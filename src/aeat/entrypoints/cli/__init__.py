@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     import click
 from typer._types import TyperChoice as _TyperChoice
 
+from ._stdio import _ensure_help_render_width as _ensure_help_render_width
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 
 # Force UTF-8 on stdout / stderr before any echo, log, or Rich console
@@ -177,7 +178,8 @@ def _root(
         from ._bootstrap_exempt import is_bootstrap_exempt
 
         verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
-        if not is_bootstrap_exempt(verb_path):
+        explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
+        if not is_bootstrap_exempt(verb_path) and not explicit_profile_show:
             _normalize_active_profile_label_to_uuid(ctx)
     if ctx.invoked_subcommand is None:
         # The landing surface needs the application operator_surface
@@ -289,11 +291,12 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     application-layer resolver and pin the override to the UUID, so the core
     route resolver (which stays UUID-only) receives the identifier it expects.
 
-    No-ops when no active profile resolves, when the value already resolves as a
-    UUID bucket directly (the fast path — zero change for UUID-valued input), or
-    when the label does not match any live profile (the per-command active-profile
-    guard surfaces that). An ambiguous label (more than one live match) raises a
-    clear refusal rather than an arbitrary pick.
+    No-ops when no active profile resolves or when the label does not match any
+    live profile (the per-command active-profile guard surfaces that). A live
+    UUID-valued input is pinned to the same UUID; a tombstoned UUID-valued input
+    is refused instead of bypassing the label resolver's lifecycle filter. An
+    ambiguous label (more than one live match) raises a clear refusal rather than
+    an arbitrary pick.
     """
     from ...application.workflow import (
         ProfileLabelAmbiguousError,
@@ -307,14 +310,6 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
 
     active = resolve_active_bucket_id()
     if active is None:
-        return
-    try:
-        active_bucket = read_profile_bucket_by_id(active)
-    except AeatError:
-        return
-    if active_bucket is not None:
-        # Already a UUID bucket directory — the canonical fast path. Leave the
-        # active-profile value byte-identical so the UUID path is unchanged.
         return
     try:
         pointer = resolve_profile_bucket(active)
@@ -332,6 +327,15 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     except AeatError:
         return
     if pointer is None:
+        try:
+            inactive_bucket = read_profile_bucket_by_id(active)
+        except AeatError:
+            return
+        if inactive_bucket is not None:
+            raise CliRefusedBoundaryError(
+                translated_message="cli.config.profile.unknown_profile",
+                context={"name": active},
+            )
         # Not a live label either; leave resolution to the per-command active
         # profile guard, which emits the canonical no-active-profile refusal.
         return
@@ -372,13 +376,21 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...core import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
+    from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
     from ._errors import CliRefusedBoundaryError
 
     verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
     exempt = is_bootstrap_exempt(verb_path)
-    write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt)
+    explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
+    argv_tokens = _full_invocation_tokens() or tuple(
+        str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ())
+    )
+    write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt, argv_tokens=argv_tokens)
     if not write_policy.allowed:
-        raise CliRefusedBoundaryError(write_policy.render_refusal_message())
+        raise CliRefusedBoundaryError(
+            write_policy.render_refusal_message(),
+            context=write_policy.refusal_context(),
+        )
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
         # No active profile: each non-exempt verb refuses for itself
@@ -388,6 +400,8 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
         # database and keeps the bare-invocation landing card path
         # (handled by the caller) intact. Bootstrap-exempt verbs also
         # return — they run cleanly with no profile by design.
+        return
+    if explicit_profile_show:
         return
     if _is_unregistered_profile_status_probe(verb_path, active_bucket_id):
         return
@@ -404,7 +418,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     # root callback cached the settings-default language before the
     # profile preference was readable. Drop the cache here so the verb
     # body re-resolves through the now-readable profile preference.
-    from ...core.i18n._render import clear_output_language_cache
+    from ...core.i18n import clear_output_language_cache
 
     clear_output_language_cache()
 
@@ -416,6 +430,56 @@ def _is_unregistered_profile_status_probe(verb_path: str | None, active_bucket_i
     from ...application.workflow import read_profile_bucket_by_id
 
     return read_profile_bucket_by_id(active_bucket_id) is None
+
+
+def _is_explicit_profile_show_invocation(ctx: typer.Context, verb_path: str | None) -> bool:
+    """Return whether the operator targeted ``config profile show <name>``.
+
+    Explicit profile inspection resolves its own label/UUID target and must stay
+    reachable when the unrelated active-profile pointer is stale. The no-arg
+    ``config profile show`` form still depends on the active profile and remains
+    active-profile guarded.
+    """
+    from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
+
+    raw_tokens = _full_invocation_tokens() or tuple(
+        str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ())
+    )
+    if raw_tokens:
+        command_start = _profile_show_command_start(raw_tokens)
+        if command_start is None:
+            return False
+        return _has_explicit_profile_show_target(raw_tokens[command_start + 3 :])
+
+    if verb_path is None:
+        return False
+    verb_tokens = tuple(verb_path.split())
+    if verb_tokens[:3] != ("config", "profile", "show"):
+        return False
+    return _has_explicit_profile_show_target(verb_tokens[3:])
+
+
+def _profile_show_command_start(tokens: tuple[str, ...]) -> int | None:
+    for index in range(0, max(len(tokens) - 2, 0)):
+        if tokens[index : index + 3] == ("config", "profile", "show"):
+            return index
+    return None
+
+
+def _has_explicit_profile_show_target(tokens: tuple[str, ...]) -> bool:
+    value_options = {"--format", "--language", "--lang", "--output-language", "--profile"}
+    skip_next = False
+    for token in tokens:
+        if skip_next:
+            skip_next = False
+            continue
+        if token.startswith("-"):
+            option = token.split("=", 1)[0]
+            if "=" not in token and option in value_options:
+                skip_next = True
+            continue
+        return True
+    return False
 
 
 def _register_wizard_catalogue_for_profile_keys() -> None:
@@ -483,7 +547,10 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
         if subcommand is None:
             return True
         command = subcommand
-    return False
+    # A bare subgroup invocation (for example `aeat config profile`) can
+    # only render that group's help/callback surface. Treat it like help so
+    # discovery never asks for the encrypted profile passphrase first.
+    return hasattr(command, "list_commands")
 
 
 def _verb_path_from_context(ctx: typer.Context) -> str | None:
@@ -518,7 +585,7 @@ def _verb_path_from_context(ctx: typer.Context) -> str | None:
     # Click 9 exposes the unparsed remainder on ``ctx.args``. Click 8 still
     # stages the same data on the internal protected list during root-callback
     # execution; reading the deprecated public ``protected_args`` property emits
-    # a warning, so use the internal storage only as a compatibility fallback.
+    # a warning, so use the internal storage only for supported Click 8 runtimes.
     remainder = list(ctx.args)
     if not remainder:
         remainder = list(getattr(ctx, "_protected_args", ()))
@@ -546,14 +613,9 @@ def _full_invocation_verb_path() -> str | None:
     so ``"config profile create alice"`` matches the exempt entry
     ``"config profile create"``.
     """
-    import sys
-    from pathlib import Path
-
-    executable = Path(sys.argv[0]).name.lower()
-    if executable not in {"aeat", "aeat.exe", "__main__.py"}:
+    tokens = list(_full_invocation_tokens())
+    if not tokens:
         return None
-
-    tokens = sys.argv[1:]
     verb_tokens: list[str] = []
     skip_next = False
     for token in tokens:
@@ -561,13 +623,24 @@ def _full_invocation_verb_path() -> str | None:
             skip_next = False
             continue
         if token.startswith("-"):
-            if token in ("--language", "--lang", "--format", "--profile") and "=" not in token:
+            if token in ("--language", "--lang", "--format", "--profile", "--output-language") and "=" not in token:
                 skip_next = True
             continue
         verb_tokens.append(token)
     if not verb_tokens:
         return None
     return " ".join(verb_tokens)
+
+
+def _full_invocation_tokens() -> tuple[str, ...]:
+    """Return raw operator argv tokens for real ``aeat`` entrypoint runs."""
+    import sys
+    from pathlib import Path
+
+    executable = Path(sys.argv[0]).name.lower()
+    if executable not in {"aeat", "aeat.exe", "__main__.py"}:
+        return ()
+    return tuple(sys.argv[1:])
 
 
 def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
@@ -636,7 +709,11 @@ def _app_root(
 
 _LAZY_COMMAND_MODULES: frozenset[str] = frozenset(
     {
+        "._app_agent_workspace",
+        "._app_contract",
+        "._app_diagnostics",
         "._app_live",
+        "._app_quickfile",
         "._config",
         "._ledger",
         "._modelo",
@@ -688,15 +765,44 @@ def _lazy(group_name: str, name: str, module_name: str) -> None:
 
 
 _lazy("app", "overview", "._overview")
+_lazy("app", "contract", "._app_contract")
+_lazy("app", "agent", "._app_agent_workspace")
+_lazy("app", "diagnostics", "._app_diagnostics")
 _lazy("app", "ledger", "._ledger")
 _lazy("app", "live", "._app_live")
 _lazy("app", "modelo", "._modelo")
+_lazy("app", "quickfile", "._app_quickfile")
 _lazy("app", "registry", ".registry")
 _lazy("app", "review", "._review")
 
 _lazy("aeat", "config", "._config")
 app.add_typer(app_app, name="app")
 _decorate_typer_app(app)
+
+
+def __getattr__(name: str) -> object:
+    """Lazily resolve re-exported names without importing heavy submodules eagerly.
+
+    ``_app_contract``, ``_config._google``, and ``_modelo_rendering`` are
+    kept off the eager import path precisely so constructing the ``aeat``
+    app object never pulls the registry-dependent command tree; a
+    top-level ``from ._app_contract import command_schema_refs`` (and
+    siblings) would defeat that and reintroduce the startup cost
+    :mod:`._stdio` / the lazy command-tree gate guard against.
+    """
+    if name == "command_schema_refs":
+        from ._app_contract import command_schema_refs
+
+        return command_schema_refs
+    if name == "OAuthClientPayload":
+        from ._config._google import OAuthClientPayload
+
+        return OAuthClientPayload
+    if name in ("calculation_revision_lines", "calculation_revision_payload"):
+        from . import _modelo_rendering
+
+        return getattr(_modelo_rendering, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def main() -> None:
@@ -713,7 +819,17 @@ def main() -> None:
     import sys
 
     _apply_language_argv_to_environment(sys.argv[1:])
-    app(prog_name="aeat")
+    with _ensure_help_render_width():
+        app(prog_name="aeat")
 
 
-__all__ = ["AppRootResult", "RootStatusResult", "app", "main"]
+__all__ = [
+    "AppRootResult",
+    "OAuthClientPayload",
+    "RootStatusResult",
+    "app",
+    "calculation_revision_lines",
+    "calculation_revision_payload",
+    "command_schema_refs",
+    "main",
+]

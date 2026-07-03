@@ -15,10 +15,10 @@ from typing import ClassVar, Protocol, runtime_checkable
 class SiteHealthEvidenceLike(Protocol):
     """Structural view of the evidence block carried by a site-health status.
 
-    Declared in :mod:`aeat.core.errors` so :class:`SiteHealthError` can
+    Declared in :mod:`core.errors` so :class:`SiteHealthError` can
     type its payload without importing the adapter layer that produces
     it. The concrete record is
-    :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthEvidence`.
+    :class:`adapters.outbound.aeat.browser._site_health.SiteHealthEvidence`.
 
     Members are read-only properties so the protocol matches
     covariantly: a concrete record may carry narrower member types
@@ -46,10 +46,10 @@ class SiteHealthEvidenceLike(Protocol):
 class SiteHealthStatusLike(Protocol):
     """Structural view of a detected AEAT site-health classification.
 
-    Declared in :mod:`aeat.core.errors` so :class:`SiteHealthError` can
+    Declared in :mod:`core.errors` so :class:`SiteHealthError` can
     accept the status without a runtime or type-checking import of the
     adapter layer. The concrete record is
-    :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`.
+    :class:`adapters.outbound.aeat.browser._site_health.SiteHealthStatus`.
 
     Members are read-only properties so the protocol matches
     covariantly: the concrete ``SiteHealthStatus`` carries a concrete
@@ -125,7 +125,7 @@ class CoreError(AeatError):
 
 
 class DecimalFormatError(CoreError):
-    """Raised when :func:`~aeat.core.decimal._format.format_decimal` receives an invalid argument.
+    """Raised when :func:`core.decimal._format.format_decimal` receives an invalid argument.
 
     Replaces the bare :class:`TypeError` previously raised when ``value``
     is ``None`` but ``none_value`` was not provided.
@@ -136,8 +136,8 @@ class RedactionError(CoreError):
     """Raised when a redaction helper receives an argument of the wrong type.
 
     Replaces bare :class:`TypeError` previously raised by
-    :func:`~aeat.core.redaction.redact` and
-    :func:`~aeat.core.redaction.redact_for_cli_output` when passed a
+    :func:`core.redaction.redact` and
+    :func:`core.redaction.redact_for_cli_output` when passed a
     non-``str`` argument.
     """
 
@@ -153,10 +153,10 @@ class CoreValidationError(CoreError, ValueError):
 class ProfileAnswerTypeError(CoreValidationError):
     """Raised when a typed profile-answers field coercion receives an unexpected type.
 
-    Lives in :mod:`aeat.core.errors` so :class:`~aeat.core.setup_answers.SetupAnswers`
+    Lives in :mod:`core.errors` so :class:`core.setup_answers.SetupAnswers`
     can raise a typed error without importing application-layer wizard modules.
     Application-layer wizard code raises the narrower
-    :class:`~aeat.application.wizard._errors.WizardAnswerTypeError`, which
+    :class:`application.wizard._errors.WizardAnswerTypeError`, which
     inherits from this class, so callers catching either type continue to work.
     """
 
@@ -164,10 +164,10 @@ class ProfileAnswerTypeError(CoreValidationError):
 class AeatObservabilityError(AeatError):
     """Base class for observability-layer errors.
 
-    Lives in :mod:`aeat.core.errors` (rather than the leaf
-    :mod:`aeat.core.observability` subpackage) so other subpackages can
-    catch it without importing observability internals. Concrete
-    subclasses are declared in :mod:`aeat.core.observability._errors`.
+    Lives in :mod:`core.errors` (rather than the leaf
+    :mod:`core.observability` subpackage) so other subpackages can catch it
+    without importing observability internals. Concrete subclasses are
+    declared in :mod:`core.observability._errors`.
     """
 
 
@@ -183,10 +183,10 @@ class FixtureProvisioningError(AeatError):
 class ModeloFixtureError(AeatError):
     """Raised when a synthetic modelo-history fixture cannot be loaded.
 
-    Thrown by :mod:`aeat.application.filing.testing` when the fixtures directory cannot be
-    resolved, a fixture file cannot be read, JSON decoding fails, or a
-    payload fails strict pydantic validation (including the synthetic-
-    only invariant checks on the ``synthetic`` and ``_comment`` fields).
+    Thrown by :mod:`application.filing.testing` when the fixtures directory
+    cannot be resolved, a fixture file cannot be read, JSON decoding fails, or
+    a payload fails strict pydantic validation (including the synthetic-only
+    invariant checks on the ``synthetic`` and ``_comment`` fields).
     """
 
 
@@ -200,10 +200,10 @@ class SiteHealthError(AeatError):
     that precedes the generic exception handler so a planned
     mantenimiento never collapses into ``UNHANDLED_EXCEPTION``.
 
-    The error lives in :mod:`aeat.core.errors` (and not in either leaf
+    The error lives in :mod:`core.errors` (and not in either leaf
     subpackage) to break the circular import between
-    :mod:`aeat.adapters.outbound.aeat.browser` (which raises it) and
-    :mod:`aeat.application.workflow` (which consumes it). The payload is
+    :mod:`adapters.outbound.aeat.browser` (which raises it) and
+    :mod:`application.workflow` (which consumes it). The payload is
     typed through the :class:`SiteHealthStatusLike` structural Protocol
     declared in this module, so no import of the adapter layer occurs at
     runtime or under type checking — the ``core-not-outer`` boundary is
@@ -256,7 +256,7 @@ class ActiveProfilePointerError(CoreError):
             f"invalid active-profile pointer at {path}; refusing root storage fallback",
             translated_message="errors.integrity.integrity_active_profile_pointer",
             context={"path": str(path)},
-            suggestion="aeat config repair profile",
+            suggestion="aeat config repair profile # language fallback=es until the active-profile pointer is readable",
         )
 
 
@@ -268,7 +268,7 @@ class NoActiveProfileError(AeatError):
     to operate without an active profile. The active-bucket precedence chain is
     a core concern (env var > pointer file), so the refusal that gates it lives
     in the core error taxonomy and is raised by
-    :func:`aeat.core.require_active_bucket_id`. Callers that surface this to the
+    :func:`core.require_active_bucket_id`. Callers that surface this to the
     operator map it to the standard ``cli.common.errors.no_active_profile`` message.
     """
 
@@ -283,6 +283,7 @@ from ._registry import (
     build_error_envelope,
     declared_error_codes,
     get_error_exit_code,
+    get_error_suggestion,
     get_registered_error_code,
     register,
     render_error_json,
@@ -319,6 +320,7 @@ __all__ = [
     "build_error_envelope",
     "declared_error_codes",
     "get_error_exit_code",
+    "get_error_suggestion",
     "get_registered_error_code",
     "register",
     "render_error_json",

@@ -14,8 +14,11 @@ import pytest
 
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
-from ...auth._models import AuthState
-from ...review._models import InvoiceReviewRecord, LedgerReviewRecord
+from ...auth import AuthState
+from ...review import (
+    InvoiceReviewRecord,
+    LedgerReviewRecord,
+)
 from .._models import (
     DeclaracionPointer,
     WorkflowEvent,
@@ -25,6 +28,8 @@ from .._persistence import WorkflowStateRepository
 from .._profile_bucket_scan import list_profile_buckets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_WORKFLOW_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
 
 
 def _populated_workflow_state() -> WorkflowState:
@@ -42,7 +47,6 @@ def _populated_workflow_state() -> WorkflowState:
     record itself, so it is intentionally absent from the fixture.
     """
 
-    now = datetime.now(UTC).replace(microsecond=0)
     return WorkflowState(
         auth=AuthState(),
         declarations={
@@ -53,20 +57,20 @@ def _populated_workflow_state() -> WorkflowState:
                 status="BORRADOR",
                 exported_path="exports/303-2025-1T.txt",
                 verified=False,
-                updated_at=now,
+                updated_at=_WORKFLOW_TIMESTAMP,
             ),
         },
         invoice_reviews={
             "invoice-2024-001": InvoiceReviewRecord(
                 invoice_id="invoice-2024-001",
                 fields={"note": "follow up IVA split"},
-                updated_at=now,
+                updated_at=_WORKFLOW_TIMESTAMP,
             ),
         },
         ledger_reviews={
             "transaction-2024-abc": LedgerReviewRecord(
                 transaction_id="transaction-2024-abc",
-                updated_at=now,
+                updated_at=_WORKFLOW_TIMESTAMP,
             ),
         },
         bucket_events=(
@@ -75,10 +79,10 @@ def _populated_workflow_state() -> WorkflowState:
                 reason="initial provisioning",
                 bucket_id="b" * 32,
                 object_id="profile-a",
-                at=now,
+                at=_WORKFLOW_TIMESTAMP,
             ),
         ),
-        updated_at=now,
+        updated_at=_WORKFLOW_TIMESTAMP,
     )
 
 

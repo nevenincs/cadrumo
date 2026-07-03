@@ -19,7 +19,7 @@ proved here:
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import ExitStack
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -28,37 +28,38 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ...adapters.persistence.storage.bucket._layout import provision_bucket_directory
-from ...adapters.persistence.storage.bucket._manifest import (
+from ...adapters.persistence.storage.bucket import (
     BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
+    provision_bucket_directory,
+    write_manifest,
 )
-from ...adapters.persistence.storage.bucket._manifest_io import write_manifest
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core import Period
 from ...core.config import SecretStoreBackend, override_settings
+from ...domain.categories import SpendingCategory
 from ...domain.transactions import BusinessClassification, TransactionDirection
 from ...tests.secure_sql import dev_test_database_password
-from ..auth._operator import inspect_operator_auth
-from ..auth._operator import test_operator_auth as probe_operator_auth
+from ..auth import inspect_operator_auth
+from ..auth import test_operator_auth as probe_operator_auth
 from ..ledger import ManualLedgerTransactionCommand, create_manual_transaction
-from ..modelo._actions import create_work_unit, discard_work_unit
+from ..modelo import create_work_unit, discard_work_unit
 from ..overview import build_overview_status_report
 from ..state_projection import (
     ModeloReadinessRequest,
     build_operator_state_projection,
     modelo_requires_ledger_preflight,
 )
-from ..user_profile._testing import register_minimal_profile
+from ..user_profile import register_minimal_profile
 from ..wizard import WIZARD_FLOWS
-from ..workflow._models import WorkflowState
-from ..workflow._persistence import workflow_state_repository
+from ..workflow import WorkflowState, workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
+_STAGED_MANIFEST_CREATED_AT = datetime(2026, 5, 28, 15, 30, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -95,17 +96,21 @@ def _ensure_operator_storage_span() -> None:
         return
     if _ACTIVE_STORAGE_STACK is None:
         raise RuntimeError("state projection test storage span is not active")
-    from ..user_profile._orchestration import profile_create_storage_span
+    from ..user_profile import profile_create_storage_span
 
-    _ACTIVE_STORAGE_STACK.enter_context(profile_create_storage_span("operator"))
+    _ACTIVE_STORAGE_STACK.enter_context(profile_create_storage_span("11111111-1111-4111-8111-111111111111"))
     _PROFILE_SPAN_OPEN = True
 
 
-def _register_active_profile() -> str:
+def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> str:
     """Register and activate a minimal profile; return its bucket id."""
 
     _ensure_operator_storage_span()
-    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(
+            state, profile_id="11111111-1111-4111-8111-111111111111", overrides=overrides
+        ),
+    )
     bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     assert bucket_id is not None
     return bucket_id
@@ -118,7 +123,7 @@ def _stage_profile_manifest(root: Path, bucket_id: str) -> None:
         BucketManifest(
             bucket_id=bucket_id,
             label=bucket_id,
-            created_at=datetime.now(UTC),
+            created_at=_STAGED_MANIFEST_CREATED_AT,
             last_unlocked_at=None,
             kdf_params=ManifestKdfParams(
                 algorithm="argon2id",
@@ -141,7 +146,7 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path) -> None:
     present, ``overview status`` must report them.
 
     Before the canonical projection, ``build_overview_status_report``
-    read the legacy ``ModeloDraft`` store but never the
+    read the declaration-draft ``ModeloDraft`` store but never the
     ``WorkUnitCatalogue`` store, so an operator who used ``modelo work
     create`` saw a silently-zero count. The projection carries
     ``work_units`` as a distinct counter."""
@@ -159,7 +164,7 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path) -> None:
     report = build_overview_status_report()
 
     assert report.work_units == 1, "overview status must surface modelo work units, not zero"
-    assert report.drafts == 0, "the legacy ModeloDraft store is separate and stays at zero"
+    assert report.drafts == 0, "the ModeloDraft store is separate and stays at zero"
 
 
 def test_overview_status_distinguishes_drafts_from_work_units() -> None:
@@ -314,6 +319,124 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
     assert readiness.ledger_period == Period.from_year_and_code(2026, "1T")
     assert readiness.ledger_checked_transaction_count == 1
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["missing_category"]
+
+
+def test_modelo_303_readiness_reports_pre_activity_period_refusal() -> None:
+    bucket_id = _register_active_profile(overrides={"censo.activity_start_date": "2026-05-01"})
+
+    projection = build_operator_state_projection(
+        modelo_readiness_requests=(
+            ModeloReadinessRequest(
+                modelo="303",
+                revision_id="2023-y-siguientes",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            ),
+        ),
+    )
+
+    readiness = projection.modelo_readiness[0]
+    assert readiness.profile_id == bucket_id
+    assert readiness.registry_ready is True
+    assert readiness.profile_ready is False
+    assert readiness.ready is False
+    assert "Modelo 303 2026 1T is before the profile activity-start date 2026-05-01" in readiness.profile_refusal
+    assert "filing period ends on 2026-03-31" in readiness.profile_refusal
+    assert "pre-activity period" in readiness.profile_refusal
+    assert projection.workspace.work_units == 0
+
+
+def test_modelo_349_readiness_uses_applicability_for_attribution_entity() -> None:
+    """An attribution entity that trades intracommunity is APPLICABLE for Modelo 349.
+
+    RD 1624/1992 art. 79 obliges the entity itself (a comunidad de bienes /
+    sociedad civil) to file the declaración recapitulativa when it performs
+    operaciones intracomunitarias — régimen de atribución de rentas governs
+    IRPF/IS attribution, not IVA obligations. The readiness gate must not
+    refuse this profile on applicability grounds; it still reports
+    ``ready is False`` here because the minimal fixture has no ledger-sourced
+    binding values, a separate axis from applicability.
+    """
+    bucket_id = _register_active_profile(
+        overrides={
+            "identity.tax_id": "E12345674",
+            "taxpayer_type.entity_type": "attribution_entity",
+            "taxpayer_type.irpf_income_categories": "",
+            "irpf.estimation_regime": "",
+            "iva.does_intracomunitario": "true",
+        },
+    )
+
+    projection = build_operator_state_projection(
+        modelo_readiness_requests=(
+            ModeloReadinessRequest(
+                modelo="349",
+                revision_id="2020-y-siguientes",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            ),
+        ),
+    )
+
+    readiness = projection.modelo_readiness[0]
+    assert readiness.profile_id == bucket_id
+    assert readiness.registry_ready is True
+    assert readiness.profile_ready is True
+    assert readiness.profile_refusal == ""
+    assert readiness.binding_ready is False
+    assert readiness.missing_bindings
+    assert readiness.ready is False
+    assert projection.workspace.work_units == 0
+
+
+def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clean_preflight() -> None:
+    bucket_id = _register_active_profile()
+    create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=bucket_id,
+            booked_date=date(2026, 4, 15),
+            amount=Decimal("1210.00"),
+            direction=TransactionDirection.INCOMING,
+            description="consulting invoice with output IVA",
+            business_classification=BusinessClassification.BUSINESS,
+            taxable_base=Decimal("1000.00"),
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("210.00"),
+            actor="operator",
+        ),
+    )
+    create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=bucket_id,
+            booked_date=date(2026, 4, 20),
+            amount=Decimal("121.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="office supplies with input IVA",
+            business_classification=BusinessClassification.BUSINESS,
+            category_id=SpendingCategory.MATERIAL_OFICINA.value,
+            taxable_base=Decimal("100.00"),
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("21.00"),
+            actor="operator",
+        ),
+    )
+
+    projection = build_operator_state_projection(
+        modelo_readiness_requests=(
+            ModeloReadinessRequest(
+                modelo="303",
+                revision_id="2023-y-siguientes",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "2T"),
+            ),
+        ),
+    )
+
+    readiness = projection.modelo_readiness[0]
+    assert readiness.ledger_preflight_required is True
+    assert readiness.ledger_ready is True
+    assert readiness.ledger_issues == ()
+    assert "ledger_iva_aggregation" not in {binding.source for binding in readiness.missing_bindings}
 
 
 def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period() -> None:
@@ -485,7 +608,7 @@ def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:
     raw engineering English ``certificate path not configured``.
     """
 
-    from ..auth._operator import configure_operator_auth
+    from ..auth import configure_operator_auth
 
     _register_active_profile()
     configure_operator_auth("certificate")
@@ -520,7 +643,7 @@ def test_auth_readiness_drops_certificate_path_after_switching_provider(tmp_path
     active provider (persona-fleet finding G1).
     """
 
-    from ..auth._operator import configure_operator_auth
+    from ..auth import configure_operator_auth
 
     _register_active_profile()
     cert_file = tmp_path / "operator-cert.pfx"
@@ -548,7 +671,7 @@ def test_auth_readiness_health_severity_is_populated_for_a_configured_provider()
     finding G4).
     """
 
-    from ..auth._operator import configure_operator_auth
+    from ..auth import configure_operator_auth
 
     _register_active_profile()
     configure_operator_auth("clave_movil")

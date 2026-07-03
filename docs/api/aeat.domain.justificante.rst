@@ -14,5 +14,4 @@ Submodules
    :maxdepth: 4
 
    aeat.domain.justificante._errors
-   aeat.domain.justificante._repository
    aeat.domain.justificante._schema

@@ -14,7 +14,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel
 
 from ....core.i18n import Translatable as tr
 from .._models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
@@ -24,12 +23,9 @@ from .._translations import (
     _walk_keys,
     cli_keys_referenced_in_source,
 )
+from ._support import EmptyAnswersBase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-class _EmptyAnswersBase(BaseModel):
-    """Minimal pydantic answers model required by WizardFlow."""
 
 
 def _build_minimal_flow(*, with_help: bool = False, with_choice_description: bool = False) -> WizardFlow:
@@ -63,7 +59,7 @@ def _build_minimal_flow(*, with_help: bool = False, with_choice_description: boo
         title=tr("wizard.test.title"),
         description=tr("wizard.test.description"),
         sections=(section,),
-        answers_model=_EmptyAnswersBase,
+        answers_model=EmptyAnswersBase,
     )
 
 

@@ -34,20 +34,28 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.core._amendment_kind_regime
    aeat.core._bucket_pointer
    aeat.core._bucket_pointer_io
    aeat.core._capabilities
    aeat.core._casilla_id
+   aeat.core._config_live_tests
+   aeat.core._config_runtime_fields
+   aeat.core._config_state_root
    aeat.core._config_storage_route
    aeat.core._config_support
    aeat.core._config_timeouts
+   aeat.core._foreign_asset_obligation
    aeat.core._iban
+   aeat.core._irnr
    aeat.core._ledger_sort
    aeat.core._modelo
    aeat.core._models
    aeat.core._optional_extras
    aeat.core._period
+   aeat.core._post_filing_event
    aeat.core._refund_election
+   aeat.core._rescate_type
    aeat.core._result_disposition
    aeat.core._tax_domain
    aeat.core._toml
@@ -65,5 +73,7 @@ Submodules
    aeat.core.logging
    aeat.core.output_rendering
    aeat.core.paths
+   aeat.core.secure_object_write
    aeat.core.setup_answers
+   aeat.core.storage_route_guidance
    aeat.core.wizard_catalogue

@@ -6,25 +6,21 @@ import logging
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
 from sqlalchemy import text
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository, session_scope
 from ....core import Period
 from ....core.classification import SensitivityClass
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.categories import SpendingCategory
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
+from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import (
     EUMemberState,
     IvaCategory,
@@ -46,31 +42,36 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
+    AggregationValidationError,
     CalculationSourceContext,
+    IvaLedgerAggregationIssueReason,
     LedgerIvaAggregationSourceResolver,
     LedgerRentaExpenseAggregationSourceResolver,
     OssIossLedgerCandidate,
     OssIossLedgerSourceResolver,
+    aggregate_iva_ledger_observations,
     aggregate_oss_ioss_bindings,
     merge_source_resolutions,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "28282828-2828-4828-8828-282828282828"
+
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
 
+@cache
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
-    modelo_definition = next(item for item in resources().modelos.all() if item.id == modelo)
+    modelo_definition = resources().modelos.get(modelo)
     return modelo_definition.revisions[revision_id]
 
 
@@ -81,7 +82,7 @@ def _raw_transaction(
     amount: Decimal,
 ) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=booked_date,
         value_date=booked_date,
         amount=amount,
@@ -115,6 +116,8 @@ def _iva_transaction(
         "raw": _raw_transaction(provider_id, booked_date=booked_date, amount=amount),
         "direction": direction,
         "business_classification": BusinessClassification.BUSINESS,
+        "source_jurisdiction": "ES",
+        "group_label": None,
         "category_id": "test_iva_operation",
         "taxable_base": taxable_base,
         "iva_rate": Decimal("0.21"),
@@ -142,7 +145,9 @@ def _renta_transaction(
                 amount=Decimal("121.00"),
             ),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
             "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
             "category_id": SpendingCategory.ASESORIA_FISCAL.value,
             "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
@@ -151,7 +156,7 @@ def _renta_transaction(
     )
 
 
-def _invoice(tx_id: str, *, bucket_id: str = "bucket-a") -> Invoice:
+def _invoice(tx_id: str, *, bucket_id: str = _BUCKET_ID) -> Invoice:
     line = InvoiceLine(
         description="Asesoria fiscal",
         quantity=Decimal("1"),
@@ -180,10 +185,48 @@ def _invoice(tx_id: str, *, bucket_id: str = "bucket-a") -> Invoice:
     )
 
 
+def _domestic_iva_invoice(
+    invoice_number: str,
+    *,
+    kind: CatalogueInvoiceKind,
+    issued_at: date,
+    taxable_base: Decimal,
+    iva_amount: Decimal,
+    bucket_id: str = _BUCKET_ID,
+    linked_transaction_ids: tuple[str, ...] = (),
+) -> Invoice:
+    line = InvoiceLine(
+        description="Operacion interior con IVA",
+        quantity=Decimal("1"),
+        unit_price=taxable_base,
+        subtotal=taxable_base,
+        iva_rate=IvaRate.RATE_21,
+        iva_amount=iva_amount,
+    )
+    return Invoice.model_validate(
+        {
+            "bucket_id": bucket_id,
+            "kind": kind,
+            "invoice_number": invoice_number,
+            "issued_at": issued_at,
+            "counterparty_name": "Cliente ES" if kind is CatalogueInvoiceKind.ISSUED else "Proveedor ES",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "base_total": taxable_base,
+            "iva_total": iva_amount,
+            "grand_total": taxable_base + iva_amount,
+            "currency": "EUR",
+            "lines": (line,),
+            "payment_status": PaymentStatus.PAID,
+            "linked_transaction_ids": linked_transaction_ids,
+        },
+    )
+
+
 def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase(secure_objects: SecureObjectRepository) -> None:
     revision = _revision("303", "2009-y-siguientes")
     tx_repo = TransactionCatalogueRepository(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         objects=secure_objects,
     )
     incoming = _iva_transaction(
@@ -204,7 +247,7 @@ def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase(secure_obje
 
     resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
         CalculationSourceContext(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -222,6 +265,86 @@ def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase(secure_obje
         f"transaction:{incoming.transaction_id}",
         f"transaction:{outgoing.transaction_id}",
     }
+
+
+def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_transaction_ledger(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    revision = _revision("303", "2023-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice = _domestic_iva_invoice(
+        "LAURA-1T-SALE",
+        kind=CatalogueInvoiceKind.ISSUED,
+        issued_at=date(2025, 2, 10),
+        taxable_base=Decimal("10000.00"),
+        iva_amount=Decimal("2100.00"),
+    )
+    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+
+    with pytest.raises(AggregationValidationError) as exc_info:
+        LedgerIvaAggregationSourceResolver(
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="303",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "1T"),
+                revision=revision,
+            ),
+        )
+
+    assert exc_info.value.context["reason"] == "invoice_domestic_iva_not_in_transaction_ledger"
+    assert exc_info.value.context["period"] == "1T"
+    assert exc_info.value.context["invoice_count"] == "1"
+    assert exc_info.value.context["invoice_domestic_iva_excess_by_binding"] == {
+        "modelo-303-iva-repercutido-general-cuota": "2100.00",
+    }
+
+
+def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transaction_ledger_matches(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    revision = _revision("303", "2023-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    transaction = _iva_transaction(
+        "laura-1t-sale",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("12100.00"),
+        taxable_base=Decimal("10000.00"),
+        iva_amount=Decimal("2100.00"),
+        booked_date=date(2025, 2, 10),
+    )
+    invoice = _domestic_iva_invoice(
+        "LAURA-1T-SALE",
+        kind=CatalogueInvoiceKind.ISSUED,
+        issued_at=date(2025, 2, 10),
+        taxable_base=Decimal("10000.00"),
+        iva_amount=Decimal("2100.00"),
+        linked_transaction_ids=(transaction.transaction_id,),
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
+    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+
+    resolution = LedgerIvaAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "1T"),
+            revision=revision,
+        ),
+    )
+
+    assert resolution.binding_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("2100.00")
+    assert resolution.source_transaction_ids == (transaction.transaction_id,)
+    assert resolution.diagnostics == ()
 
 
 def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_37_net_zero(
@@ -244,7 +367,7 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
     """
     revision = _revision("303", "2009-y-siguientes")
     tx_repo = TransactionCatalogueRepository(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         objects=secure_objects,
     )
     # A consumed domestic sale (matches the repercutido-general binding) ...
@@ -270,7 +393,7 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
 
     resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
         CalculationSourceContext(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -313,7 +436,7 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation(
     """
     revision = _revision("303", "2009-y-siguientes")
     tx_repo = TransactionCatalogueRepository(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         objects=secure_objects,
     )
     domestic_sale = _iva_transaction(
@@ -336,7 +459,7 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation(
 
     resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
         CalculationSourceContext(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -364,7 +487,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
     """
     revision = _revision("303", "2009-y-siguientes")
     tx_repo = TransactionCatalogueRepository(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         objects=secure_objects,
     )
     domestic_sale = _iva_transaction(
@@ -378,7 +501,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
 
     resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
         CalculationSourceContext(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -390,13 +513,84 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
     assert resolution.diagnostics == ()
 
 
+def test_iva_source_mesh_resolver_suppresses_out_of_period_personal_source_diagnostic(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    revision = _revision("303", "2009-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+    )
+    personal_q2 = _iva_transaction(
+        "personal-q2",
+        direction=TransactionDirection.OUTGOING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+        booked_date=date(2026, 4, 10),
+    ).model_copy(update={"business_classification": BusinessClassification.PERSONAL})
+    catalogue = TransactionCatalogue.from_transactions((personal_q2,))
+    tx_repo.save(catalogue)
+
+    raw_aggregation = aggregate_iva_ledger_observations(catalogue, period=Period.from_year_and_code(2026, "1T"))
+    assert [issue.reason for issue in raw_aggregation.issues] == [IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD]
+
+    resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=revision,
+        ),
+    )
+
+    assert resolution.diagnostics == ()
+    assert personal_q2.transaction_id not in resolution.source_transaction_ids
+
+
+def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    revision = _revision("303", "2009-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+    )
+    missing_rate = _iva_transaction(
+        "business-missing-rate",
+        direction=TransactionDirection.OUTGOING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    ).model_copy(update={"iva_rate": None})
+    catalogue = TransactionCatalogue.from_transactions((missing_rate,))
+    tx_repo.save(catalogue)
+
+    raw_aggregation = aggregate_iva_ledger_observations(catalogue, period=Period.from_year_and_code(2026, "1T"))
+    assert [issue.reason for issue in raw_aggregation.issues] == [IvaLedgerAggregationIssueReason.MISSING_IVA_RATE]
+
+    resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=revision,
+        ),
+    )
+
+    assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["source_issue"]
+    assert "transaction has no iva_rate fact" in resolution.diagnostics[0].message
+
+
 def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
     secure_objects: SecureObjectRepository,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     revision = _revision("303", "2009-y-siguientes")
     tx_repo = TransactionCatalogueRepository(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         objects=secure_objects,
     )
     incoming = _iva_transaction(
@@ -416,7 +610,7 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
     with caplog.at_level(logging.DEBUG, logger="aeat.application.aggregation._source_mesh"):
         resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
             CalculationSourceContext(
-                bucket_id="bucket-a",
+                bucket_id=_BUCKET_ID,
                 modelo="303",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
@@ -436,28 +630,28 @@ def test_iva_source_mesh_resolver_degrades_on_transaction_catalogue_drift(
     secure_objects: SecureObjectRepository,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    from ....domain.transactions._repository import transaction_index_object_key
+    from ....domain.transactions import transaction_index_object_key
 
     revision = _revision("303", "2009-y-siguientes")
     # Per-row catalogue: a corrupt membership-index row makes load() fail closed
     # with StoredTransactionDriftError, the drift the resolver must degrade on.
     secure_objects.save(
         namespace=TX_BUCKET_NAMESPACE,
-        object_key=transaction_index_object_key("bucket-a"),
+        object_key=transaction_index_object_key(_BUCKET_ID),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
         written_at=datetime(2026, 6, 4, 12, 0, tzinfo=UTC),
         payload=b"{}",
     )
     tx_repo = TransactionCatalogueRepository(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         objects=secure_objects,
     )
 
     with caplog.at_level(logging.DEBUG, logger="aeat.application.aggregation._source_mesh"):
         resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
             CalculationSourceContext(
-                bucket_id="bucket-a",
+                bucket_id=_BUCKET_ID,
                 modelo="303",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
@@ -477,10 +671,10 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
 ) -> None:
     revision = _revision("100", "2025")
     tx_repo = TransactionCatalogueRepository(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         objects=secure_objects,
     )
-    invoice_repo = InvoiceCatalogueRepository(bucket_id="bucket-a", objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     initial = _renta_transaction("renta-linked", purchase_invoice_evidence_id=None)
     invoice = _invoice(initial.transaction_id)
     linked = _renta_transaction("renta-linked", purchase_invoice_evidence_id=invoice.invoice_id)
@@ -492,7 +686,7 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
         invoice_repository=invoice_repo,
     ).resolve(
         CalculationSourceContext(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
@@ -509,7 +703,7 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
     }
 
 
-def test_oss_source_mesh_resolver_matches_existing_candidate_binding_wrapper() -> None:
+def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> None:
     revision = _revision("369", "esquema-union")
     candidates = (
         OssIossLedgerCandidate(
@@ -525,10 +719,10 @@ def test_oss_source_mesh_resolver_matches_existing_candidate_binding_wrapper() -
         ),
     )
 
-    legacy = aggregate_oss_ioss_bindings(revision, candidates)
+    aggregated = aggregate_oss_ioss_bindings(revision, candidates)
     resolution = OssIossLedgerSourceResolver(candidates=candidates).resolve(
         CalculationSourceContext(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             modelo="369",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "4T"),
@@ -536,7 +730,7 @@ def test_oss_source_mesh_resolver_matches_existing_candidate_binding_wrapper() -
         ),
     )
 
-    assert resolution.binding_values == legacy
+    assert resolution.binding_values == aggregated
     assert resolution.source_transaction_ids == ("oss-ledger-1",)
     assert resolution.diagnostics == ()
     assert tuple(item.source_ref for item in resolution.provenance) == ("transaction:oss-ledger-1",)
@@ -568,7 +762,7 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
 
     resolution = OssIossLedgerSourceResolver(candidates=candidates).resolve(
         CalculationSourceContext(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             modelo="369",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "4T"),

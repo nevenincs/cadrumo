@@ -7,7 +7,9 @@ ingresados") is a *computed* casilla whose registry formula
 * ``renta-2024-rel-130-pagos-fraccionados`` — ``source_modelo='130'``,
   ``source_casilla_id='19'``, ``source_periods=('1T','2T','3T','4T')``.
 * ``renta-2024-rel-131-pagos-fraccionados`` — ``source_modelo='131'``,
-  ``source_casilla_id='15'``, same four periods.
+  ``source_casilla_id='15'``, same four periods. A direct-estimation taxpayer
+  does not file M131, so that mutually exclusive leg resolves as explicit zero
+  without synthetic filings.
 
 Each relation materialises into its declared ``target_binding``
 (``renta-2024-modelo-130-pagos-fraccionados`` / ``-131-``), whose registry
@@ -23,13 +25,12 @@ Real-behaviour, real-adapter (real encrypted-SQLite observation store via
 registry authority, real calculation engine, real relation resolver, real source
 mesh — no mocks, stubs, skips, or xfail).
 
-The aggregation assertion (``0604 == sum(four seeded M130 c19) + M131 c15``) is a
-fold-WIRING invariant, not a tautology: the four seeded c19 values are DISTINCT
-non-equal known Decimals, so the assertion can only hold if the resolver folds
-those four specific prior filings into the annual casilla. It does not reproduce
-any registry formula under test — there is no IRPF formula being hand-recomputed;
-the seeded c19 inputs are summed by the declared ``sum`` aggregation and the test
-proves the cross-period fold wires the prior filings through to 0604.
+The aggregation assertion is a fold-WIRING invariant, not a tautology: the test
+persists four local M130 filing observations with the persona's reported c19
+values (380.00 each) and independently expects the annual credit to be 1520.00.
+It does not reproduce any registry formula under test; it proves the
+cross-period fold wires the prior filings through to 0604 and that the absent,
+not-applicable M131 leg no longer blanks the M130 credit.
 """
 
 from __future__ import annotations
@@ -41,6 +42,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
@@ -50,14 +55,10 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
-from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -67,37 +68,34 @@ from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-m100-pagos-fold"
+_BUCKET_ID = "10006040-0000-4000-8000-000000000604"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _YEAR = 2024
 
-# Four DISTINCT non-equal known quarterly pagos fraccionados (M130 casilla 19,
-# "Resultado a ingresar"). Distinct values make the annual fold unmistakable: an
-# off-by-one-quarter or coincidental sum cannot satisfy the assertion. These are
-# the values a filed M130 would persist for each quarter's c19.
+# Marta's locally filed M130 quarters reported casilla 19 ("Resultado a ingresar")
+# as EUR 380.00 in every quarter, so annual M100 must credit EUR 1520.00.
 _M130_C19_BY_PERIOD: dict[str, Decimal] = {
-    "1T": Decimal("100.00"),
-    "2T": Decimal("250.50"),
-    "3T": Decimal("75.25"),
-    "4T": Decimal("300.00"),
+    "1T": Decimal("380.00"),
+    "2T": Decimal("380.00"),
+    "3T": Decimal("380.00"),
+    "4T": Decimal("380.00"),
 }
-_EXPECTED_M130_TOTAL = Decimal("100.00") + Decimal("250.50") + Decimal("75.25") + Decimal("300.00")  # 725.75
+_EXPECTED_M130_TOTAL = Decimal("1520.00")
 _M130_SOURCE_CASILLA_ID: CasillaId = validated_casilla_id("19", surface="_M130_SOURCE_CASILLA_ID")
-_M131_SOURCE_CASILLA_ID: CasillaId = validated_casilla_id("15", surface="_M131_SOURCE_CASILLA_ID")
 _M100_ANNUAL_PERIOD = "0A"
 _M100_PAGOS_CASILLA: CasillaId = validated_casilla_id("0604", surface="_M100_PAGOS_CASILLA")
+_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id(
+    "1391",
+    surface="_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA",
+)
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+_OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset(
+    {"renta-2024-certificado-trabajo-retenciones"},
+)
+_M130_PAGOS_BINDING_ID: BindingId = "renta-2024-modelo-130-pagos-fraccionados"
 _M130_PAGOS_RELATION_ID = "renta-2024-rel-130-pagos-fraccionados"
-
-# The M100 0604 formula references BOTH the M130 and M131 pagos-fraccionados
-# relations directly (``sum(relation 130, relation 131)``); unresolved prior
-# filings now leave the computed casilla blank and surface source diagnostics
-# instead of zero-contributing. So the M131 leg must also be present for 0604 to
-# compute.
-# This persona has no estimación-objetiva (M131) activity, so its four c15
-# quarters are a true zero — folded as 0 into 0604, leaving 0604 == the M130 sum.
-_M131_C15_QUARTERS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
+_M131_PAGOS_RELATION_ID = "renta-2024-rel-131-pagos-fraccionados"
 
 
 @pytest.fixture
@@ -141,32 +139,25 @@ def _seed_m130_quarters(
     return total
 
 
-def _seed_m131_zero_quarters(*, obs_repo: CalculationObservationRepository) -> None:
-    """Persist the four M131/2024 c15 quarters as a true zero (no módulos activity).
-
-    The 0604 formula sums both the M130 and M131 pagos relations directly, so the
-    M131 leg must resolve for the engine not to raise. This persona files no
-    estimación-objetiva, so its four c15 quarters are zero and fold as 0.
-    """
-    for period in _M131_C15_QUARTERS:
-        obs_repo.save_observation(
-            RegistryModeloObservation(
-                modelo="131",
-                filing_year=_YEAR,
-                period=period,
-                observations=registry_grounded_observations(
-                    modelo="131",
-                    filing_year=_YEAR,
-                    period=period,
-                    casilla_values={_M131_SOURCE_CASILLA_ID: Decimal("0")},
-                ),
+def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> None:
+    CalculationObservationRepository(objects=secure_objects).save_observation(
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_YEAR - 1,
+            period=_M100_ANNUAL_PERIOD,
+            observations=registry_grounded_observations(
+                modelo="100",
+                filing_year=_YEAR - 1,
+                period=_M100_ANNUAL_PERIOD,
+                casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
+    )
 
 
-def _seed_taxpayer_unit_profile() -> None:
+def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed a single-taxpayer ``UserProfileRecord`` covering M100's profile bindings.
 
     The M100/2024 annual revision declares ``source = "profile"`` bindings (the
@@ -182,10 +173,19 @@ def _seed_taxpayer_unit_profile() -> None:
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Operator"),
+            UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="varon"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
+            UserProfileFact(path="renta_taxpayer.sex", value="H"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
@@ -201,7 +201,7 @@ def _seed_taxpayer_unit_profile() -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(record)
 
 
 def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
@@ -220,6 +220,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
+        if binding.id not in _OPTIONAL_PAYEE_RETENCIONES_BINDINGS
         if binding.source
         not in (
             "profile",
@@ -234,7 +235,11 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     }
 
 
-def _calculate_m100_annual(secure_objects: SecureObjectRepository):
+def _calculate_m100_annual(
+    secure_objects: SecureObjectRepository,
+    *,
+    binding_values: dict[BindingId, Decimal] | None = None,
+):
     """Run the live M100/2024/0A calculate over the seeded bucket.
 
     Seeds the taxpayer profile and zero-defaults non-profile/non-relation
@@ -242,7 +247,8 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository):
     ``relation_prefill`` bindings are deliberately left UNSET so the enrolled
     relation resolver folds them from the seeded M130 observation store.
     """
-    _seed_taxpayer_unit_profile()
+    _seed_taxpayer_unit_profile(secure_objects)
+    _seed_prior_year_m100_zero_carry(secure_objects)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -259,7 +265,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository):
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        binding_values=_non_relation_zero_bindings(),
+        binding_values={**_non_relation_zero_bindings(), **(binding_values or {})},
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         transaction_repository=tx_repo,
@@ -271,29 +277,27 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository):
 def test_m100_0604_folds_in_four_m130_quarters_on_live_calculate(secure_objects: SecureObjectRepository) -> None:
     """E2E: the four filed M130 quarters fold into the annual M100 0604.
 
-    With four M130/2024 quarters recorded as filed observations (each carrying a
-    DISTINCT c19) and the four M131 c15 quarters recorded as a true zero (no
-    módulos activity), a live calculate of the M100/2024 annual draws both
+    With four M130/2024 quarters recorded as filed observations (each carrying
+    the persona's c19=380.00), and no M131 filings because the profile is direct
+    estimation, a live calculate of the M100/2024 annual draws both
     pagos-fraccionados relations through the enrolled
-    ``RelationPrefillSourceResolver`` and 0604 equals the summed four M130
-    quarters (+ M131 c15, which folds as zero).
+    ``RelationPrefillSourceResolver`` and 0604 equals 1520.00.
     """
     obs_repo = CalculationObservationRepository()
     seeded_total = _seed_m130_quarters(obs_repo=obs_repo, periods=("1T", "2T", "3T", "4T"))
-    _seed_m131_zero_quarters(obs_repo=obs_repo)
-    # Sanity: the four seeded values are distinct and sum to a strictly-positive
-    # known total, so a silent blank (0) or a single-quarter copy would fail below.
+    # Sanity: the four seeded observations reproduce Marta's local M130 c19
+    # values and total to a strictly-positive known annual credit.
     assert seeded_total == _EXPECTED_M130_TOTAL
-    assert len(set(_M130_C19_BY_PERIOD.values())) == 4
     assert seeded_total > Decimal("0")
 
     result = _calculate_m100_annual(secure_objects)
 
     casilla_0604 = Decimal(result.revision.casilla_values[_M100_PAGOS_CASILLA])
-    # M131 c15 folds to zero; 0604 == sum(M130 c19) over the four DISTINCT quarters.
+    # M131 c15 folds to zero by not-applicable profile evidence; 0604 == sum(M130 c19).
     assert casilla_0604 == _EXPECTED_M130_TOTAL, (
         f"M100 0604 must fold in the four M130 quarters (sum {_EXPECTED_M130_TOTAL}); got {casilla_0604}"
     )
+    assert Decimal(result.revision.relation_overrides[_M131_PAGOS_RELATION_ID]) == Decimal("0")
 
     # The relation_prefill source is CLAIMED (resolver enrolled): no
     # unhandled_binding_source advisory names it, and the diagnostics carry no
@@ -315,13 +319,31 @@ def test_m100_0604_folds_in_four_m130_quarters_on_live_calculate(secure_objects:
     )
 
 
+def test_m100_explicit_m130_binding_resolves_relation_formula_without_m131_filing(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The public --binding override reaches M100 0604's relation formula."""
+    result = _calculate_m100_annual(
+        secure_objects,
+        binding_values={_M130_PAGOS_BINDING_ID: _EXPECTED_M130_TOTAL},
+    )
+
+    assert Decimal(result.revision.casilla_values[_M100_PAGOS_CASILLA]) == _EXPECTED_M130_TOTAL
+    assert Decimal(result.revision.relation_overrides[_M130_PAGOS_RELATION_ID]) == _EXPECTED_M130_TOTAL
+    assert Decimal(result.revision.relation_overrides[_M131_PAGOS_RELATION_ID]) == Decimal("0")
+    assert not any(
+        diagnostic.source_kind == _RELATION_PREFILL_SOURCE
+        and diagnostic.relation_id in {_M130_PAGOS_RELATION_ID, _M131_PAGOS_RELATION_ID}
+        for diagnostic in result.source_diagnostics
+    ), result.source_diagnostics
+
+
 def test_m100_partial_prior_m130_filings_leave_0604_unresolved_with_diagnostic(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """A partial prior M130 set leaves 0604 blank and names the missing relation."""
     obs_repo = CalculationObservationRepository()
     _seed_m130_quarters(obs_repo=obs_repo, periods=("1T", "2T"))
-    _seed_m131_zero_quarters(obs_repo=obs_repo)
 
     result = _calculate_m100_annual(secure_objects)
 

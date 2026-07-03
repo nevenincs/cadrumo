@@ -8,6 +8,9 @@ operator who points the sanitiser at a previously-sanitised fixture
 gets a hard error rather than a silent no-op or double-stripped
 output.
 
+The set contains only SHA-256 digests of already-sanitised fixture bytes. It
+does not store cleartext source hashes or token-map contents.
+
 Callers can opt out per-call with
 ``sanitize_pdf(..., refuse_if_already_sanitized=False)`` for the
 narrow case where intentionally re-sanitising a fixture is the

@@ -3,14 +3,12 @@ tags:
   - '#research'
   - '#code-duplication-sweep'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 related: []
 title: "Accidental Redefinition and Overlapping Module Definitions Audit"
 source: "Manual Codebase Sweep and AST Analysis"
 relevance: 10
 ---
-
-
 
 # `code-duplication-sweep` research: `Accidental Redefinition and Overlapping Module Definitions Audit`
 
@@ -303,7 +301,7 @@ Following a complete scan of the 2,189 class and model definitions across the co
 ### 1. The Spanish-English Financial Proof Duality: `Justificante` vs. `Invoice` vs. `Receipt`
 The Spanish tax system relies heavily on the term `justificante` to denote any formal receipt, filing proof, or transactional justification. Across the codebase, this has produced a dual-language naming divide:
 * **The Sede Filing Receipt**: In `src/aeat/domain/justificante/_models.py` and `src/aeat/adapters/inbound/justificante/test_parser.py`, `Justificante` refers exclusively to the official electronic receipt issued by the Sede Electrónica when a tax declaration is successfully submitted.
-* **The General Expense Proof**: In application services and tests like `src/aeat/application/ledger/test_business_operation_invoice.py` and `src/aeat/domain/invoices/_models.py`, expense tracking relies on `Invoice`, `CollectibleInvoice`, and `PayableInvoice`. 
+* **The General Expense Proof**: In application services and tests like `src/aeat/application/ledger/test_business_operation_invoice.py` and `src/aeat/domain/invoices/_models.py`, expense tracking relies on `Invoice`, `CollectibleInvoice`, and `PayableInvoice`.
 * **The Concern**: A developer writing logic to "verify a transaction using a justificante" faces severe semantic ambiguity. They may conflate the physical transaction proof (a vendor invoice or receipt) with the government's declaration filing receipt (`Justificante`). This terminology collision obscures the data flow and boundary between user-provided source documentation and government-emitted filing proof.
 
 ### 2. Collection Abstraction Overloading: The Proliferation of `Catalogue` Classes
@@ -590,10 +588,6 @@ A comprehensive prose analysis of the complete flat Python file list (`tmp/dupli
   * `RentalExpense` (deductible lease asset amortization scheduler)
   * `RentaExpense` (deductible general business expense categories)
 
-
-
-
-
 ---
 
 ## Application Sweep Pass 2: Deep Structural Analysis of src/aeat/application/**
@@ -691,7 +685,6 @@ This pass focuses on READ-ONLY discovery of code duplication within the applicat
 - Duplicate WorkUnitNotFoundError in application/modelo
 - Duplicate ForeignAssetObservation models
 - Duplicate Borrador100Snapshot in application/live
-
 
 ## Domain Sweep Pass 2
 
@@ -1407,7 +1400,6 @@ Submodules
 
 ---
 
-
 ## Domain Calculations Sweep
 
 ### Summary
@@ -1476,7 +1468,6 @@ No overlapping method signatures or conflicting role definitions. Protocol/ABC h
 | Protocol/ABC overlap | 0 | NONE | Design is coherent; no refactor needed |
 
 **Sweep Conclusion:** `domain/calculations/` subdomain is structurally sound. No high-priority duplication, orphaning, or naming collisions detected. Cross-reference all findings against domain/calculations registry-authority scope to ensure no inter-module collision slipped detection.
-
 
 ## CLI Entrypoints Sweep Pass 2
 
@@ -1689,7 +1680,6 @@ No references to legacy `Filing*` or `Declaration*` class names found. Generator
 
 **Estimated Remediation Effort**: 12–20 engineering hours (generate() consolidation, class namespace alignment, utilities import refactoring, Phase 2 execution).
 
-
 ## Domain Submission Sweep
 
 ### Summary
@@ -1804,7 +1794,6 @@ Three symbols cannot be renamed without coordinating cross-domain refactors:
 | Orphaned exceptions | 0 | NONE | All exceptions actively used |
 
 **Sweep Conclusion:** `domain.submission` is well-isolated and internally coherent. Rename coordination must sequence with application-tier consolidation (FilingDraft, FilingDraftStatus) and filing-domain re-exports (FilingFindingSeverity). `SubmittedFiling` → `SubmittedModelo` is independently actionable.
-
 
 ---
 
@@ -1953,7 +1942,6 @@ Validation enforced via:
 
 **Sweep Conclusion:** `core/` infrastructure is well-designed with no critical duplication or naming issues. Error registry boilerplate is a design constraint. Repository façades are minimalist and consistent. Configuration and constants are validated and drift-proof.
 
-
 ---
 
 ## Orchestration Layer Sweep
@@ -2079,7 +2067,6 @@ Validation enforced via:
 **Total Unique Findings**: 2 (both LOW risk)
 
 **Estimated Remediation Effort**: 4–6 engineering hours (enum naming alignment, optional parameterization; Phase 2 nice-to-have).
-
 
 ---
 
@@ -2275,7 +2262,6 @@ No boilerplate duplication between files. Exception hierarchy is intentional and
 
 **Sweep Conclusion:** `domain.justificante` is a focused, well-isolated domain package with clear single responsibility: receipt metadata parsing, validation, and persistence. Spanish-stem authority is respected throughout. Justificante/invoice boundary is clean. No renaming, duplication, or structural issues detected. Package is production-ready.
 
-
 ## Domain Transactions Sweep
 
 ### 1. Class Inventory and Model Structure
@@ -2366,7 +2352,6 @@ Bucket-scoping is clean and layered. No significant boilerplate duplication betw
 
 **Sweep Conclusion:** domain/transactions/ is well-structured. Multiple Direction enums are domain-specific and intentional. Exception hierarchy is layer-appropriate. Bucket-scoping is clean with no significant boilerplate duplication.
 
-
 ---
 
 ## Application Transactions + Ledger Sweep
@@ -2416,7 +2401,6 @@ Result: ✓ No drift detected. English correctly used for operational/procedural
 **Total Findings**: Severity enum consolidation (3 duplicates) + no CRUD naming drift + no class collisions + clean Censo rename + no ENG/ESP drift.
 
 **Estimated Remediation Effort**: 1–2 engineering hours.
-
 
 ## Application Profile Layer Sweep
 
@@ -2470,7 +2454,7 @@ Result: ✓ No drift detected. English correctly used for operational/procedural
 | `test_roundtrip_anti_tautology.py` | domain/filing/ | Single-field mutation (drops required field) | 180 |
 | `test_secure_bound_repository_contract.py` | adapters/persistence/storage/envelope/ | Generalized contract (3 required fields, pluggable mutation_field) | ~100 |
 
-**Assessment**: 
+**Assessment**:
 - User-profile anti-tautology test is NOT tautological (correct).
 - Shared contract test exists and is properly structured (parametric mutation_field, checks both ValidationError and inequality outcomes).
 - Two hand-written anti-tautology tests (user_profile, domain/filing) follow nearly identical structure (populate → save → mutate JSON → reload → assert error OR inequality).
@@ -2516,7 +2500,6 @@ Result: ✓ No drift detected. English correctly used for operational/procedural
 **Overall Risk**: LOW. Application profile layer is well-structured with clean separation of concerns. No blocking duplication patterns.
 
 **Estimated Effort**: 0–2 hours if consolidation opportunities are pursued; recommended as refactoring, not blocking.
-
 
 ## Domain Invoices Sweep
 
@@ -2647,7 +2630,6 @@ Status: NO DUPLICATION DETECTED
 
 Sweep Conclusion: domain.invoices post-IVA consolidation is structurally sound. VAT references have been completely migrated to IVA. InvoiceKind consolidation successful; InvoiceDirection fully removed. Invoice/Justificante commercial/receipt boundary is clean. Package serves as focused foundation for invoice ingest, linking, and reconciliation workflows. No renaming, duplication, or structural issues detected.
 
-
 ## Domain Profile + Assets + Inventory Sweep
 
 ### 1. Censo Rename Completion
@@ -2730,7 +2712,6 @@ No ENG/ESP drift detected. English used consistently for generic infrastructure;
 | ENG/ESP terminology | Consistent; English for infrastructure, Spanish for regulatory | GOOD | No action |
 
 **Sweep Conclusion:** `domain/profile/` is clean. Censo rename is complete. VAT decomposition duplication is intentional isolation per ADR; refactoring not recommended unless mandated. RentaDeclaracionType rename is complete. CCAA enum is correctly NOT renamed. No ENG/ESP drift detected.
-
 
 ---
 
@@ -2843,7 +2824,6 @@ No ENG/ESP drift detected. English used consistently for generic infrastructure;
 
 **Risk Category**: structural integrity / clean — IVA consolidation complete, observability unified
 
-
 ---
 
 ## Application Aggregation Sweep
@@ -2893,7 +2873,6 @@ Result: ✓ NO DRIFT. English correctly scoped to operational/procedural context
 2. Parallel issue-reason enums (~5 shared values across IVA + Renta ledgers)
 
 **Estimated Total Remediation**: 3–5 engineering hours.
-
 
 ## Census Alias Residue Investigation
 
@@ -2965,7 +2944,6 @@ To fully retire these aliases per the mandate:
 **Total scope**: ~18 affected lines across 3 files.
 
 **Estimated effort**: 30 minutes (straightforward rename + import route).
-
 
 ---
 
@@ -3043,7 +3021,6 @@ To fully retire these aliases per the mandate:
 **Blocked Findings**: `FilingRecordNotFoundError` rename is part of W04.P09 FilingRecord cluster completion (task #5).
 
 **Estimated Remediation Effort**: 5 min (rename 1 exception name).
-
 
 ## Domain Renta + Period Sweep
 
@@ -3123,7 +3100,6 @@ Status: SPANISH-STEM COMPLIANT
 | Internal duplication | 0 | NONE |
 
 Sweep Conclusion: `domain/renta/` substrate is well-isolated, Spanish-stem compliant, and cleanly separated from `domain/rental`. `domain/period.py` is canonical and correctly frames filing periods around Spanish `ejercicio` (tax year) terminology. No renaming regressions, duplication, or boundary drift detected.
-
 
 ---
 
@@ -3258,11 +3234,10 @@ Sweep Conclusion: `domain/renta/` substrate is well-isolated, Spanish-stem compl
 
 **Risk Category**: structural integrity / clean — W05.P15 rename has minimal cross-package impact
 
-
 ## Adapters Outbound AEAT Sede + Export Sweep
 
-**Date**: 2026-05-19  
-**Scope**: `src/aeat/adapters/outbound/aeat/sede/` and `src/aeat/adapters/outbound/aeat/export/`  
+**Date**: 2026-05-19
+**Scope**: `src/aeat/adapters/outbound/aeat/sede/` and `src/aeat/adapters/outbound/aeat/export/`
 **Inventory Method**: Filesystem scan + rg symbol search + docstring audit
 
 ### Sede Module — Declaracion and Censo Rename Completion Status
@@ -3357,7 +3332,6 @@ No other format handlers detected. Export pipeline is single-format (Fichero-BOE
 
 **Conclusion**: Both sede and export modules exhibit clean class boundaries, Spanish-stem naming compliance, and zero cross-module duplication. Export module is correctly abstracted via protocols; FilingDraft remains a domain type not exposed at the outbound boundary. Serialisation / deserialisation is registry-driven with no parallel implementations.
 
-
 ---
 
 ## Campaign Progress Summary: W04.P06 Declaracion Cluster & Code-Duplication Sweep
@@ -3386,11 +3360,10 @@ Discovered during sweep: (1) three severity enums with identical value sets (INF
 4. Complete SecureBoundRepository migration for remaining 20 repositories (4–6 hrs, bulk refactor)
 5. Verify `Rental*Row` status (in-flight or blocked) — deferred until current batch completes
 
-
 ## Application Tail Final Sweep
 
-**Date**: 2026-05-19  
-**Scope**: Residual `src/aeat/application/` subpackages not covered in prior slices  
+**Date**: 2026-05-19
+**Scope**: Residual `src/aeat/application/` subpackages not covered in prior slices
 **Inventory Method**: Filesystem scan + rg class definition search + selective module inspection
 
 ### Coverage Summary
@@ -3455,7 +3428,6 @@ Swept 11 application/ subpackages and top-level modules:
 - **Payload shape duplications**: 0
 
 **Conclusion**: Application/ tail packages are well-isolated, follow consistent naming, error, and payload patterns. No refactoring candidates identified. Architectural separation is sound.
-
 
 ## Domain Calculations Registry Deep Dive
 
@@ -3576,7 +3548,6 @@ Default-None optional fields in definition models (year_from, year_to, valid_to,
 
 **Overall Risk**: LOW. Registry models well-structured with strict boundaries and correct provenance. Known in-flight W04.P10 renames.
 
-
 ---
 
 ## SQL ORM Deep Dive
@@ -3639,7 +3610,7 @@ Systematic audit of `.../adapters/persistence/storage/sql/_orm.py` identified **
 
 **Roundtrip test files identified**: `test_records.py`, `test_repository.py`, `test_secure_objects.py`, `test_constraints.py`.
 
-**Anti-tautology mandate compliance** per aeat-roundtrip-discipline: 
+**Anti-tautology mandate compliance** per aeat-roundtrip-discipline:
 
 - **RentalFinca / RentalFincaRow**: ✅ `test_repository.py` contains roundtrip tests; status confirmed by grep of rental test files.
 - **RentalContract / RentalContractRow**: ✅ Covered.
@@ -3666,7 +3637,6 @@ Systematic audit of `.../adapters/persistence/storage/sql/_orm.py` identified **
 - **Schema migration files**: 0 (ad-hoc via Alembic autogenerate, not explicit versioned migrations)
 - **Roundtrip test pairs per Row**: 1+ per Row class (all covered)
 - **Anti-tautology probe tests**: Present for constraints; minimal for per-row field mutations
-
 
 ## W04.P11 Pre-Analysis Impact Map
 
@@ -3749,11 +3719,10 @@ Systematic audit of `.../adapters/persistence/storage/sql/_orm.py` identified **
 
 **Total touch-points**: ~40 (definitions + importers + tests + internal refs)
 
-
 ## Auth + Access Gate Sweep
 
-**Date**: 2026-05-19  
-**Scope**: `src/aeat/domain/auth/`, `src/aeat/core/access_gate/`, and `src/aeat/application/auth/` (summary re-reference)  
+**Date**: 2026-05-19
+**Scope**: `src/aeat/domain/auth/`, `src/aeat/core/access_gate/`, and `src/aeat/application/auth/` (summary re-reference)
 **Inventory Method**: Filesystem scan + rg class definition search + semantic inspection of live-write guards
 
 ### Domain Auth Module — Apoderamientos Catalogue
@@ -3835,7 +3804,6 @@ Systematic audit of `.../adapters/persistence/storage/sql/_orm.py` identified **
 - **Live-write mandate violations**: 0
 
 **Conclusion**: Auth and access-gate boundaries are cleanly separated by tier. Spanish-stem compliance is excellent in domain layer. Live-write safety gates are properly positioned in core/ and never substitutable. No refactoring or remediation candidates.
-
 
 ## Registry Data TOML Deep Dive
 
@@ -3954,7 +3922,6 @@ src/aeat/_data/registry/aeat/modelos/200/
 | Corpus file integrity | ✓ Clean | No broken references in sample check |
 
 **Overall Risk**: LOW. Data layout is clean and consistent with expected structure. One expected residue (vat/ from task #29) and one pending optimization (Modelo 200 split) do not block operations.
-
 
 ---
 
@@ -4130,9 +4097,9 @@ Spanish stems are correct (plazo=deadline, presentación=filing, vencido=expired
 
 ## W05.P15 Pre-Analysis Impact Map
 
-**Date**: 2026-05-19  
-**Scope**: Fincas cluster (13 class renames + package move + SQL schema impact)  
-**Analysis Type**: Pre-execution risk assessment for schema-impacting rename cluster  
+**Date**: 2026-05-19
+**Scope**: Fincas cluster (13 class renames + package move + SQL schema impact)
+**Analysis Type**: Pre-execution risk assessment for schema-impacting rename cluster
 **Target Execution**: W05.P15 (S134-S146)
 
 ### Domain Classes (src/aeat/domain/rental/_models.py)
@@ -4233,7 +4200,6 @@ Import sites to update:
 - **Schema version bumps needed**: 0
 
 **Conclusion**: W05.P15 is a pure-code cluster with ZERO schema migration risk. Table names remain stable. Rename surface is clean and bounded. Ready for execution once current waves settle.
-
 
 ## Cross-Cutting Drift Snapshot (Reader-5 W05 Completeness Audit)
 
@@ -4405,7 +4371,6 @@ Cross-cutting drift audit complete. Ready for next phase: task #26 (delete Censu
 
 **~75% of ADR ledger landed** (was ~67% pre-cycle-16). **Filing* cluster down 73%** (877→238 refs, 36→36 files remain = W04.P08/P11/P13 queue). **Task #12 (IvaResidency) COMPLETE**; task #13 (AUTOREPERCUTIDO) IN-FLIGHT (34 refs pending). **Rental* stem FULLY ELIMINATED**. **573 canonical refs live** (IvaTerritorialScope, Modelo*, Iva*, BaseSeverity). **Zero structural breakage**; all deletions verified; no legacy paths. **Remaining**: W04.P08 (pre-staged), W04.P11 (in-flight), W04.P13 (pre-staged), task #13 cleanup (AUTOREPERCUTIDO), task #10 follow-up (IvaClassificationResult audit), locale sweep (#23), full alias scan (#24).
 
-
 ---
 
 ## Task #23 Pre-Analysis Impact Map: Locale tr() Key Sweep
@@ -4468,7 +4433,7 @@ python -m aeat.locales audit      # validate YAML structure, detect orphans
 - **Keys to KEEP**: 5 (filing.validation.*)
   - No changes needed; these represent generic domain validation (not modelo-specific)
   - Already integrated per Locale Consistency Audit ✅
-  
+
 - **Keys to RENAME**: 3 (review.filing.* → review.modelo.*)
   - 3 Python callsites in `application/review/_adapters.py`
   - 4 locale files (en, es, ca, hu) × 3 keys = 12 locale entries to update
@@ -4495,11 +4460,10 @@ python -m aeat.locales audit      # validate YAML structure, detect orphans
 
 **Next phase**: Coder claims task #23, runs scaffold + updates Python + audit, commits.
 
-
 ## Task #10 Investigation — IvaInvoiceClassification vs IvaClassificationResult
 
-**Date**: 2026-05-19  
-**Task**: Feasibility of merging IvaClassificationResult into IvaInvoiceClassification  
+**Date**: 2026-05-19
+**Task**: Feasibility of merging IvaClassificationResult into IvaInvoiceClassification
 **Background**: W03.P04 IVA reversal renamed VATClassification to IvaClassificationResult (rather than merging) due to field set differences. 11 IvaClassificationResult hits remain unmerged.
 
 ### Class Definitions
@@ -4560,7 +4524,6 @@ Other fields are role-specific:
 Current design is correct and intentional. The 11 IvaClassificationResult hits represent 1 export + 10 internal uses, reflecting a properly scoped output record that serves a specific resolver contract.
 
 Action: Close Task #10 as "DESIGN INTENT — keep separate".
-
 
 ---
 
@@ -4633,7 +4596,6 @@ Locale file scan across `src/aeat/locales/` (en.yml, es.yml, ca.yml, hu.yml):
 3. **Locale Keys**: ✅ **Zero `filing.*` keys**; 24 `modelo.*` keys live. **Task #23 is effectively complete** — no tr() key migration work remains.
 
 **Next Steps**: Dispatch W04.P08 (coder-beta in-flight) to eliminate remaining ~40 active Filing* code refs. Maintain task #23 as complete. Monitor W04.P11/W04.P13 pre-staged queues for dispatch readiness. Full alias sweep (#24) remains pending.
-
 
 ## SecureRepositoryContract Consumer Migration Pre-Analysis (Reader-5)
 
@@ -4712,13 +4674,12 @@ Create two follow-up coder tasks:
 
 Section "## SecureRepositoryContract Consumer Migration Pre-Analysis" landed in `.vault/research/2026-05-19-code-duplication-sweep-research.md`.
 
-
 ---
 
 ## CAMPAIGN FINAL METRICS (Cycle 20 Post-Harvest)
 
-**Date**: 2026-05-19  
-**Scope**: Code-duplication-sweep campaign (W03 acronym standardization through W05 Fincas consolidation)  
+**Date**: 2026-05-19
+**Scope**: Code-duplication-sweep campaign (W03 acronym standardization through W05 Fincas consolidation)
 **Final State**: EPIC HARVEST complete — all primary ADR ledger items landed; zero legacy, zero aliases, zero shims
 
 ### 1. Stem Residue — Final Cleandown
@@ -4823,13 +4784,12 @@ Section "## SecureRepositoryContract Consumer Migration Pre-Analysis" landed in 
 
 **THE CODE-DUPLICATION-SWEEP CAMPAIGN HAS ACHIEVED ITS PRIMARY MANDATE**.
 
-✅ **95% ADR ledger landed** (38 core tasks complete; 2 deferral items flagged as future work)  
-✅ **Zero legacy, zero aliases, zero shims** (factory-direct, no deprecation paths)  
-✅ **Codebase is clean and forward-looking** (755+ canonical refs live; 1395 dead lines eliminated)  
-✅ **Structural integrity 100%** (full validation gate pass; zero breakage)  
+✅ **95% ADR ledger landed** (38 core tasks complete; 2 deferral items flagged as future work)
+✅ **Zero legacy, zero aliases, zero shims** (factory-direct, no deprecation paths)
+✅ **Codebase is clean and forward-looking** (755+ canonical refs live; 1395 dead lines eliminated)
+✅ **Structural integrity 100%** (full validation gate pass; zero breakage)
 ✅ **All major renames consolidated** (W03/W04/W05 complete; IVA, Modelo, Fincas, Snapshot unified)
 
 **Quality State**: PRODUCTION-READY. The codebase is ready for live deployment with zero technical debt from consolidation work, zero lingering shims, and full forward-path clarity.
 
 **Closed Epoch**: The era of legacy identifiers (Declaration*, Census*, Rental*, VAT* domain packages) is permanently sealed. The epoch of clean, tax-domain-grounded, Spanish-stemmed, consolidated code begins.
-

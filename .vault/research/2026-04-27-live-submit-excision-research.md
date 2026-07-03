@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#live-submit-excision'
 date: '2026-04-27'
-modified: '2026-04-27'
+modified: '2026-06-30'
 related:
   - "[[2026-04-16-live-write-test-audit-research]]"
   - "[[2026-04-16-live-write-static-audit]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-18-live-submit-cli-excision-adr]]"
 ---
-
-
 
 # `live-submit-excision` research: live-write reachability gaps identified ahead of cli excision
 

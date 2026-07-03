@@ -1,0 +1,10 @@
+[[revisions."2019-y-siguientes".workbook_parity_refs]]
+id = "modelo-117-record-design"
+workbook_source = "boe-modelo-117-form-layout"
+fixture_id = "modelo-117-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S14'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
-
-
-
 
 # Add an equality/consistency operator to the verification predicate DSL registry KNOWN_VERIFICATION_PREDICATE_OPERATORS, separately grounded, so a box-equals-source consistency predicate can be authored
 

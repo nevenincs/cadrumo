@@ -9,11 +9,11 @@ fleet-level structural gate over it.
 
 The gate has two jobs:
 
-- **Report coverage honestly.** On every run it prints ``authorized N/30`` plus
-  the explicit UNAUTHORIZED id list and any engine-build-blocked modelos. There
+- **Report coverage honestly.** On every run it prints ``authorized N/<fleet size>``
+  plus the explicit UNAUTHORIZED id list and any engine-build-blocked modelos. There
   is no stored baseline and no recorded number to silently regress against;
   coverage can only ratchet upward as enrolling tests land. The denominator is
-  the curated :data:`CANONICAL_MODELO_FLEET` (30), pinned against the live
+  the curated :data:`CANONICAL_MODELO_FLEET`, pinned against the live
   registry so a registry change that adds or drops a modelo surfaces loudly.
 
 - **Enforce enrollment validity.** For every manifest entry it asserts the
@@ -26,9 +26,9 @@ The gate has two jobs:
   a stub or single-year test cannot claim authorization.
 
 CRITICAL DESIGN: the gate is GREEN at partial rollout. An empty manifest yields
-``authorized 0/30`` and passes, because there are zero *invalid* entries — the
-campaign ratchets coverage rather than the gate being permanently red until
-30/30 (a permanent-red gate would violate ``aeat-quality-gates``). A fake,
+``authorized 0/<fleet size>`` and passes, because there are zero *invalid* entries —
+the campaign ratchets coverage rather than the gate being permanently red until full
+coverage (a permanent-red gate would violate ``aeat-quality-gates``). A fake,
 single-year, missing-test, or contract-less entry turns the gate RED.
 """
 
@@ -98,11 +98,29 @@ def _authority():
     return resources().modelos.authority
 
 
-def test_canonical_fleet_is_thirty_distinct_modelos() -> None:
-    """The canonical fleet — the gate's denominator — is exactly 30 distinct ids."""
+def test_canonical_fleet_is_forty_six_distinct_modelos() -> None:
+    """The canonical fleet — the gate's denominator — is exactly 46 distinct ids.
+
+    46 is the count of registry-loadable modelo directories under
+    ``src/aeat/_data/registry/aeat/modelos/`` today (verified against the live
+    registry by :func:`test_canonical_fleet_covers_every_loadable_modelo` below,
+    which asserts zero drift in either direction). A prior worktree-consolidation
+    commit (``c955c0496d``) accidentally dropped the registry TOML for six
+    modelos (136, 189, 280, 289, 345, 379) that a parallel registry-grounding
+    campaign had freshly authored and committed one commit earlier
+    (``fee68502dd``, ``96265d0169``, ``1600c030b0``, ``536a82183f``,
+    ``47e63c7797``, ``395ea08329``), while leaving this assertion bumped to a
+    ``66`` that was never actually achieved. The registry TOML for those six
+    modelos has been restored (byte-identical to the pre-consolidation commit)
+    and they were removed from :data:`aeat.core.UNMODELED_OBLIGATIONS`
+    accordingly. 45 was the honest, registry-verified count once the accidental
+    data loss was corrected; it became 46 when Modelo 182 (donativos, donaciones
+    y aportaciones recibidas, Orden EHA/3021/2007) was promoted from
+    :data:`aeat.core.UNMODELED_OBLIGATIONS` to a real registry definition.
+    """
     assert len(CANONICAL_MODELO_FLEET) == FLEET_SIZE
     assert len(set(CANONICAL_MODELO_FLEET)) == FLEET_SIZE
-    assert FLEET_SIZE == 30
+    assert FLEET_SIZE == 46
 
 
 def test_canonical_fleet_covers_every_loadable_modelo() -> None:
@@ -122,7 +140,7 @@ def test_canonical_fleet_covers_every_loadable_modelo() -> None:
 
 
 def test_authorization_coverage_report_and_validity(capsys: pytest.CaptureFixture[str]) -> None:
-    """Report ``authorized N/30`` and enforce per-entry enrollment validity.
+    """Report ``authorized N/<fleet size>`` and enforce per-entry enrollment validity.
 
     GREEN at partial rollout: the assertions below check only that each
     *present* manifest entry is a valid, un-fakeable enrollment. Zero entries

@@ -11,6 +11,8 @@ by the corporate-entity calculation contract:
 
 Both facts are optional: an undeclared value yields the engine's
 existing INCOMPLETE-style fallback, never a guessed modality or rate.
+The same boundary now carries the Ley 49/2002 Title II option and
+renunciation facts sourced from Modelo 036.
 The persistence-boundary contract is the same as for every other
 taxpayer-axis fact — survive a real save/load cycle through the
 encrypted store with strict pydantic equality.
@@ -33,7 +35,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -71,6 +73,10 @@ _PROFILE_UUID = "8a4e0c5b-1d2f-4e3a-9b7c-6f5e4d3c2b1a"
 #    None and from the negatively-declared False).
 _INCN_VALUE = Decimal("7500000.00")
 _NEW_ENTITY_VALUE = True
+_LEY49_OPTION_DECLARED = True
+_LEY49_OPTION_DATE = date(2024, 2, 3)
+_LEY49_RENUNCIATION_DECLARED = False
+_LEY49_RENUNCIATION_DATE = date(2026, 5, 11)
 
 
 def _populated_record() -> UserProfileRecord:
@@ -115,6 +121,26 @@ def _populated_record() -> UserProfileRecord:
             UserProfileFact(
                 path="taxpayer_type.new_entity_first_two_profit_periods",
                 value=_NEW_ENTITY_VALUE,
+                source="manual_cli",
+            ),
+            UserProfileFact(
+                path="taxpayer_type.ley_49_2002_special_regime_option_declared",
+                value=_LEY49_OPTION_DECLARED,
+                source="manual_cli",
+            ),
+            UserProfileFact(
+                path="taxpayer_type.ley_49_2002_special_regime_option_date",
+                value=_LEY49_OPTION_DATE.isoformat(),
+                source="manual_cli",
+            ),
+            UserProfileFact(
+                path="taxpayer_type.ley_49_2002_special_regime_renunciation_declared",
+                value=_LEY49_RENUNCIATION_DECLARED,
+                source="manual_cli",
+            ),
+            UserProfileFact(
+                path="taxpayer_type.ley_49_2002_special_regime_renunciation_date",
+                value=_LEY49_RENUNCIATION_DATE.isoformat(),
                 source="manual_cli",
             ),
         ),
@@ -184,6 +210,22 @@ def test_corporate_tax_facts_survive_encrypted_sql_roundtrip(
     persisted_new_entity = _fact_value(loaded, "taxpayer_type.new_entity_first_two_profit_periods")
     assert isinstance(persisted_new_entity, bool)
     assert persisted_new_entity is _NEW_ENTITY_VALUE
+    persisted_ley49_option = _fact_value(loaded, "taxpayer_type.ley_49_2002_special_regime_option_declared")
+    assert isinstance(persisted_ley49_option, bool)
+    assert persisted_ley49_option is _LEY49_OPTION_DECLARED
+    persisted_ley49_option_date = _fact_value(loaded, "taxpayer_type.ley_49_2002_special_regime_option_date")
+    assert persisted_ley49_option_date == _LEY49_OPTION_DATE
+    persisted_ley49_renunciation = _fact_value(
+        loaded,
+        "taxpayer_type.ley_49_2002_special_regime_renunciation_declared",
+    )
+    assert isinstance(persisted_ley49_renunciation, bool)
+    assert persisted_ley49_renunciation is _LEY49_RENUNCIATION_DECLARED
+    persisted_ley49_renunciation_date = _fact_value(
+        loaded,
+        "taxpayer_type.ley_49_2002_special_regime_renunciation_date",
+    )
+    assert persisted_ley49_renunciation_date == _LEY49_RENUNCIATION_DATE
 
     # The deadline-engine projection reconstructs the typed Decimal
     # and the three-state optional bool on TaxpayerProfile, so every
@@ -192,6 +234,10 @@ def test_corporate_tax_facts_survive_encrypted_sql_roundtrip(
     profile = projection_for_taxpayer(loaded)
     assert profile.incn_prior_12_months == _INCN_VALUE
     assert profile.new_entity_first_two_profit_periods is _NEW_ENTITY_VALUE
+    assert profile.ley_49_2002_special_regime_option_declared is _LEY49_OPTION_DECLARED
+    assert profile.ley_49_2002_special_regime_option_date == _LEY49_OPTION_DATE
+    assert profile.ley_49_2002_special_regime_renunciation_declared is _LEY49_RENUNCIATION_DECLARED
+    assert profile.ley_49_2002_special_regime_renunciation_date == _LEY49_RENUNCIATION_DATE
 
 
 def test_undeclared_corporate_tax_facts_project_to_none(
@@ -215,6 +261,10 @@ def test_undeclared_corporate_tax_facts_project_to_none(
         not in {
             "taxpayer_type.incn_prior_12_months",
             "taxpayer_type.new_entity_first_two_profit_periods",
+            "taxpayer_type.ley_49_2002_special_regime_option_declared",
+            "taxpayer_type.ley_49_2002_special_regime_option_date",
+            "taxpayer_type.ley_49_2002_special_regime_renunciation_declared",
+            "taxpayer_type.ley_49_2002_special_regime_renunciation_date",
         }
     )
     record = base.model_copy(update={"facts": facts_without_corporate_tax})
@@ -224,10 +274,18 @@ def test_undeclared_corporate_tax_facts_project_to_none(
     persisted_paths = {fact.path for fact in loaded.facts}
     assert "taxpayer_type.incn_prior_12_months" not in persisted_paths
     assert "taxpayer_type.new_entity_first_two_profit_periods" not in persisted_paths
+    assert "taxpayer_type.ley_49_2002_special_regime_option_declared" not in persisted_paths
+    assert "taxpayer_type.ley_49_2002_special_regime_option_date" not in persisted_paths
+    assert "taxpayer_type.ley_49_2002_special_regime_renunciation_declared" not in persisted_paths
+    assert "taxpayer_type.ley_49_2002_special_regime_renunciation_date" not in persisted_paths
 
     profile = projection_for_taxpayer(loaded)
     assert profile.incn_prior_12_months is None
     assert profile.new_entity_first_two_profit_periods is None
+    assert profile.ley_49_2002_special_regime_option_declared is None
+    assert profile.ley_49_2002_special_regime_option_date is None
+    assert profile.ley_49_2002_special_regime_renunciation_declared is None
+    assert profile.ley_49_2002_special_regime_renunciation_date is None
 
 
 def test_dropping_a_persisted_corporate_tax_fact_surfaces_on_reload(

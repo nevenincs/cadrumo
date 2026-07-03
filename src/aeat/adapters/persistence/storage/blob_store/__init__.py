@@ -1,12 +1,18 @@
-"""Blob-store substrate: classification-gated content-addressed encrypted blobs.
+"""Blob-store substrate for classification-gated encrypted blobs.
 
-Public surface for the encrypted blob substrate. Exposes the
-:class:`EncryptedBlobStore` repository, the typed :class:`BlobReference`
-and :class:`BlobManifest` records, and the secret-materialisation
-helpers (:func:`materialise_secret`, :func:`export_to_temp_path`,
-:func:`get_secret_store`, :func:`override_secret_store`) consumed by
-adapters that must hand a plaintext secret to a third-party SDK
-through the filesystem.
+Public surface for the content-addressed :class:`EncryptedBlobStore` and its
+typed :class:`BlobReference` / :class:`BlobManifest` handles. Blob layout is
+classification-driven: only ``SensitivityClass.CORPUS`` payloads are stored as
+plaintext corpus blobs; every other class is ciphertext with a per-blob wrapped
+data-encryption key.
+
+This package also exposes the path-shaped secret bridge used by SDKs that
+cannot consume in-memory bytes. :func:`materialise_secret` and
+:func:`export_to_temp_path` read encrypted records through
+:class:`adapters.persistence.storage.secret_store.SecretStore`, write a
+short-lived private tempfile, and leave cleanup ownership explicit. Domain
+repositories and calculation sources should depend on higher-level secure-object
+or repository APIs, not on blob paths directly.
 """
 
 from __future__ import annotations

@@ -13,6 +13,14 @@ Concrete models:
 * :class:`TransactionReviewItem` — pending bank transactions.
 * :class:`InvoiceReviewItem` — unmatched, disputed, or payment-pending invoices.
 * :class:`FindingReviewItem` — pending findings on filing drafts.
+
+``InvoiceReviewRecord`` and ``LedgerReviewRecord`` are re-exported here from
+:mod:`aeat.application._workflow_review_models`, which owns them jointly with
+:class:`~aeat.application.workflow.WorkflowEvent` because
+:class:`~aeat.application.workflow.WorkflowState` embeds both review records
+as field types — a genuine mutual runtime dependency between
+``application.review`` and ``application.workflow`` that the shared leaf
+module resolves.
 """
 
 from __future__ import annotations
@@ -24,13 +32,11 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import Translatable as tr
-from ...core.time._utc import validate_utc_aware
-from ...domain.contribuyente import normalise_key
+from ...core.time import validate_utc_aware
 from ...domain.invoices import Invoice
 from ...domain.transactions import Transaction
+from .._workflow_review_models import InvoiceReviewRecord, LedgerReviewRecord
 from ..filing import ModeloValidationFinding
-from ..workflow._models import WorkflowEvent
-from ..workflow._utils import utc_now
 from ._enums import ReviewItemKind, ReviewSeverity
 
 
@@ -130,34 +136,17 @@ field as the discriminator. Validate via
 ``.validate_json(...)``.
 """
 
-
-class LedgerReviewRecord(BaseModel):
-    """Workflow attention annotation for one persisted transaction.
-
-    Durable transaction facts are not stored here. Classification,
-    category, business percentage, tax fields, evidence references,
-    skip/final-disposition state, and corrections live on the
-    bucket-scoped transaction catalogue.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    transaction_id: str = Field(min_length=1)
-    history: tuple[WorkflowEvent, ...] = ()
-    updated_at: datetime = Field(default_factory=utc_now)
-
-
-class InvoiceReviewRecord(BaseModel):
-    """Workflow annotations for one persisted invoice."""
-
-    model_config = _STRICT_FROZEN
-
-    invoice_id: str = Field(min_length=1)
-    fields: dict[str, str] = Field(default_factory=dict)
-    history: tuple[WorkflowEvent, ...] = ()
-    updated_at: datetime = Field(default_factory=utc_now)
-
-    @field_validator("fields")
-    @classmethod
-    def _normalise_fields(cls, value: dict[str, str]) -> dict[str, str]:
-        return {normalise_key(str(key)): str(raw).strip() for key, raw in value.items()}
+__all__ = [
+    "FindingReviewItem",
+    "InvoiceReviewItem",
+    "InvoiceReviewRecord",
+    "LedgerReviewRecord",
+    "ReviewItem",
+    "TransactionReviewItem",
+]
+"""``InvoiceReviewRecord`` and ``LedgerReviewRecord`` are defined in and owned
+by :mod:`aeat.application._workflow_review_models` (see that module's
+docstring for the mutual-runtime-dependency rationale); this module
+re-exports them so ``application.review`` consumers keep importing them from
+here.
+"""

@@ -1,7 +1,23 @@
-"""Top-level package for ``aeat`` user-facing entrypoints.
+"""Import-light namespace for user-facing entrypoints.
 
-Hosts the sub-packages that expose the project to humans and other
-processes — currently the Typer-based CLI surface in
-:mod:`aeat.entrypoints.cli`. This module is an intentionally empty namespace
-package marker; concrete entrypoints live in the children.
+Concrete transports live in child packages, currently the Typer CLI under
+:mod:`cli`. The root exports no commands and should remain a
+marker so importing :mod:`entrypoints` does not initialise command trees,
+locale catalogues, browser integrations, or storage sessions.
+
+Entrypoints translate process-level concerns into application-facade calls. They
+own presentation, command parsing, exit-code mapping, and terminal error
+contracts; business decisions stay in :mod:`application` and
+:mod:`domain`.
+
+See Also:
+    :mod:`cli`
+        Typer transport that mounts the operator command tree.
+    :mod:`application.operator_surface`
+        Backend-owned command-surface contract consumed by entrypoint adapters.
+    :mod:`core.json_contract`
+        Shared success-envelope, schema registry, and notice-channel contract.
+    :mod:`core.errors`
+        Central error envelope and exit-code mapping used at transport
+        boundaries.
 """

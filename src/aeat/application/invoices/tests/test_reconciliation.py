@@ -8,14 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
 from ....domain.transactions import (
     RawProvenance,
@@ -23,13 +18,14 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import reconcile_invoice_catalogues, reconcile_invoice_repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_BUCKET_ID = "23232323-2323-4232-8232-232323232323"
 
 
 def test_reconcile_invoice_catalogues_without_apply_reports_suggestions_without_mutation() -> None:
@@ -79,7 +75,7 @@ def test_reconcile_invoice_catalogues_apply_roundtrips_bidirectional_links() -> 
 
 
 def test_reconcile_invoice_repositories_binds_both_catalogues_to_requested_bucket(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="invoice-reconcile-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         invoice = _invoice()
         transaction = _transaction()
         InvoiceCatalogueRepository(bucket_id=profile.bucket_id).save(InvoiceCatalogue.from_invoices([invoice]))
@@ -132,7 +128,7 @@ def _invoice() -> Invoice:
 
 def _transaction() -> Transaction:
     raw = RawTransaction(
-        transaction_id="bank-row-1",
+        provider_transaction_id="bank-row-1",
         booked_date=date(2026, 4, 2),
         value_date=date(2026, 4, 2),
         amount=Decimal("121.00"),
@@ -149,4 +145,6 @@ def _transaction() -> Transaction:
         ),
         raw_fields={"amount": "121.00"},
     )
-    return Transaction.model_validate({"raw": raw, "direction": TransactionDirection.INCOMING})
+    return Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.INCOMING, "group_label": None, "source_jurisdiction": "ES"},
+    )

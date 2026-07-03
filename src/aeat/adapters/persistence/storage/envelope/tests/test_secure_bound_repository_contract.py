@@ -25,8 +25,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ......core.config import Settings
 from ... import SensitivityClass
-from ...sql import SecureObjectRepository
-from ...sql._orm import Base
+from ...sql import Base, SecureObjectRepository
 from ...sql.engine import create_engine_from_settings
 from .._repository_test_suite import (
     EXPECTED_CHECK_COUNT,
@@ -55,7 +54,7 @@ class _ContractPayload(BaseModel):
 
 
 class _ContractRepository(SecureBoundRepository[_ContractPayload]):
-    namespace: ClassVar[str] = "aeat.test.envelope.secure_bound_contract"
+    namespace: ClassVar[str] = "aeat-test.envelope.secure_bound_contract"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
     payload_type: ClassVar[type[BaseModel]] = _ContractPayload

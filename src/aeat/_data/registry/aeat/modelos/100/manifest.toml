@@ -25,6 +25,11 @@ legal_refs = [
     "rd-439-2007:art-30",
     "ley-35-2006:art-99",
     "rd-439-2007:art-109",
+    "orden-hac-248-2021:art-3",
+    "orden-hfp-207-2022:art-3",
+    "orden-hfp-310-2023:art-3",
+    "orden-hac-265-2024:art-3",
+    "orden-hac-242-2025:art-3",
     "orden-hac-277-2026:art-3",
 ]
 source_refs = [
@@ -52,6 +57,7 @@ source_refs = [
     "aeat-dr-100-2024-input-dictionary",
     "aeat-dr-100-2024-xsd",
     "aeat-renta-2024-manual-parte1",
+    "aeat-renta-2024-manual-deducciones-autonomicas",
     "boe-modelo-100-2024-form",
     "aeat-dr-100-2025-dictionary",
     "aeat-dr-100-2025-input-dictionary",

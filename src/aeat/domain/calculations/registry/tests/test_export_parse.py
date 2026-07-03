@@ -38,32 +38,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_parse_dictionary_casilla_id_returns_digit_string_unchanged() -> None:
-    assert _parse_dictionary_casilla_id("01") == "01"
-    assert _parse_dictionary_casilla_id("1234") == "1234"
+    cases = {
+        "01": "01",
+        "1234": "1234",
+        "  01  ": "01",
+    }
+
+    for raw, expected in cases.items():
+        assert _parse_dictionary_casilla_id(raw) == expected, raw
 
 
-def test_parse_dictionary_casilla_id_strips_surrounding_whitespace() -> None:
-    assert _parse_dictionary_casilla_id("  01  ") == "01"
-
-
-def test_parse_dictionary_casilla_id_returns_none_for_empty_input() -> None:
-    assert _parse_dictionary_casilla_id("") is None
-
-
-def test_parse_dictionary_casilla_id_returns_none_for_whitespace_only() -> None:
-    assert _parse_dictionary_casilla_id("   ") is None
-
-
-def test_parse_dictionary_casilla_id_returns_none_for_asterisk_prefixed() -> None:
+def test_parse_dictionary_casilla_id_rejects_non_casilla_rows() -> None:
     """AEAT dictionaries use `*` to mark non-casilla rows (notes, separators)."""
-    assert _parse_dictionary_casilla_id("*not-a-casilla") is None
-    assert _parse_dictionary_casilla_id("*01") is None
+    cases = ("", "   ", "*not-a-casilla", "*01", "abc", "01a", "01.5")
 
-
-def test_parse_dictionary_casilla_id_returns_none_for_non_digit_text() -> None:
-    assert _parse_dictionary_casilla_id("abc") is None
-    assert _parse_dictionary_casilla_id("01a") is None
-    assert _parse_dictionary_casilla_id("01.5") is None
+    for raw in cases:
+        assert _parse_dictionary_casilla_id(raw) is None, raw
 
 
 # ---------------------------------------------------------------------------
@@ -71,16 +61,15 @@ def test_parse_dictionary_casilla_id_returns_none_for_non_digit_text() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_local_name_strips_xml_namespace_prefix() -> None:
-    assert _local_name("{http://example.com/ns}casilla") == "casilla"
+def test_local_name_returns_tag_name_without_namespace() -> None:
+    cases = {
+        "{http://example.com/ns}casilla": "casilla",
+        "casilla": "casilla",
+        "{}casilla": "casilla",
+    }
 
-
-def test_local_name_returns_bare_tag_unchanged() -> None:
-    assert _local_name("casilla") == "casilla"
-
-
-def test_local_name_handles_empty_namespace_braces() -> None:
-    assert _local_name("{}casilla") == "casilla"
+    for tag, expected in cases.items():
+        assert _local_name(tag) == expected, tag
 
 
 # ---------------------------------------------------------------------------
@@ -88,30 +77,20 @@ def test_local_name_handles_empty_namespace_braces() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_parse_xml_decimal_empty_returns_zero() -> None:
-    assert _parse_xml_decimal("") == Decimal("0")
-
-
-def test_parse_xml_decimal_whitespace_only_returns_zero() -> None:
-    assert _parse_xml_decimal("   ") == Decimal("0")
-
-
-def test_parse_xml_decimal_comma_decimal_separator_normalises_to_dot() -> None:
+def test_parse_xml_decimal_normalises_supported_numeric_forms() -> None:
     """Spanish locale uses `,` as the decimal separator; AEAT exports
     follow that convention."""
-    assert _parse_xml_decimal("123,45") == Decimal("123.45")
+    cases = {
+        "": Decimal("0"),
+        "   ": Decimal("0"),
+        "123,45": Decimal("123.45"),
+        "123.45": Decimal("123.45"),
+        "12345": Decimal("12345"),
+        "  123,45  ": Decimal("123.45"),
+    }
 
-
-def test_parse_xml_decimal_dot_decimal_separator_works_unchanged() -> None:
-    assert _parse_xml_decimal("123.45") == Decimal("123.45")
-
-
-def test_parse_xml_decimal_integer_string_works() -> None:
-    assert _parse_xml_decimal("12345") == Decimal("12345")
-
-
-def test_parse_xml_decimal_strips_surrounding_whitespace() -> None:
-    assert _parse_xml_decimal("  123,45  ") == Decimal("123.45")
+    for raw, expected in cases.items():
+        assert _parse_xml_decimal(raw) == expected, raw
 
 
 def test_parse_xml_decimal_malformed_raises_registry_validation_error() -> None:
@@ -129,15 +108,15 @@ def test_parse_boolean_returns_none_for_empty_input() -> None:
     assert _parse_boolean("   ") is None
 
 
-@pytest.mark.parametrize("truthy", ["X", "1", "S", "SI", "TRUE", "x", "true", "  X  "])
-def test_parse_boolean_accepts_canonical_truthy_tokens(truthy: str) -> None:
+def test_parse_boolean_accepts_canonical_truthy_tokens() -> None:
     """AEAT dictionaries use 'X' or 'S/SI' to mark a checked flag."""
-    assert _parse_boolean(truthy) is True
+    for raw in ("X", "1", "S", "SI", "TRUE", "x", "true", "  X  "):
+        assert _parse_boolean(raw) is True, raw
 
 
-@pytest.mark.parametrize("falsy", ["0", "N", "NO", "FALSE", "no", "false"])
-def test_parse_boolean_accepts_canonical_falsy_tokens(falsy: str) -> None:
-    assert _parse_boolean(falsy) is False
+def test_parse_boolean_accepts_canonical_falsy_tokens() -> None:
+    for raw in ("0", "N", "NO", "FALSE", "no", "false"):
+        assert _parse_boolean(raw) is False, raw
 
 
 def test_parse_boolean_raises_on_unrecognised_token() -> None:
@@ -159,33 +138,22 @@ def test_parse_boolean_delegates_to_core_parse_bool() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_parse_xml_dictionary_value_dispatches_n_codes_to_decimal() -> None:
+def test_parse_xml_dictionary_value_dispatches_by_data_type_prefix() -> None:
     """AEAT XML dictionaries encode numeric fields with data_type starting
     with 'N' (e.g. 'N15.2') or 'P' (percentage)."""
-    assert _parse_xml_dictionary_value("N15.2", "123,45") == Decimal("123.45")
+    cases: tuple[tuple[str, str, Decimal | str | bool], ...] = (
+        ("N15.2", "123,45", Decimal("123.45")),
+        ("P5.2", "0,21", Decimal("0.21")),
+        ("L1", "X", True),
+        ("L1", "0", False),
+        ("A60", "ESPAÑA", "ESPAÑA"),
+        ("D8", "20250101", "20250101"),
+        ("n15.2", "100", Decimal("100")),
+        ("l1", "X", True),
+    )
 
-
-def test_parse_xml_dictionary_value_dispatches_p_codes_to_decimal() -> None:
-    assert _parse_xml_dictionary_value("P5.2", "0,21") == Decimal("0.21")
-
-
-def test_parse_xml_dictionary_value_dispatches_l_codes_to_boolean() -> None:
-    assert _parse_xml_dictionary_value("L1", "X") is True
-    assert _parse_xml_dictionary_value("L1", "0") is False
-
-
-def test_parse_xml_dictionary_value_passes_unknown_codes_through_as_raw_string() -> None:
-    """Anything that does not start with N/P/L is treated as alphanumeric
-    and returned as-is so the caller can apply its own normalisation."""
-    assert _parse_xml_dictionary_value("A60", "ESPAÑA") == "ESPAÑA"
-    assert _parse_xml_dictionary_value("D8", "20250101") == "20250101"
-
-
-def test_parse_xml_dictionary_value_data_type_dispatch_is_case_insensitive() -> None:
-    """The dispatcher uppercases the data_type before prefix matching,
-    so lowercase codes still route to the right branch."""
-    assert _parse_xml_dictionary_value("n15.2", "100") == Decimal("100")
-    assert _parse_xml_dictionary_value("l1", "X") is True
+    for data_type, raw, expected in cases:
+        assert _parse_xml_dictionary_value(data_type, raw) == expected, (data_type, raw)
 
 
 # ---------------------------------------------------------------------------

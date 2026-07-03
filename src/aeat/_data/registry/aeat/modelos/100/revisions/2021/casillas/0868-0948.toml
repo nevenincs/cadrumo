@@ -3,6 +3,6 @@ id = "0948"
 number = "0948"
 label = "Por obras de mejora en viviendas: importes generados en 2019 y/o 2020 pendientes de aplicación"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
-semantic_role = "irpf_deduccion_cantabria_obras_mejora"
+semantic_role = "irpf_deduccion_cantabria_obras_mejora_pendiente_ejercicios_anteriores"
 legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

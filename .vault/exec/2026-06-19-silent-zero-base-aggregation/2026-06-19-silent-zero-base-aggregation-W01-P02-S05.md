@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#silent-zero-base-aggregation'
 date: '2026-06-20'
-modified: '2026-06-20'
+modified: '2026-06-30'
 step_id: 'S05'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-plan]]"
 ---
-
-
-
 
 # fix the prorrata-porcentaje no-volume-data default from 0 to 100 (full right to deduct, LIVA art-94) so a fully-taxable trader's export unblocks, with a regression test - the correct peer-clean fix for defect C2
 

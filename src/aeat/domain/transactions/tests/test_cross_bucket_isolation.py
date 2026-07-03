@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
@@ -23,7 +24,6 @@ from .. import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
 )
@@ -46,7 +46,7 @@ def _tx(
     direction: TransactionDirection = TransactionDirection.OUTGOING,
 ) -> Transaction:
     raw = RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 4, 5),
         value_date=date(2026, 4, 5),
         amount=amount,
@@ -67,6 +67,8 @@ def _tx(
         {
             "raw": raw,
             "direction": direction,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
         },
     )

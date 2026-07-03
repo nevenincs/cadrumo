@@ -1,24 +1,29 @@
-"""Canonical typed-answer model and projection registry for the setup flow.
+"""Canonical typed-answer model and projection slot for the setup flow.
 
 :class:`SetupAnswers` is the authoritative typed-answers model for the wizard
-``setup`` flow.  Domain modules import it from here — never from the application
-wizard layer — so the hexagonal boundary (domain → core is allowed; domain →
-application is forbidden) is respected.
+``setup`` flow. Domain modules import it from here, not from the application
+wizard layer, so the permitted dependency direction remains domain-to-core
+rather than domain-to-application.
 
-The :func:`project_answers` callable is initially unregistered and is populated
-at application startup by the wizard layer via :func:`register_project_answers`.
-Domain consumers call :func:`project_answers` directly; it raises
-:class:`ProjectAnswersNotRegisteredError` when the application layer has not
-yet run.
+This module owns typed answer validation and the core registration slot for the
+reverse projection from persisted canonical-token strings. It does not own
+prompt rendering, profile persistence, secure storage, deadline scheduling, or
+registry semantics. The application wizard registers its concrete projector at
+startup with :func:`register_project_answers`; domain consumers call
+:func:`project_answers` through this core slot and receive
+:class:`ProjectAnswersNotRegisteredError` if startup has not installed it.
 
-This pattern mirrors the one established in :mod:`aeat.core.wizard_catalogue`
-for ``SETUP_FLOW`` / ``WIZARD_FLOWS``.
+The contract mirrors :mod:`aeat.core.wizard_catalogue`: the application layer
+declares the ``SETUP_FLOW`` descriptor, while core exposes the stable answer
+model and the projection hook. Downstream profile construction, including
+``taxpayer_profile_from_mapping``, therefore stays aligned with wizard
+canonical-token parsing without importing application modules directly.
 
 Domain taxonomy types (``EntityType``, ``IVARegime``, etc.) are imported lazily
 inside validators rather than at module level to break the circular import
-path: ``aeat.core.setup_answers`` → ``aeat.domain.deadlines._models`` →
-``aeat.domain.deadlines.__init__`` → ``aeat.domain.deadlines._profiles`` →
-``aeat.core.setup_answers``.  This mirrors the deferral strategy used in
+path: ``aeat.core.setup_answers`` -> ``aeat.domain.deadlines._models`` ->
+``aeat.domain.deadlines.__init__`` -> ``aeat.domain.deadlines._profiles`` ->
+``aeat.core.setup_answers``. This mirrors the deferral strategy used in
 ``aeat.core.resources._repos.*`` and is the established project pattern.
 """
 
@@ -37,6 +42,30 @@ from .logging import get_logger
 _log = get_logger(__name__)
 
 
+def _parse_optional_bool_token(value: object, *, field_name: str) -> object:
+    """Parse a three-state optional wizard boolean token.
+
+    Accepted affirmative tokens become ``True``; accepted negative tokens become
+    ``False``. Blank input and ``None`` remain the empty-string sentinel so
+    profile persistence drops the fact instead of writing a declared false
+    value. This helper does not parse prompt labels or locale text; it accepts
+    only canonical yes/no tokens.
+    """
+    if value == "" or value is None:
+        return ""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        token = value.strip().lower()
+        if token == "":
+            return ""
+        if token in {"true", "1", "yes", "y", "si", "sí"}:
+            return True
+        if token in {"false", "0", "no", "n"}:
+            return False
+    raise ValueError(f"{field_name} must be a boolean, blank, or a recognised canonical token")
+
+
 # ---------------------------------------------------------------------------
 # project_answers registration slot
 # ---------------------------------------------------------------------------
@@ -53,7 +82,7 @@ class ProfileRegistrationError(CoreError):
 
 
 class ProjectAnswersNotRegisteredError(CoreError):
-    """Raised when domain code calls project_answers before registration."""
+    """Raised when domain code calls :func:`project_answers` before registration."""
 
     def __init__(self) -> None:
         """Initialise with a fixed message directing the caller to register the projection."""
@@ -89,7 +118,9 @@ def register_project_answers(fn: ProjectAnswersFn) -> None:
     Call exactly once at application startup (e.g. in
     ``aeat.application.wizard._persistence`` module body after the function is
     defined). A second call with an identical callable is a no-op; a second
-    call with a different callable raises :class:`RuntimeError`.
+    call with a different callable raises :class:`ProfileRegistrationError`.
+    Domain code should depend on :func:`project_answers`, not on the
+    application-layer implementation object registered here.
     """
     if _PROJECT_ANSWERS_SLOT:
         if _PROJECT_ANSWERS_SLOT[0] is fn:
@@ -132,7 +163,9 @@ def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
         flow: The wizard flow descriptor identifying which flow to
             project answers for.
         values: Mapping of canonical token keys to raw string values
-            collected from the wizard.
+            collected from the wizard or read from profile storage. Blank
+            strings preserve undeclared optional facts for the registered
+            projector to interpret.
 
     Returns:
         A typed answers model instance produced by the registered
@@ -153,14 +186,14 @@ def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the
-# aeat.domain.deadlines._models module object; a typed return would require
-# importing the module at definition time, re-introducing the circular import
-# described in the block comment above.
+# aeat.domain.deadlines.taxpayer_model module object; a typed return would
+# require importing the module at definition time, re-introducing the
+# circular import described in the block comment above.
 def _m() -> Any:
-    """Return the aeat.domain.deadlines._models module (lazy)."""
+    """Return the aeat.domain.deadlines.taxpayer_model module (lazy)."""
     import importlib
 
-    return importlib.import_module("aeat.domain.deadlines._models")
+    return importlib.import_module("aeat.domain.deadlines.taxpayer_model")
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the
@@ -180,7 +213,7 @@ def _ccaa() -> Any:
     """Return the CCAA enum class (lazy)."""
     import importlib
 
-    return importlib.import_module("aeat.domain.contribuyente._ccaa").CCAA
+    return importlib.import_module("aeat.domain.contribuyente").CCAA
 
 
 # ---------------------------------------------------------------------------
@@ -195,11 +228,19 @@ class SetupAnswers(BaseModel):
     imports :class:`SetupAnswers` from here; the domain deadline engine likewise
     imports it from here — no layer needs to cross the hexagonal boundary.
 
+    The model stores canonical answer tokens and typed taxonomy values for the
+    setup flow. It is not the persisted profile record and it is not the
+    deadline-engine taxpayer profile; those are produced downstream by wizard
+    persistence and deadline profile projection. Where validators allow the
+    empty string, the value means undeclared/no answer rather than false, zero,
+    or a default legal fact.
+
     Field annotations use ``Any`` for domain taxonomy union types because those
     types are loaded lazily inside validators to prevent a circular import.
-    Validators enforce the same invariants the original typed annotations
-    carried: they reject values outside the declared enum / blank-string set and
-    raise :class:`~aeat.core.errors.ProfileAnswerTypeError`.
+    That ``Any`` is not a loose schema: validators enforce the same invariants
+    the original typed annotations carried, reject values outside the declared
+    enum / blank-string set, and raise
+    :class:`~aeat.core.errors.ProfileAnswerTypeError`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -236,6 +277,14 @@ class SetupAnswers(BaseModel):
     """Optional INCN as a canonical decimal string."""
     new_entity_first_two_profit_periods: Any = ""
     """Optional three-state bool for LIS Art. 29 new-entity rate."""
+    ley_49_2002_option_declared: Any = ""
+    """Optional three-state bool for the Ley 49/2002 Title II option."""
+    ley_49_2002_option_date: str = ""
+    """ISO-8601 date declared for the Ley 49/2002 Title II option."""
+    ley_49_2002_renunciation_declared: Any = ""
+    """Optional three-state bool for Ley 49/2002 Title II renunciation."""
+    ley_49_2002_renunciation_date: str = ""
+    """ISO-8601 date declared for the Ley 49/2002 Title II renunciation."""
     irpf_income_categories: str = ""
     """Comma-separated set of IrpfIncomeCategory tokens."""
 
@@ -271,6 +320,8 @@ class SetupAnswers(BaseModel):
     iva_regime: Any = None
     iva_roi_enrolled: bool = False
     iva_oss_enrolled: bool = False
+    iva_group_member_enrolled: bool = False
+    iva_group_dominant_entity_enrolled: bool = False
     iva_sii_enrolled: bool = False
     iva_redeme_enrolled: bool = False
     iva_intracommunity_operations_exceed_50000_eur: bool = False
@@ -283,9 +334,10 @@ class SetupAnswers(BaseModel):
     has_employees: bool = False
     pays_professionals_with_retencion: bool = False
     professional_income_withholding_ge_70pct: bool = False
+    art109_activity_income_withholding_ge_70pct: bool = False
     pays_rent_with_retencion: bool = False
     pays_capital_income_with_retencion: bool = False
-    uses_objective_estimation_irpf: bool = False
+    modelo_111_no_retenciones_periods: str = ""
     irpf_estimation_regime: Any = ""
     irpf_special_regime: Any = ""
     """IRPF special-regime axis. Blank for the general regime."""
@@ -294,6 +346,7 @@ class SetupAnswers(BaseModel):
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
+    monedas_virtuales_extranjero_above_threshold: bool = False
 
     # ── residence ────────────────────────────────────────────────────────
     tax_residence_ccaa: Any = None
@@ -578,21 +631,25 @@ class SetupAnswers(BaseModel):
         cls,
         value: object,
     ) -> Any:
-        if value == "" or value is None:
-            return ""
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            token = value.strip().lower()
-            if token == "":
-                return ""
-            if token in {"true", "1", "yes", "y", "si", "sí"}:
-                return True
-            if token in {"false", "0", "no", "n"}:
-                return False
-        raise ValueError(
-            "new_entity_first_two_profit_periods must be a boolean, blank, or a recognised canonical token",
+        return _parse_optional_bool_token(
+            value,
+            field_name="new_entity_first_two_profit_periods",
         )
+
+    @field_validator(
+        "ley_49_2002_option_declared",
+        "ley_49_2002_renunciation_declared",
+        mode="before",
+    )
+    @classmethod
+    # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic
+    # field_validator(mode='before') requires -> Any; actual return is a
+    # bool or the blank undeclared sentinel.
+    def _parse_ley_49_2002_optional_bool(  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
+        cls,
+        value: object,
+    ) -> Any:
+        return _parse_optional_bool_token(value, field_name="ley_49_2002_optional_bool")
 
     @field_validator("activity_start_date")
     @classmethod
@@ -605,6 +662,19 @@ class SetupAnswers(BaseModel):
             date.fromisoformat(value)
         except ValueError as exc:
             raise ValueError(f"activity_start_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}") from exc
+        return value
+
+    @field_validator("ley_49_2002_option_date", "ley_49_2002_renunciation_date")
+    @classmethod
+    def _validate_ley_49_2002_dates(cls, value: str) -> str:
+        from datetime import date
+
+        if value == "":
+            return value
+        try:
+            date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError(f"Ley 49/2002 dates must be ISO-8601 (YYYY-MM-DD), got {value!r}") from exc
         return value
 
     @field_validator("irpf_special_regime_start_date")

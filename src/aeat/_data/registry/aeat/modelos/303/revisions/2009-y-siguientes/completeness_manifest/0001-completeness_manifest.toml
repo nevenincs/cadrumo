@@ -1,0 +1,162 @@
+[revisions.2009-y-siguientes.completeness_manifest]
+source_ref = "aeat-dr-303-2025"
+legal_refs = [
+    "ley-37-1992:art-102",
+    "ley-37-1992:art-104",
+    "ley-37-1992:art-115",
+    "ley-37-1992:art-116",
+    "ley-37-1992:art-13",
+    "ley-37-1992:art-15",
+    "ley-37-1992:art-161",
+    "ley-37-1992:art-17",
+    "ley-37-1992:art-21",
+    "ley-37-1992:art-22",
+    "ley-37-1992:art-25",
+    "ley-37-1992:art-84",
+    "ley-37-1992:art-88",
+    "ley-37-1992:art-90",
+    "ley-37-1992:art-91",
+    "ley-37-1992:art-92",
+    "ley-37-1992:art-94",
+    "ley-37-1992:art-95",
+    "ley-37-1992:art-99",
+    "orden-eha-3786-2008:art-1",
+    "rd-1624-1992:art-29",
+    "rd-1624-1992:art-30",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+# Informativa base-imponible boxes (entregas intracomunitarias exentas, casilla
+# 59; exportaciones exentas, casilla 60) became computed projection targets when
+# their ledger_iva_aggregation bindings landed; they join the calculation closure.
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "59"
+number = "59"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "60"
+number = "60"
+
+# Recargo de equivalencia cuota casillas join the calculation closure once their
+# ledger_iva_aggregation recargo_amount_sum bindings landed (LIVA art. 161 tiers:
+# general 5.2%, reducido 1.4%, super-reducido 0.5%).
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "158"
+number = "158"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "21"
+number = "21"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "24"
+number = "24"
+
+# Regimen-general per-tier base casillas (01 super-reducido 4%, 04 reducido 10%,
+# 07 general 21%) and the deducible soportado-interiores base (28) join the
+# calculation closure once their ledger_iva_aggregation base_amount_sum bindings
+# landed (LIVA art. 88 repercutido base / art. 92 soportado base).
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "01"
+number = "01"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "04"
+number = "04"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "07"
+number = "07"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "28"
+number = "28"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.compensacion-pendiente-periodos-anteriores"
+number = "110"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.resultado"
+number = "69"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.compensacion-aplicada-periodo"
+number = "78"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.compensacion-pendiente-periodos-posteriores"
+number = "87"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.compensacion-disponible-fin-periodo"
+number = "compensacion-disponible-fin-periodo"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.compensacion-generada-periodo"
+number = "compensacion-generada-periodo"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.soportado.importaciones"
+number = "iva.soportado.importaciones"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.intracomunitaria"
+number = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.intracomunitaria.devengado"
+number = "iva.autorepercutido.intracomunitaria.devengado"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.intracomunitaria.deducible"
+number = "iva.autorepercutido.intracomunitaria.deducible"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.interior.devengado"
+number = "iva.autorepercutido.interior.devengado"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.interior.deducible"
+number = "iva.autorepercutido.interior.deducible"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.cuota-deducible-total"
+number = "iva.cuota-deducible-total"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.cuota-devengada-total"
+number = "iva.cuota-devengada-total"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.general"
+number = "iva.repercutido.general"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.reducido"
+number = "iva.repercutido.reducido"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.super-reducido"
+number = "iva.repercutido.super-reducido"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.resultado-regimen-general"
+number = "iva.resultado-regimen-general"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.soportado.interiores"
+number = "iva.soportado.interiores"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.prorrata-porcentaje"
+number = "prorrata-porcentaje"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.prorrata-volumen-con-derecho"
+number = "prorrata-volumen-con-derecho"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.prorrata-volumen-total"
+number = "prorrata-volumen-total"

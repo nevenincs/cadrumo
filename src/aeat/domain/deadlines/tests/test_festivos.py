@@ -42,6 +42,81 @@ from .._errors import DeadlineValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_NATIONAL_HOLIDAY_DATES_2025 = (
+    date(2025, 1, 1),  # Año Nuevo
+    date(2025, 1, 6),  # Reyes
+    date(2025, 4, 18),  # Viernes Santo
+    date(2025, 5, 1),  # Fiesta del Trabajo
+    date(2025, 8, 15),  # Asunción
+    date(2025, 11, 1),  # Todos los Santos
+    date(2025, 12, 6),  # Constitución
+    date(2025, 12, 8),  # Inmaculada
+    date(2025, 12, 25),  # Navidad
+)
+
+_BUSINESS_DAY_CASES = (
+    ("saturday", date(2025, 3, 1), None, 5, False),
+    ("sunday", date(2025, 3, 2), None, 6, False),
+    ("national-holiday-friday", date(2025, 4, 18), None, 4, False),
+    ("diada-cataluna", date(2025, 9, 11), CalendarCCAA.CATALUNA, 3, False),
+    ("diada-madrid", date(2025, 9, 11), CalendarCCAA.MADRID, 3, True),
+    ("plain-tuesday", date(2025, 3, 4), CalendarCCAA.MADRID, 1, True),
+    ("national-only-degraded-diada", date(2025, 9, 11), None, 3, True),
+)
+
+_NEXT_BUSINESS_DAY_CASES = (
+    ("already-business", date(2025, 3, 4), date(2025, 3, 4)),
+    ("weekend-to-monday", date(2025, 11, 1), date(2025, 11, 3)),
+    ("national-holiday-to-friday", date(2025, 12, 25), date(2025, 12, 26)),
+)
+
+_SHIFT_DEADLINE_CASES = (
+    (
+        "plain-business-day",
+        date(2025, 3, 4),
+        "303",
+        CalendarCCAA.MADRID,
+        False,
+        date(2025, 3, 4),
+        0,
+        ("business_day",),
+        (),
+    ),
+    (
+        "saturday-to-monday",
+        date(2025, 3, 1),
+        "303",
+        CalendarCCAA.MADRID,
+        True,
+        date(2025, 3, 3),
+        2,
+        ("sabado",),
+        (),
+    ),
+    (
+        "national-holiday-weekday",
+        date(2025, 4, 18),
+        "303",
+        CalendarCCAA.MADRID,
+        True,
+        date(2025, 4, 21),
+        None,
+        ("Viernes Santo",),
+        (HolidayJurisdiction.NATIONAL,),
+    ),
+    (
+        "modelo-369-oss-exception",
+        date(2025, 3, 1),
+        "369",
+        CalendarCCAA.MADRID,
+        False,
+        date(2025, 3, 1),
+        None,
+        ("modelo_exception",),
+        (),
+    ),
+)
+
 
 # ---------------------------------------------------------------------------
 # Calendar loading.
@@ -65,15 +140,8 @@ def test_load_calendar_2025_contains_boe_anchored_national_holidays() -> None:
 
     calendar = load_holiday_calendar(2025)
     national_dates = {h.holiday_date for h in calendar.national}
-    assert date(2025, 1, 1) in national_dates  # Año Nuevo
-    assert date(2025, 1, 6) in national_dates  # Reyes
-    assert date(2025, 4, 18) in national_dates  # Viernes Santo
-    assert date(2025, 5, 1) in national_dates  # Fiesta del Trabajo
-    assert date(2025, 8, 15) in national_dates  # Asunción
-    assert date(2025, 11, 1) in national_dates  # Todos los Santos
-    assert date(2025, 12, 6) in national_dates  # Constitución
-    assert date(2025, 12, 8) in national_dates  # Inmaculada
-    assert date(2025, 12, 25) in national_dates  # Navidad
+    for holiday_date in _NATIONAL_HOLIDAY_DATES_2025:
+        assert holiday_date in national_dates
 
 
 def test_load_calendar_2025_separates_national_from_ccaa() -> None:
@@ -108,59 +176,13 @@ def test_load_calendar_caches_repeat_calls() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_business_day_predicate_recognises_saturday_as_inhabil() -> None:
-    """date.weekday() == 5 is Saturday — never a business day."""
+def test_business_day_predicate_cases() -> None:
+    """Weekend, national, CCAA, weekday, and degraded-mode business-day cases."""
 
     calendar = load_holiday_calendar(2025)
-    saturday = date(2025, 3, 1)  # Saturday, not a holiday.
-    assert saturday.weekday() == 5
-    assert is_business_day(saturday, calendar=calendar, ccaa_code=None) is False
-
-
-def test_business_day_predicate_recognises_sunday_as_inhabil() -> None:
-    calendar = load_holiday_calendar(2025)
-    sunday = date(2025, 3, 2)
-    assert sunday.weekday() == 6
-    assert is_business_day(sunday, calendar=calendar, ccaa_code=None) is False
-
-
-def test_business_day_predicate_recognises_national_holiday_as_inhabil() -> None:
-    """2025-04-18 is Viernes Santo per BOE-A-2024-22011; a Friday but
-    nevertheless inhábil because it is a national holiday."""
-
-    calendar = load_holiday_calendar(2025)
-    viernes_santo = date(2025, 4, 18)
-    assert viernes_santo.weekday() == 4  # Friday
-    assert is_business_day(viernes_santo, calendar=calendar, ccaa_code=None) is False
-
-
-def test_business_day_predicate_recognises_ccaa_only_holiday_in_that_ccaa() -> None:
-    """2025-09-11 (Diada) is a holiday only in ES-CT. A taxpayer in
-    ES-CT sees it as inhábil; a taxpayer in ES-MD sees it as a regular
-    Thursday business day."""
-
-    calendar = load_holiday_calendar(2025)
-    diada = date(2025, 9, 11)
-    assert diada.weekday() == 3  # Thursday
-    assert is_business_day(diada, calendar=calendar, ccaa_code=CalendarCCAA.CATALUNA) is False
-    assert is_business_day(diada, calendar=calendar, ccaa_code=CalendarCCAA.MADRID) is True
-
-
-def test_business_day_predicate_returns_true_for_plain_weekday() -> None:
-    calendar = load_holiday_calendar(2025)
-    tuesday = date(2025, 3, 4)  # Tuesday, not a holiday.
-    assert is_business_day(tuesday, calendar=calendar, ccaa_code=CalendarCCAA.MADRID) is True
-
-
-def test_business_day_predicate_degrades_to_national_only_when_ccaa_is_none() -> None:
-    """When ``ccaa_code`` is None, the predicate recognises national
-    holidays but treats CCAA holidays as regular days. This is the
-    degraded mode for callers without tax-residence data."""
-
-    calendar = load_holiday_calendar(2025)
-    diada = date(2025, 9, 11)
-    # Without CCAA context the predicate cannot know about ES-CT-only Diada.
-    assert is_business_day(diada, calendar=calendar, ccaa_code=None) is True
+    for case_id, probe, ccaa_code, expected_weekday, expected in _BUSINESS_DAY_CASES:
+        assert probe.weekday() == expected_weekday, case_id
+        assert is_business_day(probe, calendar=calendar, ccaa_code=ccaa_code) is expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -168,29 +190,10 @@ def test_business_day_predicate_degrades_to_national_only_when_ccaa_is_none() ->
 # ---------------------------------------------------------------------------
 
 
-def test_next_business_day_returns_input_when_already_business() -> None:
+def test_next_business_day_cases() -> None:
     calendar = load_holiday_calendar(2025)
-    tuesday = date(2025, 3, 4)
-    assert next_business_day(tuesday, calendar=calendar, ccaa_code=None) == tuesday
-
-
-def test_next_business_day_skips_weekend_to_monday() -> None:
-    calendar = load_holiday_calendar(2025)
-    # 2025-11-01 is a Saturday AND national holiday. The next business
-    # day is Monday 2025-11-03 (national holidays Sat + Sun + nothing
-    # else; Monday is plain).
-    saturday = date(2025, 11, 1)
-    assert next_business_day(saturday, calendar=calendar, ccaa_code=None) == date(2025, 11, 3)
-
-
-def test_next_business_day_skips_national_holiday_then_weekend() -> None:
-    """2025-12-25 Thursday Navidad → Friday → Saturday 27 → Sunday 28 →
-    Monday 29 is the next business day."""
-
-    calendar = load_holiday_calendar(2025)
-    navidad = date(2025, 12, 25)
-    assert navidad.weekday() == 3
-    assert next_business_day(navidad, calendar=calendar, ccaa_code=None) == date(2025, 12, 26)
+    for case_id, probe, expected in _NEXT_BUSINESS_DAY_CASES:
+        assert next_business_day(probe, calendar=calendar, ccaa_code=None) == expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -198,40 +201,30 @@ def test_next_business_day_skips_national_holiday_then_weekend() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_shift_deadline_does_not_move_a_business_day_close() -> None:
-    """A close on a plain Tuesday produces an unshifted DeadlineShift."""
+def test_shift_deadline_basic_cases() -> None:
+    """AEAT deadline-shift cases for business days, weekends, holidays, and OSS exceptions."""
 
-    tuesday = date(2025, 3, 4)
-    result = shift_deadline(tuesday, modelo="303", ccaa_code=CalendarCCAA.MADRID)
-    assert result.shifted is False
-    assert result.shift_days == 0
-    assert result.original_close_date == result.adjusted_close_date == tuesday
-    assert result.shift_reason == "business_day"
-
-
-def test_shift_deadline_moves_a_saturday_close_to_next_monday() -> None:
-    """AEAT rule: a deadline on a Saturday shifts to the next Monday."""
-
-    # 2025-03-01 is a Saturday with no holiday overlay.
-    saturday = date(2025, 3, 1)
-    result = shift_deadline(saturday, modelo="303", ccaa_code=CalendarCCAA.MADRID)
-    assert result.shifted is True
-    assert result.original_close_date == saturday
-    assert result.adjusted_close_date == date(2025, 3, 3)
-    assert result.shift_days == 2
-    assert "sabado" in result.shift_reason
-
-
-def test_shift_deadline_handles_national_holiday_on_weekday() -> None:
-    """2025-04-18 is Viernes Santo (Friday). The deadline shifts to the
-    next Monday because Saturday + Sunday follow the holiday."""
-
-    viernes_santo = date(2025, 4, 18)
-    result = shift_deadline(viernes_santo, modelo="303", ccaa_code=CalendarCCAA.MADRID)
-    assert result.shifted is True
-    assert result.adjusted_close_date == date(2025, 4, 21)
-    assert HolidayJurisdiction.NATIONAL in result.jurisdictions
-    assert "Viernes Santo" in result.shift_reason
+    for (
+        case_id,
+        close_date,
+        modelo,
+        ccaa_code,
+        expected_shifted,
+        expected_adjusted,
+        expected_shift_days,
+        reason_fragments,
+        expected_jurisdictions,
+    ) in _SHIFT_DEADLINE_CASES:
+        result = shift_deadline(close_date, modelo=modelo, ccaa_code=ccaa_code)
+        assert result.shifted is expected_shifted, case_id
+        assert result.original_close_date == close_date, case_id
+        assert result.adjusted_close_date == expected_adjusted, case_id
+        if expected_shift_days is not None:
+            assert result.shift_days == expected_shift_days, case_id
+        for fragment in reason_fragments:
+            assert fragment in result.shift_reason, case_id
+        for jurisdiction in expected_jurisdictions:
+            assert jurisdiction in result.jurisdictions, case_id
 
 
 def test_shift_deadline_handles_ccaa_holiday_when_residence_matches() -> None:
@@ -249,19 +242,6 @@ def test_shift_deadline_handles_ccaa_holiday_when_residence_matches() -> None:
     madrid_result = shift_deadline(diada, modelo="303", ccaa_code=CalendarCCAA.MADRID)
     assert madrid_result.shifted is False
     assert madrid_result.adjusted_close_date == diada
-
-
-def test_shift_deadline_modelo_369_does_not_shift_per_oss_exception() -> None:
-    """The AEAT Calendario del Contribuyente documents Modelo 369
-    (OSS / IOSS) as an exception: its deadlines do NOT shift even when
-    the close date is a non-business day, because the OSS / IOSS
-    regime is governed by an EU-harmonised cutoff."""
-
-    saturday = date(2025, 3, 1)
-    result = shift_deadline(saturday, modelo="369", ccaa_code=CalendarCCAA.MADRID)
-    assert result.shifted is False
-    assert result.adjusted_close_date == saturday
-    assert result.shift_reason == "modelo_exception"
 
 
 def test_shift_deadline_modelos_without_shift_constant_contains_369() -> None:

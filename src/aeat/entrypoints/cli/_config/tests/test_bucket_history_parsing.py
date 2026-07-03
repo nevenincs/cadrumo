@@ -13,8 +13,11 @@ from .....domain.buckets import (
     BucketEventType,
     derive_bucket_event_id,
 )
-from .. import _parse_bucket_event_types
-from .._bucket_history import _bucket_history_event_matches, _parse_bucket_history_instant
+from .._bucket_history import (
+    _bucket_history_event_matches,
+    _parse_bucket_event_types,
+    _parse_bucket_history_instant,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

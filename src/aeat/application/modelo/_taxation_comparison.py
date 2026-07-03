@@ -1,19 +1,46 @@
 """Conjunta vs. individual taxation comparison for Modelo 100 (IRPF).
 
-Runs the registry engine twice — once with ``declaration_type=2``
+Runs the registry engine twice -- once with ``declaration_type=2``
 (tributación conjunta, Art. 82-84 LIRPF) and once with
-``declaration_type=1`` (tributación individual) — over identical
+``declaration_type=1`` (tributación individual) -- over identical
 casilla inputs and profile bindings, then surfaces the cuota
 differential so married couples can pick the lower-tax regime.
 
-This is a **pure, ephemeral** operation: no work unit is required
-and no revision is persisted. The caller supplies all inputs
-explicitly via a :class:`RegistrySnapshot`; the registry formula engine
-evaluates both paths and returns a typed :class:`TaxationComparisonResult`.
+This is a pure, ephemeral operation: no work unit is required and no
+revision is persisted. The caller supplies all inputs explicitly via a
+:class:`RegistrySnapshot`; the registry
+formula engine evaluates both paths and returns a typed
+:class:`TaxationComparisonResult`.
 
-:func:`compare_taxation_for_work_unit` is the high-level entry point
-for CLI use: it resolves the registry snapshot and profile bindings
-from an existing work unit and delegates to :func:`compare_taxation_modes`.
+Scope honesty (ADR ``2026-07-01-tributacion-conjunta-individual-adr``): the
+individual run reuses the *single* input set assembled for the unidad familiar
+and only flips ``declaration_type`` to 1, so it faithfully models a
+**single-earner** household. It does not compute two separate spouse returns; a
+genuine two-earner individual comparison requires a per-spouse income axis that
+is absent at HEAD (the deferred second slice). Every result therefore carries
+``individual_branch_single_earner_only`` and an
+``individual_branch_caveat`` so no surface presents the individual figure as
+authoritative for a two-earner couple.
+
+The comparison is snapshot-grounded. It resolves the result casillas by their
+declared semantic roles, refuses ambiguous role matches before choosing a
+``CasillaId``, and requires the
+revision's ``profile-declaration-type`` binding so the stored profile value can
+be replaced independently for each run.
+
+:func:`compare_taxation_for_work_unit` is the high-level entry point for CLI
+use: it resolves the registry snapshot and profile bindings from an existing
+work unit, deliberately excludes the stored declaration-type value, and delegates
+to :func:`compare_taxation_modes`.
+
+See Also:
+    :mod:`~aeat.application.modelo._semantic_role_resolution`:
+        Provides the canonical semantic-role-to-casilla resolver and ambiguity
+        refusal used for the cuota resultante and cuota diferencial roles.
+    :mod:`~aeat.application.modelo._binding_resolution`:
+        Supplies the profile-bound values used by the work-unit entry point.
+    :mod:`~aeat.application.modelo._work_addressing`:
+        Resolves natural or exact work addresses before CLI comparison.
 """
 
 from __future__ import annotations
@@ -49,9 +76,32 @@ _DECLARATION_TYPE_BINDING_SUFFIX = "profile-declaration-type"
 _CUOTA_RESULTANTE_ROLE = "irpf_cuota_resultante_autoliquidacion"  # casilla 0595
 _RESULTADO_ROLE = "irpf_cuota_diferencial"  # casilla 0610
 
+#: Honesty scope caveat for the individual filing branch (ADR
+#: ``2026-07-01-tributacion-conjunta-individual-adr``). The individual run
+#: reuses the *single* input set assembled for the unidad familiar and merely
+#: flips ``declaration_type`` to 1, so it faithfully models only a **single-earner**
+#: household. It does NOT compute two separate spouse returns (each on that
+#: spouse's own income); a genuine two-earner individual comparison requires a
+#: per-spouse income attribution axis that does not exist at HEAD. Surfacing this
+#: statement keeps the comparator from presenting an unfaithful two-earner figure
+#: as authoritative (``no-silent-under-declaration`` / ``aeat-safety-legal-gates``).
+INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT = (
+    "The individual-mode figure is a single-return computation over the unidad "
+    "familiar's combined inputs and is faithful only for a single-earner household. "
+    "It does not model two separate spouse returns (each taxed on that spouse's own "
+    "income); for a genuine two-earner couple the individual comparison is not yet "
+    "available, pending a per-spouse income axis. Treat the individual figure as "
+    "directional, not authoritative, for two-earner households."
+)
+
 
 class TaxationRecommendation(StrEnum):
-    """Recommended filing mode based on the computed cuota differential."""
+    """Recommended filing mode based on the computed cuota differential.
+
+    The enum reports the lower-tax path after applying the materiality threshold,
+    or ``INDIFFERENT`` when the two calculated results differ by less than one
+    euro.
+    """
 
     CONJUNTA = "conjunta"
     INDIVIDUAL = "individual"
@@ -65,6 +115,11 @@ class TaxationComparisonResult(BaseModel):
     the registry formula engine).  Positive values are amounts
     to pay (a ingresar); negative values are amounts to refund
     (a devolver).
+
+    ``*_cuota_resultante`` carries the Modelo 100 cuota resultante de la
+    autoliquidación semantic role, while ``*_resultado`` carries the cuota
+    diferencial/result role used to compute ``delta_resultado`` and the
+    recommendation.
     """
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
@@ -87,6 +142,17 @@ class TaxationComparisonResult(BaseModel):
     recommendation: TaxationRecommendation
     recommendation_reason: str
 
+    # Honesty scope (ADR 2026-07-01): the individual branch reuses the unidad
+    # familiar's single input set, so it is faithful only for a single-earner
+    # household. ``individual_branch_single_earner_only`` is always True in this
+    # first slice; a genuine two-earner individual comparison (two separate
+    # spouse returns) requires a per-spouse income axis absent at HEAD, tracked
+    # as the deferred second slice. ``individual_branch_caveat`` carries the
+    # operator-facing disclosure so no surface presents the individual figure as
+    # authoritative for a two-earner couple.
+    individual_branch_single_earner_only: bool = True
+    individual_branch_caveat: str = INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT
+
 
 # ---------------------------------------------------------------------------
 # Internal helpers
@@ -94,7 +160,11 @@ class TaxationComparisonResult(BaseModel):
 
 
 def _casilla_by_semantic_role(snapshot: RegistrySnapshot, role: str) -> CasillaId | None:
-    """Return the casilla id with ``semantic_role == role``, or ``None``."""
+    """Return the unique casilla id for ``role`` or ``None`` when absent.
+
+    Ambiguous matches are promoted to :class:`TaxationComparisonError` so the
+    comparison never silently chooses among duplicated semantic roles.
+    """
     try:
         return casilla_id_for_unique_semantic_role(snapshot, role)
     except AmbiguousSemanticRoleCasillaError as exc:
@@ -102,7 +172,12 @@ def _casilla_by_semantic_role(snapshot: RegistrySnapshot, role: str) -> CasillaI
 
 
 def _declaration_type_binding_id(snapshot: RegistrySnapshot) -> BindingId | None:
-    """Return the binding id for ``profile-declaration-type`` in this revision."""
+    """Return the binding id for ``profile-declaration-type`` in this revision.
+
+    The suffix match preserves the revision-authored binding namespace while
+    locating the declaration-type input that the comparison injects as ``1`` or
+    ``2`` for each run.
+    """
     suffix = _DECLARATION_TYPE_BINDING_SUFFIX
     for binding in snapshot.revision.bindings:
         if binding.id.endswith(suffix):
@@ -127,7 +202,12 @@ def compare_taxation_modes(
 ) -> TaxationComparisonResult:
     """Run the registry engine for conjunta and individual, then diff the results.
 
-    Returns a :class:`TaxationComparisonResult`.
+    The function is pure and does not read, create, or persist work units. It
+    requires the caller to provide a loaded
+    :class:`RegistrySnapshot`, casilla inputs,
+    and already-resolved profile bindings. It then injects ``declaration_type``
+    separately for the conjunta and individual runs and compares the calculated
+    cuota diferencial/result casilla.
 
     Args:
         snapshot: The :class:`RegistrySnapshot` whose revision is executed for both
@@ -140,14 +220,20 @@ def compare_taxation_modes(
         date_binding_values: Optional date-typed binding values.
         date_context: Optional date context for temporal casilla resolution.
 
-    The caller must supply all profile-sourced bindings (CCAA, birth
-    date, etc.) that the revision needs, *except* ``declaration_type``:
-    this function injects ``declaration_type=2`` for the conjunta run
-    and ``declaration_type=1`` for the individual run automatically.
+    Returns:
+        A :class:`TaxationComparisonResult` with both run outcomes, the signed
+        ``individual - conjunta`` delta, and the recommendation after the one-euro
+        materiality threshold.
+
+    The caller must supply all profile-sourced bindings (CCAA, birth date, etc.)
+    that the revision needs, except ``declaration_type``: this function injects
+    ``declaration_type=2`` for the conjunta run and ``declaration_type=1`` for
+    the individual run automatically.
 
     Raises :class:`TaxationComparisonError` when the revision does not
     declare a ``declaration_type`` binding or lacks the cuota casillas
-    required to build the differential.
+    required to build the differential. Ambiguous semantic-role casillas are also
+    refused through the same error type.
     """
     decl_binding = _declaration_type_binding_id(snapshot)
     if decl_binding is None:
@@ -232,7 +318,11 @@ def compare_taxation_modes(
 
 
 class TaxationComparisonError(CoreError):
-    """Raised when a conjunta-vs-individual comparison cannot be performed."""
+    """Raised when a conjunta-vs-individual comparison cannot be performed.
+
+    Covers unsupported revisions, missing declaration-type bindings, missing
+    result casillas, and ambiguous semantic-role resolution.
+    """
 
 
 # ---------------------------------------------------------------------------
@@ -249,16 +339,22 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     injected by the comparison engine; the stored profile value is
     intentionally ignored so both paths are always evaluated.
 
-    Returns a :class:`TaxationComparisonResult` with the conjunta and
-    individual calculation outcomes.
+    Returns:
+        A :class:`TaxationComparisonResult` with the conjunta and individual
+        calculation outcomes.
 
     Raises :class:`TaxationComparisonError` when the work unit's modelo
     does not support the comparison (e.g. not Modelo 100).
     Raises :class:`~aeat.application.modelo._action_errors.WorkUnitNotFoundError`
     when ``work_unit_id`` does not exist in the active bucket.
+
+    See Also:
+        :func:`compare_taxation_modes`:
+            Performs the pure snapshot comparison after this function resolves
+            work-unit state.
     """
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...domain.calculations.registry import RegistrySnapshotError
-    from ...domain.modelos._repository import WorkUnitCatalogueRepository
     from ..aggregation import CalculationSourceContext, ProfileSourceResolver
     from ._action_errors import WorkUnitNotFoundError
     from ._binding_resolution import (
@@ -336,7 +432,12 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
 def compare_taxation_for_work_address(address: object) -> TaxationComparisonResult:
     """Run conjunta-vs-individual comparison for a natural or exact work address.
 
-    Returns a :class:`TaxationComparisonResult`.
+    Args:
+        address: The :class:`~aeat.application.modelo._work_addressing.ModeloWorkAddress`
+            selected by CLI work-address parsing.
+
+    Returns:
+        A :class:`TaxationComparisonResult` for the resolved work unit.
     """
     from ._work_addressing import ModeloWorkAddress, resolve_modelo_work_address_unit
 

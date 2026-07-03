@@ -1,12 +1,20 @@
 """Typed ``--json`` payload schemas for registry CLI commands.
 
-Each class declared here is a strict :class:`OutputSchema` subclass and is
-decorated with :func:`register_schema` so the JSON-contract test suite can
-enumerate every registry command surface this module covers.
+Each class declared here is a strict
+:class:`OutputSchema` subclass and is decorated
+with :func:`register_schema` so the
+JSON-contract test suite can enumerate every registry command surface this
+module covers.
 
 Field sets match the production payload dicts constructed in ``registry.py``
 at their emit sites. All sequence fields use ``list`` rather than ``tuple``
 because ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
+
+The application layer remains authoritative for registry validation, oracle
+audits, workbook verification, filed-state comparison, and parity tape
+execution. These schemas document the CLI transport shape that enters
+:class:`SchemaEnvelope` through
+:func:`_emit_envelope`.
 """
 
 from __future__ import annotations
@@ -16,7 +24,14 @@ from ._schemas import OutputSchema, register_schema
 
 @register_schema("registry.inspect")
 class RegistryInspectResult(OutputSchema):
-    """JSON envelope for ``aeat app registry inspect``."""
+    """JSON envelope for ``aeat app registry inspect``.
+
+    Mirrors the inventory half of
+    :class:`RegistryTreeReport` returned by
+    :func:`inspect_registry_tree`. Extra fields carry
+    per-revision detail rows such as
+    :class:`RegistryRevisionDetailReport`.
+    """
 
     modelo_count: int
     revision_count: int
@@ -39,7 +54,16 @@ class RegistryInspectResult(OutputSchema):
 
 @register_schema("registry.verify")
 class RegistryVerifyResult(OutputSchema):
-    """JSON envelope for ``aeat app registry verify``."""
+    """JSON envelope for ``aeat app registry verify``.
+
+    Mirrors the validated :class:`RegistryTreeReport`
+    returned by :func:`verify_registry_tree`.
+    ``verified`` marks the fail-fast registry/corpus validation branch, while
+    extra fields preserve the same
+    :class:`RegistryRevisionDetailReport` inventory
+    available from
+    :class:`RegistryInspectResult`.
+    """
 
     verified: bool
     modelo_count: int
@@ -65,10 +89,12 @@ class RegistryVerifyResult(OutputSchema):
 class RegistryAuditOraclesResult(OutputSchema):
     """JSON envelope for ``aeat app registry audit-oracles``.
 
-    Mirrors ``RegistryOracleAuditReport.model_dump(mode='json')``.
-    Sequence fields are typed as ``list[...]`` because tuples serialise
-    to JSON arrays and the strict envelope does not coerce arrays back
-    to tuples on re-validation.
+    Mirrors :class:`RegistryOracleAuditReport` from
+    :func:`audit_registry_oracles`. The report
+    aggregates
+    :func:`audit_registry_oracle_bindings`
+    failures, applicability declarations, and orphan oracle ids for one
+    :class:`OracleEnvironment`.
     """
 
     environment: str
@@ -87,7 +113,12 @@ class RegistryAuditOraclesResult(OutputSchema):
 class RegistryVerifyFiledStateResult(OutputSchema):
     """JSON envelope for ``aeat app registry verify-filed-state``.
 
-    Mirrors ``FiledStateVerificationReport.model_dump(mode='json')``.
+    Mirrors :class:`FiledStateVerificationReport`
+    from :func:`verify_filed_state`. ``comparison``
+    contains the
+    :class:`RegistryFiledStateComparison`
+    between local registry calculation output and the captured filed AEAT
+    observation.
     """
 
     observation_path: str
@@ -103,7 +134,12 @@ class RegistryVerifyFiledStateResult(OutputSchema):
 class RegistryWorkbooksVerifyResult(OutputSchema):
     """JSON envelope for ``aeat app registry workbooks verify``.
 
-    Mirrors ``WorkbookBackendVerificationReport.model_dump(mode='json')``.
+    Mirrors
+    :class:`WorkbookBackendVerificationReport`
+    returned by :func:`verify_registry_workbooks`.
+    ``runner`` reports workbook backend availability, ``reports`` carries
+    per-workbook artefact scans, and ``modelo_coverage`` summarizes
+    per-modelo workbook support.
     """
 
     root: str
@@ -125,7 +161,11 @@ class RegistryWorkbooksVerifyResult(OutputSchema):
 class RegistryParityRunResult(OutputSchema):
     """JSON envelope for ``aeat app registry parity run``.
 
-    Mirrors ``ParityTape.model_dump(mode='json')``.
+    Mirrors :class:`ParityTape` returned by
+    :func:`run_registry_parity`. The payload includes
+    the :class:`ParityScenario`, scanned
+    workbook artefact, runner availability, and the registry workbook parity
+    run report; ``path`` is added by the CLI as the archive destination.
     """
 
     created_at: str
@@ -145,7 +185,11 @@ class RegistryParityRunResult(OutputSchema):
 class RegistryParityReplayResult(OutputSchema):
     """JSON envelope for ``aeat app registry parity replay``.
 
-    Mirrors ``ParityTapeReplayReport.model_dump(mode='json')``.
+    Mirrors :class:`ParityTapeReplayReport`
+    returned by :func:`replay_registry_parity`.
+    ``stored`` is the archived :class:`ParityTape`;
+    ``current`` is the fresh replay tape, and ``differences`` lists the stable
+    JSON paths that diverged.
     """
 
     tape_path: str

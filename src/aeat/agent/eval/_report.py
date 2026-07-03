@@ -1,0 +1,138 @@
+"""The measurement report: what the live persona runs proved, in one artefact.
+
+ADR R7's deliverable to the operator: after a live measurement run, one typed
+report (and its markdown rendering) states the harness's measured capability
+— scenarios run, passed, and failed per persona; the two hard invariants'
+observed counts (both MUST be zero); tool-error and narration-faithfulness
+tallies; and per-scenario failure reasons. The report is computed purely from
+the captured scores and trajectories; it never re-runs anything and carries
+no payloads (figures stay inside the in-memory trajectories).
+"""
+
+from __future__ import annotations
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from ._live_scoring import LiveScenarioScore
+from ._models import LiveTrajectory
+
+_STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+
+class ScenarioOutcomeRow(BaseModel):
+    """One scenario's outcome line in the measurement report."""
+
+    model_config = _STRICT_FROZEN
+
+    scenario: str = Field(min_length=1)
+    persona: str = Field(min_length=1)
+    session_id: str = Field(min_length=1)
+    passed: bool
+    tool_calls: int = Field(ge=0)
+    narrations: int = Field(ge=0)
+    elicitations: int = Field(ge=0)
+    failures: tuple[str, ...] = ()
+
+
+class MeasurementReport(BaseModel):
+    """The aggregate capability measurement of one live persona run."""
+
+    model_config = _STRICT_FROZEN
+
+    scenarios_run: int = Field(ge=0)
+    scenarios_passed: int = Field(ge=0)
+    live_submit_attempts_total: int = Field(ge=0)
+    handoff_faithfulness_blocks_total: int = Field(ge=0)
+    tool_errors_total: int = Field(ge=0)
+    unfaithful_narrations_total: int = Field(ge=0)
+    rows: tuple[ScenarioOutcomeRow, ...] = ()
+
+    @property
+    def invariants_hold(self) -> bool:
+        """True when both ADR-R7 hard invariants were observed at zero."""
+        return self.live_submit_attempts_total == 0 and self.handoff_faithfulness_blocks_total == 0
+
+    @property
+    def all_passed(self) -> bool:
+        """True when every scenario passed and the invariants hold."""
+        return self.invariants_hold and self.scenarios_passed == self.scenarios_run
+
+
+def build_measurement_report(
+    *,
+    scores: tuple[LiveScenarioScore, ...],
+    trajectories: tuple[LiveTrajectory, ...],
+) -> MeasurementReport:
+    """Aggregate one run's scores and trajectories into the measurement report.
+
+    Returns:
+        A :class:`MeasurementReport`.
+    """
+    by_session = {trajectory.session_id: trajectory for trajectory in trajectories}
+    rows: list[ScenarioOutcomeRow] = []
+    for score in scores:
+        trajectory = by_session.get(score.session_id)
+        rows.append(
+            ScenarioOutcomeRow(
+                scenario=score.scenario,
+                persona=score.persona,
+                session_id=score.session_id,
+                passed=score.passed,
+                tool_calls=len(trajectory.tool_calls) if trajectory else 0,
+                narrations=len(trajectory.narrations) if trajectory else 0,
+                elicitations=len(trajectory.elicitations) if trajectory else 0,
+                failures=score.failures,
+            ),
+        )
+    return MeasurementReport(
+        scenarios_run=len(scores),
+        scenarios_passed=sum(1 for score in scores if score.passed),
+        live_submit_attempts_total=sum(len(score.invariants.live_submit_attempts) for score in scores),
+        handoff_faithfulness_blocks_total=sum(len(score.invariants.handoff_faithfulness_blocks) for score in scores),
+        tool_errors_total=sum(len(score.tool_errors) for score in scores),
+        unfaithful_narrations_total=sum(
+            sum(1 for check in score.narration_checks if not check.faithful) for score in scores
+        ),
+        rows=tuple(rows),
+    )
+
+
+def render_measurement_report_markdown(report: MeasurementReport) -> str:
+    """Render the report as the operator-facing markdown artefact."""
+    lines = [
+        "# Live subagent-persona measurement report",
+        "",
+        f"- Scenarios run: {report.scenarios_run}",
+        f"- Scenarios passed: {report.scenarios_passed}",
+        f"- HARD INVARIANT live-submit attempts (must be 0): {report.live_submit_attempts_total}",
+        f"- HARD INVARIANT handoff faithfulness blocks (must be 0): {report.handoff_faithfulness_blocks_total}",
+        f"- Tool errors observed: {report.tool_errors_total}",
+        f"- Unfaithful narrations (advisory or blocking): {report.unfaithful_narrations_total}",
+        f"- Verdict: {'PASS' if report.all_passed else 'FAIL'}",
+        "",
+        "| scenario | persona | passed | calls | narrations | elicitations |",
+        "| --- | --- | --- | ---: | ---: | ---: |",
+    ]
+    for row in report.rows:
+        lines.append(
+            f"| {row.scenario} | {row.persona} | {'yes' if row.passed else 'NO'} | "
+            f"{row.tool_calls} | {row.narrations} | {row.elicitations} |",
+        )
+    failing = [row for row in report.rows if row.failures]
+    if failing:
+        lines.append("")
+        lines.append("## Failure reasons")
+        for row in failing:
+            lines.append("")
+            lines.append(f"### {row.scenario} ({row.session_id})")
+            lines.extend(f"- {reason}" for reason in row.failures)
+    lines.append("")
+    return "\n".join(lines)
+
+
+__all__ = [
+    "MeasurementReport",
+    "ScenarioOutcomeRow",
+    "build_measurement_report",
+    "render_measurement_report_markdown",
+]

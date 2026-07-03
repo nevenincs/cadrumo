@@ -3,17 +3,14 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-13-cli-workflow-redesign-root-help-shape-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
 ---
 
-
-
 # `cli-workflow-redesign` Code Review
-
 
 W05-ROOT-HELP-001 | HIGH | Bare root invocation does not execute the required overview workflow
 `src/aeat/entrypoints/cli/__init__.py:123`-`128` handles bare `aeat` by loading workflow state and printing `render_root_landing_text(build_root_landing_report(...))`. The backend report in `src/aeat/application/operator_surface/_help.py:19`-`31` only constructs a message and a "Next:" command string. With an active profile, this never delegates to the overview service or the mounted `app overview` command path, so bare `aeat` returns a hint instead of the canonical "where do I stand?" overview result required by the root-help ADR. This also means the real overview payload, active-profile output conventions, and backend-owned readiness/count behavior are bypassed.

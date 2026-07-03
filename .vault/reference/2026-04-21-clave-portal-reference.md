@@ -3,7 +3,7 @@ tags:
   - "#reference"
   - "#auth-cli"
 date: "2026-04-21"
-modified: '2026-04-21'
+modified: '2026-06-30'
 related:
   - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-04-18-aeat-auth-providers-research]]"
@@ -258,8 +258,6 @@ rather than assume the subdomain.
 - `Settings.aeat_status_detail_url_template` (default
   `/wlpl/TC-UTIL/Expediente/Detalle?EXP={expediente_id}`) — will
   inherit the same host-assumption bug when plumbed into the reader.
-
-
 
 - **STORK**: pan-European auth federation. `storksp=EA0028512` is
   AEAT's service-provider code.

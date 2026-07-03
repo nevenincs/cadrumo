@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cross-domain-continuity'
 date: 2026-05-28
-modified: '2026-05-28'
+modified: '2026-06-29'
 step_id: S387
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
@@ -12,7 +12,15 @@ related:
 
 # `cross-domain-continuity` `W04.P19.S387` (M210 casilla skeleton — initial commit)
 
-First-cut authoring of the Modelo 210 IRNR Phase 1 registry skeleton: manifest, 2025 revision frame, and the six-casilla base / rate / cuota chain for the general (TRLIRNR Art 25.1.a, 24%) and ue_residente (Art 25.1.f, 19%) tipos de renta. Initial commit landed with three latent issues that the companion S387.patch (7a270e4ed) addressed; both commits are documented separately for clarity.
+First-cut authoring of the Modelo 210 IRNR Phase 1 registry skeleton: manifest, 2025 revision frame, and the six-casilla base / rate / cuota chain for the general (TRLIRNR Art 25.1.a, 24%) and reduced-rate `ue_residente` path. Initial commit landed with three latent issues that the companion S387.patch (7a270e4ed) addressed; both commits are documented separately for clarity.
+
+> 2026-06-29 currentization: this exec record describes the initial
+> skeleton commit. The current registry no longer treats
+> `ue_residente` as an art. 25.1.f branch. `ue_residente` is grounded in
+> art. 25.1.a's EU/EEE reduced general rate, while `interest` and
+> `ganancia_patrimonial` are unconditional art. 25.1.f income-class rows.
+> The current registry also includes the art. 25.1.b pension tariff and
+> the art. 13.1.h imputed-real-estate base branch.
 
 Commit: `602b0cdfb`
 
@@ -33,7 +41,7 @@ Casillas TOML defines the six-casilla skeleton implementing the base / rate / cu
 - Three more casillas covering the rate selection, cuota integra, and pagos a cuenta surface in the canonical Phase 1 chain.
 - Cuota diferencial as the final settlement casilla.
 
-Header comment on the casillas TOML explicitly records the Phase 1 scope: only the general (Art 25.1.a, 24%) and ue_residente (Art 25.1.f, 19%) variants are covered. The remaining tipos de renta (pension under Art 25.1.b, inmobiliaria under Art 25.2, ganancia patrimonial under Art 25.3, pagos a cuenta under Art 25.5) are Phase 2 scope per the m210-irnr-full-engine ADR §D2.3 and the M210 Phase 2 engine plan W01.
+Header comment on the initial casillas TOML recorded the first-cut Phase 1 scope. Current registry state supersedes the old wording: general and `ue_residente` are Art 25.1.a branches, `interest` and `ganancia_patrimonial` are Art 25.1.f branches, `pension` resolves through the Art 25.1.b tariff table, and `inmobiliaria` has an Art 13.1.h/LIRPF Art 85 imputed-real-estate base branch.
 
 Phase 1 ships every casilla with `input_kind = "manual"` because the formula registry is NOT authored yet. S388 lands the formula TOMLs (base = rendimientos_integros for Art 25.1.a; tipo_gravamen = bracket-table lookup; cuota_integra = base × rate; cuota_diferencial = cuota_integra − pagos a cuenta). Until S388 ships, every casilla currently flagged manual flips back to `input_kind = "computed"` with its formula id wired through. While the manual-input shape stays, the M210 work-create surface keeps the Path-B refusal stub per ADR §D5.
 

@@ -20,17 +20,16 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.registry import CasillaId, validated_casilla_id
-from ...calculations.registry._schema import RegistrySnapshotRef
+from ...calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from .._amendment import (
     AmendmentKind,
     CasillaChange,
     ModeloComplementaria,
     make_amendment_id,
 )
-from .._complementaria_repository import ModeloAmendmentRepository
 from .._schema import (
     ModeloDraft,
     ModeloDraftStatus,
@@ -41,6 +40,8 @@ from .._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "filing-runtime"
+_DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
+_AMENDMENT_CREATED_AT = datetime(2026, 5, 25, 15, 0, 0, tzinfo=UTC)
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -60,7 +61,6 @@ _NONCANONICAL_IVA_DEVENGADO_CASILLA_ID = " iva.devengado "
 def _populated_amended_draft() -> ModeloDraft:
     """Build the ModeloDraft embedded inside the amendment."""
 
-    now = datetime.now(UTC).replace(microsecond=0)
     return ModeloDraft(
         draft_id="d" * 64,
         modelo="303",
@@ -91,8 +91,8 @@ def _populated_amended_draft() -> ModeloDraft:
         ),
         binding_values=(),
         findings=(),
-        created_at=now,
-        updated_at=now,
+        created_at=_DRAFT_TIMESTAMP,
+        updated_at=_DRAFT_TIMESTAMP,
         schema_version="schema-2025-1",
     )
 
@@ -113,7 +113,6 @@ def _populated_amendment() -> ModeloComplementaria:
             reason="recomputed downstream of iva.devengado",
         ),
     )
-    now = datetime.now(UTC).replace(microsecond=0)
     return ModeloComplementaria(
         amendment_id=make_amendment_id(
             submission_id=submission_id,
@@ -126,7 +125,7 @@ def _populated_amendment() -> ModeloComplementaria:
         original_period=Period.from_year_and_code(2025, "1T"),
         delta=delta,
         amended_draft=_populated_amended_draft(),
-        created_at=now,
+        created_at=_AMENDMENT_CREATED_AT,
     )
 
 
@@ -194,14 +193,14 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+    from ....adapters.persistence.storage import FILING_AMENDMENTS_NAMESPACE
+    from ....adapters.persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ....adapters.persistence.storage.sql import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
-    from .._complementaria_repository import _AMENDMENT_NAMESPACE
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         try:
@@ -211,7 +210,7 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
 
             with session_scope(profile.repository._engine) as session:
                 all_rows = session.execute(select(SecureObjectRow)).scalars().all()
-                amendment_rows = [r for r in all_rows if r.namespace == _AMENDMENT_NAMESPACE]
+                amendment_rows = [r for r in all_rows if r.namespace == FILING_AMENDMENTS_NAMESPACE.namespace]
                 assert len(amendment_rows) == 1, (
                     f"expected one amendment row, found {len(amendment_rows)} "
                     f"(namespaces: {sorted({r.namespace for r in all_rows})})"

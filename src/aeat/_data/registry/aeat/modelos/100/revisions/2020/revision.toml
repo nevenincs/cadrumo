@@ -4,6 +4,7 @@ label = "Ejercicio 2020"
 valid_from = 2020-01-01
 valid_to = 2020-12-31
 period_selector = { years = [2020], periods = ["0A"] }
+orden_aplicabilidad = ["orden-hac-248-2021:art-3"]
 legal_refs = [
     "ley-35-2006:art-17",
     "ley-35-2006:art-18",
@@ -19,6 +20,7 @@ legal_refs = [
     "ley-35-2006:art-30",
     "ley-35-2006:art-31",
     "ley-35-2006:art-32",
+    "orden-hac-248-2021:art-3",
 ]
 source_refs = [
     "aeat-dr-100-2020-dictionary",

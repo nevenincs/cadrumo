@@ -4,17 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import bundled_path as _bundled_path
+from ....core.resources import resources
 from ....domain.calculations.registry import InputKind
-from ....domain.calculations.registry._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_REGISTRY_ROOT = _bundled_path("registry", "aeat")
 
-
-def _authority() -> ValidatedRegistryAuthority:
-    return ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=_bundled_path())
+def _authority():
+    return resources().modelos.authority
 
 
 def test_formula_backed_casillas_are_computed_inputs() -> None:
@@ -41,9 +38,7 @@ def test_filing_period_metadata_casillas_are_informational_inputs() -> None:
     authority = _authority()
     snapshot = authority.snapshot("303", filing_year=2026, period="1T")
 
-    period_casillas = [
-        casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_period"
-    ]
+    period_casillas = [casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_period"]
 
     assert period_casillas, "modelo 303 must declare filing-period metadata casillas"
     assert all(casilla.input_kind is InputKind.INFORMATIONAL for casilla in period_casillas)

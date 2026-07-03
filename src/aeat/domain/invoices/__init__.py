@@ -1,9 +1,59 @@
-"""Immutable invoice catalogue surface for the financial pipeline.
+"""Public facade for immutable invoice catalogue records.
 
-Public surface for :class:`InvoiceCatalogue` and :class:`InvoiceCatalogueRepository`.
-Callers must import invoice models, errors, and service functions
-exclusively from ``aeat.domain.invoices`` and must not reach into the
-private underscore modules inside this package.
+The package root is the import boundary for :class:`InvoiceLine`,
+:class:`Invoice`, :class:`InvoiceCatalogue`, invoice errors, repository
+ports, and reconciliation helpers. :class:`Invoice` is a strict frozen
+commercial-document record; :func:`derive_invoice_id` derives its stable id
+from kind, number, issue date, counterparty, currency, and grand total, while
+line and invoice validators preserve totals, tax-rate slots, payment state,
+bucket ownership, and ``linked_transaction_ids`` provenance.
+
+The IVA bridge re-exports :class:`IvaRate`, :class:`PaymentStatus`,
+:class:`IvaInvoiceClassification`, :func:`classify_invoice_line_for_iva`,
+:func:`invoice_line_to_iva_observation`, and rate helpers. The standard helper
+covers domestic IVA rate slots; reverse-charge, intra-community, OSS/IOSS, and
+other non-domestic cases use explicit substrate fields such as
+:class:`domain.iva.IvaCategory` already carried on :class:`Invoice`.
+
+Service helpers such as :func:`link_transaction`,
+:func:`suggest_reconciliations`, and :func:`verify_link_consistency` are pure
+operations over :class:`InvoiceCatalogue` and
+:class:`domain.transactions.TransactionCatalogue`; persisted cross-catalogue
+workflows belong in :mod:`application.invoices`.
+Ledger ``purchase_invoice_evidence_id`` references must resolve to
+bucket-owned :class:`Invoice` records with matching ``linked_transaction_ids``
+before aggregation treats them as purchase evidence.
+
+Persistence is exposed through the narrow
+:class:`InvoiceCatalogueRepositoryProtocol` port; the concrete
+:class:`~aeat.adapters.persistence.profile.invoices.InvoiceCatalogueRepository`
+lives in the persistence adapter and stores the active-bucket catalogue
+singleton through
+:class:`adapters.persistence.storage.SecureObjectRepository` as
+``FINANCIAL`` :class:`adapters.persistence.storage.SensitivityClass`
+payloads wrapped in :class:`adapters.persistence.storage.Envelope`; no
+plaintext invoice row, JSON catalogue, or envelope file is the durable store.
+Callers must import public objects from ``aeat.domain.invoices`` and must not
+reach into the private underscore modules inside this package.
+
+See Also:
+    :class:`Invoice`
+        Strict frozen invoice record that carries identity, totals, payment,
+        bucket, tax-substrate, and linked-transaction facts.
+    :class:`InvoiceCatalogue`
+        Frozen aggregate persisted as the encrypted invoice catalogue.
+    :class:`InvoiceCatalogueRepositoryProtocol`
+        Narrow port used by application services that only need load/save
+        semantics.
+    :mod:`application.invoices`
+        Persisted invoice import, reconciliation, repository linking, and
+        :class:`application.invoices.InvoiceCatalogueSourceResolver`.
+    :mod:`application.ledger`
+        Ledger lifecycle that attaches ``purchase_invoice_evidence_id`` to
+        bucket-scoped transactions after evidence ownership checks.
+    :mod:`application.aggregation`
+        Calculation-source resolvers that consume invoice and purchase-evidence
+        records for modelo bindings.
 """
 
 from __future__ import annotations
@@ -32,10 +82,11 @@ from ..iva import (
 )
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from ._protocols import InvoiceCatalogueRepositoryProtocol
-from ._repository import InvoiceCatalogueRepository
 from ._service import (
     LinkInconsistency,
     ReconciliationSuggestion,
+    find_invoice,
+    find_unmatched,
     link_transaction,
     suggest_reconciliations,
     verify_link_consistency,
@@ -46,7 +97,6 @@ __all__ = [
     "Invoice",
     "InvoiceCatalogue",
     "InvoiceCatalogueError",
-    "InvoiceCatalogueRepository",
     "InvoiceCatalogueRepositoryProtocol",
     "InvoiceError",
     "InvoiceLine",
@@ -62,6 +112,8 @@ __all__ = [
     "ReconciliationSuggestion",
     "classify_invoice_line_for_iva",
     "derive_invoice_id",
+    "find_invoice",
+    "find_unmatched",
     "invoice_line_to_iva_observation",
     "iva_rate_kind",
     "iva_rate_percentage",

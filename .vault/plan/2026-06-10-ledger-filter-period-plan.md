@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#ledger-filter-period'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-10-ledger-filter-period-adr]]'
   - '[[2026-06-10-ledger-filter-period-research]]'
 ---
-
 
 # `ledger-filter-period` `Ledger shared period filter: ratify, delete residual notation, continuity gate` plan
 

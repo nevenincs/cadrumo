@@ -1,4 +1,4 @@
-"""Real-behavior tests for _actions module-level surfaces.
+"""Real-behavior tests for modelo action module surfaces.
 
 contract: ``_IVA_LEDGER_EXEMPT_REGIMES`` uses ``IVARegime`` enum members rather
 than raw strings, so the frozenset membership check is typed at the schema
@@ -24,35 +24,46 @@ from ....domain.calculations.registry import (
     CasillaId,
     DataBindingDefinition,
     InputKind,
+    ModeloRevision,
+    PeriodSelector,
+    RegistryValidationError,
+    VerificationPredicateDefinition,
+    calculate_registry_snapshot,
     validated_casilla_id,
 )
-from ....domain.calculations.registry._schema import ModeloRevision, PeriodSelector, VerificationPredicateDefinition
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva_compensation._reconciliation import (
-    IvaCompensationDivergence,
-    IvaCompensationReconciliationDecision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.iva_compensation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
-from .._actions import (
+from ...workflow import WorkflowInputMismatchError
+from .. import ModeloAggregationBindingError
+from .._calculation_actions import (
     _IVA_LEDGER_EXEMPT_REGIMES,
-    ModeloAggregationBindingError,
+    _reject_caller_overrides_of_source_bindings,
+)
+from .._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
-    WorkflowInputMismatchError,
-    _apply_iva_compensation_decision_binding,
+    iva_wallet_blocked_message,
+)
+from .._iva_wallet_gate import (
+    apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding,
+)
+from .._revision_replay_inputs import _informational_casilla_replay_inputs
+from .._verification_actions import (
     _art20_reduccion_advisory_finding,
     _collect_revision_verification_findings,
     _dt12_reduccion_advisory_finding,
     _evaluate_verification_predicates,
-    _iva_wallet_blocked_message,
     _iva_wallet_blocking_verification_finding,
     _missing_required_casilla_finding,
-    _reject_caller_overrides_of_source_bindings,
+)
+from .._workflow_gate import (
     _RevisionInputsProvider,
     workflow_period_for_work_unit,
 )
@@ -66,7 +77,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _TEST_LEGAL_REF = "test-actions:legal"
-_TEST_SOURCE_REF = "test-actions:source"
+_TEST_SOURCE_REF = "test-actions-source"
+_BUCKET_ID = "ac42089b-a822-458e-99e6-333861181de7"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -88,6 +100,8 @@ _ART20_REDUCCION_CASILLA: CasillaId = _casilla_id("0023")
 _M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
 _M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
 _SOURCE_BOUND_BINDING: BindingId = "ledger_iva_base"
+_M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: CasillaId = _casilla_id("0171")
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
 
 
 def _test_casilla_definition(
@@ -239,7 +253,12 @@ def _resident_profile() -> TaxpayerProfile:
     return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
 
 
-def _minimal_work_unit(modelo: str = "999", period: str = "0A", filing_year: int = 2026) -> WorkUnit:
+def _minimal_work_unit(
+    modelo: str = "999",
+    period: str = "0A",
+    filing_year: int = 2026,
+    revision_id: str = "r" + "0" * 63,
+) -> WorkUnit:
     bucket_id = "test-bucket"
     typed_period = Period.from_year_and_code(filing_year, period)
     return WorkUnit(
@@ -248,13 +267,13 @@ def _minimal_work_unit(modelo: str = "999", period: str = "0A", filing_year: int
             modelo=modelo,
             filing_year=filing_year,
             period=typed_period,
-            revision_id="r" + "0" * 63,
+            revision_id=revision_id,
         ),
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
         period=typed_period,
-        revision_id="r" + "0" * 63,
+        revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
         created_at=_T0,
         updated_at=_T0,
@@ -382,6 +401,7 @@ def test_registry_snapshot_unresolved_finding_is_localised() -> None:
         work_unit=work_unit,
         target=target,
         profile=_resident_profile(),
+        transaction_repository=None,
     )
 
     assert len(findings) == 1
@@ -515,19 +535,19 @@ def test_iva_wallet_blocking_finding_next_action_is_localised() -> None:
 
 
 # ---------------------------------------------------------------------------
-# contract/contract — _iva_wallet_blocked_message uses tr(); exception carries translated_message
+# contract/contract — iva_wallet_blocked_message uses tr(); exception carries translated_message
 # ---------------------------------------------------------------------------
 
 
 def test_iva_wallet_blocked_message_is_localised() -> None:
-    """_iva_wallet_blocked_message renders via tr() interpolating divergence and reason.
+    """iva_wallet_blocked_message renders via tr() interpolating divergence and reason.
 
     The returned string must contain the divergence and reason tokens as
     produced by the locale template, not a raw f-string fallback.
     """
     decision = _blocked_wallet_decision(divergence="wallet_missing", reason="No history available.")
 
-    message = _iva_wallet_blocked_message(decision)
+    message = iva_wallet_blocked_message(decision)
 
     # The divergence and reason tokens must appear in the rendered message.
     assert "wallet_missing" in message
@@ -542,14 +562,12 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
     """ModeloIvaWalletReconciliationBlocked raised via _raise_if_persisted... carries
     translated_message='application.modelo.errors.iva_wallet_blocked'.
 
-    This test exercises the raise site through _iva_wallet_blocked_message
+    This test exercises the raise site through iva_wallet_blocked_message
     indirectly by constructing the exception the same way the raise site does
     after contract — with both the rendered message and the translated_message key.
     """
-    from .._actions import ModeloIvaWalletReconciliationBlocked
-
     decision = _blocked_wallet_decision(divergence="filed_history_only", reason="Only filed history present.")
-    rendered = _iva_wallet_blocked_message(decision)
+    rendered = iva_wallet_blocked_message(decision)
 
     exc = ModeloIvaWalletReconciliationBlocked(
         rendered,
@@ -566,7 +584,7 @@ def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
             "303",
             2026,
             Period.from_year_and_code(2026, "1T"),
-            bucket_id="bucket-1",
+            bucket_id=_BUCKET_ID,
             revision=_test_revision(),
             taxpayer_nif="12345678Z",
             caller_binding_values={},
@@ -628,7 +646,7 @@ class TestWorkflowInputMismatchError:
 
     def test_matching_request_does_not_raise(self) -> None:
         """load_inputs with the correct modelo and workflow period returns inputs."""
-        from .._actions import workflow_period_for_work_unit
+        from .._workflow_gate import workflow_period_for_work_unit
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
@@ -643,7 +661,7 @@ class TestWorkflowInputMismatchError:
 
     def test_mismatched_modelo_raises_workflow_input_mismatch_error(self) -> None:
         """load_inputs with a wrong modelo raises WorkflowInputMismatchError."""
-        from .._actions import workflow_period_for_work_unit
+        from .._workflow_gate import workflow_period_for_work_unit
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
@@ -709,20 +727,113 @@ class TestWorkflowInputMismatchError:
             pytest.fail("WorkflowInputMismatchError was not raised")
 
 
-def test_iva_regime_enum_covers_all_wizard_choice_values() -> None:
-    """All IVARegime members must appear in the wizard's IVA-regime choice list.
+def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() -> None:
+    """Verify-time draft replay must not feed M100 0224 back as an operator input."""
+    work_unit = _minimal_work_unit(modelo="100", period="0A", filing_year=2024, revision_id="2024")
+    snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A", revision_id="2024")
+    binding_values: dict[BindingId, Decimal] = {
+        "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+        "renta-2024-profile-declaration-type": Decimal("1"),
+        "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
+        "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+        "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-2024-profile-marriage-full-year": Decimal("0"),
+        "renta-2024-profile-marriage-month-start": Decimal("0"),
+        "renta-2024-profile-marriage-month-end": Decimal("0"),
+        "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+    }
+    relation_values = {
+        "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
+        "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
+        "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
+        "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
+        "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
+        "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+    }
+    enum_binding_values = {"renta-2024-profile-tax-residence-ccaa": "madrid"}
+    date_binding_values = {"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)}
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={_M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: Decimal("10000")},
+        date_context={"filing_period": date(2024, 12, 31)},
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        relation_values=relation_values,
+        date_binding_values=date_binding_values,
+    )
+    assert result.values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA] == Decimal("10000.00")
+    with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"):
+        calculate_registry_snapshot(
+            snapshot,
+            inputs={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("10000")},
+            date_context={"filing_period": date(2024, 12, 31)},
+            binding_values=binding_values,
+            enum_binding_values=enum_binding_values,
+            relation_values=relation_values,
+            date_binding_values=date_binding_values,
+        )
 
-    This cross-cuts the wizard ``_IVA_REGIME_CHOICE_VALUES`` derivation (contract)
-    against the canonical enum so neither can drift independently.
+    binding_overrides = {
+        **{binding_id: str(value) for binding_id, value in binding_values.items()},
+        **enum_binding_values,
+        **{binding_id: value.isoformat() for binding_id, value in date_binding_values.items()},
+    }
+    relation_overrides = {relation_id: str(value) for relation_id, value in relation_values.items()}
+    input_values_by_casilla_id = {_M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: "10000"}
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides=binding_overrides,
+        relation_overrides=relation_overrides,
+        casilla_values=result.values,
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides=binding_overrides,
+        relation_overrides=relation_overrides,
+        casilla_values=result.values,
+        observations=result.observations,
+        created_at=_T0,
+        updated_at=_T0,
+    )
+
+    informational_replay_inputs = _informational_casilla_replay_inputs(
+        revision=revision,
+        snapshot=snapshot,
+    )
+
+    assert _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA not in informational_replay_inputs
+
+
+def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values() -> None:
+    """The CLI accepts the wizard's operator-selectable IVA-regime choices.
+
+    ``IVARegime.NO_APLICA`` is an internal projection sentinel for profiles
+    that are not enrolled in IVA. It must not leak into the operator-facing
+    ``--iva-regime`` choice set.
     """
+    from ....core.wizard_catalogue import get_setup_flow
     from ...wizard._commands import _IVA_REGIME_CHOICE_VALUES
 
-    enum_values = {m.value for m in IVARegime}
+    wizard_values = {
+        choice.value
+        for section in get_setup_flow().sections
+        for question in section.questions
+        if question.id == "iva-regime"
+        for choice in question.choices
+    }
     choice_set = set(_IVA_REGIME_CHOICE_VALUES)
-    assert enum_values == choice_set, (
-        f"Wizard choice values {choice_set!r} do not match IVARegime members {enum_values!r}. "
-        "Update _iva_regime_choice_values() or IVARegime."
-    )
+    assert choice_set == wizard_values
+    assert IVARegime.NO_APLICA.value not in choice_set
 
 
 # ---------------------------------------------------------------------------

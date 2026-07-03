@@ -51,8 +51,18 @@ from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
 from .....core.time import now
 from .._namespace_registry import BLOB_MANIFEST_SCHEMA_VERSION, STORAGE_NAMESPACE_REGISTRY
-from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
-from ..envelope._envelope import EncryptionMetadata, Envelope, load_envelope, save_envelope
+from ..crypto import (
+    KEY_SIZE,
+    EncryptedBlob,
+    decrypt_record,
+    encrypt_record,
+)
+from ..envelope import (
+    EncryptionMetadata,
+    Envelope,
+    load_envelope,
+    save_envelope,
+)
 from ..errors import (
     BlobIntegrityError,
     BlobNotFoundError,
@@ -61,8 +71,7 @@ from ..errors import (
     EncryptionError,
     EnvelopeVersionError,
 )
-from ..master_key._active_session import get_active_master_key
-from ..master_key._master_key import MasterKeyProvider
+from ..master_key import MasterKeyProvider, get_active_master_key
 
 _log = get_logger(__name__)
 
@@ -417,7 +426,7 @@ class EncryptedBlobStore:
             for manifest_path in sorted(shard_dir.glob("*.manifest.json")):
                 # Single read + inline gate: iter_manifests is
                 # classification-class-agnostic at the API surface, so
-                # the only gate that applies is the version ceiling.
+                # the schema-version contract is the only gate here.
                 try:
                     envelope = Envelope[BlobManifest].model_validate_json(
                         manifest_path.read_text(encoding=_UTF_8_ENCODING),
@@ -433,10 +442,10 @@ class EncryptedBlobStore:
                         violation="manifest_payload",
                         object_kind="manifest",
                     ) from exc
-                if envelope.schema_version > BLOB_MANIFEST_SCHEMA_VERSION:
+                if envelope.schema_version != BLOB_MANIFEST_SCHEMA_VERSION:
                     raise EnvelopeVersionError(
                         f"blob manifest is at version {envelope.schema_version}; "
-                        f"consumer supports up to {BLOB_MANIFEST_SCHEMA_VERSION}",
+                        f"consumer expects {BLOB_MANIFEST_SCHEMA_VERSION}",
                     )
                 yield manifest_path, envelope.payload
 

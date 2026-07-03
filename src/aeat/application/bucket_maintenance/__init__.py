@@ -1,21 +1,74 @@
-"""Operator-facing bucket maintenance surface.
+"""Application-layer bucket-maintenance lifecycle facade.
 
-Composes the existing single-writer primitives that own bucket-scoped
-lifecycle operations (label rename, soft tombstone + hard removal,
-portable bundle export / import, namespace-grouped browse) behind a
-thin service that emits the bucket-maintenance audit events alongside
-the lifecycle events the inner primitives already emit.
+This package exposes :class:`BucketMaintenanceService`
+and its Pydantic command/result contracts for profile-scoped storage
+maintenance. The service composes the existing single-writer primitives
+that own bucket lifecycle operations: label rename, soft tombstone plus
+hard removal, sealed portable-bundle export/import, and namespace-level
+browse. It contributes bucket-maintenance audit events through
+:class:`domain.buckets.BucketEventHistoryRepository` while the
+inner profile primitives keep emitting their lifecycle events.
 
 Authority: ``2026-06-03-cli-workflow-redesign-adr`` (composition
-pattern). The service NEVER re-implements a cross-store write — it
-delegates to the existing top-level re-exports (``rename_profile``,
-``delete_profile_with_lifecycle_span``, ``remove_profile_bucket_directory``,
-``serialize_profile_bundle``, ``deserialize_profile_bundle``).
+pattern). The service does not re-implement a cross-store write; it
+delegates to the existing top-level user-profile re-exports:
+:func:`application.user_profile.rename_profile`,
+:func:`application.user_profile.delete_profile_with_lifecycle_span`,
+:func:`application.user_profile.remove_profile_bucket_directory`,
+:func:`application.user_profile.serialize_profile_bundle`, and
+:func:`application.user_profile.deserialize_profile_bundle`.
 
-This package exposes the lifecycle composition verbs ``browse``, ``delete``,
-``export``, ``import``, and ``rename``. The ``search`` verb is deferred behind
-its own ADR because it must route through domain repositories instead of
-decrypting secure-object storage directly.
+Export/import composition is deliberately typed at the facade boundary:
+commands such as
+:class:`ExportBucketCommand` and
+:class:`ImportBucketCommand` produce
+sealed archives with
+:class:`adapters.persistence.storage.bucket.ExportArchiveHeader`,
+payloads based on
+:class:`domain.user_profile.UserProfilePortableExport`, and a
+manifest digest from
+:func:`compute_manifest_digest`.
+Sealed exports use
+:class:`adapters.persistence.storage.StorageCustodyProfile.FULL`:
+the portable payload carries the typed profile/work/ledger/calculation/filing
+categories plus the registry-derived carried secure-object namespaces. Carried
+rows are addressed by their natural object keys, not the stored HMAC lookup
+digests, so import re-saves them through the recipient bucket's
+:class:`adapters.persistence.storage.SecureObjectRepository` and
+re-encrypts under that bucket's DEK.
+This package exposes the lifecycle composition verbs ``browse``,
+``delete``, ``export``, ``import``, ``inspect``, and ``rename``. The
+``search`` verb is deferred behind its own ADR because it must route
+through domain repositories instead of decrypting secure-object storage
+directly.
+
+:func:`create_sandbox` and :func:`discard_sandbox` expose a discardable
+experiment-workspace lifecycle over the same primitives: a sandbox is an
+ordinary bucket labelled with the reserved :data:`SANDBOX_LABEL_PREFIX`,
+created (optionally forked from a live profile's facts) through the
+canonical atomic-create span and discarded through this package's
+:meth:`BucketMaintenanceService.delete`. :func:`preview_discard_sandbox`
+reports what a discard would remove without removing it, and
+:func:`list_sandboxes` enumerates every live sandbox for bulk operations
+such as ``sandbox prune``.
+
+See Also:
+    :mod:`application.user_profile`
+        Lifecycle and portable-bundle single-writer primitives composed by this
+        facade.
+    :mod:`domain.buckets`
+        Bucket-event records and
+        :class:`domain.buckets.BucketEventHistoryRepository` used for the
+        maintenance audit trail.
+    :mod:`adapters.persistence.storage.bucket`
+        Bucket manifest, sealed-archive header, and archive reader/writer
+        contracts used by export and import.
+    :class:`BucketMaintenanceService`
+        Stateless service that implements the ``browse``, ``delete``,
+        ``export``, ``import``, ``inspect``, and ``rename`` verbs.
+    :func:`compute_manifest_digest`
+        Archive-header integrity anchor bound into the sealed payload's AEAD
+        associated data.
 """
 
 from __future__ import annotations
@@ -30,24 +83,66 @@ from ._contracts import (
     ExportBucketResult,
     ImportBucketCommand,
     ImportBucketResult,
+    InspectBucketArchiveCommand,
+    InspectBucketArchiveResult,
     RenameBucketCommand,
     RenameBucketResult,
 )
 from ._manifest_digest import compute_manifest_digest
+from ._sandbox import (
+    SANDBOX_LABEL_PREFIX,
+    CreateSandboxCommand,
+    CreateSandboxResult,
+    DiscardSandboxCommand,
+    DiscardSandboxResult,
+    PreviewDiscardSandboxCommand,
+    PreviewDiscardSandboxResult,
+    SandboxAlreadyExistsError,
+    SandboxDiscardRefusedError,
+    SandboxNamespaceInventoryRow,
+    SandboxNotFoundError,
+    SandboxSourceNotFoundError,
+    create_sandbox,
+    discard_sandbox,
+    is_sandbox_label,
+    list_sandboxes,
+    preview_discard_sandbox,
+    sandbox_label,
+)
 from ._service import BucketMaintenanceService
 
 __all__ = [
+    "SANDBOX_LABEL_PREFIX",
     "BrowseBucketCommand",
     "BrowseBucketResult",
     "BucketMaintenanceService",
     "BucketNamespaceInventoryRow",
+    "CreateSandboxCommand",
+    "CreateSandboxResult",
     "DeleteBucketCommand",
     "DeleteBucketResult",
+    "DiscardSandboxCommand",
+    "DiscardSandboxResult",
     "ExportBucketCommand",
     "ExportBucketResult",
     "ImportBucketCommand",
     "ImportBucketResult",
+    "InspectBucketArchiveCommand",
+    "InspectBucketArchiveResult",
+    "PreviewDiscardSandboxCommand",
+    "PreviewDiscardSandboxResult",
     "RenameBucketCommand",
     "RenameBucketResult",
+    "SandboxAlreadyExistsError",
+    "SandboxDiscardRefusedError",
+    "SandboxNamespaceInventoryRow",
+    "SandboxNotFoundError",
+    "SandboxSourceNotFoundError",
     "compute_manifest_digest",
+    "create_sandbox",
+    "discard_sandbox",
+    "is_sandbox_label",
+    "list_sandboxes",
+    "preview_discard_sandbox",
+    "sandbox_label",
 ]

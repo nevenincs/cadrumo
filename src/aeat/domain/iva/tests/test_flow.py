@@ -6,7 +6,8 @@ import tomllib
 
 import pytest
 
-from ....core.resources import bundled_path
+from ....core.resources import bundled_path, resources
+from ...calculations.registry import selector_as_dict
 from .. import (
     InvoiceKind,
     IvaCategory,
@@ -31,9 +32,8 @@ def test_iva_flow_direction_string_values_are_kebab_case() -> None:
     assert IvaFlowDirection.INVERSION_SUJETO_PASIVO.value == "inversion_sujeto_pasivo"
 
 
-@pytest.mark.parametrize(
-    ("category", "direction", "expected"),
-    [
+def test_derive_flow_classifies_non_reverse_charge_categories() -> None:
+    cases: tuple[tuple[IvaCategory, InvoiceKind, IvaFlowDirection], ...] = (
         (IvaCategory.DOMESTIC_GENERAL_21, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
         (IvaCategory.DOMESTIC_REDUCED_10, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
         (IvaCategory.DOMESTIC_SUPER_REDUCED_4, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
@@ -42,63 +42,46 @@ def test_iva_flow_direction_string_values_are_kebab_case() -> None:
         (IvaCategory.RECARGO_EQUIVALENCIA, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
         (IvaCategory.INTRA_COMMUNITY_SUPPLY, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
         (IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
-    ],
-)
-def test_derive_flow_classifies_issued_non_reverse_charge_as_repercutido(
-    category: IvaCategory,
-    direction: InvoiceKind,
-    expected: IvaFlowDirection,
-) -> None:
-    assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected
-
-
-@pytest.mark.parametrize(
-    ("category", "direction", "expected"),
-    [
+        (IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
         (IvaCategory.DOMESTIC_GENERAL_21, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
         (IvaCategory.DOMESTIC_REDUCED_10, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
         (IvaCategory.DOMESTIC_SUPER_REDUCED_4, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
         (IvaCategory.IMPORT_THIRD_COUNTRY, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
         (IvaCategory.RECARGO_EQUIVALENCIA, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
-    ],
-)
-def test_derive_flow_classifies_received_non_reverse_charge_as_soportado(
-    category: IvaCategory,
-    direction: InvoiceKind,
-    expected: IvaFlowDirection,
-) -> None:
-    assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected
-
-
-@pytest.mark.parametrize("direction", [InvoiceKind.ISSUED, InvoiceKind.RECEIVED])
-def test_derive_flow_classifies_domestic_reverse_charge_as_autorepercutido(
-    direction: InvoiceKind,
-) -> None:
-    """Domestic reverse-charge (LIVA art 84.Uno.2) routes to INVERSION_SUJETO_PASIVO
-    irrespective of invoice direction; the recipient self-assesses."""
-    assert (
-        derive_flow_for_classification(
-            category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
-            invoice_direction=direction,
-        )
-        is IvaFlowDirection.INVERSION_SUJETO_PASIVO
     )
 
+    for category, direction, expected in cases:
+        assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected, (
+            category,
+            direction,
+        )
 
-@pytest.mark.parametrize("direction", [InvoiceKind.ISSUED, InvoiceKind.RECEIVED])
-def test_derive_flow_classifies_intracomm_acquisition_rc_as_autorepercutido(
-    direction: InvoiceKind,
-) -> None:
+
+def test_derive_flow_classifies_domestic_reverse_charge_as_autorepercutido() -> None:
+    """Domestic reverse-charge (LIVA art 84.Uno.2) routes to INVERSION_SUJETO_PASIVO
+    irrespective of invoice direction; the recipient self-assesses."""
+    for direction in (InvoiceKind.ISSUED, InvoiceKind.RECEIVED):
+        assert (
+            derive_flow_for_classification(
+                category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+                invoice_direction=direction,
+            )
+            is IvaFlowDirection.INVERSION_SUJETO_PASIVO
+        ), direction
+
+
+def test_derive_flow_classifies_intracomm_acquisition_rc_as_autorepercutido() -> None:
     """Intra-community acquisition reverse-charge (LIVA art 84.Uno.2.e)
     self-assesses both the repercutido and soportado entries on the
     same operation."""
-    assert (
-        derive_flow_for_classification(
-            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            invoice_direction=direction,
-        )
-        is IvaFlowDirection.INVERSION_SUJETO_PASIVO
-    )
+    for direction in (InvoiceKind.ISSUED, InvoiceKind.RECEIVED):
+        assert (
+            derive_flow_for_classification(
+                category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+                invoice_direction=direction,
+            )
+            is IvaFlowDirection.INVERSION_SUJETO_PASIVO
+        ), direction
 
 
 def test_iva_flow_legal_articles_present_in_registry_toml() -> None:
@@ -138,9 +121,7 @@ def test_iva_flow_corpus_excerpts_present_with_boe_quotes() -> None:
 def test_iva_flow_load_registry_recognises_three_articles() -> None:
     """The registry tree loader must surface the three LIVA articles in
     the catalogue."""
-    from ...calculations.registry import load_registry_tree
-
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = resources().modelos.authority.catalogues
     assert "ley-37-1992:art-84" in catalogues.legal
     assert "ley-37-1992:art-88" in catalogues.legal
     assert "ley-37-1992:art-92" in catalogues.legal
@@ -265,14 +246,12 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     tiers) + INVERSION_SUJETO_PASIVO — the same flows as DEVENGADA_FLOW_DIRECTIONS.
     This test is a contract gate: if the substrate's devengada set ever
     changes, this test fires unless 303's formula updates in lockstep."""
-    from ...calculations.registry import load_registry_tree
     from .. import (
         DEVENGADA_FLOW_DIRECTIONS,
         IvaFlowDirection,
     )
 
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    m303 = next(m for m in modelos if m.id == "303")
+    m303 = resources().modelos.get("303")
     revision = m303.revisions["2009-y-siguientes"]
 
     # Each ledger_iva_aggregation binding declares its flow direction in
@@ -288,7 +267,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
             continue
         binding_id = casilla_to_binding[casilla_id]
         binding = next(b for b in revision.bindings if b.id == binding_id)
-        flow_value = binding.selector["flow_direction"]
+        flow_value = selector_as_dict(binding)["flow_direction"]
         binding_flows.add(IvaFlowDirection(flow_value))
 
     assert binding_flows == DEVENGADA_FLOW_DIRECTIONS

@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-29'
 related:
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]"
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
@@ -94,8 +94,8 @@ All other ADR anchors hold at HEAD.
 | G1 | CLI verb fork -- bindings preview | _modelo_discovery_cli.py:530 | bindings_app.command preview under app modelo bindings subgroup (:75,81,86) | one learnable verb story per aeat-cli-pull-and-file-standard; preview names a UI gesture, not the value-bearing aggregation it performs | locale keys cli.app.modelo.bindings.preview_help + list_help; bindings_app registration | F7 (CLI verb fork 1/3) | S(CLI verb reconciliation) |
 | G2 | CLI verb fork -- calc pull --compute | _config/_google_sync_calc.py:361 | calc_app.command pull + --compute/--no-compute (:373-376) under config google sync calc | reconcile with G1/G3 -- same produce-bound-casilla-values-from-sources intent; pull here multiplexes Sheets transport + compute | locale keys cli.config.google.sync.calc.pull*; the pull channel multiplexing | F7 (CLI verb fork 2/3) | S(CLI verb reconciliation) |
 | G3 | CLI verb fork -- work calculate | _modelo_work_calculate_cli.py:253 | work_app.command calculate under app modelo work | the live calculate path -- the canonical aggregation engine entry | locale key cli.app.modelo.work.calculate_help; register_work_calculate_commands | F7 (CLI verb fork 3/3) | S(CLI verb reconciliation) |
-| H1 | binding selector (free-form Mapping) | registry/_schema.py:1007; alias _schema_scalars.py:399 | DataBindingDefinition.selector: BindingSelectorMap = Mapping[str, BindingSelectorValue]; typed only at validate-time via per-source selector models in _bindings.py, never at the schema | discriminated union keyed by BindingSourceKind -- per-family selector models BECOME the schema. LARGEST residual; may split to follow-up per ADR | BindingSelectorMap consumed by _schema.py (alias :173, field :1007) + _schema_scalars.py (:387,399); per-source typed selector models in _bindings.py; _validate_binding_selector_shapes snapshot gate | F8 (selector typing) | S(selector union -- MAY DEFER) |
-| H2 | typed_enum stringly-typed pointer | registry/_schema.py:1009 | typed_enum: str-or-None = None -- a string pointer to an enum CLASS NAME | narrow to a typed enum-class reference | bindings list CLI table, ModeloBindingQueryRow (A3) projection, borrador resolver, Sheets-pull router; gated by test_schema_hygiene.py | F8 (selector typing) | S(selector union -- MAY DEFER) |
+| H1 | binding selector (hydrated source-family model) | registry/_schema.py:839; alias _schema_scalars.py:399 | DataBindingDefinition.selector: BindingSelector; raw BindingSelectorMap is authoring/input shape only | closed/currentized 2026-06-29: the constructed binding schema hydrates raw TOML/dict selectors through selector_model_for_source into concrete per-family pydantic selector models, serializes them back to authored mappings, and refuses mesh-only borrador / iva_wallet_decision as registry binding sources. Binding-derived export record projection parses through BindingFixedExportSelector / BindingRowExportSelector, Detalle row-set assembly and Sheets layout parse through BindingRowSetSelector, and public binding query rows expose BindingSelectorQueryProjection ordered entries instead of the raw selector map. | _schema.py selector field + serializer; _schema_scalars.py BindingSelector; per-source typed selector models in _bindings.py; _validate_binding_selector_shapes snapshot gate; ModeloBindingQueryRow.selector projection BindingSelectorQueryProjection | F8 (selector typing) | closed for H1 |
+| H2 | typed_enum closed enum-class annotation | registry/_schema.py:841; core/aggregation.py:353 | DataBindingDefinition.typed_enum: BindingTypedEnumKind \| None; raw TOML tokens hydrate at the schema boundary | closed/currentized 2026-06-29: the canonical binding schema stores a closed enum member instead of a bare string pointer. `ModeloBindingQueryRow.typed_enum` remains string-valued as an operator/API projection because StrEnum serializes to its token. | bindings list CLI table, ModeloBindingQueryRow (A3) projection, borrador resolver, Sheets-pull router; gated by `test_schema_hygiene.py::test_declared_typed_enum_hydrates_to_binding_typed_enum_kind` | F8 (selector typing) | closed |
 | H3 | DISTINGUISH: relation source-revision selector | _schema_surfaces.py:483 | source_revision_selector: Mapping[str, str-or-int] on the relation/dependency surface | NOT the binding selector (H1) -- this is the RELATION revision selector. Do not conflate; F8 touches H1, not H3 | _relations.py:281, _validate_relation_sources.py:88,122,123,159, cross-dependency tests | F8 (disambiguation note) | n/a (clarifier) |
 
 ### Observation-family enumeration (E2 detail)
@@ -164,11 +164,10 @@ read clearly; they are NOT the homonym problem and need no rename -- only the ba
   curated operator help (operator_surface/_help.py), and the envelope command= identifiers
   -- per aeat-cli-pull-and-file-standard. HIGH blast radius; the registration is the small
   part. Gated by test_documented_command_conformance.py and test_json_schema_conformance.py.
-- F8 selector typing (H1-H2): the LARGEST residual. H1 (discriminated union keyed by
-  BindingSourceKind) restructures the schema and every per-family selector model; H2
-  (typed_enum) is smaller. The ADR explicitly permits splitting F8 into a tracked
-  follow-up. Recommendation: scope 2.4 to F6+F7 (the rename / re-home / CLI cohesion) and
-  split F8 to its own phase unless the rename pass lands light.
+- F8 selector typing (H1-H2): H1 and H2 are closed in current state. Binding
+  selectors hydrate to per-source models, and `typed_enum` hydrates to
+  `BindingTypedEnumKind`; public query rows still serialize enum annotations as
+  string tokens.
 
 ### What is NOT in scope (guardrails)
 

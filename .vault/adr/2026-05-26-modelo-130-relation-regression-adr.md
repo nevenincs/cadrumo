@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-130-relation-regression'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-29'
 related:
   - "[[2026-05-19-modelo-130-relation-regression-research]]"
   - "[[2026-05-26-modelo-130-relation-regression-audit]]"
@@ -14,11 +14,12 @@ related:
 
 ## Problem Statement
 
-The Modelo 130 prior-quarter negative-result carry-forward (RD
-439/2007 art. 110.5) is structurally undeclarable in the current
-registry runtime, and casillas whose declared bindings fail to
-resolve silently default to `Decimal("0")` instead of surfacing the
-failure. Two coupled defects produce one regression:
+The Modelo 130 prior-quarter negative-result carry-forward (casilla 15
+mechanics from AEAT Modelo 130 instructions under the RD 439/2007 art. 110
+payment framework) is structurally undeclarable in the current registry
+runtime, and casillas whose declared bindings fail to resolve silently default
+to `Decimal("0")` instead of surfacing the failure. Two coupled defects produce
+one regression:
 
 **Selector capability gap.** The `_PreviousModeloSelector` model
 expresses two source-period shapes: explicit period anchors
@@ -111,13 +112,12 @@ raises.
 - No shims, no parallel chains, no deprecation paths. The dead-state
   binding declaration in `130.toml` is replaced by the correct one
   in the same commit that lands the selector capability.
-- The legal grounding for the carry-forward rule is RD 439/2007
-  art. 110.5; the `[legal."rd-439-2007:art-110"]` entry is reviewed
-  and BOE-permalinked. `required_text` already covers art. 110 but
-  does NOT cite the carry-forward fragment specifically; the
-  remediation plan should extend `required_text` with the
-  art. 110.5 sentence so the legal grounding asserts the rule under
-  test.
+- The legal grounding split for the carry-forward rule is current as of
+  2026-06-29: `[legal."rd-439-2007:art-110"]` is reviewed and
+  BOE-permalinked for the vigente payment framework, while the casilla 15
+  negative-result mechanics are grounded in `aeat-modelo-130-instructions`.
+  The current BOE consolidated art. 110 has no vigente apartado 5, so the
+  remediation must not revive the retired art. 110.5 premise.
 - Shared-worktree discipline. The fix touches
   `src/aeat/domain/calculations/registry/_bindings.py`,
   `_formula_runtime.py`, `_data/registry/aeat/modelos/130.toml`,
@@ -239,14 +239,12 @@ satisfies the no-tautological-calculation-tests rule.
 
 ### Decision 4 — legal grounding strengthening
 
-Extend `[legal."rd-439-2007:art-110"].required_text` with the
-art. 110.5 carry-forward sentence fragment ("de las cantidades
-positivas, se deducirá el importe de los pagos fraccionados
-ingresados por los trimestres anteriores del mismo año, así como
-... resultado negativo de los trimestres anteriores"). The corpus
-verbatim-match check fails today if the fragment is absent from the
-BOE source — if so, the corpus source needs a re-fetch before the
-ADR-implementing plan lands.
+Verify `[legal."rd-439-2007:art-110"].required_text` against the current BOE
+consolidated art. 110 and the bundled corpus, and keep it scoped to the vigente
+payment framework. The Modelo 130 casilla 15 carry mechanics are grounded by
+`aeat-modelo-130-instructions`, which provides the required negative-result and
+cap-by-casilla-14 instruction text. Current verification on 2026-06-29 confirms
+there is no vigente art. 110.5 carry-forward sentence to import.
 
 ## Rationale
 
@@ -362,8 +360,10 @@ plan:
    across every modelo and the resolution status of its binding;
    dead bindings discovered are either repaired or annotated as
    absent-by-design before the runtime flip.
-7. `required_text` on `[legal."rd-439-2007:art-110"]` includes the
-   art. 110.5 carry-forward fragment, BOE-verbatim.
+7. `required_text` on `[legal."rd-439-2007:art-110"]` matches the current
+   BOE/bundled corpus for art. 110, and the Modelo 130 casilla 15
+   negative-result mechanics are grounded through `aeat-modelo-130-instructions`
+   rather than a retired art. 110.5 fragment.
 
 ## Amendment 2026-05-27 — Decision Z2 scope narrowed to previous-filing
 

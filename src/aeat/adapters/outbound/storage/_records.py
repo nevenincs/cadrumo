@@ -1,7 +1,9 @@
-"""Pydantic records and enums for the :class:`StorageProvider` abstraction.
+"""Pydantic records and enums for the outbound storage abstraction.
 
 Provider records anchor the storage boundary:
 
+- :class:`adapters.outbound.storage.StorageProvider` - synchronous
+  bytes-in / bytes-out provider Protocol.
 - :class:`ProviderKind` - closed enum naming the v1 backends.
 - :class:`ProviderObjectMetadata` - per-object metadata returned by listing /
   fetching operations. Carries the object key HMAC, namespace, byte
@@ -14,7 +16,7 @@ Provider records anchor the storage boundary:
   :class:`RemoteMirrorNamespaceManifest`, :class:`RemoteMirrorIssue`, and
   :class:`RemoteMirrorInspection` - immutable manifest and inspection records
   for remote ciphertext mirror reconciliation by
-  :mod:`aeat.adapters.outbound.storage._mirror_manifest`.
+  :mod:`adapters.outbound.storage._mirror_manifest`.
 """
 
 from __future__ import annotations
@@ -46,7 +48,7 @@ _StorageRevisionId = Annotated[
 
 
 class ProviderKind(StrEnum):
-    """Closed enumeration of supported storage backends selected by :func:`get_storage_provider`."""
+    """Closed storage backend selector for :func:`adapters.outbound.storage.get_storage_provider`."""
 
     LOCAL_FILESYSTEM = "local_filesystem"
     GOOGLE_DRIVE = "google_drive"
@@ -62,13 +64,16 @@ class RemoteMirrorIssueKind(StrEnum):
 
 
 class ProviderObjectMetadata(BaseModel):
-    """Per-object metadata returned by :class:`StorageProvider` operations.
+    """Per-object metadata returned by storage-provider operations.
 
-    Returned by :meth:`StorageProvider.put`, :meth:`StorageProvider.get`, and
-    :meth:`StorageProvider.iter_objects`. ``provider_object_id`` is the
-    backend-native identifier (a filesystem path for the local provider, a
-    Drive ``fileId`` for the Google Drive provider). The coordinator threads it through
-    subsequent get/delete/patch calls without re-resolving by name.
+    Returned by :class:`adapters.outbound.storage.StorageProvider`
+    methods: :meth:`adapters.outbound.storage.StorageProvider.put`,
+    :meth:`adapters.outbound.storage.StorageProvider.get`, and
+    :meth:`adapters.outbound.storage.StorageProvider.iter_objects`.
+    ``provider_object_id`` is the backend-native identifier (a filesystem path
+    for the local provider, a Drive ``fileId`` for the Google Drive provider).
+    The coordinator threads it through subsequent get/delete/patch calls without
+    re-resolving by name.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -82,8 +87,10 @@ class ProviderObjectMetadata(BaseModel):
 
 
 class ProviderProbeReport(BaseModel):
-    """Result of a :meth:`StorageProvider.probe` health check against a storage backend.
+    """Health-check result returned by storage-provider probes.
 
+    Returned by
+    :meth:`adapters.outbound.storage.StorageProvider.probe`.
     ``reachable`` is True iff the backend endpoint responds at all.
     ``writable`` is True iff a sentinel payload write/delete succeeded;
     inherently False when the probe runs in read-only mode.
@@ -123,8 +130,10 @@ class RemoteMirrorObjectManifest(BaseModel):
 class RemoteMirrorNamespaceManifest(BaseModel):
     """Manifest persisted beside remote ciphertext objects for one namespace.
 
-    Built by :func:`build_remote_mirror_namespace_manifest` and persisted by
-    :func:`put_remote_mirror_namespace_manifest`.
+    Built by
+    :func:`adapters.outbound.storage.build_remote_mirror_namespace_manifest`
+    and persisted by
+    :func:`adapters.outbound.storage.put_remote_mirror_namespace_manifest`.
     """
 
     model_config = STRICT_FROZEN_CONFIG

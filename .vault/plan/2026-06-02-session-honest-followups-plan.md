@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#session-honest-followups'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-02-suite-redgreen-2026-06-02-plan]]'
@@ -13,20 +13,11 @@ related:
   - '[[2026-06-04-session-honest-followups-research]]'
 ---
 
-
-
-
-
-
-
-
 # `session-honest-followups` `Session-honest follow-ups and substrate hardening` plan
 
 ### Phase `P01` - Architectural blockers untracked
 
 Capture and drive M303 chain, entrypoints cluster, M721 887 grounding to closure via teammate dispatch
-
-
 
 - [x] `P01.S01` - Verify M303 Route A landing closes 47 verification_chain reds; `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
 - [x] `P01.S02` - Dispatch peer adjudication on M151/M714/M721 stub-refusal trio post Phase-A registry landing; `src/aeat/entrypoints/cli/test_modelo_{151,714,721}_stub_refusal.py`.
@@ -72,17 +63,8 @@ P04.S10 / P04.S12 / P07.S25 / M390 autoconsumo plus plan triage parents 143-147
 
 ## Description
 
-
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 
-
 ## Verification
-

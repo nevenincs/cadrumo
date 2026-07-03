@@ -7,8 +7,9 @@ SecretStr / PrivateAttr non-leakage.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from cryptography import x509
@@ -21,6 +22,7 @@ from pydantic import SecretStr
 from ......core.config import CertificateBackend, Settings
 from ......tests.env_scope import isolated_aeat_env
 from .. import (
+    CERTIFICATE_CONTEXT_MARKER,
     CertificateBundle,
     CertificateExpiredError,
     CertificateHandshakeError,
@@ -37,6 +39,10 @@ from ..certificate import _select_backend
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _SEDE_ORIGIN = Settings.external_constants().aeat.domains.sede
+_VALID_NOT_BEFORE = datetime(2026, 5, 28, 14, 0, 0, tzinfo=UTC)
+_VALID_NOT_AFTER = datetime(2099, 5, 28, 14, 0, 0, tzinfo=UTC)
+_EXPIRED_NOT_BEFORE = datetime(2025, 5, 28, 14, 0, 0, tzinfo=UTC)
+_EXPIRED_NOT_AFTER = datetime(2026, 5, 27, 14, 0, 0, tzinfo=UTC)
 
 
 def _build_pkcs12_bundle(
@@ -55,15 +61,14 @@ def _build_pkcs12_bundle(
             x509.NameAttribute(NameOID.COMMON_NAME, "aeat-test-subject"),
         ],
     )
-    now = datetime.now(UTC)
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)
         .issuer_name(issuer)
         .public_key(key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(not_valid_before or (now - timedelta(days=1)))
-        .not_valid_after(not_valid_after or (now + timedelta(days=365)))
+        .not_valid_before(not_valid_before or _VALID_NOT_BEFORE)
+        .not_valid_after(not_valid_after or _VALID_NOT_AFTER)
         .sign(key, hashes.SHA256())
     )
     pfx_bytes = pkcs12.serialize_key_and_certificates(
@@ -161,11 +166,10 @@ def test_load_certificate_wrong_password(tmp_path: Path) -> None:
 
 
 def test_load_certificate_expired(tmp_path: Path) -> None:
-    now = datetime.now(UTC)
     p12 = _build_pkcs12_bundle(
         tmp_path,
-        not_valid_before=now - timedelta(days=365),
-        not_valid_after=now - timedelta(days=1),
+        not_valid_before=_EXPIRED_NOT_BEFORE,
+        not_valid_after=_EXPIRED_NOT_AFTER,
     )
     bundle = CertificateBundle(
         path=p12,
@@ -283,11 +287,8 @@ def test_playwright_preload_rejects_unmarked_context(tmp_path: Path) -> None:
     )
     loaded = load_certificate(bundle)
 
-    class _UnmarkedContext:
-        pass
-
     with pytest.raises(CertificateError, match=r"certificate"):
-        preload_into_browser_context(loaded, _UnmarkedContext())
+        preload_into_browser_context(loaded, SimpleNamespace())
 
 
 def test_playwright_preload_accepts_marked_context(tmp_path: Path) -> None:
@@ -299,12 +300,8 @@ def test_playwright_preload_accepts_marked_context(tmp_path: Path) -> None:
     )
     loaded = load_certificate(bundle)
 
-    class _MarkedContext:
-        def __init__(self, thumbprint: str) -> None:
-            self._aeat_certificate_thumbprint = thumbprint
-
-    ctx = _MarkedContext(loaded.sha256_thumbprint)
-    assert ctx._aeat_certificate_thumbprint == loaded.sha256_thumbprint
+    ctx = SimpleNamespace(**{CERTIFICATE_CONTEXT_MARKER: loaded.sha256_thumbprint})
+    assert getattr(ctx, CERTIFICATE_CONTEXT_MARKER) == loaded.sha256_thumbprint
     result = preload_into_browser_context(loaded, ctx)
     assert result is None
 

@@ -1,7 +1,21 @@
 """Construct closure and support-removal validation helpers.
 
 Validates that every construct and support-removal decision declared on
-a :class:`ModeloRevision` has coherent member references and legal grounding.
+a :class:`~aeat.domain.calculations.registry.ModeloRevision` has coherent member
+references and legal grounding.
+
+Construct member closure compares each member's
+:class:`~aeat.domain.calculations.registry.LegalReference` and
+:class:`~aeat.domain.calculations.registry.SourceReference` requirements with the
+refs declared by the owning construct. Support-removal decisions are separately
+gated through the
+:class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`.
+
+See Also:
+    :func:`aeat.domain.calculations.registry._validate_revision_closure._validate_revision_closure_sections`
+        Revision-level runner that invokes both validators in this module.
+    :func:`aeat.domain.calculations.registry.resolve_revision_constructs`
+        Runtime projection of validated construct declarations.
 """
 
 from __future__ import annotations
@@ -9,6 +23,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 
 from ._schema import LegalReference, ModeloRevision, SourceReference
+from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import _missing_refs
 
 _CONSTRUCT_MEMBER_ATTRS = {
@@ -30,6 +45,7 @@ _CONSTRUCT_MEMBER_ATTRS = {
     "support removal decision": "support_removal_decisions",
     "dependency classification": "dependency_classifications",
 }
+_SUPPORT_REMOVAL_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 
 
 def validate_construct_closure(
@@ -39,12 +55,23 @@ def validate_construct_closure(
     member_objects: Mapping[str, Mapping[str, object]],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> list[str]:
+    """Return construct member and grounding failures for one revision.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    construct declarations; ``member_objects`` is the prebuilt member index from
+    the revision validation context. Each member's legal/source refs must be
+    included by the construct that claims it, and
+    :class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`
+    enforces official-source grounding for the construct itself.
+    """
     failures: list[str] = []
     for construct in revision.constructs:
         owner = f"construct {construct.id}"
         failures.extend(_missing_refs(scope, owner, construct.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(scope, owner, construct.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_source_tier(scope, owner, construct.source_refs, "official_source_guidance"))
         construct_legal_refs = set(construct.legal_refs)
         construct_source_refs = set(construct.source_refs)
         for kind, attr in _CONSTRUCT_MEMBER_ATTRS.items():
@@ -84,8 +111,19 @@ def validate_support_removal_decisions(
     deadline_window_ids: Iterable[str],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
     filing_schedule_ids: Iterable[str] = (),
 ) -> list[str]:
+    """Return support-removal decision failures for one revision.
+
+    Each
+    :class:`~aeat.domain.calculations.registry.SupportRemovalDecisionDefinition`
+    declared by the
+    :class:`~aeat.domain.calculations.registry.ModeloRevision` must cite known
+    legal/source refs and one accepted source tier. A decision also fails when it
+    claims to remove a subject id that remains active in the supplied subject-id
+    indexes.
+    """
     failures: list[str] = []
     active_subjects = {
         "export_layout": set(export_layout_ids),
@@ -108,6 +146,14 @@ def validate_support_removal_decisions(
                 decision.source_refs,
                 source_refs,
                 "source",
+            ),
+        )
+        failures.extend(
+            evidence.require_any_source_tier(
+                scope,
+                f"support removal decision {decision.id}",
+                decision.source_refs,
+                _SUPPORT_REMOVAL_SOURCE_TIERS,
             ),
         )
         active_ids = active_subjects.get(decision.subject_type)

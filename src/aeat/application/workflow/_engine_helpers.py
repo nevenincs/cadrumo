@@ -22,17 +22,18 @@ class FilingWindowState(StrEnum):
     """State of the filing window for a given (modelo, period) at workflow time."""
 
     ABSENT = "absent"
+    FUTURE = "future"
     OPEN = "open"
     CLOSED = "closed"
 
 
 def registry_period_token(period: Period) -> tuple[int, str]:
-    """Resolve a :class:`~aeat.core.Period` to ``(filing_year, registry_period)``."""
+    """Resolve a :class:`~core.Period` to ``(filing_year, registry_period)``."""
     return period.year, period.registry_token
 
 
 def registry_filing_year(period: Period) -> int:
-    """Return the filing year from a typed :class:`~aeat.core.Period`."""
+    """Return the filing year from a typed :class:`~core.Period`."""
     return period.year
 
 

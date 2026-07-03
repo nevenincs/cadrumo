@@ -24,7 +24,7 @@ _NOW = datetime(2026, 6, 15, 10, 0, tzinfo=UTC)
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
     return UserProfileRecord(
-        profile_id="p1",
+        profile_id="19191919-1919-4191-8191-191919191919",
         display_name="P1",
         facts=facts,
         created_at=_NOW,
@@ -34,10 +34,16 @@ def _record(*facts: UserProfileFact) -> UserProfileRecord:
 
 def test_no_profile_fact_falls_back_to_global_default() -> None:
     settings = load_settings()
-    cloud = resolve_capability(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, profile_record=None, settings=settings)
-    assert cloud.enabled is False and cloud.source is CapabilitySource.GLOBAL_SETTING
-    vision = resolve_capability(ServiceCapability.LLM_VISION, profile_record=None, settings=settings)
-    assert vision.enabled is True and vision.source is CapabilitySource.DEFAULT
+    cases: tuple[tuple[ServiceCapability, bool, CapabilitySource], ...] = (
+        (ServiceCapability.CLOUD_EVIDENCE_UPLOAD, False, CapabilitySource.GLOBAL_SETTING),
+        (ServiceCapability.LLM_VISION, True, CapabilitySource.DEFAULT),
+    )
+
+    for capability, expected_enabled, expected_source in cases:
+        resolved = resolve_capability(capability, profile_record=None, settings=settings)
+
+        assert resolved.enabled is expected_enabled
+        assert resolved.source is expected_source
 
 
 def test_profile_fact_overrides_the_default() -> None:
@@ -46,12 +52,17 @@ def test_profile_fact_overrides_the_default() -> None:
         UserProfileFact(path="capabilities.llm_vision", value=False),
         UserProfileFact(path="capabilities.cloud_evidence_upload", value=True),
     )
-    vision = resolve_capability(ServiceCapability.LLM_VISION, profile_record=record, settings=settings)
-    assert vision.enabled is False and vision.source is CapabilitySource.PROFILE
-    cloud = resolve_capability(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, profile_record=record, settings=settings)
-    # The profile opted in, and gestor mode is off + global default off, so the
-    # profile fact is the deciding layer.
-    assert cloud.enabled is True and cloud.source is CapabilitySource.PROFILE
+
+    for capability, expected_enabled in (
+        (ServiceCapability.LLM_VISION, False),
+        (ServiceCapability.CLOUD_EVIDENCE_UPLOAD, True),
+    ):
+        resolved = resolve_capability(capability, profile_record=record, settings=settings)
+
+        # The profile opted in, and gestor mode is off + global default off, so the
+        # profile fact is the deciding layer.
+        assert resolved.enabled is expected_enabled
+        assert resolved.source is CapabilitySource.PROFILE
 
 
 def test_gestor_mode_bars_cloud_upload_even_with_profile_opt_in() -> None:

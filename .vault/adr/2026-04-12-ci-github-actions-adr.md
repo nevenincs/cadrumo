@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#ci-github-actions"
 date: 2026-04-12
-modified: '2026-04-12'
+modified: '2026-06-13'
 related:
   - "[[2026-04-12-ci-github-actions-research]]"
 ---
@@ -11,7 +11,7 @@ related:
 
 ## Status
 
-Proposed
+accepted — `.github/workflows/ci.yml` verified present at HEAD; bumped via issue #367
 
 ## Context
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-classification-workflow'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-06-14-llm-classification-workflow-plan]]"
 ---
-
-
-
 
 # Carry multiple_components into LLMClassificationSuggestion + LLMSaturatedSuggestion
 
@@ -34,4 +31,3 @@ The application layer routes a no-split verdict to in-place classification and r
 ## Notes
 
 `apply_evidence_classification` reuses `update_manual_transaction_fields`, the same single-writer the per-child split apply uses (composition-service-no-parallel-write-path).
-

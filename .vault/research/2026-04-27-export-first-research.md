@@ -3,14 +3,12 @@ tags:
   - '#research'
   - '#export-first'
 date: '2026-04-27'
-modified: '2026-04-27'
+modified: '2026-06-30'
 related:
   - "[[2026-04-12-gsuite-bootstrap-audit]]"
   - "[[2026-04-16-submission-safety-sweep-adr-audit]]"
   - "[[2026-04-17-export-first-adr]]"
 ---
-
-
 
 # `export-first` research: product direction pivot from live-filing to produce-verify-export
 

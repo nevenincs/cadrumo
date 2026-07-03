@@ -3,100 +3,12 @@ tags:
   - '#plan'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-07-02'
 tier: L3
 related:
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-reference]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #plan) and one feature tag.
-     Replace binding-vocabulary-cli-cohesion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     tier is mandatory for new plans. Allowed: L1, L2, L3, L4.
-     L1 = Steps only. L2 = Phases above Steps. L3 = Waves above
-     Phases above Steps. L4 = Epic above Waves above Phases above
-     Steps; PM association required. Pre-existing plans without this
-     field default to L2.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'. The related field
-     carries the AUTHORIZING documents (ADR, research, reference, prior
-     plan) for every Step in this plan; Steps inherit this chain;
-     per-row reference footers do not exist.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-
-<!-- HIERARCHY AND TIERS:
-     Epic > Wave > Phase > Step. Step is the canonical leaf-row
-     noun. Execution Record artifact: <Step Record>.
-     Tier is declared in frontmatter as tier: L1/L2/L3/L4
-     (mandatory for new plans; pre-existing plans without the
-     field default to L2 and the writer adds the field on first
-     edit). The tier selects containers:
-       L1 = Steps only.
-       L2 = Phases above Steps.
-       L3 = Waves above Phases above Steps.
-       L4 = Epic above Waves above Phases above Steps; MUST declare
-            a project-management association in the Epic intent
-            block prose.
-     Selection is by complexity criteria, not container counting.
-     Writer never invents containers to qualify a tier. -->
-
-<!-- IDENTIFIERS AND ROW CONTRACT:
-     S##, P##, W## are flat, per-document, append-only, immutable.
-     Promotion adds containers without renumbering. Gaps are not
-     reused.
-     Display paths are computed from current grouping:
-       Step path:    L1 S##   L2 P##.S##   L3/L4 W##.P##.S##
-       Phase heading:        L2 P##       L3/L4 W##.P##
-       Wave heading:                      L3/L4 W##
-     Row format:
-       - [ ] `<display-path>` - imperative-verb action; `path/to/file`.
-     Two-state checkboxes only ([ ] open, [x] closed). No per-row
-     reference footers; wiki-links and markdown links are forbidden
-     in plan body. Authorizing documents go in the plan's `related:`
-     frontmatter once.
-     ASCII spaced hyphens everywhere; em-dash (U+2014) and en-dash
-     (U+2013) are forbidden. Step rows within a Phase are
-     contiguous. -->
-
-<!-- NO COMPRESSION:
-     N self-similar actions = N rows. Never collapse into "for each
-     X, do Y" / "across all callers, do Z" / "in every module,
-     replace W". The rule applies at every tier including L1. -->
-
-<!-- VAULTSPEC-CORE VAULT PLAN CLI:
-     The `vaultspec-core vault plan` CLI is the canonical surface for
-     structural manipulation of this plan document. Writers and
-     executors MUST use `vaultspec-core vault plan step add/insert/move/
-     remove/check/uncheck/toggle/edit`,
-     `vaultspec-core vault plan phase add/move/remove/edit`,
-     `vaultspec-core vault plan wave add/move/remove/edit`,
-     `vaultspec-core vault plan epic intent`, and
-     `vaultspec-core vault plan tier promote/demote` for every
-     identifier-affecting change rather than hand-editing the row
-     grammar. Hand edits are tolerated by the parser but flagged by
-     `vaultspec-core vault plan check`; canonical-identifier preservation is
-     guaranteed only when the CLI performs the mutation. Run
-     `vaultspec-core vault plan --help` for the full subcommand
-     surface. -->
 
 # `binding-vocabulary-cli-cohesion` plan
 
@@ -199,8 +111,8 @@ DEFERRED CARVE per the ADR and reference recommendation: typing DataBindingDefin
 
 DEFERRED carve: replace the free-form DataBindingDefinition.selector Mapping with a discriminated union keyed by BindingSourceKind and narrow typed_enum to a typed enum-class reference. Not a blocking dependency of W01-W04; lands only if the rename pass is light or as a separate follow-up phase.
 
-- [ ] `W05.P08.S25` - DEFERRED FOLLOW-UP (do NOT execute as part of W01-W04; `lands only if the rename pass is light or as a separate phase): replace the free-form DataBindingDefinition.selector BindingSelectorMap Mapping with a discriminated union keyed by BindingSourceKind so the per-family selector models in _bindings.py BECOME the schema rather than a validate-time overlay, updating the _schema.py field and alias, the _schema_scalars.py alias, and the _validate_binding_selector_shapes snapshot gate; atomic commit with docs-scaffold + API-stub + docstring-core-struct regen; collect-only clean before commit; apply-cached own-only, abort-on-WIP. NOTE: H3 source_revision_selector on the relation surface is NOT the binding selector and is out of scope; `src/aeat/domain/calculations/registry/_schema.py, src/aeat/domain/calculations/registry/_schema_scalars.py, src/aeat/domain/calculations/registry/_bindings.py`.
-- [ ] `W05.P08.S26` - DEFERRED FOLLOW-UP (paired with the selector union): narrow the typed_enum stringly-typed pointer (str-or-None enum class name) on DataBindingDefinition to a typed enum-class reference, sweeping the bindings list CLI table, the ModeloBindingQueryRow projection, the borrador resolver, and the Sheets-pull router; `gated by test_schema_hygiene.py; atomic commit with docs-scaffold + API-stub + docstring-core-struct regen; collect-only clean before commit; apply-cached own-only, abort-on-WIP; `src/aeat/domain/calculations/registry/_schema.py, src/aeat/domain/calculations/registry/_queries.py`.
+- [x] `W05.P08.S25` - DEFERRED FOLLOW-UP (do NOT execute as part of W01-W04; `lands only if the rename pass is light or as a separate phase): replace the free-form DataBindingDefinition.selector BindingSelectorMap Mapping with a discriminated union keyed by BindingSourceKind so the per-family selector models in _bindings.py BECOME the schema rather than a validate-time overlay, updating the _schema.py field and alias, the _schema_scalars.py alias, and the _validate_binding_selector_shapes snapshot gate; atomic commit with docs-scaffold + API-stub + docstring-core-struct regen; collect-only clean before commit; apply-cached own-only, abort-on-WIP. NOTE: H3 source_revision_selector on the relation surface is NOT the binding selector and is out of scope; `src/aeat/domain/calculations/registry/_schema.py, src/aeat/domain/calculations/registry/_schema_scalars.py, src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `W05.P08.S26` - DEFERRED FOLLOW-UP (paired with the selector union): narrow the typed_enum stringly-typed pointer (str-or-None enum class name) on DataBindingDefinition to a typed enum-class reference, sweeping the bindings list CLI table, the ModeloBindingQueryRow projection, the borrador resolver, and the Sheets-pull router; `gated by test_schema_hygiene.py; atomic commit with docs-scaffold + API-stub + docstring-core-struct regen; collect-only clean before commit; apply-cached own-only, abort-on-WIP; `src/aeat/domain/calculations/registry/_schema.py, src/aeat/domain/calculations/registry/_queries.py`.
 - [ ] `W05.P08.S27` - DEFERRED FOLLOW-UP verification: when F8 lands, run pytest --collect-only -q clean, test_schema_hygiene.py and the bindings-framework gate suite green, and assert the selector union is behaviour-preserving over the prior validate-time selector models; `if F8 is deferred to a separate phase, leave this Wave open and record the carve in the close note; `src/aeat/domain/calculations/registry/tests/test_schema_hygiene.py, src/aeat/domain/calculations/registry/tests`.
 
 ## Parallelization

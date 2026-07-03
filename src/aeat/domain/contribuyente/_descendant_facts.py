@@ -28,7 +28,7 @@ from datetime import date
 from typing import Literal, cast
 
 from ...core.errors import ProfileAnswerTypeError
-from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing import parse_iso8601_date
 from .family import DescendantInfo
 
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente"
@@ -41,7 +41,7 @@ def descendant_facts_from_list(
 ) -> list[tuple[str, str]]:
     """Return a list of (path, canonical-value-string) tuples for all DescendantInfo entries.
 
-    The caller converts these to :class:`~aeat.domain.user_profile.UserProfileFact`
+    The caller converts these to :class:`domain.user_profile.UserProfileFact`
     records; this function only computes the canonical key-value pairs.
     """
     facts: list[tuple[str, str]] = []
@@ -102,12 +102,12 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
         birth_raw = row.get("birth_date")
         if not birth_raw:
             continue
-        # _parse_iso8601_date returns None only for absent/empty input (it raises
+        # parse_iso8601_date returns None only for absent/empty input (it raises
         # on a malformed non-empty string); birth_raw is non-empty here.
-        birth_date = _parse_iso8601_date(birth_raw)
+        birth_date = parse_iso8601_date(birth_raw)
         assert birth_date is not None
         adoption_raw = row.get("adoption_date")
-        adoption_date = _parse_iso8601_date(adoption_raw) if adoption_raw else None
+        adoption_date = parse_iso8601_date(adoption_raw) if adoption_raw else None
         discapacidad_raw = row.get("discapacidad")
         if discapacidad_raw is not None:
             disc_val = int(discapacidad_raw)
@@ -167,15 +167,15 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     nacimiento_raw = parts.get("NACIMIENTO")
     if not nacimiento_raw:
         raise ProfileAnswerTypeError(f"--descendiente flag requires NACIMIENTO=YYYY-MM-DD; got: {raw!r}")
-    # _parse_iso8601_date returns None only for absent/empty input (it raises on a
+    # parse_iso8601_date returns None only for absent/empty input (it raises on a
     # malformed non-empty string); nacimiento_raw is non-empty here.
-    birth_date = _parse_iso8601_date(nacimiento_raw)
+    birth_date = parse_iso8601_date(nacimiento_raw)
     assert birth_date is not None
 
     adoption_date: date | None = None
     adopcion_raw = parts.get("ADOPCION")
     if adopcion_raw:
-        adoption_date = _parse_iso8601_date(adopcion_raw)
+        adoption_date = parse_iso8601_date(adopcion_raw)
 
     discapacidad_grado = None
     disc_raw = parts.get("DISCAPACIDAD")

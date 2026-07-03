@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "280",
+  "retrieved_at": "2026-07-01",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/DR_280_2022.pdf"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "280",
+      "title": "280 - Modelo 280. Declaracion informativa anual de Planes de Ahorro a Largo Plazo. Ejercicio 2022 (PDF)",
+      "source_page": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/DR_280_2022.pdf",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/DR_280_2022.pdf",
+      "stored_path": "files/DR_280_2022.pdf",
+      "original_filename": "DR_280_2022.pdf",
+      "content_type": "application/pdf",
+      "bytes": 235352,
+      "sha256": "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701",
+      "retrieved_at": "2026-07-01"
+    }
+  ]
+}

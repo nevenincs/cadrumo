@@ -9,9 +9,11 @@ import pytest
 from ....core import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.external_constants import M347_THRESHOLD_EUR
+from ....core.resources import resources
 from .._counterpart import (
     COUNTERPART_MODELO_KIND_CATALOGUE,
     CounterpartAggregation,
+    CounterpartAggregationSourceResolver,
     CounterpartObservation,
     CounterpartSourceKind,
     OperationKind347,
@@ -20,6 +22,7 @@ from .._counterpart import (
     aggregate_counterpart_349,
     declarable_for_347,
 )
+from .._source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -156,6 +159,89 @@ class TestAggregate349:
         fr1 = next(r for r in result.rollups if r.counterparty_nif == "FR1")
         assert de1.counterparty_country == "DE"
         assert fr1.counterparty_country == "FR"
+
+
+class TestCounterpartSourceResolver:
+    def test_resolver_materialises_m349_values_from_existing_aggregator(self) -> None:
+        period = Period.from_year_and_code(2026, "1T")
+        observations = (
+            _obs(
+                nif="DE123456789",
+                name="Kunde GmbH",
+                op_kind=OperationKind349.INTRA_DELIVERY.value,
+                base="1000.00",
+                country="DE",
+                source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+                source_id="sale-de",
+            ),
+            _obs(
+                nif="IT12345678901",
+                name="Servizi SRL",
+                op_kind=OperationKind349.INTRA_SERVICE_IN.value,
+                base="3000.00",
+                country="IT",
+                source_kind=BindingSourceKind.PAYABLE_INVOICE,
+                source_id="purchase-it",
+            ),
+            _obs(
+                nif="B00000001",
+                op_kind=OperationKind347.DELIVERY.value,
+                base="999.00",
+                source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+                source_id="domestic-347",
+            ),
+        )
+        snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+        resolution = CounterpartAggregationSourceResolver(observations=observations).resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="349",
+                filing_year=2026,
+                period=period,
+                revision=snapshot.revision,
+            ),
+        )
+
+        assert set(resolution.owned_sources) == {
+            BindingSourceKind.COLLECTIBLE_INVOICE,
+            BindingSourceKind.LEDGER_TRANSACTION,
+            BindingSourceKind.PAYABLE_INVOICE,
+            BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        }
+        assert resolution.binding_values["iva-349-declarante-numero-operadores-adquisicion"] == Decimal("1")
+        assert resolution.binding_values["iva-349-declarante-importe-operaciones-adquisicion"] == Decimal("3000.00")
+        assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("2")
+        assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("4000.00")
+        assert {item.source_ref for item in resolution.provenance} == {
+            "collectible_invoice:sale-de",
+            "payable_invoice:purchase-it",
+        }
+
+    def test_resolver_silent_when_revision_declares_no_counterpart_source(self) -> None:
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+
+        observation = _obs(
+            nif="DE123456789",
+            op_kind=OperationKind349.INTRA_DELIVERY.value,
+            base="1000.00",
+            country="DE",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        )
+
+        resolution = CounterpartAggregationSourceResolver(observations=(observation,)).resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="303",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                revision=snapshot.revision,
+            ),
+        )
+
+        assert resolution.binding_values == {}
+        assert resolution.diagnostics == ()
+        assert resolution.provenance == ()
 
 
 class TestInvariants:

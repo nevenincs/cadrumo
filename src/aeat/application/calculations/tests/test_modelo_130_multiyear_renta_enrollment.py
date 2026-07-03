@@ -10,8 +10,7 @@ year-set against the authorization manifest via
 :func:`assert_enrollment_matches_manifest`.
 
 The cross-renta hook is the prior-year minoración fold-in. M130's casilla
-13 ("Minoración por aplicación del artículo 110.3.b RD 439/2007") is
-computed by a banded formula keyed on
+13 is computed by a banded formula keyed on
 ``irpf.previous_year_economic_activity_net_income`` — a
 ``source = "previous_filing"`` binding (selector ``source_modelo = "100",
 filing_year_delta = -1, period = "0A"``) that sums the prior annual Renta
@@ -33,7 +32,7 @@ value for the ≤9000 band, not a value hand-computed from the formula under
 test. The load-bearing assertion is the *wiring* invariant — renta year
 N+1's casilla 13 is selected by renta year N's persisted M100 net income —
 which the M130 instruction defines as the minoración keyed on "el importe
-neto de la cifra de negocios del año anterior". A wrong cross-renta wiring
+de los rendimientos netos del ejercicio anterior". A wrong cross-renta wiring
 (no fold-in, or the wrong year) would surface a different band and red the
 assertion.
 """
@@ -47,20 +46,22 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
     BindingId,
     CasillaId,
     validated_casilla_id,
 )
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import CalculationRevision
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit
+from ...user_profile import UserProfileLifecycleRepository
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -76,6 +77,8 @@ _Repos = tuple[
 
 #: Modelo id this module enrolls into the multi-year-renta authorization gate.
 _MODELO = "130"
+_PROFILE_ID = "13013013-0130-4130-8130-130130130131"
+_BUCKET_ID = _PROFILE_ID
 
 #: The two distinct renta years the enrollment exercises. Renta year N's
 #: annual M100 net income feeds renta year N+1's M130 casilla-13 minoración.
@@ -138,11 +141,36 @@ _Q1_INPUTS: dict[CasillaId, Decimal] = {
 }
 
 
+def _seed_ready_profile(objects: object) -> None:
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+        UserProfileRecord(
+            profile_id=_PROFILE_ID,
+            display_name="Test runtime profile",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+            ),
+            created_at=_CLOCK,
+            updated_at=_CLOCK,
+        ),
+    )
+
+
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over an isolated profile — no mocks."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
+        _seed_ready_profile(objects)
         yield (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),
@@ -167,7 +195,7 @@ def _calculate_quarter(
     """
     wu_repo, cr_repo, bv_repo, _obs_repo = repos
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo=_MODELO,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),

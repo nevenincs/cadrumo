@@ -16,9 +16,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import bundled_path
-from ...calculations.registry import load_registry_tree
-from ...calculations.registry._bindings import CasillaObservation
+from ....core.resources import resources
+from ...calculations.registry import CasillaObservation
 from .._maritime_exemption import (
     ART_7P_EXEMPTION_CAP_EUR,
     RENTA_EXENTA_CASILLA,
@@ -43,6 +42,148 @@ _RETMAR_LEGAL_REFS = ("ley-35-2006:art-96",)
 _ART_7P_SOURCE_REFS = ("boe-lirpf-art-7-authority",)
 _REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-authority",)
 
+_ART_7P_SELECTOR_CASES = (
+    (
+        "foreign-flag-international-waters",
+        MaritimeWorkerFacts(
+            worker_class="trabajador_del_mar",
+            vessel_flag="foreign",
+            waters_type="international",
+        ),
+        True,
+    ),
+    (
+        "foreign-flag-national-waters",
+        MaritimeWorkerFacts(
+            worker_class="trabajador_del_mar",
+            vessel_flag="foreign",
+            waters_type="national",
+        ),
+        True,
+    ),
+    (
+        "spanish-flag-international-waters",
+        MaritimeWorkerFacts(
+            worker_class="trabajador_del_mar",
+            vessel_flag="ES",
+            waters_type="international",
+        ),
+        True,
+    ),
+    (
+        "spanish-flag-national-waters",
+        MaritimeWorkerFacts(
+            worker_class="trabajador_del_mar",
+            vessel_flag="ES",
+            waters_type="national",
+        ),
+        False,
+    ),
+    (
+        "missing-worker-class",
+        MaritimeWorkerFacts(
+            worker_class=None,
+            vessel_flag="foreign",
+            waters_type="international",
+        ),
+        False,
+    ),
+    (
+        "other-worker-class",
+        MaritimeWorkerFacts(
+            worker_class="standard_employee",
+            vessel_flag="foreign",
+            waters_type="international",
+        ),
+        False,
+    ),
+    ("default-facts", MaritimeWorkerFacts(), False),
+)
+
+_REBECA_SELECTOR_CASES = (
+    (
+        "rebeca-registry",
+        MaritimeWorkerFacts(
+            worker_class="trabajador_del_mar",
+            vessel_registry="REBECA",
+        ),
+        True,
+    ),
+    (
+        "rebeca-eu-eea-registry",
+        MaritimeWorkerFacts(
+            worker_class="trabajador_del_mar",
+            vessel_registry="rebeca_eu_eea",
+        ),
+        True,
+    ),
+    (
+        "scheduled-canary-route",
+        MaritimeWorkerFacts(
+            worker_class="trabajador_del_mar",
+            vessel_registry="scheduled_canary_route",
+        ),
+        True,
+    ),
+    (
+        "missing-registry",
+        MaritimeWorkerFacts(
+            worker_class="trabajador_del_mar",
+            vessel_registry=None,
+        ),
+        False,
+    ),
+    (
+        "missing-worker-class",
+        MaritimeWorkerFacts(
+            worker_class=None,
+            vessel_registry="REBECA",
+        ),
+        False,
+    ),
+    ("default-facts", MaritimeWorkerFacts(), False),
+)
+
+_DA41_SELECTOR_CASES = (
+    (
+        "tuna-fleet-pending-clearance",
+        MaritimeWorkerFacts(
+            worker_class="trabajador_del_mar",
+            tuna_fleet=True,
+            pending_eu_clearance=True,
+        ),
+        True,
+    ),
+    (
+        "tuna-fleet-without-pending-clearance",
+        MaritimeWorkerFacts(
+            worker_class="trabajador_del_mar",
+            tuna_fleet=True,
+            pending_eu_clearance=False,
+        ),
+        False,
+    ),
+    (
+        "pending-clearance-without-tuna-fleet",
+        MaritimeWorkerFacts(
+            worker_class="trabajador_del_mar",
+            tuna_fleet=False,
+            pending_eu_clearance=True,
+        ),
+        False,
+    ),
+    (
+        "missing-worker-class",
+        MaritimeWorkerFacts(
+            worker_class=None,
+            tuna_fleet=True,
+            pending_eu_clearance=True,
+        ),
+        False,
+    ),
+    ("default-facts", MaritimeWorkerFacts(), False),
+)
+
 
 # ---------------------------------------------------------------------------
 # contract: selector unit tests
@@ -52,143 +193,25 @@ _REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-authority",)
 class TestArt7pEligible:
     """art_7p_eligible predicate: vessel_flag != ES AND waters_type == international."""
 
-    def test_foreign_flag_international_waters_is_eligible(self) -> None:
-        facts = MaritimeWorkerFacts(
-            worker_class="trabajador_del_mar",
-            vessel_flag="foreign",
-            waters_type="international",
-        )
-        assert art_7p_eligible(facts) is True
-
-    def test_foreign_flag_national_waters_is_eligible(self) -> None:
-        # The business rule is: vessel_flag != ES OR waters_type == international.
-        # Either condition suffices per the binding selector.
-        facts = MaritimeWorkerFacts(
-            worker_class="trabajador_del_mar",
-            vessel_flag="foreign",
-            waters_type="national",
-        )
-        assert art_7p_eligible(facts) is True
-
-    def test_spanish_flag_international_waters_is_eligible(self) -> None:
-        # International waters qualify even for Spanish-flagged vessels per
-        # AEAT accepted practice (TEAR Galicia December 2024).
-        facts = MaritimeWorkerFacts(
-            worker_class="trabajador_del_mar",
-            vessel_flag="ES",
-            waters_type="international",
-        )
-        assert art_7p_eligible(facts) is True
-
-    def test_spanish_flag_national_waters_is_not_eligible(self) -> None:
-        facts = MaritimeWorkerFacts(
-            worker_class="trabajador_del_mar",
-            vessel_flag="ES",
-            waters_type="national",
-        )
-        assert art_7p_eligible(facts) is False
-
-    def test_non_maritime_worker_class_is_not_eligible(self) -> None:
-        facts = MaritimeWorkerFacts(
-            worker_class=None,
-            vessel_flag="foreign",
-            waters_type="international",
-        )
-        assert art_7p_eligible(facts) is False
-
-    def test_other_worker_class_is_not_eligible(self) -> None:
-        facts = MaritimeWorkerFacts(
-            worker_class="standard_employee",
-            vessel_flag="foreign",
-            waters_type="international",
-        )
-        assert art_7p_eligible(facts) is False
-
-    def test_default_facts_not_eligible(self) -> None:
-        assert art_7p_eligible(MaritimeWorkerFacts()) is False
+    def test_selector_cases(self) -> None:
+        for label, facts, expected in _ART_7P_SELECTOR_CASES:
+            assert art_7p_eligible(facts) is expected, label
 
 
 class TestRebecaEligible:
     """rebeca_eligible predicate: vessel_registry in {REBECA, rebeca_eu_eea, scheduled_canary_route}."""
 
-    def test_rebeca_registry_is_eligible(self) -> None:
-        facts = MaritimeWorkerFacts(
-            worker_class="trabajador_del_mar",
-            vessel_registry="REBECA",
-        )
-        assert rebeca_eligible(facts) is True
-
-    def test_rebeca_eu_eea_registry_is_eligible(self) -> None:
-        # Extended to EU/EEA sister-registry vessels since 1 January 2021
-        # per Ley 19/1994 Art. 75.1 BOE-A-1994-15794.
-        facts = MaritimeWorkerFacts(
-            worker_class="trabajador_del_mar",
-            vessel_registry="rebeca_eu_eea",
-        )
-        assert rebeca_eligible(facts) is True
-
-    def test_scheduled_canary_route_is_eligible(self) -> None:
-        facts = MaritimeWorkerFacts(
-            worker_class="trabajador_del_mar",
-            vessel_registry="scheduled_canary_route",
-        )
-        assert rebeca_eligible(facts) is True
-
-    def test_no_registry_is_not_eligible(self) -> None:
-        facts = MaritimeWorkerFacts(
-            worker_class="trabajador_del_mar",
-            vessel_registry=None,
-        )
-        assert rebeca_eligible(facts) is False
-
-    def test_non_maritime_worker_class_is_not_eligible(self) -> None:
-        facts = MaritimeWorkerFacts(
-            worker_class=None,
-            vessel_registry="REBECA",
-        )
-        assert rebeca_eligible(facts) is False
-
-    def test_default_facts_not_eligible(self) -> None:
-        assert rebeca_eligible(MaritimeWorkerFacts()) is False
+    def test_selector_cases(self) -> None:
+        for label, facts, expected in _REBECA_SELECTOR_CASES:
+            assert rebeca_eligible(facts) is expected, label
 
 
 class TestDa41Eligible:
     """da41_eligible predicate: tuna_fleet AND pending_eu_clearance."""
 
-    def test_tuna_fleet_with_pending_clearance_is_eligible(self) -> None:
-        facts = MaritimeWorkerFacts(
-            worker_class="trabajador_del_mar",
-            tuna_fleet=True,
-            pending_eu_clearance=True,
-        )
-        assert da41_eligible(facts) is True
-
-    def test_tuna_fleet_without_pending_clearance_not_eligible(self) -> None:
-        facts = MaritimeWorkerFacts(
-            worker_class="trabajador_del_mar",
-            tuna_fleet=True,
-            pending_eu_clearance=False,
-        )
-        assert da41_eligible(facts) is False
-
-    def test_pending_clearance_without_tuna_fleet_not_eligible(self) -> None:
-        facts = MaritimeWorkerFacts(
-            worker_class="trabajador_del_mar",
-            tuna_fleet=False,
-            pending_eu_clearance=True,
-        )
-        assert da41_eligible(facts) is False
-
-    def test_non_maritime_worker_class_not_eligible(self) -> None:
-        facts = MaritimeWorkerFacts(
-            worker_class=None,
-            tuna_fleet=True,
-            pending_eu_clearance=True,
-        )
-        assert da41_eligible(facts) is False
-
-    def test_default_facts_not_eligible(self) -> None:
-        assert da41_eligible(MaritimeWorkerFacts()) is False
+    def test_selector_cases(self) -> None:
+        for label, facts, expected in _DA41_SELECTOR_CASES:
+            assert da41_eligible(facts) is expected, label
 
 
 # ---------------------------------------------------------------------------
@@ -544,7 +567,7 @@ def test_rebeca_legal_refs_contain_no_wrong_provision() -> None:
 
 def test_runtime_legal_and_source_refs_resolve_to_bundled_catalogues() -> None:
     """Runtime maritime provenance must resolve through typed registry catalogues."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = resources().modelos.authority.catalogues
 
     art7p_obs = calculate_art_7p_exemption(
         annual_salary=Decimal("36500"),

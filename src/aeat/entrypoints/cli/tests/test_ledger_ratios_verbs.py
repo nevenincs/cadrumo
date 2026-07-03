@@ -32,15 +32,16 @@ def _invoke(args: Sequence[str]) -> Result:
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    from ....application.user_profile._orchestration import profile_create_storage_span
-    from ....application.user_profile._testing import register_minimal_profile
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+    from ....application.workflow import workflow_state_repository
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("operator"),
+        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
     ):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        )
         yield
 
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S07'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
-
-
-
 
 # Flip box 13 (otras ops inversion sujeto pasivo excl intracom cuota) to computed with formula modelo-303-dr303-13-projection copying iva.autorepercutido.interior.devengado (oficial casilla 13), carrying box 13 legal_refs
 

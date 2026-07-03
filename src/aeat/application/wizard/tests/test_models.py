@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import ValidationError
 
 from ....core.i18n import Translatable as tr
 from .._models import (
@@ -22,17 +22,12 @@ from .._models import (
     WizardSection,
     WizardWidget,
 )
+from ._support import EmptyAnswersBase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _DEFAULT_PROMPT = tr("wizard.setup.profile.tax-id.prompt")
 _SECTION_TITLE = tr("wizard.setup.profile.title")
-
-
-class _EmptyAnswersBase(BaseModel):
-    """Minimal answers model used only for descriptor construction tests."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 def _question(
@@ -84,7 +79,7 @@ def test_flow_rejects_non_tuple_sections() -> None:
                 "title": "wizard.setup.title",
                 "description": "wizard.setup.description",
                 "sections": [_section().model_dump()],
-                "answers_model": _EmptyAnswersBase,
+                "answers_model": EmptyAnswersBase,
             },
         )
 
@@ -96,7 +91,7 @@ def test_flow_rejects_empty_sections_tuple() -> None:
             title=tr("wizard.setup.title"),
             description=tr("wizard.setup.description"),
             sections=(),
-            answers_model=_EmptyAnswersBase,
+            answers_model=EmptyAnswersBase,
         )
 
 

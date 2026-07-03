@@ -44,7 +44,15 @@ __all__ = [
     "ExportRecordDefinition",
     "RecordDiscriminator",
     "RelationDefinition",
+    "RelationPeriodAlignment",
+    "RelationRevisionSelector",
 ]
+
+
+def _require_official_text(value: str, field_name: str) -> None:
+    """Assert an official registry text field is not blank."""
+    if not value.strip():
+        raise RegistryValidationError(f"{field_name} must contain official Spanish text")
 
 
 class CasillaContinuidadEvolutionDefinition(RegistryModel):
@@ -87,6 +95,11 @@ class CasillaAlias(RegistryModel):
     label: str = Field(min_length=1, max_length=512)
     legal_refs: LegalRefs
     source_refs: SourceRefs
+
+    @model_validator(mode="after")
+    def _validate_label(self) -> CasillaAlias:
+        _require_official_text(self.label, "casilla alias label")
+        return self
 
 
 class CasillaConstraints(RegistryModel):
@@ -249,6 +262,15 @@ class CasillaDefinition(RegistryModel):
     input_kind: InputKindValue = InputKind.MANUAL
     formula: FormulaId | None = None
     binding: BindingId | None = None
+    alternate_bindings: tuple[BindingId, ...] = Field(
+        default_factory=tuple,
+        description=(
+            "Equivalent binding slots that may populate the same bound casilla. "
+            "Used only when the registry has reviewed multiple legally grounded "
+            "source paths for the same factual amount; conflicting supplied "
+            "values are rejected before calculation."
+        ),
+    )
     export_refs: tuple[ExportFieldId, ...] = ()
     constraints: CasillaConstraints | None = None
     form_number: str | None = Field(default=None, min_length=1, max_length=16)
@@ -290,12 +312,21 @@ class CasillaDefinition(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_input_kind(self) -> CasillaDefinition:
+        _require_official_text(self.label, f"casilla {self.id!r} label")
         if self.input_kind == InputKind.COMPUTED and self.formula is None:
             raise RegistryValidationError(f"computed casilla {self.id!r} must declare formula")
         if self.input_kind == InputKind.COMPUTED and self.binding is not None:
             raise RegistryValidationError(f"computed casilla {self.id!r} must not declare binding")
+        if self.input_kind != InputKind.BOUND and self.alternate_bindings:
+            raise RegistryValidationError(f"non-bound casilla {self.id!r} must not declare alternate_bindings")
         if self.input_kind == InputKind.BOUND and self.binding is None:
             raise RegistryValidationError(f"bound casilla {self.id!r} must declare binding")
+        if self.binding is not None and self.binding in self.alternate_bindings:
+            raise RegistryValidationError(
+                f"casilla {self.id!r} alternate_bindings must not repeat primary binding {self.binding!r}",
+            )
+        if len(set(self.alternate_bindings)) != len(self.alternate_bindings):
+            raise RegistryValidationError(f"casilla {self.id!r} alternate_bindings must be unique")
         if self.input_kind == InputKind.BOUND and self.formula is not None:
             raise RegistryValidationError(f"bound casilla {self.id!r} must not declare formula")
         if self.internal_only and self.export_refs:
@@ -469,6 +500,102 @@ class AlgorithmBindingDefinition(RegistryModel):
     source_refs: SourceRefs
 
 
+class RelationRevisionSelector(RegistryModel):
+    year: int | None = None
+    year_from: int | None = None
+    year_to: int | None = None
+    filing_year_delta: int | None = None
+
+    @model_validator(mode="after")
+    def _validate_shape(self) -> RelationRevisionSelector:
+        if self.year_to is not None and self.year_from is None:
+            raise RegistryValidationError("relation source revision selector year_to requires year_from")
+        if self.year is None and self.year_from is None and self.filing_year_delta is None:
+            raise RegistryValidationError(
+                "relation source revision selector must declare year, year_from, or filing_year_delta",
+            )
+        absolute_selector = self.year is not None or self.year_from is not None or self.year_to is not None
+        if absolute_selector and self.filing_year_delta is not None:
+            raise RegistryValidationError(
+                "relation source revision selector must use absolute year bounds or filing_year_delta, not both",
+            )
+        if self.year is not None and (self.year_from is not None or self.year_to is not None):
+            raise RegistryValidationError(
+                "relation source revision selector must use year or year_from/year_to, not both",
+            )
+        if self.year_from is not None and self.year_to is not None and self.year_to < self.year_from:
+            raise RegistryValidationError(
+                "relation source revision selector year_to must be on or after year_from",
+            )
+        return self
+
+
+class RelationPeriodAlignment(RegistryModel):
+    mode: Literal["previous_quarter", "prior_pagos_cumulative"] | None = None
+    source_periods: Literal["quarters", "months", "annual_summary"] | None = None
+    source_period_kind: Literal["quarterly"] | None = None
+    source_period: str | None = Field(default=None, min_length=1, max_length=8)
+    target_period: str | None = Field(default=None, min_length=1, max_length=8)
+    filing_year_delta: int | None = None
+
+    @model_validator(mode="after")
+    def _validate_shape(self) -> RelationPeriodAlignment:
+        if not any(
+            value is not None
+            for value in (
+                self.mode,
+                self.source_periods,
+                self.source_period_kind,
+                self.source_period,
+                self.target_period,
+                self.filing_year_delta,
+            )
+        ):
+            raise RegistryValidationError("relation period alignment must declare a current alignment shape")
+        if self.mode is not None:
+            if any(
+                value is not None
+                for value in (
+                    self.source_periods,
+                    self.source_period_kind,
+                    self.source_period,
+                    self.target_period,
+                    self.filing_year_delta,
+                )
+            ):
+                raise RegistryValidationError("relation period alignment mode cannot be combined with period fields")
+            return self
+        if self.source_periods is not None:
+            if self.target_period is None:
+                raise RegistryValidationError("relation period alignment source_periods requires target_period")
+            if (
+                self.source_period_kind is not None
+                or self.source_period is not None
+                or self.filing_year_delta is not None
+            ):
+                raise RegistryValidationError(
+                    "relation period alignment source_periods cannot be combined with source_period_kind, "
+                    "source_period, or filing_year_delta",
+                )
+            return self
+        if self.source_period_kind is not None:
+            if self.target_period is None:
+                raise RegistryValidationError("relation period alignment source_period_kind requires target_period")
+            if self.source_period is not None or self.filing_year_delta is not None:
+                raise RegistryValidationError(
+                    "relation period alignment source_period_kind cannot be combined with source_period "
+                    "or filing_year_delta",
+                )
+            return self
+        if self.source_period is not None:
+            if self.target_period is None or self.filing_year_delta is None:
+                raise RegistryValidationError(
+                    "relation period alignment source_period requires target_period and filing_year_delta",
+                )
+            return self
+        raise RegistryValidationError("relation period alignment declares target/delta fields without source alignment")
+
+
 class RelationDefinition(RegistryModel):
     id: RelationId
     kind: Literal["previous_period", "annual_summary", "cross_model_output"]
@@ -480,10 +607,10 @@ class RelationDefinition(RegistryModel):
         "factual_evidence",
     ]
     source_modelo: ModeloId
-    source_revision_selector: Mapping[str, str | int]
+    source_revision_selector: RelationRevisionSelector
     source_casilla_id: CasillaId
     target_binding: BindingId
-    period_alignment: Mapping[str, str | int]
+    period_alignment: RelationPeriodAlignment
     source_periods: tuple[str, ...] = ()
     target_periods: tuple[str, ...] = ()
     source_period_offset_from_target: int | None = None

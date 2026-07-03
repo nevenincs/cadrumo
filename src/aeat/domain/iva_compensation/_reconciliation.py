@@ -61,6 +61,8 @@ type IvaCompensationDivergence = Literal[
     "wallet_stale",
     "override",
     "first_period_zero",
+    "filed_history_zero",
+    "local_recurrence_zero",
     "missing",
 ]
 
@@ -375,6 +377,23 @@ def _missing_wallet_decision(
             wallet_captured_at=None,
         )
     if _is_filed_history_source(local_recurrence_source):
+        if ctx.local_recurrence_amount == Decimal("0"):
+            return _decision(
+                ctx,
+                selected_authority="filed_history",
+                selected_amount=Decimal("0"),
+                wallet_amount=None,
+                local_recurrence_amount=Decimal("0"),
+                override_amount=None,
+                divergence="filed_history_zero",
+                blocked=False,
+                stale_wallet=False,
+                reason=(
+                    "Committed local Modelo 303 filed-history evidence proves zero carry-forward "
+                    "compensation; no AEAT wallet amount is required for a zero prior-compensation binding."
+                ),
+                wallet_captured_at=None,
+            )
         return _decision(
             ctx,
             selected_authority="filed_history",
@@ -388,6 +407,23 @@ def _missing_wallet_decision(
             reason=(
                 "Direct AEAT wallet/cartera evidence is unavailable; AEAT filed-history-derived recurrence "
                 "is recorded as fallback evidence but requires explicit taxpayer override before automatic output."
+            ),
+            wallet_captured_at=None,
+        )
+    if ctx.local_recurrence_amount == Decimal("0"):
+        return _decision(
+            ctx,
+            selected_authority="local_recurrence",
+            selected_amount=Decimal("0"),
+            wallet_amount=None,
+            local_recurrence_amount=Decimal("0"),
+            override_amount=None,
+            divergence="local_recurrence_zero",
+            blocked=False,
+            stale_wallet=False,
+            reason=(
+                "Local Modelo 303 recurrence proves zero carry-forward compensation; "
+                "no prior compensation balance is available to apply."
             ),
             wallet_captured_at=None,
         )
@@ -547,13 +583,16 @@ def local_recurrence_authority_source(
     source_filing_year = int(recurrence.source_filing_year)
     source_periods = tuple(recurrence.source_periods)
     resolved_at = recurrence.resolved_at
+    source_locator = str(
+        getattr(recurrence, "source_locator", None) or f"binding:{binding_id}",
+    )
     source_kind: IvaCompensationAuthorityKind = (
         _FILED_HISTORY_OBSERVATION if recurrence.source_kind in _AEAT_FILED_HISTORY_SOURCE_KINDS else "local_recurrence"
     )
     return IvaCompensationAuthoritySource(
         source_kind=source_kind,
         amount=amount,
-        source_locator=f"binding:{binding_id}",
+        source_locator=source_locator,
         captured_at=resolved_at,
         source_modelo=source_modelo,
         source_filing_year=source_filing_year,

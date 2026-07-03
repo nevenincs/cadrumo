@@ -9,6 +9,7 @@ import pytest
 from ....core import Period
 from .. import (
     DeadlineEngine,
+    IrpfEstimationRegime,
     IVARegime,
     ModeloDeadline,
     ModeloEnrollment,
@@ -35,6 +36,7 @@ def _profile(**overrides: object) -> TaxpayerProfile:
         "tax_id": "X1234567L",
         "iva_regime": IVARegime.GENERAL,
         "professional_income_withholding_ge_70pct": False,
+        "art109_activity_income_withholding_ge_70pct": False,
     }
     base.update(overrides)
     return TaxpayerProfile.model_validate(base)
@@ -72,14 +74,23 @@ class TestCompute:
 
     def test_profile_condition_can_remove_registry_deadline(self) -> None:
         schedule = _engine().compute(
-            _profile(professional_income_withholding_ge_70pct=True),
+            _profile(art109_activity_income_withholding_ge_70pct=True),
             2026,
             today=date(2026, 1, 1),
         )
 
         modelos = [obligation.modelo for obligation in schedule.obligations]
-        assert "130" not in modelos, "M130 must be absent when professional withholding >= 70%"
+        assert "130" not in modelos, "M130 must be absent when the Art. 109 activity-income fact is true"
         assert modelos.count("303") == 4, "M303 must appear for all four quarters"
+
+    def test_professional_only_high_retention_field_does_not_remove_m130_deadline(self) -> None:
+        schedule = _engine().compute(
+            _profile(professional_income_withholding_ge_70pct=True),
+            2026,
+            today=date(2026, 1, 1),
+        )
+
+        assert [obligation.modelo for obligation in schedule.obligations].count("130") == 4
 
     def test_registry_any_condition_can_add_withholding_deadline_for_employee_payer(self) -> None:
         schedule = _engine().compute(_profile(has_employees=True), 2026, today=date(2026, 1, 1))
@@ -191,7 +202,7 @@ class TestCompute:
 
     def test_registry_condition_can_add_objective_estimation_deadline(self) -> None:
         schedule = _engine().compute(
-            _profile(uses_objective_estimation_irpf=True),
+            _profile(irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA),
             2026,
             today=date(2026, 1, 1),
         )
@@ -211,6 +222,34 @@ class TestCompute:
         assert q1.closes_on == date(2026, 4, 20)
         assert q1.payment_cutoff_on == date(2026, 4, 15)
         assert "rd-439-2007:art-110" in q1.boe_references
+
+    def test_modelo_130_2025_windows_cover_same_year_carry_chain(self) -> None:
+        """M130 2025 deadlines are present so local filing can seed later quarters.
+
+        External authority: AEAT Calendario del contribuyente 2025 lists
+        Modelos 130/131 quarterly presentation windows as April 1-21,
+        July 1-21, and October 1-20, with direct debit cutoffs April 15,
+        July 16, and October 15. The 2026 calendar lists the 2025 fourth
+        quarter window as January 1-30, with direct debit through January 27.
+        """
+        schedule = _engine().compute(_profile(), 2025, today=date(2026, 6, 29))
+        rows = {
+            obligation.period.registry_token: (
+                obligation.opens_on,
+                obligation.closes_on,
+                obligation.payment_cutoff_on,
+                obligation.status,
+            )
+            for obligation in schedule.obligations
+            if obligation.modelo == "130"
+        }
+
+        assert rows == {
+            "1T": (date(2025, 4, 1), date(2025, 4, 21), date(2025, 4, 15), ObligationStatus.OVERDUE),
+            "2T": (date(2025, 7, 1), date(2025, 7, 21), date(2025, 7, 16), ObligationStatus.OVERDUE),
+            "3T": (date(2025, 10, 1), date(2025, 10, 20), date(2025, 10, 15), ObligationStatus.OVERDUE),
+            "4T": (date(2026, 1, 1), date(2026, 1, 30), date(2026, 1, 27), ObligationStatus.OVERDUE),
+        }
 
     def test_obligations_sorted_by_close_date(self) -> None:
         schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
@@ -246,7 +285,7 @@ class TestPreRegistrationObligationGate:
         )
 
     def test_unset_activity_start_date_keeps_full_2025_schedule(self) -> None:
-        """A profile with no alta date behaves exactly as before.
+        """A profile with no alta date keeps the full 2025 schedule.
 
         The gate is opt-in: when ``activity_start_date`` is ``None`` no
         window is suppressed, so the 2025 schedule still carries the
@@ -277,21 +316,17 @@ class TestStatusTransitions:
     def _find_q1(self, schedule: Schedule) -> ModeloDeadline:
         return next(o for o in schedule.obligations if o.period == _period(2026, "1T"))
 
-    def test_overdue(self) -> None:
-        schedule = _engine().compute(_profile(), 2026, today=date(2026, 4, 21))
-        assert self._find_q1(schedule).status == ObligationStatus.OVERDUE
+    def test_q1_status_transitions(self) -> None:
+        cases = (
+            (date(2026, 4, 21), ObligationStatus.OVERDUE),
+            (date(2026, 4, 20), ObligationStatus.DUE_TODAY),
+            (date(2026, 4, 7), ObligationStatus.DUE_SOON),
+            (date(2026, 1, 1), ObligationStatus.UPCOMING),
+        )
 
-    def test_due_today(self) -> None:
-        schedule = _engine().compute(_profile(), 2026, today=date(2026, 4, 20))
-        assert self._find_q1(schedule).status == ObligationStatus.DUE_TODAY
-
-    def test_due_soon(self) -> None:
-        schedule = _engine().compute(_profile(), 2026, today=date(2026, 4, 7))
-        assert self._find_q1(schedule).status == ObligationStatus.DUE_SOON
-
-    def test_upcoming(self) -> None:
-        schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
-        assert self._find_q1(schedule).status == ObligationStatus.UPCOMING
+        for today, expected_status in cases:
+            schedule = _engine().compute(_profile(), 2026, today=today)
+            assert self._find_q1(schedule).status == expected_status, today
 
 
 class TestNextDeadline:
@@ -313,7 +348,8 @@ class TestNextDeadline:
 class TestRegistryApplicability:
     def test_applies_to_uses_registry_conditions(self) -> None:
         assert applies_to(_profile(), "130") is True
-        assert applies_to(_profile(professional_income_withholding_ge_70pct=True), "130") is False
+        assert applies_to(_profile(professional_income_withholding_ge_70pct=True), "130") is True
+        assert applies_to(_profile(art109_activity_income_withholding_ge_70pct=True), "130") is False
         assert applies_to(_profile(), "111") is False
         assert applies_to(_profile(has_employees=True), "111") is True
         assert applies_to(_profile(pays_professionals_with_retencion=True), "111") is True
@@ -322,7 +358,7 @@ class TestRegistryApplicability:
         assert applies_to(_profile(), "123") is False
         assert applies_to(_profile(pays_capital_income_with_retencion=True), "123") is True
         assert applies_to(_profile(), "131") is False
-        assert applies_to(_profile(uses_objective_estimation_irpf=True), "131") is True
+        assert applies_to(_profile(irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA), "131") is True
 
     def test_explain_uses_registry_condition_text(self) -> None:
         text = explain(_profile(), "130")
@@ -379,7 +415,7 @@ class TestAnnualFilingWindows:
         assert engine.explain(_profile(), "100", year=2023)
 
     def test_modelo_303_quarterly_windows_resolve(self) -> None:
-        for year in (2025, 2026):
+        for year in (2024, 2025, 2026):
             quarterly_periods = sorted(
                 (
                     window.period
@@ -405,13 +441,21 @@ class TestAnnualFilingWindows:
                 key=lambda p: p.code,
             )
             assert len(monthly_periods) > 0, f"M303 monthly windows absent for {year}"
+        january_2026 = next(
+            window
+            for code, _revision, window in _engine()._registry.deadline_windows(2026)
+            if code == "303" and window.period == _period(2026, "01")
+        )
+        assert january_2026.closes_on == date(2026, 3, 2)
+        assert january_2026.payment_cutoff_on == date(2026, 2, 25)
 
     def test_modelo_347_annual_window_resolves(self) -> None:
-        for year in (2025, 2026):
+        for year, closes_on in ((2025, date(2026, 3, 2)), (2026, date(2027, 2, 28))):
             windows = [
                 window for code, _revision, window in _engine()._registry.deadline_windows(year) if code == "347"
             ]
             assert [window.period for window in windows] == [_period(year, "0A")]
+            assert windows[0].closes_on == closes_on
 
 
 class TestEnginePurity:

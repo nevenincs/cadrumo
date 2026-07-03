@@ -13,10 +13,11 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ._errors import RegistryValidationError
+from ._ids import CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
 from ._schema import EvidenceTier, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ._snapshot import _build_validated_snapshot
 from ._validate import RegistryValidator
@@ -42,11 +43,22 @@ class EvidenceTierCoverageGate(CoverageModel):
 
     tier: EvidenceTier
     status: CoverageGateStatus
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
-    workbook_refs: tuple[str, ...] = ()
-    cross_reference_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
+    workbook_refs: tuple[WorkbookParityRefId, ...] = ()
+    cross_reference_refs: tuple[CrossReferenceId, ...] = ()
     detail: str
+
+    @model_validator(mode="after")
+    def _validate_status_matches_evidence(self) -> EvidenceTierCoverageGate:
+        has_evidence = bool(
+            self.legal_refs or self.source_refs or self.workbook_refs or self.cross_reference_refs,
+        )
+        if self.status == "satisfied" and not has_evidence:
+            raise RegistryValidationError(f"{self.tier} coverage cannot be satisfied without evidence refs")
+        if self.status == "gap" and has_evidence:
+            raise RegistryValidationError(f"{self.tier} coverage gap cannot carry evidence refs")
+        return self
 
 
 class ModelLawCoverageLedger(CoverageModel):
@@ -207,11 +219,11 @@ def _layout_authority_gate(snapshot: RegistrySnapshot) -> EvidenceTierCoverageGa
     )
 
 
-def _sources_for_tier(snapshot: RegistrySnapshot, tier: EvidenceTier) -> tuple[str, ...]:
+def _sources_for_tier(snapshot: RegistrySnapshot, tier: EvidenceTier) -> tuple[SourceRefId, ...]:
     return tuple(sorted(ref for ref, item in snapshot.sources.items() if item.evidence_tier == tier))
 
 
-def _cross_refs_for_tier(snapshot: RegistrySnapshot, tier: EvidenceTier) -> tuple[str, ...]:
+def _cross_refs_for_tier(snapshot: RegistrySnapshot, tier: EvidenceTier) -> tuple[CrossReferenceId, ...]:
     return tuple(sorted(ref for ref, item in snapshot.live_cross_references.items() if item.evidence_tier == tier))
 
 
@@ -220,7 +232,7 @@ def _workbook_refs_for_tier(
     *,
     coverage_kinds: tuple[str, ...],
     tier: EvidenceTier,
-) -> tuple[str, ...]:
+) -> tuple[WorkbookParityRefId, ...]:
     return tuple(
         sorted(
             ref.id
@@ -230,7 +242,7 @@ def _workbook_refs_for_tier(
     )
 
 
-def _status(*values: tuple[str, ...]) -> CoverageGateStatus:
+def _status(*values: tuple[object, ...]) -> CoverageGateStatus:
     return "satisfied" if any(values) else "gap"
 
 

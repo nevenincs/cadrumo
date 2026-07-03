@@ -3,12 +3,10 @@ tags:
   - '#reference'
   - '#external-tax-definition-engines'
 date: '2026-05-03'
-modified: '2026-05-03'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-inventory-research]]'
 ---
-
-
 
 # `external-tax-definition-engines` reference: `Spain-focused AEAT model definition and tax rule architecture`
 

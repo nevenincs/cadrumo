@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...workflow._models import WorkflowState
+from ...workflow import WorkflowState
 from .._actions import update_auth
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

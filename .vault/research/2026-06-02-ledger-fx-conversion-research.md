@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#ledger-fx-conversion'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `ledger-fx-conversion` research: `foreign-currency conversion: legal basis, accounting practice, and a stable free per-date rate source`
 

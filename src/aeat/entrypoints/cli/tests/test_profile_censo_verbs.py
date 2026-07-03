@@ -12,51 +12,41 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 from datetime import UTC, date, datetime
-from functools import cache
 from pathlib import Path
-from typing import cast
 
-import click
 import pytest
-from click.testing import CliRunner, Result
-from typer.main import get_command
+from click.testing import Result
 
-from ....application.live._censo import CensoSnapshotService
-from ....application.user_profile._orchestration import profile_create_storage_span
+from ....application.live import CensoSnapshotService
+from ....application.user_profile import profile_create_storage_span
 from ....core.config import Settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._config import profile_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 _AEAT = Settings.external_constants().aeat
 _G313 = f"{_AEAT.domains.sede}{_AEAT.sede_paths.censo_g313_launcher}"
-_PROFILE_RUNNER = CliRunner()
-
-
-@cache
-def _profile_command() -> click.Command:
-    return cast(click.Command, get_command(profile_app))
+_CAPTURED_AT = datetime(2026, 5, 28, 15, 35, tzinfo=UTC)
 
 
 def _invoke_profile(args: Sequence[str]) -> Result:
-    return _PROFILE_RUNNER.invoke(_profile_command(), list(args))
+    return invoke_cached_cli(["config", "profile", *args])
 
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("default"),
+        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
     ):
         yield
 
 
 def _seed_active_profile(*, without_taxpayer_axes: bool = False) -> None:
-    from ....application.user_profile._testing import register_minimal_profile
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.user_profile import register_minimal_profile
+    from ....application.workflow import workflow_state_repository
 
     repo = workflow_state_repository()
     overrides = {"identity.tax_id": "12345678Z", "activities.description": "software"}
@@ -71,7 +61,7 @@ def _seed_active_profile(*, without_taxpayer_axes: bool = False) -> None:
     repo.update(
         lambda state: register_minimal_profile(
             state,
-            profile_id="default",
+            profile_id="00000000-0000-4000-8000-000000000000",
             overrides=overrides,
         ),
     )
@@ -94,7 +84,7 @@ def _capture_snapshot(*, include_iae: bool = False) -> str:
         censo_facts["iva.regime"] = "GENERAL"
     snapshot = service.capture(
         profile_id=active,
-        captured_at=datetime.now(UTC),
+        captured_at=_CAPTURED_AT,
         source_url=_G313,
         censo_facts=censo_facts,
     )
@@ -245,9 +235,10 @@ def test_apply_emits_censo_applied_bucket_event() -> None:
     catalogue before this assertion landed — the emission was
     implemented but not witnessed end-to-end."""
 
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ....application.workflow import workflow_state_repository
     from ....core import resolve_active_bucket_id
-    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....domain.buckets import BucketEventType
 
     _seed_active_profile()
     snapshot_id = _capture_snapshot()
@@ -297,7 +288,7 @@ def test_compare_emits_json_payload_with_typed_rows() -> None:
 
     raw = json.loads(result.output)
     # Every CLI verb now emits the centralised {schema_version, command,
-    # result, warnings} envelope; the operator-visible payload lives
+    # status, result, notices} envelope; the operator-visible payload lives
     # under ``result``.
     payload = raw["result"] if isinstance(raw, dict) and "schema_version" in raw else raw
     assert payload["snapshot_id"]

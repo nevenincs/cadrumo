@@ -42,26 +42,9 @@ coincidental sum cannot satisfy the assertion. The test does not recompute any
 registry IRPF formula — it proves the enrolled relation resolver wires the four
 prior periodic filings through to each annual credit casilla.
 
-WIRING-GAP CARVE-OUT: the M100/2024 revision declares two further
-``relation_prefill`` retenciones bindings whose relations fold a source modelo's
-retenciones output, but NO casilla binds to either — they are ORPHANED bindings
-(the same wiring-gap shape found in the M200 base-determination and M369 OSS paths):
-
-* ``renta-2024-modelo-115-retenciones-periodicas`` (M115 ``source_casilla_id='03'``,
-  arrendamientos retención): the only inmobiliario-retención casilla, ``0598``,
-  is ``computed`` by formula ``renta-2024-retenciones-arrendamientos-urbanos``
-  (= ``copy(0153)``), where ``0153`` is a per-inmueble MANUAL input
-  (``irpf_inmueble_retenciones_ingresos_a_cuenta``), not the M115 binding. The
-  M115 relation folds into a binding that no casilla consumes.
-* ``renta-2024-modelo-193-retenciones-anuales`` (M193 ``source_casilla_id=
-  'decl.retenciones-total'``, copy): no casilla binds it; the capital-mobiliario
-  retención casilla ``0597`` consumes the M123 binding, not M193.
-
-Both orphaned bindings are referenced only by their own definition, their
-relation's ``target_binding``, and the ``dependent-modelos`` construct — never by
-a casilla ``binding`` field nor a formula. They are NOT proven-live here; the gap
-is reported precisely so the epic can decide whether to wire a consuming casilla
-or retire the orphaned binding.
+M193 annual retenciones are covered separately by the registry-level M100
+retenciones binding wiring tests; M100 rental retenciones remain grounded in
+casilla ``0153`` and its ``0598`` copy formula.
 """
 
 from __future__ import annotations
@@ -73,6 +56,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
@@ -82,14 +69,10 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
-from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,
@@ -100,7 +83,7 @@ from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-m100-retenciones-fold"
+_BUCKET_ID = "10005960-0000-4000-8000-000000000596"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _YEAR = 2024
@@ -116,6 +99,10 @@ _M100_CAPITAL_MOBILIARIO_CASILLA: CasillaId = validated_casilla_id(
 )
 _M111_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("28", surface="_M111_RETENCIONES_OUTPUT")
 _M123_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("09", surface="_M123_RETENCIONES_OUTPUT")
+_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id(
+    "1391",
+    surface="_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA",
+)
 
 # Four DISTINCT non-equal quarterly M111 c28 retenciones-rendimientos-del-trabajo
 # values. Distinctness makes the annual fold unmistakable: an off-by-one-quarter
@@ -149,6 +136,9 @@ _M130_C19_BY_PERIOD: dict[str, Decimal] = {
 }
 _M130_PAGOS_OUTPUT: CasillaId = validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT")
 _M131_PAGOS_OUTPUT: CasillaId = validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT")
+_OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset(
+    {"renta-2024-certificado-trabajo-retenciones"},
+)
 
 
 @pytest.fixture
@@ -215,7 +205,25 @@ def _seed_pagos_quarters(*, obs_repo: CalculationObservationRepository) -> None:
         )
 
 
-def _seed_taxpayer_unit_profile() -> None:
+def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> None:
+    CalculationObservationRepository(objects=secure_objects).save_observation(
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_YEAR - 1,
+            period=_ANNUAL_PERIOD,
+            observations=registry_grounded_observations(
+                modelo="100",
+                filing_year=_YEAR - 1,
+                period=_ANNUAL_PERIOD,
+                casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+            ),
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
+    )
+
+
+def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed a single-taxpayer ``UserProfileRecord`` covering M100's profile bindings.
 
     The M100/2024 annual revision declares ``source = "profile"`` bindings (the
@@ -232,10 +240,19 @@ def _seed_taxpayer_unit_profile() -> None:
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Operator"),
+            UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="varon"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
+            UserProfileFact(path="renta_taxpayer.sex", value="H"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
@@ -251,7 +268,7 @@ def _seed_taxpayer_unit_profile() -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(record)
 
 
 def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
@@ -270,6 +287,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
+        if binding.id not in _OPTIONAL_PAYEE_RETENCIONES_BINDINGS
         if binding.source
         not in (
             "profile",
@@ -292,7 +310,8 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> BucketAggr
     ``relation_prefill`` bindings are deliberately left UNSET so the enrolled
     relation resolver folds them from the seeded observation store.
     """
-    _seed_taxpayer_unit_profile()
+    _seed_taxpayer_unit_profile(secure_objects)
+    _seed_prior_year_m100_zero_carry(secure_objects)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-classification-workflow'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S08'
 related:
   - "[[2026-06-14-llm-classification-workflow-plan]]"
 ---
-
-
-
 
 # Add reject_llm_suggestion + LLMSuggestionRejectionResult emitting the rejection event without mutating the transaction
 
@@ -30,4 +27,3 @@ A rejection records a captured audit event and leaves the row unclassified; veri
 ## Notes
 
 Persisted via `_save_transaction_catalogue_and_events` (not a bare event-repo save) so the default CLI event repo binds to the active bucket, mirroring the apply path.
-

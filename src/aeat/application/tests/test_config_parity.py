@@ -22,8 +22,8 @@ def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") ->
     """Seed an active profile through the profile application service."""
 
     from ...domain.user_profile import UserProfileFact
-    from ..user_profile._orchestration import register_active_profile
-    from ..workflow._persistence import workflow_state_repository
+    from ..user_profile import register_active_profile
+    from ..workflow import workflow_state_repository
 
     repo = workflow_state_repository()
     facts = (
@@ -38,7 +38,7 @@ def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") ->
     repo.update(
         lambda state: register_active_profile(
             state,
-            profile_id="default",
+            profile_id="00000000-0000-4000-8000-000000000000",
             display_name="operator",
             facts=facts,
         ),
@@ -60,6 +60,12 @@ def test_config_create_then_config_show_round_trips_iva_regime(
                 "--quiet",
                 "--tax-id",
                 "00000000T",
+                "--entity-type",
+                "natural_person",
+                "--name",
+                "Operator",
+                "--surnames",
+                "Example",
                 "--activity",
                 "design",
                 "--iva-regime",
@@ -71,15 +77,18 @@ def test_config_create_then_config_show_round_trips_iva_regime(
         show_via_config = invoke_cached_cli(["--format", "json", "config", "profile", "show", "default"])
         assert show_via_config.exit_code == 0, show_via_config.output
         _show_payload = json.loads(show_via_config.output)
-        # Migrated commands emit a SchemaEnvelope wrapper; pre-migration
-        # commands emit the bare payload.
-        _facts_payload = _show_payload.get("result", _show_payload)
+        assert isinstance(_show_payload, dict)
+        assert "schema_version" in _show_payload and "result" in _show_payload
+        _facts_payload = _show_payload["result"]
         facts = {row["path"]: row["value"] for row in _facts_payload["facts"]}
         assert facts["iva.regime"] == "GENERAL"
 
-        from ..user_profile import UserProfileLifecycleRepository
-        from ..user_profile._orchestration import fact_value, profile_storage_session
-        from ..workflow._profile_bucket_scan import read_profile_bucket
+        from ..user_profile import (
+            UserProfileLifecycleRepository,
+            fact_value,
+            profile_storage_session,
+        )
+        from ..workflow import read_profile_bucket
 
         # The bucket directory is named by the minted UUID; resolve it
         # from the operator label "default" carried in the manifest.
@@ -105,6 +114,12 @@ def test_config_create_then_config_status_surfaces_assigned_value(
                 "--quiet",
                 "--tax-id",
                 "00000000T",
+                "--entity-type",
+                "natural_person",
+                "--name",
+                "Operator",
+                "--surnames",
+                "Example",
                 "--activity",
                 "design",
                 "--iva-regime",

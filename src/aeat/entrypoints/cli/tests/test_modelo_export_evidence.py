@@ -12,6 +12,7 @@ from openpyxl import load_workbook
 from pydantic import ValidationError
 
 from ....application.storage.calc_sheets import (
+    CalcSheetsEngineError,
     OfflineWorkbookEvidenceSidecar,
     SheetEvidenceFacet,
     SheetExportMetadata,
@@ -21,10 +22,13 @@ from ....application.storage.calc_sheets import (
     serialize_offline_export,
     sheet_evidence_from_ledger_filing,
 )
-from ....application.storage.calc_sheets._errors import CalcSheetsEngineError
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
+from ....domain.modelos import (
+    LedgerEvidenceRow,
+    LedgerFilingEvidence,
+    ManualFactBasisEntry,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -44,6 +48,8 @@ _IVA_DEVENGADO_CUOTA_CASILLA: CasillaId = validated_casilla_id(
     surface="_IVA_DEVENGADO_CUOTA_CASILLA",
 )
 _NONCANONICAL_IVA_DEVENGADO_BASE_CASILLA_ID = " iva.devengado.base "
+_LEGAL_REFS = ("ley-37-1992:art-99",)
+_SOURCE_REFS = ("boe-modelo-303-2025-form",)
 
 
 def _ledger_evidence() -> LedgerFilingEvidence:
@@ -75,8 +81,8 @@ def _ledger_evidence() -> LedgerFilingEvidence:
                 purchase_invoice_evidence_id="invoice-evidence-1",
                 attachment_ids=("attachment-1",),
                 document_link_ids=("drive-doc-1",),
-                legal_refs=("liva-art-99",),
-                source_refs=("boe-a-2026-1",),
+                legal_refs=_LEGAL_REFS,
+                source_refs=_SOURCE_REFS,
             ),
         ),
         manual_entries=(
@@ -85,6 +91,8 @@ def _ledger_evidence() -> LedgerFilingEvidence:
                 value="140000.00",
                 kind="casilla_input",
                 note="operator supplied accounting result",
+                legal_refs=_LEGAL_REFS,
+                source_refs=_SOURCE_REFS,
             ),
         ),
         captured_at=_NOW,
@@ -135,7 +143,8 @@ def test_offline_export_sidecar_reconstitutes_evidence_casilla_basis() -> None:
     )
     assert sidecar.evidence.manual_entries[0].casilla_id == _RESULTADO_CONTABLE_CASILLA
     assert sidecar.evidence.contributor_rows[0].transaction_id == "tx-roundtrip-001"
-    assert sidecar.evidence.contributor_rows[0].legal_refs == ("liva-art-99",)
+    assert sidecar.evidence.contributor_rows[0].legal_refs == _LEGAL_REFS
+    assert sidecar.evidence.manual_entries[0].source_refs == _SOURCE_REFS
 
 
 def test_ledger_evidence_projection_refuses_unattributed_contributor() -> None:

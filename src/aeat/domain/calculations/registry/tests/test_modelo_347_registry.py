@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date
-from functools import lru_cache
 
 import pytest
 
@@ -13,19 +12,16 @@ from .. import (
     InputKind,
     RegistryValidator,
     build_snapshot,
-    load_registry_tree,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_347():
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == "347")
-    return modelo, catalogues
+    return _committed_modelo("347")
 
 
 _FORBIDDEN_REMOTE_ACTIONS = frozenset(
@@ -59,6 +55,10 @@ def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int)
         period="0A",
     )
     assert snapshot.revision.id == "2008-y-siguientes"
+    assert snapshot.revision.orden_aplicabilidad == (
+        "orden-eha-3012-2008:art-1",
+        "orden-hac-1431-2025:art-1",
+    )
 
 
 def test_committed_modelo_347_is_informative_only() -> None:
@@ -73,6 +73,9 @@ def test_committed_modelo_347_is_informative_only() -> None:
 def test_committed_modelo_347_workbook_parity_refs_resolve_to_corpus() -> None:
     modelo, catalogues = _load_modelo_347()
     expected_sources = {"aeat-dr-347-2025", "aeat-dr-347-2011"}
+    assert catalogues.sources["aeat-modelo-347-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-347-2008-form"].evidence_tier == "layout_authority"
+    assert catalogues.sources["boe-modelo-347-2011-amendment"].evidence_tier == "layout_authority"
     for revision in modelo.revisions.values():
         sources_seen = {ref.workbook_source for ref in revision.workbook_parity_refs}
         assert expected_sources <= sources_seen, sources_seen
@@ -120,13 +123,15 @@ def test_committed_modelo_347_filing_schedule_is_annual() -> None:
 @pytest.mark.parametrize(
     ("filing_year", "expected_open", "expected_close"),
     [
-        # Plazo per Orden EHA/3012/2008 art 10: durante el mes de febrero
+        # Plazo per Orden EHA/3012/2008 art. 10: durante el mes de febrero,
+        # shifted by the AEAT annual calendar when February ends on a non-working day.
         (2018, date(2019, 2, 1), date(2019, 2, 28)),
         (2019, date(2020, 2, 1), date(2020, 2, 29)),
         (2024, date(2025, 2, 1), date(2025, 2, 28)),
+        (2025, date(2026, 2, 1), date(2026, 3, 2)),
     ],
 )
-def test_committed_modelo_347_deadline_window_is_february_following_ejercicio(
+def test_committed_modelo_347_deadline_window_matches_official_calendar(
     filing_year: int,
     expected_open: date,
     expected_close: date,
@@ -143,6 +148,9 @@ def test_committed_modelo_347_deadline_window_is_february_following_ejercicio(
     assert window.period_kind == "annual"
     assert window.opens_on == expected_open
     assert window.closes_on == expected_close
+    assert "aeat-modelo-347-procedure" in window.source_refs
+    if filing_year == 2025:
+        assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in window.source_refs
 
 
 def test_committed_modelo_347_construct_includes_revision_members() -> None:

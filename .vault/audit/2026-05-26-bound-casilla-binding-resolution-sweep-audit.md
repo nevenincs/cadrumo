@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#modelo-130-relation-regression'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-29'
 related:
   - "[[2026-05-26-modelo-130-relation-regression-plan]]"
   - "[[2026-05-26-modelo-130-relation-regression-adr]]"
@@ -68,10 +68,10 @@ declares `source_modelo = "<self>", source_output =
 relation, and aggregates with `{op = "copy"}`. With no period
 anchor and no relation declaration the binding silently never
 fires; the bound casilla defaults to `Decimal("0")` through
-`_initial_values`. AEAT's RD 439/2007 art. 110.5 (Modelo 130) and
-the parallel rule for estimación objetiva (Modelo 131) require the
-prior quarter's saldo negativo to deduct from the current
-quarter's diferencia.
+`_initial_values`. AEAT Modelo 130 instructions, under the current
+RD 439/2007 art. 110 payment framework, and the parallel rule for
+estimación objetiva (Modelo 131) require the prior quarter's saldo
+negativo to deduct from the current quarter's diferencia.
 
 | Modelo | Revision        | Casilla | Binding id                                          |
 | :----- | :-------------- | :------ | :-------------------------------------------------- |

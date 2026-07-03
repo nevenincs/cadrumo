@@ -8,14 +8,18 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.external_constants import MODELO_202_ART_40_3_INCN_THRESHOLD_EUR
 from ...deadlines.taxpayer_model import EntityType, TaxpayerProfile
+from ._ids import LegalRefId
 
-_MODELO_202_MODALITY_LEGAL_REFS: tuple[str, ...] = (
+type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+
+_MODELO_202_MODALITY_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-27-2014:art-40",
     "ley-27-2014:art-40-3",
 )
@@ -36,8 +40,8 @@ class Modelo202ModalityVerdict(BaseModel):
     model_config = _STRICT_FROZEN
 
     modality: Modelo202Modality
-    reason: str = Field(min_length=1)
-    legal_refs: tuple[str, ...] = Field(min_length=1)
+    reason: _OperatorReason
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
 
 
 _MODELO_202_ART_40_3_MANDATORY_REASON = (

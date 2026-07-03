@@ -1,8 +1,28 @@
-"""Core aggregation taxonomy shared across application and adapter layers."""
+"""Core aggregation taxonomy shared across registry, application, and adapters.
+
+This module owns closed value sets and tiny pydantic carriers only; it does not
+aggregate ledger rows, calculate casilla values, or perform source resolution.
+The registry schema imports :class:`BindingAggregation`,
+:class:`RelationAggregation`, and :class:`BindingSourceKind` to validate TOML
+authoring input. Application resolvers and adapters import the same
+:class:`BindingSourceKind` members so source tokens do not drift through bare
+strings.
+
+Keep the three axes separate:
+
+- :class:`BindingAggregationOp` governs how a
+  ``DataBindingDefinition.aggregation`` folds selected binding values.
+- :class:`RelationAggregationOp` governs cross-modelo relation fold-ins.
+- :class:`RowSetGroupingKind` is the downstream row-assembly grouping axis, not
+  a binding ``source`` token; use
+  :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE` only where a detail-record binding
+  source must be projected into the row assembler.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
+from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Final, Literal
@@ -50,12 +70,12 @@ class BindingAggregationOp(StrEnum):
 class BindingAggregation(BaseModel):
     """Typed aggregation rule carried by a registry ``DataBindingDefinition``.
 
-    Placed in :mod:`aeat.core` (cross-layer home) because the domain registry
+    Placed in :mod:`core` (cross-layer home) because the domain registry
     schema declares the field and the application/adapter layers read it; the
     closed :class:`BindingAggregationOp` set is the only key real binding
     aggregation mappings carry in the registry authoring tree. The model is
     strict and frozen, matching the registry schema's
-    :data:`~aeat.core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or
+    :data:`core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or
     a stray extra key is rejected at registry-build validation rather than
     silently re-parsed at resolve time.
     """
@@ -103,13 +123,13 @@ class RelationAggregationOp(StrEnum):
 class RelationAggregation(BaseModel):
     """Typed aggregation rule carried by a registry ``RelationDefinition``.
 
-    Placed in :mod:`aeat.core` (cross-layer home) because the domain registry
+    Placed in :mod:`core` (cross-layer home) because the domain registry
     schema declares the field and the application/adapter layers read it. The
     closed :class:`RelationAggregationOp` set is the only key real relation
     aggregation mappings carry in the registry authoring tree (every relation
     declares ``aggregation = {op = "copy" | "sum"}`` or none). The model is strict
     and frozen, matching the registry schema's
-    :data:`~aeat.core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or a
+    :data:`core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or a
     stray extra key is rejected at registry-build validation rather than silently
     re-parsed at resolve time. This is the relation sibling of
     :class:`BindingAggregation`; the two op axes are deliberately separate.
@@ -140,10 +160,15 @@ class RelationAggregation(BaseModel):
 class PeriodKind(StrEnum):
     """Authoritative period cadences shared across aggregation and deadline layers.
 
-    Placed in :mod:`aeat.core` (cross-layer home) so the deadline domain and
+    Placed in :mod:`core` (cross-layer home) so the deadline domain and
     application aggregation layer can both import without violating the
     hexagonal direction (domain → core is always legal; domain → application
     is forbidden).
+
+    This lightweight cadence enum is an aggregation/deadline taxonomy, not the
+    public :class:`core.Period` classifier. Concrete filing-period values
+    should use :class:`core.Period` and its exported ``PeriodKind``, which
+    also distinguishes instalment and extended registry tokens.
     """
 
     MONTHLY = "monthly"
@@ -154,7 +179,7 @@ class PeriodKind(StrEnum):
 class RowSetGroupingKind(StrEnum):
     """Canonical row-set source-kind discriminators for detail-record assembly.
 
-    Placed in :mod:`aeat.core` (cross-layer home) because both the application
+    Placed in :mod:`core` (cross-layer home) because both the application
     assembly layer and the domain registry schema reference these values, and
     domain → application imports are forbidden under the hexagonal contract.
 
@@ -173,6 +198,8 @@ class RowSetGroupingKind(StrEnum):
       ↔ ``ATRIBUCION`` (``"atribucion"``)
     - ``BindingSourceKind.REFUND_OPERATION`` (``"refund_operation"``)
       ↔ ``REFUND`` (``"refund"``)
+    - ``BindingSourceKind.DONATIVO_DONOR`` (``"donativo_donor"``)
+      ↔ ``DONATIVO`` (``"donativo"``)
     """
 
     WITHHOLDING = "withholding"
@@ -180,17 +207,20 @@ class RowSetGroupingKind(StrEnum):
     FOREIGN_ASSET = "foreign_asset"
     ATRIBUCION = "atribucion"
     REFUND = "refund"
+    DONATIVO = "donativo"
 
 
 class BindingSourceKind(StrEnum):
-    """The single canonical closed set of registry binding ``source`` tokens.
+    """The single canonical closed set of binding/source-mesh tokens.
 
-    Every :class:`~aeat.domain.calculations.registry.DataBindingDefinition`
-    declares exactly one ``source`` drawn from this enum. The members below are
-    the complete set of source tokens declared across the registry authoring
-    tree; the per-family frozensets (invoice, ledger, counterpart) are
-    **derived** from this enum rather than hand-maintained, so a new source
-    token is added in exactly one place.
+    Every :class:`domain.calculations.registry.DataBindingDefinition`
+    declares exactly one ``source`` drawn from the registry-declared subset of
+    this enum. The same enum also carries mesh-only source decisions such as
+    :attr:`BORRADOR` and :attr:`IVA_WALLET_DECISION`, which are resolved before a
+    registry binding is constructed and are parity-accounted as non-registry
+    members. Per-family frozensets (invoice, ledger, counterpart) are
+    **derived** from this enum rather than hand-maintained, so a new source token
+    is added in exactly one place.
 
     BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the source
     token that was previously a bare string (or a :class:`RowSetGroupingKind`
@@ -229,6 +259,17 @@ class BindingSourceKind(StrEnum):
     # mechanism (invoice-evidence + category-profile + annual-window) and is
     # deliberately not reused for the M130 quarterly cumulative gasto sum.
     LEDGER_RENTA_GASTO_AGGREGATION = "ledger_renta_gasto_aggregation"
+    # Modelo 151 régimen especial de impatriados (Ley Beckham, art. 93 LIRPF)
+    # Spanish-source base aggregation. Reads the bucket ledger like the other
+    # ledger-aggregation sources, but its per-row classifier admits INCOMING
+    # income ONLY when source_jurisdiction resolves to ES (art. 93.2: the
+    # impatriado is taxed by IRNR scope rules, not the art. 8 worldwide base),
+    # admits trabajo income (the class the M130 income pipeline excludes), and
+    # segregates every foreign-source or jurisdiction-unresolved row as a typed
+    # BECKHAM_FOREIGN_SOURCE_SEGREGATED issue (never a silent ES coercion). Feeds
+    # impatriado.base-liquidable-general (ADR
+    # 2026-07-01-modelo-151-beckham-source-scope).
+    LEDGER_IMPATRIADO_INCOME_AGGREGATION = "ledger_impatriado_income_aggregation"
     # Per-perceptor retención aggregation: the calc-mesh source that reads the
     # dedicated per-perceptor retención store (RETENCION_OBSERVATIONS_NAMESPACE,
     # operator-supplied — NOT the bucket ledger, so deliberately NOT in
@@ -238,6 +279,32 @@ class BindingSourceKind(StrEnum):
     # total_perceptors) — replacing the wrong sum-of-quarterly-M115-counts relation
     # (RET-1, ADR 2026-06-24-retenciones-perceptor-count-adr).
     RETENCIONES_AGGREGATION = "retenciones_aggregation"
+    # Modelo 390 year-end IVA compensation carry partition: reads filed Modelo
+    # 303 compensation states and materialises AEAT boxes 97 / 662 together from
+    # the FIFO carry projection. This is a registry-declared source because the
+    # two annual boxes are not independent relation copy/sum folds.
+    IVA_COMPENSATION_ANNUAL_PARTITION = "iva_compensation_annual_partition"
+    # Capital-goods IVA deduction regularización (LIVA arts. 107-110): the source
+    # that would materialise Modelo 303 casilla 43 / the Modelo 390 regularización
+    # field from the profile-scoped bienes-de-inversión register plus the
+    # definitive prorrata percentages. Registered in ``DEFERRED_SOURCE_KINDS`` for
+    # the first slice — the automatic feed is blocked on the separately-deferred
+    # prorrata-definitiva source (2026-06-19-silent-zero-base-aggregation-adr), so
+    # it carries no registry binding yet and surfaces an advisory rather than a
+    # hard binding (ADR 2026-07-01-iva-bienes-inversion-regularizacion).
+    BIENES_INVERSION_REGULARIZACION = "bienes_inversion_regularizacion"
+    # Annual prorrata-general regularización por porcentaje definitivo (LIVA arts.
+    # 104-105): the source that would materialise Modelo 303 casilla 44 / the
+    # Modelo 390 annual regularización field from the provisional percentage
+    # (prior-year definitive, art. 105.Uno) applied across the year and the
+    # current-year definitive percentage (art. 104) over full-year volumes.
+    # Registered in ``DEFERRED_SOURCE_KINDS`` for the first slice — it carries no
+    # registry binding yet and surfaces an advisory (the automatic casilla-44
+    # feed is promoted to a live mesh binding once the provisional-carry store
+    # lands), per ADR 2026-07-01-iva-complexity-hardening-scope. This is the same
+    # definitive-percentage source the capital-goods regularización (#349) is
+    # blocked on.
+    PRORRATA_REGULARIZACION = "prorrata_regularizacion"
     # Mesh-only sourcing decisions with NO registry binding declaration. Both are
     # resolved by a pre-mesh gate, not a registry `DataBindingDefinition.source`:
     # `borrador` materialises the Modelo 100 borrador prefill
@@ -255,13 +322,22 @@ class BindingSourceKind(StrEnum):
     LEDGER_TRANSACTION = "ledger_transaction"
     PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
     # Detail-record families. WITHHOLDING / FOREIGN_ASSET reuse the
-    # RowSetGroupingKind value; the other three carry their distinct
+    # RowSetGroupingKind value; the other four carry their distinct
     # source-token value (see ROW_SET_GROUPING_FOR_BINDING_SOURCE).
     WITHHOLDING = RowSetGroupingKind.WITHHOLDING.value
     FOREIGN_ASSET = RowSetGroupingKind.FOREIGN_ASSET.value
     RELATED_PARTY_OPERATION = "related_party_operation"
     ATRIBUCION_MEMBER = "atribucion_member"
     REFUND_OPERATION = "refund_operation"
+    # Modelo 182 (Ley 49/2002 art. 24, Orden EHA/3021/2007) per-donor register:
+    # the "registro tipo 2" detail row carrying the donor's NIF, importe
+    # donado, porcentaje de deducción aplicable, and the recurrencia flag
+    # (donativo plurianual a la misma entidad, LIRPF art. 68.3 / LIS art. 20).
+    # No live resolver yet — Sheets-pull-only, the same shape as the sibling
+    # detail-record families (ATRIBUCION_MEMBER, FOREIGN_ASSET,
+    # RELATED_PARTY_OPERATION, REFUND_OPERATION); registered in
+    # DEFERRED_SOURCE_KINDS (application/aggregation/_source_mesh.py).
+    DONATIVO_DONOR = "donativo_donor"
 
 
 ROW_SET_GROUPING_FOR_BINDING_SOURCE: Final[Mapping[BindingSourceKind, RowSetGroupingKind]] = MappingProxyType(
@@ -271,6 +347,7 @@ ROW_SET_GROUPING_FOR_BINDING_SOURCE: Final[Mapping[BindingSourceKind, RowSetGrou
         BindingSourceKind.RELATED_PARTY_OPERATION: RowSetGroupingKind.RELATED_PARTY,
         BindingSourceKind.ATRIBUCION_MEMBER: RowSetGroupingKind.ATRIBUCION,
         BindingSourceKind.REFUND_OPERATION: RowSetGroupingKind.REFUND,
+        BindingSourceKind.DONATIVO_DONOR: RowSetGroupingKind.DONATIVO,
     },
 )
 """Explicit detail-record binding-source ↔ row-assembly grouping correspondence.
@@ -318,7 +395,19 @@ COUNTERPART_SOURCE_KINDS: Final[frozenset[CounterpartSourceKind]] = frozenset(
 
 
 def counterpart_source_kind(value: object) -> CounterpartSourceKind:
-    """Return ``value`` narrowed to the counterpart source-kind subset."""
+    """Return ``value`` narrowed to the counterpart source-kind subset.
+
+    Args:
+        value: A :class:`BindingSourceKind` member or its stored string value.
+
+    Returns:
+        The same source kind narrowed to :data:`CounterpartSourceKind` for
+        counterpart aggregation inputs.
+
+    Raises:
+        ValueError: When ``value`` is not a known :class:`BindingSourceKind`, or
+            is known but outside the counterpart subset.
+    """
     try:
         source_kind = value if isinstance(value, BindingSourceKind) else BindingSourceKind(value)
     except ValueError as exc:
@@ -338,14 +427,16 @@ LEDGER_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
         BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
     },
 )
-"""Ledger-aggregation binding source kinds (all five), derived from the enum.
+"""Ledger-aggregation binding source kinds (all six), derived from the enum.
 
 Every binding whose ``source`` is a member reads its values from the
 bucket-scoped ledger (transaction-classified IVA / OSS aggregation, Renta
-first-slice income/expense aggregation, or the M130 pago-fraccionado gasto
-cumulative aggregation). Cross-domain consumers route through this frozenset
+first-slice income/expense aggregation, the M130 pago-fraccionado gasto
+cumulative aggregation, or the M151 impatriado Spanish-source base
+aggregation). Cross-domain consumers route through this frozenset
 so the registry stays the single source of truth for ledger readiness.
 """
 
@@ -353,7 +444,7 @@ so the registry stays the single source of truth for ledger readiness.
 class BindingTypedEnumKind(StrEnum):
     """The closed set of substrate enum-class names a binding value bridges.
 
-    A :class:`~aeat.domain.calculations.registry.DataBindingDefinition` whose
+    A :class:`domain.calculations.registry.DataBindingDefinition` whose
     value bridges a closed-membership substrate axis declares ``typed_enum`` =
     one of these members. Each value is the NAME of the closed enum class a
     consumer routes the binding value through:
@@ -374,10 +465,10 @@ class BindingTypedEnumKind(StrEnum):
     without changing any stored, compared, or emitted string (the
     modelo-enum-hardening precedent). Do NOT rename a stored token.
 
-    Declared in :mod:`aeat.core` as a closed value set per the architecture
+    Declared in :mod:`core` as a closed value set per the architecture
     contract; the loader hydrates the registry TOML's raw token to its member at
     the schema boundary (see
-    :meth:`~aeat.domain.calculations.registry.DataBindingDefinition._coerce_typed_enum`).
+    :meth:`domain.calculations.registry.DataBindingDefinition._coerce_typed_enum`).
     It is the closed-set *annotation* on the binding, distinct from the engine
     ``input_channel`` (how a formula consumes the value); a binding may carry a
     ``typed_enum`` yet still be a numeric ``decimal`` channel.
@@ -395,11 +486,21 @@ class RetencionScheme(StrEnum):
     Each scheme maps to one of the casillas (or grouped casillas) on a
     retenciones modelo form. The mapping from scheme to modelo lives in the
     per-modelo entry-point functions; this enum is the union. Declared in
-    :mod:`aeat.core` as a closed value set per the architecture contract.
+    :mod:`core` as a closed value set per the architecture contract.
+
+    ``WORK_INCOME`` and ``WORK_INCOME_DIRECTOR`` both fold into the Modelo 111
+    *rendimientos del trabajo* block (casillas 01-06) — the form carries a
+    single trabajo block and does not split them — but they carry distinct
+    statutory retención treatments (Modelo 190 separates them by clave A vs E):
+    ``WORK_INCOME`` (ordinary empleados) follows the personalised progressive
+    procedure of LIRPF art. 101.1; ``WORK_INCOME_DIRECTOR`` (administradores y
+    miembros de consejos de administración) follows the FIXED rate of LIRPF
+    art. 101.2. See :func:`work_income_retencion_treatment`.
     """
 
     # Modelo 111 schemes (quarterly retenciones IRPF on labor + activities)
-    WORK_INCOME = "rendimientos_trabajo"  # clave A
+    WORK_INCOME = "rendimientos_trabajo"  # clave A (empleados, escala progresiva art 101.1)
+    WORK_INCOME_DIRECTOR = "rendimientos_trabajo_administrador"  # clave E (administrador, tipo fijo art 101.2)
     ECONOMIC_ACTIVITY = "actividades_economicas"  # clave G
     PROFESSIONAL = "actividades_profesionales"  # clave H (subset of G)
     PRIZE = "premios"  # clave I (lottery, prize)
@@ -409,6 +510,86 @@ class RetencionScheme(StrEnum):
     CAPITAL_INTEREST = "intereses"  # clave I (interest income)
     CAPITAL_DIVIDEND = "dividendos"  # clave A (dividend income)
     CAPITAL_OTHER = "otros_capital_mobiliario"  # clave C (other capital income)
+
+
+#: FIXED retención rate on rendimientos del trabajo perceived "por la condición de
+#: administradores y miembros de los consejos de administración, de las juntas que
+#: hagan sus veces, y demás miembros de otros órganos representativos". Binding
+#: provision: LIRPF art. 101.2 (Ley 35/2006, BOE-A-2006-20764), developed by RIRPF
+#: art. 80.1.3.º (RD 439/2007). Confirmed against the bundled consolidated LIRPF
+#: art-101 corpus ("será del 35 por ciento"). This is the GENERAL fixed tipo —
+#: distinct from the personalised progressive escala of art. 101.1 (19/24/30/37/45/47
+#: por ciento) that applies to ordinary empleados.
+ADMINISTRADOR_RETENCION_RATE: Final[Decimal] = Decimal("0.35")
+
+#: REDUCED fixed retención rate that replaces the 35 % when the administrador/consejero
+#: rendimientos proceed from "entidades con un importe neto de la cifra de negocios
+#: inferior a 100.000 euros". Binding provision: LIRPF art. 101.2 segundo inciso
+#: (Ley 35/2006), developed by RIRPF art. 80.1.3.º. Confirmed against the bundled
+#: consolidated LIRPF art-101 corpus ("el porcentaje de retención e ingreso a cuenta
+#: será del 19 por ciento").
+ADMINISTRADOR_RETENCION_REDUCED_RATE: Final[Decimal] = Decimal("0.19")
+
+#: LIRPF art. 101.2 INCN ceiling: the reduced 19 % administrador rate applies iff the
+#: paying entity's importe neto de la cifra de negocios is STRICTLY below this amount
+#: ("inferior a 100.000 euros"); at or above it the general 35 % applies. Binding
+#: provision: LIRPF art. 101.2 (Ley 35/2006) / RIRPF art. 80.1.3.º (RD 439/2007).
+ADMINISTRADOR_RETENCION_REDUCED_INCN_THRESHOLD_EUR: Final[Decimal] = Decimal("100000")
+
+
+class WorkIncomeRetencionTreatment(BaseModel):
+    """Statutory retención treatment for a rendimientos-del-trabajo scheme.
+
+    Separates the personalised progressive procedure the law applies to ordinary
+    empleados (LIRPF art. 101.1, developed by RIRPF arts. 80/82-86) from the FIXED
+    rate LIRPF art. 101.2 sets for administradores y miembros de consejos de
+    administración. ``is_fixed_rate`` is ``False`` for the progressive empleado
+    treatment (the per-perceptor percentage is a personalised computation, so no
+    single rate is carried) and ``True`` for the administrador treatment, which
+    carries the general fixed rate plus the reduced rate and its INCN threshold.
+
+    A tiny closed carrier per this module's contract; the rate values are the
+    grounded module constants (:data:`ADMINISTRADOR_RETENCION_RATE` et al.).
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    scheme: RetencionScheme
+    is_fixed_rate: bool
+    fixed_rate: Decimal | None = None
+    fixed_reduced_rate: Decimal | None = None
+    fixed_reduced_incn_threshold_eur: Decimal | None = None
+    legal_refs: tuple[str, ...]
+
+
+_WORK_INCOME_RETENCION_TREATMENTS: Mapping[RetencionScheme, WorkIncomeRetencionTreatment] = MappingProxyType(
+    {
+        RetencionScheme.WORK_INCOME: WorkIncomeRetencionTreatment(
+            scheme=RetencionScheme.WORK_INCOME,
+            is_fixed_rate=False,
+            legal_refs=("ley-35-2006:art-101", "rd-439-2007:art-80", "rd-439-2007:art-86"),
+        ),
+        RetencionScheme.WORK_INCOME_DIRECTOR: WorkIncomeRetencionTreatment(
+            scheme=RetencionScheme.WORK_INCOME_DIRECTOR,
+            is_fixed_rate=True,
+            fixed_rate=ADMINISTRADOR_RETENCION_RATE,
+            fixed_reduced_rate=ADMINISTRADOR_RETENCION_REDUCED_RATE,
+            fixed_reduced_incn_threshold_eur=ADMINISTRADOR_RETENCION_REDUCED_INCN_THRESHOLD_EUR,
+            legal_refs=("ley-35-2006:art-101", "rd-439-2007:art-80"),
+        ),
+    },
+)
+
+
+def work_income_retencion_treatment(scheme: RetencionScheme) -> WorkIncomeRetencionTreatment | None:
+    """Return the statutory :class:`WorkIncomeRetencionTreatment` for a work-income scheme.
+
+    Returns ``None`` for non-work-income schemes (actividades, premios, capital,
+    arrendamiento), which are not governed by the LIRPF art. 101.1/101.2 trabajo
+    procedure. Use it to distinguish the empleado (progressive) treatment from the
+    administrador/consejero (fixed art. 101.2) treatment at the operator boundary.
+    """
+    return _WORK_INCOME_RETENCION_TREATMENTS.get(scheme)
 
 
 class RetencionClave(StrEnum):
@@ -427,7 +608,7 @@ class RetencionClave(StrEnum):
     Modelo 193 reuses the A-D letters for its own concepts; the stored clave is the
     LETTER and its per-modelo meaning is context, so a single letter catalogue
     covers both. The member name equals its AEAT clave letter (value byte-identical
-    to the stored token). Declared in :mod:`aeat.core` as a closed value set per the
+    to the stored token). Declared in :mod:`core` as a closed value set per the
     architecture contract. The M349 / M347 operation "clave" is a DISTINCT taxonomy
     -- see :class:`OperationKind349` / :class:`OperationKind347`, not this enum.
     """
@@ -449,7 +630,7 @@ class RetencionClave(StrEnum):
 class OperationKind347(StrEnum):
     """Modelo 347 operation kinds (clave de operación).
 
-    Source: AEAT Modelo 347 instrucciones. Declared in :mod:`aeat.core` as a
+    Source: AEAT Modelo 347 instrucciones. Declared in :mod:`core` as a
     closed value set per the architecture contract.
     """
 
@@ -474,12 +655,27 @@ class OperationKind349(StrEnum):
     TRIANGULAR = "triangular"  # clave T
 
 
+class IntracomOperationType(StrEnum):
+    """Modelo 349 operation-key letters carried by invoice records."""
+
+    E = "E"
+    H = "H"
+    M = "M"
+    S = "S"
+    T = "T"
+    R = "R"
+    A = "A"
+    ADQUISICION_SERVICIOS = "I"
+    D = "D"
+    C = "C"
+
+
 class ForeignAssetClass(StrEnum):
     """Modelo 720 asset classes (clave de tipo de bien).
 
     Source: AEAT Modelo 720 instrucciones. Each class is declared separately;
     the declarability gate (50,000 EUR per class) is applied after the
-    aggregator runs. Declared in :mod:`aeat.core` as a closed value set.
+    aggregator runs. Declared in :mod:`core` as a closed value set.
     """
 
     ACCOUNT = "cuenta_entidad_financiera"  # clave C

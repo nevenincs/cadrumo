@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -31,6 +32,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 #: The display label the operator chooses at create — the only id they know.
 _LABEL = "operator"
+_DUPLICATE_MANIFEST_CREATED_AT = datetime(2026, 5, 28, 15, 5, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -103,11 +105,11 @@ def test_env_override_by_display_label_resolves_the_profile_bucket() -> None:
 
 
 def test_env_override_by_uuid_is_unchanged() -> None:
-    """``AEAT_ACTIVE_PROFILE=<uuid>`` resolves byte-identically (backward-compatible).
+    """``AEAT_ACTIVE_PROFILE=<uuid>`` resolves through the direct bucket-id route.
 
-    The UUID fast path must be untouched: the normalization only fires when the
+    The UUID fast path is current behavior: normalization only fires when the
     direct UUID-bucket lookup misses, so a UUID-valued override never reaches the
-    label fallback.
+    operator-label fallback.
     """
     uuid = _create_profile_and_resolve_uuid()
 
@@ -127,8 +129,6 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
     state that makes a label resolve ambiguously, exercising the ambiguity-refusal
     path through the entrypoint normalizer.
     """
-    from datetime import UTC, datetime
-
     from ....adapters.persistence.storage.bucket import (
         BucketLifecycleStatus,
         BucketManifest,
@@ -141,14 +141,13 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
 
     root = load_settings().aeat_local_storage_root
     duplicate_uuid = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
-    now = datetime.now(UTC).replace(microsecond=0)
     provision_bucket_directory(root, duplicate_uuid)
     write_manifest(
         bucket_paths(root, duplicate_uuid),
         BucketManifest(
             bucket_id=duplicate_uuid,
             label=label,
-            created_at=now,
+            created_at=_DUPLICATE_MANIFEST_CREATED_AT,
             last_unlocked_at=None,
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,

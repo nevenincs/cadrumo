@@ -15,7 +15,15 @@ entries use ``reconciliation_total_casilla_ids`` for result-to-pay /
 result-to-refund casillas and ``computed_casilla_ids`` for the modelo's
 key computed outputs.
 
+This is a presentation summary only. It does not derive the fichero
+``Tipo de declaración`` result disposition, apply Modelo 303 refund elections,
+or decide cross-period carry-forward; that single determined fact belongs to
+:func:`aeat.application.modelo.resolve_modelo_result_disposition`.
+
 See Also:
+    :func:`aeat.application.modelo.resolve_modelo_result_disposition`
+        Determines the filed result disposition that export and carry-forward
+        persistence read.
     :func:`aeat.application.filing.summarise_calculation`
         Draft-calculation summary surface for filing workflows; this module
         handles persisted modelo revisions instead.
@@ -33,8 +41,7 @@ from ...core import Period
 from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId
-from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._work_unit import WorkUnit
+from ...domain.modelos import CalculationRevision, WorkUnit
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._work_lifecycle import get_work_unit
 
@@ -48,14 +55,17 @@ class ResultSummaryRow(BaseModel):
     :class:`CalculationRevision` values. ``result_ingresar`` and
     ``result_devolver`` identify registry-declared reconciliation totals;
     ``key_figure`` identifies a computed output retained for the CLI summary.
-    CLI JSON rendering serializes this model into ``ResultSummaryRowPayload``
-    rows with string decimal values.
+    ``label`` remains the official Spanish invariant; ``localized_labels``
+    carries registry-provided operator-facing display labels for other output
+    languages. CLI JSON rendering serializes this model into
+    ``ResultSummaryRowPayload`` rows with string decimal values.
     """
 
     model_config = _STRICT_FROZEN
 
     casilla_id: CasillaId
     label: str
+    localized_labels: dict[str, str] = Field(default_factory=dict)
     value: Decimal
     role: str
     """Why the casilla is a headline figure.
@@ -88,7 +98,7 @@ def calculation_result_summary(
     *,
     work_unit_resolver: Callable[[str], WorkUnit] = get_work_unit,
 ) -> CalculationResultSummary | None:
-    """Return the registry-derived headline summary for ``revision``, if available.
+    """Return the :class:`CalculationResultSummary` for ``revision``, if available.
 
     ``revision`` is the persisted :class:`CalculationRevision` attempt and
     provides ``casilla_values``. The function resolves its parent
@@ -127,7 +137,7 @@ def calculation_result_summary(
         )
         return None
 
-    casilla_labels = {casilla.id: casilla.label for casilla in snapshot.revision.casillas}
+    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     result_roles: dict[CasillaId, str] = {}
     key_figures: list[CasillaId] = []
     for expectation in snapshot.revision.verification_expectations:
@@ -141,6 +151,16 @@ def calculation_result_summary(
     if not result_roles and not key_figures:
         return None
 
+    def _row(casilla_id: CasillaId, *, value: Decimal, role: str) -> ResultSummaryRow:
+        casilla = casillas_by_id.get(casilla_id)
+        return ResultSummaryRow(
+            casilla_id=casilla_id,
+            label=casilla.label if casilla is not None else casilla_id,
+            localized_labels=dict(casilla.localized_labels) if casilla is not None else {},
+            value=value,
+            role=role,
+        )
+
     rows: list[ResultSummaryRow] = []
     seen: set[CasillaId] = set()
     # Result-to-pay / result-to-refund totals lead the summary.
@@ -148,28 +168,14 @@ def calculation_result_summary(
         value = casilla_values.get(casilla_id)
         if value is None or casilla_id in seen:
             continue
-        rows.append(
-            ResultSummaryRow(
-                casilla_id=casilla_id,
-                label=casilla_labels.get(casilla_id, casilla_id),
-                value=value,
-                role=role,
-            ),
-        )
+        rows.append(_row(casilla_id, value=value, role=role))
         seen.add(casilla_id)
     # The verification expectation's computed casilla ids follow as key figures.
     for casilla_id in key_figures:
         value = casilla_values.get(casilla_id)
         if value is None or casilla_id in seen:
             continue
-        rows.append(
-            ResultSummaryRow(
-                casilla_id=casilla_id,
-                label=casilla_labels.get(casilla_id, casilla_id),
-                value=value,
-                role="key_figure",
-            ),
-        )
+        rows.append(_row(casilla_id, value=value, role="key_figure"))
         seen.add(casilla_id)
 
     if not rows:

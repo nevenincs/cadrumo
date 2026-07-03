@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#core-authority-constants-v2'
 date: '2026-05-31'
-modified: '2026-05-31'
+modified: '2026-06-30'
 related: []
 ---
 
@@ -701,7 +701,6 @@ Count: 5
 | `AEAT_NIF_IVA_VERIFICATION_URL` | `aeat\domain\calculations\registry\_aeat_nif_iva_oracle.py:44` | domain | AEAT_NIF_IVA_VERIFICATION_URL = AnyUrl(_EXTERNAL.aeat.o | 3 |
 | `RENTA_WEB_OPEN_APP_URL` | `aeat\domain\calculations\registry\_renta_web_open_oracle.py:25` | domain | RENTA_WEB_OPEN_APP_URL = AnyUrl(_EXTERNAL.aeat.oracles. | 3 |
 | `RENTA_WEB_OPEN_LANDING_URL` | `aeat\domain\calculations\registry\_renta_web_open_oracle.py:24` | domain | RENTA_WEB_OPEN_LANDING_URL = AnyUrl(f"{_EXTERNAL.aeat.d | 2 |
-
 
 ### _STRICT_FROZEN ConfigDict pattern (106 declarations)
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 import re
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -28,6 +27,8 @@ from ._inventory import (
     package_python_files,
     production_ast_items,
     production_python_files,
+    project_test_control_modules,
+    project_test_modules,
     qualified_name,
     regex_line_hits,
     repo_path,
@@ -94,6 +95,57 @@ def test_package_python_files_includes_tests_but_excludes_data_by_default() -> N
     assert all("_data" not in path.relative_to(repo_path("src/aeat")).parts for path in files)
 
 
+def test_project_test_modules_discovers_dev_docs_tests_outside_source_tree() -> None:
+    """Project-level test discovery includes dev/docs tests outside ``src/aeat``."""
+    modules = project_test_modules()
+
+    assert repo_path("dev/docs/tests/test_docs.py") in modules
+    assert all("src" not in path.relative_to(REPO_ROOT).parts[:1] for path in modules)
+
+
+def test_project_test_control_modules_cover_tests_support_and_exclude_production_helpers() -> None:
+    """Project test-control discovery includes tests/support without docs tooling."""
+    modules = project_test_control_modules()
+
+    assert set(project_test_modules()) <= set(modules)
+    assert repo_path("dev/docs/tests/test_docs.py") in modules
+    assert repo_path("dev/docs/terminology/_sweep.py") not in modules
+    assert all("src" not in path.relative_to(REPO_ROOT).parts[:1] for path in modules)
+
+
+def test_project_test_control_modules_do_not_execute_control_flow_at_import_time() -> None:
+    """Project-level test controls must keep collection import side-effect free."""
+    allowed_top_level = (
+        ast.Expr,
+        ast.Import,
+        ast.ImportFrom,
+        ast.Assign,
+        ast.AnnAssign,
+        ast.FunctionDef,
+        ast.AsyncFunctionDef,
+        ast.ClassDef,
+    )
+    violations: list[str] = []
+    for path in project_test_control_modules():
+        tree = ast_for_path(path)
+        if not isinstance(tree, ast.Module):
+            continue
+        for node in tree.body:
+            if (
+                isinstance(node, ast.Expr)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+            ):
+                continue
+            if isinstance(node, allowed_top_level):
+                continue
+            violations.append(f"{repo_relative(path)}:{node.lineno}: {type(node).__name__}")
+
+    assert not violations, "project test-control modules must not run control flow at import time:\n" + "\n".join(
+        violations
+    )
+
+
 def test_non_test_package_python_files_excludes_test_tree_and_scan_excludes() -> None:
     """Non-test package inventory keeps conftest by default and honors rel excludes."""
     files = non_test_package_python_files(include_data=True, scan_excludes={"core/config.py"})
@@ -132,15 +184,17 @@ def test_production_ast_items_filters_cache_to_production_package_files(tmp_path
     ) == ((config_path, config_tree),)
 
 
-def test_package_ast_items_reuses_cache_for_test_modules(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_package_ast_items_reuses_cache_for_test_modules() -> None:
     """Package AST iteration includes test modules and reuses cached trees."""
     current = Path(__file__).resolve()
-    current_tree = source_tree_ast[current]
+    current_tree = ast.parse("CURRENT = True")
+    config_path = repo_path("src/aeat/core/config.py")
+    config_tree = ast.parse("CONFIG = True")
 
-    items = dict(package_ast_items(source_tree_ast))
+    items = dict(package_ast_items({current: current_tree, config_path: config_tree}))
 
     assert items[current] is current_tree
-    assert repo_path("src/aeat/core/config.py") in items
+    assert items[config_path] is config_tree
 
 
 def test_module_name_renders_importable_aeat_modules() -> None:
@@ -164,9 +218,11 @@ def test_ast_for_path_falls_back_to_real_parse(tmp_path: Path) -> None:
     path.write_text("value = 1\n", encoding="utf-8")
 
     tree = ast_for_path(path)
+    cached_tree = ast_for_path(path)
 
     assert isinstance(tree, ast.Module)
     assert isinstance(tree.body[0], ast.Assign)
+    assert cached_tree is tree
 
 
 def test_ast_for_path_returns_none_for_unparseable_source(tmp_path: Path) -> None:

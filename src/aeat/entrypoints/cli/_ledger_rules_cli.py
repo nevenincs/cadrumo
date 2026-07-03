@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import typer
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import ApplyRulesResult
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.i18n import tr
@@ -15,7 +16,6 @@ from ...domain.transactions import (
     BusinessClassification,
     LedgerClassificationRule,
     Transaction,
-    TransactionCatalogueRepository,
     TransactionLifecycleState,
 )
 from ._common import _bad, _emit_envelope

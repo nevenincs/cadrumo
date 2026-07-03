@@ -11,9 +11,14 @@ quoting, variable expansion, or multi-line values. ``env/.env`` is a
 flat key/value file in this project and any deviation from that shape
 is treated as an error.
 
+The boundary is file persistence only. Runtime configuration still flows
+through :class:`~core.config.Settings`, :func:`~core.config.load_settings`,
+and :func:`~core.config.override_settings`; this module does not inspect or
+mutate process environment variables.
+
 The public surface is :func:`read_env_file`, :func:`write_env_var`, and
 :func:`write_env_vars`; each takes a :class:`~pathlib.Path` target. Malformed
-input raises :class:`~aeat.core.errors.CoreValidationError`, while writers use
+input raises :class:`~core.errors.CoreValidationError`, while writers use
 :func:`_atomic_write_text` so the ``.env`` file is replaced atomically.
 """
 
@@ -33,7 +38,7 @@ def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> Non
     """Atomically write ``text`` to ``path`` via tempfile + :func:`os.replace`.
 
     Mirrors the substrate's atomic-write discipline at
-    :func:`aeat.adapters.persistence.storage.master_key._master_key.atomic_write_secure_bytes`.
+    :func:`adapters.persistence.storage.master_key._master_key.atomic_write_secure_bytes`.
     The plaintext ``env/.env`` payload is operator-controlled
     configuration, not a secret — but the durability story matters:
     :meth:`pathlib.Path.write_text` truncates the existing inode in
@@ -105,7 +110,8 @@ def read_env_file(path: Path) -> dict[str, str]:
 
     Comments and blank lines are skipped. Trailing newlines on values
     are stripped. Lines that look like ``KEY=`` (empty value) yield an
-    empty string.
+    empty string. The returned mapping is a file snapshot for setup and
+    bootstrap workflows; it is not the effective runtime settings model.
 
     Args:
         path: Filesystem path to the env file.
@@ -139,7 +145,9 @@ def write_env_var(path: Path, key: str, value: str) -> None:
 
     Existing comments and blank lines are preserved. If the key already
     exists, its line is rewritten in place. Otherwise the new entry is
-    appended to the end of the file.
+    appended to the end of the file. The write goes through
+    :func:`write_env_vars` so single-key updates share the same atomic file
+    replacement path as batch updates.
 
     Args:
         path: Filesystem path to the env file. Created if missing.
@@ -154,7 +162,9 @@ def write_env_vars(path: Path, mapping: dict[str, str]) -> None:
 
     Existing keys are rewritten in place; new keys are appended in the
     order given. Comments and blank lines in the existing file are
-    preserved verbatim.
+    preserved verbatim. Keys absent from ``mapping`` are left untouched; this
+    helper persists setup results without acting as an env-file normalizer or
+    deleting operator annotations.
 
     Args:
         path: Filesystem path to the env file. Created if missing along

@@ -56,6 +56,7 @@ from ._checker_oracle_flow import (
     replay_parse_operation,
 )
 from ._errors import RegistryValidationError
+from ._ids import OracleId
 from ._live_parity import (
     BaseCheckerOracle,
     LiveParityCatalogue,
@@ -65,7 +66,7 @@ from ._live_parity import (
 )
 from ._remote_state_guard import RemoteOperation
 
-GROI_ORACLE_ID = "aeat-groi-spanish-roi-checker"
+GROI_ORACLE_ID: OracleId = "aeat-groi-spanish-roi-checker"
 
 
 class GroiObservation(_CheckerBaseModel):
@@ -252,7 +253,7 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
 
     @property
     @override
-    def oracle_id(self) -> str:
+    def oracle_id(self) -> OracleId:
         """Return the stable catalogue identifier for this oracle.
 
         The value is the module-level ``GROI_ORACLE_ID`` constant

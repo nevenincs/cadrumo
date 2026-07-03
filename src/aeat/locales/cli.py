@@ -1,10 +1,10 @@
 """Developer CLI for locale catalogue audits and scaffolding.
 
 Catalogue-wide commands delegate YAML maintenance to
-:class:`~aeat.locales.manager.LocaleManager`, while ``modelo`` subcommands
+:class:`locales.manager.LocaleManager`, while ``modelo`` subcommands
 route schema-local TOML translations through
-:class:`~aeat.locales._modelo_manager.ModeloLocaleManager`. Typer arguments
-that name runtime languages use :class:`~aeat.core.external_constants.OutputLanguage`.
+:class:`locales._modelo_manager.ModeloLocaleManager`. Typer arguments
+that name runtime languages use :class:`core.external_constants.OutputLanguage`.
 """
 
 from __future__ import annotations

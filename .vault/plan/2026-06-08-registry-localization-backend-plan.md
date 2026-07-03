@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#registry-localization-backend'
 date: '2026-06-08'
-modified: '2026-06-08'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-08-registry-localization-backend-adr]]'
   - '[[2026-06-08-registry-localization-backend-research]]'
 ---
-
 
 # `registry-localization-backend` `schema localization support implementation plan` plan
 
@@ -79,7 +78,6 @@ Fetch and backfill structured directories and manifest files for Renta Part 2 (D
 - [x] `P09.S20` - Add PartSpec configurations and fetch Renta Part 2 PDFs and manifests for 2020-2024; `src/aeat/domain/manuals/_fetch.py`.
 - [x] `P09.S21` - Generate structured chapter and section layouts for historical Renta Part 2 manuals; `src/aeat/_data/corpus/manuals/renta/`.
 - [x] `P09.S22` - Verify that Renta Part 2 manuals view for all years 2020-2024 reports structure_available: True; `src/aeat/_data/corpus/manuals/renta/`.
-
 
 ## Description
 

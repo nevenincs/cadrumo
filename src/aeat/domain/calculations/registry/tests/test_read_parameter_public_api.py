@@ -14,12 +14,9 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import bundled_path
 from .. import RegistryValidationError, read_parameter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter() -> None:
@@ -34,7 +31,6 @@ def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter(
         "2025",
         "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
         date_context={"filing_period": date(2025, 12, 31)},
-        registry_root=_REGISTRY_ROOT,
     )
     assert isinstance(value, Decimal)
     # The registry stores the raw percent figure (5); the `percent` formula op divides by 100.
@@ -42,6 +38,25 @@ def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter(
     assert value == Decimal("5"), (
         f"Expected the 5% gastos-difícil-justificación rate stored as Decimal('5'), got {value!r}. "
         "Check rd-439-2007:art-30 / orden-hac-277-2026:art-3 and the TOML parameter declaration."
+    )
+
+
+def test_read_parameter_returns_2023_temporary_da56_rate() -> None:
+    """The 2023 EDS difficult-justification rate is the DA 56 temporary 7%.
+
+    Ley 35/2006 DA 56 elevated the RIRPF art. 30 percentage only for the 2023
+    tax period. This guard prevents the current 5% rate from being flattened
+    across all historical revisions.
+    """
+    value = read_parameter(
+        "100",
+        "2023",
+        "renta-2023-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+        date_context={"filing_period": date(2023, 12, 31)},
+    )
+    assert isinstance(value, Decimal)
+    assert value == Decimal("7"), (
+        f"Expected the 2023 DA 56 gastos-difícil-justificación rate stored as Decimal('7'), got {value!r}."
     )
 
 
@@ -63,7 +78,6 @@ def test_read_parameter_raises_for_unknown_modelo() -> None:
             "2025",
             "any-parameter-id",
             date_context={"filing_period": date(2025, 12, 31)},
-            registry_root=_REGISTRY_ROOT,
         )
 
 
@@ -74,7 +88,6 @@ def test_read_parameter_raises_for_unknown_revision() -> None:
             "1999",
             "any-parameter-id",
             date_context={"filing_period": date(1999, 12, 31)},
-            registry_root=_REGISTRY_ROOT,
         )
 
 
@@ -85,5 +98,4 @@ def test_read_parameter_raises_for_unknown_parameter_id() -> None:
             "2025",
             "does-not-exist",
             date_context={"filing_period": date(2025, 12, 31)},
-            registry_root=_REGISTRY_ROOT,
         )

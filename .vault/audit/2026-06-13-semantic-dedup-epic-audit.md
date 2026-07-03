@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#semantic-dedup-epic'
 date: '2026-06-13'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `semantic-dedup-epic` audit: `Semantic Deduplication Discovery Pass 1`
 
@@ -304,5 +302,3 @@ The ruled-out clusters are recorded so a later pass does not re-flag them; the
 substitutability pre-filter verdict for each is the durable result.
 
 ## Codification candidates
-
-

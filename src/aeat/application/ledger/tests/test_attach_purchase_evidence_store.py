@@ -21,12 +21,9 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.transactions import (
-    TransactionCatalogueRepository,
-    TransactionDirection,
-    TransactionValidationError,
-)
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....domain.transactions import TransactionDirection, TransactionValidationError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     ManualLedgerTransactionCommand,
@@ -40,7 +37,7 @@ from .._evidence import PurchaseInvoiceEvidenceService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET = "bucket-001"
+_BUCKET = "31313131-3131-4131-8131-313131313131"
 
 
 @pytest.fixture

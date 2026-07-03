@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-evidence-classification'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-06-13-llm-evidence-classification-plan]]"
 ---
-
-
-
 
 # Test image evidence without --llm classifies via the vision model and text/no-evidence without --llm refuses instructively
 
@@ -27,4 +24,3 @@ related:
 - Both real-behaviour tests pass (loopback Ollama + refusal). Committed `41c17af16`.
 
 ## Notes
-

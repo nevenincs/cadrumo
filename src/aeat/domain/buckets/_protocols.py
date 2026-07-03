@@ -1,14 +1,15 @@
 """Domain-level repository Protocol for the bucket-event-history catalogue.
 
 Application-layer code that persists or loads bucket event catalogues
-depends on this Protocol, not on the concrete adapter-backed
-``BucketEventHistoryRepository``. This keeps the domain layer free of
-adapter imports while still providing a typed port surface.
+depends on :class:`BucketEventHistoryRepositoryProtocol`, not on the concrete
+secure-object-backed :class:`BucketEventHistoryRepository`. This keeps callers
+typed against the narrow port while the concrete repository owns the adapter
+integration.
 
 :class:`BucketEventHistoryRepositoryProtocol` abstracts ``exists`` / ``load`` /
 ``save`` operations over :class:`BucketEventHistoryCatalogue`, allowing
 services to emit :class:`BucketEvent` history without importing the concrete
-:class:`aeat.domain.buckets.BucketEventHistoryRepository`.
+:class:`BucketEventHistoryRepository`.
 """
 
 from __future__ import annotations
@@ -23,8 +24,8 @@ class BucketEventHistoryRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for the bucket-event-history catalogue.
 
     Any object that provides ``exists``, ``load``, and ``save`` over a
-    per-bucket event-history catalogue satisfies this protocol. The concrete
-    secure-object-backed implementation lives in ``_event_repository.py``.
+    per-bucket :class:`BucketEventHistoryCatalogue` satisfies this protocol. The
+    production implementation is :class:`BucketEventHistoryRepository`.
     """
 
     def exists(self) -> bool:
@@ -40,7 +41,11 @@ class BucketEventHistoryRepositoryProtocol(Protocol):
         ...
 
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
-        """Persist ``catalogue`` in the encrypted database object store."""
+        """Persist ``catalogue`` in the encrypted database object store.
+
+        Args:
+            catalogue: The :class:`BucketEventHistoryCatalogue` to persist.
+        """
         ...
 
 

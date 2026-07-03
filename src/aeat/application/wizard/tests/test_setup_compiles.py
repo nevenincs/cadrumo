@@ -69,7 +69,8 @@ def test_tax_residence_ccaa_is_a_descriptor_bound_profile_key() -> None:
     assert "tax_residence.ccaa" in registered
 
 
-def test_pays_capital_income_and_uses_objective_estimation_are_now_descriptor_questions() -> None:
+def test_pays_capital_income_and_irpf_estimation_regime_are_descriptor_questions() -> None:
     profile_keys = {question.profile_key for question in _setup_questions()}
     assert "withholding.pays_capital_income_with_retencion" in profile_keys
-    assert "irpf.uses_objective_estimation" in profile_keys
+    assert "irpf.estimation_regime" in profile_keys
+    assert "irpf.uses_objective_estimation" not in profile_keys

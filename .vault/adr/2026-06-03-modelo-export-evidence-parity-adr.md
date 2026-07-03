@@ -3,13 +3,11 @@ tags:
   - '#adr'
   - '#modelo-export-evidence-parity'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-03-modelo-export-evidence-parity-research]]"
   - "[[2026-06-02-modelo-filing-ledger-snapshot-adr]]"
 ---
-
-
 
 # `modelo-export-evidence-parity` adr: `ledger-evidence-bundled modelo revisions and exports` | (**status:** `accepted`)
 

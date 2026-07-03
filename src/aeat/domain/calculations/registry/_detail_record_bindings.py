@@ -10,7 +10,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.aggregation import BindingAggregationOp, RowSetGroupingKind
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.external_constants import DEFAULT_CURRENCY
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model, uppercase_alpha_code
@@ -150,7 +150,7 @@ def resolve_related_party_binding_row_values(
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _RelatedPartySelector]] = []
     for binding in revision.bindings:
-        if binding.source != "related_party_operation":
+        if binding.source != BindingSourceKind.RELATED_PARTY_OPERATION:
             continue
         selector = _validated_related_party_selector(binding)
         members.append((binding, selector))
@@ -284,7 +284,7 @@ def resolve_foreign_asset_binding_row_values(
     members: list[tuple[DataBindingDefinition, _ForeignAssetSelector]] = []
     cohort_classes: set[tuple[str, ...]] = set()
     for binding in revision.bindings:
-        if binding.source != RowSetGroupingKind.FOREIGN_ASSET:
+        if binding.source != BindingSourceKind.FOREIGN_ASSET:
             continue
         selector = _validated_foreign_asset_selector(binding)
         members.append((binding, selector))
@@ -423,7 +423,7 @@ def resolve_atribucion_binding_row_values(
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _AtributionSelector]] = []
     for binding in revision.bindings:
-        if binding.source != "atribucion_member":
+        if binding.source != BindingSourceKind.ATRIBUCION_MEMBER:
             continue
         selector = _validated_atribucion_selector(binding)
         members.append((binding, selector))
@@ -537,7 +537,7 @@ def resolve_refund_binding_row_values(
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _RefundSelector]] = []
     for binding in revision.bindings:
-        if binding.source != "refund_operation":
+        if binding.source != BindingSourceKind.REFUND_OPERATION:
             continue
         selector = _validated_refund_selector(binding)
         members.append((binding, selector))

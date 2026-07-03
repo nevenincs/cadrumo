@@ -9,7 +9,7 @@ key, and re-writing under the new key. This module is the single
 sanctioned path for that operation.
 
 Rotation operates at the bytes level - it never parses the inner
-:class:`Envelope` payload. That keeps the rotation contract
+:class:`adapters.persistence.storage.Envelope` payload. That keeps the rotation contract
 content-preserving across every consumer's payload type without
 requiring rotation code to know the typed payload schemas.
 
@@ -41,16 +41,19 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.locks import exclusive_file_lock, fsync_parent_dir
 from ....core.logging import get_logger
 from ....core.time import now
-from .blob_store._blob_store import EncryptedBlobStore
-from .crypto._crypto import decrypt_record, encrypt_record
-from .envelope._envelope import (
+from .blob_store import EncryptedBlobStore
+from .crypto import (
+    decrypt_record,
+    encrypt_record,
+)
+from .envelope import (
     CipherEnvelope,
     EncryptionMetadata,
-    _build_aad,
-    _derive_envelope_key,
+    build_aad,
+    derive_envelope_key,
 )
 from .errors import DecryptionError, EncryptionError
-from .master_key._master_key import MasterKeyProvider
+from .master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
 
@@ -200,7 +203,7 @@ def _try_decrypt_bytes(
     """
     try:
         blob = cipher_envelope.encryption.to_blob()
-        aad = _build_aad(cipher_envelope.classification, hkdf_context)
+        aad = build_aad(cipher_envelope.classification, hkdf_context)
         if cipher_envelope.encryption.associated_data() != aad:
             return None
     except (ValueError, binascii.Error):
@@ -210,7 +213,7 @@ def _try_decrypt_bytes(
         # in the errors counter via the outer caller.
         _log.debug("rotation probe: AAD/blob parse failed; treating as miss", exc_info=True)
         return None
-    derived_key = _derive_envelope_key(
+    derived_key = derive_envelope_key(
         master_key=master_key_provider.get_master_key(),
         hkdf_context=hkdf_context,
     )
@@ -341,8 +344,8 @@ def rotate_master_key(
             # Re-encrypt under the new key. Build the AAD freshly so the
             # outer cipher-envelope wrapper continues to bind the same
             # (classification, hkdf_context) pair.
-            aad = _build_aad(cipher_envelope.classification, entry.hkdf_context)
-            new_derived_key = _derive_envelope_key(
+            aad = build_aad(cipher_envelope.classification, entry.hkdf_context)
+            new_derived_key = derive_envelope_key(
                 master_key=new_master_key_provider.get_master_key(),
                 hkdf_context=entry.hkdf_context,
             )
@@ -395,7 +398,8 @@ def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlan
     whose ciphertext is derived directly from the project master key (via the
     per-consumer HKDF context above). The SQL ``secure_objects`` store is NOT in
     this plan and intentionally so: its payloads are encrypted under the
-    per-bucket DEK (the column layer resolves the active :class:`BucketSession`
+    per-bucket DEK (the column layer resolves the active
+    :class:`adapters.persistence.storage.master_key._bucket_session.BucketSession`
     DEK, not the master key). A master-key / passphrase custody change rewraps
     that DEK without changing its value, so the ``secure_objects`` ciphertext
     stays valid and never requires re-encryption on master-key rotation.
@@ -512,10 +516,10 @@ def default_blob_store_roots(settings: _BlobStoreSettings) -> tuple[Path, ...]:
     The substrate persists wrapped DEKs in:
 
     - The secret-store's blob store (``aeat_blob_store_dir``), wired up
-      by :func:`get_secret_store` for opaque-bearer credentials, OAuth
+      by :func:`adapters.persistence.storage.get_secret_store` for opaque-bearer credentials, OAuth
       refresh tokens, and identity records.
     - The financial-attachments store (``aeat_attachments_dir``), wired
-      up by :class:`aeat.domain.attachments.AttachmentStore` for
+      up by :class:`adapters.persistence.storage.AttachmentStore` for
       receipts, invoices, and bank statements.
 
     Each root is a directory whose ``blobs/<hex[:2]>/<hex>.manifest.json``

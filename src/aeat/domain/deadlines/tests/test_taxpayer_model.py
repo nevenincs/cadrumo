@@ -11,6 +11,7 @@ the on-disk payload and assert the drift surfaces.
 from __future__ import annotations
 
 import json
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -29,6 +30,7 @@ from .. import (
     ModeloIVAProfile,
     TaxpayerProfile,
     evaluate_multiple_pagadores_obligation,
+    resolve_multiple_pagadores_reduced_limit,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -39,9 +41,9 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
 
     entity_type, legal_entity_form, irpf_income_categories,
     irpf_estimation_regime, iva_regime (REAGP, the new member), and the
-    sii_enrolled / redeme_enrolled enrolment flags are all non-default
-    so a save-drops-field / load-re-defaults-field regression surfaces
-    as model inequality.
+    SII, REDEME, and IVA-group enrolment flags are all non-default so
+    a save-drops-field / load-re-defaults-field regression surfaces as
+    model inequality.
     """
 
     return TaxpayerProfile(
@@ -60,6 +62,8 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
         iva=ModeloIVAProfile(
             roi_enrolled=True,
             oss_enrolled=True,
+            group_member_enrolled=True,
+            group_dominant_entity_enrolled=True,
             sii_enrolled=True,
             redeme_enrolled=True,
             intracommunity_operations_exceed_50000_eur=True,
@@ -94,6 +98,8 @@ class TestTaxpayerModelRoundTrip:
         )
         assert restored.irpf_estimation_regime is IrpfEstimationRegime.DIRECTA_SIMPLIFICADA
         assert restored.iva_regime is IVARegime.REAGP
+        assert restored.iva.group_member_enrolled is True
+        assert restored.iva.group_dominant_entity_enrolled is True
         assert restored.iva.sii_enrolled is True
         assert restored.iva.redeme_enrolled is True
         assert restored.cross_period_group_member_rosters == (
@@ -105,63 +111,45 @@ class TestTaxpayerModelRoundTrip:
             ),
         )
 
-    def test_objetiva_regime_round_trips_with_derived_objective_boolean(self) -> None:
-        """An OBJETIVA regime derives uses_objective_estimation_irpf and survives."""
+    def test_objetiva_regime_round_trips_as_structured_axis(self) -> None:
+        """An OBJETIVA regime survives without a derived boolean side channel."""
 
         original = TaxpayerProfile(
             tax_id="X1234567L",
             iva_regime=IVARegime.SIMPLIFICADO,
             irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
         )
-        assert original.uses_objective_estimation_irpf is True
         restored = TaxpayerProfile.model_validate_json(original.model_dump_json())
         assert restored == original
-        assert restored.uses_objective_estimation_irpf is True
         assert restored.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
 
 
-class TestObjectiveEstimationConsistency:
-    """The legacy objective-estimation boolean stays in lockstep with the regime."""
+class TestObjectiveEstimationRegimeAxis:
+    """Objective estimation is represented by the structured regime axis only."""
 
-    def test_objetiva_regime_forces_objective_boolean_true(self) -> None:
+    def test_objetiva_regime_is_the_current_objective_estimation_signal(self) -> None:
         profile = TaxpayerProfile(
             tax_id="X1234567L",
             iva_regime=IVARegime.GENERAL,
             irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
         )
-        assert profile.uses_objective_estimation_irpf is True
+        assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
 
-    def test_directa_regime_keeps_objective_boolean_false(self) -> None:
+    def test_directa_regime_is_not_objective_estimation(self) -> None:
         profile = TaxpayerProfile(
             tax_id="X1234567L",
             iva_regime=IVARegime.GENERAL,
             irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
         )
-        assert profile.uses_objective_estimation_irpf is False
+        assert profile.irpf_estimation_regime is IrpfEstimationRegime.DIRECTA_NORMAL
 
-    def test_undeclared_regime_leaves_legacy_boolean_untouched(self) -> None:
-        """An undeclared regime keeps an explicit legacy boolean working.
+    def test_old_objective_estimation_boolean_is_rejected(self) -> None:
+        """The retired objective-estimation boolean is no longer a profile input."""
 
-        Existing profiles that set only uses_objective_estimation_irpf
-        must keep resolving until the engine reads the enum directly.
-        """
-
-        profile = TaxpayerProfile(
-            tax_id="X1234567L",
-            iva_regime=IVARegime.GENERAL,
-            uses_objective_estimation_irpf=True,
-        )
-        assert profile.irpf_estimation_regime is None
-        assert profile.uses_objective_estimation_irpf is True
-
-    def test_contradictory_regime_and_boolean_are_rejected(self) -> None:
-        """A non-objective regime with a True objective boolean is rejected."""
-
-        with pytest.raises(ValidationError, match=r"contradicts uses_objective_estimation"):
+        with pytest.raises(ValidationError, match=r"uses_objective_estimation_irpf"):
             TaxpayerProfile(
                 tax_id="X1234567L",
                 iva_regime=IVARegime.GENERAL,
-                irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
                 uses_objective_estimation_irpf=True,
             )
 
@@ -328,8 +316,6 @@ class TestBeckhamWindow:
     """
 
     def _impatriado(self) -> TaxpayerProfile:
-        from datetime import date
-
         return TaxpayerProfile(
             tax_id="X1234567L",
             entity_type=EntityType.NATURAL_PERSON,
@@ -338,30 +324,17 @@ class TestBeckhamWindow:
             special_regime_start_date=date(2023, 1, 15),
         )
 
-    def test_election_year_is_within_window(self) -> None:
-        from datetime import date
-
-        assert self._impatriado().beckham_window_active(date(2023, 6, 1)) is True
-
-    def test_year_five_is_within_window(self) -> None:
-        from datetime import date
-
-        assert self._impatriado().beckham_window_active(date(2027, 12, 31)) is True
-
-    def test_year_six_is_within_window(self) -> None:
-        from datetime import date
-
-        assert self._impatriado().beckham_window_active(date(2028, 12, 31)) is True
-
-    def test_year_seven_is_outside_window(self) -> None:
-        from datetime import date
-
-        assert self._impatriado().beckham_window_active(date(2029, 1, 1)) is False
-
-    def test_year_before_election_is_outside_window(self) -> None:
-        from datetime import date
-
-        assert self._impatriado().beckham_window_active(date(2022, 12, 31)) is False
+    def test_impatriado_window_boundaries(self) -> None:
+        cases = (
+            (date(2023, 6, 1), True),
+            (date(2027, 12, 31), True),
+            (date(2028, 12, 31), True),
+            (date(2029, 1, 1), False),
+            (date(2022, 12, 31), False),
+        )
+        profile = self._impatriado()
+        for today, expected in cases:
+            assert profile.beckham_window_active(today) is expected, today
 
     def test_general_regime_profile_is_always_outside_window(self) -> None:
         from datetime import date
@@ -559,37 +532,22 @@ class TestConvenioAplicable:
             iva_regime=IVARegime.GENERAL,
             fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
             country_of_fiscal_residence=country,
-            # EU countries (FR, DE) don't need representante; non-EU (GB, US) do.
-            representante_fiscal_nif=("12345678Z" if country in {"GB", "US", "NL"} else None),
-            representante_fiscal_nombre=("Test Rep" if country in {"GB", "US", "NL"} else None),
+            # EU countries (DE, FR, NL) don't need representante; non-EU countries do.
+            representante_fiscal_nif=("12345678Z" if country in {"GB", "US", "MA"} else None),
+            representante_fiscal_nombre=("Test Rep" if country in {"GB", "US", "MA"} else None),
         )
 
-    def test_gb_maps_to_espana_uk_convenio(self) -> None:
-        assert self._profile("GB").convenio_aplicable == "BOE-A-2014-5171 España-UK"
-
-    def test_de_maps_to_espana_alemania_convenio(self) -> None:
-        assert self._profile("DE").convenio_aplicable == "BOE-A-2012-3669 España-Alemania"
-
-    def test_fr_maps_to_espana_francia_convenio(self) -> None:
-        assert self._profile("FR").convenio_aplicable == "BOE-A-1997-21331 España-Francia"
-
-    def test_us_maps_to_espana_eeuu_convenio(self) -> None:
-        assert self._profile("US").convenio_aplicable == "BOE-A-1990-28246 España-EE.UU."
-
-    def test_nl_maps_to_espana_paises_bajos_convenio(self) -> None:
-        assert self._profile("NL").convenio_aplicable == "BOE-A-1972-674 España-Países Bajos"
-
-    def test_ma_maps_to_espana_marruecos_convenio(self) -> None:
-        # BOE-A-1985-9280 is the Spain-Morocco double-taxation treaty.
-        profile = TaxpayerProfile(
-            tax_id="X1234567L",
-            iva_regime=IVARegime.GENERAL,
-            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
-            country_of_fiscal_residence="MA",
-            representante_fiscal_nif="12345678Z",
-            representante_fiscal_nombre="Rep Marroquí",
+    def test_known_country_maps_to_convenio(self) -> None:
+        cases = (
+            ("GB", "BOE-A-2014-5171 España-UK"),
+            ("DE", "BOE-A-2012-3669 España-Alemania"),
+            ("FR", "BOE-A-1997-21331 España-Francia"),
+            ("US", "BOE-A-1990-28246 España-EE.UU."),
+            ("NL", "BOE-A-1972-674 España-Países Bajos"),
+            ("MA", "BOE-A-1985-9280 España-Marruecos"),
         )
-        assert profile.convenio_aplicable == "BOE-A-1985-9280 España-Marruecos"
+        for country, expected in cases:
+            assert self._profile(country).convenio_aplicable == expected, country
 
     def test_unknown_country_returns_none(self) -> None:
         # ZZ is not a real ISO code and has no convenio entry.
@@ -616,57 +574,107 @@ class TestMultiplePagadoresObligation:
     Modelo 100 filing.  No threshold values are hand-invented here.
     """
 
-    def test_single_pagador_no_obligation(self) -> None:
-        # One pagador, total income €18,000 — single-pagador exemption; no obligation.
-        assert evaluate_multiple_pagadores_obligation(1, Decimal("18000")) is False
-
-    def test_two_pagadores_secondary_above_threshold_obliged(self) -> None:
-        # Two pagadores, secondary income €1,600 > €1,500 threshold → obliged.
-        assert evaluate_multiple_pagadores_obligation(2, Decimal("1600")) is True
-
-    def test_three_pagadores_secondary_above_threshold_obliged(self) -> None:
-        # Three pagadores, secondary income €1,600 > €1,500 threshold → obliged.
-        assert evaluate_multiple_pagadores_obligation(3, Decimal("1600")) is True
-
-    def test_two_pagadores_secondary_exactly_threshold_not_obliged(self) -> None:
-        # Art. 96.3 threshold is strictly > 1500; exactly 1500 does NOT trigger.
-        assert evaluate_multiple_pagadores_obligation(2, Decimal("1500")) is False
-
-    def test_two_pagadores_secondary_one_cent_above_threshold_obliged(self) -> None:
-        # €1,500.01 crosses the strict > boundary.
-        assert evaluate_multiple_pagadores_obligation(2, Decimal("1500.01")) is True
-
-    def test_two_pagadores_secondary_below_threshold_not_obliged(self) -> None:
-        # Secondary income €1,499 — below threshold, no obligation.
-        assert evaluate_multiple_pagadores_obligation(2, Decimal("1499")) is False
-
-    def test_none_count_returns_false(self) -> None:
-        # Undeclared pagadores count → cannot assert obligation.
-        assert evaluate_multiple_pagadores_obligation(None, Decimal("2000")) is False
-
-    def test_none_secondary_income_returns_false(self) -> None:
-        # Undeclared secondary income → cannot assert obligation.
-        assert evaluate_multiple_pagadores_obligation(2, None) is False
-
-    def test_both_none_returns_false(self) -> None:
-        assert evaluate_multiple_pagadores_obligation(None, None) is False
+    def test_multiple_pagadores_threshold_cases(self) -> None:
+        cases = (
+            (1, Decimal("18000"), False),
+            (2, Decimal("1600"), True),
+            (3, Decimal("1600"), True),
+            (2, Decimal("1500"), False),
+            (2, Decimal("1500.01"), True),
+            (2, Decimal("1499"), False),
+            (None, Decimal("2000"), False),
+            (2, None, False),
+            (None, None, False),
+        )
+        for pagadores_count, secondary_income, expected in cases:
+            assert evaluate_multiple_pagadores_obligation(pagadores_count, secondary_income) is expected, (
+                pagadores_count,
+                secondary_income,
+            )
 
     def test_taxpayer_profile_roundtrip_pagadores_fields(self) -> None:
-        # TaxpayerProfile must carry the two new fields through construction unchanged.
+        # TaxpayerProfile must carry the pagadores axes through construction unchanged.
         profile = TaxpayerProfile(
             tax_id="12345678Z",
             iva_regime=IVARegime.GENERAL,
             irpf_pagadores_count=3,
             irpf_pagadores_secondary_income=Decimal("2000"),
+            irpf_pagadores_total_work_income=Decimal("19000"),
         )
         assert profile.irpf_pagadores_count == 3
         assert profile.irpf_pagadores_secondary_income == Decimal("2000")
+        assert profile.irpf_pagadores_total_work_income == Decimal("19000")
 
     def test_taxpayer_profile_pagadores_fields_default_none(self) -> None:
         # Existing profiles without pagadores fields must load cleanly.
         profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
         assert profile.irpf_pagadores_count is None
         assert profile.irpf_pagadores_secondary_income is None
+        assert profile.irpf_pagadores_total_work_income is None
+
+
+class TestMultiplePagadoresReducedLimitSchedule:
+    """Art. 96.3 LIRPF per-year reduced work-income exemption limit.
+
+    Expected values derive from the dated statutory schedule, not hand
+    computation: 14.000 EUR base (Art. 96.3 LIRPF, post-Ley 26/2014),
+    raised to 15.000 EUR for 2023 (Ley 31/2022 PGE-2023, BOE-A-2022-22128)
+    and to 15.876 EUR for 2024 onward (RD-Ley 4/2024, BOE-A-2024-13066;
+    confirmed by the bundled consolidated LIRPF art-96 corpus, "15.876
+    euros").
+    """
+
+    def test_reduced_limit_schedule(self) -> None:
+        cases = (
+            (2022, Decimal("14000")),
+            (2023, Decimal("15000")),
+            (2024, Decimal("15876")),
+            (2025, Decimal("15876")),
+            (2015, Decimal("14000")),
+            (2099, Decimal("15876")),
+            (None, Decimal("15876")),
+        )
+        for year, expected in cases:
+            assert resolve_multiple_pagadores_reduced_limit(year) == expected, year
+
+
+class TestMultiplePagadoresObligationWithTotalIncome:
+    """Art. 96.2.a)/96.3 LIRPF obligation: total income vs the applicable limit.
+
+    The multiple-pagadores situation never obliges a filing by itself — it
+    lowers the work-income exemption limit from the general 22.000 EUR to the
+    per-year reduced limit. The obligation arises only when total work income
+    exceeds the applicable reduced limit. Expected limits derive from the dated
+    statutory schedule (see TestMultiplePagadoresReducedLimitSchedule); no
+    threshold is hand-invented.
+    """
+
+    def test_total_income_obligation_cases(self) -> None:
+        cases = (
+            (2, Decimal("1600"), Decimal("18000"), 2024, True),
+            (2, Decimal("1600"), Decimal("10000"), 2024, False),
+            (2, Decimal("1600"), Decimal("16000"), 2024, True),
+            (2, Decimal("1600"), Decimal("15500"), 2023, True),
+            (2, Decimal("1600"), Decimal("15500"), 2024, False),
+            (1, Decimal("0"), Decimal("18000"), 2024, False),
+            (2, Decimal("1500"), Decimal("18000"), 2024, False),
+            (2, Decimal("1600"), None, 2024, True),
+        )
+        for pagadores_count, secondary_income, total_income, year, expected in cases:
+            assert (
+                evaluate_multiple_pagadores_obligation(
+                    pagadores_count,
+                    secondary_income,
+                    total_income,
+                    year,
+                )
+                is expected
+            ), (
+                pagadores_count,
+                secondary_income,
+                total_income,
+                year,
+            )
 
 
 class TestResidencyBoundaryNear:
@@ -686,37 +694,19 @@ class TestResidencyBoundaryNear:
             days_in_spain=days_in_spain,
         )
 
-    def test_empty_days_returns_false(self) -> None:
-        # No data declared → cannot assert boundary proximity.
-        assert self._profile_with_days({}).residency_boundary_near is False
-
-    def test_149_days_returns_false(self) -> None:
-        # 149 days — one below the advisory lower bound (150).
-        assert self._profile_with_days({2024: 149}).residency_boundary_near is False
-
-    def test_150_days_returns_true(self) -> None:
-        # 150 days — at the advisory lower bound; boundary zone begins.
-        assert self._profile_with_days({2024: 150}).residency_boundary_near is True
-
-    def test_183_days_returns_true(self) -> None:
-        # 183 days — the statutory habitual-residence threshold (Art. 9 LIRPF).
-        assert self._profile_with_days({2024: 183}).residency_boundary_near is True
-
-    def test_215_days_returns_true(self) -> None:
-        # 215 days — at the advisory upper bound; boundary zone ends.
-        assert self._profile_with_days({2024: 215}).residency_boundary_near is True
-
-    def test_216_days_returns_false(self) -> None:
-        # 216 days — one above the advisory upper bound; residency clearly triggered.
-        assert self._profile_with_days({2024: 216}).residency_boundary_near is False
-
-    def test_multi_year_one_year_in_range_returns_true(self) -> None:
-        # 2023 safely above, 2024 safely below, 2025 in the boundary window.
-        assert self._profile_with_days({2023: 220, 2024: 100, 2025: 170}).residency_boundary_near is True
-
-    def test_multi_year_all_out_of_range_returns_false(self) -> None:
-        # Both years clearly below advisory lower bound.
-        assert self._profile_with_days({2023: 90, 2024: 120}).residency_boundary_near is False
+    def test_residency_boundary_near_cases(self) -> None:
+        cases = (
+            ({}, False),
+            ({2024: 149}, False),
+            ({2024: 150}, True),
+            ({2024: 183}, True),
+            ({2024: 215}, True),
+            ({2024: 216}, False),
+            ({2023: 220, 2024: 100, 2025: 170}, True),
+            ({2023: 90, 2024: 120}, False),
+        )
+        for days_in_spain, expected in cases:
+            assert self._profile_with_days(days_in_spain).residency_boundary_near is expected, days_in_spain
 
     def test_days_in_spain_roundtrip(self) -> None:
         # days_in_spain dict must survive a strict pydantic JSON roundtrip.
@@ -738,41 +728,27 @@ class TestParseDaysInSpain:
 
         self._parse = _parse_days_in_spain
 
-    def test_valid_single_year(self) -> None:
-        result = self._parse({"taxpayer_type.days_in_spain_2024": "165"})
-        assert result == {2024: 165}
-
-    def test_valid_multiple_years(self) -> None:
-        result = self._parse(
-            {
-                "taxpayer_type.days_in_spain_2023": "200",
-                "taxpayer_type.days_in_spain_2024": "165",
-            },
+    def test_parse_days_in_spain_cases(self) -> None:
+        cases = (
+            ({"taxpayer_type.days_in_spain_2024": "165"}, {2024: 165}),
+            (
+                {
+                    "taxpayer_type.days_in_spain_2023": "200",
+                    "taxpayer_type.days_in_spain_2024": "165",
+                },
+                {2023: 200, 2024: 165},
+            ),
+            ({"taxpayer_type.days_in_spain_24": "165"}, {}),
+            ({"taxpayer_type.days_in_spain_2024": "many"}, {}),
+            ({}, {}),
+            (
+                {
+                    "taxpayer_type.fiscal_residency": "RESIDENT_IRPF",
+                    "taxpayer_type.days_in_spain_2024": "183",
+                },
+                {2024: 183},
+            ),
+            ({"taxpayer_type.days_in_spain_20244": "100"}, {}),
         )
-        assert result == {2023: 200, 2024: 165}
-
-    def test_non_four_digit_year_ignored(self) -> None:
-        # "24" is not a 4-digit year; must be silently skipped.
-        result = self._parse({"taxpayer_type.days_in_spain_24": "165"})
-        assert result == {}
-
-    def test_non_numeric_value_ignored(self) -> None:
-        result = self._parse({"taxpayer_type.days_in_spain_2024": "many"})
-        assert result == {}
-
-    def test_empty_mapping_returns_empty(self) -> None:
-        assert self._parse({}) == {}
-
-    def test_unrelated_keys_ignored(self) -> None:
-        result = self._parse(
-            {
-                "taxpayer_type.fiscal_residency": "RESIDENT_IRPF",
-                "taxpayer_type.days_in_spain_2024": "183",
-            },
-        )
-        assert result == {2024: 183}
-
-    def test_five_digit_year_ignored(self) -> None:
-        # "20244" has length 5 — not exactly 4 digits.
-        result = self._parse({"taxpayer_type.days_in_spain_20244": "100"})
-        assert result == {}
+        for raw_facts, expected in cases:
+            assert self._parse(raw_facts) == expected, raw_facts

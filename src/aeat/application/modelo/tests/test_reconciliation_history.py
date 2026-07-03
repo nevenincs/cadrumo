@@ -20,15 +20,18 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from ....domain.modelos import (
+    ModeloCode,
+    WorkUnit,
+    derive_work_unit_id,
+    upsert_work_unit,
+)
 from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile._orchestration import profile_create_storage_span
-from ...user_profile._testing import register_minimal_profile
-from ...workflow._persistence import workflow_state_repository
+from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ...workflow import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
     ModeloReconciliationEvidenceKind,
@@ -41,18 +44,19 @@ from .._reconcile import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
+_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 13, 30, 0, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("operator"),
+        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
-                profile_id="operator",
+                profile_id="11111111-1111-4111-8111-111111111111",
                 overrides={"identity.tax_id": "00000000T"},
             ),
         )
@@ -84,8 +88,8 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str, revision_suff
         period=typed_period,
         revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=_WORK_UNIT_TIMESTAMP,
+        updated_at=_WORK_UNIT_TIMESTAMP,
     )
     repo = WorkUnitCatalogueRepository()
     repo.save(upsert_work_unit(repo.load(), work_unit))

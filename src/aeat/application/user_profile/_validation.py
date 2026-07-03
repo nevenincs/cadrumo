@@ -12,7 +12,7 @@ from collections.abc import Iterable
 from datetime import date
 
 from ...core.errors import BaseSeverity
-from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ...domain.user_profile import (
     ProfileFieldDefinition,
     ProfileFieldType,
@@ -25,7 +25,7 @@ from . import (
     ProfileValidationIssue,
     ProfileValidationReport,
 )
-from ._completeness import conditional_profile_missing_required
+from ._completeness import IVA_REGIME_PATH, conditional_profile_missing_required, iva_regime_required
 
 _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 """The single accepted date layout: zero-padded ``YYYY-MM-DD``.
@@ -175,6 +175,7 @@ class ProfileValidationService:
         facts: tuple[UserProfileFact, ...],
     ) -> tuple[ProfileValidationIssue, ...]:
         present = {self._section_field_key(fact.path) for fact in facts}
+        values = {fact.path: self._render_fact_value(fact.value) for fact in facts if fact.value is not None}
         issues: list[ProfileValidationIssue] = []
         for section in self._schema.sections:
             if section.repeatable:
@@ -182,13 +183,16 @@ class ProfileValidationService:
             for field in section.fields:
                 if not field.required:
                     continue
-                if f"{section.key}.{field.key}" not in present:
+                path = f"{section.key}.{field.key}"
+                if path == IVA_REGIME_PATH and not iva_regime_required(values):
+                    continue
+                if path not in present:
                     issues.append(
                         ProfileValidationIssue(
                             severity=BaseSeverity.ERROR,
                             code="required_field_missing",
-                            path=f"{section.key}.{field.key}",
-                            message=f"required field {section.key}.{field.key} is missing",
+                            path=path,
+                            message=f"required field {path} is missing",
                         ),
                     )
         return tuple(issues)

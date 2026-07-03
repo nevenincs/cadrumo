@@ -147,15 +147,16 @@ def test_classifier_routes_ioss_low_value_distance_sale_to_r23() -> None:
     assert result.category is IvaCategory.OPERACION_NO_SUJETA
 
 
-def test_classifier_legacy_r14_digital_b2c_oss_still_matches_unchanged() -> None:
-    criteria = IvaInvoiceClassificationCriteria(
-        transaction_date=date(2025, 6, 15),
-        issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-        customer_residency=IvaTerritorialScope.EU_MEMBER,
-        customer_member_state=EUMemberState.DE,
-        customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-        kind=TransactionKind.SERVICES_DIGITAL_B2C_OSS,
-        direction=InvoiceKind.ISSUED,
-    )
-    result = classify_iva(criteria)
-    assert result.matched_rule_id == "R14_digital_b2c_oss"
+def test_classifier_rejects_retired_digital_b2c_oss_alias() -> None:
+    with pytest.raises(ValueError, match="services_digital_b2c_oss"):
+        IvaInvoiceClassificationCriteria.model_validate(
+            {
+                "transaction_date": date(2025, 6, 15),
+                "issuer_residency": IvaTerritorialScope.ES_MAINLAND,
+                "customer_residency": IvaTerritorialScope.EU_MEMBER,
+                "customer_member_state": EUMemberState.DE,
+                "customer_tax_status": CustomerTaxStatus.B2C_CONSUMER,
+                "kind": "services_digital_b2c_oss",
+                "direction": InvoiceKind.ISSUED,
+            },
+        )

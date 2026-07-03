@@ -10,12 +10,15 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
+from ....adapters.persistence.profile.submission import (
+    SubmissionRepository,
+)
 from ....adapters.persistence.storage import (
     Envelope,
     SensitivityClass,
 )
 from ....adapters.persistence.storage.errors import ClassificationError
-from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.engine import get_engine
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import Period
@@ -26,13 +29,11 @@ from .. import (
     SubmissionStatus,
     make_submission_id,
 )
-from .._repository import (
-    SubmissionRepository,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
+_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 15, 30, 0, tzinfo=UTC)
 
 
 def _make_filing(
@@ -40,6 +41,7 @@ def _make_filing(
     draft_id: str = "draft-abc123",
     attempt_ordinal: int = 1,
     status: SubmissionStatus = SubmissionStatus.PRESENTADA,
+    profile_tax_id: str = "00000000T",
     period: object = _PERIOD,
 ) -> ModeloPresentado:
     submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
@@ -56,7 +58,7 @@ def _make_filing(
             "draft_id": draft_id,
             "modelo": "130",
             "period": period,
-            "profile_tax_id": "00000000T",
+            "profile_tax_id": profile_tax_id,
             "status": status,
             "submitted_at": submitted_at,
             "attempts": (attempt,),
@@ -64,10 +66,23 @@ def _make_filing(
     )
 
 
+def _save_two_filings(repo: SubmissionRepository) -> tuple[ModeloPresentado, ModeloPresentado]:
+    f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
+    f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
+    repo.save(f1)
+    repo.save(f2)
+    return f1, f2
+
+
 @pytest.fixture(autouse=True)
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="submission-test") as profile:
         yield profile
+
+
+@pytest.fixture
+def repo() -> SubmissionRepository:
+    return SubmissionRepository()
 
 
 def _database_bytes(runtime_profile: TestRuntimeProfile) -> bytes:
@@ -77,22 +92,18 @@ def _database_bytes(runtime_profile: TestRuntimeProfile) -> bytes:
 
 
 class TestEmptyState:
-    def test_load_returns_none_when_absent(self) -> None:
-        repo = SubmissionRepository()
+    def test_load_returns_none_when_absent(self, repo: SubmissionRepository) -> None:
         assert repo.load("missing-id") is None
 
-    def test_object_marker_identifies_secure_backend(self) -> None:
-        repo = SubmissionRepository()
+    def test_object_marker_identifies_secure_backend(self, repo: SubmissionRepository) -> None:
         assert repo.envelope_path_for("abc123").as_posix().endswith("aeat.domain.submission.records/abc123")
 
-    def test_list_submission_ids_empty(self) -> None:
-        repo = SubmissionRepository()
+    def test_list_submission_ids_empty(self, repo: SubmissionRepository) -> None:
         assert repo.list_submission_ids() == ()
 
 
 class TestSaveLoad:
-    def test_round_trip_preserves_payload(self) -> None:
-        repo = SubmissionRepository()
+    def test_round_trip_preserves_payload(self, repo: SubmissionRepository) -> None:
         filing = _make_filing()
         repo.save(filing)
 
@@ -100,8 +111,7 @@ class TestSaveLoad:
         loaded = repo_b.load(filing.submission_id)
         assert loaded == filing
 
-    def test_save_is_idempotent(self) -> None:
-        repo = SubmissionRepository()
+    def test_save_is_idempotent(self, repo: SubmissionRepository) -> None:
         filing = _make_filing()
         repo.save(filing)
         repo.save(filing)
@@ -112,38 +122,34 @@ class TestSaveLoad:
 
         assert filing.period == _PERIOD
 
+    def test_profile_tax_id_checksum_rejected_at_model_boundary(self) -> None:
+        with pytest.raises(ValidationError, match="profile_tax_id"):
+            _make_filing(profile_tax_id="12345678A")
+
     def test_combined_period_string_rejected_at_model_boundary(self) -> None:
         with pytest.raises(ValidationError, match="period"):
             _make_filing(period="2026Q1")
 
 
 class TestListAndIter:
-    def test_list_returns_persisted_ids_sorted(self) -> None:
-        repo = SubmissionRepository()
-        f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
-        f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
-        repo.save(f1)
-        repo.save(f2)
+    def test_list_returns_persisted_ids_sorted(self, repo: SubmissionRepository) -> None:
+        f1, f2 = _save_two_filings(repo)
         ids = repo.list_submission_ids()
         assert set(ids) == {f1.submission_id, f2.submission_id}
         assert ids == tuple(sorted(ids))
 
-    def test_iter_submissions_yields_payloads(self) -> None:
-        repo = SubmissionRepository()
-        f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
-        f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
-        repo.save(f1)
-        repo.save(f2)
+    def test_iter_submissions_yields_payloads(self, repo: SubmissionRepository) -> None:
+        f1, f2 = _save_two_filings(repo)
         loaded = {payload.submission_id: payload for payload in repo.iter_submissions()}
         assert loaded[f1.submission_id] == f1
         assert loaded[f2.submission_id] == f2
 
     def test_iter_submissions_skips_unreadable_rows_with_warning(
         self,
+        repo: SubmissionRepository,
         runtime_profile: TestRuntimeProfile,
         caplog: pytest.LogCaptureFixture,
     ) -> None:
-        repo = SubmissionRepository()
         healthy = _make_filing(draft_id="healthy", attempt_ordinal=1)
         future = _make_filing(draft_id="future", attempt_ordinal=1)
         repo.save(healthy)
@@ -162,28 +168,26 @@ class TestListAndIter:
 
         assert tuple(repo.iter_submissions()) == (healthy,)
         assert "skipping unreadable submission" in caplog.text
-        assert "schema version 2 exceeds supported 1" in caplog.text
+        assert "schema version 2 does not match expected 1" in caplog.text
 
 
 class TestDelete:
-    def test_delete_removes_object(self) -> None:
-        repo = SubmissionRepository()
+    def test_delete_removes_object(self, repo: SubmissionRepository) -> None:
         filing = _make_filing()
         repo.save(filing)
         assert repo.delete(filing.submission_id) is True
         assert repo.load(filing.submission_id) is None
 
-    def test_delete_missing_returns_false(self) -> None:
-        repo = SubmissionRepository()
+    def test_delete_missing_returns_false(self, repo: SubmissionRepository) -> None:
         assert repo.delete("never-existed") is False
 
 
 class TestClassificationGate:
     def test_database_payload_is_encrypted_audit_data(
         self,
+        repo: SubmissionRepository,
         runtime_profile: TestRuntimeProfile,
     ) -> None:
-        repo = SubmissionRepository()
         filing = _make_filing()
         repo.save(filing)
         raw = _database_bytes(runtime_profile)
@@ -203,7 +207,7 @@ class TestClassificationGate:
         filing = _make_filing()
         bad = Envelope[ModeloPresentado](
             schema_version=1,
-            written_at=datetime.now(UTC),
+            written_at=_FOREIGN_CLASS_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=filing,
         )
@@ -223,15 +227,13 @@ class TestUnsafeSubmissionIds:
         "bad",
         ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
     )
-    def test_unsafe_id_rejected(self, bad: str) -> None:
-        repo = SubmissionRepository()
+    def test_unsafe_id_rejected(self, repo: SubmissionRepository, bad: str) -> None:
         with pytest.raises(ValueError):
             repo.envelope_path_for(bad)
 
 
 class TestPerSubmissionLockIsolation:
-    def test_lock_target_per_submission(self) -> None:
-        repo = SubmissionRepository()
+    def test_lock_target_per_submission(self, repo: SubmissionRepository) -> None:
         a = repo.lock_target_for("sub-a")
         b = repo.lock_target_for("sub-b")
         assert a != b

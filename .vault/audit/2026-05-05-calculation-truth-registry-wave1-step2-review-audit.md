@@ -3,17 +3,14 @@ tags:
   - '#audit'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-05-05'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-05-calculation-truth-registry-wave1-step2-exec]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
 ---
 
-
-
 # `calculation-truth-registry-wave1-step2` Code Review
-
 
 CTR-W1S2-001 | HIGH | Manual corpus schema was rewritten, not just sample text cleaned up
 

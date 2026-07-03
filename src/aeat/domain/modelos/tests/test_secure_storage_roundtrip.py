@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import SensitivityClass
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
@@ -28,7 +29,6 @@ from .._repository import (
     _WORK_UNIT_CATALOGUE_VERSION,
     _WORK_UNIT_NAMESPACE,
     _WORK_UNIT_OBJECT_KEY,
-    WorkUnitCatalogueRepository,
     WorkUnitPersistenceError,
 )
 from .._work_unit import (
@@ -41,6 +41,9 @@ from .._work_unit import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "modelo-runtime"
+_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 10, 30, 0, tzinfo=UTC)
+_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 35, 0, tzinfo=UTC)
+_FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 40, 0, tzinfo=UTC)
 
 
 def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
@@ -55,7 +58,6 @@ def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
     makes a drop-and-redefault regression visible.
     """
 
-    now = datetime.now(UTC).replace(microsecond=0)
     bucket_id = "b" * 32
     modelo = ModeloCode("303")
     filing_year = 2025
@@ -75,22 +77,22 @@ def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
         period=period,
         revision_id=revision_id,
         name=f"IVA-{filing_year}-{period.registry_token}-{name_suffix}",
-        created_at=now,
-        updated_at=now,
+        created_at=_WORK_UNIT_TIMESTAMP,
+        updated_at=_WORK_UNIT_TIMESTAMP,
         # Non-default lifecycle state so a save-drops-state regression
         # would surface as state mismatch on load (default is DRAFT).
         state=WorkUnitState.DESCARTADO,
         # Discard metadata is required when state is DISCARDED;
         # populating it covers all three defaultable optional fields
         # at once.
-        discarded_at=now,
+        discarded_at=_WORK_UNIT_TIMESTAMP,
         discarded_by="cli/aeat",
         discard_reason="superseded by amended revision for roundtrip test fixture",
         # Censo-stale marker pair — defaults to (None, None). Without
         # non-default fixture values, a save-drops-field regression on
         # either side would still pass strict equality. Stamp at
         # created_at so the validator's not-before invariant holds.
-        censo_stamped_stale_at=now,
+        censo_stamped_stale_at=_WORK_UNIT_TIMESTAMP,
         censo_stale_reason="censo apply snapshot abc123 superseded prior facts",
     )
 
@@ -215,7 +217,7 @@ def test_work_unit_catalogue_wrong_inner_classification_is_localized(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[WorkUnitCatalogue](
             schema_version=_WORK_UNIT_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC).replace(microsecond=0),
+            written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.AUDIT,
             payload=WorkUnitCatalogue(),
         )
@@ -250,7 +252,7 @@ def test_work_unit_catalogue_unsupported_inner_version_is_localized(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[WorkUnitCatalogue](
             schema_version=stored_schema_version,
-            written_at=datetime.now(UTC).replace(microsecond=0),
+            written_at=_FUTURE_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.FINANCIAL,
             payload=WorkUnitCatalogue(),
         )

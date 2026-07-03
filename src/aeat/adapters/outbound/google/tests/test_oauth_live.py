@@ -1,6 +1,6 @@
 """Live-gated OAuth Desktop integration tests.
 
-Skip cleanly unless `AEAT_LIVE_TESTS_ENABLED=1` AND the operator has
+Deselect unless `AEAT_LIVE_TESTS_ENABLED=1` AND the operator has
 already pre-registered an `OAuthClient` in the secure store for the
 named test profile (`AEAT_GOOGLE_LIVE_PROFILE`, default `live-test`).
 The tests exercise three real-world paths against the operator's own
@@ -47,13 +47,13 @@ def _live_profile() -> str:
     return os.environ.get("AEAT_GOOGLE_LIVE_PROFILE", "live-test")
 
 
-def _skip_unless_live_and_client_registered() -> None:
+def _require_live_and_client_registered() -> None:
     requires_live_enabled()
     profile = _live_profile()
     if load_client(profile) is None:
-        pytest.skip(
+        pytest.fail(
             f"no OAuth client registered for profile {profile!r}; "
-            f"run `aeat config google register --client-json <path> --profile {profile}` first",
+            f"run `aeat config google register --client-json <path> --profile {profile}` after live opt-in",
         )
 
 
@@ -66,7 +66,7 @@ def test_login_persists_token_and_metadata_against_real_google_endpoints() -> No
     cookie and complete without manual interaction.
     """
 
-    _skip_unless_live_and_client_registered()
+    _require_live_and_client_registered()
     profile = _live_profile()
     client = load_client(profile)
     assert client is not None  # guard guarantees this; assert for the type checker
@@ -84,13 +84,13 @@ def test_login_persists_token_and_metadata_against_real_google_endpoints() -> No
 def test_status_round_trips_persisted_metadata() -> None:
     """Reading back the persisted metadata after a live login matches what was saved."""
 
-    _skip_unless_live_and_client_registered()
+    _require_live_and_client_registered()
     profile = _live_profile()
     metadata = load_metadata(profile)
     if metadata is None:
-        pytest.skip(
+        pytest.fail(
             "no persisted OAuth metadata; run the login test first or "
-            f"`aeat config google login --profile {profile}` manually",
+            f"`aeat config google login --profile {profile}` manually after live opt-in",
         )
     assert metadata.account_email
     assert metadata.reauth_required is False
@@ -105,7 +105,7 @@ def test_logout_clears_session_records_but_preserves_client() -> None:
     re-importing the Cloud Console JSON.
     """
 
-    _skip_unless_live_and_client_registered()
+    _require_live_and_client_registered()
     profile = _live_profile()
     client_before = load_client(profile)
     assert client_before is not None

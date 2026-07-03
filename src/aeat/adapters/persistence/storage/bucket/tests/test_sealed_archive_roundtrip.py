@@ -34,8 +34,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _BUCKET_ID = "bucket-sealed-archive-roundtrip-test"
 _MANIFEST_DIGEST = "a" * 64
 _FROZEN_INSTANT = datetime(2026, 6, 3, 14, 30, 0, tzinfo=UTC)
-_PAYLOAD = b"encrypted-payload-bytes-stand-in"
-_RECOVERY_WRAP = b"recovery-wrap-bytes-stand-in"
+_PAYLOAD = b"sealed-payload-envelope-ciphertext-v1"
+_RECOVERY_WRAP = b"sealed-recovery-wrap-ciphertext-v1"
 
 
 def _header(*, recovery_wrap_present: bool = False) -> ExportArchiveHeader:
@@ -43,7 +43,7 @@ def _header(*, recovery_wrap_present: bool = False) -> ExportArchiveHeader:
         bucket_id=_BUCKET_ID,
         manifest_digest=_MANIFEST_DIGEST,
         recovery_wrap_present=recovery_wrap_present,
-        archive_schema_version=1,
+        archive_schema_version=2,
         created_at=_FROZEN_INSTANT,
     )
 
@@ -83,31 +83,29 @@ def test_roundtrip_with_recovery_wrap_returns_all_three_members(tmp_path: Path) 
     assert contents.recovery_wrap_bytes == _RECOVERY_WRAP
 
 
-def test_writer_refuses_when_header_recovery_flag_disagrees_with_bytes(tmp_path: Path) -> None:
-    """Header recovery_wrap_present=True without bytes is a service-side bug."""
+@pytest.mark.parametrize(
+    ("recovery_wrap_present", "recovery_wrap_bytes", "error_match"),
+    (
+        pytest.param(True, None, "no recovery_wrap_bytes supplied", id="flag-without-bytes"),
+        pytest.param(False, _RECOVERY_WRAP, "recovery_wrap_present is False", id="bytes-without-flag"),
+    ),
+)
+def test_writer_refuses_when_header_recovery_flag_disagrees_with_bytes(
+    tmp_path: Path,
+    recovery_wrap_present: bool,
+    recovery_wrap_bytes: bytes | None,
+    error_match: str,
+) -> None:
+    """Recovery-wrap header flag and payload bytes must agree."""
     archive_path = tmp_path / "export.tar.gz"
-    header = _header(recovery_wrap_present=True)
+    header = _header(recovery_wrap_present=recovery_wrap_present)
 
-    with pytest.raises(SealedArchiveWriteError, match="no recovery_wrap_bytes supplied"):
+    with pytest.raises(SealedArchiveWriteError, match=error_match):
         write_sealed_archive(
             archive_path,
             header=header,
             payload_envelope_bytes=_PAYLOAD,
-            recovery_wrap_bytes=None,
-        )
-
-
-def test_writer_refuses_when_recovery_bytes_supplied_without_header_flag(tmp_path: Path) -> None:
-    """Recovery bytes without header flag is also a service-side bug."""
-    archive_path = tmp_path / "export.tar.gz"
-    header = _header(recovery_wrap_present=False)
-
-    with pytest.raises(SealedArchiveWriteError, match="recovery_wrap_present is False"):
-        write_sealed_archive(
-            archive_path,
-            header=header,
-            payload_envelope_bytes=_PAYLOAD,
-            recovery_wrap_bytes=_RECOVERY_WRAP,
+            recovery_wrap_bytes=recovery_wrap_bytes,
         )
 
 

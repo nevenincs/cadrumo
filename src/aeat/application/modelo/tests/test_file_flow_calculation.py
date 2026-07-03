@@ -6,13 +6,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
 from ._file_flow_support import (
     DEFAULT_130_BINDING_VALUES,
     M130_EXPENSE_CASILLA,
     M130_INCOME_CASILLA,
     M130_NET_RESULT_CASILLA,
-    T0,
     T1,
     T2,
     BucketEventType,
@@ -20,7 +18,6 @@ from ._file_flow_support import (
     Decimal,
     Repos,
     calculate_modelo_revision,
-    create_work_unit,
     get_work_unit,
     list_calculation_revisions,
     seed_work_unit,
@@ -316,15 +313,7 @@ def test_calculate_refuses_when_registry_snapshot_unresolvable(repos: Repos) -> 
     wu_repo, cr_repo, _, _, bv_repo = repos
     # Modelo 130 at year 2010 predates the registry's earliest
     # revision (``2019-y-siguientes``), so the snapshot lookup fails.
-    work_unit = create_work_unit(
-        bucket_id="default",
-        modelo="130",
-        filing_year=2010,
-        period=Period.from_year_and_code(2010, "1T"),
-        revision_id="2019-y-siguientes",
-        repository=wu_repo,
-        clock=T0,
-    )
+    work_unit = seed_work_unit(wu_repo, filing_year=2010)
 
     with pytest.raises(CalculationRegistryUnavailableError) as exc_info:
         calculate_modelo_revision(

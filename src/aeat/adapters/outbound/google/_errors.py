@@ -1,13 +1,13 @@
 """Typed exception hierarchy for the Google OAuth Desktop integration.
 
-Every subclass is an :class:`~aeat.core.errors.AeatError` with a stable
-:class:`~aeat.core.errors.ErrorCode` declared in the adapter error registry.
+Every subclass is an :class:`core.errors.AeatError` with a stable
+:class:`core.errors.ErrorCode` declared in the adapter error registry.
 That keeps the public CLI taxonomy explicit while
-:mod:`aeat.entrypoints.cli._config._google_errors` can map concrete
+:mod:`entrypoints.cli._config._google_errors` can map concrete
 :class:`GoogleAuthError` subclasses to localised refusal text. Constructors
 carry structured remediation context (``context={...}``) so renderers can
 surface actionable guidance without leaking the secret material handled by
-:mod:`aeat.adapters.outbound.google._oauth_flow`.
+:mod:`adapters.outbound.google._oauth_flow`.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ class GoogleAuthError(AeatError):
     """Base class for every Google OAuth Desktop authentication failure.
 
     Catch this at CLI boundaries that need one Google-auth refusal arm while
-    preserving the concrete :class:`~aeat.core.errors.ErrorCode` on each leaf.
+    preserving the concrete :class:`core.errors.ErrorCode` on each leaf.
     """
 
 
@@ -86,8 +86,8 @@ class GoogleAuthKeychainLockedError(GoogleAuthError):
 class GoogleAuthProfileUnboundError(GoogleAuthError):
     """Raised when Google auth cannot resolve the active AEAT profile.
 
-    Emitted by :func:`aeat.adapters.outbound.google._active_profile.resolve_active_profile`
-    and profile-loading guards in :mod:`aeat.adapters.outbound.google._oauth_flow`.
+    Emitted by :func:`adapters.outbound.google._active_profile.resolve_active_profile`
+    and profile-loading guards in :mod:`adapters.outbound.google._oauth_flow`.
     """
 
 

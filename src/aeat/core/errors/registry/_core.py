@@ -96,6 +96,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core._optional_extras.MissingOptionalExtraError",
+        ErrorCode(
+            code="ERROR_OPTIONAL_EXTRA_MISSING",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_aeat_core",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core._period.PeriodError",
         ErrorCode(
             code="INTEGRITY_PERIOD",
@@ -206,6 +217,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core.observability._errors.GoldenCaptureError",
+        ErrorCode(
+            code="INTEGRITY_OBSERVABILITY_GOLDEN_CAPTURE",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_observability_run_trace_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.observability._errors.GoldenReplayMismatchError",
+        ErrorCode(
+            code="INTEGRITY_OBSERVABILITY_GOLDEN_REPLAY_MISMATCH",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_observability_run_trace_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core.observability._errors.RunContextMissingError",
         ErrorCode(
             code="INTERNAL_OBSERVABILITY_RUN_CONTEXT_MISSING",
@@ -289,6 +322,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.INTEGRITY,
             message_key="errors.integrity.integrity_storage_corpus_manifest_drift",
             default_suggestion="aeat config profile status",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.corpus_manifest._errors.CorpusBundleError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_CORPUS_BUNDLE",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_corpus_bundle",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.corpus_manifest._errors.CorpusBundleVerificationError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_CORPUS_BUNDLE_VERIFICATION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_corpus_bundle_verification",
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),

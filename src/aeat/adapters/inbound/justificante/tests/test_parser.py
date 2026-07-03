@@ -26,14 +26,14 @@ from .....domain.justificante import (
     JustificanteParserBackend,
 )
 from .....tests import FIXTURES_DIR as _FIXTURES_ROOT
-from .....tests._justificante_parse_cache import parse_committed_justificante_fixture
+from .....tests import parse_committed_justificante_fixture
 from .....tests.aeat_literal_fixtures import (
     JUSTIFICANTE_AYUDA_PATH_FIXTURE,
     JUSTIFICANTE_VERIFY_PATH_FIXTURE,
     aeat_host,
     aeat_url,
 )
-from ...pdf._utils import source_pdf_reference_path
+from ...pdf import source_pdf_reference_path
 from .. import parse_justificante, parse_justificante_bytes
 from .._parsers import _TEXT_CACHE, extract_text
 

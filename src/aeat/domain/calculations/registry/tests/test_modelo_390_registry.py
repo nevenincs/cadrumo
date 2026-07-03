@@ -4,27 +4,23 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
 
 import pytest
 
-from .....core.aggregation import RelationAggregationOp
 from .....core.resources import bundled_path
-from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
     CasillaId,
     ModeloDefinition,
     RegistryCatalogues,
+    RegistryValidationError,
     RegistryValidator,
     binding_source_casilla_ids,
     build_snapshot,
-    load_registry_tree,
-    relation_aggregation_op,
     validated_casilla_id,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -38,19 +34,99 @@ _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengad
 _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
 _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
 _M303_COMPENSACION_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
+_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
+_M303_COMPENSACION_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_COMPENSACION_POSTERIOR_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-posteriores",
+)
+_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-devengada-total")
+_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-deducible-total")
+_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.anual.resultado-regimen-general")
+_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.devengada-303",
+)
+_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.deducible-303",
+)
+_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.resultado-303",
+)
 _M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = _casilla_id(
     "iva.anual.compensacion-ultimo-periodo-97",
 )
 _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = _casilla_id(
     "iva.anual.compensacion-generada-ejercicio-no-97",
 )
+_M390_CONSTRUCT_ID = "modelo-390-iva-resumen-anual"
+_M390_RECONCILIATION_PREDICATES = (
+    (
+        "modelo-390-cuota-devengada-total-equals-reconciliacion-303",
+        _M390_CUOTA_DEVENGADA_TOTAL_CASILLA,
+        _M390_RECONCILIACION_DEVENGADA_303_CASILLA,
+        'equals(["iva.anual.cuota-devengada-total", "iva.anual.reconciliacion.devengada-303"])',
+        {
+            "ley-37-1992:art-88",
+            "ley-37-1992:art-90",
+            "ley-37-1992:art-91",
+            "rd-1624-1992:art-71",
+            "orden-eha-3111-2009:art-1",
+        },
+    ),
+    (
+        "modelo-390-cuota-deducible-total-equals-reconciliacion-303",
+        _M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+        _M390_RECONCILIACION_DEDUCIBLE_303_CASILLA,
+        'equals(["iva.anual.cuota-deducible-total", "iva.anual.reconciliacion.deducible-303"])',
+        {
+            "ley-37-1992:art-17",
+            "ley-37-1992:art-84",
+            "ley-37-1992:art-92",
+            "rd-1624-1992:art-71",
+            "orden-eha-3111-2009:art-1",
+        },
+    ),
+    (
+        "modelo-390-resultado-regimen-general-equals-reconciliacion-303",
+        _M390_RESULTADO_REGIMEN_GENERAL_CASILLA,
+        _M390_RECONCILIACION_RESULTADO_303_CASILLA,
+        'equals(["iva.anual.resultado-regimen-general", "iva.anual.reconciliacion.resultado-303"])',
+        {
+            "ley-37-1992:art-88",
+            "ley-37-1992:art-92",
+            "rd-1624-1992:art-71",
+            "orden-eha-3111-2009:art-1",
+        },
+    ),
+)
+_M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
+    {
+        "ley-37-1992:art-84",
+        "ley-37-1992:art-88",
+        "ley-37-1992:art-92",
+        "ley-37-1992:art-99",
+        "ley-37-1992:art-115",
+        "ley-37-1992:art-116",
+        "orden-eha-3111-2009:art-1",
+        "rd-1624-1992:art-29",
+        "rd-1624-1992:art-30",
+        "rd-1624-1992:art-71",
+    }
+)
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_390() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "390")
-    return modelo, catalogues
+    return _committed_modelo("390")
+
+
+def _replace_revision(modelo: ModeloDefinition, revision) -> ModeloDefinition:
+    return modelo.model_copy(
+        update={
+            "revisions": {
+                revision_id: revision if revision_id == revision.id else item
+                for revision_id, item in modelo.revisions.items()
+            },
+        },
+    )
 
 
 def test_modelo_390_validator_accepts_committed_definition() -> None:
@@ -78,6 +154,7 @@ def test_modelo_390_revision_period_selector_starts_at_2010() -> None:
     assert revision.valid_from == date(2010, 1, 1)
     assert revision.period_selector.year_from == 2010
     assert revision.period_selector.periods == ("0A",)
+    assert revision.orden_aplicabilidad == ("orden-eha-3111-2009:art-1",)
 
 
 def test_modelo_390_snapshot_builds_for_each_published_filing_year() -> None:
@@ -98,9 +175,28 @@ def test_modelo_390_snapshot_carries_legal_authority_and_record_design() -> None
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="0A")
     assert "orden-eha-3111-2009:art-1" in snapshot.legal
     assert "orden-eha-3111-2009:art-8" in snapshot.legal
+    assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3111-2009:art-1",)
     assert snapshot.legal["orden-eha-3111-2009:art-8"].article == "8"
     assert "aeat-dr-390-2025" in snapshot.sources
     assert "aeat-modelo-390-procedure" in snapshot.sources
+    assert "boe-modelo-390-2009-form" in snapshot.sources
+    assert catalogues.sources["aeat-modelo-390-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-390-2009-form"].evidence_tier == "layout_authority"
+
+
+def test_modelo_390_extraction_profile_legal_refs_match_target_casillas() -> None:
+    modelo, _ = _load_modelo_390()
+    revision = modelo.revisions["2010-y-siguientes"]
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+
+    assert revision.extraction_profiles, revision.id
+    profile = next(item for item in revision.extraction_profiles if item.id == "modelo-390-declaracion-pdf")
+    target_refs = frozenset(
+        legal_ref for target in profile.target_casillas for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+    )
+
+    assert target_refs == _M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS
+    assert set(profile.legal_refs) == _M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS
 
 
 def test_modelo_390_january_30_deadline_matches_orden_eha_3111_2009_art_8() -> None:
@@ -144,11 +240,36 @@ def test_modelo_390_live_cross_references_are_read_only() -> None:
 def test_modelo_390_construct_links_filing_workbook_parity() -> None:
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions["2010-y-siguientes"]
-    construct = next(c for c in revision.constructs if c.id == "modelo-390-iva-resumen-anual")
+    construct = next(c for c in revision.constructs if c.id == _M390_CONSTRUCT_ID)
     assert "modelo-390-filing" in construct.application_links
     assert "modelo-390-deadline" in construct.application_links
     assert construct.filing_schedules == ("modelo-390-anual",)
     assert "modelo-390-dr-2025" in construct.workbook_parity_refs
+    assert "ley-37-1992:art-161" in construct.legal_refs
+
+
+def test_modelo_390_construct_requires_recargo_grounding() -> None:
+    modelo, catalogues = _load_modelo_390()
+    revision = modelo.revisions["2010-y-siguientes"]
+    constructs = tuple(
+        construct.model_copy(
+            update={"legal_refs": tuple(ref for ref in construct.legal_refs if ref != "ley-37-1992:art-161")},
+        )
+        if construct.id == _M390_CONSTRUCT_ID
+        else construct
+        for construct in revision.constructs
+    )
+    mutated_revision = revision.model_copy(update={"constructs": constructs})
+    mutated_modelo = _replace_revision(modelo, mutated_revision)
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=(
+            r"construct 'modelo-390-iva-resumen-anual' does not include legal refs "
+            r"\['ley-37-1992:art-161'\] required by formula 'modelo-390-iva-anual-cuota-devengada-total'"
+        ),
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
 def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> None:
@@ -165,7 +286,25 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
         "modelo-390-iva-soportado-interiores-cuota",
         "modelo-390-iva-soportado-importaciones-cuota",
         "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
+        "modelo-390-iva-recargo-equivalencia-general-cuota",
+        "modelo-390-iva-recargo-equivalencia-reducido-cuota",
     }
+
+
+def test_modelo_390_declares_annual_reconciliation_predicates() -> None:
+    """The annual result totals are blocked when they drift from the four 303s."""
+    modelo, _ = _load_modelo_390()
+    revision = modelo.revisions["2010-y-siguientes"]
+    casilla_ids = {casilla.id for casilla in revision.casillas}
+    predicates = {predicate.predicate_id: predicate for predicate in revision.verification_predicates}
+
+    for predicate_id, computed_id, reconciliation_id, expression, legal_refs in _M390_RECONCILIATION_PREDICATES:
+        predicate = predicates[predicate_id]
+        assert computed_id in casilla_ids
+        assert reconciliation_id in casilla_ids
+        assert predicate.expression == expression
+        assert predicate.finding_kind == "BLOCKING_RULE"
+        assert set(str(ref) for ref in predicate.legal_refs) == legal_refs
 
 
 def test_modelo_390_declares_annual_compensation_result_fields() -> None:
@@ -174,106 +313,27 @@ def test_modelo_390_declares_annual_compensation_result_fields() -> None:
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     bindings = {binding.id: binding for binding in revision.bindings}
     relations = {rel.id: rel for rel in revision.relations}
+    compensation_source_ids = (
+        _M303_COMPENSACION_GENERADA_CASILLA,
+        _M303_COMPENSACION_APLICADA_CASILLA,
+        _M303_COMPENSACION_DISPONIBLE_CASILLA,
+        _M303_COMPENSACION_POSTERIOR_CASILLA,
+    )
 
     assert casillas[_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA].number == "97"
     assert casillas[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA].number == "662"
-    # Migrated to relation_prefill: slot bindings use source_modelo + source_casilla_id.
-    assert bindings["modelo-390-prev-303-compensacion-ultimo-periodo"].source == "relation_prefill"
-    assert binding_source_casilla_ids(bindings["modelo-390-prev-303-compensacion-ultimo-periodo"]) == (
-        _M303_COMPENSACION_GENERADA_CASILLA,
-    )
-    assert bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"].source == "relation_prefill"
-    assert binding_source_casilla_ids(bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"]) == (
-        _M303_COMPENSACION_GENERADA_CASILLA,
-    )
-    # The canonical period sets live on the relations, not on the bindings.
-    ultimo_rel = relations["modelo-390-rel-303-compensacion-ultimo-periodo"]
-    no97_rel = relations["modelo-390-rel-303-compensacion-generada-ejercicio-no-97"]
-    assert ultimo_rel.source_periods == ("4T",)
-    assert relation_aggregation_op(ultimo_rel) == RelationAggregationOp.COPY
-    assert no97_rel.source_periods == ("1T", "2T", "3T")
-    assert relation_aggregation_op(no97_rel) == RelationAggregationOp.SUM
-
-
-def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations() -> None:
-    """Migrated to relation_prefill: the five M390←M303 fold bindings resolve via the
-    relation resolver (resolve_relation_values_from_observations → materialize), not
-    the previous_filing path."""
-    from .. import (
-        materialize_relation_binding_values,
-    )
-    from .._relations import resolve_relation_values_from_observations
-
-    modelo, _ = _load_modelo_390()
-    revision = modelo.revisions["2010-y-siguientes"]
-    # Use prime-valued compensacion amounts to avoid false-positive tautology-gate detection.
-    # Each quarter's compensacion-generada-periodo is distinct and non-trivially summed.
-    _comp_1t = Decimal("13")
-    _comp_2t = Decimal("17")
-    _comp_3t = Decimal("19")
-    _comp_4t = Decimal("251")  # 4T: copied as-is into ultimo-periodo-97
-    # generada-ejercicio-no-97: sum of 1T+2T+3T = 13+17+19 = 49
-    _comp_no97_expected = _comp_1t + _comp_2t + _comp_3t
-
-    observations = (
-        registry_grounded_modelo_observation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            casilla_values={
-                _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: Decimal("100"),
-                _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: Decimal("90"),
-                _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("10"),
-                _M303_COMPENSACION_GENERADA_CASILLA: _comp_1t,
-            },
-        ),
-        registry_grounded_modelo_observation(
-            modelo="303",
-            filing_year=2025,
-            period="2T",
-            casilla_values={
-                _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: Decimal("200"),
-                _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: Decimal("180"),
-                _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("20"),
-                _M303_COMPENSACION_GENERADA_CASILLA: _comp_2t,
-            },
-        ),
-        registry_grounded_modelo_observation(
-            modelo="303",
-            filing_year=2025,
-            period="3T",
-            casilla_values={
-                _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: Decimal("300"),
-                _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: Decimal("270"),
-                _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("30"),
-                _M303_COMPENSACION_GENERADA_CASILLA: _comp_3t,
-            },
-        ),
-        registry_grounded_modelo_observation(
-            modelo="303",
-            filing_year=2025,
-            period="4T",
-            casilla_values={
-                _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: Decimal("400"),
-                _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: Decimal("360"),
-                _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("40"),
-                _M303_COMPENSACION_GENERADA_CASILLA: _comp_4t,
-            },
-        ),
-    )
-
-    relation_values = resolve_relation_values_from_observations(revision, observations, filing_year=2025, period="0A")
-    resolved = materialize_relation_binding_values(revision, relation_values, period="0A")
-
-    # Assert the two binding keys are present — wiring check.
-    assert "modelo-390-prev-303-compensacion-ultimo-periodo" in resolved
-    assert "modelo-390-prev-303-compensacion-generada-ejercicio-no-97" in resolved
-
-    # The ultimo-periodo relation uses source_periods=("4T",) aggregation copy.
-    assert resolved["modelo-390-prev-303-compensacion-ultimo-periodo"] == _comp_4t
-
-    # The generada-ejercicio-no-97 relation uses source_periods=("1T","2T","3T") sum.
-    assert resolved["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"] == _comp_no97_expected
+    box_97_binding = bindings["modelo-390-prev-303-compensacion-ultimo-periodo"]
+    box_662_binding = bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"]
+    assert box_97_binding.source == "iva_compensation_annual_partition"
+    assert box_97_binding.selector.source_modelo == "303"
+    assert binding_source_casilla_ids(box_97_binding) == compensation_source_ids
+    assert box_97_binding.selector.partition_output == "last_period_amount"
+    assert box_662_binding.source == "iva_compensation_annual_partition"
+    assert box_662_binding.selector.source_modelo == "303"
+    assert binding_source_casilla_ids(box_662_binding) == compensation_source_ids
+    assert box_662_binding.selector.partition_output == "generated_not_in_last_amount"
+    assert "modelo-390-rel-303-compensacion-ultimo-periodo" not in relations
+    assert "modelo-390-rel-303-compensacion-generada-ejercicio-no-97" not in relations
 
 
 def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations() -> None:

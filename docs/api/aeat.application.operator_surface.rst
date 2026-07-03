@@ -18,4 +18,5 @@ Submodules
    aeat.application.operator_surface._crud_registry
    aeat.application.operator_surface._errors
    aeat.application.operator_surface._help
+   aeat.application.operator_surface._manifest
    aeat.application.operator_surface._models

@@ -1,26 +1,34 @@
-"""Modelo 720 foreign-assets aggregator.
+"""Modelo 720 foreign-assets aggregation and source-mesh resolver.
 
-Modelo 720: Declaración informativa sobre bienes y derechos situados en el
-extranjero. Per-asset records grouped by asset class. Each class carries
-a €50,000 valuation threshold; declarability is per-class, not per-asset.
+Modelo 720 is an informativa declaration for assets and rights abroad. This
+module groups per-asset observations by ``(source_kind, asset_class)`` and
+returns :class:`ForeignAssetsAggregation` for
+:mod:`application.aggregation._service`; the repository-free
+:class:`ForeignAssetsAggregationSourceResolver` adapts the same observations to
+the calculation source-mesh envelope when a caller supplies them.
 
-Used by: :mod:`aeat.application.aggregation._service` (central per-modelo aggregator).
-
-Bare ``invoice`` source-kind is rejected at observation construction;
-the four canonical source kinds are accepted: ``ledger_transaction``,
+Declarability is per asset class. The aggregate keeps raw class totals, and
+:func:`declarable_asset_classes_720` applies the EUR 50,000 threshold across all
+source-kind cohorts for a class. Observation construction accepts only the four
+canonical source-kind values ``ledger_transaction``,
 ``purchase_invoice_evidence``, ``payable_invoice``, and
-``collectible_invoice``.
+``collectible_invoice``; bare ``invoice`` is rejected.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from decimal import Decimal
+from types import MappingProxyType
 
 from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Modelo, Period
 from ...core.aggregation import ForeignAssetClass
 from ...core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
+from ...core.parsing import parse_iso8601_date
+from ...domain.calculations.registry import Modelo720RowObservation, resolve_foreign_asset_binding_row_values
+from ._source_mesh import CalculationSourceContext, CalculationSourceProvenance, CalculationSourceResolution
 
 _CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
@@ -30,15 +38,34 @@ _CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.COLLECTIBLE_INVOICE,
     },
 )
+_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.FOREIGN_ASSET,)
+_ASSET_CLASS_CODES: Mapping[ForeignAssetClass, str] = MappingProxyType(
+    {
+        ForeignAssetClass.ACCOUNT: "C",
+        ForeignAssetClass.SECURITY: "V",
+        ForeignAssetClass.REAL_ESTATE: "I",
+        ForeignAssetClass.INSURANCE: "S",
+        ForeignAssetClass.VIRTUAL_CURRENCY: "M",
+    },
+)
 
 
-def _validate_source_kind(value: str) -> str:
-    if value not in _CANONICAL_SOURCE_KINDS:
+def _foreign_asset_source_kind(value: object) -> BindingSourceKind:
+    if isinstance(value, BindingSourceKind):
+        source_kind = value
+    elif isinstance(value, str):
+        try:
+            source_kind = BindingSourceKind(value)
+        except ValueError as exc:
+            raise ValueError(f"foreign asset source_kind {value!r} is not a BindingSourceKind") from exc
+    else:
+        raise ValueError("foreign asset source_kind must be a BindingSourceKind or source-kind string")
+    if source_kind not in _CANONICAL_SOURCE_KINDS:
+        allowed = ", ".join(kind.value for kind in _CANONICAL_SOURCE_KINDS)
         raise ValueError(
-            "unsupported source_kind; use one of ledger_transaction, "
-            "purchase_invoice_evidence, payable_invoice, collectible_invoice",
+            f"unsupported source_kind {source_kind.value!r}; use one of {allowed}",
         )
-    return value
+    return source_kind
 
 
 def _validate_country(value: str) -> str:
@@ -52,7 +79,7 @@ class ForeignAssetIngestObservation(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_kind: str = Field(min_length=1)
+    source_kind: BindingSourceKind
     source_object_id: str = Field(min_length=1)
     asset_class: ForeignAssetClass
     asset_external_id: str = Field(min_length=1, max_length=128)
@@ -62,10 +89,10 @@ class ForeignAssetIngestObservation(BaseModel):
     acquisition_date: str = Field(min_length=10, max_length=10)
     held_at_year_end: bool = True
 
-    @field_validator("source_kind")
+    @field_validator("source_kind", mode="before")
     @classmethod
-    def _source_kind_is_canonical(cls, value: str) -> str:
-        return _validate_source_kind(value)
+    def _source_kind_is_canonical(cls, value: object) -> BindingSourceKind:
+        return _foreign_asset_source_kind(value)
 
     @field_validator("country")
     @classmethod
@@ -78,7 +105,7 @@ class ForeignAssetClassRollup(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_kind: str = Field(min_length=1)
+    source_kind: BindingSourceKind
     asset_class: ForeignAssetClass
     assets_count: int = Field(ge=0)
     held_at_year_end_count: int = Field(ge=0)
@@ -92,10 +119,10 @@ class ForeignAssetClassRollup(BaseModel):
             _validate_country(country)
         return value
 
-    @field_validator("source_kind")
+    @field_validator("source_kind", mode="before")
     @classmethod
-    def _source_kind_is_canonical(cls, value: str) -> str:
-        return _validate_source_kind(value)
+    def _source_kind_is_canonical(cls, value: object) -> BindingSourceKind:
+        return _foreign_asset_source_kind(value)
 
     @model_validator(mode="after")
     def _held_count_within_total(self) -> ForeignAssetClassRollup:
@@ -170,7 +197,7 @@ def aggregate_foreign_assets_720(
     :func:`declarable_class` to filter rollups before binding to
     Modelo 720 casillas.
     """
-    grouped: dict[tuple[str, ForeignAssetClass], list[ForeignAssetIngestObservation]] = {}
+    grouped: dict[tuple[BindingSourceKind, ForeignAssetClass], list[ForeignAssetIngestObservation]] = {}
     for obs in observations:
         grouped.setdefault((obs.source_kind, obs.asset_class), []).append(obs)
     rollups: list[ForeignAssetClassRollup] = []
@@ -202,11 +229,103 @@ def aggregate_foreign_assets_720(
     )
 
 
+class ForeignAssetsAggregationSourceResolver:
+    """Resolve Modelo 720 foreign-asset rows from operator-supplied observations.
+
+    The resolver is deliberately repository-free, mirroring the existing
+    ``aggregate_foreign_assets_720`` shape-C surface: callers supply typed
+    observations, the resolver delegates to the aggregate function for threshold
+    semantics, then validates the declarable rows against the live M720 registry
+    row-producer bindings.
+    """
+
+    resolver_id = "foreign_assets_aggregation"
+    owned_sources = _OWNED_SOURCES
+
+    def __init__(self, *, observations: Iterable[ForeignAssetIngestObservation] = ()) -> None:
+        self._observations = tuple(observations)
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        if not _foreign_asset_source_for_revision(context):
+            return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
+
+        aggregation = aggregate_foreign_assets_720(self._observations, period=context.period)
+        selected_observations = _selected_foreign_asset_observations(aggregation, self._observations)
+        row_observations = _registry_observations_from_foreign_assets_aggregation(
+            aggregation,
+            selected_observations,
+        )
+        resolve_foreign_asset_binding_row_values(context.revision, row_observations)
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            source_transaction_ids=tuple(
+                sorted(
+                    observation.source_object_id
+                    for observation in selected_observations
+                    if observation.source_kind is BindingSourceKind.LEDGER_TRANSACTION
+                ),
+            ),
+            provenance=tuple(
+                CalculationSourceProvenance(
+                    source_kind=observation.source_kind.value,
+                    source_ref=f"{observation.source_kind.value}:{observation.source_object_id}",
+                )
+                for observation in selected_observations
+            ),
+        )
+
+
+def _foreign_asset_source_for_revision(context: CalculationSourceContext) -> bool:
+    return any(binding.source == BindingSourceKind.FOREIGN_ASSET for binding in context.revision.bindings)
+
+
+def _registry_observations_from_foreign_assets_aggregation(
+    aggregation: ForeignAssetsAggregation,
+    observations: Iterable[ForeignAssetIngestObservation],
+) -> tuple[Modelo720RowObservation, ...]:
+    declarable_classes = declarable_asset_classes_720(aggregation)
+    return tuple(
+        _registry_observation_from_foreign_asset(observation)
+        for observation in observations
+        if observation.asset_class in declarable_classes
+    )
+
+
+def _selected_foreign_asset_observations(
+    aggregation: ForeignAssetsAggregation,
+    observations: Iterable[ForeignAssetIngestObservation],
+) -> tuple[ForeignAssetIngestObservation, ...]:
+    declarable_classes = declarable_asset_classes_720(aggregation)
+    return tuple(observation for observation in observations if observation.asset_class in declarable_classes)
+
+
+def _registry_observation_from_foreign_asset(
+    observation: ForeignAssetIngestObservation,
+) -> Modelo720RowObservation:
+    acquisition_date = parse_iso8601_date(observation.acquisition_date)
+    if acquisition_date is None:
+        raise ValueError(f"acquisition_date {observation.acquisition_date!r} is not a valid ISO-8601 date")
+    return Modelo720RowObservation(
+        source_id=f"{observation.source_kind.value}:{observation.source_object_id}",
+        asset_class_code=_asset_class_code(observation.asset_class),
+        country_code=observation.country,
+        asset_identifier=observation.asset_external_id,
+        acquisition_date=acquisition_date,
+        valuation_amount=observation.valuation_eur,
+    )
+
+
+def _asset_class_code(asset_class: ForeignAssetClass) -> str:
+    return _ASSET_CLASS_CODES[asset_class]
+
+
 __all__ = [
     "ForeignAssetClass",
     "ForeignAssetClassRollup",
     "ForeignAssetIngestObservation",
     "ForeignAssetsAggregation",
+    "ForeignAssetsAggregationSourceResolver",
     "aggregate_foreign_assets_720",
     "declarable_asset_classes_720",
     "declarable_class",

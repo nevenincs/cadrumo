@@ -3,26 +3,21 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
-from decimal import Decimal
 
 import pytest
 
 from ....adapters.outbound.aeat.sede import Declaracion
-from ....domain.calculations.registry import (
-    CasillaId,
-    RegistryModeloObservation,
-    validated_casilla_id,
-)
-from ....domain.modelos import ExternalEvidence, ExternalEvidenceKind
-from ....tests.registry_observations import registry_grounded_observations
-from ...calculations import CalculationObservationRepository
-from ...live._expedientes import PersistedExpedientesSnapshot
+from ....domain.modelos import ExternalEvidenceKind
+from ...live import PersistedExpedientesSnapshot
 from .. import (
     OverviewAeatSubmissionState,
     OverviewCalendarRange,
     build_overview_calendar,
     calendar_events_from_expedientes_snapshots,
     calendar_filing_evidence_from_sources,
+)
+from .calendar_test_support import (
+    BUCKET_ID as _BUCKET_ID,
 )
 from .calendar_test_support import (
     FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
@@ -32,6 +27,12 @@ from .calendar_test_support import (
 )
 from .calendar_test_support import (
     SOURCE_URL as _SOURCE_URL,
+)
+from .calendar_test_support import (
+    calculation_observation_payload as _calculation_observation_payload,
+)
+from .calendar_test_support import (
+    external_evidence as _external_evidence,
 )
 from .calendar_test_support import (
     filed_declaration_artefact as _filed_declaration_artefact,
@@ -52,25 +53,6 @@ from .calendar_test_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"overview conflict fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_OBSERVED_CASILLA: CasillaId = _casilla_id("01")
-
-
-def _observed_casilla_observations(value: Decimal):
-    return registry_grounded_observations(
-        modelo="303",
-        filing_year=2025,
-        period="1T",
-        casilla_values={_OBSERVED_CASILLA: value},
-    )
-
-
 def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disagree() -> None:
     """A verified filed-history row must not hide a different local AEAT evidence reference."""
     local_ref = "LOCAL-LIVE-CAPTURE-CSV"
@@ -80,7 +62,7 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="3" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
@@ -102,9 +84,9 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
         filing_records=(
             _modelo_record(
                 aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-                    reference_id=local_ref,
+                external_evidence=_external_evidence(
+                    ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+                    local_ref,
                     imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
                 ),
             ),
@@ -151,9 +133,9 @@ def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history
         filing_records=(
             _modelo_record(
                 aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-                    reference_id=csv,
+                external_evidence=_external_evidence(
+                    ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+                    csv,
                     imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
                 ),
             ),
@@ -191,14 +173,7 @@ def test_calendar_does_not_conflict_matching_verified_csv_across_reference_names
     """CSV-backed local evidence and expediente-backed filed-history evidence can describe the same receipt."""
     csv = "JUST-303-2025-1T"
     expediente_id = "12345678901234567890"
-    payload = CalculationObservationRepository.payload_type(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+    payload = _calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -211,9 +186,9 @@ def test_calendar_does_not_conflict_matching_verified_csv_across_reference_names
         filing_records=(
             _modelo_record(
                 aeat_accepted=True,
-                external_evidence=ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                    reference_id=csv,
+                external_evidence=_external_evidence(
+                    ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                    csv,
                     imported_at=datetime(2025, 4, 16, 11, 0, tzinfo=UTC),
                 ),
                 filed_by="aeat-import",

@@ -1,12 +1,13 @@
-"""Contract tests for the five detail-record observation types.
+"""Contract tests for the six detail-record observation types.
 
 Validates pydantic field constraints, validator semantics, and the
 deterministic row-builder helpers for the observation surfaces feeding
 the per-record tipo-2 row-producer bindings on the IRPF retencion
 modelos (190 / 193 perceptors), the IS related-party operations modelo
 (232), the foreign-asset informative modelo (720), the régimen de
-atribución de rentas modelo (184), and the IVA refund operations
-modelo (360).
+atribución de rentas modelo (184), the IVA refund operations modelo
+(360), and the donativos/donaciones/aportaciones informativa modelo
+(182).
 """
 
 from __future__ import annotations
@@ -20,11 +21,13 @@ from pydantic import ValidationError
 
 from .._bindings import (
     AtributionMemberObservation,
+    DonativoDonorObservation,
     Modelo720RowObservation,
     RefundOperationObservation,
     RelatedPartyOperationObservation,
 )
 from .._detail_record_bindings import _build_related_party_rows
+from .._donativo_bindings import _build_donativo_rows
 from .._withholding_bindings import (
     WithholdingObservation,
     _build_withholding_rows,
@@ -334,3 +337,95 @@ def test_refund_operation_amount_must_be_non_negative() -> None:
             supplier_tax_id="FR12345678",
             refund_amount=Decimal("-1"),
         )
+
+
+# ---------------------------------------------------------------------------
+# DonativoDonorObservation (modelo 182)
+# ---------------------------------------------------------------------------
+
+
+def test_donativo_donor_amount_must_be_non_negative() -> None:
+    with pytest.raises(ValidationError, match="amount_donated must be non-negative"):
+        DonativoDonorObservation(
+            source_id="d1",
+            donor_tax_id="12345678A",
+            transaction_date=date(2025, 3, 15),
+            amount_donated=Decimal("-1"),
+            deduction_percentage=Decimal("80"),
+        )
+
+
+def test_donativo_donor_deduction_percentage_must_be_in_range() -> None:
+    with pytest.raises(ValidationError, match=r"deduction_percentage must be within \[0, 100\]"):
+        DonativoDonorObservation(
+            source_id="d1",
+            donor_tax_id="12345678A",
+            transaction_date=date(2025, 3, 15),
+            amount_donated=Decimal("100"),
+            deduction_percentage=Decimal("150"),
+        )
+    with pytest.raises(ValidationError, match=r"deduction_percentage must be within \[0, 100\]"):
+        DonativoDonorObservation(
+            source_id="d1",
+            donor_tax_id="12345678A",
+            transaction_date=date(2025, 3, 15),
+            amount_donated=Decimal("100"),
+            deduction_percentage=Decimal("-1"),
+        )
+
+
+def test_donativo_donor_country_code_must_be_uppercase_alphabetic() -> None:
+    with pytest.raises(ValidationError, match="country_code must be uppercase alphabetic"):
+        DonativoDonorObservation(
+            source_id="d1",
+            donor_tax_id="12345678A",
+            country_code="es",
+            transaction_date=date(2025, 3, 15),
+            amount_donated=Decimal("100"),
+            deduction_percentage=Decimal("80"),
+        )
+
+
+def test_build_donativo_rows_sums_per_donor_and_preserves_recurrencia() -> None:
+    """A donor who gave twice in the year folds into one row; recurrencia sticks."""
+    q1_amount = Decimal("100")
+    q3_amount = Decimal("250")
+    other_donor_amount = Decimal("500")
+    obs = (
+        DonativoDonorObservation(
+            source_id="d1a",
+            donor_tax_id="12345678A",
+            donor_legal_name="Donor One",
+            transaction_date=date(2025, 2, 1),
+            amount_donated=q1_amount,
+            deduction_percentage=Decimal("80"),
+            is_recurrent=False,
+        ),
+        DonativoDonorObservation(
+            source_id="d1b",
+            donor_tax_id="12345678A",
+            donor_legal_name="Donor One",
+            transaction_date=date(2025, 9, 1),
+            amount_donated=q3_amount,
+            deduction_percentage=Decimal("80"),
+            is_recurrent=True,
+        ),
+        DonativoDonorObservation(
+            source_id="d2",
+            donor_tax_id="87654321Z",
+            donor_legal_name="Donor Two",
+            transaction_date=date(2025, 5, 1),
+            amount_donated=other_donor_amount,
+            deduction_percentage=Decimal("35"),
+            is_recurrent=False,
+        ),
+    )
+
+    rows = _build_donativo_rows(obs)
+
+    assert len(rows) == 2
+    by_nif = {row["donor_tax_id"]: row for row in rows}
+    assert by_nif["12345678A"]["amount_donated"] == q1_amount + q3_amount
+    assert by_nif["12345678A"]["is_recurrent"] == "1"
+    assert by_nif["87654321Z"]["amount_donated"] == other_donor_amount
+    assert by_nif["87654321Z"]["is_recurrent"] == "0"

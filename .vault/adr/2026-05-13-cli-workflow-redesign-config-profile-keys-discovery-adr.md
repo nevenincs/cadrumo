@@ -3,14 +3,13 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]"
 ---
-
 
 # `cli-workflow-redesign` adr: `Config profile keys discovery verb` | (**status:** `accepted`)
 

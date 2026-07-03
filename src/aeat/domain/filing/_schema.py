@@ -1,4 +1,4 @@
-"""Pydantic v2 schema for the :mod:`aeat.domain.filing` subpackage.
+"""Pydantic v2 schema for the :mod:`domain.filing` subpackage.
 
 Every type in this module is a strict, frozen pydantic v2 model
 or a closed :class:`enum.StrEnum`. These are the boundary-crossing
@@ -74,7 +74,7 @@ class ModeloBindingValue(BaseModel):
     Carries the same regulatory grounding the casilla half exposes via
     :class:`ModeloCasillaProvenance`: ``legal_refs`` and ``source_refs``
     populated from the binding definition, plus a typed
-    :class:`~aeat.core.BindingSourceKind` ``source`` (replacing the former
+    :class:`~core.BindingSourceKind` ``source`` (replacing the former
     free-text provenance string) so a bound value is operator-traceable at
     parity with a computed casilla.
 
@@ -83,8 +83,8 @@ class ModeloBindingValue(BaseModel):
         value: The scalar value carried for this binding.
         kind: Provenance kind — literal input, computed, inherited, etc.
         source: Typed registry binding source kind (e.g.
-            :attr:`~aeat.core.BindingSourceKind.MANUAL_INPUT`,
-            :attr:`~aeat.core.BindingSourceKind.LEDGER_IVA_AGGREGATION`).
+            :attr:`~core.BindingSourceKind.MANUAL_INPUT`,
+            :attr:`~core.BindingSourceKind.LEDGER_IVA_AGGREGATION`).
         legal_refs: Legal references carried from the binding definition.
         source_refs: Source references carried from the binding definition.
         row_index: 1-based row index for multi-row (detail-record) bindings.
@@ -130,7 +130,7 @@ class ModeloValidationFinding(BaseModel):
             ``"casilla-required-missing"``).
         message: A strictly-typed :class:`Translatable` key.
         references_rules: Tuple of Manual práctico Rule IDs that
-            justify the finding (see :class:`aeat.domain.manuals.Rule`).
+            justify the finding (see :class:`domain.manuals.Rule`).
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -159,7 +159,7 @@ class ModeloDraft(BaseModel):
     """A typed, validated draft of one filing.
 
     The ``draft_id`` is a content-addressed hash of
-    ``(modelo, period, profile_tax_id, schema_version, values)``.
+    ``(modelo, period, profile_tax_id, snapshot_ref, values)``.
     Re-validating a draft preserves its identity because findings,
     status, ``updated_at`` and ``notes`` are deliberately excluded
     from the hash.
@@ -170,20 +170,17 @@ class ModeloDraft(BaseModel):
     draft_id: str
     modelo: str
     period: Period
-    profile_tax_id: str
-    # Typed Spanish NIF/NIE/CIF of the filing subject. Defaults to
-    # ``None`` so historical records that predate the field remain
-    # loadable; new drafts populate this from the validated profile
-    # substrate so the identity is re-checkable at persistence time.
-    subject_tax_id: SubjectTaxId | None = None
+    profile_tax_id: SubjectTaxId
+    # Typed Spanish NIF/NIE/CIF of the filing subject. New drafts
+    # populate this from the validated profile substrate so the
+    # identity is re-checkable at persistence time.
+    subject_tax_id: SubjectTaxId
     # Four-axis coordinates identifying the registry snapshot this
     # draft was built against. Replaces the role of the opaque
     # ``schema_version`` string for re-resolution against the live
-    # registry catalogue. Defaults to ``None`` for backward
-    # compatibility with persisted records that predate the field;
-    # newly built drafts populate this from the snapshot used to
-    # produce the casilla values.
-    snapshot_ref: RegistrySnapshotRef | None = None
+    # registry catalogue. Newly built drafts populate this from the
+    # snapshot used to produce the casilla values.
+    snapshot_ref: RegistrySnapshotRef
     status: ModeloDraftStatus
     values: tuple[ModeloValue, ...]
     binding_values: tuple[ModeloBindingValue, ...] = Field(default_factory=tuple)
@@ -203,8 +200,8 @@ def compute_modelo_draft_id(
     *,
     modelo: str,
     period: Period,
-    profile_tax_id: str,
-    schema_version: str,
+    profile_tax_id: SubjectTaxId,
+    snapshot_ref: RegistrySnapshotRef,
     values: tuple[ModeloValue, ...],
     binding_values: tuple[ModeloBindingValue, ...] = (),
 ) -> str:
@@ -216,9 +213,9 @@ def compute_modelo_draft_id(
 
     Args:
         modelo: Modelo string ID.
-        period: Typed :class:`~aeat.core.Period` for the filing period.
-        profile_tax_id: Taxpayer tax ID.
-        schema_version: The casilla DB version this draft was
+        period: Typed :class:`~core.Period` for the filing period.
+        profile_tax_id: Validated taxpayer tax ID.
+        snapshot_ref: Typed registry snapshot coordinate this draft was
             built against.
         values: The tuple of :class:`ModeloValue` records to hash.
         binding_values: Optional tuple of :class:`ModeloBindingValue` records
@@ -233,7 +230,7 @@ def compute_modelo_draft_id(
         "modelo": modelo,
         "period": {"filing_year": period.filing_year, "code": period.registry_token},
         "profile_tax_id": profile_tax_id,
-        "schema_version": schema_version,
+        "snapshot_ref": snapshot_ref.model_dump(mode="json"),
         "values": [v.model_dump(mode="json") for v in sorted_values],
         "binding_values": [v.model_dump(mode="json") for v in sorted_binding_values],
     }

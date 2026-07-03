@@ -1,8 +1,15 @@
-"""Serialize tabular rows into :class:`TabularExportResult` payloads.
+"""Serialize tabular rows into :class:`~application.export.TabularExportResult` payloads.
 
-Rows are rendered through the closed :class:`ExportSerializationFormat`
-surface, with :class:`ExportFieldError` and :class:`ExportFormatError`
-preserving validation failures as structured application errors.
+Rows are rendered through the closed
+:class:`~application.export.ExportSerializationFormat` surface, with
+:class:`~application.export._errors.ExportFieldError` and
+:class:`~application.export._errors.ExportFormatError` preserving
+validation failures as structured application errors.
+
+This module is a pure in-memory serializer. It returns bytes, media type,
+extension, field metadata, row count, and SHA-256 digest to the calling
+export service; it does not choose paths, write files, emit bucket events,
+or mutate canonical storage.
 """
 
 from __future__ import annotations
@@ -25,7 +32,7 @@ from ._errors import ExportFieldError, ExportFormatError
 
 
 class ExportSerializationFormat(StrEnum):
-    """Supported backend export serialization formats."""
+    """Closed set of backend tabular export serialization formats."""
 
     CSV = "csv"
     JSONL = "jsonl"
@@ -42,7 +49,13 @@ _SHA256_INVALID_REASON = "sha256_invalid"
 
 
 class TabularExportResult(BaseModel):
-    """Serialized tabular payload produced by :func:`serialize_tabular_rows`."""
+    """Serialized tabular payload produced by :func:`~application.export.serialize_tabular_rows`.
+
+    The result carries the raw payload plus operator-facing metadata:
+    :class:`~application.export.ExportSerializationFormat`, media type,
+    filename extension, byte count, SHA-256 digest, row count, and normalized
+    field names.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -82,8 +95,13 @@ def serialize_tabular_rows(
 ) -> TabularExportResult:
     """Serialize string-keyed rows as deterministic CSV, JSON Lines, or XLSX.
 
-    Returns a :class:`TabularExportResult` with the encoded bytes, media
-    type, and file extension for the requested format.
+    Field order follows ``fieldnames`` and row order follows ``rows``.
+    Values are coerced to strings, missing fields become empty strings,
+    and unknown fields raise
+    :class:`~application.export._errors.ExportFieldError`. Returns a
+    :class:`~application.export.TabularExportResult` with encoded bytes,
+    media type, filename extension, row count, field metadata, and payload
+    digest.
     """
     normalized_fields = _normalize_fieldnames(fieldnames)
     normalized_rows = tuple(_normalize_row(row, fieldnames=normalized_fields) for row in rows)
@@ -160,7 +178,7 @@ def _serialize_xlsx(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, 
 
     Every cell is written as text so a deterministic, locale-independent
     round-trip is preserved; the workbook re-reads through
-    :class:`aeat.adapters.inbound.financial.providers._xlsx.XlsxProvider`,
+    :class:`~adapters.inbound.financial.providers._xlsx.XlsxProvider`,
     which shares the CSV bank-layout catalogue.
     """
     from io import BytesIO

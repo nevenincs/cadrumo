@@ -9,6 +9,7 @@ to application services by the caller.
 from __future__ import annotations
 
 import re
+import shlex
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 from typing import Annotated
@@ -21,7 +22,9 @@ from ...application.modelo import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
+    Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
+    Modelo349RectificacionRow,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloDetailRow,
@@ -32,17 +35,40 @@ from ...application.modelo import (
     WorkCalculateInputBundle,
     WorkUnitNotFoundError,
     build_work_calculate_input_bundle,
+    declared_modelo_period_tokens,
     get_work_unit,
+    is_detail_casilla_override_key,
+    modelo_work_create_refusal_locale_key,
+    validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
-from ...core.errors import resolve_error_message
+from ...core import Modelo, RescateType
+from ...core.errors import AeatError, build_error_envelope, resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import BindingId, CasillaId, RelationId, validated_casilla_id
+from ._errors import CliRefusedBoundaryError
 from ._modelo_rendering import short_id
 
 _log = get_logger(__name__)
+
+#: Registry-validation translated-message keys that signal an unsatisfied
+#: calculation input the operator can supply with ``--binding`` / ``--relation``
+#: (or, on the guided ``work wizard`` path, an interactive follow-up prompt).
+#: Shared by ``_modelo.py`` (the ``work calculate`` missing-binding guidance)
+#: and ``_modelo_work_wizard_cli.py`` (the wizard's retry-on-missing-input
+#: loop), so the two surfaces agree on exactly which registry refusals are
+#: "ask the operator for one more value" versus every other refusal.
+MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
+    {
+        "errors.calc.binding_value_missing",
+        "errors.calc.bound_casilla_binding_value_missing",
+        "errors.calc.date_binding_value_missing",
+        "errors.calc.enum_binding_value_missing",
+        "errors.calc.relation_value_missing",
+    },
+)
 
 # Shared ``--output-language`` / ``--language`` option for all modelo work
 # commands. Centralised here so the five-line block does not repeat across
@@ -59,9 +85,18 @@ _BINDING_MAX_LEN = 128
 _CASILLA_MAX_LEN = 64
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _RELATION_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(RelationId)
-_ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada", "operador", "contraparte"})
+_ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada", "operador", "rectificacion", "contraparte"})
 _ROW_DECIMAL_FIELDS: frozenset[str] = frozenset(
-    {"porcentaje", "importe", "importe_Q1", "importe_Q2", "importe_Q3", "importe_Q4"},
+    {
+        "porcentaje",
+        "importe",
+        "importe_Q1",
+        "importe_Q2",
+        "importe_Q3",
+        "importe_Q4",
+        "base_rectificada",
+        "base_anterior",
+    },
 )
 
 
@@ -109,6 +144,11 @@ def parse_kv_spec[T](
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.kv_format_error",
+                default=(
+                    "{flag} must be written as {key_label}={value_label}. "
+                    "This is a key-value entry: put the field name on the left of one equals sign "
+                    "and the value on the right. Received {spec}."
+                ),
                 flag=flag,
                 key_label=key_label,
                 value_label=value_label,
@@ -150,6 +190,47 @@ def parse_binding_override(spec: str) -> tuple[BindingId, str]:
         key_validator=validate_binding_key,
     )
     return _BINDING_ID_ADAPTER.validate_python(key), value
+
+
+def unsupported_local_work_period_refusal(
+    *,
+    modelo: str | None,
+    token: str | None,
+) -> CliRefusedBoundaryError | None:
+    """Return the central :class:`CliRefusedBoundaryError` for declared non-Period tokens.
+
+    Some registry-visible modelos declare non-core event tokens such as census
+    event names that are valid registry metadata but cannot become a local typed
+    :class:`Period`. Commands that require a local filing period must
+    not report those tokens as both valid and invalid. If the modelo is
+    centrally marked unsupported for local work, reuse that refusal.
+    """
+    if modelo is None or token is None:
+        return None
+    modelo_code = modelo.strip()
+    period_token = token.strip()
+    if not modelo_code or not period_token:
+        return None
+
+    locale_key = modelo_work_create_refusal_locale_key(modelo_code)
+    if locale_key is None:
+        return None
+
+    try:
+        declared = declared_modelo_period_tokens(modelo_code)
+    except AeatError:
+        return None
+    except Exception:
+        _log.debug(
+            "unsupported_local_work_period_refusal: unexpected period lookup failure for modelo=%r",
+            modelo_code,
+            exc_info=True,
+        )
+        return None
+
+    if not any(period_token.casefold() == declared_token.casefold() for declared_token in declared):
+        return None
+    return CliRefusedBoundaryError(translated_message=locale_key, context={"modelo": modelo_code})
 
 
 def validate_relation_key(key: str, spec: str) -> None:
@@ -210,9 +291,41 @@ def parse_casilla_override(spec: str) -> tuple[CasillaId, str]:
     return validated_casilla_id(key, surface="--casilla key"), value
 
 
+def parse_work_calculate_casilla_override(spec: str) -> tuple[str, str]:
+    """Parse a work-calculate ``--casilla`` spec, preserving reserved detail aliases."""
+    key, value = parse_kv_spec(
+        spec,
+        flag="--casilla",
+        key_label="ID",
+        transform=str.strip,
+        key_validator=validate_work_calculate_casilla_key,
+        strip_key=False,
+    )
+    if is_detail_casilla_override_key(key):
+        return key, value
+    return validated_casilla_id(key, surface="--casilla key"), value
+
+
+def validate_work_calculate_casilla_key(key: str, spec: str) -> None:
+    """Validate a work-calculate ``--casilla`` key or pass reserved detail aliases through."""
+    if is_detail_casilla_override_key(key):
+        return
+    validate_casilla_key(key, spec)
+
+
 def parse_row_spec(spec: str) -> ModeloDetailRow:
     """Parse a ``--row TYPE FIELD=value ...`` spec into a typed row model."""
-    parts = spec.split()
+    try:
+        parts = shlex.split(spec)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_validation_error",
+                default=f"--row 'spec' failed validation: {exc}",
+                row_type="spec",
+                error=str(exc),
+            ),
+        ) from exc
     if not parts:
         raise typer.BadParameter(
             tr(
@@ -236,7 +349,11 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
             raise typer.BadParameter(
                 tr(
                     "cli.app.modelo.work.row_kv_format_error",
-                    default=f"--row field {token!r} must be in KEY=VALUE format",
+                    default=(
+                        "--row field {token} must be written as KEY=VALUE. "
+                        "This is a key-value entry: put the row field name on the left of one equals sign "
+                        "and its value on the right."
+                    ),
                     token=token,
                 ),
             )
@@ -276,6 +393,24 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
                     ),
                 )
             return row_m349
+        if row_type == "rectificacion":
+            row_m349_rect = Modelo349RectificacionRow.model_validate({"row_type": "rectificacion", **kv_pairs})
+            nif = str(kv_pairs.get("nif_comunitario", ""))
+            pais = str(kv_pairs.get("codigo_pais", ""))
+            if nif and pais and not validate_m349_nif_format(nif, pais):
+                raise typer.BadParameter(
+                    tr(
+                        "cli.app.modelo.work.row_m349_invalid_nif",
+                        default=(
+                            f"--row rectificacion: nif_comunitario {nif!r} does not match "
+                            f"the expected NIF-IVA format for country {pais!r} "
+                            f"(Council Directive 2006/112/EC Annex XI)"
+                        ),
+                        nif=nif,
+                        pais=pais,
+                    ),
+                )
+            return row_m349_rect
         return Modelo347ContraparteRow.model_validate({"row_type": "contraparte", **kv_pairs})
     except typer.BadParameter:
         raise
@@ -354,13 +489,16 @@ def work_calculate_input_bundle_from_cli(
     rescate_plan_pensiones_capital: str | None,
     rescate_plan_pensiones_aportaciones_pre_2007: str | None,
     rescate_plan_pensiones_aportaciones_totales: str | None,
+    rescate_type: RescateType | None = None,
+    contingencia_year: int | None = None,
+    rescate_year: int | None = None,
     sal_beneficio_neto: str | None,
     sal_reserva_dotada: str | None,
     sal_capital_social: str | None,
     autoconsumo_promotor_base: str | None,
 ) -> WorkCalculateInputBundle:
     """Build a :class:`WorkCalculateInputBundle` from raw Typer option values."""
-    casilla_pairs = dict(parse_casilla_override(spec) for spec in (casilla or ()))
+    casilla_pairs = dict(parse_work_calculate_casilla_override(spec) for spec in (casilla or ()))
     binding_pairs = dict(parse_binding_override(spec) for spec in (binding or ()))
     relation_pairs = dict(parse_relation_override(spec) for spec in relation or ())
     detail_rows: tuple[ModeloDetailRow, ...] = tuple(parse_row_spec(spec) for spec in (row or ()))
@@ -368,6 +506,7 @@ def work_calculate_input_bundle_from_cli(
         parse_meses_trabajo_hijo_spec(spec) for spec in (meses_trabajo_con_hijo_menor_3 or ())
     )
     try:
+        _validate_m349_detail_rows_for_work_unit(work_unit_id, detail_rows)
         return build_work_calculate_input_bundle(
             work_unit_id=work_unit_id,
             casilla_overrides=casilla_pairs,
@@ -396,6 +535,9 @@ def work_calculate_input_bundle_from_cli(
                 translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
                 default="--rescate-plan-pensiones-* values must be decimals.",
             ),
+            rescate_plan_pensiones_tipo=rescate_type,
+            rescate_plan_pensiones_contingencia_year=contingencia_year,
+            rescate_plan_pensiones_rescate_year=rescate_year,
             sal_beneficio_neto=optional_decimal_option(
                 sal_beneficio_neto,
                 translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
@@ -417,13 +559,52 @@ def work_calculate_input_bundle_from_cli(
                 default="--autoconsumo-promotor-base must be a decimal amount; received: {value}",
             ),
         )
+    except AeatError:
+        raise
     except (LookupError, ValueError, WorkUnitNotFoundError) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
 
+def _validate_m349_detail_rows_for_work_unit(work_unit_id: str, rows: tuple[ModeloDetailRow, ...]) -> None:
+    operador_rows = tuple(row for row in rows if isinstance(row, Modelo349OperadorRow))
+    rectification_rows = tuple(row for row in rows if isinstance(row, Modelo349RectificacionRow))
+    if not operador_rows and not rectification_rows:
+        return
+    unit = get_work_unit(work_unit_id)
+    if str(unit.modelo) != Modelo.M349.value:
+        return
+    for row in operador_rows:
+        try:
+            validate_m349_country_prefix_context(
+                country_code=row.codigo_pais,
+                clave_operacion=row.clave_operacion,
+                filing_year=unit.filing_year,
+                period=unit.period.registry_token,
+            )
+        except Modelo349CountryPrefixContextError as exc:
+            raise bad_parameter_from_error(exc) from exc
+    for row in rectification_rows:
+        try:
+            validate_m349_country_prefix_context(
+                country_code=row.codigo_pais,
+                clave_operacion=row.clave_operacion,
+                filing_year=unit.filing_year,
+                period=unit.period.registry_token,
+                is_rectification=True,
+                rectified_year=int(row.ejercicio),
+                rectified_period=row.periodo,
+            )
+        except Modelo349CountryPrefixContextError as exc:
+            raise bad_parameter_from_error(exc) from exc
+
+
 def bad_parameter_from_error(exc: BaseException) -> typer.BadParameter:
     """Render registered domain errors before crossing the Typer boundary."""
-    return typer.BadParameter(resolve_error_message(exc))
+    message = resolve_error_message(exc)
+    suggestion = build_error_envelope(exc).suggestion
+    if suggestion:
+        message = f"{message}\nRun `{suggestion}`"
+    return typer.BadParameter(message)
 
 
 def bad_parameter_from_localized_context(exc: BaseException) -> typer.BadParameter:
@@ -575,6 +756,7 @@ def resolve_default_actor() -> str:
 
 
 __all__ = [
+    "MISSING_INPUT_TRANSLATED_MESSAGES",
     "OutputLanguageOpt",
     "bad_parameter_from_error",
     "bad_parameter_from_localized_context",

@@ -6,6 +6,12 @@ AEAT prints the form code + año + period in a header / footer stamp.
 ``--modelo --año`` flags. Detection resolves template identity only; the
 revision tag selects the registry ``declaracion_pdf`` extraction profile
 for the matched modelo and ejercicio.
+
+The detector returns :class:`~aeat.adapters.inbound.declaracion.TemplateRevision`
+records; it does not load
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot` data or choose an
+extraction profile. Registry validation happens in
+:func:`~aeat.adapters.inbound.declaracion.parse_declaracion`.
 """
 
 from __future__ import annotations
@@ -49,7 +55,15 @@ def detect_template_revision(pdf_path: Path) -> TemplateRevision | None:
 
 
 def detect_template_revision_from_pages(pages: tuple[str, ...]) -> TemplateRevision | None:
-    """Return a :class:`TemplateRevision` from already-extracted PDF page text."""
+    """Return a :class:`TemplateRevision` from already-extracted PDF page text.
+
+    Args:
+        pages: Per-page text extracted from a declaración PDF.
+
+    Returns:
+        The detected :class:`TemplateRevision`, or ``None`` when the header
+        pages do not carry enough modelo/year signal.
+    """
     if not pages:
         return None
     # Union of pages 1-2 header region: some Modelo 100 PDFs print

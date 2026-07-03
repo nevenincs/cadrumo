@@ -28,7 +28,7 @@ RATIONALE-* markers.
 
 (g) entrypoints/cli/_stdio.py stdlib-logger regression enrollment.
 
-No mocks, no skips, no tautological assertions.
+No test doubles, no skip/xfail shortcuts, no tautological assertions.
 """
 
 from __future__ import annotations
@@ -90,16 +90,19 @@ def _find_def_line(lines: list[str], func_name: str) -> int | None:
     return None
 
 
-@pytest.mark.parametrize("func_name", _PROFILE_VALIDATORS)
-def test_profile_pydantic_validators_carry_rationale(func_name: str) -> None:
+def test_profile_pydantic_validators_carry_rationale() -> None:
     """Each mode='before' field_validator in setup_answers.py carries the rationale marker."""
     lines = _lines(_PROFILE_MODULE)
-    lineno = _find_def_line(lines, func_name)
-    assert lineno is not None, f"setup_answers.py: could not locate def {func_name}"
-    def_line = lines[lineno - 1]
-    assert _PYDANTIC_VALIDATOR_TOKEN in def_line, (
-        f"setup_answers.py:{lineno} def {func_name}: missing {_PYDANTIC_VALIDATOR_TOKEN!r}"
-    )
+    failures: list[str] = []
+    for func_name in _PROFILE_VALIDATORS:
+        lineno = _find_def_line(lines, func_name)
+        if lineno is None:
+            failures.append(f"setup_answers.py: could not locate def {func_name}")
+            continue
+        def_line = lines[lineno - 1]
+        if _PYDANTIC_VALIDATOR_TOKEN not in def_line:
+            failures.append(f"setup_answers.py:{lineno} def {func_name}: missing {_PYDANTIC_VALIDATOR_TOKEN!r}")
+    assert not failures, "\n".join(failures)
 
 
 # ---------------------------------------------------------------------------
@@ -111,14 +114,19 @@ _CATALOGUE_TOKEN = "ANY-RETURN-RATIONALE-CATALOGUE-SLOT"
 _CATALOGUE_FUNCS = ("get_setup_flow", "get_wizard_flows")
 
 
-@pytest.mark.parametrize("func_name", _CATALOGUE_FUNCS)
-def test_wizard_catalogue_slots_carry_rationale(func_name: str) -> None:
+def test_wizard_catalogue_slots_carry_rationale() -> None:
     """get_setup_flow and get_wizard_flows must carry ANY-RETURN-RATIONALE-CATALOGUE-SLOT."""
     lines = _lines(_CATALOGUE_MODULE)
-    lineno = _find_def_line(lines, func_name)
-    assert lineno is not None, f"wizard_catalogue.py: could not locate def {func_name}"
-    def_line = lines[lineno - 1]
-    assert _CATALOGUE_TOKEN in def_line, f"wizard_catalogue.py:{lineno} def {func_name}: missing {_CATALOGUE_TOKEN!r}"
+    failures: list[str] = []
+    for func_name in _CATALOGUE_FUNCS:
+        lineno = _find_def_line(lines, func_name)
+        if lineno is None:
+            failures.append(f"wizard_catalogue.py: could not locate def {func_name}")
+            continue
+        def_line = lines[lineno - 1]
+        if _CATALOGUE_TOKEN not in def_line:
+            failures.append(f"wizard_catalogue.py:{lineno} def {func_name}: missing {_CATALOGUE_TOKEN!r}")
+    assert not failures, "\n".join(failures)
 
 
 # ---------------------------------------------------------------------------
@@ -130,16 +138,19 @@ _GOOGLE_BUILD_TOKEN = "ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY"
 _CALC_SHEETS_FUNCS = ("_drive_service", "_sheets_service")
 
 
-@pytest.mark.parametrize("func_name", _CALC_SHEETS_FUNCS)
-def test_calc_sheets_build_factories_carry_rationale(func_name: str) -> None:
+def test_calc_sheets_build_factories_carry_rationale() -> None:
     """_drive_service and _sheets_service must carry ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY."""
     lines = _lines(_CALC_SHEETS_MODULE)
-    lineno = _find_def_line(lines, func_name)
-    assert lineno is not None, f"_calc_sheets_apply.py: could not locate def {func_name}"
-    def_line = lines[lineno - 1]
-    assert _GOOGLE_BUILD_TOKEN in def_line, (
-        f"_calc_sheets_apply.py:{lineno} def {func_name}: missing {_GOOGLE_BUILD_TOKEN!r}"
-    )
+    failures: list[str] = []
+    for func_name in _CALC_SHEETS_FUNCS:
+        lineno = _find_def_line(lines, func_name)
+        if lineno is None:
+            failures.append(f"_calc_sheets_apply.py: could not locate def {func_name}")
+            continue
+        def_line = lines[lineno - 1]
+        if _GOOGLE_BUILD_TOKEN not in def_line:
+            failures.append(f"_calc_sheets_apply.py:{lineno} def {func_name}: missing {_GOOGLE_BUILD_TOKEN!r}")
+    assert not failures, "\n".join(failures)
 
 
 # ---------------------------------------------------------------------------
@@ -201,20 +212,24 @@ _GOOGLE_DRIVE_ANY_RETURN_FUNCS = (
 )
 
 
-@pytest.mark.parametrize("func_name", _GOOGLE_DRIVE_ANY_RETURN_FUNCS)
-def test_google_drive_any_return_sites_carry_rationale(func_name: str) -> None:
+def test_google_drive_any_return_sites_carry_rationale() -> None:
     """Each -> Any site in _google_drive.py must carry ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY.
 
     googleapiclient.discovery.build() returns an untyped Resource object;
-    no stub narrows the concrete type, so -> Any is necessary at these 4 sites.
+    no shipped third-party typing surface narrows the concrete type, so -> Any
+    is necessary at these 4 sites.
     """
     lines = _lines(_GOOGLE_DRIVE_MODULE)
-    lineno = _find_def_line(lines, func_name)
-    assert lineno is not None, f"_google_drive.py: could not locate def {func_name}"
-    def_line = lines[lineno - 1]
-    assert _GOOGLE_DRIVE_TOKEN in def_line, (
-        f"_google_drive.py:{lineno} def {func_name}: missing {_GOOGLE_DRIVE_TOKEN!r}"
-    )
+    failures: list[str] = []
+    for func_name in _GOOGLE_DRIVE_ANY_RETURN_FUNCS:
+        lineno = _find_def_line(lines, func_name)
+        if lineno is None:
+            failures.append(f"_google_drive.py: could not locate def {func_name}")
+            continue
+        def_line = lines[lineno - 1]
+        if _GOOGLE_DRIVE_TOKEN not in def_line:
+            failures.append(f"_google_drive.py:{lineno} def {func_name}: missing {_GOOGLE_DRIVE_TOKEN!r}")
+    assert not failures, "\n".join(failures)
 
 
 # ---------------------------------------------------------------------------

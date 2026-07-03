@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#linkage-design-audit'
 date: '2026-05-17'
-modified: '2026-05-17'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-15-linkage-design-audit-research]]'
@@ -13,7 +13,6 @@ related:
   - '[[2026-05-26-linkage-design-audit-research]]'
   - '[[2026-05-26-linkage-design-audit-adr]]'
 ---
-
 
 # `linkage-design-audit` `Wave 3: referential integrity and typed envelope (Phase 3 of linkage epic)` plan
 

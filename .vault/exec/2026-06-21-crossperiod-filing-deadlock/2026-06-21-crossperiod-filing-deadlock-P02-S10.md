@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-21'
-modified: '2026-06-21'
+modified: '2026-06-30'
 step_id: 'S10'
 related:
   - "[[2026-06-21-crossperiod-filing-deadlock-plan]]"
 ---
-
-
-
 
 # Reconcile the local cross-period carry tests to admit-with-advisory for same-year chains while keeping the cross-year prior blocking and preserving the app_filing-non-official invariant
 
@@ -28,4 +25,3 @@ related:
 Landed in commit `84add274d`. `test_local_cross_period_carry.py` 5/5 green; real-behaviour, no mocks/skips/xfail.
 
 ## Notes
-

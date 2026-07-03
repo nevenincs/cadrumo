@@ -1,11 +1,15 @@
 """Encrypted SQL-backed content-addressed attachment store implementation.
 
 Concrete adapter-layer implementation of the
-:class:`~aeat.domain.attachments._protocols.AttachmentStoreProtocol`. The
+:class:`~domain.attachments.AttachmentStoreProtocol`. The
 domain declares the protocol; this module provides the implementation that
-reads/writes encrypted attachment blobs and manifests wrapped in
-:class:`Envelope` records through the :class:`SecureObjectRepository`
-persistence substrate.
+reads/writes encrypted attachment blobs and manifests through the
+:class:`~adapters.persistence.storage.SecureObjectRepository` persistence
+substrate. Blob rows are framed byte payloads governed by
+:data:`adapters.persistence.storage.ATTACHMENT_BLOB_NAMESPACE`; manifest
+rows wrap :class:`Attachment` payloads in
+:class:`~adapters.persistence.storage.Envelope` records governed by
+:data:`adapters.persistence.storage.ATTACHMENT_MANIFEST_NAMESPACE`.
 
 Sensitivity rationale: attachment blobs and manifests are content-addressed
 byte objects (invoice PDFs, bank statements, supporting documents) that are
@@ -31,12 +35,13 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import now
-from ....domain.attachments._errors import (
+from ....domain.attachments import (
+    Attachment,
     AttachmentNotFoundError,
     AttachmentPersistenceError,
     AttachmentValidationError,
+    is_link_only_mime_type,
 )
-from ....domain.attachments._models import Attachment, is_link_only_mime_type
 from ._namespace_registry import (
     ATTACHMENT_BLOB_NAMESPACE as ATTACHMENT_BLOB_STORAGE_NAMESPACE,
 )
@@ -146,7 +151,7 @@ def _unwrap_blob_payload(stored: bytes) -> bytes:
     """Strip the envelope prefix from a stored blob; refuse an un-enveloped payload.
 
     Every blob is wrapped by :func:`_wrap_blob_payload` at write time, so a
-    missing prefix can only mean corruption — never legacy data. Refuse it
+    missing prefix can only mean corruption, never valid data. Refuse it
     rather than returning unframed bytes.
     """
     if not stored.startswith(_ATTACHMENT_BLOB_ENVELOPE_PREFIX):
@@ -175,7 +180,14 @@ def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
 class AttachmentStore(BaseModel):
     """Encrypted SQL-backed content-addressed attachment store.
 
-    Implements :class:`~aeat.domain.attachments._protocols.AttachmentStoreProtocol`.
+    Implements :class:`~domain.attachments.AttachmentStoreProtocol`
+    by storing raw document bytes under their SHA-256 digest in
+    :data:`adapters.persistence.storage.ATTACHMENT_BLOB_NAMESPACE` and
+    encrypted :class:`Attachment` manifests in
+    :data:`adapters.persistence.storage.ATTACHMENT_MANIFEST_NAMESPACE`.
+    Both namespaces are profile-local FINANCIAL custody surfaces; the
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
+    encrypts the stored rows and HMAC-digests the object keys.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
@@ -187,12 +199,12 @@ class AttachmentStore(BaseModel):
 
     @property
     def blobs_dir(self) -> Path:
-        """Return the logical byte-object namespace marker."""
+        """Return the logical marker for the attachment blob namespace."""
         return secure_object_namespace_logical_path(_ATTACHMENT_BLOB_NAMESPACE)
 
     @property
     def manifests_dir(self) -> Path:
-        """Return the logical manifest-object namespace marker."""
+        """Return the logical marker for the attachment manifest namespace."""
         return secure_object_namespace_logical_path(_ATTACHMENT_MANIFEST_NAMESPACE)
 
     def manifest_path(self, attachment_id: str) -> Path:
@@ -200,7 +212,7 @@ class AttachmentStore(BaseModel):
         return self.manifests_dir / _require_digest(attachment_id)
 
     def put_bytes(self, data: bytes) -> str:
-        """Write ``data`` under its SHA-256 digest if not already present."""
+        """Write ``data`` under its SHA-256 digest in the blob namespace."""
         digest = sha256_hex(data)
         objects = self._objects_repo()
         if objects.exists(_ATTACHMENT_BLOB_NAMESPACE, digest):
@@ -274,7 +286,7 @@ class AttachmentStore(BaseModel):
             raise _attachment_validation_error("blob digest drift", violation="blob_digest_drift")
 
     def write_manifest(self, attachment: Attachment) -> None:
-        """Persist ``attachment`` as an encrypted database object."""
+        """Persist ``attachment`` as an encrypted manifest envelope."""
         if is_link_only_mime_type(attachment.mime_type):
             raise _attachment_validation_error(
                 "attachment manifest must carry document bytes, not a link-only URI list",
@@ -302,7 +314,7 @@ class AttachmentStore(BaseModel):
         _LOGGER.debug("wrote attachment manifest %s", attachment.attachment_id)
 
     def load_manifest(self, attachment_id: str) -> Attachment:
-        """Load and validate the :class:`Attachment` manifest for ``attachment_id``."""
+        """Load and validate the :class:`Attachment` manifest envelope."""
         digest = _require_digest(attachment_id)
         record = self._objects_repo().load(
             _ATTACHMENT_MANIFEST_NAMESPACE,

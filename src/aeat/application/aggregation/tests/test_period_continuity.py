@@ -58,24 +58,24 @@ def _calendar_month_bounds(year: int, month: int) -> tuple[date, date]:
 # --- Period bounds match the independent calendar oracle ----------------------
 
 
-@pytest.mark.parametrize("year", _YEARS)
-@pytest.mark.parametrize("quarter_index", (1, 2, 3, 4))
-def test_quarter_bounds_match_calendar_oracle(year: int, quarter_index: int) -> None:
+def test_quarter_bounds_match_calendar_oracle() -> None:
     """Period quarter start/end dates equal the stdlib-derived calendar bounds."""
-    period = _quarter_period(year, quarter_index)
-    expected_start, expected_end = _calendar_quarter_bounds(year, quarter_index)
-    assert period.start_date == expected_start
-    assert period.end_date == expected_end
+    for year in _YEARS:
+        for quarter_index in (1, 2, 3, 4):
+            period = _quarter_period(year, quarter_index)
+            expected_start, expected_end = _calendar_quarter_bounds(year, quarter_index)
+            assert period.start_date == expected_start, (year, quarter_index)
+            assert period.end_date == expected_end, (year, quarter_index)
 
 
-@pytest.mark.parametrize("year", _YEARS)
-@pytest.mark.parametrize("month", range(1, 13))
-def test_month_bounds_match_calendar_oracle(year: int, month: int) -> None:
+def test_month_bounds_match_calendar_oracle() -> None:
     """Period month start/end dates equal the stdlib-derived calendar bounds."""
-    period = _month_period(year, month)
-    expected_start, expected_end = _calendar_month_bounds(year, month)
-    assert period.start_date == expected_start
-    assert period.end_date == expected_end
+    for year in _YEARS:
+        for month in range(1, 13):
+            period = _month_period(year, month)
+            expected_start, expected_end = _calendar_month_bounds(year, month)
+            assert period.start_date == expected_start, (year, month)
+            assert period.end_date == expected_end, (year, month)
 
 
 # --- Continuity: no gap, no overlap between adjacent periods ------------------

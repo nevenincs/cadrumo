@@ -3,8 +3,9 @@
 The C2 ledger-evidence campaign rewired ``aeat app ledger doclink`` to resolve a
 Drive document link to its bytes and store those bytes as encrypted evidence —
 never a link. This gate exercises that end to end with the storage and manifest
-path REAL (a real ``AttachmentStore`` over real SQLite) and only the Drive
-transport seam (``service.files().get_media``) faked:
+path REAL (a real ``AttachmentStore`` over real SQLite) and the Drive media
+request executed through a real ``google-api-python-client`` resource pointed at
+a local HTTP endpoint:
 
 * the fetched bytes equal the stored bytes, and the persisted manifest's
   ``sha256`` / ``mime_type`` match (the fetch-and-encrypt roundtrip);
@@ -30,53 +31,31 @@ from .....adapters.persistence.storage.attachment import AttachmentStore
 from .....domain.attachments import (
     AttachmentKind,
     AttachmentSource,
+    AttachmentValidationError,
     add_attachment_bytes,
 )
-from .....domain.attachments._errors import AttachmentValidationError
 from .....tests.secure_sql import isolated_runtime_profile
-from ....outbound.storage._errors import OutboundStoragePermissionError
+from ...storage import OutboundStoragePermissionError
 from .._document_link_resolver import resolve_document_link
+from ._drive_media_server import drive_media_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
 _DRIVE_LINK = f"https://drive.google.com/file/d/{_FILE_ID}/view"
-
-
-class _InMemoryDriveRequest:
-    def __init__(self, payload: bytes) -> None:
-        self._payload = payload
-
-    def execute(self) -> bytes:
-        return self._payload
-
-
-class _InMemoryDriveFiles:
-    def __init__(self, payload: bytes) -> None:
-        self._payload = payload
-
-    def get_media(self, *, fileId: str) -> _InMemoryDriveRequest:  # noqa: N803 - Google API kwarg name
-        return _InMemoryDriveRequest(self._payload)
-
-
-class _InMemoryDriveResource:
-    """Transport-only seam: stands in for the built Drive ``v3`` service."""
-
-    def __init__(self, payload: bytes) -> None:
-        self._files = _InMemoryDriveFiles(payload)
-
-    def files(self) -> _InMemoryDriveFiles:
-        return self._files
+_CAPTURED_AT = datetime(2026, 5, 28, 12, 45, 0, tzinfo=UTC)
 
 
 def _store_resolved_link(store: AttachmentStore, *, payload: bytes):
-    """Resolve a Drive link via the transport seam and store the fetched bytes."""
-    data = resolve_document_link(
-        source=AttachmentSource.GOOGLE_DRIVE,
-        reference=_DRIVE_LINK,
-        credentials=None,
-        service=_InMemoryDriveResource(payload),
-    )
+    """Resolve a Drive link through the Google client and store the fetched bytes."""
+    with drive_media_endpoint(payload=payload) as endpoint:
+        data = resolve_document_link(
+            source=AttachmentSource.GOOGLE_DRIVE,
+            reference=_DRIVE_LINK,
+            credentials=None,
+            service=endpoint.service,
+        )
+        assert endpoint.requested_paths == [f"/drive/v3/files/{_FILE_ID}?alt=media"]
     return add_attachment_bytes(
         store,
         data=data,
@@ -84,7 +63,7 @@ def _store_resolved_link(store: AttachmentStore, *, payload: bytes):
         source=AttachmentSource.GOOGLE_DRIVE,
         source_reference=_DRIVE_LINK,
         mime_type="application/pdf",
-        captured_at=datetime.now(UTC).replace(microsecond=0),
+        captured_at=_CAPTURED_AT,
         bucket_id="b" * 32,
         link_transaction_ids=("tx-doclink-1",),
         metadata={"source": "GOOGLE_DRIVE", "source_reference": _DRIVE_LINK},
@@ -121,14 +100,14 @@ def test_blob_mutation_after_store_surfaces_on_reverify(tmp_path: Path) -> None:
     """
     from sqlalchemy import select
 
-    from .....adapters.persistence.storage.crypto._encrypted_columns import (
+    from .....adapters.persistence.storage.sql.engine import get_engine
+    from .....adapters.persistence.storage.sql.session import session_scope
+    from ....persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from .....adapters.persistence.storage.sql._orm import SecureObjectRow
-    from .....adapters.persistence.storage.sql.engine import get_engine
-    from .....adapters.persistence.storage.sql.session import session_scope
+    from ....persistence.storage.sql import SecureObjectRow
 
     payload = b"%PDF-1.4 anti-tautology blob mutation proof payload"
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:

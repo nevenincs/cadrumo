@@ -4,7 +4,7 @@ tags:
   - "#exec"
   - "#trabajador-del-mar"
 date: "2026-05-31"
-modified: '2026-05-31'
+modified: '2026-06-29'
 related:
   - "[[2026-05-31-trabajador-del-mar-plan]]"
   - "[[2026-05-31-trabajador-del-mar-adr]]"
@@ -30,7 +30,7 @@ S01 and S02 committed together as they modify the same section of the same file 
 
 - vessel_flag: Ley 35/2006 Art. 7.p) BOE-A-2006-20764 — flag-state condition for Art. 7.p) eligibility
 - waters_type: Ley 35/2006 Art. 7.p) BOE-A-2006-20764 — international waters qualification
-- vessel_registry: Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-16100 — REBECA register classification
+- vessel_registry: Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794 — REBECA register classification
 - retmar_registered: Ley 47/2015 BOE-A-2015-11346 — mandatory filing obligation since January 2023
 
 ## Outcome

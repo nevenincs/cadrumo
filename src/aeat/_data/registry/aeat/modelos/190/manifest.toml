@@ -18,8 +18,8 @@ legal_refs = [
 ]
 source_refs = [
     "aeat-dr-190-2025",
+    "aeat-modelo-190-instructions-2025",
     "aeat-modelo-190-procedure",
     "boe-modelo-190-2025-form",
     "boe-modelo-190-2025-amendment",
 ]
-

@@ -12,12 +12,16 @@ from .. import UserProfileFact, UserProfileRecord, UserProfileSnapshot, UserProf
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_PROFILE_ID = "8d87424d-0b5a-469e-b802-02ffdad316f1"
+_ACTIVE_PROFILE_ID = "503a9d70-8308-4cf8-9f56-0dd357f88594"
+_REMOVED_PROFILE_ID = "6903a7e2-6312-49ef-a54e-dcfe7a520faf"
+
 
 def test_profile_record_is_strict_frozen_and_tombstones_live_root() -> None:
     created_at = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
     removed_at = datetime(2026, 5, 7, 11, 0, tzinfo=UTC)
     profile = UserProfileRecord(
-        profile_id="default",
+        profile_id=_PROFILE_ID,
         display_name="Default",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         created_at=created_at,
@@ -36,21 +40,28 @@ def test_profile_record_is_strict_frozen_and_tombstones_live_root() -> None:
 
 
 def test_profile_record_rejects_invalid_lifecycle_state() -> None:
-    with pytest.raises(ValidationError, match="tombstoned profiles must carry removed_at"):
-        UserProfileRecord.model_validate(
+    cases: tuple[tuple[dict[str, object], str], ...] = (
+        (
             {
-                "profile_id": "removed",
+                "profile_id": _REMOVED_PROFILE_ID,
                 "display_name": "Removed",
                 "status": "tombstoned",
             },
-        )
+            "tombstoned profiles must carry removed_at",
+        ),
+        (
+            {
+                "profile_id": _ACTIVE_PROFILE_ID,
+                "display_name": "Active",
+                "removed_at": datetime(2026, 5, 7, tzinfo=UTC),
+            },
+            "active profiles must not carry removed_at",
+        ),
+    )
 
-    with pytest.raises(ValidationError, match="active profiles must not carry removed_at"):
-        UserProfileRecord(
-            profile_id="active",
-            display_name="Active",
-            removed_at=datetime(2026, 5, 7, tzinfo=UTC),
-        )
+    for payload, expected_message in cases:
+        with pytest.raises(ValidationError, match=expected_message):
+            UserProfileRecord.model_validate(payload)
 
 
 def test_profile_fact_rejects_invalid_effective_window() -> None:
@@ -93,20 +104,27 @@ def test_json_restoration_still_recovers_canonical_decimal_and_zero() -> None:
     is a legitimate Decimal shape.
     """
 
-    decimal_fact = UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50"))
-    reloaded = UserProfileFact.model_validate_json(decimal_fact.model_dump_json())
-    assert reloaded.value == Decimal("0.50")
-    assert isinstance(reloaded.value, Decimal)
+    cases = (
+        (
+            UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50")).model_dump_json(),
+            Decimal("0.50"),
+        ),
+        (
+            '{"path": "usage_ratios.business_ratio", "value": "0"}',
+            Decimal("0"),
+        ),
+    )
 
-    zero_fact = UserProfileFact.model_validate_json('{"path": "usage_ratios.business_ratio", "value": "0"}')
-    assert zero_fact.value == Decimal("0")
-    assert isinstance(zero_fact.value, Decimal)
+    for payload_json, expected in cases:
+        reloaded = UserProfileFact.model_validate_json(payload_json)
+        assert reloaded.value == expected
+        assert isinstance(reloaded.value, Decimal)
 
 
 def test_snapshot_is_canonical_and_rejects_tombstoned_profiles() -> None:
     created_at = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
     profile = UserProfileRecord(
-        profile_id="default",
+        profile_id=_PROFILE_ID,
         display_name="Default",
         facts=(
             UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50")),
@@ -137,7 +155,7 @@ def test_snapshot_hash_is_canonical_for_duplicate_same_window_facts() -> None:
         UserProfileFact(path="identity.name", value="Babbage", source="modelo_036_import"),
     )
     profile = UserProfileRecord(
-        profile_id="default",
+        profile_id=_PROFILE_ID,
         display_name="Default",
         facts=facts,
         created_at=created_at,

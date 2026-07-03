@@ -1,31 +1,80 @@
-"""End-user composite workflow engine for the modelo lifecycle.
+"""Public facade for workflow runs and profile-bucket discovery.
 
-Composes the auth, filing, and submission layers into a single resumable
-workflow that drives a modelo from setup through draft, verification, and
-export. Run state is persisted per bucket, so an interrupted run resumes
-where it left off.
+The workflow engine surface composes auth, filing, draft-building, and
+submission collaborators into resumable modelo runs. A
+:class:`WorkflowEngine` advances
+:class:`WorkflowStage` values and persists
+:class:`WorkflowResult` records through
+:class:`WorkflowRunRepository`. The companion
+:class:`WorkflowState` envelope carries progress
+pointers, auth readiness, review annotations, and bucket events; it does not
+store profile facts or profile-value maps.
 
-Major declarations:
+The profile-discovery surface is manifest-backed and intentionally cheap.
+:func:`list_profile_buckets`,
+:func:`read_profile_bucket`,
+:func:`read_profile_bucket_by_id`, and
+:func:`resolve_profile_bucket` scan plaintext
+bucket manifests and return
+:class:`ProfileBucketPointer` records without
+opening an encrypted database. The scanners resolve immutable bucket UUIDs
+and operator labels, filter tombstoned buckets from live surfaces by default,
+and leave tombstoned-by-id inspection to diagnostics and repair callers.
+Active-profile status and repair use the redacted
+:class:`ActiveProfileHealth` projection;
+sensitive profile records are loaded only through the active bucket and the
+user-profile orchestration layer.
 
-* :class:`WorkflowEngine` — the orchestrator that advances a run through
-  its :class:`WorkflowStage` sequence.
-* :class:`WorkflowState` and :class:`WorkflowResult` — the persisted run
-  record and its terminal outcome.
-* :func:`resume_modelo_workflow` and :func:`find_latest_run_for_period` —
-  the resume entry points.
-* :class:`WorkflowRunRepository` and :class:`WorkflowStateRepository` —
-  the persistence boundaries.
-* :class:`WorkflowError` and its subclasses (:class:`WorkflowAbortedError`,
-  :class:`WorkflowComponentError`, :class:`WorkflowInputMismatchError`) — the
-  failure taxonomy. The active-profile refusal :class:`NoActiveProfileError` is
-  core-owned (:mod:`aeat.core.errors`); import it from there, not from this package.
+Workflow persistence is likewise bucket-scoped.
+:func:`workflow_state_repository` binds the
+state envelope to the currently resolved active bucket via the storage
+runtime's secure-object repository. A cold root with no active pointer is the
+only bootstrap exception, so recovery and status probes can observe an absent
+state without manufacturing a profile bucket. Reset helpers
+:func:`fingerprint_workflow_state` and
+:func:`reset_workflow_state` operate on the
+workflow-state row only: they emit a plaintext-free
+:class:`WorkflowStateResetFingerprint` and append
+the ``workflow_state.reset`` bucket event before deleting the encrypted row.
 
-The engine speaks to its dependencies through the protocols defined here
-(:class:`DeadlineEngineProtocol`, :class:`ModeloDraftBuilderProtocol`,
-:class:`SubmissionEngineProtocol`), so the concrete adapters stay swappable.
+This initializer is only the public re-export boundary. Manifest parsing stays
+in :mod:`_profile_bucket_scan`; health projection and
+pointer repair stay in :mod:`_profile_health`;
+encrypted state and run storage stay behind
+:class:`WorkflowStateRepository` and
+:class:`WorkflowRunRepository`; and engine
+orchestration stays in :mod:`_engine`. Callers must
+not duplicate pointer parsing, manifest resolution, secure-repository opening,
+SQL routing, or master-key handling here. The active-profile refusal
+``NoActiveProfileError`` remains core-owned and is imported from
+:mod:`core.errors`.
+
+See Also:
+    :class:`WorkflowState`: Encrypted progress,
+        readiness, review, and event state for the active bucket.
+    :class:`WorkflowResult`: Persisted terminal
+        result for one modelo workflow run.
+    :func:`resume_modelo_workflow`: Build the
+        resume context for a persisted aborted workflow run.
+    :func:`resolve_modelo_workflow_resume_target`:
+        Resolve exact run ids, exact work-unit ids, calculation revisions, or
+        visible modelo selectors to one resumable workflow run target.
+    :func:`list_profile_buckets`: Enumerate live
+        manifest-backed profile buckets without opening secure storage.
+    :func:`assess_active_profile_health`: Produce
+        the redacted active-profile status used by CLI status surfaces.
+    :func:`workflow_state_repository`: Resolve the
+        active-bucket secure-object repository for encrypted workflow state.
+    :class:`WorkflowStateResetFingerprint`: Redacted
+        reset audit record produced before workflow-state deletion.
+    :class:`DeadlineEngineProtocol`: Protocol
+        boundary for pluggable deadline calculation collaborators.
 """
 
 from __future__ import annotations
+
+# ---- auth (re-exported for WorkflowState.auth field callers) ----------------
+from ..auth import AuthState
 
 # ---- adapters & engine (pull in auth / filing layers) -----------------------
 from ._adapters import (
@@ -61,6 +110,7 @@ from ._models import (
     WorkflowStage,
     WorkflowState,
     WorkflowStep,
+    WorkflowStepDetails,
     active_transaction_catalogue_repository,
     compute_run_id,
     declaration_key,
@@ -83,6 +133,7 @@ from ._persistence import (
 
 # ---- profile-bucket scan (depends on _models only) --------------------------
 from ._profile_bucket_scan import (
+    list_profile_bucket_scan_issues,
     list_profile_buckets,
     read_profile_bucket,
     read_profile_bucket_by_id,
@@ -90,10 +141,8 @@ from ._profile_bucket_scan import (
 )
 from ._profile_health import (
     ActiveProfileHealth,
-    ActiveProfileManifestStatusRepairResult,
     ActiveProfileRepairResult,
     assess_active_profile_health,
-    repair_active_profile_manifest_status,
     repair_active_profile_pointer,
 )
 
@@ -129,8 +178,8 @@ from ._resume import (
 
 __all__ = [
     "ActiveProfileHealth",
-    "ActiveProfileManifestStatusRepairResult",
     "ActiveProfileRepairResult",
+    "AuthState",
     "CertificateBundleProtocol",
     "DeadlineEngineAdapter",
     "DeadlineEngineProtocol",
@@ -167,6 +216,7 @@ __all__ = [
     "WorkflowStateRepository",
     "WorkflowStateResetFingerprint",
     "WorkflowStep",
+    "WorkflowStepDetails",
     "active_transaction_catalogue_repository",
     "assess_active_profile_health",
     "compute_run_id",
@@ -175,12 +225,12 @@ __all__ = [
     "find_latest_run_for_period",
     "find_unique_run_for_period",
     "fingerprint_workflow_state",
+    "list_profile_bucket_scan_issues",
     "list_profile_buckets",
     "list_runs",
     "load_run",
     "read_profile_bucket",
     "read_profile_bucket_by_id",
-    "repair_active_profile_manifest_status",
     "repair_active_profile_pointer",
     "reset_workflow_state",
     "resolve_modelo_exact_workflow_run_for_resume",

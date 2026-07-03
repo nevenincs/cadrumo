@@ -36,7 +36,7 @@ from ._censo import CensoFactSet, parse_g313_html
 from ._errors import SedeFailureMode, SedeNavigationError
 
 if TYPE_CHECKING:
-    from ..auth._authenticator import AeatSession
+    from ..auth import AeatSession
 
 
 BrowserSessionFactory = Callable[[Settings], Awaitable[Any]]

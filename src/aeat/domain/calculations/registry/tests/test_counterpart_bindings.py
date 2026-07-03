@@ -10,13 +10,12 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
 
 import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from .....core.resources import resources
+from .._binding_selector_utils import selector_as_dict
 from .._bindings import (
     CounterpartAggregationObservation,
     counterpart_binding_requirements,
@@ -25,13 +24,13 @@ from .._bindings import (
 )
 from .._errors import RegistryValidationError
 from .._schema import DataBindingDefinition, ModeloRevision
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@lru_cache(maxsize=1)
 def _modelo_349_revision() -> ModeloRevision:
-    modelo = resources().modelos.get("349")
+    modelo, _catalogues = _committed_modelo("349")
     return modelo.revisions["2020-y-siguientes"]
 
 
@@ -39,9 +38,8 @@ def _binding(binding_id: str) -> DataBindingDefinition:
     return next(item for item in _modelo_349_revision().bindings if item.id == binding_id)
 
 
-@lru_cache(maxsize=1)
 def _other_source_binding() -> DataBindingDefinition:
-    modelo = resources().modelos.get("130")
+    modelo, _catalogues = _committed_modelo("130")
     revision = modelo.revisions["2019-y-siguientes"]
     return next(item for item in revision.bindings if item.source != "ledger_transaction")
 
@@ -51,7 +49,7 @@ def _revision(*bindings: DataBindingDefinition) -> ModeloRevision:
 
 
 def _with_selector(binding: DataBindingDefinition, **updates: object) -> DataBindingDefinition:
-    return binding.model_copy(update={"selector": {**binding.selector, **updates}})
+    return binding.model_copy(update={"selector": {**selector_as_dict(binding), **updates}})
 
 
 def _with_aggregation(binding: DataBindingDefinition, op: BindingAggregationOp) -> DataBindingDefinition:

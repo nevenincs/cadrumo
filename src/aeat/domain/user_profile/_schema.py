@@ -7,6 +7,7 @@ secure DB backend.
 
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Annotated, Self
 
@@ -14,6 +15,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.classification import SensitivityClass
+from ...core.decimal import coerce_decimal_strict
 from ._errors import UserProfileNotFoundError, UserProfileValidationError
 
 _SchemaId = Annotated[
@@ -107,6 +109,8 @@ class ProfileFieldDefinition(BaseModel):
     export_headers: tuple[_Selector, ...] = Field(default=())
     schedule_predicates: tuple[_Selector, ...] = Field(default=())
     legal_refs: tuple[_Description, ...] = Field(default=())
+    minimum: Decimal | None = None
+    maximum: Decimal | None = None
 
     @field_validator("type", mode="before")
     @classmethod
@@ -118,6 +122,18 @@ class ProfileFieldDefinition(BaseModel):
     def _coerce_sensitivity(cls, value: object) -> object:
         return _parse_sensitivity(value)
 
+    @field_validator("minimum", "maximum", mode="before")
+    @classmethod
+    def _parse_decimal_bound(cls, value: object) -> object:
+        if value is None or isinstance(value, Decimal):
+            return value
+        if isinstance(value, str | int):
+            try:
+                return coerce_decimal_strict(value)
+            except (InvalidOperation, ValueError) as exc:
+                raise UserProfileValidationError(f"invalid decimal bound {value!r}") from exc
+        return value
+
     @model_validator(mode="after")
     def _validate_enum_values(self) -> Self:
         if self.type is ProfileFieldType.ENUM and not self.enum_values:
@@ -126,6 +142,11 @@ class ProfileFieldDefinition(BaseModel):
             raise UserProfileValidationError(f"field {self.key!r}: enum_values are only valid for enum fields")
         if len(set(self.enum_values)) != len(self.enum_values):
             raise UserProfileValidationError(f"field {self.key!r}: duplicate enum_values are not allowed")
+        numeric_types = {ProfileFieldType.INTEGER, ProfileFieldType.DECIMAL, ProfileFieldType.MONEY}
+        if (self.minimum is not None or self.maximum is not None) and self.type not in numeric_types:
+            raise UserProfileValidationError(f"field {self.key!r}: numeric bounds are only valid for numeric fields")
+        if self.minimum is not None and self.maximum is not None and self.minimum > self.maximum:
+            raise UserProfileValidationError(f"field {self.key!r}: minimum must be less than or equal to maximum")
         return self
 
 

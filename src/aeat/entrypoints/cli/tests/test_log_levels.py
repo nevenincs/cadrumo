@@ -24,24 +24,21 @@ def test_resolve_log_level_defaults_to_default_mode() -> None:
     assert resolve_log_level(env={}) is LogLevel.DEFAULT
 
 
-def test_apply_default_log_level_keeps_stderr_at_error() -> None:
-    apply_to_root_logger(LogLevel.DEFAULT)
+@pytest.mark.parametrize(
+    ("log_level", "stderr_level"),
+    (
+        pytest.param(LogLevel.DEFAULT, logging.ERROR, id="default"),
+        pytest.param(LogLevel.VERBOSE, logging.INFO, id="verbose"),
+    ),
+)
+def test_apply_log_level_updates_stderr_handlers(log_level: LogLevel, stderr_level: int) -> None:
+    apply_to_root_logger(log_level)
 
     root_logger = logging.getLogger()
     stderr_handlers = [handler for handler in root_logger.handlers if not isinstance(handler, logging.FileHandler)]
 
     assert stderr_handlers
-    assert all(handler.level == logging.ERROR for handler in stderr_handlers)
-
-
-def test_apply_verbose_log_level_opts_stderr_back_into_info() -> None:
-    apply_to_root_logger(LogLevel.VERBOSE)
-
-    root_logger = logging.getLogger()
-    stderr_handlers = [handler for handler in root_logger.handlers if not isinstance(handler, logging.FileHandler)]
-
-    assert stderr_handlers
-    assert all(handler.level == logging.INFO for handler in stderr_handlers)
+    assert all(handler.level == stderr_level for handler in stderr_handlers)
 
 
 class TestSetLogLevel:

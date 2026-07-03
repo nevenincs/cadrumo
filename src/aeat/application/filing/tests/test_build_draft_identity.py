@@ -1,15 +1,12 @@
 """Contract tests for identity fields populated by the production build_draft path.
 
 :class:`ModeloDraft.subject_tax_id` and :class:`ModeloDraft.snapshot_ref`
-both default to ``None`` on the model so already-persisted drafts remain
-loadable. The production ``build_draft`` entry point is the only path
-that constructs a *new* draft, and it must populate both fields:
-``subject_tax_id`` from the validated profile substrate and
-``snapshot_ref`` from the resolved registry snapshot. Without a contract
-test exercising the real ``build_draft``, a regression that stopped
-wiring either field would leave new drafts silently identity-less and
-the encrypted-persistence roundtrip suite would not catch it (the
-roundtrip fixtures build drafts directly, not via ``build_draft``).
+are required on the model. The production ``build_draft`` entry point
+must populate both fields: ``subject_tax_id`` from the validated profile
+substrate and ``snapshot_ref`` from the resolved registry snapshot.
+Without a contract test exercising the real ``build_draft``, a
+regression that stopped wiring either field would fail only at the
+model boundary, away from the builder code that owns the data.
 """
 
 from __future__ import annotations
@@ -69,10 +66,9 @@ def _profile() -> ModeloTestProfile:
 def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
     """The production build_draft path populates both identity fields.
 
-    Both ``subject_tax_id`` and ``snapshot_ref`` default to ``None`` on
-    :class:`ModeloDraft`; this contract test pins that a freshly built
-    draft carries the validated taxpayer identity and the registry
-    snapshot reference resolved during the build.
+    This contract test pins that a freshly built draft carries the
+    validated taxpayer identity and the registry snapshot reference
+    resolved during the build.
     """
 
     draft = build_draft(
@@ -132,12 +128,36 @@ def test_build_draft_rejects_whitespace_padded_casilla_input_key() -> None:
         )
 
 
-def test_build_draft_rejects_printed_number_for_semantic_casilla_id() -> None:
-    """A printed number must not be accepted as a filing input casilla reference."""
+@pytest.mark.parametrize(
+    ("casilla_id", "reference_kind", "expected_fragment"),
+    [
+        (
+            _M303_PREVIOUS_COMPENSATION_CASILLA,
+            "printed_number",
+            "iva.compensacion-pendiente-periodos-anteriores",
+        ),
+        (
+            _M303_REGIMEN_GENERAL_RESULT_CASILLA,
+            "export_ref",
+            _M303_REGIMEN_GENERAL_RESULT_CASILLA,
+        ),
+    ],
+    ids=("printed-number", "export-ref"),
+)
+def test_build_draft_rejects_noncanonical_casilla_reference_token(
+    casilla_id: CasillaId,
+    reference_kind: str,
+    expected_fragment: str,
+) -> None:
+    """Printed numbers and export refs must not be accepted as input casilla references."""
     period = Period.from_year_and_code(2026, "1T")
     snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period=period.code, on=date(2026, 4, 1))
-    casilla = next(c for c in snapshot.revision.casillas if c.id == _M303_PREVIOUS_COMPENSATION_CASILLA)
-    assert casilla.number != casilla.id
+    casilla = next(c for c in snapshot.revision.casillas if c.id == casilla_id)
+    if reference_kind == "printed_number":
+        input_key = casilla.number
+        assert input_key != casilla.id
+    else:
+        input_key = next(ref for ref in casilla.export_refs if ref != casilla.id)
 
     with pytest.raises(ModeloBuilderError, match="non-canonical casilla reference tokens are not accepted") as exc_info:
         build_draft(
@@ -145,12 +165,12 @@ def test_build_draft_rejects_printed_number_for_semantic_casilla_id() -> None:
             period=period,
             profile=_profile(),
             inputs={
-                casilla.number: Decimal("100.00"),
+                input_key: Decimal("100.00"),
             },
             schema_provider=build_runtime_schema_provider(modelos=("303",), filing_year=2026, period=period),
         )
 
-    assert "iva.compensacion-pendiente-periodos-anteriores" in str(exc_info.value)
+    assert expected_fragment in str(exc_info.value)
 
 
 def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
@@ -170,27 +190,6 @@ def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
 
     assert _M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA in str(exc_info.value)
     assert _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA in str(exc_info.value)
-
-
-def test_build_draft_rejects_export_ref_for_semantic_casilla_id() -> None:
-    """An export field reference must not be accepted as a filing input casilla reference."""
-    period = Period.from_year_and_code(2026, "1T")
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period=period.code, on=date(2026, 4, 1))
-    casilla = next(c for c in snapshot.revision.casillas if c.id == _M303_REGIMEN_GENERAL_RESULT_CASILLA)
-    export_ref = next(ref for ref in casilla.export_refs if ref != casilla.id)
-
-    with pytest.raises(ModeloBuilderError, match="non-canonical casilla reference tokens are not accepted") as exc_info:
-        build_draft(
-            modelo="303",
-            period=period,
-            profile=_profile(),
-            inputs={
-                export_ref: Decimal("100.00"),
-            },
-            schema_provider=build_runtime_schema_provider(modelos=("303",), filing_year=2026, period=period),
-        )
-
-    assert _M303_REGIMEN_GENERAL_RESULT_CASILLA in str(exc_info.value)
 
 
 def test_typed_extended_and_event_periods_resolve_filing_date_context() -> None:

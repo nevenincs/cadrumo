@@ -13,13 +13,11 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
 from .._temporal import select_revision
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _ACTIVIDADES_CHAPTER = frozenset({f"ley-35-2006:art-{n}" for n in (27, 28, 30, 31, 32)})
 _GANANCIA_FOUNDATION = frozenset({"ley-35-2006:art-33", "ley-35-2006:art-34"})
 
@@ -49,9 +47,8 @@ _GROUNDED_GANANCIA_SECTIONS: dict[str, tuple[int, ...]] = {
 
 
 def _section_casillas(filing_year: int, section_tag: str):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelos_by_id = {m.id: m for m in modelos}
-    rev = select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    modelo, _ = _committed_modelo("100")
+    rev = select_revision(modelo, filing_year=filing_year, period="0A")
     return [c for c in rev.casillas if section_tag in tuple(c.section)]
 
 

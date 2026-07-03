@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#registry-validator-baseline-repair'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-30'
 related:
   - "[[2026-06-04-registry-validator-baseline-repair-plan]]"
   - "[[2026-06-04-registry-validator-baseline-repair-research]]"
 ---
-
 
 # `registry-validator-baseline-repair` adr: `phase two authority alignment` | (**status:** `accepted`)
 

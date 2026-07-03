@@ -3,27 +3,18 @@ tags:
   - '#plan'
   - '#modelo-locales-cli'
 date: '2026-06-11'
-modified: '2026-06-11'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-11-modelo-locales-cli-research]]'
   - '[[2026-06-11-modelo-locales-cli-adr]]'
 ---
 
-
-
-
-
-
-
-
 # `modelo-locales-cli` `aeat.locales modelo schema localization CLI` plan
 
 ### Phase `P01` - registry locale manager contract
 
 Define the registry-local locale manager as the only writer for modelo schema translation TOML while preserving the runtime registry loader contract.
-
-
 
 - [x] `P01.S01` - Define registry-local locale manager models; `src/aeat/locales/_modelo_manager.py`.
 - [x] `P01.S02` - Implement contained registry-root resolution; `src/aeat/locales/_modelo_manager.py`.
@@ -73,12 +64,6 @@ Extend the existing aeat.locales governance surface so modelo schema localizatio
 The CLI becomes the only intended writer for registry-local schema locale files. It must audit drift against canonical registry schemas, scaffold missing keys without replacing translated values, set and remove individual translations, report coverage per modelo and revision, and refuse writes outside the registry data root. The rollout deliberately stops direct schema locale editing and first establishes the manager, command surface, tests, and campaign control points needed for safe multi-language translation work.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

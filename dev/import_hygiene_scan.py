@@ -1,0 +1,874 @@
+"""Import-hygiene scanner for the top-level-export centralisation campaign.
+
+Discovery-phase tool: builds an inventory of cross-package private imports,
+shim/re-export modules, and redundantly re-exported symbols across
+``src/aeat``. READ-ONLY: it does not modify production code.
+
+Re-run with:
+
+    python dev/import_hygiene_scan.py [--json OUT.json] [--top N]
+
+See ``.vault/`` (once authored) for the campaign ADR/plan that consumes this
+inventory. Companion rule: ``service-imports-via-top-level-reexports``.
+"""
+
+from __future__ import annotations
+
+import argparse
+import ast
+import json
+import sys
+from collections import Counter, defaultdict
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Final
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SRC_ROOT = REPO_ROOT / "src"
+PKG_ROOT = SRC_ROOT / "aeat"
+_UTF_8: Final[str] = "utf-8"
+
+
+# ---------------------------------------------------------------------------
+# Module path helpers
+# ---------------------------------------------------------------------------
+
+
+def module_name_for(path: Path) -> str:
+    """Return the dotted module name for a file under ``src/``."""
+    rel = path.relative_to(SRC_ROOT)
+    parts = list(rel.parts)
+    if parts[-1] == "__init__.py":
+        parts = parts[:-1]
+    else:
+        parts[-1] = parts[-1][: -len(".py")]
+    return ".".join(parts)
+
+
+def is_test_module(mod: str, path: Path) -> bool:
+    """True if the module is a test module (under ``tests/`` or ``test_*``)."""
+    parts = path.parts
+    if "tests" in parts:
+        return True
+    last = mod.rsplit(".", 1)[-1]
+    return last.startswith("test_") or last == "conftest"
+
+
+def has_private_component(mod: str) -> bool:
+    """True if any dotted component (other than a dunder) starts with '_'."""
+    return any(part.startswith("_") and not (part.startswith("__") and part.endswith("__")) for part in mod.split("."))
+
+
+def is_underscore_named(name: str) -> bool:
+    """True if ``name`` is a private-convention identifier (leading '_', not a dunder).
+
+    Mirrors the private-component test above but for a single bare identifier
+    (an ``__all__`` entry), not a dotted module path.
+    """
+    return name.startswith("_") and not (name.startswith("__") and name.endswith("__"))
+
+
+def owning_package(mod: str) -> str:
+    """Return the package that owns a private module.
+
+    Ownership rule: for a private module ``A.B._C...`` (first private
+    component at index k), the owning package is ``A.B`` -- everything
+    strictly before the first private component. If the module itself has
+    no private component, it owns itself (not expected to be called in that
+    case).
+    """
+    parts = mod.split(".")
+    for i, part in enumerate(parts):
+        if part.startswith("_") and not (part.startswith("__") and part.endswith("__")):
+            return ".".join(parts[:i])
+    return mod
+
+
+def resolve_relative_import(
+    importer_mod: str, importer_is_pkg: bool, level: int, node_module: str | None
+) -> str | None:
+    """Resolve a (possibly relative) ``from`` import target to an absolute name.
+
+    Mirrors Python's import-system semantics for relative ``from`` imports.
+    """
+    if level == 0:
+        return node_module
+
+    importer_parts = importer_mod.split(".")
+    # For a package (__init__.py), "its own package" is itself; the base for
+    # relative resolution starts at the package itself for level=1.
+    base_parts = importer_parts if importer_is_pkg else importer_parts[:-1]
+
+    # level=1 means "current package" (base_parts as-is); each extra level
+    # strips one more component.
+    strip = level - 1
+    if strip > 0:
+        if strip > len(base_parts):
+            return None
+        base_parts = base_parts[: len(base_parts) - strip]
+
+    if node_module:
+        return ".".join(base_parts + node_module.split("."))
+    return ".".join(base_parts) if base_parts else None
+
+
+# ---------------------------------------------------------------------------
+# Facade boundary discovery
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class FacadeInfo:
+    """A package __init__.py and the ``__all__`` export surface it declares."""
+
+    package: str
+    path: Path
+    all_names: list[str] = field(default_factory=list)
+    has_real_all: bool = False
+    is_pure_reexport_shape: bool = False
+
+
+def _dunder_all_assignment_value(node: ast.stmt) -> ast.expr | None:
+    """Return the assigned value expression if ``node`` assigns ``__all__``.
+
+    Handles both the plain form (``__all__ = [...]``, :class:`ast.Assign`) and
+    the annotated form (``__all__: list[str] = [...]``, :class:`ast.AnnAssign`).
+    An annotated declaration with no value (``__all__: list[str]``) yields
+    ``None``, same as any other statement that is not an ``__all__`` binding.
+    """
+    if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets):
+        return node.value
+    if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "__all__":
+        return node.value
+    return None
+
+
+def discover_facades() -> dict[str, FacadeInfo]:
+    """Enumerate every __init__.py carrying a real ``__all__`` literal.
+
+    A "real" ``__all__`` is a non-empty list/tuple/set of string constants,
+    assigned via either the plain (``__all__ = [...]``) or annotated
+    (``__all__: list[str] = [...]``) form.
+    """
+    facades: dict[str, FacadeInfo] = {}
+    for init_path in PKG_ROOT.rglob("__init__.py"):
+        mod = module_name_for(init_path)
+        try:
+            src = init_path.read_text(encoding=_UTF_8)
+            tree = ast.parse(src, filename=str(init_path))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+        all_names: list[str] = []
+        has_real_all = False
+        for node in ast.walk(tree):
+            value = _dunder_all_assignment_value(node)
+            if value is None or not isinstance(value, (ast.List, ast.Tuple, ast.Set)):
+                continue
+            names = [elt.value for elt in value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)]
+            if names:
+                all_names.extend(names)
+                has_real_all = True
+        facades[mod] = FacadeInfo(package=mod, path=init_path, all_names=all_names, has_real_all=has_real_all)
+    return facades
+
+
+# ---------------------------------------------------------------------------
+# Violation family 4: underscore-named entries in a public ``__all__``
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class UnderscoreInAllViolation:
+    """A private-named symbol (leading '_', not a dunder) exported in a facade's ``__all__``.
+
+    A public facade exporting a private-named symbol contradicts the
+    single-canonical-source policy: the leading underscore signals "not part
+    of the public contract" everywhere else in the codebase, but listing the
+    name in ``__all__`` advertises it as exactly that. Every hit needs a
+    per-symbol disposition -- promote to a public name (rename + sweep every
+    consumer) or drop it from the facade (it stays importable intra-package,
+    just not on the public surface).
+    """
+
+    package: str
+    path: str
+    name: str
+
+
+def find_underscore_in_all_violations(facades: dict[str, FacadeInfo]) -> list[UnderscoreInAllViolation]:
+    """Return every ``__all__`` entry across all facades that is underscore-named."""
+    violations: list[UnderscoreInAllViolation] = []
+    for pkg, info in facades.items():
+        if not info.has_real_all:
+            continue
+        for name in info.all_names:
+            if is_underscore_named(name):
+                violations.append(
+                    UnderscoreInAllViolation(
+                        package=pkg,
+                        path=str(info.path.relative_to(REPO_ROOT)).replace("\\", "/"),
+                        name=name,
+                    )
+                )
+    return violations
+
+
+# ---------------------------------------------------------------------------
+# Import extraction
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ImportSite:
+    """A single ``import`` / ``from`` statement resolved to its target module."""
+
+    importer_mod: str
+    importer_path: Path
+    lineno: int
+    target_mod: str
+    imported_names: list[str]
+    is_test: bool
+    in_type_checking: bool
+
+
+def walk_module_imports(path: Path) -> list[ImportSite]:
+    """Parse a module and return every resolved import site it contains."""
+    mod = module_name_for(path)
+    is_pkg = path.name == "__init__.py"
+    try:
+        src = path.read_text(encoding=_UTF_8)
+        tree = ast.parse(src, filename=str(path))
+    except (SyntaxError, UnicodeDecodeError):
+        return []
+
+    sites: list[ImportSite] = []
+    test_flag = is_test_module(mod, path)
+
+    # Track TYPE_CHECKING guard membership via a simple ancestor stack walk.
+    type_checking_nodes: set[int] = set()
+
+    def mark_type_checking(node: ast.If) -> None:
+        test_expr = node.test
+        is_tc = (isinstance(test_expr, ast.Name) and test_expr.id == "TYPE_CHECKING") or (
+            isinstance(test_expr, ast.Attribute) and test_expr.attr == "TYPE_CHECKING"
+        )
+        if is_tc:
+            for child in ast.walk(node):
+                type_checking_nodes.add(id(child))
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.If):
+            mark_type_checking(node)
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            target = resolve_relative_import(mod, is_pkg, node.level, node.module)
+            if target is None:
+                continue
+            names = [alias.name for alias in node.names]
+            sites.append(
+                ImportSite(
+                    importer_mod=mod,
+                    importer_path=path,
+                    lineno=node.lineno,
+                    target_mod=target,
+                    imported_names=names,
+                    is_test=test_flag,
+                    in_type_checking=id(node) in type_checking_nodes,
+                )
+            )
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                sites.append(
+                    ImportSite(
+                        importer_mod=mod,
+                        importer_path=path,
+                        lineno=node.lineno,
+                        target_mod=alias.name,
+                        imported_names=[],
+                        is_test=test_flag,
+                        in_type_checking=id(node) in type_checking_nodes,
+                    )
+                )
+    return sites
+
+
+# ---------------------------------------------------------------------------
+# Violation family 1: cross-package private import
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class PrivateImportViolation:
+    """A cross-package import that reaches into another package's private module."""
+
+    importer_mod: str
+    importer_path: str
+    lineno: int
+    target_mod: str
+    owning_package: str
+    imported_names: list[str]
+    is_test: bool
+    in_type_checking: bool
+
+
+def find_private_import_violations(all_sites: list[ImportSite]) -> list[PrivateImportViolation]:
+    """Return every import site that reaches into a foreign package's privates."""
+    violations: list[PrivateImportViolation] = []
+    for site in all_sites:
+        if not site.target_mod.startswith("aeat"):
+            continue
+        if not has_private_component(site.target_mod):
+            continue
+        owner = owning_package(site.target_mod)
+        importer = site.importer_mod
+        # Legitimate: importer is under the owning package (sibling/descendant),
+        # OR importer *is* the owning package's own __init__ building its facade.
+        if importer == owner or importer.startswith(owner + "."):
+            continue
+        violations.append(
+            PrivateImportViolation(
+                importer_mod=importer,
+                importer_path=str(site.importer_path.relative_to(REPO_ROOT)).replace("\\", "/"),
+                lineno=site.lineno,
+                target_mod=site.target_mod,
+                owning_package=owner,
+                imported_names=site.imported_names,
+                is_test=site.is_test,
+                in_type_checking=site.in_type_checking,
+            )
+        )
+    return violations
+
+
+# ---------------------------------------------------------------------------
+# Violation family 2: shim / pure re-export / alias modules
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ShimModule:
+    """A module flagged as a shim / pure re-export / English-alias surface."""
+
+    mod: str
+    path: str
+    reason: str
+    detail: str
+
+
+SPANISH_ALIAS_HINTS = {
+    "vat": "iva",
+    "census": "censo",
+    "form": "modelo",
+    "receipt": "justificante",
+    "box": "casilla",
+    "invoice_draft": "borrador",
+    "authorization": "apoderamiento",
+    "withholding": "retencion",
+    "filing": "declaracion",
+}
+
+
+def module_body_defs(tree: ast.Module) -> tuple[int, int, int]:
+    """Return (n_imports_stmts, n_real_defs, n_all_assigns).
+
+    ``__future__`` imports are excluded from the import count (every module
+    may carry one; it is not "re-export" signal). Annotated assignments
+    (``NAME: Type = value``, e.g. a module-level typed constant/data record)
+    count as real defs, same as a plain ``Assign``, a function, or a class --
+    UNLESS the value is a bare ``Name`` reference (``Foo = _internal.Foo`` /
+    ``Foo = Foo``), which is itself a re-export alias, not a real definition.
+    """
+    n_imports = 0
+    n_defs = 0
+    n_all = 0
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.module == "__future__":
+            continue
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            n_imports += 1
+        elif isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets):
+            n_all += 1
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            n_defs += 1
+        elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+            continue  # docstring
+        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+            value = node.value
+            if isinstance(value, (ast.Name, ast.Attribute)):
+                # Bare re-export alias (Foo = Bar / Foo = mod.Bar); not a
+                # real definition.
+                continue
+            n_defs += 1
+    return n_imports, n_defs, n_all
+
+
+def find_shim_modules(py_files: list[Path], facades: dict[str, FacadeInfo]) -> list[ShimModule]:
+    """Return modules whose shape or naming marks them as shim / alias surfaces."""
+    shims: list[ShimModule] = []
+    for path in py_files:
+        if path.name == "__init__.py":
+            continue  # __init__ facades are expected to be import+__all__
+        if path.name == "__main__.py":
+            # Entry-point module: `from .cli import app` + `if __name__ ==
+            # "__main__": app()` is the standard `python -m pkg` pattern, not
+            # a Family-2 shim/pure-reexport surface.
+            continue
+        mod = module_name_for(path)
+        if is_test_module(mod, path):
+            continue
+        try:
+            src = path.read_text(encoding=_UTF_8)
+            tree = ast.parse(src, filename=str(path))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+
+        n_imports, n_defs, n_all = module_body_defs(tree)
+
+        # Pure re-export shape: only imports (+ optional __all__), zero
+        # real function/class definitions, and at least one import.
+        if n_imports > 0 and n_defs == 0:
+            shims.append(
+                ShimModule(
+                    mod=mod,
+                    path=str(path.relative_to(REPO_ROOT)).replace("\\", "/"),
+                    reason="pure_reexport_shape",
+                    detail=f"{n_imports} import stmt(s), 0 real defs, __all__={'yes' if n_all else 'no'}",
+                )
+            )
+
+        # English-alias-over-Spanish-stem heuristic: module basename contains
+        # an English hint token and the sibling directory also contains a
+        # same-shaped Spanish-stem module.
+        base = path.stem.lstrip("_")
+        for en_hint, es_stem in SPANISH_ALIAS_HINTS.items():
+            if en_hint in base.lower() and es_stem not in base.lower():
+                sibling_es = path.with_name(path.name.replace(en_hint, es_stem))
+                if sibling_es.exists() and sibling_es != path:
+                    shims.append(
+                        ShimModule(
+                            mod=mod,
+                            path=str(path.relative_to(REPO_ROOT)).replace("\\", "/"),
+                            reason="english_alias_over_spanish_stem",
+                            detail=f"hint='{en_hint}' sibling='{sibling_es.relative_to(REPO_ROOT)}'",
+                        )
+                    )
+
+        # Compat/deprecation naming heuristic.
+        lowered = mod.lower()
+        for marker in ("_compat", "_legacy", "_deprecated", "_shim", "_bridge"):
+            if marker in lowered:
+                shims.append(
+                    ShimModule(
+                        mod=mod,
+                        path=str(path.relative_to(REPO_ROOT)).replace("\\", "/"),
+                        reason="compat_naming_marker",
+                        detail=f"marker='{marker}'",
+                    )
+                )
+    return shims
+
+
+# ---------------------------------------------------------------------------
+# Violation family 3: redundant re-exports (symbol in >1 __all__, or
+# imported from both a private submodule and a facade across the codebase)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class MultiSourcedSymbol:
+    """A symbol exported / consumed from more than one module surface."""
+
+    symbol: str
+    facades: list[str]
+    private_sources: list[str]
+    consumed_from_facade_by: list[str]
+    consumed_from_private_by: list[str]
+    confidence: str = "high"  # "high" (same resolved origin) | "name_collision" (different origins; likely unrelated)
+
+
+def _facade_export_origins(facades: dict[str, FacadeInfo]) -> dict[str, dict[str, set[str]]]:
+    """Resolve each facade's ``__all__`` name to its absolute origin module(s).
+
+    Best-effort: only direct ``from X import Name [as Alias]`` statements in the
+    ``__init__`` body are resolved; a name built by other means is simply absent
+    from this map.
+    """
+    origins: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
+    for pkg, info in facades.items():
+        if not info.has_real_all:
+            continue
+        try:
+            src = info.path.read_text(encoding=_UTF_8)
+            tree = ast.parse(src, filename=str(info.path))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                target = resolve_relative_import(pkg, True, node.level, node.module)
+                if not target:
+                    continue
+                for alias in node.names:
+                    exported_as = alias.asname or alias.name
+                    if exported_as in info.all_names:
+                        origins[pkg][exported_as].add(target)
+    return origins
+
+
+def find_multi_sourced_symbols(facades: dict[str, FacadeInfo], all_sites: list[ImportSite]) -> list[MultiSourcedSymbol]:
+    """Return symbols reachable from more than one facade / private surface."""
+    # Map symbol -> set of facades whose __all__ contains it.
+    symbol_to_facades: dict[str, set[str]] = defaultdict(set)
+    for pkg, info in facades.items():
+        if not info.has_real_all:
+            continue
+        for name in info.all_names:
+            symbol_to_facades[name].add(pkg)
+
+    facade_export_origins = _facade_export_origins(facades)
+
+    # Map symbol -> set of private modules it's imported FROM (target private
+    # module -> imported name), restricted to aeat.* targets.
+    symbol_private_sources: dict[str, set[str]] = defaultdict(set)
+    symbol_facade_consumers: dict[str, set[str]] = defaultdict(set)
+    symbol_private_consumers: dict[str, set[str]] = defaultdict(set)
+
+    facade_targets = {pkg for pkg, info in facades.items() if info.has_real_all}
+
+    for site in all_sites:
+        if not site.target_mod.startswith("aeat"):
+            continue
+        for name in site.imported_names:
+            if name == "*":
+                continue
+            if has_private_component(site.target_mod):
+                symbol_private_sources[name].add(site.target_mod)
+                symbol_private_consumers[name].add(site.importer_mod)
+            elif site.target_mod in facade_targets:
+                symbol_facade_consumers[name].add(site.importer_mod)
+
+    results: list[MultiSourcedSymbol] = []
+
+    def _is_ancestor_or_descendant(a: str, b: str) -> bool:
+        return a == b or a.startswith(b + ".") or b.startswith(a + ".")
+
+    # Case A: symbol declared __all__ in more than one facade package. Split
+    # by confidence: "hierarchical_rollup" when every pair of declaring
+    # facades is in a parent/child (umbrella aggregator) relationship -- this
+    # codebase's umbrella packages (e.g. `aeat.adapters.persistence.storage`
+    # over its `.envelope` / `.bucket` / `.crypto` sub-facades,
+    # `aeat.core.errors` over `.registry`) deliberately roll up child-facade
+    # symbols into a parent convenience facade, which is NOT the violation
+    # this family targets; "high" when at least two declaring facades are
+    # NOT in an ancestor/descendant relationship AND resolve the name to the
+    # SAME underlying origin module (genuine structural duplication across
+    # orthogonal packages); "name_collision" when every non-hierarchical pair
+    # resolves to different origins (near-certainly two unrelated symbols
+    # sharing a name, e.g. two domains each defining their own `Settings`).
+    for symbol, pkgs in symbol_to_facades.items():
+        if len(pkgs) <= 1:
+            continue
+        pkg_list = sorted(pkgs)
+        all_hierarchical = all(
+            _is_ancestor_or_descendant(pkg_list[i], pkg_list[j])
+            for i in range(len(pkg_list))
+            for j in range(i + 1, len(pkg_list))
+        )
+        origin_sets = [facade_export_origins.get(pkg, {}).get(symbol, set()) for pkg in pkgs]
+        origin_counts: Counter[str] = Counter()
+        for s in origin_sets:
+            for o in s:
+                origin_counts[o] += 1
+        shared_origin = any(c > 1 for c in origin_counts.values())
+        if all_hierarchical:
+            confidence = "hierarchical_rollup"
+        elif shared_origin:
+            confidence = "high"
+        else:
+            confidence = "name_collision"
+        results.append(
+            MultiSourcedSymbol(
+                symbol=symbol,
+                facades=pkg_list,
+                private_sources=sorted(symbol_private_sources.get(symbol, [])),
+                consumed_from_facade_by=sorted(symbol_facade_consumers.get(symbol, [])),
+                consumed_from_private_by=sorted(symbol_private_consumers.get(symbol, [])),
+                confidence=confidence,
+            )
+        )
+
+    # Case B: symbol importable from a facade AND actually imported from a
+    # private submodule by real consumers elsewhere (not the owning facade
+    # building itself) AND also imported from the facade by some consumer.
+    for symbol, priv_mods in symbol_private_sources.items():
+        facade_consumers = symbol_facade_consumers.get(symbol, set())
+        priv_consumers = symbol_private_consumers.get(symbol, set())
+        # Only interesting if the symbol also appears in >=1 facade __all__
+        # and is genuinely consumed (not just declared) from both shapes.
+        if symbol in symbol_to_facades and facade_consumers and priv_consumers:
+            # Exclude consumers that are simply the owning package building
+            # its own facade (those are legitimate, not redundant); a
+            # private-module consumer that lives INSIDE the owner is fine,
+            # only flag if some consumer is outside the owning package.
+            owners = {owning_package(p) for p in priv_mods}
+            outside_priv_consumers = set()
+            for c in priv_consumers:
+                if not any(c == own or c.startswith(own + ".") for own in owners):
+                    outside_priv_consumers.add(c)
+            if outside_priv_consumers and facade_consumers:
+                existing = next((r for r in results if r.symbol == symbol), None)
+                if existing is None:
+                    results.append(
+                        MultiSourcedSymbol(
+                            symbol=symbol,
+                            facades=sorted(symbol_to_facades[symbol]),
+                            private_sources=sorted(priv_mods),
+                            consumed_from_facade_by=sorted(facade_consumers),
+                            consumed_from_private_by=sorted(outside_priv_consumers),
+                            confidence="high",
+                        )
+                    )
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Fix-strategy analysis: precondition promotions vs. simple consumer rewrites
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class FixClassification:
+    """Whether a cross-package symbol needs facade promotion or a consumer rewrite."""
+
+    owning_package: str
+    symbol: str
+    already_in_facade: bool
+    consumer_count: int
+    consumer_modules: list[str]
+
+
+def classify_fix_strategy(
+    priv_violations: list[PrivateImportViolation], facades: dict[str, FacadeInfo]
+) -> list[FixClassification]:
+    """Classify each cross-package (owning_package, symbol) pair by fix strategy.
+
+    A symbol already present in the owning package's ``__all__`` is a simple
+    consumer-side rewrite; an absent one is a precondition facade promotion that
+    must land before consumers can switch.
+    """
+    pair_consumers: dict[tuple[str, str], set[str]] = defaultdict(set)
+    for v in priv_violations:
+        if v.is_test:
+            continue  # precondition sizing is driven by production consumers
+        for name in v.imported_names:
+            if name == "*":
+                continue
+            pair_consumers[(v.owning_package, name)].add(v.importer_mod)
+
+    results: list[FixClassification] = []
+    for (owner, symbol), consumers in pair_consumers.items():
+        facade_info = facades.get(owner)
+        already = bool(facade_info and facade_info.has_real_all and symbol in facade_info.all_names)
+        results.append(
+            FixClassification(
+                owning_package=owner,
+                symbol=symbol,
+                already_in_facade=already,
+                consumer_count=len(consumers),
+                consumer_modules=sorted(consumers),
+            )
+        )
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+
+def main() -> int:
+    """Scan ``src/aeat`` and print the import-hygiene inventory report."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--json", type=Path, default=None, help="Write full inventory as JSON to this path")
+    parser.add_argument("--top", type=int, default=20, help="Top-N offender modules to print")
+    args = parser.parse_args()
+
+    py_files = sorted(PKG_ROOT.rglob("*.py"))
+    py_files = [p for p in py_files if "__pycache__" not in p.parts]
+
+    facades = discover_facades()
+    real_facades = {pkg: info for pkg, info in facades.items() if info.has_real_all}
+
+    all_sites: list[ImportSite] = []
+    for path in py_files:
+        all_sites.extend(walk_module_imports(path))
+
+    priv_violations = find_private_import_violations(all_sites)
+    shims = find_shim_modules(py_files, facades)
+    multi_sourced = find_multi_sourced_symbols(facades, all_sites)
+    fix_classes = classify_fix_strategy(priv_violations, facades)
+    underscore_in_all = find_underscore_in_all_violations(facades)
+
+    # ---- Reporting ----
+    print(f"Scanned {len(py_files)} .py files under {PKG_ROOT}")
+    print(f"Discovered {len(facades)} __init__.py files; {len(real_facades)} carry a real, non-empty __all__.")
+    print()
+    print("=== FACADE BOUNDARY SET (packages with real __all__) ===")
+    for pkg in sorted(real_facades):
+        print(f"  {pkg}  ({len(real_facades[pkg].all_names)} exported names)")
+    print()
+
+    print(f"=== FAMILY 1: cross-package private imports: {len(priv_violations)} total ===")
+    non_test = [v for v in priv_violations if not v.is_test]
+    test_only = [v for v in priv_violations if v.is_test]
+    print(f"  non-test: {len(non_test)}   test-only: {len(test_only)}")
+    by_owner = Counter(v.owning_package for v in priv_violations)
+    print("  by owning package (target):")
+    for owner, cnt in by_owner.most_common(30):
+        print(f"    {cnt:4d}  {owner}")
+    print()
+    by_target_mod = Counter(v.target_mod for v in priv_violations)
+    print(f"  top {args.top} offender private target modules:")
+    for mod, cnt in by_target_mod.most_common(args.top):
+        print(f"    {cnt:4d}  {mod}")
+    print()
+    by_importer_area = Counter(".".join(v.importer_mod.split(".")[:3]) for v in priv_violations)
+    print("  by importer area (top-3 dotted segments):")
+    for area, cnt in by_importer_area.most_common(30):
+        print(f"    {cnt:4d}  {area}")
+    print()
+
+    print(f"=== FAMILY 2: shim/alias/pure-reexport modules: {len(shims)} total ===")
+    by_reason = Counter(s.reason for s in shims)
+    for reason, cnt in by_reason.most_common():
+        print(f"  {cnt:4d}  {reason}")
+    print()
+    for s in shims:
+        print(f"  [{s.reason}] {s.path} :: {s.detail}")
+    print()
+
+    by_confidence = Counter(m.confidence for m in multi_sourced)
+    print(f"=== FAMILY 3: redundant / multi-sourced symbols: {len(multi_sourced)} total ===")
+    print(f"  by confidence: {dict(by_confidence)}")
+    print("  (name_collision = same name, different resolved origin -- likely unrelated symbols, LOW priority)")
+    print("  (hierarchical_rollup = umbrella parent facade re-exporting a child facade's symbol -- NOT a violation)")
+    print()
+    _order = {"high": 0, "name_collision": 1, "hierarchical_rollup": 2}
+    for m in sorted(multi_sourced, key=lambda x: (_order.get(x.confidence, 9), x.symbol)):
+        print(f"  [{m.confidence}] {m.symbol}")
+        print(f"    facades: {m.facades}")
+        print(f"    private_sources: {m.private_sources}")
+        print(f"    consumed_from_facade_by: {len(m.consumed_from_facade_by)} sites")
+        print(
+            f"    consumed_from_private_by: {len(m.consumed_from_private_by)} sites -> {m.consumed_from_private_by[:5]}"
+        )
+    print()
+
+    print(f"=== FAMILY 4: underscore-named entries in __all__: {len(underscore_in_all)} total ===")
+    print("  (a public facade exporting a private-named symbol; every hit needs a per-symbol disposition:")
+    print("   rename to a public name and sweep consumers, or drop it from __all__)")
+    by_underscore_owner = Counter(v.package for v in underscore_in_all)
+    for owner, cnt in by_underscore_owner.most_common():
+        print(f"    {cnt:4d}  {owner}")
+    print()
+    for v in sorted(underscore_in_all, key=lambda x: (x.package, x.name)):
+        print(f"  [{v.package}] {v.name}  ({v.path})")
+    print()
+
+    print(f"=== FIX STRATEGY: precondition promotions vs. simple consumer rewrites ({len(fix_classes)} pairs) ===")
+    needs_promotion = [f for f in fix_classes if not f.already_in_facade]
+    simple_rewrite = [f for f in fix_classes if f.already_in_facade]
+    print(f"  distinct (owning_package, symbol) pairs consumed cross-package (production only): {len(fix_classes)}")
+    print(f"  NEEDS FACADE PROMOTION FIRST (symbol absent from owning __all__): {len(needs_promotion)} pairs")
+    print(f"  SIMPLE CONSUMER REWRITE (symbol already in owning __all__):       {len(simple_rewrite)} pairs")
+    total_consumer_sites_promo = sum(f.consumer_count for f in needs_promotion)
+    total_consumer_sites_rewrite = sum(f.consumer_count for f in simple_rewrite)
+    print(f"  production import sites behind promotion-needed pairs: {total_consumer_sites_promo}")
+    print(f"  production import sites behind already-facaded pairs:  {total_consumer_sites_rewrite}")
+    print()
+    print("  --- batches: symbols needing PROMOTION, grouped by owning package ---")
+    promo_by_owner: dict[str, list[FixClassification]] = defaultdict(list)
+    for f in needs_promotion:
+        promo_by_owner[f.owning_package].append(f)
+    for owner in sorted(promo_by_owner, key=lambda o: -len(promo_by_owner[o])):
+        items = promo_by_owner[owner]
+        symbols = sorted({f.symbol for f in items})
+        n_sites = sum(f.consumer_count for f in items)
+        print(f"    {owner}  :: {len(symbols)} symbol(s) to promote, {n_sites} consumer site(s)")
+        print(f"      symbols: {symbols}")
+    print()
+    print("  --- batches: symbols ALREADY facaded, grouped by owning package (pure consumer rewrite) ---")
+    rewrite_by_owner: dict[str, list[FixClassification]] = defaultdict(list)
+    for f in simple_rewrite:
+        rewrite_by_owner[f.owning_package].append(f)
+    for owner in sorted(rewrite_by_owner, key=lambda o: -len(rewrite_by_owner[o])):
+        items = rewrite_by_owner[owner]
+        symbols = sorted({f.symbol for f in items})
+        n_sites = sum(f.consumer_count for f in items)
+        print(f"    {owner}  :: {len(symbols)} symbol(s), {n_sites} consumer site(s)")
+    print()
+
+    distinct_files_to_edit = {v.importer_path for v in priv_violations if not v.is_test}
+    distinct_symbols_all = {f.symbol for f in fix_classes}
+    print("=== MAGNITUDE ===")
+    print(f"  distinct production files with >=1 cross-package private import: {len(distinct_files_to_edit)}")
+    print(f"  distinct (owner, symbol) pairs touched: {len(fix_classes)}")
+    print(f"  distinct symbol names touched: {len(distinct_symbols_all)}")
+    print(f"  distinct symbols needing facade promotion: {len({f.symbol for f in needs_promotion})}")
+    print(f"  distinct owning packages needing >=1 promotion: {len(promo_by_owner)}")
+    print(f"  underscore-named __all__ entries (Family 4): {len(underscore_in_all)}")
+    print()
+
+    if args.json:
+        payload = {
+            "facades": {
+                pkg: {"path": str(info.path.relative_to(REPO_ROOT)).replace("\\", "/"), "all_names": info.all_names}
+                for pkg, info in real_facades.items()
+            },
+            "private_import_violations": [
+                {
+                    "importer_mod": v.importer_mod,
+                    "importer_path": v.importer_path,
+                    "lineno": v.lineno,
+                    "target_mod": v.target_mod,
+                    "owning_package": v.owning_package,
+                    "imported_names": v.imported_names,
+                    "is_test": v.is_test,
+                    "in_type_checking": v.in_type_checking,
+                }
+                for v in priv_violations
+            ],
+            "shim_modules": [{"mod": s.mod, "path": s.path, "reason": s.reason, "detail": s.detail} for s in shims],
+            "multi_sourced_symbols": [
+                {
+                    "symbol": m.symbol,
+                    "facades": m.facades,
+                    "private_sources": m.private_sources,
+                    "consumed_from_facade_by": m.consumed_from_facade_by,
+                    "consumed_from_private_by": m.consumed_from_private_by,
+                    "confidence": m.confidence,
+                }
+                for m in multi_sourced
+            ],
+            "fix_classification": [
+                {
+                    "owning_package": f.owning_package,
+                    "symbol": f.symbol,
+                    "already_in_facade": f.already_in_facade,
+                    "consumer_count": f.consumer_count,
+                    "consumer_modules": f.consumer_modules,
+                }
+                for f in fix_classes
+            ],
+            "underscore_in_all_violations": [
+                {"package": v.package, "path": v.path, "name": v.name} for v in underscore_in_all
+            ],
+        }
+        args.json.write_text(json.dumps(payload, indent=2), encoding=_UTF_8)
+        print(f"Wrote full JSON inventory to {args.json}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

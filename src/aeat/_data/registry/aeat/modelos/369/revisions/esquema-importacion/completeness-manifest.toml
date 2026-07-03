@@ -16,7 +16,13 @@
 
 [revisions."esquema-importacion".completeness_manifest]
 source_ref = "aeat-dr-369-2021"
-legal_refs = ["ley-37-1992:art-163-quinvicies", "orden-hac-610-2021:art-1"]
+legal_refs = [
+    "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
+    "orden-hac-610-2021:art-1",
+]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".completeness_manifest.casillas]]

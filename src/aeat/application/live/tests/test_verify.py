@@ -21,6 +21,8 @@ from .._verify import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_BUCKET_A_ID = "60606060-6060-4060-8060-606060606060"
+_BUCKET_B_ID = "61616161-6161-4161-8161-616161616161"
 
 
 @pytest.fixture
@@ -268,7 +270,7 @@ class TestLatestForNif:
 class TestBucketIsolation:
     def test_observations_are_runtime_profile_scoped(self, tmp_path: Path) -> None:
         ts = datetime(2025, 3, 15, tzinfo=UTC)
-        with isolated_runtime_profile(tmp_path=tmp_path / "bucket-a", bucket_id="bucket-A") as bucket_a:
+        with isolated_runtime_profile(tmp_path=tmp_path / "profile-a", bucket_id=_BUCKET_A_ID) as bucket_a:
             svc_a = _service(bucket_a)
             svc_a.record(
                 bucket_id=bucket_a.bucket_id,
@@ -279,7 +281,7 @@ class TestBucketIsolation:
             )
             assert svc_a.list_observations(bucket_id=bucket_a.bucket_id)[0].nif == "DE1"
 
-        with isolated_runtime_profile(tmp_path=tmp_path / "bucket-b", bucket_id="bucket-B") as bucket_b:
+        with isolated_runtime_profile(tmp_path=tmp_path / "profile-b", bucket_id=_BUCKET_B_ID) as bucket_b:
             svc_b = _service(bucket_b)
             assert svc_b.list_observations(bucket_id=bucket_b.bucket_id) == ()
             svc_b.record(
@@ -323,13 +325,13 @@ class TestSecureStorage:
 
     def test_object_key_refuses_blank_observation_with_locale_metadata(self) -> None:
         with pytest.raises(LiveApplicationInputError) as exc_info:
-            verify_observation_object_key("bucket-1", " ")
+            verify_observation_object_key(_BUCKET_A_ID, " ")
         assert exc_info.value.translated_message == "application.live.verify.errors.observation_id_blank"
 
     def test_list_refuses_misrouted_payload_bucket(self, secure_engine: TestRuntimeProfile) -> None:
         observation = VerifyObservation(
             observation_id="a" * 64,
-            bucket_id="bucket-b",
+            bucket_id=_BUCKET_B_ID,
             surface=VerifySurface.NIF_IVA,
             nif="DE123456789",
             verdict="valid",
@@ -357,7 +359,7 @@ class TestSecureStorage:
 
         assert exc_info.value.translated_message == "application.live.verify.errors.observation_bucket_mismatch"
         assert exc_info.value.context == {
-            "observation_bucket": "bucket-b",
+            "observation_bucket": _BUCKET_B_ID,
             "repository_bucket": secure_engine.bucket_id,
         }
 

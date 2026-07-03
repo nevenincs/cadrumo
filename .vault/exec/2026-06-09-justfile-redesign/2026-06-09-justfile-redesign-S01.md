@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#justfile-redesign'
 date: '2026-06-09'
-modified: '2026-06-09'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-06-09-justfile-redesign-plan]]"
 ---
-
-
-
 
 # extract complexity calculation heredocs with zero-noise success filtering
 
@@ -30,4 +27,3 @@ related:
 The script `scripts/audit_complexity.py` was created and successfully executed via `uv run --no-sync python scripts/audit_complexity.py`. It correctly filtered out passing files and listed the exact functions/files exceeding complexity thresholds.
 
 ## Notes
-

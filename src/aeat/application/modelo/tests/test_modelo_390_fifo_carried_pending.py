@@ -1,20 +1,21 @@
 """M390 year-end carry boxes 97/662 as a FIFO partition - the DISCRIMINATING case.
 
 Companion to ``test_modelo_390_303_fold_in_live.py``. That module proves the
-five M390<-M303 relations fold on the live calculate path, but its fixture seeds
-independent per-period ``iva.compensacion-generada-periodo`` with NO carried
-pending chain (each period's disponible equals its own generated credit). In
+ordinary M390<-M303 relations and the annual compensation partition source run on
+the live calculate path, but its fixture seeds independent per-period
+``iva.compensacion-generada-periodo`` with NO carried pending chain (each
+period's disponible equals its own generated credit). In
 that degenerate case the FIFO partition and the naive per-period split COINCIDE
 (box 97 = copy(4T generated), box 662 = sum(1T-3T generated)), so the existing
-test cannot tell whether the box-97/662 values came from the correct FIFO
-override (#7/#12, IVA-1/IVA-2) or from the un-fixed naive relation sums.
+test cannot tell whether the box-97/662 values came from the declared FIFO
+annual-partition source (#7/#12, IVA-1/IVA-2) or from the un-fixed naive relation sums.
 
 This module closes that coverage hole with a REAL carried-pending chain driven
 through the full operator calculate action
 (:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`),
 choosing inputs where the FIFO partition DIVERGES from the naive split, so the
-test FAILS if the FIFO override is ever removed and the naive relation sums leak
-through.
+test FAILS if the annual-partition source is ever removed and the naive relation
+sums leak through.
 
 Scenario (the AEAT "always-carry" case - every period's credit carries forward
 into the last period's autoliquidacion, nothing consumed):
@@ -60,6 +61,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
@@ -68,13 +73,11 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
-from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.transactions import TransactionCatalogueRepository
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
@@ -83,7 +86,8 @@ from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-m390-fifo-carried-pending"
+_BUCKET_ID = "00000000-0000-4000-8000-000000000390"
+_PROFILE_LABEL = "M390 FIFO profile"
 _T0 = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 20, 11, 0, tzinfo=UTC)
 _YEAR = 2025
@@ -96,7 +100,7 @@ def _casilla_id(value: object) -> CasillaId:
         raise AssertionError(f"M390 FIFO fixture casilla key {value!r} is not a CasillaId") from exc
 
 
-# M303 compensacion casillas the FIFO override reads to build each period's state.
+# M303 compensacion casillas the annual partition source reads to build each period's state.
 _GENERADA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
 _APLICADA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
 _DISPONIBLE: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
@@ -130,7 +134,28 @@ _NAIVE_BOX_662 = sum(  # sum(1T-3T) = 150.00
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """Yield the active profile's real encrypted-SQLite object repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
+        UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=profile.repository).save(
+            UserProfileRecord(
+                profile_id=_BUCKET_ID,
+                display_name=_PROFILE_LABEL,
+                facts=(
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="economic activity"),
+                    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                    UserProfileFact(path="iva.regime", value="GENERAL"),
+                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+                ),
+                created_at=_T0,
+                updated_at=_T0,
+            ),
+        )
         yield profile.repository
 
 
@@ -222,7 +247,7 @@ def test_m390_carry_boxes_are_the_fifo_partition_not_the_naive_split(
 
     # Belt-and-braces: the result must NOT be the naive split (the un-fixed behaviour).
     assert (box_97, box_662) != (_NAIVE_BOX_97, _NAIVE_BOX_662), (
-        "M390 carry boxes collapsed to the naive per-period split - the FIFO override is not firing"
+        "M390 carry boxes collapsed to the naive per-period split - the annual partition source is not firing"
     )
     # The AEAT partition identity is preserved through the full calculate.
     assert box_97 + box_662 == _YEAR_PENDING, (

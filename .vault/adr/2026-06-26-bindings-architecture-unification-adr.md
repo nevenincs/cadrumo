@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#bindings-architecture-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 related:
   - '[[2026-06-26-bindings-architecture-unification-audit]]'
   - '[[2026-06-26-bindings-architecture-unification-research]]'
@@ -13,8 +13,6 @@ related:
   - '[[2026-05-20-calculation-source-connectivity-adr]]'
   - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]'
 ---
-
-
 
 # `bindings-architecture-unification` adr: `central bindings architecture: one canonical cross-source data-sourcing interface reconciling the source-kind, resolver-contract, fold-in, and carry decisions` | (**status:** `rejected`)
 
@@ -271,5 +269,3 @@ constraints this architecture will codify once its phases land:
 - A docs-cohesion discipline: a new ADR that introduces a binding/source vocabulary
   MUST point at this central architecture via `## Status`, so the corpus stays
   RAG-coherent (candidate phase-2.4 codify).
-
-

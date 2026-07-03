@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#core-authority-compat-markers'
 date: '2026-05-31'
-modified: '2026-05-31'
+modified: '2026-06-30'
 related: []
 ---
 
@@ -88,4 +88,3 @@ All are test-infrastructure or intentional optional integrations; none are produ
 ## Recommendation
 
 No immediate breaking changes required. The _legacy_iva_wallet_decision_key fallback warrants explicit timeline tracking. All other markers represent intentional architecture decisions, versioned fixture support, or explanatory comments.
-

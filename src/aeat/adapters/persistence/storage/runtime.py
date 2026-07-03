@@ -23,8 +23,9 @@ from ....core.config import (
     load_settings,
     settings_for_active_profile_bucket,
 )
-from ....core.external_constants import DEFAULT_OUTPUT_LANGUAGE
+from ....core.external_constants import DEFAULT_OUTPUT_LANGUAGE, SUPPORTED_OUTPUT_LANGUAGES
 from ....core.logging import get_logger
+from ....core.storage_route_guidance import EXPLICIT_DATABASE_URL_PROFILE_RECOVERY
 from ....core.time import now as _utc_now
 from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .errors import (
@@ -33,7 +34,7 @@ from .errors import (
 from .errors import (
     storage_validation_error as _storage_validation_error,
 )
-from .master_key._active_session import _active_session
+from .master_key import current_active_bucket_session
 
 if TYPE_CHECKING:
     from .sql.secure_objects import SecureObjectRepository
@@ -64,6 +65,7 @@ class StorageRuntimeReadinessIssue(BaseModel):
     code: StorageRuntimeReadinessCode
     message_key: str = Field(min_length=1)
     message: str = Field(min_length=1)
+    recovery_hint: str = ""
 
 
 class StorageRuntimeSession(BaseModel):
@@ -114,9 +116,13 @@ class StorageRuntime(BaseModel):
         details = "; ".join(issue.message for issue in self.readiness.issues)
         if not details:
             details = "storage runtime reported no detailed readiness issue."
+        context: dict[str, object] = {"details": _render_readiness_details(self.readiness.issues)}
+        recovery = _render_recovery_hints(self.readiness.issues)
+        if recovery:
+            context["recovery"] = recovery
         raise StorageValidationError(
             f"storage runtime is not ready for profile-bound storage: {details}",
-            context={"details": _render_readiness_details(self.readiness.issues)},
+            context=context,
             translated_message="errors.storage.runtime.not_ready",
         )
 
@@ -124,16 +130,18 @@ class StorageRuntime(BaseModel):
         """Create a :class:`SecureObjectRepository` attached to this runtime's bucket."""
         self.require_ready()
         self._require_current_active_session()
-        from .sql.engine import get_engine
         from .sql.secure_objects import SecureObjectRepository
 
-        active = _active_session.get()
+        active = current_active_bucket_session()
         assert active is not None
         settings = Settings(
             aeat_local_storage_root=self.storage_root,
             aeat_active_profile=self.bucket_id,
         )
-        engine = get_engine(settings)
+        # The active bucket session owns the engine lifecycle: acquire the
+        # engine through it so the handle is registered on the session and
+        # disposed on session close/switch, rather than left to a caller.
+        engine = active.acquire_engine(settings)
         return SecureObjectRepository(
             engine=engine,
             namespace_registry=STORAGE_NAMESPACE_REGISTRY,
@@ -143,7 +151,7 @@ class StorageRuntime(BaseModel):
 
     def _require_current_active_session(self) -> None:
         """Refuse repository construction when the live session drifted."""
-        active = _active_session.get()
+        active = current_active_bucket_session()
         if active is None:
             raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: no active bucket session.",
@@ -191,8 +199,14 @@ def _readiness_issue(
     code: StorageRuntimeReadinessCode,
     message: str,
     message_key: str,
+    recovery_hint: str = "",
 ) -> StorageRuntimeReadinessIssue:
-    return StorageRuntimeReadinessIssue(code=code, message=message, message_key=message_key)
+    return StorageRuntimeReadinessIssue(
+        code=code,
+        message=message,
+        message_key=message_key,
+        recovery_hint=recovery_hint,
+    )
 
 
 def _render_readiness_details(issues: tuple[StorageRuntimeReadinessIssue, ...]) -> str:
@@ -205,14 +219,54 @@ def _render_readiness_details(issues: tuple[StorageRuntimeReadinessIssue, ...]) 
     return "; ".join(rendered)
 
 
+def _render_recovery_hints(issues: tuple[StorageRuntimeReadinessIssue, ...]) -> str:
+    rendered = tuple(dict.fromkeys(issue.recovery_hint for issue in issues if issue.recovery_hint))
+    return " ".join(rendered)
+
+
 def _settings_output_language() -> str:
-    """Resolve locale without consulting active-profile storage."""
+    """Resolve locale without consulting encrypted active-profile storage."""
     try:
-        language = load_settings().aeat_output_language or DEFAULT_OUTPUT_LANGUAGE
+        settings = load_settings()
     except (AttributeError, KeyError, ValueError):
         _log.debug("storage runtime could not resolve output language; using default", exc_info=True)
         return DEFAULT_OUTPUT_LANGUAGE.value
-    return getattr(language, "value", str(language))
+    if "aeat_output_language" in settings.model_fields_set:
+        explicit = _normalise_supported_language(settings.aeat_output_language)
+        if explicit is not None:
+            return explicit
+    hinted = _active_bucket_output_language_hint(settings)
+    if hinted is not None:
+        return hinted
+    return _normalise_supported_language(settings.aeat_output_language) or DEFAULT_OUTPUT_LANGUAGE.value
+
+
+def _normalise_supported_language(value: object) -> str | None:
+    raw = str(getattr(value, "value", value)).strip().lower()
+    if raw in SUPPORTED_OUTPUT_LANGUAGES:
+        return raw
+    return None
+
+
+def _active_bucket_output_language_hint(settings: Settings) -> str | None:
+    try:
+        from ....core import resolve_active_bucket_id
+        from .bucket import read_bucket_output_language_hint
+
+        bucket_id = resolve_active_bucket_id()
+        if bucket_id is None:
+            return None
+        return read_bucket_output_language_hint(
+            storage_root=settings.aeat_local_storage_root,
+            bucket_id=bucket_id,
+        )
+    except Exception as exc:
+        _log.debug(
+            "storage runtime could not resolve bucket output-language hint; using settings/default (%s)",
+            type(exc).__name__,
+            exc_info=True,
+        )
+        return None
 
 
 def inspect_storage_runtime(
@@ -224,7 +278,7 @@ def inspect_storage_runtime(
     resolved = settings or load_settings()
     route = classify_storage_route(resolved)
     checked_at = now or _utc_now()
-    active = _active_session.get()
+    active = current_active_bucket_session()
     session = None
     issues: list[StorageRuntimeReadinessIssue] = []
 
@@ -282,11 +336,18 @@ def inspect_storage_runtime(
             )
 
     if route.kind is not StorageRouteKind.ACTIVE_BUCKET_DATABASE:
+        recovery_hint = (
+            EXPLICIT_DATABASE_URL_PROFILE_RECOVERY if route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL else ""
+        )
+        message = "the primary database route is not attached to an active profile bucket."
+        if recovery_hint:
+            message = f"{message} {recovery_hint}"
         issues.append(
             _readiness_issue(
                 code=StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET,
                 message_key="errors.storage.runtime.route_not_active_bucket",
-                message="the primary database route is not attached to an active profile bucket.",
+                message=message,
+                recovery_hint=recovery_hint,
             ),
         )
     elif (

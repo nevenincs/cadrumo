@@ -2,10 +2,10 @@
 
 This package contains explicit-spec byte helpers for fichero-BOE records
 and envelopes. The active modelo export flow is registry-driven through
-:func:`aeat.application.filing.export_draft`, which renders
-:class:`aeat.domain.calculations.registry.ExportLayoutDefinition`
+:func:`application.filing.export_draft`, which renders
+:class:`domain.calculations.registry.ExportLayoutDefinition`
 records directly; export verification re-reads files through
-:func:`aeat.domain.calculations.registry.parse_export_payload`.
+:func:`domain.calculations.registry.parse_export_payload`.
 
 The primitives here remain useful when a caller already has adapter-local
 :class:`RecordFieldSpec` or :class:`SegmentSpec` tuples and needs to
@@ -17,12 +17,12 @@ validate byte-level round trips. This module re-exports:
 :func:`validate_segment_specs`.
 
 See Also:
-    :mod:`aeat.adapters.outbound.aeat.export`
+    :mod:`adapters.outbound.aeat.export`
         Supported outbound export package root and error import surface.
-    :func:`aeat.application.filing.export_draft`
+    :func:`application.filing.export_draft`
         Application entry point that writes approved drafts from registry
         export layouts.
-    :func:`aeat.domain.calculations.registry.parse_export_payload`
+    :func:`domain.calculations.registry.parse_export_payload`
         Registry parser used by export verification.
 """
 

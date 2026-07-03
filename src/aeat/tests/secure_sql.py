@@ -14,21 +14,26 @@ from ..adapters.persistence.storage.bucket import (
     BucketKeySchedule,
     BucketLifecycleStatus,
     BucketManifest,
+    BucketPaths,
+    provision_bucket_directory,
     write_manifest,
 )
-from ..adapters.persistence.storage.bucket._layout import BucketPaths, provision_bucket_directory
 from ..adapters.persistence.storage.master_key import (
+    BucketSession,
     KdfParams,
     activate_session,
     get_master_key_provider,
+    load_or_mint_bucket_dek,
 )
-from ..adapters.persistence.storage.master_key._bucket_session import BucketSession
-from ..adapters.persistence.storage.master_key._master_key_bucket_dek import load_or_mint_bucket_dek
 from ..adapters.persistence.storage.runtime import StorageRuntime, inspect_storage_runtime
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..core.config import Settings, load_settings, override_settings
+
+_DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
+_DEFAULT_PRIMARY_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
+_DEFAULT_SECONDARY_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
 
 def _provision_bucket_dek_v1_session(
@@ -219,7 +224,7 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
 def isolated_runtime_profile(
     *,
     tmp_path: Path,
-    bucket_id: str = "test-runtime-profile",
+    bucket_id: str = _DEFAULT_RUNTIME_BUCKET_ID,
     label: str = "Test runtime profile",
 ) -> Iterator[TestRuntimeProfile]:
     """Create a real active-profile bucket runtime for tests.
@@ -257,6 +262,10 @@ def isolated_runtime_profile(
         )
         with activate_session(session):
             runtime = inspect_storage_runtime(settings)
+            # Building the repository through the runtime acquires and
+            # registers the bucket engine on ``session``; closing the
+            # session in the teardown below disposes it via the unified
+            # lifecycle, so no separate ``dispose_engine`` teardown is needed.
             repository = secure_object_repository_for_active_bucket()
             try:
                 yield TestRuntimeProfile(
@@ -268,7 +277,7 @@ def isolated_runtime_profile(
                     repository=repository,
                 )
             finally:
-                dispose_engine(settings)
+                session.close()
 
 
 @dataclass(frozen=True)
@@ -312,8 +321,8 @@ class MultiBucketTestRuntime:
 def isolated_two_bucket_runtime(
     *,
     tmp_path: Path,
-    primary_bucket_id: str = "primary-test-runtime",
-    secondary_bucket_id: str = "secondary-test-runtime",
+    primary_bucket_id: str = _DEFAULT_PRIMARY_BUCKET_ID,
+    secondary_bucket_id: str = _DEFAULT_SECONDARY_BUCKET_ID,
     primary_label: str = "Primary test runtime",
     secondary_label: str = "Secondary test runtime",
 ) -> Iterator[MultiBucketTestRuntime]:
@@ -394,14 +403,18 @@ def isolated_two_bucket_runtime(
                     _secondary_session=secondary_session,
                 )
             finally:
-                dispose_engine(settings)
+                # Each session owns and disposes its bucket engine on close;
+                # closing both sweeps the two buckets' engines via the
+                # unified lifecycle.
+                secondary_session.close()
+                primary_session.close()
 
 
 @contextmanager
 def isolated_cli_runtime_profile(
     *,
     tmp_path: Path,
-    bucket_id: str = "test-runtime-profile",
+    bucket_id: str = _DEFAULT_RUNTIME_BUCKET_ID,
     label: str = "Test runtime profile",
 ) -> Iterator[TestRuntimeProfile]:
     """Create a real runtime profile with CLI-adjacent directories isolated.
@@ -426,7 +439,11 @@ def isolated_cli_runtime_profile(
             label=label,
         ) as profile,
     ):
-        dispose_engine(profile.settings)
+        # The active session opened by ``isolated_runtime_profile`` already
+        # owns a valid engine for this bucket; disposing it here would strand
+        # the session's registered handle. The added directory overrides do
+        # not change the database route, so the engine stays valid for the
+        # CLI test and is disposed on the session's close.
         yield profile
 
 

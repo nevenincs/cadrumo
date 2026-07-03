@@ -22,20 +22,51 @@ import pytest
 from .....core.resources import resources
 from .....domain.calculations.registry import RegistrySnapshot
 from .. import build_export_plan
+from .._layout import plan_layout
+from .._translator import is_translatable
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _untranslatable_internal_only_ids(snapshot: RegistrySnapshot) -> set[str]:
+    """Return ``internal_only`` computed casillas with no closed-form Sheets formula.
+
+    These are app-internal calculation-support figures the AEAT Diseño de
+    Registros omits, whose custom runtime-dispatch formula op cannot be rendered
+    as a live spreadsheet formula (M303 régimen-simplificado módulos), so the
+    export legitimately omits them from the official-structure workbook. A
+    *translatable* internal_only casilla (M200 ceiling) is NOT excluded.
+    """
+    revision = snapshot.revision
+    formulas = {formula.id: formula for formula in revision.formulas}
+    layout = plan_layout(revision, bracket_filter_date=date(snapshot.filing_year, 12, 31))
+    excluded: set[str] = set()
+    for casilla in revision.casillas:
+        if not casilla.internal_only or casilla.formula is None:
+            continue
+        if not is_translatable(formulas[casilla.formula].expression, layout=layout):
+            excluded.add(casilla.id)
+    return excluded
 
 # (modelo, filing_year, period, on) — supported modelos whose registry formulas
 # are export-capable (every formula op has a closed-form Sheets translation), so
 # a live-formula workbook can be built and held to official-casilla parity.
 _COVERED = [
     ("130", 2025, "1T", date(2025, 4, 1)),  # pagos fraccionados actividad
+    ("303", 2023, "1T", date(2023, 4, 1)),  # IVA trimestral — 2023-y-siguientes (módulos)
+    ("303", 2024, "1T", date(2024, 4, 1)),  # IVA trimestral — módulos omitted across every year
     ("303", 2025, "1T", date(2025, 4, 1)),  # IVA trimestral
+    ("303", 2026, "1T", date(2026, 4, 1)),  # IVA trimestral — módulos omitted for 2026 too
     ("390", 2025, "0A", date(2026, 1, 20)),  # IVA resumen anual
     ("111", 2025, "1T", date(2025, 4, 1)),  # retenciones trabajo
     ("115", 2025, "1T", date(2025, 4, 1)),  # retenciones arrendamientos
     ("200", 2025, "0A", date(2026, 7, 1)),  # sociedades (bracket-by-entity-type translated)
-    ("100", 2025, "0A", date(2025, 5, 1)),  # renta IRPF anual (age_at_year_end translated)
+    # M100 2025 is NOT covered: formula 0197 (Art. 85 renta inmobiliaria imputada,
+    # casillas 0083-0089) evaluates through the custom
+    # ``m100_resolve_renta_inmobiliaria_imputada`` op, which raises registry
+    # validation errors on out-of-range inputs and has no closed-form Sheets
+    # equivalent — the same closed-form gap as M210's ``irnr_resolve_tipo_gravamen``
+    # / ``m210_resolve_base_imponible``, neither of which is covered either.
 ]
 
 
@@ -71,12 +102,20 @@ def test_export_plan_covers_completeness_manifest(modelo: str, year: int, period
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
 def test_every_computed_casilla_has_a_live_formula(modelo: str, year: int, period: str, on: date) -> None:
     snapshot = _snapshot(modelo, year, period, on)
-    computed_ids = {c.id for c in snapshot.revision.casillas if c.formula is not None}
+    # An ``internal_only`` casilla whose formula op has no closed-form Sheets
+    # translation is app-internal calculation-support the AEAT Diseño de Registros
+    # omits and the workbook cannot render as a live formula (the M303
+    # régimen-simplificado módulos advisory-support figures resolve through custom
+    # runtime-dispatch ops — the same untranslatable class as the M100/M210 ops
+    # that keep those modelos out of _COVERED). The export omits it by design, so
+    # the gate scopes to casillas the official-structure workbook renders.
+    excluded = _untranslatable_internal_only_ids(snapshot)
+    computed_ids = {c.id for c in snapshot.revision.casillas if c.formula is not None and c.id not in excluded}
     plan = build_export_plan(snapshot)
     formula_ids = {fc.casilla_id for fc in plan.formula_cells}
     assert computed_ids, f"modelo {modelo} declares no computed casillas"
     missing = sorted(computed_ids - formula_ids)
-    # Every computed casilla must carry a live spreadsheet formula in the export.
+    # Every renderable computed casilla must carry a live spreadsheet formula in the export.
     assert not missing, f"modelo {modelo} computed casillas without a live formula cell: {missing}"
 
 
@@ -92,10 +131,15 @@ def test_numeric_casillas_carry_number_format_facet(modelo: str, year: int, peri
     snapshot = _snapshot(modelo, year, period, on)
     plan = build_export_plan(snapshot)
     formats = {item.casilla_id: item for item in plan.number_formats}
+    # Untranslatable ``internal_only`` casillas are omitted from the export
+    # layout entirely (see test_every_computed_casilla_has_a_live_formula), so
+    # they carry no cell to format; scope the expectation to casillas the
+    # official-structure workbook actually renders.
+    excluded = _untranslatable_internal_only_ids(snapshot)
     expected = {
         casilla.id: _FORMAT_BY_REGISTRY_TYPE[casilla.data_type]
         for casilla in snapshot.revision.casillas
-        if casilla.data_type in _FORMAT_BY_REGISTRY_TYPE
+        if casilla.data_type in _FORMAT_BY_REGISTRY_TYPE and casilla.id not in excluded
     }
 
     missing = sorted(set(expected) - set(formats))

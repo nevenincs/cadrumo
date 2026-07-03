@@ -1,8 +1,9 @@
 # Modelo 714 casilla 39 = 80 % de la cuota íntegra del Impuesto sobre el
 # Patrimonio (suelo de la reducción por el límite conjunto IP+IRPF, Ley 19/1991
 # art. 31). The límite conjunto (art. 31) caps the combined IP+IRPF cuota at 60 %
-# of the IRPF base liquidable, but the IP-cuota reduction may not exceed 80 % of
-# the IP cuota íntegra (so the IP cuota cannot fall below 20 % of its íntegra).
+# of the computable IRPF bases imponibles, after the article's exclusions, but
+# the IP-cuota reduction may not exceed 80 % of the IP cuota íntegra (so the IP
+# cuota cannot fall below 20 % of its íntegra).
 # Casilla 39 is that 80 %-reference value, computed unconditionally from the
 # cuota íntegra (casilla 29). The "80 por 100" figure is verified against the
 # bundled authoritative corpus `ley-19-1991-art-31.html`. The límite-conjunto

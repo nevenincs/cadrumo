@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#en-es-ca-translation'
 date: '2026-05-28'
-modified: '2026-05-28'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `en-es-ca-translation` audit: placeholder-antipattern eradication
 

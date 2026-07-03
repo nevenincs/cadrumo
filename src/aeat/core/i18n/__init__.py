@@ -8,7 +8,7 @@ never reuses these translation keys.
 Major declarations:
 
 * :func:`tr` — translate a key to the active language.
-* :func:`~aeat.core.i18n.output_language` and
+* :func:`output_language` and
   :data:`OUTPUT_LANGUAGE_ENV_VAR` — resolve and override the active
   :class:`OutputLanguage`, drawn from
   :data:`SUPPORTED_OUTPUT_LANGUAGES`.
@@ -19,10 +19,12 @@ Major declarations:
 
 from __future__ import annotations
 
-from ..external_constants import OutputLanguage
+from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ._render import (
     OUTPUT_LANGUAGE_ENV_VAR,
     SUPPORTED_OUTPUT_LANGUAGES,
+    UnmatchedPlaceholderError,
+    clear_output_language_cache,
     output_language,
     register_profile_language_resolver,
     tr,
@@ -30,10 +32,13 @@ from ._render import (
 from ._translatable import Translatable
 
 __all__ = [
+    "DEFAULT_OUTPUT_LANGUAGE",
     "OUTPUT_LANGUAGE_ENV_VAR",
     "SUPPORTED_OUTPUT_LANGUAGES",
     "OutputLanguage",
     "Translatable",
+    "UnmatchedPlaceholderError",
+    "clear_output_language_cache",
     "output_language",
     "register_profile_language_resolver",
     "tr",

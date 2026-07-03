@@ -33,6 +33,7 @@ from .._schema import (
     PeriodSelector,
 )
 from .._validate_registry_scope import validate_registry_scope
+from .._validate_semantic_role_axes import semantic_roles_are_axis_siblings
 from .._validate_semantic_role_typos import (
     _build_semantic_role_typo_index,
     _candidate_is_typo_twin,
@@ -53,6 +54,7 @@ _TEST_CASILLA_ID: CasillaId = validated_casilla_id("test_casilla", surface="_TES
 def _casilla(
     *,
     cid: CasillaId = _TEST_CASILLA_ID,
+    label: str = "Test casilla",
     data_type: str = "money",
     semantic_role: str | None = None,
     semantic_role_cardinality: str = "shared",
@@ -64,7 +66,7 @@ def _casilla(
         {
             "id": cid,
             "number": "01",
-            "label": "Test casilla",
+            "label": label,
             "section": ("test",),
             "data_type": data_type,
             "semantic_role": semantic_role,
@@ -76,28 +78,6 @@ def _casilla(
             "source_refs": ("aeat-manual",),
         },
     )
-
-
-def _modelo(modelo_id: str, revision_id: str, casillas: Iterable[CasillaDefinition]) -> Any:
-    """Build the minimum object shape `_validate_semantic_role_consistency` expects.
-
-    The validator only reads `.id` on the modelo, `.id` on each
-    revision, and walks `.casillas`. Use a lightweight stand-in to
-    avoid pulling the full ModeloDefinition / ModeloRevision schema
-    (with its many required fields) for unit-test scope.
-    """
-
-    class _Rev:
-        def __init__(self) -> None:
-            self.id = revision_id
-            self.casillas = tuple(casillas)
-
-    class _Mod:
-        def __init__(self) -> None:
-            self.id = modelo_id
-            self.revisions = {revision_id: _Rev()}
-
-    return _Mod()
 
 
 def _registry_modelo(modelo_id: str, revision_id: str, casillas: Iterable[CasillaDefinition]) -> ModeloDefinition:
@@ -145,29 +125,44 @@ class TestSemanticRoleFieldShape:
         assert rebuilt.semantic_role == "taxpayer_nif"
         assert rebuilt == c
 
-    def test_empty_role_string_rejected(self) -> None:
+    @pytest.mark.parametrize(
+        "updates",
+        (
+            {"semantic_role": ""},
+            {
+                "semantic_role_cardinality": "intentional_singleton",
+                "semantic_role_cardinality_reason": "2025-only legal slot",
+            },
+            {
+                "semantic_role": "is_pf_mod_40_3_b2_base_tipo_3",
+                "semantic_role_cardinality": "intentional_singleton",
+            },
+            {
+                "semantic_role": "is_pf_mod_40_3_b2_base_tipo_3",
+                "semantic_role_cardinality_reason": "2025-only legal slot",
+            },
+        ),
+        ids=(
+            "empty-role",
+            "singleton-without-role",
+            "singleton-without-reason",
+            "reason-without-singleton",
+        ),
+    )
+    def test_invalid_semantic_role_shape_rejected(self, updates: dict[str, object]) -> None:
         with pytest.raises(ValidationError):
-            _casilla(semantic_role="")
+            _casilla(**updates)
 
-    def test_intentional_singleton_role_requires_semantic_role(self) -> None:
-        with pytest.raises(ValidationError):
-            _casilla(
-                semantic_role_cardinality="intentional_singleton",
-                semantic_role_cardinality_reason="2025-only legal slot",
-            )
+    def test_blank_primary_label_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="official Spanish text"):
+            _casilla(label="   ")
 
-    def test_intentional_singleton_role_requires_reason(self) -> None:
-        with pytest.raises(ValidationError):
-            _casilla(
-                semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
-                semantic_role_cardinality="intentional_singleton",
-            )
-
-    def test_singleton_reason_requires_intentional_singleton_cardinality(self) -> None:
-        with pytest.raises(ValidationError):
-            _casilla(
-                semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
-                semantic_role_cardinality_reason="2025-only legal slot",
+    def test_blank_alias_label_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="official Spanish text"):
+            CasillaAlias(
+                label="   ",
+                legal_refs=("ley-58-2003:art-29",),
+                source_refs=("aeat-manual",),
             )
 
     def test_intentional_singleton_cardinality_round_trips(self) -> None:
@@ -195,21 +190,21 @@ class TestSemanticRoleFieldShape:
 
 class TestValidateSemanticRoleConsistency:
     def test_no_role_declarations_passes(self) -> None:
-        m = _modelo("180", "2023", [_casilla()])
+        m = _registry_modelo("180", "2023", [_casilla()])
         assert _validate_semantic_role_consistency([m]) == ()
 
     def test_matching_role_declarations_pass(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
         b = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
-        m1 = _modelo("180", "2023", [a])
-        m2 = _modelo("184", "2023", [b])
+        m1 = _registry_modelo("180", "2023", [a])
+        m2 = _registry_modelo("184", "2023", [b])
         assert _validate_semantic_role_consistency([m1, m2]) == ()
 
     def test_diverging_data_type_rejected(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
         b = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="text")
-        m1 = _modelo("180", "2023", [a])
-        m2 = _modelo("184", "2023", [b])
+        m1 = _registry_modelo("180", "2023", [a])
+        m2 = _registry_modelo("184", "2023", [b])
         failures = _validate_semantic_role_consistency([m1, m2])
         assert any("data_type" in f for f in failures)
         assert any("taxpayer_nif" in f for f in failures)
@@ -221,8 +216,8 @@ class TestValidateSemanticRoleConsistency:
         unconstrained = CasillaConstraints(sign="any", legal_refs=common_legal, source_refs=common_source)
         a = _casilla(cid="a", semantic_role="retenciones", data_type="money", constraints=constrained)
         b = _casilla(cid="b", semantic_role="retenciones", data_type="money", constraints=unconstrained)
-        m1 = _modelo("180", "2023", [a])
-        m2 = _modelo("184", "2023", [b])
+        m1 = _registry_modelo("180", "2023", [a])
+        m2 = _registry_modelo("184", "2023", [b])
         failures = _validate_semantic_role_consistency([m1, m2])
         assert any("constraints" in f for f in failures)
 
@@ -234,7 +229,7 @@ class TestValidateSemanticRoleCardinality:
             semantic_role_cardinality="intentional_singleton",
             semantic_role_cardinality_reason="2025-only legal slot",
         )
-        m = _modelo("202", "2025-y-siguientes", [c])
+        m = _registry_modelo("202", "2025-y-siguientes", [c])
         assert _validate_semantic_role_cardinality([m]) == ()
 
     def test_intentional_singleton_role_repeated_elsewhere_fails(self) -> None:
@@ -245,8 +240,8 @@ class TestValidateSemanticRoleCardinality:
             semantic_role_cardinality_reason="2025-only legal slot",
         )
         b = _casilla(cid="b", semantic_role="is_pf_mod_40_3_b2_base_tipo_3")
-        m1 = _modelo("202", "2025-y-siguientes", [a])
-        m2 = _modelo("202", "2026-y-siguientes", [b])
+        m1 = _registry_modelo("202", "2025-y-siguientes", [a])
+        m2 = _registry_modelo("202", "2026-y-siguientes", [b])
         failures = _validate_semantic_role_cardinality([m1, m2])
         assert failures == (
             "semantic_role 'is_pf_mod_40_3_b2_base_tipo_3': casilla "
@@ -258,6 +253,196 @@ class TestValidateSemanticRoleCardinality:
 class TestTypoTwinWarning:
     def test_reviewed_singleton_roles_are_marked_in_committed_registry(self) -> None:
         reviewed_singletons = (
+            (
+                "100",
+                "2024",
+                "2028",
+                "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_precio",
+            ),
+            (
+                "100",
+                "2024",
+                "2029",
+                "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio",
+            ),
+            (
+                "100",
+                "2020",
+                "0463",
+                "irpf_red_prevision_social_exceso_2015_2019",
+            ),
+            (
+                "100",
+                "2021",
+                "0437",
+                "irpf_red_prevision_social_exceso_2016_2020",
+            ),
+            (
+                "100",
+                "2021",
+                "1757",
+                "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo",
+            ),
+            (
+                "100",
+                "2021",
+                "1758",
+                "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "00827",
+                "is_deduccion_di_internacional_rdleg_pendiente",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "00848",
+                "is_deduccion_di_interna_rdleg_pendiente",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02511",
+                "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02512",
+                "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02513",
+                "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02516",
+                "is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02517",
+                "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02518",
+                "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03321",
+                "is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03322",
+                "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03323",
+                "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03326",
+                "is_correccion_operaciones_a_plazos_dt1_permanente_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03327",
+                "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03328",
+                "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03396",
+                "is_correccion_otras_correcciones_resultado_permanente_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "03397",
+                "is_correccion_otras_correcciones_resultado_temporaria_ejercicio_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "00501",
+                "is_liquidacion_i_importe",
+            ),
+            (
+                "100",
+                "2020",
+                "1171",
+                "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020",
+            ),
+            ("100", "2022", "1911", "irpf_num_hijos_maternidad_2020"),
+            ("100", "2022", "1912", "irpf_incremento_maternidad_no_aplicado_2020"),
+            ("100", "2022", "1914", "irpf_num_hijos_maternidad_2021"),
+            ("100", "2022", "1915", "irpf_incremento_maternidad_no_aplicado_2021"),
+            (
+                "100",
+                "2025",
+                "2027",
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo",
+            ),
+            (
+                "100",
+                "2025",
+                "2028",
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio",
+            ),
+            (
+                "100",
+                "2025",
+                "2029",
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio",
+            ),
+            (
+                "100",
+                "2025",
+                "1958",
+                "irpf_deduccion_c_valenciana_autoconsumo_generado_pendiente_2",
+            ),
+            (
+                "100",
+                "2025",
+                "2013",
+                "irpf_deduccion_c_valenciana_autoconsumo_pendiente_2",
+            ),
+            (
+                "100",
+                "2025",
+                "2022",
+                "irpf_deduccion_madrid_nuevos_contribuyentes_pendiente_1",
+            ),
+            (
+                "100",
+                "2025",
+                "2163",
+                "irpf_deduccion_murcia_recursos_energeticos_renovables_pendiente_1",
+            ),
             ("184", "2015-y-siguientes", "tipo2.clave", "tipo_renta_atribuida_clave"),
             ("184", "2015-y-siguientes", "tipo2.subclave", "tipo_renta_atribuida_subclave"),
             ("190", "2024-y-siguientes", "decl.total-percepciones", "total_percepciones_count"),
@@ -267,6 +452,132 @@ class TestTypoTwinWarning:
             ("202", "2025-y-siguientes", "64", "is_pf_mod_40_3_b2_base_tipo_4"),
             ("202", "2025-y-siguientes", "65", "is_pf_mod_40_3_b2_porcentaje_4"),
             ("202", "2025-y-siguientes", "67", "is_pf_mod_40_3_correcciones_impuesto_complementario"),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02631",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02632",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_ejercicio_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02633",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_anteriores_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02636",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02637",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_ejercicio_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02638",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_anteriores_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02641",
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02642",
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_ejercicio_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02643",
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_anteriores_aumento",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02646",
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02647",
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_ejercicio_disminucion",
+            ),
+            (
+                "200",
+                "2024-y-siguientes",
+                "02648",
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_anteriores_disminucion",
+            ),
+            ("100", "2025", "0773", "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes"),
+            ("100", "2025", "0776", "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes_generado"),
+            ("100", "2025", "1715", "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes_pendiente"),
+            ("100", "2025", "1708", "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero"),
+            ("100", "2025", "1714", "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero_generado"),
+            ("100", "2025", "1717", "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero_pendiente"),
+            (
+                "100",
+                "2022",
+                "0808",
+                "irpf_deduccion_c_valenciana_acciones_participaciones_aplicado_ejercicio_anterior",
+            ),
+            (
+                "100",
+                "2022",
+                "1117",
+                "irpf_deduccion_c_valenciana_acciones_participaciones_aplicado_ejercicio",
+            ),
+            (
+                "100",
+                "2025",
+                "1185",
+                "irpf_deduccion_c_valenciana_danos_vivienda_dana_generado_pendiente_1",
+            ),
+            (
+                "100",
+                "2025",
+                "2012",
+                "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_generado_pendiente_1",
+            ),
+            ("100", "2025", "2014", "irpf_deduccion_c_valenciana_danos_vivienda_dana_pendiente_1"),
+            (
+                "100",
+                "2025",
+                "2015",
+                "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_pendiente_1",
+            ),
+            ("100", "2025", "2227", "irpf_ganancia_fondos_coti_valor_transmision_global"),
+            ("100", "2025", "2228", "irpf_ganancia_fondos_coti_valor_transmision_renta_vitalicia"),
+            ("100", "2025", "2229", "irpf_ganancia_fondos_coti_valor_adquisicion_global"),
+            ("100", "2025", "2230", "irpf_ganancia_fondos_coti_ganancia"),
+            ("100", "2025", "2231", "irpf_ganancia_fondos_coti_exenta_renta_vitalicia"),
+            ("100", "2025", "2233", "irpf_perdida_fondos_coti_importe"),
+            ("100", "2025", "2234", "irpf_perdida_fondos_coti_importe_computable"),
+            ("100", "2025", "0360", "irpf_ganancia_premios_juegos_valoracion_b"),
+            ("100", "2025", "0361", "irpf_ganancia_premios_juegos_pub_valoracion_b"),
+            ("100", "2025", "0413", "irpf_ganancia_inmueble_referencia_catastral_4"),
+            ("100", "2025", "0238", "irpf_eo_reintegro_subvenciones"),
+            ("100", "2025", "0239", "irpf_eo_agr_reintegro_subvenciones"),
+            ("100", "2025", "2202", "irpf_anexo_b_aav_importe_satisfecho"),
+            ("100", "2025", "2243", "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4"),
+            ("100", "2025", "2154", "irpf_deduccion_murcia_vehiculo_matricula"),
+            ("100", "2025", "2155", "irpf_deduccion_murcia_vehiculo_importe"),
+            ("100", "2025", "2246", "irpf_deduccion_canarias_acciones_participaciones"),
             # M303 compensacion-pendiente roles appear in both 2009-y-siguientes and
             # 2023-y-siguientes revisions; the validator requires unique occurrence for
             # intentional_singleton, so they carry semantic_role_cardinality="shared".
@@ -287,15 +598,79 @@ class TestTypoTwinWarning:
             assert casilla.semantic_role_cardinality == "intentional_singleton"
             assert casilla.semantic_role_cardinality_reason is not None
 
+    def test_m100_2024_2025_family_profile_roles_are_shared(self) -> None:
+        modelo = _bundled_modelo("100")
+        casillas = {
+            (revision.id, casilla.id): casilla
+            for revision in modelo.revisions.values()
+            for casilla in revision.casillas
+        }
+        shared_roles = (
+            ("DECFAL", "irpf_declarante_fecha_fallecimiento"),
+            ("APENOMDLG", "irpf_descendiente_apellidos_nombre"),
+            ("FNACDLG", "irpf_descendiente_fecha_nacimiento"),
+            ("MINUSDLG", "irpf_descendiente_clave_discapacidad"),
+            ("FALLDLG", "irpf_descendiente_fecha_fallecimiento"),
+            ("APENOMDLG_ASC", "irpf_ascendiente_apellidos_nombre"),
+            ("ANOASDLG", "irpf_ascendiente_fecha_nacimiento"),
+            ("PCTMINASDLG", "irpf_ascendiente_clave_discapacidad"),
+            ("FALLASDLG", "irpf_ascendiente_fecha_fallecimiento"),
+        )
+
+        for casilla_id, role in shared_roles:
+            casilla_2024 = casillas[("2024", casilla_id)]
+            casilla_2025 = casillas[("2025", casilla_id)]
+            assert casilla_2024.semantic_role == role
+            assert casilla_2025.semantic_role == role
+            assert casilla_2024.semantic_role_cardinality == "shared"
+            assert casilla_2025.semantic_role_cardinality == "shared"
+
     def test_reviewed_singleton_markers_do_not_warn(self) -> None:
         reviewed_modelos = (
+            _bundled_modelo("100"),
             _bundled_modelo("184"),
             _bundled_modelo("190"),
+            _bundled_modelo("200"),
             _bundled_modelo("202"),
             _bundled_modelo("303"),
             _bundled_modelo("369"),
         )
         reviewed_roles = {
+            "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_precio",
+            "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio",
+            "irpf_red_prevision_social_exceso_2015_2019",
+            "irpf_red_prevision_social_exceso_2016_2020",
+            "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo",
+            "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
+            "is_deduccion_di_internacional_rdleg_pendiente",
+            "is_deduccion_di_interna_rdleg_pendiente",
+            "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+            "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_aumento",
+            "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_aumento",
+            "is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
+            "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_disminucion",
+            "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_disminucion",
+            "is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
+            "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_aumento",
+            "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_aumento",
+            "is_correccion_operaciones_a_plazos_dt1_permanente_disminucion",
+            "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_disminucion",
+            "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_disminucion",
+            "is_correccion_otras_correcciones_resultado_permanente_disminucion",
+            "is_correccion_otras_correcciones_resultado_temporaria_ejercicio_disminucion",
+            "is_liquidacion_i_importe",
+            "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020",
+            "irpf_num_hijos_maternidad_2020",
+            "irpf_incremento_maternidad_no_aplicado_2020",
+            "irpf_num_hijos_maternidad_2021",
+            "irpf_incremento_maternidad_no_aplicado_2021",
+            "irpf_deduccion_madrid_vivienda_municipio_riesgo",
+            "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio",
+            "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio",
+            "irpf_deduccion_c_valenciana_autoconsumo_generado_pendiente_2",
+            "irpf_deduccion_c_valenciana_autoconsumo_pendiente_2",
+            "irpf_deduccion_madrid_nuevos_contribuyentes_pendiente_1",
+            "irpf_deduccion_murcia_recursos_energeticos_renovables_pendiente_1",
             "tipo_renta_atribuida_clave",
             "tipo_renta_atribuida_subclave",
             "total_percepciones_count",
@@ -307,6 +682,41 @@ class TestTypoTwinWarning:
             "is_pf_mod_40_3_b2_base_tipo_4",
             "is_pf_mod_40_3_b2_porcentaje_4",
             "is_pf_mod_40_3_correcciones_impuesto_complementario",
+            "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
+            "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_ejercicio_aumento",
+            "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_anteriores_aumento",
+            "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_disminucion",
+            "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_ejercicio_disminucion",
+            "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_anteriores_disminucion",
+            "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
+            "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_ejercicio_aumento",
+            "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_anteriores_aumento",
+            "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_disminucion",
+            "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_ejercicio_disminucion",
+            "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_anteriores_disminucion",
+            "irpf_deduccion_c_valenciana_acciones_participaciones_aplicado_ejercicio_anterior",
+            "irpf_deduccion_c_valenciana_acciones_participaciones_aplicado_ejercicio",
+            "irpf_deduccion_c_valenciana_danos_vivienda_dana_generado_pendiente_1",
+            "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_generado_pendiente_1",
+            "irpf_deduccion_c_valenciana_danos_vivienda_dana_pendiente_1",
+            "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_pendiente_1",
+            "irpf_ganancia_fondos_coti_valor_transmision_global",
+            "irpf_ganancia_fondos_coti_valor_transmision_renta_vitalicia",
+            "irpf_ganancia_fondos_coti_valor_adquisicion_global",
+            "irpf_ganancia_fondos_coti_ganancia",
+            "irpf_ganancia_fondos_coti_exenta_renta_vitalicia",
+            "irpf_perdida_fondos_coti_importe",
+            "irpf_perdida_fondos_coti_importe_computable",
+            "irpf_ganancia_premios_juegos_valoracion_b",
+            "irpf_ganancia_premios_juegos_pub_valoracion_b",
+            "irpf_ganancia_inmueble_referencia_catastral_4",
+            "irpf_eo_reintegro_subvenciones",
+            "irpf_eo_agr_reintegro_subvenciones",
+            "irpf_anexo_b_aav_importe_satisfecho",
+            "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4",
+            "irpf_deduccion_murcia_vehiculo_matricula",
+            "irpf_deduccion_murcia_vehiculo_importe",
+            "irpf_deduccion_canarias_acciones_participaciones",
             "iva_oss_union_servicios_destino_de_cuota",
             "iva_oss_union_servicios_destino_fr_cuota",
         }
@@ -321,7 +731,7 @@ class TestTypoTwinWarning:
 
     def test_single_occurrence_role_emits_warning(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer-nif", data_type="nif")  # note hyphen typo
-        m = _modelo("180", "2023", [a])
+        m = _registry_modelo("180", "2023", [a])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -331,7 +741,7 @@ class TestTypoTwinWarning:
         typo = _casilla(cid="a", semantic_role="taxpayer_niff", data_type="nif")
         canonical_a = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
         canonical_b = _casilla(cid="c", semantic_role="taxpayer_nif", data_type="nif")
-        m = _modelo("180", "2023", [typo, canonical_a, canonical_b])
+        m = _registry_modelo("180", "2023", [typo, canonical_a, canonical_b])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -361,7 +771,7 @@ class TestTypoTwinWarning:
             semantic_role_cardinality="intentional_singleton",
             semantic_role_cardinality_reason="legacy source spelling is legally unique",
         )
-        m = _modelo("180", "2023", [a])
+        m = _registry_modelo("180", "2023", [a])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -370,8 +780,8 @@ class TestTypoTwinWarning:
     def test_repeated_role_does_not_warn(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
         b = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
-        m1 = _modelo("180", "2023", [a])
-        m2 = _modelo("184", "2023", [b])
+        m1 = _registry_modelo("180", "2023", [a])
+        m2 = _registry_modelo("184", "2023", [b])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m1, m2])
@@ -387,7 +797,7 @@ class TestTypoTwinWarning:
             cid="b",
             semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
         )
-        m = _modelo("200", "2024-y-siguientes", [aumento, disminucion])
+        m = _registry_modelo("200", "2024-y-siguientes", [aumento, disminucion])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
@@ -402,150 +812,137 @@ class TestTypoTwinWarning:
             cid="b",
             semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
         )
-        m = _modelo("200", "2024-y-siguientes", [typo, canonical])
+        m = _registry_modelo("200", "2024-y-siguientes", [typo, canonical])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
         assert any("permanent_aumento" in str(w.message) for w in captured)
 
-    def test_token_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
-        anteriores = _casilla(
-            cid="a",
-            semantic_role="iva_compensacion_pendiente_anteriores",
-        )
-        posteriores = _casilla(
-            cid="b",
-            semantic_role="iva_compensacion_pendiente_posteriores",
-        )
-        m = _modelo("303", "2009-y-siguientes", [anteriores, posteriores])
+    @pytest.mark.parametrize(
+        ("left", "right"),
+        (
+            pytest.param("tipo_renta_atribuida_clave", "tipo_renta_atribuida_subclave", id="renta-attribuida"),
+            pytest.param("total_percepciones_count", "total_percepciones_amount", id="percepciones-total"),
+            pytest.param(
+                "iva_compensacion_pendiente_anteriores",
+                "iva_compensacion_pendiente_posteriores",
+                id="iva-compensacion-temporal",
+            ),
+            pytest.param(
+                "irpf_ganancia_valor_transmision",
+                "irpf_ganancia_valor_adquisicion",
+                id="ganancia-valor-kind",
+            ),
+            pytest.param("irpf_anexo_b_ab_importe", "irpf_anexo_b_c_importe", id="anexo-b-letter"),
+            pytest.param(
+                "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
+                "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
+                id="sin-maintenance",
+            ),
+            pytest.param(
+                "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
+                "is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
+                id="legal-reference",
+            ),
+            pytest.param(
+                "is_deduccion_di_internacional_rdleg_pendiente",
+                "is_deduccion_di_internacional_pendiente",
+                id="legal-regime",
+            ),
+            pytest.param(
+                "irpf_red_prevision_social_exceso_2015_2019",
+                "irpf_red_prevision_social_exceso_2016_2020",
+                id="numeric-window",
+            ),
+            pytest.param(
+                "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo",
+                "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
+                id="period-applied",
+            ),
+            pytest.param(
+                "is_deduccion_di_interna_rdleg_pendiente",
+                "is_deduccion_di_internacional_rdleg_pendiente",
+                id="internal-international",
+            ),
+            pytest.param(
+                "is_correccion_detalle_correcciones_resultado_permanente_disminucion",
+                "is_correccion_otras_correcciones_resultado_permanente_disminucion",
+                id="detail-other",
+            ),
+            pytest.param("is_liquidacion_i_importe", "is_liquidacion_ii_importe", id="roman-liquidation"),
+            pytest.param(
+                "irpf_descendiente_fecha_nacimiento",
+                "irpf_descendiente_fecha_fallecimiento",
+                id="birth-death",
+            ),
+            pytest.param(
+                "irpf_descendiente_apellidos_nombre",
+                "irpf_ascendiente_apellidos_nombre",
+                id="relationship",
+            ),
+            pytest.param(
+                "irpf_anexo_b_aav_importe_satisfecho",
+                "irpf_anexo_b_importe_satisfecho",
+                id="anexo-b-aav-marker",
+            ),
+            pytest.param(
+                "irpf_ganancia_premios_juegos_pub_valoracion",
+                "irpf_ganancia_premios_juegos_valoracion",
+                id="public-source",
+            ),
+            pytest.param(
+                "irpf_eo_agr_reintegro_subvenciones",
+                "irpf_eo_reintegro_subvenciones",
+                id="agricultural-objective-estimation",
+            ),
+            pytest.param(
+                "irpf_deduccion_cantabria_obras_mejora_pendiente_1",
+                "irpf_deduccion_cantabria_obras_mejora_pendiente_2",
+                id="numeric-line",
+            ),
+            pytest.param(
+                "irpf_deduccion_murcia_vehiculo_importe",
+                "irpf_deduccion_asturias_vehiculo_importe",
+                id="ccaa",
+            ),
+            pytest.param(
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio",
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo",
+                id="field-detail-year",
+            ),
+            pytest.param(
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio",
+                "irpf_deduccion_madrid_vivienda_municipio_riesgo",
+                id="field-detail-price",
+            ),
+            pytest.param(
+                "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4",
+                "irpf_ganancia_inmueble_referencia_catastral_4",
+                id="cadastral-anexo-c1",
+            ),
+        ),
+    )
+    def test_non_axis_token_pairs_are_not_axis_siblings(self, left: str, right: str) -> None:
+        assert semantic_roles_are_axis_siblings(left, right) is False
+
+    def test_related_party_row_slot_roles_do_not_warn_as_typos(self) -> None:
+        first_slot = _casilla(cid="a", semantic_role="related_party_nif_1", data_type="nif")
+        second_slot = _casilla(cid="b", semantic_role="related_party_nif_2", data_type="nif")
+        m = _registry_modelo("232", "2018-y-siguientes", [first_slot, second_slot])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
 
-    def test_optional_negation_sibling_roles_do_not_warn_as_typos(self) -> None:
-        con_mantenimiento = _casilla(
-            cid="a",
-            semantic_role="is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
-        )
-        sin_mantenimiento = _casilla(
-            cid="b",
-            semantic_role="is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
-        )
-        m = _modelo("200", "2024-y-siguientes", [con_mantenimiento, sin_mantenimiento])
+    def test_coti_scope_marker_is_not_optional_axis_token(self) -> None:
+        coti = _casilla(cid="a", semantic_role="irpf_ganancia_fondos_coti_ganancia")
+        general_a = _casilla(cid="b", semantic_role="irpf_ganancia_fondos_ganancia")
+        general_b = _casilla(cid="c", semantic_role="irpf_ganancia_fondos_ganancia")
+        m = _registry_modelo("100", "2025", [coti, general_a, general_b])
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
-
-    def test_legal_reference_axis_roles_do_not_warn_as_typos(self) -> None:
-        article = _casilla(
-            cid="a",
-            semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
-        )
-        transitional = _casilla(
-            cid="b",
-            semantic_role="is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
-        )
-        m = _modelo("200", "2024-y-siguientes", [article, transitional])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
-
-    def test_optional_legal_regime_roles_do_not_warn_as_typos(self) -> None:
-        rdleg = _casilla(
-            cid="a",
-            semantic_role="is_deduccion_di_internacional_rdleg_pendiente",
-        )
-        current = _casilla(
-            cid="b",
-            semantic_role="is_deduccion_di_internacional_pendiente",
-        )
-        m = _modelo("200", "2024-y-siguientes", [rdleg, current])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
-
-    def test_scope_token_sibling_roles_do_not_warn_as_typos(self) -> None:
-        detalle = _casilla(
-            cid="a",
-            semantic_role="is_correccion_detalle_correcciones_resultado_permanente_disminucion",
-        )
-        otras = _casilla(
-            cid="b",
-            semantic_role="is_correccion_otras_correcciones_resultado_permanente_disminucion",
-        )
-        m = _modelo("200", "2024-y-siguientes", [detalle, otras])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
-
-    def test_numeric_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
-        first_window = _casilla(cid="a", semantic_role="irpf_red_prevision_social_exceso_2015_2019")
-        second_window = _casilla(cid="b", semantic_role="irpf_red_prevision_social_exceso_2016_2020")
-        m = _modelo("100", "2021", [first_window, second_window])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
-
-    def test_relationship_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
-        descendant = _casilla(cid="a", semantic_role="irpf_descendiente_fecha_nacimiento")
-        ascendant = _casilla(cid="b", semantic_role="irpf_ascendiente_fecha_nacimiento")
-        m = _modelo("100", "2025", [descendant, ascendant])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
-
-    def test_optional_scope_axis_roles_do_not_warn_as_typos(self) -> None:
-        listed = _casilla(cid="a", semantic_role="irpf_ganancia_fondos_coti_ganancia")
-        general = _casilla(cid="b", semantic_role="irpf_ganancia_fondos_ganancia")
-        m = _modelo("100", "2025", [listed, general])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
-
-    def test_multiple_optional_scope_axis_roles_do_not_warn_as_typos(self) -> None:
-        scoped = _casilla(cid="a", semantic_role="irpf_ganancia_premios_juegos_pub_valoracion_b")
-        general = _casilla(cid="b", semantic_role="irpf_ganancia_premios_juegos_valoracion")
-        m = _modelo("100", "2025", [scoped, general])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
-
-    def test_optional_numeric_axis_roles_do_not_warn_as_typos(self) -> None:
-        annual_line = _casilla(cid="a", semantic_role="irpf_deduccion_cantabria_generado_2025_pendiente_2")
-        general_line = _casilla(cid="b", semantic_role="irpf_deduccion_cantabria_generado_pendiente")
-        m = _modelo("100", "2025", [annual_line, general_line])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
-
-    def test_ccaa_axis_roles_do_not_warn_as_typos(self) -> None:
-        murcia = _casilla(cid="a", semantic_role="irpf_deduccion_murcia_vehiculo_importe")
-        asturias = _casilla(cid="b", semantic_role="irpf_deduccion_asturias_vehiculo_importe")
-        m = _modelo("100", "2025", [murcia, asturias])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
-
-    def test_optional_field_scope_axis_roles_do_not_warn_as_typos(self) -> None:
-        parent = _casilla(cid="a", semantic_role="irpf_deduccion_madrid_vivienda_municipio_riesgo")
-        year = _casilla(cid="b", semantic_role="irpf_deduccion_madrid_vivienda_municipio_riesgo_anio")
-        price = _casilla(cid="c", semantic_role="irpf_deduccion_madrid_vivienda_municipio_riesgo_precio")
-        m = _modelo("100", "2025", [parent, year, price])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+        assert any("irpf_ganancia_fondos_coti_ganancia" in str(item.message) for item in captured)
 
 
 class TestSemanticRoleTypoTwinHelpers:
@@ -561,36 +958,36 @@ class TestSemanticRoleTypoTwinHelpers:
     def _index(*known_roles: str) -> _SemanticRoleTypoIndex:
         return _build_semantic_role_typo_index(known_roles)
 
-    def test_identity_candidate_is_not_a_typo_twin(self) -> None:
-        role = "taxpayer_nif"
-        index = self._index(role)
-        assert _candidate_is_typo_twin(role, set(role), len(role), role, len(role), 1, index) is False
-
-    def test_single_char_substitution_is_a_typo_twin(self) -> None:
-        # taxpayer_niff vs taxpayer_nif: a near-duplicate that is not a sibling.
-        role = "taxpayer_niff"
-        known = "taxpayer_nif"
+    @pytest.mark.parametrize(
+        ("role", "known", "expected"),
+        (
+            ("taxpayer_nif", "taxpayer_nif", False),
+            ("taxpayer_niff", "taxpayer_nif", True),
+            ("irpf_ascendiente_fecha_nacimiento", "irpf_descendiente_fecha_nacimiento", True),
+        ),
+        ids=("identity", "single-char-substitution", "relationship-not-axis-exempt"),
+    )
+    def test_candidate_typo_twin_cases(self, role: str, known: str, expected: bool) -> None:
         index = self._index(known)
-        max_diff = int(0.08 * (len(role) + len(known)))
-        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is True
+        max_diff = max(1, int(0.08 * (len(role) + len(known))))
+        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is expected
 
-    def test_axis_sibling_candidate_is_exempt(self) -> None:
-        # ascendiente vs descendiente share a relationship axis -> not a typo twin.
-        role = "irpf_ascendiente_fecha_nacimiento"
-        known = "irpf_descendiente_fecha_nacimiento"
-        index = self._index(known)
-        max_diff = int(0.08 * (len(role) + len(known)))
-        # The two differ by more than the fast-check budget, so they never reach
-        # the sibling exemption: the fast prefix/suffix filter rejects first.
-        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is False
-
-    def test_scan_finds_near_duplicate_across_length_buckets(self) -> None:
-        index = self._index("taxpayer_nif", "unrelated_role_value")
-        assert _scan_length_buckets_for_typo_twin("taxpayer_niff", index) is True
-
-    def test_scan_returns_false_when_no_near_duplicate(self) -> None:
-        index = self._index("taxpayer_nif", "counterparty_amount")
-        assert _scan_length_buckets_for_typo_twin("completely_distinct_role", index) is False
+    @pytest.mark.parametrize(
+        ("candidate", "known_roles", "expected"),
+        (
+            ("taxpayer_niff", ("taxpayer_nif", "unrelated_role_value"), True),
+            ("completely_distinct_role", ("taxpayer_nif", "counterparty_amount"), False),
+        ),
+        ids=("near-duplicate", "distinct"),
+    )
+    def test_scan_length_buckets_for_typo_twin_cases(
+        self,
+        candidate: str,
+        known_roles: tuple[str, ...],
+        expected: bool,
+    ) -> None:
+        index = self._index(*known_roles)
+        assert _scan_length_buckets_for_typo_twin(candidate, index) is expected
 
 
 class TestSignedCuotaResultadoRoles:

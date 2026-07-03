@@ -23,12 +23,11 @@ from __future__ import annotations
 import ast
 import re
 from collections import defaultdict
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_AEAT, ast_for_path, module_name, production_python_files
+from ._inventory import SRC_AEAT, module_name, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -56,10 +55,8 @@ CORE_STRUCTS: dict[str, str] = {
     "PortalCategory": "aeat.domain.portals._categories",
     # Financial-input aggregates and their repositories
     "TransactionCatalogue": "aeat.domain.transactions._models",
-    "TransactionCatalogueRepository": "aeat.domain.transactions._repository",
+    "TransactionCatalogueRepository": "aeat.adapters.persistence.profile.transactions",
     "InvoiceCatalogue": "aeat.domain.invoices._models",
-    "InvoiceCatalogueRepository": "aeat.domain.invoices._repository",
-    "BucketEventHistoryRepository": "aeat.domain.buckets._event_repository",
     # Profile, deadlines, and filing records
     "TaxpayerProfile": "aeat.domain.deadlines._models",
     "Schedule": "aeat.domain.deadlines._models",
@@ -84,12 +81,13 @@ def _imported_anchors(tree: ast.AST) -> set[str]:
     return found
 
 
-def _linked_anchors(tree: ast.Module) -> set[str]:
+def _linked_anchors(tree: ast.AST) -> set[str]:
     """Core-struct names cross-referenced in any docstring of this module."""
     docstrings: list[str] = []
-    module_doc = ast.get_docstring(tree)
-    if module_doc:
-        docstrings.append(module_doc)
+    if isinstance(tree, ast.Module):
+        module_doc = ast.get_docstring(tree)
+        if module_doc:
+            docstrings.append(module_doc)
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
             doc = ast.get_docstring(node)
@@ -121,13 +119,10 @@ def test_core_struct_anchors_are_unambiguous() -> None:
     assert not problems, "core-struct anchor set is stale:\n  " + "\n  ".join(problems)
 
 
-def test_modules_that_use_a_core_struct_link_it(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_modules_that_use_a_core_struct_link_it() -> None:
     """A module importing a core struct must cross-link it in a docstring."""
     violations: dict[str, list[str]] = defaultdict(list)
-    for path in production_python_files():
-        tree = ast_for_path(path, source_tree_ast)
-        if tree is None:
-            continue
+    for path, tree in production_ast_items():
         module = module_name(path)
         linked = _linked_anchors(tree)
         for anchor in _imported_anchors(tree):
@@ -161,7 +156,7 @@ def _annotation_names(node: ast.AST) -> set[str]:
     return names
 
 
-def test_public_functions_link_anchor_parameters(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_public_functions_link_anchor_parameters() -> None:
     """A documented public function taking a core struct as a parameter links it.
 
     The spine is highest-signal at a function's own boundary: if a parameter is
@@ -169,10 +164,7 @@ def test_public_functions_link_anchor_parameters(source_tree_ast: Mapping[Path, 
     reader following the signature lands on the canonical definition.
     """
     violations: dict[str, list[str]] = defaultdict(list)
-    for path in production_python_files():
-        tree = ast_for_path(path, source_tree_ast)
-        if tree is None:
-            continue
+    for path, tree in production_ast_items():
         module = module_name(path)
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):

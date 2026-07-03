@@ -20,10 +20,8 @@ import pytest
 import sqlalchemy.exc as sa_exc
 import typer
 
-from ....adapters.persistence.storage.master_key._active_session import (
-    NoActiveBucketSessionError,
-)
-from ....core.errors import AeatError
+from ....adapters.persistence.storage.master_key import NoActiveBucketSessionError
+from ....core.errors import AeatError, build_error_envelope, render_error_text
 from .._errors import (
     CliUnexpectedBoundaryError,
     _unwrap_aeat_error,
@@ -140,3 +138,23 @@ def test_cli_unexpected_boundary_error_is_aeat_error() -> None:
     """Sanity: the unexpected-boundary wrapper is itself an AeatError."""
 
     assert issubclass(CliUnexpectedBoundaryError, AeatError)
+
+
+def test_unexpected_boundary_suggests_log_inspection_not_integrity_repair() -> None:
+    """The unexpected boundary must point at the read-only log inspection.
+
+    An unexpected exception is a code/environment fault, not corrupted stored
+    state, so suggesting ``config repair integrity`` (which implies storage
+    corruption and points at a mutating repair) is misleading and could send an
+    operator to a pointless or mutating action. The honest recovery is the
+    read-only ``config repair logs``, where the traceback is echoed back.
+    """
+    boundary = CliUnexpectedBoundaryError(RuntimeError("an import error, say"))
+
+    rendered = render_error_text(boundary)
+    assert "aeat config repair logs" in rendered, rendered
+    assert "repair integrity" not in rendered, rendered
+
+    envelope = build_error_envelope(boundary)
+    assert envelope.suggestion == "aeat config repair logs"
+    assert "integrity" not in (envelope.suggestion or "")

@@ -3,14 +3,12 @@ tags:
   - '#exec'
   - '#json-output-contract'
 date: '2026-04-25'
-modified: '2026-04-25'
+modified: '2026-06-30'
 related:
   - "[[2026-04-25-json-output-contract-plan]]"
   - "[[2026-04-25-json-output-contract-adr]]"
   - "[[2026-04-25-json-output-contract-audit]]"
 ---
-
-
 
 # `json-output-contract` `phase-1` `implementation-and-verification`
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S0839'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
 ---
-
-
-
 
 # Handle currency normalization layer failures through the central command error boundary
 

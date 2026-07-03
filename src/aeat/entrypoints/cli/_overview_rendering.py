@@ -1,6 +1,24 @@
+"""Text rendering and notice projection for ``overview status``.
+
+This module consumes an application-built
+:class:`OverviewStatusReport` and turns it into
+localized text lines plus :class:`Notice` objects for the
+:class:`SchemaEnvelope` notice channel.  It is
+presentation-only: active-profile discovery, storage reads, and status assembly
+stay upstream in the application overview layer and :mod:`._overview`.
+"""
+
 from __future__ import annotations
 
-from ...application.overview import OverviewStatusReport
+from collections.abc import Sequence
+
+from ...application.overview import (
+    CoverageAdviceReason,
+    ObligationCoverageReport,
+    OverviewCalendarEvent,
+    OverviewStatusReport,
+    actionable_post_filing_events,
+)
 from ...core import Modelo
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -22,8 +40,102 @@ def overview_next_step_notices(report: OverviewStatusReport) -> list[Notice]:
     ]
 
 
+_COVERAGE_NOTICE_CODE = "overview.coverage.incomplete"
+
+
+def overview_coverage_notices(coverage: ObligationCoverageReport) -> list[Notice]:
+    """Project the obligation-coverage advisory onto the envelope notice channel.
+
+    Returns a single default-visible :class:`Notice`
+    naming every registry modelo the surface could not positively scope — the
+    ``advised`` bucket of the reconciliation — so an operator (or the autonomous
+    agent the CLI targets) is never allowed to trust ``overview`` and silently
+    under-file. Severity is ``warning`` when at least one advised obligation is
+    positively known to apply but has no deadline window (the Modelo-190 shape —
+    an unambiguous under-filing risk); otherwise ``info`` for the merely
+    applicability-undetermined set. The advised modelo→reason map rides on
+    :attr:`Notice.context` so machine consumers keep the
+    structured list. Empty ``advised`` yields no notice.
+    """
+    if not coverage.has_advisories:
+        return []
+    advised = coverage.advised
+    modelos = ", ".join(item.modelo for item in advised)
+    window_missing = any(item.reason is CoverageAdviceReason.APPLICABLE_WINDOW_MISSING for item in advised)
+    severity = NoticeSeverity.WARNING if window_missing else NoticeSeverity.INFO
+    message = tr(
+        "cli.overview.coverage.investigate",
+        default=(
+            "%{count} filing obligation(s) could not be positively scoped for "
+            "this profile and may be under-reported: %{modelos}. Investigate "
+            "each with 'aeat app overview explain <modelo>'."
+        ),
+        count=len(advised),
+        modelos=modelos,
+    )
+    return [
+        Notice(
+            severity=severity,
+            code=_COVERAGE_NOTICE_CODE,
+            message=message,
+            suggestion=f"aeat app overview explain {advised[0].modelo}",
+            context={item.modelo: item.reason.value for item in advised},
+        ),
+    ]
+
+
+_POST_FILING_NOTICE_CODE = "overview.post_filing.pending"
+
+
+def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) -> list[Notice]:
+    """Surface pulled AEAT post-filing events that demand operator attention.
+
+    Filters the observed calendar events to the actionable
+    :class:`PostFilingEventKind` categories through
+    :func:`actionable_post_filing_events` — a
+    requerimiento, a propuesta / acuerdo de liquidación, a procedimiento
+    sancionador, or a recaudación enforcement act — and projects them onto a
+    single ``warning``-severity :class:`Notice` so the
+    overview never silently buries a pending requerimiento in an
+    undifferentiated event list. The per-event reference→kind map rides on
+    :attr:`Notice.context` so machine consumers keep the
+    structured list. Empty when no actionable event is present.
+    """
+    actionable = actionable_post_filing_events(tuple(events))
+    if not actionable:
+        return []
+    kinds = sorted({event.post_filing_kind.value for event in actionable if event.post_filing_kind is not None})
+    message = tr(
+        "cli.overview.post_filing.pending",
+        default=(
+            "%{count} AEAT post-filing event(s) require attention: %{kinds}. "
+            "Review them with 'aeat app live notifications list'."
+        ),
+        count=len(actionable),
+        kinds=", ".join(kinds),
+    )
+    return [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code=_POST_FILING_NOTICE_CODE,
+            message=message,
+            suggestion="aeat app live notifications list",
+            context={
+                event.reference_id: event.post_filing_kind.value
+                for event in actionable
+                if event.post_filing_kind is not None
+            },
+        ),
+    ]
+
+
 def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
-    """Render overview status as operator-facing CLI text."""
+    """Render :class:`OverviewStatusReport` as operator-facing CLI text.
+
+    The renderer preserves the same next-step decisions used by
+    :func:`overview_next_step_notices`,
+    so text and JSON-envelope notice output stay aligned.
+    """
     lines: list[str] = [
         tr("cli.overview.status.title"),
         "",
@@ -48,7 +160,9 @@ def _next_step_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     "import a bank statement" — that step is done. The guidance walks
     the operator forward: import when the ledger is empty, classify /
     work-modelo when transactions exist, continue the modelo flow when
-    work units are already in progress.
+    work units are already in progress. Unsupported
+    :class:`Modelo` work-unit creation is diverted to discovery
+    guidance instead of a dead command.
     """
     if report.work_units > 0:
         return (
@@ -160,15 +274,14 @@ def _drafts_line(report: OverviewStatusReport) -> str:
         # Two independent operators read the bare "no saved declaration
         # drafts" line - which sits next to the work-units line - as
         # "your work is gone". When work units exist, the line must say
-        # so explicitly: legacy drafts and modelo work units are
+        # so explicitly: declaration drafts and modelo work units are
         # separate stores, and an empty draft store never means lost
         # modelo work.
         if report.work_units > 0:
             return tr(
                 "cli.overview.status.drafts_empty_with_work_units",
                 default=(
-                    "No legacy declaration drafts are saved - this is normal and "
-                    "does not affect your modelo work units below."
+                    "No declaration drafts are saved - this is normal and does not affect your modelo work units below."
                 ),
             )
         return tr("cli.overview.status.drafts_empty")
@@ -185,7 +298,7 @@ def _storage_lines(report: OverviewStatusReport) -> tuple[str, ...]:
 
 
 def _filing_obligation_lines(report: OverviewStatusReport) -> tuple[str, ...]:
-    """Return advisory lines for filing obligations derived from the profile."""
+    """Return localized filing-obligation advisory lines from the report."""
     if not report.filing_obligation_advisories:
         return ()
     lines: list[str] = [""]
@@ -194,4 +307,8 @@ def _filing_obligation_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     return tuple(lines)
 
 
-__all__ = ["render_cli_overview_status_lines"]
+__all__ = [
+    "overview_coverage_notices",
+    "overview_post_filing_event_notices",
+    "render_cli_overview_status_lines",
+]

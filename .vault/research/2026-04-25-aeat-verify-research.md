@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#aeat-verify'
 date: '2026-04-25'
-modified: '2026-04-25'
+modified: '2026-06-30'
 related:
   - "[[2026-04-24-aeat-verify-research]]"
   - "[[2026-04-24-aeat-verify-reference]]"
@@ -12,8 +12,6 @@ related:
   - "[[2026-04-25-pdf-sanitizer-adr]]"
   - "[[2026-04-25-pdf-sanitizer-plan]]"
 ---
-
-
 
 # `aeat-verify` research: `modelo-pipeline-per-wave`
 

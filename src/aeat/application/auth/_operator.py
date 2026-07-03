@@ -1,8 +1,28 @@
 """Operator-facing auth application services for the config CLI.
 
-Auth configuration and login actions emit bucket events through
-:class:`BucketEventHistoryRepository` so every provider switch and
-session renewal is reflected in the audit trail.
+Auth configuration and login actions mutate
+:class:`application.workflow.WorkflowState`, validate the active bucket
+through :func:`application.workflow.assess_active_profile_health`, and
+emit durable :class:`domain.buckets.BucketEvent` records through
+:class:`domain.buckets.BucketEventHistoryRepository`.
+
+Status, test, and preflight surfaces consume the canonical
+:func:`application.state_projection.build_operator_state_projection`
+producer, then narrow its
+:class:`application.state_projection.ProjectionAuthReadiness` and
+:class:`application.state_projection.ProjectionActiveProfile` fields into
+operator-facing result records.
+
+See Also:
+    :class:`application.auth.AuthState`
+        Persisted local auth selection embedded in workflow state.
+    :class:`application.auth.AuthStatusResult`
+        CLI readiness result emitted by ``auth status``.
+    :class:`application.auth.AuthTestResult`
+        CLI readiness result emitted by ``auth test`` with local provider
+        probes.
+    :class:`application.auth.LiveAuthPreflightReport`
+        Redacted readiness report used before a live read can request login.
 """
 
 from __future__ import annotations
@@ -52,8 +72,7 @@ from ._sessions import (
 
 if TYPE_CHECKING:
     from ..state_projection import OperatorStateProjection
-    from ..workflow._models import WorkflowState
-    from ..workflow._persistence import WorkflowStateRepository
+    from ..workflow import WorkflowState, WorkflowStateRepository
 
 
 def list_operator_auth_providers() -> AuthProvidersReport:
@@ -64,15 +83,19 @@ def list_operator_auth_providers() -> AuthProvidersReport:
 def configure_operator_auth(provider: str, *, certificate_path: Path | None = None) -> AuthConfigureResult:
     """Configure the active auth provider in workflow state.
 
+    The active profile is resolved through
+    :func:`application.workflow.assess_active_profile_health` before the
+    :class:`application.workflow.WorkflowState` mutation is written, so a
+    dangling or unreadable active bucket cannot receive an auth selection.
     Persists the workflow-state update and a typed
     ``AUTH_PROVIDER_CONFIGURED`` event into the bucket-event-history
     catalogue in a single SQL transaction (via
-    :meth:`SecureObjectRepository.save_many`), so a crash between the
-    two writes cannot leave the state mutated without the catalogue
-    event landing. The certificate path is recorded as a payload value
-    when supplied because it is a filesystem reference, not credential
-    material; certificate passwords, private keys, and session tokens
-    never enter the payload.
+    :meth:`adapters.persistence.storage.SecureObjectRepository.save_many`),
+    so a crash between the two writes cannot leave the state mutated without
+    the catalogue event landing. The certificate path is recorded as a payload
+    value when supplied because it is a filesystem reference, not credential
+    material; certificate passwords, private keys, and session tokens never
+    enter the payload.
 
     Args:
         provider: The auth provider identifier to configure (e.g.
@@ -88,19 +111,24 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
             exists yet. The operator must run ``aeat config profile create NAME`` first.
         AuthConfigureDanglingActiveProfileError: When the active-profile
             pointer does not resolve to a registered bucket.
+
+    See Also:
+        :class:`domain.buckets.BucketEventHistoryRepository`
+            Durable per-bucket event history that receives the typed auth event.
+        :class:`application.workflow.ActiveProfileHealth`
+            Redacted health verdict used to accept or refuse the active bucket.
     """
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...adapters.persistence.storage import secure_object_repository_for_active_bucket
     from ...core import resolve_active_bucket_id
     from ...domain.buckets import (
         BucketEvent,
-        BucketEventHistoryRepository,
         BucketEventObjectType,
         BucketEventType,
         append_bucket_event,
         derive_bucket_event_id,
     )
-    from ..workflow._persistence import workflow_state_repository
-    from ..workflow._profile_health import assess_active_profile_health
+    from ..workflow import assess_active_profile_health, workflow_state_repository
 
     listing = _implemented_provider(provider)
 
@@ -187,11 +215,15 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
 def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
     """Return current local auth state as :class:`AuthStatusResult`, optionally scoped to a known provider slot.
 
-    Consumes the canonical :func:`build_operator_state_projection`. The
-    ``configured`` field is the projection's single canonical
-    operational-readiness definition — ``auth status`` and ``auth test``
-    read the same datum and cannot disagree. The live backend is probed
-    (via the projection) for the ``available`` / ``health_*`` fields.
+    Consumes the canonical
+    :func:`application.state_projection.build_operator_state_projection`.
+    The ``configured`` field is the
+    :class:`application.state_projection.ProjectionAuthReadiness` single
+    canonical operational-readiness definition; ``auth status`` and ``auth
+    test`` read the same datum and cannot disagree. The live backend is probed
+    (via the projection) for the ``available`` / ``health_*`` fields, while the
+    active-profile fields mirror
+    :class:`application.state_projection.ProjectionActiveProfile`.
     """
     if provider is not None:
         get_auth_provider(provider)
@@ -243,7 +275,7 @@ def _auth_configure_result(
     certificate_path: Path | None,
 ) -> AuthConfigureResult:
     """Build a redacted configuration result that exposes identity readiness."""
-    from ..user_profile._projections import record_to_path_values
+    from ..user_profile import record_to_path_values
 
     active_profile = state.active_profile_bucket_id() or ""
     record = state.active_profile_record()
@@ -445,7 +477,15 @@ def build_live_auth_preflight_report(
     """Return a redacted preflight report before a live read may trigger auth.
 
     Returns a :class:`LiveAuthPreflightReport` with provider status,
-    identity alignment, and active-profile health indicators.
+    identity alignment, persisted-session indicators, and active-profile health
+    fields inherited from :class:`AuthTestResult`.
+
+    See Also:
+        :class:`core.access_gate.AeatAccessGate`
+            Live-read gate evaluated before an authenticated AEAT operation can
+            proceed.
+        :func:`test_operator_auth`
+            Shared provider-readiness probe that supplies the preflight base.
     """
     resolved_settings = settings or load_settings()
     provider_kind = _provider_kind_or_none(provider)
@@ -515,6 +555,13 @@ async def login_operator_auth(
     live-test opt-in, or when the configured provider is locally
     incomplete (certificate path unset / file missing / unreadable).
     Round-5 B2.
+
+    See Also:
+        :class:`core.access_gate.AeatAccessGate`
+            Enforces the live-read opt-in before provider authentication.
+        :func:`application.auth.ensure_authenticated_aeat_session`
+            Provider-session lifecycle helper that returns the verified session
+            result consumed here.
     """
     if settings is not None:
         with _auth_operator_settings_scope(settings):
@@ -563,7 +610,7 @@ async def login_operator_auth(
             target_url=target_url,
         )
 
-        from ..workflow._persistence import workflow_state_repository
+        from ..workflow import workflow_state_repository
 
         repository = workflow_state_repository()
         repository.update(
@@ -598,7 +645,14 @@ def clear_operator_auth(
     locks: bool = False,
     settings: Settings | None = None,
 ) -> AuthClearResult:
-    """Clear workflow auth state, persisted sessions, and acquisition locks, returning a :class:`AuthClearResult`."""
+    """Clear workflow auth state, persisted sessions, and acquisition locks.
+
+    Returns an :class:`AuthClearResult` after resetting
+    :class:`application.auth.AuthState` in
+    :class:`application.workflow.WorkflowState` when the requested target
+    matches the currently configured provider. Session and lock removals append
+    bucket events through the same workflow-state event trail.
+    """
     if settings is not None:
         with _auth_operator_settings_scope(settings):
             return clear_operator_auth(
@@ -628,7 +682,7 @@ def clear_operator_auth(
     )
 
     with _active_profile_storage_span(resolved_settings):
-        from ..workflow._persistence import workflow_state_repository
+        from ..workflow import workflow_state_repository
 
         repository = workflow_state_repository()
         current_provider = repository.load().auth.provider
@@ -736,7 +790,7 @@ def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKi
     if provider_kind is AuthProviderKind.CERTIFICATE:
         cert_path = settings.aeat_certificate_path
         if cert_path is None:
-            from ..workflow._persistence import workflow_state_repository
+            from ..workflow import workflow_state_repository
 
             recorded = workflow_state_repository().load().auth.certificate_path or ""
             cert_path = Path(recorded) if recorded else None
@@ -776,7 +830,7 @@ def _provider_kind_or_none(provider: str | None) -> AuthProviderKind | None:
 
 
 def _configured_or_default_provider(settings: Settings) -> AuthProviderKind:
-    from ..workflow._persistence import workflow_state_repository
+    from ..workflow import workflow_state_repository
 
     state = workflow_state_repository().load()
     if state.auth.provider:
@@ -792,7 +846,7 @@ def _append_bucket_event(
     action: str,
     object_id: str,
 ) -> WorkflowState:
-    from ..workflow._models import WorkflowEvent
+    from ..workflow import WorkflowEvent
 
     # Auth flows can run before a profile is bound (e.g. `auth configure`
     # during initial setup). Falling back to the literal "default" silently

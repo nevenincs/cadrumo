@@ -1,4 +1,21 @@
-"""Boundary tests for registry public imports and private module ownership."""
+"""Boundary tests for registry public imports and private module ownership.
+
+The cross-package raw-registry-orchestration check this module carried
+(``test_production_code_does_not_import_raw_registry_orchestration``, guarding
+``build_snapshot`` / ``load_registry_tree``) is superseded by the
+project-wide ratcheting import-hygiene gate,
+``src/aeat/tests/test_import_hygiene_gate.py`` (backed by
+``dev/import_hygiene_scan.py`` and ``dev/import_hygiene_baseline.json``), per
+the ``import-centralization`` decision record's Ruling 8. Its former allowlist
+(``_authority.py``, both package ``__init__.py`` files,
+``legal_parameters.py``, ``_imputacion_parameters.py``,
+``_recargo_equivalencia.py``) is empty in practice at supersession time: none
+of those sites still import the raw orchestration symbols cross-package, and
+the general gate now enforces the boundary for every package, not just the
+registry. The checks below (positive facade-content assertions and the
+absolute-import / intra-package-test-boundary checks) are NOT import-hygiene
+duplicates and remain the registry package's own authority.
+"""
 
 from __future__ import annotations
 
@@ -15,25 +32,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _PRIVATE_REGISTRY_PREFIX = "aeat.domain.calculations.registry._"
 _REGISTRY_SOURCE_ROOT = PROJECT_ROOT / "src" / "aeat"
 _REGISTRY_TEST_ROOT = PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry"
-_RAW_REGISTRY_ORCHESTRATION_NAMES = frozenset({"build_snapshot", "load_registry_tree"})
-_RAW_REGISTRY_ORCHESTRATION_MODULES = frozenset(
-    {
-        "aeat.domain.calculations.registry._loader",
-        "aeat.domain.calculations.registry._snapshot",
-        "aeat.domain.calculations.registry",
-        "aeat.domain.calculations",
-    },
-)
-_RAW_REGISTRY_ORCHESTRATION_IMPORT_ALLOWLIST = frozenset(
-    {
-        Path("src/aeat/domain/calculations/registry/_authority.py"),
-        Path("src/aeat/domain/calculations/registry/__init__.py"),
-        Path("src/aeat/domain/calculations/__init__.py"),
-        Path("src/aeat/core/resources/_repos/legal_parameters.py"),
-        Path("src/aeat/domain/fincas/_imputacion_parameters.py"),
-        Path("src/aeat/domain/iva/_recargo_equivalencia.py"),
-    },
-)
 _LEDGER_BINDING_PUBLIC_NAMES = (
     "IvaLedgerObservation",
     "OssIossLedgerObservation",
@@ -93,18 +91,6 @@ def test_modelo_registry_tests_use_public_registry_api_boundaries() -> None:
     assert offenders == []
 
 
-def test_production_code_does_not_import_raw_registry_orchestration() -> None:
-    offenders = sorted(
-        f"{path.relative_to(PROJECT_ROOT)} imports {name}"
-        for path in _REGISTRY_SOURCE_ROOT.rglob("*.py")
-        if not _is_test_source(path)
-        if path.relative_to(PROJECT_ROOT) not in _RAW_REGISTRY_ORCHESTRATION_IMPORT_ALLOWLIST
-        for name in _raw_registry_orchestration_imports(path)
-    )
-
-    assert offenders == []
-
-
 def _absolute_registry_private_imports(path: Path) -> tuple[str, ...]:
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     imports: list[str] = []
@@ -122,23 +108,6 @@ def _absolute_registry_private_imports(path: Path) -> tuple[str, ...]:
     return tuple(imports)
 
 
-def _raw_registry_orchestration_imports(path: Path) -> tuple[str, ...]:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    imports: list[str] = []
-    module_name = _module_name_for(path)
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.ImportFrom) or node.module is None:
-            continue
-        imported_names = {alias.name for alias in node.names}
-        raw_names = sorted(imported_names.intersection(_RAW_REGISTRY_ORCHESTRATION_NAMES))
-        if not raw_names:
-            continue
-        resolved_module = _resolve_import_module(module_name, node.level, node.module)
-        if resolved_module in _RAW_REGISTRY_ORCHESTRATION_MODULES:
-            imports.extend(raw_names)
-    return tuple(imports)
-
-
 def _relative_private_imports(path: Path) -> tuple[str, ...]:
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     return tuple(
@@ -151,20 +120,3 @@ def _relative_private_imports(path: Path) -> tuple[str, ...]:
             and node.module.startswith("_")
         )
     )
-
-
-def _is_test_source(path: Path) -> bool:
-    return path.name.startswith("test_") or path.name == "conftest.py" or "tests" in path.parts
-
-
-def _module_name_for(path: Path) -> str:
-    relative = path.relative_to(PROJECT_ROOT / "src").with_suffix("")
-    return ".".join(relative.parts)
-
-
-def _resolve_import_module(current_module: str, level: int, module: str) -> str:
-    if level == 0:
-        return module
-    package_parts = current_module.split(".")[:-1]
-    base_parts = package_parts[: len(package_parts) - level + 1]
-    return ".".join((*base_parts, module))

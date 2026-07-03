@@ -3,7 +3,7 @@ tags:
   - "#research"
   - "#auth-protocol"
 date: "2026-04-18"
-modified: '2026-04-18'
+modified: '2026-06-13'
 related:
   - "[[2026-04-18-aeat-auth-providers-research]]"
   - "[[2026-04-18-auth-provider-abstraction-adr]]"

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S12'
 related:
   - "[[2026-06-10-cli-operator-surface-plan]]"
 ---
-
-
-
 
 # implement the highest feasible D6 outcome in ordering work-then-remove-then-warn: make --language localize help text if the spike succeeds, else remove it from the help surface it cannot affect, else emit a one-line warning naming AEAT_OUTPUT_LANGUAGE
 

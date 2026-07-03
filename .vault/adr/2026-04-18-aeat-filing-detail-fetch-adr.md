@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#aeat-filing-detail-fetch"
 date: 2026-04-18
-modified: '2026-04-18'
+modified: '2026-06-30'
 title: ADR — StatusReader.fetch_filing_detail (#227)
 status: accepted
 issue: wgergely/aeat#227
@@ -209,7 +209,6 @@ hatch; a follow-up task (after #8 completion) MUST revalidate the
 default against live AEAT and update it if necessary. The parser-
 first path (`Expediente.detail_url`) is the authoritative source
 whenever AEAT renders the link.
-
 
 The detail URL for a given `Expediente` resolves in order:
 

@@ -52,10 +52,10 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos._verification_report import ModeloVerificationFindingKind
+from ....domain.modelos import ModeloVerificationFindingKind
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo._actions import _evaluate_verification_predicates
+from ...modelo._verification_actions import _evaluate_verification_predicates
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -137,8 +137,14 @@ def _calculate_200(
     *,
     filing_year: int,
     relation_values: dict[RelationId, Decimal],
+    manual_inputs: dict[CasillaId, Decimal] | None = None,
 ) -> tuple[RegistryCalculationResult, int]:
-    """Run the REAL M200 annual calculation from resolved relations + the SL profile."""
+    """Run the REAL M200 annual calculation from resolved relations + the SL profile.
+
+    ``manual_inputs`` supplies operator-keyed manual casilla values (e.g.
+    resultado contable 00501) merged over the resolved bound inputs; absent
+    manual casillas default to zero in formula evaluation.
+    """
     snapshot = resources().modelos.authority.snapshot(_MODELO_200, filing_year=filing_year, period="0A")
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     # Resolve every previous_filing carry binding (BIN-stock 00670 AND the art.13
@@ -151,7 +157,7 @@ def _calculate_200(
         c.binding: Decimal("0") for c in snapshot.revision.casillas if c.input_kind.value == "bound" and c.binding
     }
     binding_values = {**carry_defaults, **prefilled, **relation_binding_values, **_PROFILE_DECIMAL_BINDINGS}
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = {**resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values), **(manual_inputs or {})}
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -298,3 +304,57 @@ def test_modelo_200_applying_exactly_the_cap_is_permitted() -> None:
     }
     findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
     assert findings == []
+
+
+# ---------------------------------------------------------------------------
+# Cap-formula worked example (LIS art. 26.1): when the base imponible previa is
+# large enough that 70% of it exceeds the EUR 1.000.000 floor, the computed
+# ceiling DP200014:bin-aplicada-maxima must select the 70%-of-base-previa branch
+# (not the floor), clamped by the available BIN stock. The existing predicate
+# tests above supply the ceiling by hand and exercise only the EUR 1M-floor
+# branch; this test drives the REAL cap formula end-to-end through the M200
+# engine so the 70% branch — and the base-previa operand it reads — is covered.
+# ---------------------------------------------------------------------------
+
+#: Resultado contable de la cuenta de pérdidas y ganancias (casilla 00501), the
+#: operand the base imponible previa (00550) is computed from.
+_M200_RESULTADO_CONTABLE: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE")
+_M200_BASE_PREVIA: CasillaId = validated_casilla_id("DP200014:00550", surface="_M200_BASE_PREVIA")
+
+
+def test_modelo_200_bin_aplicada_maxima_selects_70_percent_branch(tmp_path: Path) -> None:
+    """The art.26.1 ceiling computes 70%·base previa when it exceeds the EUR 1M floor.
+
+    Worked scenario: a sociedad with resultado contable 5.000.000 € and no
+    correcciones has base imponible previa (00550) = 5.000.000 €. LIS art. 26.1
+    (BOE-A-2014-12328): the BIN compensable límite is «el 70 por ciento de la
+    base imponible previa», with «en todo caso» a floor of «1 millón de euros».
+    Here 70 %·5.000.000 = 3.500.000 € dominates the 1.000.000 € floor, and the
+    BIN stock carried from the prior year (4.000.000 €) does not clip it, so the
+    computed ceiling DP200014:bin-aplicada-maxima = 3.500.000 €.
+
+    Non-tautological grounding: the expected 3.500.000 € is the BOE-stated 70 %
+    rate applied to the worked base, not a re-run of the registry formula; the
+    test proves the engine wires the 70 % branch (and reads casilla 00550 as the
+    base operand) rather than falling back to the EUR 1M floor.
+    """
+    prior_year_bin_stock = Decimal("4000000.00")
+    resultado_contable = Decimal("5000000.00")
+    expected_ceiling = Decimal("3500000.00")  # 70 % de 5.000.000 € (LIS art. 26.1)
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        obs_repo = CalculationObservationRepository()
+        _seed_m200_bin_stock(source_year=2024, stock=prior_year_bin_stock, obs_repo=obs_repo)
+        resolved = _resolve_and_supply_relations(filing_year=_YEAR_N, obs_repo=obs_repo)
+        result, _ = _calculate_200(
+            filing_year=_YEAR_N,
+            relation_values=resolved,
+            manual_inputs={_M200_RESULTADO_CONTABLE: resultado_contable},
+        )
+
+    # The base previa operand the cap reads is the computed 00550 = 00501.
+    assert Decimal(result.values[_M200_BASE_PREVIA]) == resultado_contable
+    # The opening BIN stock carried from the prior year does not clip the 70% branch.
+    assert Decimal(result.values[_M200_BIN_PENDIENTE_INICIO]) == prior_year_bin_stock
+    # The ceiling selects 70%·base previa over the EUR 1M floor and the stock.
+    assert Decimal(result.values[_M200_BIN_APLICADA_MAXIMA]) == expected_ceiling

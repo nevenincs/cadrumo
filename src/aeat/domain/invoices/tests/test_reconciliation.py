@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.invoices import link_invoice_transaction_repositories
 from ....tests.secure_sql import isolated_runtime_profile
 from ...iva import InvoiceKind
@@ -20,10 +22,8 @@ from ...transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ...transactions._repository import TransactionCatalogueRepository
 from .._enums import IvaRate, PaymentStatus
 from .._models import Invoice, InvoiceCatalogue, InvoiceLine
-from .._repository import InvoiceCatalogueRepository
 from .._service import (
     suggest_reconciliations,
     verify_link_consistency,
@@ -31,10 +31,12 @@ from .._service import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_BUCKET_ID = "18181818-1818-4181-8181-181818181818"
+
 
 @pytest.fixture(autouse=True)
 def _active_bucket_runtime(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         yield
 
 
@@ -88,7 +90,7 @@ def _transaction(
     direction: TransactionDirection = TransactionDirection.INCOMING,
 ) -> Transaction:
     raw = RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 4, 5),
         value_date=date(2026, 4, 5),
         amount=amount,
@@ -108,6 +110,8 @@ def _transaction(
     payload: dict[str, object] = {
         "raw": raw,
         "direction": direction,
+        "source_jurisdiction": "ES",
+        "group_label": None,
     }
     if invoice_id is not None:
         payload["invoice_id"] = invoice_id
@@ -277,10 +281,10 @@ def test_link_bidirectional_updates_both_catalogues() -> None:
         counterparty="Cliente SL",
     )
     InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices([invoice]))
-    TransactionCatalogueRepository(bucket_id="test").save(TransactionCatalogue.from_transactions([transaction]))
+    TransactionCatalogueRepository(bucket_id=_BUCKET_ID).save(TransactionCatalogue.from_transactions([transaction]))
 
     result = link_invoice_transaction_repositories(
-        bucket_id="test",
+        bucket_id=_BUCKET_ID,
         invoice_id=invoice.invoice_id,
         transaction_id=transaction.transaction_id,
     )
@@ -295,5 +299,5 @@ def test_link_bidirectional_updates_both_catalogues() -> None:
     assert updated_transaction.invoice_id == invoice.invoice_id
 
     # Catalogues persisted in the secure backend agree with the returned values.
-    reloaded = TransactionCatalogueRepository(bucket_id="test").load()
+    reloaded = TransactionCatalogueRepository(bucket_id=_BUCKET_ID).load()
     assert reloaded.get(transaction.transaction_id) == updated_transaction

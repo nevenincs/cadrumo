@@ -29,8 +29,7 @@ import pytest
 from pydantic import BaseModel
 
 from ....core.i18n import Translatable as tr
-from ...workflow._errors import WorkflowInputMismatchError
-from ...workflow._models import WorkflowState
+from ...workflow import WorkflowInputMismatchError, WorkflowState
 from .._models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from .._persistence import _canonicalise, _parse_canonical, _resolve_canonical, persist_patch
 
@@ -87,14 +86,10 @@ def test_canonicalise_none_returns_empty_string() -> None:
     assert _canonicalise(question, None) == ""
 
 
-def test_canonicalise_bool_true_returns_lowercase_true_token() -> None:
+def test_canonicalise_bool_returns_lowercase_token() -> None:
     question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
-    assert _canonicalise(question, True) == "true"
-
-
-def test_canonicalise_bool_false_returns_lowercase_false_token() -> None:
-    question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
-    assert _canonicalise(question, False) == "false"
+    for value, expected in ((True, "true"), (False, "false")):
+        assert _canonicalise(question, value) == expected
 
 
 def test_canonicalise_path_returns_str_form() -> None:
@@ -123,14 +118,10 @@ def test_canonicalise_empty_string_passes_through_as_empty() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_parse_canonical_bool_true_token_returns_true() -> None:
+def test_parse_canonical_bool_declared_tokens_return_bool() -> None:
     question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
-    assert _parse_canonical(question, "true") is True
-
-
-def test_parse_canonical_bool_false_token_returns_false() -> None:
-    question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
-    assert _parse_canonical(question, "false") is False
+    for raw_value, expected in (("true", True), ("false", False)):
+        assert _parse_canonical(question, raw_value) is expected
 
 
 def test_parse_canonical_bool_non_true_token_returns_false() -> None:
@@ -257,8 +248,8 @@ def test_parse_canonical_optional_bool_declared_tokens_project_to_bool() -> None
         required=False,
         answer_type=bool,
     )
-    assert _parse_canonical(question, "true") is True
-    assert _parse_canonical(question, "false") is False
+    for raw_value, expected in (("true", True), ("false", False)):
+        assert _parse_canonical(question, raw_value) is expected
 
 
 def test_canonicalise_blank_string_for_optional_bool_stays_blank() -> None:

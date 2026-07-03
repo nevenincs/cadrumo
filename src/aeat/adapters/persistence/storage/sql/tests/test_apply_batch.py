@@ -16,9 +16,10 @@ from pathlib import Path
 
 import pytest
 
-from ...crypto._encrypted_columns import secure_object_key_digest
+from ......core import SecureObjectWrite
+from ...crypto import secure_object_key_digest
 from ...errors import SecureObjectRevisionConflictError
-from .._secure_object_records import SecureObjectDeletion, SecureObjectWrite
+from .._secure_object_records import SecureObjectDeletion
 from ._secure_objects_support import (
     Base,
     EphemeralMasterKeyProvider,
@@ -30,7 +31,7 @@ from ._secure_objects_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_NS = "aeat.test"
+_NS = "aeat-test"
 
 
 def _write(key: str, body: bytes, *, expected_revision_id: str | None = None) -> SecureObjectWrite:
@@ -83,7 +84,7 @@ def test_namespace_payload_hashes_keys_match_natural_key_digests(tmp_path: Path)
         assert all(value for value in stored.values())
         # Stable across reads; a different namespace is empty.
         assert repo.namespace_payload_hashes(_NS) == stored
-        assert repo.namespace_payload_hashes("aeat.test.absent") == {}
+        assert repo.namespace_payload_hashes("aeat-test.absent") == {}
 
 
 def test_apply_batch_is_atomic_on_failure(tmp_path: Path) -> None:

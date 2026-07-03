@@ -15,17 +15,17 @@ from collections.abc import Iterable
 from datetime import date, datetime
 from typing import Literal
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...core.errors import BaseSeverity
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
     BucketEvent,
-    BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.user_profile import (
     ProfileAlreadyExistsError,
     ProfileNotFoundError,
@@ -33,8 +33,8 @@ from ...domain.user_profile import (
     UserProfileFact,
     UserProfileRecord,
     UserProfileStatus,
+    utc_now,
 )
-from ...domain.user_profile._values import utc_now
 from . import (
     DuplicateProfileCommand,
     EditProfileFieldCommand,

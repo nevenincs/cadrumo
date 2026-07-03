@@ -26,8 +26,12 @@ import pytest
 
 from ......core import Period
 from ......core.i18n import tr
-from ...auth._authenticator import AeatSession, CertificateSessionDetail, HandshakeResult
-from ...auth._providers import AuthProviderKind
+from ...auth import (
+    AeatSession,
+    AuthProviderKind,
+    CertificateSessionDetail,
+    HandshakeResult,
+)
 from .._auth_state import storage_state_for_session
 from .._errors import SedeNavigationError
 
@@ -37,7 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 # Helpers
 # ---------------------------------------------------------------------------
 
-_NOW = datetime.now(UTC)
+_NOW = datetime(2026, 5, 28, 14, 40, 0, tzinfo=UTC)
 _DEADLINE = _NOW + timedelta(hours=8)
 
 

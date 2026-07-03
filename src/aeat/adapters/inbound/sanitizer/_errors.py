@@ -1,7 +1,7 @@
-"""Domain errors raised by the :mod:`aeat.adapters.inbound.sanitizer` subpackage.
+"""Domain errors raised by the :mod:`adapters.inbound.sanitizer` subpackage.
 
 All sanitiser errors inherit from
-:class:`aeat.core.errors.AeatError` so callers can catch the family
+:class:`core.errors.AeatError` so callers can catch the family
 without importing implementation details. The hierarchy mirrors the
 failure surfaces the sanitiser pipeline can encounter — source-parse
 failure, signature-present refusal, already-sanitised guard, and
@@ -16,7 +16,7 @@ _SANITIZER_SOURCE_LABEL = "<input-pdf>"
 
 
 class SanitizationError(AeatError):
-    """Base error for the :mod:`aeat.adapters.inbound.sanitizer` subpackage."""
+    """Base error for the :mod:`adapters.inbound.sanitizer` subpackage."""
 
 
 class SanitizerValidationError(SanitizationError, ValueError):
@@ -47,10 +47,9 @@ class SanitizerSourceParseError(SanitizationError):
         """Construct a redacted source-parse error.
 
         Args:
-            message: Legacy positional diagnostic text. Accepted for
-                compatibility, but intentionally not rendered or copied
-                into context because historical callers passed raw
-                pikepdf/QPDF diagnostics here.
+            message: Positional diagnostic text, intentionally not
+                rendered or copied into context because callers may pass
+                raw pikepdf/QPDF diagnostics here.
             failure: Optional underlying parser exception type name,
                 safe for debug envelopes because it excludes operator
                 paths and provider payload text.

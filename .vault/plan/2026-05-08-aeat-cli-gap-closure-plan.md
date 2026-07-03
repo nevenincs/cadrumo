@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#aeat-cli-gap-closure'
 date: '2026-05-08'
-modified: '2026-05-08'
+modified: '2026-06-30'
 related:
   - "[[2026-05-08-aeat-cli-gap-discovery-audit]]"
   - "[[2026-05-08-aeat-cli-hardening-plan]]"
@@ -15,8 +15,6 @@ related:
   - "[[2026-04-27-auth-cli-research]]"
   - "[[2026-05-12-cli-design-research]]"
 ---
-
-
 
 # `aeat-cli-gap-closure` `AEAT CLI gap closure granular execution plan`
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S11'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
-
-
-
 
 # Flip box 37 (AIC corrientes deducible cuota) to computed with formula modelo-303-dr303-37-projection copying the P01-pinned source iva.autorepercutido.intracomunitaria.deducible, carrying box 37 legal_refs
 

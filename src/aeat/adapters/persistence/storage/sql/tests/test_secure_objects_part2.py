@@ -22,6 +22,7 @@ from ._secure_objects_support import (
     SecureObjectWrite,
     SensitivityClass,
     Settings,
+    StorageCustodyDisposition,
     StorageHierarchyRegistry,
     StorageNamespaceScope,
     StorageValidationError,
@@ -65,17 +66,18 @@ def test_iter_records_with_failures_yields_registry_schema_drift(tmp_path: Path)
     """Registry-bound row schema drift surfaces as a typed unreadable outcome."""
 
     with _ephemeral_secure_repo(tmp_path, "registry-schema-drift.db") as (_, engine, repo):
-        namespace = "aeat.test.registry.schema"
+        namespace = "aeat-test.registry.schema"
         registry = StorageHierarchyRegistry(
             namespaces=(
                 SecureObjectNamespaceDefinition(
                     key="test_registry_schema",
                     namespace=namespace,
-                    owner="aeat.test",
+                    owner="aeat-test",
                     sensitivity=SensitivityClass.FINANCIAL,
                     schema_version=1,
                     object_key_grammar="{id}",
                     scope=StorageNamespaceScope.PROFILE_LOCAL,
+                    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
                 ),
             ),
             paths=(),
@@ -110,7 +112,7 @@ def test_iter_records_with_failures_returns_empty_on_empty_namespace(
     with _ephemeral_secure_repo(tmp_path, "empty.db") as (_, _, repo):
         items = list(
             repo.iter_records_with_failures(
-                "aeat.test.empty",
+                "aeat-test.empty",
                 expected_class=SensitivityClass.FINANCIAL,
                 max_supported_version=1,
             ),
@@ -118,11 +120,39 @@ def test_iter_records_with_failures_returns_empty_on_empty_namespace(
         assert items == []
 
 
+def test_iter_records_with_failures_yields_older_schema_drift(tmp_path: Path) -> None:
+    """Rows below the consumer's current schema version are unreadable."""
+
+    with _ephemeral_secure_repo(tmp_path, "older-schema-drift.db") as (_, _, repo):
+        namespace = "aeat-test.older.schema"
+        repo.save(
+            namespace=namespace,
+            object_key="older-row",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=datetime.now(UTC),
+            payload=b"older-row",
+        )
+
+        outcomes = list(
+            repo.iter_records_with_failures(
+                namespace,
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=2,
+            ),
+        )
+
+        assert len(outcomes) == 1
+        assert isinstance(outcomes[0], SecureObjectUnreadable)
+        assert outcomes[0].schema_version == 1
+        assert "does not match expected" in outcomes[0].reason
+
+
 def test_iter_records_with_failures_applies_bounded_batch_execution(tmp_path: Path) -> None:
     """The explicit diagnostic iterator executes its row scan with a bounded batch size."""
 
     with _ephemeral_secure_repo(tmp_path, "bounded-batches.db") as (_, engine, repo):
-        namespace = "aeat.test.bounded.batches"
+        namespace = "aeat-test.bounded.batches"
         captured_options: list[dict[str, object]] = []
 
         def capture_listing_execution(
@@ -173,7 +203,7 @@ def test_iter_records_with_failures_rejects_invalid_batch_size(tmp_path: Path) -
         with pytest.raises(StorageValidationError) as raised:
             list(
                 repo.iter_records_with_failures(
-                    "aeat.test.invalid.batch",
+                    "aeat-test.invalid.batch",
                     expected_class=SensitivityClass.FINANCIAL,
                     max_supported_version=1,
                     batch_size=0,
@@ -189,7 +219,7 @@ def test_list_records_only_emits_warning_when_unreadable_rows_exist(
 ) -> None:
     """No warning fires on a clean namespace; the warning is gated on real failures."""
     with _ephemeral_secure_repo(tmp_path, "clean.db") as (_, _, repo):
-        namespace = "aeat.test.clean"
+        namespace = "aeat-test.clean"
         repo.save(
             namespace=namespace,
             object_key="row-clean",

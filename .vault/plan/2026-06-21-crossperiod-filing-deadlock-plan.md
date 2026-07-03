@@ -3,27 +3,18 @@ tags:
   - '#plan'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-21'
-modified: '2026-06-21'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-19-crossperiod-filing-deadlock-adr]]'
   - '[[2026-06-19-crossperiod-filing-deadlock-research]]'
 ---
 
-
-
-
-
-
-
-
 # `crossperiod-filing-deadlock` plan
 
 ### Phase `P01` - Decision A - admit late local work file for closed-window targets
 
 Resolve the FILE-gate obligation schedule in the target period's filing year so a genuinely-existing but closed-window obligation is admitted as a late LOCAL filing (extemporanea, con recargo), seeding the next period's cross-period carry observation; a target that never had an obligation still refuses NO_PENDING_OBLIGATION.
-
-
 
 - [x] `P01.S01` - Re-scope the FILE-gate obligation schedule to the target period's filing year for an explicit FILE target, leaving the as-of-today projection on today.year; `src/aeat/application/workflow/_engine.py`.
 - [x] `P01.S02` - Guard the target-year compute against NoDeadlineWindowsError so a year with no registry windows degrades to NO_PENDING_OBLIGATION rather than UNHANDLED_EXCEPTION; `src/aeat/application/workflow/_engine.py`.
@@ -53,12 +44,6 @@ Phase `P02` (Decision B, same-year scope) admits a same-filing-year `app_filing`
 This plan is a retroactive backfill: the implementation landed on `chore/eliminate-shims` in commits `6e635f566` (Decision A) and `84add274d` (Decision B) before this plan was authored. Each Step's execution record names the landing commit; the companion code-review audit is the closure evidence.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

@@ -9,7 +9,7 @@ A small set of tests legitimately need to manipulate *real*
 ``os.environ`` instead of (or in addition to) the ContextVar layer:
 
 * The pydantic-settings env-precedence tests in
-  :mod:`aeat.tests.test_config` exercise the env-reading contract
+  :mod:`aeat-tests.test_config` exercise the env-reading contract
   itself — validators must observe real env values, so a ContextVar
   override above the env layer would defeat the test.
 * The model-validator-derives-default tests in

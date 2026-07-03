@@ -4,8 +4,8 @@
 # (source_ref: boe-modelo-840-2003-form).
 # pdfplumber extracts casilla-number prefixed labels: "14Ejercicio:" and
 # "15Declaración de:". The patterns match those extracted lines at line-start.
-# Round-trip verified by test_parser_extracts_modelo_840_synthetic_fixture_targets
-# in test_parser_boundary.py against a sanitized synthetic fixture built from
+# Round-trip verified by test_parser_boundary_part2.py::
+# test_parser_extracts_modelo_840_synthetic_fixture_targets against a sanitized synthetic fixture built from
 # the corpus-published labels.
 [[revisions."2003-y-siguientes".extraction_profiles]]
 id = "modelo-840-declaracion-pdf"
@@ -22,6 +22,6 @@ corpus_round_trip_verified = true
 verification_source = "synthetic_from_aeat_published_text"
 min_coverage = "1.0"
 failure_semantics = "fail_hard"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "orden-hac-2572-2003:apartado-6"]
 source_refs = ["aeat-dr-840", "boe-modelo-840-2003-form"]
 

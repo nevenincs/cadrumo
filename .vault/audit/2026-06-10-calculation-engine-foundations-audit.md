@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#calculation-engine-foundations'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `calculation-engine-foundations` audit: `Dormant calculation-parts census: every part not enrolled into the live calculate path (sonnet+opus audit swarm)`
 

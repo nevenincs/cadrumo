@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 step_id: 'S09'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-plan]]"
 ---
-
-
-
 
 # Update the calculate orchestration call site to consume the mesh-merged resolution directly instead of CalculationBindingResolution, sourcing borrador provenance from the borrador resolution, applying the apply-cached-on-collision drive against the live peer WIP
 

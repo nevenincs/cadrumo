@@ -17,8 +17,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from email.parser import Parser
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
+_UTF_8: Final[str] = "utf-8"
 _REPRESENTATIVE_DATA_LEAVES = (
     "registry/aeat/modelos/036/manifest.toml",
     "registry/aeat/user_profile/schema.toml",
@@ -31,6 +32,13 @@ _TRACKED_DATA_ROOTS = (
 )
 _SOURCE_DATA_PREFIX = "src/aeat/_data/"
 _WHEEL_DATA_PREFIX = "aeat/_data"
+# Corpus source binaries excluded from the slim ``aeat`` wheel by the wheel-split
+# build config; they ship in the ``aeat-data`` companion distribution. A tracked
+# source path is one of these when it lives under ``_data/corpus`` and carries a
+# binary suffix, so the wheel-bundling parity check must not expect it in the
+# ``aeat`` archive.
+_CORPUS_SOURCE_PREFIX = "src/aeat/_data/corpus/"
+_CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
 _RENTA_PDF_ALLOW_LIST = {
     f"src/aeat/_data/corpus/manuals/renta/{year}/part1/source.pdf"
     for year in ("2020", "2021", "2022", "2023", "2024", "2025")
@@ -44,6 +52,18 @@ _CORE_ABSENT_NAMES = {
     "semgrep",
     "sphinx",
     "torch",
+}
+# Packages that legitimately appear in the core resolution as transitive
+# dependencies of a base dependency, even though they are ALSO declared under an
+# optional extra (a name collision). Without this carve-out the
+# "optional-leaked-into-core" export check would false-positive on the shared
+# name. ``numpy`` is pulled into core by ``formulas`` (a base dependency, the
+# workbook-parity oracle) and is independently listed in the ``search`` extra.
+# ``anyio`` is pulled into core by ``httpx`` (a base dependency) and is declared
+# in the ``agent`` extra because the stdio MCP server imports it directly.
+_CORE_PRESENT_TRANSITIVE_NAMES = {
+    "numpy",
+    "anyio",
 }
 _EXTRAS_PRESENT_NAMES = {
     "anthropic",
@@ -127,7 +147,7 @@ def _git_env(repo_root: Path) -> dict[str, str] | None:
     dot_git = repo_root / ".git"
     if not dot_git.is_file():
         return None
-    gitdir_line = dot_git.read_text(encoding="utf-8").strip()
+    gitdir_line = dot_git.read_text(encoding=_UTF_8).strip()
     prefix = "gitdir: "
     if not gitdir_line.startswith(prefix):
         return None
@@ -257,7 +277,7 @@ def _pyproject_surfaces(repo_root: Path) -> DependencySurfaces:
 def _optional_extra_registry(repo_root: Path) -> tuple[dict[str, str], set[str]]:
     """Return capability-gated optional extras declared by the core registry."""
     source = repo_root / "src" / "aeat" / "core" / "_optional_extras.py"
-    module = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+    module = ast.parse(source.read_text(encoding=_UTF_8), filename=str(source))
     records_by_symbol: dict[str, tuple[str, str]] = {}
     tuple_symbols: set[str] = set()
     for node in module.body:
@@ -325,7 +345,7 @@ def _wheel_metadata(wheel: Path) -> tuple[list[str], set[str]]:
     """Return wheel Requires-Dist rows and Provided-Extra names."""
     with zipfile.ZipFile(wheel) as archive:
         metadata_name = next(name for name in archive.namelist() if name.endswith(".dist-info/METADATA"))
-        metadata = Parser().parsestr(archive.read(metadata_name).decode("utf-8"))
+        metadata = Parser().parsestr(archive.read(metadata_name).decode(_UTF_8))
     return metadata.get_all("Requires-Dist") or [], {
         _normalize_name(extra) for extra in (metadata.get_all("Provides-Extra") or [])
     }
@@ -361,10 +381,29 @@ def _tracked_source_data_paths(repo_root: Path) -> set[str]:
     return tracked
 
 
+def _is_corpus_source_binary(source_relative: str) -> bool:
+    """Return True for a tracked ``_data/corpus`` path that is an excluded source binary."""
+    return source_relative.startswith(_CORPUS_SOURCE_PREFIX) and source_relative.lower().endswith(
+        _CORPUS_BINARY_SUFFIXES
+    )
+
+
 def _expected_wheel_data_paths(repo_root: Path) -> set[str]:
-    """Return expected bundled-data paths inside the wheel archive."""
+    """Return expected bundled-data paths inside the slim ``aeat`` wheel archive.
+
+    Corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``) are excluded:
+    the wheel-split build config sheds them from this wheel and ships them in the
+    ``aeat-data`` companion, so they are legitimately absent from the archive.
+    Test modules under a ``_data`` ``tests/`` folder are excluded by the
+    data-budget wheel boundary (tests serve no installed consumer) and are
+    likewise legitimately absent.
+    """
     expected: set[str] = set()
     for path in _tracked_source_data_paths(repo_root):
+        if _is_corpus_source_binary(path):
+            continue
+        if "/tests/" in path:
+            continue
         expected.add(f"{_WHEEL_DATA_PREFIX}/{path.removeprefix(_SOURCE_DATA_PREFIX)}")
     return expected
 
@@ -404,13 +443,26 @@ def _assert_wheel_metadata_matches_pyproject(repo_root: Path, wheel: Path) -> No
         raise SystemExit(f"dev-only dependencies leaked into wheel metadata: {leaked_dev!r}")
 
 
-def _export_names(output: str) -> set[str]:
-    """Return normalized package names from a requirements export."""
+def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
+    """Return normalized package names from a requirements export.
+
+    A dependency resolved through a ``[tool.uv.sources]`` path source (the
+    not-yet-published ``aeat-data`` companion) exports as a bare local path
+    row (``./packaging/aeat_data``) rather than a requirement string; resolve
+    such a row to the referenced project's own ``[project].name`` so the
+    surface checks see the real package name.
+    """
     names: set[str] = set()
     for line in output.splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
+        if stripped.startswith(("./", "../")) and repo_root is not None:
+            local_pyproject = (repo_root / stripped / "pyproject.toml").resolve()
+            if local_pyproject.is_file():
+                local = tomllib.loads(local_pyproject.read_text(encoding=_UTF_8))
+                names.add(_normalize_name(local["project"]["name"]))
+                continue
         names.add(_requirement_name(stripped))
     return names
 
@@ -443,14 +495,15 @@ def _validate_frozen_exports(repo_root: Path, uv: str) -> None:
         [uv, "export", "--frozen", "--all-extras", "--all-groups", "--no-emit-project", "--no-hashes"],
         cwd=repo_root,
     )
-    core_names = _export_names(core.stdout)
-    extras_names = _export_names(extras.stdout)
-    dev_names = _export_names(dev.stdout)
+    core_names = _export_names(core.stdout, repo_root=repo_root)
+    extras_names = _export_names(extras.stdout, repo_root=repo_root)
+    dev_names = _export_names(dev.stdout, repo_root=repo_root)
     _assert_export_surface(
         "core",
         core_names,
         present=surfaces.project_active_names,
-        absent=surfaces.external_optional_active_names | surfaces.dev_only_active_names | _CORE_ABSENT_NAMES,
+        absent=(surfaces.external_optional_active_names | surfaces.dev_only_active_names | _CORE_ABSENT_NAMES)
+        - _CORE_PRESENT_TRANSITIVE_NAMES,
     )
     _assert_export_surface(
         "extras",
@@ -491,7 +544,7 @@ def _build_wheel(repo_root: Path, work_dir: Path, uv: str) -> Path:
     wheel_dir = work_dir / "wheel"
     wheel_dir.mkdir(parents=True, exist_ok=True)
     _run([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=repo_root)
-    wheels = sorted(wheel_dir.glob("aeat-*.whl"))
+    wheels = sorted(wheel_dir.glob("aeat_cli-*.whl"))
     if len(wheels) != 1:
         raise SystemExit(f"expected exactly one aeat wheel in {wheel_dir}; got {[wheel.name for wheel in wheels]!r}")
     _assert_wheel_contains_tracked_data(repo_root, wheels[0], expected_data_paths)
@@ -510,7 +563,7 @@ def _install_wheel(
     """Install the built wheel into a fresh virtualenv and return the venv path."""
     venv = work_dir / "venv"
     _run([uv, "venv", str(venv), "--python", python], cwd=repo_root)
-    target = str(wheel) if not extras else f"aeat[{','.join(extras)}] @ {wheel.resolve().as_uri()}"
+    target = str(wheel) if not extras else f"aeat-cli[{','.join(extras)}] @ {wheel.resolve().as_uri()}"
     _run(
         [uv, "pip", "install", "--python", str(_venv_python(venv)), target],
         cwd=repo_root,
@@ -746,7 +799,7 @@ def _write_smoke_manifest(
     if details:
         payload["details"] = details
     path = work_dir / "packaging-smoke-manifest.json"
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding=_UTF_8)
     return path
 
 

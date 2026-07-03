@@ -1,0 +1,15 @@
+[[revisions."esquema-union".filing_schedules]]
+id = "modelo-369-union-trimestral"
+period_kind = "quarterly"
+periods = ["1T", "2T", "3T", "4T"]
+profile_condition_mode = "all"
+legal_refs = ["orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
+
+[[revisions."esquema-union".filing_schedules.profile_conditions]]
+field = "iva.oss_enrolled"
+op = "equals"
+value = true
+explanation = "Modelo 369 esquema union aplica solo a sujetos pasivos acogidos al regimen OSS de ventanilla unica, y unicamente por ventas a distancia intracomunitarias de bienes y prestaciones de servicios B2C a destinatarios que no tengan la condicion de sujetos pasivos (consumidores finales) en otros Estados miembros; las operaciones intracomunitarias B2B entre sujetos pasivos tributan por inversion del sujeto pasivo en destino y se declaran en los modelos 303 y 349, no en el modelo 369."
+legal_refs = ["orden-hac-610-2021:art-2"]
+source_refs = ["aeat-modelo-369-procedure"]

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-live-shape-adr]]"
@@ -11,7 +11,6 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]"
 ---
-
 
 # `cli-workflow-redesign` adr: `Borrador snapshot management list, discard, export, verify` | (**status:** `accepted`)
 

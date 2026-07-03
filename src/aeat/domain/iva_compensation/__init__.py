@@ -1,10 +1,48 @@
-"""IVA-compensation domain: pure carry-forward, reconciliation, and balance logic.
+"""Public facade for pure IVA-compensation domain primitives.
 
-This package owns the regulatory carry-forward projection (Modelo 303 four-year
-compensation window), the wallet reconciliation decision logic, and the wallet
-balance projection, plus their typed guard errors. Repositories, event stores,
-and orchestration that wire these pure pieces to persistence remain in the
-application layer.
+This package owns the regulatory Modelo 303 carry-forward projection, the
+Modelo 390 year-end carry partition, the wallet reconciliation decision logic,
+and the wallet balance projection. The domain works with typed immutable records
+such as :class:`IvaCompensationPeriodState`,
+:class:`IvaCompensationCarryForwardLot`,
+:class:`IvaCompensationCarryForwardReport`,
+:class:`IvaCompensationYearEndCarryPartition`, and
+:class:`IvaWalletBalanceReport`; it does not open repositories, emit bucket
+events, or resolve the active profile.
+
+Compensation availability is derived by :func:`derive_303_compensation_available`
+and then projected through
+:func:`build_iva_compensation_carry_forward_report` /
+:func:`enforce_iva_compensation_four_year_window`. Reconciliation records such
+as :class:`IvaCompensationOverride`, :class:`IvaCompensationAuthoritySource`, and
+:class:`IvaCompensationReconciliationDecision` separate AEAT wallet evidence,
+filed-history evidence, local recurrence, and taxpayer override before Modelo
+303 consumes casilla ``110``. :func:`reconcile_iva_compensation_wallet` and
+:func:`validate_wallet_matches_snapshot` apply that reconciliation policy
+against a live wallet observation conforming to
+:class:`IvaCompensationWalletObservationProtocol`.
+
+Repositories, secure-object custody, live wallet acquisition, and bucket event
+emission remain application responsibilities.
+
+See Also:
+    :class:`application.calculations.IvaCompensationHistoryRepository`
+        Encrypted local period-state history consumed by carry reconstruction.
+    :class:`application.calculations.IvaWalletDecisionRepository`
+        Persisted wallet-authority decisions selected before Modelo 303
+        calculation consumes casilla ``110``.
+    :mod:`application.calculations`
+        Application source resolvers for previous-filing carries, IVA wallet
+        decisions, and Modelo 390 annual carry partitioning.
+    :mod:`application.live`
+        Read-only AEAT wallet and filed-history capture surface that supplies
+        external evidence without performing live writes.
+    :mod:`application.modelo`
+        Work-unit calculation and IVA-wallet gate that apply the persisted
+        authority decision to registry snapshots.
+    :class:`adapters.persistence.profile.buckets.BucketEventHistoryRepository`
+        Bucket audit trail for persisted decisions and capture orchestration,
+        outside this pure domain package.
 """
 
 from __future__ import annotations
@@ -23,6 +61,7 @@ from ._carry_forward import (
     derive_303_compensation_available,
     derive_iva_compensation_year_end_carry_partition,
     enforce_iva_compensation_four_year_window,
+    iva_compensation_period_sort_key,
 )
 from ._errors import (
     IvaCompensationCarryForwardPolicyError,
@@ -31,28 +70,47 @@ from ._errors import (
     IvaCompensationReconciliationInputError,
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
+    IvaWalletReconciliationError,
 )
 from ._reconciliation import (
+    DEFAULT_MAX_WALLET_AGE_DAYS,
+    IvaCompensationAuthoritySource,
+    IvaCompensationDivergence,
     IvaCompensationOverride,
+    IvaCompensationReconciliationDecision,
+    IvaCompensationWalletObservationProtocol,
+    local_recurrence_authority_source,
+    reconcile_iva_compensation_wallet,
+    validate_wallet_matches_snapshot,
 )
 
 __all__ = [
+    "DEFAULT_MAX_WALLET_AGE_DAYS",
+    "IvaCompensationAuthoritySource",
     "IvaCompensationCarryForwardLot",
     "IvaCompensationCarryForwardPolicyError",
     "IvaCompensationCarryForwardReport",
     "IvaCompensationCasillaReferenceError",
     "IvaCompensationDecimalParseError",
+    "IvaCompensationDivergence",
     "IvaCompensationExpiryReviewState",
     "IvaCompensationOverride",
     "IvaCompensationPeriodState",
+    "IvaCompensationReconciliationDecision",
     "IvaCompensationReconciliationInputError",
     "IvaCompensationSeedConflictError",
+    "IvaCompensationWalletObservationProtocol",
     "IvaCompensationYearEndCarryPartition",
     "IvaCompensationYearRangeError",
     "IvaWalletBalanceReport",
+    "IvaWalletReconciliationError",
     "build_iva_compensation_carry_forward_report",
     "build_iva_wallet_balance_report",
     "derive_303_compensation_available",
     "derive_iva_compensation_year_end_carry_partition",
     "enforce_iva_compensation_four_year_window",
+    "iva_compensation_period_sort_key",
+    "local_recurrence_authority_source",
+    "reconcile_iva_compensation_wallet",
+    "validate_wallet_matches_snapshot",
 ]

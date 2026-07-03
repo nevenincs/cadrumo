@@ -3,6 +3,22 @@
 Every type that crosses a public boundary is a strict+frozen
 :class:`pydantic.BaseModel` or a closed :class:`enum.StrEnum`.
 No dataclasses; no bare ``dict[str, Any]``.
+
+The records describe a local or imported filing audit trail. They do not
+authorize a live AEAT write; live-write refusal stays with the core access gate
+and application facades compose these records into draft/import flows.
+
+See Also:
+    :class:`aeat.domain.submission.SubmissionEngine`
+        Runs preflight and reads these records from the repository.
+    :func:`aeat.application.filing.import_filing_from_justificante`
+        Builds a companion :class:`ModeloPresentado` when an offline
+        justificante PDF is imported.
+    :class:`aeat.domain.modelos.ModeloRecord`
+        Work-unit filing record used by the modelo application facade.
+    :mod:`aeat.application.live`
+        Read-only live-capture surface that may attach AEAT evidence to
+        existing local filing records.
 """
 
 from __future__ import annotations
@@ -16,6 +32,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...core.identity import SubjectTaxId
 from ._errors import SubmissionValidationError
 
 
@@ -89,7 +106,8 @@ class ModeloPresentado(BaseModel):
         period: The :class:`~aeat.core.Period` covered, serialised as
             ``{"filing_year": int, "code": str}`` across the persistence
             boundary.
-        profile_tax_id: The autónomo NIF / NIE verbatim.
+        profile_tax_id: The validated taxpayer identity value carried
+            by the upstream draft or imported receipt.
         status: The overall :class:`SubmissionStatus` for the filing.
         justificante_csv: The AEAT-issued CSV, when present.
         justificante_pdf_path: Local path to the justificante PDF,
@@ -107,7 +125,7 @@ class ModeloPresentado(BaseModel):
     draft_id: str = Field(min_length=1)
     modelo: str = Field(min_length=1)
     period: Period
-    profile_tax_id: str = Field(min_length=1)
+    profile_tax_id: SubjectTaxId = Field(min_length=1)
     status: SubmissionStatus
     justificante_csv: str | None = None
     justificante_pdf_path: Path | None = None

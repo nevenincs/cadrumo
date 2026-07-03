@@ -1,0 +1,14 @@
+[[revisions."2022".relations]]
+id = "renta-2022-rel-131-pagos-fraccionados"
+kind = "cross_model_output"
+dependency_role = "instalment_to_final_settlement"
+source_modelo = "131"
+source_revision_selector = { year = 2022 }
+source_casilla_id = "15"
+target_binding = "renta-2022-modelo-131-pagos-fraccionados"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-672-2007:art-3"]
+source_refs = ["aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]

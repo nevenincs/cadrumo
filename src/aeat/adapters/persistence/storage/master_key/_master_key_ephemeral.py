@@ -6,7 +6,7 @@ import secrets
 from typing import TYPE_CHECKING
 
 from .....core.time import now
-from ..crypto._crypto import KEY_SIZE
+from ..crypto import KEY_SIZE
 from ..errors import SecretStoreError
 
 if TYPE_CHECKING:

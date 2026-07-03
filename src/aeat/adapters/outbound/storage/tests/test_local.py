@@ -20,11 +20,13 @@ from .....core.i18n import tr
 from .. import (
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,
+    OutboundStoragePathTooLongError,
     OutboundStorageValidationError,
     ProviderKind,
     StorageCorruptionError,
     StorageProvider,
 )
+from .._errors import OutboundStoragePermissionError
 from .._local import LocalFileSystemProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -206,26 +208,52 @@ def test_put_with_relabel_replaces_existing_file(provider: LocalFileSystemProvid
     assert Path(metadata_v2.provider_object_id).exists()
 
 
-def test_put_rejects_blank_namespace(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(OutboundStorageValidationError, match="namespace must not be blank") as raised:
-        provider.put("", "abcdef0123456789", b"x", content_hash="sha256-x", label="x")
-    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.namespace_blank"
-    assert resolve_error_message(raised.value) == tr(raised.value.translated_message)
-
-
-def test_put_rejects_namespace_with_slash(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(OutboundStorageValidationError, match="forbidden characters") as raised:
-        provider.put("with/slash", "abcdef0123456789", b"x", content_hash="sha256-x", label="x")
-    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.namespace_forbidden_characters"
-    assert raised.value.context == {"namespace": "with/slash"}
+@pytest.mark.parametrize(
+    ("put_kwargs", "match", "message", "context"),
+    [
+        (
+            {"namespace": "", "object_key_hmac": "abcdef0123456789", "payload": b"x", "content_hash": "sha256-x"},
+            "namespace must not be blank",
+            "adapters.outbound.storage.local.errors.namespace_blank",
+            None,
+        ),
+        (
+            {
+                "namespace": "with/slash",
+                "object_key_hmac": "abcdef0123456789",
+                "payload": b"x",
+                "content_hash": "sha256-x",
+            },
+            "forbidden characters",
+            "adapters.outbound.storage.local.errors.namespace_forbidden_characters",
+            {"namespace": "with/slash"},
+        ),
+        (
+            {
+                "namespace": "ledger_transaction",
+                "object_key_hmac": "abcdef0123456789",
+                "payload": b"x",
+                "content_hash": "",
+            },
+            "content_hash",
+            "adapters.outbound.storage.local.errors.content_hash_blank",
+            None,
+        ),
+    ],
+    ids=("blank-namespace", "forbidden-namespace", "blank-content-hash"),
+)
+def test_put_rejects_invalid_storage_keys(
+    provider: LocalFileSystemProvider,
+    put_kwargs: dict[str, object],
+    match: str,
+    message: str,
+    context: dict[str, str] | None,
+) -> None:
+    with pytest.raises(OutboundStorageValidationError, match=match) as raised:
+        provider.put(**put_kwargs, label="x")
+    assert raised.value.translated_message == message
+    assert raised.value.context == context
     assert resolve_error_message(raised.value) == tr(raised.value.translated_message, **(raised.value.context or {}))
-
-
-def test_put_rejects_blank_content_hash(provider: LocalFileSystemProvider) -> None:
-    with pytest.raises(OutboundStorageValidationError, match="content_hash") as raised:
-        provider.put("ledger_transaction", "abcdef0123456789", b"x", content_hash="", label="x")
-    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.content_hash_blank"
-    assert resolve_error_message(raised.value) == tr(raised.value.translated_message)
 
 
 def test_get_rejects_non_object_sidecar_with_localized_integrity_error(provider: LocalFileSystemProvider) -> None:
@@ -295,3 +323,62 @@ def test_get_raises_storage_corruption_error_when_sidecar_byte_length_is_wrong_t
         provider.get("ledger_transaction", "aabbccdd00112233")
     assert raised.value.translated_message == "adapters.outbound.storage.local.errors.byte_length_invalid"
     assert resolve_error_message(raised.value) == tr(raised.value.translated_message, **(raised.value.context or {}))
+
+
+# ---------------------------------------------------------------------------
+# WIN-003: Windows MAX_PATH (long-path) classification on the write boundary
+# ---------------------------------------------------------------------------
+
+
+def test_path_too_long_error_is_registered_in_error_registry() -> None:
+    """OutboundStoragePathTooLongError must have a bound ErrorCode in ERROR_REGISTRY."""
+    assert "ERROR_OUTBOUND_STORAGE_PATH_TOO_LONG" in ERROR_REGISTRY
+
+
+def test_path_too_long_error_round_trips_through_build_error_envelope() -> None:
+    """build_error_envelope must produce a valid, localized envelope for the new error."""
+    err = OutboundStoragePathTooLongError(
+        "cannot write object payload to C:\\deep\\path: path exceeds the Windows MAX_PATH ceiling",
+        context={"path": "C:\\deep\\path"},
+        translated_message="adapters.outbound.storage.local.errors.payload_write_path_too_long",
+    )
+    envelope = build_error_envelope(err)
+    assert envelope.code == "ERROR_OUTBOUND_STORAGE_PATH_TOO_LONG"
+    assert envelope.retryable is False
+    assert "path" in (envelope.context or {})
+    assert err.translated_message is not None
+    assert resolve_error_message(err) == tr(err.translated_message, **(err.context or {}))
+
+
+def test_put_still_raises_conflict_for_a_real_non_long_path_oserror(
+    provider: LocalFileSystemProvider,
+    tmp_path: Path,
+) -> None:
+    """A genuine, unrelated OSError during the payload write is NOT misclassified as long-path.
+
+    Reproduces a real (not mocked) write failure: the target object's
+    sidecar path is pre-occupied by a real directory, so
+    ``sidecar_path.write_text(...)`` raises a real ``OSError`` (Windows:
+    ``PermissionError``/WinError 5; POSIX: ``IsADirectoryError``) carrying
+    no long-path ``winerror`` signature. The cleanup path here only
+    unlinks the already-committed ``target_path`` file (not the colliding
+    directory), so the reproduction exercises the classification branch
+    without tripping the pre-existing directory-vs-tmp-file cleanup
+    ordering. Confirms the fallthrough for a genuinely unrelated failure
+    never raises :class:`OutboundStoragePathTooLongError`.
+    """
+    payload = b"payload whose sidecar path is a real directory"
+    hmac = "0011223344556677"
+    label = "blocked"
+    # Materialise the real namespace directory through the public API,
+    # then pre-occupy the exact sidecar path this hmac/label pair resolves
+    # to as a real directory so the real sidecar write step collides.
+    provider.put("ledger_transaction", "ffffffffffffffff", b"seed", content_hash=_hash(b"seed"), label="seed")
+    namespace_dir = tmp_path / "vault" / "ledger_transaction"
+    sidecar_collision = namespace_dir / f"{hmac[:8]}--{label}.meta.json"
+    sidecar_collision.mkdir()
+
+    with pytest.raises(OutboundStoragePermissionError) as raised:
+        provider.put("ledger_transaction", hmac, payload, content_hash=_hash(payload), label=label)
+    assert not isinstance(raised.value, OutboundStoragePathTooLongError)
+    assert raised.value.translated_message == "adapters.outbound.storage.local.errors.sidecar_write_failed"

@@ -25,19 +25,18 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket._layout import bucket_paths
-from ....adapters.persistence.storage.bucket._manifest_io import manifest_path
-from ....adapters.persistence.storage.master_key._kdf_params import KdfParams
+from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
+from ....adapters.persistence.storage.master_key import KdfParams
 from ....core import BucketPointer, read_pointer, write_pointer
 from ....domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaValidationError,
     UserProfileFact,
     UserProfileStatus,
+    new_profile_id,
 )
-from ....domain.user_profile._values import new_profile_id
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...workflow._profile_bucket_scan import (
+from ...workflow import (
     list_profile_buckets,
     read_profile_bucket,
     read_profile_bucket_by_id,
@@ -438,8 +437,7 @@ def test_delete_mirrors_the_tombstone_onto_the_manifest(_backend: Path) -> None:
     exclude the profile without unlocking the encrypted bucket.
     """
 
-    from ....adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
-    from ....adapters.persistence.storage.bucket._manifest_io import read_manifest
+    from ....adapters.persistence.storage.bucket import BucketLifecycleStatus, read_manifest
 
     repository = ProfileRepository()
     created = _create(repository, label="Soft Delete", facts=_VALID_FACTS)
@@ -460,7 +458,7 @@ def test_tombstoned_profile_is_excluded_from_the_live_scan(_backend: Path) -> No
     tombstoned profile by UUID.
     """
 
-    from ....adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
+    from ....adapters.persistence.storage.bucket import BucketLifecycleStatus
 
     repository = ProfileRepository()
     created = _create(repository, label="Vanishing", facts=_VALID_FACTS)

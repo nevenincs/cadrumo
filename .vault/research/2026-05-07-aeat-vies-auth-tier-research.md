@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#live-parity-oracle'
 date: '2026-05-07'
-modified: '2026-05-07'
+modified: '2026-06-30'
 related:
   - '[[2026-05-07-aeat-vies-surface-split-ixvi-vs-groi-adr]]'
   - '[[2026-05-06-aeat-nif-iva-checker-adapter-adr]]'
 ---
-
 
 # `aeat-vies-auth-tier` research: empirical findings on which AEAT auth tier unlocks which VIES surface
 

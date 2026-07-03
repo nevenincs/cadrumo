@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#centralized-output-redaction'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 step_id: 'S22'
 related:
   - "[[2026-05-28-centralized-output-redaction-plan]]"
 ---
-
-
-
 
 # update profile diagnostics tests for centralized output redaction and canonical keys
 
@@ -19,7 +16,6 @@ related:
 - `src/aeat/diagnostics/test_profile.py`
 
 ## Description
-
 
 ## Outcome
 

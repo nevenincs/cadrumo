@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-domain-continuity'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-02'
+modified: '2026-07-03'
 related:
   - '[[2026-05-26-cross-domain-continuity-P01-S05]]'
   - '[[2026-05-26-cross-domain-continuity-P01-S06]]'
@@ -34,6 +34,8 @@ related:
   - '[[2026-05-26-cross-domain-continuity-P26-S99]]'
   - '[[2026-05-26-cross-domain-continuity-P35-S123]]'
   - '[[2026-05-26-cross-domain-continuity-P35-S140]]'
+  - '[[2026-05-26-cross-domain-continuity-W03-P14-S223]]'
+  - '[[2026-05-26-cross-domain-continuity-W04-P19-S398]]'
   - '[[2026-05-26-cross-domain-continuity-W07-P31-S113]]'
   - '[[2026-05-26-cross-domain-continuity-W07-P31-S114]]'
   - '[[2026-05-26-cross-domain-continuity-W07-P31-S115]]'
@@ -58,14 +60,47 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S254]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S256]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S267]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S268]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S269]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S270]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S271]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S272]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S285]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S286]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S289]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S290]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S291]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S292]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S297]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S304]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S320]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S323]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S380]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S392]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S393]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S394]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S395]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S396]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S410]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P42-S165]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S168]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S222]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S224]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S229]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S231]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S235]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S236]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S237]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S238]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S239]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S282]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S283]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S284]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S293]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S294]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S295]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S303]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S312]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P47-S170]]'
   - '[[2026-05-26-cross-domain-continuity-W12-P61-S277]]'
   - '[[2026-05-26-cross-domain-continuity-adr]]'
@@ -165,6 +200,7 @@ related:
   - '[[2026-05-31-cross-domain-continuity-exec]]'
   - '[[2026-06-03-cross-domain-continuity-audit]]'
   - '[[2026-06-04-cross-domain-continuity-research]]'
+  - '[[2026-07-01-cross-domain-continuity-audit]]'
 ---
 
 # `cross-domain-continuity` feature index
@@ -186,6 +222,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-28-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `wave-3-commit-review`
 - `2026-05-29-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `persona-fleet round 7`
 - `2026-06-03-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `Peer-WIP collision protocol audit (lint-zero session)`
+- `2026-07-01-cross-domain-continuity-audit` - `cross-domain-continuity` audit: rolling code review
 
 ### exec
 
@@ -338,6 +375,41 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W09-P42-S165` - merge active_bucket_id_or_raise and require_active_bucket_id into one canonical function update all call sites
 - `2026-05-26-cross-domain-continuity-W09-P45-S168` - extract _covered_by_namespace to one location and import from the other
 - `2026-05-26-cross-domain-continuity-W09-P47-S170` - for every CLI command registering --verbose assert it consumes the flag fix or remove unused declarations
+- `2026-05-26-cross-domain-continuity-W04-P19-S398` - FU-task-226 M131 cuota-minima regulatory floor authoring gated on Orden EHA/672/2007 modulo-tariff corpus landing under task 226
+- `2026-05-26-cross-domain-continuity-W09-P41-S268` - FU-W10-A extract HAC/242/2025 art-8 text into corpus HTML and add required_text to orden-hac-242-2025:art-8 entry in irpf.toml
+- `2026-05-26-cross-domain-continuity-W09-P41-S269` - FU-W10-B oracle-verify M202 2025-2P and 2025-3P closing dates against AEAT calendar and correct if needed
+- `2026-05-26-cross-domain-continuity-W09-P41-S271` - FU-W09-B S268 corpus gap: HAC/242/2025 art-8 is referenced by the M100 2024 deadline-window registration but the corpus file currently exists only as .json without required_text
+- `2026-05-26-cross-domain-continuity-W09-P41-S272` - FU-W09-C S269 verify M202 2025-2P and 2025-3P deadline window closing dates against AEAT oracle
+- `2026-05-26-cross-domain-continuity-W09-P41-S285` - TAUTOLOGICAL_TEST_SUSPICION sweep S98 follow-up: refactor test_cross_dependency_calculations.py M180 and M190 tests to derive expected values from AEAT workbook or grounded fixture instead of synthetic Decimal hand-computed oracles
+- `2026-05-26-cross-domain-continuity-W09-P41-S286` - TAUTOLOGICAL_TEST_SUSPICION sweep S98 follow-up: replace monkeypatch.setenv abuse in application/auth/test_operator.py lines 230-260 and 477-521 with Settings override fixture
+- `2026-05-26-cross-domain-continuity-W09-P41-S292` - R8-MARC-A surface legal_refs and source_refs in verify and revision CLI outputs
+- `2026-05-26-cross-domain-continuity-W09-P41-S297` - R8-ROSA-CRITICAL M131 DPA-to-page1 calculation chain not executing under estimacion objetiva modulos regime
+- `2026-05-26-cross-domain-continuity-W09-P41-S323` - R9-MANUEL-A SC profile schema lacks socio enumeration
+- `2026-05-26-cross-domain-continuity-W09-P41-S410` - verify Modelo 202 2025-3P payment_cutoff_on against the year-specific AEAT calendar and decide whether direct-debit cutoffs shift independently from the general day-15 rule
+- `2026-05-26-cross-domain-continuity-W09-P45-S239` - R7-MARC-D4 ledger import --period rejects 2024-1T 1T 2024/1T and 2024Q1 with Periode no reconegut
+- `2026-05-26-cross-domain-continuity-W09-P45-S283` - HARDCODED_USER_STRING sweep S98 follow-up: route 9 BadParameter raises in diagnostics/profile.py via tr() (lines 62 66 68 72 77 98 104 117 127-128 153)
+- `2026-05-26-cross-domain-continuity-W09-P45-S284` - HARDCODED_USER_STRING sweep S98 follow-up: route diagnostics/secure_objects.py:42-43 BadParameter via tr()
+- `2026-05-26-cross-domain-continuity-W09-P45-S294` - R8-MARC-C ledger import --period rejects 2026T1 silently with no suggestion of valid format 2026-Q1
+- `2026-05-26-cross-domain-continuity-W09-P45-S295` - W09 wording follow-up Tier-2 import-collision tr() default text reads 'already taken by a different profile' regardless of fresh_uuid_mode
+- `2026-05-26-cross-domain-continuity-W09-P45-S303` - R8-ROSA-G when profile create rejects a combination of flags surface the SPECIFIC field that failed validation not a generic La entrada del comando no supero la validacion message
+- `2026-05-26-cross-domain-continuity-W09-P45-S312` - FU-W05-D add hu.yml locale key-path fallbacks for the two new W05.P24 IVA classification reject reasons (DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION + EU_MEMBER_STATE_ON_EXPORT_TRANSACTION)
+- `2026-05-26-cross-domain-continuity-W03-P14-S223` - R7-B variant of S218 covers tax-residence-ccaa enum binding in M100 verify path
+- `2026-05-26-cross-domain-continuity-W09-P41-S320` - G4 retroactive violation in commit c27f35398  -  added iva_category_help and counterparty_eu_member_state_help keys by hand to en/es/ca/hu.yml without scaffold evidence
+- `2026-05-26-cross-domain-continuity-W09-P41-S380` - author m210-irnr-full-engine ADR scoping IRNR base computation plus tipo gravamen plus Convenio doble imposicion routing plus representante fiscal surface
+- `2026-05-26-cross-domain-continuity-W09-P41-S392` - reconcile Phase 1 acceptance-test plan text with current focused gates: Olivia GB/general, Khadija MA/interest, Felipe AR/pension domestic tariff, non-Convenio missing row, sentinel rewrites, representante predicate truth table, and anti-tautology mutation pair now live under `src/aeat/application/modelo/tests/test_modelo_210_convenio_rate_resolution.py`
+- `2026-05-26-cross-domain-continuity-W09-P41-S393` - FU-task-198 land Convenio doble imposicion + representante fiscal IRNR surfacing for Olivia round-16
+- `2026-05-26-cross-domain-continuity-W09-P41-S394` - reconcile Convenio Espana-Marruecos follow-up: current registry has `MA/interest` at 0.10 grounded in `convenio-es-ma-1978:art-11` / BOE-A-1985-9280, not the old Art 14 anchor
+- `2026-05-26-cross-domain-continuity-W09-P41-S395` - reconcile Art 25.1.b pension follow-up: current registry implements `m210-pension-tarifa-2025` as a three-tranche bracket table (8%, 30%, 40%) and AR/pension delegates through `DOMESTIC_TARIFF`
+- `2026-05-26-cross-domain-continuity-W09-P41-S396` - reconcile imputed-real-estate follow-up: current registry authors TRLIRNR Art 13.1.h, AEAT imputed-income guidance, imputation parameters, input casillas, and the `m210_resolve_base_imponible` branch for `tipo_renta=inmobiliaria`
+- `2026-05-26-cross-domain-continuity-W09-P45-S222` - R7-001 / W01.P03 follow-up localise ledger CSV date-parse error inner reason
+- `2026-05-26-cross-domain-continuity-W09-P45-S224` - R7-A fix ledger list and ledger view CliValidationBoundaryError on CSV-imported transactions
+- `2026-05-26-cross-domain-continuity-W09-P45-S229` - R7-INES-3 register --output-language option on overview calendar to parity-match other commands
+- `2026-05-26-cross-domain-continuity-W09-P45-S231` - R7-INES-5 disambiguate the CLI input-validation refusal message from the stored-data validation refusal message
+- `2026-05-26-cross-domain-continuity-W09-P45-S235` - R7-ANNA-D4 expand wizard non-TTY refusal message to list the minimum required flags for one-shot profile creation
+- `2026-05-26-cross-domain-continuity-W09-P45-S236` - R7-ANNA-D5 default modelo work create --revision to the in-force revision for the supplied --year via registry lookup
+- `2026-05-26-cross-domain-continuity-W09-P45-S237` - R7-MARC-D1 ledger classify list view blocked by silent profile-completeness gate
+- `2026-05-26-cross-domain-continuity-W09-P45-S238` - R7-MARC-D3 modelo bindings list without --year --period flags returns binding ids for an arbitrary revision (often the latest)
+- `2026-05-26-cross-domain-continuity-W09-P45-S293` - R8-MARC-B verification finding text drifts to Castellano while CLI interface is Catalan
 
 ### plan
 

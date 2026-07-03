@@ -106,12 +106,12 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_re
 review_status = "reviewed"
 
 [sources."boe-modelo-145-2011-approval"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/boe-a-2011-208-modelo-145.html"
-sha256 = "d548b41f957f0712a93fd59dce30a5f17f0fd29fff1a75cd5afbe8bcccea0d60"
-bytes = 58329
+sha256 = "10b68a50615af2e1aa3eebe610983c799048ae677999276fe1ce29186278ae76"
+bytes = 58195
 retrieved_at = 2026-05-14
 published_at = 2011-01-05
 applies_from = 2011-01-05
@@ -119,12 +119,12 @@ source_url = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2011-208"
 review_status = "reviewed"
 
 [sources."boe-modelo-145-2013-amendment"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/boe-a-2014-59-modelo-145-amendment.html"
-sha256 = "1519acf1d04d9c829698fe585486fee9c624d71cb90d8fc47da6ed883bcb8a09"
-bytes = 40738
+sha256 = "4bfd94046f9b23e27004af8daad2d276c92dd368a6995f57d979d38ec3558db8"
+bytes = 40604
 retrieved_at = 2026-05-14
 published_at = 2014-01-03
 applies_from = 2014-01-01
@@ -132,12 +132,12 @@ source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-59"
 review_status = "reviewed"
 
 [sources."boe-modelo-145-2014-amendment"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/boe-a-2014-13679-modelo-145-amendment.html"
-sha256 = "3f274e0d8357cb0f98dc32ff354c94eb6d1eeee6f52d90563b9892ad1f774320"
-bytes = 32253
+sha256 = "05d4e73e3996792e9a2a5cdb2410bcc0bef7d59ded5cd774a5c03a29ecc95ccb"
+bytes = 32119
 retrieved_at = 2026-05-14
 published_at = 2014-12-31
 applies_from = 2015-01-01

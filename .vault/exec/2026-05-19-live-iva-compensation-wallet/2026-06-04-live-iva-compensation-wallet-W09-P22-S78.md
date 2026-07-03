@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#live-iva-compensation-wallet'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-29'
 step_id: 'S78'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
@@ -14,7 +14,8 @@ related:
 
 ## Scope
 
-Non-IVA registry drift closeout for Modelo 714 Phase-A manual-casilla enrollment.
+Historical non-IVA registry drift closeout for the then-current Modelo 714 Phase-A
+manual-casilla enrollment.
 
 ## Description
 
@@ -33,4 +34,8 @@ Passing gates:
 
 ## Notes
 
-Modelo 714 remains Phase-A/manual. The fix removes misleading empty formula metadata rather than adding fake formula targets or tautological formula parity.
+Historical S78 state: Modelo 714 remained Phase-A/manual in this closeout, and the
+fix removed misleading empty formula metadata rather than adding fake formula targets
+or tautological formula parity. Currentization on 2026-06-29: the registry now
+computes the art. 30 cuota íntegra scale (casilla 29) and art. 31 80%-floor reference
+(casilla 39); only the full art. 31 same-year M100 joint-limit tail remains manual.

@@ -5,14 +5,13 @@ Exercises save -> load -> iter -> delete against a real SQLite-backed
 :class:`EphemeralMasterKeyProvider`. No mocks; this is the
 anti-tautology, anti-regression gate for the new base class.
 
-A throwaway ``_RoundtripPayload`` Pydantic model and a throwaway concrete
-:class:`SecureBoundRepository` subclass live inside this module —
-production migrations of the 8 concrete repositories ship under
-subsequent steps.
+A throwaway ``_RoundtripPayload`` Pydantic model and throwaway concrete
+:class:`SecureBoundRepository` subclasses live inside this module.
 """
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar, override
 
@@ -23,8 +22,7 @@ from sqlalchemy import Engine, text
 from ......core.config import Settings, override_settings
 from ... import EphemeralMasterKeyProvider, SensitivityClass
 from ...errors import EnvelopeVersionError, SecureObjectUnreadableError, StorageValidationError
-from ...sql import SecureObjectRepository
-from ...sql._orm import Base
+from ...sql import Base, SecureObjectRepository
 from ...sql.engine import create_engine_from_settings
 from ...sql.secure_objects import SecureObjectRecord, SecureObjectUnreadable
 from ...sql.session import session_scope
@@ -32,6 +30,8 @@ from .._envelope import Envelope
 from .._secure_repository import SecureBoundRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 27, 9, 30, 0, tzinfo=UTC)
 
 
 class _RoundtripPayload(BaseModel):
@@ -46,7 +46,7 @@ class _RoundtripPayload(BaseModel):
 class _RoundtripRepository(SecureBoundRepository[_RoundtripPayload]):
     """Concrete subclass wiring the four class-level descriptors."""
 
-    namespace: ClassVar[str] = "aeat.test.envelope.secure_bound_roundtrip"
+    namespace: ClassVar[str] = "aeat-test.envelope.secure_bound_roundtrip"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
     payload_type: ClassVar[type[BaseModel]] = _RoundtripPayload
@@ -54,6 +54,13 @@ class _RoundtripRepository(SecureBoundRepository[_RoundtripPayload]):
     @override
     def extract_identifier(self, payload: _RoundtripPayload) -> str:
         return payload.id
+
+
+class _RoundtripV2Repository(_RoundtripRepository):
+    """Concrete subclass used to prove older embedded envelopes are refused."""
+
+    namespace: ClassVar[str] = "aeat-test.envelope.secure_bound_roundtrip_v2"
+    schema_version: ClassVar[int] = 2
 
 
 def _bound_repo_with_engine(tmp_path: Path) -> tuple[_RoundtripRepository, Engine]:
@@ -142,8 +149,6 @@ def test_secure_bound_repository_rejects_future_schema_version(
     in the base class load path.
     """
 
-    from datetime import UTC, datetime
-
     provider = EphemeralMasterKeyProvider()
     with provider:
         repo, engine = _bound_repo_with_engine(tmp_path)
@@ -151,7 +156,7 @@ def test_secure_bound_repository_rejects_future_schema_version(
             future_payload = _RoundtripPayload(id="future", value=7)
             future_envelope = Envelope[_RoundtripPayload](
                 schema_version=2,
-                written_at=datetime.now(UTC),
+                written_at=_ENVELOPE_WRITTEN_AT,
                 classification=SensitivityClass.AUDIT,
                 payload=future_payload,
             )
@@ -169,6 +174,48 @@ def test_secure_bound_repository_rejects_future_schema_version(
 
             with pytest.raises(EnvelopeVersionError):
                 repo.load("future")
+        finally:
+            engine.dispose()
+
+
+def test_secure_bound_repository_rejects_older_inner_envelope_version(
+    tmp_path: Path,
+) -> None:
+    """The decrypted envelope version must match the repository contract.
+
+    The SQL row carries the current v2 schema marker, but the embedded
+    :class:`Envelope` claims v1. This represents a stale app-written
+    payload behind current row metadata and must be refused on direct
+    loads and full-namespace enumeration.
+    """
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        base_repo, engine = _bound_repo_with_engine(tmp_path)
+        repo = _RoundtripV2Repository(objects=base_repo._objects)
+        try:
+            stale_payload = _RoundtripPayload(id="stale", value=7)
+            stale_envelope = Envelope[_RoundtripPayload](
+                schema_version=1,
+                written_at=_ENVELOPE_WRITTEN_AT,
+                classification=SensitivityClass.AUDIT,
+                payload=stale_payload,
+            )
+            repo._objects.save(
+                namespace=_RoundtripV2Repository.namespace,
+                object_key="stale",
+                classification=SensitivityClass.AUDIT,
+                schema_version=2,
+                written_at=stale_envelope.written_at,
+                payload=stale_envelope.model_dump_json().encode("utf-8"),
+            )
+
+            with pytest.raises(EnvelopeVersionError):
+                repo.load("stale")
+            with pytest.raises(EnvelopeVersionError):
+                tuple(repo.iter_ids())
+            with pytest.raises(EnvelopeVersionError):
+                tuple(repo.iter_records())
         finally:
             engine.dispose()
 
@@ -283,8 +330,6 @@ def test_envelope_for_payload_type_returns_correct_parameterised_class() -> None
     - ``model_validate_json`` on the returned class accepts valid JSON.
     - ``model_validate_json`` rejects JSON whose payload does not match.
     """
-    from datetime import UTC, datetime
-
     from pydantic import ValidationError
 
     env_cls = Envelope.for_payload_type(_RoundtripPayload)
@@ -298,7 +343,7 @@ def test_envelope_for_payload_type_returns_correct_parameterised_class() -> None
     valid_json = json.dumps(
         {
             "schema_version": 1,
-            "written_at": datetime.now(UTC).isoformat(),
+            "written_at": _ENVELOPE_WRITTEN_AT.isoformat(),
             "classification": SensitivityClass.AUDIT.value,
             "payload": {"id": "x", "value": 3},
             "encryption": None,
@@ -312,7 +357,7 @@ def test_envelope_for_payload_type_returns_correct_parameterised_class() -> None
     bad_json = json.dumps(
         {
             "schema_version": 1,
-            "written_at": datetime.now(UTC).isoformat(),
+            "written_at": _ENVELOPE_WRITTEN_AT.isoformat(),
             "classification": SensitivityClass.AUDIT.value,
             "payload": {"id": "x", "value": "not-an-int"},
             "encryption": None,

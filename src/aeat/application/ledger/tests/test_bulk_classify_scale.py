@@ -21,8 +21,9 @@ from typing import override
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository, SecureObjectWrite
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -30,7 +31,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -39,6 +39,7 @@ from .. import bulk_classify_from_csv
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ROW_COUNT = 270
+_BUCKET_ID = "18181818-1818-4818-8818-181818181818"
 
 
 class _CountingTxRepo(TransactionCatalogueRepository):
@@ -60,7 +61,7 @@ class _CountingTxRepo(TransactionCatalogueRepository):
 
 def _raw(idx: int) -> RawTransaction:
     return RawTransaction(
-        transaction_id=f"provider-row-{idx:04d}",
+        provider_transaction_id=f"provider-row-{idx:04d}",
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
         amount=Decimal("80.00"),
@@ -84,14 +85,16 @@ def _unclassified(idx: int) -> Transaction:
         {
             "raw": _raw(idx),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
+            "source_jurisdiction": "ES",
         },
     )
 
 
 @pytest.fixture
 def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
 
 

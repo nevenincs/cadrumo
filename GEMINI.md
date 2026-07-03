@@ -791,13 +791,15 @@ Run the multi-agent audit swarm on the event triggers below, not only when somet
 
 Trigger the swarm under three conditions. First, before any release cut that has crossed a domain boundary or persisted a new record type. Second, after any major structural refactor that touches more than two domain subpackages. Third, every 6–8 commits on a long-running branch when no other trigger has fired in the interim, to surface drift before it accumulates.
 
-Cover the seven standard axes. Dispatch one agent per axis: calculation-engine grounding, persistence-boundary identity, cross-domain handoffs, export/import fidelity, workflow + CLI surface, selector + binding drift, and semantic functionality-cluster overlap. Give each agent a focused scope plus an explicit reference to the established roundtrip-test pattern so findings come back as actionable structural deltas rather than open-ended commentary.
+Cover the eight standard axes. Dispatch one agent per axis: calculation-engine grounding, persistence-boundary identity, cross-domain handoffs, export/import fidelity, workflow + CLI surface, selector + binding drift, semantic functionality-cluster overlap, and runtime import-graph coupling. Give each agent a focused scope plus an explicit reference to the established roundtrip-test pattern so findings come back as actionable structural deltas rather than open-ended commentary.
 
 Run the seventh axis — semantic functionality-cluster overlap and canonical-definition enrollment — through the resident vaultspec-rag service. This axis discovers, by meaning rather than by symbol, every site that implements a given functional concept; classifies the set as a true duplication cluster or a constraint-shape-divergent set; and confirms that consumers import the canonical implementation rather than re-deriving it. Where no canonical home exists but two or more substitutable sites do, it nominates one. It exists because text search cannot cluster lexically different but semantically identical code: two modules that both round a Decimal to cents never co-occur in a grep result.
 
 Query the service by functional concept, never by domain jargon. Always pass `--port 8766` and `--max-results 20`. Treat a score floor around 0.50 as the signal threshold. Use RAG for discovery, then `rg` to verify the exact sites. Filter locale and test-docstring rows and treat the same string across four locales as one signal. RAG is a clustering instrument, not a symbol locator: pair every sweep with a targeted `rg` pass for known canonical symbols so a single-site authority is not misread as having no cluster. Apply the substitutability pre-filter below — it is mandatory for this axis. RAG goes stale during active remediation; run an incremental `index --type all --port 8766` after major commits and before each sweep rather than relying on the filesystem watcher alone.
 
-Match the model to the axis. Use sonnet for the four axes that need deeper structural analysis: calculation engine, cross-domain handoffs, selector / binding drift, semantic functionality-cluster overlap. Use haiku for the three breadth-oriented axes: persistence identity inventory, export/import fidelity, workflow + CLI surface. The cost / latency profile rewards model selection that matches the cognitive shape of each axis.
+Run the eighth axis — runtime import-graph coupling — through a grimp pass over the executed import graph, not the static import-time graph the layered-contract linter audits. The layered contracts read the import-TIME graph while the runtime graph is materially denser, because the codebase defers hundreds of function-local imports to break module-load cycles and soften layer edges; a cycle "fixed" by deferring an import is hidden from the static linter, not removed. Build the runtime graph with grimp (`grimp.build_graph("aeat", include_external_packages=False)`), then diff its cross-layer and cycle edges against the static picture: a cross-layer edge or module cycle present in the grimp graph but absent from the import-linter graph is a hidden coupling to report. Ground the read against the D7 lazy-import policy gate (`src/aeat/tests/test_lazy_import_policy.py`): that gate's allowlist is the declared inventory of unsanctioned function-local first-party edges, so a grimp-discovered runtime edge with no allowlist entry — or a new module cycle the allowlist does not explain — is the actionable finding this axis exists to surface. This axis is breadth-oriented; run it on haiku alongside the other inventory axes.
+
+Match the model to the axis. Use sonnet for the four axes that need deeper structural analysis: calculation engine, cross-domain handoffs, selector / binding drift, semantic functionality-cluster overlap. Use haiku for the four breadth-oriented axes: persistence identity inventory, export/import fidelity, workflow + CLI surface, runtime import-graph coupling. The cost / latency profile rewards model selection that matches the cognitive shape of each axis.
 
 Persist every finding in the vault. Each agent writes a single .vault/audit/yyyy-mm-dd-<axis>-swarm-audit.md document with frontmatter following the vaultspec template. Write findings as third-level headings with pathway label, file:line, data lost, and a concrete remediation. Reports must not modify production code; they exist to drive subsequent action commits.
 
@@ -1562,6 +1564,65 @@ ADR `2026-06-19-m100-dependent-modelo-applicability-adr`; research
 `no-silent-under-declaration`, and `aeat-registry-authority-flow`.
 
 ---
+name: dynamic-import-targets-the-public-facade
+trigger: always_on
+---
+
+# Dynamic import targets the public facade
+
+## Rule
+
+A deferred / circular-import workaround built on `importlib.import_module` (or
+an equivalent runtime string-target import) is a SANCTIONED technique, but the
+module string it names is bound by the SAME ownership rule as a static import:
+it MUST name the owning package's public top-level facade — or a documented
+Ruling-4 bridge module — never a private `_submodule`. The cycle-break
+technique is never the problem; an unqualified private-module target is.
+
+## Why
+
+ADR `2026-07-01-import-centralization-adr` (Ruling 6) found
+`core/setup_answers.py`'s deferred `_m()` and `_ccaa()` helpers used
+`importlib.import_module` to legitimately break an import cycle, but targeted
+private submodules — `aeat.domain.deadlines._models` and
+`aeat.domain.contribuyente._ccaa` — when public facades already re-exported
+the same names (`aeat.domain.deadlines.taxpayer_model`,
+`aeat.domain.contribuyente`). Because the AST-static import scanner
+(`dev/import_hygiene_scan.py`) cannot see a dynamically constructed module
+string, this class of violation is invisible to the automated gate and would
+otherwise persist indefinitely inside an already-sanctioned cycle-break
+pattern. The fix retargeted the strings to the public facades and closed the
+gap as an ordinary Ruling-1 violation, without touching the deferred-import
+technique itself — proof that the technique and the target are independent
+concerns, and only the target is governed by ownership.
+
+## How
+
+- **Good:**
+  `importlib.import_module("aeat.domain.deadlines.taxpayer_model")` inside a
+  deferred cycle-break helper — the module string names the public facade.
+- **Good:** `importlib.import_module("aeat.domain.contribuyente")` — the
+  package's own top level, not a private submodule path appended to it.
+- **Bad:** `importlib.import_module("aeat.domain.deadlines._models")` from
+  outside the `deadlines` package — the technique is fine, the target is a
+  private submodule of a package that already exports the same symbols
+  publicly.
+- **Bad:** `importlib.import_module("aeat.domain.contribuyente._ccaa")` for the
+  same reason — retarget to the owning package's public facade.
+
+Because the scanner cannot see these string-built targets, this rule is author
+discipline: when writing or reviewing a deferred/dynamic import, read the
+target string exactly as if it were a static `from X import Y` and apply
+`service-imports-via-top-level-reexports` to it.
+
+## Source
+
+ADR `2026-07-01-import-centralization-adr` (Ruling 6), research
+`2026-07-01-import-centralization-research`. Companion to
+`service-imports-via-top-level-reexports` (the static-import ownership rule
+this rule extends to dynamic targets).
+
+---
 name: firmware-reference-parity.builtin
 trigger: always_on
 ---
@@ -1806,6 +1867,60 @@ ADR `2026-06-15-docs-terminology-search-adr` (D1/D2); audit
 `approved`-only gate in the glossary generator (`dev/docs/glossary_reference.py`)
 and the Pagefind injector (`dev/docs/pagefind_inject.py`). Companion rules:
 `terminology-single-declaration`, `terminology-scaffold-preserve-contract`.
+
+---
+name: iva-cuota-devengada-includes-recargo-equivalencia
+trigger: always_on
+---
+
+# IVA total cuota devengada must include the recargo de equivalencia tiers
+
+## Rule
+
+Every IVA "total cuota devengada" aggregation formula — Modelo 303 casilla `27`,
+Modelo 390 `iva.anual.cuota-devengada-total`, and any IVA modelo's total-devengada
+casilla — MUST sum the recargo de equivalencia cuota tiers (the recargo casillas,
+LIVA art. 161) alongside the standard / reducido / super-reducido IVA repercutido
+tiers and the autorepercutido (intracomunitaria / inversión del sujeto pasivo)
+cuota. Omitting the recargo tiers silently under-declares cuota devengada for any
+filer whose supplier charged recargo de equivalencia, and — because the M390
+annual total is reconciled against the summed M303 quarters — trips the
+`modelo-390-cuota-devengada-total-equals-reconciliacion-303` BLOCKING_RULE for
+every recargo filer.
+
+## Why
+
+Grounding the IVA engine against the bundled AEAT Manual Práctico IVA surfaced the
+SAME omission twice: Modelo 303 casilla `27` (total cuota devengada) never summed
+the recargo cuota casillas `18`/`21`/`24`, and Modelo 390's annual
+`iva.anual.cuota-devengada-total` never summed its recargo tiers — even though the
+recargo casillas were already ledger-bound in both. Each produced a silent
+under-declaration (M303 casilla 27 short by the recargo total; M390 short by the
+annual recargo total), and the M390 case additionally broke the M390↔M303
+reconciliation gate for recargo filers. Both were caught only because a manual
+worked example that included a recargo line was reconciled against the engine, and
+both were cross-validated against the manual's own quarterly totals. This is the
+IVA-aggregation companion to `no-silent-under-declaration` (an omitted tier
+under-declares) and `ledger-iva-advisory-only-on-cuota-bearing-categories`
+(recargo is a real cuota-bearing tier).
+
+## How
+
+- **Good:** the total-cuota-devengada formula sums repercutido general/reducido/
+  super-reducido + autorepercutido intracomunitaria/inversión-sujeto-pasivo + the
+  recargo de equivalencia cuota tiers (LIVA art. 161), and the construct's
+  `legal_refs` cite art. 161. A grounded parity test against a manual worked
+  example that charges recargo reproduces the manual's printed total exactly.
+- **Good:** when adding a new IVA modelo or revision, confirm the total-devengada
+  aggregation enumerates every cuota-bearing tier including recargo, and that any
+  cross-modelo reconciliation gate (M390↔M303) sees the same recargo-inclusive
+  total on both sides.
+- **Bad:** a total-cuota-devengada formula that sums only the standard IVA tiers
+  and autorepercutido but omits the recargo casillas — it silently under-reports
+  for recargo filers and desynchronises the annual↔quarterly reconciliation.
+- **Bad:** "fixing" a failing recargo-inclusive parity test by feeding the engine
+  a recargo-excluded expected value — the expected figure is the AEAT manual's
+  printed recargo-inclusive total; fix the formula, not the test.
 
 ---
 name: ledger-amount-is-absolute-direction-is-authority
@@ -2148,26 +2263,37 @@ carry a non-official `source_kind` (`app_filing`) and MUST NEVER be added to
 `_OFFICIAL_SOURCE_KINDS` — the set that satisfies the cross-period clean-state gate
 (`aeat_sede_justificante`, `aeat_sede_live_capture`, `aeat_csv_register`). Automatic
 cross-period `previous_filing` carry may feed calculate/draft from these observations, but
-they must never substitute for external AEAT filing evidence when filing a dependent period.
+they must never substitute for external AEAT filing evidence. A same-filing-year local chain
+may reach local verify/export only when the chain is present, value-consistent,
+revision-confirmed, and its only blockers are the official-evidence delta; that path MUST
+surface a non-blocking non-official-local-chain advisory and MUST NOT assert AEAT acceptance.
+Cross-year priors, operator-manual sources, missing filing/observation data, and value or
+revision divergence remain blocking.
 
 ## Why
 
 Wave C wired automatic local cross-period carry: local `file` now persists the filed
 revision's observations so a later period's calculate can auto-carry the prior value. The
 load-bearing safety decision is the `source_kind`. The cross-period clean-state guard blocks
-filing a dependent period whose upstream evidence is non-official
-(`LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE`). If `app_filing` were treated as official, an
-unevidenced local-only chain could file a dependent period — a silent under-evidenced filing,
-violating `aeat-safety-legal-gates` and `no-silent-under-declaration`. Stamping the carry
-observation non-official keeps the prior value available for calculation while still demanding
-a real justificante / CSV register / live capture before the dependent period is filed.
+unsafe dependent filings whose upstream evidence is non-official
+(`LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE`). Decision B later narrowed one reachability gap:
+same-filing-year local reconstruction may proceed to local export with a warning when every
+upstream dependency is otherwise clean and only the official-evidence delta is missing. If
+`app_filing` were treated as official, an unevidenced local-only chain could silently claim
+AEAT-evidenced acceptance, violating `aeat-safety-legal-gates` and
+`no-silent-under-declaration`. Stamping the carry observation non-official keeps the prior
+value available for calculation while still disclosing the local-only basis and still demanding
+a real justificante / CSV register / live capture before any official-evidence assertion.
 
 ## How
 
 - **Good:** `persist_filed_revision_observation` stamps `source_kind="app_filing"`; the carry
-  resolver reads it to populate a calculate binding; filing a dependent period whose only
-  upstream evidence is that `app_filing` observation still raises
-  `LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE`.
+  resolver reads it to populate a calculate binding; a same-filing-year, value-consistent,
+  revision-confirmed local chain whose only blockers are the official-evidence delta reaches
+  local verify/export with a non-blocking non-official-local-chain advisory.
+- **Good:** cross-year local chains, operator-manual sources, missing filing/observation data,
+  and value or revision divergence remain blocking; the official-evidence delta still raises
+  `LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE` outside the narrow same-year advisory scope.
 - **Good:** a regression test asserts `app_filing not in _OFFICIAL_SOURCE_KINDS` and fails the
   moment it is added.
 - **Bad:** adding `app_filing` to `_OFFICIAL_SOURCE_KINDS` to make cross-period filing "just
@@ -2179,6 +2305,8 @@ a real justificante / CSV register / live capture before the dependent period is
 
 ADR `2026-06-09-modelo-iva-routing-carry-adr` (accepted) codification candidate, ruling D1;
 research `2026-06-09-modelo-iva-routing-carry-research`; commit `10167440f` (Wave C carry).
+Refined same-year Decision B scope: ADR `2026-06-19-crossperiod-filing-deadlock-adr`,
+commit `84add274d`.
 Companion to `aeat-safety-legal-gates`, `no-silent-under-declaration`, and
 `ledger-derived-revisions-bundle-evidence`.
 
@@ -2197,6 +2325,25 @@ formulas with an explicit labelled start (input) and final (resultado) anchor,
 and pass the registry-grounded parity gate (casilla set, numbering, section
 order). A structural divergence from the official AEAT modelo layout is a hard
 failure, never a warning.
+
+The same registry-grounded completeness gate MUST bind the fixed-width
+fichero-BOE (`.boe`) export, not only the workbook transport. `export_draft` MUST,
+before it writes any bytes, assert that every casilla that is a calculation RESULT
+(declares a formula) or is schema-required, and that the
+`CalculationCompletenessManifest` lists AND the official record files (`manifest ∩
+representable`, for the draft's disposition), carries a real value on disk; such a
+casilla rendered blank means the calculation did not populate it — a
+structurally-thin file behind a valid SHA-256 digest — and MUST raise a hard
+`FilingExportError` that enumerates every missing casilla with its official number
+and segmento. Optional operator-input casillas (retenciones, prior payments,
+deductions the taxpayer may legitimately not have — e.g. Modelo 131 casillas
+02/08/09/12/14) are NOT required to carry a value: a blank slot is a valid zero,
+not a thin file, so they are excluded from the required set. The rendered set keys
+on value presence (`ModeloValue.value is not None`), never on casilla-id
+membership, because `build_draft` emits an `EMPTY` (`value=None`) row for every
+declared casilla. The gate is scoped to `format == "fixed_width"`; an
+`xml_dictionary` export omits an absent casilla as a legitimately-absent optional
+element, so the blank-slot thinness does not apply.
 
 ## Why
 
@@ -2231,6 +2378,18 @@ not a separate hand-maintained spec. This is the export-surface companion to
 - **Good:** the gate reports coverage honestly — a modelo whose completeness
   manifest is incomplete yields a weaker gate that says so, rather than implying
   full parity.
+- **Good:** `assert_export_mirrors_manifest` runs inside `export_draft` after the
+  rendered set is known and before `output_path.write_bytes`; a fixed-width `.boe`
+  that would omit a required, representable casilla panics with an enumerated
+  `FilingExportError` naming each casilla's number and segmento, and no file is
+  written.
+- **Bad:** computing the rendered set from `{v.casilla_id for v in draft.values}`
+  (id membership) instead of filtering `v.value is not None` — every declared
+  casilla, including the `EMPTY` ones, then counts as rendered and the gate never
+  fires on the real thin draft.
+- **Bad:** letting a fixed-width `.boe` export write a structurally-thin file (a
+  required casilla rendered blank) because the digest is valid — the digest is a
+  byte-integrity lock, not a completeness signal.
 - **Bad:** writing formatting, start/final, or evidence in one transport but not
   the other, or computing them at apply time instead of in the plan — offline
   and online then drift.
@@ -2245,7 +2404,14 @@ not a separate hand-maintained spec. This is the export-surface companion to
 ADR `2026-06-03-modelo-export-workbook-parity-adr` (accepted); research
 `2026-06-03-modelo-export-workbook-parity-research`; plan
 `2026-06-03-modelo-export-evidence-parity-plan` (W03/W04/W05). Promoted per the
-[[vaultspec-codify]] discipline.
+[[vaultspec-codify]] discipline. The fichero-BOE transport binding was added by
+ADR `2026-07-01-fichero-boe-parity-gate-adr` (accepted) after the gate completed a
+full implement→review→fix→validate cycle: an independent code review found the
+rendered set keyed on casilla-id membership rather than value presence (so the gate
+never fired on the real `EMPTY` thin state), which was fixed and locked with a test
+that reproduces the production state. Enforced by
+`test_export_completeness_gate.py`, `test_export_completeness_sets.py`, and
+`test_fichero_boe_completeness_parity.py`.
 
 ---
 name: modelo-identifiers-use-core-enum
@@ -2585,6 +2751,60 @@ disagree.
   parity regression must cover any casilla both paths can persist.
 
 ---
+name: operator-harness-cites-live-cli-surface
+trigger: always_on
+---
+
+# Operator harness documents cite only the live CLI surface
+
+## Rule
+
+Every operator agent-harness document — each operator rule, persona, and skill
+under `src/aeat/_data/agent/` — that names a CLI verb (an `aeat ...` invocation)
+or a JSON-envelope field MUST cite only verbs that resolve against the live
+operator-surface manifest and fields that exist on the live envelope models, and
+MUST be co-committed with the CLI surface it couples to. A harness document and
+the verb or field it teaches move in the same change, or the document orphans the
+operator.
+
+## Why
+
+The harness is the operating layer an LLM tax-advisor loads to drive the
+deterministic CLI; a rule, persona, or skill that cites a renamed or non-existent
+verb hands the agent a dead instruction it cannot recover from — the operator-side
+form of the verb-drift failure the `aeat-cli-pull-and-file-standard` rule exists
+to prevent. During the agent-harness build a safety rule cited `aeat app modelo
+work export`, which does not exist (the real verb is `aeat app modelo export`); the
+drift gate caught it before commit. The gate
+(`src/aeat/agent/tests/test_rule_surface_conformance.py`) parses every shipped
+rule, persona, and skill, extracts each `aeat ...` command path and each named
+envelope-spine field, and asserts they all resolve against the live manifest and
+the real `SchemaEnvelope`/`Notice` models, so a drift is a loud test failure rather
+than a silent operator misdirection.
+
+## How
+
+- **Good:** a skill that tells the operator to run `aeat app modelo work calculate`
+  cites the verb exactly as the CLI exposes it; the drift gate confirms it resolves
+  and the change ships with any coupled CLI surface.
+- **Good:** a rule that instructs the operator to read the envelope `status` or a
+  notice `suggestion` names a field the gate confirms still exists on the live
+  model.
+- **Bad:** authoring `aeat app modelo work export` (a verb that does not exist) or
+  citing a renamed/removed envelope field — the gate fails until the citation
+  matches the live surface.
+- **Bad:** renaming a CLI verb without sweeping the harness documents that cite it,
+  leaving the operator a dead instruction.
+
+## Source
+
+Authored during the agent-harness framework build (ADR
+`2026-06-30-agent-harness-adr`, plan step W05.P13.S54), codifying the discipline
+the rule-surface drift gate enforces. Companion to `aeat-cli-pull-and-file-standard`
+(CLI verb naming), `cli-notices-are-the-only-diagnostic-channel` (the envelope
+fields the rules cite), and `aeat-architecture-boundaries` (the two-root surface).
+
+---
 name: period-filter-single-boundary-authority
 trigger: always_on
 ---
@@ -2753,77 +2973,87 @@ name: registry-revision-content-inline-or-fragmented
 trigger: always_on
 ---
 
-# Registry revision content is inline OR fragmented — assess by both, never `ls`/`find` alone
+# Registry revision content is fragmented — revision.toml is scalar-only; assess via the loaded snapshot, never `ls`/`find` alone
 
 ## Rule
 
-A registry modelo revision MAY declare its bindings, formulas,
-`verification_expectations`, and `verification_predicates` EITHER inline in
-`revision.toml` (the older monolithic format) OR in fragmented subdirectories
-(`bindings/`, `formulas/`, `verification_expectations/`, …). When assessing
-whether a revision is calc-grade, whether a casilla is ledger-bound, or whether a
-binding/formula is present, read BOTH the inline `revision.toml` AND the
-subdirectories — RAG-ground the concept first (`aeat-rag-discovery`), then `grep`
-to confirm. NEVER infer a revision's calc-grade or binding coverage from
-`ls bindings/` / `find -path '*formulas*'` on the subdirectories alone: the
-subdirectory listing is blind to inline declarations and yields false
-"parse-only / zero-bindings / staged build-out" conclusions.
+A registry modelo revision declares its sections — `bindings`, `formulas`,
+`casillas`, `verification_expectations`, `verification_predicates`,
+`constructs`, `completeness_manifest`, and every other array-of-tables field —
+ONLY in fragmented subdirectories (`bindings/`, `formulas/`,
+`verification_expectations/`, …). The fragment directory's `revision.toml`
+manifest carries ONLY scalar revision metadata (label, `valid_from`/`valid_to`,
+`period_selector`, `legal_refs`, `source_refs`, `orden_aplicabilidad`,
+`continuidad_validation`). The loader ENFORCES this: an inline
+`[[revisions."…".<section>]]` table (or the `completeness_manifest` table) in
+`revision.toml` is a loud `RegistryLoadError` naming the fragmented layout. To
+assess whether a revision is calc-grade, whether a casilla is ledger-bound, or
+whether a binding/formula is present, load the revision through the authority
+and inspect the compiled schema — never infer a revision's coverage from
+`ls bindings/` / `find -path '*formulas*'` on the subdirectory listing alone.
 
 ## Why
 
-During #15 (IVA-3, M303 `2009-y-siguientes`, filing years 2009-2022), a
-structural check that only counted `bindings/` and `formulas/` subdirectory
-files concluded the revision was "parse-only" with no calculation machinery and
-filed a verdict of "not a live gap, by design". That was WRONG: the
-`2009-y-siguientes` revision declares its cuota bindings, formulas, compensación
-carry, and `verification_expectations` INLINE in `revision.toml`, while the
-sibling `2023-y-siguientes` uses the fragmented-subdirectory format. The
-subdirectory-blind check missed a real, plausibly-live "cuota-without-base"
-under-declaration (the base-imponible casillas 01/04/07/28 were ledger-unbound on
-2009-2022 while the cuota resolved). The operator's "the schema may be defective —
-use RAG" challenge surfaced it; RAG-grounding the actual binding sets exposed the
-defect, which was then fixed (#15 + the #41 recargo/59-60 tail). The same
-inline-vs-fragmented blind spot also mis-classified M369 (OSS, fully inline) in
-the settlement-guard sweep. Only M303 and M369 use inline today, but the format
-is per-revision, not per-modelo, so the check must always consider both. This is
-the discovery-method companion to `aeat-rag-discovery` (RAG-first grounding) and
-`aeat-registry-authority-flow` (the loader merges inline and fragmented into one
-strict schema regardless of on-disk form).
+The dual-format era is over. Historically a revision MAY have declared its
+sections EITHER inline in `revision.toml` OR in fragmented subdirectories, and a
+subdirectory-blind check (`ls bindings/ | wc -l`) was therefore blind to inline
+declarations: during #15 (IVA-3, M303 `2009-y-siguientes`) a subdirectory-count
+check wrongly concluded the revision was "parse-only" and missed a real
+"cuota-without-base" under-declaration, because that revision declared its cuota
+bindings/formulas INLINE; the same blind spot mis-classified M369 (fully inline)
+in the settlement-guard sweep. The `arch-remediation-registry-format` campaign
+(register D6, ADR `2026-07-02-arch-remediation-registry-format-adr`) converged
+every remaining inline revision to the fragmented layout — proven byte-identical
+at the compiled-`ModeloRevision` level per revision — and added the loader
+refusal above, so the inline-vs-fragmented blind spot can no longer recur: there
+is one on-disk format, and the loaded snapshot is format-agnostic ground truth.
+The read-the-loaded-snapshot guidance survives the convergence; the
+dual-format caveat is now history. This is the discovery-method companion to
+`aeat-rag-discovery` (RAG-first grounding) and `aeat-registry-authority-flow`
+(the loader compiles fragments into one strict schema).
 
 ## How
 
 - **Good:** to decide whether a casilla aggregates from the ledger on a given
-  revision, `grep` BOTH `revision.toml` (inline `[[revisions."…".bindings]]` +
-  the casilla's `binding =` / `input_kind`) AND the `bindings/` /
-  `casillas/` subdirectories; RAG-search the concept first, then `grep` the exact
-  ids. Better still, load the revision through the authority
+  revision, load the revision through the authority
   (`resources().modelos.authority.snapshot(...)`) and inspect
-  `revision.bindings` / `revision.casillas` — the loaded schema is format-agnostic
-  and is the ground truth.
+  `revision.bindings` / `revision.casillas` — the compiled schema is the
+  format-agnostic ground truth. Sections always live in subdirectories now, so
+  `grep` the `bindings/` / `casillas/` fragments for the exact ids after
+  RAG-grounding the concept.
 - **Good:** to find binding-coverage asymmetries, compare a casilla's `binding =`
-  + `input_kind` across sibling revisions from the LOADED snapshot (or by reading
-  both inline and fragmented sources), not by diffing subdirectory file counts
-  (the #15 / #40 pattern).
-- **Good:** before grounding any binding-source classification, read the binding's
-  `source` field (`ledger_iva_aggregation` vs `profile` vs `relation_prefill`),
-  wherever it is declared — a `source = "profile"` binding (autoconsumo, state
+  + `input_kind` across sibling revisions from the LOADED snapshot, not by
+  diffing subdirectory file counts (the #15 / #40 pattern).
+- **Good:** before grounding any binding-source classification, read the
+  binding's `source` field (`ledger_iva_aggregation` vs `profile` vs
+  `relation_prefill`) — a `source = "profile"` binding (autoconsumo, state
   attribution) is not a ledger silent-zero even when absent (#43).
-- **Bad:** `ls bindings/ | wc -l` or `find … -path '*formulas*' -name '*.toml' | wc -l`
-  as the SOLE signal of "is this revision calc-grade / does this casilla bind" —
-  blind to inline declarations; it produced the wrong #15 "parse-only" verdict.
-- **Bad:** concluding "not a gap / staged build-out / parse-only by design" from
-  subdirectory absence without reading `revision.toml` and RAG-grounding the
-  actual binding/formula set.
+- **Bad:** re-introducing a section table inline in a fragment directory's
+  `revision.toml`. The loader refuses it, naming the `<section>/` fragment
+  subdirectory it belongs in.
+- **Bad:** `ls bindings/ | wc -l` as the SOLE signal of "is this revision
+  calc-grade / does this casilla bind" — count the LOADED snapshot's sections,
+  not on-disk file counts, and never conclude "parse-only / staged build-out"
+  from subdirectory absence without loading the revision.
+
+## Status
+
+Active. Converged by the `arch-remediation-registry-format` campaign (register
+D6): every inline revision was migrated to the fragmented layout and the loader
+now refuses inline sections in `revision.toml`, so the dual-format assessment
+hazard is structurally eliminated rather than mitigated. The rule survives to
+carry the load-the-snapshot discipline (never `ls`/`find`-count) and to record
+that a section inline in `revision.toml` is now a hard load error.
 
 ## Source
 
 The #15 IVA-3 correction (M303 `2009-y-siguientes` domestic-base, fixed in
-`6c259afc3`; the recargo/59-60 tail in `4e669c113`), the binding-coverage
-systemic sweep, and the binding-source grounding that scoped out the
-profile-source autoconsumo/state-attribution casillas. Promoted per the
-`vaultspec-codify` discipline after the inline-vs-fragmented blind spot caught two
-real regulated under-declaration defects and prevented a false-positive in one
-campaign. Companion rules: `aeat-rag-discovery`, `aeat-registry-authority-flow`,
+`6c259afc3`; the recargo/59-60 tail in `4e669c113`) that first exposed the
+inline-vs-fragmented blind spot; the `arch-remediation-registry-format` campaign
+(ADR `2026-07-02-arch-remediation-registry-format-adr`, plan
+`2026-07-02-arch-remediation-registry-format-plan`) that converged the tree to
+fragmented-only and added the loader refusal. Companion rules:
+`aeat-rag-discovery`, `aeat-registry-authority-flow`,
 `registry-calculation-legal-grounding`.
 
 ---
@@ -3024,51 +3254,97 @@ trigger: always_on
 
 ## Rule
 
-A new application-layer service MUST consume cross-package primitives through
-the consumed package's top-level ``__all__`` re-export, never through an
-internal submodule import (the ``_foo`` module that owns the implementation is
-private to its package). Promote the symbol to ``__all__`` as a precondition;
-the service-side import line is then the package-top-level form.
+Every cross-package import project-wide MUST resolve to the SOLE canonical
+public top-level ``__all__`` facade of the symbol's owning package; a
+cross-package consumer MUST NEVER import from another package's private
+``_module`` (ownership of ``A.B._C...`` is ``A.B``). Intra-package private
+imports and a package building its own facade out of its own private modules
+are fine. When the symbol is not yet exported, promotion to ``__all__`` is a
+precondition of the consuming change, not a follow-up: add the symbol to the
+owning package's ``__all__`` (eager ``from .module import Name`` by default;
+lazy ``__getattr__`` / PEP 562 ONLY if the owning package already uses that
+pattern or an eager import risks a circular-import cost — never retrofit an
+existing eager facade to lazy). Never mechanically rename a private ``_name``
+straight into ``__all__``; per-symbol, either rename-to-public and promote a
+genuinely shared primitive, or expose a narrower purpose-built public API for a
+single caller's need, or treat the reach as a design defect to remove. A
+single DOCUMENTED non-``__init__`` public re-export bridge module (a stated,
+one-line-docstring purpose) is an acceptable canonical source; an undocumented
+pure-reexport shim is not.
 
 ## Why
 
-The BucketMaintenanceService composition pattern landing on 2026-06-03 surfaced
-the consequence of letting one consumer dot into a package's internals: every
-later consumer reads the precedent as permission to do the same. The fix is
-mechanical (add the symbol to ``__all__`` + the lazy ``__getattr__`` block) but
-re-binding the call sites later is invasive. Better to insist at authoring
-time that a new service consume symbols through the package boundary.
-
-Concretely, the precondition Step for the bucket-maintenance composition
-promoted ``rename_profile``, ``delete_profile_with_lifecycle_span``,
-``remove_profile_bucket_directory``, ``serialize_profile_bundle``,
-``deserialize_profile_bundle``, ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS``, and
-``UserProfilePortableExport`` to top-level surfaces before the service
-consumed them. Operator-direct directive recorded 2026-06-03 in the same
-session: "single authoritative source that is imported only from top level
-re-exports not from internal submodules".
+The BucketMaintenanceService composition pattern landing on 2026-06-03 first
+surfaced the consequence of letting one consumer dot into a package's
+internals: every later consumer reads the precedent as permission to do the
+same. The `2026-07-01-import-centralization-research` scan then quantified the
+cost of leaving the constraint scoped to "new application-layer services": 2465
+cross-package private imports (866 production, 1599 test) across 250 files and
+34 owning packages, plus a genuine naming collision
+(`_withholding_observations_repository.py` masking two distinct M180/193 vs
+M190 stores) and three latent Ruling-1 violations hiding inside a legitimate
+circular-import workaround. The `2026-07-01-import-centralization-adr`
+(Rulings 1, 2, 3, 4) generalized the constraint project-wide: ownership-first,
+promotion-before-rewrite, one canonical facade per symbol, with the
+promotion-mechanism and underscore-judgment detail this rule now carries.
+Enforcement moved from a single regression test pinning one package's surface
+to the project-wide AST scanner `dev/import_hygiene_scan.py` and its CI gate
+`src/aeat/tests/test_import_hygiene_gate.py`, which ratchets a checked-in
+production baseline toward zero and treats the Family-2 documented-bridge
+allowlist and the Family-3 pinned-symbol set as structural data.
 
 ## How
 
 - **Good:** a new ``aeat.application.bucket_maintenance`` service imports
   ``rename_profile`` from ``aeat.application.user_profile`` (the package
-  ``__all__`` re-export). The precondition Step promoted the symbol to that
-  surface before the service file was authored.
-- **Good:** a regression-gate test pins the public surface
-  (``test_bundle_reexports.py``) so a future refactor cannot retract the
-  re-export and force the service to import from internals again.
+  ``__all__`` re-export). The symbol was promoted to that surface before the
+  service file was authored.
+- **Good:** a cross-package consumer that needs
+  ``domain.modelos.CalculationRevision`` imports it from ``domain.modelos``
+  directly, never from ``application.modelo`` even though the app-layer
+  package used to re-export it — the ADR's Ruling-5 umbrella RETIRE makes the
+  domain package the sole canonical source once a duplicate re-export is
+  identified.
+- **Good:** ``registry/applicability.py``, ``deadlines/taxpayer_model.py``,
+  ``transactions/_ids.py``, ``cli/_schemas.py``,
+  ``outbound/aeat/_playwright.py``, and ``workflow/_utils.py`` are documented
+  non-``__init__`` bridge modules and remain acceptable canonical sources
+  under Ruling 4 — a consumer importing from one of these is not a violation.
+- **Good:** an underscore-named symbol reached by two or more unrelated
+  production packages is renamed to public and promoted to ``__all__``
+  (Ruling 3.i); one reached by exactly one narrow caller instead gets a
+  purpose-built narrower public API (Ruling 3.ii) rather than a blanket
+  ``_foo`` -> ``foo`` rename.
 - **Bad:** a service file imports ``from ....application.user_profile._orchestration
   import rename_profile`` (dotting into the private submodule). The next agent
   who needs the same symbol reads the precedent and does the same; gradually
   the package boundary is eroded.
+- **Bad:** mechanically stripping the leading underscore from every reached
+  private symbol and adding it to ``__all__`` without judging whether it is a
+  shared primitive, a single-caller need, or a design defect — this is the
+  blanket promotion Ruling 3 forbids.
+- **Bad:** an undocumented pure-reexport shim module invented to avoid a
+  proper facade promotion — only the six named, documented bridges (plus any
+  future one authored with the same one-line-docstring discipline) count as
+  canonical sources under Ruling 4.
+
+## Status
+
+Active; generalized project-wide. Supersedes the prior narrower scope ("a new
+application-layer service"), which is now a worked example (the first `Good`
+entry above) of the project-wide Ruling-1 ownership policy rather than the
+rule's full scope.
 
 ## Source
 
 Operator directive recorded 2026-06-03 during the BucketMaintenanceService
-composition-pattern landing on the ``chore/eliminate-shims`` branch. Backing
-ADR: ``2026-06-03-cli-workflow-redesign-adr``. Backing research:
-``2026-06-03-cli-workflow-redesign-research``. Backing exec record:
-``2026-06-03-cli-workflow-redesign-exec``.
+composition-pattern landing on the ``chore/eliminate-shims`` branch (backing
+ADR ``2026-06-03-cli-workflow-redesign-adr``; research
+``2026-06-03-cli-workflow-redesign-research``; exec record
+``2026-06-03-cli-workflow-redesign-exec``). Generalized project-wide by ADR
+``2026-07-01-import-centralization-adr`` (Rulings 1, 2, 3, 4), research
+``2026-07-01-import-centralization-research``. Enforced by
+``dev/import_hygiene_scan.py`` and ``src/aeat/tests/test_import_hygiene_gate.py``.
 
 ---
 name: shipped-search-licence-clean
@@ -3091,6 +3367,143 @@ The accepted `2026-06-10-docs-terminology-search-adr` makes licence-clean shippi
 - Good: regenerate the Pagefind index at docs-build/deploy time from the committed light data; never `git add` the generated `pagefind/` corpus.
 - Bad: Commit an embedding vector, SPLADE sparse map, raw score/path/snippet payload, or unreviewed term data from an NC, ND, gated, or unlicensed source.
 - Bad: commit the generated Pagefind index corpus (`pagefind/`, thousands of fragment/index/wasm files) to the git base.
+
+---
+name: single-subject-mutation-is-idempotent-guarded
+trigger: always_on
+---
+
+# Single-subject creating mutations are idempotent-guarded
+
+## Rule
+
+Every CLI verb (and the application service behind it) that CREATES one
+addressable record MUST be `idempotent_guarded`: a retry carrying the same
+caller-supplied idempotency key — or the same deterministic, clock-free derived
+id — returns the EXISTING record as a no-op (no second lifecycle event, no
+`created_at`/`modified_at` re-stamp, no re-run of side effects) surfaced through
+the surface's uniform result shape (e.g. the ledger mutation quintet with empty
+`bucket_event_ids`) plus an info `Notice`; a same-key call whose content DIFFERS
+refuses with an instructive, localised conflict naming the divergent fields. A
+verb that is deliberately additive (two genuinely-distinct records may share
+identical content) is `non_idempotent_append` and MUST document that choice. The
+record's identity MUST be clock-free — the timestamp is a non-identity last-seen
+body field, never folded into the derived id — so a retry at a different instant
+resolves to the same record.
+
+## Why
+
+The `aeat` CLI's target operator is an autonomous LLM agent that retries
+uncertain or failed calls, so a creating mutation that is not retry-safe silently
+double-writes: a duplicate ledger transaction inflates every downstream modelo
+aggregation, and a time-stamped verify report or filing record accumulates one
+copy per retry. The `2026-06-30-ledger-add-idempotency-adr` closed this across the
+three single-subject surfaces — manual `ledger add`, `modelo verify`, `modelo
+file` — by keying idempotency on a clock-free id, returning the existing record as
+a guarded no-op, and refusing same-key/different-content. The independent close
+review (`2026-07-01-ledger-add-idempotency-audit`) confirmed the pattern and
+caught the recurring failure mode it guards: an idempotency/no-op match that omits
+a field (recargo, source jurisdiction) silently drops the new value — a silent
+under-declaration. Making the guard the standing rule keeps every future creating
+verb retry-safe by construction, and keeps identities clock-free (advancing the
+replayability the determinism work depends on). This is the creating-mutation
+companion to `ledger-mutation-returns-uniform-quintet` (the result shape the no-op
+rides on), `cli-notices-are-the-only-diagnostic-channel` (the no-op Notice),
+`no-silent-under-declaration` (the match must be complete), and
+`carried-observations-stamp-their-revision` (identity is content, not clock).
+
+## How
+
+- **Good:** `create_manual_transaction` keys on the clock-free provider id
+  `manual:{bucket}:{key}`; a same-key retry with matching content returns the
+  existing-row quintet with empty `bucket_event_ids` + an info `Notice`, emitting
+  no second `LEDGER_TRANSACTION_CREATED` event and leaving `created_at` unchanged;
+  a same-key add whose content differs raises `TransactionValidationError`. The
+  idempotency match compares EVERY persisted field (including `recargo_amount` and
+  `source_jurisdiction`).
+- **Good:** `derive_verification_report_id` / `derive_filing_record_id` fold the
+  OUTCOME (revision + status/findings + actor) and drop the timestamp from
+  identity; a non-granting verify retry and a re-file of an already-`PRESENTADO`
+  revision collapse to the existing record with an info `Notice`; the timestamp
+  survives as a non-identity last-seen field.
+- **Good:** the keyless `ledger add` path stays `non_idempotent_append` (two
+  genuine identical same-day cash movements both persist) and the agent-harness
+  contract requires the agent to always pass a stable idempotency key.
+- **Bad:** a creating verb whose id folds `now()`/`occurred_at`/`filed_at`, so a
+  retry mints a new id and double-writes — the pre-ADR manual-add and
+  time-stamped-report defect.
+- **Bad:** a guarded no-op whose match omits a persisted field, so a same-key
+  retry that changes only that field no-ops and silently drops the new value
+  (`no-silent-under-declaration`).
+- **Bad:** modelling a deliberately-additive verb as guarded (collapsing genuine
+  distinct records) or an idempotent verb as append (double-writing on retry)
+  without documenting the choice.
+
+## Source
+
+ADR `2026-06-30-ledger-add-idempotency-adr` (codification candidate), research
+`2026-06-30-ledger-add-idempotency-research`, plan
+`2026-06-30-ledger-add-idempotency-plan`, close honesty-review audit
+`2026-07-01-ledger-add-idempotency-audit`. Promoted per the `vaultspec-codify`
+discipline after the pattern held across all three single-subject surfaces
+(`ledger add`, `modelo verify`, `modelo file`) plus an independent PASS/GO review
+in one full execution cycle. Companion rules:
+`ledger-mutation-returns-uniform-quintet`, `cli-single-subject-id-is-positional`,
+`cli-notices-are-the-only-diagnostic-channel`, `no-silent-under-declaration`.
+
+---
+name: subagent-commits-require-explicit-pathspec
+trigger: always_on
+---
+
+# Rule
+
+A dispatched agent (or coordinator) committing in this shared worktree MUST pass
+an explicit pathspec to `git commit -- <path>...` naming only files it authored,
+and MUST verify (`git diff --cached`) that the staged set carries zero foreign
+markers immediately before committing. A bare `git commit` with no pathspec is
+forbidden: the shared index routinely holds peer campaigns' staged work, and a
+no-pathspec commit sweeps all of it under your SHA and message.
+
+## Why
+
+During the DAE-80 agent-harness rollout a subagent tasked with a one-line change
+verified its own file was clean, then ran `git add -- <its file>` followed by a
+`git commit` with NO pathspec. The shared index already held 35 staged files from
+the unrelated `cross-domain-continuity` campaign, and the no-pathspec commit
+bundled all of them into commit `84f84166f` under the subagent's message. This
+was not benign: it left the M100 anualidades regime (LIRPF art. 64/75) broken at
+committed HEAD — a deleted derivation function still referenced by
+`schema.toml`/registry bindings, a silent-under-declaration-class defect — and it
+mis-attributed a peer campaign's work to a foreign SHA. `git add` being
+path-scoped is not enough; the commit itself must be path-scoped, because
+`git commit` with no pathspec commits the entire index. This is the enforcement
+teeth behind `uncommitted-wip-is-not-orphaned` (which governs how to LAND your own
+change amid live peer WIP) and `aeat-git-worktree-safety` (which forbids the
+destructive un-bundling that a swept commit tempts).
+
+## How
+
+- **Good:** `git commit -m "..." -- src/aeat/foo.py src/aeat/tests/test_foo.py`
+  after `git diff --cached -- src/aeat/foo.py src/aeat/tests/test_foo.py` confirms
+  only your hunks are staged; a pathspec commit ignores every other staged path.
+- **Good:** for a file entangled with a peer's uncommitted hunks, use the
+  apply-cached gated drive from `uncommitted-wip-is-not-orphaned` (stage a
+  HEAD-anchored own-edits-only patch, verify zero foreign markers, then a
+  verified-index commit) rather than a pathspec commit that would re-stage the
+  peer's interleaved lines.
+- **Bad:** `git add -- my_file.py && git commit -m "..."` (no pathspec on the
+  commit) — sweeps every other file staged in the shared index under your SHA.
+  This is the `84f84166f` incident.
+- **Bad:** a no-pathspec `git commit` "because I only touched one file" — you did
+  not stage the index; peers did, and the commit takes the whole index.
+- **Bad:** a broad `git add` (a directory, `-A`, or `.`) that sweeps peer-staged
+  files, then a `git reset -- <your files>` to "undo" it. `git reset` in any form
+  is categorically forbidden here (`aeat-git-worktree-safety`) — even an
+  index-only pathspec reset. The fix is to never over-stage: `git add -- <your
+  explicit files only>` then `git commit -- <the same explicit files>`. If you
+  ever find you need `git reset` to clean up a bad add, you added too broadly —
+  there is no reset escape hatch.
 
 ---
 name: terminology-scaffold-preserve-contract
@@ -3288,12 +3701,16 @@ read-only: it is the zeroth move, not a pipeline phase, and produces no artifact
   or MCPs
 - `vaultspec-core spec mcps status --json` - verify MCP config health
 - `vaultspec-core spec system show` - inspect the assembled system prompt
-- `vaultspec-core sync` - propagate edits under `.vaultspec/rules/...`
+- `vaultspec-core sync` - propagate edits under `.vaultspec/...`
 - `vaultspec-core spec doctor` - diagnose overall workspace health
 - `vaultspec-core migrations status` / `vaultspec-core migrations run` - inspect or run
   pending schema migrations
 - `vaultspec-core vault feature archive <tag>` - archive a feature so it no longer
   exists in the active project
+- `vaultspec-core vault feature rename <old> <new>` - rename a feature tag across every
+  binding surface (document filenames, the exec folder, the `#feature` tag, `related:`
+  wiki-links, and the regenerated feature index); rolls back on failure during apply,
+  and `--force` merges the source into an existing target feature
 - `vaultspec-core vault rule promote --from <audit-stem> --as <rule-name>` - promote an
   audit finding to a project rule
 
@@ -3324,9 +3741,9 @@ propagation command after source-side changes.
 Permitted:
 
 - Edit body prose of a `.vault/` document scaffolded by `vaultspec-core vault add`.
-- Edit source files under `.vaultspec/rules/rules/`, `.vaultspec/rules/skills/`,
-  `.vaultspec/rules/agents/`, `.vaultspec/rules/hooks/`, or `.vaultspec/rules/mcps/`,
-  then run `vaultspec-core sync`.
+- Edit source files under `.vaultspec/rules/`, `.vaultspec/skills/`,
+  `.vaultspec/agents/`, `.vaultspec/hooks/`, or `.vaultspec/mcps/`, then run
+  `vaultspec-core sync`.
 
 Forbidden:
 
@@ -3336,9 +3753,9 @@ Forbidden:
 
 ## References
 
-- `.vaultspec/rules/reference/cli.md` - locally-resident machine-facing CLI reference:
-  command inventory, options, argument enumerations, exit codes, and environment
-  variables. Read this first; no network round-trip needed.
+- `.vaultspec/reference/cli.md` - locally-resident machine-facing CLI reference: command
+  inventory, options, argument enumerations, exit codes, and environment variables. Read
+  this first; no network round-trip needed.
 
 ---
 name: vaultspec-codify.builtin
@@ -3468,6 +3885,40 @@ discretionary sixth step. Most features end at review; the features whose lesson
 outlast the feature itself end at codify.
 
 ---
+name: vaultspec-discovery.builtin
+trigger: always_on
+---
+
+# Codebase and intent discovery
+
+Begin every pipeline phase - Research, ADR, Plan, Execute - by grounding in what the
+project already decided and built. The project's own benchmarking is unambiguous: a
+semantic-search-led hybrid sweep finds a feature fastest and at the lowest context cost
+\- roughly 1.3-2x cheaper than broad keyword search on a large tree - and recalls
+governing decisions with near-zero noise. Lead with it. The validated sequence is locate
+by meaning, read the epicenter whole, confirm with grep:
+
+1. **Locate by meaning.** For code, lead with
+   `vaultspec-rag search "<concept and domain nouns>" --type code` (narrow with
+   `--language`/`--path`); it reaches the right file in about one call where broad
+   globbing floods context. For decisions and intent,
+   `vaultspec-rag search "<intent>" --type vault --doc-type adr` - the directed ADR
+   filter, sharper than catch-all `--type vault`. `vaultspec-core status [target]`,
+   `vaultspec-core vault list`, and `vaultspec-core vault graph` are first-class for
+   orientation, in-flight plan state, and project health - reach for them to get your
+   bearings on intent. For a small, well-named module, list the directory.
+1. **Read** the epicenter file - or, when extending a feature, the nearest existing
+   analogue - in full. This whole-file read is the breakthrough in nearly every run.
+1. **Confirm** exact symbols and insertion points with a targeted grep, which is sharper
+   than semantic search at exact-symbol lookup.
+1. For decision discovery, round out recall by listing `.vault/adr/` and filtering by
+   feature - semantic search alone can miss lower-ranked or opaquely-named records.
+
+Do not lead with broad `Glob`/grep sweeps; their context cost scales badly on large
+codebases, and grep earns its place at the confirmation step. Where `vaultspec-rag` is
+not installed, the `vaultspec-core` discovery verbs and grep carry the same sequence.
+
+---
 name: vaultspec-dry-run-discipline.builtin
 trigger: always_on
 ---
@@ -3586,63 +4037,66 @@ name: vaultspec-rag.builtin
 trigger: always_on
 ---
 
-# vaultspec-rag — semantic search
+# vaultspec-rag — semantic search for code and decisions
 
-Use semantic search for codebase discovery and implementation discovery. When you need
-to find where or how something is done and don't know the exact name, search by meaning
-instead of grepping keywords or guessing identifiers.
+Discover by MEANING when you do not know the exact name, instead of grepping keywords or
+guessing identifiers. vaultspec-rag does two jobs: find the CODE, and find the DECISIONS -
+the ADRs (architecture decision records) that govern it.
 
-## Write good queries
+Server mode is the default backend. If a search reports the service is down, start it with
+`uvx vaultspec-rag server start` (small or offline projects opt into the on-disk local
+backend with `--local-only`). The running service auto-reindexes on file changes.
+DO NOT manually reindex during normal work.
 
-The index is hybrid: dense embeddings match meaning, sparse vectors match exact terms,
-and a cross-encoder reranks the top hits. A good query feeds both halves. So:
+## Discover code by meaning
 
-- Describe the concept or behavior in a short phrase - this drives the dense, semantic
-  half.
-- In that same phrase, name the concrete domain nouns the target code or docs would use
-  - these drive the sparse, exact-match half. A query of pure natural language leaves
-    the sparse half nothing to match.
-- One concept per query. Narrow with filters; don't paste bare keywords or a guessed
-  function name.
+`--type code` searches source by meaning. Phrase the query as a short behaviour plus the
+concrete domain nouns the target code would use: the behaviour drives semantic matching, the
+nouns drive exact matching, so a bare keyword or pure prose finds less than both together.
 
 ```
-vaultspec-rag search "file lock acquired around incremental index write" --type code
-vaultspec-rag search "retry policy backoff for failed webhook delivery" --type code --language python
-vaultspec-rag search "decision on gpu_lock scope around forward pass" --type vault --doc-type adr
+uvx vaultspec-rag search "retry backoff around failed webhook delivery" --type code
 ```
 
-Code filters: `--language --path --function-name --class-name --include-path GLOB`.
-Vault filters: `--doc-type --feature --date --tag`. Filters also work inline in the
-query: `type:adr lang:python func:main`.
+## Discover architecture decisions
 
-## Run the server
-
-If the server is not running, start it:
+When you need the WHY - the rationale, constraints, or decision behind code - search the
+vault's ADRs, not the source. `--type vault --doc-type adr` returns the governing records.
 
 ```
-vaultspec-rag server start
+uvx vaultspec-rag search "decision on gpu lock scope around the forward pass" --type vault --doc-type adr
 ```
 
-Server mode is the default backend: `server start` supervises the managed Qdrant
-server and loads the GPU models. The server is the only workable backend at codebase
-scale - local mode is orders of magnitude slower - so it is the assumed default, not an
-opt-in. Provision the binary and models once with `vaultspec-rag install` (it fetches
-torch, the models, and the Qdrant binary by default).
+`--doc-type` also accepts `audit`, `plan`, `reference`, `research`, and `exec` (comma-separate
+to union several).
 
-Local mode is a first-class explicit opt-out for small projects, CI, or air-gapped
-hosts: `vaultspec-rag server start --local-only` (or `VAULTSPEC_RAG_LOCAL_ONLY=1`, or
-`vaultspec-rag install --local-only` which persists the choice). It uses the on-disk
-store and needs no server binary.
+## Cut noise with filters
 
-Check dependency readiness any time with `vaultspec-rag server doctor` (`--json` for the
-machine-readable snapshot): it reports torch CUDA, model presence, and the Qdrant binary
-and supervised-server state.
+Semantic search competes production code against its own noise - overlapping tests, parallel
+locale files, generated and vendored trees, worktree clones. Code search is production-biased
+by default: it hides duplicate/derivative domains (`generated`, `worktree`) and demotes
+`tests`, `docs`, `locale`, and `vendored` beneath production. When noise still crowds a page,
+narrow by DOMAIN rather than raising `--max-results`. The domains are `prod`, `tests`, `docs`,
+`locale`, `generated`, `vendored`, `worktree`.
 
-The running service auto-reindexes on file changes - DO NOT manually reindex during
-normal work.
+Steer with inline query tokens (comma-separated, repeatable):
 
-The same search is available through MCP as the `search_vault` and `search_codebase`
-tools.
+```
+uvx vaultspec-rag search "fixture setup helpers exclude:tests" --type code
+uvx vaultspec-rag search "auth token validation only:prod" --type code
+uvx vaultspec-rag search "translation table lookup include:locale" --type code
+```
+
+`exclude:` hides a domain, `only:` keeps just the named domains, and `include:` re-admits a
+domain the default profile hides or demotes. Compose with path and category filters:
+
+```
+uvx vaultspec-rag search "request handler" --type code --include-path "src/**" --exclude-path "**/legacy/**"
+uvx vaultspec-rag search "encode batch" --type code --prefer production
+```
+
+The full option set is `uvx vaultspec-rag search --help`. The same search is available through
+MCP as the `search_codebase` and `search_vault` tools.
 
 ---
 name: vaultspec.builtin
@@ -3933,4 +4387,65 @@ instead.
   template annotations, and applies markdown hygiene fixes. The dedicated
   `vaultspec-core vault check placeholders` check surfaces any `{...}` residue left in
   body prose, which must be filled in by hand or by the owning CLI verb.
+
+---
+name: verification-grounding-needs-oracle-evidence
+trigger: always_on
+---
+
+# Verification grounding needs bundled oracle evidence and engine reproduction
+
+## Rule
+
+A verification grounding claim — a casilla listed in a verification expectation's
+`externally_grounded_casilla_ids` — MUST be backed by a bundled AEAT-authoritative
+oracle payload that carries the expected figure (a Renta WEB Open replay under
+`corpus/parity_replays/renta_web_open/`, or an AEAT manual worked-example oracle
+under `corpus/manual_oracles/`, both keyed by `expected_by_casilla_id`), AND the
+registry engine MUST independently reproduce that figure in a parity test. Never
+fabricate a grounding figure, never hand-compute it from the registry formula
+under test, and never declare `externally_grounded_casilla_ids` without both the
+bundled evidence and the engine-reproduction test. Enrollment in a
+`verification_expectation` (coverage-gated or reconcile-when-present) is NOT
+grounding — it only means the casilla is reconciled filed-vs-engine; grounding is
+the stronger claim that the engine value itself is checked against an independent
+AEAT authority.
+
+## Why
+
+The verification-power campaign found enrollment reached 100% of computed casillas
+while external per-casilla AEAT grounding was ~1% (research
+`2026-07-01-verification-power-research`). A grounding claim with no independent
+oracle behind it is a false confidence signal: a filed value reconciled only
+against the app's own engine cannot catch a systematic engine error the filing
+matches. ADR `2026-07-01-verification-power-adr` made grounding tier a declared,
+build-time-validated registry field surfaced on the verdict as
+`independently_grounded_fraction`, and the symmetric honesty gate
+(`test_external_oracle_grounding_enrolled.py`) enforces evidence in BOTH
+directions — every bundled oracle figure must be enrolled, and every declared
+`externally_grounded_casilla_ids` must have a bundled oracle figure for its filing
+year. This is the verification-surface companion to
+`legal-grounding-verifies-bundled-authoritative-corpus` (verify figures against
+bundled authoritative text) and `no-tautological-calculation-tests` (never assert
+engine output against a number hand-computed from the same formula).
+
+## How
+
+- **Good:** M100 2024 `0226` is declared `externally_grounded` only after (1) a
+  bundled `corpus/manual_oracles/modelo-100-2024-estimacion-directa-simplificada.json`
+  carries `expected_by_casilla_id.0226 = "58100.00"` quoted verbatim from the AEAT
+  manual's caso práctico (with a `raw_evidence_locator` line anchor), and (2)
+  `test_m100_2024_estimacion_directa_manual_worked_example.py` seeds the manual's
+  raw inputs and proves the engine independently computes `0226 = 58100.00`. Both
+  the honesty gate and an anti-tautology companion test pass.
+- **Good:** when the bundled manual states a contradictory figure (an OCR/footnote
+  artefact), ground on the figure the manual states repeatedly and that the engine
+  re-derives bottom-up, and document the discrepancy in the test — never silently
+  pick one number.
+- **Bad:** adding a casilla id to `externally_grounded_casilla_ids` because the
+  engine happens to emit a plausible value, with no bundled oracle payload — the
+  symmetric honesty gate fails, and the "grounding" is unfounded.
+- **Bad:** authoring a manual-oracle `expected_by_casilla_id` figure by running the
+  registry formula and copying its output — that is tautological; the figure must
+  be the AEAT manual/replay literal, and the engine must reproduce it independently.
 </vaultspec>

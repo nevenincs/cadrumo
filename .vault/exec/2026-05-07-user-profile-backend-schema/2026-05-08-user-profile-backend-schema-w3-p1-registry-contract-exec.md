@@ -1,14 +1,12 @@
 ---
 tags: ["#exec", "#user-profile-backend-schema"]
 date: 2026-05-08
-modified: '2026-05-08'
+modified: '2026-06-30'
 related:
   - "[[2026-05-07-user-profile-backend-schema-plan]]"
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-05-07-user-profile-schema-research]]"
 ---
-
-
 
 # `user-profile-backend-schema` `W3.P1` `Registry Contract`
 

@@ -1,7 +1,16 @@
 """Typed ``--json`` payload schemas for ledger rule commands.
 
-Every declared payload is an :class:`OutputSchema` subclass registered for
-the ledger rule command JSON-contract surface.
+Every declared payload is an
+:class:`OutputSchema` subclass registered with
+:func:`register_schema` for the ledger rule
+command JSON-contract surface carried by
+:class:`SchemaEnvelope` through
+:func:`_emit_envelope`. These schemas are the CLI projection of the secure,
+profile-local rule engine: persisted :class:`LedgerClassificationRule` records
+are listed and added through :mod:`_ledger_rules_cli`, while
+:func:`apply_classification_rules` owns live mutation semantics. The parent
+:mod:`_ledger_payloads` module re-exports these split schemas so existing ledger
+command emitters keep one payload import surface.
 """
 
 from __future__ import annotations
@@ -10,7 +19,17 @@ from ._schemas import OutputSchema, register_schema
 
 
 class ClassificationRulePayload(OutputSchema):
-    """One classification-rule row (matches the dict emitted by rule.add / rule.list)."""
+    """One persisted ledger classification rule row.
+
+    Mirrors :class:`LedgerClassificationRule` as
+    emitted by
+    :class:`RuleAddResult` and
+    nested in
+    :class:`RuleListResult`.
+    ``rule_id`` is the content-addressed id, ``description_pattern`` is the
+    regex evaluated against transaction descriptions, and lower ``priority``
+    values run before higher ones.
+    """
 
     rule_id: str
     description_pattern: str
@@ -23,18 +42,38 @@ class ClassificationRulePayload(OutputSchema):
 
 @register_schema("ledger.rule.add")
 class RuleAddResult(ClassificationRulePayload):
-    """JSON envelope for ``aeat app ledger rule add``."""
+    """JSON envelope for ``aeat app ledger rule add``.
+
+    The command persists one
+    :class:`LedgerClassificationRule` through
+    :class:`LedgerClassificationRuleRepository`; adding
+    the same pattern/classification/category tuple is idempotent because the
+    rule id is content-addressed.
+    """
 
 
 @register_schema("ledger.rule.list")
 class RuleListResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger rule list``."""
+    """JSON envelope for ``aeat app ledger rule list``.
+
+    Rows are returned in the application evaluation order exposed by
+    :meth:`LedgerClassificationRuleRepository.list_rules`: priority ascending,
+    then creation time ascending for ties.
+    """
 
     rules: list[ClassificationRulePayload]
 
 
 class RuleApplyMatchPayload(OutputSchema):
-    """One dry-run match row for ``rule apply --dry-run``."""
+    """One non-mutating preview row for ``ledger rule apply --dry-run``.
+
+    The row reports the first rule that would classify the transaction if the
+    operator re-ran without ``--dry-run``. It previews the same priority-ordered
+    :class:`LedgerClassificationRule` match selection
+    as :func:`apply_classification_rules`, but remains evidence only: no
+    transaction state or bucket event is written for these :class:`RuleApplyResult`
+    rows.
+    """
 
     transaction_id: str
     description: str
@@ -43,7 +82,16 @@ class RuleApplyMatchPayload(OutputSchema):
 
 
 class RuleApplyAppliedPayload(OutputSchema):
-    """One live-applied rule row nested in ``ledger rule apply``."""
+    """One transaction classified by a live ``ledger rule apply`` pass.
+
+    Nested in
+    :class:`RuleApplyResult` and
+    mirrors
+    :class:`ApplyRulesAppliedRow`: the transaction id,
+    the matched content-addressed rule id, and the classification persisted
+    through the shared manual transaction mutation path with ``rule:<rule_id>``
+    provenance.
+    """
 
     transaction_id: str
     matched_rule_id: str
@@ -57,8 +105,11 @@ class RuleApplyResult(OutputSchema):
     Covers both the dry-run branch (``dry_run``, ``would_match``,
     ``count``) and the live-apply branch (``rules_evaluated``,
     ``transactions_scanned``, ``matched``, ``skipped_already_classified``,
-    ``no_match``, ``applied``). All fields are optional so both branches
-    validate cleanly.
+    ``no_match``, ``applied``).  Live counts mirror
+    :class:`ApplyRulesResult`; dry-run rows preview the
+    same first-match rule selection without writing transaction state.  Rows
+    already classified by an operator are skipped unless the command is run with
+    the explicit ``--reaffirm`` consent flag.
     """
 
     # Dry-run path
@@ -75,7 +126,15 @@ class RuleApplyResult(OutputSchema):
 
 
 class LLMProviderAvailabilityPayload(OutputSchema):
-    """One subprocess LLM provider's PATH availability (nested)."""
+    """One subprocess LLM provider's PATH availability.
+
+    Nested in
+    :class:`LedgerProvidersResult`
+    and mirrors
+    :class:`LLMProviderAvailability` from
+    :func:`available_llm_providers`. The probe uses PATH lookup only; it does
+    not spawn the provider CLI or send transaction data to a cloud service.
+    """
 
     provider: str
     cli_binary: str
@@ -84,7 +143,15 @@ class LLMProviderAvailabilityPayload(OutputSchema):
 
 
 class VisionProviderPayload(OutputSchema):
-    """The on-host Ollama vision model's availability (nested)."""
+    """The on-host Ollama vision model's availability.
+
+    Nested in
+    :class:`LedgerProvidersResult`
+    and carries the
+    :class:`DependencyStatus` fields surfaced
+    beside subprocess LLM providers, including operator remediation text when
+    the local model or service is unavailable.
+    """
 
     service: str
     available: bool
@@ -96,10 +163,78 @@ class VisionProviderPayload(OutputSchema):
 class LedgerProvidersResult(OutputSchema):
     """JSON envelope for ``aeat app ledger providers``.
 
-    Reports the subprocess cloud-provider CLIs (claude / antigravity / codex) and
-    the on-host Ollama vision model, so the operator sees every classification
-    backend — cloud and local — in one place.
+    Reports subprocess cloud-provider CLIs from
+    :func:`available_llm_providers` and the on-host Ollama vision model probed
+    by :func:`probe_ollama_vision`, so the operator sees every classification
+    backend - cloud and local - in one place before running LLM-assisted
+    classification.
     """
 
     providers: list[LLMProviderAvailabilityPayload]
     vision: VisionProviderPayload | None = None
+
+
+class LlmUsageProviderPayload(OutputSchema):
+    """Per-provider LLM usage/cost row.
+
+    Mirrors :class:`LlmUsageProviderMetrics`, aggregated
+    from the encrypted usage log. ``calls`` counts every recorded call
+    (cache hits included); ``cost_estimate_usd`` is the summed estimate.
+    """
+
+    provider: str
+    calls: int
+    cache_hits: int
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+    cost_estimate_usd: str
+
+
+class LlmConfidenceProviderPayload(OutputSchema):
+    """Per-provider classification-confidence distribution row.
+
+    Mirrors :class:`LlmConfidenceProviderMetrics`,
+    aggregated from LLM-classified ledger transactions. ``low_confidence_count``
+    is the count below the tunable report threshold; ``high_confidence_count``
+    (>= 0.8) and ``medium_confidence_count`` ([0.5, 0.8)) are fixed-floor
+    distribution buckets.
+    """
+
+    provider: str
+    classified_count: int
+    low_confidence_count: int
+    high_confidence_count: int
+    medium_confidence_count: int
+    min_confidence: str | None = None
+    max_confidence: str | None = None
+    mean_confidence: str | None = None
+
+
+@register_schema("ledger.llm_diagnostics")
+class LedgerLlmDiagnosticsResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger llm-diagnostics``.
+
+    Presents the two existing LLM metric stores in one read-only report: the
+    usage/cost log aggregated per provider
+    (:class:`LlmUsageProviderMetrics`) and the
+    classification-confidence distribution over LLM-classified ledger
+    transactions (:class:`LlmConfidenceProviderMetrics`),
+    both sourced from
+    :func:`build_llm_diagnostics_report`. It reports only accounting metadata,
+    never response text or financial content.
+    """
+
+    since: str | None = None
+    until: str | None = None
+    low_confidence_threshold: str
+    usage_providers: list[LlmUsageProviderPayload]
+    total_calls: int
+    total_cache_hits: int
+    total_input_tokens: int
+    total_output_tokens: int
+    total_cost_estimate_usd: str
+    confidence_providers: list[LlmConfidenceProviderPayload]
+    total_classified: int
+    total_low_confidence: int
+    has_data: bool

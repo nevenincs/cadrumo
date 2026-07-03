@@ -34,21 +34,27 @@ from sqlalchemy import select
 from .....core.config import override_settings
 from .....core.errors import build_error_envelope, resolve_error_message
 from .....core.external_constants import UTF_8_ENCODING
-from .....domain.attachments._enums import AttachmentKind, AttachmentSource
-from .....domain.attachments._errors import AttachmentPersistenceError, AttachmentValidationError
-from .....domain.attachments._models import Attachment
+from .....domain.attachments import (
+    Attachment,
+    AttachmentKind,
+    AttachmentPersistenceError,
+    AttachmentSource,
+    AttachmentValidationError,
+)
 from .....tests.secure_sql import isolated_runtime_profile
 from ..attachment import _ATTACHMENT_MANIFEST_NAMESPACE, AttachmentStore
-from ..crypto._encrypted_columns import (
+from ..crypto import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
-from ..sql._orm import SecureObjectRow
+from ..sql import SecureObjectRow
 from ..sql.engine import get_engine
 from ..sql.session import session_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_CAPTURED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
 
 
 def _row_payload_aad(row: SecureObjectRow) -> bytes:
@@ -104,7 +110,6 @@ def _make_attachment(*, sha256: str, bytes_size: int) -> Attachment:
     the surface.
     """
 
-    now = datetime.now(UTC).replace(microsecond=0)
     return Attachment(
         attachment_id=sha256,
         kind=AttachmentKind.INVOICE_PDF,
@@ -113,7 +118,7 @@ def _make_attachment(*, sha256: str, bytes_size: int) -> Attachment:
         sha256=sha256,
         mime_type="application/pdf",
         bytes_size=bytes_size,
-        captured_at=now,
+        captured_at=_CAPTURED_AT,
         linked_transaction_ids=("tx-001", "tx-002"),
         linked_invoice_ids=("inv-2025-001",),
         bucket_id="b" * 32,

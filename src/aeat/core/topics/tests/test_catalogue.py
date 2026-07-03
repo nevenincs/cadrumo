@@ -6,9 +6,10 @@ import ast
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ...resources import resources
-from .. import TopicCatalogue, TopicNotFoundError
+from .. import Topic, TopicCatalogue, TopicNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -22,7 +23,8 @@ _EXPECTED_TOPICS = frozenset(
         "casilla",
         "pago-fraccionado",
         "recargo-extemporaneo",
-        "sii-verifactu",
+        "sii",
+        "verifactu",
         "authentication",
         "profile",
         "calendar",
@@ -33,13 +35,14 @@ _EXPECTED_TOPICS = frozenset(
 )
 
 
-def test_catalogue_loads_all_thirteen_audit_named_topics() -> None:
+def test_catalogue_loads_all_current_audit_named_topics() -> None:
     """Every audit-named slug must be registered in the canonical catalogue."""
     catalogue = resources().topics.singleton
     assert isinstance(catalogue, TopicCatalogue)
     slugs = set(catalogue.slugs())
     missing = _EXPECTED_TOPICS - slugs
     assert not missing, f"audit-named topics missing from catalogue: {missing}"
+    assert "sii-verifactu" not in slugs
 
 
 def test_catalogue_topic_lookup_returns_typed_record() -> None:
@@ -80,6 +83,7 @@ def test_every_topic_legal_ref_resolves_against_real_legal_catalogue() -> None:
     """Topic citation links must resolve through the committed legal catalogue."""
     catalogue = resources().topics.singleton
     legal_ids = set(resources().modelos.authority.catalogues.legal)
+    ungrounded = sorted(topic.slug for topic in catalogue.topics if not topic.legal_refs)
     missing = sorted(
         f"{topic.slug}: {legal_ref}"
         for topic in catalogue.topics
@@ -87,7 +91,21 @@ def test_every_topic_legal_ref_resolves_against_real_legal_catalogue() -> None:
         if legal_ref not in legal_ids
     )
 
+    assert ungrounded == []
     assert missing == []
+
+
+def test_topic_requires_legal_refs() -> None:
+    """A topic cannot be registered without legal grounding."""
+
+    with pytest.raises(ValidationError) as raised:
+        Topic(
+            slug="ungrounded-topic",
+            title_key="topic.ungrounded-topic.title",
+            body_key="topic.ungrounded-topic.body",
+        )
+
+    assert "legal_refs" in str(raised.value)
 
 
 _FORBIDDEN_IMPORT_ROOTS: frozenset[str] = frozenset({"click", "rich", "typer", "aeat.entrypoints"})

@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#calculation-aggregation-taxonomy'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `calculation-aggregation-taxonomy` research: `Calculation aggregation mechanism taxonomy: enumeration, overlaps, and the dormant-resolver under-declaration`
 

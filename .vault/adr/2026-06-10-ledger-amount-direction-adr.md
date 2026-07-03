@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#ledger-amount-direction'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-ledger-amount-direction-research]]"
 ---
-
-
 
 # `ledger-amount-direction` adr: `Ledger absolute-amount + direction-authority convention` | (**status:** `accepted`)
 

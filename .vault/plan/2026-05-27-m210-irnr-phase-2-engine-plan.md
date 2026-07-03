@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#m210-irnr-phase-2-engine'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-05-27-m210-irnr-full-engine-adr]]'
@@ -12,7 +12,6 @@ related:
   - '[[2026-06-04-m210-irnr-phase-2-engine-adr]]'
   - '[[2026-06-04-m210-irnr-phase-2-engine-research]]'
 ---
-
 
 # `m210-irnr-phase-2-engine` `M210 IRNR Phase 2 engine - full diseno-de-registro + Convenios roster + remaining tipo-de-renta variants` plan
 

@@ -23,23 +23,19 @@ class TestReadEnvFile:
     def test_returns_empty_for_missing_file(self, tmp_path: Path) -> None:
         assert read_env_file(tmp_path / "missing.env") == {}
 
-    def test_parses_simple_key_value_pairs(self, tmp_path: Path) -> None:
-        path = tmp_path / ".env"
-        path.write_text("FOO=bar\nBAZ=qux\n", encoding="utf-8")
-        assert read_env_file(path) == {"FOO": "bar", "BAZ": "qux"}
-
-    def test_skips_blank_lines_and_comments(self, tmp_path: Path) -> None:
-        path = tmp_path / ".env"
-        path.write_text(
-            "# header comment\n\nFOO=bar\n# inline comment\nBAZ=qux\n",
-            encoding="utf-8",
-        )
-        assert read_env_file(path) == {"FOO": "bar", "BAZ": "qux"}
-
-    def test_empty_value_yields_empty_string(self, tmp_path: Path) -> None:
-        path = tmp_path / ".env"
-        path.write_text("FOO=\n", encoding="utf-8")
-        assert read_env_file(path) == {"FOO": ""}
+    def test_parses_supported_env_lines(self, tmp_path: Path) -> None:
+        for case_name, text, expected in (
+            ("simple-pairs", "FOO=bar\nBAZ=qux\n", {"FOO": "bar", "BAZ": "qux"}),
+            (
+                "comments-and-blanks",
+                "# header comment\n\nFOO=bar\n# inline comment\nBAZ=qux\n",
+                {"FOO": "bar", "BAZ": "qux"},
+            ),
+            ("empty-value", "FOO=\n", {"FOO": ""}),
+        ):
+            path = tmp_path / f"{case_name}.env"
+            path.write_text(text, encoding="utf-8")
+            assert read_env_file(path) == expected
 
     def test_malformed_line_raises(self, tmp_path: Path) -> None:
         path = tmp_path / ".env"
@@ -53,22 +49,25 @@ class TestWriteEnvVars:
     :func:`aeat.core.env_io.write_env_vars`.
     """
 
-    def test_creates_file_when_missing(self, tmp_path: Path) -> None:
-        path = tmp_path / "subdir" / ".env"
-        write_env_var(path, "FOO", "bar")
-        assert path.read_text(encoding="utf-8") == "FOO=bar\n"
-
-    def test_appends_new_key(self, tmp_path: Path) -> None:
-        path = tmp_path / ".env"
-        path.write_text("FOO=bar\n", encoding="utf-8")
-        write_env_var(path, "BAZ", "qux")
-        assert path.read_text(encoding="utf-8") == "FOO=bar\nBAZ=qux\n"
-
-    def test_rewrites_existing_key_in_place(self, tmp_path: Path) -> None:
-        path = tmp_path / ".env"
-        path.write_text("FOO=old\nBAZ=qux\n", encoding="utf-8")
-        write_env_var(path, "FOO", "new")
-        assert path.read_text(encoding="utf-8") == "FOO=new\nBAZ=qux\n"
+    def test_write_env_var_materializes_and_updates_file(self, tmp_path: Path) -> None:
+        for case_name, path_parts, initial, key, value, expected in (
+            ("create-missing", ("subdir", ".env"), None, "FOO", "bar", "FOO=bar\n"),
+            ("append-new-key", (".env",), "FOO=bar\n", "BAZ", "qux", "FOO=bar\nBAZ=qux\n"),
+            (
+                "rewrite-existing-key",
+                (".env",),
+                "FOO=old\nBAZ=qux\n",
+                "FOO",
+                "new",
+                "FOO=new\nBAZ=qux\n",
+            ),
+        ):
+            path = tmp_path.joinpath(case_name, *path_parts)
+            if initial is not None:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(initial, encoding="utf-8")
+            write_env_var(path, key, value)
+            assert path.read_text(encoding="utf-8") == expected
 
     def test_preserves_comments_and_blank_lines(self, tmp_path: Path) -> None:
         path = tmp_path / ".env"
@@ -83,13 +82,18 @@ class TestWriteEnvVars:
         # blank lines preserved
         assert result.count("\n\n") >= 1
 
-    def test_multi_var_write_appends_in_order(self, tmp_path: Path) -> None:
-        path = tmp_path / ".env"
-        write_env_vars(path, {"A": "1", "B": "2", "C": "3"})
-        assert path.read_text(encoding="utf-8") == "A=1\nB=2\nC=3\n"
-
-    def test_multi_var_write_mixes_update_and_append(self, tmp_path: Path) -> None:
-        path = tmp_path / ".env"
-        path.write_text("EXISTING=old\n", encoding="utf-8")
-        write_env_vars(path, {"EXISTING": "new", "FRESH": "value"})
-        assert path.read_text(encoding="utf-8") == "EXISTING=new\nFRESH=value\n"
+    def test_multi_var_write_materializes_updates_in_order(self, tmp_path: Path) -> None:
+        for case_name, initial, updates, expected in (
+            ("append-in-order", None, {"A": "1", "B": "2", "C": "3"}, "A=1\nB=2\nC=3\n"),
+            (
+                "update-and-append",
+                "EXISTING=old\n",
+                {"EXISTING": "new", "FRESH": "value"},
+                "EXISTING=new\nFRESH=value\n",
+            ),
+        ):
+            path = tmp_path / f"{case_name}.env"
+            if initial is not None:
+                path.write_text(initial, encoding="utf-8")
+            write_env_vars(path, updates)
+            assert path.read_text(encoding="utf-8") == expected

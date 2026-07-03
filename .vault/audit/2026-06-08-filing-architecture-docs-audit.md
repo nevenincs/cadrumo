@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#filing-architecture-docs'
 date: '2026-06-08'
-modified: '2026-06-08'
+modified: '2026-06-30'
 related:
   - "[[2026-06-08-filing-architecture-docs-plan]]"
 ---
-
-
 
 # `filing-architecture-docs` audit: `Filing Architecture Documentation Gaps and Narrative Transitions Audit`
 
@@ -79,9 +77,8 @@ Reviewing the campaign as a new developer inheriting the codebase:
 
 ### 3. Resolution and Deferrals
 To declare the `filing-architecture-docs` campaign structurally complete, these outstanding findings are formally deferred to follow-up campaigns:
-- **Deferred to `#aeat-cli-userdocs-hardening`**: 
+- **Deferred to `#aeat-cli-userdocs-hardening`**:
   - **F01 (Modelo 130 How-to Guide)**: To be authored under the user docs hardening campaign.
   - **F03 (IVA Wallet and Compare Verbs)**: Dedicated documentation to be added.
 - **Deferred to `#live-censo-calendar-reconciliation`**:
   - **F02 (live-read Command Documentation)**: Since the censo/calendar reconciliation campaign directly integrates live AEAT portal data, the live-read command family guides belong to its scope.
-

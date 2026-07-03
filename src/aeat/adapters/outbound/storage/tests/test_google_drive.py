@@ -1,7 +1,7 @@
 """Unit coverage for Google Drive storage provider boundaries.
 
 These tests cover refusal paths that happen before a Drive service is
-constructed. They do not fake the Drive API or patch dependencies.
+constructed. They use no Drive API doubles or patched dependencies.
 """
 
 from __future__ import annotations
@@ -34,32 +34,65 @@ def test_google_drive_module_does_not_construct_settings_at_import_time() -> Non
     assert offenders == []
 
 
-def test_google_drive_provider_rejects_blank_root_with_localized_message() -> None:
-    with pytest.raises(OutboundStorageValidationError) as raised:
-        GoogleDriveProvider(credentials=object(), root_folder_id=" ", vault_folder_name="aeat-vault")
+def test_google_drive_provider_rejects_blank_constructor_values_with_localized_message() -> None:
+    cases = (
+        (
+            {"credentials": object(), "root_folder_id": " ", "vault_folder_name": "aeat-vault"},
+            "adapters.outbound.storage.google_drive.errors.root_folder_id_blank",
+            {"root_folder_id": " "},
+        ),
+        (
+            {"credentials": object(), "root_folder_id": "drive-root", "vault_folder_name": " "},
+            "adapters.outbound.storage.google_drive.errors.vault_folder_name_blank",
+            None,
+        ),
+    )
 
-    exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage.google_drive.errors.root_folder_id_blank"
-    assert exc.context == {"root_folder_id": " "}
-    assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
+    for provider_kwargs, message, context in cases:
+        with pytest.raises(OutboundStorageValidationError) as raised:
+            GoogleDriveProvider(**provider_kwargs)
+
+        exc = raised.value
+        assert exc.translated_message == message
+        assert exc.context == context
+        assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
 
 
-def test_google_drive_provider_rejects_blank_vault_folder_with_localized_message() -> None:
-    with pytest.raises(OutboundStorageValidationError) as raised:
-        GoogleDriveProvider(credentials=object(), root_folder_id="drive-root", vault_folder_name=" ")
+def test_google_drive_provider_rejects_blank_put_values_before_service_construction() -> None:
+    cases = (
+        (
+            {"namespace": "", "object_key_hmac": "a" * 64, "payload": b"x", "content_hash": "sha256-x", "label": "x"},
+            "adapters.outbound.storage.google_drive.errors.namespace_blank",
+        ),
+        (
+            {
+                "namespace": "ledger_transaction",
+                "object_key_hmac": " ",
+                "payload": b"x",
+                "content_hash": "sha256-x",
+                "label": "x",
+            },
+            "adapters.outbound.storage.google_drive.errors.object_key_hmac_blank",
+        ),
+        (
+            {
+                "namespace": "ledger_transaction",
+                "object_key_hmac": "a" * 64,
+                "payload": b"x",
+                "content_hash": " ",
+                "label": "x",
+            },
+            "adapters.outbound.storage.google_drive.errors.content_hash_blank",
+        ),
+    )
 
-    exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage.google_drive.errors.vault_folder_name_blank"
-    assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
+    for put_kwargs, message in cases:
+        with pytest.raises(OutboundStorageValidationError) as raised:
+            _provider().put(**put_kwargs)
 
-
-def test_google_drive_provider_rejects_blank_namespace_before_service_construction() -> None:
-    with pytest.raises(OutboundStorageValidationError) as raised:
-        _provider().put("", "a" * 64, b"x", content_hash="sha256-x", label="x")
-
-    exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage.google_drive.errors.namespace_blank"
-    assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
+        exc = raised.value
+        assert exc.translated_message == message
+        assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
 
 
 def test_google_drive_provider_rejects_forbidden_namespace_before_service_construction() -> None:
@@ -69,24 +102,6 @@ def test_google_drive_provider_rejects_forbidden_namespace_before_service_constr
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.google_drive.errors.namespace_forbidden_characters"
     assert exc.context == {"namespace": "with/slash"}
-    assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
-
-
-def test_google_drive_provider_rejects_blank_hmac_before_service_construction() -> None:
-    with pytest.raises(OutboundStorageValidationError) as raised:
-        _provider().put("ledger_transaction", " ", b"x", content_hash="sha256-x", label="x")
-
-    exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage.google_drive.errors.object_key_hmac_blank"
-    assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
-
-
-def test_google_drive_provider_rejects_blank_content_hash_before_service_construction() -> None:
-    with pytest.raises(OutboundStorageValidationError) as raised:
-        _provider().put("ledger_transaction", "a" * 64, b"x", content_hash=" ", label="x")
-
-    exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage.google_drive.errors.content_hash_blank"
     assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
 
 

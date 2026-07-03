@@ -1,0 +1,47 @@
+{
+  "manifest_version": "0.2",
+  "name": "aeat",
+  "display_name": "AEAT tax assistant console",
+  "version": "0.1.0",
+  "description": "Operate the aeat Spanish-tax CLI as an MCP tool surface: grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided workflows, and gated execution that never files to AEAT.",
+  "long_description": "The aeat console exposes a deterministic Spanish-tax CLI to any MCP client. It carries the operator rules, the taxpayer-situation skills, and guided-workflow prompts; a read-only corpus and terminology search for legal grounding; and a human-in-the-loop confirmation gate on every state-changing verb. Live submission to AEAT is permanently impossible — no such tool exists; the taxpayer files outside the app. All financial data stays on-host in encrypted storage; only the conversation and the figures the assistant sees reach the LLM client's provider.",
+  "author": {
+    "name": "AEAT tax assistant project"
+  },
+  "server": {
+    "type": "binary",
+    "entry_point": "aeat-mcp",
+    "mcp_config": {
+      "command": "aeat-mcp",
+      "args": [],
+      "env": {
+        "AEAT_MCP_PERSONA": "${user_config.persona}"
+      }
+    }
+  },
+  "user_config": {
+    "persona": {
+      "type": "string",
+      "title": "Operator persona",
+      "description": "The harness persona scoping the tool surface (leave blank for the full surface). One of: coordinator, onboarding, ledger-groomer, classifier, modelo-preparer, verifier, reconciler.",
+      "default": "",
+      "required": false
+    }
+  },
+  "tools": [
+    { "name": "aeat_harness_load", "description": "Load the operator rules and active persona (the universal operating-layer floor)." },
+    { "name": "aeat_corpus_search", "description": "Search the bundled BOE/AEAT legal corpus for grounding." },
+    { "name": "aeat_terminology_search", "description": "Look up a Spanish tax term in the bundled terminology handbook." },
+    { "name": "aeat_contract", "description": "Read the operator-surface capability contract." },
+    { "name": "search", "description": "Search the aeat command surface by keyword." },
+    { "name": "execute", "description": "Execute one aeat command by key through the safety gates." }
+  ],
+  "prompts_generated": true,
+  "keywords": ["tax", "aeat", "spain", "irpf", "iva", "modelo"],
+  "license": "Apache-2.0",
+  "compatibility": {
+    "runtimes": {
+      "python": ">=3.12"
+    }
+  }
+}

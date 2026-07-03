@@ -5,6 +5,10 @@
   },
   "hu": {
     "untranslated_pending": "The hu locale still mirrors en for keys captured in this slice. A\nfollow-up translation pass replaces the English strings with real\nHungarian translations and removes entries from this allowlist.\n",
-    "_untranslated_ceiling": 118
+    "_untranslated_ceiling": 118,
+    "wizard.setup.residence.ccaa.choices.extremadura.label": "Proper noun with no Hungarian exonym; 'Extremadura' is spelled identically in Hungarian (unlike e.g. Andalucia -> Andaluzia).",
+    "wizard.setup.residence.ccaa.choices.la_rioja.label": "Proper noun with no Hungarian exonym; 'La Rioja' is spelled identically in Hungarian.",
+    "wizard.setup.residence.ccaa.choices.madrid.label": "Proper noun with no Hungarian exonym; 'Madrid' is spelled identically in Hungarian.",
+    "wizard.setup.residence.ccaa.choices.murcia.label": "Proper noun with no Hungarian exonym; 'Murcia' is spelled identically in Hungarian."
   }
 }

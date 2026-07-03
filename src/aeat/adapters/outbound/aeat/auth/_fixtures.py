@@ -7,7 +7,7 @@ PKCS#12 bundles with one canonical passphrase. Test code wraps
 :class:`LoadedCertificate` records or exercise :class:`AeatAuthenticator`.
 
 Module name intentionally does NOT start with ``_test_`` so the
-:mod:`aeat.tests.test_marker_integrity` glob (``**/_test_*.py``) does
+:mod:`aeat-tests.test_marker_integrity` glob (``**/_test_*.py``) does
 not pick it up as a test module — this file holds shared constants,
 not tests, and carries no ``pytestmark``.
 

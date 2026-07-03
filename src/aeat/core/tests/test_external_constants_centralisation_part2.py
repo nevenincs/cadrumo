@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from ...tests import leaf_name
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
@@ -21,14 +23,6 @@ def _repo_source(relative_path: str) -> str:
 
 def _repo_tree(relative_path: str) -> ast.AST:
     return ast.parse(_repo_source(relative_path))
-
-
-def _call_name(func: ast.expr) -> str:
-    if isinstance(func, ast.Name):
-        return func.id
-    if isinstance(func, ast.Attribute):
-        return func.attr
-    return ""
 
 
 def _assert_module_constant_identity(
@@ -55,7 +49,7 @@ def _decimal_call_literal_offenders(
     for node in ast.walk(_repo_tree(relative_path)):
         if not isinstance(node, ast.Call):
             continue
-        if _call_name(node.func) != "Decimal":
+        if leaf_name(node.func) != "Decimal":
             continue
         if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == literal:
             offenders.append(f"{display_path}:{node.lineno}: bare Decimal({literal!r}); use {replacement}")
@@ -73,7 +67,7 @@ def _min_arg_literal_offenders(
     for node in ast.walk(_repo_tree(relative_path)):
         if not isinstance(node, ast.Call):
             continue
-        if _call_name(node.func) != "min":
+        if leaf_name(node.func) != "min":
             continue
         for arg in node.args:
             if isinstance(arg, ast.Constant) and arg.value == literal:
@@ -308,24 +302,15 @@ _DECIMAL_LITERAL_IDS = ("amortization-rate", "rebeca-fraction")
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(("constant_name", "expected"), _DECIMAL_CONSTANT_CASES, ids=_DECIMAL_CONSTANT_IDS)
-def test_decimal_external_constant_values(constant_name: str, expected: str) -> None:
-    """Decimal external constants equal their legal scalar values."""
+def test_decimal_external_constant_values_and_types() -> None:
+    """Decimal external constants equal their legal scalar values and remain ``Decimal`` instances."""
 
     from .. import external_constants
 
-    assert Decimal(expected) == getattr(external_constants, constant_name)
-
-
-@pytest.mark.parametrize(("constant_name", "expected"), _DECIMAL_CONSTANT_CASES, ids=_DECIMAL_CONSTANT_IDS)
-def test_decimal_external_constants_are_decimal(constant_name: str, expected: str) -> None:
-    """Decimal external constants are ``Decimal`` instances."""
-
-    from .. import external_constants
-
-    value = getattr(external_constants, constant_name)
-    assert isinstance(value, Decimal)
-    assert value == Decimal(expected)
+    for case_id, (constant_name, expected) in zip(_DECIMAL_CONSTANT_IDS, _DECIMAL_CONSTANT_CASES, strict=True):
+        value = getattr(external_constants, constant_name)
+        assert isinstance(value, Decimal), case_id
+        assert value == Decimal(expected), case_id
 
 
 def test_default_iva_general_rate_pct_matches_registry() -> None:
@@ -342,52 +327,6 @@ def test_default_iva_general_rate_pct_matches_registry() -> None:
 
     registry_rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2026, 1, 1))
     assert registry_rate.pct == DEFAULT_IVA_GENERAL_RATE_PCT
-
-
-@pytest.mark.parametrize(
-    ("module_name", "message"),
-    _DEFAULT_IVA_IMPORT_CASES,
-    ids=_DEFAULT_IVA_IMPORT_IDS,
-)
-def test_modules_import_default_iva_general_rate_pct_from_core(
-    module_name: str,
-    message: str,
-) -> None:
-    """Known consumers import ``DEFAULT_IVA_GENERAL_RATE_PCT`` from core."""
-
-    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
-
-    _assert_module_constant_identity(
-        module_name=module_name,
-        attr_name="DEFAULT_IVA_GENERAL_RATE_PCT",
-        expected=DEFAULT_IVA_GENERAL_RATE_PCT,
-        import_message=message,
-    )
-
-
-@pytest.mark.parametrize(
-    ("relative_path", "display_path", "replacement"),
-    _IVA_DECIMAL_LITERAL_CASES,
-    ids=_IVA_DECIMAL_LITERAL_IDS,
-)
-def test_no_bare_iva_rate_decimal_literal_in_consumers(
-    relative_path: str,
-    display_path: str,
-    replacement: str,
-) -> None:
-    """No bare ``Decimal("21.00")`` literal in IVA rate consumers."""
-
-    offenders = _decimal_call_literal_offenders(
-        relative_path=relative_path,
-        display_path=display_path,
-        literal="21.00",
-        replacement=replacement,
-    )
-
-    assert offenders == [], (
-        f"Local IVA 21.00 literals found in {display_path}; import DEFAULT_IVA_GENERAL_RATE_PCT from core instead:\n"
-        + "\n".join(offenders)
-    )
 
 
 def test_no_bare_iva_rate_string_literal_in_ledger_inventory_cli() -> None:
@@ -440,48 +379,34 @@ def test_no_bare_jsonl_or_xlsx_mime_literal_in_tabular() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(("constant_name", "expected"), _MODELO_GROUP_CASES, ids=_MODELO_GROUP_IDS)
-def test_modelo_group_values(constant_name: str, expected: tuple[str, ...]) -> None:
-    """Modelo group constants equal their authoritative modelo tuples."""
+def test_modelo_group_values_and_types() -> None:
+    """Modelo group constants equal their authoritative tuples and contain strings."""
 
     from .. import external_constants
 
-    assert getattr(external_constants, constant_name) == expected
+    for case_id, (constant_name, expected) in zip(_MODELO_GROUP_IDS, _MODELO_GROUP_CASES, strict=True):
+        value = getattr(external_constants, constant_name)
+        assert value == expected, case_id
+        assert isinstance(value, tuple), case_id
+        assert all(isinstance(code, str) for code in value), case_id
 
 
-@pytest.mark.parametrize(("constant_name", "expected"), _MODELO_GROUP_CASES, ids=_MODELO_GROUP_IDS)
-def test_modelo_groups_are_tuples_of_str(constant_name: str, expected: tuple[str, ...]) -> None:
-    """Modelo group constants are tuples whose elements are strings."""
-
-    from .. import external_constants
-
-    value = getattr(external_constants, constant_name)
-    assert isinstance(value, tuple)
-    assert all(isinstance(code, str) for code in value)
-    assert len(value) == len(expected)
-
-
-@pytest.mark.parametrize(
-    ("module_name", "module_attr", "constant_name", "message"),
-    _MODELO_GROUP_ALIAS_CASES,
-    ids=_MODELO_GROUP_IDS,
-)
-def test_modelo_group_consumers_alias_central_constants(
-    module_name: str,
-    module_attr: str,
-    constant_name: str,
-    message: str,
-) -> None:
+def test_modelo_group_consumers_alias_central_constants() -> None:
     """Known consumers alias modelo group constants from core."""
 
     from .. import external_constants
 
-    _assert_module_constant_identity(
-        module_name=module_name,
-        attr_name=module_attr,
-        expected=getattr(external_constants, constant_name),
-        import_message=message,
-    )
+    for _case_id, (module_name, module_attr, constant_name, message) in zip(
+        _MODELO_GROUP_IDS,
+        _MODELO_GROUP_ALIAS_CASES,
+        strict=True,
+    ):
+        _assert_module_constant_identity(
+            module_name=module_name,
+            attr_name=module_attr,
+            expected=getattr(external_constants, constant_name),
+            import_message=message,
+        )
 
 
 def _ast_contains_modelo_group_tuple(source: str, expected_elts: tuple[str, ...]) -> bool:
@@ -500,19 +425,15 @@ def _ast_contains_modelo_group_tuple(source: str, expected_elts: tuple[str, ...]
     return False
 
 
-@pytest.mark.parametrize(
-    ("relative_path", "expected_elts", "message"),
-    _MODELO_GROUP_LITERAL_CASES,
-    ids=_MODELO_GROUP_IDS,
-)
-def test_no_bare_modelo_group_tuple_literals_in_consumers(
-    relative_path: str,
-    expected_elts: tuple[str, ...],
-    message: str,
-) -> None:
+def test_no_bare_modelo_group_tuple_literals_in_consumers() -> None:
     """No bare modelo group tuple literals in consumers."""
 
-    assert not _ast_contains_modelo_group_tuple(_repo_source(relative_path), expected_elts), message
+    for _case_id, (relative_path, expected_elts, message) in zip(
+        _MODELO_GROUP_IDS,
+        _MODELO_GROUP_LITERAL_CASES,
+        strict=True,
+    ):
+        assert not _ast_contains_modelo_group_tuple(_repo_source(relative_path), expected_elts), message
 
 
 # ---------------------------------------------------------------------------
@@ -520,58 +441,39 @@ def test_no_bare_modelo_group_tuple_literals_in_consumers(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(("constant_name", "expected"), _IRPF_INT_CONSTANT_CASES, ids=_IRPF_INT_CONSTANT_IDS)
-def test_irpf_int_constant_values(constant_name: str, expected: int) -> None:
-    """IRPF integer constants equal their legal scalar values."""
+def test_irpf_int_constant_values_types_and_maternidad_cap_relation() -> None:
+    """IRPF euro constants equal their values and preserve the maternidad cap relation."""
 
     from .. import external_constants
-
-    assert getattr(external_constants, constant_name) == expected
-
-
-@pytest.mark.parametrize(("constant_name", "expected"), _IRPF_INT_CONSTANT_CASES, ids=_IRPF_INT_CONSTANT_IDS)
-def test_irpf_int_constants_are_int(constant_name: str, expected: int) -> None:
-    """IRPF euro constants are ``int`` values because the target casillas carry no decimals."""
-
-    from .. import external_constants
-
-    value = getattr(external_constants, constant_name)
-    assert isinstance(value, int)
-    assert value == expected
-
-
-def test_deduccion_maternidad_monthly_times_12_equals_annual_cap() -> None:
-    """12 monthly accruals sum to the annual cap: consistency guard."""
-
     from ..external_constants import (
         DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR,
         DEDUCCION_MATERNIDAD_MENSUAL_EUR,
     )
 
+    for case_id, (constant_name, expected) in zip(_IRPF_INT_CONSTANT_IDS, _IRPF_INT_CONSTANT_CASES, strict=True):
+        value = getattr(external_constants, constant_name)
+        assert isinstance(value, int), case_id
+        assert value == expected, case_id
+
     assert DEDUCCION_MATERNIDAD_MENSUAL_EUR * 12 == DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
 
 
-@pytest.mark.parametrize(
-    ("module_name", "module_attr", "constant_name", "message"),
-    _IRPF_INT_ALIAS_CASES,
-    ids=_IRPF_INT_ALIAS_IDS,
-)
-def test_irpf_int_constant_consumers_alias_core_constants(
-    module_name: str,
-    module_attr: str,
-    constant_name: str,
-    message: str,
-) -> None:
+def test_irpf_int_constant_consumers_alias_core_constants() -> None:
     """Known consumers alias IRPF integer constants from core."""
 
     from .. import external_constants
 
-    _assert_module_constant_identity(
-        module_name=module_name,
-        attr_name=module_attr,
-        expected=getattr(external_constants, constant_name),
-        import_message=message,
-    )
+    for _case_id, (module_name, module_attr, constant_name, message) in zip(
+        _IRPF_INT_ALIAS_IDS,
+        _IRPF_INT_ALIAS_CASES,
+        strict=True,
+    ):
+        _assert_module_constant_identity(
+            module_name=module_name,
+            attr_name=module_attr,
+            expected=getattr(external_constants, constant_name),
+            import_message=message,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -579,28 +481,22 @@ def test_irpf_int_constant_consumers_alias_core_constants(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("relative_path", "display_path", "literal", "replacement", "message"),
-    _MIN_LITERAL_CASES,
-    ids=_MIN_LITERAL_IDS,
-)
-def test_no_bare_irpf_cap_literals_in_min_calls(
-    relative_path: str,
-    display_path: str,
-    literal: int,
-    replacement: str,
-    message: str,
-) -> None:
+def test_no_bare_irpf_cap_literals_in_min_calls() -> None:
     """No bare IRPF cap literals appear as ``min()`` arguments in consumers."""
 
-    offenders = _min_arg_literal_offenders(
-        relative_path=relative_path,
-        display_path=display_path,
-        literal=literal,
-        replacement=replacement,
-    )
+    for _case_id, (relative_path, display_path, literal, replacement, message) in zip(
+        _MIN_LITERAL_IDS,
+        _MIN_LITERAL_CASES,
+        strict=True,
+    ):
+        offenders = _min_arg_literal_offenders(
+            relative_path=relative_path,
+            display_path=display_path,
+            literal=literal,
+            replacement=replacement,
+        )
 
-    assert offenders == [], message + ":\n" + "\n".join(offenders)
+        assert offenders == [], message + ":\n" + "\n".join(offenders)
 
 
 # ---------------------------------------------------------------------------
@@ -608,48 +504,62 @@ def test_no_bare_irpf_cap_literals_in_min_calls(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("module_name", "module_attr", "constant_name", "message"),
-    _DECIMAL_ALIAS_CASES,
-    ids=_DECIMAL_ALIAS_IDS,
-)
-def test_decimal_constant_consumers_alias_core_constants(
-    module_name: str,
-    module_attr: str,
-    constant_name: str,
-    message: str,
-) -> None:
+def test_decimal_constant_consumers_alias_core_constants() -> None:
     """Known consumers alias Decimal constants from core."""
 
     from .. import external_constants
 
-    _assert_module_constant_identity(
-        module_name=module_name,
-        attr_name=module_attr,
-        expected=getattr(external_constants, constant_name),
-        import_message=message,
-    )
+    for _case_id, (module_name, message) in zip(_DEFAULT_IVA_IMPORT_IDS, _DEFAULT_IVA_IMPORT_CASES, strict=True):
+        _assert_module_constant_identity(
+            module_name=module_name,
+            attr_name="DEFAULT_IVA_GENERAL_RATE_PCT",
+            expected=external_constants.DEFAULT_IVA_GENERAL_RATE_PCT,
+            import_message=message,
+        )
+
+    for _case_id, (module_name, module_attr, constant_name, message) in zip(
+        _DECIMAL_ALIAS_IDS,
+        _DECIMAL_ALIAS_CASES,
+        strict=True,
+    ):
+        _assert_module_constant_identity(
+            module_name=module_name,
+            attr_name=module_attr,
+            expected=getattr(external_constants, constant_name),
+            import_message=message,
+        )
 
 
-@pytest.mark.parametrize(
-    ("relative_path", "display_path", "literal", "replacement", "message"),
-    _DECIMAL_LITERAL_CASES,
-    ids=_DECIMAL_LITERAL_IDS,
-)
-def test_no_bare_decimal_literals_in_consumers(
-    relative_path: str,
-    display_path: str,
-    literal: str,
-    replacement: str,
-    message: str,
-) -> None:
+def test_no_bare_decimal_literals_in_consumers() -> None:
     """No bare Decimal literals in Decimal-constant consumers."""
 
-    offenders = _decimal_call_literal_offenders(
-        relative_path=relative_path,
-        display_path=display_path,
-        literal=literal,
-        replacement=replacement,
-    )
+    for case_id, (relative_path, display_path, replacement) in zip(
+        _IVA_DECIMAL_LITERAL_IDS,
+        _IVA_DECIMAL_LITERAL_CASES,
+        strict=True,
+    ):
+        offenders = _decimal_call_literal_offenders(
+            relative_path=relative_path,
+            display_path=display_path,
+            literal="21.00",
+            replacement=replacement,
+        )
 
-    assert offenders == [], message + ":\n" + "\n".join(offenders)
+        assert offenders == [], (
+            f"Local IVA 21.00 literals found in {display_path} ({case_id}); "
+            "import DEFAULT_IVA_GENERAL_RATE_PCT from core instead:\n" + "\n".join(offenders)
+        )
+
+    for _case_id, (relative_path, display_path, literal, replacement, message) in zip(
+        _DECIMAL_LITERAL_IDS,
+        _DECIMAL_LITERAL_CASES,
+        strict=True,
+    ):
+        offenders = _decimal_call_literal_offenders(
+            relative_path=relative_path,
+            display_path=display_path,
+            literal=literal,
+            replacement=replacement,
+        )
+
+        assert offenders == [], message + ":\n" + "\n".join(offenders)

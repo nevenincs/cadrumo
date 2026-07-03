@@ -16,24 +16,22 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.buckets import BucketEvent, BucketEventHistoryRepository, BucketEventType
+from ....domain.buckets import BucketEvent, BucketEventType
 from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
-    LLMSplitChild,
-    LLMSplitResponse,
     RawProvenance,
     RawTransaction,
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
     TransactionNotFoundError,
-    TransactionValidationError,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
@@ -41,9 +39,7 @@ from .. import (
     LLMProvider,
     LLMSaturatedSuggestion,
     LLMSuggestionRejectionResult,
-    apply_evidence_split,
     reject_llm_suggestion,
-    suggest_evidence_split,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -67,7 +63,7 @@ def repositories(
 
 def _seed_parent(repository: TransactionCatalogueRepository, *, amount: Decimal = Decimal("121.00")) -> str:
     raw = RawTransaction(
-        transaction_id="row-reject",
+        provider_transaction_id="row-reject",
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
         amount=amount,
@@ -84,7 +80,9 @@ def _seed_parent(repository: TransactionCatalogueRepository, *, amount: Decimal 
         ),
         raw_fields={"Concepto": "supplier invoice"},
     )
-    tx = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    tx = Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
+    )
     repository.save(TransactionCatalogue.from_transactions([tx]))
     return tx.transaction_id
 
@@ -173,54 +171,6 @@ def test_reject_saturated_suggestion_captures_iva_category(
     assert payload["iva_category"] == IvaCategory.DOMESTIC_GENERAL_21.value
 
 
-def test_reject_split_suggestion_records_kind_split(
-    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
-) -> None:
-    repository, events, _objects = repositories
-    tx_id = _seed_parent(repository)
-
-    class _Proposer:
-        @property
-        def decided_by(self) -> str:
-            return "llm:claude:test-model"
-
-        def propose_split(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMSplitResponse:
-            return LLMSplitResponse(
-                children=(
-                    LLMSplitChild(proportion=Decimal("0.6"), iva_category=IvaCategory.DOMESTIC_GENERAL_21),
-                    LLMSplitChild(proportion=Decimal("0.4"), iva_category=IvaCategory.DOMESTIC_GENERAL_21),
-                ),
-                reason="two lines",
-            )
-
-    suggestion = suggest_evidence_split(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
-        proposer=_Proposer(),
-        transaction_repository=repository,
-        read_evidence=False,
-    )
-
-    result = reject_llm_suggestion(
-        suggestion,
-        bucket_id=_BUCKET,
-        reason="do not split this",
-        transaction_repository=repository,
-        bucket_event_repository=events,
-        occurred_at=_NOW,
-    )
-
-    assert result.suggestion_kind == "split"
-    payload = _rejection_events(events)[0].payload
-    assert payload["suggestion_kind"] == "split"
-    assert payload["child_count"] == "2"
-    # No split happened: the parent is intact and active.
-    txn = repository.load().get(tx_id)
-    assert txn is not None
-    assert txn.lifecycle_state is TransactionLifecycleState.ACTIVE
-
-
 def test_reject_unknown_transaction_raises(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
 ) -> None:
@@ -228,51 +178,6 @@ def test_reject_unknown_transaction_raises(
     with pytest.raises(TransactionNotFoundError):
         reject_llm_suggestion(
             _classification_suggestion("tx_does_not_exist"),
-            bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        )
-
-
-def test_reject_non_active_transaction_raises(
-    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
-) -> None:
-    repository, events, _objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
-    # Split the parent so it becomes a SPLIT (non-active) row.
-
-    class _Proposer:
-        @property
-        def decided_by(self) -> str:
-            return "llm:claude:test-model"
-
-        def propose_split(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMSplitResponse:
-            return LLMSplitResponse(
-                children=(
-                    LLMSplitChild(proportion=Decimal("0.5"), iva_category=IvaCategory.DOMESTIC_GENERAL_21),
-                    LLMSplitChild(proportion=Decimal("0.5"), iva_category=IvaCategory.DOMESTIC_GENERAL_21),
-                ),
-                reason="two lines",
-            )
-
-    suggestion = suggest_evidence_split(
-        bucket_id=_BUCKET,
-        transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
-        proposer=_Proposer(),
-        transaction_repository=repository,
-        read_evidence=False,
-    )
-    apply_evidence_split(
-        suggestion,
-        bucket_id=_BUCKET,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-    )
-
-    with pytest.raises(TransactionValidationError, match="active"):
-        reject_llm_suggestion(
-            _classification_suggestion(tx_id),
             bucket_id=_BUCKET,
             transaction_repository=repository,
             bucket_event_repository=events,

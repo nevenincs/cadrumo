@@ -126,7 +126,11 @@ class BucketEventType(StrEnum):
     # operator authentication + workspace bootstrap
     AUTH_PROVIDER_CONFIGURED = "auth.provider.configured"
     CONFIG_ENV_UPDATED = "config.env.updated"
-    SETUP_STATE_MIGRATED = "setup.state.migrated"
+
+    # named multi-certificate source registry (personal + apoderado certs)
+    AUTH_CERTIFICATE_SOURCE_REGISTERED = "auth.certificate_source.registered"
+    AUTH_CERTIFICATE_SOURCE_SELECTED = "auth.certificate_source.selected"
+    AUTH_CERTIFICATE_SOURCE_REMOVED = "auth.certificate_source.removed"
 
     # ledger transaction lifecycle
     LEDGER_TRANSACTION_CREATED = "ledger.transaction.created"
@@ -140,6 +144,7 @@ class BucketEventType(StrEnum):
     LEDGER_TRANSACTION_ARCHIVED = "ledger.transaction.archived"
     LEDGER_TRANSACTION_STASHED = "ledger.transaction.stashed"
     LEDGER_TRANSACTION_RESTORED = "ledger.transaction.restored"
+    LEDGER_TRANSACTION_REVIEWED_EXCLUDED = "ledger.transaction.reviewed_excluded"
     LEDGER_TRANSACTION_EXPORTED = "ledger.transaction.exported"
     LEDGER_TRANSACTION_SPLIT = "ledger.transaction.split"
     LEDGER_TRANSACTION_MERGED = "ledger.transaction.merged"

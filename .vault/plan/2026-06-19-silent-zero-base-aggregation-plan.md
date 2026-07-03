@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#silent-zero-base-aggregation'
 date: '2026-06-19'
-modified: '2026-06-21'
+modified: '2026-07-02'
 tier: L3
 related:
   - '[[2026-06-19-silent-zero-base-aggregation-adr]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-06-19-silent-zero-base-aggregation-audit]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
 ---
-
 
 # `silent-zero-base-aggregation` plan
 
@@ -58,7 +57,7 @@ Bind the prorrata volume casillas to the IVA ledger base aggregation so the LIVA
 - [ ] `W01.P02.S03` - SUPERSEDED for the common case by the S05 formula default; `a per-period base_amount_sum binding for volumen-total would ship a wrong prorrata for mixed traders (the regulated prorrata is the prior-year definitive percent applied provisionally + Q4 regularisation), so the faithful mechanism is deferred to a cross-period prorrata model; src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/bindings/; `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/bindings/`.
 - [ ] `W01.P02.S04` - SUPERSEDED/deferred with S03: volumen-con-derecho per-period binding is not the regulated provisional+regularised prorrata; `deferred to the cross-period prorrata model; src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/bindings/; `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/bindings/`.
 - [x] `W01.P02.S05` - fix the prorrata-porcentaje no-volume-data default from 0 to 100 (full right to deduct, LIVA art-94) so a fully-taxable trader's export unblocks, with a regression test - the correct peer-clean fix for defect C2; `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/revision.toml; `src/aeat/_data/registry/aeat/modelos/303/`.
-- [ ] `W01.P02.S06` - add a real-CLI end-to-end test that a fully-taxable M303 trader reaches a granted `.boe` with no prorrata-divergence error and no manual prorrata input; `src/aeat/application/modelo/tests/`.
+- [x] `W01.P02.S06` - add a real-CLI end-to-end test that a fully-taxable M303 trader reaches a granted `.boe` with no prorrata-divergence error and no manual prorrata input; `src/aeat/application/modelo/tests/`.
 
 ### Phase `W01.P03` - recargo de equivalencia rate axis
 
@@ -87,7 +86,7 @@ Bind the income casilla and prove the rendimiento chain.
 
 - [x] `W02.P05.S12` - bind M100 casilla 0171 to the annual income aggregation (project verb uses the formula-runtime path, so no disentanglement needed) with grounded legal_refs (LIRPF art. 27/28); `src/aeat/_data/registry/aeat/modelos/100/; `src/aeat/_data/registry/aeat/modelos/100/`.
 - [x] `W02.P05.S13` - sweep the M100 tests that supply 0171 to the bound path and rerun the M100 registry, formula-runtime, and verification gates green; `src/aeat/application/modelo/tests/`.
-- [ ] `W02.P05.S14` - add a real-CLI end-to-end test that a sole-trader's M100 casilla 0171 / 0180 / 0224 populate from the ledger unaided; `src/aeat/application/modelo/tests/`.
+- [x] `W02.P05.S14` - add a real-CLI end-to-end test that a sole-trader's M100 casilla 0171 / 0180 / 0224 populate from the ledger unaided; `src/aeat/application/modelo/tests/`.
 
 ## Wave `W03` - annual reconciliation and deferred axes
 
@@ -99,7 +98,7 @@ Backed by the ADR's M390 decision and the M130 grounding completion already ship
 Confirm the reconciliacion-303 relation is the canonical annual carrier.
 
 - [x] `W03.P06.S15` - add an import-deducible casilla to M390 (box, locale, manifest, extraction) and bind it to `ledger_iva_aggregation` import deducible, then add it to the cuota-deducible-total formula so the annual result stops over-stating the importer's amount to pay; `src/aeat/_data/registry/aeat/modelos/390/`.
-- [ ] `W03.P06.S16` - add a reconciliation predicate that flags any divergence between the M390 ledger cuota-deducible-total and the reconciliacion-303 total, covering the import and reverse-charge flows; `src/aeat/_data/registry/aeat/modelos/390/`.
+- [x] `W03.P06.S16` - add a reconciliation predicate that flags any divergence between the M390 ledger cuota-deducible-total and the reconciliacion-303 total, covering the import and reverse-charge flows; `src/aeat/_data/registry/aeat/modelos/390/`.
 
 ### Phase `W03.P07` - deferred axes and grounding
 

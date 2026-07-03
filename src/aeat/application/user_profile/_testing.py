@@ -3,8 +3,8 @@
 Wraps :func:`register_active_profile` with a curated set of required
 schema-validated placeholder facts so unit tests can register a profile
 in one call without reciting six placeholder values every time. An
-explicit :class:`SecureObjectRepository` may be injected to bind the
-helper to an in-process ephemeral store.
+explicit :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+may be injected to bind the helper to an in-process ephemeral store.
 
 This is a TEST helper and lives in the canonical package because it
 composes only canonical surfaces.
@@ -14,13 +14,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...adapters.persistence.storage import SecureObjectRepository
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.hashing import sha256_hex
 from ...core.identity import nif_check_letter
-from ...domain.deadlines._models import IVARegime
+from ...domain.deadlines import IVARegime
 from ...domain.user_profile import ProfileAlreadyExistsError, UserProfileFact
-from ..workflow._models import WorkflowState
+from ..workflow import WorkflowState
 from ._orchestration import register_active_profile, select_profile, set_active_fields
 
 
@@ -43,6 +43,7 @@ _REQUIRED_PLACEHOLDERS: Mapping[str, str] = {
     "identity.surnames": "Test Operator",
     "tax_residence.ccaa": "madrid",
     "tax_residence.jurisdiction_scope": "common_regime",
+    "activities.description": "economic activity",
     "iva.regime": IVARegime.GENERAL,
     "provenance.source": _PROVENANCE_SOURCE_MANUAL_CLI,
     # A minimal profile declares a minimal taxpayer model: an autónomo
@@ -75,7 +76,8 @@ def register_minimal_profile(
         overrides: Optional schema-path → string overrides applied on top
             of the placeholder facts (also accepts paths not in the
             required set; they merge in).
-        secure_objects: Optional injected :class:`SecureObjectRepository`.
+        secure_objects: Optional injected
+            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
         enforce_unique_tax_id: When ``False``, skip the cross-bucket
             tax-id uniqueness scan. Use in per-bucket-storage test
             scenarios where each profile's encrypted record lives in its

@@ -26,6 +26,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....adapters.persistence.storage import SensitivityClass
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
@@ -34,7 +35,6 @@ from .._participation_index import (
     PARTICIPATION_INDEX_NAMESPACE,
     PARTICIPATION_INDEX_SCHEMA_VERSION,
     TransactionParticipationIndexPersistenceError,
-    TransactionParticipationIndexRepository,
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
     derive_participation_index_id,
@@ -44,6 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "modelo-participation-runtime"
 _P_2024_2T = Period.from_year_and_code(2024, "2T")
+_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 20, 0, tzinfo=UTC)
 
 
 def _hex(seed: str) -> str:
@@ -172,7 +173,7 @@ def test_participation_index_wrong_inner_classification_is_localized(tmp_path: P
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[TransactionRevisionParticipationIndex](
             schema_version=PARTICIPATION_INDEX_SCHEMA_VERSION,
-            written_at=datetime.now(UTC).replace(microsecond=0),
+            written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.AUDIT,
             payload=TransactionRevisionParticipationIndex(transaction_id=_TRANSACTION_ID),
         )

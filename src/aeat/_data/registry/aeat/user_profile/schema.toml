@@ -1,6 +1,6 @@
 [schema]
 id = "aeat.user_profile"
-version = 2
+version = 3
 title = "AEAT user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -214,9 +214,10 @@ type = "boolean"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Large-company enrollment fact used by filing cadence."
+description = "Large-company condition used by filing cadence. Applies when operation volume, calculated under LIVA Art. 121, exceeded 6.010.121,04 EUR during the immediately prior calendar year; RIVA Art. 71 then switches IVA liquidation to monthly."
 model_selectors = ["enrollment.large_company"]
 schedule_predicates = ["enrollment.large_company"]
+legal_refs = ["ley-37-1992:art-121", "rd-1624-1992:art-71"]
 
 [[sections.fields]]
 key = "public_administration_budget_gt_6000000"
@@ -224,9 +225,10 @@ type = "boolean"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Public-administration budget threshold used by filing cadence."
+description = "Public-administration budget threshold used by Modelo 111 filing cadence. Applies when the last approved annual public-administration budget before the start of the tax year exceeds 6 million EUR; the Modelo 111 official instructions then route the withholding self-assessment to monthly."
 model_selectors = ["enrollment.public_administration_budget_gt_6000000"]
 schedule_predicates = ["enrollment.public_administration_budget_gt_6000000"]
+legal_refs = ["orden-eha-586-2011:art-1", "rd-439-2007:art-108"]
 
 [[sections.fields]]
 key = "activity_start_date"
@@ -320,6 +322,46 @@ model_selectors = ["taxpayer.new_entity_first_two_profit_periods"]
 legal_refs = ["ley-27-2014:art-29"]
 
 [[sections.fields]]
+key = "ley_49_2002_special_regime_option_declared"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether Modelo 036 casilla 651 declares exercise of the Title II Ley 49/2002 special fiscal regime option. Captures the declaration fact; art. 14 still conditions application on requirements and no renunciation."
+model_selectors = ["taxpayer.ley_49_2002_special_regime_option_declared"]
+legal_refs = ["ley-49-2002:art-14"]
+
+[[sections.fields]]
+key = "ley_49_2002_special_regime_option_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Date declared in Modelo 036 casilla 653 for exercising the Title II Ley 49/2002 special-regime option."
+model_selectors = ["taxpayer.ley_49_2002_special_regime_option_date"]
+legal_refs = ["ley-49-2002:art-14"]
+
+[[sections.fields]]
+key = "ley_49_2002_special_regime_renunciation_declared"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether Modelo 036 casilla 652 declares renunciation of a previously exercised Title II Ley 49/2002 special-regime option."
+model_selectors = ["taxpayer.ley_49_2002_special_regime_renunciation_declared"]
+legal_refs = ["ley-49-2002:art-14"]
+
+[[sections.fields]]
+key = "ley_49_2002_special_regime_renunciation_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Date declared in Modelo 036 casilla 654 for the renunciation of the Title II Ley 49/2002 special-regime option."
+model_selectors = ["taxpayer.ley_49_2002_special_regime_renunciation_date"]
+legal_refs = ["ley-49-2002:art-14"]
+
+[[sections.fields]]
 key = "tributacion_estado_porcentaje"
 type = "decimal"
 required = false
@@ -345,7 +387,7 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the twice-capital threshold: dotacion = 0 once reserva_dotada reaches at least 2 * capital_social."
+description = "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the strict twice-capital threshold: dotacion = 0 once reserva_dotada reaches at least 2 * capital_social + 0.01."
 model_selectors = ["taxpayer.sal_reserva_especial_dotada"]
 legal_refs = ["ley-44-2015:art-14"]
 
@@ -355,7 +397,7 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Capital social of the Sociedad Laboral. Basis for the twice-capital reserve threshold under Ley 44/2015 Art. 14. Dotacion is capped such that accumulated reserva does not exceed twice capital social."
+description = "Capital social of the Sociedad Laboral. Basis for the strict twice-capital reserve threshold under Ley 44/2015 Art. 14. Dotacion is capped once accumulated reserva reaches the first euro cent above twice capital social."
 model_selectors = ["taxpayer.sal_capital_social"]
 legal_refs = ["ley-44-2015:art-14"]
 
@@ -415,6 +457,73 @@ effective_dated = true
 description = "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents."
 model_selectors = ["taxpayer.representante_fiscal_nombre"]
 legal_refs = ["trlirnr-rdleg-5-2004:art-10"]
+
+[[sections]]
+key = "attribution_entity"
+title = "Attribution entity legal shape"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "legal_form"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Legal form of an entity in regimen de atribucion de rentas, such as a sociedad civil or comunidad de bienes."
+enum_values = ["sociedad_civil", "comunidad_bienes", "herencia_yacente", "other"]
+model_selectors = ["attribution_entity.legal_form"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-2"]
+
+[[sections]]
+key = "attribution_entity_socios"
+title = "Attribution entity socios"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF/NIE/CIF of a socio, comunero, or participe in an attribution entity member row."
+model_selectors = ["attribution_entity_socios.nif"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "name"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Display or legal name of a socio, comunero, or participe in an attribution entity member row."
+model_selectors = ["attribution_entity_socios.name"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "share_pct"
+type = "decimal"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Participation percentage for the attribution entity member, expressed in the closed interval 0..100."
+minimum = "0"
+maximum = "100"
+model_selectors = ["attribution_entity_socios.share_pct"]
+legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "role"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Legal member role inside the attribution entity."
+enum_values = ["socio", "comunero", "participe"]
+model_selectors = ["attribution_entity_socios.role"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89"]
 
 [[sections]]
 key = "vivienda_office"
@@ -490,17 +599,17 @@ sensitivity = "financial"
 effective_dated = true
 description = "Whether professional income withholding reaches the 70 percent threshold."
 model_selectors = ["professional_income_withholding_ge_70pct"]
-schedule_predicates = ["professional_income_withholding_ge_70pct"]
 
 [[sections.fields]]
-key = "uses_objective_estimation"
+key = "art109_activity_income_withholding_ge_70pct"
 type = "boolean"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Whether the profile uses objective estimation for IRPF. Derived from estimation_regime: objetiva implies true. Retained as a registry-condition predicate until the applicability engine reads estimation_regime directly."
-model_selectors = ["uses_objective_estimation_irpf"]
-schedule_predicates = ["uses_objective_estimation_irpf"]
+description = "Whether the Art. 109 RIRPF 70 percent income-coverage exception is met for covered professional, agricultural, livestock, or forestry activity income. For activity-start cases this is the current payment-period coverage fact, not a prior-year fact."
+model_selectors = ["art109_activity_income_withholding_ge_70pct"]
+schedule_predicates = ["art109_activity_income_withholding_ge_70pct"]
+legal_refs = ["rd-439-2007:art-109"]
 
 [[sections.fields]]
 key = "estimation_regime"
@@ -526,9 +635,9 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Prior-year gross income volume for all economic activities except agricultural, livestock, and forestry activities. Used to advise when a declared objective-estimation profile exceeds the settled DT 32 exclusion magnitude."
+description = "Prior-year gross income volume for all economic activities except agricultural, livestock, and forestry activities. Used to advise when a declared objective-estimation profile exceeds the settled official exclusion magnitude."
 model_selectors = ["irpf.objective_estimation_prior_year_gross_income_eur"]
-legal_refs = ["ley-35-2006:dt-32"]
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:dt-32"]
 
 [[sections.fields]]
 key = "objective_estimation_prior_year_invoice_gross_income_eur"
@@ -536,9 +645,19 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Prior-year gross income volume from operations requiring an invoice to a business or professional recipient. Used to advise when a declared objective-estimation profile exceeds the settled DT 32 exclusion magnitude."
+description = "Prior-year gross income volume from operations requiring an invoice to a business or professional recipient. Used to advise when a declared objective-estimation profile exceeds the settled official exclusion magnitude."
 model_selectors = ["irpf.objective_estimation_prior_year_invoice_gross_income_eur"]
-legal_refs = ["ley-35-2006:dt-32"]
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:dt-32"]
+
+[[sections.fields]]
+key = "objective_estimation_prior_year_agri_livestock_forest_gross_eur"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Prior-year gross income volume for agricultural, livestock, and forestry activities. Used to advise when a declared objective-estimation profile exceeds the LIRPF Art. 31 exclusion magnitude."
+model_selectors = ["irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur"]
+legal_refs = ["ley-35-2006:art-31"]
 
 [[sections.fields]]
 key = "objective_estimation_prior_year_purchases_eur"
@@ -546,9 +665,9 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Prior-year purchase volume for goods and services, excluding fixed-asset acquisitions. Used to advise when a declared objective-estimation profile exceeds the settled DT 32 exclusion magnitude."
+description = "Prior-year purchase volume for goods and services, excluding fixed-asset acquisitions. Used to advise when a declared objective-estimation profile exceeds the settled official exclusion magnitude."
 model_selectors = ["irpf.objective_estimation_prior_year_purchases_eur"]
-legal_refs = ["ley-35-2006:dt-32"]
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:dt-32"]
 
 [[sections.fields]]
 key = "special_regime"
@@ -588,8 +707,18 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Sum of income received from the 2nd and subsequent pagadores. Art. 96.3 LIRPF: declaración obligatoria when this value exceeds €1,500. Only meaningful when pagadores_count >= 2."
+description = "Sum of income received from the 2nd and subsequent pagadores. Art. 96.3 LIRPF: when pagadores_count >= 2 and this value exceeds €1,500, the work-income filing-exemption limit drops from the general €22,000 to the per-year reduced limit. Only meaningful when pagadores_count >= 2."
 model_selectors = ["irpf.pagadores_secondary_income"]
+legal_refs = ["ley-35-2006:art-96"]
+
+[[sections.fields]]
+key = "pagadores_total_work_income"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Total rendimientos íntegros del trabajo for the year, across all pagadores. Art. 96.2.a)/96.3 LIRPF: a Modelo 100 filing obligation arises when this total exceeds the applicable exemption limit — the general €22,000, or the per-year reduced limit (€15,876 for 2024 onward) when income comes from more than one pagador and the 2nd-and-subsequent aggregate exceeds €1,500."
+model_selectors = ["irpf.pagadores_total_work_income"]
 legal_refs = ["ley-35-2006:art-96"]
 
 [[sections]]
@@ -637,6 +766,16 @@ effective_dated = true
 description = "Whether the taxpayer pays capital income with withholding."
 model_selectors = ["pays_capital_income_with_retencion"]
 schedule_predicates = ["pays_capital_income_with_retencion"]
+
+[[sections.fields]]
+key = "modelo_111_no_retenciones_periods"
+type = "string"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Comma-separated YYYY:PERIOD Modelo 111 periods where no rentas subject to retencion or ingreso a cuenta were paid, so no all-blank Modelo 111 filing obligation existed."
+model_selectors = ["withholding.modelo_111_no_retenciones_periods"]
+legal_refs = ["rd-439-2007:art-108", "orden-eha-586-2011:art-1"]
 
 [[sections]]
 key = "iva"
@@ -701,6 +840,28 @@ model_selectors = ["iva.oss_enrolled"]
 schedule_predicates = ["iva.oss_enrolled"]
 
 [[sections.fields]]
+key = "group_member_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is a member entity in the IVA group-of-entities special regime and files Modelo 322 as the individual monthly self-assessment."
+model_selectors = ["iva.group_member_enrolled"]
+schedule_predicates = ["iva.group_member_enrolled"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[sections.fields]]
+key = "group_dominant_entity_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is the dominant entity of an IVA group-of-entities regime and files Modelo 353 as the aggregate monthly self-assessment."
+model_selectors = ["iva.group_dominant_entity_enrolled"]
+schedule_predicates = ["iva.group_dominant_entity_enrolled"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+
+[[sections.fields]]
 key = "sii_enrolled"
 type = "boolean"
 required = false
@@ -708,8 +869,7 @@ sensitivity = "financial"
 effective_dated = true
 description = "Whether the taxpayer is enrolled in the SII (Suministro Inmediato de Informacion), the near-real-time IVA Libros registro submission system. Mandatory for the monthly IVA collective (grandes empresas, REDEME, grupos de IVA); voluntary opt-in via Modelo 036 for everyone else."
 model_selectors = ["iva.sii_enrolled"]
-schedule_predicates = ["iva.sii_enrolled"]
-legal_refs = ["rd-596-2016"]
+legal_refs = ["rd-596-2016", "rd-1624-1992:art-71"]
 
 [[sections.fields]]
 key = "redeme_enrolled"
@@ -757,6 +917,16 @@ effective_dated = true
 description = "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold."
 schedule_predicates = ["bienes_extranjero_above_threshold"]
 
+[[sections.fields]]
+key = "monedas_virtuales_extranjero_above_threshold"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Modelo 721 eligibility: virtual currencies held abroad declared above the legal threshold."
+model_selectors = ["monedas_virtuales_extranjero_above_threshold"]
+schedule_predicates = ["monedas_virtuales_extranjero_above_threshold"]
+
 [[sections]]
 key = "filing_export"
 title = "Filing and export context"
@@ -771,6 +941,16 @@ sensitivity = "financial"
 description = "Declaration type used by export layouts and Modelo 100."
 model_selectors = ["declaration.type"]
 export_headers = ["declaration_type", "complementaria", "complementaria_page", "page_complementaria"]
+
+[[sections.fields]]
+key = "rental_reduccion_art_23_2_tier_2024"
+type = "enum"
+required = false
+sensitivity = "financial"
+description = "Modelo 100 2024 Art. 23.2 housing-rental reduction tier selected from the legally applicable 50, 60, 70, or 90 percent path. Absent means the engine cannot compute casilla 0150 from the eligibility checkbox alone."
+enum_values = ["tier-50", "tier-60", "tier-70", "tier-90"]
+model_selectors = ["renta.rental_reduccion_art_23_2_tier_2024"]
+legal_refs = ["ley-35-2006:art-23"]
 
 [[sections.fields]]
 key = "previous_receipt"
@@ -894,11 +1074,12 @@ model_selectors = ["taxpayer.sex"]
 
 [[sections.fields]]
 key = "marital_status"
-type = "string"
+type = "enum"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Taxpayer marital status valid for Modelo 100."
+description = "Taxpayer marital or registered-partnership status used by Renta profile decisions."
+enum_values = ["1", "2", "3", "4", "5"]
 model_selectors = ["taxpayer.marital_status"]
 
 [[sections.fields]]
@@ -1084,6 +1265,25 @@ description = "EU/EEA descendant deduction flag for Modelo 100."
 model_selectors = ["family.descendants_eu_eea_deduction"]
 
 [[sections.fields]]
+key = "descendiente"
+type = "object"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "One repeated descendant row, addressed as renta_family.descendiente.{n}.{subfield} (0-based index). Subfields: birth_date (required), adoption_date, discapacidad (0|33|65), convivencia (default true), custodia_compartida (default false, Art. 61.1a prorrateo), meses_madre_trabajo (0..12, Art. 81 maternidad cap), gastos_guarderia (euros, Art. 81 bis 0613), nif. Consumed by RentaFamilyProfile.minimo_descendientes_estatal (Art. 58/61 LIRPF, casillas 0513/0514)."
+model_selectors = [
+  "DescendantInfo.birth_date",
+  "DescendantInfo.adoption_date",
+  "DescendantInfo.discapacidad_grado",
+  "DescendantInfo.convive_con_contribuyente",
+  "DescendantInfo.custodia_compartida",
+  "DescendantInfo.meses_madre_trabajo_2024",
+  "DescendantInfo.gastos_guarderia_euros",
+  "DescendantInfo.nif",
+]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+
+[[sections.fields]]
 key = "situacion_familiar"
 type = "enum"
 required = false
@@ -1110,13 +1310,124 @@ description = "Count of descendants represented in Renta family facts."
 model_selectors = ["RentaFamilyProfile.descendientes_count"]
 
 [[sections.fields]]
+key = "descendientes_minimos_aggregate_2020"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2020 Art. 58/61 LIRPF mínimo por descendientes aggregate, parte estatal (feeds casilla 0513). Derived at binding-resolution time from renta_family.descendiente.* facts by _inject_derived_minimo_descendientes_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.descendientes_minimos_aggregate_2020"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+
+[[sections.fields]]
+key = "descendientes_minimos_aggregate_autonomico_2020"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2020 Art. 58/61 mínimo por descendientes, parte autonómica (feeds 0514). Resolves each tranche against the filer's tax-residence CCAA (Ley 22/2009 art. 46.1.a); Madrid's own tercer/cuarto tranches apply for Madrid residents, else mirrors estatal. Derived by _inject_derived_minimo_descendientes_facts (_profile_binding.py); not wizard-settable."
+model_selectors = ["family.descendientes_minimos_aggregate_autonomico_2020"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61", "madrid-dl-1-2010:art-2"]
+
+[[sections.fields]]
+key = "descendientes_minimos_aggregate_2021"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2021 Art. 58/61 LIRPF mínimo por descendientes aggregate, parte estatal (feeds casilla 0513). Derived at binding-resolution time from renta_family.descendiente.* facts by _inject_derived_minimo_descendientes_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.descendientes_minimos_aggregate_2021"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+
+[[sections.fields]]
+key = "descendientes_minimos_aggregate_autonomico_2021"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2021 Art. 58/61 mínimo por descendientes, parte autonómica (feeds 0514). Resolves each tranche against the filer's tax-residence CCAA (Ley 22/2009 art. 46.1.a); Madrid's own tercer/cuarto tranches apply for Madrid residents, else mirrors estatal. Derived by _inject_derived_minimo_descendientes_facts (_profile_binding.py); not wizard-settable."
+model_selectors = ["family.descendientes_minimos_aggregate_autonomico_2021"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61", "madrid-dl-1-2010:art-2"]
+
+[[sections.fields]]
+key = "descendientes_minimos_aggregate_2022"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2022 Art. 58/61 LIRPF mínimo por descendientes aggregate, parte estatal (feeds casilla 0513). Derived at binding-resolution time from renta_family.descendiente.* facts by _inject_derived_minimo_descendientes_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.descendientes_minimos_aggregate_2022"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+
+[[sections.fields]]
+key = "descendientes_minimos_aggregate_autonomico_2022"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2022 Art. 58/61 mínimo por descendientes, parte autonómica (feeds 0514). Resolves each tranche against the filer's tax-residence CCAA (Ley 22/2009 art. 46.1.a); Madrid's own full tranche table applies for Madrid residents, else mirrors estatal. Derived by _inject_derived_minimo_descendientes_facts (_profile_binding.py); not wizard-settable."
+model_selectors = ["family.descendientes_minimos_aggregate_autonomico_2022"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61", "madrid-dl-1-2010:art-2"]
+
+[[sections.fields]]
+key = "descendientes_minimos_aggregate_2023"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2023 Art. 58/61 LIRPF mínimo por descendientes aggregate, parte estatal (feeds casilla 0513). Derived at binding-resolution time from renta_family.descendiente.* facts by _inject_derived_minimo_descendientes_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.descendientes_minimos_aggregate_2023"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+
+[[sections.fields]]
+key = "descendientes_minimos_aggregate_autonomico_2023"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2023 Art. 58/61 mínimo por descendientes, parte autonómica (feeds 0514). Resolves each tranche against the filer's tax-residence CCAA (Ley 22/2009 art. 46.1.a); Madrid's own full tranche table applies for Madrid residents, else mirrors estatal. Derived by _inject_derived_minimo_descendientes_facts (_profile_binding.py); not wizard-settable."
+model_selectors = ["family.descendientes_minimos_aggregate_autonomico_2023"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61", "madrid-dl-1-2010:art-2"]
+
+[[sections.fields]]
 key = "descendientes_minimos_aggregate_2024"
 type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Renta 2024 aggregate minimum for descendants."
+description = "Renta 2024 Art. 58/61 LIRPF mínimo por descendientes aggregate, parte estatal (feeds casilla 0513). Derived at binding-resolution time from renta_family.descendiente.* facts by _inject_derived_minimo_descendientes_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
 model_selectors = ["family.descendientes_minimos_aggregate_2024"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+
+[[sections.fields]]
+key = "descendientes_minimos_aggregate_autonomico_2024"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2024 Art. 58/61 mínimo por descendientes, parte autonómica (feeds 0514). Resolves each tranche against the filer's tax-residence CCAA (Ley 22/2009 art. 46.1.a); Madrid's own full tranche table applies for Madrid residents, else mirrors estatal. Derived by _inject_derived_minimo_descendientes_facts (_profile_binding.py); not wizard-settable."
+model_selectors = ["family.descendientes_minimos_aggregate_autonomico_2024"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61", "madrid-dl-1-2010:art-2"]
+
+[[sections.fields]]
+key = "descendientes_minimos_aggregate_2025"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2025 Art. 58/61 LIRPF mínimo por descendientes aggregate, parte estatal (feeds casilla 0513). Derived at binding-resolution time from renta_family.descendiente.* facts by _inject_derived_minimo_descendientes_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.descendientes_minimos_aggregate_2025"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+
+[[sections.fields]]
+key = "descendientes_minimos_aggregate_autonomico_2025"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2025 Art. 58/61 mínimo por descendientes, parte autonómica (feeds 0514). Resolves each tranche against the filer's tax-residence CCAA (Ley 22/2009 art. 46.1.a); Madrid's own full tranche table applies for Madrid residents, else mirrors estatal. Derived by _inject_derived_minimo_descendientes_facts (_profile_binding.py); not wizard-settable."
+model_selectors = ["family.descendientes_minimos_aggregate_autonomico_2025"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61", "madrid-dl-1-2010:art-2"]
 
 [[sections.fields]]
 key = "descendientes_menores_3_2024"
@@ -1126,6 +1437,86 @@ sensitivity = "identity"
 effective_dated = true
 description = "Count of descendants eligible for the bajo-3-años supplement at year-end 2024 (Art. 58.3 LIRPF)."
 model_selectors = ["family.descendientes_menores_3_2024"]
+
+[[sections.fields]]
+key = "anualidades_sin_minimo_descendientes_2020"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "LIRPF Art. 64/75 anualidades por alimentos separate-escala eligibility flag for 2020: 1 when the payer has no right to the mínimo por descendientes for those children (default, non-custodial payer), 0 when custody is shared. Derived at binding-resolution time from renta_family.descendiente.*.custodia_compartida by _inject_derived_anualidades_eligibility_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.anualidades_sin_minimo_descendientes_2020"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+
+[[sections.fields]]
+key = "anualidades_sin_minimo_descendientes_2021"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "LIRPF Art. 64/75 anualidades por alimentos separate-escala eligibility flag for 2021: 1 when the payer has no right to the mínimo por descendientes for those children (default, non-custodial payer), 0 when custody is shared. Derived at binding-resolution time from renta_family.descendiente.*.custodia_compartida by _inject_derived_anualidades_eligibility_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.anualidades_sin_minimo_descendientes_2021"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+
+[[sections.fields]]
+key = "anualidades_sin_minimo_descendientes_2022"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "LIRPF Art. 64/75 anualidades por alimentos separate-escala eligibility flag for 2022: 1 when the payer has no right to the mínimo por descendientes for those children (default, non-custodial payer), 0 when custody is shared. Derived at binding-resolution time from renta_family.descendiente.*.custodia_compartida by _inject_derived_anualidades_eligibility_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.anualidades_sin_minimo_descendientes_2022"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+
+[[sections.fields]]
+key = "anualidades_sin_minimo_descendientes_2023"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "LIRPF Art. 64/75 anualidades por alimentos separate-escala eligibility flag for 2023: 1 when the payer has no right to the mínimo por descendientes for those children (default, non-custodial payer), 0 when custody is shared. Derived at binding-resolution time from renta_family.descendiente.*.custodia_compartida by _inject_derived_anualidades_eligibility_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.anualidades_sin_minimo_descendientes_2023"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+
+[[sections.fields]]
+key = "anualidades_sin_minimo_descendientes_2024"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "LIRPF Art. 64/75 anualidades por alimentos separate-escala eligibility flag for 2024: 1 when the payer has no right to the mínimo por descendientes for those children (default, non-custodial payer), 0 when custody is shared. Derived at binding-resolution time from renta_family.descendiente.*.custodia_compartida by _inject_derived_anualidades_eligibility_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.anualidades_sin_minimo_descendientes_2024"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+
+[[sections.fields]]
+key = "anualidades_sin_minimo_descendientes_2025"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "LIRPF Art. 64/75 anualidades por alimentos separate-escala eligibility flag for 2025: 1 when the payer has no right to the mínimo por descendientes for those children (default, non-custodial payer), 0 when custody is shared. Derived at binding-resolution time from renta_family.descendiente.*.custodia_compartida by _inject_derived_anualidades_eligibility_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard."
+model_selectors = ["family.anualidades_sin_minimo_descendientes_2025"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+
+[[sections.fields]]
+key = "madrid_nacimiento_adopcion_eligible_count"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Prorrateo-weighted count of descendants inside the Comunidad de Madrid nacimiento/adopción applicability window (DL 1/2010 art. 4) who cohabit. Derived at binding-resolution time from renta_family.descendiente.* facts and tax_residence.ccaa by _inject_derived_autonomic_deduccion_facts in src/aeat/application/modelo/_profile_binding.py; not stored as a profile fact and not operator-settable through the wizard. Feeds Modelo 100 casilla 1039."
+model_selectors = ["renta_family.madrid_nacimiento_adopcion_eligible_count"]
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-4"]
+
+[[sections.fields]]
+key = "unidad_familiar_otros_miembros_base"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = false
+description = "Base imponible (casillas 0435 + 0460) of unidad-familiar members other than the filer, for the Comunidad de Madrid autonomic double income-limit gate (DL 1/2010 art. 18.1). Derived by _inject_derived_autonomic_deduccion_facts; supplied only for the determinable single / monoparental individual filer (Decimal 0, the filer's own base is added by the registry formula), absent for conyugal units whose spouse base is not persisted. Not operator-settable through the wizard."
+model_selectors = ["renta_family.unidad_familiar_otros_miembros_base"]
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-18"]
 
 [[sections.fields]]
 key = "gastos_guarderia_reales_2024"

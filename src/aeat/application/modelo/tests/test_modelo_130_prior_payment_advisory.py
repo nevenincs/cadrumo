@@ -40,6 +40,9 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....domain.calculations.registry import (
@@ -47,8 +50,6 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -56,14 +57,15 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceDiagnostic
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -73,7 +75,8 @@ from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET = "bucket-m130-prior-payment-advisory"
+_BUCKET = "00000000-0000-4000-8000-000000000130"
+_PROFILE_LABEL = "M130 prior payment advisory profile"
 _REVISION = "2019-y-siguientes"
 _YEAR = 2026
 _PRIOR_YEAR = 2025
@@ -138,8 +141,34 @@ _INCOME_DATE = date(2026, 2, 14)  # inside both 1T (Jan-Mar) and 2T (Jan-Jun) wi
 
 @pytest.fixture
 def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL) as profile:
+        _seed_ready_profile(profile.repository)
         yield profile.repository
+
+
+def _seed_ready_profile(objects: SecureObjectRepository) -> None:
+    """Persist the M130 natural-person profile required by the work-unit gate."""
+    UserProfileLifecycleRepository(bucket_id=_BUCKET, objects=objects).save(
+        UserProfileRecord(
+            profile_id=_BUCKET,
+            display_name=_PROFILE_LABEL,
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            ),
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
 
 
 def _seed_prior_year_m100(obs_repo: CalculationObservationRepository) -> None:
@@ -222,7 +251,7 @@ def _income_transaction(objects: SecureObjectRepository) -> None:
     transaction = Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id="m130-prior-payment-income",
+                provider_transaction_id="m130-prior-payment-income",
                 booked_date=_INCOME_DATE,
                 value_date=_INCOME_DATE,
                 amount=_INCOME_AMOUNT,
@@ -240,6 +269,8 @@ def _income_transaction(objects: SecureObjectRepository) -> None:
                 raw_fields={"Concepto": "income"},
             ),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "business_pct": None,
             "purchase_invoice_evidence_id": None,

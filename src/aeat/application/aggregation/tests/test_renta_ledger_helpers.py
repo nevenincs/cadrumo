@@ -10,9 +10,9 @@ regression in (for example) the MIXED-classification scaling would
 silently halve every mixed-use deductible expense.
 
 Tests here are structural / contract assertions on the helpers, not
-calculation tautologies — `_business_amount` is verified against
-the helper's declared contract (apply pct to amount magnitude), not
-against any external authoritative-tax calculation.
+calculation tautologies: business proportion dispatch is verified
+against its declared contract, and amount scaling is verified only
+against the local non-negative magnitude contract.
 """
 
 from __future__ import annotations
@@ -24,10 +24,11 @@ import pytest
 from ....core import Period
 from ....domain.renta import RentaExpenseDirection
 from ....domain.transactions import BusinessClassification, TransactionDirection
+from .._business_proportion import business_proportion
 from .._errors import AggregationPeriodError
 from .._renta_ledger import (
     _bounded_detail,
-    _business_amount,
+    _business_fact_amount,
     _renta_direction_for,
     _resolve_annual_period,
 )
@@ -85,32 +86,38 @@ def test_renta_direction_for_incoming_without_invoice_is_unsupported() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _business_amount — apply BusinessClassification to the amount magnitude
+# business_proportion + _business_fact_amount - classify then scale magnitude
 # ---------------------------------------------------------------------------
 
 
-def test_business_amount_business_classification_preserves_magnitude() -> None:
+def test_business_proportion_business_classification_preserves_magnitude() -> None:
     """BUSINESS rows pass through the canonical amount magnitude; business_pct ignored."""
-    assert _business_amount(Decimal("100.00"), BusinessClassification.BUSINESS, None) == Decimal("100.00")
+    proportion = business_proportion(BusinessClassification.BUSINESS, None)
+
+    assert proportion == Decimal("1")
+    assert _business_fact_amount(Decimal("100.00"), proportion) == Decimal("100.00")
 
 
-def test_business_amount_mixed_classification_scales_by_business_pct() -> None:
+def test_business_proportion_mixed_classification_scales_by_business_pct() -> None:
     """MIXED rows multiply amount magnitude by the operator-declared
     business percentage — for example a 60% business-use phone bill of
     100 EUR yields a 60 EUR deductible base."""
-    result = _business_amount(Decimal("100.00"), BusinessClassification.MIXED, Decimal("0.60"))
+    proportion = business_proportion(BusinessClassification.MIXED, Decimal("0.60"))
+    assert proportion == Decimal("0.60")
+
+    result = _business_fact_amount(Decimal("100.00"), proportion)
 
     assert result == Decimal("60.00")
 
 
-def test_business_amount_rejects_negative_amount() -> None:
+def test_business_fact_amount_rejects_negative_amount() -> None:
     with pytest.raises(ValueError, match="non-negative magnitude"):
-        _business_amount(Decimal("-100.00"), BusinessClassification.MIXED, Decimal("0.30"))
+        _business_fact_amount(Decimal("-100.00"), Decimal("0.30"))
 
 
-def test_business_amount_personal_classification_returns_none() -> None:
+def test_business_proportion_personal_classification_returns_none() -> None:
     """PERSONAL spend never produces a deductible base."""
-    assert _business_amount(Decimal("100.00"), BusinessClassification.PERSONAL, None) is None
+    assert business_proportion(BusinessClassification.PERSONAL, None) is None
 
 
 # ---------------------------------------------------------------------------

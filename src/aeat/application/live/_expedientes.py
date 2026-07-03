@@ -29,8 +29,7 @@ from typing import Any, override
 from pydantic import BaseModel, Field
 
 from ...adapters.outbound.aeat.sede import Declaracion
-from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE, secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.hashing import sha256_hex

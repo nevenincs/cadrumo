@@ -2,9 +2,9 @@
 
 Verifies the full round-trip without mocks, patches, stubs, or fakes:
 
-  CLI invocation (CliRunner) → real AeatError subclass raised in callback
+  shared CLI runner invocation → real AeatError subclass raised in callback
   → command_error_boundary catches → _emit_error_and_exit → typer.Exit(code=N)
-  → CliRunner captures exit_code → assertion against live ERROR_REGISTRY
+  → runner captures exit_code → assertion against live ERROR_REGISTRY
 
 The existing :mod:`test_error_registry_contract` module verifies that
 representative errors render with the correct grep-stable prefix

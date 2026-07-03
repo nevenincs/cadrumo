@@ -41,13 +41,13 @@ from typing import Any
 
 import pytest
 
-from ....adapters.inbound.declaracion._schema import (
-    DeclaracionObservation,
+from ....adapters.inbound.declaracion import (
+    InboundDeclaracionObservation,
     TemplateRevision,
 )
-from ....adapters.inbound.pdf._shared import ExtractedCasilla
+from ....adapters.inbound.pdf import ExtractedCasilla
 from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from .._schema import DiscrepancyCause, VerificationStatus
 from .._verify import (
     _classify_discrepancy,
@@ -200,8 +200,8 @@ def test_classify_discrepancy_round_trips_casilla_id_and_delta() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _declaracion(casilla_ids: tuple[CasillaId, ...]) -> DeclaracionObservation:
-    """Build a real :class:`DeclaracionObservation` with the given casillas.
+def _declaracion(casilla_ids: tuple[CasillaId, ...]) -> InboundDeclaracionObservation:
+    """Build a real :class:`InboundDeclaracionObservation` with the given casillas.
 
     Uses the actual pydantic model with no stand-ins. Required
     PDF-provenance fields are filled with stable test-only values
@@ -216,7 +216,7 @@ def _declaracion(casilla_ids: tuple[CasillaId, ...]) -> DeclaracionObservation:
         )
         for cid in casilla_ids
     )
-    return DeclaracionObservation(
+    return InboundDeclaracionObservation(
         modelo="100",
         period=Period.from_year_and_code(2025, "0A"),
         ejercicio="2025",
@@ -226,6 +226,12 @@ def _declaracion(casilla_ids: tuple[CasillaId, ...]) -> DeclaracionObservation:
             año=2025,
             revision="2025.01",
             detected_from="explicit_override",
+        ),
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="100",
+            revision_id="2025",
+            modelo_year=2025,
+            period="0A",
         ),
         values=values,
         source_pdf_path=Path(__file__),

@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#legal-grounding-centralization'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-29'
 related: []
 ---
-
-
 
 # `legal-grounding-centralization` audit: `Inline-and-Hardcoded Regulatory Definition Inventory — Cross-Domain Centralization Sweep`
 
@@ -142,26 +140,36 @@ non-profit 10%), the IRPF escala estatal general half-scale and the escala del a
 INCLUDING the Ley 7/2024 jump of the >300.000 € top tranche to 30% for 2025 (the
 registry already carries 28% for 2024, 30% for 2025 — correct), the M130/M210
 retención/fraccionamiento rates, the informativa thresholds (M347 3.005,06 €, M720
-50.000 €/bloque, M349 50.000 € cadence), gastos difícil justificación 5%/2.000 €, the
-recargo ladders, and 14 of the `external_constants` regulatory constants. No
-wrong-value defect in any of these.
+50.000 €/bloque, M349 50.000 € cadence), gastos difícil justificación general
+5%/2.000 € with the 2023 DA 56 7% exception tracked separately, the recargo
+ladders, and 14 of the `external_constants` regulatory constants. No wrong-value
+defect in any of these.
 
-### V1 (WRONG-vs-LAW — tracked, cuota is correct) — M200 tipo-gravamen-erd scalar echo
+### V1 (CLOSED 2026-06-29, cuota was correct) — M200 tipo-gravamen-erd scalar echo
 
-`_data/registry/.../200/.../parameters.toml` `is.modelo-200.tipo-gravamen-erd` is a
-flat-23% scalar (`value = "23"`, `valid_from 2023`, grounded on the superseded Ley
-31/2022 art. 39) feeding the casilla 00558 rate ECHO. For 2025/2026 micro-empresa
-(INCN < 1M) entities the law (DT 44ª) is the two-tranche 21/22 (2025) and 19/21
-(2026), so the displayed rate echoes a stale 23%. CRITICAL NUANCE verified against
-code: the sibling `cuota-integra-bracket-erd` IS correctly year-stepped, so the actual
-**cuota (tax owed) is correct** — only the scalar display in 00558 is stale. This is
-the documented-deferred `lookup_bracket_by_entity_type` limitation (a scalar cannot
-express a two-tranche rate). NOT fixed in this pass: changing the scalar without
-AEAT-form-level knowledge of how 00558 represents a two-tranche micro-empresa rate
-could make the echo more wrong, and the tax is already correct. Tracked for a focused
-fix that lands the deferred bracket-based rate echo. A related latent gap: the true
-ERD (INCN < 10M, LIS art. 101) DT 44ª schedule 24/23/22/21 is absent from the registry
-and the "erd" parameter name misleadingly covers the INCN<1M micro-empresa category.
+> 2026-06-29 verification update: V1 is closed in the current registry.
+> Modelo 200 now carries `is.modelo-200.tipo-gravamen-pyme-display` as the
+> scalar export echo for casilla `DP200014:00558`, with dated values 23
+> (2024), 21 (2025), and 19 (2026), while `DP200014:00562` remains
+> bracket-derived from `is.modelo-200.tipo-gravamen-pyme`. The current
+> formula `modelo-200-tipo-gravamen-por-forma-juridica` routes
+> micro-empresa general forms to the display parameter, and the focused
+> registry tests passed on 2026-06-29:
+> `test_modelo_200_tipo_gravamen_dispatch.py` (18 passed),
+> `test_modelo_200_cuota_integra_lanes.py` (14 passed), and
+> `test_modelo_200_temporal_coverage.py` (7 passed). The separate true
+> ERD INCN<10M schedule is also closed in the current registry through the
+> Art.101 lane described below.
+
+The original V1 defect was a stale scalar echo: `is.modelo-200.tipo-gravamen-erd`
+fed casilla 00558 with a flat 23% display while the micro-empresa cuota path was
+already bracket-derived. The current registry resolves that display defect through
+`is.modelo-200.tipo-gravamen-pyme-display`. It also resolves the related Art.101
+gap: `is.modelo-200.tipo-gravamen-erd-art101` and
+`is.modelo-200.cuota-integra-bracket-erd-art101` encode the ERD INCN<10M lane
+separately from the micro-empresa lane, with legal refs to `ley-27-2014:art-101`
+and `ley-27-2014:dt-44` and formulas routing general-rate Art.101 entity forms to
+those parameters.
 
 ### V2 (citation-imprecision — ALL FIXED this pass)
 
@@ -182,13 +190,16 @@ provision that sets them (`registry-calculation-legal-grounding`). All corrected
 - `MODELO_720_REPORTING_THRESHOLD_EUR` cited bare "AEAT instrucciones" → **RD 1065/2007
   arts. 42 bis/ter/quater (RD 1558/2012) under LGT DA 18ª**. Fixed in `external_constants`.
 
-### V3 (non-value gap — tracked) — estimación objetiva magnitude-exclusion limits not codified
+### V3 (CLOSED 2026-06-29 — advisory, not hard enforcement) — estimación objetiva magnitude-exclusion limits codified
 
-The módulos volume-exclusion limits (250.000 / 125.000 / 150.000 €, LIRPF art. 31 +
-DT 32ª, extended through 2026 by RDL 9/2024) exist only in corpus reference text, never
-as an enforceable registry parameter or constant — the regime is gated by self-declared
-booleans with no numeric safety net. Not a wrong value; a silent gating gap. Tracked as
-a future grounding feature (author the limits as registry parameters with legal_refs).
+The módulos volume-exclusion limits are now codified as grounded legal parameters in
+`irpf-estimacion-objetiva.toml`, the user-profile schema declares the four prior-year
+volume fields, and `src/aeat/application/modelo/_objective_estimation_advisory.py`
+consumes those fields to emit Modelo 100/131 warnings when an objective-estimation
+profile exceeds a supported official-source magnitude. This is intentionally advisory,
+not hard enforcement: the warning surfaces the legal risk while leaving the operator to
+review the underlying activity-volume evidence. The currentized profile path uses
+`irpf.estimation_regime`; the old self-declared boolean input has been retired.
 
 ## Verification pass 3 — IRNR / Patrimonio / amortización-deductions (3-agent swarm, 2026-06-14)
 
@@ -206,18 +217,22 @@ art. 25.1.a general-rate EU/EEE reduction with the unconditional art. 25.1.f. In
 corroboration: the registry's own `ganancia_patrimonial` (same letra f, 3º) was correctly
 0.19 while `interest` (2º) was 0.24. A non-EU resident's Spanish-source interest was
 over-declared ~26%. **Fixed** to 0.19; 46 M210/IRNR tests pass (no test asserted the wrong
-value). A C1-class side issue: the bundled corpus snippet `trlirnr-rdleg-5-2004` art. 25.1.f
-mis-phrases the rate as EU/EEE-conditional (self-declared non-authoritative Phase-1 anchor,
-`required_text` empty) — operator should refresh that corpus text; the parameter is the calc
-authority and is now correct.
+value). 2026-06-29 currentization closes the former C1 corpus side issue: the bundled
+`trlirnr-rdleg-5-2004` corpus now keeps the EU/EEE condition in art. 25.1.a and the
+unconditional 19% dividend/interest/capital-gain list in art. 25.1.f, the registry legal row
+has non-empty `required_text`, and focused tests enforce both the 0.19 interest parameter and
+the absence of EU/EEE wording from the art. 25.1.f corpus/extracted paragraph. Live BOE check
+against BOE-A-2004-4527 art. 25 confirmed the same split.
 
 ### V5 (verified correct / gaps) — Patrimonio (M714/M718) and amortización/deductions
 
 Patrimonio: 4 values verified CORRECT + centralized against bundled authoritative corpus
 (Ley 19/1991, BOE-A-1991-14392) — mínimo exento 700.000 €, vivienda habitual 300.000 €,
 límite conjunto 60%/80%, escala 0,2-3,5% — all correctly marked STATE defaults with CCAA
-devolution flagged. M714 escala is `input_kind=manual` (Phase-B calc deferred); M718 grandes
-fortunas (Ley 38/2022) entirely absent — both NOT-CODIFIED feature gaps, not wrong values.
+devolution flagged. The original M714 note that the escala was `input_kind=manual` is now
+superseded by V34: the current tree computes the art. 30 state scale and the art. 31 80%-floor
+reference. M718 grandes fortunas (Ley 38/2022) remains an absent NOT-CODIFIED feature gap, not a
+wrong value.
 Amortización/deductions: 8 coefficients verified CORRECT + centralized (amortización 3%
 RIRPF art.14.2.a; M130 20%/2%; M131 2%/2%; rental tiers 50/60/70/90% + 5% rebaja) — all
 registry-causal with documented fallbacks, amortización grounded in bundled authoritative
@@ -233,7 +248,8 @@ BOE and found **2 real wrong-calc-values — both fixed** (Ley 44/2015 reserva e
 4× too low; M210 IRNR interest 24% vs 19%) — plus several citation-precision fixes and one
 fabricated-corpus defect (módulos DT 32ª, caught by the honesty review). Every other audited
 figure verified correct and centralized. The remaining items are NOT-CODIFIED feature gaps
-(M714 escala, M718, módulos enforcement) tracked for deliberate build, not drift.
+(M718, módulos enforcement, and the M714 full art. 31 same-year M100 joint-limit tail) tracked
+for deliberate build, not drift.
 
 ## Verification pass 4 — IRPF mínimo amounts + reducciones/deducciones (2026-06-14)
 
@@ -793,15 +809,12 @@ per-finding audit rather than a value-pattern sweep:
   `MINIMO_MENOR_TRES_MAX_AGE`, and `CUSTODIA_COMPARTIDA_PRORRATA_FACTOR` from `external_constants`.
 - **M202 art. 40.3 INCN + art. 20 RNT ceiling — CLOSED (this campaign, V24/V25).**
 
-The inline-literal centralisation mandate is therefore complete across the whole audit inventory — no
-ungrounded inline regulatory literal remains in production. The ONLY open findings are registry-dependent
-and blocked by the peer `BindingAggregationOp` refactor: F1 (fincas art. 23.2 reducción tiers — a live
-calc-path change wired to a registry read), F3 (M303/M390 compensación casilla routing), and F4
-(casilla 59/60 base-imponible helpers) — each requires authoring/validating registry bindings or
-resolvers, which needs a loadable registry. They cannot be closed registry-independently and are NOT
-deferrable into the helper-mechanism pattern that unblocked art-20 Phase-1 (that pattern works only where
-the value is already present in the same revision's `casilla_values`; F1/F3/F4 and M714 require
-cross-binding/cross-modelo registry resolution).
+The inline-literal centralisation mandate was therefore complete across the audit inventory at this
+2026-06-15 checkpoint: no ungrounded inline regulatory literal remained in production. At that point the
+audit still reported F1/F3/F4 as registry-dependent and blocked by the peer `BindingAggregationOp`
+refactor. That blocker status is historical and superseded by V33 below: F1/F3/F4 are now closed in the
+current working tree, and the F2-final prorrata aggregation fate is closed by deleting the dormant
+application aggregation wrapper instead of enrolling unused capacity.
 
 ### V27 (decisive blocker root-cause — HEAD loads clean; the break is transient working-tree peer WIP, not a committed regression)
 
@@ -1005,28 +1018,71 @@ TOML valid; format-preserving (single-/multi-line kept, row-width wrapping not r
 `2a1bd715f`, `233108021`, `b48a35219`. This supersedes V31's deferral: the kitchen-sink is no longer a
 separate-campaign item — it is standardized to the concept-specific cross-revision baseline.
 
+### V33 (2026-06-29 currentization — F1/F2/F3/F4 closed)
+
+A RAG-first re-scan on 2026-06-29 found the V26/V27 "blocked F1/F3/F4" state stale against the current
+tree. The registry loads for the relevant surfaces and the focused gates now prove:
+
+- **F1 (fincas art. 23.2 tiers) — CLOSED, stricter than the plan.** `resolve_reduccion` routes the tier
+  rates, rebaja threshold, amendment year, joven age range, and rehab lookback through Modelo 100
+  `read_parameter` values for every supported revision (2020-2025). The remaining stale tolerance was the
+  catch-and-constant path for unsupported years; it has now been removed from `_tier_resolver.py`, and the
+  sibling rental amortización reader in `_amortization_ledger.py` was made fail-closed the same way. A
+  missing revision/parameter now raises `RegistryValidationError` instead of calculating from a Python
+  fallback constant. Verification: `ruff check` on the four touched rental files passed; the focused
+  rental tests passed (`test_threshold_registry_grounded.py`, `test_amortizacion_rate_registry_grounded.py`,
+  `test_tier_resolver.py`, `test_amortization_ledger.py`: 159 passed).
+- **F3 (M303/M390 compensación routing) — CLOSED.** `_iva_compensation_history.py` now keys filed and
+  registry observations by canonical semantic `casilla.id` values, validates observed ids against the
+  resolved registry snapshot, and rejects printed-number aliases (`69`, `87`, `97`, etc.) rather than
+  using numeric routing literals as authority. Verification: the printed-number rejection and provenance
+  tests passed.
+- **F4 (casilla 59/60 helpers) — CLOSED.** The dormant `casilla_59_base_imponible` /
+  `casilla_60_base_imponible` application helpers are gone. Both M303 revisions declare
+  `ledger_iva_aggregation` `base_amount_sum` bindings for intracommunity supplies and exports; the
+  application aggregation tests resolve the boxes through the registry binding ids. Verification: the
+  intracom/export application tests plus the 2009/2023 registry binding tests passed (17 focused tests).
+- **F2-final (prorrata fate) — CLOSED by deletion.** V26 correctly closed the inline prorrata thresholds,
+  but the plan's P03.S07 checkbox had overstated the final fate decision before this pass. The current
+  tree now deletes the exported `application.aggregation` prorrata wrapper and its application-level
+  tests instead of enrolling an unused `BindingSourceKind`. The active `domain.iva._prorrata` substrate
+  remains because IVA ledger aggregation validates `prorrata_reference` values through
+  `validate_prorrata_reference`; it is not a dormant source resolver and does not own Modelo casilla
+  routing.
+
+### V34 (2026-06-29 currentization — M714 art.30/art.31 baseline closed)
+
+A RAG-first re-scan found the V5 "M714 escala manual / Phase-B deferred" and the June 2 M714
+research/ADR "empty scaffold / corpus gap" state stale against the current tree. The current
+registry and corpus now prove:
+
+- **Corpus gap closed.** Ley 19/1991 art. 4.Nueve, art. 28, art. 30, and art. 31 are bundled under
+  `src/aeat/_data/corpus/normatives/html/` and reviewed in `patrimonio.toml` with
+  `document_id = "BOE-A-1991-14392"`.
+- **Escala no longer manual.** M714 revision `2021-y-siguientes` computes casilla 29
+  (`patrimonio.cuota-integra`) through `patrimonio-cuota-integra-escala-estatal`, a
+  `lookup_bracket` over the BOE-grounded `patrimonio-escala-estatal` art. 30 bracket table.
+- **Art. 31 baseline no longer absent.** Casilla 39 (`patrimonio.reduccion-limite-80`) computes the
+  80%-floor reference through `patrimonio-reduccion-limite-80-suelo`, grounded in art. 31.
+- **Remaining M714 gap narrowed.** The full art. 31 same-year M100 joint-limit relation and downstream
+  result boxes (`limite-conjunto`, total cuota, cuota minorada, cuota a ingresar) remain manual until
+  their cross-modelo IRPF evidence is authored. This is not a corpus-ingest gap and not an art. 30
+  escala gap.
+
+Verification on 2026-06-29: the focused M714 registry/baseline tests passed (22 tests) and the
+catalogue verification gate passed (70 tests).
+
 ## Recommendations
 
-- Track every F1–F6 finding as a plan step with a verification gate (per the
-  standing honesty-tracking directive); drive remediation incrementally,
-  safest-highest-value first.
-- Suggested execution order: (1) F2 + F6 + F5 are SAFE pure-centralisation moves —
-  the value is unchanged, only its home, so they carry low regression risk and can
-  land first with a roundtrip/grounding assertion; (2) F1 is the highest-value but
-  is a LIVE calc-path change (the reducción rate is the deductible percentage on
-  real rental income) — wire it with the dormant reader and prove parity against the
-  existing tier oracle tests; (3) F3 + F4 are dormant/duplicate routing — decide
-  per `no-legacy-compatibility`: bind through the registry OR delete, never leave
-  live-but-unrouted.
-- For every promoted value, prefer the registry `legal_refs`→`corpus_ref`
-  mechanism over a bare `external_constants` literal where a corpus text exists, so
-  the grounding gate (`registry-calculation-legal-grounding`) guards it.
-- The broader goal — legal grounding for ALL Spanish-tax concepts — extends beyond
-  this inventory: subsequent passes should sweep IS (sociedades) brackets, IRPF
-  escala estatal/autonómica, módulos coefficients, and the M347/M349/M720 thresholds
-  against their BOE source, each fetched online (pass-1 proved an inline figure can
-  be silently wrong).
+- Treat F1/F2/F3/F4/F5/F6 and the M714 art.30/art.31 baseline in this centralization inventory as
+  closed in the current tree.
+- Keep the prorrata distinction explicit in future work: `domain.iva._prorrata` is the legal substrate for
+  percentages and reference validation, while Modelo casilla routing must remain registry-owned or be
+  deleted if unused.
+- For every future promoted value, prefer the registry `legal_refs`→`corpus_ref` mechanism over a bare
+  `external_constants` literal where a corpus text exists, so the grounding gate
+  (`registry-calculation-legal-grounding`) guards it.
+- Continue the broader grounding campaign beyond this inventory: sweep IS brackets, IRPF estatal/
+  autonómica scales, módulos coefficients, and informativa thresholds against their BOE/AEAT source.
 
 ## Codification candidates
-
-

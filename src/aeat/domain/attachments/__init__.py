@@ -1,18 +1,48 @@
-"""Content-addressed attachment domain for the transaction evidence layer.
+"""Public facade for content-addressed attachment evidence.
 
-This subpackage owns the attachment evidence model: supporting documents
-(invoice PDFs, Gmail messages, Drive documents, receipts, contracts,
-metadata blobs) wrapped as immutable manifests linked to transactions
-and/or invoices. The link makes every casilla value the project justifies
-traceable back to physical evidence.
+This package owns the immutable :class:`Attachment` manifest and in-memory
+:class:`AttachmentCatalogue` records used by ledger and filing evidence flows.
+Each manifest is keyed by the stored bytes' SHA-256
+(``attachment_id == sha256``) and records :class:`AttachmentKind`,
+:class:`AttachmentSource`, the source reference, MIME type, byte size, capture
+timestamp, owning bucket, linked transaction/invoice ids, metadata, and notes.
+Link-only URI-list manifests are rejected: an attachment evidence record must
+represent document bytes, not an external pointer.
 
-Domain models, errors, and the on-disk repository live here, alongside
-the orchestration helpers :func:`add_attachment`, :func:`list_attachments`,
-and :func:`load_attachment` exported from :mod:`._service`.
+Persistence is a protocol boundary. Domain helpers accept an
+:class:`AttachmentStoreProtocol`; the concrete
+:class:`adapters.persistence.storage.AttachmentStore` lives in the
+adapter layer and stores encrypted blob rows plus manifest
+:class:`adapters.persistence.storage.Envelope` rows through
+:class:`adapters.persistence.storage.SecureObjectRepository` at ``FINANCIAL``
+:class:`adapters.persistence.storage.SensitivityClass`.
+This package does not own a plaintext or on-disk repository implementation.
 
-The exported surface comprises :class:`Attachment`, :class:`AttachmentCatalogue`,
-:class:`AttachmentStoreProtocol`, the :class:`AttachmentKind` and
-:class:`AttachmentSource` enums, and the :exc:`AttachmentError` family.
+Service helpers :func:`add_attachment` and :func:`add_attachment_bytes` hash
+file or in-memory bytes, write them through the supplied store, build the
+manifest, and persist it; :func:`load_attachment` and
+:func:`list_attachments` read manifests back through the same protocol.
+:class:`DocumentLinkSource` narrows operator doclink channels, but a document
+link must be resolved to bytes before :func:`add_attachment_bytes`; there is no
+link-only attachment path.
+
+Callers must import public models, errors, enums, protocols, and service
+helpers from ``aeat.domain.attachments`` and must not reach into private
+underscore modules inside this package.
+
+See Also:
+    :mod:`application.ledger`
+        Ledger lifecycle that verifies attachment existence, byte custody, and
+        bucket ownership before a transaction claims attachment evidence.
+    :mod:`domain.invoices`
+        Purchase-invoice evidence records that remain distinct from generic
+        encrypted attachment bytes while sharing ledger evidence workflows.
+    :mod:`application.aggregation`
+        Calculation-source and evidence-advisory surfaces that consume
+        transaction evidence links without reading plaintext files from disk.
+    :mod:`adapters.persistence.storage`
+        Secure-object and encrypted blob storage that implements
+        :class:`AttachmentStoreProtocol`.
 """
 
 from __future__ import annotations
@@ -24,7 +54,7 @@ from ._errors import (
     AttachmentPersistenceError,
     AttachmentValidationError,
 )
-from ._models import Attachment, AttachmentCatalogue
+from ._models import Attachment, AttachmentCatalogue, is_link_only_mime_type
 from ._protocols import AttachmentStoreProtocol
 from ._service import add_attachment, add_attachment_bytes, list_attachments, load_attachment
 
@@ -41,6 +71,7 @@ __all__ = [
     "DocumentLinkSource",
     "add_attachment",
     "add_attachment_bytes",
+    "is_link_only_mime_type",
     "list_attachments",
     "load_attachment",
 ]

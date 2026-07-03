@@ -14,16 +14,16 @@ from pathlib import Path
 import pytest
 
 from .....core import Period
-from .....domain.submission._models import (
+from .....domain.submission import (
     ModeloPresentado,
     SubmissionAttempt,
     SubmissionStatus,
     make_submission_id,
 )
-from .....domain.submission._repository import (
+from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...profile.submission import (
     SubmissionRepository,
 )
-from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     SensitivityClass,
 )
@@ -33,6 +33,7 @@ from ..sql.secure_objects import SecureObjectRepository
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
+_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 15, 0, 0, tzinfo=UTC)
 
 
 def _make_filing(
@@ -59,6 +60,14 @@ def _make_filing(
         submitted_at=submitted_at,
         attempts=(attempt,),
     )
+
+
+def _save_two_filings(repo: SubmissionRepository) -> tuple[ModeloPresentado, ModeloPresentado]:
+    f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
+    f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
+    repo.save(f1)
+    repo.save(f2)
+    return f1, f2
 
 
 @pytest.fixture(autouse=True)
@@ -107,19 +116,13 @@ class TestSaveLoad:
 
 class TestListAndIter:
     def test_list_returns_persisted_ids_sorted(self, repo: SubmissionRepository) -> None:
-        f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
-        f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
-        repo.save(f1)
-        repo.save(f2)
+        f1, f2 = _save_two_filings(repo)
         ids = repo.list_submission_ids()
         assert set(ids) == {f1.submission_id, f2.submission_id}
         assert ids == tuple(sorted(ids))
 
     def test_iter_submissions_yields_payloads(self, repo: SubmissionRepository) -> None:
-        f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
-        f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
-        repo.save(f1)
-        repo.save(f2)
+        f1, f2 = _save_two_filings(repo)
         loaded = {payload.submission_id: payload for payload in repo.iter_submissions()}
         assert loaded[f1.submission_id] == f1
         assert loaded[f2.submission_id] == f2
@@ -156,7 +159,7 @@ class TestClassificationGate:
         filing = _make_filing()
         bad = Envelope[ModeloPresentado](
             schema_version=1,
-            written_at=datetime.now(UTC),
+            written_at=_FOREIGN_CLASS_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=filing,
         )
@@ -180,13 +183,10 @@ class TestClassificationGate:
 
 
 class TestUnsafeSubmissionIds:
-    @pytest.mark.parametrize(
-        "bad",
-        ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
-    )
-    def test_unsafe_id_rejected(self, repo: SubmissionRepository, bad: str) -> None:
-        with pytest.raises(ValueError, match=r"identifier|non-empty|submission_id"):
-            repo.envelope_path_for(bad)
+    def test_unsafe_id_rejected(self, repo: SubmissionRepository) -> None:
+        for bad in ("", "..", ".", ".hidden", "../escape", "a/b", "a\\b"):
+            with pytest.raises(ValueError, match=r"identifier|non-empty|submission_id"):
+                repo.envelope_path_for(bad)
 
 
 class TestPerSubmissionLockIsolation:

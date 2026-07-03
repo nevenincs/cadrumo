@@ -2,18 +2,31 @@
 
 Each adapter is a thin translation layer: no domain decisions live here,
 only the minimal surface normalisation required by the narrow Protocols
-in :mod:`aeat.application.workflow._protocols`. The
+in :mod:`application.workflow._protocols`. The
 :func:`default_engine` factory composes the adapters into a
-:class:`aeat.application.workflow.WorkflowEngine` and is the entry point
+:class:`~application.workflow.WorkflowEngine` and is the entry point
 production call sites (notably the CLI) use to obtain a fully-wired
 workflow engine. The deadline adapter wraps a :class:`Schedule`-producing engine; the
 filing adapter constructs a :class:`ModeloDraft` via ``build_draft``
 from the filing surface.
 
 The session and certificate-bundle slots remain ``None`` by default:
-:class:`aeat.application.workflow.WorkflowEngine` tolerates ``None`` for
+:class:`~application.workflow.WorkflowEngine` tolerates ``None`` for
 each and records the skipped stages as "not wired" diagnostics rather
 than failing.
+
+See Also:
+    :mod:`application.workflow._protocols`
+        Declares the narrow contracts each adapter satisfies.
+    :class:`~application.workflow.WorkflowEngine`
+        Consumes the adapted deadline, draft-building, submission, and live
+        read collaborators.
+    :class:`~domain.submission.SubmissionEngine`
+        Read-only domain preflight engine wrapped by
+        :class:`SubmissionEngineAdapter`.
+    :mod:`application.modelo._workflow_gate`
+        Builds revision-scoped workflow engines with the same adapter
+        boundaries for verification and local mark-as-filed paths.
 """
 
 from __future__ import annotations
@@ -59,10 +72,10 @@ _logger = get_logger(__name__)
 
 @dataclass(frozen=True, slots=True)
 class _TaxpayerProfileBridge:
-    """Minimal :class:`~aeat.domain.filing.ModeloProfile`-compatible wrapper.
+    """Minimal :class:`~domain.filing.ModeloProfile`-compatible wrapper.
 
-    :class:`~aeat.domain.deadlines.TaxpayerProfile` does not declare
-    ``display_name``, which the :class:`~aeat.domain.filing.ModeloProfile`
+    :class:`~domain.deadlines.TaxpayerProfile` does not declare
+    ``display_name``, which the :class:`~domain.filing.ModeloProfile`
     Protocol requires. This thin bridge adds a default empty ``display_name``
     so the structural protocol check passes without modifying either model.
 
@@ -75,7 +88,7 @@ class _TaxpayerProfileBridge:
 
 
 class DeadlineEngineAdapter:
-    """Wrap :class:`aeat.domain.deadlines.DeadlineEngine` as a workflow Protocol."""
+    """Wrap :class:`~domain.deadlines.DeadlineEngine` as a workflow Protocol."""
 
     def __init__(self, engine: DeadlineEngine) -> None:
         """Store the wrapped :class:`DeadlineEngine`."""
@@ -96,7 +109,7 @@ class DeadlineEngineAdapter:
 
 
 class ModeloDraftBuilderAdapter:
-    """Wrap :func:`aeat.application.filing.build_draft` as a workflow Protocol.
+    """Wrap :func:`application.filing.build_draft` as a workflow Protocol.
 
     A schema provider is stored on construction so the narrow
     Protocol method does not leak the provider argument into the
@@ -119,7 +132,7 @@ class ModeloDraftBuilderAdapter:
         """Delegate to :func:`build_draft` and return a :class:`RegistryModeloDraftProtocol`.
 
         :class:`TaxpayerProfile` lacks ``display_name`` required by the
-        :class:`~aeat.domain.filing.ModeloProfile` Protocol.
+        :class:`~domain.filing.ModeloProfile` Protocol.
         :class:`_TaxpayerProfileBridge` bridges the gap without modifying
         either domain model.
         """
@@ -136,7 +149,7 @@ class ModeloDraftBuilderAdapter:
 
 
 class SubmissionEngineAdapter:
-    """Wrap :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine` as a workflow Protocol.
+    """Wrap :class:`~domain.submission.SubmissionEngine` as a workflow Protocol.
 
     The adapter uses the engine's public preflight method so the
     workflow's ``RUNNING_PREFLIGHT`` stage can execute the gate without
@@ -200,7 +213,7 @@ def default_engine(
             workflow to have any obligation to work on.
         filing_draft_builder: Required :class:`ModeloDraftBuilderProtocol`.
             ``None`` triggers a :class:`WorkflowError`.
-        session: Optional authenticated :class:`aeat.adapters.outbound.aeat.auth.AeatSession`.
+        session: Optional authenticated :class:`~adapters.outbound.aeat.auth.AeatSession`.
             ``None`` skips both the inbox probe and the already-filed
             probe (both stages record a "not wired" diagnostic).
         certificate_bundle: Optional :class:`CertificateBundleProtocol`.
@@ -246,9 +259,9 @@ def default_engine(
     )
 
 
-# Re-exported so importing :mod:`aeat.application.workflow` surfaces the primary
+# Re-exported so importing :mod:`application.workflow` surfaces the primary
 # preflight-exception type without callers having to dig into
-# :mod:`aeat.adapters.outbound.aeat.export` for an isinstance check.
+# :mod:`domain.submission` for an isinstance check.
 __all__ = [
     "DeadlineEngineAdapter",
     "ModeloDraftBuilderAdapter",

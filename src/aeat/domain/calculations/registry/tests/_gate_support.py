@@ -13,7 +13,7 @@ _M130_LEGAL_REF_IDS = frozenset(
         "orden-eha-672-2007:art-1",
         "rd-439-2007:art-95",
         "rd-439-2007:art-110",
-        "rd-439-2007:art-110-3-b",
+        "rd-439-2007:art-109",
     },
 )
 _M130_SOURCE_REF_IDS = frozenset({"aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"})

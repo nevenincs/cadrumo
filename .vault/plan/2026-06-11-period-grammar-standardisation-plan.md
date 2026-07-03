@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#period-grammar-standardisation'
 date: '2026-06-11'
-modified: '2026-06-11'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-11-period-grammar-standardisation-research]]'
@@ -11,13 +11,6 @@ related:
   - '[[2026-06-10-ledger-filter-period-adr]]'
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
 ---
-
-
-
-
-
-
-
 
 # `period-grammar-standardisation` `period grammar standardisation: AEAT-token-only, year always separate, conflation burn-down` plan
 
@@ -28,8 +21,6 @@ Landed: the ledger and modelo --period surfaces accept only canonical AEAT token
 ### Phase `W01.P01` - CLI operator-input grammar: AEAT-token-only + separate --year, conversion layer deleted
 
 Ledger --period accepts only canonical AEAT tokens (0A/1T-4T/01-12); year travels on --year; the _aeat_token_to_calendar conversion layer and the 2026-1T hybrid regex are deleted; helpers return a Period built directly from (year, token).
-
-
 
 - [x] `W01.P01.S01` - Delete the _aeat_token_to_calendar conversion layer and the _FILTER_YEAR_QUALIFIED_RE hybrid regex; `make _canonical_period / _filter_canonical_period / _optional_canonical_period build a Period directly from (year, bare-token); `src/aeat/entrypoints/cli/_common.py`.
 - [x] `W01.P01.S02` - Add Period.from_year_and_token(year, token) so the (year, AEAT-token) pair resolves straight to a Period date span with no intermediate calendar string; `src/aeat/application/aggregation/_models.py`.

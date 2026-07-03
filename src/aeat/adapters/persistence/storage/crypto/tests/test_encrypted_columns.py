@@ -22,9 +22,24 @@ from ...errors import DecryptionError, StorageValidationError
 from ...master_key import EphemeralMasterKeyProvider
 from .. import KEY_SIZE, EncryptedBytes, EncryptedJSON, EncryptedPayload, EncryptedString, HashedLookup
 from .._crypto import encrypt_record
-from .._encrypted_columns import _AAD_JSON, _AAD_STRING, decrypt_encrypted_string_column
+from .._encrypted_columns import _AAD_JSON, _AAD_STRING
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_ENCRYPTED_STRING_CASES = (
+    "hello world",
+    "movimientos bancarios — autónomo año 2025",
+    None,
+)
+_ENCRYPTED_BYTES_CASES = (
+    bytes(range(64)),
+    b"",
+)
+_ENCRYPTED_JSON_CASES = (
+    {"nombre": "Juan", "edad": 42, "tags": ["a", "b"]},
+    [{"k": 1}, {"k": 2}],
+    None,
+)
 
 
 class _TestBase(DeclarativeBase):
@@ -75,30 +90,13 @@ def session(engine: Engine) -> Iterator[Session]:
 class TestEncryptedString:
     """``EncryptedString`` round-trips str values and stores ciphertext on disk."""
 
-    def test_round_trip_ascii(self, session: Session) -> None:
-        row = _CryptoRow(secret_text="hello world")
-        session.add(row)
+    def test_round_trips(self, session: Session) -> None:
+        rows = [_CryptoRow(secret_text=value) for value in _ENCRYPTED_STRING_CASES]
+        session.add_all(rows)
         session.commit()
         session.expire_all()
-        loaded = session.execute(select(_CryptoRow)).scalar_one()
-        assert loaded.secret_text == "hello world"
-
-    def test_round_trip_unicode(self, session: Session) -> None:
-        text = "movimientos bancarios — autónomo año 2025"
-        row = _CryptoRow(secret_text=text)
-        session.add(row)
-        session.commit()
-        session.expire_all()
-        loaded = session.execute(select(_CryptoRow)).scalar_one()
-        assert loaded.secret_text == text
-
-    def test_none_round_trips_as_none(self, session: Session) -> None:
-        row = _CryptoRow(secret_text=None)
-        session.add(row)
-        session.commit()
-        session.expire_all()
-        loaded = session.execute(select(_CryptoRow)).scalar_one()
-        assert loaded.secret_text is None
+        loaded = session.scalars(select(_CryptoRow).order_by(_CryptoRow.id)).all()
+        assert [row.secret_text for row in loaded] == list(_ENCRYPTED_STRING_CASES)
 
     def test_storage_is_ciphertext(self, engine: Engine) -> None:
         plaintext = "extremely-sensitive-secret-value"
@@ -118,45 +116,23 @@ class TestEncryptedString:
 
 
 class TestEncryptedBytes:
-    def test_round_trip(self, session: Session) -> None:
-        payload = secrets.token_bytes(64)
-        session.add(_CryptoRow(secret_bytes=payload))
+    def test_round_trips(self, session: Session) -> None:
+        rows = [_CryptoRow(secret_bytes=value) for value in _ENCRYPTED_BYTES_CASES]
+        session.add_all(rows)
         session.commit()
         session.expire_all()
-        loaded = session.execute(select(_CryptoRow)).scalar_one()
-        assert loaded.secret_bytes == payload
-
-    def test_empty_bytes_round_trips(self, session: Session) -> None:
-        session.add(_CryptoRow(secret_bytes=b""))
-        session.commit()
-        session.expire_all()
-        loaded = session.execute(select(_CryptoRow)).scalar_one()
-        assert loaded.secret_bytes == b""
+        loaded = session.scalars(select(_CryptoRow).order_by(_CryptoRow.id)).all()
+        assert [row.secret_bytes for row in loaded] == list(_ENCRYPTED_BYTES_CASES)
 
 
 class TestEncryptedJSON:
-    def test_round_trips_dict(self, session: Session) -> None:
-        payload = {"nombre": "Juan", "edad": 42, "tags": ["a", "b"]}
-        session.add(_CryptoRow(secret_json=payload))
+    def test_round_trips(self, session: Session) -> None:
+        rows = [_CryptoRow(secret_json=value) for value in _ENCRYPTED_JSON_CASES]
+        session.add_all(rows)
         session.commit()
         session.expire_all()
-        loaded = session.execute(select(_CryptoRow)).scalar_one()
-        assert loaded.secret_json == payload
-
-    def test_round_trips_list(self, session: Session) -> None:
-        payload = [{"k": 1}, {"k": 2}]
-        session.add(_CryptoRow(secret_json=payload))
-        session.commit()
-        session.expire_all()
-        loaded = session.execute(select(_CryptoRow)).scalar_one()
-        assert loaded.secret_json == payload
-
-    def test_round_trips_none(self, session: Session) -> None:
-        session.add(_CryptoRow(secret_json=None))
-        session.commit()
-        session.expire_all()
-        loaded = session.execute(select(_CryptoRow)).scalar_one()
-        assert loaded.secret_json is None
+        loaded = session.scalars(select(_CryptoRow).order_by(_CryptoRow.id)).all()
+        assert [row.secret_json for row in loaded] == list(_ENCRYPTED_JSON_CASES)
 
     def test_rejects_unserialisable(self, session: Session) -> None:
         from sqlalchemy.exc import StatementError
@@ -208,16 +184,6 @@ class TestCrossTypeReplayPrevention:
             session.execute(
                 select(_CryptoRow.secret_bytes).where(_CryptoRow.secret_bytes.is_not(None)),
             ).all()
-
-    def test_legacy_string_helper_rejects_invalid_utf8_plaintext(self, fixed_master_key: bytes) -> None:
-        wire = encrypt_record(
-            b"\xff\xfe",
-            key=fixed_master_key,
-            associated_data=_AAD_STRING,
-        ).to_wire()
-
-        with pytest.raises(DecryptionError):
-            decrypt_encrypted_string_column(wire)
 
     def test_encrypted_string_result_rejects_invalid_utf8(self, engine: Engine, fixed_master_key: bytes) -> None:
         wire = encrypt_record(

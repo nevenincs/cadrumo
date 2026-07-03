@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#storage-backend-security-review'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - "[[2026-06-14-storage-backend-security-review-research]]"
 ---
-
-
 
 # `storage-backend-security-review` adr: `close the residual secure-storage security, enrollment, and standardisation gap` | (**status:** `accepted`)
 

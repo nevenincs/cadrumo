@@ -96,7 +96,8 @@ FormulaOperator = Literal[
     "lookup_parameter",
     "lookup_bracket",
     "lookup_bracket_by_ccaa",
-    "m210_resolve_rate",
+    "m100_resolve_renta_inmobiliaria_imputada",
+    "irnr_resolve_tipo_gravamen",
     "m210_resolve_base_imponible",
     "lookup_parameter_by_entity_type",
     "lookup_bracket_by_entity_type",
@@ -104,6 +105,11 @@ FormulaOperator = Literal[
     "previous_period_sum",
     "cross_model_sum",
     "age_at_year_end",
+    "m131_resolve_modulos_previo",
+    "m131_resolve_modulos_minoracion_empleo",
+    "m131_resolve_modulos_indice_exceso",
+    "m303_resolve_modulos_iva_cuota_devengada",
+    "m303_resolve_modulos_iva_cuota_minima_pct",
 ]
 
 

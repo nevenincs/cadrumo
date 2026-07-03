@@ -3,14 +3,12 @@ tags:
   - '#adr'
   - '#ledger-operator-hardening'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 related:
   - "[[2026-05-08-ledger-renta-pipeline-adr]]"
   - "[[2026-05-14-ledger-transaction-lifecycle-adr]]"
   - '[[2026-06-04-ledger-operator-hardening-research]]'
 ---
-
-
 
 # `ledger-operator-hardening` adr: `ledger operator-testimonial corpus and persona-driven hardening` | (**status:** `accepted`)
 

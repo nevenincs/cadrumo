@@ -80,8 +80,8 @@ def test_window_straddling_baja_is_retained() -> None:
 
 def test_no_censo_dates_means_no_filtering() -> None:
     """When the operator has not yet captured a censo, both dates
-    are None and the gate never fires — backwards-compatible with
-    every existing TaxpayerProfile that pre-dates the censo schema fields."""
+    are None and the gate never fires. The profile lacks the legal
+    activity-period evidence needed to suppress any window."""
 
     assert (
         _window_outside_activity_period(

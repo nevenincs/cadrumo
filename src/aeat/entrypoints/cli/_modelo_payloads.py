@@ -1,14 +1,27 @@
 """Typed ``--json`` payload schemas for modelo command envelopes.
 
-Each payload here is a :class:`OutputSchema` subclass registered for its
-command envelope.
+Each command result is a strict
+:class:`OutputSchema` subclass registered by
+:func:`register_schema` for a stable command path
+and wrapped at emit time in
+:class:`SchemaEnvelope` through
+:func:`_emit_envelope`. This file is the CLI-side
+projection boundary for :mod:`modelo`: application and domain
+results stay authoritative while these classes expose JSON-safe
+:class:`WorkUnit`,
+:class:`CalculationRevision`,
+:class:`ModeloRecord`,
+:class:`VerificationReport`,
+:obj:`CasillaId`,
+:obj:`LegalRefId`, and
+:obj:`SourceRefId` fields to operators.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pydantic import Field, model_validator
+from pydantic import Field
 
 from ...core import Period
 from ...core.identity import BucketId
@@ -22,12 +35,38 @@ from ...domain.calculations.registry import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.modelos._ids import (
+from ...domain.modelos import (
     CalculationRevisionId,
     FilingRecordId,
     VerificationReportId,
     WorkUnitId,
 )
+from ._modelo_aux_payloads import (
+    EvidenceBundleCheckFindingPayload,
+    EvidenceRecordRefPayload,
+    ModeloAuditCheckResult,
+    ModeloAuditExportResult,
+    ModeloAuditReplayResult,
+    ModeloAuditShowResult,
+    ModeloDescribeResult,
+    ModeloListResult,
+    ModeloRowPayload,
+    WithholdingClaveBreakdownPayload,
+    WorkflowRunPayload,
+    WorkHistoryResult,
+    WorkRunsResult,
+    WorkUnitHistoryEventPayload,
+)
+from ._modelo_bindings_payloads import (
+    BindingEncodedOptionPayload,
+    BindingListRowPayload,
+    BindingPreviewRowPayload,
+    ModeloBindingsListResult,
+    ModeloBindingsPreviewResult,
+)
+from ._modelo_revision_payload_parts import DetailRowPayload, ObservationPayload, ResultSummaryRowPayload
+from ._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
+from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
 from ._payloads_modelo_reconcile import (
     ModeloReconcileResult,
     ModeloReconciliationDiffPayload,
@@ -40,7 +79,18 @@ if TYPE_CHECKING:
 
 
 class WorkUnitPayload(OutputSchema):
-    """Work unit fields shared across create / status / rename / discard."""
+    """Shared JSON projection of a bucket-scoped :class:`WorkUnit`.
+
+    Built by :func:`work_unit_payload`.
+    The payload carries the stable
+    :obj:`WorkUnitId`, operator-facing short ids,
+    current / filed
+    :obj:`CalculationRevisionId` pointers, optional
+    :obj:`FilingRecordId`, and discard metadata used
+    by create, list, status, rename, and discard lifecycle commands. It is
+    lifecycle metadata only: calculation, verification, filing, and import
+    evidence remain in their own command payloads.
+    """
 
     work_unit_id: WorkUnitId
     short_work_unit_id: str
@@ -62,29 +112,6 @@ class WorkUnitPayload(OutputSchema):
     discarded_by: str | None = None
     discard_reason: str | None = None
     causante_ccaa: str | None = None
-
-
-class ObservationPayload(OutputSchema):
-    """One typed casilla observation with full provenance."""
-
-    casilla_id: CasillaId
-    value: str  # serialised Decimal
-    formula_id: FormulaId | None = None
-    operand_refs: tuple[str, ...] = ()
-    operand_casilla_refs: tuple[CasillaId, ...] = ()
-    operand_values: tuple[str, ...] = ()
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
-
-    @model_validator(mode="after")
-    def _operand_casilla_refs_are_traced(self) -> ObservationPayload:
-        missing = tuple(ref for ref in self.operand_casilla_refs if ref not in self.operand_refs)
-        if missing:
-            raise ValueError(
-                f"observation payload for {self.casilla_id!r} declares operand_casilla_refs "
-                f"that are absent from operand_refs: {missing!r}",
-            )
-        return self
 
 
 class WorkRecargoPayload(OutputSchema):
@@ -118,17 +145,20 @@ class WorkPlazoDeadlinePayload(OutputSchema):
     recargo: WorkRecargoPayload | None = None
 
 
-class ResultSummaryRowPayload(OutputSchema):
-    """One headline-result summary row (registry-declared lead figure)."""
-
-    role: str
-    casilla_id: CasillaId
-    value: str  # serialised Decimal
-    label: str
-
-
 class CalculationRevisionPayload(OutputSchema):
-    """Calculation revision fields surfaced by calculate / revisions commands."""
+    """Shared JSON projection of a persisted :class:`CalculationRevision`.
+
+    Built by
+    :func:`calculation_revision_payload`.
+    ``casilla_values`` is the flat convenience table keyed by
+    :obj:`CasillaId`, while
+    ``observations`` carries joinable :class:`ObservationPayload` rows projected
+    from :class:`CasillaObservation`.
+    ``result_summary`` carries :class:`ResultSummaryRowPayload` rows selected
+    from :class:`ResultSummaryRow`. The binding and
+    relation override maps preserve the operator inputs that shaped the draft
+    revision.
+    """
 
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
@@ -136,6 +166,7 @@ class CalculationRevisionPayload(OutputSchema):
     casilla_values: dict[CasillaId, str]  # casilla_id -> str(Decimal)
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
+    detail_rows: tuple[DetailRowPayload, ...] = ()
     binding_overrides: dict[BindingId, str]
     relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
     input_values_by_casilla_id: dict[CasillaId, str]
@@ -216,7 +247,14 @@ class CrossPeriodCleanStatePayload(OutputSchema):
 
 
 class VerificationReportPayload(OutputSchema):
-    """Verification report fields returned by verify / verification-report commands."""
+    """Shared projection of a :class:`VerificationReport`.
+
+    ``findings`` carries the blocking or advisory
+    :class:`FindingPayload` rows that
+    explain whether the selected
+    :class:`CalculationRevision` earned the
+    verified-complete transition.
+    """
 
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
@@ -230,7 +268,12 @@ class VerificationReportPayload(OutputSchema):
 
 
 class ExternalEvidencePayload(OutputSchema):
-    """External-evidence reference embedded in a filing record."""
+    """JSON projection of :class:`ExternalEvidence`.
+
+    The evidence reference records the official AEAT source consumed by
+    :func:`import_external_filing_evidence`; it is data
+    observed outside the application, not proof that this CLI submitted the return.
+    """
 
     kind: str
     reference_id: str
@@ -238,7 +281,12 @@ class ExternalEvidencePayload(OutputSchema):
 
 
 class ModeloRecordPayload(OutputSchema):
-    """Filing record fields returned by file / filing-record commands."""
+    """Shared projection of a :class:`ModeloRecord`.
+
+    The payload represents local filing state for a verified
+    :class:`CalculationRevision`; it is not a live AEAT
+    submission. Evidence appears only through ``external_evidence``.
+    """
 
     filing_record_id: FilingRecordId
     work_unit_id: WorkUnitId
@@ -276,6 +324,16 @@ class FormulaPayload(OutputSchema):
 
 @register_schema("modelo.work.create")
 class WorkCreateResult(OutputSchema):
+    """Creation result returned by ``aeat app modelo work create``.
+
+    Mirrors :class:`WorkUnitPayload` after the application/modelo lifecycle
+    service resolves the registry revision and active bucket profile, then adds
+    create-specific status fields such as ``name_applied`` and
+    ``applicability_guard_bypassed``. Newly created work units have no current
+    :class:`CalculationRevision` or filing record until
+    later lifecycle commands populate those pointers.
+    """
+
     operation: str = "modelo.work.create"
     status: str
     status_message: str
@@ -305,7 +363,12 @@ class WorkCreateResult(OutputSchema):
 
 @register_schema("modelo.work.list")
 class WorkListResult(OutputSchema):
-    """Work-unit listing result returned by ``aeat app modelo work list``."""
+    """Work-unit listing result returned by ``aeat app modelo work list``.
+
+    The list contains :class:`WorkUnitPayload` rows for the selected bucket and
+    filters.  Discarded work units stay preserved in storage for audit history
+    but are omitted unless ``include_discarded`` is true.
+    """
 
     operation: str = "modelo.work.list"
     bucket_id_filter: str | None = None
@@ -316,7 +379,13 @@ class WorkListResult(OutputSchema):
 
 @register_schema("modelo.work.status")
 class WorkStatusResult(OutputSchema):
-    """Work-unit status result returned by ``aeat app modelo work status``."""
+    """Status projection returned by ``aeat app modelo work status``.
+
+    Reports one :class:`WorkUnit` lifecycle root together
+    with the current calculation, filed calculation, and filing-record pointers
+    that default downstream work-unit commands. It does not inline the referenced
+    calculation, verification, or filing payloads.
+    """
 
     operation: str = "modelo.work.status"
     work_unit_id: WorkUnitId
@@ -343,7 +412,13 @@ class WorkStatusResult(OutputSchema):
 
 @register_schema("modelo.work.rename")
 class WorkRenameResult(OutputSchema):
-    """Work-unit rename confirmation returned by ``aeat app modelo work rename``."""
+    """Rename confirmation returned by ``aeat app modelo work rename``.
+
+    A rename preserves the :obj:`WorkUnitId`, registry
+    revision, and stored calculation / filing pointers while updating only
+    display metadata and ``updated_at``. Discarded work units are rejected before
+    this payload is emitted.
+    """
 
     operation: str = "modelo.work.rename"
     work_unit_id: WorkUnitId
@@ -372,9 +447,11 @@ class WorkRenameResult(OutputSchema):
 class WorkDiscardResult(OutputSchema):
     """Work-unit discard confirmation returned by ``aeat app modelo work discard``.
 
-    The discard is an audit-grade state transition: the work unit is
+    The discard is an audit-grade transition on the
+    :class:`WorkUnit` lifecycle root: the record is
     preserved with ``discarded_at`` / ``discarded_by`` / ``discard_reason``
-    populated and subsequent mutations are rejected.
+    populated, default listings hide it, and subsequent mutations are rejected.
+    It never deletes the stored calculation revisions or contacts AEAT.
     """
 
     operation: str = "modelo.work.discard"
@@ -402,6 +479,20 @@ class WorkDiscardResult(OutputSchema):
 
 @register_schema("modelo.work.calculate")
 class WorkCalculateResult(OutputSchema):
+    """Successful ``modelo work calculate`` result payload.
+
+    The calculate CLI flattens the persisted
+    :class:`CalculationRevision` fields from
+    :class:`CalculationRevisionPayload`,
+    then adds the presentation-only values
+    carried by
+    :class:`ModeloWorkCalculationServiceResult`: Modelo
+    202 modality, backend authorization state, and optional
+    :class:`WorkPlazoDeadlinePayload`.
+    Non-blocking authorization and source diagnostics are projected into the envelope's
+    :class:`Notice` rows, not bespoke result fields.
+    """
+
     operation: str = "modelo.work.calculate"
     saved: bool = True
     saved_confirmation: str
@@ -411,6 +502,7 @@ class WorkCalculateResult(OutputSchema):
     casilla_values: dict[CasillaId, str]
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
+    detail_rows: tuple[DetailRowPayload, ...] = ()
     binding_overrides: dict[BindingId, str]
     relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
     input_values_by_casilla_id: dict[CasillaId, str]
@@ -431,8 +523,10 @@ class WorkCalculateResult(OutputSchema):
 class WorkRevisionsResult(OutputSchema):
     """Calculation-revision listing returned by ``aeat app modelo work revisions``.
 
-    Each entry in ``revisions`` is a :class:`CalculationRevisionPayload`
-    carrying the full casilla table, typed observations, and provenance.
+    Each entry in ``revisions`` is a
+    :class:`CalculationRevisionPayload`
+    carrying the full casilla table, typed observations, and provenance for one
+    persisted :class:`CalculationRevision`.
     """
 
     operation: str = "modelo.work.revisions"
@@ -441,45 +535,19 @@ class WorkRevisionsResult(OutputSchema):
     revisions: list[CalculationRevisionPayload]
 
 
-@register_schema("modelo.work.revision")
-class WorkRevisionResult(OutputSchema):
-    """Single-revision shape returned by ``aeat app modelo work revision``.
-
-    Carries the same calculation-revision fields as
-    :class:`WorkCalculateResult` minus the persistence-confirmation
-    pair (``saved`` / ``saved_confirmation``). Modelo 202 modality
-    surfaces on the same optional fields so the inspection verb stays
-    contract-compatible with the calculate verb's output.
-    """
-
-    operation: str = "modelo.work.revision"
-    calculation_revision_id: CalculationRevisionId
-    work_unit_id: WorkUnitId
-    state: str
-    casilla_values: dict[CasillaId, str]
-    observations: tuple[ObservationPayload, ...]
-    result_summary: tuple[ResultSummaryRowPayload, ...] = ()
-    binding_overrides: dict[BindingId, str]
-    relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
-    input_values_by_casilla_id: dict[CasillaId, str]
-    created_at: str
-    updated_at: str
-    verified_at: str | None = None
-    verified_by: str | None = None
-    filed_at: str | None = None
-    filed_by: str | None = None
-    superseded_at: str | None = None
-    modality: str | None = None
-    modality_reason: str | None = None
-
-
 @register_schema("modelo.work.verify")
 class WorkVerifyResult(OutputSchema):
     """Verification report returned by ``aeat app modelo work verify``.
 
-    On a successful verificado-completo verdict the revision transitions to
-    ``verificado_completo``; on a refused verdict the revision is unchanged
-    and ``findings`` names every blocking or advisory issue.
+    The command delegates to
+    :func:`verify_modelo_revision` and returns the
+    resulting
+    :class:`VerificationReportPayload`.
+    On a successful
+    verificado-completo verdict the revision transitions to
+    ``verificado_completo``; on a refused verdict the revision is unchanged and
+    ``findings`` names every blocking or advisory issue. Advisory findings also
+    ride the envelope's :class:`Notice` channel.
     """
 
     operation: str = "modelo.work.verify"
@@ -513,8 +581,11 @@ class WorkDependenciesResult(OutputSchema):
 class WorkFileResult(OutputSchema):
     """Internal-filing confirmation returned by ``aeat app modelo work file``.
 
-    Records that the revision was marked as internally filed. Does NOT
-    represent an AEAT submission; ``live_submission`` is always ``False``.
+    The command delegates to
+    :func:`file_modelo_revision` and returns the
+    resulting :class:`ModeloRecordPayload`. It records that the verified
+    revision was marked as internally filed. It does not attach
+    :class:`ExternalEvidencePayload`; ``live_submission`` is always ``False``.
     """
 
     operation: str = "modelo.work.file"
@@ -542,9 +613,13 @@ class WorkFileResult(OutputSchema):
 class WorkAmendResult(OutputSchema):
     """Amendment filing confirmation returned by ``aeat app modelo work amend``.
 
-    Carries the amendment-specific pair (``amendment_kind``,
-    ``amends_filing_record_id``) above the standard filing-record body.
-    ``live_submission`` is always ``False``; does NOT submit to AEAT.
+    The command delegates to
+    :func:`amend_modelo_revision` and returns the
+    resulting :class:`ModeloRecordPayload` with the amendment-specific pair
+    (``amendment_kind``, ``amends_filing_record_id``). The source filing record
+    must carry :class:`ExternalEvidence`; the new filing
+    record clears ``external_evidence`` and remains local, so ``live_submission``
+    is always ``False``.
     """
 
     operation: str = "modelo.work.amend"
@@ -608,7 +683,14 @@ class ModeloRecordShowResult(OutputSchema):
 
 @register_schema("modelo.verification_report.list")
 class VerificationReportListResult(OutputSchema):
-    """Verification-report listing returned by ``aeat app modelo verification-report list``."""
+    """Typed listing of persisted verification reports.
+
+    ``reports`` contains shared
+    :class:`VerificationReportPayload`
+    projections; filtering only constrains ``calculation_revision_id_filter`` and
+    leaves each report's finding, missing-casilla, and verificado-completo fields
+    intact.
+    """
 
     operation: str = "modelo.verification_report.list"
     calculation_revision_id_filter: str | None = None
@@ -618,7 +700,15 @@ class VerificationReportListResult(OutputSchema):
 
 @register_schema("modelo.verification_report.view")
 class VerificationReportShowResult(OutputSchema):
-    """Verification-report detail returned by ``aeat app modelo verification-report view``."""
+    """Typed detail view for one persisted verification report.
+
+    This schema mirrors :class:`WorkVerifyResult` verification fields so
+    operators can re-read a saved
+    :class:`VerificationReport` with the same
+    :class:`FindingPayload`
+    legal/source-reference detail emitted by
+    ``aeat app modelo work verify``.
+    """
 
     operation: str = "modelo.verification_report.show"
     verification_report_id: VerificationReportId
@@ -643,125 +733,17 @@ class FormulasResult(OutputSchema):
     rows: tuple[FormulaPayload, ...]
 
 
-class EvidenceRecordRefPayload(OutputSchema):
-    """One record reference entry inside an evidence bundle manifest."""
-
-    object_type: str
-    object_id: str
-    content_sha256: str
-    payload_size_bytes: int
-
-
-class EvidenceBundleCheckFindingPayload(OutputSchema):
-    """One check outcome from a bundle verification pass."""
-
-    check: str
-    passed: bool
-    detail: str = ""
-
-
-@register_schema("modelo.audit.show")
-class ModeloAuditShowResult(OutputSchema):
-    """Evidence bundle manifest render result (audit show)."""
-
-    operation: str = "modelo.audit.show"
-    bundle_id: str
-    manifest_version: int
-    bucket_id: str
-    work_unit_id: str
-    calculation_revision_id: str | None = None
-    filing_record_id: str | None = None
-    verification_state: str
-    completeness_ratio: float
-    records: list[EvidenceRecordRefPayload]
-    created_at: str
-    notes: str = ""
-
-
-@register_schema("modelo.audit.check")
-class ModeloAuditCheckResult(OutputSchema):
-    """Evidence bundle integrity re-verification result (audit check)."""
-
-    operation: str = "modelo.audit.check"
-    bundle_id: str
-    verification_state: str
-    completeness_ratio: float
-    findings: list[EvidenceBundleCheckFindingPayload]
-
-
-@register_schema("modelo.audit.export")
-class ModeloAuditExportResult(OutputSchema):
-    """Evidence bundle ZIP export result (audit export).
-
-    Uses output path reference + record count instead of raw bytes so
-    the JSON envelope never persists binary content.
-    """
-
-    operation: str = "modelo.audit.export"
-    bucket_id: str
-    bundle_id: str
-    output: str
-    verification_state: str
-    records: int
-
-
-@register_schema("modelo.audit.replay")
-class ModeloAuditReplayResult(OutputSchema):
-    """Evidence bundle replay result (audit replay)."""
-
-    operation: str = "modelo.audit.replay"
-    bundle_id: str
-    verification_state: str
-    completeness_ratio: float
-    findings: list[EvidenceBundleCheckFindingPayload]
-
-
-class WorkUnitHistoryEventPayload(OutputSchema):
-    """One event row in a work-unit history stream."""
-
-    event_id: str
-    occurred_at: str
-    event_type: str
-    object_type: str
-    object_id: str
-    actor: str
-    payload: dict[str, str]
-
-
-@register_schema("modelo.work.history")
-class WorkHistoryResult(OutputSchema):
-    """Work-unit event history result."""
-
-    operation: str = "modelo.work.history"
-    bucket_id: str
-    work_unit_id: str
-    event_count: int
-    events: list[WorkUnitHistoryEventPayload]
-
-
-class WorkflowRunPayload(OutputSchema):
-    """One workflow run row in the runs listing."""
-
-    run_id: str
-    modelo: str | None
-    period: str | None
-    final_stage: str
-    aborted_reason: str | None
-    started_at: str
-
-
-@register_schema("modelo.work.runs")
-class WorkRunsResult(OutputSchema):
-    """Workflow runs listing result."""
-
-    operation: str = "modelo.work.runs"
-    run_count: int
-    runs: list[WorkflowRunPayload]
-
-
 @register_schema("modelo.filing_record.import")
 class FilingRecordImportResult(OutputSchema):
-    """Filing record created by importing external AEAT evidence."""
+    """Result emitted by ``aeat app modelo filing-record import``.
+
+    The command delegates to
+    :func:`import_external_filing_evidence` and returns
+    the resulting evidence-bearing :class:`ModeloRecordPayload` with
+    :class:`ExternalEvidencePayload` data. Imported records are the
+    :class:`ModeloRecord` baseline consumed by
+    :func:`amend_modelo_revision`, not live submission.
+    """
 
     operation: str = "modelo.filing_record.import"
     evidence_kind: str
@@ -786,44 +768,66 @@ class FilingRecordImportResult(OutputSchema):
     live_submission: bool = False
 
 
-class ModeloRowPayload(OutputSchema):
-    """One modelo row in the list modelos output."""
+@register_schema("modelo.filing_record.observe_local")
+class FilingRecordLocalObservationResult(OutputSchema):
+    """Result emitted by ``aeat app modelo filing-record observe-local``.
 
-    code: str
-    title: str
-    cadence: str
-    tax_domain: str
-    revision_count: int
+    The payload mirrors
+    :class:`ModeloLocalObservationResult`:
+    values are stored in the calculation-observation repository for prefill, while
+    ``official_evidence``, ``filing_record_created``, and ``aeat_accepted`` remain
+    false so consumers cannot mistake operator-entered values for AEAT evidence.
+    """
+
+    operation: str = "modelo.filing_record.observe_local"
+    modelo: str
+    filing_year: int
+    period: Period
+    revision_id: RevisionId
+    observation_key: str
+    source_kind: str
+    casilla_values: dict[CasillaId, str]
+    casilla_count: int
+    captured_at: str
+    captured_by: str
+    official_evidence: bool
+    filing_record_created: bool
+    aeat_accepted: bool
 
 
-@register_schema("modelo.list")
-class ModeloListResult(OutputSchema):
-    """List modelos result."""
+@register_schema("modelo.casilla")
+class ModeloCasillaResult(OutputSchema):
+    """Single-casilla semantic detail returned by ``aeat app modelo casilla``.
 
-    operation: str = "modelo.list"
-    year_filter: int | None = None
-    modelo_count: int
-    modelos: list[ModeloRowPayload]
+    Projects
+    :class:`ModeloCasillaDetailReport`
+    into the JSON envelope: an operator can look up one casilla's official
+    label, legal / source grounding, input kind, and, when the casilla is
+    computed, the resolved formula ``expression`` from the authoritative
+    :class:`CasillaId` definition on the
+    resolved registry snapshot, without running a calculation. ``legal_refs``
+    and ``source_refs`` stay required so the grounding survives the boundary.
+    """
 
-
-@register_schema("modelo.describe")
-class ModeloDescribeResult(OutputSchema):
-    """Describe modelo result."""
-
-    operation: str = "modelo.describe"
-    code: str
-    title: str
-    official_name: str
-    tax_domain: str
-    cadence: str
+    operation: str = "modelo.casilla"
+    modelo: str
     revision: str
     filing_year: int | None = None
     period: str | None = None
-    revision_ids: list[str]
-    periods: list[str]
-    casilla_count: int
-    binding_count: int
-    formula_count: int
+    casilla_id: CasillaId
+    number: str
+    label: str
+    localized_labels: dict[str, str] = Field(default_factory=dict)
+    localized_help: dict[str, str] = Field(default_factory=dict)
+    section: tuple[str, ...] = ()
+    data_type: str
+    input_kind: str
+    required: bool
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    binding: BindingId | None = None
+    formula_id: FormulaId | None = None
+    formula_expression: dict[str, object] | None = None
 
 
 class CasillaRowPayload(OutputSchema):
@@ -834,6 +838,8 @@ class CasillaRowPayload(OutputSchema):
     input_kind: str
     required: bool
     label: str
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     localized_labels: dict[str, str] = Field(default_factory=dict)
     localized_help: dict[str, str] = Field(default_factory=dict)
 
@@ -849,74 +855,53 @@ class ModeloCasillasResult(OutputSchema):
     rows: list[CasillaRowPayload]
 
 
-class BindingListRowPayload(OutputSchema):
-    """One binding row in the bindings list output.
+class DataInventoryCasillaPayload(OutputSchema):
+    """One casilla entry on the ``modelo requires`` data-inventory checklist.
 
-    Carries the binding's regulatory grounding (``legal_refs`` /
-    ``source_refs``, sourced from the registry binding definition) at
-    parity with the casilla half (``CasillaRowPayload``), per the
-    operator-boundary provenance-parity decision of the
-    bindings-interface-hardening ADR. ``source`` renders the typed
-    :class:`~aeat.core.BindingSourceKind` value as a string.
+    Projects :class:`~aeat.application.modelo.DataInventoryCasilla`. ``binding_id``
+    and ``binding_source`` are populated only for ``ledger_derivable`` and
+    ``profile_derivable`` rows; required and optional manual entries carry no
+    binding (they are hand-entered).
     """
 
-    modelo: str
-    revision: str
-    filing_year: int | None
-    period: str | None
-    binding_id: BindingId
-    source: str
-    readiness: str
-    typed_enum: str | None
-    input_channel: str
-    borrador_capable: bool
+    casilla_id: CasillaId
+    number: str
+    label: str
+    localized_labels: dict[str, str] = Field(default_factory=dict)
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    binding_id: BindingId | None = None
+    binding_source: str | None = None
 
 
-@register_schema("modelo.bindings.list")
-class ModeloBindingsListResult(OutputSchema):
-    """Bindings list result."""
+@register_schema("modelo.requires")
+class ModeloRequiresResult(OutputSchema):
+    """Data-inventory checklist result returned by ``aeat app modelo requires``.
 
-    operation: str = "modelo.bindings.list"
-    modelo_filter: str | None
-    year_filter: int | None
-    period_filter: str | None
-    missing_filter: bool
-    binding_count: int
-    bindings: tuple[BindingListRowPayload, ...]
-
-
-class BindingPreviewRowPayload(OutputSchema):
-    """One binding preview row with optional override value.
-
-    Carries the binding's regulatory grounding (``legal_refs`` /
-    ``source_refs``, sourced from the registry binding definition) at
-    parity with the casilla half, per the operator-boundary
-    provenance-parity decision of the bindings-interface-hardening ADR.
+    Composes the registry snapshot for one ``(modelo, filing_year, period)``
+    into the operator-facing "what data do I need" checklist: casillas the
+    operator must hand-enter (``required_manual``), casillas they may
+    optionally enter (``optional_manual``), casillas the ledger aggregation
+    mesh populates once the relevant transactions are imported and classified
+    (``ledger_derivable``), and casillas populated from the active taxpayer
+    profile (``profile_derivable``). ``unresolved_profile_bindings`` names the
+    profile-derivable bindings the active profile has not yet supplied a fact
+    for (e.g. an unset home-office usage ratio) so the operator can fix the
+    gap before calculating; ``profile_checked`` is ``False`` when no active
+    profile was available to check.
     """
 
-    binding_id: BindingId
-    source: str
-    readiness: str
-    typed_enum: str | None
-    override: str | None
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
-
-
-@register_schema("modelo.bindings.resolve")
-class ModeloBindingsPreviewResult(OutputSchema):
-    """Bindings resolve result."""
-
-    operation: str = "modelo.bindings.resolve"
+    operation: str = "modelo.requires"
     modelo: str
     revision: str
-    filing_year: int | None
-    period: str | None
-    override_count: int
-    binding_count: int
-    bindings: list[BindingPreviewRowPayload]
+    filing_year: int
+    period: str
+    required_manual: list[DataInventoryCasillaPayload]
+    optional_manual: list[DataInventoryCasillaPayload]
+    ledger_derivable: list[DataInventoryCasillaPayload]
+    profile_derivable: list[DataInventoryCasillaPayload]
+    unresolved_profile_bindings: list[BindingId]
+    profile_checked: bool
 
 
 # ---------------------------------------------------------------------------
@@ -974,7 +959,11 @@ class ModeloExportPayload(OutputSchema):
 
 
 class DeltaRowPayload(OutputSchema):
-    """One casilla comparison row in the compare output."""
+    """One grounded :class:`CasillaId` comparison row in ``modelo.compare``.
+
+    Preserves formula, legal-reference, and source-reference identifiers so the
+    :class:`ModeloCompareResult` envelope does not lose registry provenance.
+    """
 
     casilla_id: CasillaId
     label: str
@@ -989,7 +978,7 @@ class DeltaRowPayload(OutputSchema):
 
 
 class CompareSectionPayload(OutputSchema):
-    """One section grouping in the compare output."""
+    """Named section grouping for :class:`DeltaRowPayload` rows."""
 
     section: str
     rows: list[DeltaRowPayload]
@@ -997,7 +986,11 @@ class CompareSectionPayload(OutputSchema):
 
 @register_schema("modelo.compare")
 class ModeloCompareResult(OutputSchema):
-    """Year-over-year modelo comparison result."""
+    """Envelope result for ``modelo.compare``.
+
+    Rows are carried both sectioned and flattened so table rendering and JSON
+    consumers share the same :class:`DeltaRowPayload` provenance fields.
+    """
 
     operation: str = "modelo.compare"
     modelo: str
@@ -1036,7 +1029,12 @@ class ModeloHistoryResult(OutputSchema):
 
 
 class CasillaObservationPayload(OutputSchema):
-    """One typed casilla observation in the project result."""
+    """One typed :class:`CasillaId` observation for projection-style results.
+
+    Used by :class:`ModeloProjectResult` and
+    :class:`WorkPreviewMaritimeExemptionResult`; ``legal_refs`` and
+    ``source_refs`` stay required to preserve calculation grounding in CLI JSON.
+    """
 
     casilla_id: CasillaId
     value: str
@@ -1046,7 +1044,11 @@ class CasillaObservationPayload(OutputSchema):
 
 
 class M130AccumulatedPayload(OutputSchema):
-    """Accumulated M130 aggregation inputs for the project result."""
+    """M130 summary inputs that feed :class:`ModeloProjectResult`.
+
+    These stringified Decimal fields are operator-facing totals; the grounded
+    per-casilla path is :class:`CasillaObservationPayload`.
+    """
 
     ingresos: str
     gastos: str
@@ -1055,7 +1057,11 @@ class M130AccumulatedPayload(OutputSchema):
 
 
 class M100ProjectionPayload(OutputSchema):
-    """Projected M100 output casillas in the project result."""
+    """Projected M100 summary values in :class:`ModeloProjectResult`.
+
+    This flat view gives stable top-line JSON keys; formula provenance lives in
+    ``ModeloProjectResult.casilla_observations``.
+    """
 
     base_liquidable_general_0505: str
     pagos_fraccionados_0604: str
@@ -1068,7 +1074,12 @@ class M100ProjectionPayload(OutputSchema):
 
 @register_schema("modelo.project")
 class ModeloProjectResult(OutputSchema):
-    """Year-end M100 projection from M130 quarterly filings."""
+    """Envelope result for ``modelo.project``.
+
+    Combines :class:`M130AccumulatedPayload` source totals, the flat
+    :class:`M100ProjectionPayload` summary, and the required
+    :class:`CasillaObservationPayload` provenance list.
+    """
 
     operation: str = "modelo.project"
     year: int
@@ -1117,6 +1128,7 @@ class ModeloReadinessResult(OutputSchema):
     period: Period
     ready: bool
     profile_ready: bool
+    profile_refusal: str
     registry_ready: bool
     registry_refusal: str
     binding_ready: bool
@@ -1136,6 +1148,8 @@ class IvaWalletBalanceResult(OutputSchema):
     operation: str = "modelo.iva_wallet.balance"
     as_of_year: int
     total_balance: str
+    active_balance: str
+    expired_balance: str
     lot_count: int
     next_expiry_year: int | None
     unallocated_applied_amount: str
@@ -1178,7 +1192,16 @@ class IvaWalletOverrideResult(OutputSchema):
 
 @register_schema("modelo.work.resume")
 class WorkResumeResult(OutputSchema):
-    """Workflow resume precondition and context result."""
+    """Workflow resume precondition and context result.
+
+    Combines the resumable
+    :class:`WorkflowResumeContext` with selector
+    metadata from
+    :class:`WorkflowResumeTargetResolution`. The
+    ``obligation`` payload is the serialized
+    :class:`ModeloDeadline` the workflow engine would use
+    for a fresh attempt.
+    """
 
     operation: str = "modelo.work.resume"
     prior_workflow_run_id: str
@@ -1195,7 +1218,13 @@ class WorkResumeResult(OutputSchema):
 
 @register_schema("modelo.aggregate")
 class ModeloAggregateResult(OutputSchema):
-    """Per-modelo aggregation result."""
+    """Per-modelo aggregation result.
+
+    ``clave_breakdown`` carries the Modelo 190 per-clave retención rows (empty
+    for every other modelo); it is primary structured result data the command
+    produces, sourced from the already-ingested per-perceptor-clave withholding
+    detail, not an incidental diagnostic.
+    """
 
     operation: str = "modelo.aggregate"
     modelo: str
@@ -1204,11 +1233,17 @@ class ModeloAggregateResult(OutputSchema):
     observation_count: int
     source_kinds: list[str]
     result_row_count: int
+    clave_breakdown: list[WithholdingClaveBreakdownPayload] = Field(default_factory=list)
 
 
 @register_schema("modelo.work.preview_maritime_exemption")
 class WorkPreviewMaritimeExemptionResult(OutputSchema):
-    """Maritime worker IRPF exemption preview result."""
+    """Envelope result for ``modelo.work.preview_maritime_exemption``.
+
+    ``casilla_values`` is a convenience mapping keyed by :class:`CasillaId`;
+    ``observations`` reuses :class:`CasillaObservationPayload` for grounded
+    legal-reference and source-reference identifiers.
+    """
 
     operation: str = "modelo.work.preview_maritime_exemption"
     worker_class: str | None = None
@@ -1223,6 +1258,7 @@ class WorkPreviewMaritimeExemptionResult(OutputSchema):
 
 
 __all__ = [
+    "BindingEncodedOptionPayload",
     "BindingListRowPayload",
     "BindingPreviewRowPayload",
     "CalculationRevisionPayload",
@@ -1233,10 +1269,12 @@ __all__ = [
     "CrossPeriodDependencyEvidencePayload",
     "CrossPeriodDependencyInventoryItemPayload",
     "CrossPeriodDependencyRequirementPayload",
+    "DataInventoryCasillaPayload",
     "DeltaRowPayload",
     "EvidenceBundleCheckFindingPayload",
     "EvidenceRecordRefPayload",
     "FilingRecordImportResult",
+    "FilingRecordLocalObservationResult",
     "FindingPayload",
     "FormulaPayload",
     "FormulasResult",
@@ -1252,6 +1290,7 @@ __all__ = [
     "ModeloAuditShowResult",
     "ModeloBindingsListResult",
     "ModeloBindingsPreviewResult",
+    "ModeloCasillaResult",
     "ModeloCasillasResult",
     "ModeloCompareResult",
     "ModeloDescribeResult",
@@ -1268,12 +1307,15 @@ __all__ = [
     "ModeloRecordListResult",
     "ModeloRecordPayload",
     "ModeloRecordShowResult",
+    "ModeloRequiresResult",
     "ModeloRowPayload",
     "ObservationPayload",
     "ResultSummaryRowPayload",
     "VerificationReportListResult",
     "VerificationReportPayload",
     "VerificationReportShowResult",
+    "WithholdingClaveBreakdownPayload",
+    "WizardPromptedCasillaPayload",
     "WorkAmendResult",
     "WorkCalculateResult",
     "WorkCompareTaxationResult",
@@ -1283,14 +1325,17 @@ __all__ = [
     "WorkFileResult",
     "WorkHistoryResult",
     "WorkListResult",
+    "WorkObservationsResult",
     "WorkPreviewMaritimeExemptionResult",
     "WorkRenameResult",
     "WorkResumeResult",
+    "WorkRevisionResult",
     "WorkRevisionsResult",
     "WorkRunsResult",
     "WorkStatusResult",
     "WorkUnitHistoryEventPayload",
     "WorkUnitPayload",
     "WorkVerifyResult",
+    "WorkWizardResult",
     "WorkflowRunPayload",
 ]

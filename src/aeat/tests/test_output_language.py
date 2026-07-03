@@ -13,9 +13,9 @@ from pathlib import Path
 
 import pytest
 
-from ..application.user_profile._orchestration import profile_create_storage_span
+from ..application.user_profile import profile_create_storage_span
 from ..core.config import override_settings
-from ..core.i18n._render import output_language
+from ..core.i18n import output_language
 from .secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -34,19 +34,18 @@ def isolated_language_state(tmp_path: Path) -> Iterator[None]:
     with (
         override_settings(aeat_output_language=""),
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("default"),
+        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
     ):
         yield
 
 
 def _seed_profile_language(language: str) -> None:
-    from ..application.user_profile._orchestration import set_active_field
-    from ..application.user_profile._testing import register_minimal_profile
-    from ..application.workflow._persistence import workflow_state_repository
+    from ..application.user_profile import register_minimal_profile, set_active_field
+    from ..application.workflow import workflow_state_repository
     from ..domain.user_profile import UserProfileFact
 
     repository = workflow_state_repository()
-    repository.update(lambda state: register_minimal_profile(state, profile_id="default"))
+    repository.update(lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000"))
     repository.update(
         lambda state: set_active_field(state, UserProfileFact(path="preferences.output_language", value=language)),
     )
@@ -56,7 +55,7 @@ def test_output_language_reads_active_profile_without_emitting_bucket_events(
     isolated_language_state: None,
 ) -> None:
     del isolated_language_state
-    from ..application.workflow._persistence import workflow_state_repository
+    from ..application.workflow import workflow_state_repository
 
     _seed_profile_language("ca")
     repository = workflow_state_repository()

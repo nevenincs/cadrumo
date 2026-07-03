@@ -21,12 +21,16 @@ from .._calc_sheets_apply import _build_row_set_header_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_TEST_LEGAL_REFS = ("ley-58-2003:art-119",)
+_TEST_SOURCE_REFS = ("aeat-dr-190-2025",)
+
 
 def _column(binding: str, column: int, label: str, *, row: int = 1) -> SheetRowSetColumn:
     return SheetRowSetColumn(
         binding=binding,
         header_address=SheetCellAddress.at(TabName.DETALLE, row, column),
         header_label=label,
+        legal_refs=_TEST_LEGAL_REFS,
     )
 
 
@@ -41,6 +45,8 @@ def test_build_row_set_header_data_emits_one_entry_per_column() -> None:
             _column("modelo-190-perceptor-row-name", 2, "Apellidos y nombre del perceptor"),
             _column("modelo-190-perceptor-row-clave", 3, "Clave"),
         ),
+        legal_refs=_TEST_LEGAL_REFS,
+        source_refs=_TEST_SOURCE_REFS,
     )
 
     data = _build_row_set_header_data((row_set,))
@@ -62,6 +68,8 @@ def test_build_row_set_header_data_handles_multiple_row_sets() -> None:
         header_row=1,
         first_data_row=2,
         columns=(_column("iva-349-operador-row-nif", 1, "NIF de la contraparte"),),
+        legal_refs=_TEST_LEGAL_REFS,
+        source_refs=_TEST_SOURCE_REFS,
     )
     operator_clave_period_row_set = SheetRowSet(
         grouping="operator_clave_period",
@@ -72,6 +80,8 @@ def test_build_row_set_header_data_handles_multiple_row_sets() -> None:
             _column("iva-349-rectificacion-row-nif", 1, "NIF", row=53),
             _column("iva-349-rectificacion-row-ejercicio", 2, "Ejercicio rectificado", row=53),
         ),
+        legal_refs=_TEST_LEGAL_REFS,
+        source_refs=_TEST_SOURCE_REFS,
     )
 
     data = _build_row_set_header_data((operator_clave_row_set, operator_clave_period_row_set))

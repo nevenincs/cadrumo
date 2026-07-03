@@ -108,39 +108,35 @@ def test_render_command_output_renders_json_payload_with_project_types() -> None
     assert _OTHER_OBJECT_KEY not in rendered.text
 
 
-def test_render_command_output_default_redacts_profile_and_bucket_ids_in_json() -> None:
-    """Default JSON rendering keeps the paste-safe placeholder policy."""
+def test_render_command_output_json_identifier_redaction_honours_reveal_opt_in() -> None:
+    """Default JSON placeholders can be revealed for opaque profile/bucket ids only."""
 
-    rendered = render_command_output(
+    default_rendered = render_command_output(
         format_name="json",
         payload={"bucket_id": _PROFILE_ID, "profile_id": _PROFILE_ID},
         lines=("ignored",),
     )
 
-    payload = json.loads(rendered.text)
-    assert payload == {
+    default_payload = json.loads(default_rendered.text)
+    assert default_payload == {
         "bucket_id": CLI_BUCKET_ID_PLACEHOLDER,
         "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
     }
-    assert _PROFILE_ID not in rendered.text
-
-
-def test_render_command_output_reveal_opt_in_exposes_real_bucket_id_in_json() -> None:
-    """``aeat_cli_reveal_identifiers`` opt-out emits the real bucket/profile id."""
+    assert _PROFILE_ID not in default_rendered.text
 
     with override_settings(aeat_cli_reveal_identifiers=True):
-        rendered = render_command_output(
+        revealed_rendered = render_command_output(
             format_name="json",
             payload={"bucket_id": _PROFILE_ID, "profile_id": _PROFILE_ID, "tax_id": _NIF},
             lines=("ignored",),
         )
 
-    payload = json.loads(rendered.text)
-    assert payload["bucket_id"] == _PROFILE_ID
-    assert payload["profile_id"] == _PROFILE_ID
+    revealed_payload = json.loads(revealed_rendered.text)
+    assert revealed_payload["bucket_id"] == _PROFILE_ID
+    assert revealed_payload["profile_id"] == _PROFILE_ID
     # Tax identity stays redacted even under the reveal opt-out.
-    assert payload["tax_id"].startswith("sha256:")
-    assert _NIF not in rendered.text
+    assert revealed_payload["tax_id"].startswith("sha256:")
+    assert _NIF not in revealed_rendered.text
 
 
 def test_render_command_output_does_not_corrupt_tabular_header_in_text() -> None:
@@ -159,25 +155,38 @@ def test_render_command_output_does_not_corrupt_tabular_header_in_text() -> None
     assert CLI_BUCKET_ID_PLACEHOLDER not in rendered.text
 
 
-def test_render_command_output_uses_registered_error_for_unencodable_payload() -> None:
-    assert get_registered_error_code(OutputRenderingError).code == "INTERNAL_OUTPUT_RENDERING"
+def test_render_command_output_errors_use_registered_error_contract() -> None:
+    cases: tuple[
+        tuple[type[BaseException], str, object, tuple[str, ...], str, dict[str, str], str],
+        ...,
+    ] = (
+        (
+            OutputRenderingError,
+            "json",
+            object(),
+            (),
+            "INTERNAL_OUTPUT_RENDERING",
+            {"type_name": "object"},
+            "Internal. Internal error:",
+        ),
+        (
+            OutputFormatRefusedError,
+            "xml",
+            {"ignored": True},
+            ("ignored",),
+            "REFUSED_OUTPUT_FORMAT",
+            {"format_name": "xml", "expected": "text,json"},
+            "Refused. The requested output format is not supported.",
+        ),
+    )
 
-    with pytest.raises(OutputRenderingError) as excinfo:
-        render_command_output(format_name="json", payload=object(), lines=())
-    error = excinfo.value
-    assert error.args == ()
-    assert error.context == {"type_name": "object"}
-    with override_settings(aeat_output_language="en"):
-        assert render_error_text(error).startswith("Internal. Internal error:")
+    for error_type, format_name, payload, lines, registered_code, expected_context, english_prefix in cases:
+        assert get_registered_error_code(error_type).code == registered_code
 
-
-def test_render_command_output_refuses_unsupported_format_with_registered_error() -> None:
-    assert get_registered_error_code(OutputFormatRefusedError).code == "REFUSED_OUTPUT_FORMAT"
-
-    with pytest.raises(OutputFormatRefusedError) as excinfo:
-        render_command_output(format_name="xml", payload={"ignored": True}, lines=("ignored",))
-    error = excinfo.value
-    assert error.args == ()
-    assert error.context == {"format_name": "xml", "expected": "text,json"}
-    with override_settings(aeat_output_language="en"):
-        assert render_error_text(error).startswith("Refused. The requested output format is not supported.")
+        with pytest.raises(error_type) as excinfo:
+            render_command_output(format_name=format_name, payload=payload, lines=lines)
+        error = excinfo.value
+        assert error.args == ()
+        assert error.context == expected_context
+        with override_settings(aeat_output_language="en"):
+            assert render_error_text(error).startswith(english_prefix)

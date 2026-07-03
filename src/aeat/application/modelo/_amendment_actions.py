@@ -1,13 +1,37 @@
 """Amendment actions for externally filed modelo baselines.
 
-``amend_modelo_revision`` starts from a current, externally evidenced
-:class:`ModeloRecord`, builds a corrected :class:`CalculationRevision` with an
-explicit :class:`CalculationRevisionAmendmentKind`, supersedes the baseline
-filing, and stores the new amendment record as current.
+:func:`~aeat.application.modelo.amend_modelo_revision` starts from a current, externally evidenced
+:class:`ModeloRecord`, builds a corrected
+:class:`CalculationRevision` with an explicit
+:class:`CalculationRevisionAmendmentKind`, supersedes the
+baseline filing, and stores the new amendment record as current.
 
 The side effects update the work-unit pointers and emit ``modelo.amended``
-through :class:`BucketEventHistoryRepository`, matching the event-history path
-used by imported and locally filed returns.
+through :class:`BucketEventHistoryRepository`, matching the
+event-history path used by imported and locally filed returns.
+
+Only filing records carrying
+:class:`ExternalEvidence` can enter this path. The standard
+local ``calculate -> verify -> file`` chain remains separate:
+locally filed records have no external evidence and must be corrected through
+their own re-file workflow. Amendment overrides are resolved against the target
+registry snapshot, rejected when they use printed or undeclared casilla tokens,
+and projected back onto the
+:class:`CasillaObservation` contract so the
+new revision keeps legal/source provenance for both overridden and inherited
+casillas.
+
+See Also:
+    :func:`~aeat.application.modelo.import_external_filing_evidence`:
+        Creates the AEAT-attested baseline that this module amends.
+    :func:`~aeat.application.modelo._calculation_helpers.amendment_observations`:
+        Carries or rebuilds observation provenance for the corrected casilla map.
+    :class:`ExternalEvidence`:
+        Filing-record evidence marker required before this amendment path can run.
+    :func:`~aeat.application.modelo._registry_helpers.reject_unknown_override_casillas`:
+        Canonicalizes amendment override casilla ids against the registry.
+    :func:`~aeat.application.modelo._registry_helpers.reject_incomplete_amendment_casillas`:
+        Reuses the registry completeness gate before the amendment is filed.
 """
 
 from __future__ import annotations
@@ -16,34 +40,32 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import CasillaId
 from ...domain.modelos import (
-    CalculationRevisionCatalogue,
-    ModeloRecordCatalogue,
-    WorkUnit,
-    WorkUnitCatalogue,
-)
-from ...domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ...domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from ...domain.modelos._filing_record import ModeloRecord, ModeloRecordStatus, derive_filing_record_id
-from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository, upsert_filing_record
-from ...domain.modelos._protocols import (
+    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionState,
+    ModeloRecord,
+    ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
+    ModeloRecordStatus,
+    WorkUnit,
+    WorkUnitCatalogue,
     WorkUnitCatalogueRepositoryProtocol,
+    derive_calculation_revision_id,
+    derive_filing_record_id,
+    upsert_calculation_revision,
+    upsert_filing_record,
+    upsert_work_unit,
 )
-from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ._action_errors import (
     AmendmentEvidenceMissingError,
     AmendmentTargetStateError,
@@ -51,6 +73,10 @@ from ._action_errors import (
     CalculationRevisionStateError,
     ModeloRecordNotFoundError,
     WorkUnitNotFoundError,
+)
+from ._amendment_kind_resolution import assert_amendment_kind_permitted as _assert_amendment_kind_permitted
+from ._amendment_kind_resolution import (
+    assert_complementaria_liability_direction_permitted as _assert_complementaria_liability_direction_permitted,
 )
 from ._calculation_helpers import amendment_observations as _amendment_observations
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
@@ -67,6 +93,7 @@ def _load_amendment_baseline[CasillaKey](
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
 ):
+    """Load and validate the current externally evidenced baseline filing."""
     filing_catalogue = filing_repository.load()
     baseline = filing_catalogue.get(from_filing_record_id)
     if baseline is None:
@@ -122,10 +149,40 @@ def amend_modelo_revision[CasillaKey](
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
-    """Build and file an amendment over an externally-filed return.
+    """Build and file an amendment over an externally filed return.
+
+    ``from_filing_record_id`` must identify the current
+    :class:`ModeloRecord` for an imported AEAT-attested
+    baseline. The baseline's
+    :class:`CalculationRevision` supplies the full casilla
+    map; ``overrides`` replace only corrected casillas after registry validation,
+    while unchanged casillas are inherited. The resulting revision records the
+    requested :class:`CalculationRevisionAmendmentKind`,
+    stores the stripped ``reason``, receives registry-grounded observations,
+    transitions through ``VERIFICADO_COMPLETO`` to ``PRESENTADO``, and becomes
+    the current filed revision for the :class:`WorkUnit`.
+
+    The baseline filing is marked ``SUPERSEDIDO`` and linked to the new current
+    amendment record. The new filing record is an internal filing envelope:
+    ``aeat_accepted`` remains false, ``external_evidence`` is cleared, and
+    ``amends_filing_record_id`` points back to the imported baseline. A
+    ``modelo.amended`` bucket event records the amendment kind, override count,
+    work-unit id, and amended baseline id.
 
     Returns:
-        :class:`ModeloRecord`: The new filing record for the amended return.
+        The new current :class:`ModeloRecord` for the
+        amended return.
+
+    See Also:
+        ``aeat app modelo work amend``:
+            CLI command that validates ``--from-filing-record``, ``--kind``,
+            ``--reason``, and ``--set`` before calling this service.
+        :func:`~aeat.application.modelo.import_external_filing_evidence`:
+            Production import path that creates accepted external-evidence
+            baselines.
+        :func:`~aeat.application.modelo._calculation_helpers.amendment_observations`:
+            Builds the :class:`CasillaObservation`
+            rows persisted on the amendment revision.
     """
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
@@ -145,6 +202,27 @@ def amend_modelo_revision[CasillaKey](
     now = clock or _utc_now()
     corrected_values: dict[CasillaId, Decimal] = dict(baseline_revision.casilla_values)
     corrected_values.update(canonical_overrides)
+
+    # Period-aware amendment-kind routing: refuse a requested kind the
+    # resolved (modelo, period) does not legally permit (e.g. rectificativa
+    # requested for a pre-adoption period, or complementaria requested where
+    # rectificativa has replaced it), and — for a pre-rectificativa period —
+    # refuse a complementaria that would decrease the taxpayer's declared
+    # liability (that correction is a solicitud de rectificación, LGT
+    # art. 120.3, not a complementaria, LGT art. 122.2). Both guards run
+    # before any amendment state is persisted.
+    _assert_amendment_kind_permitted(
+        modelo=str(baseline.modelo),
+        period=baseline.period,
+        amendment_kind=amendment_kind,
+    )
+    _assert_complementaria_liability_direction_permitted(
+        modelo=str(baseline.modelo),
+        period=baseline.period,
+        amendment_kind=amendment_kind,
+        baseline_casilla_values=baseline_revision.casilla_values,
+        corrected_casilla_values=corrected_values,
+    )
 
     new_revision_id = derive_calculation_revision_id(
         work_unit_id=baseline.work_unit_id,
@@ -206,20 +284,12 @@ def amend_modelo_revision[CasillaKey](
     )
 
     # Transition draft → verified-complete (operator opts in by calling amend).
-    verified_amendment = amendment_draft.model_copy(
-        update={
-            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
-            "verified_at": now,
-            "verified_by": actor.strip(),
-            "updated_at": now,
-        },
-    )
+    verified_amendment = _verified_amendment_revision(amendment_draft, actor=actor, now=now)
     revisions = upsert_calculation_revision(revisions, verified_amendment)
 
     new_filing_id = derive_filing_record_id(
         work_unit_id=baseline.work_unit_id,
         calculation_revision_id=new_revision_id,
-        filed_at=now,
         filed_by=actor.strip(),
     )
 
@@ -241,14 +311,7 @@ def amend_modelo_revision[CasillaKey](
     updated_filing_catalogue = upsert_filing_record(filing_catalogue, superseded_baseline)
     updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
 
-    filed_amendment = verified_amendment.model_copy(
-        update={
-            "state": CalculationRevisionState.PRESENTADO,
-            "filed_at": now,
-            "filed_by": actor.strip(),
-            "updated_at": now,
-        },
-    )
+    filed_amendment = _filed_amendment_revision(verified_amendment, actor=actor, now=now)
     revisions = upsert_calculation_revision(revisions, filed_amendment)
 
     _persist_amendment_side_effects(
@@ -272,6 +335,38 @@ def amend_modelo_revision[CasillaKey](
     return new_filing
 
 
+def _verified_amendment_revision(
+    amendment_draft: CalculationRevision,
+    *,
+    actor: str,
+    now: datetime,
+) -> CalculationRevision:
+    return amendment_draft.model_copy(
+        update={
+            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
+            "verified_at": now,
+            "verified_by": actor.strip(),
+            "updated_at": now,
+        },
+    )
+
+
+def _filed_amendment_revision(
+    verified_amendment: CalculationRevision,
+    *,
+    actor: str,
+    now: datetime,
+) -> CalculationRevision:
+    return verified_amendment.model_copy(
+        update={
+            "state": CalculationRevisionState.PRESENTADO,
+            "filed_at": now,
+            "filed_by": actor.strip(),
+            "updated_at": now,
+        },
+    )
+
+
 def _build_amendment_filing_record(
     *,
     filing_record_id: str,
@@ -280,6 +375,7 @@ def _build_amendment_filing_record(
     filed_at: datetime,
     filed_by: str,
 ) -> ModeloRecord:
+    """Create the current filing record that points back to ``baseline``."""
     return ModeloRecord(
         filing_record_id=filing_record_id,
         work_unit_id=baseline.work_unit_id,
@@ -316,6 +412,7 @@ def _persist_amendment_side_effects(
     actor: str,
     now: datetime,
 ) -> None:
+    """Persist amendment catalogues, work-unit pointers, and the bucket event."""
     calculation_repository.save(revisions)
     filing_repository.save(filing_catalogue)
     work_unit_repository.save(

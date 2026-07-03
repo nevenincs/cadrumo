@@ -3,14 +3,12 @@ tags:
   - '#adr'
   - '#semantic-dedup-epic'
 date: '2026-06-13'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - '[[2026-06-13-semantic-dedup-epic-research]]'
   - "[[2026-06-13-semantic-dedup-epic-audit]]"
   - '[[2026-06-13-semantic-dedup-epic-plan]]'
 ---
-
-
 
 # `semantic-dedup-epic` adr: `Semantic Deduplication Pass 1 — Canonical-Home Decisions` | (**status:** `accepted`)
 
@@ -94,5 +92,3 @@ continues: Pass 1 covered 24 functional concepts; subsequent passes extend
 coverage and append waves to the plan.
 
 ## Codification candidates
-
-

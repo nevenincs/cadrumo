@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-research]]"
@@ -16,7 +16,6 @@ related:
 > **PARTIALLY-SUPERSEDED 2026-05-19**: The module-path direction in this ADR is reversed: Spanish stems are authoritative for tax-domain identifiers and domain/vat migrates into domain/iva. The LIVA arts. 101-103 legal grounding, application-aggregation observation contract, the Modelo 303 and Modelo 390 binding-provider design, and the separation from app-ledger-ratios and domain/usage_ratios remain in force; the legal IVA prorrata substrate lives under domain/iva rather than domain/vat.
 > See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
 > rename ledger and Spanish-stem terminology authority.
-
 
 ## CLI Backend Boundary
 

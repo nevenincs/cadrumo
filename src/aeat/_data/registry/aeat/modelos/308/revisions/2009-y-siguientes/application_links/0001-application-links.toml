@@ -36,5 +36,5 @@ surface = "deadline"
 consumer = "aeat.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
-source_refs = ["boe-modelo-308-2008-form"]
+source_refs = ["boe-modelo-308-2008-form", "aeat-modelo-308-procedure"]
 

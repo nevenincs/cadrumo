@@ -21,10 +21,10 @@ class _ProfileNameHolder(BaseModel):
     value: ProfileName
 
 
-@pytest.mark.parametrize("invalid", ["", "   ", "\t"])
-def test_profile_name_rejects_empty_or_whitespace(invalid: str) -> None:
-    with pytest.raises(ValidationError):
-        _ProfileNameHolder(value=invalid)
+def test_profile_name_rejects_empty_or_whitespace() -> None:
+    for invalid in ("", "   ", "\t"):
+        with pytest.raises(ValidationError):
+            _ProfileNameHolder(value=invalid)
 
 
 def test_profile_name_rejects_overlong_input() -> None:

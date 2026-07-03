@@ -14,10 +14,11 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import cache
 
 import pytest
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp, RowSetGroupingKind
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.resources import resources
 from .._schema import DataBindingDefinition, ModeloRevision
 from .._withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
@@ -25,6 +26,7 @@ from .._withholding_bindings import WithholdingObservation, resolve_withholding_
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@cache
 def _m190_revision() -> ModeloRevision:
     return resources().modelos.authority.snapshot("190", filing_year=2024, period="0A").revision
 
@@ -35,10 +37,10 @@ def _percepcion_count_binding() -> DataBindingDefinition:
     Reusing a committed binding's id + grounding keeps the carrier valid; only
     the source/selector/op are lifted to exercise the distinct-count primitive.
     """
-    base = next(b for b in _m190_revision().bindings if b.source == RowSetGroupingKind.WITHHOLDING)
+    base = next(b for b in _m190_revision().bindings if b.source == BindingSourceKind.WITHHOLDING)
     return base.model_copy(
         update={
-            "source": RowSetGroupingKind.WITHHOLDING,
+            "source": BindingSourceKind.WITHHOLDING,
             "selector": {"fact": "percepcion_count"},
             "aggregation": BindingAggregation(op=BindingAggregationOp.COUNT_DISTINCT),
         },

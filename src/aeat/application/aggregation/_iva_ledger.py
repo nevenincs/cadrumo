@@ -1,14 +1,22 @@
 """Repository-backed IVA observation projection from ledger catalogues.
 
-Consumes a :class:`~aeat.domain.calculations.registry.ModeloRevision` to resolve the IVA aggregation binding
-values declared for the target modelo period. The primary entry point
-:func:`aggregate_iva_ledger_observations` accepts a
-:class:`~aeat.domain.transactions.TransactionCatalogue` and returns an :class:`IvaLedgerAggregation`.
-The repository-backed entry point constructs a
-:class:`~aeat.domain.transactions.TransactionCatalogueRepository` for the active bucket when none
-is supplied.
+This module classifies bucket-local
+:class:`~domain.transactions.TransactionCatalogue` rows into typed
+:class:`~domain.calculations.registry.IvaLedgerObservation` records and
+binding-ready totals. The source-mesh resolver in :mod:`~._modelo_bindings`
+then applies the target
+:class:`~domain.calculations.registry.ModeloRevision`, resolves
+``ledger_iva_aggregation`` bindings, and surfaces source diagnostics for ledger
+rows that no declared binding consumes.
 
-Related: :mod:`_renta_ledger`, :mod:`_renta_income_ledger` for similar pipelines.
+The repository-backed entry point constructs a
+:class:`~domain.transactions.TransactionCatalogueRepository` for the active
+bucket when none is supplied. Pre-classified callers can use
+:class:`IvaLedgerCandidate` and :func:`aggregate_iva_ledger_candidate_bindings`
+to run the same validation and registry binding path.
+
+Related: :mod:`~._renta_ledger`, :mod:`~._renta_income_ledger`, and
+:mod:`~._renta_gasto_ledger` for the sibling Renta ledger projections.
 """
 
 from __future__ import annotations
@@ -20,10 +28,13 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.i18n import tr
 from ...domain.calculations.registry import (
     BindingId,
     IvaLedgerObservation,
@@ -35,6 +46,7 @@ from ...domain.iva import (
     EUMemberState,
     InvoiceKind,
     IvaCategory,
+    IvaExemptionArticle,
     IvaFlowDirection,
     IvaRateKind,
     IvaRateNotFoundError,
@@ -48,7 +60,6 @@ from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,
@@ -75,7 +86,7 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     """Machine-readable reasons why a ledger row did not produce IVA observations.
 
     The first five values are shared with
-    :class:`aeat.application.aggregation._renta_ledger.RentaLedgerAggregationIssueReason`
+    :class:`application.aggregation._renta_ledger.RentaLedgerAggregationIssueReason`
     through :mod:`._shared_issue_reasons` so cross-ledger telemetry can
     group upstream filter rejections under one key. The remaining values
     are IVA-specific.
@@ -90,6 +101,7 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     MISSING_IVA_AMOUNT = "missing_iva_amount"
     MISSING_IVA_RATE = "missing_iva_rate"
     UNSUPPORTED_IVA_RATE = "unsupported_iva_rate"
+    MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
     INVALID_PRORRATA_REFERENCE = "invalid_prorrata_reference"
     UNSUPPORTED_IVA_CATEGORY = "unsupported_iva_category"
     MISSING_COUNTERPARTY_EU_MEMBER_STATE = "missing_counterparty_eu_member_state"
@@ -150,12 +162,26 @@ class IvaLedgerCandidate(BaseModel):
     ledger_id: _LedgerId
     transaction_date: date
     category: IvaCategory
+    exemption_article: IvaExemptionArticle | None = None
     rate_kind: IvaRateKind
     flow_direction: IvaFlowDirection
     base_amount: Decimal
     iva_amount: Decimal
     input_kind: IvaLedgerInputKind = IvaLedgerInputKind.ORDINARY_OPERATION
     prorrata_reference_id: _LedgerId | None = None
+
+    @model_validator(mode="after")
+    def _enforce_exemption_article_category(self) -> IvaLedgerCandidate:
+        if self.exemption_article is not None and self.category is not IvaCategory.DOMESTIC_EXEMPT:
+            raise AggregationValidationError(
+                t("aggregation.iva_ledger.errors.unsupported_iva_category"),
+                context={
+                    "ledger_id": self.ledger_id,
+                    "category": self.category.value,
+                    "exemption_article": self.exemption_article.value,
+                },
+            )
+        return self
 
 
 class IvaLedgerAggregation(BaseModel):
@@ -247,6 +273,7 @@ def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerO
         ledger_id=candidate.ledger_id,
         transaction_date=candidate.transaction_date,
         category=candidate.category,
+        exemption_article=candidate.exemption_article,
         rate_kind=candidate.rate_kind,
         flow_direction=candidate.flow_direction,
         base_amount=candidate.base_amount,
@@ -271,7 +298,7 @@ def aggregate_iva_ledger_candidates(
     """Project pre-classified IVA candidates into period-scoped observations.
 
     This path complements :func:`aggregate_iva_ledger_observations`,
-    which remains the legacy domestic-rate projection from bank
+    which remains the domestic-rate projection from bank
     transactions. Pre-classified candidates are required for non-domestic
     IVA and adjustments because those axes cannot be recovered from a
     transaction amount or direction without guessing.
@@ -360,6 +387,12 @@ def aggregate_iva_ledger_observations(
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
+        if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+            # Operator reviewed and deliberately excluded this row from filing
+            # (a final disposition): omit it silently — no observation, no gate
+            # issue. The exclusion is an explicit, recorded operator decision,
+            # not an unclassified row that should nag with a "classify me" advisory.
+            continue
         outcome = _classify_iva_transaction(transaction, resolved_period=resolved_period)
         if outcome.gate_issue is not None:
             issues.append(outcome.gate_issue)
@@ -440,6 +473,18 @@ def _classify_iva_transaction(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
                 detail=f"transaction currency {transaction.raw.currency!r} is not supported for IVA aggregation",
+            ),
+        )
+    if _has_converted_non_eur_amount(transaction):
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE,
+                detail=(
+                    f"transaction currency {transaction.raw.currency!r} has a converted gross value_in_eur "
+                    "but taxable_base/iva_amount remain native-currency facts; IVA aggregation requires "
+                    "explicit EUR tax substrate"
+                ),
             ),
         )
     flow_direction = _flow_direction_for(transaction.direction)
@@ -544,6 +589,7 @@ def _classify_iva_transaction(
         ledger_id=transaction.transaction_id,
         transaction_date=operation_date,
         category=effective_category,
+        exemption_article=transaction.exemption_article,
         rate_kind=rate_kind,
         flow_direction=flow_direction,
         base_amount=base_amount,
@@ -615,7 +661,7 @@ def _validate_intracom_export_counterparty(
 
     Rules (ADR D5):
     - ``INTRA_COMMUNITY_SUPPLY`` requires a non-ES ``EUMemberState``.
-    - ``EXPORT_THIRD_COUNTRY_ZERO_RATED`` must carry no ``EUMemberState``.
+    - Export and export-assimilated categories must carry no ``EUMemberState``.
     """
     if category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
         if eu_member_state is None:
@@ -628,18 +674,43 @@ def _validate_intracom_export_counterparty(
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION,
-                detail=(
-                    f"counterparty EU member state {eu_member_state.value!r} is Spain — "
-                    "not a valid intra-community counterparty"
+                detail=tr(
+                    "aggregation.iva_ledger.errors.domestic_counterparty_on_intra_community_transaction",
+                    default="Spanish counterparties are not valid for intra-community transactions.",
                 ),
             )
-    if category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED and eu_member_state is not None:
+    if (
+        category
+        in {
+            IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+            IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+        }
+        and eu_member_state is not None
+    ):
         return IvaLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
-            detail=f"export to third country must not carry an EU member state; got {eu_member_state.value!r}",
+            detail=tr(
+                "aggregation.iva_ledger.errors.eu_member_state_on_export_transaction",
+                member_state=eu_member_state.value,
+                default=(
+                    "Export or export-assimilated operations must not carry an EU member state; got %{member_state}."
+                ),
+            ),
         )
     return None
+
+
+def validate_iva_ledger_counterparty_category(transaction: Transaction) -> IvaLedgerAggregationIssue | None:
+    """Return the D5 counterparty/category gate :class:`IvaLedgerAggregationIssue` for a ledger transaction."""
+    category = transaction.iva_category
+    if category is None:
+        return None
+    return _validate_intracom_export_counterparty(
+        transaction_id=transaction.transaction_id,
+        category=category,
+        eu_member_state=transaction.counterparty_eu_member_state,
+    )
 
 
 def _invoice_kind_for(direction: TransactionDirection) -> InvoiceKind | None:
@@ -676,6 +747,10 @@ def _flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | N
 
 def _business_proportionality(transaction: Transaction) -> Decimal | None:
     return business_proportion(transaction.business_classification, transaction.business_pct)
+
+
+def _has_converted_non_eur_amount(transaction: Transaction) -> bool:
+    return transaction.raw.currency != DEFAULT_CURRENCY and transaction.value_in_eur is not None
 
 
 def _missing_tax_fact_reason(transaction: Transaction) -> IvaLedgerAggregationIssueReason | None:
@@ -747,6 +822,7 @@ __all__ = [
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",
     "iva_ledger_missing_fact_reasons",
+    "validate_iva_ledger_counterparty_category",
     "validate_iva_ledger_observation",
     "validate_iva_ledger_observations",
 ]

@@ -3,10 +3,31 @@ generated: true
 tags:
   - '#index'
   - '#binding-vocabulary-cli-cohesion'
-date: '2026-06-26'
-modified: '2026-06-26'
+date: '2026-07-02'
+modified: '2026-07-02'
 related:
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S01]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S02]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S03]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S04]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P02-S05]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P02-S06]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P02-S07]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W02-P03-S08]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W02-P03-S09]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W02-P03-S10]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W02-P03-S11]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W02-P04-S12]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W02-P04-S13]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W02-P04-S14]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W03-P06-S19]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W03-P06-S20]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S25]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S26]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-plan]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-reference]]'
+  - '[[2026-07-02-binding-vocabulary-cli-cohesion-audit]]'
 ---
 
 # `binding-vocabulary-cli-cohesion` feature index
@@ -17,4 +38,37 @@ Auto-generated index of all documents tagged with `#binding-vocabulary-cli-cohes
 
 ### adr
 
-- `2026-06-26-binding-vocabulary-cli-cohesion-adr` - `binding-vocabulary-cli-cohesion` adr: `vocabulary and CLI cohesion: retire the binding homonyms and reconcile the source-pull verb surface` | (**status:** `proposed`)
+- `2026-06-26-binding-vocabulary-cli-cohesion-adr` - `binding-vocabulary-cli-cohesion` adr: `vocabulary and CLI cohesion: retire the binding homonyms and reconcile the source-pull verb surface` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-02-binding-vocabulary-cli-cohesion-audit` - `binding-vocabulary-cli-cohesion` audit: `Wave 1 D9 close-blocker audit`
+
+### exec
+
+- `2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S01` - Rename BindingRowPayload to BindingListRowPayload as one atomic relocation:BindingRowPayload commit, sweeping the def, __all__, ModeloBindingsListResult.bindings, the _modelo_discovery_cli import, _binding_list_rows_for_report uses, and the test docstring
+- `2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S02` - Rename ModeloBindingRow to ModeloBindingQueryRow as one atomic relocation:ModeloBindingRow commit, sweeping the def, the rows tuple field, the _binding_rows builder, registry __all__, the registry package __init__ re-export, and the _schema.py docstring-core-struct xref
+- `2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S03` - Assert BindingPreviewRowPayload (A2) and _BindingRow (A4) are already role-distinct / module-private at HEAD and confirm no bare BindingRow stem collision remains
+- `2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S04` - Verify W01.P01 no-shift: run pytest --collect-only -q clean, the docstring-core-struct gate green, and the bindings-framework gate suite green
+- `2026-06-26-binding-vocabulary-cli-cohesion-W01-P02-S05` - Re-home _m232_row_bindings.py to a row-materialisation module name dropping the _bindings stem (e.g. _m232_row_materialisation.py) toward the domain row-model surface as one atomic relocation:m232-row-materialisation commit
+- `2026-06-26-binding-vocabulary-cli-cohesion-W01-P02-S06` - Rename _sources.py to a corpus-catalogue module name (e.g. _corpus_catalogue.py) as one atomic relocation:corpus-catalogue commit
+- `2026-06-26-binding-vocabulary-cli-cohesion-W01-P02-S07` - Verify W01.P02 no-shift: run pytest --collect-only -q clean, dev.docs.apidocs scaffold --check clean (no orphan / missing stubs), and the catalogue-verification / m232-row test consumers green
+- `2026-06-26-binding-vocabulary-cli-cohesion-W02-P03-S08` - Rename ModeloReconciliationSourceKind to ModeloReconciliationEvidenceKind (reconcile transport / external-evidence axis, NOT folded into BindingSourceKind) as one atomic relocation:ModeloReconciliationSourceKind commit, sweeping all 30 occurrences across the reconcile CLI, the application modelo __init__ re-export, _reconcile.py, _justificante.py, and the two test modules
+- `2026-06-26-binding-vocabulary-cli-cohesion-W02-P03-S09` - Rename the BusinessOperationInvoiceSourceKind TYPE to BusinessOperationInvoiceDirection (invoice-direction axis) KEEPING the payable_invoice / collectible_invoice member STRING values load-bearing per aeat-spanish-stem-naming, as one atomic relocation:BusinessOperationInvoiceSourceKind commit, sweeping all 31 occurrences across the ledger invoice CLI, the invoices _source_resolver, _business_operation_invoice.py, the ledger __init__ re-export, and the two test modules
+- `2026-06-26-binding-vocabulary-cli-cohesion-W02-P03-S10` - Rename the IvaCompensationAuthoritySourceKind type alias (Literal, not a class) to IvaCompensationAuthorityKind (wallet/compensation authority axis) as one atomic relocation:IvaCompensationAuthoritySourceKind commit, sweeping the def, the two field annotations, __all__, and the docs/conf.py nitpicky-resolver allowlist
+- `2026-06-26-binding-vocabulary-cli-cohesion-W02-P03-S11` - Verify W02.P03 no-shift: run pytest --collect-only -q clean, the reconcile / ledger-invoice / iva-compensation test modules green, and assert the C2 member string values payable_invoice / collectible_invoice are unchanged
+- `2026-06-26-binding-vocabulary-cli-cohesion-W02-P04-S12` - Rename the PerModeloAggregationProvider role-family to a name that says aggregation provider role (e.g. PerModeloAggregationContributor) for both PerModeloAggregationProvider and PerModeloAggregationProviderContract as one atomic relocation:PerModeloAggregationProvider commit, sweeping the enum, the contract model, the provider field / providers tuple, and the ~12 consumer sites
+- `2026-06-26-binding-vocabulary-cli-cohesion-W02-P04-S13` - Rename the schema-provider role-family (RegistrySchemaProvider / CasillaSchemaProvider) to a name that says schema source / accessor distinct from the settled resolver port, as one atomic relocation:RegistrySchemaProvider commit, sweeping the class def, builder returns, __all__, and the ~6 consumer sites in filing runtime
+- `2026-06-26-binding-vocabulary-cli-cohesion-W02-P04-S14` - Verify W02.P04 no-shift: run pytest --collect-only -q clean, the aggregation / filing-runtime test modules green, and assert ModeloSourceResolver / CalculationSourceResolution / merge_source_resolutions were NOT renamed (the phase-2.2 settled contract is intact)
+- `2026-06-26-binding-vocabulary-cli-cohesion-W03-P06-S19` - Assert and document the three prefill tiers are distinct and not merged: relation prefill (_relation_prefill.py, RelationPrefillSourceResolver), previous-filing direct carry (_binding_prefill.py), and AEAT borrador pre-fill (registry _schema.py aeat_prefilled / borrador-fed typed_enum)
+- `2026-06-26-binding-vocabulary-cli-cohesion-W03-P06-S20` - Verify W03.P06 no-shift: run pytest --collect-only -q clean and assert the prefill modules retain distinct names and tiers with no merge and no behaviour change (docstring-only clarification)
+- `2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S25` - DEFERRED FOLLOW-UP (do NOT execute as part of W01-W04
+- `2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S26` - DEFERRED FOLLOW-UP (paired with the selector union): narrow the typed_enum stringly-typed pointer (str-or-None enum class name) on DataBindingDefinition to a typed enum-class reference, sweeping the bindings list CLI table, the ModeloBindingQueryRow projection, the borrador resolver, and the Sheets-pull router
+
+### plan
+
+- `2026-06-26-binding-vocabulary-cli-cohesion-plan` - `binding-vocabulary-cli-cohesion` plan
+
+### reference
+
+- `2026-06-26-binding-vocabulary-cli-cohesion-reference` - `binding-vocabulary-cli-cohesion` reference: `phase-2.4 rename and re-home anchors: binding homonyms, CLI verb fork, selector typing`

@@ -27,17 +27,19 @@ from .._errors import WorkflowError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "56f638b9-5bbe-4888-bb30-574a8e7bc0e9"
+
 
 @pytest.fixture(autouse=True)
 def _patch_secure_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         yield
 
 
 def _database_bytes(tmp_path: Path) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(tmp_path / "aeat-storage" / "buckets" / "test-runtime-profile" / "db" / "aeat.db")
+    return read_db_at_rest_bytes(tmp_path / "aeat-storage" / "buckets" / _BUCKET_ID / "db" / "aeat.db")
 
 
 def _result(run_id: str, started: datetime) -> WorkflowResult:

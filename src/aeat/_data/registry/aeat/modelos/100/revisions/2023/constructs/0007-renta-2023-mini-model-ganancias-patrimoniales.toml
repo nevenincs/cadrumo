@@ -19,6 +19,7 @@ formulas = [
     "renta-2023-cambio-residencia-extranjero-suma",
     "renta-2023-cambio-residencia-ganancias-reducidas",
     "renta-2023-criptomonedas-ganancia-no-exenta",
+    "renta-2023-ganancia-cripto-imputable",
     "renta-2023-criptomonedas-ganancias-suma",
     "renta-2023-criptomonedas-perdidas-suma",
     "renta-2023-derechos-suscripcion-ganancias-reducidas",

@@ -9,7 +9,7 @@ from click.core import Command
 from click.testing import CliRunner, Result
 
 from ...core.i18n import OUTPUT_LANGUAGE_ENV_VAR
-from ...tests._env import temporary_env
+from ...tests import temporary_env
 
 
 class _TyperAwareCliRunner(CliRunner):

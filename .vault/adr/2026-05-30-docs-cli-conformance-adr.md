@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#docs-cli-conformance'
 date: '2026-05-30'
-modified: '2026-05-30'
+modified: '2026-06-30'
 related:
   - "[[2026-05-30-docs-architecture-research]]"
   - "[[2026-05-30-docs-architecture-adr]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-04-25-json-output-contract-adr]]"
   - '[[2026-06-04-docs-cli-conformance-research]]'
 ---
-
-
 
 # `docs-cli-conformance` adr: `cli documentation conformance` | (**status:** `partially superseded`)
 

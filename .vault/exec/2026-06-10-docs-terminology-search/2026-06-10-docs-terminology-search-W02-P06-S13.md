@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S13'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Run the first scaffold and editorially migrate the four hand-maintained term stores (the shipped glossary page, the explanation inline mini-glossary, the two vault glossary references) into the initial curated concept set of roughly 150-300 approved concepts, tiering casillas out as projections per ADR D4 (ADR D1)
 
@@ -43,7 +40,7 @@ Gates: `pytest src/aeat/terminology -q` 72 passed; `pytest --collect-only -q src
 ## Scaffold outcome breakdown + total concepts
 
 - Scaffold: 82 SCAFFOLD_EMPTY, 0 PRESERVE, 0 RETIRE, 3 UNCHANGED.
-- Total: 95 concepts. Scaffolded enrolables: 82 (drafts) of which 7 curated to approved (4 modelo + 3 IVA). Hand-authored `concepto` terms: 10 (all approved). Pre-existing exemplars: 3 (approved). 
+- Total: 95 concepts. Scaffolded enrolables: 82 (drafts) of which 7 curated to approved (4 modelo + 3 IVA). Hand-authored `concepto` terms: 10 (all approved). Pre-existing exemplars: 3 (approved).
 - Approved: 20. Draft (curation backlog): 75.
 
 ## Which store yielded what

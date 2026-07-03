@@ -9,10 +9,9 @@
 # superior a la cantidad positiva consignada en la casilla 14".
 # Corpus path: corpus/aeat_official/instructions/modelo_130/files/.
 #
-# P08.S48 enforces this via the cap_le_when_positive predicate DSL
-# operator introduced in P08.S47. The carry-forward binding
-# straight-copies the prior period's saldo seed; this predicate
-# catches the residual case where the seed exceeds the current C14.
+# The calculation formula caps the trusted previous-filing carry at
+# current C14. This predicate remains the verification backstop for
+# externally supplied, imported, or tampered over-cap calculation data.
 [[revisions."2019-y-siguientes".verification_predicates]]
 predicate_id = "modelo-130-c15-cap-by-c14"
 expression = 'cap_le_when_positive(["15", "14"])'

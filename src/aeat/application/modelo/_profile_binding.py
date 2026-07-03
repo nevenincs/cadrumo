@@ -15,15 +15,16 @@ The resolved bindings use :class:`ProfileSchemaDefinition` and
 :class:`UserProfileFactValue` to translate raw facts.
 
 Channel selection is the load-bearing decision. The registry runtime
-resolves a binding leaf from one of two channels depending on *how a
-formula consumes it*: a binding that is the enum-key argument of a
-dispatch op (``lookup_bracket_by_ccaa`` /
-``lookup_parameter_by_entity_type``) is read from the string-valued
-``enum_binding_values`` channel; every other binding leaf is read from
-the Decimal-valued ``binding_values`` channel. The channel is therefore
-NOT determined by the binding's ``typed_enum`` annotation -- a binding
-may carry ``typed_enum`` yet still be consumed as a Decimal operand.
-:func:`enum_consumed_binding_ids` is the authoritative discriminator.
+resolves profile bindings through three engine channels:
+``date_binding_values`` for date operands, ``enum_binding_values`` for
+dispatch keys, and Decimal-valued ``binding_values`` for numeric
+operands. The channel is determined by the consumer shape, not by the
+binding's ``typed_enum`` annotation: :func:`expression_date_binding_refs`
+finds date operands, :func:`enum_consumed_binding_ids` finds enum
+dispatch operands, and formula-consumed or bound numeric casillas use
+the Decimal channel. Profile bindings that only populate identity or
+export-layout fields are intentionally left out of the calculation
+source mesh.
 """
 
 from __future__ import annotations
@@ -44,13 +45,21 @@ from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
     BindingId,
     DataBindingDefinition,
+    ParameterDefinition,
     RegistrySnapshot,
     enum_consumed_binding_ids,
     expression_binding_refs,
     expression_date_binding_refs,
+    resolve_parameter,
 )
-from ...domain.contribuyente import marriage_full_year, marriage_month_start
-from ...domain.modelos._errors import ModeloError
+from ...domain.contribuyente import (
+    CCAA,
+    RentaFamilyProfile,
+    descendant_list_from_facts,
+    marriage_full_year,
+    marriage_month_start,
+)
+from ...domain.modelos import ModeloError
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,
@@ -58,7 +67,7 @@ from ...domain.user_profile import (
     load_user_profile_schema,
     profile_binding_selectors,
 )
-from ..aggregation._source_mesh import (
+from ..aggregation import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
@@ -66,7 +75,20 @@ from ..aggregation._source_mesh import (
 _PROFILE_RESOLVER_ID = "profile"
 _PROFILE_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.PROFILE,)
 _MARRIED_STATUS_TOKENS = frozenset({"2", "casado"})
-_UNMARRIED_STATUS_TOKENS = frozenset({"1", "3", "4", "soltero", "viudo", "separado_divorciado"})
+_PARTNERED_STATUS_TOKENS = _MARRIED_STATUS_TOKENS | frozenset({"5", "pareja_hecho", "pareja_hecho_registrada"})
+_UNMARRIED_STATUS_TOKENS = frozenset(
+    {
+        "1",
+        "3",
+        "4",
+        "5",
+        "soltero",
+        "viudo",
+        "separado_divorciado",
+        "pareja_hecho",
+        "pareja_hecho_registrada",
+    }
+)
 _MARRIAGE_DERIVED_FACT_PATHS = (
     "renta_taxpayer.marriage_full_year",
     "renta_taxpayer.marriage_month_start",
@@ -208,6 +230,317 @@ def _inject_derived_family_facts(
         idx += 1
 
     fact_index[menores_key] = Decimal(count_menores)
+
+
+_MINIMO_DESCENDIENTES_FILING_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
+_MINIMO_DESCENDIENTES_BIRTH_ORDER_SUFFIXES = (
+    "primer-hijo",
+    "segundo-hijo",
+    "tercer-hijo",
+    "cuarto-y-siguientes",
+)
+_MINIMO_DESCENDIENTES_MENOR_TRES_SUFFIX = "menor-tres-anos"
+
+
+def _minimo_descendientes_parameter(
+    snapshot: RegistrySnapshot,
+    *,
+    filing_year: int,
+    suffix: str,
+    ccaa_infix: str | None = None,
+) -> ParameterDefinition | None:
+    """Return the Art. 58 mínimo-por-descendientes registry parameter for *suffix*.
+
+    Parameter ids follow the uniform ``renta-{year}-minimo-descendientes-
+    {suffix}-{year}`` shape across every 2020-2025 revision (e.g.
+    ``renta-2024-minimo-descendientes-primer-hijo-2024``). When *ccaa_infix*
+    is supplied the id gains a CCAA segment
+    (``renta-{year}-minimo-descendientes-{ccaa_infix}-{suffix}-{year}``, e.g.
+    ``renta-2024-minimo-descendientes-madrid-tercer-hijo-2024``) — the shape a
+    comunidad's own Art. 46 Ley 22/2009 divergent figure uses. Returns
+    ``None`` when the revision declares no such parameter (a revision outside
+    the engine's supported filing-year set, or a CCAA with no published
+    divergent figure for this tranche).
+    """
+    infix = f"{ccaa_infix}-" if ccaa_infix else ""
+    parameter_id = f"renta-{filing_year}-minimo-descendientes-{infix}{suffix}-{filing_year}"
+    for parameter in snapshot.revision.parameters:
+        if parameter.id == parameter_id:
+            return parameter
+    return None
+
+
+_MINIMO_DESCENDIENTES_AUTONOMICO_CCAA_INFIXES: dict[str, str] = {
+    # Ley 22/2009 art. 46.1.a) cedes normative competence over the mínimo
+    # personal y familiar's autonómico half to each comunidad, within a ±10%
+    # band per concept. Only Comunidad de Madrid's divergent mínimo por
+    # descendientes table is wired today (Decreto Legislativo 1/2010, art. 2,
+    # grounded verbatim against the bundled AEAT Renta manuals 2020-2025,
+    # part 1, "Comunidad de Madrid: Importes del mínimo..."); a CCAA absent
+    # from this table falls back to the estatal tranches (the pre-existing
+    # mirror-estatal default), matching the 0511/0512 mínimo-del-contribuyente
+    # precedent. Other CCAA that publish their own mínimo por descendientes
+    # figures for 2025 (Andalucía, Asturias, Baleares, Canarias, Galicia,
+    # Comunitat Valenciana per the bundled 2025 manual) are a named follow-up,
+    # not silently assumed to mirror estatal forever.
+    CCAA.MADRID.value: "madrid",
+}
+
+
+def _minimo_descendientes_autonomico_ccaa_infix(fact_index: Mapping[str, UserProfileFactValue]) -> str | None:
+    """Return the CCAA infix for the filer's declared tax-residence CCAA, if wired."""
+    ccaa = fact_index.get("tax_residence.ccaa")
+    if not isinstance(ccaa, str):
+        return None
+    return _MINIMO_DESCENDIENTES_AUTONOMICO_CCAA_INFIXES.get(ccaa.strip().lower())
+
+
+def _resolved_minimo_descendientes_tranches(
+    snapshot: RegistrySnapshot,
+    *,
+    ccaa_infix: str | None,
+) -> tuple[list[Decimal], Decimal] | None:
+    """Resolve the birth-order tranche amounts + menor-3 supplement for *ccaa_infix*.
+
+    When *ccaa_infix* is ``None`` (or the CCAA-specific parameter for a given
+    tranche is absent), that tranche falls back to the estatal Art. 58
+    parameter — this is what makes a CCAA's PARTIAL divergence (e.g. Baleares
+    regulates only the 2º/3º/4º tranches, leaving 1º at the estatal figure)
+    resolve correctly rather than requiring a full parallel table per CCAA.
+    Returns ``None`` when the revision does not declare the full estatal
+    parameter set (the engine's supported-year gate already filters this, but
+    the check stays defensive for any future partial revision).
+    """
+    filing_year = snapshot.filing_year
+    date_context = {"filing_period": date(filing_year, 12, 31)}
+
+    def _resolve_tranche(suffix: str) -> Decimal | None:
+        specific = (
+            _minimo_descendientes_parameter(snapshot, filing_year=filing_year, suffix=suffix, ccaa_infix=ccaa_infix)
+            if ccaa_infix
+            else None
+        )
+        general = _minimo_descendientes_parameter(snapshot, filing_year=filing_year, suffix=suffix)
+        chosen = specific if specific is not None else general
+        return resolve_parameter(chosen, date_context) if chosen is not None else None
+
+    birth_order_amounts: list[Decimal] = []
+    for suffix in _MINIMO_DESCENDIENTES_BIRTH_ORDER_SUFFIXES:
+        amount = _resolve_tranche(suffix)
+        if amount is None:
+            return None
+        birth_order_amounts.append(amount)
+
+    menor_tres_supplement = _resolve_tranche(_MINIMO_DESCENDIENTES_MENOR_TRES_SUFFIX)
+    if menor_tres_supplement is None:
+        return None
+    return birth_order_amounts, menor_tres_supplement
+
+
+def _inject_derived_minimo_descendientes_facts(
+    fact_index: dict[str, UserProfileFactValue],
+    snapshot: RegistrySnapshot,
+) -> None:
+    """Inject the Art. 58/61 LIRPF mínimo por descendientes aggregates (casillas 0513/0514).
+
+    Reads the existing ``renta_family.descendiente.{n}.*`` facts, ranks every
+    Art. 58.1-eligible descendant by ``birth_date``, and computes two
+    aggregates via
+    :meth:`~aeat.domain.contribuyente.RentaFamilyProfile.minimo_descendientes_estatal`
+    (a CCAA-agnostic birth-order-tranche aggregator despite its name — it takes
+    the tranche amounts as caller-supplied parameters, never a hardcoded euro
+    figure per `aeat-schema-central-config`):
+
+    * the ESTATAL aggregate, from the revision's ``renta-{year}-minimo-
+      descendientes-{suffix}-{year}`` Art. 58 parameters, projected onto
+      ``renta_family.descendientes_minimos_aggregate_{year}`` — the
+      user-profile schema field the ``modelo-100-minimo-descendientes-engine``
+      ADR named as a dangling selector (declared, never populated, its former
+      binding deleted in commit ``bc3b89594``); this injector retires that gap
+      rather than minting a new key. Feeds casilla 0513 via the registry
+      binding ``renta-{year}-profile-minimo-descendientes-estatal``.
+    * the AUTONÓMICO aggregate, from the SAME estatal parameters UNLESS the
+      filer's declared ``tax_residence.ccaa`` has a wired divergent tranche
+      table (Ley 22/2009 art. 46.1.a cedes this to each comunidad within a
+      ±10% band; see :data:`_MINIMO_DESCENDIENTES_AUTONOMICO_CCAA_INFIXES`),
+      projected onto
+      ``renta_family.descendientes_minimos_aggregate_autonomico_{year}``.
+      Feeds casilla 0514 via the registry binding
+      ``renta-{year}-profile-minimo-descendientes-autonomico``. A CCAA absent
+      from the wired set mirrors the estatal aggregate exactly (the
+      pre-existing default, matching the 0511/0512 mínimo-del-contribuyente
+      precedent).
+
+    Always injects both keys (``Decimal("0")`` for a profile with no eligible
+    descendant) so a genuinely childless filer's casillas resolve to the
+    legally correct zero rather than an unresolved binding failing the
+    calculation outright. Idempotent per key: a key already present (an
+    explicit profile fact written by an older tooling version) is not
+    overwritten. Only the 2020-2025 filing years are handled; other years are
+    ignored until the engine is extended.
+    """
+    if snapshot.filing_year not in _MINIMO_DESCENDIENTES_FILING_YEARS:
+        return
+
+    estatal_key = f"renta_family.descendientes_minimos_aggregate_{snapshot.filing_year}"
+    autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{snapshot.filing_year}"
+    if estatal_key in fact_index and autonomico_key in fact_index:
+        return
+
+    estatal_tranches = _resolved_minimo_descendientes_tranches(snapshot, ccaa_infix=None)
+    if estatal_tranches is None:
+        # The revision does not declare the full mínimo-por-descendientes
+        # parameter set; leave both aggregates unresolved rather than compute
+        # against a partial tranche table.
+        return
+
+    descendant_facts = {
+        fact_key: str(value)
+        for fact_key, value in fact_index.items()
+        if fact_key.startswith("renta_family.descendiente.")
+    }
+    profile = RentaFamilyProfile(descendientes=descendant_list_from_facts(descendant_facts))
+
+    if estatal_key not in fact_index:
+        birth_order_amounts, menor_tres_supplement = estatal_tranches
+        fact_index[estatal_key] = profile.minimo_descendientes_estatal(
+            snapshot.filing_year,
+            birth_order_amounts=birth_order_amounts,
+            menor_tres_supplement=menor_tres_supplement,
+        )
+
+    if autonomico_key not in fact_index:
+        ccaa_infix = _minimo_descendientes_autonomico_ccaa_infix(fact_index)
+        autonomico_tranches = (
+            _resolved_minimo_descendientes_tranches(snapshot, ccaa_infix=ccaa_infix)
+            if ccaa_infix is not None
+            else estatal_tranches
+        )
+        if autonomico_tranches is None:
+            # A wired CCAA infix resolved to a partial table (should not
+            # happen given the per-tranche estatal fallback in
+            # ``_resolved_minimo_descendientes_tranches``, but stays
+            # defensive): fall back to the estatal tranches rather than
+            # leaving the autonómico casilla unresolved.
+            autonomico_tranches = estatal_tranches
+        birth_order_amounts, menor_tres_supplement = autonomico_tranches
+        fact_index[autonomico_key] = profile.minimo_descendientes_estatal(
+            snapshot.filing_year,
+            birth_order_amounts=birth_order_amounts,
+            menor_tres_supplement=menor_tres_supplement,
+        )
+
+
+_ANUALIDADES_ELIGIBILITY_FILING_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
+
+
+def _inject_derived_anualidades_eligibility_facts(
+    fact_index: dict[str, UserProfileFactValue],
+    filing_year: int,
+) -> None:
+    """Inject the LIRPF art. 64/75 anualidades separate-escala eligibility flag.
+
+    Art. 64 grants judicial anualidades por alimentos a favor de los hijos the
+    separate-escala régimen only to a payer "sin derecho a la aplicación por
+    estos últimos del mínimo por descendientes previsto en el artículo 58". This
+    "no right to the mínimo por descendientes" fact is not derivable from any
+    other casilla; it is projected here onto the synthetic Decimal key
+    ``renta_family.anualidades_sin_minimo_descendientes_{year}`` the registry
+    régimen predicate consumes.
+
+    Form-faithful default: filling casilla 0527 (anualidades por decisión
+    judicial) implies the non-custodial payer without the mínimo, so the flag is
+    1 (eligible) unless custody is shared. When at least one eligible descendant
+    has ``custodia_compartida = true`` the mínimo por descendientes is split
+    50/50, the payer retains it, and the régimen does NOT apply (flag 0).
+
+    Idempotent: an explicit fact already present is not overwritten. Only the
+    revisions carrying the separate-escala régimen are handled.
+    """
+    if filing_year not in _ANUALIDADES_ELIGIBILITY_FILING_YEARS:
+        return
+    key = f"renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
+    if key in fact_index:
+        return
+    descendant_facts = {
+        fact_key: str(value)
+        for fact_key, value in fact_index.items()
+        if fact_key.startswith("renta_family.descendiente.")
+    }
+    shared_custody = any(
+        descendant.custodia_compartida and descendant.is_eligible_ordinary(filing_year)
+        for descendant in descendant_list_from_facts(descendant_facts)
+    )
+    fact_index[key] = Decimal("0") if shared_custody else Decimal("1")
+
+
+_MADRID_CCAA_CODE = "madrid"
+_CONJUNTA_DECLARATION_TYPE = "2"
+_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY = "renta_family.madrid_nacimiento_adopcion_eligible_count"
+_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY = "renta_family.unidad_familiar_otros_miembros_base"
+_MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR = 2025
+
+
+def _inject_derived_autonomic_deduccion_facts(
+    fact_index: dict[str, UserProfileFactValue],
+    filing_year: int,
+) -> None:
+    """Inject the Madrid nacimiento/adopción deducción derived facts (casilla 1039).
+
+    Companion to :func:`_inject_derived_marriage_facts` and
+    :func:`_inject_derived_family_facts`. Reads the existing
+    ``renta_family.descendiente.{n}.*`` facts and ``tax_residence.ccaa`` and
+    computes the prorrateo-weighted count of descendants inside the Comunidad de
+    Madrid nacimiento/adopción applicability window (DL 1/2010 arts. 4 y 18.1)
+    who cohabit, projecting it onto the synthetic Decimal keys the registry
+    formula on casilla 1039 consumes.
+
+    The trigger is fail-closed: it auto-populates only the unambiguous single /
+    monoparental individual filer. A tributación conjunta declaration or a
+    married filer needs the spouse's base imponible for the unidad-familiar
+    61.860 € límite, which the app does not persist (research F9); for those
+    cases no count is injected, the registry formula's binding default resolves
+    casilla 1039 to 0, and the operator-facing eligibility advisory surfaces the
+    entitlement instead. A deducción's failure mode is over-claim, so silence on
+    an indeterminate unidad-familiar aggregate is the safe default.
+
+    Only the 2025 filing year is handled (the first-slice registry formula);
+    other years return early. Idempotent: keys already present are not
+    overwritten.
+    """
+    if filing_year != _MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR:
+        return
+
+    # Always supply a neutral 0 default so the casilla-1039 formula's two profile
+    # bindings resolve for EVERY M100 2025 filer — non-Madrid, tributación
+    # conjunta, or no eligible descendants. The registry formula hard-fails on an
+    # unsupplied binding, so the default is what keeps a Cataluña/single filer's
+    # calculation from breaking; the Madrid determinable-eligible branch below
+    # overrides the count with the real prorrateo-weighted value.
+    fact_index.setdefault(_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY, Decimal("0"))
+    fact_index.setdefault(_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY, Decimal("0"))
+
+    ccaa = fact_index.get("tax_residence.ccaa")
+    if not isinstance(ccaa, str) or ccaa.strip().lower() != _MADRID_CCAA_CODE:
+        return
+    declaration_type = str(fact_index.get("filing_export.declaration_type", "")).strip()
+    if declaration_type == _CONJUNTA_DECLARATION_TYPE:
+        return
+    marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
+    if marital_status in _PARTNERED_STATUS_TOKENS:
+        return
+
+    descendant_facts = {
+        key: str(value) for key, value in fact_index.items() if key.startswith("renta_family.descendiente.")
+    }
+    weighted_count = Decimal("0")
+    for descendant in descendant_list_from_facts(descendant_facts):
+        if descendant.is_nacimiento_adopcion_eligible(filing_year):
+            weighted_count += descendant.nacimiento_adopcion_prorrateo_share()
+    if weighted_count <= 0:
+        return
+
+    fact_index[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY] = weighted_count
 
 
 def _inject_derived_state_attribution_facts(
@@ -356,8 +689,8 @@ def resolve_profile_sourced_bindings(
 
     Walks the registry revision's ``source = "profile"`` bindings,
     matches each against a fact on the bucket's user profile, and routes
-    the value into the Decimal channel or the enum channel per
-    :func:`enum_consumed_binding_ids`.
+    the value into the Decimal, enum, or date channel according to the
+    consuming formula or bound numeric casilla.
 
     A binding the profile cannot satisfy is skipped silently: the engine
     surfaces the missing-binding error only if a formula needs it.
@@ -366,6 +699,12 @@ def resolve_profile_sourced_bindings(
     Returns a :class:`CalculationSourceResolution` with resolved binding
     values split across the Decimal, enum, and date engine channels and a
     :class:`CalculationSourceProvenance` row per profile-sourced binding.
+
+    See Also:
+        :func:`enum_consumed_binding_ids`:
+            Identifies profile bindings consumed as enum dispatch keys.
+        :func:`expression_date_binding_refs`:
+            Identifies profile bindings consumed by date-aware formula ops.
     """
     # A profile binding matters to the engine when a formula consumes it OR when
     # it feeds a ``bound`` NUMERIC input casilla (e.g. M303 casilla 65, the
@@ -391,7 +730,7 @@ def resolve_profile_sourced_bindings(
     profile_bindings = [
         binding
         for binding in snapshot.revision.bindings
-        if binding.source == "profile"
+        if binding.source == BindingSourceKind.PROFILE
         and (
             binding.id in formula_consumed
             or binding.id in formula_date_consumed
@@ -415,6 +754,9 @@ def resolve_profile_sourced_bindings(
     fact_index = _profile_fact_index(record, resolved_schema)
     _inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     _inject_derived_family_facts(fact_index, snapshot.filing_year)
+    _inject_derived_anualidades_eligibility_facts(fact_index, snapshot.filing_year)
+    _inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
+    _inject_derived_minimo_descendientes_facts(fact_index, snapshot)
     _inject_derived_state_attribution_facts(fact_index)
     enum_bindings = enum_consumed_binding_ids(snapshot.revision)
 
@@ -474,13 +816,19 @@ def _resolve_one(
 
 
 inject_derived_marriage_facts = _inject_derived_marriage_facts
+inject_derived_autonomic_deduccion_facts = _inject_derived_autonomic_deduccion_facts
+inject_derived_anualidades_eligibility_facts = _inject_derived_anualidades_eligibility_facts
+inject_derived_minimo_descendientes_facts = _inject_derived_minimo_descendientes_facts
 profile_fact_index = _profile_fact_index
 resolve_profile_binding_value = _resolve_one
 
 
 __all__ = [
     "ProfileBindingResolutionError",
+    "inject_derived_anualidades_eligibility_facts",
+    "inject_derived_autonomic_deduccion_facts",
     "inject_derived_marriage_facts",
+    "inject_derived_minimo_descendientes_facts",
     "profile_fact_index",
     "resolve_profile_binding_value",
     "resolve_profile_sourced_bindings",

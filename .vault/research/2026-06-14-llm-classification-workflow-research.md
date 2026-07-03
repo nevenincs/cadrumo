@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#llm-classification-workflow'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `llm-classification-workflow` research: `LLM classification workflow: review/approve/reject loop and evidence-driven auto-split`
 

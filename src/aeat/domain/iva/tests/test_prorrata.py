@@ -45,6 +45,63 @@ from .._prorrata import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_INPUT_DEDUCTION_CASES = (
+    (
+        InputClassification.EXCLUSIVELY_DEDUCTIBLE,
+        Decimal("210.00"),
+        Decimal("40"),
+        Decimal("100"),
+        Decimal("210.00"),
+    ),
+    (
+        InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE,
+        Decimal("210.00"),
+        Decimal("80"),
+        Decimal("0"),
+        Decimal("0.00"),
+    ),
+    (
+        InputClassification.COMMON,
+        Decimal("210.00"),
+        Decimal("70"),
+        Decimal("70"),
+        Decimal("147.00"),
+    ),
+)
+
+_ESPECIAL_MANDATORY_CASES = (
+    (((Decimal("110.01"), Decimal("100.00")),), True),
+    (
+        (
+            (Decimal("110.00"), Decimal("100.00")),
+            (Decimal("109.99"), Decimal("100.00")),
+        ),
+        False,
+    ),
+    (((Decimal("50.00"), Decimal("0.00")),), True),
+    (((Decimal("0.00"), Decimal("0.00")),), False),
+)
+
+_ACCEPTED_PRORRATA_REFERENCE_CASES = (
+    (
+        "prorrata:2026:provisional:general",
+        ProrrataKind.PROVISIONAL,
+        ProrrataRegime.GENERAL,
+        None,
+    ),
+    (
+        "prorrata:2026:definitiva:especial:sector-retail",
+        ProrrataKind.DEFINITIVA,
+        ProrrataRegime.ESPECIAL,
+        "sector-retail",
+    ),
+)
+
+_INVALID_SECTOR_ID_CASES = (
+    ("", "empty id"),
+    ("has spaces and unicode ñ", "bad pattern"),
+)
+
 
 # ---------------------------------------------------------------------------
 # Identity / boundary tests — anchored in the LIVA formula's mathematical
@@ -177,46 +234,18 @@ def test_general_percentage_does_not_round_up_exact_whole_integer() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_exclusively_deductible_input_is_100_percent_regardless_of_general() -> None:
-    """LIVA art. 103.Uno.1.º: an input used only in deductible activity
-    is 100% deductible, irrespective of the general prorrata
-    percentage."""
+def test_classify_input_deduction_cases() -> None:
+    """LIVA art. 103.Uno classification rules for exclusive and common inputs."""
 
-    deduction = classify_input_deduction(
-        InputClassification.EXCLUSIVELY_DEDUCTIBLE,
-        input_iva_amount=Decimal("210.00"),
-        general_percentage=Decimal("40"),
-    )
-    assert deduction.deductible_percentage == Decimal("100")
-    assert deduction.deductible_amount == Decimal("210.00")
-
-
-def test_exclusively_non_deductible_input_is_zero_regardless_of_general() -> None:
-    """LIVA art. 103.Uno.2.º: an input used only in exempt activity is
-    0% deductible, irrespective of the general prorrata percentage."""
-
-    deduction = classify_input_deduction(
-        InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE,
-        input_iva_amount=Decimal("210.00"),
-        general_percentage=Decimal("80"),
-    )
-    assert deduction.deductible_percentage == Decimal("0")
-    assert deduction.deductible_amount == Decimal("0.00")
-
-
-def test_common_input_applies_general_percentage() -> None:
-    """LIVA art. 103.Uno.3.º: an input used in both kinds of operations
-    is deducted at the general prorrata percentage."""
-
-    deduction = classify_input_deduction(
-        InputClassification.COMMON,
-        input_iva_amount=Decimal("210.00"),
-        general_percentage=Decimal("70"),
-    )
-    assert deduction.deductible_percentage == Decimal("70")
-    # 210.00 * 70 / 100 = 147.00. This is a Python arithmetic primitive
-    # contract — not a re-implementation of the formula.
-    assert deduction.deductible_amount == Decimal("147.00")
+    for case in _INPUT_DEDUCTION_CASES:
+        classification, input_iva_amount, general_percentage, expected_percentage, expected_amount = case
+        deduction = classify_input_deduction(
+            classification,
+            input_iva_amount=input_iva_amount,
+            general_percentage=general_percentage,
+        )
+        assert deduction.deductible_percentage == expected_percentage, classification
+        assert deduction.deductible_amount == expected_amount, classification
 
 
 # ---------------------------------------------------------------------------
@@ -224,36 +253,12 @@ def test_common_input_applies_general_percentage() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_especial_mandatory_when_general_exceeds_especial_by_more_than_10_percent() -> None:
-    """LIVA art. 103.Dos: especial is mandatory when general deduction
-    exceeds especial deduction by more than 10 percent."""
+def test_especial_mandatory_cases() -> None:
+    """LIVA art. 103.Dos strict +10% boundary and zero-deduction defences."""
 
-    # general = 110.01, especial = 100.00 → ratio 1.1001, > 1.10
-    assert is_especial_mandatory(Decimal("110.01"), Decimal("100.00")) is True
-
-
-def test_especial_optional_when_general_does_not_exceed_especial_by_10_percent() -> None:
-    """LIVA art. 103.Dos boundary at exactly +10%: especial is NOT
-    mandatory when general equals especial * 1.10 exactly (the rule is
-    'more than ten percent', strictly greater)."""
-
-    assert is_especial_mandatory(Decimal("110.00"), Decimal("100.00")) is False
-    assert is_especial_mandatory(Decimal("109.99"), Decimal("100.00")) is False
-
-
-def test_especial_mandatory_when_especial_is_zero_and_general_is_positive() -> None:
-    """Defence: especial deduction = 0 with general deduction > 0 means
-    the general regime would over-deduct without bound, so especial is
-    mandatory."""
-
-    assert is_especial_mandatory(Decimal("50.00"), Decimal("0.00")) is True
-
-
-def test_especial_not_mandatory_when_both_deductions_are_zero() -> None:
-    """Defence: both regimes produce zero deduction; especial-mandatory
-    cannot apply because there is nothing to over-deduct."""
-
-    assert is_especial_mandatory(Decimal("0.00"), Decimal("0.00")) is False
+    for deduction_pairs, expected in _ESPECIAL_MANDATORY_CASES:
+        for general_deduction, especial_deduction in deduction_pairs:
+            assert is_especial_mandatory(general_deduction, especial_deduction) is expected
 
 
 def test_is_especial_mandatory_rejects_negative_amounts() -> None:
@@ -418,24 +423,16 @@ def test_result_definitiva_rejects_non_annual_period() -> None:
         )
 
 
-def test_validate_prorrata_reference_accepts_canonical_general_reference() -> None:
-    reference = validate_prorrata_reference("prorrata:2026:provisional:general")
+def test_validate_prorrata_reference_accepts_canonical_values() -> None:
+    for reference_id, expected_kind, expected_regime, expected_sector_id in _ACCEPTED_PRORRATA_REFERENCE_CASES:
+        reference = validate_prorrata_reference(reference_id)
 
-    assert isinstance(reference, ProrrataReference)
-    assert reference.reference_id == "prorrata:2026:provisional:general"
-    assert reference.year == 2026
-    assert reference.kind is ProrrataKind.PROVISIONAL
-    assert reference.regime is ProrrataRegime.GENERAL
-    assert reference.sector_id is None
-
-
-def test_validate_prorrata_reference_accepts_sectoral_reference() -> None:
-    reference = validate_prorrata_reference("prorrata:2026:definitiva:especial:sector-retail")
-
-    assert reference.reference_id == "prorrata:2026:definitiva:especial:sector-retail"
-    assert reference.kind is ProrrataKind.DEFINITIVA
-    assert reference.regime is ProrrataRegime.ESPECIAL
-    assert reference.sector_id == "sector-retail"
+        assert isinstance(reference, ProrrataReference)
+        assert reference.reference_id == reference_id
+        assert reference.year == 2026
+        assert reference.kind is expected_kind
+        assert reference.regime is expected_regime
+        assert reference.sector_id == expected_sector_id
 
 
 def test_validate_prorrata_reference_rejects_usage_ratio_and_malformed_values() -> None:
@@ -511,28 +508,17 @@ def test_classify_input_rejects_out_of_range_general_percentage() -> None:
         )
 
 
-def test_sector_rejects_empty_sector_id() -> None:
-    with pytest.raises(ValidationError, match=r"sector_id"):
-        ProrrataSector(
-            sector_id="",
-            name="empty id",
-            inputs=ProrrataInputs(
-                operaciones_con_derecho_deduccion=Decimal("100"),
-                operaciones_sin_derecho_deduccion=Decimal("0"),
-            ),
-        )
-
-
-def test_sector_rejects_invalid_sector_id_pattern() -> None:
-    with pytest.raises(ValidationError, match=r"sector_id"):
-        ProrrataSector(
-            sector_id="has spaces and unicode ñ",
-            name="bad pattern",
-            inputs=ProrrataInputs(
-                operaciones_con_derecho_deduccion=Decimal("100"),
-                operaciones_sin_derecho_deduccion=Decimal("0"),
-            ),
-        )
+def test_sector_rejects_invalid_sector_ids() -> None:
+    for sector_id, name in _INVALID_SECTOR_ID_CASES:
+        with pytest.raises(ValidationError, match=r"sector_id"):
+            ProrrataSector(
+                sector_id=sector_id,
+                name=name,
+                inputs=ProrrataInputs(
+                    operaciones_con_derecho_deduccion=Decimal("100"),
+                    operaciones_sin_derecho_deduccion=Decimal("0"),
+                ),
+            )
 
 
 # ---------------------------------------------------------------------------

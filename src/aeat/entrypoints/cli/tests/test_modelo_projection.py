@@ -54,7 +54,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile._repository import UserProfileLifecycleRepository
+from ....application.user_profile import UserProfileLifecycleRepository
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, calculate_registry_snapshot, validated_casilla_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
@@ -135,7 +135,8 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
 # Constants
 # ---------------------------------------------------------------------------
 
-_PROFILE_ID = "m130-projection-test-profile"
+_PROFILE_ID = "13013013-0130-4130-8130-130130130130"
+_PROFILE_LABEL = "M130 projection regression test profile"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
@@ -220,7 +221,7 @@ def runtime_profile(
     with isolated_cli_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_PROFILE_ID,
-        label="M130 projection regression test profile",
+        label=_PROFILE_LABEL,
     ) as profile:
         yield profile
 
@@ -232,12 +233,14 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
         schema_id="aeat.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name="M130 projection regression test profile",
+        display_name=_PROFILE_LABEL,
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(path="identity.name", value="Projection Test Autónomo"),
+            UserProfileFact(path="identity.surnames", value="Regression Harness"),
             UserProfileFact(path="identity.tax_id", value="87654321X"),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="activities.description", value="consultoria fiscal"),
             UserProfileFact(
                 path="taxpayer_type.irpf_income_categories",
                 value="actividad_economica",
@@ -328,6 +331,71 @@ def test_modelo_project_no_revisions_guides_natural_m130_calculation(
     assert f"--year {_FILING_YEAR}" in result.output
     assert "--period 1T" in result.output
     assert "<work_unit_id>" not in result.output
+
+
+def test_modelo_project_2025_uses_revision_declared_default_bindings(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The projection default bindings are scoped to the selected M100 revision.
+
+    Persona regression: a mixed employee/autonomo user projected 2025 after
+    calculating M130 and hit ``unknown registry binding ids`` for profile
+    defaults that exist in 2024 but not in the 2025 M100 registry. This drives
+    the real CLI calculate/project path and proves generated defaults are not
+    passed to the 2025 engine when that revision does not declare them.
+    """
+
+    filing_year = 2025
+    _seed_autónomo_profile(runtime_profile)
+    seed_m130_income_transaction(
+        amount=_Q_INGRESOS,
+        filing_year=filing_year,
+        source_key="projection-2025-1T",
+        value_date=date(filing_year, 2, 15),
+    )
+    work_unit_id = _create_work_unit(
+        modelo="130",
+        year=str(filing_year),
+        period="1T",
+        revision="2019-y-siguientes",
+    )
+    calc_result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            work_unit_id,
+            "--binding",
+            f"irpf.previous_year_economic_activity_net_income={_PREV_YEAR_INCOME}",
+            "--binding",
+            "modelo-130-resultados-negativos-anteriores=0",
+        ],
+    )
+    assert calc_result.exit_code == 0, calc_result.output
+
+    project_result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "project",
+            "--year",
+            str(filing_year),
+            "--ccaa",
+            _CCAA,
+        ],
+    )
+
+    assert project_result.exit_code == 0, project_result.output
+    assert "Traceback" not in project_result.output
+    assert "unknown registry binding ids" not in project_result.output
+    payload = _payload(project_result.output)
+    assert payload["year"] == filing_year
+    assert payload["quarters_available"] == ["1T"]
 
 
 # ---------------------------------------------------------------------------
@@ -487,7 +555,6 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         binding_values={
             f"renta-{_FILING_YEAR}-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             f"renta-{_FILING_YEAR}-modelo-111-retenciones-periodicas": Decimal("0"),
-            f"renta-{_FILING_YEAR}-modelo-115-retenciones-periodicas": Decimal("0"),
             f"renta-{_FILING_YEAR}-modelo-123-retenciones-periodicas": Decimal("0"),
             f"renta-{_FILING_YEAR}-modelo-193-retenciones-anuales": Decimal("0"),
             f"renta-{_FILING_YEAR}-profile-declaration-type": Decimal("1"),

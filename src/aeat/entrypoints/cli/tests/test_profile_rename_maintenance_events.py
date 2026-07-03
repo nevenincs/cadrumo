@@ -18,16 +18,12 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_bucket,
 )
-from ....application.workflow._profile_bucket_scan import read_profile_bucket
-from ....domain.buckets import (
-    BucketEventHistoryCatalogue,
-    BucketEventHistoryRepository,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ....application.workflow import read_profile_bucket
+from ....domain.buckets import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ._profile_lifecycle_support import create_profile_via_cli
@@ -47,7 +43,7 @@ def _bucket_history(bucket_id: str) -> BucketEventHistoryCatalogue:
     Reading a bucket's encrypted store requires an active session scoped
     to that bucket, so the read runs inside ``profile_storage_session``.
     """
-    from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile import profile_storage_session
 
     with profile_storage_session(bucket_id):
         repository = BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
@@ -63,17 +59,14 @@ def test_cli_rename_co_emits_profile_renamed_and_bucket_renamed() -> None:
     fired, so the two-event audit contract was dead at the actual
     operator surface.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     create_profile_via_cli("alpha")
     pointer = read_profile_bucket("alpha")
     assert pointer is not None
 
-    dispose_engine()
     result = invoke_cached_cli(("config", "profile", "rename", "alpha", "beta"))
     assert result.exit_code == 0, f"rename failed: {result.output}"
 
-    dispose_engine()
     catalogue = _bucket_history(pointer.bucket_id)
     event_kinds = {event.event_type for event in catalogue.events.values()}
     assert BucketEventType.PROFILE_RENAMED in event_kinds
@@ -101,7 +94,6 @@ def test_cli_rename_of_non_active_profile_is_refused_loudly_and_changes_nothing(
     happened, which is exactly what an active-bucket-bound event
     repository default would have written.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     create_profile_via_cli("alpha")
     create_profile_via_cli("bravo")  # bravo is now the active profile
@@ -111,11 +103,9 @@ def test_cli_rename_of_non_active_profile_is_refused_loudly_and_changes_nothing(
     assert bravo_pointer is not None
     assert alpha_pointer.bucket_id != bravo_pointer.bucket_id
 
-    dispose_engine()
     result = invoke_cached_cli(("config", "profile", "rename", "alpha", "gamma"))
     assert result.exit_code != 0, f"expected refusal, got: {result.output}"
 
-    dispose_engine()
     # The refused rename must not have moved the label.
     assert read_profile_bucket("alpha") is not None
     assert read_profile_bucket("gamma") is None
@@ -133,14 +123,11 @@ def test_cli_rename_refuses_blank_target_with_localised_message() -> None:
     The boundary refusal mirrors the inner primitive's blank-label
     refusal so the operator never sees a raw schema validation error.
     """
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     create_profile_via_cli("alpha")
 
-    dispose_engine()
     result = invoke_cached_cli(("config", "profile", "rename", "alpha", "   "))
     assert result.exit_code != 0, f"expected refusal, got: {result.output}"
 
-    dispose_engine()
     pointer = read_profile_bucket("alpha")
     assert pointer is not None, "the profile label must be unchanged after the refusal"

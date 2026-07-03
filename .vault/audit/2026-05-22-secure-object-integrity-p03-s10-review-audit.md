@@ -3,15 +3,12 @@ tags:
   - '#audit'
   - '#secure-object-integrity'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 related:
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'
 ---
 
-
-
 # `secure-object-integrity` Code Review
-
 
 S10-001 | HIGH | Initial subprocess environment did not guarantee root-fallback route
 

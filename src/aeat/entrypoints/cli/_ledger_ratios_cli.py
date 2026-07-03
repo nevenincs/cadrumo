@@ -47,14 +47,9 @@ def _emit_ratios_event(
     new: object,
 ) -> None:
     """Append a ratios mutation event to the bucket-event-history catalogue."""
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ...domain.buckets import (
-        BucketEvent,
-        BucketEventHistoryRepository,
-        BucketEventObjectType,
-        append_bucket_event,
-        derive_bucket_event_id,
-    )
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    from ...domain.buckets import BucketEvent, BucketEventObjectType, append_bucket_event, derive_bucket_event_id
 
     occurred_at = now()
     payload = {
@@ -98,14 +93,9 @@ def _emit_ratios_censo_override_warning(
     warning,
 ) -> None:
     """Append LEDGER_RATIOS_CENSO_OVERRIDE_WARNING to the bucket catalogue."""
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ...domain.buckets import (
-        BucketEvent,
-        BucketEventHistoryRepository,
-        BucketEventObjectType,
-        append_bucket_event,
-        derive_bucket_event_id,
-    )
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    from ...domain.buckets import BucketEvent, BucketEventObjectType, append_bucket_event, derive_bucket_event_id
 
     occurred_at = now()
     payload = {
@@ -173,12 +163,12 @@ def ratios_list(
 ) -> None:
     """List every per-category proportional-deduction override stored on the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.user_profile import CensoSyncService
-    from ...domain.usage_ratios import (
-        CensoRatioMismatchError,
+    from ...adapters.persistence.profile.usage_ratios import (
         load_usage_ratios,
         load_usage_ratios_with_censo_guard,
     )
+    from ...application.user_profile import CensoSyncService
+    from ...domain.usage_ratios import CensoRatioMismatchError
     from ._ledger_payloads import RatiosListResult
 
     bucket_id, profile_id = _ratios_bucket_and_profile()

@@ -143,6 +143,19 @@ def _profile_keys() -> tuple[ProfileKey, ...]:
     return _PROFILE_KEYS_CACHE[0]
 
 
+def profile_keys() -> tuple[ProfileKey, ...]:
+    """Return the full registered :class:`ProfileKey` tuple, resolved at call time.
+
+    Unlike the :data:`PROFILE_KEYS` module attribute (resolved once, at
+    whatever moment a caller's ``from ... import PROFILE_KEYS`` statement
+    executes), this function always defers resolution to the moment it is
+    called. Callers that read the registry from inside a function body
+    (rather than at their own module-import time) should prefer this
+    function so they cannot race the wizard catalogue's registration.
+    """
+    return _profile_keys()
+
+
 def _by_key() -> dict[str, ProfileKey]:
     _profile_keys()
     return _BY_KEY_CACHE[0]
@@ -191,5 +204,7 @@ __all__ = [
     "ProfileKeyRequirement",
     "get_profile_key",
     "optional_profile_keys",
+    "profile_keys",
+    "register_profile_keys",
     "required_profile_keys",
 ]

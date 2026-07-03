@@ -1,10 +1,37 @@
 """Filing-record actions for modelo calculation revisions.
 
-``file_modelo_revision`` promotes a verified :class:`CalculationRevision` into a
-current :class:`ModeloRecord` after the :class:`WorkflowEngine` preflight gate
-passes. Filing transitions and audit entries are persisted through the
-:class:`BucketEventHistoryRepository` path shared by the modelo revision
-services.
+:func:`~aeat.application.modelo.file_modelo_revision` promotes a verified
+:class:`CalculationRevision` into a current
+:class:`ModeloRecord` after the
+:class:`WorkflowEngine` preflight gate passes. Filing
+transitions and audit entries are persisted through the
+:class:`BucketEventHistoryRepository` path shared by the
+modelo revision services.
+
+The action records the operator's local/internal filing state only. It never
+submits to AEAT, never marks AEAT acceptance, and never fabricates official
+external evidence. A successful transition sets the target revision to
+``PRESENTADO``, creates a ``VIGENTE``
+:class:`ModeloRecord` with ``aeat_accepted=False``, and
+delegates cross-period carry projection to
+:func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`,
+which stamps locally-filed observations as non-official ``app_filing`` evidence.
+
+See Also:
+    :func:`~aeat.application.modelo.import_external_filing_evidence`:
+        Separate AEAT-attested import path that creates
+        :class:`ExternalEvidence` baselines; this local
+        filing action deliberately does not.
+    :func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`:
+        Persists the filing catalogue, revision state, work-unit pointers,
+        bucket events, participation index rows, and optional carry observation.
+    :func:`~aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+        Projects filed casillas into non-official cross-period observations.
+    :func:`~aeat.application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`:
+        Resolves the shared Modelo 303 refund/carry disposition before the file
+        transition persists.
+    :func:`~aeat.application.modelo._verification_actions._require_cross_period_clean_state`:
+        Rechecks cross-period dependencies before local filing state is written.
 """
 
 from __future__ import annotations
@@ -14,27 +41,30 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import RefundElection
 from ...core.config import Settings
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepository
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.buckets import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import derive_modelo_202_modality
 from ...domain.deadlines import TaxpayerProfile
-from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._calculation_revision import CalculationRevisionState
-from ...domain.modelos._codes import ModeloCode
-from ...domain.modelos._filing_record import ModeloRecord, ModeloRecordStatus
-from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ...domain.modelos._protocols import (
+from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionState,
+    ModeloCode,
+    ModeloError,
+    ModeloRecord,
+    ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
+    ModeloRecordStatus,
+    VerificationReport,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
-from ...domain.modelos._verification_report import VerificationReport
-from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ..calculations import CalculationObservationRepository, CrossPeriodExpectedMemberSet
 from ..workflow import WorkflowEngine, WorkflowRunRepository
 from ._action_errors import (
@@ -47,6 +77,10 @@ from ._action_errors import (
 from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
+from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
+from ._required_binding_gate import (
+    require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
+)
 from ._result_disposition_resolution import revision_is_refund_disposition
 from ._revision_persistence import persist_filed_revision
 from ._verification_actions import (
@@ -58,7 +92,29 @@ from ._workflow_gate import build_revision_workflow_engine as _build_revision_wo
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
 if TYPE_CHECKING:
-    from ..calculations._observations_repository import IvaWalletDecisionRepository
+    from ..calculations import IvaWalletDecisionRepository
+
+
+class ModeloFilingEvidenceMissingError(ModeloError):
+    """Raised when internal filing would seal deductible IVA without evidence."""
+
+
+def _existing_vigente_filing_record(
+    catalogue: ModeloRecordCatalogue,
+    calculation_revision_id: str,
+) -> ModeloRecord | None:
+    """Return the current (VIGENTE) filing record for a filed revision, if any.
+
+    Used by the idempotent re-file no-op: a revision already in ``PRESENTADO``
+    state is the current filed answer, so its VIGENTE
+    :class:`ModeloRecord` is returned unchanged. A
+    ``PRESENTADO`` revision must have exactly one VIGENTE record; ``None``
+    signals an inconsistent state the caller refuses rather than masking.
+    """
+    for record in catalogue.values():
+        if record.calculation_revision_id == calculation_revision_id and record.status is ModeloRecordStatus.VIGENTE:
+            return record
+    return None
 
 
 def file_modelo_revision(
@@ -81,34 +137,43 @@ def file_modelo_revision(
     settings: Settings | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
-    """File a verified-complete revision as the current filed answer.
+    """Mark a verified-complete revision as the current internal filed answer.
 
-    State transitions performed atomically (from the caller's
-    perspective — each repository save is sequenced):
+    This is the application service behind ``aeat app modelo work file``. It is
+    a local state transition, not an AEAT presentation: the resulting
+    :class:`ModeloRecord` has ``aeat_accepted=False`` and no
+    external evidence.
+
+    Preconditions and state changes:
 
     1. Verify the revision is in ``VERIFICADO_COMPLETO`` state.
-    2. Run the workflow gate for the revision's modelo and period.
-    3. Look up any existing current filing record for the same
-       (bucket, modelo, year, period) tuple.
-    4. If a prior current filing exists:
-        * mark the prior filing record ``SUPERSEDED`` with
-          ``superseded_at`` and ``superseded_by_filing_record_id``;
-        * transition the prior filed calculation revision from
-          ``FILED`` to ``FILED_SUPERSEDED``.
-    5. Create the new filing record with status ``CURRENT``.
-    6. Transition the target calculation revision from
-       ``VERIFICADO_COMPLETO`` to ``FILED``.
-    7. Advance the work unit's ``filed_calculation_revision_id``
-       and ``current_filing_record_id`` pointers.
+    2. Recheck profile readiness, persisted Modelo 303 IVA-wallet decision
+       compatibility, and cross-period clean state.
+    3. Run the :class:`WorkflowEngine` gate for the
+       revision's modelo and period.
+    4. Resolve the Modelo 303 refund/carry disposition from
+       :class:`RefundElection` and
+       :class:`TaxpayerProfile`.
+    5. If a prior current filing exists, mark its
+       :class:`ModeloRecord` as ``SUPERSEDIDO`` and its
+       prior :class:`CalculationRevision` as
+       ``PRESENTADO_SUPERSEDIDO``.
+    6. Create the new filing record with status ``VIGENTE`` and transition the
+       target calculation revision from ``VERIFICADO_COMPLETO`` to
+       ``PRESENTADO``.
+    7. Advance the work unit's ``filed_calculation_revision_id`` and
+       ``current_filing_record_id`` pointers, emit ``MODELO_FILED``/
+       ``MODELO_FILED_SUPERSEDED`` bucket events, and persist any local
+       ``app_filing`` carry observation.
 
     Args:
         calculation_revision_id: The id of the verified-complete revision
             to file.
         actor: Operator identifier recorded in the filing record and audit
             trail.
-        workflow_profile: The :class:`TaxpayerProfile` used to evaluate
-            :class:`WorkflowEngine` gate conditions and cross-period clean-state
-            applicability.
+        workflow_profile: The :class:`TaxpayerProfile`
+            used to evaluate :class:`WorkflowEngine`
+            gate conditions and cross-period clean-state applicability.
         notes: Optional operator-supplied filing notes.
         refund_election: The operator's per-filing Modelo 303 negative-result
             disposition election. Defaults to ``COMPENSAR`` (carry the credit
@@ -126,9 +191,11 @@ def file_modelo_revision(
         bucket_event_repository: Optional bucket-event history repository
             override.
         iva_compensation_decision_repository: Optional IVA wallet decision
-            repository override.
+            repository override used to require that a persisted decision still
+            matches the target revision.
         calculation_observation_repository: Optional calculation-observation
-            repository override used by the cross-period clean-state proof.
+            repository override used by the cross-period clean-state proof and
+            the non-official local carry projection.
         cross_period_expected_member_sets: Optional expected grupo member
             rosters used by the cross-period clean-state proof.
         workflow_engine: Optional workflow engine override for the preflight
@@ -138,7 +205,8 @@ def file_modelo_revision(
         clock: Optional UTC timestamp override.
 
     Returns:
-        The newly created :class:`ModeloRecord` in ``CURRENT`` status.
+        The newly created local :class:`ModeloRecord` in
+        ``VIGENTE`` status.
 
     Raises:
         CalculationRevisionNotFoundError: When the revision id is
@@ -147,6 +215,20 @@ def file_modelo_revision(
             ``VERIFICADO_COMPLETO`` state.
         WorkUnitNotFoundError: When the revision's parent work
             unit cannot be loaded.
+
+    See Also:
+        :func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`:
+            Performs the repository writes once all gates pass.
+        :func:`~aeat.application.modelo.import_external_filing_evidence`:
+            Creates official-evidence baselines for imported filings; use that
+            path when a :class:`ExternalEvidence` reference
+            must be carried.
+        :func:`~aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+            Saves the non-official ``app_filing`` observation used by later
+            ``previous_filing`` calculations.
+        :func:`~aeat.application.modelo.export_modelo_revision`:
+            Sibling local finish line that writes the fichero-BOE artefact
+            without requiring this internal file marker.
     """
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
@@ -164,6 +246,19 @@ def file_modelo_revision(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id},
         )
+    if target.state is CalculationRevisionState.PRESENTADO:
+        # Idempotent re-file: this revision is already the current filed answer.
+        # A retry of a completed single-subject file returns the existing VIGENTE
+        # filing record as a clean no-op - no new filing record, no duplicate
+        # MODELO_FILED lifecycle event, and (filing is a local transition, never
+        # an AEAT submission per aeat-safety-legal-gates) no write/submit path is
+        # touched. Mirrors the verify-report content-pinned idempotency. The CLI
+        # surfaces the no-op as an info Notice. A PRESENTADO revision with no
+        # VIGENTE record is an inconsistent state, so it falls through to the
+        # hard refusal below rather than fabricating a record.
+        existing = _existing_vigente_filing_record(fr_repo.load(), calculation_revision_id)
+        if existing is not None:
+            return existing
     if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
@@ -176,31 +271,16 @@ def file_modelo_revision(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
         )
-    from ._profile_readiness_gate import require_profile_ready_for_work_unit
-
-    require_profile_ready_for_work_unit(work_unit)
-    iva_compensation_decision = _require_iva_compensation_revision_match(
-        work_unit,
-        target,
-        repository=iva_compensation_decision_repository,
-    )
-    _require_cross_period_clean_state(
-        work_unit,
+    _require_filing_preconditions(
+        work_unit=work_unit,
+        target=target,
+        workflow_profile=workflow_profile,
         observation_repository=obs_repo,
         filing_repository=fr_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
-        iva_compensation_decision=iva_compensation_decision,
-        expected_member_sets=_cross_period_expected_member_sets_from_profile(
-            workflow_profile,
-            cross_period_expected_member_sets,
-        ),
-        taxpayer_tax_id=workflow_profile.tax_id,
-        activity_start_date=workflow_profile.activity_start_date,
-        modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
-        taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
-        workflow_profile=workflow_profile,
-        target_revision=target,
+        iva_compensation_decision_repository=iva_compensation_decision_repository,
+        cross_period_expected_member_sets=cross_period_expected_member_sets,
     )
 
     now = clock or _utc_now()
@@ -221,20 +301,10 @@ def file_modelo_revision(
         run_repository=run_repo,
     )
 
-    # Determine the filing disposition ONCE from the same shared resolver the
-    # export reads (resolve_modelo_result_disposition): a Modelo 303 devolución
-    # period (REDEME monthly-refund or non-REDEME last-period opt-in) returns the
-    # credit, so the cross-period carry persisted below must generate zero
-    # compensación rather than double-claim the refunded credit into the next
-    # period's casilla 110. The export's fichero "D" and this carry now read one
-    # determined fact from the same ``refund_election`` (RD 1624/1992 art. 30 /
-    # Ley 37/1992 art. 116). An out-of-window ``DEVOLVER`` election is refused
-    # here, before the filing transition persists.
-    refunded = revision_is_refund_disposition(
+    refunded = _filed_revision_refunded(
         work_unit=work_unit,
-        revision=target,
+        target=target,
         workflow_profile=workflow_profile,
-        period=work_unit.period,
         refund_election=refund_election,
     )
 
@@ -255,6 +325,80 @@ def file_modelo_revision(
     )
 
 
+def _filed_revision_refunded(
+    *,
+    work_unit,
+    target,
+    workflow_profile: TaxpayerProfile,
+    refund_election: RefundElection,
+) -> bool:
+    # Determine the filing disposition ONCE from the same shared resolver the
+    # export reads. A Modelo 303 devolución period returns the credit, so the
+    # cross-period carry persisted by filing must generate zero compensación
+    # rather than double-claim the refunded credit into the next period.
+    return revision_is_refund_disposition(
+        work_unit=work_unit,
+        revision=target,
+        workflow_profile=workflow_profile,
+        period=work_unit.period,
+        refund_election=refund_election,
+    )
+
+
+def _require_filing_preconditions(
+    *,
+    work_unit,
+    target,
+    workflow_profile: TaxpayerProfile,
+    observation_repository: CalculationObservationRepository,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
+    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+) -> None:
+    from ._profile_readiness_gate import require_profile_ready_for_work_unit
+
+    raise_if_deductible_vat_evidence_missing(
+        target,
+        error_type=ModeloFilingEvidenceMissingError,
+        surface="internal filing",
+        suggestion=(
+            "aeat app ledger evidence add PATH; "
+            "aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID"
+        ),
+    )
+    require_profile_ready_for_work_unit(work_unit)
+    _require_persisted_required_bindings_resolved(
+        work_unit=work_unit,
+        revision=target,
+        action="file",
+    )
+    iva_compensation_decision = _require_iva_compensation_revision_match(
+        work_unit,
+        target,
+        repository=iva_compensation_decision_repository,
+    )
+    _require_cross_period_clean_state(
+        work_unit,
+        observation_repository=observation_repository,
+        filing_repository=filing_repository,
+        calculation_repository=calculation_repository,
+        verification_repository=verification_repository,
+        iva_compensation_decision=iva_compensation_decision,
+        expected_member_sets=_cross_period_expected_member_sets_from_profile(
+            workflow_profile,
+            cross_period_expected_member_sets,
+        ),
+        taxpayer_tax_id=workflow_profile.tax_id,
+        activity_start_date=workflow_profile.activity_start_date,
+        modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
+        taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
+        workflow_profile=workflow_profile,
+        target_revision=target,
+    )
+
+
 def list_filing_records(
     *,
     bucket_id: str | None = None,
@@ -262,7 +406,7 @@ def list_filing_records(
     include_superseded: bool = False,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
 ) -> tuple[ModeloRecord, ...]:
-    """List :class:`ModeloRecord` filing records, optionally filtered to a bucket and modelo.
+    """List :class:`ModeloRecord` rows, optionally filtered to a bucket and modelo.
 
     Superseded records are excluded unless ``include_superseded``
     is true. Results are sorted by ``(bucket_id, filing_year,
@@ -308,9 +452,13 @@ def list_verification_reports(
     calculation_revision_id: str | None = None,
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
 ) -> tuple[VerificationReport, ...]:
-    """List :class:`VerificationReport` records, optionally filtered to one calculation revision.
+    """List :class:`VerificationReport` records.
 
-    Results are sorted by ``(calculation_revision_id, run_at)``.
+    Optionally filtered to one
+    :class:`CalculationRevision`. The
+    :class:`VerificationReportCatalogueRepositoryProtocol`
+    supplies the persisted report catalogue. Results are sorted by
+    ``(calculation_revision_id, run_at)``.
     """
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     catalogue = vr_repo.load()
@@ -327,7 +475,13 @@ def get_verification_report(
     *,
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
 ) -> VerificationReport:
-    """Return one :class:`VerificationReport` by id, or raise."""
+    """Return one :class:`VerificationReport` by id, or raise.
+
+    The optional
+    :class:`VerificationReportCatalogueRepositoryProtocol`
+    supplies the persisted report catalogue for tests or alternate storage
+    boundaries.
+    """
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     catalogue = vr_repo.load()
     report = catalogue.get(verification_report_id)

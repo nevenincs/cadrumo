@@ -40,33 +40,29 @@ def test_classification_result_stamps_exemption_article_when_domestic_exempt() -
     assert result.exemption_article is IvaExemptionArticle.ART_20_UNO_26
 
 
-@pytest.mark.parametrize(
-    "non_exempt_category",
-    [
+def test_classification_result_rejects_exemption_article_on_non_exempt_category() -> None:
+    """The validator rejects a discriminator paired with any non-DOMESTIC_EXEMPT category."""
+    # Pydantic v2 wraps validator-raised exceptions in ValidationError;
+    # the inner IvaValidationError message reaches the rendered output.
+    for non_exempt_category in (
         IvaCategory.DOMESTIC_GENERAL_21,
         IvaCategory.DOMESTIC_REDUCED_10,
         IvaCategory.INTRA_COMMUNITY_SUPPLY,
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
         IvaCategory.OPERACION_NO_SUJETA,
-    ],
-)
-def test_classification_result_rejects_exemption_article_on_non_exempt_category(
-    non_exempt_category: IvaCategory,
-) -> None:
-    """The validator rejects a discriminator paired with any non-DOMESTIC_EXEMPT category."""
-    # Pydantic v2 wraps validator-raised exceptions in ValidationError;
-    # the inner IvaValidationError message reaches the rendered output.
-    with pytest.raises(ValidationError) as exc:
-        IvaClassificationResult(
-            category=non_exempt_category,
-            matched_rule_id="R_test",
-            exemption_article=IvaExemptionArticle.ART_20_UNO_8,
-        )
+    ):
+        with pytest.raises(ValidationError) as exc:
+            IvaClassificationResult(
+                category=non_exempt_category,
+                matched_rule_id="R_test",
+                exemption_article=IvaExemptionArticle.ART_20_UNO_8,
+            )
 
-    message = str(exc.value)
-    assert "exemption_article" in message
-    assert "DOMESTIC_EXEMPT" in message
-    assert non_exempt_category.value in message
+        message = str(exc.value)
+        assert "exemption_article" in message, non_exempt_category
+        assert "DOMESTIC_EXEMPT" in message, non_exempt_category
+        assert non_exempt_category.value in message
 
 
 def test_exemption_article_enum_membership_matches_baseline_set() -> None:

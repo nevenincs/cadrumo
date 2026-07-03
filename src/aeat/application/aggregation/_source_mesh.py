@@ -1,8 +1,20 @@
 """Canonical application-layer source resolution contracts.
 
-:class:`CalculationSourceContext` carries the :class:`ModeloRevision` that
-the source mesh resolvers consult when projecting binding slots onto
-available data sources.
+The source mesh is the calculation-facing envelope for values derived from
+bucket-local ledgers, invoices, prior filings, profile facts, borrador data,
+relation prefill, and other registry-declared sources. A
+:class:`CalculationSourceContext` binds the active bucket, modelo,
+:class:`Period`, and selected :class:`ModeloRevision`; each
+:class:`ModeloSourceResolver` claims one or more :class:`BindingSourceKind`
+members and returns a :class:`CalculationSourceResolution`.
+
+``CalculationSourceResolution`` is the single resolved-source carrier consumed
+by modelo calculation. It carries decimal, enum, date, relation, bound-casilla,
+detail-row, transaction-id, diagnostic, and provenance channels. Exclusive
+merges use :func:`merge_source_resolutions`; precedence overlays use
+:func:`merge_source_resolutions_by_precedence`; and
+:func:`collect_unhandled_source_diagnostics` is the no-silent-blank safety net
+for declared binding sources without an enrolled resolver.
 """
 
 from __future__ import annotations
@@ -12,9 +24,9 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Literal, Protocol, runtime_checkable
+from typing import Literal, NamedTuple, Protocol, runtime_checkable
 
-from pydantic import BaseModel, Field, field_serializer, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, Period
@@ -22,7 +34,16 @@ from ...core.errors import CoreValidationError
 from ...core.i18n import tr
 from ...core.identity import BucketId
 from ...core.logging import get_logger
-from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision, RelationId
+from ...domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+    LegalRefId,
+    ModeloId,
+    ModeloRevision,
+    RelationId,
+    SourceRefId,
+)
+from ...domain.modelos import ModeloDetailRow
 from ._errors import AggregationValidationError, t
 
 
@@ -32,7 +53,7 @@ class SourceMeshError(CoreValidationError):
     Replaces bare :exc:`ValueError` at the ``owned_sources`` uniqueness / blank
     guards and the ``source_transaction_ids`` uniqueness / blank guards so
     callers receive a typed, registry-bound, localized error.  Inherits from
-    :class:`~aeat.core.errors.CoreValidationError` (which inherits from
+    :class:`~core.errors.CoreValidationError` (which inherits from
     :exc:`ValueError`) so pydantic field validators surface it through
     ``ValidationError`` without special handling.
     """
@@ -54,26 +75,162 @@ CalculationSourceDiagnosticReason = Literal[
     "unrouted_observation",
     "oss_no_live_source",
     "missing_transaction_evidence",
+    "administrador_retencion_rate_mismatch",
     "official_box_unpopulated",
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",
     "settlement_not_computed",
+    "dt12_regime_window_closed",
+    "dt12_regime_window_unverified",
+    "dt12_parcial_rescate_guidance",
 ]
+
+
+def _binding_source_for_token(value: object) -> BindingSourceKind | None:
+    if isinstance(value, BindingSourceKind):
+        return value
+    if not isinstance(value, str):
+        return None
+    token = value.strip()
+    if not token:
+        return None
+    try:
+        return BindingSourceKind(token)
+    except ValueError:
+        return None
+
+
+def _infer_binding_source(payload: object) -> object:
+    """Hydrate ``binding_source`` when the free ``source_kind`` token is canonical."""
+    if not isinstance(payload, Mapping):
+        return payload
+    data = dict(payload)
+    source = _binding_source_for_token(data.get("source_kind"))
+    if isinstance(data.get("source_kind"), BindingSourceKind):
+        data["source_kind"] = data["source_kind"].value
+
+    explicit = data.get("binding_source")
+    if explicit is None:
+        if source is not None:
+            data["binding_source"] = source
+        return data
+
+    explicit_source = _binding_source_for_token(explicit)
+    if explicit_source is not None:
+        data["binding_source"] = explicit_source
+    if source is not None and explicit_source is not None and source is not explicit_source:
+        raise SourceMeshError("aggregation.source_mesh.errors.binding_source_mismatch")
+    return data
+
+
+class DeferredSourceTarget(NamedTuple):
+    """The governed promotion target of a deferred binding source kind.
+
+    A deferred kind has no live mesh resolver yet, so it produces a standing
+    calculate-path advisory rather than a silent blank. Re-ratification per the
+    deferrals ADR replaces the former free-prose deferral comments with this
+    structured annotation so the deferral set is governed, not merely
+    enumerated: every deferred kind names the decision that owns it and the
+    condition that promotes it, and a kind whose trigger has fired but which
+    remains deferred is a mechanically-detectable finding at the swarm-audit
+    cadence.
+
+    Members:
+        owning_adr: The decision-record stem that ratifies this deferral and its
+            promotion target.
+        trigger: The condition under which the kind should be promoted to a live
+            mesh binding (a dependency for the IVA kinds; a per-modelo review
+            for the informativa detail-row kinds, which carry no promotion date).
+        promotion_depends_on: For a kind gated on another source kind landing,
+            the source kind it waits on. ``None`` for kinds whose trigger is a
+            human review rather than a mechanical source-kind dependency. When a
+            named dependency has itself been promoted out of the deferred set,
+            this kind's trigger has fired.
+    """
+
+    owning_adr: str
+    trigger: str
+    promotion_depends_on: BindingSourceKind | None = None
+
 
 # Source kinds that are explicitly deferred — no mesh resolver is built yet, but
 # they are known to the system and must produce a standing advisory on
-# source_diagnostics rather than a silent blank.  Listed here so the S26
-# boundary gate (in _calculation_actions) can accept them without flagging
-# them as unknown-novel sources, and so the S08 safety net emits the advisory
-# while keeping them off the manual_sources allowlist (W02.P06.S10).
-DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
+# source_diagnostics rather than a silent blank. The S26 boundary gate (in
+# _calculation_actions) accepts them without flagging them as unknown-novel
+# sources, and the S08 safety net emits the advisory while keeping them off the
+# manual_sources allowlist. Each carries a typed promotion target (owning ADR +
+# trigger) per the deferrals re-ratification; ``DEFERRED_SOURCE_KINDS`` is
+# derived from the mapping so the membership set and its governance cannot drift.
+DEFERRED_SOURCE_KIND_TARGETS: Mapping[BindingSourceKind, DeferredSourceTarget] = MappingProxyType(
     {
-        BindingSourceKind.ATRIBUCION_MEMBER,  # M184 — Sheets-pull-only, no live resolver yet
-        BindingSourceKind.RELATED_PARTY_OPERATION,  # M232 — Sheets-pull-only
-        BindingSourceKind.FOREIGN_ASSET,  # M720 — Sheets-pull-only
-        BindingSourceKind.REFUND_OPERATION,  # M360 — Sheets-pull-only
+        # Informativa detail-row kinds (Sheets-pull-only, no resolver design):
+        # re-ratified with no promotion date; the review trigger is the modelo's
+        # next hardening campaign or an operator filing need, whichever comes
+        # first, and promotion requires its own grounded design ADR.
+        BindingSourceKind.ATRIBUCION_MEMBER: DeferredSourceTarget(
+            owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
+            trigger=(
+                "No promotion date. Review at M184's next hardening campaign or an operator filing need; "
+                "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
+            ),
+        ),
+        BindingSourceKind.RELATED_PARTY_OPERATION: DeferredSourceTarget(
+            owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
+            trigger=(
+                "No promotion date. Review at M232's next hardening campaign or an operator filing need; "
+                "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
+            ),
+        ),
+        BindingSourceKind.FOREIGN_ASSET: DeferredSourceTarget(
+            owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
+            trigger=(
+                "No promotion date. Review at M720's next hardening campaign or an operator filing need; "
+                "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
+            ),
+        ),
+        BindingSourceKind.REFUND_OPERATION: DeferredSourceTarget(
+            owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
+            trigger=(
+                "No promotion date. Review at M360's next hardening campaign or an operator filing need; "
+                "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
+            ),
+        ),
+        BindingSourceKind.DONATIVO_DONOR: DeferredSourceTarget(
+            owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
+            trigger=(
+                "No promotion date. Review at M182's next hardening campaign or an operator filing need; "
+                "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
+            ),
+        ),
+        # IVA regularización kinds: dependency-triggered, not dateless. LIVA
+        # arts. 107-110 capital-goods regularización (casilla 43) promotes once
+        # the prorrata regularización source lands, consuming the same definitive
+        # percentage.
+        BindingSourceKind.BIENES_INVERSION_REGULARIZACION: DeferredSourceTarget(
+            owning_adr="2026-07-01-iva-bienes-inversion-regularizacion-adr",
+            trigger=(
+                "Promote once the prorrata-definitiva source lands; it consumes the same annual definitive "
+                "percentage as prorrata regularización (LIVA arts. 107-110, casilla 43)."
+            ),
+            promotion_depends_on=BindingSourceKind.PRORRATA_REGULARIZACION,
+        ),
+        # LIVA arts. 104-105 annual prorrata-general regularización por porcentaje
+        # definitivo (casilla 44) stays operator-confirmable until the
+        # provisional-carry store is wired and the source is promoted to a live
+        # mesh binding on the iva_compensation_annual_partition precedent.
+        BindingSourceKind.PRORRATA_REGULARIZACION: DeferredSourceTarget(
+            owning_adr="2026-07-01-iva-complexity-hardening-scope-adr",
+            trigger=(
+                "Promote to a live mesh binding on the iva_compensation_annual_partition precedent once the "
+                "provisional-carry store plus Q4 regularisation is proven end to end (LIVA arts. 104-105, casilla 44)."
+            ),
+        ),
     },
 )
+
+# Derived so the membership set and its governance annotations cannot diverge:
+# every deferred kind is a key in DEFERRED_SOURCE_KIND_TARGETS.
+DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(DEFERRED_SOURCE_KIND_TARGETS)
 
 # Source kinds reserved-undeclared: a member that exists in the closed taxonomy
 # but carries no registry binding and no resolver yet (counterpart / invoice-shaped
@@ -87,11 +244,104 @@ RESERVED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 )
 
 
+class CallerOverrideDisposition(StrEnum):
+    """Whether the calculate path permits a caller override of a source's value.
+
+    The override disposition axis of the caller-override precedence ladder
+    (aggregation-taxonomy ADR ruling D2).
+
+    Members:
+        LOCK: Deterministic bucket-owned resolvers (the ledger aggregations and
+            the invoice families). A caller override is REJECTED so the persisted
+            revision faithfully reflects the sources it aggregates.
+        CARRY: Carry-style sources (previous_filing, relation_prefill, and the
+            IVA-compensation annual partition). A caller override of an
+            automatically-carried prior value is legitimate and must reach the
+            engine, so these are EXCLUDED from the post-merge caller-override
+            guard.
+    """
+
+    LOCK = "lock"
+    CARRY = "carry"
+
+
+class CallerOverridePrecedenceTier(NamedTuple):
+    """One ordered tier of the calculate-path caller-override precedence ladder.
+
+    Carries the tier name, the source kinds it owns, and the override disposition
+    the guard applies to them. The ordered ladder is the single declaration the
+    caller-override guard sets are derived from — :data:`CALLER_OVERRIDE_PRECEDENCE_LADDER`
+    replaces the hand-listed lock / carry frozensets, and a conformance test binds
+    the policy's derived sets to it so the two cannot silently diverge.
+    """
+
+    name: str
+    source_kinds: frozenset[BindingSourceKind]
+    disposition: CallerOverrideDisposition
+
+
+#: The calculate-path caller-override precedence ladder as ordered tier data
+#: (aggregation-taxonomy ADR ruling D2), lowest-precedence tier first. The
+#: guard's lock and carry source sets are the unions of the LOCK- and
+#: CARRY-disposition tiers (see :func:`precedence_ladder_sources`). This encodes
+#: the override DISPOSITION axis only; the merge OVERLAY order (profile < mesh
+#: backend < borrador < caller, later tier wins) is enforced separately by
+#: :func:`merge_source_resolutions`.
+CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
+    CallerOverridePrecedenceTier(
+        name="deterministic_lock",
+        source_kinds=frozenset(
+            {
+                BindingSourceKind.LEDGER_IVA_AGGREGATION,
+                BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+                BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+                BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+                BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
+                BindingSourceKind.LEDGER_OSS_AGGREGATION,
+                BindingSourceKind.COLLECTIBLE_INVOICE,
+                BindingSourceKind.PAYABLE_INVOICE,
+            },
+        ),
+        disposition=CallerOverrideDisposition.LOCK,
+    ),
+    CallerOverridePrecedenceTier(
+        name="carry_forward",
+        source_kinds=frozenset(
+            {
+                BindingSourceKind.PREVIOUS_FILING,
+                BindingSourceKind.RELATION_PREFILL,
+                BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+            },
+        ),
+        disposition=CallerOverrideDisposition.CARRY,
+    ),
+)
+
+
+def precedence_ladder_sources(disposition: CallerOverrideDisposition) -> frozenset[BindingSourceKind]:
+    """Union of the source kinds carried by every ladder tier of ``disposition``.
+
+    The single derivation the caller-override policy sets read, so a source kind's
+    lock-vs-carry disposition is declared once in
+    :data:`CALLER_OVERRIDE_PRECEDENCE_LADDER` rather than hand-listed per set.
+
+    Returns:
+        The :class:`BindingSourceKind` members carried by every ladder tier
+        whose disposition matches *disposition*.
+    """
+    return frozenset(
+        kind
+        for tier in CALLER_OVERRIDE_PRECEDENCE_LADDER
+        if tier.disposition is disposition
+        for kind in tier.source_kinds
+    )
+
+
 class BindingSourceDisposition(StrEnum):
     """Where a binding source kind resolves on the live calculate mesh.
 
     The single closed answer to "where does source X resolve" for every
-    :class:`~aeat.core.BindingSourceKind` member, replacing the four scattered
+    :class:`~core.BindingSourceKind` member, replacing the four scattered
     enrollment structures (the ``merge_source_resolutions`` resolver tuple, the
     pre-mesh-handled set, ``DEFERRED_SOURCE_KINDS``, and the per-modelo service
     provider enum).
@@ -138,7 +388,7 @@ def build_binding_source_dispositions(
 class CalculationSourceContext(BaseModel):
     """Context supplied to a calculation source resolver.
 
-    The ``period`` field is the typed :class:`~aeat.core.Period` value
+    The ``period`` field is the typed :class:`~core.Period` value
     carrying both the filing year and the bare registry period code.  Consumers
     that need the raw token for a downstream ``str``-typed API should use
     ``context.period.registry_token``; those that need only the year can use
@@ -162,11 +412,18 @@ class CalculationSourceDiagnostic(BaseModel):
 
     reason: CalculationSourceDiagnosticReason
     source_kind: str = Field(min_length=1, max_length=64)
+    binding_source: BindingSourceKind | None = None
+    """Canonical binding source when ``source_kind`` names one; ``None`` for advisory categories."""
     message: str = Field(min_length=1, max_length=512)
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
     binding_id: BindingId | None = None
     relation_id: RelationId | None = None
     casilla_id: CasillaId | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _set_binding_source(cls, value: object) -> object:
+        return _infer_binding_source(value)
 
 
 class CalculationSourceProvenance(BaseModel):
@@ -175,8 +432,37 @@ class CalculationSourceProvenance(BaseModel):
     model_config = _STRICT_FROZEN
 
     source_kind: str = Field(min_length=1, max_length=64)
+    binding_source: BindingSourceKind | None = None
+    """Canonical binding source when ``source_kind`` names one; ``None`` for non-binding provenance."""
     source_ref: str = Field(min_length=1, max_length=256)
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
+    relation_id: RelationId | None = None
+    source_modelo: ModeloId | None = None
+    source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    source_periods: tuple[str, ...] = ()
+    source_casilla_ids: tuple[CasillaId, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
+
+    @model_validator(mode="before")
+    @classmethod
+    def _set_binding_source(cls, value: object) -> object:
+        return _infer_binding_source(value)
+
+    @model_validator(mode="after")
+    def _relation_provenance_is_complete(self) -> CalculationSourceProvenance:
+        if self.relation_id is None:
+            return self
+        if (
+            self.source_modelo is None
+            or self.source_filing_year is None
+            or not self.source_periods
+            or not self.source_casilla_ids
+            or not self.legal_refs
+            or not self.source_refs
+        ):
+            raise SourceMeshError("aggregation.source_mesh.errors.relation_provenance_incomplete")
+        return self
 
 
 class BorradorSourceProvenance(BaseModel):
@@ -213,6 +499,7 @@ class CalculationSourceResolution(BaseModel):
     unresolved_relation_ids: tuple[RelationId, ...] = Field(default_factory=tuple)
     unresolved_binding_ids: tuple[BindingId, ...] = Field(default_factory=tuple)
     bound_inputs_by_casilla_id: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
+    detail_rows: tuple[ModeloDetailRow, ...] = Field(default_factory=tuple)
     source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
     # Typed borrador provenance. Carried only by the borrador resolution
     # (``Modelo100BorradorSourceResolver``); ``merge_source_resolutions``
@@ -228,11 +515,11 @@ class CalculationSourceResolution(BaseModel):
     def _coerce_owned_sources(cls, value: object) -> object:
         """Hydrate known bare source-token strings to their :class:`BindingSourceKind` member.
 
-        The model carries :data:`~aeat.core.STRICT_FROZEN_CONFIG` (``strict=True``),
+        The model carries :data:`~core.STRICT_FROZEN_CONFIG` (``strict=True``),
         which disables string→enum coercion. Resolvers declare their owned source as a
         canonical token and may pass either the member or its bare string value; this
         before-validator maps each KNOWN bare string to its member (the
-        ``BindingAggregation._coerce_op`` precedent in :mod:`aeat.core.aggregation`) so
+        ``BindingAggregation._coerce_op`` precedent in :mod:`core.aggregation`) so
         the field stays strictly typed while a known token still validates. A blank
         string raises :class:`SourceMeshError`; any other non-member value is left
         untouched for the strict field to reject with its standard enum error, so a
@@ -396,6 +683,7 @@ def merge_source_resolutions(
     unresolved_relation_ids: set[RelationId] = set()
     unresolved_binding_ids: set[BindingId] = set()
     bound_inputs_by_casilla_id: dict[CasillaId, Decimal] = {}
+    detail_rows: list[ModeloDetailRow] = []
     source_transaction_ids: set[str] = set()
     diagnostics: list[CalculationSourceDiagnostic] = []
     provenance: list[CalculationSourceProvenance] = []
@@ -413,6 +701,7 @@ def merge_source_resolutions(
         owned_sources.update(resolution.owned_sources)
         diagnostics.extend(resolution.diagnostics)
         provenance.extend(resolution.provenance)
+        detail_rows.extend(resolution.detail_rows)
         source_transaction_ids.update(resolution.source_transaction_ids)
         unresolved_relation_ids.update(resolution.unresolved_relation_ids)
         unresolved_binding_ids.update(resolution.unresolved_binding_ids)
@@ -452,6 +741,7 @@ def merge_source_resolutions(
             ),
         ),
         bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
+        detail_rows=tuple(detail_rows),
         source_transaction_ids=tuple(sorted(source_transaction_ids)),
         borrador_provenance=borrador_provenance,
         diagnostics=tuple(diagnostics),
@@ -488,6 +778,7 @@ def merge_source_resolutions_by_precedence(
     unresolved_relation_ids: set[RelationId] = set()
     unresolved_binding_ids: set[BindingId] = set()
     bound_inputs_by_casilla_id: dict[CasillaId, Decimal] = {}
+    detail_rows: list[ModeloDetailRow] = []
     source_transaction_ids: set[str] = set()
     diagnostics: list[CalculationSourceDiagnostic] = []
     provenance: list[CalculationSourceProvenance] = []
@@ -498,6 +789,7 @@ def merge_source_resolutions_by_precedence(
         owned_sources.update(tier.owned_sources)
         diagnostics.extend(tier.diagnostics)
         provenance.extend(tier.provenance)
+        detail_rows.extend(tier.detail_rows)
         source_transaction_ids.update(tier.source_transaction_ids)
         unresolved_relation_ids.update(tier.unresolved_relation_ids)
         unresolved_binding_ids.update(tier.unresolved_binding_ids)
@@ -526,6 +818,7 @@ def merge_source_resolutions_by_precedence(
             ),
         ),
         bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
+        detail_rows=tuple(detail_rows),
         source_transaction_ids=tuple(sorted(source_transaction_ids)),
         borrador_provenance=borrador_provenance,
         diagnostics=tuple(diagnostics),
@@ -627,7 +920,9 @@ def _claim_relation(owners: dict[RelationId, str], relation_id: RelationId, reso
 
 
 __all__ = [
+    "CALLER_OVERRIDE_PRECEDENCE_LADDER",
     "DEFERRED_SOURCE_KINDS",
+    "DEFERRED_SOURCE_KIND_TARGETS",
     "RESERVED_SOURCE_KINDS",
     "BindingSourceDisposition",
     "BorradorSourceProvenance",
@@ -636,10 +931,14 @@ __all__ = [
     "CalculationSourceDiagnosticReason",
     "CalculationSourceProvenance",
     "CalculationSourceResolution",
+    "CallerOverrideDisposition",
+    "CallerOverridePrecedenceTier",
+    "DeferredSourceTarget",
     "ModeloSourceResolver",
     "build_binding_source_dispositions",
     "collect_unhandled_source_diagnostics",
     "merge_source_resolutions",
     "merge_source_resolutions_by_precedence",
+    "precedence_ladder_sources",
     "storage_degradation_resolution",
 ]

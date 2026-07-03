@@ -22,9 +22,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_diff_paths_returns_empty_for_identical_scalars() -> None:
-    assert _diff_paths(5, 5) == ()
-    assert _diff_paths("abc", "abc") == ()
-    assert _diff_paths(None, None) == ()
+    for value in (5, "abc", None):
+        assert _diff_paths(value, value) == (), value
 
 
 def test_diff_paths_returns_empty_for_identical_dicts() -> None:
@@ -32,12 +31,14 @@ def test_diff_paths_returns_empty_for_identical_dicts() -> None:
     assert _diff_paths(payload, payload) == ()
 
 
-def test_diff_paths_reports_scalar_inequality_with_empty_prefix() -> None:
-    assert _diff_paths(1, 2) == (": 1 != 2",)
+def test_diff_paths_reports_scalar_inequality() -> None:
+    cases = (
+        ("", ": 1 != 2"),
+        ("report.value", "report.value: 1 != 2"),
+    )
 
-
-def test_diff_paths_reports_scalar_inequality_with_nested_prefix() -> None:
-    assert _diff_paths(1, 2, "report.value") == ("report.value: 1 != 2",)
+    for prefix, expected in cases:
+        assert _diff_paths(1, 2, prefix) == (expected,), prefix
 
 
 def test_diff_paths_top_level_dict_keys_have_no_leading_dot() -> None:
@@ -53,17 +54,15 @@ def test_diff_paths_nested_dict_keys_use_dot_separator() -> None:
     assert diff == ("outer.inner: 1 != 2",)
 
 
-def test_diff_paths_reports_key_missing_from_stored_tape() -> None:
+def test_diff_paths_reports_key_missing_from_one_side() -> None:
     """The convention: `left` is the stored tape, `right` is current."""
-    diff = _diff_paths({}, {"value": 1})
+    cases = (
+        ({}, {"value": 1}, "value: missing from stored tape"),
+        ({"value": 1}, {}, "value: missing from current tape"),
+    )
 
-    assert diff == ("value: missing from stored tape",)
-
-
-def test_diff_paths_reports_key_missing_from_current_tape() -> None:
-    diff = _diff_paths({"value": 1}, {})
-
-    assert diff == ("value: missing from current tape",)
+    for stored, current, expected in cases:
+        assert _diff_paths(stored, current) == (expected,), expected
 
 
 def test_diff_paths_reports_asymmetric_keys_in_sorted_order() -> None:
@@ -112,12 +111,9 @@ def test_diff_paths_tracks_mixed_dict_of_list_of_dict_paths() -> None:
     assert diff == ("report.diff[0].value: 100 != 200",)
 
 
-def test_diff_paths_returns_empty_for_empty_dicts() -> None:
-    assert _diff_paths({}, {}) == ()
-
-
-def test_diff_paths_returns_empty_for_empty_lists() -> None:
-    assert _diff_paths([], []) == ()
+def test_diff_paths_returns_empty_for_empty_containers() -> None:
+    for stored, current in (({}, {}), ([], [])):
+        assert _diff_paths(stored, current) == (), (stored, current)
 
 
 def test_diff_paths_distinguishes_dict_vs_list_at_the_same_path() -> None:

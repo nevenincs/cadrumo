@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from ....core.i18n import tr
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ._profile_cli_support import (
     create_quiet_profile as _create_profile,
@@ -31,6 +33,10 @@ from ._profile_cli_support import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_STATUS_LABEL = tr("application.wizard.output_labels.status", locale="en")
+_NEXT_LABEL = tr("application.wizard.output_labels.next", locale="en")
+_CREATED = tr("wizard.commands.status.created", locale="en")
+
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
@@ -39,9 +45,38 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _registered_profile_exists(name: str) -> bool:
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     return read_profile_bucket(name) is not None
+
+
+def test_missing_entity_type_does_not_re_report_supplied_identity_flags() -> None:
+    """A missing taxpayer type should not tell the operator to re-enter supplied names."""
+
+    result = invoke_cached_cli(
+        (
+            "config",
+            "profile",
+            "create",
+            "missing-entity-type",
+            "--quiet",
+            "--accept-defaults",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Irene",
+            "--surnames",
+            "Hardening",
+            "--activity",
+            "consultoria",
+        ),
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "--entity-type" in result.output
+    assert "--name" not in result.output
+    assert "--surnames" not in result.output
+    assert _registered_profile_exists("missing-entity-type") is False
 
 
 def test_legal_entity_profile_creates_non_interactively_without_spouse_flags() -> None:
@@ -53,6 +88,8 @@ def test_legal_entity_profile_creates_non_interactively_without_spouse_flags() -
         "webco",
         "--entity-type",
         "legal_entity",
+        "--legal-entity-form",
+        "sl",
         "--tax-id",
         "B66012345",
         "--activity",
@@ -60,9 +97,29 @@ def test_legal_entity_profile_creates_non_interactively_without_spouse_flags() -
     )
 
     assert result.exit_code == 0, result.output
-    assert "Status\tcreated" in result.output
+    assert f"{_STATUS_LABEL}\t{_CREATED}" in result.output
     rows = _profile_rows("webco")
     assert rows["taxpayer_type.entity_type"] == "legal_entity"
+    assert rows["taxpayer_type.legal_entity_form"] == "sl"
+    assert rows["iva.regime"] == "GENERAL"
+
+
+def test_legal_entity_profile_create_refuses_missing_legal_form_before_registration() -> None:
+    """A legal entity without a recognised legal form is not filing-grade."""
+
+    result = _create_profile(
+        "missing-form-co",
+        "--entity-type",
+        "legal_entity",
+        "--tax-id",
+        "B66012345",
+        "--activity",
+        "consultoria informatica",
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "--legal-entity-form" in result.output
+    assert _registered_profile_exists("missing-form-co") is False
 
 
 def test_non_resident_irnr_quiet_create_requires_country_before_registration() -> None:
@@ -83,8 +140,33 @@ def test_non_resident_irnr_quiet_create_requires_country_before_registration() -
     )
 
     assert result.exit_code != 0, result.output
-    assert "country_of_fiscal_residence" in result.output
+    assert "--country-of-fiscal-residence" in result.output
+    assert "taxpayer_type.country_of_fiscal_residence" not in result.output
     assert _registered_profile_exists("irnr-no-country") is False
+
+
+def test_non_resident_irnr_create_guides_to_m210_discovery_not_work_create() -> None:
+    """A successful IRNR profile must not point at unsupported local M210 work."""
+
+    result = _create_profile(
+        "marta-irnr",
+        "--entity-type",
+        "natural_person",
+        "--irpf-income-categories",
+        "capital_inmobiliario",
+        "--fiscal-residency",
+        "non_resident_irnr",
+        "--country-of-fiscal-residence",
+        "FR",
+        "--tax-id",
+        "X1234567L",
+        "--iva-regime",
+        "GENERAL",
+    )
+
+    assert result.exit_code == 0, result.output
+    assert f"{_NEXT_LABEL}\taeat app modelo describe 210" in result.output
+    assert f"{_NEXT_LABEL}\taeat app modelo work create" not in result.output
 
 
 def test_gb_legal_entity_irnr_quiet_create_requires_representante_before_registration() -> None:
@@ -109,8 +191,10 @@ def test_gb_legal_entity_irnr_quiet_create_requires_representante_before_registr
     )
 
     assert result.exit_code != 0, result.output
-    assert "representante_fiscal_nif" in result.output
-    assert "representante_fiscal_nombre" in result.output
+    assert "--representante-fiscal-nif" in result.output
+    assert "--representante-fiscal-nombre" in result.output
+    assert "taxpayer_type.representante_fiscal_nif" not in result.output
+    assert "taxpayer_type.representante_fiscal_nombre" not in result.output
     assert _registered_profile_exists("gb-ltd") is False
 
 
@@ -123,6 +207,8 @@ def test_legal_entity_profile_creates_with_explicit_no_spouse_flag() -> None:
         "webco-ltd",
         "--entity-type",
         "legal_entity",
+        "--legal-entity-form",
+        "sl",
         "--tax-id",
         "B12345674",
         "--no-spouse-non-resident-irpf",
@@ -133,6 +219,7 @@ def test_legal_entity_profile_creates_with_explicit_no_spouse_flag() -> None:
     assert result.exit_code == 0, result.output
     rows = _profile_rows("webco-ltd")
     assert rows["taxpayer_type.entity_type"] == "legal_entity"
+    assert rows["taxpayer_type.legal_entity_form"] == "sl"
 
 
 def test_legal_entity_form_flag_populates_the_legal_entity_form_field() -> None:
@@ -290,6 +377,30 @@ def test_pure_landlord_profile_creates_without_activity() -> None:
     assert rows["taxpayer_type.irpf_income_categories"] == "capital_inmobiliario"
     # No invented economic activity is stored for a pure landlord.
     assert "activities.description" not in rows
+    # No IVA regime is invented either: a landlord/salaried/pensioner
+    # natural-person profile must not silently look like a Modelo 303 filer.
+    assert "iva.regime" not in rows
+
+
+def test_pure_landlord_profile_stores_explicit_iva_regime_when_operator_opts_in() -> None:
+    """The no-default rule must not discard an explicit IVA declaration."""
+
+    result = _create_profile(
+        "landlord-with-iva",
+        "--entity-type",
+        "natural_person",
+        "--irpf-income-categories",
+        "capital_inmobiliario",
+        "--tax-id",
+        "87654321X",
+        "--iva-regime",
+        "EXENTO",
+    )
+
+    assert result.exit_code == 0, result.output
+    rows = _profile_rows("landlord-with-iva")
+    assert rows["taxpayer_type.irpf_income_categories"] == "capital_inmobiliario"
+    assert rows["iva.regime"] == "EXENTO"
 
 
 def test_attribution_entity_profile_creates_without_spouse_flags() -> None:
@@ -309,6 +420,7 @@ def test_attribution_entity_profile_creates_without_spouse_flags() -> None:
     assert result.exit_code == 0, result.output
     rows = _profile_rows("comunidad")
     assert rows["taxpayer_type.entity_type"] == "attribution_entity"
+    assert rows["iva.regime"] == "GENERAL"
 
 
 def test_activity_start_date_flag_stores_the_censo_alta_date() -> None:
@@ -378,6 +490,7 @@ def test_natural_person_with_economic_activity_stores_the_activity() -> None:
     assert result.exit_code == 0, result.output
     rows = _profile_rows("autonomo")
     assert rows["activities.description"] == "fontaneria epigrafe 151"
+    assert rows["iva.regime"] == "GENERAL"
 
 
 @pytest.mark.parametrize(

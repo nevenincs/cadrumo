@@ -6,7 +6,7 @@ surfaces — not concrete classes — for two reasons:
 1. **Cross-subpackage decoupling.** Each Protocol lets the workflow
    engine integrate with an in-house subpackage without forcing a
    hard import dependency at the engine layer; adapters in
-   :mod:`aeat.application.workflow._adapters` translate the richer real surfaces
+   :mod:`application.workflow._adapters` translate the richer real surfaces
    onto these narrow Protocols.
 2. **Protocol-shaped tests.** Tests can supply narrow
    Protocol-conforming classes per scenario without importing the
@@ -16,6 +16,19 @@ Every Protocol here describes **only** the attributes the workflow
 engine actually reads. :class:`DeadlineEngineProtocol` wraps the
 deadline engine's ``compute`` method that returns a :class:`Schedule`
 for a given :class:`TaxpayerProfile`.
+
+See Also:
+    :class:`~application.workflow.WorkflowEngine`
+        Orchestrates these contracts stage by stage.
+    :mod:`application.workflow._adapters`
+        Adapts production deadline, draft-building, submission, and live-read
+        components to these contracts.
+    :class:`~domain.submission.SubmissionEngine`
+        Implements the read-only preflight surface described by
+        :class:`SubmissionEngineProtocol`.
+    :class:`~application.workflow.WorkflowPurpose`
+        Decides when workflow callers skip the AEAT filing-window preflight
+        gate for local verification or local mark-as-filed paths.
 """
 
 from __future__ import annotations
@@ -29,16 +42,16 @@ from ...core import Period
 from ...domain.deadlines import Schedule, TaxpayerProfile
 
 # ``ModeloInputs`` and its element aliases have a single canonical
-# definition in :mod:`aeat.domain.filing._protocols`. The workflow
+# definition in :mod:`domain.filing._protocols`. The workflow
 # engine re-exports them here so adapters can import the contract from
 # the workflow package without taking a second divergent definition.
 from ...domain.filing import ModeloInputs, ModeloInputScalar, ModeloInputValue
-from ...domain.submission._protocols import ModeloDraftLike
+from ...domain.submission import ModeloDraftLike
 
 
 @runtime_checkable
 class DeadlineEngineProtocol(Protocol):
-    """Narrow surface over :class:`aeat.domain.deadlines.DeadlineEngine`."""
+    """Narrow surface over :class:`domain.deadlines.DeadlineEngine`."""
 
     def compute(
         self,
@@ -66,7 +79,7 @@ class RegistryModeloDraftProtocol(ModeloDraftLike, Protocol):
 
 @runtime_checkable
 class ModeloDraftBuilderProtocol(Protocol):
-    """Narrow surface over :func:`aeat.application.filing.build_draft`."""
+    """Narrow surface over :func:`application.filing.build_draft`."""
 
     def build(
         self,
@@ -86,7 +99,7 @@ class ModeloDraftBuilderProtocol(Protocol):
 
 @runtime_checkable
 class SubmissionEngineProtocol(Protocol):
-    """Read-only preflight surface over :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`."""
+    """Read-only preflight surface over :class:`~domain.submission.SubmissionEngine`."""
 
     def preflight(
         self,
@@ -97,9 +110,11 @@ class SubmissionEngineProtocol(Protocol):
     ) -> None:
         """Run preflight gates against ``draft``; raise on failure.
 
-        ``skip_deadline_window`` skips the AEAT filing-window gate so a
-        calculation can be verified independently of the filing
-        calendar; filing always runs the window gate.
+        ``skip_deadline_window`` skips the AEAT filing-window gate. The
+        local workflow uses this for both :attr:`WorkflowPurpose.VERIFY`
+        and :attr:`WorkflowPurpose.FILE`: VERIFY is calendar-independent,
+        while FILE is a local mark-as-filed path whose obligation existence
+        has already been enforced by the deadline stage.
         """
         ...
 
@@ -111,7 +126,7 @@ class CertificateBundleProtocol(Protocol):
     The workflow engine calls :meth:`describe` once during the
     preflight stage to prove the configured auth provider is present
     and healthy. Any exception raised here is translated into
-    :attr:`aeat.application.workflow.WorkflowAbortReason.CERT_INVALID` to preserve
+    :attr:`application.workflow.WorkflowAbortReason.CERT_INVALID` to preserve
     the existing workflow abort taxonomy.
     """
 

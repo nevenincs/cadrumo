@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#session-rollout-2026-06-03'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-29'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
   - "[[2026-06-03-bucket-sealed-archive-adr]]"
@@ -174,9 +174,10 @@ actionable findings:
 Each research doc + ADR + audit captures specific follow-ups.
 Headline items:
 
-- **M349 R21 closure (2 commits)**: catalogue + corpus authoring
-  first, then 17 mirror payable_invoice bindings + substantive
-  legal_ref additions. Corpus access required.
+- **M349 R21 closure (closed 2026-06-29)**: current registry has
+  17 `collectible_invoice` and 17 `payable_invoice` bindings, all carrying
+  substantive M349 legal refs; the old two-commit catalogue/binding follow-up
+  is historical, not current.
 - **M210 S393 early-create gate**: optional UX enhancement;
   verify-pipeline contract already met per audit.
 - **M210 S394-S396**: corpus + schema blocked. Needs BOE Convenio

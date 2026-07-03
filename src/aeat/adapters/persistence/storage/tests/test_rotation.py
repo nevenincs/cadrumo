@@ -69,7 +69,7 @@ def bob() -> EphemeralMasterKeyProvider:
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key(alice: EphemeralMasterKeyProvider) -> Iterator[None]:
+def _use_alice_master_key(alice: EphemeralMasterKeyProvider) -> Iterator[None]:
     """Default provider during fixture setup is alice (the old key).
 
     Individual tests temporarily swap to bob as needed by entering
@@ -630,10 +630,10 @@ class TestDefaultBlobStoreRoots:
 class TestRotationLockTargetAlignment:
     """Rotation lock-target must match the writer's lock-target."""
 
-    @pytest.mark.parametrize(
-        ("entry", "envelope_path", "expected_lock_path"),
-        (
+    def test_rotation_lock_path_conventions(self) -> None:
+        cases = (
             (
+                "multi-file-envelope-writer-convention",
                 RotationPlanEntry(
                     store_dir=Path("/store"),
                     hkdf_context=_HKDF_CONTEXT_DRAFT,
@@ -642,6 +642,7 @@ class TestRotationLockTargetAlignment:
                 Path("/store/draft-abc123.lock"),
             ),
             (
+                "single-file-with-suffix-convention",
                 RotationPlanEntry(
                     store_dir=Path("/store"),
                     hkdf_context=b"aeat.domain.usage_ratios.profile.v1",
@@ -651,6 +652,7 @@ class TestRotationLockTargetAlignment:
                 Path("/store/usage-ratios.lock"),
             ),
             (
+                "fallback-to-stem-when-suffix-missing",
                 RotationPlanEntry(
                     store_dir=Path("/store"),
                     hkdf_context=_HKDF_CONTEXT_TX,
@@ -659,20 +661,10 @@ class TestRotationLockTargetAlignment:
                 Path("/store/oddly-named-file.json"),
                 Path("/store/oddly-named-file.lock"),
             ),
-        ),
-        ids=(
-            "multi-file-envelope-writer-convention",
-            "single-file-with-suffix-convention",
-            "fallback-to-stem-when-suffix-missing",
-        ),
-    )
-    def test_rotation_lock_path_conventions(
-        self,
-        entry: RotationPlanEntry,
-        envelope_path: Path,
-        expected_lock_path: Path,
-    ) -> None:
-        assert entry.lock_path_for(envelope_path) == expected_lock_path
+        )
+
+        for case_id, entry, envelope_path, expected_lock_path in cases:
+            assert entry.lock_path_for(envelope_path) == expected_lock_path, case_id
 
     def test_rotation_blocks_on_writer_held_lock(
         self,

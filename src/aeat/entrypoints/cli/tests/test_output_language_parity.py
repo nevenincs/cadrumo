@@ -19,7 +19,7 @@ before any state access.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
@@ -33,6 +33,59 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # The option string we assert must appear in every target command's help.
 _OPTION_FLAG = "--output-language"
 _CHOICE_LIST = f"[{'|'.join(SUPPORTED_OUTPUT_LANGUAGES)}]"
+_AUTH_COMMANDS = (
+    ("config", "auth", "clear"),
+    ("config", "auth", "providers"),
+    ("config", "auth", "configure"),
+    ("config", "auth", "status"),
+    ("config", "auth", "login"),
+    ("config", "auth", "test"),
+)
+_CONFIG_PROFILE_COMMANDS = (
+    ("config", "profile", "show"),
+    ("config", "profile", "validate"),
+    ("config", "profile", "list"),
+    ("config", "profile", "delete"),
+    ("config", "profile", "duplicate"),
+    ("config", "profile", "rename"),
+    ("config", "profile", "export"),
+    ("config", "profile", "import"),
+    ("config", "profile", "logout"),
+    ("config", "profile", "status"),
+    ("config", "switch"),
+)
+_MODELO_WORK_COMMANDS = (
+    ("app", "modelo", "work", "calculate"),
+    ("app", "modelo", "work", "verify"),
+    ("app", "modelo", "work", "file"),
+    ("app", "modelo", "work", "list"),
+    ("app", "modelo", "work", "status"),
+    ("app", "modelo", "work", "history"),
+    ("app", "modelo", "work", "revisions"),
+    ("app", "modelo", "work", "revision"),
+    ("app", "modelo", "work", "runs"),
+    ("app", "modelo", "work", "create"),
+)
+_REVIEW_COMMANDS = (
+    ("app", "review", "queue"),
+    ("app", "review", "view"),
+)
+_SUB_NOUN_GROUP_COMMANDS = (
+    ("config", "auth", "diagnostics", "list"),
+    ("config", "auth", "diagnostics", "show"),
+    ("config", "auth", "diagnostics", "report"),
+    ("config", "auth", "apoderado", "scopes", "list"),
+    ("config", "auth", "apoderado", "status"),
+    ("config", "auth", "apoderado", "configure"),
+    ("config", "auth", "apoderado", "clear"),
+    ("config", "auth", "apoderado", "check"),
+    ("config", "profile", "history"),
+    ("app", "ledger", "ratios", "list"),
+    ("app", "ledger", "ratios", "set"),
+    ("app", "ledger", "ratios", "unset"),
+    ("app", "ledger", "ratios", "eligible"),
+    ("app", "ledger", "ratios", "validate"),
+)
 
 
 @pytest.fixture(autouse=True)
@@ -41,7 +94,7 @@ def _isolated_state(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _assert_output_language_registered(args: list[str]) -> None:
+def _assert_output_language_registered(args: Sequence[str]) -> None:
     """Invoke ``--help`` for *args* and assert ``--output-language`` is present."""
     help_args = [*args, "--help"]
     result = invoke_cached_cli(help_args)
@@ -54,153 +107,31 @@ def _assert_output_language_registered(args: list[str]) -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# contract — auth subcommands
-# ---------------------------------------------------------------------------
+def test_auth_commands_accept_output_language() -> None:
+    """Config auth commands must accept ``--output-language``."""
+    for argv in _AUTH_COMMANDS:
+        _assert_output_language_registered(argv)
 
 
-def test_auth_clear_accepts_output_language() -> None:
-    """``aeat config auth clear`` must accept ``--output-language`` (contract)."""
-    _assert_output_language_registered(["config", "auth", "clear"])
+def test_config_profile_commands_accept_output_language() -> None:
+    """Every config-profile verb and ``config switch`` accept ``--output-language``."""
+    for argv in _CONFIG_PROFILE_COMMANDS:
+        _assert_output_language_registered(argv)
 
 
-def test_auth_providers_accepts_output_language() -> None:
-    """``aeat config auth providers`` must accept ``--output-language`` (contract)."""
-    _assert_output_language_registered(["config", "auth", "providers"])
+def test_modelo_work_commands_accept_output_language() -> None:
+    """Every ``aeat app modelo work`` command accepts ``--output-language``."""
+    for argv in _MODELO_WORK_COMMANDS:
+        _assert_output_language_registered(argv)
 
 
-def test_auth_configure_accepts_output_language() -> None:
-    """``aeat config auth configure`` must accept ``--output-language`` (contract)."""
-    _assert_output_language_registered(["config", "auth", "configure"])
+def test_review_commands_accept_output_language() -> None:
+    """Every ``aeat app review`` read verb accepts ``--output-language``."""
+    for argv in _REVIEW_COMMANDS:
+        _assert_output_language_registered(argv)
 
 
-# ---------------------------------------------------------------------------
-# contract — config profile subcommands
-# ---------------------------------------------------------------------------
-
-
-def test_config_profile_show_accepts_output_language() -> None:
-    """``aeat config profile show`` must accept ``--output-language`` (contract)."""
-    _assert_output_language_registered(["config", "profile", "show"])
-
-
-# ---------------------------------------------------------------------------
-# contract — modelo work subcommands
-# ---------------------------------------------------------------------------
-
-
-def test_work_calculate_accepts_output_language() -> None:
-    """``aeat app modelo work calculate`` must accept ``--output-language`` (contract)."""
-    _assert_output_language_registered(["app", "modelo", "work", "calculate"])
-
-
-def test_work_verify_accepts_output_language() -> None:
-    """``aeat app modelo work verify`` must accept ``--output-language`` (contract)."""
-    _assert_output_language_registered(["app", "modelo", "work", "verify"])
-
-
-def test_work_file_accepts_output_language() -> None:
-    """``aeat app modelo work file`` must accept ``--output-language`` (contract)."""
-    _assert_output_language_registered(["app", "modelo", "work", "file"])
-
-
-# ---------------------------------------------------------------------------
-# Commands confirmed to already have the flag (anti-regression guard)
-# ---------------------------------------------------------------------------
-
-
-def test_auth_status_retains_output_language() -> None:
-    """``aeat config auth status`` had ``--output-language`` before contract; must keep it."""
-    _assert_output_language_registered(["config", "auth", "status"])
-
-
-def test_auth_login_retains_output_language() -> None:
-    """``aeat config auth login`` had ``--output-language`` before contract; must keep it."""
-    _assert_output_language_registered(["config", "auth", "login"])
-
-
-def test_auth_test_retains_output_language() -> None:
-    """``aeat config auth test`` had ``--output-language`` before contract; must keep it."""
-    _assert_output_language_registered(["config", "auth", "test"])
-
-
-# ---------------------------------------------------------------------------
-# Modelo work read-only verbs.
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "verb",
-    ["list", "status", "history", "revisions", "revision", "runs"],
-)
-def test_work_read_only_verb_accepts_output_language(verb: str) -> None:
-    """Every read-only `aeat app modelo work` verb must accept ``--output-language``.
-
-    Closes the discovery3 #121 CLI completeness audit gap for the six
-    work_ verbs that previously had no language flag (contract), pinning
-    them under the parity regression gate (contract/contract broader sweep)."""
-    _assert_output_language_registered(["app", "modelo", "work", verb])
-
-
-# ---------------------------------------------------------------------------
-# Config profile validate verb.
-# ---------------------------------------------------------------------------
-
-
-def test_config_profile_validate_accepts_output_language() -> None:
-    """``aeat config profile validate`` accepts ``--output-language``."""
-    _assert_output_language_registered(["config", "profile", "validate"])
-
-
-# ---------------------------------------------------------------------------
-# Full config profile verb tree parity sweep.
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "verb",
-    ["list", "delete", "duplicate", "rename", "export", "import", "logout", "status"],
-)
-def test_config_profile_verb_accepts_output_language(verb: str) -> None:
-    """Every config-profile verb that previously
-    lacked ``--output-language`` now accepts it for parity with the rest
-    of the config noun-group."""
-    _assert_output_language_registered(["config", "profile", verb])
-
-
-def test_config_switch_accepts_output_language() -> None:
-    """``aeat config switch`` (the profile-switch verb that replaced
-    ``config unlock`` per the cli-operator-surface rename decision) accepts
-    ``--output-language`` for parity with the rest of the config surface."""
-    _assert_output_language_registered(["config", "switch"])
-
-
-# ---------------------------------------------------------------------------
-# Sub-noun-group parity sweep.
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "argv",
-    [
-        ["config", "auth", "diagnostics", "list"],
-        ["config", "auth", "diagnostics", "show"],
-        ["config", "auth", "diagnostics", "report"],
-        ["config", "auth", "apoderado", "scopes", "list"],
-        ["config", "auth", "apoderado", "status"],
-        ["config", "auth", "apoderado", "configure"],
-        ["config", "auth", "apoderado", "clear"],
-        ["config", "auth", "apoderado", "check"],
-        ["config", "profile", "history"],
-        ["app", "ledger", "ratios", "list"],
-        ["app", "ledger", "ratios", "set"],
-        ["app", "ledger", "ratios", "unset"],
-        ["app", "ledger", "ratios", "eligible"],
-        ["app", "ledger", "ratios", "validate"],
-    ],
-)
-def test_sub_noun_group_verb_accepts_output_language(argv: list[str]) -> None:
-    """Every CLI sub-noun-group verb under
-    auth_diagnostics, apoderado, profile history, and ledger ratios accepts
-    ``--output-language`` for parity with the top-level config verbs."""
-    _assert_output_language_registered(argv)
+def test_sub_noun_group_commands_accept_output_language() -> None:
+    """Every enrolled sub-noun-group verb accepts ``--output-language``."""
+    for argv in _SUB_NOUN_GROUP_COMMANDS:
+        _assert_output_language_registered(argv)

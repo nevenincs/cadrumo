@@ -26,6 +26,7 @@ def register(app: typer.Typer) -> None:
     @app.command("check", help=tr("cli.config.check.help"))
     def config_check(ctx: typer.Context) -> None:
         """Report external-dependency availability + the active profile's capability posture."""
+        from ....application.preflight import run_preflight_checks
         from ....application.provisioning import (
             probe_ollama_vision,
             probe_optional_extras,
@@ -49,6 +50,11 @@ def register(app: typer.Typer) -> None:
         playwright = probe_playwright_browser()
         extras = probe_optional_extras()
         dependencies = [d.model_dump() for d in (ollama, *providers, playwright, *extras)]
+        # Per-provider cert/clave health (#286), storage/corpus/env preflight (#102),
+        # and registry referential integrity (#98). Report-only: a red preflight row
+        # is surfaced for operator visibility but does not, on its own, flip the
+        # capability/dependency exit contract below.
+        preflight = [row.model_dump(mode="json") for row in run_preflight_checks()]
         any_provider = any(p.available for p in providers)
         extra_available = {status.service: status.available for status in extras}
 
@@ -67,6 +73,7 @@ def register(app: typer.Typer) -> None:
                 "ok": ok,
                 "capabilities": capabilities,
                 "dependencies": dependencies,
+                "preflight": preflight,
                 "issues": issues,
             },
         )
@@ -82,6 +89,9 @@ def register(app: typer.Typer) -> None:
             mark = tr("cli.config.check.available" if dep["available"] else "cli.config.check.missing")
             tail = f"\t{dep['remediation']}" if dep["remediation"] else ""
             lines.append(f"dependency\t{dep['service']}\t{mark}{tail}")
+        for row in preflight:
+            tail = f"\t{row['remediation']}" if row["remediation"] else ""
+            lines.append(f"preflight\t{row['check']}\t{row['severity']}\t{row['detail']}{tail}")
         for issue in issues:
             lines.append(f"{tr('cli.config.check.issue_label', default='issue')}\t{issue}")
         _emit_envelope(ctx, command="config.check", result=result, lines=tuple(lines))

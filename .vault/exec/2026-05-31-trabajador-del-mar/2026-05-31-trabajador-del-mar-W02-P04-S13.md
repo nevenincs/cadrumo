@@ -4,7 +4,7 @@ tags:
   - "#exec"
   - "#trabajador-del-mar"
 date: "2026-05-31"
-modified: '2026-05-31'
+modified: '2026-06-29'
 related:
   - "[[2026-05-31-trabajador-del-mar-plan]]"
   - "[[2026-05-31-trabajador-del-mar-adr]]"
@@ -26,10 +26,10 @@ Implement REBECA calculation (exempt_amount = gross_navigation_income * Decimal(
 
 ## BOE Citations
 
-- Ley 19/1994 Art. 73.2 BOE-A-1994-16100 — 50% exemption base condition
-- Ley 19/1994 Art. 73.3 BOE-A-1994-16100 — REBECA vessel and employment requirements
-- Ley 19/1994 Art. 75.1 BOE-A-1994-16100 — EU/EEA extension since 1 January 2021
-- Ley 19/1994 Art. 75.3 BOE-A-1994-16100 — employer Modelo 111 withholding base adjustment
+- Ley 19/1994 Art. 73.2 BOE-A-1994-15794 — 50% exemption base condition
+- Ley 19/1994 Art. 73.3 BOE-A-1994-15794 — REBECA vessel and employment requirements
+- Ley 19/1994 Art. 75.1 BOE-A-1994-15794 — EU/EEA extension since 1 January 2021
+- Ley 19/1994 Art. 75.3 BOE-A-1994-15794 — employer Modelo 111 withholding base adjustment
 
 ## Outcome
 

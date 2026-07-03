@@ -15,6 +15,9 @@ See Also:
     :mod:`aeat.domain.modelos`
         Work-unit filing records and supersession history for calculation
         revisions.
+    :class:`aeat.domain.modelos.ModeloRecordCatalogue`
+        Current/superseded filing-record catalogue that owns the authoritative
+        work-unit filing lifecycle.
     :mod:`aeat.application.calculations`
         Past-filing casilla observations used by cross-period calculation
         resolvers.
@@ -28,7 +31,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
-from ...domain._identifiers import ModeloIdentifier
+from ...domain import ModeloIdentifier
 
 
 class ModeloHistoryEntry(BaseModel):

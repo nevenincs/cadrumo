@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#eoy-final-calculation'
 date: '2026-06-23'
-modified: '2026-06-23'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-06-22-eoy-final-calculation-plan]]"
 ---
-
-
-
 
 # Ground the LIS deduccion/bonificacion casilla set that reduces cuota integra (00562) to cuota liquida (00592) against the AEAT Modelo 200 Diseno de Registros / Manual practico
 

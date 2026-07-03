@@ -35,42 +35,23 @@ def _casilla_with(data_type: str) -> CasillaDefinition:
 
 
 class TestCountryCodeAccepts:
-    @pytest.mark.parametrize("code", ["ES", "FR", "DE", "IT", "PT", "US", "XK", "GB"])
-    def test_alpha_two_codes_accepted(self, code: str) -> None:
-        assert _COUNTRY_ADAPTER.validate_python(code) == code
+    def test_alpha_two_codes_accepted(self) -> None:
+        for code in ("ES", "FR", "DE", "IT", "PT", "US", "XK", "GB"):
+            assert _COUNTRY_ADAPTER.validate_python(code) == code, code
 
 
 class TestCountryCodeRejects:
-    @pytest.mark.parametrize(
-        "raw",
-        [
-            "",
-            "E",
-            "ESP",
-            "es",
-            "Es",
-            "E1",
-            "12",
-            "  ES",
-            "ES ",
-            "ES-1",
-        ],
-    )
-    def test_malformed_rejected_through_adapter(self, raw: str) -> None:
-        with pytest.raises(ValidationError):
-            _COUNTRY_ADAPTER.validate_python(raw)
+    def test_malformed_rejected_through_adapter(self) -> None:
+        cases: tuple[object, ...] = ("", "E", "ESP", "es", "Es", "E1", "12", "  ES", "ES ", "ES-1", 34)
 
-    def test_non_string_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            _COUNTRY_ADAPTER.validate_python(34)
+        for raw in cases:
+            with pytest.raises(ValidationError):
+                _COUNTRY_ADAPTER.validate_python(raw)
 
-    def test_lowercase_raises_registry_validation_error_at_validator(self) -> None:
-        with pytest.raises(RegistryValidationError):
-            _validate_country_code("es")
-
-    def test_non_string_raises_registry_validation_error_at_validator(self) -> None:
-        with pytest.raises(RegistryValidationError):
-            _validate_country_code(34)
+    def test_invalid_value_raises_registry_validation_error_at_validator(self) -> None:
+        for raw in ("es", 34):
+            with pytest.raises(RegistryValidationError):
+                _validate_country_code(raw)
 
 
 class TestCasillaDefinitionDataType:

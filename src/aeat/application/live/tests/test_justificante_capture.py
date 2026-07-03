@@ -12,6 +12,7 @@ path rejects the record.
 
 from __future__ import annotations
 
+import base64
 import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
@@ -106,6 +107,25 @@ def test_active_capture_survives_encrypted_storage_roundtrip(tmp_path: Path) -> 
         assert loaded.source_kind == "aeat_sede_justificante"
 
 
+def test_capture_rejects_pdf_hash_that_does_not_match_decoded_bytes() -> None:
+    """The persisted source-bytes hash must describe the exact PDF payload."""
+    with pytest.raises(LiveApplicationInputError, match="pdf_sha256 does not match decoded PDF bytes"):
+        JustificanteCaptureSnapshot(
+            snapshot_id="snapshot-hash-mismatch",
+            bucket_id="renta-2026-bucket",
+            modelo=Modelo.M130.value,
+            filing_year=2026,
+            period=_PERIOD_2T,
+            expediente_id="202613000522456T",
+            csv="ABCD1234EFGH5678",
+            pdf_sha256=_OTHER_PDF_SHA256,
+            pdf_base64=base64.b64encode(_PDF_BYTES).decode("ascii"),
+            source_kind="aeat_sede_live_capture",
+            captured_at=datetime(2026, 7, 18, 10, 5, 0, tzinfo=UTC),
+            state=SnapshotLifecycleState.ACTIVE,
+        )
+
+
 def test_superseded_capture_survives_roundtrip(tmp_path: Path) -> None:
     """A SUPERSEDED capture round-trips with its successor pointer intact."""
     bucket_id = "renta-2026-bucket"
@@ -165,12 +185,12 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
     from pydantic import ValidationError
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+    from ....adapters.persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ....adapters.persistence.storage.sql import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
     from .._justificante import (
         JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,

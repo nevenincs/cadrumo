@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
-
 import pytest
 
 from .....core.resources import bundled_path
@@ -12,19 +10,16 @@ from .. import (
     InputKind,
     RegistryValidator,
     build_snapshot,
-    load_registry_tree,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_840():
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == "840")
-    return modelo, catalogues
+    return _committed_modelo("840")
 
 
 _FORBIDDEN_REMOTE_ACTIONS = frozenset(
@@ -38,6 +33,12 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
         "document-submission",
         "declaration-submission",
     ],
+)
+_DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
+    [
+        "orden-hac-2572-2003:apartado-1",
+        "orden-hac-2572-2003:apartado-6",
+    ]
 )
 
 
@@ -61,6 +62,7 @@ def test_committed_modelo_840_resolves_revision_by_filing_year(filing_year: int)
         period="0A",
     )
     assert snapshot.revision.id == "2003-y-siguientes"
+    assert snapshot.revision.orden_aplicabilidad == ("orden-hac-2572-2003:apartado-1",)
 
 
 def test_committed_modelo_840_is_informative_only() -> None:
@@ -86,6 +88,16 @@ def test_committed_modelo_840_workbook_parity_resolves_to_corpus_artefact() -> N
         assert source.evidence_tier == "layout_authority"
         artefact_path = bundled_path() / source.corpus_path
         assert artefact_path.is_file(), artefact_path
+
+
+def test_committed_modelo_840_guidance_and_layout_sources_are_separated() -> None:
+    modelo, catalogues = _load_modelo_840()
+
+    assert "aeat-modelo-840-procedure" in modelo.source_refs
+    procedure = catalogues.sources["aeat-modelo-840-procedure"]
+    assert procedure.evidence_tier == "official_source_guidance"
+    assert (bundled_path() / procedure.corpus_path).is_file()
+    assert catalogues.sources["boe-modelo-840-2003-form"].evidence_tier == "layout_authority"
 
 
 def test_committed_modelo_840_static_cross_reference_forbids_remote_writes() -> None:
@@ -136,3 +148,19 @@ def test_committed_modelo_840_construct_includes_revision_members() -> None:
         assert construct.filing_schedules == tuple(s.id for s in revision.filing_schedules)
         link_surfaces = {link.surface for link in revision.application_links}
         assert {"portal", "filing", "extractor", "verification"} <= link_surfaces, revision.id
+
+
+def test_committed_modelo_840_declaration_pdf_profile_legal_refs_match_target_casillas() -> None:
+    modelo, _ = _load_modelo_840()
+    for revision in modelo.revisions.values():
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        pdf_profiles = [profile for profile in revision.extraction_profiles if profile.surface == "declaracion_pdf"]
+        assert pdf_profiles, revision.id
+        for profile in pdf_profiles:
+            target_refs = frozenset(
+                legal_ref
+                for target in profile.target_casillas
+                for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+            )
+            assert target_refs == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
+            assert set(profile.legal_refs) == _DECLARATION_PROFILE_TARGET_LEGAL_REFS

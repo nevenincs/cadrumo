@@ -9,9 +9,8 @@ from pathlib import Path
 import pytest
 
 from ..adapters.persistence.storage import has_active_bucket_session
-from ..adapters.persistence.storage.bucket._manifest_io import read_manifest
-from ..adapters.persistence.storage.master_key._active_session import activate_session
-from ..adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ..adapters.persistence.storage.bucket import read_manifest
+from ..adapters.persistence.storage.master_key import BucketSession, activate_session
 from ..adapters.persistence.storage.runtime import StorageRuntimeReadinessCode, inspect_storage_runtime
 from ..adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -87,7 +86,7 @@ def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(t
         try:
             with activate_session(_control_session()):
                 SecureObjectRepository().save(
-                    namespace="aeat.tests.contamination.control",
+                    namespace="aeat-tests.contamination.control",
                     object_key="active-profile-row",
                     classification=SensitivityClass.FINANCIAL,
                     schema_version=1,
@@ -99,7 +98,7 @@ def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(t
 
             with isolated_ephemeral_secure_sql(tmp_path=isolated_root):
                 SecureObjectRepository().save(
-                    namespace="aeat.tests.contamination.isolated",
+                    namespace="aeat-tests.contamination.isolated",
                     object_key="isolated-row",
                     classification=SensitivityClass.FINANCIAL,
                     schema_version=1,
@@ -120,7 +119,7 @@ def test_isolated_runtime_profile_provisions_manifest_runtime_and_repository(tmp
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CONTROL_BUCKET_ID) as profile:
         manifest = read_manifest(profile.paths)
         profile.repository.save(
-            namespace="aeat.tests.runtime.profile",
+            namespace="aeat-tests.runtime.profile",
             object_key="runtime-row",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
@@ -156,9 +155,9 @@ def test_profile_bootstrap_storage_uses_shared_dev_database_password(tmp_path: P
 def test_isolated_cli_runtime_profile_routes_workflow_and_modelo_repositories_to_active_bucket(
     tmp_path: Path,
 ) -> None:
-    from ..application.workflow._persistence import workflow_state_repository
-    from ..domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-    from ..domain.modelos._repository import WorkUnitCatalogueRepository
+    from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ..application.workflow import workflow_state_repository
 
     with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_CONTROL_BUCKET_ID) as profile:
         workflow_state_repository().update(lambda state: state)

@@ -19,20 +19,19 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_application_package_reexports_bundle_serialiser() -> None:
-    """`aeat.application.user_profile` exposes the bundle serialiser."""
+def test_application_package_reexports_callable_symbols() -> None:
     from ... import user_profile as package
 
-    assert "serialize_profile_bundle" in package.__all__
-    assert callable(package.serialize_profile_bundle)
-
-
-def test_application_package_reexports_bundle_deserialiser() -> None:
-    """`aeat.application.user_profile` exposes the bundle deserialiser."""
-    from ... import user_profile as package
-
-    assert "deserialize_profile_bundle" in package.__all__
-    assert callable(package.deserialize_profile_bundle)
+    symbols = (
+        "serialize_profile_bundle",
+        "deserialize_profile_bundle",
+        "rename_profile",
+        "delete_profile_with_lifecycle_span",
+        "remove_profile_bucket_directory",
+    )
+    for symbol in symbols:
+        assert symbol in package.__all__, symbol
+        assert callable(getattr(package, symbol)), symbol
 
 
 def test_application_package_reexports_supported_bundle_schema_versions() -> None:
@@ -43,30 +42,6 @@ def test_application_package_reexports_supported_bundle_schema_versions() -> Non
     supported = package.SUPPORTED_BUNDLE_SCHEMA_VERSIONS
     assert isinstance(supported, frozenset)
     assert supported, "supported bundle schema version set must not be empty"
-
-
-def test_application_package_reexports_rename_orchestration() -> None:
-    """`rename_profile` is the top-level coordinator for the cross-store relabel."""
-    from ... import user_profile as package
-
-    assert "rename_profile" in package.__all__
-    assert callable(package.rename_profile)
-
-
-def test_application_package_reexports_delete_orchestration() -> None:
-    """`delete_profile_with_lifecycle_span` is the top-level soft-tombstone coordinator."""
-    from ... import user_profile as package
-
-    assert "delete_profile_with_lifecycle_span" in package.__all__
-    assert callable(package.delete_profile_with_lifecycle_span)
-
-
-def test_application_package_reexports_bucket_directory_removal() -> None:
-    """`remove_profile_bucket_directory` is the top-level hard-erase primitive."""
-    from ... import user_profile as package
-
-    assert "remove_profile_bucket_directory" in package.__all__
-    assert callable(package.remove_profile_bucket_directory)
 
 
 def test_application_package_reexports_orchestration_full_surface() -> None:

@@ -182,8 +182,7 @@ class TestSubmittedFileObservation:
         input_values = {
             casilla.id: observed_values[casilla.id]
             for casilla in snapshot.revision.casillas
-            if casilla.input_kind != InputKind.COMPUTED
-            and casilla.id != _M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA
+            if casilla.input_kind != InputKind.COMPUTED and casilla.id != _M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA
         }
         binding = next(
             item for item in snapshot.revision.bindings if item.id == "irpf.previous_year_economic_activity_net_income"
@@ -355,14 +354,14 @@ class TestSubmittedFileObservation:
                 "modelo-123-2019-export-record",
                 _casilla_values(
                     {
-                        "01-legacy": Decimal("5"),
-                        "02-legacy": Decimal("1201.00"),
-                        "03-legacy": Decimal("228.19"),
-                        "04-legacy": Decimal("0.00"),
-                        "05-legacy": Decimal("7.50"),
-                        "06-legacy": Decimal("235.69"),
-                        "07-legacy": Decimal("12.25"),
-                        "08-legacy": Decimal("223.44"),
+                        "01": Decimal("5"),
+                        "02": Decimal("1201.00"),
+                        "03": Decimal("228.19"),
+                        "04": Decimal("0.00"),
+                        "05": Decimal("7.50"),
+                        "06": Decimal("235.69"),
+                        "07": Decimal("12.25"),
+                        "08": Decimal("223.44"),
                     },
                 ),
             ),
@@ -627,27 +626,23 @@ class TestReadOperationGuard:
                 policy=policy,
             )
 
-    def test_cotejo_pdf_get_allowed(self) -> None:
-        _assert_read_http(
-            "GET",
+    @pytest.mark.parametrize(
+        "url",
+        (
             f"{_COTEJO_DOCUMENT_URL}?CSV=S3RASL6U73H49Y83",
-        )
+            _REGISTER_DOWNLOAD_URL,
+        ),
+    )
+    def test_allowed_get_read_surfaces(self, url: str) -> None:
+        _assert_read_http("GET", url)
 
-    def test_declaration_pdf_action_allowed(self) -> None:
-        _assert_read_browser_action("open-cotejo-pdf")
-
-    def test_submitted_file_download_action_allowed(self) -> None:
-        _assert_read_browser_action("download-filed-data-file")
+    @pytest.mark.parametrize("action", ("open-cotejo-pdf", "download-filed-data-file"))
+    def test_allowed_browser_actions(self, action: str) -> None:
+        _assert_read_browser_action(action)
 
     def test_unclassified_browser_action_rejected(self) -> None:
         with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
             _assert_read_browser_action("new-unreviewed-declarations-click")
-
-    def test_register_download_get_allowed(self) -> None:
-        _assert_read_http(
-            "GET",
-            _REGISTER_DOWNLOAD_URL,
-        )
 
     def test_register_download_external_host_rejected(self) -> None:
         with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):

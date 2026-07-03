@@ -1,8 +1,18 @@
-"""Async-first public LLM client."""
+"""Async-first public LLM client.
+
+Coordinates :class:`~aeat.adapters.outbound.llm.LLMRequest` inputs,
+:class:`~aeat.adapters.outbound.llm.LLMCache` lookup/write-through,
+:class:`~aeat.adapters.outbound.llm.UsageRecorder` accounting, and concrete
+:class:`~aeat.adapters.outbound.llm.LLMProvider` adapters before returning an
+:class:`~aeat.adapters.outbound.llm.LLMResponse`.
+"""
 
 from __future__ import annotations
 
 import json
+import time
+from datetime import datetime
+from uuid import uuid4
 
 from pydantic import SecretStr
 
@@ -11,7 +21,7 @@ from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import now
 from ._cache import LLMCache
-from ._errors import LLMConfigError
+from ._errors import LLMCacheError, LLMConfigError
 from ._models import LLMProvider, LLMRequest, LLMResponse, PromptRegistry
 from ._pricing import estimate_cost_usd
 from ._providers import (
@@ -19,28 +29,41 @@ from ._providers import (
     LocalAdapter,
     OpenAIAdapter,
     ProviderRequest,
-    _ProviderAdapter,
 )
+from ._providers.base import _ProviderAdapter
+from ._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 
-# AnthropicAdapter is NOT imported here: it pulls the optional `anthropic` SDK at
-# module load. It is imported lazily in _build_adapter behind the extra guard.
+# AnthropicAdapter stays lazy here so provider construction remains behind the
+# optional-extra guard in _build_adapter.
 from ._usage import UsageRecorder
 
 _LOGGER = get_logger(__name__)
+
+
+def _elapsed_ms(monotonic_start: float) -> int:
+    """Return the whole-millisecond elapsed duration since ``monotonic_start``."""
+    return max(0, round((time.monotonic() - monotonic_start) * 1000))
 
 
 class LLMClient:
     """Public async-first LLM completion entry point.
 
     Args:
-        settings: Optional settings override used for provider selection and
-            defaults.
-        cache: Optional cache implementation override.
-        usage_recorder: Optional usage recorder override.
-        prompt_registry: Optional prompt registry override.
+        settings: Optional :class:`~aeat.core.config.Settings` override used
+            for provider selection and defaults.
+        cache: Optional :class:`~aeat.adapters.outbound.llm.LLMCache`
+            implementation override.
+        usage_recorder: Optional
+            :class:`~aeat.adapters.outbound.llm.UsageRecorder` override.
+        run_telemetry_recorder: Optional
+            :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder` override.
+        prompt_registry: Optional
+            :class:`~aeat.adapters.outbound.llm.PromptRegistry` override.
         caller: Stable caller identifier recorded in usage logs.
         prompt_id: Stable prompt identifier recorded in usage logs.
-        adapter_override: Optional adapter override for tests and controlled flows.
+        adapter_override: Optional
+            :class:`~aeat.adapters.outbound.llm._providers.base._ProviderAdapter`
+            override for tests and controlled flows.
     """
 
     def __init__(
@@ -49,6 +72,7 @@ class LLMClient:
         settings: Settings | None = None,
         cache: LLMCache | None = None,
         usage_recorder: UsageRecorder | None = None,
+        run_telemetry_recorder: LLMRunTelemetryRecorder | None = None,
         prompt_registry: PromptRegistry | None = None,
         caller: str = "aeat.adapters.outbound.llm.client",
         prompt_id: str = "adhoc",
@@ -57,6 +81,9 @@ class LLMClient:
         self.settings = settings or Settings()
         self.cache = cache or LLMCache(root_dir=self.settings.aeat_llm_cache_dir)
         self.usage_recorder = usage_recorder or UsageRecorder(root_dir=self.settings.aeat_llm_usage_dir)
+        self.run_telemetry_recorder = run_telemetry_recorder or LLMRunTelemetryRecorder(
+            root_dir=self.settings.aeat_llm_run_telemetry_dir,
+        )
         self.prompt_registry = prompt_registry or PromptRegistry.seeded()
         self.caller = caller
         self.prompt_id = prompt_id
@@ -66,10 +93,11 @@ class LLMClient:
         """Complete a prompt request.
 
         Args:
-            request: Structured completion request.
+            request: Structured :class:`~aeat.adapters.outbound.llm.LLMRequest`.
 
         Returns:
-            A :class:`LLMResponse` enriched with cache and cost metadata.
+            A :class:`~aeat.adapters.outbound.llm.LLMResponse` enriched with
+            cache and cost metadata.
 
         Raises:
             Exception: Re-raised after logging when the LLM provider adapter fails.
@@ -96,9 +124,11 @@ class LLMClient:
             timeout_s=self.settings.aeat_llm_default_timeout_s,
             images=tuple(image.base64_data for image in request.images),
         )
+        run_started_at = now()
+        run_clock_start = time.monotonic()
         try:
             completion = await adapter.complete(provider_request)
-        except Exception:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise at this boundary
+        except Exception as exc:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise here
             _LOGGER.error(
                 "llm request failed provider=%s model=%s request_id=%s",
                 provider.value,
@@ -106,7 +136,23 @@ class LLMClient:
                 request_id,
                 exc_info=True,
             )
+            self._record_run_telemetry(
+                provider=provider.value,
+                model=model,
+                started_at=run_started_at,
+                duration_ms=_elapsed_ms(run_clock_start),
+                succeeded=False,
+                error_kind=type(exc).__name__,
+            )
             raise
+        self._record_run_telemetry(
+            provider=provider.value,
+            model=completion.model,
+            started_at=run_started_at,
+            duration_ms=_elapsed_ms(run_clock_start),
+            succeeded=True,
+            error_kind="",
+        )
         response = LLMResponse(
             text=completion.text,
             provider=provider,
@@ -133,6 +179,40 @@ class LLMClient:
             completion.output_tokens,
         )
         return response
+
+    def _record_run_telemetry(
+        self,
+        *,
+        provider: str,
+        model: str,
+        started_at: datetime,
+        duration_ms: int,
+        succeeded: bool,
+        error_kind: str,
+    ) -> None:
+        """Best-effort append of one local run-timing record.
+
+        A run-telemetry write failure must never mask the real completion
+        result or a real provider error, so this swallows
+        :exc:`~aeat.adapters.outbound.llm.LLMCacheError` (the recorder's only
+        declared failure mode) after a debug log; the completion call's own
+        return or exception always wins.
+        """
+        try:
+            self.run_telemetry_recorder.record(
+                LLMRunRecord(
+                    run_id=uuid4().hex,
+                    caller=self.caller,
+                    provider=provider,
+                    model=model,
+                    duration_ms=duration_ms,
+                    succeeded=succeeded,
+                    error_kind=error_kind,
+                    started_at=started_at,
+                ),
+            )
+        except LLMCacheError:
+            _LOGGER.debug("llm run-telemetry write failed; continuing without it", exc_info=True)
 
     def _default_provider(self) -> LLMProvider:
         raw_provider = self.settings.aeat_llm_provider

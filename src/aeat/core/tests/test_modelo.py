@@ -62,6 +62,21 @@ def test_non_registry_modelos_are_not_registry_loadable() -> None:
             authority.validate_modelo(member.value)
 
 
+def test_non_registry_modelos_have_no_registry_source_paths() -> None:
+    """Known non-registry modelos must not appear as authoritative registry TOML."""
+
+    from ..resources import bundled_path
+
+    modelos_dir = bundled_path("registry", "aeat", "modelos")
+    offenders = [
+        member.value
+        for member in NON_REGISTRY_MODELOS
+        if (modelos_dir / f"{member.value}.toml").exists() or (modelos_dir / member.value / "manifest.toml").exists()
+    ]
+
+    assert offenders == [], f"NON_REGISTRY_MODELOS have registry sources: {offenders}"
+
+
 def test_modelo_members_are_valid_modelo_codes() -> None:
     """Every :class:`Modelo` value passes the :class:`~aeat.domain.modelos.ModeloCode` shape validator."""
     from ...domain.modelos import ModeloCode

@@ -3,15 +3,13 @@ tags:
   - '#research'
   - '#bindings-architecture-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 related:
   - '[[2026-06-26-bindings-architecture-unification-audit]]'
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
 ---
-
-
 
 # `bindings-architecture-unification` research: `decision-corpus reconciliation map: prior bindings ADRs and rules to absorb, supersede, or align under one central architecture`
 

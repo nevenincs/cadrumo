@@ -14,20 +14,29 @@ from __future__ import annotations
 
 import hashlib
 from datetime import UTC, datetime
+from uuid import UUID
 
-from ....adapters.persistence.storage.bucket._layout import provision_bucket_directory
-from ....adapters.persistence.storage.bucket._manifest import (
+from ....adapters.persistence.storage.bucket import (
     BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
+    provision_bucket_directory,
+    write_manifest,
 )
-from ....adapters.persistence.storage.bucket._manifest_io import write_manifest
-from ....application.user_profile._orchestration import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.workflow import workflow_state_repository
 from ....core.config import load_settings
 from ....core.identity import nif_check_letter
 from ....tests.cli_runner import invoke_cached_cli
+
+_STAGED_MANIFEST_CREATED_AT = datetime(2026, 5, 28, 15, 50, tzinfo=UTC)
+
+
+def _profile_id_for_label(label: str) -> str:
+    digest = bytearray(hashlib.sha256(label.encode("utf-8")).digest()[:16])
+    digest[6] = (digest[6] & 0x0F) | 0x40
+    digest[8] = (digest[8] & 0x3F) | 0x80
+    return str(UUID(bytes=bytes(digest)))
 
 
 def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
@@ -58,7 +67,7 @@ def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
         BucketManifest(
             bucket_id=bucket_id,
             label=label,
-            created_at=datetime.now(UTC),
+            created_at=_STAGED_MANIFEST_CREATED_AT,
             last_unlocked_at=None,
             kdf_params=ManifestKdfParams(
                 algorithm="argon2id",
@@ -77,7 +86,7 @@ def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
     # Clear the active-profile pointer after provisioning so the staged
     # profile is not reported as the active one; the torn-state tests
     # specifically test non-active torn profiles.
-    from ....application.user_profile._orchestration import logout_active_profile
+    from ....application.user_profile import logout_active_profile
 
     logout_active_profile()
 
@@ -97,11 +106,13 @@ def seed(name: str = "default", *, tax_id: str | None = None) -> None:
     # its own SQLite file, so loading another bucket's record while a
     # different session is active would fail. Matches the CLI path.
     overrides = {"identity.tax_id": tax_id} if tax_id is not None else None
-    with profile_create_storage_span(name):
+    profile_id = _profile_id_for_label(name)
+    with profile_create_storage_span(profile_id):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
-                profile_id=name,
+                profile_id=profile_id,
+                display_name=name,
                 overrides=overrides,
                 enforce_unique_tax_id=False,
             ),
@@ -132,8 +143,12 @@ def create_profile_via_cli(name: str, *, tax_id: str | None = None) -> None:
             "--quiet",
             "--tax-id",
             tax_id or distinct_nif(name),
+            "--entity-type",
+            "natural_person",
             "--name",
             name.capitalize(),
+            "--surnames",
+            "Operator",
             "--activity",
             "design",
             "--iva-regime",

@@ -1,4 +1,9 @@
-"""Typer registration for ledger inventory commands."""
+"""Typer registration for ledger inventory commands.
+
+The commands delegate inventory persistence and valuation to
+:class:`InventoryService` and emit typed payloads
+from :mod:`._ledger_payloads`.
+"""
 
 from __future__ import annotations
 
@@ -79,7 +84,7 @@ inventory_valuation_app = typer.Typer(
     ),
 )
 def inventory_list(ctx: typer.Context) -> None:
-    """List every per-actividad inventory ledger on the active bucket."""
+    """List per-actividad ledgers via :meth:`InventoryService.list_all`."""
     bucket_id = _inventory_bucket_id()
     rows = _inventory_service().list_all(bucket_id=bucket_id)
     payload = {
@@ -126,7 +131,7 @@ def inventory_create(
         help=tr("cli.app.ledger.inventory.opening_stock_help", default="Opening stock value."),
     ),
 ) -> None:
-    """Create a fresh inventory ledger for one actividad and fiscal year."""
+    """Create a ledger via :meth:`InventoryService.create`."""
     bucket_id = _inventory_bucket_id()
     result = _inventory_service().create(
         bucket_id=bucket_id,
@@ -207,7 +212,7 @@ def inventory_movement_add(
         help=tr("cli.app.ledger.inventory.iva_rate_help", default="IVA rate in percent."),
     ),
 ) -> None:
-    """Append one inventory movement to an actividad ledger."""
+    """Append an :class:`InventoryMovementCommand` to an actividad ledger."""
     bucket_id = _inventory_bucket_id()
     command = InventoryMovementCommand(
         movement_id=movement_id,
@@ -257,7 +262,7 @@ def inventory_valuation_preview(
     ),
     year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help", default="Fiscal year.")),
 ) -> None:
-    """Preview closing stock and COGS for one actividad/year inventory ledger."""
+    """Preview valuation via :meth:`InventoryService.valuation_preview`."""
     bucket_id = _inventory_bucket_id()
     result = _inventory_service().valuation_preview(bucket_id=bucket_id, actividad_id=actividad_id, year=year)
     preview = result.preview

@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#real-pdf-import"
 date: 2026-04-22
-modified: '2026-04-22'
+modified: '2026-06-13'
 related:
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-12-manual-practico-adr]]"
@@ -227,16 +227,15 @@ violated. Rationale for deferral:
   bearing pipeline artefact; they already cite commits by SHA
   and enumerate closure-status per finding.
 
-**Catch-up commitment**: tracked as
-[issue #313](https://github.com/wgergely/aeat/issues/313) (child of
-EPIC #305) per wave 68c. Acceptance criteria: a consolidated
-`.vault/exec/2026-04-20-pdf-import/2026-04-22-pdf-import-audit-loop-summary.md`
-back-fills a single exec record summarising every sub-wave with
-its commit SHA + closing-audit wave. PR closing #313 MUST merge
-before the EPIC #305 close-out PR. Until then, the audit docs are
-the authoritative source. The uncovered-sub_op-chains backlog from
-wave 64 stream 2 L2 is tracked separately as
-[issue #314](https://github.com/wgergely/aeat/issues/314).
+**Catch-up commitment — CLOSED**: tracked as
+[issue #313](https://github.com/nevenincs/aeat/issues/313) (child of
+EPIC #305) per wave 68c; closed by the back-fill PR that merged before
+the EPIC #305 close-out PR. The consolidated exec record
+`.vault/exec/2026-04-20-pdf-import/2026-04-22-pdf-import-audit-loop-summary-exec.md`
+exists and contains one entry per sub-wave with commit SHA and closing-audit
+wave reference. The uncovered-sub_op-chains backlog from wave 64 stream 2 L2
+is tracked separately as
+[issue #314](https://github.com/nevenincs/aeat/issues/314).
 
 ### Non-goals
 

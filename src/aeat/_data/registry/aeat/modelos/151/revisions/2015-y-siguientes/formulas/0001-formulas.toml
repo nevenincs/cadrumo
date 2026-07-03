@@ -12,11 +12,11 @@ expression = { op = "lookup_bracket", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-form"]
+source_refs = ["aeat-modelo-151-procedure"]
 
 [[revisions."2015-y-siguientes".formulas.source_citations]]
-source_ref = "boe-modelo-151-form"
-required_text = ["modelo 151"]
+source_ref = "aeat-modelo-151-procedure"
+required_text = ["Modelo 151"]
 
 # Cuota diferencial: cuota íntegra general menos retenciones e ingresos a cuenta
 # (los pagos a cuenta de la letra f), que son distintos de la cuota).
@@ -29,8 +29,8 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-form"]
+source_refs = ["aeat-modelo-151-procedure"]
 
 [[revisions."2015-y-siguientes".formulas.source_citations]]
-source_ref = "boe-modelo-151-form"
-required_text = ["modelo 151"]
+source_ref = "aeat-modelo-151-procedure"
+required_text = ["Modelo 151"]

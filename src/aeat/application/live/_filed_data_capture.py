@@ -1,7 +1,30 @@
 """Filed-declaration capture services for live AEAT workflows.
 
-Source capture resolves a :class:`ValidatedRegistryAuthority` snapshot before
-asking the Sede adapter which prior declarations a target filing needs.
+The listing helpers read AEAT declaration-register rows without downloading
+artefacts. The capture helpers download the selected filed-declaration artefacts
+through the authenticated Sede adapter, persist encrypted
+:class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
+payloads and artefacts, promote extracted casillas into registry-grounded
+calculation observations, and attempt to stamp matching current
+:class:`~aeat.domain.modelos.ModeloRecord` filings with live
+:class:`~aeat.domain.modelos.ExternalEvidence`.
+
+Source capture resolves a
+:class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` before
+asking the Sede adapter which prior declarations a target filing needs, so
+cross-period inputs remain registry-authored rather than adapter-inferred. The
+module never creates a remote submission or mutates AEAT state; filing-record
+stamping is local evidence enrollment against an existing current record.
+
+See Also:
+    :func:`aeat.application.live._session.active_verified_session`
+        Enforces the read-only live gate before the register walker is opened.
+    :func:`aeat.application.live._filed_observation_persistence.persist_latest_filed_calculation_observations`
+        Persists the latest captured filed observations as calculation-history
+        evidence.
+    :func:`aeat.application.live._filed_observation_persistence.enroll_filed_justificante_evidence`
+        Persists matching justificante metadata and stamps current filing
+        records when the receipt matches.
 """
 
 from __future__ import annotations
@@ -14,6 +37,7 @@ from ...adapters.outbound.aeat.sede import (
     Declaracion,
     FiledDeclaracionObservation,
     FiledDeclaracionObservationStore,
+    SedeParseError,
     capture_previous_filing_observations,
     capture_relation_source_observations,
     open_declarations_register,
@@ -22,7 +46,7 @@ from ...adapters.outbound.aeat.sede import (
 from ...core import Period, require_active_bucket_id
 from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import ValidatedRegistryAuthority
-from ._errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
+from ._errors import LiveApplicationError, LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from ._filed_data import (
     BulkFiledDataListingReport,
     FiledDataListingReport,
@@ -32,8 +56,9 @@ from ._filed_data import (
 )
 from ._filed_observation_persistence import (
     _filed_observation_identity_key,
+    _filed_observation_rank,
     enroll_filed_justificante_evidence,
-    persist_latest_filed_calculation_observations,
+    persist_filed_calculation_observation,
 )
 from ._remote_state_models import (
     BulkFiledDataCaptureReport,
@@ -76,6 +101,71 @@ def _unsupported_filed_capture_failure_row(
         error_type="LiveApplicationInputError",
         message=reason,
     )
+
+
+def _filed_registry_enrollment_failure_row(
+    observation: FiledDeclaracionObservation,
+    error: BaseException,
+) -> FiledDataCaptureFailureRow:
+    return FiledDataCaptureFailureRow(
+        modelo=observation.modelo,
+        year=observation.ejercicio,
+        period=observation.period,
+        expediente_id=observation.expediente_id,
+        error_type=error.__class__.__name__,
+        message=bounded_context_text(error),
+    )
+
+
+def _raise_registry_enrollment_failure(failures: tuple[FiledDataCaptureFailureRow, ...]) -> None:
+    if not failures:
+        return
+    first = failures[0]
+    raise LiveApplicationError(
+        "filed observation could not be enrolled as registry-grounded calculation evidence",
+        context={
+            "failed_count": len(failures),
+            "modelo": first.modelo,
+            "year": first.year,
+            "period": first.period.registry_token if first.period is not None else None,
+            "expediente_id": first.expediente_id,
+            "error_type": first.error_type,
+            "message": first.message,
+        },
+    )
+
+
+def _persist_latest_filed_calculation_observations_with_failures(
+    observations: tuple[FiledDeclaracionObservation, ...],
+    *,
+    justificante_csvs_by_observation: dict[tuple[str, int, str, str], tuple[str, ...]],
+) -> tuple[tuple[str, ...], tuple[FiledDataCaptureFailureRow, ...]]:
+    latest: dict[tuple[str, int, Period], FiledDeclaracionObservation] = {}
+    for observation in observations:
+        key = (observation.modelo, observation.ejercicio, observation.period)
+        current = latest.get(key)
+        if current is None or _filed_observation_rank(observation) > _filed_observation_rank(current):
+            latest[key] = observation
+
+    keys: list[str] = []
+    failures: list[FiledDataCaptureFailureRow] = []
+    for _key, observation in sorted(
+        latest.items(),
+        key=lambda item: (item[0][0], item[0][1], item[0][2].registry_token),
+    ):
+        try:
+            keys.append(
+                persist_filed_calculation_observation(
+                    observation,
+                    justificante_csvs=justificante_csvs_by_observation.get(
+                        _filed_observation_identity_key(observation),
+                        (),
+                    ),
+                ),
+            )
+        except (LiveApplicationInputError, SedeParseError) as exc:
+            failures.append(_filed_registry_enrollment_failure_row(observation, exc))
+    return tuple(keys), tuple(failures)
 
 
 def _filed_capture_unsupported_reason(*, modelo: str, year: int) -> str | None:
@@ -248,7 +338,13 @@ async def capture_filed_data(
     expediente_id: str | None = None,
     limit: int | None = None,
 ) -> FiledDataCaptureReport:
-    """Capture filed-declaration artefacts and return a :class:`FiledDataCaptureReport`."""
+    """Capture filed-declaration artefacts and return a :class:`FiledDataCaptureReport`.
+
+    The report accounts for persisted observation manifests, encrypted artefact
+    references, saved justificante CSVs, stamped
+    :class:`aeat.domain.modelos.ModeloRecord` ids, conflicts, and calculation
+    observation keys produced from the captured AEAT rows.
+    """
     session, settings = await active_verified_session()
     walk_timeout_ms = settings.aeat_live_filed_register_walk_timeout_ms
     store = FiledDeclaracionObservationStore(output_root)
@@ -304,10 +400,14 @@ async def capture_filed_data(
             casilla_count += len(observation.casillas)
             observations_for_calculation.append(observation)
 
-    calculation_observation_keys = persist_latest_filed_calculation_observations(
+    (
+        calculation_observation_keys,
+        registry_enrollment_failures,
+    ) = _persist_latest_filed_calculation_observations_with_failures(
         tuple(observations_for_calculation),
         justificante_csvs_by_observation=justificante_csvs_by_observation,
     )
+    _raise_registry_enrollment_failure(registry_enrollment_failures)
 
     return FiledDataCaptureReport(
         output_root=str(output_root),
@@ -336,7 +436,13 @@ async def capture_filed_data_bulk(
     modelos: tuple[str, ...] | None = None,
     limit: int | None = None,
 ) -> BulkFiledDataCaptureReport:
-    """Capture filed declarations across a year range and return a :class:`BulkFiledDataCaptureReport`."""
+    """Capture filed declarations across a year range and return a :class:`BulkFiledDataCaptureReport`.
+
+    Unsupported modelo/year pairs are recorded as failures before live contact.
+    Supported pairs share one authenticated register session and then follow the
+    same persistence, justificante enrolment, and calculation-observation path as
+    :func:`capture_filed_data`.
+    """
     if year_from > year_to:
         raise LiveApplicationInputError(
             message="from-year must be less than or equal to to-year",
@@ -451,10 +557,14 @@ async def capture_filed_data_bulk(
             if limit is not None and len(observation_paths) >= limit:
                 break
 
-    calculation_observation_keys = persist_latest_filed_calculation_observations(
+    (
+        calculation_observation_keys,
+        registry_enrollment_failures,
+    ) = _persist_latest_filed_calculation_observations_with_failures(
         tuple(observations_for_calculation),
         justificante_csvs_by_observation=justificante_csvs_by_observation,
     )
+    failures.extend(registry_enrollment_failures)
     return BulkFiledDataCaptureReport(
         output_root=str(output_root),
         modelos=tuple(resolved_modelos),
@@ -560,10 +670,14 @@ async def capture_source_filed_data(
         casilla_count += len(observation.casillas)
         observations_for_calculation.append(observation)
 
-    calculation_observation_keys = persist_latest_filed_calculation_observations(
+    (
+        calculation_observation_keys,
+        registry_enrollment_failures,
+    ) = _persist_latest_filed_calculation_observations_with_failures(
         tuple(observations_for_calculation),
         justificante_csvs_by_observation=justificante_csvs_by_observation,
     )
+    _raise_registry_enrollment_failure(registry_enrollment_failures)
 
     return SourceFiledDataCaptureReport(
         output_root=str(output_root),

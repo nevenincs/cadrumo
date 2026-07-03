@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from ....adapters.persistence.storage import Envelope, SensitivityClass
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -22,17 +23,19 @@ from ...categories import SpendingCategory
 from .. import (
     UsageRatioPersistenceError,
     UsageRatioProfile,
-    load_usage_ratios,
-    save_usage_ratios,
     usage_ratios_object_key,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_BUCKET_A_ID = "73737373-7373-4373-8373-737373737301"
+_BUCKET_B_ID = "73737373-7373-4373-8373-737373737302"
+_SECURE_OBJECT_WRITTEN_AT = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
+
 
 @pytest.fixture(autouse=True)
 def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_A_ID) as profile:
         yield profile
 
 
@@ -46,7 +49,7 @@ def test_load_missing_returns_empty(tmp_path: Path) -> None:
     """A missing file yields an empty profile (the virgin state)."""
     target = tmp_path / "missing.json"
     assert not target.exists()
-    assert load_usage_ratios(bucket_id="bucket-a") == UsageRatioProfile()
+    assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == UsageRatioProfile()
 
 
 def test_save_does_not_create_requested_plaintext_file(
@@ -56,7 +59,7 @@ def test_save_does_not_create_requested_plaintext_file(
     """``save_usage_ratios`` stores in the secure database, not at ``path``."""
     target = tmp_path / "a" / "b" / "ratios.json"
     profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
-    save_usage_ratios(profile, bucket_id="bucket-a")
+    save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
     assert not target.exists()
     assert (_runtime_profile.paths.db_dir / "aeat.db").exists()
 
@@ -70,30 +73,30 @@ def test_save_round_trips(tmp_path: Path) -> None:
             SpendingCategory.TELEFONIA_MOVIL: Decimal("0.6"),
         },
     )
-    save_usage_ratios(profile, bucket_id="bucket-a")
-    assert load_usage_ratios(bucket_id="bucket-a") == profile
+    save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
+    assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == profile
 
 
 def test_profiles_are_scoped_by_bucket(tmp_path: Path) -> None:
     first = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
     second = UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.6")})
-    save_usage_ratios(first, bucket_id="bucket-a")
+    save_usage_ratios(first, bucket_id=_BUCKET_A_ID)
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-b"):
-        save_usage_ratios(second, bucket_id="bucket-b")
-        assert load_usage_ratios(bucket_id="bucket-b") == second
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_B_ID):
+        save_usage_ratios(second, bucket_id=_BUCKET_B_ID)
+        assert load_usage_ratios(bucket_id=_BUCKET_B_ID) == second
 
-    assert load_usage_ratios(bucket_id="bucket-a") == first
+    assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == first
 
 
 def test_default_repository_refuses_bucket_route_mismatch() -> None:
     profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
 
     with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
-        save_usage_ratios(profile, bucket_id="bucket-b")
+        save_usage_ratios(profile, bucket_id=_BUCKET_B_ID)
 
     with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
-        load_usage_ratios(bucket_id="bucket-b")
+        load_usage_ratios(bucket_id=_BUCKET_B_ID)
 
 
 def test_save_replaces_previous_payload(tmp_path: Path) -> None:
@@ -101,9 +104,9 @@ def test_save_replaces_previous_payload(tmp_path: Path) -> None:
     tmp_path / "ratios.json"
     first = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
     second = first.with_ratio(SpendingCategory.TELEFONIA_MOVIL, Decimal("0.6"))
-    save_usage_ratios(first, bucket_id="bucket-a")
-    save_usage_ratios(second, bucket_id="bucket-a")
-    assert load_usage_ratios(bucket_id="bucket-a") == second
+    save_usage_ratios(first, bucket_id=_BUCKET_A_ID)
+    save_usage_ratios(second, bucket_id=_BUCKET_A_ID)
+    assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == second
     assert list(tmp_path.glob("*.tmp")) == []
 
 
@@ -113,7 +116,7 @@ def test_save_writes_encrypted_database_object(_runtime_profile: TestRuntimeProf
     profile = UsageRatioProfile(
         ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: plaintext_ratio},
     )
-    save_usage_ratios(profile, bucket_id="bucket-a")
+    save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
     on_disk = _database_bytes(_runtime_profile)
     assert b"secure_objects" in on_disk
     assert b"financial" in on_disk
@@ -122,35 +125,29 @@ def test_save_writes_encrypted_database_object(_runtime_profile: TestRuntimeProf
     assert b"profile" not in on_disk
 
 
-def test_load_corrupt_secure_object_raises_persistence_error(_runtime_profile: TestRuntimeProfile) -> None:
-    """A malformed encrypted payload surfaces as :class:`UsageRatioPersistenceError`."""
-    _runtime_profile.repository.save(
-        namespace="aeat.domain.usage_ratios",
-        object_key=usage_ratios_object_key("bucket-a"),
-        classification=SensitivityClass.FINANCIAL,
-        schema_version=1,
-        written_at=datetime.now(UTC),
-        payload=b"{not-json",
+def test_load_malformed_secure_object_raises_persistence_error(
+    _runtime_profile: TestRuntimeProfile,
+) -> None:
+    """Malformed encrypted payload bytes stay on the domain persistence surface."""
+    cases: tuple[tuple[str, bytes, str | None, type[BaseException], str | None], ...] = (
+        ("invalid-json", b"{not-json", None, ValidationError, "Invalid JSON"),
+        ("non-utf8", b"\xff", "invalid UTF-8", UnicodeDecodeError, None),
     )
-    with pytest.raises(UsageRatioPersistenceError) as exc_info:
-        load_usage_ratios(bucket_id="bucket-a")
-    assert isinstance(exc_info.value.__cause__, ValidationError)
-    assert "Invalid JSON" in str(exc_info.value)
 
-
-def test_load_non_utf8_secure_object_raises_persistence_error(_runtime_profile: TestRuntimeProfile) -> None:
-    """Non-UTF-8 encrypted payload bytes stay on the domain persistence surface."""
-    _runtime_profile.repository.save(
-        namespace="aeat.domain.usage_ratios",
-        object_key=usage_ratios_object_key("bucket-a"),
-        classification=SensitivityClass.FINANCIAL,
-        schema_version=1,
-        written_at=datetime.now(UTC),
-        payload=b"\xff",
-    )
-    with pytest.raises(UsageRatioPersistenceError, match="invalid UTF-8") as exc_info:
-        load_usage_ratios(bucket_id="bucket-a")
-    assert isinstance(exc_info.value.__cause__, UnicodeDecodeError)
+    for case_id, payload, message, cause_type, detail in cases:
+        _runtime_profile.repository.save(
+            namespace="aeat.domain.usage_ratios",
+            object_key=usage_ratios_object_key(_BUCKET_A_ID),
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=_SECURE_OBJECT_WRITTEN_AT,
+            payload=payload,
+        )
+        with pytest.raises(UsageRatioPersistenceError, match=message) as exc_info:
+            load_usage_ratios(bucket_id=_BUCKET_A_ID)
+        assert isinstance(exc_info.value.__cause__, cause_type), case_id
+        if detail is not None:
+            assert detail in str(exc_info.value), case_id
 
 
 def test_load_inner_classification_mismatch_raises_persistence_error(
@@ -158,20 +155,20 @@ def test_load_inner_classification_mismatch_raises_persistence_error(
 ) -> None:
     envelope = Envelope[UsageRatioProfile](
         schema_version=1,
-        written_at=datetime.now(UTC),
+        written_at=_SECURE_OBJECT_WRITTEN_AT,
         classification=SensitivityClass.CACHE,
         payload=UsageRatioProfile(),
     )
     _runtime_profile.repository.save(
         namespace="aeat.domain.usage_ratios",
-        object_key=usage_ratios_object_key("bucket-a"),
+        object_key=usage_ratios_object_key(_BUCKET_A_ID),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
-        written_at=datetime.now(UTC),
+        written_at=_SECURE_OBJECT_WRITTEN_AT,
         payload=envelope.model_dump_json().encode("utf-8"),
     )
     with pytest.raises(UsageRatioPersistenceError, match="classification"):
-        load_usage_ratios(bucket_id="bucket-a")
+        load_usage_ratios(bucket_id=_BUCKET_A_ID)
 
 
 def test_load_inner_schema_version_mismatch_raises_persistence_error(
@@ -179,20 +176,20 @@ def test_load_inner_schema_version_mismatch_raises_persistence_error(
 ) -> None:
     envelope = Envelope[UsageRatioProfile](
         schema_version=2,
-        written_at=datetime.now(UTC),
+        written_at=_SECURE_OBJECT_WRITTEN_AT,
         classification=SensitivityClass.FINANCIAL,
         payload=UsageRatioProfile(),
     )
     _runtime_profile.repository.save(
         namespace="aeat.domain.usage_ratios",
-        object_key=usage_ratios_object_key("bucket-a"),
+        object_key=usage_ratios_object_key(_BUCKET_A_ID),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
-        written_at=datetime.now(UTC),
+        written_at=_SECURE_OBJECT_WRITTEN_AT,
         payload=envelope.model_dump_json().encode("utf-8"),
     )
     with pytest.raises(UsageRatioPersistenceError, match="version"):
-        load_usage_ratios(bucket_id="bucket-a")
+        load_usage_ratios(bucket_id=_BUCKET_A_ID)
 
 
 def test_save_target_directory_is_ignored_by_secure_backend(tmp_path: Path) -> None:
@@ -200,8 +197,8 @@ def test_save_target_directory_is_ignored_by_secure_backend(tmp_path: Path) -> N
     target = tmp_path / "ratios-as-dir"
     target.mkdir()
     profile = UsageRatioProfile()
-    save_usage_ratios(profile, bucket_id="bucket-a")
-    assert load_usage_ratios(bucket_id="bucket-a") == profile
+    save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
+    assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == profile
     assert list(tmp_path.glob("*.tmp")) == []
 
 

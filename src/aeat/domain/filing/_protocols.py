@@ -1,4 +1,4 @@
-"""Cross-module Protocols consumed by :mod:`aeat.application.filing`.
+"""Cross-module Protocols consumed by :mod:`application.filing`.
 
 Every upstream collaborator (modelo identity, casilla schemas, deadline
 engine) is represented by a :class:`typing.Protocol` so the filing
@@ -6,7 +6,7 @@ application package does not take a hard import on any sibling subpackage.
 Concrete implementations are wired at runtime by the entrypoint.
 
 These Protocols are intentionally minimal: they describe only the
-attributes :mod:`aeat.application.filing` actually consumes. They do not
+attributes :mod:`application.filing` actually consumes. They do not
 attempt to model the full surface of the upstream subpackages.
 """
 
@@ -21,26 +21,6 @@ if TYPE_CHECKING:  # pragma: no cover — type-only import
     from ...core import Period
     from ...core.identity import SubjectTaxId
     from ..calculations.registry import BindingId, CasillaId, FormulaId, LegalRefId, RelationId, SourceRefId
-
-
-@runtime_checkable
-class ModeloIdentity(Protocol):
-    """The minimal modelo identity surface consumed by builders."""
-
-    @property
-    def id(self) -> str:
-        """Return the stable string ID of the modelo."""
-        ...
-
-    @property
-    def display_name(self) -> str:
-        """Return a short human-readable name for the modelo."""
-        ...
-
-    @property
-    def cadence(self) -> str:
-        """Return the filing cadence (e.g. ``"quarterly"``)."""
-        ...
 
 
 @runtime_checkable
@@ -184,7 +164,7 @@ class DeadlineChecker(Protocol):
 class ModeloProfile(Protocol):
     """The taxpayer profile a draft is built for.
 
-    Only the attributes :mod:`aeat.application.filing` actually consumes are
+    Only the attributes :mod:`application.filing` actually consumes are
     declared here; downstream callers may use richer profile
     objects as long as they expose these attributes.
     """
@@ -238,9 +218,9 @@ rather than defining a narrower divergent alias.
 class ModeloDraftRepositoryProtocol(Protocol):
     """Narrow domain-facing contract for the filing-draft repository.
 
-    :class:`aeat.domain.filing.ModeloDraftRepository` structurally conforms
-    to this Protocol; domain service code that only needs to load or save
-    drafts should depend inward on this port.
+    :class:`~aeat.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`
+    structurally conforms to this Protocol; domain service code that only
+    needs to load or save drafts should depend inward on this port.
     """
 
     @property
@@ -258,4 +238,32 @@ class ModeloDraftRepositoryProtocol(Protocol):
 
     def list_draft_ids(self) -> tuple[str, ...]:
         """Return every draft id persisted in this repository."""
+        ...
+
+
+@runtime_checkable
+class ModeloAmendmentRepositoryProtocol(Protocol):
+    """Narrow domain-facing contract for the filing-amendment repository.
+
+    :class:`~aeat.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`
+    structurally conforms to this Protocol; domain service code that only
+    needs to load, save, or list amendments should depend inward on this
+    port.
+    """
+
+    @property
+    def bucket_id(self) -> str | None:
+        """Return the profile bucket id when this repository resolved one."""
+        ...
+
+    def load(self, amendment_id: str) -> object | None:
+        """Load a persisted amendment by id, or return ``None`` if absent."""
+        ...
+
+    def save(self, amendment: object) -> None:
+        """Persist ``amendment`` in the encrypted object store."""
+        ...
+
+    def list_amendment_ids(self) -> tuple[str, ...]:
+        """Return every amendment id persisted in this repository."""
         ...

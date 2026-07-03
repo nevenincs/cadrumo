@@ -1,7 +1,7 @@
 ---
 tags: ["#audit", "#schema-driven-wizard-ux"]
 date: 2026-05-13
-modified: '2026-05-13'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-schema-driven-wizard-adr]]"
 ---
@@ -52,7 +52,6 @@ descriptor question-by-question and drives each prompt through
 ``QuestionaryPrompter`` + ``create_pipe_input`` so the prompts can be
 read verbatim. ``var/ux-captures/harness_d_pipe.py`` exercises the
 ctrl+c / unknown-choice probes the same way.
-
 
 ## SCENARIO A — Cold-start surface discovery (es)
 
@@ -1026,7 +1025,6 @@ Traceback (most recent call last):
   File "Y:\code\aeat-worktrees\chore-476-restructure-execution\.venv\Lib\site-packages\prompt_toolkit\output\win32.py", line 219, in get_win32_screen_buffer_info
     raise NoConsoleScreenBufferError
 prompt_toolkit.output.win32.NoConsoleScreenBufferError: Found xterm-256color, while expecting a Windows console. Maybe try to run this program using "winpty" or run it in cmd.exe instead. Or otherwise, in case of Cygwin, use the Python executable that is compiled for Cygwin.
-
 
 # SCENARIO D — Validation rejections
 

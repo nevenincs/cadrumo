@@ -17,13 +17,14 @@ from ....domain.deadlines import (
     Schedule,
     TaxpayerProfile,
 )
-from ...live._expedientes import PersistedExpedientesSnapshot
+from ...live import PersistedExpedientesSnapshot
 from .. import (
     OverviewCalendar,
     OverviewCalendarRange,
     build_overview_calendar,
     calendar_events_from_expedientes_snapshots,
 )
+from .calendar_test_support import BUCKET_ID as _BUCKET_ID
 from .calendar_test_support import SOURCE_URL as _SOURCE_URL
 from .calendar_test_support import profile as _profile
 
@@ -92,7 +93,7 @@ def _autonomo_without_declared_regime() -> TaxpayerProfile:
     )
 
 
-def test_calendar_autonomo_without_declared_regime_shows_all_four_m130_quarters() -> None:
+def test_calendar_autonomo_without_declared_regime_shows_range_intersecting_m130_quarters() -> None:
     """Operator repro fix: an actividad-económica profile with no declared
     estimation regime owes the four Modelo 130 quarterly pago-fraccionado
     deadlines.
@@ -111,8 +112,8 @@ def test_calendar_autonomo_without_declared_regime_shows_all_four_m130_quarters(
 
     profile = _autonomo_without_declared_regime()
     assert profile.irpf_estimation_regime is None
-    # A range wide enough to admit the 4T window, whose AEAT filing window
-    # opens 2027-01-01 (the prior fiscal year's Q4 pago fraccionado).
+    # The range includes the closing 2025 4T filing window in January
+    # 2026 and all four filing-year 2026 quarterly windows.
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 28))
     cal = build_overview_calendar(profile, rng, today=date(2026, 4, 1))
 
@@ -121,17 +122,25 @@ def test_calendar_autonomo_without_declared_regime_shows_all_four_m130_quarters(
         (entry for entry in cal.entries if entry.modelo == "130"),
         key=lambda entry: entry.closes_on,
     )
-    # All four quarterly pago-fraccionado windows are present.
-    assert len(m130_entries) == 4, [(e.period.registry_token, e.closes_on) for e in m130_entries]
+    # Every M130 filing window intersecting the calendar range is present.
+    assert len(m130_entries) == 5, [(e.period.year, e.period.registry_token, e.closes_on) for e in m130_entries]
     # The close dates are the registry deadline windows — never hand-invented.
-    # (M130 2019-y-siguientes deadline_windows: 1T/2T/3T/4T for filing year 2026.)
+    # (M130 deadline_windows: 2025 4T closes in January 2026; filing-year
+    # 2026 contributes its 1T/2T/3T/4T windows.)
+    assert [(entry.period.year, entry.period.registry_token) for entry in m130_entries] == [
+        (2025, "4T"),
+        (2026, "1T"),
+        (2026, "2T"),
+        (2026, "3T"),
+        (2026, "4T"),
+    ]
     assert [entry.closes_on for entry in m130_entries] == [
+        date(2026, 1, 30),
         date(2026, 4, 20),
         date(2026, 7, 20),
         date(2026, 10, 20),
         date(2027, 1, 30),
     ]
-    assert [entry.period.registry_token for entry in m130_entries] == ["1T", "2T", "3T", "4T"]
     # The business-day-adjusted close is never earlier than the legal close.
     for entry in m130_entries:
         assert entry.adjusted_closes_on >= entry.closes_on
@@ -177,7 +186,7 @@ def test_calendar_undeclared_profile_preserves_observed_events() -> None:
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="e" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2026, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 declarations=(
@@ -478,7 +487,7 @@ def test_undeclared_profile_message_resolves_to_real_localised_text() -> None:
 def _legal_entity() -> TaxpayerProfile:
     """A sociedad limitada — an Impuesto sobre Sociedades contribuyente."""
 
-    from ....domain.deadlines._models import LegalEntityForm
+    from ....domain.deadlines import LegalEntityForm
 
     return TaxpayerProfile(
         tax_id="B12345674",
@@ -533,6 +542,27 @@ def test_calendar_natural_person_shows_irpf_not_corporate() -> None:
     assert surfaced.isdisjoint({"200", "202"})
 
 
+def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold() -> None:
+    """A default foreign-asset false profile must not receive active M721 rows."""
+
+    profile = TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
+        iva_regime=IVARegime.GENERAL,
+        bienes_extranjero_above_threshold=False,
+        monedas_virtuales_extranjero_above_threshold=False,
+    )
+    rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 3, 31))
+
+    cal = build_overview_calendar(profile, rng, today=date(2025, 1, 15), show_suppressed=True)
+
+    assert "721" not in {entry.modelo for entry in cal.entries}
+    suppressed_721 = [entry for entry in cal.suppressed_entries if entry.modelo == "721"]
+    assert suppressed_721
+    assert {entry.verdict.value for entry in suppressed_721} == {"incomplete"}
+
+
 def test_calendar_attribution_entity_is_shown_no_cuota_obligation() -> None:
     """An attribution entity's calendar lists no IS and no IRPF cuota.
 
@@ -578,7 +608,7 @@ class _NoWindowsEngine:
         *,
         today: date | None = None,
     ) -> Schedule:
-        from ....domain.deadlines._errors import NoDeadlineWindowsError
+        from ....domain.deadlines import NoDeadlineWindowsError
 
         raise NoDeadlineWindowsError(f"No registry deadline windows registered for year {year}")
 
@@ -600,7 +630,7 @@ class _CorruptRegistryEngine:
         *,
         today: date | None = None,
     ) -> Schedule:
-        from ....domain.deadlines._errors import ScheduleComputationError
+        from ....domain.deadlines import ScheduleComputationError
 
         raise ScheduleComputationError(f"deadline registry validation failed for year {year}")
 
@@ -641,7 +671,7 @@ def test_calendar_propagates_genuine_registry_fault() -> None:
     lets the genuine fault surface so a corrupt registry is never
     hidden from the operator (round-4 #40)."""
 
-    from ....domain.deadlines._errors import (
+    from ....domain.deadlines import (
         NoDeadlineWindowsError,
         ScheduleComputationError,
     )

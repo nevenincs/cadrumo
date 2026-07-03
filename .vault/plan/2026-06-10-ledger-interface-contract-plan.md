@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#ledger-interface-contract'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-10-ledger-interface-contract-adr]]'
   - '[[2026-06-10-ledger-interface-contract-research]]'
 ---
-
 
 # `ledger-interface-contract` `Uniform ledger response envelope, ID resolution, and sorting` plan
 

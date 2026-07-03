@@ -7,29 +7,31 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    WorkUnit,
     derive_calculation_revision_id,
+    upsert_calculation_revision,
 )
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._work_unit import WorkUnit
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
+from ...user_profile import UserProfileLifecycleRepository
 from .. import create_work_unit
-from .._projection import compare_modelo_years
+from .._projection import ModeloCompareDeltaRow, ModeloProjectionCasillaObservation, compare_modelo_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 6, 25, 9, 0, tzinfo=UTC)
+_BUCKET_ID = "13013013-0130-4130-8130-130130130130"
 _M130_REVISION_ID = "2019-y-siguientes"
 
 
@@ -41,6 +43,15 @@ def _casilla_id(value: object) -> CasillaId:
 
 
 _M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
+
+
+def _m130_ingresos_registry_provenance() -> tuple[tuple[str, ...], tuple[str, ...]]:
+    registry_casilla = next(
+        item
+        for item in resources().modelos.authority.snapshot("130", filing_year=2026, period="1T").revision.casillas
+        if item.id == _M130_INGRESOS_CASILLA
+    )
+    return tuple(registry_casilla.legal_refs), tuple(registry_casilla.source_refs)
 
 
 def _seed_work_unit(
@@ -99,7 +110,28 @@ def _seed_revision(
 
 def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path: Path) -> None:
     """Comparison rows must not lose registry-grounded provenance."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="modelo-compare-provenance") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        UserProfileLifecycleRepository(bucket_id=profile.bucket_id, objects=profile.repository).save(
+            UserProfileRecord(
+                profile_id=profile.bucket_id,
+                display_name="Modelo compare profile",
+                facts=(
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="economic activity"),
+                    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                    UserProfileFact(path="iva.regime", value="GENERAL"),
+                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+                ),
+                created_at=_T0,
+                updated_at=_T0,
+            ),
+        )
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         work_2025 = _seed_work_unit(
@@ -142,3 +174,51 @@ def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path:
     assert row.source_refs == tuple(registry_casilla.source_refs)
     assert row.legal_refs, "comparison rows must not emit blank legal_refs"
     assert row.source_refs, "comparison rows must not emit blank source_refs"
+
+
+def test_projection_rows_reject_blank_registry_provenance_entries() -> None:
+    """Projection result models must not accept whitespace provenance."""
+    legal_refs, source_refs = _m130_ingresos_registry_provenance()
+
+    with pytest.raises(ValidationError):
+        ModeloProjectionCasillaObservation(
+            casilla_id=_M130_INGRESOS_CASILLA,
+            value=Decimal("1"),
+            legal_refs=(" ",),
+            source_refs=source_refs,
+        )
+
+    with pytest.raises(ValidationError):
+        ModeloProjectionCasillaObservation(
+            casilla_id=_M130_INGRESOS_CASILLA,
+            value=Decimal("1"),
+            legal_refs=legal_refs,
+            source_refs=("",),
+        )
+
+    with pytest.raises(ValidationError):
+        ModeloCompareDeltaRow(
+            casilla_id=_M130_INGRESOS_CASILLA,
+            label="Ingresos",
+            section="Actividades economicas",
+            year_a_value=Decimal("1"),
+            year_b_value=Decimal("2"),
+            delta=Decimal("1"),
+            pct_change=Decimal("100.00"),
+            formula_id=" ",
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+        )
+
+    with pytest.raises(ValidationError):
+        ModeloCompareDeltaRow(
+            casilla_id=_M130_INGRESOS_CASILLA,
+            label="Ingresos",
+            section="Actividades economicas",
+            year_a_value=Decimal("1"),
+            year_b_value=Decimal("2"),
+            delta=Decimal("1"),
+            pct_change=Decimal("100.00"),
+            legal_refs=legal_refs,
+            source_refs=(" ",),
+        )

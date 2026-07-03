@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-testimonial'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-29'
 related:
   - "[[2026-05-27-mateo-cli-testimonial-audit]]"
   - "[[2026-05-27-sergio-cli-testimonial-audit]]"
@@ -19,8 +19,18 @@ in Spain; UK tax resident. Inherited Málaga piso 2018, rents at
 €820/month to particular tenant (vivienda habitual). Spanish-source
 obligation: Modelo 210 (IRNR), Impuesto sobre la Renta de No
 Residentes. Post-Brexit (UK = non-EU): 24% tipo over rendimiento
-BRUTO without deductible gastos (TRLIRNR Art. 25.1.f). Convenio
+BRUTO without deductible gastos (TRLIRNR Art. 25.1.a general-rate
+branch; EU/EEE deductibility is Art. 24.6). Convenio
 España-UK BOE-A-2014-5171 governs double-taxation credit.
+
+> 2026-06-29 legal-grounding update: this testimonial originally
+> conflated TRLIRNR art. 25.1.f with the non-EU rental/general-rate
+> path. Current law/corpus split is: art. 25.1.a supplies the 24%
+> general rate and the qualifying EU/EEE 19% reduced general rate; art.
+> 25.1.f supplies an unconditional 19% income-class rate for dividends,
+> interest, and capital gains. Olivia's UK property-rental example
+> remains a 24% gross-basis case, but under art. 25.1.a/art. 24, not
+> art. 25.1.f.
 
 First exercise of non-resident axis, M210, Brexit régimen, and
 convenio aplicable. None previously tested.
@@ -53,10 +63,13 @@ deductibility, wrong submission body.
 
 ### CRITICAL — Brexit EU/non-EU distinction absent
 
-Under TRLIRNR Art. 25.1.a, EU/EEA residents may deduct gastos
-and apply 19% tipo. Under Art. 25.1.f, non-EU non-residents
-(including post-Brexit UK) cannot deduct gastos and face 24%
-over rendimiento BRUTO.
+Under TRLIRNR Art. 25.1.a, the general rate is 24% and the qualifying
+EU/EEA reduced general-rate branch is 19%; Art. 24.6 is the separate
+deductible-expense basis for qualifying EU/EEA residents. Post-Brexit
+UK rental income remains outside that EU/EEA branch and faces 24% over
+rendimiento BRUTO. Art. 25.1.f is not the non-EU rental/general-rate
+authority; it is the unconditional 19% income-class rate for dividends,
+interest, and capital gains.
 
 Olivia's 2024 liability:
 - Correct (non-EU, gross): 24% × €9,840 = €2,361.60.

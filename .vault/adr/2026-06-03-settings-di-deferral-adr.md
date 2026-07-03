@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#settings-di-deferral'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related:
   - '[[2026-06-04-settings-di-deferral-research]]'
 ---
@@ -40,4 +40,3 @@ The `settings-di` plan is **accepted as architecturally sound** (the research is
 ## Successor Plan
 
 Follow-up sprint: `[[2026-06-XX-settings-di-execution-plan]]` (to be authored when the campaign cluster closes and DI work is queued). The successor plan will inherit the phase structure and step inventory from `[[2026-05-14-settings-di-plan]]` without modification.
-

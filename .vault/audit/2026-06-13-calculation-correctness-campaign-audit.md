@@ -3,15 +3,12 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-adr]]"
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
   - "[[2026-06-13-first-filer-attestation-adr]]"
 ---
-
-
-
 
 # `calculation-correctness-campaign` audit: `calculation-correctness campaign close honesty review`
 

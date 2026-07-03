@@ -2,114 +2,40 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core.config import override_settings
+from ....core.i18n import clear_output_language_cache
 from ....domain.categories import SpendingCategory
+from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
-    TransactionValidationError,
 )
-from ....tests.secure_sql import isolated_runtime_profile
-from .. import LedgerPreflightIssueReason, preflight_ledger_tax_readiness, preflight_transaction_catalogue
+from .. import LedgerPreflightIssueReason, preflight_transaction_catalogue
+from ._preflight_test_support import (
+    _AD_HOC_2026,
+    _BUCKET_ID,
+    _Q2_2026,
+    _transaction,
+)
+from ._preflight_test_support import (
+    secure_objects as secure_objects,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-
-def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_code(year, code)
-
-
-_Q2_2026 = _period(2026, "2T")
-_AD_HOC_2026 = _period(2026, "AD-HOC")
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        yield profile.repository
-
-
-def _raw_transaction(
-    provider_id: str,
-    *,
-    booked_date: date = date(2026, 4, 5),
-    amount: Decimal = Decimal("121.00"),
-    currency: str = "EUR",
-) -> RawTransaction:
-    return RawTransaction(
-        transaction_id=provider_id,
-        booked_date=booked_date,
-        value_date=booked_date,
-        amount=amount,
-        currency=currency,
-        counterparty="Cliente o proveedor",
-        description=f"ledger row {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="c" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
-            provider_name="manual-ledger",
-        ),
-        raw_fields={"source_kind": "ledger_transaction"},
-    )
-
-
-def _transaction(
-    provider_id: str,
-    *,
-    direction: TransactionDirection = TransactionDirection.OUTGOING,
-    amount: Decimal = Decimal("121.00"),
-    business_classification: BusinessClassification = BusinessClassification.BUSINESS,
-    business_pct: Decimal | None = None,
-    category_id: str | None = SpendingCategory.MATERIAL_OFICINA.value,
-    taxable_base: Decimal | None = Decimal("100.00"),
-    iva_rate: Decimal | None = Decimal("0.21"),
-    iva_amount: Decimal | None = Decimal("21.00"),
-    irpf_category: str | None = None,
-    usage_ratio_id: str | None = None,
-    booked_date: date = date(2026, 4, 5),
-    currency: str = "EUR",
-    lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
-) -> Transaction:
-    return Transaction.model_validate(
-        {
-            "raw": _raw_transaction(provider_id, booked_date=booked_date, amount=amount, currency=currency),
-            "direction": direction,
-            "business_classification": business_classification,
-            "business_pct": business_pct,
-            "category_id": category_id,
-            "taxable_base": taxable_base,
-            "iva_rate": iva_rate,
-            "iva_amount": iva_amount,
-            "irpf_category": irpf_category,
-            "usage_ratio_id": usage_ratio_id,
-            "lifecycle_state": lifecycle_state,
-            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
+__all__ = ["secure_objects"]
 
 
 def test_preflight_refuses_non_span_period_even_with_empty_catalogue() -> None:
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_AD_HOC_2026,
         transactions=TransactionCatalogue.from_transactions(()),
     )
@@ -122,7 +48,7 @@ def test_preflight_refuses_non_span_period_even_with_empty_catalogue() -> None:
 
 def test_preflight_refuses_non_span_period_before_touching_transactions() -> None:
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_AD_HOC_2026,
         transactions=TransactionCatalogue.from_transactions((_transaction("row-ready"),)),
     )
@@ -157,7 +83,7 @@ def test_preflight_reports_all_missing_modelo_readiness_facts() -> None:
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions(
             (unclassified, missing_business_facts, mixed_missing_ratio),
@@ -176,91 +102,6 @@ def test_preflight_reports_all_missing_modelo_readiness_facts() -> None:
             LedgerPreflightIssueReason.MISSING_PROPORTIONALITY_REFERENCE,
         ),
     )
-
-
-def test_preflight_does_not_flag_missing_category_on_income_transaction() -> None:
-    """An INCOMING (income) transaction with no category_id must not be
-    flagged missing_category.
-
-    ``category_id`` is a SpendingCategory foreign key — a
-    deductible-expense taxonomy. The only modelo binding that reads it
-    is the Renta first-slice expense aggregation, which never admits a
-    pure-income transaction. Income is classified by direction alone,
-    so forcing an expense category onto it is a modelling error.
-    """
-
-    income = _transaction(
-        "row-income",
-        direction=TransactionDirection.INCOMING,
-        amount=Decimal("1500.00"),
-        category_id=None,
-        taxable_base=Decimal("1239.67"),
-        iva_rate=Decimal("0.21"),
-        iva_amount=Decimal("260.33"),
-    )
-
-    report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
-        period=_Q2_2026,
-        transactions=TransactionCatalogue.from_transactions((income,)),
-    )
-
-    assert report.checked_transaction_count == 1
-    assert LedgerPreflightIssueReason.MISSING_CATEGORY not in {issue.reason for issue in report.issues}
-    assert report.ready is True
-
-
-def test_preflight_still_flags_missing_category_on_expense_transaction() -> None:
-    """An OUTGOING (expense) transaction with no category_id must still
-    be flagged missing_category; the deductible-expense pipeline
-    genuinely needs the spending-category foreign key."""
-
-    expense = _transaction(
-        "row-expense",
-        direction=TransactionDirection.OUTGOING,
-        amount=Decimal("121.00"),
-        category_id=None,
-    )
-
-    report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
-        period=_Q2_2026,
-        transactions=TransactionCatalogue.from_transactions((expense,)),
-    )
-
-    assert LedgerPreflightIssueReason.MISSING_CATEGORY in {issue.reason for issue in report.issues}
-
-
-def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidence() -> None:
-    """An INCOMING transaction that carries a purchase-invoice evidence
-    id is an expense refund — it feeds the Renta expense pipeline and
-    therefore does need a deductible-expense category."""
-
-    refund = Transaction.model_validate(
-        {
-            "raw": _raw_transaction("row-refund", amount=Decimal("45.00")),
-            "direction": TransactionDirection.INCOMING,
-            "business_classification": BusinessClassification.BUSINESS,
-            "business_pct": None,
-            "category_id": None,
-            "purchase_invoice_evidence_id": "evidence-001",
-            "taxable_base": Decimal("37.19"),
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": Decimal("7.81"),
-            "usage_ratio_id": None,
-            "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
-
-    report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
-        period=_Q2_2026,
-        transactions=TransactionCatalogue.from_transactions((refund,)),
-    )
-
-    assert LedgerPreflightIssueReason.MISSING_CATEGORY in {issue.reason for issue in report.issues}
 
 
 def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows() -> None:
@@ -291,7 +132,7 @@ def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows() -
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((personal, transfer, old)),
     )
@@ -321,7 +162,7 @@ def test_preflight_ignores_archived_and_stashed_rows() -> None:
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((ready, archived_missing_facts, stashed_missing_facts)),
     )
@@ -331,71 +172,11 @@ def test_preflight_ignores_archived_and_stashed_rows() -> None:
     assert report.ready is True
 
 
-def test_preflight_skips_iva_facts_on_trabajo_income_rows() -> None:
-    """An INCOMING transaction with ``irpf_category="trabajo"`` (nómina) is
-    IVA-exempt: the IRPF retenciones binding consumes the gross amount and
-    the IVA aggregation never reads taxable_base / iva_rate / iva_amount.
-    Preflight must NOT flag missing_taxable_base + missing_iva_amount +
-    missing_iva_rate on these rows.
-
-    Closes the R9-ANDREA-HIGH false-positive surfaced in cross-domain-
-    continuity contract.
-    """
-    nomina = _transaction(
-        "row-nomina",
-        direction=TransactionDirection.INCOMING,
-        amount=Decimal("1850.00"),
-        irpf_category="trabajo",
-        category_id=None,
-        taxable_base=None,
-        iva_rate=None,
-        iva_amount=None,
-    )
-
-    report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
-        period=_Q2_2026,
-        transactions=TransactionCatalogue.from_transactions((nomina,)),
-    )
-
-    assert report.ready is True, [issue.reason for issue in report.issues]
-    assert report.issues == ()
-
-
-def test_preflight_still_flags_iva_facts_on_non_trabajo_income_rows() -> None:
-    """Anti-regression: an INCOMING row WITHOUT ``irpf_category="trabajo"``
-    still surfaces missing-IVA-fact findings. Only the nómina-shaped row
-    is exempt; the trabajo guard must not silence general income rows."""
-
-    income_no_irpf = _transaction(
-        "row-income-no-irpf",
-        direction=TransactionDirection.INCOMING,
-        amount=Decimal("500.00"),
-        irpf_category=None,
-        category_id=None,
-        taxable_base=None,
-        iva_rate=None,
-        iva_amount=None,
-    )
-
-    report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
-        period=_Q2_2026,
-        transactions=TransactionCatalogue.from_transactions((income_no_irpf,)),
-    )
-
-    assert report.ready is False
-    surfaced = {issue.reason for issue in report.issues}
-    assert LedgerPreflightIssueReason.MISSING_TAXABLE_BASE in surfaced
-    assert LedgerPreflightIssueReason.MISSING_IVA_AMOUNT in surfaced
-    assert LedgerPreflightIssueReason.MISSING_IVA_RATE in surfaced
-
-
 def test_preflight_reports_unsupported_currency_before_modelo_aggregation() -> None:
     usd = _transaction("row-usd", currency="USD")
 
     report = preflight_transaction_catalogue(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((usd,)),
     )
@@ -404,40 +185,79 @@ def test_preflight_reports_unsupported_currency_before_modelo_aggregation() -> N
     assert [issue.reason for issue in report.issues] == [LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY]
 
 
-def test_preflight_repository_path_loads_bucket_catalogue(secure_objects: SecureObjectRepository) -> None:
-    objects = secure_objects
-    repository = TransactionCatalogueRepository(bucket_id="bucket-a", objects=objects)
-    repository.save(TransactionCatalogue.from_transactions((_transaction("row-ready"),)))
-
-    report = preflight_ledger_tax_readiness(
-        bucket_id="bucket-a",
-        period=_Q2_2026,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="bucket-a", objects=objects),
+def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggregation() -> None:
+    transaction = _transaction(
+        "row-intracom-es",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("1000.00"),
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("0"),
+        iva_amount=Decimal("0"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        counterparty_eu_member_state=EUMemberState.ES,
     )
 
-    assert report.ready is True
-    assert report.checked_transaction_count == 1
-    assert report.issues == ()
+    report = preflight_transaction_catalogue(
+        bucket_id=_BUCKET_ID,
+        period=_Q2_2026,
+        transactions=TransactionCatalogue.from_transactions((transaction,)),
+    )
+
+    assert report.ready is False
+    assert [issue.reason for issue in report.issues] == [
+        LedgerPreflightIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION,
+    ]
+    assert not report.issues[0].detail.startswith("aggregation.")
 
 
-def test_preflight_default_repository_loads_active_runtime_bucket(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
-        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
-            TransactionCatalogue.from_transactions((_transaction("row-ready"),)),
-        )
+def test_preflight_renders_intracom_domestic_counterparty_detail_in_hungarian() -> None:
+    transaction = _transaction(
+        "row-intracom-es-hu",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("1000.00"),
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("0"),
+        iva_amount=Decimal("0"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        counterparty_eu_member_state=EUMemberState.ES,
+    )
 
-        report = preflight_ledger_tax_readiness(bucket_id=profile.bucket_id, period=_Q2_2026)
-
-    assert report.ready is True
-    assert report.checked_transaction_count == 1
-    assert report.issues == ()
-
-
-def test_preflight_rejects_repository_bucket_mismatch(secure_objects: SecureObjectRepository) -> None:
-    objects = secure_objects
-    with pytest.raises(TransactionValidationError, match="bucket_id"):
-        preflight_ledger_tax_readiness(
-            bucket_id="bucket-a",
+    with override_settings(aeat_output_language="hu"):
+        clear_output_language_cache()
+        report = preflight_transaction_catalogue(
+            bucket_id=_BUCKET_ID,
             period=_Q2_2026,
-            transaction_repository=TransactionCatalogueRepository(bucket_id="bucket-b", objects=objects),
+            transactions=TransactionCatalogue.from_transactions((transaction,)),
         )
+    clear_output_language_cache()
+
+    assert [issue.reason for issue in report.issues] == [
+        LedgerPreflightIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION,
+    ]
+    assert "Spanyol partner" in report.issues[0].detail
+    assert not report.issues[0].detail.startswith("aggregation.")
+
+
+def test_preflight_blocks_export_sale_with_eu_member_state_before_aggregation() -> None:
+    transaction = _transaction(
+        "row-export-de",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("800.00"),
+        taxable_base=Decimal("800.00"),
+        iva_rate=Decimal("0"),
+        iva_amount=Decimal("0"),
+        iva_category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        counterparty_eu_member_state=EUMemberState.DE,
+    )
+
+    report = preflight_transaction_catalogue(
+        bucket_id=_BUCKET_ID,
+        period=_Q2_2026,
+        transactions=TransactionCatalogue.from_transactions((transaction,)),
+    )
+
+    assert report.ready is False
+    assert [issue.reason for issue in report.issues] == [
+        LedgerPreflightIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
+    ]
+    assert EUMemberState.DE.value in report.issues[0].detail

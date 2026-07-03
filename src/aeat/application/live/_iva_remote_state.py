@@ -1,7 +1,28 @@
 """IVA remote-state, compensation-history, and wallet live actions.
 
+The module separates stored-evidence reads from live acquisition. Listing and
+load helpers read encrypted local IVA compensation history, wallet decisions,
+wallet observations, and acquisition manifests without contacting AEAT. Capture
+helpers enforce the live-read gate, acquire an authenticated
+:class:`~aeat.adapters.outbound.aeat.auth.AeatSession`,
+then persist filed-history and wallet evidence before reconciliation consumes it.
+
 Encrypted acquisition manifests are stored through the active bucket's
-:class:`SecureObjectRepository` via the typed manifest repository.
+:class:`SecureObjectRepository` via the
+typed manifest repository under
+:data:`~aeat.adapters.persistence.storage.LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE`.
+The manifest is redacted operational evidence of the acquisition attempt; it is
+not a remote submission record.
+
+See Also:
+    :class:`~aeat.application.live.IvaRemoteStateStoredEvidenceReport`
+        Stored-evidence report returned without a live AEAT read.
+    :class:`~aeat.application.live.IvaRemoteStateAcquisitionReport`
+        Combined read-only acquisition report for filed history and wallet
+        surfaces.
+    :func:`~aeat.application.live._session.active_verified_session`
+        Shared read-only authenticated-session helper used by individual
+        capture surfaces.
 """
 
 from __future__ import annotations
@@ -29,11 +50,15 @@ from ...adapters.outbound.aeat.sede import shared_playwright as _shared_playwrig
 from ...adapters.persistence.storage import (
     LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE as _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE,
 )
-from ...adapters.persistence.storage.envelope import SecureBoundRepository as _SecureBoundRepository
-from ...adapters.persistence.storage.runtime_repository import (
+from ...adapters.persistence.storage import (
+    SecureBoundRepository as _SecureBoundRepository,
+)
+from ...adapters.persistence.storage import (
+    SecureObjectRepository as _SecureObjectRepository,
+)
+from ...adapters.persistence.storage import (
     secure_object_repository_for_active_bucket as _secure_object_repository_for_active_bucket,
 )
-from ...adapters.persistence.storage.sql import SecureObjectRepository as _SecureObjectRepository
 from ...application.auth import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
 from ...application.auth import ensure_authenticated_aeat_session as _ensure_authenticated_aeat_session
 from ...application.calculations import CalculationObservationRepository as _CalculationObservationRepository
@@ -50,16 +75,14 @@ from ...core.errors import AeatError as _AeatError
 from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.resources import resources as _resources
 from ...core.time import now
-from ...domain.iva_compensation._carry_forward import IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot
-from ...domain.iva_compensation._carry_forward import IvaCompensationPeriodState as _IvaCompensationPeriodState
-from ...domain.iva_compensation._carry_forward import (
+from ...domain.iva_compensation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
+from ...domain.iva_compensation import IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot
+from ...domain.iva_compensation import IvaCompensationPeriodState as _IvaCompensationPeriodState
+from ...domain.iva_compensation import IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision
+from ...domain.iva_compensation import (
     build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report,
 )
-from ...domain.iva_compensation._reconciliation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
-from ...domain.iva_compensation._reconciliation import (
-    IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision,
-)
-from ..user_profile._orchestration import profile_storage_session as _profile_storage_session
+from ..user_profile import profile_storage_session as _profile_storage_session
 from ._errors import LiveApplicationError, LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from ._filed_data_capture import capture_report_path as _capture_report_path
 from ._filed_observation_persistence import latest_declarations_by_period as _latest_declarations_by_period
@@ -88,7 +111,20 @@ from ._session import active_verified_session as _active_verified_session
 
 
 class IvaRemoteStateAcquisitionManifestRepository(_SecureBoundRepository[IvaRemoteStateAcquisitionManifest]):
-    """Repository for encrypted live IVA acquisition manifests."""
+    """Repository for encrypted live IVA acquisition manifests.
+
+    The repository stores redacted :class:`IvaRemoteStateAcquisitionManifest`
+    payloads under the active profile bucket. Raw AEAT rows remain in their
+    dedicated evidence stores.
+
+    The namespace, sensitivity, schema version, and object-key grammar come
+    from
+    :data:`~aeat.adapters.persistence.storage.LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE`.
+    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    writes each manifest through an
+    :class:`~aeat.adapters.persistence.storage.Envelope` so acquisition ids and
+    redacted surface summaries stay inside the encrypted secure-object store.
+    """
 
     namespace: ClassVar[str] = _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE.namespace
     sensitivity: ClassVar = _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE.sensitivity
@@ -142,7 +178,8 @@ def load_iva_remote_state(
     """Reload stored remote IVA evidence from the active profile without contacting AEAT.
 
     Returns an :class:`IvaRemoteStateStoredEvidenceReport` with the
-    stored compensation history and reconciliation decisions.
+    stored compensation history, wallet observations, reconciliation decisions,
+    and redacted acquisition manifests.
     """
     with _active_profile_storage_span():
         history = list_iva_compensation_history(
@@ -170,7 +207,7 @@ def load_iva_remote_state(
 def _active_profile_storage_span():
     active_bucket_id = _resolve_active_bucket_id()
     if active_bucket_id is None:
-        from ...adapters.persistence.storage.errors import StorageValidationError as _StorageValidationError
+        from ...adapters.persistence.storage import StorageValidationError as _StorageValidationError
 
         raise _StorageValidationError(translated_message="errors.storage.runtime.not_ready")
     from ...adapters.persistence.storage import has_active_bucket_session as _has_active_bucket_session
@@ -636,6 +673,11 @@ async def capture_iva_remote_state(
     output_root: Path | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
     """Acquire filed-history and wallet/cartera IVA state as one typed read-only operation.
+
+    The operation reports each remote surface independently. A partial failure is
+    captured as a redacted outcome and persisted in the acquisition manifest; a
+    successful surface still persists and reloads its evidence before being
+    reported.
 
     Returns an :class:`IvaRemoteStateAcquisitionReport` with the acquired
     state, compensation history, and any acquisition issues.

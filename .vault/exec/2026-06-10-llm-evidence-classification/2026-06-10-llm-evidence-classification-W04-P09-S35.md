@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-evidence-classification'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S35'
 related:
   - "[[2026-06-10-llm-evidence-classification-plan]]"
 ---
-
-
-
 
 # Roll classify --llm with a real cloud CLI (agy/codex) and --read-evidence --evidence-acknowledged
 
@@ -29,4 +26,3 @@ related:
 - The model read the invoice (the bank row carried only "PAGO SUMINISTROS … 302.50"; the model returned base 250.00 / IVA 52.50, only knowable from the invoice) and classified BUSINESS / `hardware_amortizable`. `--apply` stamped `clasificado-por: llm:codex`, persisted the decision, set review status `reviewed`, and emitted a `ledger.transaction.classified` event. Provenance + evidence-read confirmed against the real model. Captured in audit `2026-06-13-llm-evidence-classification-audit`.
 
 ## Notes
-

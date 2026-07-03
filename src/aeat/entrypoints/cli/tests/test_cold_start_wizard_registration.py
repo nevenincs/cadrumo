@@ -16,7 +16,7 @@ session imports the catalogue and registers it process-wide.
 That is why this guard runs in a **fresh interpreter**: profile creation and
 work-create execute in two separate cold processes sharing one storage root, so
 the work-create process must register the catalogue through the root callback
-itself. An in-process ``CliRunner`` test cannot observe the regression.
+itself. An in-process runner cannot observe the regression.
 """
 
 from __future__ import annotations
@@ -71,13 +71,14 @@ def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedPr
 
     code = f"""
         import sys
-        from click.testing import CliRunner
-        from typer.main import get_command
-        from aeat.entrypoints.cli import app
 
-        result = CliRunner().invoke(get_command(app), {argv!r})
-        sys.stdout.write(result.output)
-        sys.exit(result.exit_code)
+        sys.argv = ["aeat", *{argv!r}]
+        from aeat.entrypoints.cli import main
+
+        try:
+            main()
+        except SystemExit as exit_:
+            raise SystemExit(exit_.code)
         """
     setting_env = str.upper
     base_settings = Settings.model_validate({})
@@ -104,7 +105,21 @@ def test_cold_process_profile_create_uses_local_storage_secret_store(tmp_path: P
 
     setup = _run_cli_cold(
         tmp_path,
-        ["config", "profile", "create", "coldprofile", "--tax-id", "45678912S", "--quiet"],
+        [
+            "config",
+            "profile",
+            "create",
+            "coldprofile",
+            "--tax-id",
+            "45678912S",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Cold",
+            "--surnames",
+            "Profile",
+            "--quiet",
+        ],
     )
 
     assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
@@ -148,7 +163,23 @@ def test_cold_process_work_create_registers_wizard_catalogue(tmp_path: Path) -> 
 
     setup = _run_cli_cold(
         tmp_path,
-        ["config", "profile", "create", "coldwiz", "--tax-id", "45678912S", "--quiet"],
+        [
+            "config",
+            "profile",
+            "create",
+            "coldwiz",
+            "--tax-id",
+            "45678912S",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Cold",
+            "--surnames",
+            "Wizard",
+            "--activity",
+            "Servicios",
+            "--quiet",
+        ],
     )
     assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
 
@@ -173,3 +204,71 @@ def test_cold_process_work_create_registers_wizard_catalogue(tmp_path: Path) -> 
     for leak in _REGISTRATION_LEAKS:
         assert leak not in created.stdout, f"work create surfaced an unregistered core slot: {leak!r}\n{created.stdout}"
     assert created.returncode == 0, f"work create failed in a cold process: {created.stdout}\n{created.stderr}"
+
+
+def test_cold_process_m100_2025_work_create_keeps_intracom_type_import_boundary(tmp_path: Path) -> None:
+    """M100/2025 work-create must not crash importing invoice intracom types.
+
+    The work-create path imports the CLI composition root in a cold process and
+    then resolves the modelo source mesh. That transitively imports the invoice
+    resolver, which consumes ``IntracomOperationType`` from its core enum home.
+    A boundary regression previously surfaced as a raw ImportError before any
+    user-facing refusal could be rendered.
+    """
+
+    setup = _run_cli_cold(
+        tmp_path,
+        [
+            "config",
+            "profile",
+            "create",
+            "marta-empleada-arrendadora-2025",
+            "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "natural_person",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Marta",
+            "--surnames",
+            "Empleada",
+            "--activity",
+            "arrendamiento",
+            "--irpf-income-categories",
+            "actividad_economica",
+            "--irpf-estimation-regime",
+            "directa_normal",
+        ],
+    )
+    assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
+
+    created = _run_cli_cold(
+        tmp_path,
+        [
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "100",
+            "--year",
+            "2025",
+            "--period",
+            "0A",
+            "--revision",
+            "2025",
+            "--name",
+            "marta-empleada-arrendadora-2025",
+            "--by",
+            "Marta",
+        ],
+    )
+
+    assert "ImportError" not in created.stdout
+    assert "ImportError" not in created.stderr
+    assert "cannot import name 'IntracomOperationType'" not in created.stdout
+    assert "cannot import name 'IntracomOperationType'" not in created.stderr
+    assert created.returncode == 0, f"work create failed in a cold process: {created.stdout}\n{created.stderr}"
+    assert "operation\tmodelo.work.create" in created.stdout
+    assert "status\tcreated" in created.stdout

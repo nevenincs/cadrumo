@@ -145,17 +145,16 @@ class CustomerTaxStatus(StrEnum):
 class TransactionKind(StrEnum):
     """Kind-of-supply classification.
 
-    Drives place-of-supply rules (services general vs. land-related vs.
-    digital), reverse-charge sub-rules (construction, waste, consumer
-    electronics) and rate-tier defaulting (passenger transport at 10 %,
-    restaurants at 10 %). Kind is orthogonal to rate tier;
+    Drives place-of-supply rules (services general vs. land-related vs. OSS),
+    reverse-charge sub-rules (construction, waste, consumer electronics) and
+    rate-tier defaulting (passenger transport at 10 %, restaurants at 10 %).
+    Kind is orthogonal to rate tier;
     :attr:`IvaInvoiceClassificationCriteria.rate_tier` is the explicit rate-tier axis
     the caller supplies for ES-to-ES domestic rules.
 
     Attributes:
         GOODS: Tangible goods supply.
         SERVICES_GENERAL: Services not covered by a specialised category.
-        SERVICES_DIGITAL_B2C_OSS: Digital services routed through OSS.
         SERVICES_LAND_RELATED: Land-related services (Art. 70).
         SERVICES_PASSENGER_TRANSPORT: Passenger transport service.
         SERVICES_RESTAURANT: Restaurant or catering service.
@@ -174,9 +173,7 @@ class TransactionKind(StrEnum):
             Unión. LIVA art. 163 unvicies.
         OSS_UNION_SERVICES: Services from an EU-established taxable person
             to a consumer in another Member State routed through Esquema
-            Unión. LIVA art. 163 unvicies. Distinct from
-            :attr:`SERVICES_DIGITAL_B2C_OSS`, which the existing classifier
-            uses for the legacy R14 digital-services-only rule.
+            Unión. LIVA art. 163 unvicies.
         IOSS_DISTANCE_SALE_LOW_VALUE: Distance sale of imported goods with
             intrinsic value at or below 150 EUR routed through Esquema de
             Importación (IOSS). LIVA art. 163 quinvicies.
@@ -184,7 +181,6 @@ class TransactionKind(StrEnum):
 
     GOODS = "goods"
     SERVICES_GENERAL = "services_general"
-    SERVICES_DIGITAL_B2C_OSS = "services_digital_b2c_oss"
     SERVICES_LAND_RELATED = "services_land_related"
     SERVICES_PASSENGER_TRANSPORT = "services_passenger_transport"
     SERVICES_RESTAURANT = "services_restaurant"
@@ -457,17 +453,6 @@ def _r13_services_b2b_eu_inbound(criteria: IvaInvoiceClassificationCriteria) -> 
     )
 
 
-def _r14_digital_b2c_oss_outbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
-    """Match an ES to EU_MEMBER B2C digital service routed via OSS (Art. 70.Uno.4º)."""
-    return (
-        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
-        and criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
-        and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
-        and criteria.kind is TransactionKind.SERVICES_DIGITAL_B2C_OSS
-        and criteria.direction is InvoiceKind.ISSUED
-    )
-
-
 def _r15_distance_sales_b2c_outbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an ES to EU_MEMBER B2C distance-sales supply (caller enforces threshold)."""
     return (
@@ -659,12 +644,6 @@ _CLASSIFICATION_RULES: tuple[_IvaClassificationRule, ...] = (
         "EU_MEMBER to ES B2B services",
         _r13_services_b2b_eu_inbound,
         IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-    ),
-    _IvaClassificationRule(
-        "R14_digital_b2c_oss",
-        "ES to EU_MEMBER B2C digital OSS",
-        _r14_digital_b2c_oss_outbound,
-        IvaCategory.DOMESTIC_NOT_SUBJECT,
     ),
     _IvaClassificationRule(
         "R15_distance_sales_b2c",

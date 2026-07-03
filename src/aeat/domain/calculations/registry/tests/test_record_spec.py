@@ -21,44 +21,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # ---------------------------------------------------------------------------
 
 
-def test_latin_1_normalises_to_iso_8859_1() -> None:
-    """``latin-1`` is the most common AEAT-declared alias; it must map to
-    ``iso-8859-1`` per the wire-encoding contract."""
-    assert ENCODING_ALIAS_MAP["latin-1"] == "iso-8859-1"
+def test_encoding_alias_map_normalises_known_aliases() -> None:
+    """Known AEAT/Python codec aliases map to their canonical wire encodings."""
+    cases = (
+        ("latin-1", "iso-8859-1"),
+        ("latin_1", "iso-8859-1"),
+        ("iso-8859-1", "iso-8859-1"),
+        ("iso_8859_1", "iso-8859-1"),
+        ("windows-1252", "cp1252"),
+        ("cp1252", "cp1252"),
+        ("latin-9", "iso-8859-15"),
+        ("iso-8859-15", "iso-8859-15"),
+        ("iso_8859_15", "iso-8859-15"),
+    )
 
-
-def test_latin_1_underscore_normalises_to_iso_8859_1() -> None:
-    """Python codec name ``latin_1`` (underscore variant) must also map."""
-    assert ENCODING_ALIAS_MAP["latin_1"] == "iso-8859-1"
-
-
-def test_iso_8859_1_is_its_own_canonical_form() -> None:
-    """The canonical form maps to itself (idempotent normalisation)."""
-    assert ENCODING_ALIAS_MAP["iso-8859-1"] == "iso-8859-1"
-
-
-def test_iso_8859_1_underscore_normalises() -> None:
-    assert ENCODING_ALIAS_MAP["iso_8859_1"] == "iso-8859-1"
-
-
-def test_windows_1252_normalises_to_cp1252() -> None:
-    assert ENCODING_ALIAS_MAP["windows-1252"] == "cp1252"
-
-
-def test_cp1252_is_its_own_canonical_form() -> None:
-    assert ENCODING_ALIAS_MAP["cp1252"] == "cp1252"
-
-
-def test_latin_9_normalises_to_iso_8859_15() -> None:
-    assert ENCODING_ALIAS_MAP["latin-9"] == "iso-8859-15"
-
-
-def test_iso_8859_15_is_its_own_canonical_form() -> None:
-    assert ENCODING_ALIAS_MAP["iso-8859-15"] == "iso-8859-15"
-
-
-def test_iso_8859_15_underscore_normalises() -> None:
-    assert ENCODING_ALIAS_MAP["iso_8859_15"] == "iso-8859-15"
+    for alias, canonical in cases:
+        assert ENCODING_ALIAS_MAP[alias] == canonical, alias
 
 
 def test_alias_map_unknown_encoding_falls_through_unchanged() -> None:
@@ -105,8 +83,8 @@ def _record(*, record_id: str, encoding: str) -> ExportRecordDefinition:
                 padding="none",
                 justification="none",
                 signed=False,
-                legal_refs=("liva.art-1",),
-                source_refs=("aeat.src.1",),
+                legal_refs=("ley-37-1992:art-1",),
+                source_refs=("aeat-src-1",),
             ),
         ),
     )
@@ -118,8 +96,8 @@ def test_layout_accepts_latin_1_iso_8859_1_mix_via_alias_map() -> None:
     forms, normalising through ENCODING_ALIAS_MAP before comparing."""
     layout = ExportLayoutDefinition(
         id="test.layout",
-        source_refs=("aeat.src.1",),
-        legal_refs=("liva.art-1",),
+        source_refs=("aeat-src-1",),
+        legal_refs=("ley-37-1992:art-1",),
         records=(
             _record(record_id="rec.a", encoding="latin-1"),
             _record(record_id="rec.b", encoding="iso-8859-1"),
@@ -137,8 +115,8 @@ def test_layout_rejects_mixed_canonical_encodings() -> None:
     with pytest.raises(ValidationError, match="inconsistent encodings"):
         ExportLayoutDefinition(
             id="test.layout.mixed",
-            source_refs=("aeat.src.1",),
-            legal_refs=("liva.art-1",),
+            source_refs=("aeat-src-1",),
+            legal_refs=("ley-37-1992:art-1",),
             records=(
                 _record(record_id="rec.a", encoding="cp1252"),
                 _record(record_id="rec.b", encoding="iso-8859-15"),

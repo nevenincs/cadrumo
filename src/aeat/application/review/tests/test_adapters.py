@@ -13,29 +13,21 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....application.user_profile._orchestration import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
-from ....core import Period
-from ....core.classification import SensitivityClass
-from ....core.config import Settings
-from ....core.errors import BaseSeverity
-from ....core.i18n import Translatable as tr
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
-from ....domain.invoices._repository import (
+from ....adapters.persistence.profile.invoices import (
     _INVOICE_CATALOGUE_VERSION,
     _INVOICE_NAMESPACE,
     _INVOICE_OBJECT_KEY,
     InvoiceCatalogueRepository,
 )
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....core import Period
+from ....core.classification import SensitivityClass
+from ....core.config import Settings
+from ....core.errors import BaseSeverity
+from ....core.i18n import Translatable as tr
+from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
+from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
 from ....domain.transactions import (
     BusinessClassification,
@@ -46,7 +38,6 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....domain.transactions._repository import TransactionCatalogueRepository
 from ...filing import (
     ModeloDraft,
     ModeloDraftStatus,
@@ -54,6 +45,8 @@ from ...filing import (
     ModeloValue,
     ModeloValueKind,
 )
+from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ...workflow import workflow_state_repository
 from .. import (
     FindingReviewItem,
     InvoiceReviewItem,
@@ -71,6 +64,10 @@ _PERIOD = Period.from_year_and_code(2026, "1T")
 _REVIEW_FINDING_CASILLA: CasillaId = validated_casilla_id("03", surface="_REVIEW_FINDING_CASILLA")
 _REVIEW_MISSING_CASILLA: CasillaId = validated_casilla_id("04", surface="_REVIEW_MISSING_CASILLA")
 _REVIEW_INFO_CASILLA: CasillaId = validated_casilla_id("05", surface="_REVIEW_INFO_CASILLA")
+_PROFILE_ID = "23232323-2323-4232-8232-232323232323"
+_OTHER_PROFILE_ID = "44444444-4444-4444-8444-444444444444"
+_ACTIVE_PROFILE_ID = "45454545-4545-4454-8454-454545454545"
+_CORRUPT_ROW_WRITTEN_AT = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
 
 
 # ── shared helpers ────────────────────────────────────────────────
@@ -88,7 +85,7 @@ def _build_settings(tmp_path: Path) -> Settings:
     )
 
 
-def _seed_active_profile(bucket_id: str = "test") -> None:
+def _seed_active_profile(bucket_id: str = _PROFILE_ID) -> None:
     """Register the minimal placeholder profile so drafts match the active tax id."""
     workflow_state_repository().update(
         lambda state: register_minimal_profile(
@@ -107,12 +104,23 @@ def _schema_version(modelo: str = "130") -> str:
     return f"test-schema-{modelo}"
 
 
+def _case_profile_id(index: int) -> str:
+    return f"23232323-2323-4232-8232-232323232{index:03d}"
+
+
+def test_adapters_return_empty_when_source_missing(tmp_path: Path) -> None:
+    settings = _build_settings(tmp_path)
+    for adapter in (transactions_pending, invoices_pending, drafts_pending):
+        with profile_create_storage_span(_PROFILE_ID):
+            assert adapter(settings, bucket_id=_PROFILE_ID) == ()
+
+
 # ── transactions adapter ──────────────────────────────────────────
 
 
 def _raw(*, source_row_index: int = 1, description: str = "Office") -> RawTransaction:
     return RawTransaction(
-        transaction_id=f"prov-{source_row_index}",
+        provider_transaction_id=f"prov-{source_row_index}",
         booked_date=date(2026, 4, 10),
         value_date=date(2026, 4, 10),
         amount=Decimal("12.34"),
@@ -141,15 +149,11 @@ def _transaction(
         {
             "raw": _raw(source_row_index=source_row_index, description=description),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "business_classification": classification,
         },
     )
-
-
-def test_transactions_pending_returns_empty_when_source_missing(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
-    with profile_create_storage_span("test"):
-        assert transactions_pending(settings, bucket_id="test") == ()
 
 
 def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
@@ -160,9 +164,9 @@ def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
             _transaction(source_row_index=2, classification=BusinessClassification.BUSINESS),
         ),
     )
-    with profile_create_storage_span("test"):
-        TransactionCatalogueRepository(bucket_id="test").save(catalogue)
-        items = transactions_pending(settings, bucket_id="test")
+    with profile_create_storage_span(_PROFILE_ID):
+        TransactionCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
+        items = transactions_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 1
     item = items[0]
     assert isinstance(item, TransactionReviewItem)
@@ -174,9 +178,9 @@ def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
 def test_transactions_pending_drills_into_ledger_owned_review_command(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1),))
-    with profile_create_storage_span("test"):
-        TransactionCatalogueRepository(bucket_id="test").save(catalogue)
-        items = transactions_pending(settings, bucket_id="test")
+    with profile_create_storage_span(_PROFILE_ID):
+        TransactionCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
+        items = transactions_pending(settings, bucket_id=_PROFILE_ID)
 
     assert len(items) == 1
     assert items[0].drill_command == f"aeat app ledger review {items[0].source.transaction_id}"
@@ -187,35 +191,32 @@ def test_transactions_pending_drills_into_ledger_owned_review_command(tmp_path: 
 def test_transactions_pending_reads_only_requested_bucket(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     other_bucket_catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1),))
-    with profile_create_storage_span("other-profile"):
-        TransactionCatalogueRepository(bucket_id="other-profile").save(other_bucket_catalogue)
+    with profile_create_storage_span(_OTHER_PROFILE_ID):
+        TransactionCatalogueRepository(bucket_id=_OTHER_PROFILE_ID).save(other_bucket_catalogue)
 
-    with profile_create_storage_span("active-profile"):
-        assert transactions_pending(settings, bucket_id="active-profile") == ()
-    with profile_create_storage_span("other-profile"):
-        assert len(transactions_pending(settings, bucket_id="other-profile")) == 1
+    with profile_create_storage_span(_ACTIVE_PROFILE_ID):
+        assert transactions_pending(settings, bucket_id=_ACTIVE_PROFILE_ID) == ()
+    with profile_create_storage_span(_OTHER_PROFILE_ID):
+        assert len(transactions_pending(settings, bucket_id=_OTHER_PROFILE_ID)) == 1
 
 
-@pytest.mark.parametrize(
-    ("state", "expected_severity"),
-    [
+def test_transactions_pending_severity_mapping(tmp_path: Path) -> None:
+    settings = _build_settings(tmp_path)
+    cases = (
         (BusinessClassification.NOT_YET_PROCESSED, ReviewSeverity.NORMAL),
         (BusinessClassification.PROCESSED_UNCLASSIFIED, ReviewSeverity.HIGH),
         (BusinessClassification.FAILED_VALIDATION, ReviewSeverity.CRITICAL),
-    ],
-)
-def test_transactions_pending_severity_mapping(
-    tmp_path: Path,
-    state: BusinessClassification,
-    expected_severity: ReviewSeverity,
-) -> None:
-    settings = _build_settings(tmp_path)
-    catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1, classification=state),))
-    with profile_create_storage_span("test"):
-        TransactionCatalogueRepository(bucket_id="test").save(catalogue)
-        items = transactions_pending(settings, bucket_id="test")
-    assert len(items) == 1
-    assert items[0].severity is expected_severity
+    )
+    for index, (state, expected_severity) in enumerate(cases, start=1):
+        bucket_id = _case_profile_id(index)
+        catalogue = TransactionCatalogue.from_transactions(
+            (_transaction(source_row_index=index, classification=state),),
+        )
+        with profile_create_storage_span(bucket_id):
+            TransactionCatalogueRepository(bucket_id=bucket_id).save(catalogue)
+            items = transactions_pending(settings, bucket_id=bucket_id)
+        assert len(items) == 1
+        assert items[0].severity is expected_severity
 
 
 def test_transactions_pending_skips_skipped_by_rule(tmp_path: Path) -> None:
@@ -233,9 +234,37 @@ def test_transactions_pending_skips_skipped_by_rule(tmp_path: Path) -> None:
             ),
         ),
     )
-    with profile_create_storage_span("test"):
-        TransactionCatalogueRepository(bucket_id="test").save(catalogue)
-        assert transactions_pending(settings, bucket_id="test") == ()
+    with profile_create_storage_span(_PROFILE_ID):
+        TransactionCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
+        assert transactions_pending(settings, bucket_id=_PROFILE_ID) == ()
+
+
+def test_transactions_pending_skips_reviewed_excluded(tmp_path: Path) -> None:
+    """``REVIEWED_EXCLUDED`` rows are a final disposition and must not resurface.
+
+    The operator reviewed the row and deliberately excluded it from filing
+    (issue #224 — "I saw this, it is not relevant, stop asking me"), so the
+    review queue must drop it.
+    """
+    settings = _build_settings(tmp_path)
+    catalogue = TransactionCatalogue.from_transactions(
+        (
+            _transaction(
+                source_row_index=1,
+                classification=BusinessClassification.REVIEWED_EXCLUDED,
+            ),
+            _transaction(
+                source_row_index=2,
+                classification=BusinessClassification.NOT_YET_PROCESSED,
+            ),
+        ),
+    )
+    with profile_create_storage_span(_PROFILE_ID):
+        TransactionCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
+        pending = transactions_pending(settings, bucket_id=_PROFILE_ID)
+    assert [item.source.business_classification for item in pending] == [
+        BusinessClassification.NOT_YET_PROCESSED,
+    ]
 
 
 # ── invoices adapter ──────────────────────────────────────────────
@@ -278,36 +307,30 @@ def _invoice(
     )
 
 
-def test_invoices_pending_returns_empty_when_source_missing(tmp_path: Path) -> None:
+def test_invoices_pending_severity_mapping(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    with profile_create_storage_span("test"):
-        assert invoices_pending(settings, bucket_id="test") == ()
-
-
-@pytest.mark.parametrize(
-    ("payment_status", "linked", "expected_severity"),
-    [
+    cases = (
         (PaymentStatus.PENDING, (), ReviewSeverity.HIGH),  # unmatched dominates
         (PaymentStatus.OVERDUE, ("a" * 64,), ReviewSeverity.HIGH),
         (PaymentStatus.PENDING, ("a" * 64,), ReviewSeverity.NORMAL),
         (PaymentStatus.PARTIALLY_PAID, ("a" * 64,), ReviewSeverity.NORMAL),
-    ],
-)
-def test_invoices_pending_severity_mapping(
-    tmp_path: Path,
-    payment_status: PaymentStatus,
-    linked: tuple[str, ...],
-    expected_severity: ReviewSeverity,
-) -> None:
-    settings = _build_settings(tmp_path)
-    catalogue = InvoiceCatalogue.from_invoices(
-        (_invoice(payment_status=payment_status, linked_transaction_ids=linked),),
     )
-    with profile_create_storage_span("test"):
-        InvoiceCatalogueRepository(bucket_id="test").save(catalogue)
-        items = invoices_pending(settings, bucket_id="test")
-    assert len(items) == 1
-    assert items[0].severity is expected_severity
+    for index, (payment_status, linked, expected_severity) in enumerate(cases, start=10):
+        bucket_id = _case_profile_id(index)
+        catalogue = InvoiceCatalogue.from_invoices(
+            (
+                _invoice(
+                    invoice_number=f"INV-SEVERITY-{index}",
+                    payment_status=payment_status,
+                    linked_transaction_ids=linked,
+                ),
+            ),
+        )
+        with profile_create_storage_span(bucket_id):
+            InvoiceCatalogueRepository(bucket_id=bucket_id).save(catalogue)
+            items = invoices_pending(settings, bucket_id=bucket_id)
+        assert len(items) == 1
+        assert items[0].severity is expected_severity
 
 
 def test_invoices_pending_skips_paid_and_cancelled(tmp_path: Path) -> None:
@@ -326,17 +349,17 @@ def test_invoices_pending_skips_paid_and_cancelled(tmp_path: Path) -> None:
             ),
         ),
     )
-    with profile_create_storage_span("test"):
-        InvoiceCatalogueRepository(bucket_id="test").save(catalogue)
-        assert invoices_pending(settings, bucket_id="test") == ()
+    with profile_create_storage_span(_PROFILE_ID):
+        InvoiceCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
+        assert invoices_pending(settings, bucket_id=_PROFILE_ID) == ()
 
 
 def test_invoices_pending_emits_invoice_review_item(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     catalogue = InvoiceCatalogue.from_invoices((_invoice(),))
-    with profile_create_storage_span("test"):
-        InvoiceCatalogueRepository(bucket_id="test").save(catalogue)
-        items = invoices_pending(settings, bucket_id="test")
+    with profile_create_storage_span(_PROFILE_ID):
+        InvoiceCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
+        items = invoices_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 1
     assert isinstance(items[0], InvoiceReviewItem)
 
@@ -344,28 +367,28 @@ def test_invoices_pending_emits_invoice_review_item(tmp_path: Path) -> None:
 def test_invoices_pending_reads_only_requested_bucket(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     other_catalogue = InvoiceCatalogue.from_invoices((_invoice(invoice_number="INV-OTHER"),))
-    with profile_create_storage_span("other-profile"):
-        InvoiceCatalogueRepository(bucket_id="other-profile").save(other_catalogue)
+    with profile_create_storage_span(_OTHER_PROFILE_ID):
+        InvoiceCatalogueRepository(bucket_id=_OTHER_PROFILE_ID).save(other_catalogue)
 
-    with profile_create_storage_span("active-profile"):
-        assert invoices_pending(settings, bucket_id="active-profile") == ()
-    with profile_create_storage_span("other-profile"):
-        assert len(invoices_pending(settings, bucket_id="other-profile")) == 1
+    with profile_create_storage_span(_ACTIVE_PROFILE_ID):
+        assert invoices_pending(settings, bucket_id=_ACTIVE_PROFILE_ID) == ()
+    with profile_create_storage_span(_OTHER_PROFILE_ID):
+        assert len(invoices_pending(settings, bucket_id=_OTHER_PROFILE_ID)) == 1
 
 
 def test_invoices_pending_load_failure_context_omits_raw_storage_error(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    with profile_create_storage_span("test"):
+    with profile_create_storage_span(_PROFILE_ID):
         secure_object_repository_for_active_bucket().save(
             namespace=_INVOICE_NAMESPACE,
             object_key=_INVOICE_OBJECT_KEY,
             classification=SensitivityClass.FINANCIAL,
             schema_version=_INVOICE_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_CORRUPT_ROW_WRITTEN_AT,
             payload=b"{not-json",
         )
         with pytest.raises(ReviewSourceLoadError) as exc_info:
-            invoices_pending(settings, bucket_id="test")
+            invoices_pending(settings, bucket_id=_PROFILE_ID)
 
     assert exc_info.value.translated_message == "review.adapters.errors.invoices_load_failed"
     assert exc_info.value.context == {"error_type": "ValidationError"}
@@ -396,6 +419,13 @@ def _draft(
         modelo=modelo,
         period=period,
         profile_tax_id="00000000T",
+        subject_tax_id="00000000T",
+        snapshot_ref=RegistrySnapshotRef(
+            modelo=modelo,
+            revision_id=_schema_version(modelo),
+            modelo_year=period.year,
+            period=period.registry_token,
+        ),
         status=status,
         values=values,
         findings=findings,
@@ -405,9 +435,9 @@ def _draft(
     )
 
 
-def _write_draft(settings: Settings, draft: ModeloDraft, *, bucket_id: str = "test") -> Path:
+def _write_draft(settings: Settings, draft: ModeloDraft, *, bucket_id: str = _PROFILE_ID) -> Path:
     """Persist ``draft`` through the ModeloDraftRepository (ciphertext-at-rest)."""
-    from ....domain.filing import ModeloDraftRepository
+    from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 
     del settings
     repository = ModeloDraftRepository(bucket_id=bucket_id)
@@ -415,29 +445,23 @@ def _write_draft(settings: Settings, draft: ModeloDraft, *, bucket_id: str = "te
     return repository.envelope_path_for(draft.draft_id)
 
 
-def test_drafts_pending_returns_empty_when_source_missing(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
-    with profile_create_storage_span("test"):
-        assert drafts_pending(settings, bucket_id="test") == ()
-
-
 def test_drafts_pending_load_failure_context_omits_raw_storage_error(tmp_path: Path) -> None:
-    from ....domain.filing import ModeloDraftRepository
+    from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 
     settings = _build_settings(tmp_path)
-    with profile_create_storage_span("test"):
+    with profile_create_storage_span(_PROFILE_ID):
         _seed_active_profile()
-        repository = ModeloDraftRepository(bucket_id="test")
+        repository = ModeloDraftRepository(bucket_id=_PROFILE_ID)
         repository.secure_object_repository.save(
             namespace=repository.namespace,
             object_key="corrupt-draft",
             classification=repository.sensitivity,
             schema_version=repository.schema_version,
-            written_at=datetime.now(UTC),
+            written_at=_CORRUPT_ROW_WRITTEN_AT,
             payload=b"{not-json",
         )
         with pytest.raises(ReviewSourceLoadError) as exc_info:
-            drafts_pending(settings, bucket_id="test")
+            drafts_pending(settings, bucket_id=_PROFILE_ID)
 
     assert exc_info.value.translated_message == "review.adapters.errors.drafts_load_failed"
     assert exc_info.value.context == {"error_type": "ValidationError"}
@@ -467,10 +491,10 @@ def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
             message=_summary("info"),
         ),
     )
-    with profile_create_storage_span("test"):
+    with profile_create_storage_span(_PROFILE_ID):
         _seed_active_profile()
         _write_draft(settings, _draft(draft_id="d1", findings=findings))
-        items = drafts_pending(settings, bucket_id="test")
+        items = drafts_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 3
     severities = {item.severity for item in items}
     assert severities == {ReviewSeverity.CRITICAL, ReviewSeverity.HIGH, ReviewSeverity.INFO}
@@ -482,10 +506,10 @@ def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
 def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> None:
     """`status=DRAFT` with no findings must emit the same placeholder as VALIDATED."""
     settings = _build_settings(tmp_path)
-    with profile_create_storage_span("test"):
+    with profile_create_storage_span(_PROFILE_ID):
         _seed_active_profile()
         _write_draft(settings, _draft(draft_id="d_draft", status=ModeloDraftStatus.BORRADOR))
-        items = drafts_pending(settings, bucket_id="test")
+        items = drafts_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.NORMAL
@@ -495,10 +519,10 @@ def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> No
 
 def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    with profile_create_storage_span("test"):
+    with profile_create_storage_span(_PROFILE_ID):
         _seed_active_profile()
         _write_draft(settings, _draft(draft_id="d2", status=ModeloDraftStatus.VALIDADO))
-        items = drafts_pending(settings, bucket_id="test")
+        items = drafts_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.NORMAL
@@ -507,10 +531,10 @@ def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tm
 def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -> None:
     """`status=APPROVAL_STALE` must surface as a HIGH-severity finding row."""
     settings = _build_settings(tmp_path)
-    with profile_create_storage_span("test"):
+    with profile_create_storage_span(_PROFILE_ID):
         _seed_active_profile()
         _write_draft(settings, _draft(draft_id="d_stale", status=ModeloDraftStatus.APROBACION_CADUCADA))
-        items = drafts_pending(settings, bucket_id="test")
+        items = drafts_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.HIGH
@@ -522,10 +546,10 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
 
 def test_drafts_pending_skips_ready_drafts_with_no_findings(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    with profile_create_storage_span("test"):
+    with profile_create_storage_span(_PROFILE_ID):
         _seed_active_profile()
         _write_draft(settings, _draft(draft_id="d3", status=ModeloDraftStatus.LISTO_PARA_PRESENTAR))
-        assert drafts_pending(settings, bucket_id="test") == ()
+        assert drafts_pending(settings, bucket_id=_PROFILE_ID) == ()
 
 
 def test_drafts_pending_dedups_identical_finding_triples(tmp_path: Path) -> None:
@@ -537,11 +561,11 @@ def test_drafts_pending_dedups_identical_finding_triples(tmp_path: Path) -> None
         message=_summary("dup"),
     )
     # Same finding repeated twice — dedup should collapse to one.
-    with profile_create_storage_span("test"):
+    with profile_create_storage_span(_PROFILE_ID):
         _seed_active_profile()
         _write_draft(
             settings,
             _draft(draft_id="d4", findings=(finding, finding)),
         )
-        items = drafts_pending(settings, bucket_id="test")
+        items = drafts_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 1

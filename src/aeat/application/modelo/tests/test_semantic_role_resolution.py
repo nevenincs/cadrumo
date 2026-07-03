@@ -7,9 +7,9 @@ from collections.abc import Iterable
 import pytest
 
 from ....core import Period
-from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import CasillaId, RegistrySnapshot, load_registry_tree, validated_casilla_id
-from ....domain.modelos._errors import ModeloError
+from ....core.resources import resources
+from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
+from ....domain.modelos import ModeloError
 from .. import _art20_advisory as art20_advisory
 from .. import _binding_resolution as binding_resolution
 from .. import _calculate_input as calculate_input
@@ -57,7 +57,7 @@ def test_ambiguous_semantic_role_refuses_before_choosing_a_casilla(snapshot_2025
 
 
 def test_application_single_casilla_resolver_roles_are_unambiguous_in_bundled_registry() -> None:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos = resources().modelos.all()
     offences: list[str] = []
 
     for modelo in modelos:

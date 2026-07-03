@@ -1,13 +1,17 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Iterator, Mapping
+import json
+import re
+from collections.abc import Callable, Iterator, Mapping
 from datetime import date
 from decimal import Decimal
+from functools import cache
 
+import pdfplumber
 import pytest
 
 from .....core.aggregation import RetencionClave
-from .....core.resources import resources
+from .....tests import FIXTURES_DIR
 from .. import (
     CasillaId,
     RegistryCalculationResult,
@@ -19,14 +23,20 @@ from .. import (
     validated_casilla_id_map,
 )
 from .._authority import ValidatedRegistryAuthority
-from .._bindings import CasillaObservation, RegistryModeloObservation, resolve_previous_filing_binding_values
-from .._errors import NoRevisionForPeriodError
+from .._binding_selector_utils import selector_as_dict
+from .._bindings import RegistryModeloObservation, resolve_previous_filing_binding_values
 from .._relations import (
     RegistryFoldRequirement,
+    materialize_relation_binding_values,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
 from .._schema import ModeloRevision, RegistrySnapshot
+from ._cross_dependency_calculation_support import (
+    _casilla_inputs,
+    _grounded_observations,
+    _observations_from_requirements,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -43,18 +53,29 @@ _M130_A_DEDUCIR_CASILLA: CasillaId = validated_casilla_id("15", surface="_M130_A
 _M130_RESULTADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_RESULTADO_PREVIO_CASILLA")
 _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_RESULTADO_CASILLA")
 _M130_A_INGRESAR_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_A_INGRESAR_CASILLA")
-_M202_CUOTA_BASE_CASILLA: CasillaId = validated_casilla_id("01", surface="_M202_CUOTA_BASE_CASILLA")
 _M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA: CasillaId = validated_casilla_id(
     "0604",
     surface="_M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA",
 )
+_M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING = "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count"
+_M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING = "renta-2025-profile-unidad-familiar-otros-miembros-base"
+_M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING = "renta-2025-profile-minimo-descendientes-estatal"
+_M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING = "renta-2025-profile-minimo-descendientes-autonomico"
 _M131_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id(
     "15",
     surface="_M131_PAGOS_FRACCIONADOS_CASILLA",
 )
-_M200_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id(
-    "DP200014B:00611",
-    surface="_M200_CUOTA_DIFERENCIAL_CASILLA",
+_DECL_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id(
+    "decl.total-perceptores",
+    surface="_DECL_TOTAL_PERCEPTORES_CASILLA",
+)
+_DECL_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "decl.base-total",
+    surface="_DECL_BASE_TOTAL_CASILLA",
+)
+_DECL_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "decl.retenciones-total",
+    surface="_DECL_RETENCIONES_TOTAL_CASILLA",
 )
 _M190_TOTAL_PERCEPCIONES_CASILLA: CasillaId = validated_casilla_id(
     "decl.total-percepciones",
@@ -73,24 +94,161 @@ _RETIRED_M190_M111_PERCEPCIONES_SOURCE_CASILLAS: frozenset[CasillaId] = frozense
     validated_casilla_id(value, surface="_RETIRED_M190_M111_PERCEPCIONES_SOURCE_CASILLAS")
     for value in ("01", "04", "07", "10", "13", "16", "19", "22", "25")
 )
-
-
-def _casilla_inputs(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
-    return validated_casilla_id_map(values, surface="cross-dependency calculation input casillas")
+_SPANISH_AMOUNT_PATTERN = r"-?\d{1,3}(?:\.\d{3})*(?:,\d{2})?|-?\d+(?:,\d{2})?"
+_ANNUAL_SUMMARY_FIXTURE_PATTERNS: dict[str, dict[CasillaId, str]] = {
+    "180": {
+        _DECL_TOTAL_PERCEPTORES_CASILLA: rf"N[uú]mero total de perceptores\s+(?P<amount>{_SPANISH_AMOUNT_PATTERN})",
+        _DECL_BASE_TOTAL_CASILLA: (
+            rf"Base (?:de )?retenciones e ingresos a cuenta total\s+(?P<amount>{_SPANISH_AMOUNT_PATTERN})"
+        ),
+        _DECL_RETENCIONES_TOTAL_CASILLA: (
+            rf"Retenciones e ingresos a cuenta total\s+(?P<amount>{_SPANISH_AMOUNT_PATTERN})"
+        ),
+    },
+    "190": {
+        _M190_TOTAL_PERCEPCIONES_CASILLA: (
+            rf"N[uú]mero total de percepciones relacionadas en la declaraci[oó]n.*?\b01\s+"
+            rf"(?P<amount>{_SPANISH_AMOUNT_PATTERN})"
+        ),
+        _M190_PERCEPCIONES_TOTAL_CASILLA: (
+            rf"Importe total de las percepciones relacionadas.*?\b02\s+(?P<amount>{_SPANISH_AMOUNT_PATTERN})"
+        ),
+        _M190_RETENCIONES_TOTAL_CASILLA: (
+            rf"Importe total de las retenciones e ingresos a cuenta relacionados.*?\b03\s+"
+            rf"(?P<amount>{_SPANISH_AMOUNT_PATTERN})"
+        ),
+    },
+}
+_M190_REL_111_ACTIVIDADES_DINERARIO = "modelo-190-rel-111-actividades-dinerario-importe-anual"
+_M190_REL_111_RETENCIONES = "modelo-190-rel-111-retenciones-anual"
+_M190_EXPECTED_RELATION_IDS = frozenset(
+    {
+        "modelo-190-rel-111-trabajo-dinerario-importe-anual",
+        "modelo-190-rel-111-trabajo-especie-importe-anual",
+        _M190_REL_111_ACTIVIDADES_DINERARIO,
+        "modelo-190-rel-111-actividades-especie-importe-anual",
+        "modelo-190-rel-111-premios-dinerario-importe-anual",
+        "modelo-190-rel-111-premios-especie-importe-anual",
+        "modelo-190-rel-111-ganancias-dinerario-importe-anual",
+        "modelo-190-rel-111-ganancias-especie-importe-anual",
+        "modelo-190-rel-111-derechos-imagen-importe-anual",
+        _M190_REL_111_RETENCIONES,
+    }
+)
 
 
 def _casilla_decimal_sequences(values: Mapping[object, tuple[Decimal, ...]]) -> dict[CasillaId, tuple[Decimal, ...]]:
     return validated_casilla_id_map(values, surface="cross-dependency relation source casillas")
 
 
-def _withholding_observation(source_id: str, nif: str, clave: str) -> WithholdingObservation:
+@cache
+def _fixture_pdf_text(modelo: str, fixture_stem: str = "2024-0A") -> str:
+    pdf_path = FIXTURES_DIR / "justificantes" / modelo / f"{fixture_stem}.pdf"
+    sidecar = json.loads(pdf_path.with_suffix(".json").read_text(encoding="utf-8"))
+    assert sidecar.get("provenance") in {"real_corpus", "synthetic_generated"}, (
+        f"{pdf_path} fixture sidecar must declare real or synthetic provenance"
+    )
+    assert sidecar.get("role") in {"formula_verification", "parser_anchor"}, (
+        f"{pdf_path} fixture sidecar must declare an oracle role"
+    )
+    with pdfplumber.open(pdf_path) as pdf:
+        return "\n".join(page.extract_text() or "" for page in pdf.pages)
+
+
+@cache
+def _annual_summary_fixture_values(modelo: str, fixture_stem: str = "2024-0A") -> dict[CasillaId, Decimal]:
+    text = _fixture_pdf_text(modelo, fixture_stem)
+    values: dict[CasillaId, Decimal] = {}
+    for casilla_id, pattern in _ANNUAL_SUMMARY_FIXTURE_PATTERNS[modelo].items():
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+        assert match is not None, f"M{modelo}/{fixture_stem} fixture did not expose {casilla_id!r}"
+        values[casilla_id] = _spanish_decimal(match.group("amount"))
+    return values
+
+
+def _spanish_decimal(raw: str) -> Decimal:
+    return Decimal(raw.replace(".", "").replace(",", "."))
+
+
+def _grounded_quarterly_source_values(total: Decimal) -> tuple[Decimal, Decimal, Decimal, Decimal]:
+    """Shape a fixture annual total into non-uniform source observations.
+
+    The fixture total remains the expected oracle.  These values are only source
+    observations, spread across all four periods so copy/partial-period
+    regressions do not accidentally match the annual fixture.
+    """
+    if total == Decimal("0"):
+        return (Decimal("0"), Decimal("0"), Decimal("0"), Decimal("0"))
+    unit = total / Decimal("10")
+    return (unit, unit * Decimal("2"), unit * Decimal("3"), total - (unit * Decimal("6")))
+
+
+def _m180_grounded_relation_source_values() -> dict[CasillaId, tuple[Decimal, ...]]:
+    fixture_values = _annual_summary_fixture_values("180")
+    return _casilla_decimal_sequences(
+        {
+            "02": _grounded_quarterly_source_values(fixture_values[_DECL_BASE_TOTAL_CASILLA]),
+            "03": _grounded_quarterly_source_values(fixture_values[_DECL_RETENCIONES_TOTAL_CASILLA]),
+        }
+    )
+
+
+@cache
+def _m190_fixture_detail_observation() -> tuple[str, str, Decimal, Decimal]:
+    text = _fixture_pdf_text("190")
+    identity_match = re.search(
+        r"\n(?P<nif>[A-Z0-9]{9})\s+[^\n]+\nDatos de la percepci[oó]n",
+        text,
+        flags=re.IGNORECASE,
+    )
+    clave_match = re.search(r"Clave:\s+(?P<clave>[A-Z])\s+Subclave:\s+01", text)
+    amount_match = re.search(
+        rf"incapacidad laboral:\s+(?P<percepcion>{_SPANISH_AMOUNT_PATTERN})\s+"
+        rf"(?P<retencion>{_SPANISH_AMOUNT_PATTERN})",
+        text,
+        flags=re.IGNORECASE,
+    )
+    assert identity_match is not None, "M190 fixture detail page did not expose a perceptor identity row"
+    assert clave_match is not None, "M190 fixture detail page did not expose clave G/01 grounding"
+    assert amount_match is not None, "M190 fixture detail page did not expose the perception/retention amount row"
+    return (
+        identity_match.group("nif"),
+        clave_match.group("clave"),
+        _spanish_decimal(amount_match.group("percepcion")),
+        _spanish_decimal(amount_match.group("retencion")),
+    )
+
+
+def _m190_fixture_relation_source_value(
+    requirement: RegistryFoldRequirement,
+    period_index: int,
+    *,
+    percepciones_quarterly: tuple[Decimal, Decimal, Decimal, Decimal],
+    retenciones_quarterly: tuple[Decimal, Decimal, Decimal, Decimal],
+) -> Decimal:
+    relation_id = requirement.relation_ids[0]
+    if relation_id == _M190_REL_111_ACTIVIDADES_DINERARIO:
+        return percepciones_quarterly[period_index]
+    if relation_id == _M190_REL_111_RETENCIONES:
+        return retenciones_quarterly[period_index]
+    return Decimal("0")
+
+
+def _withholding_observation(
+    source_id: str,
+    nif: str,
+    clave: str,
+    *,
+    percibido_dinerario: Decimal,
+    retencion_practicada: Decimal,
+) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=source_id,
         perceptor_tax_id=nif,
-        transaction_date=date(2026, 6, 1),
+        transaction_date=date(2024, 6, 1),
         clave=RetencionClave(clave),
-        percibido_dinerario=Decimal("1000"),
-        retencion_practicada=Decimal("190"),
+        percibido_dinerario=percibido_dinerario,
+        retencion_practicada=retencion_practicada,
     )
 
 
@@ -158,13 +316,6 @@ def _assert_relations_resolve_from_observations(
     assert set(resolved) == relation_ids, scope
 
 
-_M180_RELATION_SOURCE_VALUES = _casilla_decimal_sequences(
-    {
-        "01": (Decimal("1"), Decimal("1"), Decimal("2"), Decimal("1")),
-        "02": (Decimal("250.10"), Decimal("749.90"), Decimal("1200.00"), Decimal("-50.25")),
-        "03": (Decimal("47.52"), Decimal("142.48"), Decimal("228.00"), Decimal("0.00")),
-    }
-)
 _M193_RELATION_SOURCE_VALUES = _casilla_decimal_sequences(
     {
         "03": (Decimal("5"), Decimal("4"), Decimal("7"), Decimal("6")),
@@ -172,12 +323,18 @@ _M193_RELATION_SOURCE_VALUES = _casilla_decimal_sequences(
         "09": (Decimal("228.19"), Decimal("152.05"), Decimal("189.95"), Decimal("95.00")),
     }
 )
+
+
+def _m193_relation_source_values() -> dict[CasillaId, tuple[Decimal, ...]]:
+    return _M193_RELATION_SOURCE_VALUES
+
+
 _ANNUAL_SUMMARY_RELATION_CASES = (
     pytest.param(
         "180",
         2022,
         "2019-2022",
-        _M180_RELATION_SOURCE_VALUES,
+        _m180_grounded_relation_source_values,
         "modelo-180-115-perceptores-anual",
         frozenset({"modelo-180-rel-115-base-anual", "modelo-180-rel-115-retenciones-anual"}),
         "modelo-180-rel-115-base-anual",
@@ -188,7 +345,7 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         "180",
         2026,
         "2023-y-siguientes",
-        _M180_RELATION_SOURCE_VALUES,
+        _m180_grounded_relation_source_values,
         "modelo-180-115-perceptores-anual",
         frozenset({"modelo-180-rel-115-base-anual", "modelo-180-rel-115-retenciones-anual"}),
         "modelo-180-rel-115-base-anual",
@@ -199,7 +356,7 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         "180",
         2027,
         "2023-y-siguientes",
-        _M180_RELATION_SOURCE_VALUES,
+        _m180_grounded_relation_source_values,
         "modelo-180-115-perceptores-anual",
         frozenset({"modelo-180-rel-115-base-anual", "modelo-180-rel-115-retenciones-anual"}),
         "modelo-180-rel-115-base-anual",
@@ -210,7 +367,7 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         "193",
         2026,
         "2024-y-siguientes",
-        _M193_RELATION_SOURCE_VALUES,
+        _m193_relation_source_values,
         "modelo-193-123-perceptores-anual",
         frozenset({"modelo-193-rel-123-base-anual", "modelo-193-rel-123-retenciones-anual"}),
         "modelo-193-rel-123-base-anual",
@@ -225,7 +382,7 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         "modelo",
         "filing_year",
         "expected_revision",
-        "source_values",
+        "source_values_factory",
         "perceptores_binding_id",
         "expected_relation_ids",
         "base_relation_id",
@@ -237,7 +394,7 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
     modelo: str,
     filing_year: int,
     expected_revision: str,
-    source_values: dict[CasillaId, tuple[Decimal, ...]],
+    source_values_factory: Callable[[], dict[CasillaId, tuple[Decimal, ...]]],
     perceptores_binding_id: str,
     expected_relation_ids: frozenset[str],
     base_relation_id: str,
@@ -245,6 +402,7 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
     snapshot = registry_snapshot(modelo, filing_year, "0A")
+    source_values = source_values_factory()
     requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
     observations = _observations_from_requirements(
         requirements,
@@ -257,7 +415,12 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
         filing_year=filing_year,
         period="0A",
     )
-    binding_values = {perceptores_binding_id: Decimal("2")}
+    fixture_values = _annual_summary_fixture_values("180") if modelo == "180" else {}
+    perceptores_binding_value = fixture_values.get(_DECL_TOTAL_PERCEPTORES_CASILLA, Decimal("2"))
+    binding_values = {perceptores_binding_id: perceptores_binding_value}
+    if modelo == "180":
+        assert relation_values[base_relation_id] == fixture_values[_DECL_BASE_TOTAL_CASILLA]
+        assert relation_values[retenciones_relation_id] == fixture_values[_DECL_RETENCIONES_TOTAL_CASILLA]
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
@@ -270,73 +433,73 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
     assert set(relation_values) == expected_relation_ids
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert "decl.total-perceptores" not in entries
-    assert result.values["decl.total-perceptores"] == Decimal("2")
+    assert result.values["decl.total-perceptores"] == perceptores_binding_value
     assert entries["decl.base-total"].operand_refs == (base_relation_id,)
     assert entries["decl.retenciones-total"].operand_refs == (retenciones_relation_id,)
+    if modelo == "180":
+        assert result.values[_DECL_BASE_TOTAL_CASILLA] == fixture_values[_DECL_BASE_TOTAL_CASILLA]
+        assert result.values[_DECL_RETENCIONES_TOTAL_CASILLA] == fixture_values[_DECL_RETENCIONES_TOTAL_CASILLA]
 
 
 def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("190", 2026, "0A")
-    requirements = relation_source_requirements(snapshot.revision, filing_year=2026, period="0A")
-    source_values = _casilla_decimal_sequences(
-        {
-            "02": (Decimal("1000"), Decimal("2000"), Decimal("1500"), Decimal("2500")),
-            "05": (Decimal("100"), Decimal("0"), Decimal("0"), Decimal("50")),
-            "08": (Decimal("800"), Decimal("900"), Decimal("850"), Decimal("950")),
-            "11": (Decimal("120"), Decimal("0"), Decimal("0"), Decimal("0")),
-            "14": (Decimal("200"), Decimal("0"), Decimal("300"), Decimal("0")),
-            "17": (Decimal("0"), Decimal("80"), Decimal("0"), Decimal("0")),
-            "20": (Decimal("0"), Decimal("0"), Decimal("250"), Decimal("0")),
-            "23": (Decimal("0"), Decimal("0"), Decimal("0"), Decimal("75")),
-            "26": (Decimal("400"), Decimal("0"), Decimal("0"), Decimal("0")),
-            "28": (Decimal("190"), Decimal("210"), Decimal("175.25"), Decimal("225.75")),
-        }
-    )
+    fixture_values = _annual_summary_fixture_values("190")
+    detail_nif, detail_clave, detail_percepcion, detail_retencion = _m190_fixture_detail_observation()
+    assert detail_clave == "G"
+    assert detail_percepcion == fixture_values[_M190_PERCEPCIONES_TOTAL_CASILLA]
+    assert detail_retencion == fixture_values[_M190_RETENCIONES_TOTAL_CASILLA]
+
+    snapshot = registry_snapshot("190", 2024, "0A")
+    requirements = relation_source_requirements(snapshot.revision, filing_year=2024, period="0A")
+    percepciones_quarterly = _grounded_quarterly_source_values(fixture_values[_M190_PERCEPCIONES_TOTAL_CASILLA])
+    retenciones_quarterly = _grounded_quarterly_source_values(fixture_values[_M190_RETENCIONES_TOTAL_CASILLA])
     observations = _observations_from_requirements(
         requirements,
-        lambda requirement, period_index: source_values[requirement.source_casilla_ids[0]][period_index],
+        lambda requirement, period_index: _m190_fixture_relation_source_value(
+            requirement,
+            period_index,
+            percepciones_quarterly=percepciones_quarterly,
+            retenciones_quarterly=retenciones_quarterly,
+        ),
     )
 
     relation_values = resolve_relation_values_from_observations(
         snapshot.revision,
         observations,
-        filing_year=2026,
+        filing_year=2024,
         period="0A",
     )
-    assert not (set(source_values) & _RETIRED_M190_M111_PERCEPCIONES_SOURCE_CASILLAS)
-    assert set(relation_values) == {
-        "modelo-190-rel-111-trabajo-dinerario-importe-anual",
-        "modelo-190-rel-111-trabajo-especie-importe-anual",
-        "modelo-190-rel-111-actividades-dinerario-importe-anual",
-        "modelo-190-rel-111-actividades-especie-importe-anual",
-        "modelo-190-rel-111-premios-dinerario-importe-anual",
-        "modelo-190-rel-111-premios-especie-importe-anual",
-        "modelo-190-rel-111-ganancias-dinerario-importe-anual",
-        "modelo-190-rel-111-ganancias-especie-importe-anual",
-        "modelo-190-rel-111-derechos-imagen-importe-anual",
-        "modelo-190-rel-111-retenciones-anual",
-    }
+    observed_source_casillas = {requirement.source_casilla_ids[0] for requirement in requirements}
+    assert not (observed_source_casillas & _RETIRED_M190_M111_PERCEPCIONES_SOURCE_CASILLAS)
+    expected_relation_values = dict.fromkeys(_M190_EXPECTED_RELATION_IDS, Decimal("0"))
+    expected_relation_values[_M190_REL_111_ACTIVIDADES_DINERARIO] = fixture_values[_M190_PERCEPCIONES_TOTAL_CASILLA]
+    expected_relation_values[_M190_REL_111_RETENCIONES] = fixture_values[_M190_RETENCIONES_TOTAL_CASILLA]
+    assert relation_values == expected_relation_values
     withholding_observations = (
-        _withholding_observation("m190-1", "11111111H", "A"),
-        _withholding_observation("m190-1-repeat", "11111111H", "A"),
-        _withholding_observation("m190-2", "11111111H", "G"),
-        _withholding_observation("m190-3", "22222222J", "A"),
+        _withholding_observation(
+            "m190-2024-0A-detail-1",
+            detail_nif,
+            detail_clave,
+            percibido_dinerario=detail_percepcion,
+            retencion_practicada=detail_retencion,
+        ),
     )
     binding_values = resolve_withholding_binding_values(snapshot.revision, withholding_observations)
-    assert binding_values[_M190_PERCEPCIONES_BINDING] == Decimal("3")
+    assert binding_values[_M190_PERCEPCIONES_BINDING] == fixture_values[_M190_TOTAL_PERCEPCIONES_CASILLA]
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": date(2026, 12, 31)},
+        date_context={"filing_period": date(2024, 12, 31)},
         binding_values=binding_values,
         relation_values=relation_values,
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert _M190_TOTAL_PERCEPCIONES_CASILLA not in entries
-    assert result.values[_M190_TOTAL_PERCEPCIONES_CASILLA] == Decimal("3")
+    assert result.values[_M190_TOTAL_PERCEPCIONES_CASILLA] == fixture_values[_M190_TOTAL_PERCEPCIONES_CASILLA]
+    assert result.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == fixture_values[_M190_PERCEPCIONES_TOTAL_CASILLA]
+    assert result.values[_M190_RETENCIONES_TOTAL_CASILLA] == fixture_values[_M190_RETENCIONES_TOTAL_CASILLA]
     assert len(entries[_M190_PERCEPCIONES_TOTAL_CASILLA].operand_refs) == 9
     assert entries[_M190_RETENCIONES_TOTAL_CASILLA].operand_refs == ("modelo-190-rel-111-retenciones-anual",)
 
@@ -368,6 +531,10 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING: Decimal("0"),
+            _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
+            _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
+            _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
@@ -376,11 +543,9 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
     assert set(relation_values) == {
         "renta-2025-rel-111-retenciones-trimestrales",
         "renta-2025-rel-111-retenciones-mensuales",
-        "renta-2025-rel-115-retenciones-trimestrales",
         "renta-2025-rel-123-retenciones-trimestrales",
         "renta-2025-rel-130-pagos-fraccionados",
         "renta-2025-rel-131-pagos-fraccionados",
-        "renta-2025-rel-180-retenciones-anuales",
         "renta-2025-rel-184-atribucion-actividades-economicas",
         "renta-2025-rel-190-retenciones-anuales",
         "renta-2025-rel-193-retenciones-anuales",
@@ -390,6 +555,85 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         "renta-2025-rel-130-pagos-fraccionados",
         "renta-2025-rel-131-pagos-fraccionados",
     )
+
+
+def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    """Régimen de atribución de rentas fold-in (LIRPF art. 86).
+
+    The entidad en régimen de atribución files Modelo 184 and the partner
+    declares the attributed share in Modelo 100. The entidad's attributed
+    economic-activity net income — Modelo 184 source casilla
+    ``tipo2.renta-atribuible-importe`` — folds into the partner's Modelo 100
+    casilla 1577 (``Rendimiento neto de actividad economica atribuido por
+    entidades en regimen de atribucion de rentas``) through the canonical
+    cross-modelo relation ``renta-2025-rel-184-atribucion-actividades-economicas``
+    whose ``relation_prefill`` target binding materialises the value.
+
+    The expected 1577 value is the SEEDED Modelo 184 observation, NOT a registry
+    formula output: a distinct seed (``777.77``, unrelated to any registry
+    formula) discriminates the live fold-in from a silent default-zero blank and
+    proves the relation -> materialise -> bound-casilla chain carries the real
+    attributed amount end to end.
+    """
+    attributed_income = Decimal("777.77")
+    m184_relation = "renta-2025-rel-184-atribucion-actividades-economicas"
+    m184_target_binding = "renta-2025-modelo-184-atribucion-actividades-economicas"
+    casilla_1577 = validated_casilla_id("1577", surface="modelo-184 attribution fold-in target")
+
+    snapshot = registry_snapshot("100", 2025, "0A")
+
+    def _value_for(requirement: RegistryFoldRequirement, period_index: int) -> Decimal:
+        if requirement.relation_ids[0] == m184_relation:
+            return attributed_income
+        return _renta_relation_observed_value(requirement, period_index)
+
+    requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
+    observations = _observations_from_requirements(requirements, _value_for)
+    relation_values = resolve_relation_values_from_observations(
+        snapshot.revision,
+        observations,
+        filing_year=2025,
+        period="0A",
+    )
+    assert relation_values[m184_relation] == attributed_income
+
+    # Materialise ONLY the M184 attribution relation into its declared
+    # ``relation_prefill`` target binding. The retencion relations (111/123/...)
+    # feed other casillas and are out of scope for this fold-in; restricting the
+    # materialisation isolates the M184 -> 1577 path under test.
+    materialized = materialize_relation_binding_values(
+        snapshot.revision,
+        {m184_relation: relation_values[m184_relation]},
+        period="0A",
+    )
+    assert materialized[m184_target_binding] == attributed_income
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={},
+        date_context={"filing_period": date(2025, 12, 31)},
+        relation_values=relation_values,
+        binding_values={
+            "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            **materialized,
+            "renta-2025-profile-declaration-type": Decimal("1"),
+            "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-2025-profile-marriage-full-year": Decimal("0"),
+            "renta-2025-profile-marriage-month-start": Decimal("0"),
+            "renta-2025-profile-marriage-month-end": Decimal("0"),
+            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING: Decimal("0"),
+            _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
+            _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
+            _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+        },
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
+    )
+
+    assert result.values[casilla_1577] == attributed_income
 
 
 def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_registry_results(
@@ -453,6 +697,10 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING: Decimal("0"),
+            _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
+            _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
+            _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
@@ -518,7 +766,10 @@ def test_modelo_100_2024_m131_pagos_fraccionados_cumulative_wires_to_casilla_060
 
     # The binding for M131 must declare the correct source_modelo and source_casilla_id.
     binding = next(b for b in snapshot.revision.bindings if b.id == "renta-2024-modelo-131-pagos-fraccionados")
-    assert binding.selector == {"source_modelo": "131", "source_casilla_id": _M131_PAGOS_FRACCIONADOS_CASILLA}
+    assert selector_as_dict(binding) == {
+        "source_modelo": "131",
+        "source_casilla_id": _M131_PAGOS_FRACCIONADOS_CASILLA,
+    }
 
 
 def test_modelo_100_2024_m131_pagos_fraccionados_anti_tautology_proportional_change(
@@ -622,311 +873,6 @@ def test_modelo_130_resolves_previous_year_modelo_100_filed_casillas_into_bindin
     assert binding_values["irpf.previous_year_economic_activity_net_income"] == expected_binding
 
 
-@pytest.mark.parametrize("period", ["1P", "2P", "3P"])
-def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
-    period: str,
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
-) -> None:
-    snapshot = registry_snapshot("202", 2026, period)
-    revision = snapshot.revision
-    assert revision.id == "2025-y-siguientes"
-    assert len(revision.casillas) == 50
-    formula_targets = {formula.target_casilla_id for formula in revision.formulas}
-    assert formula_targets == {"03", "13", "16", "18", "22", "25", "26", "32", "34", "38", "39", "63", "66"}
-
-    inputs = _casilla_inputs(
-        {
-            "01": Decimal("10000"),
-            "02": Decimal("0"),
-            "04": Decimal("50000"),
-            "05": Decimal("2000"),
-            "06": Decimal("1000"),
-            "07": Decimal("500"),
-            "08": Decimal("300"),
-            "37": Decimal("200"),
-            "67": Decimal("100"),
-            "14": Decimal("4200"),
-            "44": Decimal("0"),
-            "45": Decimal("0"),
-            "46": Decimal("0"),
-            "17": Decimal("17"),
-            "47": Decimal("0"),
-            "40": Decimal("0"),
-            "48": Decimal("0"),
-            "49": Decimal("0"),
-            "27": Decimal("200"),
-            "28": Decimal("500"),
-            "29": Decimal("100"),
-            "31": Decimal("0"),
-            "33": Decimal("0"),
-            "20": Decimal("0"),
-            "21": Decimal("0"),
-            "23": Decimal("0"),
-            "24": Decimal("0"),
-            "42": Decimal("0"),
-            "50": Decimal("0"),
-            "51": Decimal("0"),
-            "52": Decimal("0"),
-            "61": Decimal("0"),
-            "62": Decimal("0"),
-            "64": Decimal("0"),
-            "65": Decimal("0"),
-        }
-    )
-
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        date_context={"filing_period": date(2026, 12, 31)},
-        binding_values={
-            "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores": Decimal("3000"),
-            "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior": inputs[_M202_CUOTA_BASE_CASILLA],
-        },
-    )
-
-    entries = {entry.target_casilla_id: entry for entry in result.entries}
-    assert entries["03"].operand_refs == ("01", "is.modalidad_cuota.percentage", "02")
-    assert entries["16"].operand_refs == ("13", "44", "14", "45", "46")
-    assert entries["18"].operand_refs == ("16", "17", "47", "48", "40", "49")
-    assert entries["34"].operand_refs == ("32", "33")
-
-
-@pytest.mark.parametrize(
-    ("filing_year", "expected_revision", "expected_casilla_count"),
-    [
-        (2019, "2019-2022", 43),
-        (2020, "2019-2022", 43),
-        (2022, "2019-2022", 43),
-        (2023, "2023-2024", 43),
-        (2024, "2023-2024", 43),
-        (2025, "2025-y-siguientes", 50),
-        (2026, "2025-y-siguientes", 50),
-    ],
-)
-def test_modelo_202_revision_selection_resolves_for_filing_year_boundaries(
-    filing_year: int,
-    expected_revision: str,
-    expected_casilla_count: int,
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
-) -> None:
-    snapshot = registry_snapshot("202", filing_year, "1P")
-    assert snapshot.revision.id == expected_revision
-    assert len(snapshot.revision.casillas) == expected_casilla_count
-
-
-def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementario_column(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
-) -> None:
-    snapshot = registry_snapshot("202", 2024, "2P")
-    revision = snapshot.revision
-    assert revision.id == "2023-2024"
-    casilla_ids = {casilla.id for casilla in revision.casillas}
-    assert "67" not in casilla_ids
-    assert {"61", "62", "63", "64", "65", "66"}.isdisjoint(casilla_ids)
-
-    inputs = _casilla_inputs(
-        {
-            "05": Decimal("2000"),
-            "07": Decimal("500"),
-            "06": Decimal("1000"),
-            "37": Decimal("200"),
-            "08": Decimal("300"),
-            "04": Decimal("50000"),
-        }
-    )
-    # Asserting the registry runs without raising on the historical
-    # revision shape; arithmetic comparisons against hand-computed
-    # output Decimals are deliberately omitted (tautological).
-    calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        date_context={"filing_period": date(2024, 12, 31)},
-        binding_values={
-            "modelo-202-2023-2024-pagos-fraccionados-anteriores": Decimal("0"),
-        },
-    )
-
-
-def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
-) -> None:
-    snapshot = registry_snapshot("200", 2024, "0A")
-    revision = snapshot.revision
-    assert revision.id == "2024-y-siguientes"
-    relation_ids = {relation.id for relation in revision.relations}
-    # The BIN-pendiente previous_filing binding ships as a relation on the
-    # 2024 revision (M200 base-determination design note).
-    assert relation_ids == {
-        "modelo-200-2024-rel-202-pagos-fraccionados",
-        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
-        "modelo-200-2024-rel-self-bin-pendiente-anterior",
-        "modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior",
-        "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior",
-    }
-    classifications = {
-        classification.source_modelo: classification for classification in revision.dependency_classifications
-    }
-    assert classifications["202"].treatment == "direct_annual_settlement"
-    assert classifications["200"].treatment == "factual_evidence"
-
-    requirements = relation_source_requirements(revision, filing_year=2024, period="0A")
-    observations = _observations_from_requirements(
-        requirements,
-        lambda _requirement, period_index: (
-            Decimal("1200"),
-            Decimal("1500"),
-            Decimal("1800"),
-        )[period_index],
-        target_modelo="200",
-        fallback_revision=revision,
-    )
-
-    relation_values = resolve_relation_values_from_observations(
-        revision,
-        observations,
-        filing_year=2024,
-        period="0A",
-    )
-    assert set(relation_values) == relation_ids
-
-    # The modelo-202 instalment relation aggregates the three quarterly
-    # pago-fraccionado instalments (00601 first, 00603 second, 00605
-    # third instalment to the Estado) into the annual pagos fraccionados
-    # figure. The instalment netting required by Ley 27/2014 art. 41 is
-    # realised by the cuota-diferencial formula, which subtracts that
-    # aggregated relation value from the cuota del ejercicio a ingresar
-    # o a devolver (00599).
-    diferencial_formula = next(
-        formula for formula in revision.formulas if formula.target_casilla_id == _M200_CUOTA_DIFERENCIAL_CASILLA
-    )
-    assert diferencial_formula.id == "modelo-200-cuota-diferencial"
-    assert diferencial_formula.expression.op == "subtract"
-    assert "ley-27-2014:art-41" in diferencial_formula.legal_refs
-
-    # Graph-wiring assertion: the netting subtracts the aggregated
-    # modelo-202 pagos fraccionados — delivered as the cross-model
-    # relation value — from the cuota del ejercicio (00599).
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs=_casilla_inputs(
-            {
-                "00501": Decimal("48000"),
-                "DP200013:00417": Decimal("0"),
-                "DP200013:00418": Decimal("0"),
-                "01032": Decimal("0"),
-                "DP200014:00547": Decimal("0"),
-                "DP200014:01033": Decimal("0"),
-                "DP200014:01034": Decimal("0"),
-            },
-        ),
-        enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
-        binding_values={
-            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
-            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-        },
-        date_context={"filing_period": date(2024, 12, 31)},
-        relation_values=relation_values,
-    )
-    entries = {entry.target_casilla_id: entry for entry in result.entries}
-    assert "DP200014B:00599" in entries
-    assert "DP200014B:00611" in entries
-    diferencial_entry = entries["DP200014B:00611"]
-    assert diferencial_entry.formula_id == "modelo-200-cuota-diferencial"
-    assert diferencial_entry.op == "subtract"
-    # The netting subtracts add(40.3, 40.2): the engine flattens the
-    # expression tree into leaf operands, so the cuota del ejercicio is
-    # followed by both pagos-fraccionados relations (modalidad 40.3
-    # casilla 34, then modalidad 40.2 casilla 03).
-    assert set(diferencial_entry.operand_refs) == {
-        "DP200014B:00599",
-        "modelo-200-2024-rel-202-pagos-fraccionados",
-        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
-    }
-    assert diferencial_entry.operand_refs == (
-        "DP200014B:00599",
-        "modelo-200-2024-rel-202-pagos-fraccionados",
-        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
-    )
-    # The relation operand values the cuota-diferencial formula consumed
-    # are exactly the aggregated 1P/2P/3P pagos fraccionados the relation
-    # resolver produced under each modality — the netting subtracts the
-    # resolver output, not a literal hand-summed by the test author.
-    assert diferencial_entry.operand_values[1] == relation_values["modelo-200-2024-rel-202-pagos-fraccionados"]
-    assert diferencial_entry.operand_values[2] == relation_values["modelo-200-2024-rel-202-pagos-fraccionados-40-2"]
-
-
-def _observations_from_requirements(
-    requirements: Iterable[RegistryFoldRequirement],
-    value_for: Callable[[RegistryFoldRequirement, int], Decimal],
-    *,
-    target_modelo: str | None = None,
-    fallback_revision: ModeloRevision | None = None,
-) -> tuple[RegistryModeloObservation, ...]:
-    observed: dict[tuple[str, int, str], dict[CasillaId, Decimal]] = {}
-    for requirement in requirements:
-        for period_index, period in enumerate(requirement.periods):
-            key = (requirement.source_modelo, requirement.filing_year, period)
-            casilla_values = observed.setdefault(key, {})
-            casilla_values[requirement.source_casilla_ids[0]] = value_for(requirement, period_index)
-    return tuple(
-        RegistryModeloObservation(
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            observations=_grounded_observations(
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                casilla_values=casilla_values,
-                target_modelo=target_modelo,
-                fallback_revision=fallback_revision,
-            ),
-        )
-        for (modelo, filing_year, period), casilla_values in sorted(observed.items())
-    )
-
-
-def _grounded_observations(
-    *,
-    modelo: str,
-    filing_year: int,
-    period: str,
-    casilla_values: Mapping[CasillaId, Decimal],
-    target_modelo: str | None = None,
-    fallback_revision: ModeloRevision | None = None,
-) -> tuple[CasillaObservation, ...]:
-    source = f"{modelo}/{filing_year}/{period}"
-    try:
-        snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
-        source = f"{modelo}/{snapshot.revision.id}/{filing_year}/{period}"
-        casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    except NoRevisionForPeriodError:
-        if target_modelo != modelo or fallback_revision is None:
-            raise
-        source = f"{modelo}/{fallback_revision.id}/{filing_year}/{period} self-relation fallback"
-        casillas_by_id = {casilla.id: casilla for casilla in fallback_revision.casillas}
-    observations: list[CasillaObservation] = []
-    for casilla_id, value in casilla_values.items():
-        casilla = casillas_by_id.get(casilla_id)
-        if casilla is None:
-            raise AssertionError(
-                f"cross-dependency fixture observed casilla {casilla_id!r} is absent from registry snapshot {source}",
-            )
-        observations.append(
-            CasillaObservation(
-                casilla_id=casilla_id,
-                value=value,
-                legal_refs=casilla.legal_refs,
-                source_refs=casilla.source_refs,
-            ),
-        )
-    return tuple(observations)
-
-
 def _revision_edge_years(revision: ModeloRevision) -> tuple[int, ...]:
     if revision.period_selector.years:
         years = sorted(revision.period_selector.years)
@@ -949,16 +895,12 @@ def _renta_relation_observed_value(requirement: RegistryFoldRequirement, period_
         return (Decimal("1"), Decimal("2"), Decimal("3"), Decimal("4"))[period_index]
     if relation_id == "renta-2025-rel-111-retenciones-mensuales":
         return Decimal(period_index + 1)
-    if relation_id == "renta-2025-rel-115-retenciones-trimestrales":
-        return Decimal("10")
     if relation_id == "renta-2025-rel-123-retenciones-trimestrales":
         return Decimal("20")
     if relation_id == "renta-2025-rel-130-pagos-fraccionados":
         return (Decimal("100"), Decimal("200"), Decimal("300"), Decimal("400"))[period_index]
     if relation_id == "renta-2025-rel-131-pagos-fraccionados":
         return Decimal("5")
-    if relation_id == "renta-2025-rel-180-retenciones-anuales":
-        return Decimal("30")
     if relation_id == "renta-2025-rel-190-retenciones-anuales":
         return Decimal("40")
     if relation_id == "renta-2025-rel-193-retenciones-anuales":
@@ -983,7 +925,6 @@ def _renta_2024_relation_observed_value(
     if relation_id in {
         "renta-2024-rel-111-retenciones-trimestrales",
         "renta-2024-rel-111-retenciones-mensuales",
-        "renta-2024-rel-115-retenciones-trimestrales",
         "renta-2024-rel-123-retenciones-trimestrales",
         "renta-2024-rel-193-retenciones-anuales",
     }:

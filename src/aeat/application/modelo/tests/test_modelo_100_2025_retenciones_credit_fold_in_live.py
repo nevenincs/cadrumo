@@ -55,6 +55,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
@@ -64,14 +68,15 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
-from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...aggregation import (
+    RetencionObservation,
+    RetencionObservationRepository,
+    RetencionScheme,
+)
+from ...calculations import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,
@@ -82,13 +87,16 @@ from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-m100-2025-retenciones-fold"
+_BUCKET_ID = "2fa3285a-d72e-4f86-9a1c-75c98d1f2ede"
 _T0 = datetime(2026, 6, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 6, 10, 11, 0, tzinfo=UTC)
 _YEAR = 2025
 _ANNUAL_PERIOD = "0A"
 _QUARTERS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+_OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset(
+    {"renta-2025-certificado-trabajo-retenciones"},
+)
 
 # The two genuine cross-modelo retenciones-credit casillas and their source casilla ids.
 _M100_TRABAJO_CASILLA: CasillaId = validated_casilla_id("0596", surface="_M100_TRABAJO_CASILLA")
@@ -98,6 +106,10 @@ _M100_CAPITAL_MOBILIARIO_CASILLA: CasillaId = validated_casilla_id(
 )
 _M111_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("28", surface="_M111_RETENCIONES_OUTPUT")
 _M123_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("09", surface="_M123_RETENCIONES_OUTPUT")
+_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id(
+    "1391",
+    surface="_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA",
+)
 
 # Four DISTINCT non-equal quarterly M111 c28 retenciones-rendimientos-del-trabajo
 # values for 2025. Distinctness makes the annual fold unmistakable: an
@@ -195,7 +207,25 @@ def _seed_pagos_quarters(*, obs_repo: CalculationObservationRepository) -> None:
         )
 
 
-def _seed_taxpayer_unit_profile() -> None:
+def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> None:
+    CalculationObservationRepository(objects=secure_objects).save_observation(
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_YEAR - 1,
+            period=_ANNUAL_PERIOD,
+            observations=registry_grounded_observations(
+                modelo="100",
+                filing_year=_YEAR - 1,
+                period=_ANNUAL_PERIOD,
+                casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+            ),
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
+    )
+
+
+def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed a single-taxpayer ``UserProfileRecord`` covering M100/2025 profile bindings.
 
     The M100/2025 annual revision declares ``source = "profile"`` bindings (the
@@ -211,10 +241,19 @@ def _seed_taxpayer_unit_profile() -> None:
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Operator"),
+            UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="varon"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
+            UserProfileFact(path="renta_taxpayer.sex", value="H"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
@@ -225,7 +264,7 @@ def _seed_taxpayer_unit_profile() -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(record)
 
 
 def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
@@ -258,7 +297,10 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
         },
     )
     return {
-        binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _AUTO_RESOLVED
+        binding.id: Decimal("0")
+        for binding in snapshot.revision.bindings
+        if binding.id not in _OPTIONAL_PAYEE_RETENCIONES_BINDINGS
+        if binding.source not in _AUTO_RESOLVED
     }
 
 
@@ -270,7 +312,8 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> BucketAggr
     ``relation_prefill`` bindings are deliberately left UNSET so the enrolled
     relation resolver folds them from the seeded observation store.
     """
-    _seed_taxpayer_unit_profile()
+    _seed_taxpayer_unit_profile(secure_objects)
+    _seed_prior_year_m100_zero_carry(secure_objects)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -371,4 +414,142 @@ def test_m100_2025_retenciones_credits_fold_in_periodic_filings_on_live_calculat
     assert not any(
         diag.reason == "unhandled_binding_source" and diag.source_kind == _RELATION_PREFILL_SOURCE
         for diag in result.source_diagnostics
+    )
+
+
+# Four DISTINCT non-equal administrador (clave E, art. 101.2) quarters. Each
+# withheld amount is the fixed 35 % general rate of a distinct base, so no
+# rate-mismatch advisory fires and the produced M111 c28 equals the withheld
+# amount. Distinctness makes the annual 0596 fold unmistakable.
+_M111_ADMINISTRADOR_BY_PERIOD: dict[str, tuple[Decimal, Decimal]] = {
+    "1T": (Decimal("2000.00"), Decimal("700.00")),  # 2000.00 * 0.35
+    "2T": (Decimal("3200.00"), Decimal("1120.00")),  # 3200.00 * 0.35
+    "3T": (Decimal("1500.00"), Decimal("525.00")),  # 1500.00 * 0.35
+    "4T": (Decimal("4400.00"), Decimal("1540.00")),  # 4400.00 * 0.35
+}
+
+
+def _calculate_m111_administrador_quarter(
+    secure_objects: SecureObjectRepository,
+    *,
+    period_code: str,
+    taxable_base: Decimal,
+    retencion_amount: Decimal,
+) -> Decimal:
+    """Aggregate one administrador retención into M111 and return its c28 total.
+
+    Seeds a single ``WORK_INCOME_DIRECTOR`` (clave E) retención observation for the
+    quarter and runs the LIVE M111 calculate. The administrador retención folds into
+    the single trabajo block (casillas 01/02/03) via the art. 101.2 binding selector
+    landed in #539, so c03 (trabajo retenciones) carries the withheld amount and the
+    total-retenciones formula rolls it into c28. Returns the produced c28.
+    """
+    period = Period.from_year_and_code(_YEAR, period_code)
+    RetencionObservationRepository().replace_observations(
+        modelo="111",
+        filing_year=_YEAR,
+        period=period,
+        observations=[
+            RetencionObservation(
+                source_kind="ledger_transaction",
+                source_object_id=f"administrador-{period_code}",
+                perceptor_nif="87654321X",
+                perceptor_name="Administrador Ejemplo",
+                scheme=RetencionScheme.WORK_INCOME_DIRECTOR,
+                taxable_base=taxable_base,
+                retencion_amount=retencion_amount,
+                accrued_on="2025-03-15",
+            ),
+        ],
+        source_kind="aggregate_pull",
+    )
+    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    snapshot = resources().modelos.authority.snapshot("111", filing_year=_YEAR, period=period_code)
+    work_unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="111",
+        filing_year=_YEAR,
+        period=period,
+        revision_id=snapshot.revision.id,
+        repository=wu_repo,
+        clock=_T0,
+    )
+    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        work_unit.work_unit_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
+        clock=_T1,
+    )
+    values = result.revision.casilla_values
+    # The administrador retención lands in the trabajo block, not the actividades block.
+    assert Decimal(values["03"]) == retencion_amount, (
+        f"M111 c03 (trabajo retenciones) must carry the administrador withholding {retencion_amount}; "
+        f"got {values['03']}"
+    )
+    # A correct art. 101.2 35 % withholding raises no rate-mismatch advisory.
+    assert not any(d.reason == "administrador_retencion_rate_mismatch" for d in result.source_diagnostics)
+    return Decimal(values["28"])
+
+
+def test_m100_2025_director_administrador_retencion_credits_into_trabajo_casilla(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """E2E/2025: a director's suffered administrador retención credits M100 casilla 0596.
+
+    This proves the full cross-modelo director credit chain that issue #540 asks about,
+    end to end on the LIVE calculate path:
+
+      administrador retención (``WORK_INCOME_DIRECTOR``, clave E)
+        -> M111 casilla 03 (trabajo retenciones, via the art. 101.2 binding selector, #539)
+        -> M111 casilla 28 (total-retenciones formula)
+        -> M100 casilla 0596 (retenciones por rendimientos del trabajo soportadas,
+           relation_prefill fold summed over the four quarters).
+
+    Unlike ``test_m100_2025_retenciones_credits_fold_in_periodic_filings_on_live_calculate``
+    (which seeds M111 c28 directly), each quarter's c28 here is PRODUCED by a real M111
+    aggregation of an administrador retención, so the test exercises the full director
+    path rather than the fold alone. Administrador/consejero income is rendimiento del
+    trabajo (LIRPF art. 17.2.e), so crediting it to 0596 ("Por rendimientos del trabajo")
+    is the correct casilla.
+
+    Non-tautological: the four withheld amounts are distinct art. 101.2 (35 %) values, so
+    a silent blank, a single-quarter copy, or an off-by-quarter fold cannot reproduce the
+    summed credit. No registry IRPF formula is recomputed.
+
+    Legal grounding: LIRPF art. 101.2 (administrador fixed rate) + art. 99 / RIRPF art. 108
+    (withholding source filings) + Orden HAC/277/2026 art. 3 (M100/2025 form approval).
+    """
+    obs_repo = CalculationObservationRepository()
+    _seed_taxpayer_unit_profile(secure_objects)
+
+    produced_c28: dict[str, Decimal] = {}
+    for period_code in _QUARTERS:
+        base, amount = _M111_ADMINISTRADOR_BY_PERIOD[period_code]
+        c28 = _calculate_m111_administrador_quarter(
+            secure_objects,
+            period_code=period_code,
+            taxable_base=base,
+            retencion_amount=amount,
+        )
+        assert c28 == amount, f"M111/{period_code} c28 must equal the administrador withholding {amount}; got {c28}"
+        produced_c28[period_code] = c28
+        _seed_quarterly_filing(
+            obs_repo=obs_repo,
+            source_modelo="111",
+            period=period_code,
+            casilla_id=_M111_RETENCIONES_OUTPUT,
+            value=c28,
+        )
+    _seed_pagos_quarters(obs_repo=obs_repo)
+
+    expected_credit = _assert_distinct_positive(produced_c28)
+
+    result = _calculate_m100_annual(secure_objects)
+
+    casilla_0596 = Decimal(result.revision.casilla_values[_M100_TRABAJO_CASILLA])
+    assert casilla_0596 == expected_credit, (
+        f"M100/2025 {_M100_TRABAJO_CASILLA} must credit the director's four administrador "
+        f"retención quarters (sum {expected_credit}); got {casilla_0596}"
     )

@@ -9,6 +9,7 @@ source_refs = [
     "aeat-modelo-115-180-folleto-actividades",
 ]
 casilla_ids = ["01", "02", "03", "04", "05"]
+bindings = ["modelo-115-perceptores", "modelo-115-base-retenciones"]
 formulas = ["modelo-115-retenciones", "modelo-115-resultado-ingresar"]
 parameters = ["irpf.urban_rental_withholding_rate"]
 export_layouts = ["modelo-115-fichero-boe"]
@@ -31,4 +32,3 @@ application_links = [
     "modelo-115-workflow",
 ]
 deadline_windows = ["modelo-115-2026-1t", "modelo-115-2026-2t", "modelo-115-2026-3t", "modelo-115-2026-4t"]
-

@@ -26,6 +26,8 @@ from .._models import LLMProvider, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_CREATED_AT = datetime(2026, 5, 28, 12, 25, 0, tzinfo=UTC)
+
 
 def _populated_request() -> LLMRequest:
     return LLMRequest(
@@ -59,7 +61,7 @@ def test_llm_cache_entry_survives_encrypted_storage_roundtrip(
 ) -> None:
     """A populated CachedEntry round-trips through the encrypted LLM cache."""
 
-    created_at = datetime.now(UTC).replace(microsecond=0)
+    created_at = _CREATED_AT
     request = _populated_request()
     response = _populated_response(created_at)
     cache = LLMCache(root_dir=tmp_path / "llm-cache")
@@ -112,17 +114,17 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
 
     from sqlalchemy import select
 
-    from ....persistence.storage.crypto._encrypted_columns import (
+    from ....persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....persistence.storage.sql._orm import SecureObjectRow
+    from ....persistence.storage.sql import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
     from .._cache import _CACHE_NAMESPACE
     from .._errors import LLMCacheError
 
-    created_at = datetime.now(UTC).replace(microsecond=0)
+    created_at = _CREATED_AT
     request = _populated_request()
     response = _populated_response(created_at)
     cache = LLMCache(root_dir=tmp_path / "llm-cache")

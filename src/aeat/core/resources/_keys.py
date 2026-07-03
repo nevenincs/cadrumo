@@ -13,9 +13,9 @@ are hashable for dict-backed Identity Maps. Singletons use
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-_FROZEN_STRICT = ConfigDict(strict=True, frozen=True, extra="forbid")
+from .._models import STRICT_FROZEN_CONFIG
 
 
 class TypedResourceKey(BaseModel):
@@ -27,4 +27,4 @@ class TypedResourceKey(BaseModel):
     model hashable for Identity Map dict use.
     """
 
-    model_config = _FROZEN_STRICT
+    model_config = STRICT_FROZEN_CONFIG

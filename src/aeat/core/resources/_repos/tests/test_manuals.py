@@ -13,39 +13,37 @@ import json
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ..manuals import ManualKey, ManualRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_manual_key_is_frozen_and_hashable() -> None:
+def test_manual_key_is_frozen_hashable_and_field_sensitive() -> None:
     a = ManualKey(manual_id="iva", year=2025, part="single")
     b = ManualKey(manual_id="iva", year=2025, part="single")
+    c = ManualKey(manual_id="renta", year=2025, part="part1")
 
     assert a == b
     assert hash(a) == hash(b)
+    assert a != c
+    assert hash(a) != hash(c)
+
+    with pytest.raises(ValidationError):
+        a.__setattr__("year", 2026)
 
 
-def test_manual_key_distinct_fields_yield_distinct_hashes() -> None:
-    iva = ManualKey(manual_id="iva", year=2025, part="single")
-    renta = ManualKey(manual_id="renta", year=2025, part="part1")
+def test_manual_repository_constructs_with_optional_root_and_clearable_cache(tmp_path: Path) -> None:
+    default_repo = ManualRepository()
+    rooted_repo = ManualRepository(root=tmp_path)
 
-    assert iva != renta
-    assert hash(iva) != hash(renta)
+    assert default_repo._root is None
+    assert default_repo._cache == {}
+    assert rooted_repo._root == tmp_path
 
-
-def test_manual_repository_constructs_with_no_root_override() -> None:
-    repo = ManualRepository()
-
-    assert repo._root is None
-    assert repo._cache == {}
-
-
-def test_manual_repository_constructs_with_root_override(tmp_path) -> None:
-    repo = ManualRepository(root=tmp_path)
-
-    assert repo._root == tmp_path
+    default_repo.clear_cache()  # safe on empty cache
+    assert default_repo._cache == {}
 
 
 def test_manual_repository_get_raises_for_unextracted_manual(tmp_path: Path) -> None:
@@ -58,7 +56,7 @@ def test_manual_repository_get_raises_for_unextracted_manual(tmp_path: Path) -> 
     error hierarchy lets the caller catch via either the domain-
     specific class or the resource-level base.
     """
-    from .....domain.manuals._errors import ManualNotFoundError
+    from .....domain.manuals import ManualNotFoundError
 
     # The bundled corpus is now fully extracted, so this contract is exercised
     # against a synthetic unextracted manual (manifest + source.pdf present, no
@@ -88,11 +86,3 @@ def test_manual_repository_get_raises_for_unextracted_manual(tmp_path: Path) -> 
 
     with pytest.raises(ManualNotFoundError):
         repo.get(key)
-
-
-def test_manual_repository_clear_cache_empties_identity_map() -> None:
-    repo = ManualRepository()
-
-    repo.clear_cache()  # safe on empty cache
-
-    assert repo._cache == {}

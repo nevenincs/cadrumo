@@ -21,11 +21,12 @@ from typing import TYPE_CHECKING, Self, override
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import IntracomOperationType
 from ...core.decimal import coerce_decimal
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, validate_spanish_tax_id
-from ...core.parsing._dates import _parse_iso8601_date
-from .._identifiers import canonical_decimal_string
+from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
+from .. import canonical_decimal_string
 from ..iva import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, OssIossRegime, TransactionKind
 from ._enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ._errors import InvoiceValidationError
@@ -120,6 +121,15 @@ def _normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, obje
                 raise InvoiceValidationError("iva_category must be an IvaCategory") from exc
         else:
             payload["iva_category"] = None
+    if "operation_type" in payload and isinstance(payload["operation_type"], str):
+        stripped = payload["operation_type"].strip().upper()
+        if stripped:
+            try:
+                payload["operation_type"] = IntracomOperationType(stripped)
+            except ValueError as exc:
+                raise InvoiceValidationError("operation_type must be an IntracomOperationType") from exc
+        else:
+            payload["operation_type"] = None
     if "oss_ioss_regime" in payload and isinstance(payload["oss_ioss_regime"], str):
         stripped = payload["oss_ioss_regime"].strip()
         if stripped:
@@ -368,6 +378,7 @@ class Invoice(BaseModel):
     linked_transaction_ids: tuple[str, ...] = ()
     notes: str = ""
     iva_category: IvaCategory | None = None
+    operation_type: IntracomOperationType | None = None
     oss_ioss_regime: OssIossRegime | None = None
     oss_transaction_kind: TransactionKind | None = None
     retention_rate: Decimal | None = None
@@ -566,7 +577,7 @@ class InvoiceCatalogue(BaseModel):
         return cls.model_validate(tuple(invoices))
 
     @override
-    def __iter__(self) -> Iterator[Invoice]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[Invoice]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
         """Iterate over catalogue invoices."""
         return iter(self.invoices.values())
 

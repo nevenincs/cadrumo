@@ -43,6 +43,27 @@ def _round_trip(pdf: pikepdf.Pdf) -> pikepdf.Pdf:
     return pikepdf.Pdf.open(buffer)
 
 
+def test_clean_pdf_no_op_surfaces_report_zero() -> None:
+    pdf = _new_one_page_pdf()
+
+    assert strip_attachments(pdf).count == 0
+    js, oa, aa = strip_javascript(pdf)
+    assert js.count == 0
+    assert oa.count == 0
+    assert aa.count == 0
+    assert strip_annotations(pdf).count == 0
+    assert strip_optional_content_groups(pdf).count == 0
+    acroform, acroform_warnings = strip_acroform(pdf)
+    assert acroform.count == 0
+    assert acroform_warnings == ()
+    assert strip_thumbnails(pdf).count == 0
+    assert strip_outlines(pdf).count == 0
+    assert strip_page_labels(pdf).count == 0
+    struct_tree, struct_tree_warnings = drop_struct_tree(pdf)
+    assert struct_tree.count == 0
+    assert struct_tree_warnings == ()
+
+
 class TestStripAttachments:
     """Embedded files are removed wholesale."""
 
@@ -55,46 +76,26 @@ class TestStripAttachments:
         re_opened = _round_trip(pdf)
         assert len(list(re_opened.attachments)) == 0
 
-    def test_no_op_when_table_empty(self) -> None:
-        pdf = _new_one_page_pdf()
-        result = strip_attachments(pdf)
-        assert result.count == 0
-
 
 class TestStripJavascript:
     """JavaScript surfaces in Names tree, OpenAction, AA are removed."""
 
-    def test_removes_open_action(self) -> None:
+    def test_removes_javascript_entry_points(self) -> None:
         pdf = _new_one_page_pdf()
         pdf.Root["/OpenAction"] = pikepdf.Dictionary(
             S=pikepdf.Name.JavaScript,
             JS="alert('boo');",
         )
-        _js, oa, _aa = strip_javascript(pdf)
-        assert oa.count == 1
-        assert "/OpenAction" not in pdf.Root
-
-    def test_removes_root_aa(self) -> None:
-        pdf = _new_one_page_pdf()
         pdf.Root["/AA"] = pikepdf.Dictionary()
-        _, _, aa = strip_javascript(pdf)
-        assert aa.count >= 1
+        pdf.pages[0].obj["/AA"] = pikepdf.Dictionary()
+
+        _js, oa, aa = strip_javascript(pdf)
+
+        assert oa.count == 1
+        assert aa.count >= 2
+        assert "/OpenAction" not in pdf.Root
         assert "/AA" not in pdf.Root
-
-    def test_removes_per_page_aa(self) -> None:
-        pdf = _new_one_page_pdf()
-        page = pdf.pages[0]
-        page.obj["/AA"] = pikepdf.Dictionary()
-        _, _, aa = strip_javascript(pdf)
-        assert aa.count >= 1
         assert "/AA" not in pdf.pages[0].obj
-
-    def test_no_op_when_absent(self) -> None:
-        pdf = _new_one_page_pdf()
-        js, oa, aa = strip_javascript(pdf)
-        assert js.count == 0
-        assert oa.count == 0
-        assert aa.count == 0
 
 
 class TestStripAnnotations:
@@ -115,11 +116,6 @@ class TestStripAnnotations:
         re_opened = _round_trip(pdf)
         assert "/Annots" not in re_opened.pages[0].obj
 
-    def test_no_op_when_absent(self) -> None:
-        pdf = _new_one_page_pdf()
-        result = strip_annotations(pdf)
-        assert result.count == 0
-
 
 class TestStripOptionalContentGroups:
     """OCG layers are removed."""
@@ -130,11 +126,6 @@ class TestStripOptionalContentGroups:
         result = strip_optional_content_groups(pdf)
         assert result.count == 1
         assert "/OCProperties" not in pdf.Root
-
-    def test_no_op_when_absent(self) -> None:
-        pdf = _new_one_page_pdf()
-        result = strip_optional_content_groups(pdf)
-        assert result.count == 0
 
 
 class TestStripAcroform:
@@ -162,12 +153,6 @@ class TestStripAcroform:
         assert warnings == ()
         assert "/AcroForm" not in pdf.Root
 
-    def test_no_op_when_absent(self) -> None:
-        pdf = _new_one_page_pdf()
-        result, warnings = strip_acroform(pdf)
-        assert result.count == 0
-        assert warnings == ()
-
     def test_emits_warning_when_kids_present(self) -> None:
         pdf = _new_one_page_pdf()
         child = pikepdf.Dictionary(T="child", V="real_value")
@@ -190,11 +175,6 @@ class TestStripThumbnails:
         re_opened = _round_trip(pdf)
         assert "/Thumb" not in re_opened.pages[0].obj
 
-    def test_no_op_when_absent(self) -> None:
-        pdf = _new_one_page_pdf()
-        result = strip_thumbnails(pdf)
-        assert result.count == 0
-
 
 class TestStripOutlines:
     """Bookmarks are dropped."""
@@ -206,11 +186,6 @@ class TestStripOutlines:
         assert result.count == 1
         assert "/Outlines" not in pdf.Root
 
-    def test_no_op_when_absent(self) -> None:
-        pdf = _new_one_page_pdf()
-        result = strip_outlines(pdf)
-        assert result.count == 0
-
 
 class TestStripPageLabels:
     """PageLabels are dropped."""
@@ -221,11 +196,6 @@ class TestStripPageLabels:
         result = strip_page_labels(pdf)
         assert result.count == 1
         assert "/PageLabels" not in pdf.Root
-
-    def test_no_op_when_absent(self) -> None:
-        pdf = _new_one_page_pdf()
-        result = strip_page_labels(pdf)
-        assert result.count == 0
 
 
 class TestDropStructTree:
@@ -244,9 +214,3 @@ class TestDropStructTree:
         assert "structtree_dropped_lossy" in codes
         assert "/StructTreeRoot" not in pdf.Root
         assert "/MarkInfo" not in pdf.Root
-
-    def test_no_op_when_absent(self) -> None:
-        pdf = _new_one_page_pdf()
-        scrubbed, warnings = drop_struct_tree(pdf)
-        assert scrubbed.count == 0
-        assert warnings == ()

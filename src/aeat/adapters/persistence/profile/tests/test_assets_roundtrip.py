@@ -132,13 +132,13 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ....persistence.storage.crypto._encrypted_columns import (
+    from ....persistence.storage.sql.session import session_scope
+    from ...storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....persistence.storage.sql._orm import SecureObjectRow
-    from ....persistence.storage.sql.session import session_scope
+    from ...storage.sql import SecureObjectRow
     from ..assets import _ASSETS_NAMESPACE, _ASSETS_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-dropped") as profile:
@@ -193,13 +193,13 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ....persistence.storage.crypto._encrypted_columns import (
+    from ....persistence.storage.sql.session import session_scope
+    from ...storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....persistence.storage.sql._orm import SecureObjectRow
-    from ....persistence.storage.sql.session import session_scope
+    from ...storage.sql import SecureObjectRow
     from ..assets import _ASSETS_NAMESPACE, _ASSETS_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-missing") as profile:

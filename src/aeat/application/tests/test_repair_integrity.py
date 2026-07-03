@@ -48,6 +48,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # production condition `aeat config repair` exists to surface.
 _KEY_A = b"\xa1" * 32
 _KEY_B = b"\xb2" * 32
+_ROW_WRITTEN_AT = datetime(2026, 5, 28, 13, 5, 0, tzinfo=UTC)
+_BOOTSTRAP_WRITTEN_AT = datetime(2026, 5, 28, 13, 10, 0, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -80,7 +82,7 @@ def _save_rows(namespace: str, count: int, *, tag: str) -> None:
             object_key=f"{namespace}:{tag}:{index}",
             classification=SensitivityClass.OPERATIONAL,
             schema_version=1,
-            written_at=datetime.now(UTC),
+            written_at=_ROW_WRITTEN_AT,
             payload=f"repair-integrity-payload:{namespace}:{tag}:{index}".encode(),
         )
 
@@ -194,7 +196,7 @@ class TestBuildListReport:
                 object_key="workflow:repair-list",
                 classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
                 schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
-                written_at=datetime.now(UTC),
+                written_at=_BOOTSTRAP_WRITTEN_AT,
                 payload=b"repair-list-sessionless",
             )
             with suspend_active_session():

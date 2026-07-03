@@ -13,7 +13,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from typing import TypedDict
 
 from ...core import Modelo, Period
 from ...core.parsing import parse_bool as _parse_bool
@@ -23,6 +22,7 @@ from ...core.wizard_catalogue import get_setup_flow
 from ._errors import ProfileError
 from ._models import (
     CrossPeriodGroupMemberRoster,
+    EntityType,
     FiscalResidency,
     IrpfIncomeCategory,
     IrpfSpecialRegime,
@@ -31,16 +31,6 @@ from ._models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-
-
-class _ObjectiveFieldsDict(TypedDict, total=False):
-    """Optional dict shape for objective-estimation fields.
-
-    The field is only included when ``estimation_regime`` is ``None``,
-    so all fields are optional (``total=False``).
-    """
-
-    uses_objective_estimation_irpf: bool
 
 
 def taxpayer_profile_from_mapping(
@@ -55,7 +45,10 @@ def taxpayer_profile_from_mapping(
     ``project_answers`` so canonical-token semantics for every
     boolean / select / text field stay in lockstep with the wizard's
     on-prompt validation. Missing identity fields fall back to
-    ``tax_id_default`` / ``iva_regime_default``.
+    ``tax_id_default``. Missing IVA regime falls back to
+    ``NO_APLICA`` for natural persons without economic-activity income
+    and to ``iva_regime_default`` for profiles that still require an
+    IVA regime declaration.
     """
     # Coerce mixed-typed mappings to canonical-token strings before the
     # descriptor's projection runs.
@@ -86,10 +79,15 @@ def taxpayer_profile_from_mapping(
     for bare, canonical_key in (
         ("has_employees", "withholding.has_employees"),
         ("pays_professionals_with_retencion", "withholding.pays_professionals_with_retencion"),
+        ("art109_activity_income_withholding_ge_70pct", "irpf.art109_activity_income_withholding_ge_70pct"),
         ("pays_rent_with_retencion", "withholding.pays_rent_with_retencion"),
         ("pays_capital_income_with_retencion", "withholding.pays_capital_income_with_retencion"),
         ("does_intracomunitario", "iva.does_intracomunitario"),
         ("bienes_extranjero_above_threshold", "obligations.bienes_extranjero_above_threshold"),
+        (
+            "monedas_virtuales_extranjero_above_threshold",
+            "obligations.monedas_virtuales_extranjero_above_threshold",
+        ),
         ("enrollment.large_company", "censo.large_company"),
         ("enrollment.public_administration_budget_gt_6000000", "censo.public_administration_budget_gt_6000000"),
     ):
@@ -100,22 +98,19 @@ def taxpayer_profile_from_mapping(
     if not isinstance(typed, SetupAnswers):
         raise ProfileError("setup flow projection did not yield a SetupAnswers instance")
 
-    tax_id = canonical.get("identity.tax_id") or canonical.get("tax.id") or tax_id_default
-    iva_regime = _resolve_iva_regime(canonical.get("iva.regime"), iva_regime_default)
-
     entity_type = typed.entity_type or None
     legal_entity_form = typed.legal_entity_form or None
     income_categories = _resolve_income_categories(typed.irpf_income_categories)
     estimation_regime = typed.irpf_estimation_regime or None
-
-    # The structured estimation_regime is authoritative over the legacy
-    # uses_objective_estimation_irpf boolean. When a regime is declared,
-    # let TaxpayerProfile's mode="before" validator derive the boolean
-    # from it so the projection never raises a regime/boolean conflict;
-    # when no regime is declared the boolean is forwarded as before.
-    objective_fields: _ObjectiveFieldsDict = {}
-    if estimation_regime is None:
-        objective_fields["uses_objective_estimation_irpf"] = typed.uses_objective_estimation_irpf
+    tax_id = canonical.get("identity.tax_id") or canonical.get("tax.id") or tax_id_default
+    iva_regime = _resolve_iva_regime(
+        canonical.get("iva.regime"),
+        _default_iva_regime_for_profile(
+            entity_type=entity_type,
+            income_categories=income_categories,
+            configured_default=iva_regime_default,
+        ),
+    )
 
     return TaxpayerProfile(
         tax_id=tax_id,
@@ -127,14 +122,17 @@ def taxpayer_profile_from_mapping(
         has_employees=typed.has_employees,
         pays_professionals_with_retencion=typed.pays_professionals_with_retencion,
         professional_income_withholding_ge_70pct=typed.professional_income_withholding_ge_70pct,
+        art109_activity_income_withholding_ge_70pct=typed.art109_activity_income_withholding_ge_70pct,
         pays_rent_with_retencion=typed.pays_rent_with_retencion,
         pays_capital_income_with_retencion=typed.pays_capital_income_with_retencion,
-        **objective_fields,
         objective_estimation_prior_year_gross_income_eur=_parse_decimal(
             canonical.get("irpf.objective_estimation_prior_year_gross_income_eur"),
         ),
         objective_estimation_prior_year_invoice_gross_income_eur=_parse_decimal(
             canonical.get("irpf.objective_estimation_prior_year_invoice_gross_income_eur"),
+        ),
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur=_parse_decimal(
+            canonical.get("irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur"),
         ),
         objective_estimation_prior_year_purchases_eur=_parse_decimal(
             canonical.get("irpf.objective_estimation_prior_year_purchases_eur"),
@@ -142,9 +140,12 @@ def taxpayer_profile_from_mapping(
         does_intracomunitario=typed.does_intracomunitario,
         third_party_transactions_above_347_threshold=typed.third_party_transactions_above_347_threshold,
         bienes_extranjero_above_threshold=typed.bienes_extranjero_above_threshold,
+        monedas_virtuales_extranjero_above_threshold=typed.monedas_virtuales_extranjero_above_threshold,
         iva=ModeloIVAProfile(
             roi_enrolled=typed.iva_roi_enrolled,
             oss_enrolled=typed.iva_oss_enrolled,
+            group_member_enrolled=typed.iva_group_member_enrolled,
+            group_dominant_entity_enrolled=typed.iva_group_dominant_entity_enrolled,
             sii_enrolled=typed.iva_sii_enrolled,
             redeme_enrolled=typed.iva_redeme_enrolled,
             intracommunity_operations_exceed_50000_eur=typed.iva_intracommunity_operations_exceed_50000_eur,
@@ -161,6 +162,18 @@ def taxpayer_profile_from_mapping(
         incn_prior_12_months=_parse_decimal(canonical.get("taxpayer_type.incn_prior_12_months")),
         new_entity_first_two_profit_periods=_parse_optional_bool(
             canonical.get("taxpayer_type.new_entity_first_two_profit_periods"),
+        ),
+        ley_49_2002_special_regime_option_declared=_parse_optional_bool(
+            canonical.get("taxpayer_type.ley_49_2002_special_regime_option_declared"),
+        ),
+        ley_49_2002_special_regime_option_date=_parse_date(
+            canonical.get("taxpayer_type.ley_49_2002_special_regime_option_date"),
+        ),
+        ley_49_2002_special_regime_renunciation_declared=_parse_optional_bool(
+            canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_declared"),
+        ),
+        ley_49_2002_special_regime_renunciation_date=_parse_date(
+            canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_date"),
         ),
         establecimiento_type=canonical.get("censo.establecimiento_type", ""),
         elected_withholding_pct=canonical.get("censo.elected_withholding_pct", ""),
@@ -188,6 +201,7 @@ def taxpayer_profile_from_mapping(
         representante_fiscal_nombre=canonical.get("taxpayer_type.representante_fiscal_nombre") or None,
         irpf_pagadores_count=_parse_optional_int(canonical.get("irpf.pagadores_count")),
         irpf_pagadores_secondary_income=_parse_decimal(canonical.get("irpf.pagadores_secondary_income")),
+        irpf_pagadores_total_work_income=_parse_decimal(canonical.get("irpf.pagadores_total_work_income")),
         days_in_spain=_parse_days_in_spain(canonical),
     )
 
@@ -325,6 +339,17 @@ def _resolve_iva_regime(raw: str | None, default: IVARegime) -> IVARegime:
         return default
     canonical = raw.strip().upper().replace("-", "_")
     return IVARegime(canonical)
+
+
+def _default_iva_regime_for_profile(
+    *,
+    entity_type: EntityType | None,
+    income_categories: frozenset[IrpfIncomeCategory],
+    configured_default: IVARegime,
+) -> IVARegime:
+    if entity_type is EntityType.NATURAL_PERSON and IrpfIncomeCategory.ACTIVIDAD_ECONOMICA not in income_categories:
+        return IVARegime.NO_APLICA
+    return configured_default
 
 
 def _resolve_fiscal_residency(raw: FiscalResidency | str) -> FiscalResidency | None:

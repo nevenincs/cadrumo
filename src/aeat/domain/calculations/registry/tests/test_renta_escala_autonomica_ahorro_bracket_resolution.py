@@ -45,14 +45,12 @@ from functools import cache
 
 import pytest
 
-from .....core.resources import bundled_path
 from .._errors import RegistryValidationError
 from .._formula_runtime import _resolve_bracket
-from .._loader import load_registry_tree
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _ALL_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 _YEARS_WITH_200K_BRACKET = (2021, 2022, 2023, 2024, 2025)
 _YEARS_WITH_300K_BRACKET = (2023, 2024, 2025)
@@ -60,81 +58,78 @@ _YEARS_WITH_300K_BRACKET = (2023, 2024, 2025)
 
 @cache
 def _ahorro_table(year: int):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(m for m in modelos if m.id == "100")
-    revision = modelo.revisions[str(year)]
+    revision = _revision(year)
     return next(p for p in revision.parameters if p.id == f"renta-{year}-escala-autonomica-base-ahorro")
 
 
 @cache
 def _revision(year: int):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(m for m in modelos if m.id == "100")
+    modelo, _ = _committed_modelo("100")
     return modelo.revisions[str(year)]
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_ahorro_escala_declares_art_76_legal_ref(year: int) -> None:
+def test_ahorro_escala_declares_art_76_legal_ref() -> None:
     """The autonomica ahorro escala must carry the art.76 legal grounding."""
-    table = _ahorro_table(year)
-    assert "ley-35-2006:art-76" in table.legal_refs
-    assert table.data_type == "bracket_table"
+    for year in _ALL_YEARS:
+        table = _ahorro_table(year)
+        assert "ley-35-2006:art-76" in table.legal_refs
+        assert table.data_type == "bracket_table"
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_ahorro_escala_resolves_at_zero_base(year: int) -> None:
-    table = _ahorro_table(year)
-    cuota = _resolve_bracket(table, Decimal("0"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("0")
+def test_ahorro_escala_resolves_at_zero_base() -> None:
+    for year in _ALL_YEARS:
+        table = _ahorro_table(year)
+        cuota = _resolve_bracket(table, Decimal("0"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("0"), year
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_ahorro_escala_aeat_manual_2800_worked_example(year: int) -> None:
+def test_ahorro_escala_aeat_manual_2800_worked_example() -> None:
     """AEAT Manual Renta 2025 page 954: 2.800 EUR base liquidable del ahorro.
 
     The manual states "Gravamen autonomico 2.800 x 9,50% = 266". The first
     bracket marginal rate (9,50%) has been stable across every ejercicio
     covered here, so the published 266 EUR is the oracle for all years.
     """
-    table = _ahorro_table(year)
-    cuota = _resolve_bracket(table, Decimal("2800"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("266.000")
+    for year in _ALL_YEARS:
+        table = _ahorro_table(year)
+        cuota = _resolve_bracket(table, Decimal("2800"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("266.000"), year
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_ahorro_escala_at_6000_breakpoint_matches_published_incremento(year: int) -> None:
+def test_ahorro_escala_at_6000_breakpoint_matches_published_incremento() -> None:
     """At 6.000 EUR the cuota equals the published incremento of the
     second bracket: 570 EUR (AEAT manual art.76 autonomica table)."""
-    table = _ahorro_table(year)
-    cuota = _resolve_bracket(table, Decimal("6000"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("570.000")
+    for year in _ALL_YEARS:
+        table = _ahorro_table(year)
+        cuota = _resolve_bracket(table, Decimal("6000"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("570.000"), year
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_ahorro_escala_at_50000_breakpoint_matches_published_incremento(year: int) -> None:
+def test_ahorro_escala_at_50000_breakpoint_matches_published_incremento() -> None:
     """At 50.000 EUR the cuota equals the published incremento of the
     third bracket: 5.190 EUR (AEAT manual art.76 autonomica table)."""
-    table = _ahorro_table(year)
-    cuota = _resolve_bracket(table, Decimal("50000"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("5190.000")
+    for year in _ALL_YEARS:
+        table = _ahorro_table(year)
+        cuota = _resolve_bracket(table, Decimal("50000"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("5190.000"), year
 
 
-@pytest.mark.parametrize("year", _YEARS_WITH_200K_BRACKET)
-def test_ahorro_escala_at_200000_breakpoint_matches_published_incremento(year: int) -> None:
+def test_ahorro_escala_at_200000_breakpoint_matches_published_incremento() -> None:
     """At 200.000 EUR the cuota equals the published incremento of the
     bracket added by Ley 11/2020 (effective 2021): 22.440 EUR."""
-    table = _ahorro_table(year)
-    cuota = _resolve_bracket(table, Decimal("200000"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("22440.000")
+    for year in _YEARS_WITH_200K_BRACKET:
+        table = _ahorro_table(year)
+        cuota = _resolve_bracket(table, Decimal("200000"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("22440.000"), year
 
 
-@pytest.mark.parametrize("year", _YEARS_WITH_300K_BRACKET)
-def test_ahorro_escala_at_300000_breakpoint_matches_published_incremento(year: int) -> None:
+def test_ahorro_escala_at_300000_breakpoint_matches_published_incremento() -> None:
     """At 300.000 EUR the cuota equals the published incremento of the
     top bracket added by Ley 31/2022 (effective 2023): 35.940 EUR."""
-    table = _ahorro_table(year)
-    cuota = _resolve_bracket(table, Decimal("300000"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("35940.000")
+    for year in _YEARS_WITH_300K_BRACKET:
+        table = _ahorro_table(year)
+        cuota = _resolve_bracket(table, Decimal("300000"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("35940.000"), year
 
 
 def test_ahorro_escala_2020_top_bracket_is_open_11_5_percent() -> None:
@@ -179,8 +174,7 @@ def test_ahorro_escala_2021_2022_top_marginal_rate_is_13_percent() -> None:
         assert top.marginal_rate == Decimal("0.13")
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_ahorro_escala_matches_estatal_scale(year: int) -> None:
+def test_ahorro_escala_matches_estatal_scale() -> None:
     """The art.76 autonomica savings scale is identical to the art.66.1
     estatal savings scale for every ejercicio 2020-2025, as published
     in each year's AEAT Manual practico de Renta.
@@ -188,58 +182,59 @@ def test_ahorro_escala_matches_estatal_scale(year: int) -> None:
     This is the structural guard for the BOE finding that drove this
     work: art.76 does not legislate a CCAA-specific savings scale.
     """
-    revision = _revision(year)
-    autonomica = next(p for p in revision.parameters if p.id == f"renta-{year}-escala-autonomica-base-ahorro")
-    estatal = next(p for p in revision.parameters if p.id == f"renta-{year}-escala-estatal-base-ahorro")
-    autonomica_brackets = sorted(autonomica.brackets, key=lambda b: b.lower_bound)
-    estatal_brackets = sorted(estatal.brackets, key=lambda b: b.lower_bound)
-    assert [(b.lower_bound, b.upper_bound, b.fixed_addition, b.marginal_rate) for b in autonomica_brackets] == [
-        (b.lower_bound, b.upper_bound, b.fixed_addition, b.marginal_rate) for b in estatal_brackets
-    ]
+    for year in _ALL_YEARS:
+        revision = _revision(year)
+        autonomica = next(p for p in revision.parameters if p.id == f"renta-{year}-escala-autonomica-base-ahorro")
+        estatal = next(p for p in revision.parameters if p.id == f"renta-{year}-escala-estatal-base-ahorro")
+        autonomica_brackets = sorted(autonomica.brackets, key=lambda b: b.lower_bound)
+        estatal_brackets = sorted(estatal.brackets, key=lambda b: b.lower_bound)
+        assert [(b.lower_bound, b.upper_bound, b.fixed_addition, b.marginal_rate) for b in autonomica_brackets] == [
+            (b.lower_bound, b.upper_bound, b.fixed_addition, b.marginal_rate) for b in estatal_brackets
+        ], year
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_cuota_base_liquidable_ahorro_autonomica_formula_subtracts_minimo(year: int) -> None:
+def test_cuota_base_liquidable_ahorro_autonomica_formula_subtracts_minimo() -> None:
     """Casilla 0541 must be produced by ``subtract(0537, 0539)`` so the
     minimo-personal portion (escala applied to casilla 0524) is removed
     from the gross autonomica savings cuota, per art.76.2 Ley IRPF.
     """
-    revision = _revision(year)
-    formula = next(f for f in revision.formulas if f.id == f"renta-{year}-cuota-base-liquidable-ahorro-autonomica")
-    assert formula.target_casilla_id == "0541"
-    assert formula.expression.op == "subtract"
-    operand_casillas = [arg.casilla_id for arg in formula.expression.args]
-    assert operand_casillas == ["0537", "0539"]
+    for year in _ALL_YEARS:
+        revision = _revision(year)
+        formula = next(f for f in revision.formulas if f.id == f"renta-{year}-cuota-base-liquidable-ahorro-autonomica")
+        assert formula.target_casilla_id == "0541", year
+        assert formula.expression.op == "subtract", year
+        operand_casillas = [arg.casilla_id for arg in formula.expression.args]
+        assert operand_casillas == ["0537", "0539"], year
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_escala_autonomica_formulas_target_savings_casillas(year: int) -> None:
+def test_escala_autonomica_formulas_target_savings_casillas() -> None:
     """The autonomica ahorro escala is applied to the base liquidable
     del ahorro (casilla 0510) for casilla 0537 and to the autonomic
     minimo portion (casilla 0524) for casilla 0539.
     """
-    revision = _revision(year)
-    base_formula = next(
-        f for f in revision.formulas if f.id == f"renta-{year}-cuota-escala-autonomica-sobre-base-liquidable-ahorro"
-    )
-    minimo_formula = next(
-        f
-        for f in revision.formulas
-        if f.id == f"renta-{year}-cuota-escala-autonomica-sobre-minimo-personal-familiar-base-ahorro"
-    )
-    assert base_formula.target_casilla_id == "0537"
-    assert base_formula.expression.op == "lookup_bracket"
-    assert base_formula.expression.args[0].casilla_id == "0510"
-    assert base_formula.expression.args[1].parameter == f"renta-{year}-escala-autonomica-base-ahorro"
-    assert minimo_formula.target_casilla_id == "0539"
-    assert minimo_formula.expression.op == "lookup_bracket"
-    assert minimo_formula.expression.args[0].casilla_id == "0524"
-    assert minimo_formula.expression.args[1].parameter == f"renta-{year}-escala-autonomica-base-ahorro"
+    for year in _ALL_YEARS:
+        revision = _revision(year)
+        base_formula = next(
+            f for f in revision.formulas if f.id == f"renta-{year}-cuota-escala-autonomica-sobre-base-liquidable-ahorro"
+        )
+        minimo_formula = next(
+            f
+            for f in revision.formulas
+            if f.id == f"renta-{year}-cuota-escala-autonomica-sobre-minimo-personal-familiar-base-ahorro"
+        )
+        assert base_formula.target_casilla_id == "0537", year
+        assert base_formula.expression.op == "lookup_bracket", year
+        assert base_formula.expression.args[0].casilla_id == "0510", year
+        assert base_formula.expression.args[1].parameter == f"renta-{year}-escala-autonomica-base-ahorro", year
+        assert minimo_formula.target_casilla_id == "0539", year
+        assert minimo_formula.expression.op == "lookup_bracket", year
+        assert minimo_formula.expression.args[0].casilla_id == "0524", year
+        assert minimo_formula.expression.args[1].parameter == f"renta-{year}-escala-autonomica-base-ahorro", year
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_ahorro_escala_rejects_date_outside_year_window(year: int) -> None:
-    table = _ahorro_table(year)
-    other_year = year - 5
-    with pytest.raises(RegistryValidationError, match="no bracket valid"):
-        _resolve_bracket(table, Decimal("2800"), {"filing_period": date(other_year, 6, 1)})
+def test_ahorro_escala_rejects_date_outside_year_window() -> None:
+    for year in _ALL_YEARS:
+        table = _ahorro_table(year)
+        other_year = year - 5
+        with pytest.raises(RegistryValidationError, match="no bracket valid"):
+            _resolve_bracket(table, Decimal("2800"), {"filing_period": date(other_year, 6, 1)})

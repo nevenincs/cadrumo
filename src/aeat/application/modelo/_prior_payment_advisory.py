@@ -1,40 +1,43 @@
-"""Calculate-path advisory for an undeducted Modelo 130 prior pago fraccionado.
+"""Calculate-path advisories around the Modelo 130 prior-payment carry.
 
 Modelo 130 is cumulative from the start of the ejercicio: casilla ``01``
 (Ingresos) accumulates year-to-date, so casilla ``04`` (importe del pago
-fraccionado) is the cumulative 20 % of the YTD rendimiento. To avoid the
-operator paying the same euros twice, casilla ``05`` ("Pagos fraccionados
-anteriores") carries the pagos fraccionados already declared in the prior
-trimestres of the same ejercicio, and the resultado parcial formula
-``modelo-130-resultado-apartado-i`` subtracts it: casilla ``07`` =
-``04 - 05 - 06`` (AEAT instr. casilla 07, "restar el importe de la casilla 05
-y 06 al importe de la casilla 04"; RD 439/2007 art. 110).
+fraccionado) is the cumulative 20 % of the YTD rendimiento. Casilla ``05``
+("Pagos fraccionados anteriores") is now a bound previous-filing carry,
+``modelo-130-pagos-fraccionados-anteriores``: for each same-ejercicio prior
+trimestre it adds the positive part of casilla ``07`` and subtracts casilla
+``16``. The result is then consumed unchanged by casilla ``07`` =
+``04 - 05 - 06``.
 
-Casilla ``05`` is an ``input_kind = "manual"`` cell with no binding, so a
-cumulative 2T/3T/4T calculate never auto-deducts the prior trimestres' pago
-fraccionado. A filer who files 1T (paying, say, 100) and then runs a cumulative
-2T calculate gets casilla ``05`` = 0, so casilla ``07`` does NOT subtract the
-100 already paid — the operator over-pays. No finding surfaces because the
-return is internally consistent; the over-declaration is silent
-(``no-silent-under-declaration``).
+This module does not compute the carry. It emits non-blocking
+:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` advisories
+for the two calculate-path degradation cases around the live carry:
 
-This module surfaces that contradiction on the calculate path as a non-blocking
-:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` with
-``reason = "prior_payment_not_deducted"``. The advisory fires ONLY when:
+* ``prior_payment_not_deducted`` fires only when a non-first trimestre has
+  positive cumulative ingresos, casilla ``05`` still resolved to zero, and a
+  real prior-trimestre Modelo 130 filing exists in the local
+  :class:`~aeat.application.calculations.CalculationObservationRepository`.
+  Under the Stage-2 carry, normal readable prior filings populate casilla ``05``
+  and this prior over-payment advisory stays silent.
+* ``prior_payment_minoracion_not_captured`` fires when a carried prior filing
+  includes casilla ``07`` but lacks any casilla ``16`` entry. The registry
+  resolver treats that absent minoración as ``Decimal("0")`` so the carry can
+  continue, while the advisory names the evidence gap. A filed zero is captured
+  evidence and stays silent.
 
-* the target period is a non-first trimestre (``2T`` / ``3T`` / ``4T``) — a
-  true first-obligation filer (``1T``, or an alta-quarter first filing) has no
-  prior pago fraccionado, so casilla ``05`` is legitimately null and the
-  advisory must not fire; and
-* casilla ``01`` (cumulative ingresos) is strictly positive; and
-* casilla ``05`` is zero / unpopulated; and
-* a prior-trimestre Modelo 130 filing for the SAME ejercicio actually exists in
-  the local observation catalogue.
+The first-filer safeguard still keys off real stored observations, never a bare
+period token: a 1T target or a genuine first-obligation quarter has no prior
+trimestre to carry, so casilla ``05`` materialises zero absent-by-design.
 
-The last gate is the first-filer safeguard: the advisory keys off a real prior
-filing, never off a bare period token. An operator whose first M130 obligation
-falls in 2T (a mid-year alta) has no prior-trimestre filing in the catalogue,
-so the advisory stays silent — null casilla ``05`` is correct, not an error.
+See Also:
+    :func:`~aeat.application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
+        Wires these advisories into the bucket-aggregation calculate path.
+    :class:`~aeat.application.calculations.CalculationObservationRepository`:
+        Supplies the persisted prior-filing observations inspected by both
+        advisories.
+    :class:`~aeat.domain.calculations.registry.CasillaId`:
+        The validated registry casilla key type used for the carry and advisory
+        targets.
 """
 
 from __future__ import annotations
@@ -125,14 +128,17 @@ def collect_prior_payment_not_deducted_diagnostics(
 
     The advisory (``reason = "prior_payment_not_deducted"``) fires exactly when
     the target period is a non-first trimestre, casilla ``01`` is strictly
-    positive, casilla ``05`` is zero, AND a prior-trimestre Modelo 130 filing for
-    the same ejercicio exists in ``observation_repository``. The last gate keeps
-    a true first-obligation filer (whose casilla ``05`` is legitimately null)
-    silent.
+    positive, casilla ``05`` still resolved to zero, AND a prior-trimestre
+    Modelo 130 filing for the same ejercicio exists in
+    ``observation_repository``. In the current registry, the bound casilla-05
+    carry normally populates this deduction from readable observations; this
+    advisory is the calculate-path degradation signal for a carry that could
+    not populate despite a real prior filing. The last gate keeps a true
+    first-obligation filer (whose casilla ``05`` is legitimately zero) silent.
 
     Args:
         casilla_values: The computed casilla values (engine result), keyed by
-            casilla id.
+            :class:`~aeat.domain.calculations.registry.CasillaId`.
         modelo: The modelo identifier of the filing being calculated. Used to
             confirm the modelo is 130 (the cumulative pago-fraccionado form this
             carry applies to) before any catalogue scan.
@@ -140,12 +146,21 @@ def collect_prior_payment_not_deducted_diagnostics(
             ``"2T"``).
         filing_year: The ejercicio whose prior trimestres are scanned.
         observation_repository: The local
-            :class:`CalculationObservationRepository` scanned for a prior-period
-            filing — the first-filer safeguard.
+            :class:`~aeat.application.calculations.CalculationObservationRepository`
+            scanned for a prior-period filing — the first-filer safeguard.
 
     Returns:
-        A tuple of :class:`CalculationSourceDiagnostic` advisories — empty when
-        no under-deduction is detected, otherwise the single advisory.
+        A tuple of
+        :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+        advisories — empty when no under-deduction is detected, otherwise the
+        single advisory.
+
+    See Also:
+        :func:`collect_prior_payment_minoracion_not_captured_diagnostics`:
+            Covers the companion evidence-gap case where the carry resolves but
+            a prior casilla-16 minoración was absent from the stored observation.
+        :class:`~aeat.application.calculations.CalculationObservationRepository`:
+            Provides the first-filer safeguard and prior-filing evidence.
     """
     if modelo != Modelo.M130.value:
         return ()
@@ -169,14 +184,13 @@ def collect_prior_payment_not_deducted_diagnostics(
             reason="prior_payment_not_deducted",
             source_kind="modelo_130_prior_pago_fraccionado",
             message=(
-                f"Modelo 130 {period_token} is cumulative from the start of the ejercicio, but "
-                f"casilla 05 ('Pagos fraccionados anteriores') is zero while a prior-trimestre "
-                f"{filing_year} filing exists; casilla 07 = 04 - 05 - 06 therefore does not deduct "
-                f"the pago fraccionado already paid in {', '.join(prior_codes)}, so this filing "
-                f"over-declares (RD 439/2007 art. 110). The casilla-05 carry could not populate the "
-                f"deduction from the prior filing's observation (it is absent or unreadable); re-file "
-                f"the prior trimestre through the app so the carry resolves, or enter the prior pago "
-                f"fraccionado in casilla 05 before filing"
+                f"Modelo 130 {period_token} is cumulative, but casilla 05 ('Pagos fraccionados "
+                f"anteriores') is zero while a prior-trimestre {filing_year} filing exists; casilla "
+                f"07 = 04 - 05 - 06 does not deduct the pago fraccionado already paid in "
+                f"{', '.join(prior_codes)}, so this filing over-declares (RD 439/2007 art. 110). "
+                f"The casilla-05 carry could not populate from the prior filing's observation "
+                f"(absent or unreadable); re-file the prior trimestre or enter its pago fraccionado "
+                f"in casilla 05 before filing"
             ),
             casilla_id=_PRIOR_PAYMENT_CASILLA,
         ),
@@ -213,17 +227,23 @@ def collect_prior_payment_minoracion_not_captured_diagnostics(
         period_token: The bare registry period code of the target filing.
         filing_year: The ejercicio whose prior trimestres are scanned.
         observation_repository: The local
-            :class:`CalculationObservationRepository` scanned for prior-period
-            observations.
+            :class:`~aeat.application.calculations.CalculationObservationRepository`
+            scanned for prior-period observations.
 
     Returns:
-        A tuple of :class:`CalculationSourceDiagnostic` advisories — empty when
-        every carried prior filing captured its casilla-16 minoración.
+        A tuple of
+        :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+        advisories — empty when every carried prior filing captured its
+        casilla-16 minoración, otherwise the single
+        ``prior_payment_minoracion_not_captured`` advisory.
 
-    Returns:
-        A tuple with a single ``prior_payment_minoracion_not_captured`` advisory
-        when a prior filing carries casilla 07 but no casilla-16 entry, otherwise
-        empty.
+    See Also:
+        :func:`collect_prior_payment_not_deducted_diagnostics`:
+            Covers the degraded carry case where casilla 05 stayed zero despite
+            a real prior M130 filing.
+        :class:`~aeat.application.calculations.CalculationObservationRepository`:
+            Supplies the prior-filing observations whose casilla-16 presence
+            distinguishes filed zero from not captured.
     """
     if modelo != Modelo.M130.value:
         return ()

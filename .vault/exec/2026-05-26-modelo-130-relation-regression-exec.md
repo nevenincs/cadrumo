@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#modelo-130-relation-regression'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-29'
 step_id: 'S01'
 related:
   - "[[2026-05-26-modelo-130-relation-regression-plan]]"
@@ -23,7 +23,7 @@ consults it.
 
 ## Description
 
-`_PreviousModeloSelector` (line ~302) gained `max_year_delta: int | None = None` immediately after the existing `relation` field, with a TOML-comment block documenting the same-ejercicio rule from AEAT's Modelo 130 art. 110.5 instruction and the intended `0` value for that case.
+`_PreviousModeloSelector` (line ~302) gained `max_year_delta: int | None = None` immediately after the existing `relation` field, with a TOML-comment block documenting the same-ejercicio rule from AEAT's Modelo 130 casilla 15 instructions under the RD 439/2007 art. 110 payment framework and the intended `0` value for that case.
 
 A field validator `_max_year_delta_non_negative` rejects negative integers with `RegistryValidationError("previous-filing max_year_delta must be non-negative")`. The default of `None` preserves the unbounded behaviour and is the safe shape for every existing binding declaration.
 

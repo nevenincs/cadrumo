@@ -137,7 +137,7 @@ def test_manual_match_projection_records_payment_and_matches_existing_transactio
 
 def _transaction() -> Transaction:
     raw = RawTransaction(
-        transaction_id="bank-row-1",
+        provider_transaction_id="bank-row-1",
         booked_date=date(2026, 4, 2),
         value_date=date(2026, 4, 2),
         amount=Decimal("121.00"),
@@ -154,4 +154,6 @@ def _transaction() -> Transaction:
         ),
         raw_fields={"amount": "121.00"},
     )
-    return Transaction.model_validate({"raw": raw, "direction": TransactionDirection.INCOMING})
+    return Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.INCOMING, "group_label": None, "source_jurisdiction": "ES"},
+    )

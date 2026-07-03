@@ -13,14 +13,14 @@ from ...core.i18n import Translatable as tr
 from ...core.setup_answers import SetupAnswers
 from ...core.wizard_catalogue import register_wizard_catalogue
 from ...domain.contribuyente import (
+    CCAA,
     RentaDeclaracionType,
     RentaDisabilityGrade,
     RentaMaritalStatus,
     RentaSexCode,
     SituacionFamiliar,
 )
-from ...domain.contribuyente._ccaa import CCAA
-from ...domain.deadlines._models import (
+from ...domain.deadlines import (
     EntityType,
     FiscalResidency,
     IrpfEstimationRegime,
@@ -217,6 +217,10 @@ _MARITAL_STATUS_CHOICES: tuple[WizardChoice, ...] = (
         value=RentaMaritalStatus.SEPARADO_DIVORCIADO.value,
         label=tr("wizard.setup.taxpayer.taxpayer-marital-status.choices.separado-divorciado.label"),
     ),
+    WizardChoice(
+        value=RentaMaritalStatus.PAREJA_HECHO.value,
+        label=tr("wizard.setup.taxpayer.taxpayer-marital-status.choices.pareja-hecho.label"),
+    ),
 )
 
 _SITUACION_FAMILIAR_CHOICES: tuple[WizardChoice, ...] = (
@@ -266,6 +270,16 @@ _DISABILITY_GRADE_CHOICES: tuple[WizardChoice, ...] = (
 
 
 _ENTITY_LEGAL = WizardCondition(question_id="entity-type", equals=EntityType.LEGAL_ENTITY.value)
+_ENTITY_ATTRIBUTION = WizardCondition(question_id="entity-type", equals=EntityType.ATTRIBUTION_ENTITY.value)
+_LEY_49_2002_FORM = WizardCondition(
+    question_id="legal-entity-form",
+    equals=LegalEntityForm.SIN_FINES_LUCRATIVOS.value,
+)
+_LEY_49_2002_OPTION_DECLARED = WizardCondition(question_id="ley-49-2002-option-declared", equals="true")
+_LEY_49_2002_RENUNCIATION_DECLARED = WizardCondition(
+    question_id="ley-49-2002-renunciation-declared",
+    equals="true",
+)
 
 # `activity` (the actividad económica / epígrafe IAE free-text field)
 # is collected only for a taxpayer that actually carries on an
@@ -276,6 +290,13 @@ _ENTITY_LEGAL = WizardCondition(question_id="entity-type", equals=EntityType.LEG
 _HAS_ACTIVITY = WizardVisibility(
     any_of=(
         _ENTITY_LEGAL,
+        WizardCondition(question_id="irpf-income-categories", contains=IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value),
+    ),
+)
+_IVA_REGIME_VISIBLE = WizardVisibility(
+    any_of=(
+        _ENTITY_LEGAL,
+        _ENTITY_ATTRIBUTION,
         WizardCondition(question_id="irpf-income-categories", contains=IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value),
     ),
 )
@@ -352,6 +373,46 @@ _TAXPAYER_TYPE_SECTION = WizardSection(
             required=False,
             visible_when=_ENTITY_LEGAL,
             answer_type=bool,
+        ),
+        WizardQuestion(
+            id="ley-49-2002-option-declared",
+            profile_key="taxpayer_type.ley_49_2002_special_regime_option_declared",
+            widget=WizardWidget.CONFIRM,
+            prompt=tr("wizard.setup.taxpayer-type.ley-49-2002-option-declared.prompt"),
+            help=tr("wizard.setup.taxpayer-type.ley-49-2002-option-declared.help"),
+            required=False,
+            visible_when=_LEY_49_2002_FORM,
+            answer_type=bool,
+        ),
+        WizardQuestion(
+            id="ley-49-2002-option-date",
+            profile_key="taxpayer_type.ley_49_2002_special_regime_option_date",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.taxpayer-type.ley-49-2002-option-date.prompt"),
+            help=tr("wizard.setup.taxpayer-type.ley-49-2002-option-date.help"),
+            required=False,
+            visible_when=_LEY_49_2002_OPTION_DECLARED,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="ley-49-2002-renunciation-declared",
+            profile_key="taxpayer_type.ley_49_2002_special_regime_renunciation_declared",
+            widget=WizardWidget.CONFIRM,
+            prompt=tr("wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.prompt"),
+            help=tr("wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.help"),
+            required=False,
+            visible_when=_LEY_49_2002_FORM,
+            answer_type=bool,
+        ),
+        WizardQuestion(
+            id="ley-49-2002-renunciation-date",
+            profile_key="taxpayer_type.ley_49_2002_special_regime_renunciation_date",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.prompt"),
+            help=tr("wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.help"),
+            required=False,
+            visible_when=_LEY_49_2002_RENUNCIATION_DECLARED,
+            answer_type=str,
         ),
     ),
 )
@@ -669,10 +730,13 @@ _IVA_SECTION = WizardSection(
             choices=_IVA_CHOICES,
             default=_DEFAULT_IVA_REGIME,
             required=False,
+            visible_when=_IVA_REGIME_VISIBLE,
             answer_type=str,
         ),
         _confirm("iva-roi-enrolled", "iva.roi_enrolled", suffix="iva"),
         _confirm("iva-oss-enrolled", "iva.oss_enrolled", suffix="iva"),
+        _confirm("iva-group-member-enrolled", "iva.group_member_enrolled", suffix="iva"),
+        _confirm("iva-group-dominant-entity-enrolled", "iva.group_dominant_entity_enrolled", suffix="iva"),
         _confirm("iva-sii-enrolled", "iva.sii_enrolled", suffix="iva"),
         _confirm("iva-redeme-enrolled", "iva.redeme_enrolled", suffix="iva"),
         _confirm(
@@ -709,8 +773,8 @@ _OBLIGATIONS_SECTION = WizardSection(
             suffix="obligations",
         ),
         _confirm(
-            "professional-income-withholding-ge-70pct",
-            "irpf.professional_income_withholding_ge_70pct",
+            "art109-activity-income-withholding-ge-70pct",
+            "irpf.art109_activity_income_withholding_ge_70pct",
             suffix="obligations",
         ),
         _confirm("pays-rent-with-retencion", "withholding.pays_rent_with_retencion", suffix="obligations"),
@@ -719,10 +783,14 @@ _OBLIGATIONS_SECTION = WizardSection(
             "withholding.pays_capital_income_with_retencion",
             suffix="obligations",
         ),
-        _confirm(
-            "uses-objective-estimation-irpf",
-            "irpf.uses_objective_estimation",
-            suffix="obligations",
+        WizardQuestion(
+            id="modelo-111-no-retenciones-periods",
+            profile_key="withholding.modelo_111_no_retenciones_periods",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.obligations.modelo-111-no-retenciones-periods.prompt"),
+            help=tr("wizard.setup.obligations.modelo-111-no-retenciones-periods.help"),
+            required=False,
+            answer_type=str,
         ),
         WizardQuestion(
             id="irpf-estimation-regime",
@@ -764,6 +832,11 @@ _OBLIGATIONS_SECTION = WizardSection(
         _confirm(
             "bienes-extranjero-above-threshold",
             "obligations.bienes_extranjero_above_threshold",
+            suffix="obligations",
+        ),
+        _confirm(
+            "monedas-virtuales-extranjero-above-threshold",
+            "obligations.monedas_virtuales_extranjero_above_threshold",
             suffix="obligations",
         ),
     ),

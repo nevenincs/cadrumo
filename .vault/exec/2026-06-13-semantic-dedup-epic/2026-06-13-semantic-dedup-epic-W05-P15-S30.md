@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#semantic-dedup-epic'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S30'
 related:
   - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
-
-
-
 
 # C4-1 Extract the common base payload and have the review payload extend it, keeping serialized JSON byte-identical
 

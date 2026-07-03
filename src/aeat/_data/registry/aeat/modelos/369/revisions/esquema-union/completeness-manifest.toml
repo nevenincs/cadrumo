@@ -16,7 +16,13 @@
 
 [revisions."esquema-union".completeness_manifest]
 source_ref = "aeat-dr-369-2021"
-legal_refs = ["ley-37-1992:art-163-unvicies", "orden-hac-610-2021:art-1"]
+legal_refs = [
+    "ley-37-1992:art-163-unvicies",
+    "ley-37-1992:art-163-duovicies",
+    "ley-37-1992:art-163-tervicies",
+    "ley-37-1992:art-163-quatervicies",
+    "orden-hac-610-2021:art-1",
+]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".completeness_manifest.casillas]]

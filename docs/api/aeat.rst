@@ -14,6 +14,7 @@ Subpackages
    :maxdepth: 4
 
    aeat.adapters
+   aeat.agent
    aeat.application
    aeat.core
    aeat.domain

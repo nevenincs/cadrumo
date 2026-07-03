@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#live-justificante-reconcile'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S04'
 related:
   - "[[2026-06-10-live-justificante-reconcile-plan]]"
 ---
-
-
-
 
 # Add the require_live_read-gated async capture_justificante_snapshot orchestrator (period-aware expediente resolution, capture_justificante, service.capture) and promote it plus the service to the package top-level re-exports.
 

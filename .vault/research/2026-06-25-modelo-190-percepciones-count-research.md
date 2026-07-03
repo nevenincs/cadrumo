@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#modelo-190-percepciones-count'
 date: '2026-06-25'
-modified: '2026-06-25'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `modelo-190-percepciones-count` research: `Modelo 190 número de percepciones distinct-(perceptor,clave) count`
 

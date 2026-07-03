@@ -7,59 +7,54 @@ writes the updated catalogue back.
 
 from __future__ import annotations
 
-import csv
 import json
 from collections.abc import Mapping, Sequence
-from decimal import Decimal
 from pathlib import Path
 from typing import Any, NotRequired, TypedDict, cast
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core.decimal import coerce_decimal
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
 from ...core.logging import get_logger
-from ...domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceCatalogueRepositoryProtocol,
-    InvoiceValidationError,
-)
+from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol, InvoiceValidationError
 from ...domain.iva import InvoiceKind
 
 _log = get_logger(__name__)
 
 
 class InvoiceRowPayload(TypedDict, total=False):
-    """Typed shape for a single decoded invoice row from JSON or CSV input.
+    """Typed shape for a single decoded invoice row from JSON input.
 
-    All fields are optional at the decode boundary because CSV and JSON
+    All fields are optional at the decode boundary because JSON
     sources may omit fields that are defaulted downstream in
-    :func:`parse_invoice_payload`. The downstream coercion stage
-    (``setdefault`` calls + :func:`_synthesise_single_line_if_needed`)
-    fills in required gaps before :class:`Invoice` validation runs.
+    :func:`parse_invoice_payload`. The downstream coercion stage fills in
+    application defaults before :class:`Invoice` validation runs.
     """
 
     invoice_id: NotRequired[str]
+    bucket_id: NotRequired[str]
     kind: NotRequired[str]
     currency: NotRequired[str]
+    invoice_number: NotRequired[str]
+    issued_at: NotRequired[str]
     counterparty_name: NotRequired[str]
     counterparty_tax_id: NotRequired[str]
     counterparty_country: NotRequired[str]
     payment_status: NotRequired[str]
     lines: NotRequired[list[Any]]
     base_total: NotRequired[str]
-    iva_rate: NotRequired[str]
     iva_total: NotRequired[str]
-
-
-_IVA_RATE_ALIASES = {
-    "0": "RATE_0",
-    "4": "RATE_4",
-    "10": "RATE_10",
-    "21": "RATE_21",
-}
+    grand_total: NotRequired[str]
+    linked_transaction_ids: NotRequired[list[str]]
+    notes: NotRequired[str]
+    iva_category: NotRequired[str]
+    operation_type: NotRequired[str]
+    oss_ioss_regime: NotRequired[str]
+    oss_transaction_kind: NotRequired[str]
+    retention_rate: NotRequired[str]
+    retention_amount: NotRequired[str]
+    payment_id: NotRequired[str]
 
 
 class InvoiceImportResult(BaseModel):
@@ -75,7 +70,7 @@ class InvoiceImportResult(BaseModel):
 
 
 def parse_invoice_payload(raw: str, *, default_kind: InvoiceKind | str) -> tuple[Invoice, ...]:
-    """Parse JSON or CSV invoice payloads into validated :class:`Invoice` models."""
+    """Parse JSON invoice payloads into validated :class:`Invoice` models."""
     kind = _coerce_kind(default_kind)
     candidates = _decode_invoice_payload(raw)
     invoices: list[Invoice] = []
@@ -90,7 +85,7 @@ def parse_invoice_payload(raw: str, *, default_kind: InvoiceKind | str) -> tuple
         payload.setdefault("counterparty_country", "ES")
         payload.setdefault("payment_status", "PAID")
         payload.setdefault("counterparty_name", payload.get("counterparty_tax_id", "Unknown"))
-        _synthesise_single_line_if_needed(payload)
+        _reject_top_level_iva_rate(payload)
         invoices.append(Invoice.model_validate(payload))
     return tuple(invoices)
 
@@ -182,44 +177,21 @@ def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
             context={"payload_type": type(decoded).__name__},
         )
 
-    reader = csv.DictReader(raw.splitlines())
-    # CAST-RATIONALE-WIRE-PAYLOAD-CSV-ROW:
-    # csv.DictReader yields dict[str, str]; cast to TypedDict at the CSV
-    # decode boundary before downstream coercion.
-    return tuple(cast(InvoiceRowPayload, dict(row)) for row in reader)
+    raise InvoiceValidationError(
+        "invoice import payload must be a JSON object or a JSON list of objects",
+        translated_message="application.invoices.importing.errors.invalid_json_shape",
+        context={"payload_type": "csv"},
+    )
 
 
-# ANY-RETURN-RATIONALE-INVOICE-PARSE-STAGING:
-# Parse-stage slot assembled from CSV/JSON decode before
-# Invoice.model_validate; typed InvoiceRowPayload TypedDict governs field
-# names but dict mutation is required for the line-synthesis back-fill.
-# ANY-RETURN-RATIONALE-INVOICE-PARSE-STAGING: payload is a parse-stage dict
-# assembled from CSV/JSON decode before Invoice.model_validate; in-place mutation
-# is required for the line-synthesis back-fill before the typed boundary.
-def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:
-    if "lines" in payload or "base_total" not in payload or "iva_rate" not in payload:
+def _reject_top_level_iva_rate(payload: Mapping[str, object]) -> None:
+    if "iva_rate" not in payload:
         return
-    base = coerce_decimal(payload["base_total"])
-    if base is None:
-        raise InvoiceValidationError(
-            "invoice base_total is not a decimal",
-            translated_message="application.invoices.importing.errors.invalid_base_total",
-            context={"base_total": str(payload["base_total"])},
-        )
-    rate_raw = str(payload["iva_rate"])
-    rate = _IVA_RATE_ALIASES.get(rate_raw, rate_raw)
-    iva_amount = coerce_decimal(payload.get("iva_total"), default=Decimal("0")) or Decimal("0")
-    payload["lines"] = [
-        {
-            "description": "Imported invoice line",
-            "quantity": "1",
-            "unit_price": str(base),
-            "subtotal": str(base),
-            "iva_rate": rate,
-            "iva_amount": str(iva_amount),
-        },
-    ]
-    payload.pop("iva_rate", None)
+    raise InvoiceValidationError(
+        "invoice import payload must carry iva_rate on each line, not at the invoice top level",
+        translated_message="application.invoices.importing.errors.invalid_json_shape",
+        context={"payload_type": "top-level-iva-rate"},
+    )
 
 
 def _coerce_kind(kind: InvoiceKind | str) -> InvoiceKind:

@@ -1,34 +1,48 @@
-"""Typed overview-status surface for ``aeat app overview``.
+"""Application read models for ``aeat app overview``.
 
-The CLI exposes::
+The package owns the typed DTOs and pure builders behind the overview
+``status``, ``calendar``, ``agenda``, ``backlog``, and ``explain``
+surfaces. CLI adapters supply the active profile or bucket state,
+already-persisted live-read snapshots, local filing records, and query dates;
+these builders do not contact AEAT and do not mutate storage.
 
-    aeat app overview status                                # bare readiness
-    aeat app overview status --period {period} --verbose
-    aeat app overview calendar --from DATE --to DATE
+``overview status`` delegates to
+:func:`application.state_projection.build_operator_state_projection`
+and projects the canonical
+:class:`application.state_projection.OperatorStateProjection` through
+:func:`overview_status_report_from_projection` into
+:class:`OverviewStatusReport`. ``overview calendar`` composes the existing
+:class:`domain.deadlines.DeadlineEngine` over the requested year
+window, returning :class:`OverviewCalendarEntry` obligation rows, additive
+:class:`OverviewCalendarEvent` observations, and
+:class:`OverviewCalendarFilingEvidence` rows.
 
-The calendar view uses a closed 4-state user-facing taxonomy that maps
-from the existing :class:`aeat.domain.deadlines.ObligationStatus`
-six-state enum. The typed query record
-(:class:`OverviewCalendarRange`), the per-period entry record
-(:class:`OverviewCalendarEntry`), the result wrapper
-(:class:`OverviewCalendar`), the user-facing state enum
-(:class:`OverviewPeriodState`), and the
-:func:`build_overview_calendar` aggregator that composes the existing
-:class:`aeat.domain.deadlines.DeadlineEngine` over the year window.
+Calendar evidence deliberately keeps :class:`OverviewLocalFilingState`
+separate from :class:`OverviewAeatSubmissionState`: a local ready/filed
+record never implies an AEAT submission, and an observed AEAT submission
+is not a verified justificante until persisted receipt metadata proves
+the CSV/model/year/period/taxpayer match. Raw profile values may also
+produce typed :class:`CalendarWarning` and :class:`CalendarCompleteness`
+records through :func:`build_filing_obligation_advisories` so
+deadline-engine defaults are visible rather than silent.
 
-The aggregator is pure: no I/O, no mutation. The CLI wires it to the
-operator's active :class:`TaxpayerProfile` and the parsed ``--from`` /
-``--to`` dates. The resulting :class:`Schedule` drives obligation
-date computation and period-level state classification.
-
-When the caller supplies ``raw_values`` (the operator's user_cli
-profile values mapping), the aggregator additionally detects which
-deadline-engine-consumed keys are unset and surfaces a typed
-``CalendarWarning`` per missing key plus a ``CalendarCompleteness``
-breakdown listing computable / under-default modelos. The
-profile-completeness surface ensures the engine never silently
-computes obligations from its defaults without flagging that the
-operator never declared a gating field.
+See Also:
+    :mod:`application.state_projection`
+        Canonical producer for the :class:`application.state_projection.OperatorStateProjection`
+        consumed by ``overview status``.
+    :mod:`domain.deadlines`
+        Deadline engine and :class:`domain.deadlines.Schedule` authority
+        used by calendar, agenda, backlog, and explain read models.
+    :mod:`application.live`
+        Read-only capture surface that persists the live evidence this package
+        can display without opening AEAT again.
+    :mod:`domain.modelos`
+        Local :class:`domain.modelos.ModeloRecord` and
+        :class:`domain.modelos.ExternalEvidence` records projected into
+        overview calendar evidence.
+    :mod:`application.workflow`
+        Active-profile and pending-obligation state that remains upstream of
+        overview rendering.
 """
 
 from __future__ import annotations
@@ -58,6 +72,7 @@ from ._calendar import (
     OverviewPeriodState,
     OverviewStatusReport,
     SuppressedCalendarEntry,
+    actionable_post_filing_events,
     build_overview_calendar,
     build_overview_calendar_events,
     calendar_applicability_profile_keys_for_modelo,
@@ -70,12 +85,31 @@ from ._calendar import (
     derive_modelo_applicability,
     user_state_for,
 )
+from ._coverage import (
+    AdvisedObligation,
+    CoverageAdviceReason,
+    ObligationCoverageReport,
+    build_obligation_coverage,
+)
+from ._data_prep import (
+    DataPrepStep,
+    DataPrepStepId,
+    DataPrepStepState,
+    DataPrepWalkthrough,
+    build_data_prep_walkthrough,
+)
 from ._errors import (
     OverviewAgendaError,
     OverviewBacklogError,
     OverviewCalendarError,
     OverviewError,
     OverviewExplainError,
+)
+from ._pipeline_health import (
+    ModeloHealthRow,
+    ModeloReadinessState,
+    PipelineHealthReport,
+    build_pipeline_health_report,
 )
 
 if TYPE_CHECKING:
@@ -87,19 +121,40 @@ if TYPE_CHECKING:
 
 _log = _get_logger(__name__)
 
+#: Advisory locale key surfaced when the Art. 96.3 LIRPF multiple-pagadores
+#: filing obligation is detected. Named as a ``_LOCALE_KEY`` constant so the
+#: locale scaffold's AST scanner discovers it for parity (the key is returned
+#: from a builder rather than passed to ``tr()`` at this call site).
+_MULTIPLE_PAGADORES_OBLIGATION_LOCALE_KEY = "cli.overview.status.filing_obligation_multiple_pagadores"
+
 
 def build_filing_obligation_advisories(
     raw_values: Mapping[str, object] | None,
+    *,
+    filing_year: int | None = None,
 ) -> tuple[str, ...]:
-    """Derive filing-obligation advisory locale keys from the profile values.
+    """Derive overview-status advisory locale keys from raw profile values.
 
-    Currently implements the Art. 96.3 LIRPF multiple-pagadores rule:
+    The helper feeds :class:`OverviewStatusReport` and stays on the local
+    read-model path. It implements the Art. 96.2.a)/96.3 LIRPF
+    multiple-pagadores rule through
+    :func:`domain.deadlines.evaluate_multiple_pagadores_obligation`:
     when the operator has declared ``irpf.pagadores_count >= 2`` and
-    ``irpf.pagadores_secondary_income > 1500``, Modelo 100 filing is
-    mandatory regardless of the general income thresholds.
+    ``irpf.pagadores_secondary_income > 1500``, the work-income exemption
+    limit drops from the general €22,000 to the per-year reduced limit, and
+    Modelo 100 filing is mandatory when ``irpf.pagadores_total_work_income``
+    exceeds that reduced limit. When the total work income is undeclared, the
+    advisory surfaces conservatively rather than granting a false clear.
+
+    Args:
+        raw_values: Profile raw values mapping, or ``None``.
+        filing_year: The income year selecting the dated reduced limit; when
+            ``None`` the latest known reduced limit is used (the current
+            figure for a year-agnostic operator surface).
 
     Returns a tuple of ``tr()``-resolvable locale keys, empty when no
-    evidence of a mandatory obligation is present.
+    evidence of a mandatory obligation is present. Malformed raw values are
+    logged only by profile-field name and exception type.
     """
     if raw_values is None:
         return ()
@@ -130,16 +185,31 @@ def build_filing_obligation_advisories(
 
     pagadores_count = _to_int("irpf.pagadores_count", raw_values.get("irpf.pagadores_count"))
     secondary_income = _to_decimal("irpf.pagadores_secondary_income", raw_values.get("irpf.pagadores_secondary_income"))
+    total_work_income = _to_decimal(
+        "irpf.pagadores_total_work_income",
+        raw_values.get("irpf.pagadores_total_work_income"),
+    )
 
-    if _evaluate_multiple_pagadores_obligation(pagadores_count, secondary_income):
-        return ("cli.overview.status.filing_obligation_multiple_pagadores",)
+    if _evaluate_multiple_pagadores_obligation(
+        pagadores_count,
+        secondary_income,
+        total_work_income,
+        filing_year,
+    ):
+        return (_MULTIPLE_PAGADORES_OBLIGATION_LOCALE_KEY,)
     return ()
 
 
 def build_unsupported_work_create_modelos(
     raw_values: Mapping[str, object] | None,
 ) -> tuple[str, ...]:
-    """Return registry-visible modelos whose local work-create path is unsupported."""
+    """Return modelos whose local work-create path is unsupported.
+
+    The result feeds :class:`OverviewStatusReport` and uses canonical
+    :class:`core.Modelo` identifiers. Non-resident IRNR profile state
+    currently advertises Modelo 210 because the local work-create path is not
+    available for that filing.
+    """
     if raw_values is None:
         return ()
     fiscal_residency = (
@@ -162,9 +232,11 @@ def overview_status_report_from_projection(
     """Project the canonical state projection into the ``overview status`` emit shape.
 
     The :class:`OverviewStatusReport` is a CLI emit shape derived from
-    the one :class:`OperatorStateProjection`; it is not a second
-    state-assembly path. Both the legacy ``ModeloDraft`` count and the
-    ``WorkUnitCatalogue`` count are carried distinctly.
+    the one :class:`application.state_projection.OperatorStateProjection`;
+    it is not a second state-assembly path. Both the declaration-draft
+    :class:`domain.filing.ModeloDraft` count and the
+    :class:`domain.modelos.WorkUnitCatalogue` count are carried
+    distinctly.
 
     Args:
         projection: The canonical state projection to project.
@@ -197,11 +269,13 @@ def build_overview_status_report(
 ) -> OverviewStatusReport:
     """Build and return the :class:`OverviewStatusReport` used by root and overview status.
 
-    Consumes the canonical :func:`build_operator_state_projection`; the
-    bespoke per-surface store assembly this function once carried is
+    Consumes the canonical
+    :func:`application.state_projection.build_operator_state_projection`
+    and projects it through :func:`overview_status_report_from_projection`;
+    the bespoke per-surface store assembly this function once carried is
     deleted. ``overview status`` therefore reports the same counters as
-    every other operator surface — including the ``modelo work`` work
-    units the old assembly never read.
+    every other operator surface — including the ``modelo work`` work units the
+    old assembly never read.
     """
     from ..state_projection import build_operator_state_projection
 
@@ -210,8 +284,17 @@ def build_overview_status_report(
 
 
 __all__ = [
+    "AdvisedObligation",
     "CalendarCompleteness",
     "CalendarWarning",
+    "CoverageAdviceReason",
+    "DataPrepStep",
+    "DataPrepStepId",
+    "DataPrepStepState",
+    "DataPrepWalkthrough",
+    "ModeloHealthRow",
+    "ModeloReadinessState",
+    "ObligationCoverageReport",
     "OverviewAeatSubmissionState",
     "OverviewAgendaError",
     "OverviewBacklogError",
@@ -228,14 +311,19 @@ __all__ = [
     "OverviewLocalFilingState",
     "OverviewPeriodState",
     "OverviewStatusReport",
+    "PipelineHealthReport",
     "SuppressedCalendarEntry",
+    "actionable_post_filing_events",
+    "build_data_prep_walkthrough",
     "build_filing_obligation_advisories",
+    "build_obligation_coverage",
     "build_overview_agenda",
     "build_overview_backlog",
     "build_overview_calendar",
     "build_overview_calendar_events",
     "build_overview_explain",
     "build_overview_status_report",
+    "build_pipeline_health_report",
     "build_unsupported_work_create_modelos",
     "calendar_applicability_profile_keys_for_modelo",
     "calendar_censo_enrolment_profile_keys",

@@ -1,9 +1,36 @@
-"""Typed application errors for modelo actions."""
+"""Typed exception vocabulary for modelo application actions.
+
+The classes in this module are the stable application-layer errors raised by
+modelo work-unit lifecycle, calculation, verification, filing, amendment,
+external-import, and workflow-gate services. They all inherit from
+:class:`aeat.domain.modelos._errors.ModeloError` so CLI and API error
+boundaries can route them through the central error-code registry without
+depending on the implementation module that raised them.
+
+Most classes are deliberately thin taxonomy markers whose operator-facing code,
+message key, and suggestion live in :mod:`aeat.core.errors.registry`. The richer
+contracts are kept here when the exception must preserve domain context without
+leaking it into rendered error payloads, as with
+:class:`ModeloWorkflowGateError` and its private
+:class:`~aeat.application.workflow.WorkflowResult`.
+
+See Also:
+    :mod:`aeat.application.modelo`:
+        Public package facade for these action errors.
+    :mod:`aeat.core.errors.registry`:
+        Maps these exception classes to stable error codes and suggestions.
+    :mod:`aeat.application.modelo._workflow_gate`:
+        Raises :class:`ModeloWorkflowGateError` after persisting an aborted
+        workflow run.
+    :mod:`aeat.application.modelo._profile_readiness_gate`:
+        Raises :class:`ModeloProfileReadinessError` for filing-grade profile
+        preflight failures.
+"""
 
 from __future__ import annotations
 
 from ...core.errors import CoreNotFoundError
-from ...domain.modelos._errors import ModeloError
+from ...domain.modelos import ModeloError
 from ..workflow import WorkflowAbortReason, WorkflowResult
 
 WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (
@@ -11,7 +38,13 @@ WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (
     "ley-58-2003:art-120",
     "ley-58-2003:art-122",
 )
-"""Legal anchors for the modelo workflow gate."""
+"""Legal anchors attached to workflow-gate refusal observations.
+
+The cross-period clean-state finding tests assert these ids remain present in
+the workflow-gate provenance payload. They correspond to the Ley 58/2003
+articles that frame declaration, self-assessment, and complementary declaration
+flows.
+"""
 
 
 class WorkUnitNotFoundError(ModeloError, KeyError):
@@ -50,6 +83,39 @@ class AmendmentTargetStateError(ModeloError):
     """Raised when the modelo-amend path targets a non-current filing record."""
 
 
+class AmendmentKindNotPermittedError(ModeloError):
+    """Raised when the requested amendment kind is not legally available for the period.
+
+    AEAT's amendment mechanism changed over time: the unified autoliquidación
+    rectificativa (LGT art. 120.4, RD 117/2024) replaced the dual
+    complementaria/solicitud-de-rectificación regime (LGT art. 122.2 /
+    art. 120.3) only from the period each modelo's own orden establishes (see
+    :mod:`aeat.core._amendment_kind_regime`). Requesting ``rectificativa`` for
+    a pre-adoption period, or ``complementaria`` for a modelo/period where
+    rectificativa has replaced it as the ordinary correction mechanism, is
+    refused rather than silently accepted or silently downgraded — the accepted
+    kind set for the resolved period is always named in the refusal.
+    """
+
+
+class AmendmentComplementariaLiabilityDecreaseError(ModeloError):
+    """Raised when a pre-rectificativa complementaria would decrease liability.
+
+    Before the autoliquidación rectificativa unification (LGT art. 120.4), a
+    self-filed ``complementaria`` (LGT art. 122.2) can only ever RAISE the
+    taxpayer's own declared tax due (or lower a requested devolución): "los
+    obligados tributarios podrán presentar autoliquidaciones complementarias"
+    when the new autoliquidación yields "un importe a ingresar superior... o
+    una cantidad a devolver inferior". A correction that LOWERS the declared
+    liability is not a complementaria in law; it requires the separate
+    ``solicitud de rectificación`` procedure (LGT art. 120.3, developed by RGAT
+    art. 126-128). Filing a liability-decreasing correction as a
+    complementaria would silently misrepresent which legal procedure the
+    taxpayer used, so it is refused with guidance toward the correct
+    procedure rather than silently accepted.
+    """
+
+
 class StoredCalculationDriftError(ModeloError):
     """Raised when a persisted calculation revision has drifted from its content-addressed id."""
 
@@ -58,22 +124,41 @@ class ExternalModeloImportError(ModeloError):
     """Raised when the external-filing import path cannot persist an imported baseline."""
 
 
+class ModeloLocalObservationError(ModeloError):
+    """Raised when an operator-supplied local observation cannot be persisted."""
+
+
 class ModeloCrossPeriodCleanStateError(ModeloError):
     """Raised when a filing-grade workflow lacks clean prior-filing proof."""
 
 
 class ModeloWorkflowGateError(ModeloError):
-    """Raised when the workflow gate refuses an internal file transition."""
+    """Raised when the workflow gate refuses an internal file transition.
+
+    The constructor stores the live :class:`~aeat.application.workflow.WorkflowResult`
+    on a private attribute and exposes it through :attr:`result`. The rendered
+    error context contains only primitive machine codes (``abort_code`` and
+    ``stage``), which keeps CLI JSON/text payloads stable while allowing
+    telemetry and tests to inspect the full workflow run.
+
+    See Also:
+        :func:`aeat.application.modelo._workflow_gate.run_revision_workflow_gate`:
+            Persists the workflow run and raises this error for aborted results.
+        :func:`aeat.core.errors.render_error_text`:
+            Renders the primitive context without serialising the live result.
+    """
 
     def __init__(self, result: WorkflowResult) -> None:
         self._result = result
         reason = result.aborted_reason.value if result.aborted_reason is not None else "unknown"
         summary = result.summary.strip() or "the workflow gate aborted this transition"
+        message = summary
         suggestion: str | None = None
         if result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION:
+            message = None
             suggestion = "aeat app modelo export <work-unit-id> --output <path>"
         super().__init__(
-            summary,
+            message,
             context={
                 "abort_code": reason,
                 "stage": result.final_stage.value,
@@ -83,7 +168,7 @@ class ModeloWorkflowGateError(ModeloError):
 
     @property
     def result(self) -> WorkflowResult:
-        """Return the live :class:`WorkflowResult` that triggered the abort."""
+        """Return the live :class:`~aeat.application.workflow.WorkflowResult` that triggered the abort."""
         return self._result
 
 
@@ -101,6 +186,10 @@ class CalculationRegistryUnavailableError(ModeloError):
 
 class ModeloAggregationBindingError(ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
+
+
+class ModeloRequiredBindingsMissingError(ModeloError):
+    """Raised when Modelo 202 lifecycle work lacks required calculation bindings."""
 
 
 class ModeloProfileReadinessError(ModeloError):
@@ -158,7 +247,9 @@ class WorkUnitRevisionDivergenceError(ModeloError):
 
 __all__ = [
     "WORKFLOW_GATE_LEGAL_REFS",
+    "AmendmentComplementariaLiabilityDecreaseError",
     "AmendmentEvidenceMissingError",
+    "AmendmentKindNotPermittedError",
     "AmendmentOverrideCasillaError",
     "AmendmentTargetStateError",
     "AmendmentVerificationRefusedError",
@@ -170,10 +261,12 @@ __all__ = [
     "ModeloAggregationBindingError",
     "ModeloApplicabilityFilterError",
     "ModeloCrossPeriodCleanStateError",
+    "ModeloLocalObservationError",
     "ModeloProfileReadinessError",
     "ModeloRecordNotFoundError",
     "ModeloRefundAccountMissingError",
     "ModeloRefundElectionNotEligibleError",
+    "ModeloRequiredBindingsMissingError",
     "ModeloWorkflowGateError",
     "StoredCalculationDriftError",
     "VerificationReportNotFoundError",

@@ -110,7 +110,7 @@ def test_catalogue_fstring_prefixes_detected_by_scanner() -> None:
 
 def test_google_api_typeddicts_importable() -> None:
     """GoogleDriveFile, GoogleSheetsRange, GoogleSpreadsheet must be importable from _api."""
-    from ..adapters.outbound.google._api import (
+    from ..adapters.outbound.google import (
         GoogleApiResponseBody,
         GoogleDriveFile,
         GoogleSheetsRange,
@@ -128,21 +128,21 @@ def test_google_api_typeddicts_importable() -> None:
 
 def test_google_drive_file_required_id_field() -> None:
     """GoogleDriveFile must declare 'id' as a required key."""
-    from ..adapters.outbound.google._api import GoogleDriveFile
+    from ..adapters.outbound.google import GoogleDriveFile
 
     assert "id" in GoogleDriveFile.__required_keys__, "GoogleDriveFile.id is not marked as required"
 
 
 def test_google_sheets_range_required_range_field() -> None:
     """GoogleSheetsRange must declare 'range' as a required key."""
-    from ..adapters.outbound.google._api import GoogleSheetsRange
+    from ..adapters.outbound.google import GoogleSheetsRange
 
     assert "range" in GoogleSheetsRange.__required_keys__, "GoogleSheetsRange.range is not marked as required"
 
 
 def test_google_spreadsheet_required_spreadsheet_id_field() -> None:
     """GoogleSpreadsheet must declare 'spreadsheetId' as a required key."""
-    from ..adapters.outbound.google._api import GoogleSpreadsheet
+    from ..adapters.outbound.google import GoogleSpreadsheet
 
     assert "spreadsheetId" in GoogleSpreadsheet.__required_keys__, (
         "GoogleSpreadsheet.spreadsheetId is not marked as required"
@@ -156,7 +156,7 @@ def test_google_spreadsheet_required_spreadsheet_id_field() -> None:
 
 def test_oauth_client_payload_typeddict_importable() -> None:
     """OAuthClientPayload TypedDict must be importable from cli._config._google."""
-    from ..entrypoints.cli._config._google import OAuthClientPayload
+    from ..entrypoints.cli import OAuthClientPayload
 
     assert hasattr(OAuthClientPayload, "__annotations__")
     assert "installed" in OAuthClientPayload.__annotations__
@@ -206,7 +206,7 @@ def test_oauth_client_wrapper_rejects_non_dict_payload() -> None:
 
 def test_invoice_row_payload_typeddict_importable() -> None:
     """InvoiceRowPayload must be importable from _importing."""
-    from ..application.invoices._importing import InvoiceRowPayload
+    from ..application.invoices import InvoiceRowPayload
 
     assert hasattr(InvoiceRowPayload, "__annotations__")
     expected_fields = {"kind", "currency", "counterparty_name", "counterparty_tax_id", "lines"}
@@ -238,7 +238,7 @@ def test_decode_invoice_payload_returns_invoice_row_payload_from_json() -> None:
 
 def test_parse_invoice_payload_end_to_end_json() -> None:
     """parse_invoice_payload must produce a validated Invoice from a complete JSON row."""
-    from ..application.invoices._importing import parse_invoice_payload
+    from ..application.invoices import parse_invoice_payload
     from ..domain.invoices import Invoice
 
     raw = json.dumps(

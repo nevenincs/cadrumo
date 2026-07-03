@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#dsl-conditional-predicate'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - "[[2026-04-21-calc-verification-adr]]"
   - "[[2026-05-26-modelo-130-relation-regression-adr]]"
   - '[[2026-06-04-dsl-conditional-predicate-research]]'
 ---
-
 
 # `dsl-conditional-predicate` adr: implies-nonzero conditional Layer 2 verification predicate | (**status:** `accepted`)
 

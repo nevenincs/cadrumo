@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S17'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Implement the typed chunk-to-target resolution map: registry casilla fragments resolve to their projected records, legal catalogue entries and corpus HTML to the legal grounding surface anchors, src/aeat modules to generated API stubs, docs sources to built page anchors, CLI modules to the generated CLI reference
 
@@ -141,4 +138,3 @@ Test names: resolution (`test_resolution.py`, 15) --
   so S18 has both the typed target and the raw score to wrangle. The
   `DroppedHit` report is the audit trail S18 extends. S18 then feeds the
   wrangled result set to the sweep (S19).
-

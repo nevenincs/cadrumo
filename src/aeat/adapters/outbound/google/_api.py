@@ -3,15 +3,16 @@
 Both :mod:`aeat.adapters.outbound.google._calc_sheets_apply` and
 :mod:`aeat.adapters.outbound.google._calc_sheets_pull` issue
 ``google-api-python-client`` requests. This module provides the single
-:func:`execute_request` boundary they route through so transport failures,
-HTTP failures, and quota responses become the typed
+:func:`~aeat.adapters.outbound.google._api.execute_request` boundary they route
+through so transport failures, HTTP failures, and quota responses become the typed
 :class:`~aeat.adapters.outbound.storage.OutboundStorageError` hierarchy
 instead of endpoint-specific ``HttpError`` strings.
 
 See Also:
-    :class:`GoogleDriveFile`, :class:`GoogleSheetsRange`, and
-    :class:`GoogleSpreadsheet` document the shared response shapes the calc
-    Sheets adapters cast at their call sites.
+    :class:`~aeat.adapters.outbound.google._api.GoogleDriveFile`,
+    :class:`~aeat.adapters.outbound.google._api.GoogleSheetsRange`, and
+    :class:`~aeat.adapters.outbound.google._api.GoogleSpreadsheet` document the
+    shared response shapes the calc Sheets adapters cast at their call sites.
 """
 
 from __future__ import annotations
@@ -19,7 +20,7 @@ from __future__ import annotations
 import json
 from typing import Any, Protocol, TypedDict
 
-from ...outbound.storage._errors import (
+from ..storage import (
     OutboundStorageError,
     OutboundStorageNetworkError,
     OutboundStorageNotFoundError,
@@ -40,7 +41,8 @@ class _ExecutableRequest(Protocol):
     """Structural type for google-api-python-client request objects.
 
     ``google-api-python-client-stubs`` types the concrete ``HttpRequest`` class.
-    This protocol captures the part :func:`execute_request` needs: the
+    This protocol captures the part
+    :func:`~aeat.adapters.outbound.google._api.execute_request` needs: the
     ``execute()`` method with optional ``http`` and ``num_retries`` parameters
     for Google client retry handling.
     """
@@ -95,7 +97,8 @@ class GoogleSheetsRange(_GoogleSheetsRangeRequired, total=False):
     """Typed shape for a Sheets ``ValueRange`` resource.
 
     Covers fields returned by ``spreadsheets.values.get`` and
-    ``spreadsheets.values.update`` through :func:`execute_request`.
+    ``spreadsheets.values.update`` through
+    :func:`~aeat.adapters.outbound.google._api.execute_request`.
 
     See https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values.
     """
@@ -118,7 +121,7 @@ class GoogleSpreadsheet(_GoogleSpreadsheetRequired, total=False):
     """Typed shape for a Sheets ``Spreadsheet`` resource.
 
     Covers top-level fields returned by ``spreadsheets.get`` through
-    :func:`execute_request`.
+    :func:`~aeat.adapters.outbound.google._api.execute_request`.
 
     See https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.
     """
@@ -133,13 +136,16 @@ def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiRes
 
     Runs ``request.execute(num_retries=3)`` and returns the decoded JSON
     payload unchanged. HTTP 401/403 responses become
-    :class:`OutboundStoragePermissionError`, HTTP 404 responses become
-    :class:`OutboundStorageNotFoundError`, HTTP 429 responses and recognised
-    Google quota markers become :class:`OutboundStorageQuotaError`, and every
+    :exc:`~aeat.adapters.outbound.storage.OutboundStoragePermissionError`, HTTP
+    404 responses become
+    :exc:`~aeat.adapters.outbound.storage.OutboundStorageNotFoundError`, HTTP
+    429 responses and recognised Google quota markers become
+    :exc:`~aeat.adapters.outbound.storage.OutboundStorageQuotaError`, and every
     other transport or unmapped HTTP failure becomes
-    :class:`OutboundStorageNetworkError`. A typed :class:`OutboundStorageError`
-    raised by a nested call is re-raised unchanged so ownership and validation
-    refusals are never re-wrapped as network errors.
+    :exc:`~aeat.adapters.outbound.storage.OutboundStorageNetworkError`. A typed
+    :exc:`~aeat.adapters.outbound.storage.OutboundStorageError` raised by a
+    nested call is re-raised unchanged so ownership and validation refusals are
+    never re-wrapped as network errors.
 
     Args:
         request: A google-api-python-client request object exposing
@@ -150,15 +156,18 @@ def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiRes
         The deserialised API response payload.
 
     Raises:
-        :class:`OutboundStorageError`: Re-raised unchanged when a nested call
-            already raised a typed outbound-storage error.
-        :class:`OutboundStoragePermissionError`: On HTTP 401 or 403 responses
-            that are not quota refusals.
-        :class:`OutboundStorageQuotaError`: On HTTP 429 responses or HTTP 403
-            responses carrying a recognised Google quota marker.
-        :class:`OutboundStorageNotFoundError`: On HTTP 404 responses.
-        :class:`OutboundStorageNetworkError`: On any other transport or
-            unmapped HTTP failure.
+        :exc:`~aeat.adapters.outbound.storage.OutboundStorageError`: Re-raised
+            unchanged when a nested call already raised a typed
+            outbound-storage error.
+        :exc:`~aeat.adapters.outbound.storage.OutboundStoragePermissionError`:
+            On HTTP 401 or 403 responses that are not quota refusals.
+        :exc:`~aeat.adapters.outbound.storage.OutboundStorageQuotaError`: On
+            HTTP 429 responses or HTTP 403 responses carrying a recognised
+            Google quota marker.
+        :exc:`~aeat.adapters.outbound.storage.OutboundStorageNotFoundError`: On
+            HTTP 404 responses.
+        :exc:`~aeat.adapters.outbound.storage.OutboundStorageNetworkError`: On
+            any other transport or unmapped HTTP failure.
     """
     try:
         result: GoogleApiResponseBody = request.execute(num_retries=_GOOGLE_API_NUM_RETRIES)
@@ -202,9 +211,11 @@ def _quota_marker(error: Exception) -> str | None:
 
     Google may signal quota exhaustion through an HTTP 429 status, a 403 with
     ``error.status=RESOURCE_EXHAUSTED``, or nested ``reason`` fields such as
-    ``rateLimitExceeded``. :func:`execute_request` uses this helper to route
-    those 403 responses to :class:`OutboundStorageQuotaError` instead of the
-    generic permission refusal.
+    ``rateLimitExceeded``.
+    :func:`~aeat.adapters.outbound.google._api.execute_request` uses this helper
+    to route those 403 responses to
+    :exc:`~aeat.adapters.outbound.storage.OutboundStorageQuotaError` instead of
+    the generic permission refusal.
     """
     content = getattr(error, "content", b"")
     body = content.decode("utf-8", errors="replace") if isinstance(content, bytes) else str(content)

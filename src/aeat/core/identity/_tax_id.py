@@ -3,32 +3,26 @@
 The Agencia Tributaria's identifier algorithm is shared infrastructure
 across multiple subpackages — invoice counterparty checks, encrypted
 master-key NIF canaries, sanitiser fixture validation, and CLI preflight
-gates. Co-locating the algorithm in :mod:`aeat.core.identity` gives
+gates. Co-locating the algorithm in :mod:`core.identity` gives
 every caller a public, layer-respecting import path.
 
-This module differs from :mod:`aeat.core.identity._documents` only in its return
+This module differs from :mod:`core.identity._documents` only in its return
 shape: :func:`validate_spanish_tax_id` yields the normalised identifier string,
-while :func:`~aeat.core.identity.validate_identity` returns the matching
-:class:`~aeat.core.identity.IdentityDocument` enum member. Both surfaces raise
-:class:`~aeat.core.identity.IdentityError`; this module also exports
+while :func:`~core.identity.validate_identity` returns the matching
+:class:`~core.identity.IdentityDocument` enum member. Both surfaces raise
+:class:`~core.identity.IdentityError`; this module also exports
 :func:`nif_check_letter` for callers that need the shared NIF/NIE checksum
 table directly.
 """
 
 from __future__ import annotations
 
-from ._documents import _NIF_LETTERS, IdentityError
+from ._documents import _CIF_KIND_LETTERS, _NIF_LETTERS, IdentityError
 
 _NIE_LEADERS = {"X": "0", "Y": "1", "Z": "2"}
-# ``_CIF_LEADERS`` (20 characters) is a historical-tolerance superset of
-# ``aeat.core.identity._documents._CIF_KIND_LETTERS`` (17 characters).
-# K, L, and M are included here so that ``validate_spanish_tax_id`` accepts
-# K/L/M-led CIFs that AEAT's own validator tolerates for legacy entities.
-# Those three letters are deliberately absent from ``_CIF_KIND_LETTERS``,
-# which is the AEAT current-spec closed catalogue used by ``validate_identity``
-# and ``_CIF_PATTERN`` — the authoritative shape gate for new documents.
-_CIF_LEADERS = "ABCDEFGHJKLMNPQRSUVW"
-_CIF_LETTER_CONTROL_LEADERS = set("KPQRSNW")
+_PREFIXED_NIF_LEADERS = {"K", "L", "M"}
+_CIF_LEADERS = _CIF_KIND_LETTERS
+_CIF_LETTER_CONTROL_LEADERS = set("PQRSNW")
 _CIF_CONTROL_LETTERS = "JABCDEFGHI"
 
 
@@ -48,12 +42,13 @@ def validate_spanish_tax_id(value: str) -> str:
 
     Implements the Agencia Tributaria algorithm:
 
-    * **NIF** — 8 digits followed by a checksum letter drawn from
-      ``TRWAGMYFPDXBNJZSQVHLCKE`` indexed by ``number % 23``.
+    * **NIF** — 8 digits, or current ``K``/``L``/``M`` plus 7 digits for
+      natural persons without DNI/NIE, followed by a checksum letter drawn
+      from ``TRWAGMYFPDXBNJZSQVHLCKE`` indexed by ``number % 23``.
     * **NIE** — a leading ``X``/``Y``/``Z`` substituted with ``0``/``1``/``2``
       before applying the NIF rule.
-    * **CIF** — a leading letter from ``ABCDEFGHJKLMNPQRSUVW``, 7 digits, and
-      a 1-character control.  Leading letters in ``KPQRSNW`` require a
+    * **CIF** — a leading letter from ``ABCDEFGHJNPQRSUVW``, 7 digits, and
+      a 1-character control.  Leading letters in ``PQRSNW`` require a
       **letter** control drawn from ``JABCDEFGHI``; leading letters in
       ``ABEH`` require a **digit** control; all other leaders accept
       either form (both historically in circulation).
@@ -78,6 +73,8 @@ def validate_spanish_tax_id(value: str) -> str:
     leader = normalized[0]
     if leader.isdigit():
         return _validate_nif(normalized)
+    if leader in _PREFIXED_NIF_LEADERS:
+        return _validate_prefixed_nif(normalized)
     if leader in _NIE_LEADERS:
         return _validate_nie(normalized)
     if leader in _CIF_LEADERS:
@@ -94,6 +91,18 @@ def _validate_nif(value: str) -> str:
     expected = nif_check_letter(int(digits))
     if control != expected:
         raise IdentityError("NIF checksum letter is invalid")
+    return value
+
+
+def _validate_prefixed_nif(value: str) -> str:
+    """Validate a K/L/M-prefixed natural-person NIF."""
+    body = value[1:8]
+    control = value[8]
+    if not body.isdigit() or not control.isalpha():
+        raise IdentityError("prefixed NIF must be a leading K/L/M plus 7 digits and a checksum letter")
+    expected = nif_check_letter(int(body))
+    if control != expected:
+        raise IdentityError("prefixed NIF checksum letter is invalid")
     return value
 
 

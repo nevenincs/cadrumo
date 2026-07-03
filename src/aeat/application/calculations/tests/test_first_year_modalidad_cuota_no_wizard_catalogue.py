@@ -63,10 +63,10 @@ from aeat.application.calculations._relation_prefill import (
 )
 from aeat.core import Period
 from aeat.core.resources import resources
-from aeat.domain.invoices import InvoiceCatalogueRepository
-from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
-from aeat.domain.transactions import TransactionCatalogueRepository
+from aeat.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from aeat.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from aeat.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from aeat.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
 from aeat.tests.secure_sql import isolated_runtime_profile
 from aeat.application.user_profile import UserProfileLifecycleRepository
@@ -75,16 +75,22 @@ from aeat.application.modelo import (
     create_work_unit,
 )
 
-_BUCKET = "b30-no-wizard"
+_PROFILE_ID = "20020020-0200-4200-8200-200200200200"
+_BUCKET = _PROFILE_ID
 _T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)
 tmp = Path(sys.argv[1])
 
 with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
     record = UserProfileRecord(
-        profile_id=_BUCKET,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345678"),
+            UserProfileFact(path="identity.legal_name", value="No Wizard SL"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
             UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),

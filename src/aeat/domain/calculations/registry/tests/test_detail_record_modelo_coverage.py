@@ -16,8 +16,8 @@ from collections.abc import Mapping
 import pytest
 
 from .....application.storage.calc_sheets import collect_row_sets
-from .....core.resources import resources
 from .._schema import ModeloDefinition
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -34,12 +34,14 @@ _DETAIL_RECORD_MODELOS: tuple[tuple[str, str, str, int], ...] = (
     ("184", "2015-y-siguientes", "atribucion_member", 1),
     ("360", "2010-y-siguientes", "refund_operation", 1),
     ("349", "2020-y-siguientes", "collectible_invoice", 2),
+    ("182", "2007-y-siguientes", "donativo_donor", 1),
 )
 
 
 @pytest.fixture(scope="module")
 def _modelos_by_id() -> Mapping[str, ModeloDefinition]:
-    return {m.id: m for m in resources().modelos.all()}
+    modelos, _catalogues = _committed_registry_tree()
+    return {modelo.id: modelo for modelo in modelos}
 
 
 @pytest.mark.parametrize(("modelo_id", "revision_id", "source_kind", "expected_cohorts"), _DETAIL_RECORD_MODELOS)

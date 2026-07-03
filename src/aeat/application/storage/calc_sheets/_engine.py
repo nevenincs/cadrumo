@@ -1,8 +1,14 @@
-"""Engine driver that compiles a :class:`RegistrySnapshot` into a ``SheetExportPlan``.
+"""Engine driver that compiles a :class:`RegistrySnapshot` into a :class:`SheetExportPlan`.
 
 The engine walks every casilla, binding, and parameter declared in the
 :class:`ModeloRevision` embedded in the snapshot and maps each to a
 typed cell or range in the generated workbook plan.
+
+The result is renderer-neutral: Google Sheets and offline XLSX renderers both
+consume the same :class:`SheetExportPlan`. The engine stamps registry identity,
+formula provenance, relation prefills, styling facets, and row-set layout; the
+ledger-evidence facet is supplied separately when the caller has bundled
+:class:`aeat.domain.modelos._ledger_filing_snapshot.LedgerFilingEvidence`.
 """
 
 from __future__ import annotations
@@ -13,10 +19,11 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, Literal
 
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.i18n import tr
 from ....domain.calculations.registry import (
     BindingAggregationOp,
+    BindingRowSetSelector,
     CasillaDefinition,
     CasillaId,
     DataBindingDefinition,
@@ -26,12 +33,15 @@ from ....domain.calculations.registry import (
     ParameterDefinition,
     RegistrySnapshot,
     binding_aggregation_op,
+    binding_row_set_selector,
     casillas_by_id,
+    relation_source_requirements,
 )
 from ._errors import CalcSheetsEngineError
 from ._layout import SheetLayout, plan_layout
 from ._records import (
     OperatorInputs,
+    RelationValue,
     RelationValues,
     SheetAnchor,
     SheetCellAddress,
@@ -53,9 +63,10 @@ from ._records import (
     _utc_now,
 )
 from ._styling import compute_styling
-from ._translator import translate_formula
+from ._translator import is_translatable, translate_formula
 
 _ENGINE_VERSION: Final[str] = "calc-sheets/0.1.0"
+_ACQUISITION_MIRROR_BINDING_SUFFIX: Final[str] = "-adquisicion"
 
 
 def _rounding_rule_for(
@@ -370,7 +381,7 @@ def _tariff_tables(
             # the Tarifas rows the engine emits match the runtime's
             # bracket selection exactly. Falling back to every entry
             # only happens when no temporal filter was applied at
-            # layout time (legacy callers).
+            # layout time.
             active = layout.bracket_entries.get(parameter_id) or tuple(
                 sorted(definition.brackets, key=lambda b: b.lower_bound),
             )
@@ -395,10 +406,17 @@ def _tariff_tables(
                 ),
             )
         else:
-            scalar = _resolve_scalar(definition, today)
             raw_dt = definition.data_type
             if raw_dt not in ("decimal", "money", "integer", "ratio"):
+                # Non-scalar parameter types that reach the tariff-anchor loop
+                # without being a ``bracket_table`` (e.g. ``keyed_bracket_table`` --
+                # the Modelo 303 módulos-IVA coefficients keyed by epígrafe:módulo)
+                # cannot be materialised as a single scalar tariff value. Skip them
+                # BEFORE scalar resolution: ``_resolve_scalar`` looks for dated
+                # scalar ``values`` a keyed_bracket_table does not carry, and would
+                # otherwise crash the whole workbook export.
                 continue
+            scalar = _resolve_scalar(definition, today)
             scalar_data_type: Literal["decimal", "money", "integer", "ratio"] = raw_dt
             tables.append(
                 SheetTariffTable(
@@ -684,6 +702,60 @@ def _relation_value_cells(
     return tuple(cells)
 
 
+def _relation_values_with_registry_grounding(
+    snapshot: RegistrySnapshot,
+    layout: SheetLayout,
+    relation_values: RelationValues,
+) -> RelationValues:
+    """Attach registry-owned source identity and grounding to relation scalar rows."""
+    supplied_by_relation = relation_values.by_relation()
+    relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
+    requirements_by_relation = {
+        relation_id: requirement
+        for requirement in relation_source_requirements(
+            snapshot.revision,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+        )
+        for relation_id in requirement.relation_ids
+    }
+    values: list[RelationValue] = []
+    for relation_id in layout.relation_cells:
+        relation = relations_by_id[relation_id]
+        supplied = supplied_by_relation.get(relation_id)
+        requirement = requirements_by_relation.get(relation_id)
+        source_modelo = requirement.source_modelo if requirement is not None else relation.source_modelo
+        source_filing_year = (
+            requirement.filing_year
+            if requirement is not None
+            else supplied.source_filing_year
+            if supplied is not None
+            else None
+        )
+        source_periods = requirement.periods if requirement is not None else relation.source_periods
+        source_casilla_ids = (
+            requirement.source_casilla_ids if requirement is not None else (relation.source_casilla_id,)
+        )
+        legal_refs = requirement.legal_refs if requirement is not None else relation.legal_refs
+        source_refs = requirement.source_refs if requirement is not None else relation.source_refs
+        values.append(
+            RelationValue(
+                relation=relation_id,
+                value=supplied.value if supplied is not None else None,
+                provenance=supplied.provenance if supplied is not None else "operator_manual",
+                source_modelo=source_modelo,
+                source_filing_year=source_filing_year,
+                source_periods=source_periods,
+                source_casilla_ids=source_casilla_ids,
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+                resolved_at=supplied.resolved_at if supplied is not None else None,
+                note=supplied.note if supplied is not None else None,
+            ),
+        )
+    return RelationValues(values=tuple(values))
+
+
 def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
     last_calc_row = max((row.row for row in layout.calculos_rows), default=1)
     return (
@@ -814,6 +886,62 @@ def _anchors(layout: SheetLayout) -> tuple[SheetAnchor, ...]:
 RelationResolver = Callable[[RegistrySnapshot], RelationValues]
 
 
+def _untranslatable_internal_only_casillas(
+    revision: ModeloRevision,
+    *,
+    bracket_filter_date: date,
+) -> frozenset[CasillaId]:
+    """Return the ``internal_only`` computed casillas that cannot be exported.
+
+    An ``internal_only`` casilla is app-internal calculation-support that the
+    AEAT-published Diseño de Registros omits (it carries no ``export_refs`` and
+    never reaches a filed casilla — the ``modelo-export-mirrors-official-structure``
+    rule binds the workbook to the *official* structure). When such a casilla's
+    formula additionally has no closed-form Sheets translation — the M303
+    régimen-simplificado módulos advisory-support figures resolve through the
+    custom runtime-dispatch ops ``m303_resolve_modulos_iva_cuota_devengada`` /
+    ``m303_resolve_modulos_iva_cuota_minima_pct``, which key a per-epígrafe módulo
+    coefficient table with no spreadsheet equivalent — it cannot be rendered as a
+    live workbook formula at all. It is therefore omitted from the export layout
+    entirely: it is neither an official casilla the workbook must mirror nor a
+    translatable cell.
+
+    A *translatable* ``internal_only`` casilla (e.g. the Modelo 200
+    ``bin-aplicada-maxima`` ceiling, computed from ``min``/``max``/``percent``)
+    stays in the workbook — the exclusion is scoped to the untranslatable custom
+    ops, not to ``internal_only`` as a whole.
+
+    The exclusion is computed to a fixpoint. Excluding a casilla removes its cell
+    from the layout, so an ``internal_only`` casilla that references it (e.g. the
+    M303 ``modulos-iva-cuota-derivada`` ``max`` over ``modulos-iva-cuota-devengada``)
+    becomes untranslatable in turn once the dependency is gone -- it must then be
+    excluded as well, or ``_formula_cells`` would fail translating a leaf reference
+    to a cell the layout no longer carries. Each pass rebuilds the probe layout with
+    the exclusions found so far and re-checks the remaining ``internal_only``
+    casillas until no new one is untranslatable. The custom-runtime M303 módulos ops
+    fail on the unsupported op itself regardless of layout, so the first pass always
+    seeds the chain.
+    """
+    formulas = {formula.id: formula for formula in revision.formulas}
+    excluded: set[CasillaId] = set()
+    while True:
+        probe_layout = plan_layout(
+            revision,
+            bracket_filter_date=bracket_filter_date,
+            excluded_casilla_ids=frozenset(excluded),
+        )
+        newly_excluded: set[CasillaId] = set()
+        for casilla in revision.casillas:
+            if not casilla.internal_only or casilla.formula is None or casilla.id in excluded:
+                continue
+            formula = formulas[casilla.formula]
+            if not is_translatable(formula.expression, layout=probe_layout):
+                newly_excluded.add(casilla.id)
+        if not newly_excluded:
+            return frozenset(excluded)
+        excluded |= newly_excluded
+
+
 def build_export_plan(
     snapshot: RegistrySnapshot,
     *,
@@ -824,9 +952,9 @@ def build_export_plan(
     """Walk a registry snapshot and produce a complete `SheetExportPlan`.
 
     The plan is a pure function of `snapshot`, `operator_inputs`, and
-    the resolved relation values: the apply adapter writes exactly
-    what is in the plan, no more, no less. Two engine runs with the
-    same inputs yield the same plan modulo the `exported_at`
+    the resolved relation values: workbook renderers write exactly what is in
+    the plan, no more, no less. Two engine runs with the same inputs yield the
+    same plan modulo the `exported_at`
     timestamp.
 
     Args:
@@ -852,22 +980,28 @@ def build_export_plan(
             precedence over the resolver.
 
     Returns:
-        A complete :class:`SheetExportPlan` ready for the apply adapter
-        to write to disk.
+        A complete :class:`SheetExportPlan` ready for the Google apply adapter
+        or offline workbook serializer.
     """
     inputs = operator_inputs if operator_inputs is not None else OperatorInputs()
     if relation_values is not None:
-        relations = relation_values
+        supplied_relations = relation_values
     elif relation_resolver is not None:
-        relations = relation_resolver(snapshot)
+        supplied_relations = relation_resolver(snapshot)
     else:
-        relations = RelationValues()
+        supplied_relations = RelationValues()
     revision = snapshot.revision
     # Anchor every temporal lookup (scalar parameter, bracket-table
     # window selection) at the snapshot's filing date so the workbook
     # mirrors the same registry slice the local runtime would consult.
     filing_anchor = date(snapshot.filing_year, 12, 31)
-    layout = plan_layout(revision, bracket_filter_date=filing_anchor)
+    excluded = _untranslatable_internal_only_casillas(revision, bracket_filter_date=filing_anchor)
+    layout = plan_layout(
+        revision,
+        bracket_filter_date=filing_anchor,
+        excluded_casilla_ids=excluded,
+    )
+    relations = _relation_values_with_registry_grounding(snapshot, layout, supplied_relations)
 
     entradas = _value_cells_for_entradas(revision, layout, inputs)
     calculos_labels = _label_cells_for_calculos(revision, layout)
@@ -948,37 +1082,36 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
 
     Each element in the returned tuple is a :class:`SheetRowSet`.
     """
-    cohorts: dict[str, list[DataBindingDefinition]] = {}
+    cohorts: dict[str, list[tuple[DataBindingDefinition, BindingRowSetSelector]]] = {}
     cohort_legal: dict[str, set[str]] = {}
     cohort_source: dict[str, set[str]] = {}
+    public_row_bindings_by_id = _collectible_row_bindings_by_id(revision)
     for binding in revision.bindings:
         if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
             continue
-        # `binding.selector` is a Mapping; getattr returns the default
-        # for every Mapping regardless of key, so the lookup must go
-        # through `.get`. The previous getattr-form silently dropped
-        # every row-producer binding (entire Detalle tab empty).
-        grouping = str(binding.selector.get("grouping", "") or "")
-        if not grouping:
+        selector = binding_row_set_selector(binding)
+        if selector is None:
             continue
-        cohorts.setdefault(grouping, []).append(binding)
-        cohort_legal.setdefault(grouping, set()).update(str(ref) for ref in binding.legal_refs)
-        cohort_source.setdefault(grouping, set()).update(str(ref) for ref in binding.source_refs)
+        if _is_public_row_mirror(binding, selector, public_row_bindings_by_id):
+            continue
+        cohorts.setdefault(selector.grouping, []).append((binding, selector))
+        cohort_legal.setdefault(selector.grouping, set()).update(str(ref) for ref in binding.legal_refs)
+        cohort_source.setdefault(selector.grouping, set()).update(str(ref) for ref in binding.source_refs)
 
     row_sets: list[SheetRowSet] = []
     next_row = 1
     for grouping in sorted(cohorts):
-        members = sorted(cohorts[grouping], key=lambda b: b.id)
+        members = sorted(cohorts[grouping], key=lambda item: item[0].id)
         header_row = next_row
         first_data_row = next_row + 1
         columns = tuple(
             SheetRowSetColumn(
                 binding=binding.id,
                 header_address=SheetCellAddress.at(TabName.DETALLE, header_row, column_index),
-                header_label=_row_set_column_label(binding),
+                header_label=_row_set_column_label(binding, selector),
                 legal_refs=tuple(sorted(str(ref) for ref in binding.legal_refs)),
             )
-            for column_index, binding in enumerate(members, start=1)
+            for column_index, (binding, selector) in enumerate(members, start=1)
         )
         row_sets.append(
             SheetRowSet(
@@ -998,7 +1131,36 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
     return tuple(row_sets)
 
 
-def _row_set_column_label(binding: DataBindingDefinition) -> str:
+def _collectible_row_bindings_by_id(revision: ModeloRevision) -> dict[str, DataBindingDefinition]:
+    return {
+        str(binding.id): binding
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.COLLECTIBLE_INVOICE
+        and binding_aggregation_op(binding) == BindingAggregationOp.ROWS
+    }
+
+
+def _is_public_row_mirror(
+    binding: DataBindingDefinition,
+    selector: BindingRowSetSelector,
+    public_row_bindings_by_id: Mapping[str, DataBindingDefinition],
+) -> bool:
+    if binding.source != BindingSourceKind.PAYABLE_INVOICE:
+        return False
+    binding_id = str(binding.id)
+    if not binding_id.endswith(_ACQUISITION_MIRROR_BINDING_SUFFIX):
+        return False
+    public_binding_id = binding_id.removesuffix(_ACQUISITION_MIRROR_BINDING_SUFFIX)
+    public_binding = public_row_bindings_by_id.get(public_binding_id)
+    if public_binding is None:
+        return False
+    public_selector = binding_row_set_selector(public_binding)
+    if public_selector is None:
+        return False
+    return selector.grouping == public_selector.grouping and selector.row_field == public_selector.row_field
+
+
+def _row_set_column_label(binding: DataBindingDefinition, selector: BindingRowSetSelector) -> str:
     """Derive a human-readable column header for a row-set binding.
 
     Resolves the operator-facing label through the i18n translation
@@ -1006,15 +1168,7 @@ def _row_set_column_label(binding: DataBindingDefinition) -> str:
     under ``sheets.detalle.headers.*``; missing keys fall back to the
     binding id so the workbook still renders rather than 500-erroring.
     """
-    # `binding.selector` is a Mapping; getattr returns the default for
-    # every Mapping regardless of key, so the row_field lookup must go
-    # through `.get`. The previous getattr-form silently dropped every
-    # row_field name and surfaced the binding id as the operator-facing
-    # column header (regression caught by test_detail_record_modelo_coverage).
-    row_field = binding.selector.get("row_field")
-    if isinstance(row_field, str) and row_field:
-        return tr(f"sheets.detalle.headers.{row_field}", default=binding.id)
-    return binding.id
+    return tr(f"sheets.detalle.headers.{selector.row_field}", default=binding.id)
 
 
 def _collect_cell_constraints(
@@ -1042,8 +1196,8 @@ def _collect_cell_constraints(
             constraints.append(
                 SheetCellConstraint(
                     address=address,
-                sign=casilla.constraints.sign,
-                min_value=casilla.constraints.min_value,
+                    sign=casilla.constraints.sign,
+                    min_value=casilla.constraints.min_value,
                     max_value=casilla.constraints.max_value,
                     legal_refs=tuple(casilla.constraints.legal_refs),
                     casilla_id=casilla.id,

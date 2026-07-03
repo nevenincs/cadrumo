@@ -41,39 +41,48 @@ def _casilla_with(data_type: str) -> CasillaDefinition:
 class TestPeriodCodeAccepts:
     """`PeriodCode` accepts every documented period-token form."""
 
-    @pytest.mark.parametrize("code", ["1T", "2T", "3T", "4T"])
-    def test_quarterly_accepted(self, code: str) -> None:
-        assert _PERIOD_ADAPTER.validate_python(code) == code
+    def test_valid_tokens_accepted(self) -> None:
+        cases = (
+            "1T",
+            "2T",
+            "3T",
+            "4T",
+            "1P",
+            "2P",
+            "3P",
+            "4P",
+            "0A",
+            "01",
+            "02",
+            "03",
+            "04",
+            "05",
+            "06",
+            "07",
+            "08",
+            "09",
+            "10",
+            "11",
+            "12",
+            "EXT-1T",
+            "EXT-2T",
+            "EXT-3T",
+            "EXT-4T",
+            "AD-HOC",
+            "EVENT-1",
+            "EVENT-42",
+            "EVENT-9999",
+        )
 
-    @pytest.mark.parametrize("code", ["1P", "2P", "3P", "4P"])
-    def test_is_instalment_accepted(self, code: str) -> None:
-        assert _PERIOD_ADAPTER.validate_python(code) == code
-
-    def test_annual_accepted(self) -> None:
-        assert _PERIOD_ADAPTER.validate_python("0A") == "0A"
-
-    @pytest.mark.parametrize("code", [f"{m:02d}" for m in range(1, 13)])
-    def test_monthly_accepted(self, code: str) -> None:
-        assert _PERIOD_ADAPTER.validate_python(code) == code
-
-    @pytest.mark.parametrize("code", ["EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"])
-    def test_oss_quarter_accepted(self, code: str) -> None:
-        assert _PERIOD_ADAPTER.validate_python(code) == code
-
-    def test_ad_hoc_accepted(self) -> None:
-        assert _PERIOD_ADAPTER.validate_python("AD-HOC") == "AD-HOC"
-
-    @pytest.mark.parametrize("code", ["EVENT-1", "EVENT-42", "EVENT-9999"])
-    def test_event_codes_accepted(self, code: str) -> None:
-        assert _PERIOD_ADAPTER.validate_python(code) == code
+        for code in cases:
+            assert _PERIOD_ADAPTER.validate_python(code) == code, code
 
 
 class TestPeriodCodeRejects:
     """`PeriodCode` rejects malformed and unsupported period tokens."""
 
-    @pytest.mark.parametrize(
-        "raw",
-        [
+    def test_invalid_inputs_rejected_through_adapter(self) -> None:
+        cases: tuple[object, ...] = (
             "",
             "T1",  # reversed-letter quarter
             "5T",  # quarter out of range
@@ -93,23 +102,17 @@ class TestPeriodCodeRejects:
             # of regex-matching against the AD-HOC pattern;
             # this anti-tautology guard pins the fix and would
             # accept the literal back if the regression returns
-        ],
-    )
-    def test_invalid_inputs_rejected_through_adapter(self, raw: str) -> None:
-        with pytest.raises(ValidationError):
-            _PERIOD_ADAPTER.validate_python(raw)
+            1,
+        )
 
-    def test_non_string_input_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            _PERIOD_ADAPTER.validate_python(1)
+        for raw in cases:
+            with pytest.raises(ValidationError):
+                _PERIOD_ADAPTER.validate_python(raw)
 
-    def test_blank_raises_registry_validation_error_at_validator(self) -> None:
-        with pytest.raises(RegistryValidationError):
-            _validate_period_code("")
-
-    def test_non_string_raises_registry_validation_error_at_validator(self) -> None:
-        with pytest.raises(RegistryValidationError):
-            _validate_period_code(1)
+    def test_invalid_value_raises_registry_validation_error_at_validator(self) -> None:
+        for raw in ("", 1):
+            with pytest.raises(RegistryValidationError):
+                _validate_period_code(raw)
 
 
 class TestCasillaDefinitionDataType:

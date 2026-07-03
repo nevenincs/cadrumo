@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import timezone
+
 import pytest
 
 from ......core.i18n import tr
+from .. import AuthConfigurationError
 from ._authenticator_support import (
     _SENSITIVE_HEALTH_PAYLOAD,
     _SENSITIVE_STORAGE_BASENAME,
@@ -12,18 +15,13 @@ from ._authenticator_support import (
     SECRET_PASSPHRASE,
     UTC,
     AeatAuthenticator,
-    AeatLoginAssertion,
     AeatLoginAssertionError,
-    AeatSession,
     AuthProvider,
-    AuthProviderDescription,
     AuthProviderKind,
     AuthValidationError,
     CertificateBackend,
     CertificateError,
     CertificateNifParseError,
-    ClaveMovilLoginAssertionDetail,
-    ClaveMovilSessionDetail,
     NameOID,
     NoReturn,
     Path,
@@ -363,6 +361,31 @@ def test_extract_nif_handles_quoted_plus_in_cn(tmp_path: Path) -> None:
     assert extract_nif_from_subject(cert) == "X1234567L"
 
 
+def test_extract_nif_from_multi_valued_rdn(tmp_path: Path) -> None:
+    """A genuine multi-valued RDN (``CN=X+SERIALNUMBER=Y``) yields the NIF.
+
+    Distinct from the escaped-``+`` case above: here CN and serialNumber are
+    two attributes of ONE relative distinguished name joined by an unescaped
+    ``+``, so ``cert.subject`` round-trips as ``...+SERIALNUMBER=...``. The
+    parser resolves the serialNumber via
+    :meth:`cryptography.x509.Name.get_attributes_for_oid`, which a naive
+    ``,``/``+`` split could not.
+    """
+    subject_name = x509.Name(
+        [
+            x509.RelativeDistinguishedName(
+                [
+                    x509.NameAttribute(NameOID.COMMON_NAME, "NOMBRE APELLIDO1 APELLIDO2"),
+                    x509.NameAttribute(NameOID.SERIAL_NUMBER, "12345678Z"),
+                ]
+            ),
+        ]
+    )
+    cert = _load_cert(tmp_path, subject_name=subject_name)
+    assert "+" in cert.subject
+    assert extract_nif_from_subject(cert) == "12345678Z"
+
+
 def test_aeat_session_is_stale_with_naive_datetime(tmp_path: Path) -> None:
     """Naive datetimes passed to is_stale are coerced to UTC.
 
@@ -381,54 +404,57 @@ def test_aeat_session_is_stale_with_naive_datetime(tmp_path: Path) -> None:
     assert session.is_stale(naive_future) is True
 
 
-def test_auth_provider_protocol_conformance() -> None:
-    class _NullAuthProvider:
-        kind = AuthProviderKind.CLAVE_MOVIL
+def test_aeat_session_is_stale_with_aware_non_utc_datetime(tmp_path: Path) -> None:
+    """Timezone-aware non-UTC datetimes are converted before comparison.
 
-        async def authenticate(
-            self,
-            *,
-            browser_session: object | None = None,
-            target_url: str | None = None,
-        ) -> AeatSession:
-            now = datetime.now(UTC)
-            return AeatSession(
-                provider_kind=self.kind,
-                authenticated_at=now,
-                idle_deadline=now + AEAT_SESSION_IDLE_TTL,
-                storage_state_path=None,
-                identity_nif="X1234567L",
-                provider_detail=ClaveMovilSessionDetail(dni_nie="X1234567L"),
-            )
+    Exercises the ``astimezone`` branch of ``coerce_utc_aware`` through
+    ``is_stale``: the same instant expressed in a ``+05:00`` offset must
+    compare identically to its UTC form, so the offset cannot flip the
+    staleness verdict.
+    """
+    authenticated_at = datetime.now(UTC)
+    session = _certificate_session(
+        authenticated_at=authenticated_at,
+        idle_deadline=authenticated_at + AEAT_SESSION_IDLE_TTL,
+    )
+    plus_five = timezone(timedelta(hours=5))
+    aware_before = authenticated_at.astimezone(plus_five)
+    aware_after = (authenticated_at + AEAT_SESSION_IDLE_TTL + timedelta(hours=1)).astimezone(plus_five)
+    assert aware_before.utcoffset() == timedelta(hours=5)
+    assert session.is_stale(aware_before) is False
+    assert session.is_stale(aware_after) is True
 
-        async def verify(
-            self,
-            session: AeatSession,
-            *,
-            target_url: str | None = None,
-        ) -> AeatLoginAssertion:
-            return AeatLoginAssertion(
-                target_url=target_url or "https://example.invalid/",
-                is_valid=True,
-                provider_kind=session.provider_kind,
-                identity_nif=session.identity_nif,
-                status_code=200,
-                elapsed_ms=1,
-                attempted_at=datetime.now(UTC),
-                assertion_detail=ClaveMovilLoginAssertionDetail(session_cookie_present=True),
-            )
 
-        def describe(self) -> AuthProviderDescription:
-            return AuthProviderDescription(
-                kind=self.kind,
-                label="Null provider",
-                configured=True,
-                available=True,
-                identity_nif="X1234567L",
-            )
+@pytest.mark.asyncio
+async def test_resolve_browser_session_without_factory_raises_configuration_error(
+    tmp_path: Path,
+    _settings_factory,
+) -> None:
+    """A missing browser-session factory is a configuration refusal, not a login assertion.
 
-    provider = _NullAuthProvider()
-    assert isinstance(provider, AuthProvider)
+    ``_resolve_browser_session`` guards the async entry points; with no factory
+    injected and the default Playwright factory unwired, it must raise the
+    configuration-taxonomy error rather than ``AeatLoginAssertionError`` (which
+    denotes a produced-but-untrusted login assertion).
+    """
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_factory(bundle_path)
+    authenticator = AeatAuthenticator(settings)
+
+    with pytest.raises(AuthConfigurationError, match=r"browser.*session factory") as exc_info:
+        await authenticator._resolve_browser_session()
+    # The refusal must not be classified as a login-assertion failure.
+    assert not isinstance(exc_info.value, AeatLoginAssertionError)
+
+
+def test_auth_provider_protocol_conformance(tmp_path: Path, _settings_factory) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_factory(bundle_path)
+
+    providers = tuple(select_provider(kind, settings=settings) for kind in AuthProviderKind)
+
+    assert {provider.kind for provider in providers} == set(AuthProviderKind)
+    assert all(isinstance(provider, AuthProvider) for provider in providers)
 
 
 def test_select_provider_returns_certificate_provider(tmp_path: Path, _settings_factory) -> None:

@@ -15,7 +15,6 @@ from .._errors import ModeloValidationError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-
 def _casilla_id(value: object) -> CasillaId:
     try:
         return validated_casilla_id(value, surface="test casilla id")
@@ -526,6 +525,7 @@ def test_detail_rows_sort_key_handles_all_four_row_types() -> None:
     m349_row = Modelo349OperadorRow(
         codigo_pais="DE",
         nif_comunitario="DE123456789",
+        razon_social="Deutschland GmbH",
         clave_operacion="E",
         importe=Decimal("300.00"),
     )

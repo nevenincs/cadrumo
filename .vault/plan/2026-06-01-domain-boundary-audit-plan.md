@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#domain-boundary-audit'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-01-domain-boundary-audit-adr]]'
   - '[[2026-04-30-aeat-restructure-research]]'
   - '[[2026-06-01-domain-boundary-audit-audit]]'
 ---
-
 
 # `domain-boundary-audit` `Domain boundary remediation` plan
 
@@ -386,12 +385,6 @@ audit passes (the standing swarm cadence) surface additional clusters. The audit
 and the ADR are its authorities; both are linked in frontmatter.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

@@ -26,16 +26,13 @@ from ...core.logging import get_logger
 from ...core.time import now as _utcnow
 from ...domain.deadlines import (
     ModeloDeadline,
-    NoDeadlineWindowsError,
     ObligationStatus,
-    Schedule,
     TaxpayerProfile,
-    compute_obligation_schedule,
-    next_deadline,
 )
 from ...domain.filing import ModeloBuilderError
 from ...domain.submission import ModeloDraftStatus, SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
+from ._deadline_stage import abort_missing_deadline_obligation, resolve_deadline_stage_obligation
 from ._engine_helpers import (
     DeadlineRole,
     FilingWindowState,
@@ -106,11 +103,11 @@ class WorkflowEngine:
         """Construct a :class:`WorkflowEngine`.
 
         Args:
-            deadline_engine: Protocol over :class:`aeat.domain.deadlines.DeadlineEngine`.
-            filing_draft_builder: Protocol over :func:`aeat.application.filing.build_draft`.
-            submission_engine: Protocol over :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`.
-            session: Optional authenticated :class:`aeat.adapters.outbound.aeat.auth.AeatSession`
-                used to drive the live :mod:`aeat.adapters.outbound.aeat.sede` reader. ``None``
+            deadline_engine: Protocol over :class:`domain.deadlines.DeadlineEngine`.
+            filing_draft_builder: Protocol over :func:`application.filing.build_draft`.
+            submission_engine: Protocol over :class:`~domain.submission.SubmissionEngine`.
+            session: Optional authenticated :class:`adapters.outbound.aeat.auth.AeatSession`
+                used to drive the live :mod:`adapters.outbound.aeat.sede` reader. ``None``
                 skips both the inbox probe and the already-filed probe.
             certificate_bundle: Optional Protocol over the certificate
                 backend. ``None`` skips the cert load probe.
@@ -118,10 +115,10 @@ class WorkflowEngine:
                 the draft stage.
             settings: Application :class:`Settings` instance.
             expedientes_source: Test seam over
-                :func:`aeat.adapters.outbound.aeat.sede.walk_expedientes_tree`. Defaults to the
+                :func:`adapters.outbound.aeat.sede.walk_expedientes_tree`. Defaults to the
                 live walker.
             notifications_source: Test seam over
-                :func:`aeat.adapters.outbound.aeat.sede.fetch_notifications_query`. Defaults to
+                :func:`adapters.outbound.aeat.sede.fetch_notifications_query`. Defaults to
                 the live fetcher.
         """
         self._deadline_engine = deadline_engine
@@ -423,26 +420,14 @@ class WorkflowEngine:
         """
         started = _utcnow()
         try:
-            if (
-                purpose is WorkflowPurpose.FILE
-                and target_modelo is not None
-                and target_period is not None
-                and target_period.filing_year != today.year
-            ):
-                # Resolve the schedule in the TARGET period's filing year (not
-                # today's) so a late local `work file` finds its overdue
-                # obligation; the as-of-today projection is unaffected.
-                try:
-                    schedule: Schedule = self._deadline_engine.compute(
-                        profile, target_period.filing_year, today=today
-                    )
-                except NoDeadlineWindowsError:
-                    # No registry windows for the target year: degrade to the
-                    # as-of-today schedule so the absent target yields
-                    # NO_PENDING_OBLIGATION, not an unhandled error.
-                    schedule = compute_obligation_schedule(self._deadline_engine, profile, today=today)
-            else:
-                schedule = compute_obligation_schedule(self._deadline_engine, profile, today=today)
+            obligation = resolve_deadline_stage_obligation(
+                self._deadline_engine,
+                profile,
+                target_modelo=target_modelo,
+                target_period=target_period,
+                today=today,
+                purpose=purpose,
+            )
         except SiteHealthError as exc:
             self._record_site_unavailable(
                 stage=WorkflowStage.COMPUTING_DEADLINES,
@@ -458,13 +443,6 @@ class WorkflowEngine:
                 steps=steps,
             )
 
-        obligation: ModeloDeadline | None
-        if target_modelo is not None and target_period is not None:
-            matches = [o for o in schedule.obligations if o.modelo == target_modelo and o.period == target_period]
-            obligation = matches[0] if matches else None
-        else:
-            obligation = next_deadline(schedule, today=today)
-
         if purpose is WorkflowPurpose.VERIFY:
             return self._record_verify_deadline_context(
                 obligation=obligation,
@@ -476,9 +454,13 @@ class WorkflowEngine:
             )
 
         if obligation is None:
-            no_summary = _summary_text(
-                "No pending filing obligation for this modelo/period at the current date "
-                "(the AEAT filing-obligation window is not open). Filing-to-fichero does "
+            abort_missing_deadline_obligation(started=started, steps=steps)
+
+        if obligation.opens_on > today:
+            future_summary = _summary_text(
+                f"Filing obligation for modelo={obligation.modelo} "
+                f"period={obligation.period} opens on {obligation.opens_on.isoformat()}; "
+                "the AEAT filing-obligation window is not open yet. Filing-to-fichero does "
                 "not require this step: export the verified-complete revision with "
                 "'aeat app modelo export' — that is the local finish line. 'work file' "
                 "is the optional internal mark-as-filed step for when the obligation window is open.",
@@ -489,12 +471,20 @@ class WorkflowEngine:
                     started_at=started,
                     ended_at=_utcnow(),
                     success=False,
-                    summary=no_summary,
+                    summary=future_summary,
+                    details={
+                        "modelo": obligation.modelo,
+                        "period": str(obligation.period),
+                        "opens_on": obligation.opens_on.isoformat(),
+                        "closes_on": obligation.closes_on.isoformat(),
+                        "filing_window": FilingWindowState.FUTURE,
+                        "deadline_role": DeadlineRole.BINDING,
+                    },
                 ),
             )
             raise WorkflowAbortSignalError(
                 reason=WorkflowAbortReason.NO_PENDING_OBLIGATION,
-                summary=no_summary,
+                summary=future_summary,
             )
 
         if obligation.closes_on < today:
@@ -560,6 +550,7 @@ class WorkflowEngine:
                 details={
                     "modelo": obligation.modelo,
                     "period": str(obligation.period),
+                    "opens_on": obligation.opens_on.isoformat(),
                     "closes_on": obligation.closes_on.isoformat(),
                 },
             ),
@@ -593,7 +584,12 @@ class WorkflowEngine:
         filing path.
         """
         if obligation is not None:
-            window_state = "open" if obligation.closes_on >= today else "closed"
+            if obligation.opens_on > today:
+                window_state = FilingWindowState.FUTURE
+            elif obligation.closes_on >= today:
+                window_state = FilingWindowState.OPEN
+            else:
+                window_state = FilingWindowState.CLOSED
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.COMPUTING_DEADLINES,
@@ -1000,14 +996,15 @@ class WorkflowEngine:
 
         Aborts with ``CERT_INVALID`` if the auth-provider Protocol
         raises, and with ``PREFLIGHT_FAILED`` on any
-        :class:`aeat.adapters.outbound.aeat.export.SubmissionPreflightError`.
+        :class:`~domain.submission.SubmissionPreflightError`.
 
-        For :attr:`WorkflowPurpose.VERIFY` the AEAT filing-window
-        preflight gate is skipped: verification of a calculation is
-        independent of the filing calendar (see the work-verify
-        deadline-independence ADR). The draft-soundness and
-        auth-provider gates still run, so an unsound calculation is
-        still refused.
+        For local :attr:`WorkflowPurpose.VERIFY` and
+        :attr:`WorkflowPurpose.FILE`, the AEAT filing-window preflight
+        gate is skipped. VERIFY is calendar-independent; FILE is a local
+        mark-as-filed path whose obligation existence has already been
+        enforced by the deadline stage. The draft-soundness and
+        auth-provider gates still run, so an unsound calculation is still
+        refused.
         """
         started = _utcnow()
         cert_details: dict[str, str]

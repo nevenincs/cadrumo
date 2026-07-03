@@ -14,7 +14,6 @@ from ......core.errors import ERROR_REGISTRY
 from ......core.resources import bundled_path
 from ..._errors import RegistryValidationError
 from ..._ids import CasillaId, validated_casilla_id
-from ..._loader import load_registry_tree
 from ..._parity_tapes import ParityScenario
 from ..._schema import RegistrySnapshot
 from ..._snapshot import build_snapshot
@@ -34,6 +33,7 @@ from ..._workbook_parity import (
     scan_workbook,
     verify_workbook_backend,
 )
+from .._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,9 +53,21 @@ def _write_formula_workbook(path: Path) -> None:
     workbook.save(path)
 
 
+def _write_static_workbook(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    workbook = Workbook()
+    worksheet = workbook.active
+    assert worksheet is not None
+    worksheet.title = "Modelo"
+    worksheet["A1"] = "Casilla"
+    worksheet["B1"] = "Descripcion"
+    worksheet["A2"] = "001"
+    worksheet["B2"] = "Importe"
+    workbook.save(path)
+
+
 def _committed_modelo_130_snapshot() -> RegistrySnapshot:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(item for item in modelos if item.id == "130")
+    modelo, catalogues = _committed_modelo("130")
     return build_snapshot(
         modelo,
         catalogues,
@@ -81,6 +93,20 @@ def test_scan_workbook_discovers_xlsx_formula_cells(tmp_path: Path) -> None:
     assert report.formula_cells == 2
     assert {cell.coordinate for cell in report.output_candidates} == {"B1", "B2"}
     assert {cell.coordinate for cell in report.input_candidates} >= {"A1", "A2"}
+
+
+def test_scan_workbook_classifies_static_layout_as_layout_authority(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "modelo_151" / "files" / "151-static-layout.xlsx"
+    _write_static_workbook(workbook_path)
+
+    report = scan_workbook(workbook_path, root=tmp_path, options=WorkbookScanOptions(per_file_timeout_seconds=5))
+
+    assert report.path == "modelo_151/files/151-static-layout.xlsx"
+    assert report.modelo == "151"
+    assert report.workbook_kind == "static_layout"
+    assert report.evidence_tier == "layout_authority"
+    assert report.formula_cells == 0
+    assert "executable_parity_evidence" in report.not_evidence_for
 
 
 def test_committed_record_design_xlsx_is_not_tax_formula_parity_oracle() -> None:
@@ -307,6 +333,62 @@ def test_compare_registry_to_workbook_reports_mismatch(tmp_path: Path) -> None:
     assert report.comparisons[0].expected_workbook_value == Decimal("31")
     assert report.comparisons[0].legal_refs == ("ley-37-1992:art-90",)
     assert report.comparisons[0].source_refs == ("aeat-dr-303-2026",)
+
+
+def test_compare_registry_to_workbook_rejects_missing_grounding(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "modelo_303" / "files" / "303-test.xlsx"
+    _write_formula_workbook(workbook_path)
+    workbook = scan_workbook(workbook_path, root=tmp_path)
+    synthetic = SyntheticInputSet(
+        id="synthetic-303-basic",
+        modelo="303",
+        revision="2026",
+        values=(
+            SyntheticInputValue(
+                id="base",
+                value=Decimal("10"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A1"),
+                registry_binding="iva.base",
+            ),
+        ),
+    )
+
+    with pytest.raises(RegistryValidationError, match="missing legal_refs"):
+        compare_registry_to_workbook(
+            synthetic_input=synthetic,
+            workbook=workbook,
+            runner=verify_workbook_backend(tmp_path, scan_limit=1).runner,
+            expected_workbook_values={"result": Decimal("31")},
+            actual_registry_values={"result": Decimal("31")},
+            output_cells={"result": WorkbookCellRef(sheet="Modelo", coordinate="B1", formula="=A1+A2")},
+            registry_snapshot_id="303:2026:1T",
+        )
+
+    with pytest.raises(ValidationError, match="legal_refs"):
+        compare_registry_to_workbook(
+            synthetic_input=synthetic,
+            workbook=workbook,
+            runner=verify_workbook_backend(tmp_path, scan_limit=1).runner,
+            expected_workbook_values={"result": Decimal("31")},
+            actual_registry_values={"result": Decimal("31")},
+            output_cells={"result": WorkbookCellRef(sheet="Modelo", coordinate="B1", formula="=A1+A2")},
+            registry_snapshot_id="303:2026:1T",
+            legal_refs={"result": ("",)},
+            source_refs={"result": ("aeat-dr-303-2026",)},
+        )
+
+    with pytest.raises(ValidationError, match="source_refs"):
+        compare_registry_to_workbook(
+            synthetic_input=synthetic,
+            workbook=workbook,
+            runner=verify_workbook_backend(tmp_path, scan_limit=1).runner,
+            expected_workbook_values={"result": Decimal("31")},
+            actual_registry_values={"result": Decimal("31")},
+            output_cells={"result": WorkbookCellRef(sheet="Modelo", coordinate="B1", formula="=A1+A2")},
+            registry_snapshot_id="303:2026:1T",
+            legal_refs={"result": ("ley-37-1992:art-90",)},
+            source_refs={"result": (" ",)},
+        )
 
 
 def test_compare_registry_to_workbook_rejects_missing_registry_output(tmp_path: Path) -> None:

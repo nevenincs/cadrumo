@@ -67,12 +67,8 @@ def test_counterpart_source_kind_canonical_in_domain() -> None:
 
 def test_counterpart_source_kind_application_imports_from_domain() -> None:
     """The application _counterpart module must re-export the domain alias."""
-    from ..application.aggregation._counterpart import (
-        CounterpartSourceKind as app_csk,
-    )
-    from ..domain.calculations.registry._bindings import (
-        CounterpartSourceKind as domain_csk,
-    )
+    from ..application.aggregation import CounterpartSourceKind as app_csk
+    from ..domain.calculations.registry import CounterpartSourceKind as domain_csk
 
     assert app_csk is domain_csk, (
         "application.aggregation._counterpart.CounterpartSourceKind is not the "
@@ -151,7 +147,7 @@ def test_financial_provider_init_subclass_rejects_missing_verification_source() 
     """A concrete subclass missing verification_source must raise FinancialProviderConfigError."""
     from collections.abc import Iterator
 
-    from ..adapters.inbound.financial.providers._base import (
+    from ..adapters.inbound.financial.providers import (
         FinancialProvider,
         FinancialProviderConfigError,
         ParsedLedgerRow,
@@ -180,7 +176,7 @@ def test_financial_provider_init_subclass_rejects_no_corpus_without_provisional(
     """A no_corpus provider with provisional_pending_specimen=False must raise FinancialProviderConfigError."""
     from collections.abc import Iterator
 
-    from ..adapters.inbound.financial.providers._base import (
+    from ..adapters.inbound.financial.providers import (
         FinancialProvider,
         FinancialProviderConfigError,
         ParsedLedgerRow,
@@ -210,7 +206,7 @@ def test_financial_provider_init_subclass_accepts_valid_provider() -> None:
     """A fully-compliant concrete subclass must not raise at definition."""
     from collections.abc import Iterator
 
-    from ..adapters.inbound.financial.providers._base import (
+    from ..adapters.inbound.financial.providers import (
         FinancialProvider,
         ParsedLedgerRow,
         ProviderValidation,

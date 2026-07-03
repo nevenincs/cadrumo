@@ -1,26 +1,18 @@
 # TRLIRNR (Impuesto sobre la Renta de no Residentes) legal-catalogue
-# entries supporting M210 Phase 1 (post-stub engine landing).
+# entries supporting the current M210 IRNR engine.
 #
-# Authoring scope: TRLIRNR Arts 2, 10, 13.1.h, 24, 25.1.a, 25.1.f under
+# Authoring scope: TRLIRNR Arts 2, 10, 13.1.h, 24, 25.1.a, 25.1.b, 25.1.f under
 # the consolidated text approved by Real Decreto Legislativo
 # 5/2004 (BOE-A-2004-4527). Required_text patterns are populated
-# from the bundled corpus so the M210 Phase 1 rate rows are checked
-# against the provisions that bind them. Article 25.1.b (pensiones
-# special tarifa) is catalogued and implemented as a live M210
-# progressive-tariff branch.
+# from the bundled corpus so the M210 base, rate, treaty, and tariff rows
+# are checked against the provisions that bind them.
 #
-# IMPORTANT: An earlier draft of the M210 ADR mis-cited "TRLIRNR
-# Art 47" for the representante-fiscal mandate. The correct
-# citation is TRLIRNR Art 10 (entry below). TRLIRNR Art 47
-# governs "sucesion en la deuda tributaria" (successor-tax-
-# liability) and is OUT of M210 Phase 1 scope; if a future
-# campaign needs the general-LGT representante surface,
-# ley-58-2003:art-47 (LGT) is the parallel authority.
+# TRLIRNR Art 10 is the representante-fiscal authority for M210.
 
 [legal."trlirnr-rdleg-5-2004:art-2"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a2"
 document_id = "BOE-A-2004-4527"
 article = "2"
@@ -36,7 +28,7 @@ required_text = ["Este impuesto se aplicara en todo el territorio espanol", "reg
 [legal."trlirnr-rdleg-5-2004:art-10"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a10"
 document_id = "BOE-A-2004-4527"
 article = "10"
@@ -46,13 +38,13 @@ effective_from = 2004-03-13
 review_status = "reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "wgergely"
-notes = "TRLIRNR art 10: obligacion de designar representante fiscal con residencia en Espana para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administracion Tributaria lo requiera por la cuantia o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en M210 Phase 1; corregido respecto del borrador previo del ADR que mencionaba Art 47."
+notes = "TRLIRNR art 10: obligacion de designar representante fiscal con residencia en Espana para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administracion Tributaria lo requiera por la cuantia o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en la superficie M210 vigente."
 required_text = ["no sean residentes en otro Estado miembro de la Union Europea", "persona fisica o juridica con residencia en Espana", "les represente ante la Administracion Tributaria"]
 
 [legal."trlirnr-rdleg-5-2004:art-13.1.h"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a13-1-h"
 document_id = "BOE-A-2004-4527"
 article = "13.1.h"
@@ -68,7 +60,7 @@ required_text = ["rentas imputadas a los contribuyentes personas fisicas", "bien
 [legal."trlirnr-rdleg-5-2004:art-24"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a24"
 document_id = "BOE-A-2004-4527"
 article = "24"
@@ -84,7 +76,7 @@ required_text = ["importe integro", "sin que sean de aplicacion los porcentajes 
 [legal."trlirnr-rdleg-5-2004:art-25.1.a"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a25-1-a"
 document_id = "BOE-A-2004-4527"
 article = "25.1.a"
@@ -100,7 +92,7 @@ required_text = ["Con caracter general, el 24 por ciento", "el tipo de gravamen 
 [legal."trlirnr-rdleg-5-2004:art-25.1.b"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a25-1-b"
 document_id = "BOE-A-2004-4527"
 article = "25.1.b"
@@ -116,7 +108,7 @@ required_text = ["pensiones y demas prestaciones similares", "Importe anual pens
 [legal."trlirnr-rdleg-5-2004:art-25.1.f"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real_decreto"
+kind = "real_decreto_legislativo"
 corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a25-1-f"
 document_id = "BOE-A-2004-4527"
 article = "25.1.f"
@@ -177,17 +169,67 @@ reviewed_by = "codex"
 notes = "Spain-Argentina double-taxation treaty art 19: public-function pensions paid by one contracting state for services rendered to that state may be taxed only in that state, unless the recipient is resident and national of the other state. Row-level allocation authority for the AR/pension M210 convenio seed; DOMESTIC_TARIFF delegates the Spain-side amount to the TRLIRNR art 25.1.b pension bracket table."
 required_text = ["Las pensiones pagadas por un Estado Contratante", "solo pueden someterse a imposicion en este Estado", "residente y nacional de este Estado"]
 
-[sources."aeat-modelo-210-procedure"]
-evidence_tier = "official_source_guidance"
+[legal."convenio-es-de-2011:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-de-2011-art-11.html#art-11"
+document_id = "BOE-A-2012-10212"
+article = "11"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2012-10212"
+published_at = 2012-07-30
+effective_from = 2012-10-18
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "claude"
+notes = "Spain-Germany double-taxation treaty (CDI 2011, en vigor 2012-10-18) art 11: interest whose beneficial owner is a resident of the other state may be taxed only in that other state (source-state exemption). Row-level authority for the DE/interest M210 treaty override (kind=exempt). Agent-prepared grounding cross-checked against the BOE consolidated text BOE-A-2012-10212 (ELI 2011-02-03); pending operator re-stamp. Corrects the _CONVENIO_BY_COUNTRY drift that cited BOE-A-2012-3669 (a Banco de Espana exchange-rate notice)."
+required_text = ["Los intereses procedentes de un Estado contratante", "solo pueden someterse a imposicion en ese otro Estado"]
+
+[legal."orden-eha-3316-2010:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3316-2010.html#a1"
+document_id = "BOE-A-2010-19707"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707#a1"
+published_at = 2010-12-23
+effective_from = 2011-01-03
+consolidated_as_of = 2026-06-23
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex (downloaded consolidated BOE-A-2010-19707 from BOE on 2026-06-29; operator to re-stamp)"
+notes = "Orden EHA/3316/2010 art 1, consolidated as of 2026-06-23: approves Modelo 210 for IRNR taxpayers obtaining Spanish-source income without permanent establishment and its ingreso/devolucion document. This is the formal approval-order anchor for the open M210 2025-y-siguientes revision; later HAC/56/2024 and HAC/623/2026 source refs carry layout/deadline amendments."
+required_text = [
+    "Artículo 1",
+    "Se aprueba el modelo 210",
+    "No residentes sin establecimiento permanente",
+    "rentas en España sin mediación de establecimiento permanente",
+]
+
+[sources."boe-modelo-210-base-order"]
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
-sha256 = "1adcf839bcda32e2aaf1cd2df49f27ea4925f85095b67b2ae7f035d69c015a3c"
-bytes = 141318
-retrieved_at = 2026-05-27
-published_at = 2024-01-31
-applies_from = 2024-02-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+corpus_path = "corpus/normatives/html/orden-eha-3316-2010.html"
+sha256 = "c40939b99cd2091b924a78e0690977a0f7c1f82c734fb0275f1085234c91a21d"
+bytes = 249282
+retrieved_at = 2026-06-29
+published_at = 2010-12-23
+applies_from = 2011-01-03
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707"
+review_status = "reviewed"
+
+[sources."aeat-modelo-210-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_210/files/modelo-210-instrucciones.html"
+sha256 = "c9c7c606ec1324238451d3163d8a2b61eef9e29a455a538260bdfbbdb98914c6"
+bytes = 116695
+retrieved_at = 2026-07-01
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-renta-no-residentes/modelo-210-irnr______a-no-residentes-permanente_/instrucciones.html"
 review_status = "reviewed"
 
 [sources."aeat-irnr-renta-imputada-inmueble-urbano"]
@@ -195,8 +237,8 @@ evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
 corpus_path = "corpus/aeat_official/instructions/modelo_210/files/renta-imputada-inmueble-urbano-uso-propio.html"
-sha256 = "9631d3b915c2bcc8223e72861d66cace55a16cdbb32ac175308807a88cce25ca"
-bytes = 17512
+sha256 = "a954f18028c83634641e2197b7ca67fc540686f0117bcae69fc96c51bc15ed83"
+bytes = 17458
 retrieved_at = 2026-06-28
 source_url = "https://sede.agenciatributaria.gob.es/Sede/no-residentes/irnr-sin-establecimiento-permanente/cuestiones-especificas-sobre-tributacion-inmuebles/renta-imputada-inmueble-urbano-uso-propio.html"
 review_status = "reviewed"
@@ -206,8 +248,91 @@ evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
-sha256 = "1adcf839bcda32e2aaf1cd2df49f27ea4925f85095b67b2ae7f035d69c015a3c"
-bytes = 141318
+sha256 = "ca8190a56f4f6ae3bc8501e4f0a2fa8decd0a9fca1ccc7600e7e7732b0cc3184"
+bytes = 141184
+retrieved_at = 2026-05-27
+published_at = 2024-01-31
+applies_from = 2024-02-01
+applies_to = 2026-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+review_status = "reviewed"
+
+[sources."boe-modelo-210-2026-deadline-update"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/orden-hac-623-2026.html"
+sha256 = "b901936072eb6bd8213dd84e9bd493a65d10b652b3b62dbe42228e1094f38074"
+bytes = 64566
+retrieved_at = 2026-06-28
+published_at = 2026-06-23
+applies_from = 2026-01-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
+review_status = "reviewed"
+
+[sources."boe-modelo-210-2026-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-623-2026.html"
+sha256 = "b901936072eb6bd8213dd84e9bd493a65d10b652b3b62dbe42228e1094f38074"
+bytes = 64566
+retrieved_at = 2026-06-28
+published_at = 2026-06-23
+applies_from = 2027-01-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
+review_status = "reviewed"
+
+# Modelo 216 sources — the governing Orden HAC/56/2024 (BOE-A-2024-1772) is the
+# same bundled corpus the Modelo 210 sources cite; it approves and governs the
+# Modelo 216/296 IRNR retención forms (arts. 1 y ss.). Reuses the reviewed corpus
+# file and its hash; no new corpus fetch required.
+[sources."aeat-modelo-216-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_216/files/modelo-216-instrucciones-2024-y-siguientes.html"
+sha256 = "53e6a871f2932822d560129d7610d3796e1fa226c259b6cbdc9a015d2e6703ec"
+bytes = 20731
+retrieved_at = 2026-07-01
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-renta-no-residentes/modelo-216-irnr______sos-cuenta-declaracion-ingreso_/instrucciones-modelo-216-presentacion-ejercicio-siguientes.html"
+review_status = "reviewed"
+
+[sources."boe-modelo-216-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
+sha256 = "ca8190a56f4f6ae3bc8501e4f0a2fa8decd0a9fca1ccc7600e7e7732b0cc3184"
+bytes = 141184
+retrieved_at = 2026-05-27
+published_at = 2024-01-31
+applies_from = 2024-02-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+review_status = "reviewed"
+
+# Modelo 296 sources - annual resumen (informativa) companion to Modelo 216,
+# governed by the same bundled Orden HAC/56/2024 (BOE-A-2024-1772).
+[sources."aeat-modelo-296-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_296/files/modelo-296-procedure.html"
+sha256 = "1acee493b408c9aa4d6300847c7561268fc41bdc704d36349468f67678012c54"
+bytes = 54093
+retrieved_at = 2026-07-01
+applies_from = 2024-02-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI22.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-296-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
+sha256 = "ca8190a56f4f6ae3bc8501e4f0a2fa8decd0a9fca1ccc7600e7e7732b0cc3184"
+bytes = 141184
 retrieved_at = 2026-05-27
 published_at = 2024-01-31
 applies_from = 2024-02-01

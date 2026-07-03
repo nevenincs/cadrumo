@@ -10,10 +10,12 @@ from collections.abc import Iterable, Mapping
 from functools import lru_cache
 from pathlib import Path
 
+from ....core.resources import resolve_companion_binary
+from ._corpus_catalogue import is_companion_corpus_binary
 from ._schema import LegalReference, SourceCitation, SourceReference
 from ._text import normalise_corpus_text
 
-_SourceTextCacheKey = tuple[str, str, int]
+_SourceTextCacheKey = tuple[str, str, int, int]
 _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
 
 
@@ -22,16 +24,7 @@ def _normalise_required_text(text: str) -> str:
     return normalise_corpus_text(text)
 
 
-_STAT_CACHE: dict[Path, os.stat_result] = {}
 _DISK_CACHE: dict[str, str] | None = None
-
-
-def _cached_stat(path: Path) -> os.stat_result:
-    stat = _STAT_CACHE.get(path)
-    if stat is None:
-        stat = path.stat()
-        _STAT_CACHE[path] = stat
-    return stat
 
 
 def _load_disk_cache() -> dict[str, str]:
@@ -107,14 +100,6 @@ class EvidenceValidator:
         self._source_root = source_root
         self._source_text_cache: dict[str, str] = {}
 
-    def require_legal_authority_refs(self, scope: str, owner: str, refs: Iterable[str]) -> list[str]:
-        failures: list[str] = []
-        for ref in refs:
-            legal = self._legal.get(ref)
-            if legal is not None and legal.evidence_tier != "legal_authority":
-                failures.append(f"{scope}: {owner} legal ref {ref!r} is not legal authority")
-        return failures
-
     def require_source_tier(
         self,
         scope: str,
@@ -127,6 +112,22 @@ class EvidenceValidator:
         ):
             return []
         return [f"{scope}: {owner} requires {required_tier} source evidence"]
+
+    def require_any_source_tier(
+        self,
+        scope: str,
+        owner: str,
+        refs: Iterable[str],
+        allowed_tiers: Iterable[str],
+    ) -> list[str]:
+        allowed = tuple(allowed_tiers)
+        if any((source := self._sources.get(ref)) is not None and source.evidence_tier in allowed for ref in refs):
+            return []
+        if len(allowed) == 1:
+            requirement = f"{allowed[0]} source evidence"
+        else:
+            requirement = f"one of {', '.join(allowed)} source evidence"
+        return [f"{scope}: {owner} requires {requirement}"]
 
     def validate_source_citations(
         self,
@@ -159,6 +160,16 @@ class EvidenceValidator:
                 continue
             try:
                 source_text = self._source_text(source)
+            except FileNotFoundError as exc:
+                if is_companion_corpus_binary(source):
+                    # Absent companion binary in a split install: the corpus
+                    # catalogue gate already surfaced the ONE loud advisory for
+                    # this file, and its required_text check is unevaluable
+                    # rather than failed. A PRESENT-but-unreadable file still
+                    # fails through the OSError branch below.
+                    continue
+                failures.append(f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}")
+                continue
             except OSError as exc:
                 failures.append(f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}")
                 continue
@@ -175,16 +186,27 @@ class EvidenceValidator:
             return cached
         if self._source_root is None:
             return ""
-        source_path = self._source_root / source.corpus_path
-        stat = _cached_stat(source_path)
-        source_key = (source.kind, source_path.name, stat.st_size)
+        source_root = self._source_root.expanduser().resolve()
+        source_path = (source_root / source.corpus_path).expanduser().resolve()
+        if source_root not in source_path.parents and source_path != source_root:
+            raise OSError(f"source {source.id!r} escapes source root")
+        if not source_path.is_file():
+            # A split install sheds the corpus source binaries from the runtime
+            # tree; the aeat_data companion supplies the same bytes at the
+            # mirrored relative path, keeping required_text verification
+            # byte-identical to a full checkout.
+            companion_path = resolve_companion_binary(*source.corpus_path.split("/"))
+            if companion_path is not None:
+                source_path = companion_path
+        stat = source_path.stat()
+        source_key = (source.kind, str(source_path), stat.st_size, stat.st_mtime_ns)
         global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)
         if global_cached is not None:
             self._source_text_cache[source.id] = global_cached
             return global_cached
 
         # Check disk cache
-        cache_key_str = f"{source_path.name}:{stat.st_size}:{int(stat.st_mtime)}"
+        cache_key_str = f"{source.kind}:{source_path}:{stat.st_size}:{stat.st_mtime_ns}"
         disk_cache = _load_disk_cache()
         if cache_key_str in disk_cache:
             normalised = disk_cache[cache_key_str]
@@ -193,7 +215,7 @@ class EvidenceValidator:
             return normalised
 
         if source.kind == "manual_pdf":
-            text = _extract_pdf_text_impl(str(source_path.expanduser().resolve()))
+            text = _extract_pdf_text_impl(str(source_path))
         else:
             text = source_path.read_text(encoding="utf-8", errors="replace")
         normalised = normalise_corpus_text(text)

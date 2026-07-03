@@ -1,12 +1,12 @@
-"""Repository-backed Renta income aggregation for actividad economía (Modelo 130).
+"""Repository-backed Renta actividad-income aggregation.
 
-Used by: :mod:`~._service` (per-modelo aggregation service) for Modelo 130 income aggregation.
-
-The primary entry point :func:`aggregate_renta_income_ledger_from_repositories`
-loads a :class:`~aeat.domain.transactions.TransactionCatalogue` via
-:class:`~aeat.domain.transactions.TransactionCatalogueRepository`
-from the active bucket and delegates to :func:`aggregate_renta_income_ledger`
-for period-scoped aggregation.
+This is the ledger projection behind the
+``ledger_renta_income_aggregation`` source for Modelo 130 and Modelo 100. The
+quarterly entry point :func:`aggregate_renta_income_ledger_from_repositories`
+loads a :class:`~domain.transactions.TransactionCatalogue` via
+:class:`~domain.transactions.TransactionCatalogueRepository` from the
+active bucket and delegates to :func:`aggregate_renta_income_ledger` for
+period-scoped aggregation.
 
 Modelo 130 casilla 01 (Ingresos íntegros) accumulates professional-service
 revenue from the start of the fiscal year through the end of the declared
@@ -22,6 +22,13 @@ Only ACTIVE, EUR-denominated, INCOMING transactions whose
 ``business_classification`` is BUSINESS or MIXED are eligible. Transactions
 whose ``value_date`` (or ``booked_date`` if absent) falls outside the
 cumulative window are excluded with a traceable issue record.
+
+Modelo 100 uses the annual counterpart
+:func:`aggregate_renta_m100_income_ledger`, which keeps the same activity-income
+eligibility rules but targets the annual IRPF income leaf. The source-mesh
+resolver in :mod:`~._modelo_bindings` chooses the correct path for the
+requested modelo and returns the binding values as a
+:class:`~._source_mesh.CalculationSourceResolution`.
 """
 
 from __future__ import annotations
@@ -34,6 +41,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, PeriodKind
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
@@ -41,7 +49,6 @@ from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,
@@ -109,6 +116,7 @@ class RentaIncomeObservation(BaseModel):
     target_casilla_id: CasillaId
     gross_amount: Decimal = Field(ge=Decimal("0"))
     taxable_base_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
+    withheld_amount: Decimal = Field(default=Decimal("0"), ge=Decimal("0"))
     filing_date: date
     source_jurisdiction: str | None = None
 
@@ -385,6 +393,13 @@ def _classify_income_transaction(
     """
     transaction_id = transaction.transaction_id
 
+    if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+        # Operator reviewed and deliberately excluded this row from filing (a
+        # final disposition): omit it silently. This short-circuits before the
+        # ``irpf_category=actividad_economica`` business override in
+        # ``_income_business_amount`` so an excluded row can never slip back into
+        # aggregation through the category tag.
+        return None
     if transaction.direction is not TransactionDirection.INCOMING:
         # OUTGOING (and any non-income) rows are out of scope for the income
         # pass. Deductible business expenses are owned by the gasto pipeline;
@@ -446,6 +461,7 @@ def _classify_income_transaction(
         target_casilla_id=_TARGET_CASILLA_INGRESOS,
         gross_amount=gross_amount,
         taxable_base_amount=taxable_base_amount,
+        withheld_amount=_income_withheld_amount(transaction),
         filing_date=filing_date,
         source_jurisdiction=transaction.source_jurisdiction,
     )
@@ -484,6 +500,18 @@ def _computable_income_amount(observation: RentaIncomeObservation) -> Decimal:
     if observation.taxable_base_amount is not None:
         return observation.taxable_base_amount
     return observation.gross_amount
+
+
+def _income_withheld_amount(transaction: Transaction) -> Decimal:
+    if transaction.irpf_category != _IRPF_CATEGORY_ACTIVIDAD_ECONOMICA:
+        return Decimal("0")
+    if transaction.taxable_base is None or transaction.iva_amount is None:
+        return Decimal("0")
+    invoice_gross = transaction.taxable_base + transaction.iva_amount
+    cash_received = abs(transaction.raw.amount)
+    if invoice_gross <= cash_received:
+        return Decimal("0")
+    return invoice_gross - cash_received
 
 
 def _income_casilla_aggregation(

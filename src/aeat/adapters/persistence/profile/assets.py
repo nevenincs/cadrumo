@@ -1,9 +1,20 @@
 """Encrypted SQL persistence for actividad economica asset and amortizacion ledgers.
 
-:class:`aeat.domain.contribuyente.assets.AssetRecord` and
-:class:`aeat.domain.contribuyente.assets.AmortizacionLedger` payloads are stored
-as :class:`SensitivityClass` FINANCIAL secure objects in the primary database
-through :class:`SecureObjectRepository`.
+:class:`AssetRecord`, :class:`AssetsLedgerDocument`, and
+:class:`AmortizacionLedger` payloads are stored as
+``FINANCIAL`` :class:`adapters.persistence.storage.SensitivityClass`
+secure objects in the primary database through
+:class:`adapters.persistence.storage.SecureObjectRepository`. The
+singleton namespace, default object key, schema version, and custody contracts
+come from
+:data:`adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE` and
+:data:`adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`.
+
+See Also:
+    :mod:`domain.contribuyente.assets`
+        Typed asset and amortizacion payload models persisted here.
+    :mod:`adapters.persistence.profile.inventory`
+        Sibling profile-local secure-object adapter for stock valuation ledgers.
 """
 
 from __future__ import annotations
@@ -23,11 +34,11 @@ from ....domain.contribuyente.assets import (
 from ..storage import (
     PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
     PROFILE_ASSETS_LEDGER_NAMESPACE,
+    SecureObjectRepository,
     SensitivityClass,
     secure_object_logical_path,
+    secure_object_repository_for_active_bucket,
 )
-from ..storage.runtime_repository import secure_object_repository_for_active_bucket
-from ..storage.sql import SecureObjectRepository
 
 _log = get_logger(__name__)
 
@@ -56,6 +67,9 @@ def load_assets() -> tuple[AssetRecord, ...]:
 
 def save_assets(assets: tuple[AssetRecord, ...]) -> Path:
     """Persist ``assets`` as a governed FINANCIAL-class encrypted envelope.
+
+    The storage contract comes from
+    :data:`adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE`.
 
     Args:
         assets: Asset records to persist.
@@ -92,6 +106,9 @@ def load_amortizacion_ledger() -> AmortizacionLedger:
 def save_amortizacion_ledger(ledger: AmortizacionLedger) -> Path:
     """Persist ``ledger`` as a governed FINANCIAL-class encrypted envelope.
 
+    The storage contract comes from
+    :data:`adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`.
+
     Args:
         ledger: Amortizacion ledger to persist.
 
@@ -104,7 +121,13 @@ def save_amortizacion_ledger(ledger: AmortizacionLedger) -> Path:
 
 
 class AssetsLedgerRepository:
-    """Governed repository for the encrypted assets ledger."""
+    """Governed repository for the encrypted :class:`AssetsLedgerDocument` singleton.
+
+    The singleton row is owned by
+    :data:`adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE`
+    and persisted through
+    :class:`adapters.persistence.storage.SecureObjectRepository`.
+    """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
         """Initialise the repository, defaulting to the active-bucket secure object store."""
@@ -157,6 +180,10 @@ class AssetsLedgerRepository:
     def save(self, document: AssetsLedgerDocument) -> None:
         """Persist ``document`` as FINANCIAL-class ciphertext.
 
+        The classification, schema version, namespace, and object key are taken
+        from
+        :data:`adapters.persistence.storage.PROFILE_ASSETS_LEDGER_NAMESPACE`.
+
         Args:
             document: Ledger document to encrypt and write.
         """
@@ -206,10 +233,13 @@ class AssetsLedgerRepository:
 
 
 class AmortizacionLedgerRepository:
-    """Governed repository for the encrypted amortizacion ledger.
+    """Governed repository for the encrypted :class:`AmortizacionLedger` singleton.
 
     Mirrors :class:`AssetsLedgerRepository` for amortizacion entries; the
-    payload type is :class:`aeat.domain.contribuyente.assets.AmortizacionLedger`.
+    payload type is :class:`AmortizacionLedger`. Its singleton row is owned by
+    :data:`adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`
+    and persisted through
+    :class:`adapters.persistence.storage.SecureObjectRepository`.
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
@@ -262,6 +292,10 @@ class AmortizacionLedgerRepository:
 
     def save(self, ledger: AmortizacionLedger) -> None:
         """Persist ``ledger`` as FINANCIAL-class ciphertext.
+
+        The classification, schema version, namespace, and object key are taken
+        from
+        :data:`adapters.persistence.storage.PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE`.
 
         Args:
             ledger: Amortizacion ledger to encrypt and write.

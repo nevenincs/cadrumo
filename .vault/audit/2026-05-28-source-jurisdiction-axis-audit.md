@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#source-jurisdiction-axis'
 date: '2026-05-28'
-modified: '2026-05-28'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `source-jurisdiction-axis` audit: `campaign summary`
 

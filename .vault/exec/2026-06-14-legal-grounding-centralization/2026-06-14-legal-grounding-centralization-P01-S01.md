@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#legal-grounding-centralization'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-06-14-legal-grounding-centralization-plan]]"
 ---
-
-
-
 
 # F6: promote LIRPF art.58/59 family thresholds (max-age 25, max-age 3, custodia 0.5) to external_constants grounded on the cited articles
 

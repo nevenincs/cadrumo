@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#storage-backend-security-review'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S07'
 related:
   - "[[2026-06-14-storage-backend-security-review-plan]]"
 ---
-
-
-
 
 # Bind namespace and object-key digest and schema version into the secure-object payload AEAD associated data
 
@@ -70,7 +67,6 @@ HEAD with the 7 failing tests; commit `eece62072` restored the read path. Land H
 on a clean branch slice with the full storage suite (not just `bucket/tests/`) as
 the gate. Also fixed a latent W03.P06 regression in the same restore: the
 production-file-write inventory entry for `write_manifest` (now open()+fsync).
-
 
 ## Read-site audit (completed 2026-06-15) — exhaustive `.payload` surface for the AAD refactor
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - "[[2026-05-28-schema-hardening-continuity-conformance-plan]]"
 ---
-
-
-
 
 # Add generic retirement and unmatched-continuity validation semantics
 

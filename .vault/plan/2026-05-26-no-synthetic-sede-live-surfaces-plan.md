@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#no-synthetic-sede-live-surfaces'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-research]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
 ---
-
 
 # `no-synthetic-sede-live-surfaces` implementation plan
 

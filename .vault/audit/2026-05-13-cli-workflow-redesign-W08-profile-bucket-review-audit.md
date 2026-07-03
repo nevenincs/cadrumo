@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr]]'
@@ -12,7 +12,6 @@ related:
 ---
 
 # `cli-workflow-redesign` `W08 profile bucket` Code Review
-
 
 W08-PROFILE-BUCKET-001 | RESOLVED | `WorkflowState.profiles` now stores strict profile bucket pointers only.
 

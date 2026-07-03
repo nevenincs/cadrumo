@@ -32,12 +32,43 @@ class RentaSexCode(StrEnum):
 
 
 class RentaMaritalStatus(StrEnum):
-    """Modelo 100 ``tipo_EstadoCivil`` values."""
+    """Renta taxpayer marital / registered-partnership profile values."""
 
     SOLTERO = "1"
     CASADO = "2"
     VIUDO = "3"
     SEPARADO_DIVORCIADO = "4"
+    PAREJA_HECHO = "5"
+
+
+RENTA_MODELO100_ECIVIL_EXPORT_CODES: frozenset[str] = frozenset(
+    {
+        RentaMaritalStatus.SOLTERO.value,
+        RentaMaritalStatus.CASADO.value,
+        RentaMaritalStatus.VIUDO.value,
+        RentaMaritalStatus.SEPARADO_DIVORCIADO.value,
+    }
+)
+"""Official Modelo 100 ECIVIL export codes accepted by the bundled XSD."""
+
+
+def modelo100_ecivil_export_code(value: object) -> str:
+    """Return a validated official Modelo 100 ECIVIL export code.
+
+    ``RentaMaritalStatus.PAREJA_HECHO`` is intentionally profile-only. The
+    official Modelo 100 ECIVIL field is restricted to Estado Civil codes 1-4,
+    so callers must supply the taxpayer's true official civil-status code
+    instead of exporting the registered-partnership profile marker.
+    """
+    code = str(value).strip()
+    if code in RENTA_MODELO100_ECIVIL_EXPORT_CODES:
+        return code
+    if code == RentaMaritalStatus.PAREJA_HECHO.value:
+        raise ValueError(
+            "profile-only pareja de hecho marital status code '5' is not a valid Modelo 100 ECIVIL export code; "
+            "supply the official Estado Civil code 1-4"
+        )
+    raise ValueError(f"Modelo 100 ECIVIL export code must be one of 1, 2, 3, or 4; got {code!r}")
 
 
 class RentaDisabilityGrade(StrEnum):
@@ -201,6 +232,7 @@ class SituacionFamiliarM145(StrEnum):
 
 
 __all__ = [
+    "RENTA_MODELO100_ECIVIL_EXPORT_CODES",
     "UE_EEA_COUNTRY_CODES",
     "FiscalResidency",
     "RentaDeclaracionType",
@@ -209,4 +241,5 @@ __all__ = [
     "RentaSexCode",
     "SituacionFamiliar",
     "SituacionFamiliarM145",
+    "modelo100_ecivil_export_code",
 ]

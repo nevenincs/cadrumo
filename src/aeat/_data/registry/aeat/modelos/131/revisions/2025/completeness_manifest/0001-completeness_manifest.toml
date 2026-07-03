@@ -1,6 +1,6 @@
 [revisions."2025".completeness_manifest]
 source_ref = "aeat-dr-131-2025"
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95", "ley-35-2006:art-31", "orden-hac-1347-2024:art-4", "orden-hac-1347-2024:da-1", "orden-hac-1347-2024:instruccion-2-2-a", "orden-hac-1347-2024:instruccion-2-2-b", "orden-hac-1347-2024:instruccion-2-3-b-3"]
 source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-instructions"]
 
 [[revisions."2025".completeness_manifest.casillas]]
@@ -62,3 +62,43 @@ number = "15"
 [[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "saldo-negativo-fin-periodo"
 number = "saldo-negativo-fin-periodo"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "modulos-epigrafe"
+number = "modulos-epigrafe"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "modulos-1-unidades"
+number = "modulos-1-unidades"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "modulos-1-unidades-anterior"
+number = "modulos-1-unidades-anterior"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "modulos-2-unidades"
+number = "modulos-2-unidades"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "modulos-3-unidades"
+number = "modulos-3-unidades"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "modulos-4-unidades"
+number = "modulos-4-unidades"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "modulos-5-unidades"
+number = "modulos-5-unidades"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "modulos-6-unidades"
+number = "modulos-6-unidades"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "modulos-7-unidades"
+number = "modulos-7-unidades"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "modulos-minoracion-inversion"
+number = "modulos-minoracion-inversion"

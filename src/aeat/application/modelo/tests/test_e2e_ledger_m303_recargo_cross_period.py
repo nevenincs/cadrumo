@@ -48,14 +48,15 @@ from typing import Literal
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.modelos import CalculationRevision
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -63,7 +64,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
@@ -77,7 +77,7 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-e2e-ledger-303-recargo"
+_BUCKET_ID = "30330303-0303-4303-8303-303303303303"
 _YEAR = 2025
 _TAX_ID = "12345678Z"
 _T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
@@ -143,7 +143,7 @@ def _recargo_sale(
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id=provider_id,
+                provider_transaction_id=provider_id,
                 booked_date=booked,
                 value_date=booked,
                 amount=(taxable_base + iva_amount),
@@ -161,6 +161,8 @@ def _recargo_sale(
                 raw_fields={"source_kind": "ledger_transaction"},
             ),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "category_id": "test_recargo_sale",
             "taxable_base": taxable_base,
@@ -234,7 +236,19 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Test runtime profile",
-            facts=(UserProfileFact(path="identity.tax_id", value=_TAX_ID),),
+            facts=(
+                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            ),
             created_at=_T0,
             updated_at=_T0,
         ),

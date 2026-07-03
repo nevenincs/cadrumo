@@ -11,19 +11,19 @@ target_casillas = [
     # box number onto the value token. Values parse to valid Decimal instances but are not
     # equal to 1000.00 due to the merged box number.  Tests assert isinstance(..., Decimal).
     #
-    # 0545 — cuota íntegra estatal (ley-35-2006:art-62, art-66)
+    # 0545 — cuota íntegra estatal (ley-35-2006:art-63)
     {casilla_id = "0545", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+[íi]ntegra\s+estatal\s*\['},
-    # 0546 — cuota íntegra autonómica (ley-35-2006:art-62, art-67)
+    # 0546 — cuota íntegra autonómica (ley-35-2006:art-74)
     {casilla_id = "0546", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+[íi]ntegra\s+auton[oó]mica\s*\['},
     # 0505 — base liquidable general sometida a gravamen (ley-35-2006:art-50)
     {casilla_id = "0505", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Base\s+liquidable\s+general\s+sometida\s+a\s+gravamen\s*\['},
-    # 0585 — cuota líquida estatal incrementada (ley-35-2006:art-68)
+    # 0585 — cuota líquida estatal incrementada (ley-35-2006:art-67)
     {casilla_id = "0585", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+l[íi]quida\s+estatal\s+incrementada'},
-    # 0586 — cuota líquida autonómica incrementada (ley-35-2006:art-68)
+    # 0586 — cuota líquida autonómica incrementada (ley-35-2006:art-77)
     # Pattern requires opening bracket to exclude CCAA passthrough row (casilla 0671) which has
     # the same label but no formula reference.
     {casilla_id = "0586", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+l[íi]quida\s+auton[oó]mica\s+incrementada\s*\['},
-    # 0587 — cuota líquida incrementada total = 0585 + 0586 (ley-35-2006:art-77)
+    # 0587 — cuota líquida incrementada total = 0585 + 0586 (ley-35-2006:art-50)
     {casilla_id = "0587", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+l[íi]quida\s+incrementada\s+total'},
     # 0595 — cuota resultante de la autoliquidación (ley-35-2006:art-79)
     {casilla_id = "0595", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+resultante\s+de\s+la\s+autoliquidaci[oó]n'},
@@ -40,23 +40,23 @@ target_casillas = [
     # Actividades económicas — estimación directa detail (third chunk).
     # All label_patterns confirmed unambiguous (appear exactly once) in 2021-0A.pdf corpus.
     #
-    # 0180 — total ingresos computables (ley-35-2006:art-27)
+    # 0180 — total ingresos computables (ley-35-2006:art-27, art-28, art-30, art-31, art-32)
     {casilla_id = "0180", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+ingresos\s+computables\s*\['},
-    # 0218 — suma de gastos fiscalmente deducibles (previo a simplificada; ley-35-2006:art-30)
+    # 0218 — suma de gastos fiscalmente deducibles (ley-35-2006:art-27, art-28, art-30, art-31, art-32)
     {casilla_id = "0218", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Suma\s+de\s+gastos\s+fiscalmente\s+deducibles'},
-    # 0223 — total gastos deducibles modalidad simplificada (ley-35-2006:art-30)
+    # 0223 — total gastos deducibles modalidad simplificada (ley-35-2006:art-27, art-28, art-30, art-31, art-32)
     {casilla_id = "0223", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+gastos\s+deducibles,\s+modalidad\s+simplificada'},
-    # 0224 — rendimiento neto (ley-35-2006:art-28)
+    # 0224 — rendimiento neto (ley-35-2006:art-27, art-28, art-30, art-32)
     # Pattern anchors on opening bracket after "neto" to exclude "neto reducido" line (0226).
     {casilla_id = "0224", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Rendimiento\s+neto\s+\['},
-    # 0226 — rendimiento neto reducido (ley-35-2006:art-32)
+    # 0226 — rendimiento neto reducido (ley-35-2006:art-27, art-28, art-30, art-31, art-32)
     {casilla_id = "0226", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Rendimiento\s+neto\s+reducido\s*\['},
-    # 0231 — suma de rendimientos netos reducidos (pre-0235 subtotal; ley-35-2006:art-32)
+    # 0231 — suma de rendimientos netos reducidos (ley-35-2006:art-27, art-28, art-30, art-31, art-32)
     # Pattern is distinct from 0235 "Suma del rendimiento neto reducido total de las actividades".
     {casilla_id = "0231", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Suma\s+de\s+rendimientos\s+netos\s+reducidos'},
-    # 0235 — rendimiento neto reducido total actividades económicas estimación directa
+    # 0235 — rendimiento neto reducido total actividades económicas (ley-35-2006:art-27, art-28, art-30, art-31, art-32)
     {casilla_id = "0235", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Suma\s+del\s+rendimiento\s+neto\s+reducido\s+total\s+de\s+las\s+actividades'},
-    # 0432 — saldo neto rendimientos a integrar en base imponible general
+    # 0432 — saldo neto rendimientos a integrar en base imponible general (ley-35-2006:art-48)
     {casilla_id = "0432", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Saldo\s+neto\s+de\s+rendimientos\s+a\s+integrar'},
     # 0435 — base imponible general: DEFERRED — the printed label appears twice per corpus
     # (body section + base liquidable section) with identical text; parser rejects ambiguous.
@@ -70,9 +70,10 @@ target_casillas = [
     # casillas 0172-0179 are absent from this summary form — only their total (0180) is shown.
     # The formula 0180 = sum(0171..0179) therefore cannot be verified from the corpus alone.
     # Corpus sanitisation (all amounts replaced with 1.001.000,00) further prevents arithmetic
-    # verification of any closure — documented in test_verification_chain.py M100 section.
+    # verification of any closure — documented by
+    # test_verification_chain_part3.py::test_verification_chain_m100_engine_corpus_limited.
     #
-    # 0171 — ingresos de explotación (ley-35-2006:art-27; leaf input for 0180)
+    # 0171 — ingresos de explotación (ley-35-2006:art-27, art-28, art-30, art-31, art-32; leaf input for 0180)
     {casilla_id = "0171", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ingresos\s+de\s+explotaci[oó]n'},
 ]
 confidence = "strict"
@@ -84,13 +85,13 @@ legal_refs = [
     "ley-35-2006:art-27",
     "ley-35-2006:art-28",
     "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
     "ley-35-2006:art-32",
+    "ley-35-2006:art-48",
     "ley-35-2006:art-50",
-    "ley-35-2006:art-62",
-    "ley-35-2006:art-66",
+    "ley-35-2006:art-63",
     "ley-35-2006:art-67",
-    "ley-35-2006:art-68",
-    "ley-35-2006:art-73",
+    "ley-35-2006:art-74",
     "ley-35-2006:art-77",
     "ley-35-2006:art-79",
     "ley-35-2006:art-103",

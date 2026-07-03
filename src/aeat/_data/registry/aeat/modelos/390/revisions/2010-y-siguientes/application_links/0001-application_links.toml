@@ -68,7 +68,7 @@ surface = "deadline"
 consumer = "aeat.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
-source_refs = ["boe-modelo-390-2009-form"]
+source_refs = ["boe-modelo-390-2009-form", "aeat-modelo-390-procedure"]
 
 [[revisions."2010-y-siguientes".application_links]]
 id = "modelo-390-calculation"
@@ -76,5 +76,13 @@ surface = "calculation"
 consumer = "aeat.domain.calculations.registry"
 requires_snapshot = true
 legal_refs = ["orden-eha-3111-2009:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".application_links]]
+id = "modelo-390-export"
+surface = "export"
+consumer = "aeat.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-eha-3111-2009:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 

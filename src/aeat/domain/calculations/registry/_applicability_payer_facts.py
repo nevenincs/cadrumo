@@ -21,6 +21,10 @@ class PayerFact(StrEnum):
     TRADES_INTRACOMMUNITY = "trades_intracommunity"
     EXCEEDS_THIRD_PARTY_THRESHOLD = "exceeds_third_party_threshold"
     BIENES_EXTRANJERO_ABOVE_THRESHOLD = "bienes_extranjero_above_threshold"
+    MONEDAS_VIRTUALES_EXTRANJERO_ABOVE_THRESHOLD = "monedas_virtuales_extranjero_above_threshold"
+    PAYS_CAPITAL_INCOME_WITH_RETENCION = "pays_capital_income_with_retencion"
+    IVA_GROUP_MEMBER = "iva_group_member"
+    IVA_GROUP_DOMINANT_ENTITY = "iva_group_dominant_entity"
 
 
 def payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
@@ -40,3 +44,11 @@ def payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
             return profile.third_party_transactions_above_347_threshold
         case PayerFact.BIENES_EXTRANJERO_ABOVE_THRESHOLD:
             return profile.bienes_extranjero_above_threshold
+        case PayerFact.MONEDAS_VIRTUALES_EXTRANJERO_ABOVE_THRESHOLD:
+            return profile.monedas_virtuales_extranjero_above_threshold
+        case PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION:
+            return profile.pays_capital_income_with_retencion
+        case PayerFact.IVA_GROUP_MEMBER:
+            return profile.iva.group_member_enrolled
+        case PayerFact.IVA_GROUP_DOMINANT_ENTITY:
+            return profile.iva.group_dominant_entity_enrolled

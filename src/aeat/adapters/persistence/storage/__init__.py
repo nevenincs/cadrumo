@@ -1,7 +1,7 @@
-"""Persistence layer and migrations entry point.
+"""Persistence layer public API.
 
 Public API of the storage subpackage. Callers outside
-:mod:`aeat.adapters.persistence.storage` must import only from here; internal
+:mod:`adapters.persistence.storage` must import only from here; internal
 modules (``sql._orm``, ``sql.engine``, ``sql.session``, ``sql.repository``,
 and the encryption substrate under ``crypto``,
 ``envelope``, ``master_key``, ``blob_store``, ``secret_store``) are
@@ -13,32 +13,35 @@ typed column helpers) that every persisted record passes through.
 Throughout the package, "substrate" without a qualifier refers to
 this stack.
 
-The public surface is intentionally narrow:
+The public surface is grouped by contract:
 
-- Pydantic v2 record models — :class:`ModeloCatalogueRecord`, :class:`PortalRecord`,
-  :class:`CorpusArtifactRecord`, plus :class:`PortalAuthMethod`.
-- Errors — :class:`StorageError`, :class:`RepositoryError`.
-- Engine and session helpers — :func:`get_engine`, :func:`dispose_engine`,
-  :func:`session_scope`.
-- Typed repositories — :class:`ModeloRepository`, :class:`PortalRepository`,
-  :class:`CorpusArtifactRepository`, and the base :class:`SecureObjectRepository`.
-- Encryption substrate — :class:`Envelope`, :class:`EncryptedBlobStore`,
-  :class:`MasterKeyProvider`, :class:`SecretStore`, plus the column-level
-  helpers :class:`EncryptedString`, :class:`EncryptedBytes`,
-  :class:`EncryptedJSON`, and :class:`HashedLookup`.
-- Runtime and master-key session boundary — :class:`StorageRuntime`,
-  :class:`StorageRuntimeReadiness`, :func:`inspect_storage_runtime`,
-  :func:`inspect_bucket_storage_runtime`, :func:`activate_session`,
-  :func:`has_active_bucket_session`, :func:`get_active_master_key`,
+- SQL and secure-object persistence — engine/session helpers, typed catalogue
+  repositories, :class:`SecureObjectRepository`, and the secure-object work
+  records :class:`SecureObjectWrite`, :class:`SecureObjectDeletion`, and
+  :class:`SecureObjectNamespaceIntegrity`.
+- Encryption substrate — :class:`Envelope`, :class:`CipherEnvelope`,
+  :class:`EncryptedBlobStore`, :class:`SecretStore`, :class:`MasterKeyProvider`,
+  and the column-level helpers :class:`EncryptedString`,
+  :class:`EncryptedBytes`, :class:`EncryptedJSON`, and :class:`HashedLookup`.
+- Path-shaped SDK bridges — :func:`materialise_secret`,
+  :func:`export_to_temp_path`, and :func:`get_secret_store` for callers that
+  cannot consume in-memory secret bytes.
+- Runtime and custody boundary — :class:`StorageRuntime`,
+  :class:`StorageRuntimeReadiness`, runtime repository factories,
+  :func:`activate_session`, :func:`get_active_master_key`,
   :func:`activate_master_key_provider`, and :func:`get_master_key_provider`.
+- Recovery and rotation — :class:`RecoveryRecord`, :class:`MintedRecovery`,
+  BIP-39 recovery helpers, :class:`RotationPlanEntry`,
+  :class:`RotationSummary`, and master-key / blob-store rotation functions.
 - Secure-object hierarchy registry — :data:`STORAGE_NAMESPACE_REGISTRY`,
   :data:`STORAGE_PATH_DEFINITIONS`, namespace constants, and
   :func:`secure_object_logical_path` /
   :func:`secure_object_namespace_logical_path`; callers must use these
-  exported symbols instead of constructing persisted secure-storage
-  locations by hand.
-- Classification — :class:`SensitivityClass` tags every persisted record
-  and governs the at-rest treatment applied by the substrate.
+  exported symbols instead of constructing persisted secure-storage locations
+  by hand.
+- Governance helpers — :class:`SensitivityClass`, classification policies,
+  redaction helpers, corpus manifests, path-safety helpers, and file-lock
+  primitives.
 """
 
 from __future__ import annotations
@@ -120,6 +123,7 @@ from ._namespace_registry import (
     LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
     LIVE_VERIFY_OBSERVATION_NAMESPACE,
     LLM_CACHE_NAMESPACE,
+    LLM_RUN_TELEMETRY_NAMESPACE,
     LLM_USAGE_NAMESPACE,
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
     MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
@@ -127,6 +131,7 @@ from ._namespace_registry import (
     MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
     PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
     PROFILE_ASSETS_LEDGER_NAMESPACE,
+    PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
     PROFILE_INVENTORY_LEDGER_NAMESPACE,
     REPAIR_INTEGRITY_DECISION_NAMESPACE,
     RETENCION_OBSERVATIONS_NAMESPACE,
@@ -150,6 +155,8 @@ from ._namespace_registry import (
     WORKFLOW_RUN_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
+    StorageCustodyDisposition,
+    StorageCustodyProfile,
     StorageHierarchyRegistry,
     StorageNamespaceScope,
     StoragePathDefinition,
@@ -168,40 +175,35 @@ from ._rotation import (
     rotate_master_key,
 )
 from .attachment import AttachmentStore
-from .blob_store._blob_store import (
+from .blob_store import (
     BlobManifest,
     BlobReference,
     EncryptedBlobStore,
-)
-from .blob_store._materialisation import (
     export_to_temp_path,
     get_secret_store,
     materialise_secret,
     override_secret_store,
 )
 from .bucket import RecoveryVerificationError
-from .crypto._crypto import (
+from .crypto import (
     GCM_TAG_SIZE,
     KEY_SIZE,
     NONCE_SIZE,
     EncryptedBlob,
-    decrypt_record,
-    derive_key,
-    encrypt_record,
-)
-from .crypto._encrypted_columns import (
     EncryptedBytes,
     EncryptedJSON,
     EncryptedString,
     HashedLookup,
+    decrypt_record,
+    derive_key,
+    encrypt_record,
 )
-from .envelope import SecureBoundRepository
-from .envelope._envelope import (
+from .envelope import (
     AeadAlgorithm,
     CipherEnvelope,
     EncryptionMetadata,
     Envelope,
-    EnvelopeMigrator,
+    SecureBoundRepository,
     load_encrypted_envelope,
     load_envelope,
     reencrypt_envelope_file,
@@ -235,46 +237,40 @@ from .errors import (
     StorageValidationError,
     UnsecuredModeRefusedError,
 )
-from .master_key._active_session import (
-    NoActiveBucketSessionError,
-    activate_session,
-    get_active_master_key,
-    has_active_bucket_session,
-    suspend_active_session,
-)
-from .master_key._master_key import (
+from .master_key import (
     EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
-    UnsecuredMasterKeyProvider,
-    activate_master_key_provider,
-    atomic_write_secure_bytes,
-    get_master_key_provider,
-    looks_like_real_tax_id,
-    refuse_unsecured_with_real_nif,
-)
-from .master_key._recovery import (
+    MintedRecovery,
+    NoActiveBucketSessionError,
     RecoveryKey,
+    RecoveryRecord,
+    UnsecuredMasterKeyProvider,
     WrappedMasterKey,
+    activate_master_key_provider,
+    activate_session,
+    atomic_write_secure_bytes,
     decode_mnemonic,
     encode_mnemonic,
     generate_recovery_key,
-    load_wrapped_master_key,
-    save_wrapped_master_key,
-    unwrap_master_key,
-    wrap_master_key,
-)
-from .master_key._recovery_facade import (
-    MintedRecovery,
+    get_active_master_key,
+    get_master_key_provider,
+    has_active_bucket_session,
     load_recovery_envelope,
+    load_wrapped_master_key,
+    looks_like_real_tax_id,
     mint_recovery_envelope,
     open_session_from_recovery,
+    refuse_unsecured_with_real_nif,
     save_recovery_envelope,
+    save_wrapped_master_key,
+    suspend_active_session,
+    unwrap_master_key,
     unwrap_recovery_envelope,
     verify_recovery_mnemonic,
+    wrap_master_key,
 )
-from .master_key._recovery_record import RecoveryRecord
 from .runtime import (
     StorageRuntime,
     StorageRuntimeReadiness,
@@ -284,15 +280,29 @@ from .runtime import (
     inspect_bucket_storage_runtime,
     inspect_storage_runtime,
 )
-from .runtime_repository import secure_object_repository_for_bucket
-from .secret_store._secret_store import SecretRecord, SecretStore
+from .runtime_repository import (
+    secure_object_repository_for_active_bucket,
+    secure_object_repository_for_active_bucket_or_default_route,
+    secure_object_repository_for_bucket,
+    secure_object_repository_for_cold_bootstrap_state,
+)
+from .secret_store import (
+    SecretRecord,
+    SecretStore,
+)
 from .sql import (
     SecureObjectDeletion,
     SecureObjectNamespaceIntegrity,
     SecureObjectRepository,
     SecureObjectWrite,
 )
-from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
+from .sql.engine import (
+    create_engine_from_settings,
+    dispose_engine,
+    dispose_engine_handle,
+    dispose_engines_for_bucket,
+    get_engine,
+)
 from .sql.records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, SqlRecordRepository
 from .sql.session import get_sessionmaker, session_scope
@@ -346,6 +356,7 @@ __all__ = [
     "LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE",
     "LIVE_VERIFY_OBSERVATION_NAMESPACE",
     "LLM_CACHE_NAMESPACE",
+    "LLM_RUN_TELEMETRY_NAMESPACE",
     "LLM_USAGE_NAMESPACE",
     "MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE",
     "MODELO_FILING_RECORD_CATALOGUE_NAMESPACE",
@@ -354,6 +365,7 @@ __all__ = [
     "NONCE_SIZE",
     "PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE",
     "PROFILE_ASSETS_LEDGER_NAMESPACE",
+    "PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE",
     "PROFILE_INVENTORY_LEDGER_NAMESPACE",
     "REPAIR_INTEGRITY_DECISION_NAMESPACE",
     "RETENCION_OBSERVATIONS_NAMESPACE",
@@ -400,7 +412,6 @@ __all__ = [
     "EncryptionError",
     "EncryptionMetadata",
     "Envelope",
-    "EnvelopeMigrator",
     "EnvelopeVersionError",
     "EphemeralMasterKeyProvider",
     "FileFallbackMasterKeyProvider",
@@ -449,6 +460,8 @@ __all__ = [
     "SecureObjectWrite",
     "SensitivityClass",
     "SqlRecordRepository",
+    "StorageCustodyDisposition",
+    "StorageCustodyProfile",
     "StorageError",
     "StorageHierarchyRegistry",
     "StorageNamespaceScope",
@@ -481,6 +494,8 @@ __all__ = [
     "default_rules_for_class",
     "derive_key",
     "dispose_engine",
+    "dispose_engine_handle",
+    "dispose_engines_for_bucket",
     "encode_mnemonic",
     "encrypt_record",
     "exclusive_file_lock",
@@ -522,7 +537,10 @@ __all__ = [
     "save_wrapped_master_key",
     "secure_object_logical_path",
     "secure_object_namespace_logical_path",
+    "secure_object_repository_for_active_bucket",
+    "secure_object_repository_for_active_bucket_or_default_route",
     "secure_object_repository_for_bucket",
+    "secure_object_repository_for_cold_bootstrap_state",
     "session_scope",
     "suspend_active_session",
     "unwrap_master_key",

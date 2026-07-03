@@ -47,6 +47,20 @@ aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <driv
 
 The command downloads the Drive file, stores its bytes encrypted with the transaction, and keeps the original link as provenance. Evidence always carries the document itself, never a bare link: Gmail links, arbitrary URLs, and Drive files outside the granted scope are refused. For a refused source, download the document yourself and attach it with `aeat app ledger evidence add` or `aeat app ledger attach --attachment-id`.
 
+## Bulk-fetch every invoice in a Drive folder
+
+Fetch every PDF and image invoice in one Drive folder at once, instead of one document at a time:
+
+```bash
+aeat app ledger pull-folder --folder <drive-folder-id-or-url> --note "Q1 supplier invoices"
+```
+
+The command lists the folder's contents, downloads each PDF or image, and stores every file as encrypted evidence. Fetched files are not linked to a transaction yet; bind each one afterward with `aeat app ledger attach --attachment-id <attachment-id>` or `aeat app ledger link`.
+
+Re-run the same command any time — a file already fetched is recognized by its content and is not stored twice. A file outside the granted Drive scope is refused individually and does not stop the rest of the sweep; download it yourself and attach it with `aeat app ledger attach --attachment-id`.
+
+Gmail bulk-fetch is not available yet.
+
 ## Track invoice records
 
 An invoice record tracks the invoice itself — who owes whom, for what amount

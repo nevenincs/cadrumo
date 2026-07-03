@@ -41,6 +41,39 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.corpus_search._errors.CorpusSearchError",
+        ErrorCode(
+            code="ERROR_CORPUS_SEARCH",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_corpus_search",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.corpus_search._errors.CorpusSearchInputError",
+        ErrorCode(
+            code="REFUSED_CORPUS_SEARCH_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_corpus_search_input",
+            default_suggestion="aeat app registry citations --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.corpus_search._errors.CorpusSearchDependencyError",
+        ErrorCode(
+            code="REFUSED_CORPUS_SEARCH_DEPENDENCY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_corpus_search_dependency",
+            default_suggestion='pip install "aeat-cli[search]"',
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.live._errors.LiveApplicationError",
         ErrorCode(
             code="ERROR_APPLICATION_LIVE",
@@ -124,6 +157,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_auth_login_precondition",
             default_suggestion="aeat config auth status",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.auth._operator_results.CertificateSourceNotFoundError",
+        ErrorCode(
+            code="REFUSED_AUTH_CERTIFICATE_SOURCE_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_auth_certificate_source_not_found",
+            default_suggestion="aeat config auth certificate list",
             retryable=False,
             runbook_id=None,
         ),

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#secure-storage-production-hardening'
 date: '2026-05-28'
-modified: '2026-05-28'
+modified: '2026-06-30'
 related:
   - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s40-research]]'
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
@@ -11,8 +11,6 @@ related:
   - '[[2026-05-06-secure-persistence-enforcement-adr]]'
   - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s36-side-store-inventory-audit]]'
 ---
-
-
 
 # `secure-storage-production-hardening` adr: `W05.P09.S40 operator-directed export exceptions` | (**status:** `accepted`)
 

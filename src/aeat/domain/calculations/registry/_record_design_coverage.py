@@ -9,17 +9,17 @@ full-Diseño inventory.
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from ._bindings import binding_source_casilla_ids
+from ._bindings import binding_source_casilla_ids, binding_source_modelo
 from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
-from ._ids import CasillaId
+from ._ids import CasillaId, LegalRefId
 from ._record_design_schema import RecordDesignSheet
 from ._runtime_graph import expression_casilla_refs
-from ._schema import CasillaDefinition, ModeloRevision
+from ._schema import CasillaDefinition, DataBindingDefinition, ModeloRevision
 
 
 def _extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
@@ -91,22 +91,20 @@ class DerivedDisenoCasilla:
     casilla_id: CasillaId | None = None
 
 
-def _selector_is_cross_modelo(selector: Mapping[str, object], modelo_id: str) -> bool:
-    """Return whether a binding / relation selector names a foreign modelo.
+def _binding_is_cross_modelo(binding: DataBindingDefinition, modelo_id: str) -> bool:
+    """Return whether a binding names a foreign source modelo.
 
-    A binding ``selector`` (or a relation's ``source_modelo``) is
-    *cross-modelo* when it explicitly names a ``source_modelo`` that is
-    not the modelo whose closure is being derived. A selector that omits
-    ``source_modelo``, or sets it equal to ``modelo_id``, is a
-    *within-modelo* selector: its ``source_casilla_ids`` / ``source_casilla_id``
-    name casillas on the modelo being derived (a ``previous_filing``
-    self-binding or a ``previous_period`` self-relation), and those
-    casillas belong in the modelo's own calculation closure.
+    A binding is *cross-modelo* when its typed selector helper reports a
+    ``source_modelo`` that is not the modelo whose closure is being derived.
+    A binding with no source modelo, or one set to ``modelo_id``, is a
+    *within-modelo* binding: its ``source_casilla_ids`` / ``source_casilla_id``
+    name casillas on the modelo being derived, and those casillas belong in
+    the modelo's own calculation closure.
     """
-    source_modelo = selector.get("source_modelo")
+    source_modelo = binding_source_modelo(binding)
     if source_modelo is None:
         return False
-    return str(source_modelo) != modelo_id
+    return source_modelo != modelo_id
 
 
 def _walk_calculation_closure(
@@ -138,7 +136,7 @@ def _walk_calculation_closure(
         for ref in expectation.reconciliation_total_casilla_ids.values():
             visit_token(ref)
     for binding in revision.bindings:
-        if _selector_is_cross_modelo(binding.selector, modelo_id):
+        if _binding_is_cross_modelo(binding, modelo_id):
             continue
         for token in binding_source_casilla_ids(binding):
             visit_token(token)
@@ -263,7 +261,7 @@ def calculation_closure_record_design_metadata(
     return frozenset(metadata)
 
 
-def calculation_closure_legal_refs(revision: ModeloRevision, modelo_id: str) -> frozenset[str]:
+def calculation_closure_legal_refs(revision: ModeloRevision, modelo_id: str) -> frozenset[LegalRefId]:
     """Return legal references carried by a revision's calculation closure.
 
     Legal-ref projection of :func:`calculation_closure_casilla_ids`. The
@@ -284,7 +282,7 @@ def calculation_closure_legal_refs(revision: ModeloRevision, modelo_id: str) -> 
     declared_by_id = casillas_by_id(revision)
     formulas_by_id = {formula.id: formula for formula in revision.formulas}
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
-    legal_refs: set[str] = set()
+    legal_refs: set[LegalRefId] = set()
 
     for casilla_id in calculation_closure_casilla_ids(revision, modelo_id):
         casilla = declared_by_id.get(casilla_id)
@@ -295,6 +293,8 @@ def calculation_closure_legal_refs(revision: ModeloRevision, modelo_id: str) -> 
             legal_refs.update(formulas_by_id[casilla.formula].legal_refs)
         if casilla.binding is not None:
             legal_refs.update(bindings_by_id[casilla.binding].legal_refs)
+        for binding_id in casilla.alternate_bindings:
+            legal_refs.update(bindings_by_id[binding_id].legal_refs)
     for expectation in revision.verification_expectations:
         legal_refs.update(expectation.legal_refs)
     return frozenset(legal_refs)

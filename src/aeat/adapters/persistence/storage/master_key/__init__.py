@@ -1,23 +1,52 @@
-"""Master-key substrate: providers and BIP-39 recovery.
+"""Master-key substrate: providers, sessions, and BIP-39 recovery.
 
-Public surface for the at-rest master-key plumbing. Re-exports the
-provider hierarchy (:class:`MasterKeyProvider`,
-:class:`KeyringMasterKeyProvider`, :class:`FileFallbackMasterKeyProvider`,
-:class:`UnsecuredMasterKeyProvider`, :class:`EphemeralMasterKeyProvider`),
-the :func:`get_master_key_provider` resolver, the unsecured-provider safety guard
-(:func:`refuse_unsecured_with_real_nif`,
-:func:`looks_like_real_tax_id`), the :func:`atomic_write_secure_bytes`
-helper, and the BIP-39 recovery primitives
+Public surface for at-rest key custody. Re-exports the provider family
+(:class:`MasterKeyProvider`, :class:`KeyringMasterKeyProvider`,
+:class:`FileFallbackMasterKeyProvider`,
+:class:`UnsecuredMasterKeyProvider`, and
+:class:`EphemeralMasterKeyProvider`), the
+:func:`get_master_key_provider` resolver, and the
+:func:`activate_master_key_provider` / :func:`activate_session`
+context managers that bind unlocked key material to the active bucket
+session. :class:`NoActiveBucketSessionError` and
+:func:`suspend_active_session` expose the same session boundary to
+tests and bootstrap flows.
+
+KDF and file-custody helpers are exported through :class:`KdfParams`,
+:func:`derive_kek_with_params`, the Argon2id cost constants, the
+unsecured-provider safety guard
+(:func:`refuse_unsecured_with_real_nif` and
+:func:`looks_like_real_tax_id`), and
+:func:`atomic_write_secure_bytes`.
+
+Recovery exports include the low-level BIP-39 primitives
 (:class:`RecoveryKey`, :class:`WrappedMasterKey`,
 :func:`generate_recovery_key`, :func:`encode_mnemonic`,
 :func:`decode_mnemonic`, :func:`wrap_master_key`,
-:func:`unwrap_master_key`, :func:`save_wrapped_master_key`,
-:func:`load_wrapped_master_key`).
+:func:`unwrap_master_key`, :func:`save_wrapped_master_key`, and
+:func:`load_wrapped_master_key`) plus the typed recovery-envelope
+facade (:class:`MintedRecovery`, :class:`RecoveryRecord`,
+:func:`mint_recovery_envelope`, :func:`load_recovery_envelope`,
+:func:`save_recovery_envelope`, :func:`unwrap_recovery_envelope`,
+:func:`verify_recovery_mnemonic`, and
+:func:`open_session_from_recovery`). Importing this package does not
+resolve providers, acquire keys, unwrap recovery material, or write
+custody files; callers must invoke the exported operations explicitly.
 """
 
 from __future__ import annotations
 
-from ._active_session import NoActiveBucketSessionError, activate_session, suspend_active_session
+from ._active_session import (
+    NoActiveBucketSessionError,
+    activate_session,
+    current_active_bucket_session,
+    get_active_master_key,
+    has_active_bucket_session,
+    suspend_active_session,
+)
+from ._bucket_session import BucketSession
+from ._dek_wrap import WrappedDek, unwrap_dek, wrap_dek
+from ._idle_timeout import evaluate_idle
 from ._kdf_params import KdfParams
 from ._master_key import (
     EphemeralMasterKeyProvider,
@@ -30,6 +59,12 @@ from ._master_key import (
     get_master_key_provider,
     looks_like_real_tax_id,
     refuse_unsecured_with_real_nif,
+)
+from ._master_key_bucket_dek import (
+    bucket_dek_path,
+    load_or_mint_bucket_dek,
+    read_wrapped_bucket_dek,
+    write_wrapped_bucket_dek,
 )
 from ._master_key_derivation import (
     ARGON2_MEMORY_COST_KIB,
@@ -63,6 +98,7 @@ __all__ = [
     "ARGON2_MEMORY_COST_KIB",
     "ARGON2_PARALLELISM",
     "ARGON2_TIME_COST",
+    "BucketSession",
     "EphemeralMasterKeyProvider",
     "FileFallbackMasterKeyProvider",
     "KdfParams",
@@ -73,26 +109,37 @@ __all__ = [
     "RecoveryKey",
     "RecoveryRecord",
     "UnsecuredMasterKeyProvider",
+    "WrappedDek",
     "WrappedMasterKey",
     "activate_master_key_provider",
     "activate_session",
     "atomic_write_secure_bytes",
+    "bucket_dek_path",
+    "current_active_bucket_session",
     "decode_mnemonic",
     "derive_kek_with_params",
     "encode_mnemonic",
+    "evaluate_idle",
     "generate_recovery_key",
+    "get_active_master_key",
     "get_master_key_provider",
+    "has_active_bucket_session",
+    "load_or_mint_bucket_dek",
     "load_recovery_envelope",
     "load_wrapped_master_key",
     "looks_like_real_tax_id",
     "mint_recovery_envelope",
     "open_session_from_recovery",
+    "read_wrapped_bucket_dek",
     "refuse_unsecured_with_real_nif",
     "save_recovery_envelope",
     "save_wrapped_master_key",
     "suspend_active_session",
+    "unwrap_dek",
     "unwrap_master_key",
     "unwrap_recovery_envelope",
     "verify_recovery_mnemonic",
+    "wrap_dek",
     "wrap_master_key",
+    "write_wrapped_bucket_dek",
 ]

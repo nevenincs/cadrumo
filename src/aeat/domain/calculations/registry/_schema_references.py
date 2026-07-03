@@ -88,6 +88,7 @@ class LegalReference(RegistryModel):
     kind: Literal[
         "ley",
         "real_decreto",
+        "real_decreto_legislativo",
         "real_decreto_ley",
         "orden",
         "reglamento",
@@ -106,10 +107,10 @@ class LegalReference(RegistryModel):
     effective_to: date | None = None
     consolidated_as_of: date | None = None
     review_status: ReviewStatus
-    reviewed_at: date | None = None
-    reviewed_by: str | None = None
+    reviewed_at: date
+    reviewed_by: str = Field(min_length=1)
     notes: str | None = None
-    required_text: tuple[str, ...] = Field(default_factory=tuple)
+    required_text: tuple[str, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
     def _validate_legal_reference(self) -> LegalReference:
@@ -135,7 +136,15 @@ class SourceReference(RegistryModel):
     id: SourceRefId
     evidence_tier: EvidenceTier
     authority: Literal["aeat", "boe", "eu", "autonomous_community", "other"]
-    kind: Literal["record_design", "manual_pdf", "instructions", "xsd", "dictionary", "form_spec"]
+    kind: Literal[
+        "record_design",
+        "manual_pdf",
+        "instructions",
+        "xsd",
+        "dictionary",
+        "form_spec",
+        "suppression_notice",
+    ]
     corpus_path: str
     sha256: str = Field(min_length=64, max_length=64)
     bytes: int = Field(gt=0)

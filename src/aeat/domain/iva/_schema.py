@@ -3,7 +3,7 @@
 Every record the subpackage exposes — enumerations, per-rate values,
 citations, regulations, catalogues, verification reports — is defined here.
 The schema is frozen and strict wherever the loader idiom permits it,
-mirroring the pattern established by :mod:`aeat.domain.normatives._schema`.
+matching the current registry-backed legal grounding conventions.
 
 Closed catalogues (:class:`IvaCategory`, :class:`EUMemberState`,
 :class:`IvaRateKind`, :class:`IvaCitationSource`) are :class:`enum.StrEnum`
@@ -55,6 +55,7 @@ class IvaCategory(StrEnum):
     INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE = "intra_community_acquisition_reverse_charge"
     INTRA_COMMUNITY_TRIANGULATION = "intra_community_triangulation"
     EXPORT_THIRD_COUNTRY_ZERO_RATED = "export_third_country_zero_rated"
+    EXPORT_ASSIMILATED_ZERO_RATED = "export_assimilated_zero_rated"
     IMPORT_THIRD_COUNTRY = "import_third_country"
     RECARGO_EQUIVALENCIA = "recargo_equivalencia"
     REGIMEN_SIMPLIFICADO = "regimen_simplificado"
@@ -75,8 +76,9 @@ class IvaCategory(StrEnum):
 #   imponible (Ley 37/1992 art. 7).
 # - INTRA_COMMUNITY_SUPPLY: entrega intracomunitaria exenta — zero cuota,
 #   declared as base only (Ley 37/1992 art. 25, casilla 59).
-# - EXPORT_THIRD_COUNTRY_ZERO_RATED: exportación exenta — zero cuota,
-#   base only (Ley 37/1992 art. 21, casilla 60).
+# - EXPORT_THIRD_COUNTRY_ZERO_RATED / EXPORT_ASSIMILATED_ZERO_RATED:
+#   exportación u operación asimilada exenta — zero cuota, base only
+#   (Ley 37/1992 arts. 21-22, casilla 60).
 # - INTRA_COMMUNITY_TRIANGULATION: operación triangular informativa — no
 #   cuota for the Spanish intermediary.
 # - REGIMEN_SIMPLIFICADO: settled under the régimen simplificado modulo
@@ -96,6 +98,7 @@ CUOTA_LESS_M303_IVA_CATEGORIES: frozenset[IvaCategory] = frozenset(
         IvaCategory.OPERACION_NO_SUJETA,
         IvaCategory.INTRA_COMMUNITY_SUPPLY,
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
         IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
         IvaCategory.REGIMEN_SIMPLIFICADO,
     },
@@ -143,11 +146,12 @@ class IvaExemptionArticle(StrEnum):
 
 
 class EUMemberState(StrEnum):
-    """Current 27 EU member states, ISO 3166-1 alpha-2 (lowercase).
+    """Current EU IVA country prefixes accepted at IVA-facing boundaries.
 
-    Alphabetically ordered by ISO code. The list reflects the composition of
-    the European Union after Brexit and after Croatia's accession; Schengen
-    membership is irrelevant to this taxonomy.
+    The canonical 27 EU member states use ISO 3166-1 alpha-2 codes. ``XI`` is
+    the post-Brexit Northern Ireland VAT prefix accepted for goods movements in
+    Modelo 349 / intra-community IVA contexts; predicates that need strict
+    member-state membership must exclude it explicitly.
     """
 
     AT = "at"
@@ -177,6 +181,7 @@ class EUMemberState(StrEnum):
     SE = "se"
     SI = "si"
     SK = "sk"
+    XI = "xi"
 
 
 class IvaRateKind(StrEnum):
@@ -221,7 +226,7 @@ _NormativeId = Annotated[
         pattern=r"^[a-z0-9][a-z0-9-]*$",
     ),
 ]
-"""Kebab-case normative id shared with :mod:`aeat.domain.normatives`."""
+"""Kebab-case legal reference document id used by the registry legal catalogue."""
 
 
 _ManualRef = Annotated[
@@ -241,7 +246,7 @@ def _require_translatable(translatable: tr, field_name: str) -> None:
     Raises:
         IvaValidationError: If the translation key is missing or empty.
     """
-    if not translatable:
+    if not str(translatable).strip():
         raise IvaValidationError(f"{field_name}: missing authoritative translation key")
 
 
@@ -337,6 +342,12 @@ class IvaCitation(_IvaStrictFrozen):
         description="Date the citation was retrieved / last reviewed.",
     )
 
+    @model_validator(mode="after")
+    def _validate(self) -> IvaCitation:
+        """Enforce the advertised non-empty citation text invariant."""
+        _require_translatable(self.quoted_text, f"IvaCitation[{self.source.value}:{self.article}].quoted_text")
+        return self
+
 
 class IvaRegulation(_IvaStrictFrozen):
     """A single codified IVA rule for a :class:`IvaCategory`.
@@ -356,8 +367,8 @@ class IvaRegulation(_IvaStrictFrozen):
         requires_reverse_charge: Whether the rule triggers
             *inversión del sujeto pasivo*.
         requires_supplier_iva_id: Whether a supplier NIF-IVA is mandatory.
-        boe_references: Normative ids (shared with
-            :mod:`aeat.domain.normatives`) backing this rule.
+        boe_references: Registry legal-reference document ids backing this
+            rule.
         manual_references: Optional Manual práctico IVA rule ids or section
             references.
         citations: At least one :class:`IvaCitation` is required.
@@ -380,7 +391,7 @@ class IvaRegulation(_IvaStrictFrozen):
         description="Whether a supplier NIF-IVA is mandatory for this rule.",
     )
     boe_references: tuple[_NormativeId, ...] = Field(
-        description="Normative ids (shared with aeat.domain.normatives) backing this rule.",
+        description="Registry legal-reference document ids backing this rule.",
     )
     manual_references: tuple[_ManualRef, ...] = Field(
         description="Optional Manual práctico IVA rule ids or section refs.",
@@ -433,7 +444,7 @@ class IvaCatalogue(_IvaStrictMutable):
         return self
 
     @override
-    def __iter__(self) -> Iterator[IvaRegulation]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[IvaRegulation]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
         """Iterate over every loaded :class:`IvaRegulation`."""
         return iter(self.regulations.values())
 

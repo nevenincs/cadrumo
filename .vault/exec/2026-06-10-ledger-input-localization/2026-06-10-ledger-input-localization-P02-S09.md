@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#ledger-input-localization'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S09'
 related:
   - "[[2026-06-10-ledger-input-localization-plan]]"
 ---
-
-
-
 
 # Add %{label} and %{raw} interpolations to cli.common.errors.invalid_iso_date for en, ca, and hu locales using python -m aeat.locales set so all four locales carry the same interpolation tokens as the existing es string
 

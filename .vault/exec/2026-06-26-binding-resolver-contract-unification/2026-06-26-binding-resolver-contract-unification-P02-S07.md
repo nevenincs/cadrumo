@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 step_id: 'S07'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-plan]]"
 ---
-
-
-
 
 # Enroll the profile and borrador resolvers into merge_source_resolutions with explicit mesh-merge precedence preserving the declared precedence ladder, applying the apply-cached-on-collision drive against the live peer WIP
 

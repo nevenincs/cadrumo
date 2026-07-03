@@ -131,8 +131,20 @@ applies_from = 2003-09-19
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr840.pdf"
 review_status = "reviewed"
 
-[sources."boe-modelo-840-2003-form"]
+[sources."aeat-modelo-840-procedure"]
 evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_840/files/modelo-840-procedure.html"
+sha256 = "f5697eb0b4cb401f886819167701e43f4ccd6eb452aaae3b6822c4f5210a5fe0"
+bytes = 22692
+retrieved_at = 2026-07-01
+applies_from = 2003-09-19
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G323.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-840-2003-form"]
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-2572-2003.html"

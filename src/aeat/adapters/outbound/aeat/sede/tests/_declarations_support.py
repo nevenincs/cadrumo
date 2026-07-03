@@ -150,7 +150,7 @@ _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
 _REGISTER_DOWNLOAD_URL = f"{_AEAT.domains.www6}{_DECLARATIONS_LISTING_BASE_PATH}/zkau?dtid=z_test&cmd_0=download"
 
 if TYPE_CHECKING:
-    from ...auth._authenticator import AeatSession
+    from ...auth import AeatSession
 
 
 @pytest.fixture(autouse=True)
@@ -195,6 +195,10 @@ _M130_DIFERENCIA_TOTAL_CASILLA: CasillaId = validated_casilla_id("11", surface="
 _M130_RESULTADO_POSITIVO_CASILLA: CasillaId = validated_casilla_id("12", surface="_M130_RESULTADO_POSITIVO_CASILLA")
 _M130_MINORACION_CASILLA: CasillaId = validated_casilla_id("13", surface="_M130_MINORACION_CASILLA")
 _M130_RESULTADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("14", surface="_M130_RESULTADO_PREVIO_CASILLA")
+_M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+    "15",
+    surface="_M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA",
+)
 _M130_DIFERENCIA_CASILLA: CasillaId = validated_casilla_id("17", surface="_M130_DIFERENCIA_CASILLA")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_FINAL_CASILLA")
 _M131_RESULTADO_CASILLA: CasillaId = validated_casilla_id("15", surface="_M131_RESULTADO_CASILLA")
@@ -222,6 +226,7 @@ _MODELO_130_COMPUTED_CASILLAS = frozenset(
         _M130_RESULTADO_POSITIVO_CASILLA,
         _M130_MINORACION_CASILLA,
         _M130_RESULTADO_PREVIO_CASILLA,
+        _M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA,
         _M130_DIFERENCIA_CASILLA,
         _M130_RESULTADO_FINAL_CASILLA,
     },
@@ -382,12 +387,12 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
     else:
         inputs = _casilla_values(
             {
-                "01-legacy": Decimal("5"),
-                "02-legacy": Decimal("1201.00"),
-                "03-legacy": Decimal("228.19"),
-                "04-legacy": Decimal("0"),
-                "05-legacy": Decimal("7.50"),
-                "07-legacy": Decimal("12.25"),
+                "01": Decimal("5"),
+                "02": Decimal("1201.00"),
+                "03": Decimal("228.19"),
+                "04": Decimal("0"),
+                "05": Decimal("7.50"),
+                "07": Decimal("12.25"),
             },
         )
         headers = {
@@ -651,12 +656,12 @@ def _whitespace_nif_session() -> AeatSession:
     """
     from datetime import timedelta
 
-    from ...auth._authenticator import (
+    from ...auth import (
         AeatSession,
+        AuthProviderKind,
         CertificateSessionDetail,
         HandshakeResult,
     )
-    from ...auth._providers import AuthProviderKind
 
     now = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
     return AeatSession(

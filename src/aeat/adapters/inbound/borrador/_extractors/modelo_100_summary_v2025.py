@@ -1,9 +1,24 @@
-"""Modelo 100 (IRPF / Renta) observed-value extractor for año 2025.
+"""Modelo 100 (IRPF / Renta) observed-value extractor implementation.
 
-The extractor reads printed casilla/value rows from a Renta artefact.
-It does not define Modelo 100 completeness or filing-grade authority.
-When callers pass a registry extraction profile, the parser filters to
-that profile and fails hard if the observed coverage is insufficient.
+The extractor reads printed casilla/value rows from a Renta artefact using the
+year-stable ``NNNN label amount`` grammar used by the supported 2021-2025
+extractor registrations and exercised by the checked 2021-2023 fixture PDFs
+plus the generated 2025 parser tests. The class name records the original 2025
+implementation point, but :mod:`aeat.adapters.inbound.borrador._extractors`
+deliberately maps every supported year to this implementation while the observed
+row grammar remains stable.
+
+This is a read-only inbound adapter. It does not define Modelo 100
+completeness, resolve a
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot`, or make
+filing-grade authority decisions. When callers pass a
+:class:`~aeat.adapters.inbound.borrador._schema.BorradorExtractionProfile`, the
+extractor filters to that profile and fails hard if observed coverage is
+insufficient.
+
+Rows are extracted from the concatenated text stream, so
+:class:`~aeat.adapters.inbound.pdf.ExtractedCasilla` records preserve the
+printed value and confidence but do not capture per-row bounding boxes.
 """
 
 from __future__ import annotations
@@ -16,12 +31,16 @@ from typing import ClassVar
 from .....core import Modelo
 from .....core.time import now
 from .....domain.calculations.registry import CasillaId, validated_casilla_id
-from ...pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
-from ...pdf._shared import ExtractedCasilla
-from ...pdf._utils import sha256_file, source_pdf_reference_path
+from ...pdf import (
+    SPANISH_AMOUNT_GROUP,
+    ExtractedCasilla,
+    parse_spanish_decimal,
+    sha256_file,
+    source_pdf_reference_path,
+)
 from .._errors import BorradorParseError
 from .._parsers import extract_pages_text
-from .._schema import ArtefactKind, BorradorExtractionProfile, BorradorObservation
+from .._schema import ArtefactKind, BorradorExtractionProfile, InboundBorradorObservation
 
 _CASILLA_VALUE_RE = re.compile(
     rf"(?m)^\s*(?P<casilla_id>[0-9]{{4}})\s[^\n]{{0,160}}?{SPANISH_AMOUNT_GROUP}",
@@ -37,14 +56,16 @@ _CSV_RE = re.compile(
 
 
 class Modelo100ObservedV2025Extractor:
-    """Concrete Modelo 100 observed-value extractor for año 2025.
+    """Concrete Modelo 100 observed-value extractor implementation.
 
-    Reads the printed text via ``extract_pages_text``, locates
-    printed casilla rows, and returns a
-    strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`.
+    Reads the printed text via the backend facade's ``extract_pages_text``
+    primitive, locates printed casilla rows, and returns a strict
+    :class:`~aeat.adapters.inbound.borrador._schema.InboundBorradorObservation`.
 
     Attributes:
-        año: The tax year this extractor targets.
+        año: The original implementation year. The extractor registry may map
+            additional years to this class while the observed row grammar stays
+            compatible.
     """
 
     año: ClassVar[int] = 2025
@@ -54,24 +75,26 @@ class Modelo100ObservedV2025Extractor:
         pdf_path: Path,
         artefact_kind: ArtefactKind,
         extraction_profile: BorradorExtractionProfile | None = None,
-    ) -> BorradorObservation:
-        """Parse ``pdf_path`` into a :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`.
+    ) -> InboundBorradorObservation:
+        """Parse ``pdf_path`` into a :class:`~aeat.adapters.inbound.borrador._schema.InboundBorradorObservation`.
 
         Args:
             pdf_path: Path to the Modelo 100 PDF.
             artefact_kind: The artefact kind discovered by
-                :func:`aeat.adapters.inbound.borrador._detect.detect_artefact_kind`
+                :func:`~aeat.adapters.inbound.borrador._detect.detect_artefact_kind`
                 (or supplied by the caller as an override).
-            extraction_profile: Optional registry profile that declares
-                target casillas and minimum coverage for this parse.
+            extraction_profile: Optional caller-supplied registry-profile
+                projection that declares target casillas and minimum coverage
+                for this parse.
 
         Returns:
-            The strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`
+            The strict :class:`~aeat.adapters.inbound.borrador._schema.InboundBorradorObservation`
             with observed casillas extracted.
 
         Raises:
-            BorradorParseError: When required header fields are missing, or when a
-                ``DECLARACION`` artefact lacks a CSV stamp.
+            BorradorParseError: When required header fields are missing, when a
+                ``DECLARACION`` artefact lacks a CSV stamp, or when a supplied
+                registry-profile projection does not meet its minimum coverage.
         """
         pages = extract_pages_text(pdf_path)
         text = "\n".join(pages)
@@ -83,6 +106,8 @@ class Modelo100ObservedV2025Extractor:
         csv_value = csv_match.group(1).upper() if csv_match else None
         if artefact_kind is ArtefactKind.DECLARACION and csv_value is None:
             raise BorradorParseError("DECLARACION artefact must carry a CSV stamp but none was found")
+        if artefact_kind is not ArtefactKind.DECLARACION:
+            csv_value = None
 
         observed, warnings = _observed_values(text)
         target_casilla_ids = {t.casilla_id for t in extraction_profile.target_casillas} if extraction_profile else None
@@ -116,7 +141,7 @@ class Modelo100ObservedV2025Extractor:
                 )
 
         source_pdf_sha256 = sha256_file(pdf_path)
-        return BorradorObservation(
+        return InboundBorradorObservation(
             modelo=Modelo.M100,
             ejercicio=ejercicio,
             tax_id=tax_id.upper(),
@@ -133,6 +158,13 @@ class Modelo100ObservedV2025Extractor:
 
 
 def _observed_values(text: str) -> tuple[dict[CasillaId, Decimal], list[str]]:
+    """Extract first-seen four-digit casilla amount rows from ``text``.
+
+    Duplicate casilla IDs and unparseable values are advisory warnings, not
+    immediate parse failures. Coverage-sensitive callers get hard failures later
+    when the filtered observed set is compared with the supplied extraction
+    profile.
+    """
     observed: dict[CasillaId, Decimal] = {}
     warnings: list[str] = []
     for match in _CASILLA_VALUE_RE.finditer(text):
@@ -153,7 +185,7 @@ def _observed_values(text: str) -> tuple[dict[CasillaId, Decimal], list[str]]:
 
 
 def _require_match(pattern: re.Pattern[str], text: str, field: str) -> str:
-    """Return the first capturing-group match or raise a parse error."""
+    """Return the first capturing-group match or raise :class:`BorradorParseError`."""
     match = pattern.search(text)
     if match is None:
         raise BorradorParseError(f"could not locate required field: {field}")

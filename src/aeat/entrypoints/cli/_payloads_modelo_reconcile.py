@@ -1,7 +1,16 @@
 """Typed payload schemas for modelo reconciliation and taxation comparison.
 
-Every declared payload is an :class:`OutputSchema` subclass registered for
-the modelo reconciliation and taxation-comparison JSON-contract surface.
+Every declared payload is a
+:class:`OutputSchema` subclass registered with
+:func:`register_schema` for the modelo
+reconciliation and taxation-comparison JSON-contract surface. The application
+facade remains authoritative for
+:class:`ModeloReconciliationReport` and
+:class:`TaxationComparisonResult`; this module only
+documents the CLI transport shape that enters
+:class:`SchemaEnvelope` through
+:func:`_emit_envelope`. The parent :mod:`_modelo_payloads` module re-exports
+these split schemas so modelo emitters keep one payload import surface.
 """
 
 from __future__ import annotations
@@ -12,12 +21,41 @@ from ._schemas import OutputSchema, register_schema
 
 
 class ModeloReconciliationDiffPayload(OutputSchema):
-    """One per-casilla disagreement surfaced in a reconciliation report."""
+    """One disagreement surfaced in a reconciliation report.
+
+    Nested in :class:`ModeloReconcileResult` and mirrors
+    :class:`ModeloReconciliationDiff`. Justificante
+    reconciliation compares header evidence (modelo, period, ejercicio, tax id)
+    and, where the revision declares ``reconciliation_total_casilla_ids``, the
+    filed total against the canonical computed result casilla. ``diff_kind`` is
+    the closed category (``header_field`` / ``total``); a ``total`` diff carries
+    the reconciling expectation's ``legal_refs`` / ``source_refs``. Individual
+    casilla declaration diffs require the modelo-specific declaration parser
+    (``diff_kind = casilla`` is reserved).
+    """
 
     field_name: str
     work_unit_value: str = ""
     evidence_value: str = ""
     kind: str
+    diff_kind: str = "header_field"
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
+
+
+class ModeloReconciliationAdvisoryPayload(OutputSchema):
+    """One non-blocking reconciliation advisory carried alongside the diffs.
+
+    Mirrors :class:`ModeloReconciliationAdvisory`. The
+    CLI also folds each advisory into a typed
+    :class:`Notice` on the envelope ``notices`` channel;
+    this payload preserves the structured ``code`` / ``context`` in the result
+    for machine consumers per ``cli-notices-are-the-only-diagnostic-channel``.
+    """
+
+    code: str
+    message: str
+    context: dict[str, str] = {}
 
 
 @register_schema("modelo.reconcile.pull")
@@ -25,10 +63,13 @@ class ModeloReconciliationDiffPayload(OutputSchema):
 class ModeloReconcileResult(OutputSchema):
     """Result payload for ``modelo reconcile file`` and ``modelo reconcile pull``.
 
-    Both verbs share the :class:`ModeloReconciliationReport` shape from
-    the application service: a work-unit-level verdict, the bucket
-    scope, the external-evidence source kind and path, the per-casilla
-    diff list, the reconciliation timestamp, and an optional narrative.
+    Both verbs share
+    :class:`ModeloReconciliationReport` from
+    :func:`modelo_reconcile` or :func:`modelo_reconcile_bytes`: a work-unit-level
+    :obj:`WorkUnitId`, :obj:`BucketId` scope, :class:`ModeloReconciliationVerdict`,
+    :class:`ModeloReconciliationEvidenceKind`, evidence path/reference,
+    :class:`ModeloReconciliationDiffPayload` list, reconciliation timestamp,
+    and optional narrative.
     """
 
     work_unit_id: WorkUnitId
@@ -37,6 +78,7 @@ class ModeloReconcileResult(OutputSchema):
     source_path: str
     verdict: str
     diffs: tuple[ModeloReconciliationDiffPayload, ...] = ()
+    advisories: tuple[ModeloReconciliationAdvisoryPayload, ...] = ()
     reconciled_at: str
     narrative: str = ""
 
@@ -45,9 +87,12 @@ class ModeloReconcileResult(OutputSchema):
 class WorkCompareTaxationResult(OutputSchema):
     """Result payload for ``aeat app modelo work compare-taxation``.
 
-    Surfaces cuota resultante autoliquidacion (0595) and cuota
-    diferencial / resultado (0610) for both conjunta and individual
-    filing modes, plus the delta and recommendation.
+    Projects :class:`TaxationComparisonResult` returned
+    by :func:`compare_taxation_for_work_address`. It surfaces the
+    semantic-role-selected cuota resultante de la autoliquidación and cuota
+    diferencial / resultado for both conjunta and individual filing modes, plus
+    the signed delta and
+    :class:`TaxationRecommendation`.
     """
 
     operation: str = "modelo.work.compare_taxation"

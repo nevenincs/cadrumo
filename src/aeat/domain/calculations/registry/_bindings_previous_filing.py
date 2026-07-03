@@ -1,8 +1,20 @@
 """Previous-filing binding selectors, requirements, and resolvers.
 
-The :class:`ModeloRevision` supplies ``previous_filing`` binding declarations;
-this module turns those selectors into source-observation requirements and
-resolved binding values.
+The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+``previous_filing``
+:class:`~aeat.domain.calculations.registry.DataBindingDefinition`
+declarations; this module turns those selectors into
+:class:`~aeat.domain.calculations.registry.RegistryFoldRequirement` source
+requirements and resolved
+:class:`~aeat.domain.calculations.registry.BindingId` values.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._bindings`
+        Public import surface that re-exports these previous-filing helpers.
+    :mod:`aeat.domain.calculations.registry._relations`
+        Relation-fold sibling that materialises cross-modelo source values.
+    :mod:`aeat.domain.calculations.registry._observation_fold`
+        Shared fold helpers for observed casilla values.
 """
 
 from __future__ import annotations
@@ -15,13 +27,13 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId
+from ._ids import BindingId, CasillaId, LegalRefId, ModeloId, SourceRefId
 from ._observation_fold import fold_sum_or_copy
 from ._period_offset_math import apply_period_offset
 from ._relations import RegistryFoldRequirement
@@ -29,7 +41,9 @@ from ._schema import DataBindingDefinition, ModeloRevision, filing_period_from_s
 
 
 class _RegistryModeloObservationLike(Protocol):
-    modelo: str
+    """Structural observation protocol consumed by previous-filing folds."""
+
+    modelo: ModeloId
     filing_year: int
     period: str
 
@@ -39,15 +53,27 @@ class _RegistryModeloObservationLike(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class PreviousFilingSourceReference:
-    """Canonical source reference extracted from a typed previous-filing selector."""
+    """Canonical source reference extracted from a typed previous-filing selector.
 
-    source_modelo: str
+    The reference names the source
+    :class:`~aeat.domain.calculations.registry.ModeloId`, required periods, and
+    source :class:`~aeat.domain.calculations.registry.CasillaId` values declared
+    by one previous-filing binding selector.
+    """
+
+    source_modelo: ModeloId
     required_periods: tuple[str, ...]
     source_casilla_ids: tuple[CasillaId, ...]
 
 
 def previous_filing_source_reference(binding: DataBindingDefinition) -> PreviousFilingSourceReference:
-    """Return the :class:`PreviousFilingSourceReference` for a ``previous_filing`` binding."""
+    """Return the :class:`PreviousFilingSourceReference` for a ``previous_filing`` binding.
+
+    The supplied
+    :class:`~aeat.domain.calculations.registry.DataBindingDefinition` is parsed
+    through the same selector model used by
+    :func:`previous_filing_observation_requirements`.
+    """
     selector = _previous_filing_selector(binding)
     return PreviousFilingSourceReference(
         source_modelo=selector.source_modelo,
@@ -62,16 +88,20 @@ def previous_filing_observation_requirements(
     filing_year: int,
     period: str,
 ) -> tuple[RegistryFoldRequirement, ...]:
-    """Return :class:`RegistryFoldRequirement` records needed by direct previous-filing bindings.
+    """Return source requirements needed by direct previous-filing bindings.
 
-    The :class:`ModeloRevision` is scanned for direct ``previous_filing``
-    bindings, and each selector becomes a source modelo/year/period
-    requirement.
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` is scanned
+    for direct ``previous_filing`` bindings, and each selector becomes a
+    :class:`~aeat.domain.calculations.registry.RegistryFoldRequirement` naming
+    source modelo/year/period, :class:`~aeat.domain.calculations.registry.BindingId`
+    consumers, and source casilla ids.
     """
-    binding_ids_by_key: dict[tuple[str, int, str], set[BindingId]] = {}
-    source_casilla_ids_by_key: dict[tuple[str, int, str], set[CasillaId]] = {}
+    binding_ids_by_key: dict[tuple[ModeloId, int, str], set[BindingId]] = {}
+    source_casilla_ids_by_key: dict[tuple[ModeloId, int, str], set[CasillaId]] = {}
+    legal_refs_by_key: dict[tuple[ModeloId, int, str], set[LegalRefId]] = {}
+    source_refs_by_key: dict[tuple[ModeloId, int, str], set[SourceRefId]] = {}
     for binding in revision.bindings:
-        if binding.source != "previous_filing":
+        if binding.source != BindingSourceKind.PREVIOUS_FILING:
             continue
         if not _is_direct_previous_filing_binding(binding):
             continue
@@ -81,6 +111,8 @@ def previous_filing_observation_requirements(
             key = (selector.source_modelo, expected_year, required_period)
             binding_ids_by_key.setdefault(key, set()).add(binding.id)
             source_casilla_ids_by_key.setdefault(key, set()).update(_previous_filing_source_ids(selector))
+            legal_refs_by_key.setdefault(key, set()).update(binding.legal_refs)
+            source_refs_by_key.setdefault(key, set()).update(binding.source_refs)
     return tuple(
         RegistryFoldRequirement(
             source_modelo=modelo,
@@ -93,6 +125,8 @@ def previous_filing_observation_requirements(
             periods=(required_period,),
             binding_ids=tuple(sorted(binding_ids_by_key[(modelo, expected_year, required_period)])),
             source_casilla_ids=tuple(sorted(source_casilla_ids_by_key[(modelo, expected_year, required_period)])),
+            legal_refs=tuple(sorted(legal_refs_by_key[(modelo, expected_year, required_period)])),
+            source_refs=tuple(sorted(source_refs_by_key[(modelo, expected_year, required_period)])),
         )
         for modelo, expected_year, required_period in sorted(binding_ids_by_key)
     )
@@ -232,8 +266,11 @@ def resolve_previous_filing_binding_values(
 ) -> dict[BindingId, Decimal]:
     """Resolve direct previous-filing bindings from observed filed declarations.
 
-    The :class:`ModeloRevision` supplies the binding selectors and aggregation
-    operators; ``observations`` supply the filed casilla values they fold.
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies the
+    binding selectors and aggregation operators; ``observations`` supply the
+    filed casilla values they fold. The returned mapping is keyed by
+    :class:`~aeat.domain.calculations.registry.BindingId` and carries resolved
+    :class:`decimal.Decimal` values for formula runtime consumption.
     """
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
@@ -241,7 +278,7 @@ def resolve_previous_filing_binding_values(
     for binding in revision.bindings:
         if binding.id in excluded:
             continue
-        if binding.source != "previous_filing":
+        if binding.source != BindingSourceKind.PREVIOUS_FILING:
             continue
         if not _is_direct_previous_filing_binding(binding):
             continue
@@ -283,9 +320,17 @@ def _zero_values_for_scoped_out_binding(selector: _PreviousModeloSelector) -> li
 
 
 class _PreviousModeloSelector(BaseModel):
+    """Typed selector model for a ``previous_filing`` binding declaration.
+
+    Parsed from
+    :class:`~aeat.domain.calculations.registry.DataBindingDefinition.selector`
+    and shared by build-time validation, source-requirement generation, and
+    resolve-time previous-filing folds.
+    """
+
     model_config = STRICT_FROZEN_CONFIG
 
-    source_modelo: str = Field(min_length=1, max_length=8)
+    source_modelo: ModeloId
     filing_year_delta: int = 0
     period: str | None = Field(default=None, min_length=1, max_length=8)
     source_periods: tuple[str, ...] = ()
@@ -448,8 +493,9 @@ def validate_previous_filing_binding(binding: DataBindingDefinition) -> list[str
 
     Accumulating ``list[str]`` validator: validates the selector shape against
     :class:`_PreviousModeloSelector` and lifts the previous-filing op/source
-    invariants (supported op set, copy single-casilla, pagos-fraccionados
-    casilla-pair) to build time, preserving the underlying pydantic field error.
+    invariants for a
+    :class:`~aeat.domain.calculations.registry.DataBindingDefinition` to build
+    time, preserving the underlying pydantic field error.
     """
     failures = selector_against_model(binding, _PreviousModeloSelector)
     if failures:

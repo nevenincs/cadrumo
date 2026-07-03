@@ -119,8 +119,8 @@ def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, D
             CasillaObservation(
                 casilla_id=casilla_id,
                 value=value,
-                legal_refs=("result-disposition-test",),
-                source_refs=("result-disposition-test",),
+                legal_refs=("ley-58-2003:art-120",),
+                source_refs=("aeat-modelo-disposition-fixture",),
             )
             for casilla_id, value in values.items()
         ),
@@ -149,7 +149,7 @@ def _registry_work_unit(*, modelo: str, filing_year: int, period_code: str) -> W
 @pytest.mark.parametrize(
     ("filing_year", "period_code", "revision_id", "result_casilla"),
     (
-        (2023, "4T", "2019-2023", _casilla_id("08-legacy")),
+        (2023, "4T", "2019-2023", _casilla_id("08")),
         (2026, "1T", "2024-y-siguientes", _casilla_id("14")),
     ),
 )

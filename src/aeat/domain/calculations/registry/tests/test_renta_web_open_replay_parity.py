@@ -79,8 +79,7 @@ def _casilla_id_from_replay_key(value: object, *, payload_path: Path) -> Casilla
         return validated_casilla_id(value, surface="test casilla id")
     except ValueError as exc:
         raise AssertionError(
-            f"replay payload {payload_path.name!r} expected_by_casilla_id key {value!r} "
-            f"is not a canonical casilla.id",
+            f"replay payload {payload_path.name!r} expected_by_casilla_id key {value!r} is not a canonical casilla.id",
         ) from exc
 
 

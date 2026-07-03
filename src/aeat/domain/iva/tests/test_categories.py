@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_iva_category_has_every_named_member() -> None:
-    """:class:`IvaCategory` must carry exactly the 17 declared members.
+    """:class:`IvaCategory` must carry exactly the 18 declared members.
 
     ``DOMESTIC_REVERSE_CHARGE`` exists to disambiguate
     *inversión del sujeto pasivo* on domestic transactions
@@ -34,6 +34,7 @@ def test_iva_category_has_every_named_member() -> None:
         "INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE",
         "INTRA_COMMUNITY_TRIANGULATION",
         "EXPORT_THIRD_COUNTRY_ZERO_RATED",
+        "EXPORT_ASSIMILATED_ZERO_RATED",
         "IMPORT_THIRD_COUNTRY",
         "RECARGO_EQUIVALENCIA",
         "REGIMEN_SIMPLIFICADO",
@@ -50,9 +51,10 @@ def test_iva_category_values_roundtrip_through_strenum() -> None:
         assert IvaCategory(member.value) is member
 
 
-def test_eu_member_state_has_27_members() -> None:
-    """EUMemberState must cover the 27 current EU member states."""
-    assert len(list(EUMemberState)) == 27
+def test_eu_member_state_has_27_strict_member_states_plus_xi_prefix() -> None:
+    """EUMemberState covers the 27 EU states plus the post-Brexit XI IVA prefix."""
+    assert len([member for member in EUMemberState if member is not EUMemberState.XI]) == 27
+    assert EUMemberState.XI.value == "xi"
 
 
 def test_iva_rate_kind_has_five_tiers() -> None:

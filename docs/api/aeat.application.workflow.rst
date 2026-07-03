@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    aeat.application.workflow._adapters
+   aeat.application.workflow._deadline_stage
    aeat.application.workflow._engine
    aeat.application.workflow._engine_helpers
    aeat.application.workflow._engine_recording

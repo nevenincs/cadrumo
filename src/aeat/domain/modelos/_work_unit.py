@@ -33,7 +33,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
-from ..contribuyente._ccaa import CCAA
+from ..contribuyente import CCAA
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
 from ._ids import WorkUnitId
@@ -323,7 +323,7 @@ class WorkUnitCatalogue(BaseModel):
         return cls(work_units={str(k): v for k, v in units.items()})
 
     @override
-    def __iter__(self) -> Iterator[WorkUnit]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[WorkUnit]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
         """Iterate the loaded work units (not the keys)."""
         return iter(self.work_units.values())
 

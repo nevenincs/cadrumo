@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#export-import-fidelity-swarm'
 date: '2026-05-16'
-modified: '2026-05-16'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `export-import-fidelity-swarm` audit: `Export/import fidelity`
 
@@ -117,5 +115,3 @@ A corrupted or manually-edited workbook could have constraints stripped or tarif
    - Protected range footprint is intact.
 
 6. **Ground Inbound Declaración to Registry Snapshot**: Add a `registry_snapshot_version` or `registry_sha` field to `DeclaracionObservation`. When parsing a filed declaración, capture the AEAT template publish date and cross-check against the active snapshot. Log warnings if the template is stale.
-
-

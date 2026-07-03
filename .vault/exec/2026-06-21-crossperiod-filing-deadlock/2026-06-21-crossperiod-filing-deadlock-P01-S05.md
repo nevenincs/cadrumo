@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-21'
-modified: '2026-06-21'
+modified: '2026-06-30'
 step_id: 'S05'
 related:
   - "[[2026-06-21-crossperiod-filing-deadlock-plan]]"
 ---
-
-
-
 
 # Update the workflow engine tests to Decision A semantics (targeted overdue admitted, closed-window FILE no longer aborts DEADLINE_PASSED)
 
@@ -28,4 +25,3 @@ related:
 Landed in commit `6e635f566`. `test_engine.py` 47/47 green; real-behaviour, no mocks/skips/xfail.
 
 ## Notes
-

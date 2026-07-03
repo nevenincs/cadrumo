@@ -12,12 +12,17 @@ that source: it persists each :class:`RetencionObservation` (perceptor NIF +
 scheme + taxable base + retención) keyed by ``(modelo, filing_year, period)`` plus
 the per-perceptor identity, so the pull and calculate surfaces read ONE store.
 
-Sensitivity is :class:`SensitivityClass` ``FINANCIAL`` — perceptor NIFs are
-identity-bearing financial data, stored encrypted at rest through an
-:class:`Envelope`-wrapped repository. The plaintext NIF lives only inside the
-encrypted payload; the object key carries the sha256 of the NIF (the
-iva-wallet-decision key convention), never the cleartext value
+Sensitivity is :class:`~adapters.persistence.storage.SensitivityClass`
+``FINANCIAL`` — perceptor NIFs are identity-bearing financial data, stored
+encrypted at rest through a
+:class:`~adapters.persistence.storage.SecureBoundRepository` that writes
+:class:`~adapters.persistence.storage.Envelope` records. The plaintext NIF
+lives only inside the encrypted payload; the object key carries the sha256 of
+the NIF (the iva-wallet-decision key convention), never the cleartext value
 (``sensitive-financial-data-secure-storage-only``).
+The namespace, schema version, object-key grammar, and custody disposition are
+declared by
+:data:`adapters.persistence.storage.RETENCION_OBSERVATIONS_NAMESPACE`.
 
 ADR ``2026-06-24-retenciones-perceptor-count-adr``. Producers (the pull/aggregate
 entrypoints) write here through one shared helper; the P02 calc-mesh resolver
@@ -35,10 +40,10 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage import (
     RETENCION_OBSERVATIONS_NAMESPACE,
+    SecureBoundRepository,
     SensitivityClass,
     safe_repository_id,
 )
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
@@ -105,7 +110,24 @@ def retencion_observation_key(
 
 
 class RetencionObservationRepository(SecureBoundRepository[_RetencionObservationEnvelopePayload]):
-    """Repository over encrypted SQL-backed per-perceptor retención observations."""
+    """Encrypted repository for per-perceptor :class:`RetencionObservation` payloads.
+
+    The :class:`~adapters.persistence.storage.SecureBoundRepository` base
+    wraps each payload in a
+    :class:`~adapters.persistence.storage.Envelope` under
+    :data:`adapters.persistence.storage.RETENCION_OBSERVATIONS_NAMESPACE`
+    and enforces the namespace's FINANCIAL
+    :class:`~adapters.persistence.storage.SensitivityClass`.
+
+    See Also:
+        :data:`adapters.persistence.storage.RETENCION_OBSERVATIONS_NAMESPACE`
+            Secure-object namespace and hashed object-key contract.
+        :func:`retencion_observation_key`
+            Deterministic key builder that keeps the plaintext NIF out of
+            storage metadata.
+        :func:`persist_retencion_observations`
+            Shared producer write path for pull and calculate parity.
+    """
 
     namespace: ClassVar[str] = RETENCION_OBSERVATIONS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = RETENCION_OBSERVATIONS_NAMESPACE.sensitivity
@@ -163,9 +185,10 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
         DROPPED a perceptor must not leave the stale row behind — otherwise the
         next calculate's distinct count is inflated by a perceptor no longer
         declared (a silent over-count, the inverse of the bug RET-1 fixes). An
-        empty ``observations`` clears the window (the operator declared none); the
-        P02 resolver surfaces a no-silent advisory when it then reads empty on
-        positive activity.
+        empty ``observations`` clears the window (the operator declared none);
+        the P02 resolver raises a no-silent
+        :class:`~._errors.AggregationValidationError` when a declaring revision
+        then reads an empty store, before a zero perceptor count can be filed.
         """
         safe_repository_id(modelo, context="modelo")
         when = captured_at if captured_at is not None else now()
@@ -196,8 +219,8 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
 
         The calc-mesh perceptor-count resolver (P02) folds these through the
         validated distinct-count primitive. An empty tuple means no per-perceptor
-        records were persisted for the window — the resolver MUST surface a
-        no-silent advisory rather than materialising a zero count.
+        records were persisted for the window — the resolver MUST fail loudly
+        rather than materialising a zero count.
 
         Returns:
             Persisted :class:`RetencionObservation` records for the requested window.
@@ -231,7 +254,7 @@ def persist_retencion_observations(
 
     Factoring the persist behind a single application helper makes store
     completeness STRUCTURAL rather than per-entrypoint discipline a future
-    producer could forget (an unwritten producer → an incomplete store → the exact
+    producer could forget (an unwritten producer -> an incomplete store -> the exact
     pull≠calculate divergence RET-1 fixes). Writes to the active bucket's encrypted
     store with SET-REPLACE semantics so pull and calculate read one source.
     aggregate_per_modelo stays pure — persistence is the entrypoint's job, not the

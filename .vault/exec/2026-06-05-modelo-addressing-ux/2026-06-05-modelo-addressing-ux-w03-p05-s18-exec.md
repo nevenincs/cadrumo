@@ -1,7 +1,7 @@
 ---
 tags: ['#exec', '#modelo-addressing-ux']
 date: '2026-06-05'
-modified: '2026-06-05'
+modified: '2026-06-30'
 step_id: 'S18'
 related:
   - '[[2026-06-05-modelo-addressing-ux-plan]]'
@@ -26,4 +26,3 @@ The root modelo CLI module now mounts calculate through the focused registrar. T
 
 - `rg` over `_modelo.py`, `_modelo_work_calculate_cli.py`, `_modelo_cli_support.py`, and `_calculate_input.py` confirmed the calculate command body is in `_modelo_work_calculate_cli.py`.
 - `uv run --no-sync pytest src/aeat/entrypoints/cli/test_modelo_calculation_through_real_cli.py -q` passed with 5 tests.
-

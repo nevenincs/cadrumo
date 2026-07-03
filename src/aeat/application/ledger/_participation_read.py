@@ -10,10 +10,8 @@ declared".
 
 from __future__ import annotations
 
-from ...domain.modelos._participation_index import (
-    TransactionParticipationIndexRepository,
-    TransactionRevisionParticipationIndex,
-)
+from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+from ...domain.modelos import TransactionRevisionParticipationIndex
 
 
 def get_transaction_participation(

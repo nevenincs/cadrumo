@@ -11,11 +11,14 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.errors import ErrorCategory, get_registered_error_code
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import (
     BindingId,
     CasillaId,
@@ -24,9 +27,7 @@ from ....domain.calculations.registry import (
     RelationId,
     validated_casilla_id,
 )
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import derive_calculation_revision_id
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos import derive_calculation_revision_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile
@@ -45,7 +46,7 @@ from .._registry_helpers import validate_casilla_input_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-renta"
+_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _YEAR = 2025
 _PERIOD = "0A"
 _DECIMAL_BINDING: BindingId = "renta-2025-modelo-111-retenciones-periodicas"
@@ -160,9 +161,7 @@ def test_validate_casilla_input_ids_rejects_decimal_value_for_non_numeric_casill
 
 def test_validate_casilla_input_ids_rejects_non_decimal_numeric_value() -> None:
     snapshot = _modelo_100_registry_snapshot()
-    numeric_casilla = next(
-        casilla for casilla in snapshot.revision.casillas if casilla.id == _M100_NUMERIC_CASILLA
-    )
+    numeric_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M100_NUMERIC_CASILLA)
     assert numeric_casilla.data_type in {"decimal", "money", "integer", "ratio"}
 
     with pytest.raises(RegistryValidationError) as raised:
@@ -229,7 +228,10 @@ def _non_borrador_decimal_binding_values() -> dict[BindingId, Decimal]:
     date/enum/profile bindings unset so :func:`resolve_profile_sourced_bindings`
     can populate them from the seeded :class:`UserProfileRecord`."""
     snapshot = _modelo_100_registry_snapshot()
-    exclusions = {_DECIMAL_BINDING, _ENUM_BINDING}
+    alternate_binding_ids = {
+        binding_id for casilla in snapshot.revision.casillas for binding_id in casilla.alternate_bindings
+    }
+    exclusions = {_DECIMAL_BINDING, _ENUM_BINDING, *alternate_binding_ids}
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -255,8 +257,17 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Operator"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             # Seed derived marriage facts directly (unmarried -> all zero) so the
             # formula-consumed bindings resolve without a renta_taxpayer.marriage_date.
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
@@ -420,7 +431,7 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
 
     assert resolution.binding_values == expected.binding_values
     assert resolution.enum_binding_values == expected.enum_binding_values
-    assert resolution.owned_sources == ("borrador",)
+    assert resolution.owned_sources == (BindingSourceKind.BORRADOR,)
     assert {item.source_kind for item in resolution.provenance} == {"borrador"}
     assert {item.source_ref for item in resolution.provenance} == {
         f"borrador:{snapshot_id}:binding:{_DECIMAL_BINDING}",

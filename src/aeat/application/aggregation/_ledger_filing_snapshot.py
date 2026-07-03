@@ -1,14 +1,14 @@
 """Capture and staleness for the modelo filing ledger snapshot.
 
-Used by: :mod:`aeat.application.modelo._work_lifecycle` for revision staleness checks,
-:mod:`aeat.application.evidence` for audit bundle generation.
+Used by: :mod:`application.modelo._work_lifecycle` for revision staleness checks,
+:mod:`application.evidence` for audit bundle generation.
 
-The pure records live in :mod:`aeat.domain.modelos._ledger_filing_snapshot`.
+The pure records live in :mod:`domain.modelos._ledger_filing_snapshot`.
 This application module holds the Transaction-aware halves:
 computing a contributor's content fingerprint from the live
-:class:`~aeat.domain.transactions.TransactionCatalogue`, building a
-:class:`~aeat.domain.modelos._ledger_filing_snapshot.LedgerFilingSnapshot` for a
-:class:`~aeat.domain.calculations.registry.CalculationRevision`'s ``source_transaction_ids``,
+:class:`~domain.transactions.TransactionCatalogue`, building a
+:class:`~domain.modelos._ledger_filing_snapshot.LedgerFilingSnapshot` for a
+:class:`~domain.modelos._calculation_revision.CalculationRevision`'s ``source_transaction_ids``,
 and evaluating drift between a filed snapshot and the current ledger state.
 
 The fingerprint covers exactly the transaction facts that can move a casilla --
@@ -19,7 +19,7 @@ Cosmetic fields (description, counterparty, notes) are deliberately excluded so
 staleness fires on material change, not on a relabel.
 
 This module uses
-:class:`~aeat.domain.modelos._ledger_filing_snapshot.LedgerFilingStalenessVerdict`
+:class:`~domain.modelos._ledger_filing_snapshot.LedgerFilingStalenessVerdict`
 for drift evaluation.
 """
 
@@ -28,17 +28,20 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 
+from pydantic import TypeAdapter, ValidationError
+
 from ...core.hashing import sha256_hex
-from ...domain.calculations.registry import CasillaId
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos._errors import ModeloValidationError
-from ...domain.modelos._ledger_filing_snapshot import (
+from ...domain.calculations.registry import CasillaId, LegalRefId, SourceRefId
+from ...domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionState,
     LedgerEvidenceRow,
     LedgerFilingEvidence,
     LedgerFilingSnapshot,
     LedgerFilingStalenessVerdict,
     LedgerRowFingerprint,
     ManualFactBasisEntry,
+    ModeloValidationError,
     diff_ledger_fingerprints,
     snapshot_fingerprint,
 )
@@ -74,6 +77,8 @@ _FINGERPRINT_FIELDS: tuple[tuple[str, str], ...] = (
     ("value_in_eur", "value_in_eur"),
     ("lifecycle_state", "lifecycle_state"),
 )
+_LEGAL_REFS_ADAPTER = TypeAdapter(tuple[LegalRefId, ...])
+_SOURCE_REFS_ADAPTER = TypeAdapter(tuple[SourceRefId, ...])
 
 
 def _normalise(value: object) -> str:
@@ -142,7 +147,43 @@ def _enum_value(value: object) -> str | None:
     return inner if isinstance(inner, str) else str(value)
 
 
-def _evidence_row(transaction: Transaction) -> LedgerEvidenceRow:
+def _normalised_ref_values(refs: Iterable[object], *, field_name: str) -> tuple[str, ...]:
+    normalised: list[str] = []
+    seen: set[str] = set()
+    for ref in refs:
+        value = str(ref).strip()
+        if not value:
+            raise ModeloValidationError(f"ledger filing evidence requires non-empty {field_name}")
+        if value not in seen:
+            normalised.append(value)
+            seen.add(value)
+    if not normalised:
+        raise ModeloValidationError(f"ledger filing evidence requires non-empty {field_name}")
+    return tuple(normalised)
+
+
+def _normalised_legal_refs(refs: Iterable[LegalRefId], *, field_name: str) -> tuple[LegalRefId, ...]:
+    normalised = _normalised_ref_values(refs, field_name=field_name)
+    try:
+        return _LEGAL_REFS_ADAPTER.validate_python(normalised)
+    except ValidationError as exc:
+        raise ModeloValidationError(f"ledger filing evidence has invalid {field_name}") from exc
+
+
+def _normalised_source_refs(refs: Iterable[SourceRefId], *, field_name: str) -> tuple[SourceRefId, ...]:
+    normalised = _normalised_ref_values(refs, field_name=field_name)
+    try:
+        return _SOURCE_REFS_ADAPTER.validate_python(normalised)
+    except ValidationError as exc:
+        raise ModeloValidationError(f"ledger filing evidence has invalid {field_name}") from exc
+
+
+def _evidence_row(
+    transaction: Transaction,
+    *,
+    legal_refs: tuple[LegalRefId, ...],
+    source_refs: tuple[SourceRefId, ...],
+) -> LedgerEvidenceRow:
     """Project a typed transaction into a primitive evidence row.
 
     Carries the same tax-relevant facts the fingerprint covers (so evidence and
@@ -175,6 +216,8 @@ def _evidence_row(transaction: Transaction) -> LedgerEvidenceRow:
         description=raw.description,
         purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
         attachment_ids=transaction.attachment_ids,
+        legal_refs=legal_refs,
+        source_refs=source_refs,
     )
 
 
@@ -184,6 +227,8 @@ def compute_ledger_filing_evidence(
     catalogue: TransactionCatalogue,
     snapshot_fingerprint: str,
     captured_at: datetime,
+    legal_refs: Iterable[LegalRefId],
+    source_refs: Iterable[SourceRefId],
     manual_entries: tuple[ManualFactBasisEntry, ...] = (),
 ) -> LedgerFilingEvidence:
     """Capture the bundled :class:`LedgerFilingEvidence` fact basis behind one filing revision.
@@ -202,10 +247,23 @@ def compute_ledger_filing_evidence(
         catalogue: The live :class:`TransactionCatalogue`.
         snapshot_fingerprint: The fingerprinted snapshot identifier.
         captured_at: Captured timestamp.
+        legal_refs: Registry legal references grounding this evidence bundle.
+        source_refs: Official source references grounding this evidence bundle.
         manual_entries: The manual entries basis.
     """
     index = _index(catalogue)
-    rows = tuple(_evidence_row(index[tx_id]) for tx_id in sorted(set(source_transaction_ids)) if tx_id in index)
+    source_ids = tuple(sorted(set(source_transaction_ids)))
+    evidence_legal_refs = _normalised_legal_refs(legal_refs, field_name="legal_refs") if source_ids else ()
+    evidence_source_refs = _normalised_source_refs(source_refs, field_name="source_refs") if source_ids else ()
+    rows = tuple(
+        _evidence_row(
+            index[tx_id],
+            legal_refs=evidence_legal_refs,
+            source_refs=evidence_source_refs,
+        )
+        for tx_id in source_ids
+        if tx_id in index
+    )
     return LedgerFilingEvidence(
         snapshot_fingerprint=snapshot_fingerprint,
         rows=rows,
@@ -216,6 +274,9 @@ def compute_ledger_filing_evidence(
 
 def project_manual_fact_basis_entries(
     input_values_by_casilla_id: Mapping[CasillaId, str],
+    *,
+    legal_refs_by_casilla_id: Mapping[CasillaId, Iterable[LegalRefId]],
+    source_refs_by_casilla_id: Mapping[CasillaId, Iterable[SourceRefId]],
 ) -> tuple[ManualFactBasisEntry, ...]:
     """Project operator-entered casilla inputs into :class:`ManualFactBasisEntry` entries.
 
@@ -224,7 +285,18 @@ def project_manual_fact_basis_entries(
     row explains them.
     """
     return tuple(
-        ManualFactBasisEntry(casilla_id=casilla, value=value)
+        ManualFactBasisEntry(
+            casilla_id=casilla,
+            value=value,
+            legal_refs=_normalised_legal_refs(
+                legal_refs_by_casilla_id.get(casilla, ()),
+                field_name=f"legal_refs for manual fact {casilla}",
+            ),
+            source_refs=_normalised_source_refs(
+                source_refs_by_casilla_id.get(casilla, ()),
+                field_name=f"source_refs for manual fact {casilla}",
+            ),
+        )
         for casilla, value in sorted(input_values_by_casilla_id.items())
         if value.strip()
     )
@@ -271,7 +343,7 @@ def stale_filed_revisions(
     Each item pairs a :class:`CalculationRevision` with its
     :class:`LedgerFilingStalenessVerdict`. Scans verified/filed revisions
     carrying a ``ledger_filing_snapshot`` and re-evaluates each against the
-    live catalogue. A revision with no snapshot (legacy) or a non-finalized
+    live catalogue. A revision with no snapshot or a non-finalized
     state is skipped. Pure given its inputs.
 
     Args:

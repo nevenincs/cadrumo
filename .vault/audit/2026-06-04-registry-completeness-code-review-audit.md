@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#registry-hardening-next-work'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-29'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-04-registry-m200-completeness-audit]]'
@@ -21,12 +21,21 @@ official Diseño-derived coverage. The M200 completeness manifest rows now match
 the repaired closure identities, including the internal-only
 `DP200014:bin-aplicada-maxima` formula target.
 
-## M303-001 | PASS | Stale total rows removed only from manifests
+## M303-001 | PASS | Current totals match the calculation closure
 
-No issue. The M303 cleanup removes stale completeness-manifest rows `27` and
-`45` from both revisions after derivation proved they are manifest-only. The
-casilla declarations, export layouts, extraction profiles, formulas,
-verification expectations, legal refs, and source refs remain untouched.
+No issue in the current registry state. The older cleanup record is now
+revision-scoped rather than blanket-current:
+
+- `2009-y-siguientes` keeps casillas `27` and `45` as declared/exported form
+  totals, but they are not calculation-closure members and are absent from the
+  completeness manifest.
+- `2023-y-siguientes` now declares casillas `27` and `45` as formula-backed
+  official Diseño projection targets, so they are calculation-closure members
+  and must remain in the completeness manifest.
+
+The current derivation reports no manifest-only rows and no closure-only rows
+for either revision. Removing `27` and `45` from the 2023 manifest would now be
+a regression.
 
 ## VAULT-001 | PASS | Execution artifacts and verification are consistent
 

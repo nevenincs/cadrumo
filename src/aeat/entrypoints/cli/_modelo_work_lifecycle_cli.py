@@ -23,6 +23,7 @@ from ...application.modelo import (
     modelo_work_create_applicability_refusal,
     modelo_work_create_refusal_locale_key,
     rename_work_unit,
+    require_existing_profile_baseline_ready_for_modelo_work,
     require_profile_ready_for_modelo_work,
     resolve_registry_revision_for_work_target,
 )
@@ -184,6 +185,19 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
                 ),
             ),
         ] = False,
+        quiet: Annotated[
+            bool,
+            typer.Option(
+                "--quiet",
+                help=tr(
+                    "cli.app.modelo.work.create_quiet_help",
+                    default=(
+                        "Omitir la salida de confirmación legible; el envoltorio --format json, "
+                        "los avisos y el código de salida no se ven afectados."
+                    ),
+                ),
+            ),
+        ] = False,
         causante_ccaa_raw: Annotated[
             str | None,
             typer.Option(
@@ -199,8 +213,15 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
                 ),
             ),
         ] = None,
+        output_language: OutputLanguage | None = typer.Option(
+            None,
+            "--output-language",
+            "--language",
+            help=tr("cli.config.auth.output_language_help"),
+        ),
     ) -> None:
         """Create or load a modelo work unit. Idempotent on the four-axis key."""
+        deps.activate_output_language(ctx, output_language)
         _validate_filing_year(year)
         requested_revision = revision.strip() if revision is not None else None
         causante_ccaa = parse_tax_region(causante_ccaa_raw) if causante_ccaa_raw is not None else None
@@ -218,6 +239,13 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
         _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable)
         resolved_bucket = bucket_id if bucket_id is not None else _active_bucket_id()
         resolved_actor = actor or deps.resolve_default_actor()
+        require_existing_profile_baseline_ready_for_modelo_work(
+            bucket_id=resolved_bucket,
+            modelo=modelo,
+            filing_year=resolved_year,
+            period=resolved_period,
+            enforce_applicability=not allow_not_applicable,
+        )
         resolved_revision_id = resolve_registry_revision_for_work_target(
             modelo=modelo,
             filing_year=resolved_year,
@@ -230,6 +258,7 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             revision_id=resolved_revision_id,
             filing_year=resolved_year,
             period=resolved_period,
+            enforce_applicability=not allow_not_applicable,
         )
 
         try:
@@ -242,6 +271,7 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
                 name=name,
                 actor=resolved_actor,
                 causante_ccaa=causante_ccaa,
+                enforce_applicability=not allow_not_applicable,
             )
         except (ModeloWorkRegistryYearMismatchError, RegistrySnapshotError) as exc:
             raise typer.BadParameter(str(exc)) from exc
@@ -260,6 +290,7 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             name=name,
             name_applied=ensure_result.name_applied,
             allow_not_applicable=allow_not_applicable,
+            quiet=quiet,
         )
 
 
@@ -293,6 +324,7 @@ def _emit_work_create_result(
     name: str | None,
     name_applied: str | None,
     allow_not_applicable: bool,
+    quiet: bool = False,
 ) -> None:
     status = "reused" if reused else "created"
     if reused:
@@ -311,14 +343,23 @@ def _emit_work_create_result(
             **work_unit_payload(unit).model_dump(mode="python"),
         },
     )
-    lines = [
-        f"operation\t{operation}",
-        f"status\t{status}",
-        *work_unit_lines(unit),
-        status_message,
-    ]
     obligation_notices, obligation_lines = _modelo_100_obligation_advisory_output(unit)
-    lines.extend(obligation_lines)
+    # ``--quiet`` trims the human success prose (operation/status header,
+    # work-unit summary, confirmation message) for text mode only. The
+    # notice channel is preserved verbatim — obligation advisories still
+    # print — and the JSON envelope (``result`` + ``notices``) is emitted
+    # unchanged regardless, since ``_emit_envelope`` ignores ``lines`` in
+    # JSON mode. Errors raise before reaching this emit path.
+    if quiet:
+        lines = list(obligation_lines)
+    else:
+        lines = [
+            f"operation\t{operation}",
+            f"status\t{status}",
+            *work_unit_lines(unit),
+            status_message,
+            *obligation_lines,
+        ]
     _emit_envelope(ctx, command="modelo.work.create", result=result, lines=lines, notices=obligation_notices)
 
 

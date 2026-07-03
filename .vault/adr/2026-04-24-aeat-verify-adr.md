@@ -3,14 +3,12 @@ tags:
   - '#adr'
   - '#aeat-verify'
 date: '2026-04-24'
-modified: '2026-04-24'
+modified: '2026-06-30'
 related:
   - "[[2026-04-24-aeat-verify-research]]"
   - "[[2026-04-21-calc-verification-adr]]"
   - "[[2026-04-22-ruleset-architecture-adr]]"
 ---
-
-
 
 # `aeat-verify` adr: `remote-aeat-domain-and-filing-reconciliation` | (**status:** `accepted`)
 

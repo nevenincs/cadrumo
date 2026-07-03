@@ -22,11 +22,11 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Result:
+def _invoke(args: Sequence[str], *, env: Mapping[str, str | None] | None = None) -> Result:
     return invoke_cached_cli(args, env=env)
 
 
-def _create_profile(name: str, *options: str, env: Mapping[str, str] | None = None) -> Result:
+def _create_profile(name: str, *options: str, env: Mapping[str, str | None] | None = None) -> Result:
     return _invoke(
         (
             "config",
@@ -83,8 +83,11 @@ def _profile_facts(profile_name: str) -> dict[str, str]:
 
 
 def test_config_profile_create_writes_profile_output_language() -> None:
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....adapters.persistence.storage.master_key import (
+        activate_master_key_provider,
+        get_master_key_provider,
+    )
+    from ....application.workflow import workflow_state_repository
     from ....core import resolve_active_bucket_id
     from ....core.config import override_settings
 
@@ -110,7 +113,7 @@ def test_config_profile_create_writes_profile_output_language() -> None:
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        from ....application.user_profile._orchestration import fact_value
+        from ....application.user_profile import fact_value
 
         assert fact_value(record, "preferences.output_language") == "en"
         profile_id = record.profile_id
@@ -127,8 +130,11 @@ def test_config_profile_create_writes_profile_output_language() -> None:
 
 
 def test_config_profile_create_validates_profile_output_language() -> None:
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....adapters.persistence.storage.master_key import (
+        activate_master_key_provider,
+        get_master_key_provider,
+    )
+    from ....application.workflow import workflow_state_repository
 
     valid_result = _create_profile(
         "default",
@@ -156,7 +162,7 @@ def test_config_profile_create_validates_profile_output_language() -> None:
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        from ....application.user_profile._orchestration import fact_value
+        from ....application.user_profile import fact_value
 
         assert fact_value(record, "preferences.output_language") == "ca"
         assert invalid_result.exit_code != 0
@@ -178,9 +184,12 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
     left exactly as stored.
     """
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.user_profile._orchestration import fact_value
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....adapters.persistence.storage.master_key import (
+        activate_master_key_provider,
+        get_master_key_provider,
+    )
+    from ....application.user_profile import fact_value
+    from ....application.workflow import workflow_state_repository
 
     create_result = _create_profile(
         "default",
@@ -304,9 +313,12 @@ def test_env_output_language_honored_when_creating_profile_with_accept_defaults(
     dict before the catalogue-default seeding runs, so the env var wins.
     """
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.user_profile._orchestration import fact_value
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....adapters.persistence.storage.master_key import (
+        activate_master_key_provider,
+        get_master_key_provider,
+    )
+    from ....application.user_profile import fact_value
+    from ....application.workflow import workflow_state_repository
 
     result = _create_profile(
         "marta",
@@ -377,3 +389,116 @@ def test_config_repair_labels_render_in_profile_output_language() -> None:
     # The Spanish labels must not appear.
     assert "Estado\t" not in result.output
     assert "Comprobaciones" not in result.output
+
+
+def test_malformed_bucket_dek_error_renders_in_profile_output_language() -> None:
+    """A critical master-key failure still renders through the profile language hint."""
+
+    from ....adapters.persistence.storage.bucket import read_bucket_output_language_hint
+    from ....adapters.persistence.storage.master_key import bucket_dek_path, current_active_bucket_session
+    from ....application.workflow import read_profile_bucket
+    from ....core.config import load_settings, override_settings
+    from ....core.i18n import clear_output_language_cache, tr
+
+    create_result = _create_profile(
+        "catala",
+        "--tax-id",
+        "00000000T",
+        "--activity",
+        "Serveis",
+        "--output-language",
+        "ca",
+    )
+    assert create_result.exit_code == 0, create_result.output
+    pointer = read_profile_bucket("catala")
+    assert pointer is not None
+    assert (
+        read_bucket_output_language_hint(
+            storage_root=load_settings().aeat_local_storage_root,
+            bucket_id=pointer.bucket_id,
+        )
+        == "ca"
+    )
+
+    assert current_active_bucket_session() is None
+    target = bucket_dek_path(storage_root=load_settings().aeat_local_storage_root, bucket_id=pointer.bucket_id)
+    target.write_text("not-json\n", encoding="utf-8")
+
+    with override_settings(aeat_output_language=None):
+        clear_output_language_cache()
+        result = _invoke(("config", "profile", "show"))
+        clear_output_language_cache()
+
+    assert result.exit_code != 0, result.output
+    assert tr("errors.auth.auth_storage_master_key_unavailable", locale="ca") in result.output
+    assert tr("errors.auth.auth_storage_master_key_unavailable", locale="en") not in result.output
+    assert "Traceback" not in result.output
+
+
+def test_config_switch_malformed_target_bucket_dek_uses_target_profile_output_language() -> None:
+    """A failed target-bucket switch renders through the target bucket's language hint."""
+
+    from ....adapters.persistence.storage.bucket import read_bucket_output_language_hint
+    from ....adapters.persistence.storage.master_key import bucket_dek_path
+    from ....application.workflow import read_profile_bucket
+    from ....core import resolve_active_bucket_id
+    from ....core.config import load_settings, override_settings
+    from ....core.i18n import clear_output_language_cache, tr
+
+    alpha = _create_profile(
+        "alpha",
+        "--tax-id",
+        "00000000T",
+        "--activity",
+        "Services",
+        "--output-language",
+        "en",
+    )
+    assert alpha.exit_code == 0, alpha.output
+    beta = _create_profile(
+        "beta",
+        "--tax-id",
+        "00000001R",
+        "--activity",
+        "Serveis",
+        "--output-language",
+        "ca",
+    )
+    assert beta.exit_code == 0, beta.output
+
+    alpha_pointer = read_profile_bucket("alpha")
+    beta_pointer = read_profile_bucket("beta")
+    assert alpha_pointer is not None
+    assert beta_pointer is not None
+
+    switched_alpha = _invoke(("config", "switch", "alpha"))
+    assert switched_alpha.exit_code == 0, switched_alpha.output
+    assert resolve_active_bucket_id() == alpha_pointer.bucket_id
+    assert (
+        read_bucket_output_language_hint(
+            storage_root=load_settings().aeat_local_storage_root,
+            bucket_id=alpha_pointer.bucket_id,
+        )
+        == "en"
+    )
+    assert (
+        read_bucket_output_language_hint(
+            storage_root=load_settings().aeat_local_storage_root,
+            bucket_id=beta_pointer.bucket_id,
+        )
+        == "ca"
+    )
+
+    target = bucket_dek_path(storage_root=load_settings().aeat_local_storage_root, bucket_id=beta_pointer.bucket_id)
+    target.write_text("not-json\n", encoding="utf-8")
+
+    with override_settings(aeat_output_language=None):
+        clear_output_language_cache()
+        result = _invoke(("config", "switch", "beta"))
+        clear_output_language_cache()
+
+    assert result.exit_code != 0, result.output
+    assert resolve_active_bucket_id() == alpha_pointer.bucket_id
+    assert tr("errors.auth.auth_storage_master_key_unavailable", locale="ca") in result.output
+    assert tr("errors.auth.auth_storage_master_key_unavailable", locale="en") not in result.output
+    assert "Traceback" not in result.output

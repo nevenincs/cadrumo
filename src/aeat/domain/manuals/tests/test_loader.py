@@ -7,11 +7,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from pydantic_settings import SettingsConfigDict
 
 from ....core.config import Settings
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....tests.aeat_literal_fixtures import manual_practicos_url
+from ....tests.fixtures.settings import EnvFileFreeSettings
 from .. import (
     ManualCasillaReference,
     ManualCatalogue,
@@ -32,19 +32,13 @@ _M303_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_CASILLA_
 _M130_CASILLA_07: CasillaId = validated_casilla_id("07", surface="_M130_CASILLA_07")
 
 
-class _IsolatedSettings(Settings):
-    """Settings variant that skips the on-disk env file for test isolation."""
-
-    model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
-
-
 def _write_json(path: Path, payload: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _settings_with_root(root: Path) -> Settings:
-    return _IsolatedSettings(aeat_manuals_root=root)
+    return EnvFileFreeSettings(aeat_manuals_root=root)
 
 
 def _seed_iva(tmp_path: Path) -> Settings:

@@ -12,14 +12,34 @@ This service is a stateful :class:`SnapshotService` sibling of the
 Modelo 100 borrador service: it keys supersession on the
 ``(modelo, filing_year, period)`` axis so a re-filed period's fresh
 capture supersedes the prior ACTIVE one, and it persists each snapshot
-through a :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
-at FINANCIAL sensitivity under the justificante-capture namespace, and records
-each capture as a lifecycle event via :class:`BucketEventHistoryRepository`.
+through a :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+at FINANCIAL sensitivity under
+:data:`aeat.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`,
+and records each capture as a lifecycle event via
+:class:`BucketEventHistoryRepository`.
 
 The captured PDF bytes ride inside the encrypted snapshot :class:`Envelope`
 as a base64 ``str`` (binary cannot survive the JSON envelope verbatim); the
 raw-bytes ``pdf_sha256`` is the content address used for snapshot-id
 derivation and dedup.
+
+See Also:
+    :mod:`aeat.application.live`
+        Public read-only live facade that orchestrates capture and reports
+        :class:`~aeat.application.live.JustificanteCaptureOutcome`.
+    :func:`aeat.application.live._filed_observation_persistence.enroll_filed_justificante_evidence`
+        Filed-history path that performs the same metadata registration and
+        current-record evidence stamping from declaration-register artefacts.
+    :mod:`aeat.application.overview`
+        Calendar projection that reads :class:`JustificanteCaptureSnapshot`
+        rows and matching domain justificante metadata as AEAT-side evidence.
+    :class:`aeat.application.live._snapshot_base.SecureSnapshotRepository`
+        Shared encrypted snapshot repository used by this bucket-scoped
+        capture repository.
+    :class:`~aeat.domain.modelos.ModeloRecord`
+        Local filing record stamped with live
+        :class:`~aeat.domain.modelos.ExternalEvidence` only after the receipt
+        matches the current filing axis.
 """
 
 from __future__ import annotations
@@ -43,12 +63,13 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage import (
     Envelope,
+    SecureObjectRepository,
+    secure_object_repository_for_bucket,
 )
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
@@ -63,6 +84,7 @@ from ._snapshot_base import (
 JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE = JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE.namespace
 _JUSTIFICANTE_CAPTURE_SNAPSHOT_VERSION = JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE.schema_version
 _JUSTIFICANTE_CAPTURE_SNAPSHOT_SENSITIVITY = JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE.sensitivity
+_LIVE_EVIDENCE_STAMPED_PAYLOAD_VERSION = 2
 
 # Official source kind stamped on the captured receipt. Member of the
 # cross-period clean-state gate's ``_OFFICIAL_SOURCE_KINDS`` frozenset, so a
@@ -131,6 +153,8 @@ class JustificanteCaptureSnapshot(BaseModel):
             raise LiveApplicationInputError("justificante capture pdf_base64 is not valid base64") from exc
         if not decoded:
             raise LiveApplicationInputError("justificante capture pdf_base64 must decode to non-empty bytes")
+        if sha256_hex(decoded) != self.pdf_sha256:
+            raise LiveApplicationInputError("justificante capture pdf_sha256 does not match decoded PDF bytes")
         return self
 
     def decoded_pdf_bytes(self) -> bytes:
@@ -139,7 +163,11 @@ class JustificanteCaptureSnapshot(BaseModel):
 
 
 def justificante_capture_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
-    """Return the secure-object key for one bucket's justificante-capture snapshot."""
+    """Return the secure-object key for one bucket's justificante-capture snapshot.
+
+    The key shape is the object-key grammar declared by
+    :data:`aeat.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
+    """
     trimmed_bucket = bucket_id.strip()
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_bucket:
@@ -240,6 +268,14 @@ class JustificanteCaptureSnapshotRepository:
     ``captured_at`` list ordering. ``save`` is kept local because justificante
     stamps the envelope ``written_at`` with the capture time (not ``now()``),
     a deliberate divergence from the shared base.
+
+    The namespace, sensitivity, schema version, and key grammar come from
+    :data:`aeat.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
+    Each :class:`JustificanteCaptureSnapshot` is written through an
+    :class:`~aeat.adapters.persistence.storage.Envelope` so the captured PDF,
+    CSV, and expediente metadata stay inside the encrypted
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    bucket store.
     """
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
@@ -476,7 +512,8 @@ def register_capture_justificante_metadata(
     Returns the persisted :class:`Justificante`, or ``None`` when the captured
     snapshot cannot be parsed into one.
     """
-    from ...domain.justificante import JustificanteParseError, JustificanteRepository
+    from ...adapters.persistence.profile.justificante import JustificanteRepository
+    from ...domain.justificante import JustificanteParseError
 
     if snapshot.state is not SnapshotLifecycleState.ACTIVE:
         raise LiveApplicationInputError(
@@ -572,20 +609,20 @@ def register_capture_as_filing_evidence(
             captured ``(modelo, filing_year, period)`` — the operator must file
             the period before attaching live-capture evidence to it.
     """
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...adapters.persistence.profile.justificante import JustificanteRepository
+    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...core.time import now
     from ...domain.buckets import (
         BucketEvent,
-        BucketEventHistoryRepository,
         BucketEventObjectType,
         BucketEventType,
         append_bucket_event,
         derive_bucket_event_id,
     )
-    from ...domain.justificante import JustificanteRepository
     from ...domain.modelos import (
         ExternalEvidence,
         ExternalEvidenceKind,
-        ModeloRecordCatalogueRepository,
         upsert_filing_record,
     )
 
@@ -651,6 +688,10 @@ def register_capture_as_filing_evidence(
         "evidence_kind": ExternalEvidenceKind.AEAT_LIVE_CAPTURE.value,
         "evidence_reference_id": snapshot.csv,
         "snapshot_id": snapshot.snapshot_id,
+        "source_kind": snapshot.source_kind,
+        "pdf_sha256": snapshot.pdf_sha256,
+        "captured_at": snapshot.captured_at.isoformat(),
+        "expediente_id": snapshot.expediente_id,
     }
     bucket_event_repository = BucketEventHistoryRepository()
     bucket_event_repository.save(
@@ -672,7 +713,7 @@ def register_capture_as_filing_evidence(
                 actor="aeat-live-capture",
                 object_type=BucketEventObjectType.FILING_RECORD,
                 object_id=stamped.filing_record_id,
-                payload_version=1,
+                payload_version=_LIVE_EVIDENCE_STAMPED_PAYLOAD_VERSION,
                 payload=event_payload,
             ),
         ),
@@ -738,8 +779,8 @@ def stamp_capture_evidence_if_filed(snapshot: JustificanteCaptureSnapshot) -> Mo
     best-effort: identity, period, modelo, and existing-evidence conflicts
     propagate to the caller.
     """
+    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...domain.justificante import JustificanteParseError
-    from ...domain.modelos import ModeloRecordCatalogueRepository
 
     catalogue = ModeloRecordCatalogueRepository().load()
     current = catalogue.current_for(

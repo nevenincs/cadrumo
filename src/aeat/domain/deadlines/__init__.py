@@ -1,13 +1,43 @@
-"""Registry-backed filing-deadline computation engine for autónomo profiles.
+"""Public facade for registry-backed filing deadline computation.
 
 :class:`DeadlineEngine` is the project's first user-visible
 "answer-the-user" surface: given an :class:`TaxpayerProfile` and a
 year, it produces a deterministic typed :class:`Schedule` of every
-filing the autónomo is obliged to submit, with concrete opens /
-closes dates and a current :class:`ObligationStatus`.
+filing the taxpayer profile is obliged to submit, with concrete
+opens / closes dates and a current :class:`ObligationStatus`. Each
+:class:`ModeloDeadline` may also carry a :class:`Recovery` payload backed by
+the Ley 58/2003 art. 27 :class:`RecargoBand` table when the obligation is
+overdue.
 
 The engine is read-only — it never touches the storage layer, never
 files anything, and never mutates its inputs.
+
+The facade also exposes the taxpayer-shape enums consumed by registry
+applicability predicates (:class:`EntityType`, :class:`LegalEntityForm`,
+:class:`IrpfIncomeCategory`, :class:`IrpfEstimationRegime`,
+:class:`FiscalResidency`) and the BOE-cited holiday shift substrate
+(:class:`CalendarCCAA`, :class:`HolidayCalendar`, :class:`DeadlineShift`,
+:func:`shift_deadline`, :data:`MODELOS_WITHOUT_SHIFT`). Profile mappings enter
+through :func:`taxpayer_profile_from_mapping`; local overview and workflow
+services consume the resulting :class:`Schedule` rather than rebuilding deadline
+or recovery logic.
+
+See Also:
+    :class:`domain.calculations.registry.ValidatedRegistryAuthority`
+        Registry authority that supplies modelo deadline windows and
+        applicability predicates consumed by :class:`DeadlineEngine`.
+    :func:`compute_obligation_schedule`
+        Single producer used by workflow gates and state projections to avoid
+        divergent pending-obligation calculations.
+    :func:`taxpayer_profile_from_mapping`
+        Profile-value mapper used by application profile projections before
+        calling this domain engine.
+    :mod:`application.workflow`
+        Application workflow gate that evaluates deadline obligations before
+        verification and local filing steps.
+    :mod:`application.overview`
+        Local overview read model that merges this schedule with stored filing
+        evidence.
 
 Examples:
     >>> from datetime import date
@@ -80,6 +110,7 @@ from ._models import (
     evaluate_multiple_pagadores_obligation,
     irnr_representante_fiscal_required,
     is_ue_eee_country_code,
+    resolve_multiple_pagadores_reduced_limit,
 )
 from ._plazo import resolve_filing_closes_on
 from ._profiles import taxpayer_profile_from_mapping
@@ -135,6 +166,7 @@ __all__ = [
     "next_business_day",
     "next_deadline",
     "resolve_filing_closes_on",
+    "resolve_multiple_pagadores_reduced_limit",
     "resolve_recargo_band",
     "shift_deadline",
     "taxpayer_profile_from_mapping",

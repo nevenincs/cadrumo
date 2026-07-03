@@ -60,40 +60,17 @@ def _hijo_no_menor_3() -> DescendantInfo:
 class TestDeduccionMaternidad0611Oracle:
     """Oracle values derived from Art. 81 LIRPF: sum(min(meses×100, 1200)) per hijo menor 3."""
 
-    def test_two_hijos_12_months_each_gives_2400(self) -> None:
-        """2 hijos × 12 meses each → 1200 + 1200 = 2400."""
-        profile = RentaFamilyProfile(
-            descendientes=(
-                _hijo_menor_3(12),
-                _hijo_menor_3(12),
-            ),
+    def test_oracle_examples(self) -> None:
+        cases = (
+            ("two-hijos-full-year", (12, 12), 2400),
+            ("two-hijos-partial-and-full", (6, 12), 1800),
+            ("one-hijo-six-months", (6,), 600),
+            ("one-hijo-cap", (12,), 1200),
+            ("zero-months", (0,), 0),
         )
-        assert profile.deduccion_maternidad_0611(2024) == 2400
-
-    def test_two_hijos_6_and_12_months_gives_1800(self) -> None:
-        """2 hijos, 6 and 12 meses → 600 + 1200 = 1800."""
-        profile = RentaFamilyProfile(
-            descendientes=(
-                _hijo_menor_3(6),
-                _hijo_menor_3(12),
-            ),
-        )
-        assert profile.deduccion_maternidad_0611(2024) == 1800
-
-    def test_one_hijo_6_months_gives_600(self) -> None:
-        """1 hijo × 6 meses → min(600, 1200) = 600."""
-        profile = RentaFamilyProfile(descendientes=(_hijo_menor_3(6),))
-        assert profile.deduccion_maternidad_0611(2024) == 600
-
-    def test_one_hijo_12_months_gives_1200(self) -> None:
-        """Cap: 12 meses × 100 = 1200, which hits the 1200 ceiling."""
-        profile = RentaFamilyProfile(descendientes=(_hijo_menor_3(12),))
-        assert profile.deduccion_maternidad_0611(2024) == 1200
-
-    def test_zero_meses_gives_zero(self) -> None:
-        """A hijo menor-3 with meses=0 does not contribute."""
-        profile = RentaFamilyProfile(descendientes=(_hijo_menor_3(0),))
-        assert profile.deduccion_maternidad_0611(2024) == 0
+        for case_id, meses_por_hijo, expected in cases:
+            profile = RentaFamilyProfile(descendientes=tuple(_hijo_menor_3(meses) for meses in meses_por_hijo))
+            assert profile.deduccion_maternidad_0611(2024) == expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -184,29 +161,27 @@ class TestMesesTornoFacts:
 class TestParseDescendienteFlagMesesTrabajo:
     """parse_descendiente_flag must accept MESES_TRABAJO= and validate 0–12 range."""
 
-    def test_meses_trabajo_12_parsed(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=12")
-        assert d.meses_madre_trabajo_2024 == 12
+    def test_meses_trabajo_parsed(self) -> None:
+        cases = (
+            ("twelve", "NACIMIENTO=2022-06-01,MESES_TRABAJO=12", 12),
+            ("six", "NACIMIENTO=2022-06-01,MESES_TRABAJO=6", 6),
+            ("zero", "NACIMIENTO=2022-06-01,MESES_TRABAJO=0", 0),
+            ("absent", "NACIMIENTO=2022-06-01", 0),
+        )
+        for case_id, spec, expected in cases:
+            d = parse_descendiente_flag(spec)
+            assert d.meses_madre_trabajo_2024 == expected, case_id
 
-    def test_meses_trabajo_6_parsed(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=6")
-        assert d.meses_madre_trabajo_2024 == 6
-
-    def test_meses_trabajo_absent_defaults_zero(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01")
-        assert d.meses_madre_trabajo_2024 == 0
-
-    def test_meses_trabajo_zero_accepted(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=0")
-        assert d.meses_madre_trabajo_2024 == 0
-
-    def test_meses_trabajo_13_raises(self) -> None:
-        with pytest.raises(ValueError, match="MESES_TRABAJO must be 0"):
-            parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=13")
-
-    def test_meses_trabajo_negative_raises(self) -> None:
-        with pytest.raises(ValueError, match="MESES_TRABAJO must be 0"):
-            parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=-1")
+    def test_meses_trabajo_out_of_range_raises(self) -> None:
+        for case_id, spec in (
+            ("above-range", "NACIMIENTO=2022-06-01,MESES_TRABAJO=13"),
+            ("negative", "NACIMIENTO=2022-06-01,MESES_TRABAJO=-1"),
+        ):
+            try:
+                with pytest.raises(ValueError, match="MESES_TRABAJO must be 0"):
+                    parse_descendiente_flag(spec)
+            except AssertionError as exc:
+                raise AssertionError(f"out-of-range MESES_TRABAJO was accepted: {case_id}") from exc
 
 
 # ---------------------------------------------------------------------------
@@ -217,31 +192,18 @@ class TestParseDescendienteFlagMesesTrabajo:
 class TestCLIHelpers:
     """Unit tests for compute_deduccion_maternidad_0611 (domain arithmetic)."""
 
-    def test_compute_two_hijos_12_12_gives_2400(self) -> None:
-        """Oracle: 2 × 12 meses → 2400."""
+    def test_compute_oracle_examples(self) -> None:
+        """Domain arithmetic matches the Art. 81 oracle examples."""
         from .._deduccion_maternidad import compute_deduccion_maternidad_0611
 
-        result = compute_deduccion_maternidad_0611([("0", 12), ("1", 12)])
-        assert result == 2400
-
-    def test_compute_6_and_12_gives_1800(self) -> None:
-        """Oracle: 6 + 12 meses → 1800."""
-        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
-
-        result = compute_deduccion_maternidad_0611([("0", 6), ("1", 12)])
-        assert result == 1800
-
-    def test_compute_cap_at_1200(self) -> None:
-        """Single hijo 12 meses → capped at 1200."""
-        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
-
-        assert compute_deduccion_maternidad_0611([("laia", 12)]) == 1200
-
-    def test_compute_zero_meses_gives_zero(self) -> None:
-        """Passing 0 meses must return 0, not a non-zero constant."""
-        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
-
-        assert compute_deduccion_maternidad_0611([("0", 0)]) == 0
+        cases = (
+            ("two-hijos-full-year", [("0", 12), ("1", 12)], 2400),
+            ("two-hijos-partial-and-full", [("0", 6), ("1", 12)], 1800),
+            ("one-hijo-cap", [("laia", 12)], 1200),
+            ("zero-months", [("0", 0)], 0),
+        )
+        for case_id, inputs, expected in cases:
+            assert compute_deduccion_maternidad_0611(inputs) == expected, case_id
 
     def test_compute_anti_tautology_delta(self) -> None:
         """Incrementing meses from 6 to 12 must change result by exactly 600."""

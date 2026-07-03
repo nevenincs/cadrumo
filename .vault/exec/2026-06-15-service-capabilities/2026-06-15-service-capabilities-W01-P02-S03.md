@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-06-15-service-capabilities-plan]]"
 ---
-
-
-
 
 # Add resolve_capability + CapabilityDecision overlaying profile facts onto the global Settings default (gestor-mode absolute bar first)
 
@@ -29,4 +26,3 @@ The resolver is the single posture computation; 4 tests cover default/profile/ge
 ## Notes
 
 Capabilities narrow, never widen, the safety floor (service-capabilities ADR).
-

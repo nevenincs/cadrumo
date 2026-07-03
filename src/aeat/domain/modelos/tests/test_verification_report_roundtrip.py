@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.storage import SensitivityClass
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import CasillaId, validated_casilla_id
@@ -32,7 +33,6 @@ from .._verification_repository import (
     _VERIFICATION_CATALOGUE_VERSION,
     _VERIFICATION_NAMESPACE,
     _VERIFICATION_OBJECT_KEY,
-    VerificationReportCatalogueRepository,
     VerificationReportPersistenceError,
 )
 
@@ -53,43 +53,51 @@ _IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
 _IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
 _IVA_RESOLVED_CASILLA_IDS = (_IVA_DEDUCIBLE_CASILLA, _IVA_RESULTADO_CASILLA)
 _IVA_MISSING_REQUIRED_CASILLA_IDS = (_IVA_DEVENGADO_CASILLA,)
+_TEST_FINDING_LEGAL_REFS = ("ley-58-2003:art-119",)
+_REPORT_RUN_AT = datetime(2026, 5, 28, 11, 5, 0, tzinfo=UTC)
+_LEGACY_KEY_REPORT_RUN_AT = datetime(2026, 5, 28, 11, 10, 0, tzinfo=UTC)
+_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 15, 0, tzinfo=UTC)
+_FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 20, 0, tzinfo=UTC)
 
 
 def _populated_report() -> VerificationReport:
     """Build a VerificationReport with every defaultable field non-default."""
 
-    now = datetime.now(UTC).replace(microsecond=0)
     revision_id = "a" * 64
     verified_by = "cli/aeat"
+    findings = (
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            casilla_id=_IVA_DEVENGADO_CASILLA,
+            message="iva.devengado is required but unresolved",
+            next_action="aeat app modelo work calculate <id> --casilla iva.devengado=...",
+            legal_refs=_TEST_FINDING_LEGAL_REFS,
+        ),
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.UNRESOLVED_BINDING,
+            severity=ModeloVerificationFindingSeverity.WARNING,
+            casilla_id=None,
+            expectation_id="iva-source-required",
+            message="prior-period source not yet pulled",
+            legal_refs=_TEST_FINDING_LEGAL_REFS,
+        ),
+    )
     return VerificationReport(
         verification_report_id=derive_verification_report_id(
             calculation_revision_id=revision_id,
-            run_at=now,
+            # Non-default: BLOCKED rather than the easier COMPLETE state
+            # so the tuple-of-findings field is naturally exercised.
+            completeness_status=VerificationCompletenessStatus.BLOCKED,
+            findings=findings,
             verified_by=verified_by,
         ),
         calculation_revision_id=revision_id,
-        # Non-default: BLOCKED rather than the easier COMPLETE state
-        # so the tuple-of-findings field is naturally exercised.
         completeness_status=VerificationCompletenessStatus.BLOCKED,
-        findings=(
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                casilla_id=_IVA_DEVENGADO_CASILLA,
-                message="iva.devengado is required but unresolved",
-                next_action="aeat app modelo work calculate <id> --casilla iva.devengado=...",
-            ),
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.UNRESOLVED_BINDING,
-                severity=ModeloVerificationFindingSeverity.WARNING,
-                casilla_id=None,
-                expectation_id="iva-source-required",
-                message="prior-period source not yet pulled",
-            ),
-        ),
+        findings=findings,
         resolved_casilla_ids=_IVA_RESOLVED_CASILLA_IDS,
         missing_required_casilla_ids=_IVA_MISSING_REQUIRED_CASILLA_IDS,
-        run_at=now,
+        run_at=_REPORT_RUN_AT,
         verified_by=verified_by,
         # Non-default lifecycle bit: granted_verificado_completo defaults
         # to False naturally on BLOCKED reports, but we still pin the
@@ -137,12 +145,12 @@ def test_verification_report_catalogue_survives_encrypted_storage(
 def test_verification_report_rejects_legacy_casilla_list_keys() -> None:
     """VerificationReport must not accept pre-canonical casilla list field names."""
 
-    now = datetime.now(UTC).replace(microsecond=0)
     revision_id = "b" * 64
     verified_by = "cli/aeat"
     report_id = derive_verification_report_id(
         calculation_revision_id=revision_id,
-        run_at=now,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=(),
         verified_by=verified_by,
     )
 
@@ -155,7 +163,7 @@ def test_verification_report_rejects_legacy_casilla_list_keys() -> None:
                 "findings": (),
                 "resolved_casillas": _IVA_RESOLVED_CASILLA_IDS,
                 "missing_required_casillas": _IVA_MISSING_REQUIRED_CASILLA_IDS,
-                "run_at": now,
+                "run_at": _LEGACY_KEY_REPORT_RUN_AT,
                 "verified_by": verified_by,
                 "granted_verificado_completo": False,
             },
@@ -164,6 +172,121 @@ def test_verification_report_rejects_legacy_casilla_list_keys() -> None:
     message = str(raised.value)
     assert "resolved_casillas" in message
     assert "missing_required_casillas" in message
+
+
+def test_verification_finding_requires_legal_refs() -> None:
+    """A finding is invalid unless it carries its legal grounding."""
+
+    with pytest.raises(ValidationError) as raised:
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message="cross-casilla predicate failed",
+        )
+
+    assert "legal_refs" in str(raised.value)
+
+
+def test_verification_finding_rejects_blank_grounding_refs() -> None:
+    """Finding provenance entries must be registry ids, not blank strings."""
+    with pytest.raises(ValidationError, match="legal_refs"):
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message="cross-casilla predicate failed",
+            legal_refs=(" ",),
+        )
+    with pytest.raises(ValidationError, match="source_refs"):
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message="cross-casilla predicate failed",
+            legal_refs=_TEST_FINDING_LEGAL_REFS,
+            source_refs=(" ",),
+        )
+
+
+def test_report_id_is_clock_free_for_an_identical_outcome() -> None:
+    """Two reports with an identical outcome but different run_at share one id.
+
+    The id derivation takes no clock; it is content-addressed by the outcome.
+    Constructing two reports that differ ONLY in run_at must therefore yield the
+    same id (the model validator accepts both), so an identical-outcome verify
+    retry collapses on upsert instead of accumulating.
+    """
+    revision_id = "c" * 64
+    verified_by = "cli/aeat"
+    findings = (
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message="reconciliation total mismatch over tolerance",
+            legal_refs=_TEST_FINDING_LEGAL_REFS,
+        ),
+    )
+    report_id = derive_verification_report_id(
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=findings,
+        verified_by=verified_by,
+    )
+    report_early = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=findings,
+        run_at=datetime(2026, 1, 1, 9, 0, tzinfo=UTC),
+        verified_by=verified_by,
+        granted_verificado_completo=False,
+    )
+    report_late = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=findings,
+        run_at=datetime(2026, 12, 31, 23, 59, tzinfo=UTC),
+        verified_by=verified_by,
+        granted_verificado_completo=False,
+    )
+    assert report_early.verification_report_id == report_late.verification_report_id == report_id
+    assert report_early.run_at != report_late.run_at
+
+
+def test_report_id_diverges_when_findings_change() -> None:
+    """A changed findings tuple (same revision and actor) yields a distinct id.
+
+    The findings tuple is part of the outcome identity, so a re-verify whose
+    findings differ produces a new distinct report rather than colliding with
+    the prior one.
+    """
+    revision_id = "d" * 64
+    verified_by = "cli/aeat"
+    base_finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message="reconciliation total mismatch over tolerance",
+        legal_refs=_TEST_FINDING_LEGAL_REFS,
+    )
+    extra_finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id=_IVA_DEVENGADO_CASILLA,
+        message="iva.devengado is required but unresolved",
+        legal_refs=_TEST_FINDING_LEGAL_REFS,
+    )
+    id_one = derive_verification_report_id(
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=(base_finding,),
+        verified_by=verified_by,
+    )
+    id_two = derive_verification_report_id(
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=(base_finding, extra_finding),
+        verified_by=verified_by,
+    )
+    assert id_one != id_two
 
 
 def test_verification_report_flipped_grant_invariant_surfaces_at_load(
@@ -240,7 +363,7 @@ def test_verification_report_catalogue_wrong_inner_classification_is_localized(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[VerificationReportCatalogue](
             schema_version=_VERIFICATION_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC).replace(microsecond=0),
+            written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.AUDIT,
             payload=VerificationReportCatalogue(),
         )
@@ -275,7 +398,7 @@ def test_verification_report_catalogue_unsupported_storage_version_is_localized(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[VerificationReportCatalogue](
             schema_version=stored_schema_version,
-            written_at=datetime.now(UTC).replace(microsecond=0),
+            written_at=_FUTURE_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.FINANCIAL,
             payload=VerificationReportCatalogue(),
         )

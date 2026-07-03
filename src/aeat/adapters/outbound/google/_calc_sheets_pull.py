@@ -1,11 +1,13 @@
 """Read operator-edited Sheets cells back into structured records.
 
-Pairs with :mod:`aeat.adapters.outbound.google._calc_sheets_apply`. The export
-side materialises a :class:`SheetExportPlan` as a real Google Sheets workbook;
-this module reads the operator's edits back out, validates the workbook is
-still bound to the :class:`RegistrySnapshot` the engine compiled it from, and
-returns typed records the caller can inspect, compute from, or assemble into
-ledger / filing inputs.
+Pairs with :mod:`~aeat.adapters.outbound.google._calc_sheets_apply`. The export
+side materialises a
+:class:`~aeat.application.storage.calc_sheets.SheetExportPlan` as a real Google
+Sheets workbook; this module reads the operator's edits back out, validates the
+workbook is still bound to the
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot` the engine
+compiled it from, and returns typed records the caller can inspect, compute
+from, or assemble into ledger / filing inputs.
 
 Two safety gates fire before any value is read:
 
@@ -22,14 +24,19 @@ Two safety gates fire before any value is read:
    shifted. The pull is refused with a typed error.
 
 The pull adapter does NOT mutate any local state; it returns a
-:class:`PullResult` and leaves applying the edits to the caller.
+:class:`~aeat.adapters.outbound.google.PullResult` and leaves applying the
+edits to the caller.
 
 See Also:
-    :func:`pull_operator_edits` reads the workbook,
-    :func:`compute_from_pull` maps a matching pull into
-    :class:`RegistryCalculationResult`, and
-    :func:`verify_pull_coverage` compares a pull against its source
-    :class:`SheetExportPlan` when the caller still has that plan.
+    :func:`~aeat.adapters.outbound.google.pull_operator_edits` reads the
+    workbook,
+    :func:`~aeat.adapters.outbound.google.compute_from_pull` maps a matching
+    pull into
+    :class:`~aeat.domain.calculations.registry.RegistryCalculationResult`, and
+    :func:`~aeat.adapters.outbound.google._calc_sheets_pull.verify_pull_coverage`
+    compares a pull against its source
+    :class:`~aeat.application.storage.calc_sheets.SheetExportPlan` when the
+    caller still has that plan.
 """
 
 from __future__ import annotations
@@ -49,30 +56,39 @@ from typing import TYPE_CHECKING, Any, Final, Literal
 if TYPE_CHECKING:
     from googleapiclient.discovery import Resource as _GoogleResource
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
-from ....application.storage.calc_sheets import collect_row_sets, registry_sha
-from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
-from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata, SheetExportPlan
+from ....application.storage.calc_sheets import (
+    OperatorInput,
+    SheetExportMetadata,
+    SheetExportPlan,
+    SheetLayout,
+    collect_row_sets,
+    plan_layout,
+    registry_sha,
+)
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Period
 from ....core.decimal import coerce_decimal
 from ....core.i18n import tr
-from ....core.time._utc import coerce_utc_aware
+from ....core.time import coerce_utc_aware
 from ....domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
     CasillaId,
     InputKind,
+    LegalRefId,
+    ModeloId,
     RegistryCalculationResult,
     RegistrySnapshot,
     RelationId,
     RevisionId,
+    SourceRefId,
     calculate_registry_snapshot,
     casillas_by_id,
     undeclared_casilla_ids,
 )
-from ...outbound.storage._errors import (
+from ..storage import (
     OutboundStorageConflictError,
     OutboundStorageNetworkError,
     OutboundStorageValidationError,
@@ -92,6 +108,8 @@ _DUPLICATE_SENSITIVE_METADATA_KEYS: Final[frozenset[str]] = frozenset(
         "aeat_period",
     },
 )
+_LEGAL_REFS_ADAPTER = TypeAdapter(tuple[LegalRefId, ...])
+_SOURCE_REFS_ADAPTER = TypeAdapter(tuple[SourceRefId, ...])
 
 # A single batch-get value-range entry from the Sheets API.
 # Shape: {"range": str, "values": list[list[object]]}
@@ -103,16 +121,21 @@ class OperatorEdit(BaseModel):
 
     ``display_number`` and ``label`` are display-only fields added by the
     pull adapter from the workbook's column metadata. They are not part of
-    the canonical :class:`OperatorInput` contract; use
-    :meth:`to_operator_input` to project this shape onto the canonical one.
+    the canonical
+    :class:`~aeat.application.storage.calc_sheets.OperatorInput` contract; use
+    :meth:`~aeat.adapters.outbound.google._calc_sheets_pull.OperatorEdit.to_operator_input`
+    to project this shape onto the canonical one.
 
     ``value`` mirrors the cell's raw shape from Google Sheets. The union
     is intentionally ambiguous between Decimal and numeric-shaped str
     because the wire JSON representation cannot statically distinguish
     them (pydantic serialises Decimal as a JSON string). The runtime
-    path in :func:`compute_from_pull` is what disambiguates via
-    :func:`_coerce_edit_value_to_decimal` for numeric input casillas and
-    :func:`_enum_binding_text` for enum bindings.
+    path in :func:`~aeat.adapters.outbound.google.compute_from_pull` is what
+    disambiguates via
+    :func:`~aeat.adapters.outbound.google._calc_sheets_pull._coerce_edit_value_to_decimal`
+    for numeric input casillas and
+    :func:`~aeat.adapters.outbound.google._calc_sheets_pull._enum_binding_text`
+    for enum bindings.
     """
 
     model_config = _STRICT_FROZEN
@@ -123,19 +146,25 @@ class OperatorEdit(BaseModel):
     value: Decimal | str | bool | None = None
 
     def to_operator_input(self) -> OperatorInput:
-        """Project onto the canonical :class:`OperatorInput` shape, dropping display fields."""
+        """Project onto the canonical :class:`~aeat.application.storage.calc_sheets.OperatorInput` shape.
+
+        Drops display-only fields.
+        """
         return OperatorInput(casilla_id=self.casilla_id, value=self.value)
 
 
 class BindingEdit(BaseModel):
     """One operator-edited binding cell value (numeric or enum).
 
-    Same union-ambiguity reasoning as :class:`OperatorEdit.value` —
-    the wire JSON cannot statically distinguish a CCAA-shape ``"04"``
-    from a numeric ``Decimal("4")``. The runtime dispatch in
-    :func:`compute_from_pull` is what routes the value: enum bindings
-    go through :func:`_enum_binding_text` and numeric bindings go
-    through :func:`_coerce_edit_value_to_decimal`.
+    Same union-ambiguity reasoning as
+    :attr:`~aeat.adapters.outbound.google._calc_sheets_pull.OperatorEdit.value`
+    — the wire JSON cannot statically distinguish a CCAA-shape ``"04"`` from a
+    numeric ``Decimal("4")``. The runtime dispatch in
+    :func:`~aeat.adapters.outbound.google.compute_from_pull` is what routes the
+    value: enum bindings go through
+    :func:`~aeat.adapters.outbound.google._calc_sheets_pull._enum_binding_text`
+    and numeric bindings go through
+    :func:`~aeat.adapters.outbound.google._calc_sheets_pull._coerce_edit_value_to_decimal`.
     """
 
     model_config = _STRICT_FROZEN
@@ -147,8 +176,9 @@ class BindingEdit(BaseModel):
 class RelationEdit(BaseModel):
     """One pre-resolved cross-revision relation value mirrored in Tarifas.
 
-    The provenance / source_filing_year / source_periods / resolved_at
-    fields are recovered from the workbook's developer metadata
+    The provenance / source_modelo / source_filing_year / source_periods /
+    source_casilla_ids / legal_refs / source_refs / resolved_at fields are
+    recovered from the workbook's developer metadata
     (``aeat_relation:<relation>`` keys written by the apply adapter).
     They are absent for relations that were edited manually in the
     workbook without an apply round-trip; in that case the relation
@@ -160,8 +190,12 @@ class RelationEdit(BaseModel):
     relation: RelationId
     value: Decimal | None = None
     provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None = None
+    source_modelo: ModeloId | None = None
     source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
     source_periods: tuple[str, ...] = ()
+    source_casilla_ids: tuple[CasillaId, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
     resolved_at: datetime | None = None
 
 
@@ -189,9 +223,11 @@ class PullMetadata(BaseModel):
 
     This is a loose parsing shape: ``exported_at`` is ``str | None`` because
     the developer-metadata round-trip may yield a raw ISO string or nothing.
-    Use :meth:`to_sheet_export_metadata` to project onto the strict canonical
-    :class:`~aeat.application.storage.calc_sheets._records.SheetExportMetadata`
-    shape when the workbook is known to carry a valid export stamp.
+    Use
+    :meth:`~aeat.adapters.outbound.google._calc_sheets_pull.PullMetadata.to_sheet_export_metadata`
+    to project onto the strict canonical
+    :class:`~aeat.application.storage.calc_sheets.SheetExportMetadata` shape
+    when the workbook is known to carry a valid export stamp.
     """
 
     model_config = _STRICT_FROZEN
@@ -205,10 +241,11 @@ class PullMetadata(BaseModel):
     exported_at: str | None = None
 
     def to_sheet_export_metadata(self) -> SheetExportMetadata | None:
-        """Project onto a :class:`SheetExportMetadata`, parsing exported_at from ISO string.
+        """Project onto a :class:`~aeat.application.storage.calc_sheets.SheetExportMetadata`.
 
-        Returns ``None`` when ``exported_at`` is absent or unparseable rather
-        than raising, so callers can treat a missing stamp as ``metadata_match="missing"``.
+        Parses ``exported_at`` from an ISO string. Returns ``None`` when the
+        stamp is absent or unparseable rather than raising, so callers can
+        treat it as ``metadata_match="missing"``.
         """
         if not self.exported_at:
             return None
@@ -239,9 +276,12 @@ class PullResult(BaseModel):
     """Outcome of one Google Sheets pull cycle.
 
     Carries the typed edit families read from the workbook, the
-    :class:`PullMetadata` stamp recovered from developer metadata, the
-    :class:`MetadataMatchState` verdict against the caller's
-    :class:`RegistrySnapshot`, and the count of non-blank cells read.
+    :class:`~aeat.adapters.outbound.google._calc_sheets_pull.PullMetadata`
+    stamp recovered from developer metadata, the
+    :class:`~aeat.adapters.outbound.google._calc_sheets_pull.MetadataMatchState`
+    verdict against the caller's
+    :class:`~aeat.domain.calculations.registry.RegistrySnapshot`, and the count
+    of non-blank cells read.
     ``metadata_match`` may be ``STALE`` or ``MISSING``; callers must treat that
     as a refusal boundary before applying edits to local state.
     """
@@ -286,6 +326,7 @@ def _sheets_service(credentials: object) -> _GoogleResource:
 # .files() / .spreadsheets() only via runtime Discovery JSON dispatch; the published
 # typing surface carries .close() alone, so service helpers accept Any for the dynamic
 # attribute access.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
     """Refuse to read from a spreadsheet that lacks the ownership marker."""
     file_meta = execute_request(
@@ -310,6 +351,7 @@ def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
 # .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
 # surface carries .close() alone, so the service helper accepts Any for the dynamic
 # attribute access.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _read_developer_metadata(
     sheets_service: Any,
     spreadsheet_id: str,
@@ -437,13 +479,15 @@ def pull_operator_edits(
     This is the readback entrypoint behind ``aeat config google sync calc
     pull``. It verifies the Drive ownership marker, reads developer metadata,
     classifies metadata against ``snapshot``, reads operator/binding/relation
-    cells plus Detalle row-set blocks, and returns a :class:`PullResult`.
+    cells plus Detalle row-set blocks, and returns a
+    :class:`~aeat.adapters.outbound.google.PullResult`.
 
     Args:
-        snapshot: The :class:`RegistrySnapshot` the workbook was compiled
-            against. Used to derive the layout (cell addresses for
-            every casilla / binding / relation) and to validate the
-            workbook's developer-metadata stamps.
+        snapshot: The
+            :class:`~aeat.domain.calculations.registry.RegistrySnapshot` the
+            workbook was compiled against. Used to derive the layout (cell
+            addresses for every casilla / binding / relation) and to validate
+            the workbook's developer-metadata stamps.
         spreadsheet_id: The Drive file id of the workbook to read.
             Must already exist and carry the
             ``appProperties.aeat_vault_app=aeat`` ownership marker.
@@ -452,17 +496,17 @@ def pull_operator_edits(
             the ``drive.file`` + ``spreadsheets`` scopes.
 
     Returns:
-        A :class:`PullResult` carrying the operator edits, binding edits,
-        relation edits, and the metadata-match verdict. A
-        ``metadata_match="stale"`` result still includes the edits but
-        signals to the caller that the workbook's identity does not
-        match the supplied snapshot — applying these edits to the
-        local store may corrupt data.
+        A :class:`~aeat.adapters.outbound.google.PullResult` carrying the
+        operator edits, binding edits, relation edits, and the metadata-match
+        verdict. A ``metadata_match="stale"`` result still includes the edits
+        but signals to the caller that the workbook's identity does not match
+        the supplied snapshot — applying these edits to the local store may
+        corrupt data.
 
     Raises:
-        :class:`OutboundStorageValidationError`: When ``spreadsheet_id`` is
-            blank.
-        :class:`~aeat.adapters.outbound.storage.OutboundStorageError`: When
+        :exc:`~aeat.adapters.outbound.storage.OutboundStorageValidationError`:
+            When ``spreadsheet_id`` is blank.
+        :exc:`~aeat.adapters.outbound.storage.OutboundStorageError`: When
             Drive or Sheets rejects the request, the target is missing, quota
             is exhausted, or the workbook fails the app-owned marker gate.
     """
@@ -548,6 +592,7 @@ def _operator_input_addresses(
 # .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
 # surface carries .close() alone, so the service helper accepts Any for the dynamic
 # attribute access.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _batch_get_values(
     sheets: Any,
     spreadsheet_id: str,
@@ -616,7 +661,8 @@ def _decode_binding_edits(
 ) -> tuple[tuple[BindingEdit, ...], int, int]:
     """Map the per-binding slice of the batchGet response into typed BindingEdits.
 
-    Booleans are stringified because :class:`BindingEdit.value`'s union
+    Booleans are stringified because
+    :attr:`~aeat.adapters.outbound.google._calc_sheets_pull.BindingEdit.value`
     (``Decimal | str | None``) does not carry a bool path — the runtime
     enum-binding semantics expect a textual representation here.
     """
@@ -656,7 +702,16 @@ def _decode_relation_edits(
         coerced = coerce_decimal(raw)
         if coerced is not None:
             cells_read += 1
-        provenance, source_filing_year, source_periods, resolved_at = _parse_relation_metadata(
+        (
+            provenance,
+            source_modelo,
+            source_filing_year,
+            source_periods,
+            source_casilla_ids,
+            legal_refs,
+            source_refs,
+            resolved_at,
+        ) = _parse_relation_metadata(
             metadata_pairs.get(f"aeat_relation:{relation_id}", ""),
         )
         edits.append(
@@ -664,8 +719,12 @@ def _decode_relation_edits(
                 relation=relation_id,
                 value=coerced,
                 provenance=provenance,
+                source_modelo=source_modelo,
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,
+                source_casilla_ids=source_casilla_ids,
+                legal_refs=legal_refs,
+                source_refs=source_refs,
                 resolved_at=resolved_at,
             ),
         )
@@ -676,13 +735,17 @@ def _parse_relation_metadata(
     raw: str,
 ) -> tuple[
     Literal["local_filing", "aeat_live", "operator_manual"] | None,
+    ModeloId | None,
     int | None,
     tuple[str, ...],
+    tuple[CasillaId, ...],
+    tuple[LegalRefId, ...],
+    tuple[SourceRefId, ...],
     datetime | None,
 ]:
     """Parse the ``"k=v; k=v"`` shape written by the apply adapter."""
     if not raw:
-        return None, None, (), None
+        return None, None, None, (), (), (), (), None
     parts = [piece.strip() for piece in raw.split(";") if "=" in piece]
     fields: dict[str, str] = {}
     for part in parts:
@@ -699,6 +762,7 @@ def _parse_relation_metadata(
             provenance = "operator_manual"
         case _:
             provenance = None
+    source_modelo: ModeloId | None = fields.get("source_modelo") or None
     source_filing_year: int | None = None
     raw_year = fields.get("source_filing_year", "")
     if raw_year:
@@ -710,6 +774,18 @@ def _parse_relation_metadata(
     raw_periods = fields.get("source_periods", "")
     if raw_periods:
         source_periods = tuple(piece for piece in raw_periods.split("+") if piece)
+    source_casilla_ids: tuple[CasillaId, ...] = ()
+    raw_casilla_ids = fields.get("source_casilla_ids", "")
+    if raw_casilla_ids:
+        source_casilla_ids = tuple(piece for piece in raw_casilla_ids.split("+") if piece)
+    legal_refs: tuple[LegalRefId, ...] = ()
+    raw_legal_refs = fields.get("legal_refs", "")
+    if raw_legal_refs:
+        legal_refs = _validated_relation_legal_refs(raw_legal_refs)
+    source_refs: tuple[SourceRefId, ...] = ()
+    raw_source_refs = fields.get("source_refs", "")
+    if raw_source_refs:
+        source_refs = _validated_relation_source_refs(raw_source_refs)
     resolved_at: datetime | None = None
     raw_resolved = fields.get("resolved_at", "")
     if raw_resolved:
@@ -717,13 +793,47 @@ def _parse_relation_metadata(
             resolved_at = datetime.fromisoformat(raw_resolved)
         except ValueError:
             resolved_at = None
-    return provenance, source_filing_year, source_periods, resolved_at
+    return (
+        provenance,
+        source_modelo,
+        source_filing_year,
+        source_periods,
+        source_casilla_ids,
+        legal_refs,
+        source_refs,
+        resolved_at,
+    )
+
+
+def _relation_ref_tokens(raw: str) -> tuple[str, ...]:
+    return tuple(piece for piece in raw.split("+") if piece)
+
+
+def _validated_relation_legal_refs(raw: str) -> tuple[LegalRefId, ...]:
+    try:
+        return _LEGAL_REFS_ADAPTER.validate_python(_relation_ref_tokens(raw))
+    except ValidationError as exc:
+        raise OutboundStorageValidationError(
+            "relation metadata legal_refs contains malformed registry legal reference ids",
+            context={"metadata_key": "legal_refs", "metadata_value": raw},
+        ) from exc
+
+
+def _validated_relation_source_refs(raw: str) -> tuple[SourceRefId, ...]:
+    try:
+        return _SOURCE_REFS_ADAPTER.validate_python(_relation_ref_tokens(raw))
+    except ValidationError as exc:
+        raise OutboundStorageValidationError(
+            "relation metadata source_refs contains malformed registry source reference ids",
+            context={"metadata_key": "source_refs", "metadata_value": raw},
+        ) from exc
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
 # .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
 # surface carries .close() alone, so the service helper accepts Any for the dynamic
 # attribute access.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _read_row_set_edits(
     snapshot: RegistrySnapshot,
     sheets: Any,
@@ -767,6 +877,7 @@ def _row_set_block_range(row_set: Any) -> str:
 # .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
 # surface carries .close() alone, so the service helper accepts Any for the dynamic
 # attribute access.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: runtime discovery Resource.
 def _batch_get_values_for_row_sets(
     sheets: Any,
     spreadsheet_id: str,
@@ -848,20 +959,23 @@ def _column_index_to_letters(column: int) -> str:
 
 
 class PullCoverageDiscrepancy(BaseModel):
-    """One coverage delta between a :class:`SheetExportPlan` and a :class:`PullResult`.
+    """One coverage delta between a plan and pulled workbook records.
 
     The apply adapter writes a richly-shaped workbook (tariffs,
     constraints, protected ranges, row-sets); the pull adapter
-    materialises a slimmer ``PullResult`` of operator-editable
-    surfaces. A corrupted or hand-edited workbook could have
-    structural cells stripped or row-set columns removed without
-    surfacing as a load error. ``verify_pull_coverage`` enumerates
-    every coverage mismatch as one of these typed records so callers
-    can choose to refuse the merge, log a warning, or surface a
-    diagnostic to the operator.
+    materialises a slimmer
+    :class:`~aeat.adapters.outbound.google.PullResult` of operator-editable
+    surfaces. A corrupted or hand-edited workbook could have structural cells
+    stripped or row-set columns removed without surfacing as a load error.
+    :func:`~aeat.adapters.outbound.google._calc_sheets_pull.verify_pull_coverage`
+    enumerates every coverage mismatch as one of these typed records so callers
+    can choose to refuse the merge, log a warning, or surface a diagnostic to
+    the operator.
 
     The check is intentionally caller-opt-in: not every consumer of
-    ``compute_from_pull`` carries the original ``SheetExportPlan``
+    :func:`~aeat.adapters.outbound.google.compute_from_pull` carries the
+    original
+    :class:`~aeat.application.storage.calc_sheets.SheetExportPlan`
     (e.g. a fresh pull from a workbook the operator authored without
     a prior apply). Callers that DO have the plan should run the
     check before consuming the pull.
@@ -885,12 +999,13 @@ def verify_pull_coverage(
     plan: SheetExportPlan,
     pull: PullResult,
 ) -> tuple[PullCoverageDiscrepancy, ...]:
-    """Return every :class:`PullCoverageDiscrepancy` between ``plan`` and ``pull``.
+    """Return every coverage discrepancy between ``plan`` and ``pull``.
 
-    Returns an empty tuple when the two sides agree on the surfaces
-    the pull captures. Non-empty tuples enumerate structural deltas:
-    missing row-set groupings, unexpected groupings, binding count
-    mismatch, relation count mismatch, or registry-metadata drift.
+    Returns an empty tuple of :class:`PullCoverageDiscrepancy` when the two
+    sides agree on the surfaces the pull captures. Non-empty tuples enumerate
+    structural deltas: missing row-set groupings, unexpected groupings,
+    binding count mismatch, relation count mismatch, or registry-metadata
+    drift.
 
     Tariffs, cell constraints, and protected ranges are NOT
     re-validated against the workbook itself (the pull adapter never
@@ -949,18 +1064,21 @@ def compute_from_pull(
     snapshot: RegistrySnapshot,
     pull: PullResult,
 ) -> RegistryCalculationResult:
-    """Run the local Decimal runtime against a :class:`PullResult`.
+    """Run the local Decimal runtime against a :class:`~aeat.adapters.outbound.google.PullResult`.
 
     Maps each edit family back to the runtime contract:
 
-    - ``OperatorEdit.value`` flows into runtime ``inputs``, with
-      ``Decimal("0")`` substituted for ``None`` so the runtime's "every
-      non-computed casilla has a value" precondition holds.
-    - ``BindingEdit.value`` is routed by the binding's ``typed_enum``
-      declaration: numeric bindings flow into ``binding_values`` as Decimals;
-      enum bindings flow into ``enum_binding_values`` as plain strings.
-    - ``RelationEdit.value`` flows into ``relation_values`` as Decimals,
-      with ``Decimal("0")`` substituted for ``None``.
+    - :attr:`~aeat.adapters.outbound.google._calc_sheets_pull.OperatorEdit.value`
+      flows into runtime ``inputs``, with ``Decimal("0")`` substituted for
+      ``None`` so the runtime's "every non-computed casilla has a value"
+      precondition holds.
+    - :attr:`~aeat.adapters.outbound.google._calc_sheets_pull.BindingEdit.value`
+      is routed by the binding's ``typed_enum`` declaration: numeric bindings
+      flow into ``binding_values`` as Decimals; enum bindings flow into
+      ``enum_binding_values`` as plain strings.
+    - :attr:`~aeat.adapters.outbound.google._calc_sheets_pull.RelationEdit.value`
+      flows into ``relation_values`` as Decimals, with ``Decimal("0")``
+      substituted for ``None``.
 
     Refuses to compute when the workbook's metadata stamps do not
     match the supplied snapshot (``pull.metadata_match != "matches"``).
@@ -968,19 +1086,22 @@ def compute_from_pull(
     invoking this helper.
 
     Args:
-        snapshot: The :class:`RegistrySnapshot` the workbook was compiled
-            against. Used to derive input casilla identifiers, active
-            relation periods, and the metadata-match gate.
-        pull: The :class:`PullResult` carrying the operator-edited cells
-            to compute from.
+        snapshot: The
+            :class:`~aeat.domain.calculations.registry.RegistrySnapshot` the
+            workbook was compiled against. Used to derive input casilla
+            identifiers, active relation periods, and the metadata-match gate.
+        pull: The :class:`~aeat.adapters.outbound.google.PullResult` carrying
+            the operator-edited cells to compute from.
 
     Returns:
-        A :class:`RegistryCalculationResult` produced by
-        :func:`aeat.domain.calculations.registry.calculate_registry_snapshot`.
+        A :class:`~aeat.domain.calculations.registry.RegistryCalculationResult`
+        produced by
+        :func:`~aeat.domain.calculations.registry.calculate_registry_snapshot`.
 
     Raises:
-        :class:`OutboundStorageConflictError`: When ``pull`` does not bind to
-            ``snapshot`` by metadata verdict and registry-SHA stamp.
+        :exc:`~aeat.adapters.outbound.storage.OutboundStorageConflictError`:
+            When ``pull`` does not bind to ``snapshot`` by metadata verdict and
+            registry-SHA stamp.
     """
     _require_metadata_match(pull=pull, snapshot=snapshot)
     inputs = _collect_input_casilla_values(snapshot=snapshot, edits=pull.operator_edits)
@@ -1030,7 +1151,7 @@ def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> 
 
 
 def _coerce_edit_value_to_decimal(value: Decimal | str | bool | None) -> Decimal:
-    """Coerce an :class:`OperatorEdit.value` shape into a runtime Decimal.
+    """Coerce an :attr:`~aeat.adapters.outbound.google._calc_sheets_pull.OperatorEdit.value` shape.
 
     None / unparseable text / unsupported type all collapse to
     ``Decimal("0")`` so the runtime's "every non-computed casilla has a

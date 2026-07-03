@@ -3,7 +3,7 @@ tags:
   - "#audit"
   - "#real-pdf-import"
 date: 2026-04-22
-modified: '2026-04-22'
+modified: '2026-06-13'
 related:
   - "[[2026-04-22-real-pdf-import-wave-48-exhaustive-audit]]"
   - "[[2026-04-22-real-pdf-import-wave-53-exhaustive-audit]]"
@@ -126,8 +126,8 @@ mode unless explicitly fixed.
 `.vault/exec/2026-04-20-pdf-import/` contains phase-1..6 summaries
 but no per-wave step records for 59a/59b/59c or 61a/61b/61c/61d/
 61e/61f. Wave 60 stream 3 L3 flagged this; wave 61 did not close
-it. The vaultspec pipeline contract (`.vault/exec/{feature}/
-{step}.md`) is violated for nine consecutive waves.
+it. The vaultspec pipeline contract (`.vault/exec/<feature>/
+<step>.md`) is violated for nine consecutive waves.
 
 **Fix**: ship a consolidated wave-59/61 step-record bundle OR
 explicitly document the per-wave-step deferral in the ADR with

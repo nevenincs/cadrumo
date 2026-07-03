@@ -18,9 +18,8 @@ import pytest
 from click.testing import Result
 
 from ....application.evidence import EvidenceBundleService
-from ....application.user_profile._orchestration import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....core.i18n import tr
 from ....tests.cli_runner import invoke_cached_cli
@@ -39,9 +38,11 @@ def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(aeat_audit_dir=audit_dir),
-        profile_create_storage_span("operator"),
+        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
     ):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+        )
         yield audit_dir
 
 

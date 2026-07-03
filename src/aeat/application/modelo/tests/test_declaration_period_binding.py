@@ -20,23 +20,24 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import BindingId
-from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._observations_repository import IvaWalletDecisionRepository
+from ...calculations import IvaWalletDecisionRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import calculate_modelo_revision, create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CLOCK = datetime(2026, 5, 21, 9, 0, 0, tzinfo=UTC)
+_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _TAXPAYER_NIF = "12345678Z"
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "decl.ejercicio",
@@ -50,7 +51,7 @@ _DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id(
 
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator") as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         _seed_taxpayer_profile(runtime.repository)
         yield
 
@@ -60,13 +61,25 @@ def _seed_taxpayer_profile(objects: SecureObjectRepository) -> None:
     reconciliation gate added to ``calculate_modelo_revision`` resolves
     the work-unit taxpayer identity."""
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id=_BUCKET_ID,
         display_name="Test runtime profile",
-        facts=(UserProfileFact(path="identity.tax_id", value=_TAXPAYER_NIF),),
+        facts=(
+            UserProfileFact(path="identity.tax_id", value=_TAXPAYER_NIF),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Operator"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    UserProfileLifecycleRepository(bucket_id="operator", objects=objects).save(record)
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
 
 
 def _repositories():
@@ -115,7 +128,7 @@ def _calculate_303(*, filing_year: int, period: str, period_date: date, tmp_path
         typed_period = Period.from_year_and_code(filing_year, period)
         work_repo, calc_repo, event_repo = _repositories()
         work_unit = create_work_unit(
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             modelo="303",
             filing_year=filing_year,
             period=typed_period,
@@ -223,6 +236,5 @@ def test_modelo_303_declaration_year_distinguishes_two_filing_years(tmp_path: Pa
     assert revision_2024.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal("2024")
     assert revision_2026.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal("2026")
     assert (
-        revision_2024.casilla_values[_DECL_EJERCICIO_CASILLA]
-        != revision_2026.casilla_values[_DECL_EJERCICIO_CASILLA]
+        revision_2024.casilla_values[_DECL_EJERCICIO_CASILLA] != revision_2026.casilla_values[_DECL_EJERCICIO_CASILLA]
     )

@@ -8,7 +8,13 @@ not own; the inner primitives keep emitting their lifecycle events
 (``PROFILE_RENAMED`` etc.) so each operator action surfaces both
 perspectives in the bucket-event history.
 
-This module uses :class:`BucketEventHistoryRepository` for event emission.
+This module uses :class:`BucketEventHistoryRepository` for event
+emission, :class:`~domain.user_profile.UserProfilePortableExport`
+for sealed export/import payloads, and
+:class:`~adapters.persistence.storage.bucket.ExportArchiveHeader`
+for archive frontmatter. The archive file is an explicit operator
+handoff artifact; bucket state remains owned by the profile and secure
+repository primitives the service composes.
 """
 
 from __future__ import annotations
@@ -18,11 +24,13 @@ import json
 import secrets
 from typing import TYPE_CHECKING, NamedTuple
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.storage import StorageCustodyProfile
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
 from ...domain.buckets import (
+    BucketDeleteRefusedError,
     BucketEvent,
-    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     BucketImportError,
@@ -30,10 +38,14 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ..user_profile import (
+    SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
     delete_profile_with_lifecycle_span,
     deserialize_profile_bundle,
+    missing_filing_baseline_flags,
     profile_create_storage_span,
     profile_storage_session,
+    record_to_path_values,
+    register_active_profile,
     remove_profile_bucket_directory,
     rename_profile,
     serialize_profile_bundle,
@@ -49,6 +61,8 @@ from ._contracts import (
     ExportBucketResult,
     ImportBucketCommand,
     ImportBucketResult,
+    InspectBucketArchiveCommand,
+    InspectBucketArchiveResult,
     RenameBucketCommand,
     RenameBucketResult,
 )
@@ -57,7 +71,8 @@ from ._manifest_digest import compute_manifest_digest
 if TYPE_CHECKING:  # pragma: no cover - import-cycle guard
     from datetime import datetime
 
-    from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+    from ...domain.buckets import BucketEventHistoryRepositoryProtocol
+    from ...domain.retention import RetentionFloorAssessment
     from ...domain.user_profile import UserProfilePortableExport
 
 
@@ -65,7 +80,7 @@ _RENAME_PAYLOAD_VERSION = 1
 _DELETE_PAYLOAD_VERSION = 1
 _EXPORT_PAYLOAD_VERSION = 1
 _IMPORT_PAYLOAD_VERSION = 1
-_ARCHIVE_SCHEMA_VERSION = 1
+_ARCHIVE_SCHEMA_VERSION = 2
 _RECOVERY_WRAP_SALT_BYTES = 16
 
 
@@ -191,7 +206,6 @@ class BucketMaintenanceService:
             :class:`DeleteBucketResult`: The result of the delete operation.
         """
         from ...core import resolve_active_bucket_id
-        from ...domain.buckets import BucketDeleteRefusedError
 
         if not command.confirmed:
             raise BucketDeleteRefusedError(
@@ -212,8 +226,21 @@ class BucketMaintenanceService:
                 context={"bucket_id": command.bucket_id},
             )
         previous_label = pointer.label
+        assessment = self._assess_retention_floor(command.bucket_id)
+        override_used = self._enforce_retention_floor(command, assessment)
+        latest_safe_erase_date = assessment.latest_safe_erase_date
         delete_profile_with_lifecycle_span(command.bucket_id)
         occurred_at = now()
+        payload: dict[str, str] = {"previous_label": previous_label}
+        if override_used:
+            # The override is a legally-material operator decision (erasing a
+            # record the law still requires kept); record the acknowledgement,
+            # the operator's reason, and the bypassed safe-erase date so the
+            # append-only audit trail explains why the record was destroyed early.
+            payload["retention_override"] = "true"
+            payload["retention_override_reason"] = command.retention_override_reason or ""
+            if latest_safe_erase_date is not None:
+                payload["retention_safe_erase_date"] = latest_safe_erase_date.isoformat()
         event = BucketEvent(
             event_id=derive_bucket_event_id(
                 bucket_id=command.bucket_id,
@@ -222,7 +249,7 @@ class BucketMaintenanceService:
                 actor="bucket-maintenance",
                 object_type=BucketEventObjectType.BUCKET,
                 object_id=command.bucket_id,
-                payload={"previous_label": previous_label},
+                payload=payload,
             ),
             bucket_id=command.bucket_id,
             event_type=BucketEventType.BUCKET_DELETED,
@@ -231,7 +258,7 @@ class BucketMaintenanceService:
             object_type=BucketEventObjectType.BUCKET,
             object_id=command.bucket_id,
             payload_version=_DELETE_PAYLOAD_VERSION,
-            payload={"previous_label": previous_label},
+            payload=payload,
         )
         repository = self._event_repository or BucketEventHistoryRepository()
         repository.save(append_bucket_event(repository.load(), event))
@@ -240,6 +267,55 @@ class BucketMaintenanceService:
             bucket_id=command.bucket_id,
             previous_label=previous_label,
             occurred_at=occurred_at,
+            retention_override_used=override_used,
+            latest_safe_erase_date=latest_safe_erase_date,
+        )
+
+    @staticmethod
+    def _assess_retention_floor(bucket_id: str) -> RetentionFloorAssessment:
+        """Assess the target bucket's filed records against the legal retention floor.
+
+        Opens a storage session scoped to ``bucket_id`` (the target is never the
+        active bucket, so its master-key session is activated the same way the
+        export path activates it) and reads the encrypted filing catalogue, then
+        delegates the pure floor evaluation to
+        :func:`~domain.retention.assess_retention_floor`.
+        """
+        from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+        from ...domain.retention import assess_retention_floor
+
+        with profile_storage_session(bucket_id):
+            filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load())
+        return assess_retention_floor(filing_records, as_of=now())
+
+    @staticmethod
+    def _enforce_retention_floor(
+        command: DeleteBucketCommand,
+        assessment: RetentionFloorAssessment,
+    ) -> bool:
+        """Refuse the erase when records are still retained, unless overridden.
+
+        Returns whether a still-retained record was erased under the explicit
+        legal-retention override. A record inside its window is erasable only
+        when the operator both acknowledges the override AND supplies a
+        non-empty reason; an acknowledgement without a reason is not a valid
+        override and the erase is refused.
+        """
+        if not assessment.blocks_erase:
+            return False
+        reason = (command.retention_override_reason or "").strip()
+        override_valid = command.acknowledge_retention_override and bool(reason)
+        if override_valid:
+            return True
+        from ...domain.retention import RetentionFloorError
+
+        safe_date = assessment.latest_safe_erase_date
+        raise RetentionFloorError(
+            context={
+                "bucket_id": command.bucket_id,
+                "retained_record_count": len(assessment.retained),
+                "earliest_safe_erase_date": safe_date.date().isoformat() if safe_date is not None else "",
+            },
         )
 
     def browse(self, command: BrowseBucketCommand) -> BrowseBucketResult:
@@ -278,16 +354,16 @@ class BucketMaintenanceService:
         """Write a sealed bucket archive for ``command.bucket_id``.
 
         The method composes the existing profile portable-bundle serializer,
-        sealed-archive writer, active bucket DEK, and bucket-event history.
-        It does not reimplement profile export logic. When a recovery
-        passphrase is supplied, the payload is sealed under a passphrase-derived
-        key and the archive carries a small recovery-wrap salt member; otherwise
-        the currently active bucket DEK seals the payload for same-host backup.
+        :func:`compute_manifest_digest`, sealed-archive writer, active bucket
+        DEK, and bucket-event history. It does not reimplement profile export
+        logic. When a recovery passphrase is supplied, the payload is sealed
+        under a passphrase-derived key and the archive carries a small
+        recovery-wrap salt member; otherwise the currently active bucket DEK
+        seals the payload for same-host backup.
 
         Returns:
             An :class:`ExportBucketResult` describing the written sealed archive.
         """
-        from ...adapters.persistence.storage import get_active_master_key
         from ...adapters.persistence.storage.bucket import (
             ExportArchiveHeader,
             bucket_paths,
@@ -300,6 +376,7 @@ class BucketMaintenanceService:
             ARGON2_PARALLELISM,
             ARGON2_TIME_COST,
             derive_kek_with_params,
+            get_active_master_key,
         )
         from ...core.config import load_settings
 
@@ -313,7 +390,15 @@ class BucketMaintenanceService:
             )
 
         with profile_storage_session(command.bucket_id):
-            bundle = serialize_profile_bundle(bucket_id=command.bucket_id)
+            # The sealed archive is the full-custody recovery transport: it is
+            # AEAD-encrypted at rest, so it carries every durable secure-object
+            # store (evidence bytes, cross-period calc inputs, the audit trail,
+            # the live captures), and the export fails closed if any populated
+            # carried namespace is uncovered.
+            bundle = serialize_profile_bundle(
+                bucket_id=command.bucket_id,
+                custody_profile=StorageCustodyProfile.FULL,
+            )
             manifest = read_manifest(bucket_paths(load_settings().aeat_local_storage_root, command.bucket_id))
             manifest_digest = compute_manifest_digest(manifest)
             occurred_at = now()
@@ -388,15 +473,21 @@ class BucketMaintenanceService:
         Archives with a recovery-wrap member require the matching passphrase.
         Archives without one are same-host backups and require the active bucket
         DEK to match the archive payload. New buckets are provisioned through
-        the canonical profile create span before the bundle data is restored.
+        the canonical profile create span before the
+        :class:`~domain.user_profile.UserProfilePortableExport` payload is
+        restored. The archive header's manifest digest is authenticated through
+        AEAD associated data during decryption; it is not recomputed against the
+        imported host manifest.
 
         Returns:
             An :class:`ImportBucketResult` describing the restored bucket.
         """
-        from ...adapters.persistence.storage import get_active_master_key
         from ...adapters.persistence.storage.bucket import read_sealed_archive
-        from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record
-        from ...adapters.persistence.storage.master_key import derive_kek_with_params
+        from ...adapters.persistence.storage.crypto import (
+            EncryptedBlob,
+            decrypt_record,
+        )
+        from ...adapters.persistence.storage.master_key import derive_kek_with_params, get_active_master_key
         from ...domain.user_profile import UserProfilePortableExport
 
         contents = read_sealed_archive(command.source_path)
@@ -444,9 +535,32 @@ class BucketMaintenanceService:
         except Exception as exc:
             raise BucketImportError(
                 translated_message="application.bucket_maintenance.errors.import_payload_invalid",
-                context={"bucket_id": header.bucket_id},
+                context={"bucket_id": header.bucket_id, "error": str(exc)},
             ) from exc
 
+        if bundle.bundle_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
+            raise BucketImportError(
+                translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
+                context={
+                    "bundle_schema_version": str(bundle.bundle_schema_version),
+                    "supported_versions": ",".join(
+                        str(version) for version in sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)
+                    ),
+                },
+            )
+
+        self._validate_imported_profile_filing_baseline(bundle)
+        # Recovery is same-id: the bucket is provisioned under the bundle's
+        # profile_id and the carry is restored under header.bucket_id, and the
+        # bucket-local object keys embed that id. If a (hand-built or tampered)
+        # archive's profile_id and header.bucket_id diverge, the provision and the
+        # restore would target different ids and every bucket-local row would be
+        # written under a stale key and become unreadable; fail closed instead.
+        if bundle.profile.profile_id != header.bucket_id:
+            raise BucketImportError(
+                translated_message="application.bucket_maintenance.errors.import_payload_invalid",
+                context={"bucket_id": header.bucket_id, "profile_id": bundle.profile.profile_id},
+            )
         if existing is None:
             self._provision_imported_bucket(bundle)
         with profile_storage_session(header.bucket_id):
@@ -470,6 +584,34 @@ class BucketMaintenanceService:
             manifest_digest=header.manifest_digest,
             archive_schema_version=header.archive_schema_version,
             occurred_at=occurred_at,
+        )
+
+    def inspect(self, command: InspectBucketArchiveCommand) -> InspectBucketArchiveResult:
+        """Read a sealed bucket archive's header without decrypting or restoring it.
+
+        Composes :func:`read_sealed_archive` (the same reader ``import_`` uses
+        for layout and header validation) with the on-disk file size. No
+        session is opened, no key is required, and no bucket state is
+        written or read — this is a pure inspection of the archive file
+        itself, so an operator can confirm a backup's identity, age, and
+        recovery-wrap presence before deciding whether and how to restore
+        it.
+
+        Returns:
+            An :class:`InspectBucketArchiveResult` describing the archive header.
+        """
+        from ...adapters.persistence.storage.bucket import read_sealed_archive
+
+        contents = read_sealed_archive(command.source_path)
+        header = contents.header
+        size_bytes = command.source_path.stat().st_size
+        return InspectBucketArchiveResult(
+            bucket_id=header.bucket_id,
+            manifest_digest=header.manifest_digest,
+            recovery_wrap_present=header.recovery_wrap_present,
+            archive_schema_version=header.archive_schema_version,
+            created_at=header.created_at,
+            size_bytes=size_bytes,
         )
 
     def _append_event(
@@ -505,8 +647,17 @@ class BucketMaintenanceService:
         repository.save(append_bucket_event(repository.load(), event))
 
     @staticmethod
+    def _validate_imported_profile_filing_baseline(bundle: UserProfilePortableExport) -> None:
+        missing_flags = missing_filing_baseline_flags(record_to_path_values(bundle.profile))
+        if not missing_flags:
+            return
+        raise BucketImportError(
+            translated_message="application.bucket_maintenance.errors.import_missing_filing_baseline",
+            context={"missing_flags": _format_missing_flags(missing_flags)},
+        )
+
+    @staticmethod
     def _provision_imported_bucket(bundle: UserProfilePortableExport) -> None:
-        from ..user_profile import register_active_profile
         from ..workflow import workflow_state_repository
 
         profile_id = bundle.profile.profile_id
@@ -529,7 +680,11 @@ def recovery_wrap_passphrase_present(command: ExportBucketCommand) -> bool:
 
 
 def _archive_associated_data(bucket_id: str, manifest_digest: str) -> bytes:
-    return f"aeat.bucket-maintenance.archive.v1:{bucket_id}:{manifest_digest}".encode()
+    return f"aeat.bucket-maintenance.archive.v2:{bucket_id}:{manifest_digest}".encode()
+
+
+def _format_missing_flags(missing_flags: tuple[str, ...]) -> str:
+    return " ".join(f"--{flag}" for flag in missing_flags)
 
 
 class _RecoveryWrapKdf(NamedTuple):

@@ -374,16 +374,15 @@ def _postcode_question() -> WizardQuestion:
     )
 
 
-@pytest.mark.parametrize("postcode", ["28013", "01001", "08001", "52001"])
-def test_postcode_accepts_valid_spanish_postcodes(postcode: str) -> None:
+def test_postcode_accepts_valid_spanish_postcodes() -> None:
     """Valid Spanish postcodes pass and keep their leading zeros as strings."""
 
     question = _postcode_question()
-    assert validate_widget_answer(question, postcode) == postcode
+    for postcode in ("28013", "01001", "08001", "52001"):
+        assert validate_widget_answer(question, postcode) == postcode
 
 
-@pytest.mark.parametrize("postcode", ["BADPOST", "99999", "1234", "123456", "00999"])
-def test_postcode_rejects_malformed_values(postcode: str) -> None:
+def test_postcode_rejects_malformed_values() -> None:
     """Arbitrary text and out-of-range province codes are refused.
 
     Before fix: the postcode field accepted any text (``BADPOST``,
@@ -392,8 +391,9 @@ def test_postcode_rejects_malformed_values(postcode: str) -> None:
     """
 
     question = _postcode_question()
-    with pytest.raises(WizardValidationError, match=r"invalid_postcode"):
-        validate_widget_answer(question, postcode)
+    for postcode in ("BADPOST", "99999", "1234", "123456", "00999"):
+        with pytest.raises(WizardValidationError, match=r"invalid_postcode"):
+            validate_widget_answer(question, postcode)
 
 
 def test_postcode_preserves_leading_zero_string() -> None:

@@ -1,4 +1,16 @@
-"""Backend-owned help and discovery documents for the accepted CLI roots."""
+"""Backend-owned help and discovery documents for accepted CLI roots.
+
+The builders return typed :class:`HelpDocument` and
+:class:`RootLandingReport` records for the contract-backed root, config, and
+app help surfaces declared by :mod:`application.operator_surface`.  CLI
+adapters render these records through the shared output boundary; they do not
+own the command inventory.
+
+This module is manifest-discovery only: it builds in-memory documents from
+locale keys and caller-supplied profile state.  It does not inspect storage,
+read environment variables, construct repositories, or decide whether the bare
+root should render the landing report or the overview status report.
+"""
 
 from __future__ import annotations
 
@@ -9,8 +21,10 @@ from ._models import HelpDocument, HelpEntry, HelpSection, HelpSurface, RootLand
 def build_help_document(surface: HelpSurface | str) -> HelpDocument:
     """Return the curated help document for ``surface``.
 
-    Returns a :class:`HelpDocument` with sections and entries for the
-    requested surface.
+    Accepts a :class:`HelpSurface` member or its string token and returns a
+    :class:`HelpDocument` with workflow-ordered :class:`HelpSection` and
+    :class:`HelpEntry` records for the requested surface.  The returned document
+    is consumed by :func:`render_help_text` and by the root/app envelope paths.
     """
     resolved = HelpSurface(surface)
     if resolved is HelpSurface.ROOT:
@@ -21,7 +35,14 @@ def build_help_document(surface: HelpSurface | str) -> HelpDocument:
 
 
 def build_root_landing_report(active_profile: str | None) -> RootLandingReport:
-    """Return the :class:`RootLandingReport` for the current profile state."""
+    """Return the :class:`RootLandingReport` for caller-supplied profile state.
+
+    The caller owns active-profile discovery and passes the projected display
+    label here.  A present profile points operators at ``aeat app overview
+    status``; a missing profile points at profile creation.  The CLI root
+    callback decides whether this landing report or the full overview status is
+    emitted under ``root.status``.
+    """
     if active_profile:
         return RootLandingReport(
             active_profile=active_profile,
@@ -36,7 +57,14 @@ def build_root_landing_report(active_profile: str | None) -> RootLandingReport:
 
 
 def render_help_text(document: HelpDocument) -> str:
-    """Render a curated help document as terminal-safe plain text."""
+    """Render a curated :class:`HelpDocument` as terminal-safe plain text.
+
+    The renderer preserves the backend-owned ordering of
+    :class:`HelpSection` and :class:`HelpEntry` records, aligns command columns,
+    and returns text for CLI adapters to pass through their normal output
+    boundary. It does not inspect the live CLI tree; conformance tests own
+    the check that rendered command rows still map to mounted command families.
+    """
     lines: list[str] = [document.heading, ""]
     for paragraph in document.paragraphs:
         lines.append(paragraph)
@@ -52,7 +80,13 @@ def render_help_text(document: HelpDocument) -> str:
 
 
 def render_root_landing_text(report: RootLandingReport) -> str:
-    """Render the bare-invocation landing report."""
+    """Render the compact single-line view of a :class:`RootLandingReport`.
+
+    New root CLI output uses a multi-line entrypoint renderer for the text half
+    of the ``root.status`` envelope. This helper remains the application-level
+    plain-text formatter for callers that need the compact message /
+    next-command template.
+    """
     return tr("cli.operator_surface.landing.text_template", message=report.message, command=report.command)
 
 
@@ -71,6 +105,14 @@ def _root_help() -> HelpDocument:
             tr(
                 "cli.operator_surface.help.root.paragraph_type_help",
                 default="Use config for local state and app for tax work.",
+            ),
+            tr(
+                "cli.operator_surface.help.root.paragraph_storage_isolation",
+                default=(
+                    "For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT, "
+                    "AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and "
+                    "AEAT_SECRET_PASSPHRASE; logs default under that storage root."
+                ),
             ),
         ),
         sections=(
@@ -213,6 +255,14 @@ def _config_help() -> HelpDocument:
             tr(
                 "cli.operator_surface.help.config.paragraph_durable_state",
                 default="Config commands manage local durable state.",
+            ),
+            tr(
+                "cli.operator_surface.help.config.paragraph_storage_isolation",
+                default=(
+                    "For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT, "
+                    "AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and "
+                    "AEAT_SECRET_PASSPHRASE; logs default under that storage root."
+                ),
             ),
         ),
         sections=(

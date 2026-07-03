@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#aeat-grounding-completion'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-06-14-aeat-grounding-completion-plan]]"
 ---
-
-
-
 
 # Author módulos exclusion magnitudes as registry parameters: 250.000 EUR general rendimientos, 125.000 EUR operaciones con obligación de factura, 250.000 EUR agrícolas/ganaderas/forestales, 250.000 EUR volumen de compras — grounded ley-35-2006:art-31 + dt-32 + Orden de módulos
 

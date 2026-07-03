@@ -15,7 +15,7 @@ Registered entries:
 
 Each entry documents the noun-group's intended verb set plus its
 declared exception class. The conformance harness in
-:mod:`aeat.application.operator_surface.test_crud_registry` (and any
+:mod:`aeat.application.operator_surface.tests.test_crud_registry` (and any
 future CLI surface tests) consumes :data:`BUILTIN_CRUD_CATALOGUE` to
 detect drift between shipped Typer subgroups and the locked design.
 """

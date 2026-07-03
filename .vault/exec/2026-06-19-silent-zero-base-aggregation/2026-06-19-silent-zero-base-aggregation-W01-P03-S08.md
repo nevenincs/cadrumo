@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#silent-zero-base-aggregation'
 date: '2026-06-20'
-modified: '2026-06-20'
+modified: '2026-06-30'
 step_id: 'S08'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-plan]]"
 ---
-
-
-
 
 # add `ledger_iva_aggregation` bindings selecting `recargo_equivalencia` at each recargo tier for the recargo base and cuota casillas, grounded
 

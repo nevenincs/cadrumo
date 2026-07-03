@@ -17,26 +17,22 @@ def test_json_round_trip() -> None:
 
 
 def test_toml_round_trip() -> None:
-    pointer = BucketPointer(bucket_id="bucket-001", schema_version=1)
-    revived = BucketPointer.from_toml(pointer.to_toml())
-    assert revived == pointer
+    for bucket_id, schema_version in (
+        ("bucket-001", 1),
+        ('bucket "weird" id', 2),
+    ):
+        pointer = BucketPointer(bucket_id=bucket_id, schema_version=schema_version)
+        revived = BucketPointer.from_toml(pointer.to_toml())
+        assert revived == pointer
 
 
-def test_toml_round_trip_quoted_bucket_id() -> None:
-    pointer = BucketPointer(bucket_id='bucket "weird" id', schema_version=2)
-    revived = BucketPointer.from_toml(pointer.to_toml())
-    assert revived == pointer
-
-
-def test_rejects_empty_bucket_id() -> None:
-    with pytest.raises(ValidationError):
-        BucketPointer(bucket_id="", schema_version=1)
-
-
-def test_rejects_non_positive_schema_version() -> None:
-    invalid_version: int = 0
-    with pytest.raises(ValidationError):
-        BucketPointer(bucket_id="bucket-001", schema_version=invalid_version)
+def test_rejects_invalid_constructor_fields() -> None:
+    for kwargs in (
+        {"bucket_id": "", "schema_version": 1},
+        {"bucket_id": "bucket-001", "schema_version": 0},
+    ):
+        with pytest.raises(ValidationError):
+            BucketPointer(**kwargs)
 
 
 def test_rejects_unknown_keys() -> None:
@@ -50,12 +46,10 @@ def test_rejects_unknown_keys() -> None:
         )
 
 
-def test_from_toml_rejects_unknown_keys() -> None:
-    text = 'bucket_id = "bucket-001"\nschema_version = 1\nrogue = "x"\n'
-    with pytest.raises(ValidationError):
-        BucketPointer.from_toml(text)
-
-
-def test_from_toml_rejects_missing_bucket_id() -> None:
-    with pytest.raises(ValidationError):
-        BucketPointer.from_toml("schema_version = 1\n")
+def test_from_toml_rejects_invalid_payloads() -> None:
+    for text in (
+        'bucket_id = "bucket-001"\nschema_version = 1\nrogue = "x"\n',
+        "schema_version = 1\n",
+    ):
+        with pytest.raises(ValidationError):
+            BucketPointer.from_toml(text)

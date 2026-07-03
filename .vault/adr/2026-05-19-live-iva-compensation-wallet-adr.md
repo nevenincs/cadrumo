@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-iva-compensation-wallet'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-research]]'
   - '[[2026-05-19-iva-compensation-chain-adr]]'
@@ -17,7 +17,6 @@ related:
 > **Updated 2026-05-19**: Tax-domain identifier mentions in this ADR follow the Spanish-stem terminology authority. The wallet-adapter design (IvaCompensationWalletObservation, IvaCompensationReconciliationDecision, read-only Clave Movil flow, application-level reconciliation layer, blocking-decision contract, and live-write prohibition) is already Spanish-stem aligned and unaffected.
 > See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
 > rename ledger and Spanish-stem terminology authority.
-
 
 ## Problem Statement
 

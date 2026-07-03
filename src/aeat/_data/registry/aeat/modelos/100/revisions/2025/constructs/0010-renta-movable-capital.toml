@@ -15,6 +15,7 @@ source_refs = [
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-100-2025-form",
     "aeat-dr-100-2025-dictionary",
+    "aeat-modelo-193-296-note-2025",
     "boe-modelo-193-2011-form",
 ]
 casilla_ids = [

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#iva-classification-enrichment'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - "[[2026-04-13-r1-vat-enumeration-adr]]"
   - "[[2026-04-12-modelo-303-390-adr]]"
@@ -14,7 +14,6 @@ related:
   - "[[2026-05-21-sii-digital-iva-ledger-adr]]"
   - '[[2026-06-04-iva-classification-enrichment-research]]'
 ---
-
 
 # `iva-classification-enrichment` adr: IVA category + counterparty enrichment on Transaction | (**status:** `accepted`)
 

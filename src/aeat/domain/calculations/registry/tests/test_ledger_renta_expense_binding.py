@@ -6,9 +6,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
-from .....core import Modelo
 from .....core.resources import bundled_path
 from ....categories import SpendingCategory, resolve_category_profiles
 from ....renta import (
@@ -26,12 +25,13 @@ from .. import (
     RegistryValidationError,
     build_snapshot,
     calculate_registry_snapshot,
-    load_registry_tree,
     resolve_ledger_renta_expense_aggregation_binding_values,
     unsupported_ledger_renta_expense_observations,
     validate_ledger_renta_expense_aggregation_binding_definition,
     validated_casilla_id,
 )
+from .._binding_selector_utils import selector_as_dict
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,16 +57,19 @@ _UNKNOWN_RENTA_EXPENSE_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-def _modelo_100_2025_snapshot():
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(item for item in modelos if item.id == "100")
+def _modelo_100_snapshot(filing_year: int):
+    modelo, catalogues = _committed_modelo("100")
     return build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=filing_year,
         period="0A",
     )
+
+
+def _modelo_100_2025_snapshot():
+    return _modelo_100_snapshot(2025)
 
 
 def _expense_observation(
@@ -74,12 +77,16 @@ def _expense_observation(
     *,
     category: SpendingCategory,
     gross_amount: Decimal,
+    taxable_base: Decimal | None = None,
+    iva_amount: Decimal | None = None,
 ):
     fact = RentaDeductibleExpenseFact(
         transaction_id=transaction_id,
         catalogue_id="ledger",
         operation_date=date(2025, 4, 5),
         gross_amount=gross_amount,
+        taxable_base=taxable_base,
+        iva_amount=iva_amount,
         direction=RentaExpenseDirection.OUTGOING_EXPENSE,
         category=category,
     )
@@ -98,15 +105,9 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
     assert casillas_by_id[_M100_GASTO_SS_CASILLA].binding == "renta-2025-ledger-expense-0186-deductible"
-    assert casillas_by_id[_M100_GASTO_ARRENDAMIENTOS_CASILLA].binding == (
-        "renta-2025-ledger-expense-0192-deductible"
-    )
-    assert casillas_by_id[_M100_GASTO_OTROS_CONCEPTOS_CASILLA].binding == (
-        "renta-2025-ledger-expense-0199-deductible"
-    )
-    assert casillas_by_id[_M100_GASTO_AMORTIZACIONES_CASILLA].binding == (
-        "renta-2025-ledger-expense-0203-deductible"
-    )
+    assert casillas_by_id[_M100_GASTO_ARRENDAMIENTOS_CASILLA].binding == ("renta-2025-ledger-expense-0192-deductible")
+    assert casillas_by_id[_M100_GASTO_OTROS_CONCEPTOS_CASILLA].binding == ("renta-2025-ledger-expense-0199-deductible")
+    assert casillas_by_id[_M100_GASTO_AMORTIZACIONES_CASILLA].binding == ("renta-2025-ledger-expense-0203-deductible")
 
     observations = (
         _expense_observation(
@@ -123,6 +124,21 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             "tx-contable",
             category=SpendingCategory.ASESORIA_CONTABLE,
             gross_amount=Decimal("79.00"),
+        ),
+        _expense_observation(
+            "tx-software",
+            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
+            gross_amount=Decimal("360.00"),
+        ),
+        _expense_observation(
+            "tx-material",
+            category=SpendingCategory.MATERIAL_OFICINA,
+            gross_amount=Decimal("240.00"),
+        ),
+        _expense_observation(
+            "tx-marketing",
+            category=SpendingCategory.PUBLICIDAD_MARKETING,
+            gross_amount=Decimal("180.00"),
         ),
     )
 
@@ -145,7 +161,7 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
         "no observation in 0192's category — must aggregate to zero"
     )
     assert casilla_inputs[_M100_GASTO_OTROS_CONCEPTOS_CASILLA] > Decimal("0"), (
-        "ASESORIA_FISCAL + ASESORIA_CONTABLE must both route to 0199"
+        "ASESORIA, office, software, and marketing observations must route to 0199"
     )
     assert casilla_inputs[_M100_GASTO_AMORTIZACIONES_CASILLA] == Decimal("0"), (
         "no observation in 0203's category — must aggregate to zero"
@@ -158,6 +174,11 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     ss_observation = observations[0]
     assert casilla_inputs[_M100_GASTO_SS_CASILLA] == ss_observation.deductible_amount, (
         "0186 binding aggregate of one observation must equal that observation's deductible amount"
+    )
+    otros_observations = observations[1:]
+    assert casilla_inputs[_M100_GASTO_OTROS_CONCEPTOS_CASILLA] == sum(
+        (observation.deductible_amount for observation in otros_observations),
+        start=Decimal("0"),
     )
 
     calculation = calculate_registry_snapshot(
@@ -181,6 +202,15 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             # provide the same explicit neutral opening balance used by the
             # Renta chain tests.
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
+            # facts; neutral zero when the chain under test is unrelated.
+            "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+            "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+            # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
+            # aggregate is zero (Option A engine) for both estatal and
+            # autonómico halves, regardless of the Madrid tax residence below.
+            "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={relation.id: Decimal("0") for relation in revision.relations},
@@ -192,9 +222,60 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     # binding values into casilla.values rather than computing fresh
     # aggregates.
     assert calculation.values[_M100_GASTO_SS_CASILLA] == binding_values["renta-2025-ledger-expense-0186-deductible"]
-    assert calculation.values[_M100_GASTO_OTROS_CONCEPTOS_CASILLA] == binding_values[
-        "renta-2025-ledger-expense-0199-deductible"
-    ]
+    assert (
+        calculation.values[_M100_GASTO_OTROS_CONCEPTOS_CASILLA]
+        == binding_values["renta-2025-ledger-expense-0199-deductible"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "manual_source_ref", "manual_heading", "fase_heading"),
+    [
+        (
+            2024,
+            "aeat-renta-2024-manual-parte1",
+            "Concepto y ámbito de aplicación del método de estimación directa",
+            "Fase 1ª. Determinación del rendimiento neto",
+        ),
+        (
+            2025,
+            "aeat-renta-2025-manual-parte1",
+            "Concepto y ambito de aplicacion del metodo de estimacion directa",
+            "Fase 1ª. Determinacion del rendimiento neto",
+        ),
+    ],
+)
+def test_modelo_100_renta_ledger_expense_bindings_cite_year_manual(
+    filing_year: int,
+    manual_source_ref: str,
+    manual_heading: str,
+    fase_heading: str,
+) -> None:
+    """First-slice expense bindings must cite the AEAT manual for their filing year."""
+    revision = _modelo_100_snapshot(filing_year).revision
+    expected_targets = {
+        _M100_GASTO_SS_CASILLA,
+        _M100_GASTO_ARRENDAMIENTOS_CASILLA,
+        _M100_GASTO_OTROS_CONCEPTOS_CASILLA,
+        _M100_GASTO_AMORTIZACIONES_CASILLA,
+    }
+    bindings = {
+        selector_as_dict(binding)["target_casilla_id"]: binding
+        for binding in revision.bindings
+        if binding.source == "ledger_renta_expense_aggregation"
+    }
+
+    assert expected_targets <= set(bindings)
+    for target in expected_targets:
+        binding = bindings[target]
+        assert manual_source_ref in binding.source_refs, f"{binding.id} is missing {manual_source_ref}"
+        manual_citations = [
+            citation for citation in binding.source_citations if citation.source_ref == manual_source_ref
+        ]
+        assert manual_citations, f"{binding.id} must carry required_text for {manual_source_ref}"
+        required_text = set(manual_citations[0].required_text)
+        assert manual_heading in required_text
+        assert fase_heading in required_text
 
 
 def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
@@ -258,7 +339,7 @@ def _single_expense_binding_revision(snapshot: RegistrySnapshot, target_casilla_
         item
         for item in revision.bindings
         if item.source == "ledger_renta_expense_aggregation"
-        and dict(item.selector).get("target_casilla_id") == target_casilla_id
+        and selector_as_dict(item).get("target_casilla_id") == target_casilla_id
     )
     return revision.model_copy(update={"bindings": (binding,)})
 
@@ -291,21 +372,6 @@ def test_unsupported_renta_expense_flags_observation_routed_to_no_binding() -> N
     assert result == (unrouted,)
 
 
-class _ExpenseObservation(BaseModel):
-    """Minimal structural stand-in satisfying RentaExpenseObservationProtocol.
-
-    Used to exercise the zero-deductible false-fire guard: the production
-    deductibility evaluator never emits a zero-gross fact, but a fully
-    non-deductible category legitimately yields a zero ``deductible_amount`` on
-    a non-zero expense, which the screen must not flag.
-    """
-
-    modelo: Modelo
-    period: str
-    target_casilla_id: CasillaId
-    deductible_amount: Decimal
-
-
 def test_unsupported_renta_expense_does_not_flag_zero_deductible() -> None:
     """A zero-deductible observation routed to no binding must NOT false-fire.
 
@@ -316,12 +382,15 @@ def test_unsupported_renta_expense_does_not_flag_zero_deductible() -> None:
     snapshot = _modelo_100_2025_snapshot()
     revision = _single_expense_binding_revision(snapshot, "0186")
 
-    zero_unrouted = _ExpenseObservation(
-        modelo=Modelo.M100,
-        period="0A",
-        target_casilla_id=_M100_GASTO_OTROS_CONCEPTOS_CASILLA,
-        deductible_amount=Decimal("0"),
+    zero_unrouted = _expense_observation(
+        "tx-zero-ratio",
+        category=SpendingCategory.ASESORIA_FISCAL,
+        gross_amount=Decimal("121.00"),
+        taxable_base=Decimal("0"),
+        iva_amount=Decimal("121.00"),
     )
+    assert zero_unrouted.target_casilla_id == _M100_GASTO_OTROS_CONCEPTOS_CASILLA
+    assert zero_unrouted.deductible_amount == Decimal("0")
 
     result = unsupported_ledger_renta_expense_observations(revision, (zero_unrouted,))
     assert result == ()

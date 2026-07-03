@@ -3,24 +3,21 @@
 from __future__ import annotations
 
 from datetime import date
-from functools import lru_cache
 
 import pytest
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_184() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "184")
-    return modelo, catalogues
+    return _committed_modelo("184")
 
 
 def test_modelo_184_registry_validator_accepts_committed_definition() -> None:
@@ -54,6 +51,7 @@ def test_modelo_184_revision_period_selector_starts_at_2015() -> None:
     assert revision.valid_from == date(2015, 10, 30)
     assert revision.period_selector.year_from == 2015
     assert revision.period_selector.periods == ("0A",)
+    assert revision.orden_aplicabilidad == ("orden-hap-2250-2015:art-1",)
 
 
 def test_modelo_184_snapshot_builds_for_each_published_filing_year() -> None:
@@ -76,10 +74,13 @@ def test_modelo_184_snapshot_exposes_legal_and_source_grounding() -> None:
 
     assert "orden-hap-2250-2015:art-1" in snapshot.legal
     assert "orden-hap-2250-2015:art-4" in snapshot.legal
+    assert snapshot.revision.orden_aplicabilidad == ("orden-hap-2250-2015:art-1",)
     assert snapshot.legal["orden-hap-2250-2015:art-4"].article == "4"
     assert "aeat-dr-184-2025" in snapshot.sources
     assert "aeat-modelo-184-procedure" in snapshot.sources
     assert "boe-modelo-184-2015-form" in snapshot.sources
+    assert snapshot.sources["aeat-modelo-184-procedure"].evidence_tier == "official_source_guidance"
+    assert snapshot.sources["boe-modelo-184-2015-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_184_february_deadline_windows_match_hap_2250_2015_art_4() -> None:

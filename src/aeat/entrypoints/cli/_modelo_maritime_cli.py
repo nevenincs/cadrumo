@@ -1,4 +1,20 @@
-"""Typer registration for modelo maritime preview commands."""
+"""Typer registration for modelo maritime preview commands.
+
+This module is the transport boundary for
+``aeat app modelo work preview-maritime-exemption``. The command body keeps CLI
+responsibilities narrow: parse Decimal options, require an active profile,
+delegate profile fact reading and RETMAR retry policy to
+:func:`preview_maritime_exemption_for_active_profile`,
+then serialise the returned observations into
+:class:`WorkPreviewMaritimeExemptionResult`.
+
+See Also:
+    :mod:`_maritime_preview`:
+        Active-profile application service consumed by this CLI adapter.
+    :class:`CasillaObservationPayload`:
+        JSON payload row carrying the legal/source references emitted by the
+        maritime resolver.
+"""
 
 from __future__ import annotations
 
@@ -12,7 +28,7 @@ from ...application.modelo import preview_maritime_exemption_for_active_profile
 from ...core.errors import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...domain.renta._errors import RentaValidationError
+from ...domain.renta import RentaValidationError
 from ._common import _emit_envelope
 from ._modelo_payloads import (
     CasillaObservationPayload,
@@ -27,7 +43,14 @@ def register_maritime_commands(
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
     bad_parameter_from_error: Callable[[Exception], typer.BadParameter],
 ) -> None:
-    """Register maritime worker preview commands against the work Typer app."""
+    """Register maritime worker preview commands against the work Typer app.
+
+    The caller supplies the shared modelo-work CLI hooks so this extracted
+    module does not import the monolithic modelo command root. The registered
+    command emits a
+    :class:`WorkPreviewMaritimeExemptionResult`
+    envelope through :func:`_emit_envelope`.
+    """
 
     @work_app.command(
         "preview-maritime-exemption",
@@ -94,7 +117,13 @@ def register_maritime_commands(
             help=tr("cli.config.auth.output_language_help"),
         ),
     ) -> None:
-        """Resolve the maritime exemption pathway for the active profile."""
+        """Resolve and render the maritime exemption preview for the active profile.
+
+        Decimal parsing stays at the CLI boundary. Legal pathway selection,
+        profile fact extraction, RETMAR warning handling, and typed observation
+        construction stay in
+        :func:`preview_maritime_exemption_for_active_profile`.
+        """
         activate_output_language(ctx, output_language)
         require_active_profile()
 

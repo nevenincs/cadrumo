@@ -37,6 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "bucket-renta"
 _SOURCE = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
 _CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
+_WRITTEN_AT = datetime(2026, 4, 3, 10, 5, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2025, "0A")
 
 
@@ -84,7 +85,7 @@ def test_borrador_100_snapshot_repository_rejects_payload_id_mismatch(
     )
     envelope = Envelope[Borrador100Snapshot](
         schema_version=BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
-        written_at=datetime.now(UTC),
+        written_at=_WRITTEN_AT,
         classification=SensitivityClass.FINANCIAL,
         payload=payload,
     )

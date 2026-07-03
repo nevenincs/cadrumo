@@ -109,7 +109,7 @@ class TestJsonlRunSinkRunIdFilter:
 
     def _emit(self, sink: JsonlRunSink, event: RunEvent) -> None:
         record = logging.LogRecord(
-            name="aeat.test",
+            name="aeat-test",
             level=logging.INFO,
             pathname=__file__,
             lineno=0,
@@ -141,7 +141,7 @@ class TestJsonlRunSinkRunIdFilter:
         sink = JsonlRunSink(target, run_id="0000000000000002")
         try:
             record = logging.LogRecord(
-                name="aeat.test",
+                name="aeat-test",
                 level=logging.INFO,
                 pathname=__file__,
                 lineno=0,
@@ -167,30 +167,29 @@ class TestJsonlRunSinkRunIdFilter:
 
 
 class TestStoreRunIdValidation:
-    def test_load_trace_rejects_path_traversal(
-        self,
-        tmp_path: Path,
-    ) -> None:
+    def test_load_trace_rejects_path_traversal(self, tmp_path: Path) -> None:
         from .. import load_events, load_trace
         from .._store import _validate_run_id
 
+        bad_run_ids = (
+            "../escape",
+            "../../etc/passwd",
+            "/absolute/path",
+            "00000000000000001",
+            "0123456789ABCDEF",
+            "contains/slash",
+            "",
+            "..",
+        )
+
         with override_settings(aeat_runs_dir=str(tmp_path)):
-            for bad in (
-                "../escape",
-                "../../etc/passwd",
-                "/absolute/path",
-                "00000000000000001",  # 17 chars — one too many
-                "0123456789ABCDEF",  # uppercase rejected
-                "contains/slash",
-                "",
-                "..",
-            ):
+            for bad_run_id in bad_run_ids:
                 with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-                    _validate_run_id(bad)
+                    _validate_run_id(bad_run_id)
                 with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-                    load_trace(bad)
+                    load_trace(bad_run_id)
                 with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-                    load_events(bad)
+                    load_events(bad_run_id)
 
     def test_load_trace_rejects_run_id_shape_without_creating_dir(
         self,
@@ -388,7 +387,7 @@ class TestSinkEmitFailureWarningIsScrubbed:
         sink = JsonlRunSink(target, run_id=run_id)
         try:
             record = logging.LogRecord(
-                name="aeat.test",
+                name="aeat-test",
                 level=logging.INFO,
                 pathname=__file__,
                 lineno=0,

@@ -5,23 +5,20 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
 from ....domain.categories import SpendingCategory
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
+from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
 from ....domain.renta import RentaExpenseDirection
 from ....domain.transactions import (
@@ -31,10 +28,10 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....domain.usage_ratios import UsageRatioProfile
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AggregationValidationError,
@@ -44,6 +41,7 @@ from .. import (
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
 )
+from .._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -52,12 +50,19 @@ def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
 
+@cache
+def _m100_2025_snapshot() -> RegistrySnapshot:
+    return resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+
+
 _ANNUAL_2025 = _period(2025, "0A")
+_Q1_2025 = _period(2025, "1T")
 _M100_ASESORIA_CASILLA: CasillaId = validated_casilla_id("0199", surface="_M100_ASESORIA_CASILLA")
 _M100_GASTOS_FINANCIEROS_CASILLA: CasillaId = validated_casilla_id(
     "0203",
     surface="_M100_GASTOS_FINANCIEROS_CASILLA",
 )
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
 
 
 @pytest.fixture
@@ -75,7 +80,7 @@ def _raw_transaction(
     currency: str = "EUR",
 ) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=booked_date,
         value_date=value_date,
         amount=amount,
@@ -121,6 +126,8 @@ def _transaction(
                 currency=currency,
             ),
             "direction": direction,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "business_classification": business_classification,
             "business_pct": business_pct,
             "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
@@ -193,7 +200,7 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
     )
 
     assert result.issues == ()
-    assert result.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("121.00")}
+    assert result.casilla_values == {_M100_ASESORIA_CASILLA: invoice.base_total}
     assert len(result.observations) == 1
     observation = result.observations[0]
     assert observation.transaction_id == linked.transaction_id
@@ -201,6 +208,7 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
     assert observation.filing_date == date(2025, 4, 1)
     assert observation.taxable_base == Decimal("100.00")
     assert observation.iva_amount == Decimal("21.00")
+    assert observation.deductible_amount == invoice.base_total
     assert result.casilla_aggregation.provenance[0].transaction_ids == (linked.transaction_id,)
 
 
@@ -229,7 +237,7 @@ def test_repository_backed_aggregation_binds_default_invoice_repository_to_reque
 
     assert result.issues == ()
     assert result.observations[0].invoice_id == invoice.invoice_id
-    assert result.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("121.00")}
+    assert result.casilla_values == {_M100_ASESORIA_CASILLA: invoice.base_total}
 
 
 def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects: SecureObjectRepository) -> None:
@@ -245,7 +253,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     invoice_repo.save(InvoiceCatalogue())
 
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    snapshot = _m100_2025_snapshot()
     resolution = LedgerRentaExpenseAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
@@ -264,6 +272,211 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
     assert binding_values["renta-2025-ledger-expense-0186-deductible"] == Decimal("0")
     assert binding_values["renta-2025-ledger-expense-0192-deductible"] == Decimal("0")
     assert binding_values["renta-2025-ledger-expense-0203-deductible"] == Decimal("0")
+
+
+def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_expenses(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Ordinary business operating costs must not disappear from M100."""
+    transactions = (
+        _transaction(
+            "row-office",
+            amount=Decimal("240.00"),
+            category=SpendingCategory.MATERIAL_OFICINA,
+        ),
+        _transaction(
+            "row-software",
+            amount=Decimal("360.00"),
+            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
+        ),
+        _transaction(
+            "row-marketing",
+            amount=Decimal("180.00"),
+            category=SpendingCategory.PUBLICIDAD_MARKETING,
+        ),
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions(transactions))
+    invoice_repo.save(InvoiceCatalogue())
+
+    snapshot = _m100_2025_snapshot()
+    resolution = LedgerRentaExpenseAggregationSourceResolver(
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id="test",
+            modelo="100",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert resolution.diagnostics == ()
+    assert resolution.binding_values["renta-2025-ledger-expense-0199-deductible"] == Decimal("780.00")
+
+
+def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The live source resolver must consume persisted proportionality ratios."""
+    phone = _transaction(
+        "row-phone",
+        amount=Decimal("121.00"),
+        category=SpendingCategory.TELEFONIA_MOVIL,
+    )
+    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((phone,)),
+    )
+    InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects).save(InvoiceCatalogue())
+    save_usage_ratios(
+        UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.50")}),
+        bucket_id="test",
+        objects=secure_objects,
+    )
+
+    snapshot = _m100_2025_snapshot()
+    resolution = LedgerRentaExpenseAggregationSourceResolver(
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id="test",
+            modelo="100",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert resolution.diagnostics == ()
+    assert resolution.binding_values["renta-2025-ledger-expense-0199-deductible"] == Decimal("60.50")
+    assert resolution.source_transaction_ids == (phone.transaction_id,)
+
+
+def test_m100_expense_aggregation_uses_taxable_base_for_iva_bearing_business_expenses(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Sofia's ordinary IVA-bearing expenses feed M100 by base, not cash gross."""
+    office_base, software_base, marketing_base = Decimal("700.00"), Decimal("600.00"), Decimal("800.00")
+    transactions = (
+        _transaction(
+            "sofia-office",
+            amount=Decimal("847.00"),
+            category=SpendingCategory.MATERIAL_OFICINA,
+            booked_date=date(2025, 2, 3),
+            value_date=date(2025, 2, 3),
+            taxable_base=office_base,
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("147.00"),
+        ),
+        _transaction(
+            "sofia-software",
+            amount=Decimal("726.00"),
+            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
+            booked_date=date(2025, 2, 4),
+            value_date=date(2025, 2, 4),
+            taxable_base=software_base,
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("126.00"),
+        ),
+        _transaction(
+            "sofia-marketing",
+            amount=Decimal("968.00"),
+            category=SpendingCategory.PUBLICIDAD_MARKETING,
+            booked_date=date(2025, 2, 5),
+            value_date=date(2025, 2, 5),
+            taxable_base=marketing_base,
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("168.00"),
+        ),
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions(transactions))
+    InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects).save(InvoiceCatalogue())
+
+    result = aggregate_renta_ledger_expenses_from_repositories(
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        profile_year=2025,
+    )
+
+    expected_taxable_base = office_base + software_base + marketing_base
+    gross_cash = sum((transaction.raw.amount for transaction in transactions), Decimal("0"))
+    assert result.issues == ()
+    assert result.casilla_values[_M100_ASESORIA_CASILLA] == expected_taxable_base
+    assert result.casilla_values[_M100_ASESORIA_CASILLA] != gross_cash
+
+
+def test_m100_and_m130_expense_aggregations_reconcile_on_taxable_base_for_same_ledger_rows(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The annual M100 expense basis matches M130's taxable-base gasto basis."""
+    bases = (Decimal("700.00"), Decimal("600.00"), Decimal("800.00"))
+    transactions = (
+        _transaction(
+            "shared-office",
+            amount=Decimal("847.00"),
+            category=SpendingCategory.MATERIAL_OFICINA,
+            booked_date=date(2025, 1, 15),
+            value_date=date(2025, 1, 15),
+            taxable_base=bases[0],
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("147.00"),
+        ),
+        _transaction(
+            "shared-software",
+            amount=Decimal("726.00"),
+            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
+            booked_date=date(2025, 2, 15),
+            value_date=date(2025, 2, 15),
+            taxable_base=bases[1],
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("126.00"),
+        ),
+        _transaction(
+            "shared-marketing",
+            amount=Decimal("968.00"),
+            category=SpendingCategory.PUBLICIDAD_MARKETING,
+            booked_date=date(2025, 3, 15),
+            value_date=date(2025, 3, 15),
+            taxable_base=bases[2],
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("168.00"),
+        ),
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions(transactions))
+    InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects).save(InvoiceCatalogue())
+
+    m100_result = aggregate_renta_ledger_expenses_from_repositories(
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        profile_year=2025,
+    )
+    m130_result = aggregate_renta_gasto_ledger_from_repositories(
+        bucket_id="test",
+        period=_Q1_2025,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+
+    expected_taxable_base = sum(bases, Decimal("0"))
+    gross_cash = sum((transaction.raw.amount for transaction in transactions), Decimal("0"))
+    m100_value = m100_result.casilla_values[_M100_ASESORIA_CASILLA]
+    m130_value = m130_result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA]
+
+    assert m100_result.issues == ()
+    assert m130_result.issues == ()
+    assert m100_value == expected_taxable_base
+    assert m130_value == expected_taxable_base
+    assert m100_value == m130_value
+    assert m100_value != gross_cash
 
 
 def test_repository_backed_aggregation_rejects_transaction_repository_bucket_mismatch(
@@ -390,6 +603,40 @@ def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_ca
     assert result.issues == ()
     assert result.observations[0].taxable_base == Decimal("100.00")
     assert result.observations[0].iva_amount == Decimal("21.00")
+    assert result.observations[0].deductible_amount == Decimal("100.00")
+    assert result.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("100.00")}
+
+
+def test_usage_ratio_phone_requires_ratio_before_routing_to_other_expenses() -> None:
+    phone = _transaction(
+        "phone",
+        category=SpendingCategory.TELEFONIA_MOVIL,
+    )
+
+    missing_ratio = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((phone,)),
+        InvoiceCatalogue(),
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        profile_year=2025,
+    )
+
+    assert missing_ratio.observations == ()
+    assert missing_ratio.issues[0].reason is RentaLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY
+    assert "missing usage ratio" in missing_ratio.issues[0].detail
+
+    with_ratio = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((phone,)),
+        InvoiceCatalogue(),
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        profile_year=2025,
+        usage_ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.25")},
+    )
+
+    assert with_ratio.issues == ()
+    assert with_ratio.observations[0].deductible_amount == Decimal("30.2500")
+    assert with_ratio.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("30.2500")}
 
 
 def test_linked_invoice_issue_date_controls_period_filtering() -> None:
@@ -473,7 +720,7 @@ def test_linked_incoming_refund_becomes_negative_binding_value() -> None:
 
     assert result.issues == ()
     assert result.observations[0].direction is RentaExpenseDirection.REFUND
-    assert result.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("-121.00")}
+    assert result.casilla_values == {_M100_ASESORIA_CASILLA: -invoice.base_total}
 
 
 def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> None:

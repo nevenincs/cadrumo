@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-classification-workflow'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S12'
 related:
   - "[[2026-06-14-llm-classification-workflow-plan]]"
 ---
-
-
-
 
 # Add ledger list --hide-llm-rejected: an event-based filter excluding rows whose latest LLM decision is a rejection, keeping review_status a pure projection
 
@@ -34,4 +31,3 @@ The batch reviewer can hide reviewed-and-declined rows from `ledger list`; revie
 ## Notes
 
 The exclusion reads events per listed row from one loaded catalogue; it never consults review_status. Closes the last two deferrals (declined filter + 7b weights).
-

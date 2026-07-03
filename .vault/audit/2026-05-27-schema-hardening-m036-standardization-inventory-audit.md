@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - '[[2026-05-27-schema-hardening-m036-standardization-plan]]'
 ---
-
-
 
 # `schema-hardening-m036-standardization` inventory
 

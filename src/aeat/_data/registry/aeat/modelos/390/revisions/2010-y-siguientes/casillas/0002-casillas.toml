@@ -8,7 +8,7 @@ semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["boe-modelo-390-2009-form"]
+source_refs = ["boe-modelo-390-2009-form", "aeat-modelo-390-procedure"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
@@ -20,5 +20,5 @@ semantic_role = "tipo_declaracion"
 required = true
 input_kind = "informational"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["boe-modelo-390-2009-form"]
+source_refs = ["boe-modelo-390-2009-form", "aeat-modelo-390-procedure"]
 

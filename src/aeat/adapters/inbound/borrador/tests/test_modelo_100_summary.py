@@ -15,8 +15,8 @@ from .....domain.calculations.registry import (
     ExtractionTargetDefinition,
     validated_casilla_id,
 )
-from ...pdf._utils import source_pdf_reference_path
-from .. import ArtefactKind, BorradorObservation, BorradorParseError, BorradorParseMode, parse_borrador
+from ...pdf import source_pdf_reference_path
+from .. import ArtefactKind, BorradorParseError, BorradorParseMode, InboundBorradorObservation, parse_borrador
 
 pytestmark = [
     pytest.mark.unit,
@@ -83,7 +83,7 @@ def _generate_pdf(
         amount = _spanish_amount(Decimal(raw))
         page.drawString(50, y, f"{casilla_id} Valor observado {amount}")
         y -= 16
-    if artefact_kind == "DECLARACION" and csv is not None:
+    if csv is not None:
         page.drawString(50, 40, f"Codigo Seguro de Verificacion: {csv}")
     page.save()
     return path
@@ -153,6 +153,18 @@ class TestArtefactKindDetection:
         assert filing.artefact_kind is ArtefactKind.DECLARACION
         assert filing.csv == "MNOP4321QRST8765"
 
+    def test_predeclaracion_with_csv_like_footer_does_not_surface_filed_csv(self, tmp_path: Path) -> None:
+        pdf = _generate_pdf(
+            tmp_path,
+            artefact_kind="PREDECLARACION",
+            csv="MNOP4321QRST8765",
+        )
+
+        filing = parse_borrador(pdf)
+
+        assert filing.artefact_kind is ArtefactKind.PREDECLARACION
+        assert filing.csv is None
+
     def test_unrecognised_error_omits_source_filename(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(tmp_path, artefact_kind="UNRECOGNISED")
         sensitive_pdf = tmp_path / "12345678Z-renta-borrador.pdf"
@@ -172,7 +184,7 @@ class TestObservedValues:
 
     def test_extracts_observed_casilla_rows(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(tmp_path)
-        filing: BorradorObservation = parse_borrador(pdf)
+        filing: InboundBorradorObservation = parse_borrador(pdf)
         assert filing.modelo == "100"
         assert filing.ejercicio == "2025"
         assert filing.tax_id == "00000000T"

@@ -1,0 +1,13 @@
+{
+  "modelo": "353",
+  "filing_year": 2024,
+  "source_kind": "aeat_manual_worked_example",
+  "scenario_id": "m353-2024-grupo-entidades-omega-delta-agregado",
+  "raw_evidence_locator": "corpus/manuals/iva/2024/source.pdf#Pag.199-200",
+  "notes": "AEAT Manual practico IVA 2024, Capitulo 6 'Los regimenes especiales en el IVA', 'Regimen especial del grupo de entidades', worked example (pag. 199-200): 'El dia 20 de abril, la entidad dominante, presentara una autoliquidacion mensual en el modelo agregado 353, en la que integrara los resultados de las autoliquidaciones anteriores ... Sociedad OMEGA, S.A. (dominante). Resultado (modelo 322): 4.000. Sociedad DELTA, S.A. (dependiente). Resultado (modelo 322): -1.000. Resultado autoliquidacion: 3.000' (pag. 200 - the manual's own printed aggregate). Devengada anual grupo = OMEGA 6.000 + DELTA 1.000 = 7.000; deducible anual grupo = OMEGA 2.000 + DELTA 2.000 = 4.000 (simple arithmetic over the manual's own printed per-member IVA devengado/deducible totals, never a hand-run of the registry formula under test); resultado = 7.000-4.000 = 3.000, matching the manual's own printed 'Resultado autoliquidacion: 3.000' exactly. See test_m353_2024_grupo_entidades_manual_worked_example.py, which feeds the group's combined cuota totals to the registry as IvaLedgerObservation rows and grades iva.cuota-devengada-total / iva.cuota-deducible-total / iva.resultado-regimen-general against the manual's own printed figures.",
+  "expected_by_casilla_id": {
+    "iva.cuota-devengada-total": "7000.00",
+    "iva.cuota-deducible-total": "4000.00",
+    "iva.resultado-regimen-general": "3000.00"
+  }
+}

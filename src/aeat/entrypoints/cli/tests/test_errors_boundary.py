@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import SensitivityClass
-from ....application.user_profile._repository import (
+from ....application.user_profile import (
     USER_PROFILE_VALUE_NAMESPACE,
     UserProfileLifecycleRepository,
     user_profile_value_object_key,
@@ -38,7 +38,7 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 # Profile id / bucket id used throughout; must be a valid bucket identifier.
-_PROFILE_ID = "test-boundary-profile"
+_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 
 @pytest.fixture
@@ -177,7 +177,12 @@ def test_drifted_stored_profile_boundary_is_distinct_from_unexpected_error(
 
     assert result.exit_code != 0, result.output
     combined = result.output or ""
-    assert "config repair integrity" not in combined, (
+    # Discriminate on the boundary MESSAGE, not the suggestion: both the
+    # stored-data boundary and the (corrected) unexpected boundary now cite a
+    # `config repair ...` command, so the message is the reliable signal. The
+    # unexpected boundary's message names an "unexpected internal error"; the
+    # stored-data boundary names a drifted stored record.
+    assert "unexpected internal error" not in combined, (
         f"stored-data drift triggered unexpected-error boundary;\ngot: {combined!r}"
     )
 

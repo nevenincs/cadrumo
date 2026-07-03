@@ -9,8 +9,7 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ....adapters.outbound.aeat.sede import Declaracion
-from ....adapters.outbound.aeat.sede._notifications import RemoteNotification
+from ....adapters.outbound.aeat.sede import Declaracion, RemoteNotification
 from ....core import Period
 from ....domain.deadlines import (
     EntityType,
@@ -19,8 +18,7 @@ from ....domain.deadlines import (
     ObligationStatus,
     TaxpayerProfile,
 )
-from ...live._expedientes import PersistedExpedientesSnapshot
-from ...live._notifications import PersistedNotificationsSnapshot
+from ...live import PersistedExpedientesSnapshot, PersistedNotificationsSnapshot
 from .. import (
     OverviewCalendar,
     OverviewCalendarEntry,
@@ -36,6 +34,9 @@ from .. import (
     calendar_events_from_expedientes_snapshots,
     calendar_events_from_notification_snapshots,
     user_state_for,
+)
+from .calendar_test_support import (
+    BUCKET_ID as _BUCKET_ID,
 )
 from .calendar_test_support import (
     PERIOD_2025_1T as _PERIOD_2025_1T,
@@ -224,6 +225,75 @@ def test_invalid_pagadores_values_are_debug_logged_without_raw_value(
     assert all(raw_value not in record.getMessage() for record in caplog.records)
 
 
+_MULTIPLE_PAGADORES_OBLIGATION_KEY = "cli.overview.status.filing_obligation_multiple_pagadores"
+
+
+def test_multi_payer_over_reduced_limit_surfaces_obligation_advisory() -> None:
+    # 2 pagadores, secondary €1,600 > €1,500, total €18,000 over the 2024 reduced
+    # limit (€15,876) → the Art. 96.3 LIRPF obligation advisory fires.
+    advisories = build_filing_obligation_advisories(
+        {
+            "irpf.pagadores_count": "2",
+            "irpf.pagadores_secondary_income": "1600",
+            "irpf.pagadores_total_work_income": "18000",
+        },
+        filing_year=2024,
+    )
+    assert advisories == (_MULTIPLE_PAGADORES_OBLIGATION_KEY,)
+
+
+def test_multi_payer_under_reduced_limit_does_not_surface_advisory() -> None:
+    # Same multiple-pagadores trigger but total €10,000 is below the 2024 reduced
+    # limit (€15,876) → not obliged, no advisory.
+    advisories = build_filing_obligation_advisories(
+        {
+            "irpf.pagadores_count": "2",
+            "irpf.pagadores_secondary_income": "1600",
+            "irpf.pagadores_total_work_income": "10000",
+        },
+        filing_year=2024,
+    )
+    assert advisories == ()
+
+
+def test_single_payer_under_general_limit_does_not_surface_advisory() -> None:
+    # 1 pagador, total €18,000 below the general €22,000 → no obligation.
+    advisories = build_filing_obligation_advisories(
+        {
+            "irpf.pagadores_count": "1",
+            "irpf.pagadores_secondary_income": "0",
+            "irpf.pagadores_total_work_income": "18000",
+        },
+        filing_year=2024,
+    )
+    assert advisories == ()
+
+
+def test_multi_payer_total_undeclared_surfaces_conservatively() -> None:
+    # Total work income undeclared but the multiple-pagadores trigger is met →
+    # the advisory surfaces conservatively rather than granting a false clear.
+    advisories = build_filing_obligation_advisories(
+        {
+            "irpf.pagadores_count": "2",
+            "irpf.pagadores_secondary_income": "1600",
+        },
+        filing_year=2024,
+    )
+    assert advisories == (_MULTIPLE_PAGADORES_OBLIGATION_KEY,)
+
+
+def test_obligation_advisory_key_resolves_to_a_translation() -> None:
+    # The surfaced key must resolve to a real (non-humanised-fallback) locale
+    # string in every shipped locale — the half-shipped gap this closes.
+    from ....core.i18n import tr
+
+    rendered = tr(_MULTIPLE_PAGADORES_OBLIGATION_KEY)
+    # Cites the binding provision and names the form; not the humanised fallback.
+    assert "96.3" in rendered
+    assert "100" in rendered
+    assert rendered != "Filing obligation multiple pagadores"
+
+
 # ---------------------------------------------------------------------
 # OverviewPeriodState mapping
 # ---------------------------------------------------------------------
@@ -380,7 +450,7 @@ def test_entry_is_frozen() -> None:
 def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
     snapshot = PersistedExpedientesSnapshot(
         snapshot_id="e" * 64,
-        bucket_id="bucket-1",
+        bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
         authenticated_identity="X1234567L",
@@ -417,7 +487,7 @@ def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
 def test_expedientes_snapshot_for_wrong_identity_does_not_project_filing_event() -> None:
     snapshot = PersistedExpedientesSnapshot(
         snapshot_id="e" * 64,
-        bucket_id="bucket-1",
+        bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
         authenticated_identity="Y7654321Z",
@@ -460,7 +530,7 @@ def test_notification_snapshots_project_message_events_on_notification_date() ->
     )
     snapshot = PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
-        bucket_id="bucket-1",
+        bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
         rows=(row,),
@@ -510,7 +580,7 @@ def test_notification_snapshots_filter_message_events_by_expected_taxpayer() -> 
     )
     snapshot = PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
-        bucket_id="bucket-1",
+        bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
         rows=(matching, other_taxpayer),
@@ -557,7 +627,7 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
     )
     matching_snapshot = PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
-        bucket_id="bucket-1",
+        bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
         authenticated_identity="B12345678",
@@ -566,7 +636,7 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
     )
     other_snapshot = PersistedNotificationsSnapshot(
         snapshot_id="b" * 64,
-        bucket_id="bucket-1",
+        bucket_id=_BUCKET_ID,
         captured_at=datetime(2025, 3, 14, 10, 0, tzinfo=UTC),
         source_url=_SOURCE_URL,
         authenticated_identity="C12345678",
@@ -589,7 +659,7 @@ def test_build_overview_calendar_accepts_observed_events() -> None:
         notification_snapshots=(
             PersistedNotificationsSnapshot(
                 snapshot_id="a" * 64,
-                bucket_id="bucket-1",
+                bucket_id=_BUCKET_ID,
                 captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
                 source_url=_SOURCE_URL,
                 rows=(
@@ -801,9 +871,7 @@ def test_calendar_completeness_lists_uncomputable_with_reason() -> None:
 
     With only ``iva.regime`` declared, the completeness payload must
     list it under explicitly_set_keys and the remaining gating keys
-    (does_intracomunitario, pays_professionals_with_retencion,
-    pays_rent_with_retencion, uses_objective_estimation_irpf) under
-    defaulted_keys.
+    under defaulted_keys.
     """
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     today = date(2026, 4, 1)
@@ -815,6 +883,27 @@ def test_calendar_completeness_lists_uncomputable_with_reason() -> None:
     cal = build_overview_calendar(_profile(), rng, today=today, raw_values=raw)
     assert "iva.regime" in cal.completeness.explicitly_set_keys
     assert "does_intracomunitario" in cal.completeness.defaulted_keys
+    assert "has_employees" in cal.completeness.defaulted_keys
+    assert "pays_capital_income_with_retencion" in cal.completeness.defaulted_keys
     assert "pays_professionals_with_retencion" in cal.completeness.defaulted_keys
     assert "pays_rent_with_retencion" in cal.completeness.defaulted_keys
-    assert "uses_objective_estimation_irpf" in cal.completeness.defaulted_keys
+    assert "art109_activity_income_withholding_ge_70pct" in cal.completeness.defaulted_keys
+    assert "irpf.estimation_regime" in cal.completeness.defaulted_keys
+
+
+def test_calendar_warnings_include_registry_deadline_window_predicates() -> None:
+    """Deadline-window applicability predicates must be visible as warnings."""
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
+    today = date(2026, 4, 1)
+    raw = {
+        "tax.id": "X1234567L",
+        "activity": "design",
+        "iva.regime": "general",
+    }
+
+    cal = build_overview_calendar(_profile(), rng, today=today, raw_values=raw)
+    warnings_by_code = {warning.code: warning for warning in cal.warnings}
+
+    assert "111" in warnings_by_code["has_employees"].affected_modelos
+    assert "123" in warnings_by_code["pays_capital_income_with_retencion"].affected_modelos
+    assert "130" in warnings_by_code["art109_activity_income_withholding_ge_70pct"].affected_modelos

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-export-evidence-parity'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
@@ -12,19 +12,11 @@ related:
   - '[[2026-06-03-ledger-google-live-export-plan]]'
 ---
 
-
-
-
-
-
-
-
 # `modelo-export-evidence-parity` `ledger-evidence-bundled modelo calculation + export parity` plan
 
 ## Wave `W01` - Foundational ledger-evidence record + capture
 
 Extend the snapshot layer with a typed LedgerFilingEvidence record (contributor projections + manual fact basis) pegged to the revision's snapshot fingerprint, captured at verify time, persisted in the encrypted revision envelope with strict roundtrip + no-silent-omission guards.
-
 
 ### Phase `W01.P01` - Evidence domain record + verify-time capture
 
@@ -98,17 +90,8 @@ Online renders identically; evidence-identical assertion; live push deferred to 
 
 ## Description
 
-
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 
-
 ## Verification
-

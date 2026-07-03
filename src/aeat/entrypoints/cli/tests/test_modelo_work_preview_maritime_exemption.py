@@ -25,9 +25,8 @@ from typing import Any
 import pytest
 
 from ....application.modelo import maritime_facts_from_active_profile
-from ....application.user_profile._orchestration import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....core.errors import ErrorCategory, get_error_exit_code
 from ....tests.cli_runner import invoke_cached_cli

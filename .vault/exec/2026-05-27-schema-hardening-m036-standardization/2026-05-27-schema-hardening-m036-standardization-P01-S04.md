@@ -3,13 +3,11 @@ tags:
   - '#exec'
   - '#schema-hardening'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 step_id: 'S04'
 related:
   - '[[2026-05-27-schema-hardening-m036-standardization-plan]]'
 ---
-
-
 
 # `schema-hardening-m036-standardization` `P01.S04`
 

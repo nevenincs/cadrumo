@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#core-authority-constants'
 date: '2026-05-31'
-modified: '2026-05-31'
+modified: '2026-06-30'
 related: []
 ---
 
@@ -185,4 +185,3 @@ src/aeat/core/external_constants.py, src/aeat/core/paths.py, src/aeat/core/confi
 - src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py:44-50 -- URL constants; make private
 
 ## Related
-

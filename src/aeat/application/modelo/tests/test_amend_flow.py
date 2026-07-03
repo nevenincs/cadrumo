@@ -18,40 +18,32 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....domain.buckets import (
-    BucketEventHistoryRepository,
-    BucketEventType,
-)
+from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
     CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from ....domain.modelos._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
+    WorkUnit,
+    derive_calculation_revision_id,
     derive_filing_record_id,
-)
-from ....domain.modelos._filing_repository import (
-    ModeloRecordCatalogueRepository,
+    upsert_calculation_revision,
     upsert_filing_record,
 )
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_repository import (
-    VerificationReportCatalogueRepository,
-)
-from ....domain.modelos._work_unit import WorkUnit
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
@@ -65,7 +57,10 @@ from .. import (
     get_work_unit,
     verify_modelo_revision,
 )
-from ._file_flow_support import _seed_clean_cross_period_sources, _workflow_profile
+from ._file_flow_support import (
+    seed_clean_cross_period_sources,
+    workflow_profile,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -82,6 +77,20 @@ _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
 _T2 = datetime(2026, 1, 15, 14, 0, 0, tzinfo=UTC)
 _T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
+_PROFILE_ID = "10000000-0000-4000-8000-000000000130"
+_PROFILE_LABEL = "Test runtime profile"
+_READY_PROFILE_FACTS = (
+    UserProfileFact(path="identity.tax_id", value="X1234567L"),
+    UserProfileFact(path="identity.name", value="Ready"),
+    UserProfileFact(path="identity.surnames", value="Operator"),
+    UserProfileFact(path="activities.description", value="file-flow"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -107,16 +116,26 @@ _M303_PRINTED_RESULT_TOKEN: CasillaId = _casilla_id("69")
 
 @pytest.fixture
 def repos(tmp_path: Path) -> Generator[_Repos]:
-    """Yield the five catalogue repositories over an encrypted SQLite db."""
+    """Yield the shared ready-profile repository bundle for amend-flow tests."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_PROFILE_LABEL) as profile:
         objects = profile.repository
-        wu = WorkUnitCatalogueRepository(objects=objects)
-        cr = CalculationRevisionCatalogueRepository(objects=objects)
-        fr = ModeloRecordCatalogueRepository(objects=objects)
-        vr = VerificationReportCatalogueRepository(objects=objects)
-        bv = BucketEventHistoryRepository(objects=objects)
-        yield wu, cr, fr, vr, bv
+        UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=objects).save(
+            UserProfileRecord(
+                profile_id=_PROFILE_ID,
+                display_name=_PROFILE_LABEL,
+                facts=_READY_PROFILE_FACTS,
+                created_at=_T0,
+                updated_at=_T0,
+            ),
+        )
+        yield (
+            WorkUnitCatalogueRepository(objects=objects),
+            CalculationRevisionCatalogueRepository(objects=objects),
+            ModeloRecordCatalogueRepository(objects=objects),
+            VerificationReportCatalogueRepository(objects=objects),
+            BucketEventHistoryRepository(objects=objects),
+        )
 
 
 def _seed_work_unit(
@@ -131,7 +150,7 @@ def _seed_work_unit(
     in ``calculate_modelo_revision`` has a snapshot to operate on."""
 
     return create_work_unit(
-        bucket_id="default",
+        bucket_id=_PROFILE_ID,
         modelo=modelo,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period_code),
@@ -178,7 +197,6 @@ def _seed_external_baseline(
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit.work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=_T1,
         filed_by="aeat-import",
     )
     revision = CalculationRevision(
@@ -248,7 +266,6 @@ def _seed_local_filing_record(
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit.work_unit_id,
         calculation_revision_id=filed_revision.calculation_revision_id,
-        filed_at=filed_at,
         filed_by=filed_by,
     )
     filing = ModeloRecord(
@@ -282,7 +299,6 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
             _AMEND_PREVIOUS_PAYMENT_CASILLA: Decimal("0"),
             _AMEND_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
             _AMEND_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
-            _AMEND_CARRY_FORWARD_CASILLA: Decimal("0"),
             _AMEND_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _AMEND_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
@@ -292,7 +308,7 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    _seed_clean_cross_period_sources(
+    seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -302,7 +318,7 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
     report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-A",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
@@ -345,7 +361,7 @@ def test_amend_refuses_when_baseline_already_superseded(repos: _Repos) -> None:
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
-    fake_successor = "f" * 64
+    successor_record_id = "f" * 64
     fr_repo.save(
         upsert_filing_record(
             fr_repo.load(),
@@ -353,7 +369,7 @@ def test_amend_refuses_when_baseline_already_superseded(repos: _Repos) -> None:
                 update={
                     "status": ModeloRecordStatus.SUPERSEDIDO,
                     "superseded_at": _T3,
-                    "superseded_by_filing_record_id": fake_successor,
+                    "superseded_by_filing_record_id": successor_record_id,
                 },
             ),
         ),
@@ -458,9 +474,10 @@ def test_amend_unoverridden_casilla_inherits_baseline_value(repos: _Repos) -> No
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
     new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
-    assert new_revision.casilla_values[_AMEND_EXPENSE_CASILLA] == outcome.baseline_revision.casilla_values[
-        _AMEND_EXPENSE_CASILLA
-    ]
+    assert (
+        new_revision.casilla_values[_AMEND_EXPENSE_CASILLA]
+        == outcome.baseline_revision.casilla_values[_AMEND_EXPENSE_CASILLA]
+    )
 
 
 def test_amend_work_unit_pointers_advance_to_new_filing(repos: _Repos) -> None:

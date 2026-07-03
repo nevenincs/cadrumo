@@ -16,8 +16,11 @@ from ....domain.user_profile import (
     UserProfileStatus,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...workflow._models import WorkflowState
-from ...workflow._profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
+from ...workflow import (
+    WorkflowState,
+    read_profile_bucket,
+    read_profile_bucket_by_id,
+)
 from .._orchestration import (
     profile_create_storage_span,
     read_active_profile,
@@ -29,6 +32,9 @@ from .._orchestration import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_DEFAULT_PROFILE_ID = "1a1a1a1a-1a1a-4a1a-8a1a-1a1a1a1a1a1a"
+_MISSING_PROFILE_ID = "2b2b2b2b-2b2b-4b2b-8b2b-2b2b2b2b2b2b"
 
 
 # The application-level conftest already redirects
@@ -61,21 +67,21 @@ def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFac
 
 def test_register_active_profile_threads_state_and_emits_events(schema: ProfileSchemaDefinition) -> None:
     state = WorkflowState()
-    with profile_create_storage_span("default") as routing_profile_id:
+    with profile_create_storage_span(_DEFAULT_PROFILE_ID) as routing_profile_id:
         updated = register_active_profile(
             state,
-            profile_id="default",
+            profile_id=_DEFAULT_PROFILE_ID,
             display_name="Default operator",
             facts=_all_required_facts(schema),
             schema=schema,
             routing_profile_id=routing_profile_id,
         )
-    assert resolve_active_bucket_id() == "default"
-    # The bucket directory is named by the UUID identity ("default"
-    # here); its manifest carries the decoupled operator label.
-    by_id = read_profile_bucket_by_id("default")
+    assert resolve_active_bucket_id() == _DEFAULT_PROFILE_ID
+    # The bucket directory is named by the UUID identity; its manifest carries
+    # the decoupled operator label.
+    by_id = read_profile_bucket_by_id(_DEFAULT_PROFILE_ID)
     assert by_id is not None
-    assert by_id.bucket_id == "default"
+    assert by_id.bucket_id == _DEFAULT_PROFILE_ID
     assert by_id.label == "Default operator"
     # The operator-facing label resolves back to the same bucket.
     assert read_profile_bucket("Default operator") == by_id
@@ -86,15 +92,15 @@ def test_register_active_profile_threads_state_and_emits_events(schema: ProfileS
 def test_select_profile_refuses_when_missing(schema: ProfileSchemaDefinition) -> None:
     state = WorkflowState()
     with pytest.raises(ProfileNotFoundError):
-        select_profile(state, profile_id="ghost", schema=schema)
+        select_profile(state, profile_id=_MISSING_PROFILE_ID, schema=schema)
 
 
 def test_set_active_field_appends_workflow_event(schema: ProfileSchemaDefinition) -> None:
     state = WorkflowState()
-    with profile_create_storage_span("default") as routing_profile_id:
+    with profile_create_storage_span(_DEFAULT_PROFILE_ID) as routing_profile_id:
         state = register_active_profile(
             state,
-            profile_id="default",
+            profile_id=_DEFAULT_PROFILE_ID,
             display_name="Default operator",
             facts=_all_required_facts(schema),
             schema=schema,
@@ -120,10 +126,10 @@ def test_set_active_field_appends_workflow_event(schema: ProfileSchemaDefinition
 
 def test_set_active_fields_bulk_threads_each_workflow_event(schema: ProfileSchemaDefinition) -> None:
     state = WorkflowState()
-    with profile_create_storage_span("default") as routing_profile_id:
+    with profile_create_storage_span(_DEFAULT_PROFILE_ID) as routing_profile_id:
         state = register_active_profile(
             state,
-            profile_id="default",
+            profile_id=_DEFAULT_PROFILE_ID,
             display_name="Default operator",
             facts=_all_required_facts(schema),
             schema=schema,
@@ -140,10 +146,10 @@ def test_set_active_fields_bulk_threads_each_workflow_event(schema: ProfileSchem
 
 def test_read_active_profile_returns_record(schema: ProfileSchemaDefinition) -> None:
     state = WorkflowState()
-    with profile_create_storage_span("default") as routing_profile_id:
+    with profile_create_storage_span(_DEFAULT_PROFILE_ID) as routing_profile_id:
         state = register_active_profile(
             state,
-            profile_id="default",
+            profile_id=_DEFAULT_PROFILE_ID,
             display_name="Default operator",
             facts=_all_required_facts(schema),
             schema=schema,
@@ -151,7 +157,7 @@ def test_read_active_profile_returns_record(schema: ProfileSchemaDefinition) -> 
         )
         record = read_active_profile(state, schema=schema)
         assert record is not None
-        assert record.profile_id == "default"
+        assert record.profile_id == _DEFAULT_PROFILE_ID
         assert record.status is UserProfileStatus.ACTIVE
 
 
@@ -161,7 +167,7 @@ def test_read_active_profile_logs_missing_selected_record(
 ) -> None:
     """A torn active pointer degrades to no record with debug evidence."""
 
-    with profile_create_storage_span("ghost"):
+    with profile_create_storage_span(_MISSING_PROFILE_ID):
         caplog.set_level(logging.DEBUG, logger="aeat.application.user_profile._orchestration")
 
         record = read_active_profile(WorkflowState(), schema=schema)
@@ -172,10 +178,10 @@ def test_read_active_profile_logs_missing_selected_record(
 
 def test_remove_active_profile_tombstones_and_clears_pointer(schema: ProfileSchemaDefinition) -> None:
     state = WorkflowState()
-    with profile_create_storage_span("default") as routing_profile_id:
+    with profile_create_storage_span(_DEFAULT_PROFILE_ID) as routing_profile_id:
         state = register_active_profile(
             state,
-            profile_id="default",
+            profile_id=_DEFAULT_PROFILE_ID,
             display_name="Default operator",
             facts=_all_required_facts(schema),
             schema=schema,

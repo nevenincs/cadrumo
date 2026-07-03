@@ -22,18 +22,19 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
+from functools import cache
 from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
-from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import DEFERRED_SOURCE_KINDS
@@ -51,7 +52,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 
-_BUCKET_ID = "bucket-a"
+_BUCKET_ID = "34900000-0000-4000-8000-000000000349"
 _READY_PROFILE_FACTS = (
     UserProfileFact(path="identity.tax_id", value="12345678Z"),
     UserProfileFact(path="identity.name", value="Ready"),
@@ -65,6 +66,16 @@ _READY_PROFILE_FACTS = (
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
 )
+_ATTRIBUTION_PROFILE_FACTS = (
+    UserProfileFact(path="identity.tax_id", value="E12345678"),
+    UserProfileFact(path="identity.name", value="Ready CB"),
+    UserProfileFact(path="activities.description", value="attribution-entity activity"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="attribution_entity"),
+    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+)
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID) -> None:
@@ -73,6 +84,18 @@ def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str = _BU
             profile_id=bucket_id,
             display_name="Source boundary ready profile",
             facts=_READY_PROFILE_FACTS,
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
+
+
+def _seed_attribution_entity_profile(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Source boundary attribution profile",
+            facts=_ATTRIBUTION_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,
         ),
@@ -146,7 +169,7 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
     # Fabricate a revision with a synthetic unknown source by wrapping the real one.
     # model_construct bypasses Literal validation so we can inject a source value that
     # is not in the accepted set — exactly what the gate should detect and reject.
-    from ....domain.calculations.registry._schema import DataBindingDefinition
+    from ....domain.calculations.registry import DataBindingDefinition
 
     revision = _revision("303", "2023-y-siguientes")
     # Build a synthetic binding with a novel source kind via model_construct (no validators).
@@ -189,6 +212,7 @@ def test_s08_source_diagnostics_carries_advisory_for_deferred_source(
     so the engine does not crash on a missing relation value and we can isolate the
     unhandled-source advisory path cleanly.
     """
+    _seed_attribution_entity_profile(secure_objects)
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
 
@@ -222,6 +246,7 @@ def test_s08_source_diagnostics_carries_advisory_for_atribucion_member(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """Deferred source kind 'atribucion_member' surfaces an advisory on source_diagnostics."""
+    _seed_attribution_entity_profile(secure_objects)
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
 
@@ -303,8 +328,8 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
         ],
     )
 
-    # The merged owned_sources must include 'ledger_renta_income_aggregation'.
-    assert "ledger_renta_income_aggregation" in source_resolution.owned_sources, (
+    # The merged owned_sources must include the ledger Renta income aggregation source.
+    assert BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION in source_resolution.owned_sources, (
         f"LedgerRentaIncomeAggregationSourceResolver is not enrolled: owned_sources={source_resolution.owned_sources}"
     )
     # Confirm the test is non-vacuous: M130 revision must declare this source kind.
@@ -445,6 +470,8 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         _seed_ready_profile(objects)
+        if modelo == "184":
+            _seed_attribution_entity_profile(objects)
         wu_repo, cr_repo, tx_repo, invoice_repo = (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),
@@ -517,6 +544,7 @@ def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
 # ---------------------------------------------------------------------------
 
 
+@cache
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
-    modelo_def = next(item for item in resources().modelos.all() if item.id == modelo)
+    modelo_def = resources().modelos.get(modelo)
     return modelo_def.revisions[revision_id]

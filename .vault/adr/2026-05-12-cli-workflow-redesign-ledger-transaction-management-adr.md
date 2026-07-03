@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-research]]"
   - "[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]"
@@ -14,8 +14,6 @@ related:
   - "[[2026-05-08-ledger-renta-pipeline-reference]]"
   - "[[2026-05-08-ledger-renta-pipeline-adr]]"
 ---
-
-
 
 # `cli-workflow-redesign` adr: `ledger transaction management` | (**status:** `accepted`)
 

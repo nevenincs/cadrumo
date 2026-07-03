@@ -1,25 +1,49 @@
-"""Spanish IVA (IVA) taxonomy and registry-backed lookup surface.
+"""Public facade for the registry-backed Spanish IVA substrate.
 
-Provides strict IVA identifiers, classification primitives, and read-only
-loaders for committed registry data. Python code owns validation and lookup
-behaviour; rates, effective windows, and catalogue text are loaded from
-`registry/aeat/iva`.
+This package owns the canonical IVA taxonomy, dated rate lookup, settlement
+flow mapping, invoice classification bridge, prorrata calculations, OSS/IOSS
+regime metadata, recargo-equivalencia rates, refund eligibility, and SEPA marca
+derivation. Runtime Python owns validation and deterministic resolution;
+statutory rate windows, catalogue text, and recargo tables are loaded from
+committed registry files under ``registry/aeat/iva``.
 
-The substrate exposes:
+The facade exposes closed identifiers such as :class:`IvaCategory`,
+:class:`EUMemberState`, :class:`IvaRateKind`, :class:`IvaCitationSource`,
+:class:`IvaFlowDirection`, and :class:`IvaSettlementSide`; loaders and lookups
+such as :func:`load_iva_catalogues`, :func:`resolve_catalogue`,
+:func:`load_iva_rate_table`, :func:`lookup_rate`, :func:`load_recargo_rates`,
+and :func:`recargo_rate_for`; and the classification axis stack
+(:class:`IvaTerritorialScope`, :class:`CustomerTaxStatus`,
+:class:`TransactionKind`, :class:`InvoiceKind`) resolved by
+:func:`classify_iva` into :class:`IvaClassificationResult`.
 
-* The closed enumerations :class:`IvaCategory`, :class:`EUMemberState`,
-  :class:`IvaRateKind` and :class:`IvaCitationSource`.
-* The period-keyed catalogue view :data:`IVA_CATALOGUES_BY_YEAR` and lookup
-  helper :func:`resolve_catalogue`.
-* The 27-state :data:`IVA_RATE_TABLE` with a load-time non-overlap invariant
-  that raises :class:`IvaRateOverlapError` on drift.
-* A full classification axis stack (:class:`IvaTerritorialScope` (used for both
-  issuer and customer roles), :class:`CustomerTaxStatus`,
-  :class:`TransactionKind`, :class:`InvoiceKind`) plus the deterministic
-  resolver :func:`classify_iva` returning :class:`IvaClassificationResult`.
+Ledger and invoice callers use :class:`IvaInvoiceClassification`,
+:func:`classify_invoice_line_for_iva`, :func:`invoice_line_to_iva_observation`,
+and :func:`derive_flow_for_classification` to carry the
+category/rate/flow/settlement-side tuple without re-encoding IVA rules.
+Legal prorrata remains a distinct LIVA arts. 101-103 substrate through
+:class:`ProrrataInputs`, :class:`ProrrataReference`, :class:`ProrrataResult`,
+:func:`compute_prorrata_general`, and :func:`compute_sectoral_prorrata`; it is
+not a usage-ratio or ledger business-percentage mechanism.
 
-Callers from outside this subpackage must import exclusively from
-:mod:`aeat.domain.iva` and must not reach into private modules.
+Callers from outside this subpackage import exclusively from
+:mod:`domain.iva` and must not reach into private modules. This domain
+surface is pure substrate logic: repositories, CLI commands, modelo binding,
+and live AEAT access belong to application and adapter layers.
+
+See Also:
+    :mod:`domain.invoices`
+        Invoice records and helpers that use this IVA substrate to produce
+        registry-ready invoice and IVA observations.
+    :mod:`application.aggregation`
+        Source-mesh resolvers that convert bucket-local ledger and invoice facts
+        into IVA, OSS/IOSS, and prorrata-aware calculation payloads.
+    :mod:`domain.calculations.registry`
+        Binding declarations, observation models, and formulas that consume the
+        resolved IVA substrate during modelo calculation.
+    :mod:`application.modelo`
+        Work-unit calculation and verification flows that persist the registry
+        results; they do not own IVA taxonomy or rate lookup.
 """
 
 from __future__ import annotations
@@ -81,8 +105,12 @@ from ._prorrata import (
     ProrrataRegime,
     ProrrataResult,
     ProrrataSector,
+    RegularizacionProrrataDireccion,
+    RegularizacionProrrataResult,
     classify_input_deduction,
+    compute_prorrata_definitiva_anual,
     compute_prorrata_general,
+    compute_regularizacion_prorrata_anual,
     compute_sectoral_prorrata,
     is_especial_mandatory,
     requires_sectoral_separation,
@@ -180,13 +208,17 @@ __all__ = [
     "RefundElection",
     "RefundEligibilityReason",
     "RegimePeriodicity",
+    "RegularizacionProrrataDireccion",
+    "RegularizacionProrrataResult",
     "SepaMarca",
     "TransactionKind",
     "cite",
     "classify_input_deduction",
     "classify_invoice_line_for_iva",
     "classify_iva",
+    "compute_prorrata_definitiva_anual",
     "compute_prorrata_general",
+    "compute_regularizacion_prorrata_anual",
     "compute_sectoral_prorrata",
     "derive_flow_for_classification",
     "derive_sepa_marca",

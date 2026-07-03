@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from pydantic import ValidationError
 
 from ......tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED, aeat_url
 from ......tests.secure_sql import isolated_runtime_profile
@@ -30,6 +31,8 @@ from .. import _session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "session-roundtrip"
+_HANDSHAKE_AT = datetime(2026, 5, 28, 13, 50, 0, tzinfo=UTC)
+_NON_JSON_CAPTURED_AT = datetime(2026, 5, 28, 13, 55, 0, tzinfo=UTC)
 
 
 def _playwright_shaped_storage_state() -> dict[str, object]:
@@ -75,7 +78,7 @@ def test_persisted_browser_session_roundtrips_under_real_encryption(
         metadata = {
             "certificate_thumbprint": "AA:BB:CC:DD:EE:FF:00:11:22:33",
             "certificate_subject": "CN=AEAT Test User",
-            "handshake_at": datetime.now(UTC).isoformat(),
+            "handshake_at": _HANDSHAKE_AT.isoformat(),
             "renewal_count": 0,
         }
         sha_at_save = _session_store.storage_state_sha256(storage_state)
@@ -123,3 +126,25 @@ def test_persisted_browser_session_roundtrips_under_real_encryption(
         # SHA computed at save time. If column-encryption mangled
         # any byte, this assertion fails before any field check.
         assert loaded.storage_state_sha256 == sha_at_save
+
+
+def test_storage_state_hash_rejects_non_json_values() -> None:
+    storage_state = _playwright_shaped_storage_state()
+    storage_state["captured_at"] = _NON_JSON_CAPTURED_AT
+
+    with pytest.raises(ValidationError, match="invalid-json-value"):
+        _session_store.storage_state_sha256(storage_state)
+
+
+def test_session_store_rejects_non_json_metadata_before_write(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        logical_path = Path("/profile/active/aeat-session")
+
+        with pytest.raises(ValidationError, match="invalid-json-value"):
+            _session_store.save(
+                logical_path,
+                storage_state=_playwright_shaped_storage_state(),
+                metadata={"captured_at": _NON_JSON_CAPTURED_AT},
+            )
+
+        assert _session_store.exists(logical_path) is False

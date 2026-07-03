@@ -29,19 +29,27 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot, enum_consumed_binding_ids
+from ....domain.submission import ModeloDraftStatus
 from .. import (
     _bound_casilla_binding_ids,
     _date_binding_ids,
     _date_inputs_for_ids,
     _formula_binding_ids,
     _relation_ids,
+    _string_inputs_for_ids,
+    build_draft,
 )
+from ..runtime import build_runtime_schema_provider
+from ..testing import ModeloTestProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _M100_BIRTH_DATE_BINDING = "renta-2024-profile-taxpayer-birth-date"
+_M100_TAX_RESIDENCE_CCAA_BINDING = "renta-2024-profile-tax-residence-ccaa"
+_M100_ESTIMACION_DIRECTA_NORMAL_BINDING = "renta-2024-modelo-100-estimacion-directa-es-normal"
 _M100_RELATIONS = (
     "renta-2024-rel-130-pagos-fraccionados",
     "renta-2024-rel-131-pagos-fraccionados",
@@ -50,6 +58,10 @@ _M100_RELATIONS = (
 
 def _m100_snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=2024, period="0A", on=None)
+
+
+def _profile() -> ModeloTestProfile:
+    return ModeloTestProfile(tax_id="12345678Z", display_name="M100 enum replay")
 
 
 def test_date_binding_ids_identifies_m100_birth_date() -> None:
@@ -83,7 +95,7 @@ def test_date_inputs_for_ids_parses_iso_date_strings() -> None:
 
 def test_date_inputs_for_ids_rejects_non_iso_value() -> None:
     """A corrupt (non-ISO) date value is refused, not silently dropped."""
-    from ....domain.filing._errors import ModeloBuilderError
+    from ....domain.filing import ModeloBuilderError
 
     with pytest.raises(ModeloBuilderError):
         _date_inputs_for_ids({_M100_BIRTH_DATE_BINDING: "not-a-date"}, {_M100_BIRTH_DATE_BINDING})
@@ -106,3 +118,71 @@ def test_birth_date_excluded_from_decimal_channel() -> None:
 
     assert _M100_BIRTH_DATE_BINDING in date_binding_ids
     assert _M100_BIRTH_DATE_BINDING not in decimal_binding_ids
+
+
+def test_tax_residence_ccaa_excluded_from_decimal_channel() -> None:
+    """The M100 tax-residence CCAA enum must never reach Decimal extraction.
+
+    ``work verify`` replay passes persisted profile bindings back through
+    ``build_draft`` as a flat input map.  The CCAA selector is a string enum
+    value, so ``build_draft`` must route it through ``enum_binding_values`` and
+    exclude it from the Decimal id-set before calling ``_decimal_inputs_for_ids``.
+    """
+    snap = _m100_snapshot()
+    calculation_binding_ids = _formula_binding_ids(snap) | _bound_casilla_binding_ids(snap)
+    enum_binding_ids = enum_consumed_binding_ids(snap.revision)
+    date_binding_ids = _date_binding_ids(snap)
+    relation_ids = _relation_ids(snap)
+    decimal_binding_ids = calculation_binding_ids - enum_binding_ids - date_binding_ids - relation_ids
+
+    assert _M100_TAX_RESIDENCE_CCAA_BINDING in enum_binding_ids
+    assert _M100_TAX_RESIDENCE_CCAA_BINDING not in decimal_binding_ids
+    assert _string_inputs_for_ids(
+        {_M100_TAX_RESIDENCE_CCAA_BINDING: "madrid"},
+        enum_binding_ids,
+    ) == {_M100_TAX_RESIDENCE_CCAA_BINDING: "madrid"}
+
+
+def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None:
+    """Replay-style build_draft inputs route the CCAA string through enum values."""
+    period = Period.from_year_and_code(2024, "0A")
+    draft = build_draft(
+        modelo="100",
+        period=period,
+        profile=_profile(),
+        inputs={
+            "0003": Decimal("10000"),
+            _M100_TAX_RESIDENCE_CCAA_BINDING: "madrid",
+            _M100_BIRTH_DATE_BINDING: "1975-06-15",
+            _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: "1",
+            "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
+            "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
+            "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+            "renta-2024-profile-declaration-type": Decimal("1"),
+            "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+            "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
+            "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+            "renta-2024-profile-marriage-full-year": Decimal("0"),
+            "renta-2024-profile-marriage-month-start": Decimal("0"),
+            "renta-2024-profile-marriage-month-end": Decimal("0"),
+            "renta-2024-profile-anualidades-sin-minimo-descendientes": Decimal("0"),
+            # Childless profile: Art. 58/61 LIRPF mínimo por descendientes aggregate
+            # is zero (modelo-100-minimo-descendientes-engine decision record, Option A).
+            "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
+            # Parte autonómica (#593): non-Madrid profile mirrors the estatal zero.
+            "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
+            "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
+            "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
+            "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
+            "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
+            "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
+            "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+        },
+        schema_provider=build_runtime_schema_provider(modelos=("100",), filing_year=2024, period=period),
+    )
+
+    assert draft.modelo == "100"
+    assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
+    assert next(value.value for value in draft.values if value.casilla_id == "0003") == Decimal("10000")

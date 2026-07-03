@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#executable-parity-evidence-tier-contract'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-03-bare-invocation-bucket-session-gate-adr]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - '[[2026-06-04-executable-parity-evidence-tier-contract-research]]'
 ---
-
 
 # `executable-parity-evidence-tier-contract` adr: documentary_parity_evidence tier for layout-only modelos | (**status:** `accepted`)
 

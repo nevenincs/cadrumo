@@ -9,8 +9,11 @@ from pydantic import ValidationError
 
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.filing._errors import ModeloBuilderError
-from ....domain.filing._schema import ModeloDraft, ModeloValueKind
+from ....domain.filing import (
+    ModeloBuilderError,
+    ModeloDraft,
+    ModeloValueKind,
+)
 from ....domain.submission import ModeloDraftStatus
 from .._testing_registry import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 
@@ -37,7 +40,7 @@ _M130_PAGO_FRACCIONADO_CASILLA: CasillaId = _casilla_id("05")
 _M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
 _M130_RENDIMIENTO_NETO_PREVIO_CASILLA: CasillaId = _casilla_id("08")
 _M130_MINORACION_CASILLA: CasillaId = _casilla_id("10")
-_M130_DIFERENCIA_CASILLA: CasillaId = _casilla_id("15")
+_M130_RESULTADOS_NEGATIVOS_CASILLA: CasillaId = _casilla_id("15")
 _M130_DEDUCCION_ART_110_3_CASILLA: CasillaId = _casilla_id("16")
 _M130_RETENCIONES_ARRENDAMIENTOS_CASILLA: CasillaId = _casilla_id("18")
 _M130_RESULTADO_CASILLA: CasillaId = _casilla_id("19")
@@ -96,35 +99,19 @@ def test_approved_status_uses_application_approval_path() -> None:
 
 
 def test_typed_period_input_is_passed_to_draft_without_string_roundtrip() -> None:
-    period = Period.from_year_and_code(2026, "1T")
+    for case_id, period in (("2026-q1", _Q1_2026), ("2024-q1", _Q1_2024)):
+        draft = build_registry_filing_draft(
+            modelo="130",
+            period=period,
+            casilla_values=_valid_inputs(),
+            binding_values=_valid_bindings(),
+            status=ModeloDraftStatus.BORRADOR,
+        )
 
-    draft = build_registry_filing_draft(
-        modelo="130",
-        period=period,
-        casilla_values=_valid_inputs(),
-        binding_values=_valid_bindings(),
-        status=ModeloDraftStatus.BORRADOR,
-    )
-
-    assert draft.period == period
-    assert draft.snapshot_ref is not None
-    assert draft.snapshot_ref.modelo_year == period.year
-    assert draft.snapshot_ref.period == period.registry_token
-
-
-def test_typed_period_input_uses_period_year() -> None:
-    draft = build_registry_filing_draft(
-        modelo="130",
-        period=_Q1_2024,
-        casilla_values=_valid_inputs(),
-        binding_values=_valid_bindings(),
-        status=ModeloDraftStatus.BORRADOR,
-    )
-
-    assert draft.period == _Q1_2024
-    assert draft.snapshot_ref is not None
-    assert draft.snapshot_ref.modelo_year == 2024
-    assert draft.snapshot_ref.period == "1T"
+        assert draft.period == period, case_id
+        assert draft.snapshot_ref is not None, case_id
+        assert draft.snapshot_ref.modelo_year == period.year, case_id
+        assert draft.snapshot_ref.period == period.registry_token, case_id
 
 
 def test_string_period_input_is_rejected_at_helper_boundary() -> None:
@@ -185,8 +172,13 @@ def test_values_are_registry_projected_and_sorted() -> None:
     values = {value.casilla_id: value for value in draft.values}
     assert tuple(values) == tuple(sorted(values))
     assert values[_M130_INGRESOS_CASILLA].kind is ModeloValueKind.INHERITED
-    assert values[_M130_DIFERENCIA_CASILLA].kind is ModeloValueKind.INHERITED
-    assert values[_M130_DIFERENCIA_CASILLA].value == Decimal("0")
+    assert values[_M130_RESULTADOS_NEGATIVOS_CASILLA].kind is ModeloValueKind.COMPUTED
+    assert values[_M130_RESULTADOS_NEGATIVOS_CASILLA].value == Decimal("0")
+    assert (
+        values[_M130_RESULTADOS_NEGATIVOS_CASILLA].source
+        == "registry formula modelo-130-resultados-negativos-anteriores-cap"
+    )
+    assert values[_M130_RESULTADOS_NEGATIVOS_CASILLA].formula_trace_casilla_ids == ("14",)
     assert values[_M130_RESULTADO_CASILLA].kind is ModeloValueKind.COMPUTED
     assert values[_M130_RESULTADO_CASILLA].formula_trace_casilla_ids == ("17", "18")
 
@@ -208,30 +200,25 @@ def test_draft_id_is_deterministic_for_same_registry_inputs() -> None:
     assert a.draft_id == b.draft_id
 
 
-def test_decimal_string_inputs_are_coerced_before_registry_build() -> None:
-    draft = build_registry_filing_draft_from_decimals(
-        modelo="130",
-        period=_Q1_2026,
-        casilla_decimals={key: str(value) for key, value in _valid_inputs().items()},
-        binding_decimals={key: str(value) for key, value in _valid_bindings().items()},
-        status=ModeloDraftStatus.BORRADOR,
+def test_decimal_inputs_are_coerced_before_registry_build() -> None:
+    cases: tuple[tuple[str, str | Decimal, Decimal], ...] = (
+        ("decimal-string", "10000", Decimal("10000")),
+        ("decimal-passthrough", Decimal("100.50"), Decimal("100.50")),
     )
+    for case_id, ingresos, expected in cases:
+        casilla_decimals: dict[CasillaId, str | Decimal] = {key: str(value) for key, value in _valid_inputs().items()}
+        casilla_decimals[_M130_INGRESOS_CASILLA] = ingresos
 
-    values = {value.casilla_id: value for value in draft.values}
-    assert values[_M130_INGRESOS_CASILLA].value == Decimal("10000")
+        draft = build_registry_filing_draft_from_decimals(
+            modelo="130",
+            period=_Q1_2026,
+            casilla_decimals=casilla_decimals,
+            binding_decimals={key: str(value) for key, value in _valid_bindings().items()},
+            status=ModeloDraftStatus.BORRADOR,
+        )
 
-
-def test_decimal_passthrough() -> None:
-    draft = build_registry_filing_draft_from_decimals(
-        modelo="130",
-        period=_Q1_2026,
-        casilla_decimals=_valid_inputs(ingresos=Decimal("100.50")),
-        binding_decimals=_valid_bindings(),
-        status=ModeloDraftStatus.BORRADOR,
-    )
-
-    values = {value.casilla_id: value for value in draft.values}
-    assert values[_M130_INGRESOS_CASILLA].value == Decimal("100.50")
+        values = {value.casilla_id: value for value in draft.values}
+        assert values[_M130_INGRESOS_CASILLA].value == expected, case_id
 
 
 def test_decimal_helper_rejects_noncanonical_casilla_keys() -> None:
@@ -250,27 +237,18 @@ def test_decimal_helper_rejects_noncanonical_casilla_keys() -> None:
         )
 
 
-def test_invalid_decimal_string_raises() -> None:
-    bad_inputs = {key: str(value) for key, value in _valid_inputs().items()}
-    bad_inputs[_M130_INGRESOS_CASILLA] = "not-a-decimal"
+def test_invalid_decimal_strings_raise() -> None:
+    for case_id, raw_value in (("invalid-token", "not-a-decimal"), ("spanish-thousands", "5.550,00")):
+        bad_inputs = {key: str(value) for key, value in _valid_inputs().items()}
+        bad_inputs[_M130_INGRESOS_CASILLA] = raw_value
 
-    with pytest.raises(InvalidOperation, match=r"ConversionSyntax|InvalidOperation|conversion"):
-        build_registry_filing_draft_from_decimals(
-            modelo="130",
-            period=_Q1_2026,
-            casilla_decimals=bad_inputs,
-            binding_decimals=_valid_bindings(),
-        )
-
-
-def test_spanish_thousands_rejected_at_boundary() -> None:
-    bad_inputs = {key: str(value) for key, value in _valid_inputs().items()}
-    bad_inputs[_M130_INGRESOS_CASILLA] = "5.550,00"
-
-    with pytest.raises(InvalidOperation, match=r"ConversionSyntax|InvalidOperation|conversion"):
-        build_registry_filing_draft_from_decimals(
-            modelo="130",
-            period=_Q1_2026,
-            casilla_decimals=bad_inputs,
-            binding_decimals=_valid_bindings(),
-        )
+        try:
+            with pytest.raises(InvalidOperation, match=r"ConversionSyntax|InvalidOperation|conversion"):
+                build_registry_filing_draft_from_decimals(
+                    modelo="130",
+                    period=_Q1_2026,
+                    casilla_decimals=bad_inputs,
+                    binding_decimals=_valid_bindings(),
+                )
+        except AssertionError as exc:
+            raise AssertionError(f"invalid decimal string was accepted: {case_id}") from exc

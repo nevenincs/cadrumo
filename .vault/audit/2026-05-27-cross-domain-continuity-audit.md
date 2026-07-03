@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cross-domain-continuity'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - "[[2026-05-26-cross-domain-continuity-audit]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"
@@ -12,7 +12,6 @@ related:
   - "[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]"
   - "[[2026-05-13-identity-adr]]"
 ---
-
 
 # `cross-domain-continuity` audit: `wave-1-commit-review`
 

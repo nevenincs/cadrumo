@@ -11,17 +11,18 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
 
 from ....core import Period
-from ....core.aggregation import BindingAggregation, BindingAggregationOp, RowSetGroupingKind
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....core.resources import resources
 from ....domain.calculations.registry import DataBindingDefinition, ModeloRevision, WithholdingObservation
 from ....tests.secure_sql import isolated_runtime_profile
+from .._percepciones_observations_repository import PercepcionObservationRepository
 from .._source_mesh import CalculationSourceContext
-from .._withholding_observations_repository import WithholdingObservationRepository
 from .._withholding_source import WithholdingSourceResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -29,15 +30,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PERCEPCION_BINDING_ID = "modelo-190-123-percepciones-anual-test"
 
 
+@cache
 def _m190_revision() -> ModeloRevision:
     return resources().modelos.authority.snapshot("190", filing_year=2024, period="0A").revision
 
 
 def _percepcion_binding() -> DataBindingDefinition:
-    base = next(b for b in _m190_revision().bindings if b.source == RowSetGroupingKind.WITHHOLDING)
+    base = next(b for b in _m190_revision().bindings if b.source == BindingSourceKind.WITHHOLDING)
     return base.model_copy(
         update={
-            "source": RowSetGroupingKind.WITHHOLDING,
+            "source": BindingSourceKind.WITHHOLDING,
             "selector": {"fact": "percepcion_count"},
             "aggregation": BindingAggregation(op=BindingAggregationOp.COUNT_DISTINCT),
         },
@@ -74,7 +76,7 @@ def test_resolver_materialises_distinct_percepcion_count(tmp_path: Path) -> None
     with isolated_runtime_profile(tmp_path=tmp_path):
         binding = _percepcion_binding()
         period = Period.from_year_and_code(2024, "0A")
-        WithholdingObservationRepository().replace_observations(
+        PercepcionObservationRepository().replace_observations(
             modelo="190",
             filing_year=2024,
             period=period,

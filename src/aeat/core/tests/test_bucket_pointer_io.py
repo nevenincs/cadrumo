@@ -17,13 +17,20 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+def _pointer(bucket_id: str) -> BucketPointer:
+    return BucketPointer(bucket_id=bucket_id, schema_version=1)
+
+
 def test_round_trip_preserves_pointer(tmp_path: Path) -> None:
-    pointer = BucketPointer(bucket_id="alpha", schema_version=1)
+    for root_parts, pointer in (
+        ((), _pointer("alpha")),
+        (("nested", "root"), _pointer("alpha")),
+    ):
+        root = tmp_path.joinpath(*root_parts)
 
-    write_pointer(tmp_path, pointer)
-    loaded = read_pointer(tmp_path)
+        write_pointer(root, pointer)
 
-    assert loaded == pointer
+        assert read_pointer(root) == pointer
 
 
 def test_absent_pointer_returns_none(tmp_path: Path) -> None:
@@ -31,7 +38,7 @@ def test_absent_pointer_returns_none(tmp_path: Path) -> None:
 
 
 def test_write_is_atomic_no_tmp_lingers(tmp_path: Path) -> None:
-    pointer = BucketPointer(bucket_id="alpha", schema_version=1)
+    pointer = _pointer("alpha")
 
     write_pointer(tmp_path, pointer)
 
@@ -41,8 +48,8 @@ def test_write_is_atomic_no_tmp_lingers(tmp_path: Path) -> None:
 
 
 def test_overwrite_replaces_previous_pointer(tmp_path: Path) -> None:
-    first = BucketPointer(bucket_id="alpha", schema_version=1)
-    second = BucketPointer(bucket_id="beta", schema_version=1)
+    first = _pointer("alpha")
+    second = _pointer("beta")
 
     write_pointer(tmp_path, first)
     write_pointer(tmp_path, second)
@@ -54,7 +61,7 @@ def test_overwrite_replaces_previous_pointer(tmp_path: Path) -> None:
 def test_torn_write_does_not_corrupt_existing_pointer(tmp_path: Path) -> None:
     """A partial payload at the .tmp sibling leaves the previous pointer intact."""
 
-    good = BucketPointer(bucket_id="alpha", schema_version=1)
+    good = _pointer("alpha")
     write_pointer(tmp_path, good)
 
     target = pointer_path(tmp_path)
@@ -74,12 +81,3 @@ def test_read_rejects_unknown_key(tmp_path: Path) -> None:
 
     with pytest.raises(ValidationError):
         read_pointer(tmp_path)
-
-
-def test_write_creates_parent_lazily(tmp_path: Path) -> None:
-    deeper = tmp_path / "nested" / "root"
-    pointer = BucketPointer(bucket_id="alpha", schema_version=1)
-
-    write_pointer(deeper, pointer)
-
-    assert read_pointer(deeper) == pointer

@@ -3,10 +3,22 @@
 Visible modelo/year/period input is normalized into a
 :class:`ModeloWorkSelectorRequest` and resolved to a
 :class:`ModeloWorkResolution` over active
-:class:`~aeat.domain.modelos._work_unit.WorkUnit` records. Revision selectors
+:class:`aeat.domain.modelos.WorkUnit` records. Revision selectors
 then load persisted :class:`CalculationRevision` rows and return a
 :class:`ModeloCalculationRevisionSelection` for current, latest draft, latest
 verified, filed, or explicit-id picks.
+
+The selector boundary implements the accepted visible-target addressing policy:
+the common operator target is active bucket/profile plus modelo, filing year,
+and period; raw work-unit and calculation-revision ids remain exact-addressing
+escape hatches. An explicit work-unit id is validated against any natural-key
+flags supplied beside it, discarded work units are ignored by default, and an
+ambiguous visible target refuses with candidate guidance instead of guessing.
+
+Command-specific revision defaults stay here rather than in CLI modules:
+verification selects the current draft, filing selects the current
+verified-complete revision, and export prefers the current filed revision before
+falling back to an unambiguous verified-complete revision.
 """
 
 from __future__ import annotations
@@ -16,18 +28,22 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG, Period, resolve_active_bucket_id
-from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos._codes import ModeloCode
-from ...domain.modelos._errors import ModeloError, ModeloValidationError
-from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
-from ...domain.modelos._protocols import (
+from ...domain.modelos import (
+    CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionId,
+    CalculationRevisionState,
+    ModeloCode,
+    ModeloError,
+    ModeloValidationError,
+    WorkUnit,
     WorkUnitCatalogueRepositoryProtocol,
+    WorkUnitId,
+    WorkUnitState,
 )
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
-from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
 
 _BucketId = Annotated[
     str,
@@ -293,7 +309,13 @@ def visible_target_work_units(
     *,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> tuple[WorkUnit, ...]:
-    """Return non-discarded :class:`WorkUnit` records matching the operator-visible target."""
+    """Return active :class:`aeat.domain.modelos.WorkUnit` records matching the visible target.
+
+    The visible target is bucket/modelo/filing-year/period only. Registry
+    revision is intentionally not part of this lookup so a conflicting
+    ``revision_id`` can be reported as a conflict against the existing active
+    work unit instead of silently selecting or creating a second target.
+    """
     if not request.has_visible_target:
         raise ModeloWorkSelectorContradictionError("modelo, filing_year, and period are required for natural lookup")
     bucket_id = resolve_modelo_work_bucket(request)
@@ -410,7 +432,14 @@ def select_modelo_calculation_revision(
     calculation_revision_id: str | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> ModeloCalculationRevisionSelection:
-    """Select a :class:`ModeloCalculationRevisionSelection` under one resolved work unit."""
+    """Select one persisted calculation revision as :class:`ModeloCalculationRevisionSelection`.
+
+    ``EXPLICIT`` requires ``calculation_revision_id`` and verifies the revision
+    belongs to the supplied :class:`aeat.domain.modelos.WorkUnit`. Non-explicit
+    selectors resolve through the work unit's current/filed pointers or by
+    latest state, and refuse missing or mismatched state instead of falling back
+    to another revision.
+    """
     revisions = _revisions_for_work_unit(work_unit, calculation_repository=calculation_repository)
     if selector is ModeloCalculationRevisionSelector.EXPLICIT:
         if calculation_revision_id is None:
@@ -504,7 +533,7 @@ def select_current_draft_revision(
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> ModeloCalculationRevisionSelection:
-    """Select the current draft revision and return a :class:`ModeloCalculationRevisionSelection` for verification."""
+    """Select the current draft revision as a :class:`ModeloCalculationRevisionSelection` for verification."""
     selection = select_modelo_calculation_revision(
         work_unit,
         selector=ModeloCalculationRevisionSelector.CURRENT,
@@ -550,7 +579,7 @@ def select_exportable_revision(
     Preference order:
     1. current filed pointer, when it points to a current filed revision;
     2. current calculation pointer, when it is verified-complete;
-    3. legacy single verified-complete revision, only when no current draft conflicts.
+    3. one unambiguous verified-complete revision, only when no current draft conflicts.
     """
     filed_revision = _optional_revision_by_pointer(
         work_unit,

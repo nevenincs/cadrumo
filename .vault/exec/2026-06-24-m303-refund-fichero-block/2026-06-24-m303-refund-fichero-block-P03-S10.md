@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-refund-fichero-block'
 date: '2026-06-25'
-modified: '2026-06-25'
+modified: '2026-06-30'
 step_id: 'S10'
 related:
   - "[[2026-06-24-m303-refund-fichero-block-plan]]"
 ---
-
-
-
 
 # Extend the golden-SHA fichero roundtrip with a REDEME-1 plus IBAN-populated case, per-offset assertions grounded against the DR303 offsets (110, DID 12, 23, 194)
 

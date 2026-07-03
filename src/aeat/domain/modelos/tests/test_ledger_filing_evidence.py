@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ...calculations.registry import CasillaId, validated_casilla_id
+from ...calculations.registry import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
 from .._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -22,6 +22,8 @@ def _casilla_id(value: object) -> CasillaId:
 
 
 _EVIDENCE_CASILLA: CasillaId = _casilla_id("00501")
+_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-37-1992:art-99",)
+_SOURCE_REFS: tuple[SourceRefId, ...] = ("boe-modelo-303-2025-form",)
 
 
 def test_ledger_filing_evidence_round_trips_strict_json_with_all_carriers() -> None:
@@ -50,8 +52,8 @@ def test_ledger_filing_evidence_round_trips_strict_json_with_all_carriers() -> N
         purchase_invoice_evidence_id="purchase-evidence-1",
         attachment_ids=("attachment-1",),
         document_link_ids=("drive-doc-1",),
-        legal_refs=("liva-art-99",),
-        source_refs=("boe-a-2026-1",),
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
     )
     evidence = LedgerFilingEvidence(
         snapshot_fingerprint="b" * 64,
@@ -62,6 +64,8 @@ def test_ledger_filing_evidence_round_trips_strict_json_with_all_carriers() -> N
                 value="140000.00",
                 kind="casilla_input",
                 note="resultado contable",
+                legal_refs=_LEGAL_REFS,
+                source_refs=_SOURCE_REFS,
             ),
         ),
         captured_at=datetime(2026, 6, 3, 12, 30, tzinfo=UTC),
@@ -86,6 +90,8 @@ def test_ledger_filing_evidence_records_are_frozen_and_strict() -> None:
         direction="incoming",
         business_classification="business",
         lifecycle_state="active",
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
     )
 
     with pytest.raises(ValidationError):
@@ -98,7 +104,55 @@ def test_ledger_filing_evidence_records_are_frozen_and_strict() -> None:
             direction="incoming",
             business_classification="business",
             lifecycle_state="active",
+            legal_refs=_LEGAL_REFS,
+            source_refs=_SOURCE_REFS,
         )
 
     with pytest.raises(ValidationError, match="frozen"):
         row.__setattr__("amount", Decimal("2.00"))
+
+
+def test_ledger_filing_evidence_rejects_ungrounded_rows_and_manual_entries() -> None:
+    with pytest.raises(ValidationError, match="legal_refs"):
+        LedgerEvidenceRow(
+            transaction_id="tx-1",
+            fingerprint="a" * 64,
+            booked_date="2026-01-31",
+            amount=Decimal("1.00"),
+            currency="EUR",
+            direction="incoming",
+            business_classification="business",
+            lifecycle_state="active",
+            source_refs=_SOURCE_REFS,
+        )
+
+    with pytest.raises(ValidationError, match="source_refs"):
+        ManualFactBasisEntry(
+            casilla_id=_EVIDENCE_CASILLA,
+            value="140000.00",
+            legal_refs=_LEGAL_REFS,
+        )
+
+
+def test_ledger_filing_evidence_rejects_blank_grounding_refs() -> None:
+    with pytest.raises(ValidationError, match="legal_refs"):
+        LedgerEvidenceRow(
+            transaction_id="tx-1",
+            fingerprint="a" * 64,
+            booked_date="2026-01-31",
+            amount=Decimal("1.00"),
+            currency="EUR",
+            direction="incoming",
+            business_classification="business",
+            lifecycle_state="active",
+            legal_refs=("",),
+            source_refs=_SOURCE_REFS,
+        )
+
+    with pytest.raises(ValidationError, match="source_refs"):
+        ManualFactBasisEntry(
+            casilla_id=_EVIDENCE_CASILLA,
+            value="140000.00",
+            legal_refs=_LEGAL_REFS,
+            source_refs=(" ",),
+        )

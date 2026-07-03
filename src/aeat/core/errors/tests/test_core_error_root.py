@@ -20,45 +20,31 @@ from .._not_found import CoreNotFoundError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_core_error_is_subclass_of_aeat_error() -> None:
-    """CoreError descends from AeatError so the registry constraint applies."""
+def test_core_validation_error_catch_surface_is_well_defined() -> None:
+    """CoreValidationError is catchable as CoreError, AeatError, and ValueError."""
     assert issubclass(CoreError, AeatError)
 
-
-def test_catching_core_error_catches_concrete_subclass_instance() -> None:
-    """A concrete CoreError subclass instance is caught by a CoreError handler.
-
-    Non-tautological: the concrete class must genuinely inherit from
-    CoreError for the isinstance check inside the except clause to fire.
-    If the inheritance were removed the except arm would not be reached
-    and the assertion would never execute — pytest would report the test
-    as erroring with an uncaught CoreValidationError, not as a pass.
-    """
-    caught: CoreError | None = None
+    caught_as_core: CoreError | None = None
     try:
-        raise CoreValidationError("invariant violated")
+        raise CoreValidationError("core catch")
     except CoreError as exc:
-        caught = exc
+        caught_as_core = exc
+    assert isinstance(caught_as_core, CoreValidationError)
+    assert isinstance(caught_as_core, AeatError)
 
-    assert caught is not None, "CoreError except arm was not reached"
-    assert isinstance(caught, CoreValidationError)
-    assert isinstance(caught, CoreError)
-    assert isinstance(caught, AeatError)
-
-
-def test_catching_aeat_error_catches_core_error_subclass() -> None:
-    """The AeatError catch surface covers CoreError subclasses.
-
-    Verifies the full MRO: CoreValidationError -> CoreError -> AeatError.
-    """
-    caught: AeatError | None = None
+    caught_as_aeat: AeatError | None = None
     try:
-        raise CoreValidationError("mro check")
+        raise CoreValidationError("aeat catch")
     except AeatError as exc:
-        caught = exc
+        caught_as_aeat = exc
+    assert isinstance(caught_as_aeat, CoreError)
 
-    assert caught is not None
-    assert isinstance(caught, CoreError)
+    caught_as_value_error: ValueError | None = None
+    try:
+        raise CoreValidationError("value error arm")
+    except ValueError as exc:
+        caught_as_value_error = exc
+    assert isinstance(caught_as_value_error, CoreValidationError)
 
 
 def test_core_not_found_error_descends_from_core_error() -> None:
@@ -83,7 +69,7 @@ def test_core_not_found_error_descends_from_core_error() -> None:
     assert isinstance(caught_as_core, CoreNotFoundError)
     assert isinstance(caught_as_core, KeyError)
 
-    # KeyError arm also fires (dict-like repository compatibility)
+    # KeyError arm also fires for mapping-style lookup misses.
     caught_as_key_error: KeyError | None = None
     try:
         raise CoreNotFoundError("key error arm")
@@ -92,40 +78,6 @@ def test_core_not_found_error_descends_from_core_error() -> None:
 
     assert caught_as_key_error is not None
     assert isinstance(caught_as_key_error, CoreNotFoundError)
-
-
-def test_core_validation_error_catch_order_is_well_defined() -> None:
-    """CoreValidationError is catchable as CoreError, AeatError, and ValueError.
-
-    The MRO for CoreValidationError is:
-      CoreValidationError -> CoreError -> AeatError -> Exception
-                         -> ValueError -> Exception
-
-    A handler that catches the most specific type wins. Assert all three
-    catch sites fire correctly so the catch order is unambiguous.
-    """
-    exc = CoreValidationError("bad input")
-    assert isinstance(exc, CoreValidationError)
-    assert isinstance(exc, CoreError)
-    assert isinstance(exc, AeatError)
-    assert isinstance(exc, ValueError)
-
-    # Narrowest catch fires first
-    caught_as_validation: CoreValidationError | None = None
-    try:
-        raise CoreValidationError("narrow catch")
-    except CoreValidationError as e:
-        caught_as_validation = e
-    assert caught_as_validation is not None
-
-    # ValueError arm also works (pydantic field validator compatibility)
-    caught_as_value_error: ValueError | None = None
-    try:
-        raise CoreValidationError("value error arm")
-    except ValueError as e:
-        caught_as_value_error = e
-    assert caught_as_value_error is not None
-    assert isinstance(caught_as_value_error, CoreValidationError)
 
 
 def test_core_error_does_not_catch_non_core_aeat_error() -> None:

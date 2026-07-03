@@ -3,12 +3,13 @@ tags:
   - '#plan'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-07-02'
 tier: L2
 related:
   - '[[2026-06-26-binding-resolver-contract-unification-adr]]'
   - '[[2026-06-26-binding-resolver-contract-unification-research]]'
 ---
+
 # `binding-resolver-contract-unification` plan
 
 ### Phase `P01` - One result envelope: retire the vestigial source-resolution envelopes
@@ -36,8 +37,8 @@ Bring counterpart 347/349 and foreign-assets 720 onto the live calculate mesh as
 
 > **SCOPE REFINEMENT (2026-06-26, coordinator-ruled - see the ADR Execution refinement on §3):** the counterpart 347/349 + foreign-assets 720 fold (Steps **S10/S11/S12** + correctness gates **S20/S21**) is SCOPED OUT of phase-2.2 to a grounded follow-up (task **#36**) - it is NOT mechanical (standalone `CounterpartObservation`s have no calculate-path source; M349 counterpart is already live via `InvoiceCatalogueSourceResolver`; shape-C counterpart/720 are CLI-reachable, NOT dormant mesh resolvers, so deferral breaches no no-dormant invariant). #36 grounds M347/M349/M720 per-modelo (already-live / genuinely-unrouted-silent-blank / shape-C-redundant) then acts per class. The **retenciones collapse (S13) + its correctness gate (S19) are KEPT** here - retenciones is already canonical (the enrolled `RetencionesAggregationSourceResolver`, #6), so collapsing the redundant shape-C `aggregate_retenciones` to it is mechanical and behaviour-preserving. `FOREIGN_ASSET` stays in `DEFERRED_SOURCE_KINDS` (S12 deferred). These deferred Steps are tracked, not dropped.
 
-- [ ] `P03.S10` - Author a counterpart 347/349 ModeloSourceResolver returning CalculationSourceResolution that delegates to aggregate_counterpart_347/349, behaviour-preserving against the existing counterpart suites; `src/aeat/application/aggregation/_counterpart.py`.
-- [ ] `P03.S11` - Author a foreign-assets 720 ModeloSourceResolver returning CalculationSourceResolution that delegates to aggregate_foreign_assets_720, behaviour-preserving against the existing 720 suites; `src/aeat/application/aggregation/_foreign_assets.py`.
+- [x] `P03.S10` - Author a counterpart 347/349 ModeloSourceResolver returning CalculationSourceResolution that delegates to aggregate_counterpart_347/349, behaviour-preserving against the existing counterpart suites; `src/aeat/application/aggregation/_counterpart.py`.
+- [x] `P03.S11` - Author a foreign-assets 720 ModeloSourceResolver returning CalculationSourceResolution that delegates to aggregate_foreign_assets_720, behaviour-preserving against the existing 720 suites; `src/aeat/application/aggregation/_foreign_assets.py`.
 - [ ] `P03.S21` - Prove the counterpart 347/349 mesh resolver produces a CORRECT aggregation value by oracle/calc-smoke check against a 347 and a 349 fixture, asserting the live-mesh resolution equals the prior aggregate_counterpart_347/349 output exactly so the now-resolving (no longer deferred) source cannot silently under-declare; `src/aeat/application/aggregation/tests/test_per_modelo_service.py`.
 - [ ] `P03.S20` - Prove the foreign-assets 720 mesh resolver produces a CORRECT aggregation value by oracle/calc-smoke check against a 720 fixture, asserting the live-mesh resolution equals the prior aggregate_foreign_assets_720 output exactly so the now-resolving (no longer deferred) source cannot silently under-declare; `src/aeat/application/aggregation/tests/test_per_modelo_service.py`.
 - [ ] `P03.S12` - Enroll the counterpart and foreign-assets resolvers in merge_source_resolutions and remove FOREIGN_ASSET from DEFERRED_SOURCE_KINDS now that it has a live resolver, applying the apply-cached-on-collision drive against the live peer WIP; `src/aeat/application/modelo/_calculation_actions.py`.

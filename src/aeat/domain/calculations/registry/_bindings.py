@@ -1,4 +1,20 @@
-"""Data binding helpers for registry-backed factual inputs."""
+"""Data binding helpers for registry-backed factual inputs.
+
+This module owns the
+:class:`~aeat.domain.calculations.registry.CasillaObservation` envelope emitted
+by the formula runtime and the
+:class:`~aeat.domain.calculations.registry.DataBindingDefinition` helper
+surface that turns factual binding values into bound casilla inputs.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._formula_runtime`
+        Runtime that emits typed observations and consumes resolved bound
+        casilla inputs.
+    :mod:`aeat.domain.calculations.registry._formula_initial_values`
+        Initial-value assembler that calls the bound-casilla helpers here.
+    :mod:`aeat.domain.calculations.registry._schema`
+        Registry schema definitions for casillas, bindings, and revisions.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +25,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Period
-from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind, RowSetGroupingKind
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind
 from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from ._binding_selector_utils import selector_against_model, selector_as_dict
 from ._bindings_previous_filing import (
@@ -47,8 +63,14 @@ from ._detail_record_bindings import (
     validate_refund_binding,
     validate_related_party_binding,
 )
+from ._donativo_bindings import (
+    DonativoDonorObservation,
+    _DonativoSelector,
+    resolve_donativo_binding_row_values,
+    validate_donativo_binding,
+)
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, OracleId, SourceRefId
+from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
 from ._invoice_bindings import (
     INVOICE_BINDING_SOURCE_KINDS,
     InvoiceObservation,
@@ -62,26 +84,33 @@ from ._invoice_bindings import (
 )
 from ._ledger_bindings import (
     LEDGER_BINDING_SOURCE_KINDS,
+    ImpatriadoIncomeObservationProtocol,
     IvaLedgerObservation,
     OssIossLedgerObservation,
     RentaExpenseObservationProtocol,
     RentaGastoObservationProtocol,
     RentaIncomeObservationProtocol,
+    _ImpatriadoLedgerIncomeSelector,
     _IvaLedgerSelector,
     _OssIossLedgerSelector,
     _RentaLedgerExpenseSelector,
     _RentaLedgerGastoSelector,
     _RentaLedgerIncomeSelector,
+    renta_first_slice_binding_target_casillas,
+    resolve_ledger_impatriado_income_aggregation_binding_values,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_oss_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
     resolve_ledger_renta_gasto_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
+    unsupported_ledger_impatriado_income_observations,
     unsupported_ledger_iva_observations,
     unsupported_ledger_oss_observations,
     unsupported_ledger_renta_expense_observations,
     unsupported_ledger_renta_gasto_observations,
     unsupported_ledger_renta_income_observations,
+    validate_ledger_impatriado_income_aggregation_binding,
+    validate_ledger_impatriado_income_aggregation_binding_definition,
     validate_ledger_iva_aggregation_binding,
     validate_ledger_iva_aggregation_binding_definition,
     validate_ledger_oss_aggregation_binding,
@@ -94,13 +123,17 @@ from ._ledger_bindings import (
     validate_ledger_renta_income_aggregation_binding_definition,
 )
 from ._retenciones_bindings import (
+    _RetencionesAggregationSelector,
     resolve_retenciones_aggregation_binding_values,
     validate_retenciones_aggregation_binding,
 )
-from ._schema import DataBindingDefinition, InputKind, ModeloRevision
+from ._schema import CasillaDefinition, DataBindingDefinition, InputKind, ModeloRevision
 from ._withholding_bindings import (
+    WithholdingClaveBreakdown,
     WithholdingObservation,
     WithholdingObservationRequirement,
+    _WithholdingSelector,
+    aggregate_withholding_by_clave,
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
     validate_withholding_binding_selector_shape,
@@ -117,6 +150,8 @@ __all__ = [
     "CounterpartObservationRequirement",
     "CounterpartSourceKind",
     "DataBindingDefinition",
+    "DonativoDonorObservation",
+    "ImpatriadoIncomeObservationProtocol",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
     "IvaLedgerObservation",
@@ -129,24 +164,32 @@ __all__ = [
     "RentaExpenseObservationProtocol",
     "RentaGastoObservationProtocol",
     "RentaIncomeObservationProtocol",
+    "WithholdingClaveBreakdown",
     "WithholdingObservation",
     "WithholdingObservationRequirement",
     "_build_foreign_asset_rows",
     "_build_related_party_rows",
+    "aggregate_withholding_by_clave",
     "binding_aggregation_op",
     "binding_source_casilla_ids",
+    "binding_source_modelo",
+    "bound_casilla_binding_ids",
     "counterpart_binding_requirements",
     "default_binding_aggregation_op",
     "invoice_binding_requirements",
     "previous_filing_observation_requirements",
     "previous_filing_source_reference",
+    "renta_first_slice_binding_target_casillas",
     "resolve_atribucion_binding_row_values",
+    "resolve_bound_casilla_binding_value",
     "resolve_bound_inputs_by_casilla_id",
     "resolve_counterpart_binding_row_values",
     "resolve_counterpart_binding_values",
+    "resolve_donativo_binding_row_values",
     "resolve_foreign_asset_binding_row_values",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
+    "resolve_ledger_impatriado_income_aggregation_binding_values",
     "resolve_ledger_iva_aggregation_binding_values",
     "resolve_ledger_oss_aggregation_binding_values",
     "resolve_ledger_renta_expense_aggregation_binding_values",
@@ -159,12 +202,14 @@ __all__ = [
     "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
     "selector_model_for_source",
+    "unsupported_ledger_impatriado_income_observations",
     "unsupported_ledger_iva_observations",
     "unsupported_ledger_oss_observations",
     "unsupported_ledger_renta_expense_observations",
     "unsupported_ledger_renta_gasto_observations",
     "unsupported_ledger_renta_income_observations",
     "validate_invoice_binding_definition",
+    "validate_ledger_impatriado_income_aggregation_binding_definition",
     "validate_ledger_iva_aggregation_binding_definition",
     "validate_ledger_oss_aggregation_binding_definition",
     "validate_ledger_renta_expense_aggregation_binding_definition",
@@ -203,15 +248,17 @@ def _decimal_tuple_from_json_array(value: object) -> object:
 class CasillaObservation(BaseModel):
     """One typed casilla observation emitted by the formula runtime.
 
-    Carries the casilla id + final Decimal value plus optional formula
-    provenance: when ``formula_id`` is set, the runtime computed this
-    casilla and ``operand_refs`` / ``operand_values`` trace its inputs
-    while ``operand_casilla_refs`` carries the casilla-id-only projection;
-    when ``formula_id`` is ``None`` the casilla was supplied as input
-    (manual / bound) and the trace fields are empty.
+    Carries a :class:`~aeat.domain.calculations.registry.CasillaId`, final
+    :class:`decimal.Decimal` value, required legal/source provenance, and
+    optional formula lineage. When ``formula_id`` is set, the runtime computed
+    this casilla and ``operand_refs`` / ``operand_values`` trace its inputs
+    while ``operand_casilla_refs`` carries the casilla-id-only projection; when
+    ``formula_id`` is ``None`` the casilla was supplied as input (manual /
+    bound) and the trace fields are empty.
 
-    Used as the primary storage for :class:`RegistryCalculationResult`;
-    legacy ``values`` and ``entries`` views derive from it.
+    Used as the primary storage for
+    :class:`~aeat.domain.calculations.registry.RegistryCalculationResult`;
+    derived ``values`` and ``entries`` views project from it.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -235,8 +282,7 @@ class CasillaObservation(BaseModel):
     # at 1T — the prior-quarter carry-forward selector with
     # ``max_year_delta = 0`` suppresses the cross-ejercicio anchor).
     # The value is ``Decimal("0")`` materialised through an explicit
-    # constructor, not the silent ``inputs.get(..., _ZERO)`` fallback
-    # that the runtime previously used for missing bound values.
+    # constructor rather than through a generic missing-input default.
     # Downstream audit and review surfaces should distinguish
     # absent-by-design zeros from value-bearing observations.
     absent_by_design: bool = False
@@ -277,14 +323,15 @@ class CasillaObservation(BaseModel):
 class RegistryModeloObservation(BaseModel):
     """Observed casilla values from a filed declaration.
 
-    Storage is ``observations`` — a typed tuple of :class:`CasillaObservation`
-    carrying full formula provenance. The ``casilla_values`` computed field
-    provides a read-only mapping view for downstream consumers.
+    Storage is ``observations``: a typed tuple of
+    :class:`~aeat.domain.calculations.registry.CasillaObservation` carrying full
+    formula provenance. The :attr:`casilla_values` property provides a read-only
+    mapping view for downstream consumers.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: ModeloId
     filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=32)
@@ -336,9 +383,10 @@ class RegistryModeloObservation(BaseModel):
 class OracleModeloObservation(RegistryModeloObservation):
     """Observed casilla values whose source is a live AEAT oracle adapter.
 
-    A subtype of :class:`RegistryModeloObservation` that marks the
-    observation tuple as oracle-originated rather than locally computed.
-    The ``oracle_id`` field anchors the observation to the
+    A subtype of :class:`RegistryModeloObservation` that marks the observation
+    tuple as oracle-originated rather than locally computed. The
+    :class:`~aeat.domain.calculations.registry.OracleId` field anchors the
+    observation to the
     ``LiveCrossReferenceDecision`` that produced it, so the application
     layer can route oracle-originated values through the
     cross-reference policy (synthetic-payload verification, replay
@@ -351,6 +399,50 @@ class OracleModeloObservation(RegistryModeloObservation):
     oracle_id: OracleId
 
 
+def bound_casilla_binding_ids(casilla: CasillaDefinition) -> tuple[BindingId, ...]:
+    """Return primary plus reviewed equivalent bindings for one bound casilla.
+
+    The :class:`~aeat.domain.calculations.registry.CasillaDefinition` must be a
+    bound casilla; the returned :class:`~aeat.domain.calculations.registry.BindingId`
+    tuple drives bound-value resolution and equivalent-source conflict checks.
+    """
+    if casilla.input_kind != InputKind.BOUND:
+        return ()
+    if casilla.binding is None:
+        raise RegistryValidationError(f"bound casilla {casilla.id!r} has no binding")
+    return (casilla.binding, *casilla.alternate_bindings)
+
+
+def resolve_bound_casilla_binding_value(
+    casilla: CasillaDefinition,
+    facts: Mapping[BindingId, Decimal],
+) -> tuple[Decimal | None, tuple[BindingId, ...]]:
+    """Resolve equivalent binding facts for one casilla, rejecting disagreements.
+
+    A bound :class:`~aeat.domain.calculations.registry.CasillaDefinition` can
+    declare reviewed alternate bindings when multiple registry source paths
+    represent the same factual amount. Supplying two equivalent source values is
+    legal only if they agree exactly; otherwise accepting either one would
+    silently over- or under-declare the downstream calculation.
+    """
+    binding_ids = bound_casilla_binding_ids(casilla)
+    present = tuple((binding_id, facts[binding_id]) for binding_id in binding_ids if binding_id in facts)
+    if not present:
+        return None, ()
+    first_value = present[0][1]
+    disagreeing = tuple((binding_id, value) for binding_id, value in present if value != first_value)
+    if disagreeing:
+        values_by_binding = ", ".join(f"{binding_id!r}={value!r}" for binding_id, value in present)
+        raise RegistryValidationError(
+            f"bound casilla {casilla.id!r} received conflicting equivalent binding values: {values_by_binding}",
+            context={
+                "casilla_id": casilla.id,
+                "binding_ids": ",".join(binding_id for binding_id, _value in present),
+            },
+        )
+    return first_value, tuple(binding_id for binding_id, _value in present)
+
+
 def resolve_bound_inputs_by_casilla_id(
     revision: ModeloRevision,
     facts: Mapping[BindingId, Decimal],
@@ -361,8 +453,12 @@ def resolve_bound_inputs_by_casilla_id(
     factual values; it does not own legal rates, thresholds, or casilla meaning.
 
     Args:
-        revision: The :class:`ModeloRevision` whose bindings to resolve against.
-        facts: Mapping of binding id to the factual Decimal value.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            bindings to resolve against.
+        facts: Mapping of
+            :class:`~aeat.domain.calculations.registry.BindingId` to the factual
+            :class:`decimal.Decimal` value.
     """
     for key, value in facts.items():
         if isinstance(value, bool) or not isinstance(value, Decimal):
@@ -375,11 +471,13 @@ def resolve_bound_inputs_by_casilla_id(
     for casilla in revision.casillas:
         if casilla.input_kind != InputKind.BOUND:
             continue
-        if casilla.binding is None:
-            raise RegistryValidationError(f"bound casilla {casilla.id!r} has no binding")
-        if casilla.binding not in facts:
-            raise RegistryValidationError(f"missing binding fact for casilla {casilla.id!r}: {casilla.binding!r}")
-        resolved[casilla.id] = facts[casilla.binding]
+        binding_ids = bound_casilla_binding_ids(casilla)
+        value, _present_binding_ids = resolve_bound_casilla_binding_value(casilla, facts)
+        if value is None:
+            raise RegistryValidationError(
+                f"missing binding fact for casilla {casilla.id!r}: one of {binding_ids!r}",
+            )
+        resolved[casilla.id] = value
     return resolved
 
 
@@ -410,7 +508,7 @@ class _RelationPrefillSelector(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_modelo: str = Field(min_length=1, max_length=8)
+    source_modelo: ModeloId
     source_casilla_id: CasillaId | None = Field(default=None, min_length=1)
     source_casilla_ids: tuple[CasillaId, ...] = ()
     source_periods: tuple[str, ...] = ()
@@ -446,13 +544,65 @@ def _relation_prefill_source_ids(selector: _RelationPrefillSelector) -> tuple[Ca
     return ()
 
 
+_IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE_IDS: tuple[CasillaId, ...] = (
+    "iva.compensacion-generada-periodo",
+    "iva.compensacion-aplicada-periodo",
+    "iva.compensacion-disponible-fin-periodo",
+    "iva.compensacion-pendiente-periodos-posteriores",
+)
+_IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
+
+
+class _IvaCompensationAnnualPartitionSelector(BaseModel):
+    """Selector for Modelo 390 AEAT boxes 97 / 662 as one FIFO partition."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_modelo: Literal["303"]
+    source_casilla_ids: tuple[CasillaId, ...]
+    source_periods: tuple[str, ...]
+    partition_output: Literal["last_period_amount", "generated_not_in_last_amount"]
+
+    @field_validator("source_casilla_ids")
+    @classmethod
+    def _source_casilla_ids_match_fifo_state(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
+        if value != _IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE_IDS:
+            raise RegistryValidationError(
+                "iva_compensation_annual_partition selector must declare the current Modelo 303 "
+                "compensation state casilla ids in canonical order",
+            )
+        return value
+
+    @field_validator("source_periods")
+    @classmethod
+    def _source_periods_are_full_year(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if value != _IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS:
+            raise RegistryValidationError(
+                "iva_compensation_annual_partition selector must declare source_periods ('1T', '2T', '3T', '4T')",
+            )
+        return value
+
+
 def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaId, ...]:
     """Return typed source casilla ids declared by binding families that have them."""
-    if binding.source == "previous_filing":
+    if binding.source == BindingSourceKind.PREVIOUS_FILING:
         return previous_filing_source_reference(binding).source_casilla_ids
-    if binding.source == "relation_prefill":
+    if binding.source == BindingSourceKind.RELATION_PREFILL:
         return _relation_prefill_source_ids(_relation_prefill_selector(binding))
+    if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
+        return _IvaCompensationAnnualPartitionSelector.model_validate(selector_as_dict(binding)).source_casilla_ids
     return ()
+
+
+def binding_source_modelo(binding: DataBindingDefinition) -> ModeloId | None:
+    """Return the typed source modelo declared by binding families that have one."""
+    if binding.source == BindingSourceKind.PREVIOUS_FILING:
+        return previous_filing_source_reference(binding).source_modelo
+    if binding.source == BindingSourceKind.RELATION_PREFILL:
+        return _relation_prefill_selector(binding).source_modelo
+    if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
+        return _IvaCompensationAnnualPartitionSelector.model_validate(selector_as_dict(binding)).source_modelo
+    return None
 
 
 class _ProfileSelector(BaseModel):
@@ -616,18 +766,17 @@ class _ManualInputSelector(BaseModel):
 # ---------------------------------------------------------------------------
 # Discriminated-selector registry
 #
-# Each entry pairs a ``DataBindingDefinition.source`` literal with the strict
-# pydantic model that the binding's selector must validate against. Sources
-# absent from this map are intentionally free-form for now: their selector
-# shape varies across legacy registries or is consumed by ad-hoc validators
-# elsewhere. As new typed selectors land, they should be registered here so
-# the snapshot-build gate validates them automatically.
+# Each entry pairs a registry-declared ``DataBindingDefinition.source`` literal
+# with the strict pydantic model that the binding's selector must validate
+# against. Mesh-only ``BindingSourceKind`` members stay absent because they are
+# not legal registry binding sources.
 # ---------------------------------------------------------------------------
 
 
-_BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
-    "previous_filing": _PreviousModeloSelector,
-    "relation_prefill": _RelationPrefillSelector,
+_BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
+    BindingSourceKind.PREVIOUS_FILING: _PreviousModeloSelector,
+    BindingSourceKind.RELATION_PREFILL: _RelationPrefillSelector,
+    BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: _IvaCompensationAnnualPartitionSelector,
     # Counterpart-aggregation family: every source whose selector shape
     # mirrors the invoice family (fact + claves + rectification_scope +
     # optional row_field / grouping / record) is validated against
@@ -638,17 +787,21 @@ _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: _InvoiceSelector,
     BindingSourceKind.PAYABLE_INVOICE: _InvoiceSelector,
     BindingSourceKind.COLLECTIBLE_INVOICE: _InvoiceSelector,
-    "ledger_oss_aggregation": _OssIossLedgerSelector,
-    "ledger_iva_aggregation": _IvaLedgerSelector,
-    "ledger_renta_expense_aggregation": _RentaLedgerExpenseSelector,
-    "ledger_renta_income_aggregation": _RentaLedgerIncomeSelector,
-    "ledger_renta_gasto_aggregation": _RentaLedgerGastoSelector,
-    "related_party_operation": _RelatedPartySelector,
-    RowSetGroupingKind.FOREIGN_ASSET: _ForeignAssetSelector,
-    "atribucion_member": _AtributionSelector,
-    "refund_operation": _RefundSelector,
-    "manual_input": _ManualInputSelector,
-    "profile": _ProfileSelector,
+    BindingSourceKind.LEDGER_OSS_AGGREGATION: _OssIossLedgerSelector,
+    BindingSourceKind.LEDGER_IVA_AGGREGATION: _IvaLedgerSelector,
+    BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION: _RentaLedgerExpenseSelector,
+    BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION: _RentaLedgerIncomeSelector,
+    BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION: _RentaLedgerGastoSelector,
+    BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION: _ImpatriadoLedgerIncomeSelector,
+    BindingSourceKind.RETENCIONES_AGGREGATION: _RetencionesAggregationSelector,
+    BindingSourceKind.WITHHOLDING: _WithholdingSelector,
+    BindingSourceKind.RELATED_PARTY_OPERATION: _RelatedPartySelector,
+    BindingSourceKind.FOREIGN_ASSET: _ForeignAssetSelector,
+    BindingSourceKind.ATRIBUCION_MEMBER: _AtributionSelector,
+    BindingSourceKind.REFUND_OPERATION: _RefundSelector,
+    BindingSourceKind.DONATIVO_DONOR: _DonativoSelector,
+    BindingSourceKind.MANUAL_INPUT: _ManualInputSelector,
+    BindingSourceKind.PROFILE: _ProfileSelector,
 }
 
 
@@ -658,10 +811,9 @@ def selector_model_for_source(source: object) -> type[BaseModel] | None:
     Read-only accessor over :data:`_BINDING_SELECTOR_REGISTRY`, the
     discriminated-union table keyed by :class:`~aeat.core.BindingSourceKind`
     (the canonical ``DataBindingDefinition.source`` axis). Returns the
-    per-family selector model when the source carries a typed selector schema,
-    or ``None`` when the source is intentionally free-form (absent from the
-    table) — so callers can short-circuit selector-shape validation for
-    free-form sources exactly as the snapshot-build gate does.
+    per-family selector model when the source is a registry-declared binding
+    source, or ``None`` for mesh-only source kinds that are not legal
+    ``DataBindingDefinition.source`` values.
 
     The model-level selector validator on
     :class:`~aeat.domain.calculations.registry.DataBindingDefinition` consumes
@@ -703,9 +855,12 @@ def _validate_selector_only(selector_model: type[BaseModel]) -> _BindingFamilyVa
 # ---------------------------------------------------------------------------
 
 
-_BINDING_VALIDATOR_REGISTRY: dict[str, _BindingFamilyValidator] = {
-    "previous_filing": validate_previous_filing_binding,
-    "relation_prefill": _validate_selector_only(_RelationPrefillSelector),
+_BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = {
+    BindingSourceKind.PREVIOUS_FILING: validate_previous_filing_binding,
+    BindingSourceKind.RELATION_PREFILL: _validate_selector_only(_RelationPrefillSelector),
+    BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: _validate_selector_only(
+        _IvaCompensationAnnualPartitionSelector,
+    ),
     # The three invoice-shaped sources run the stricter invoice validator (the
     # union of the prior dual path: selector-shape + counterpart fact/op
     # invariants + the two invoice-only scalar-shape guards). ledger_transaction
@@ -715,19 +870,21 @@ _BINDING_VALIDATOR_REGISTRY: dict[str, _BindingFamilyValidator] = {
     BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: validate_invoice_binding,
     BindingSourceKind.PAYABLE_INVOICE: validate_invoice_binding,
     BindingSourceKind.COLLECTIBLE_INVOICE: validate_invoice_binding,
-    "ledger_oss_aggregation": validate_ledger_oss_aggregation_binding,
-    "ledger_iva_aggregation": validate_ledger_iva_aggregation_binding,
-    "ledger_renta_expense_aggregation": validate_ledger_renta_expense_aggregation_binding,
-    "ledger_renta_income_aggregation": validate_ledger_renta_income_aggregation_binding,
-    "ledger_renta_gasto_aggregation": validate_ledger_renta_gasto_aggregation_binding,
-    "retenciones_aggregation": validate_retenciones_aggregation_binding,
-    "related_party_operation": validate_related_party_binding,
-    RowSetGroupingKind.FOREIGN_ASSET: validate_foreign_asset_binding,
-    "atribucion_member": validate_atribucion_binding,
-    "refund_operation": validate_refund_binding,
-    RowSetGroupingKind.WITHHOLDING: validate_withholding_binding_selector_shape,
-    "manual_input": _validate_selector_only(_ManualInputSelector),
-    "profile": _validate_selector_only(_ProfileSelector),
+    BindingSourceKind.LEDGER_OSS_AGGREGATION: validate_ledger_oss_aggregation_binding,
+    BindingSourceKind.LEDGER_IVA_AGGREGATION: validate_ledger_iva_aggregation_binding,
+    BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION: validate_ledger_renta_expense_aggregation_binding,
+    BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION: validate_ledger_renta_income_aggregation_binding,
+    BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION: validate_ledger_renta_gasto_aggregation_binding,
+    BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION: validate_ledger_impatriado_income_aggregation_binding,
+    BindingSourceKind.RETENCIONES_AGGREGATION: validate_retenciones_aggregation_binding,
+    BindingSourceKind.RELATED_PARTY_OPERATION: validate_related_party_binding,
+    BindingSourceKind.FOREIGN_ASSET: validate_foreign_asset_binding,
+    BindingSourceKind.ATRIBUCION_MEMBER: validate_atribucion_binding,
+    BindingSourceKind.REFUND_OPERATION: validate_refund_binding,
+    BindingSourceKind.DONATIVO_DONOR: validate_donativo_binding,
+    BindingSourceKind.WITHHOLDING: validate_withholding_binding_selector_shape,
+    BindingSourceKind.MANUAL_INPUT: _validate_selector_only(_ManualInputSelector),
+    BindingSourceKind.PROFILE: _validate_selector_only(_ProfileSelector),
 }
 
 
@@ -745,15 +902,16 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     underlying pydantic field error, so the snapshot-build gate can collect every
     failure across a revision in one pass.
 
-    For every family — including the four detail-record families
+    For every family — including the five detail-record families
     (``related_party_operation``, ``foreign_asset``, ``atribucion_member``,
-    ``refund_operation``) and ``previous_filing`` whose op/fact invariants
-    previously ran only at resolve time — a malformed binding is now rejected at
-    snapshot build rather than only when a taxpayer calculation invokes the
-    resolver.
+    ``refund_operation``, ``donativo_donor``) and ``previous_filing`` whose
+    op/fact invariants previously ran only at resolve time — a malformed
+    binding is now rejected at snapshot build rather than only when a
+    taxpayer calculation invokes the resolver.
 
-    Sources NOT in the dispatch table are intentionally free-form today; those
-    bindings short-circuit with an empty failure list.
+    Sources not in the dispatch table are mesh-only and should not appear on a
+    registry binding; construction rejects them before this build-time validator
+    runs.
     """
     validator = _BINDING_VALIDATOR_REGISTRY.get(binding.source)
     if validator is None:

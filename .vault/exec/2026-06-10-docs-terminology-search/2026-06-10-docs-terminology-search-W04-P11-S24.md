@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S24'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Extend the Ctrl-K palette to query Pagefind with the progressive ladder - term cards first (short_description plus jump links to glossary anchor, casillas, legal corpus, how-tos), nav titles second, full text third - and replace the stock search page with the Pagefind surface via Furo template override (ADR D5)
 
@@ -152,4 +149,3 @@ clean; collect-only clean.
 - Commit discipline: all verification ran first; staging and the commit are a
   single chained `git add ... ; git commit ...` over ONLY my explicit paths
   (the palette JS/CSS, the injection fix + its test, the exec record).
-

@@ -1,8 +1,8 @@
-"""Layered declarations for the public :class:`~aeat.core.errors.ErrorCode` registry.
+"""Layered declarations for the public :class:`core.errors.ErrorCode` registry.
 
 Each child module contributes ordered ``(qualname, ErrorCode)`` rows for
-one architectural layer. :mod:`aeat.core.errors._registry` imports the
-combined tuple and binds each :class:`~aeat.core.errors.AeatError`
+one architectural layer. :mod:`core.errors._registry` imports the
+combined tuple and binds each :class:`core.errors.AeatError`
 subclass to its declared metadata.
 """
 

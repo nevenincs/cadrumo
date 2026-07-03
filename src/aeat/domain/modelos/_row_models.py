@@ -14,6 +14,10 @@ Supported row types:
   (``--row operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=X clave_operacion=E importe=Y``)
   Used when no collectible-invoice ledger exists; maps directly to the
   Tipo-2 operador record layout (Orden HAC/174/2020 Anexo II).
+* ``Modelo349RectificacionRow`` — rectificación intracomunitaria for modelo 349
+  (``--row rectificacion codigo_pais=DE nif_comunitario=DE123456789 razon_social=X``
+  ``clave_operacion=E ejercicio=2025 periodo=2T base_rectificada=Y base_anterior=Z``)
+  Used when the operator declares Tipo-2 rectification records directly.
 * ``Modelo347ContraparteRow`` — contraparte declarada for modelo 347
   (``--row contraparte nif=X nombre=Y importe_Q1=Z clave_operacion=A``)
   One row per counterparty. Annual importe threshold check (> €3,005.06)
@@ -43,6 +47,7 @@ from ...core.external_constants import M347_THRESHOLD_EUR as M347_THRESHOLD_EUR 
 
 _NifStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=20)]
 _NameStr = Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)]
+_RequiredNameStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 _IsoCountryCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=2)]
 
 
@@ -247,7 +252,59 @@ _M349_NIF_PATTERNS: dict[str, re.Pattern[str]] = {
 }
 
 # Valid clave de operación codes per Orden HAC/174/2020 Anexo II.
-_M349_CLAVE_OPERACION = Literal["E", "S", "T", "R", "A", "I", "M"]
+_M349_CLAVE_OPERACION = Literal["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"]
+_M349_RECTIFICACION_PERIODO = Literal[
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "1M",
+    "1T",
+    "2T",
+    "3T",
+    "4T",
+]
+_M349_NI_PREFIX = "XI"
+_M349_GB_PREFIX = "GB"
+_M349_SERVICE_CLAVES = frozenset({"S", "I"})
+_M349_2021_FIRST_PERIODS = frozenset({"01", "1M", "1T"})
+
+
+class Modelo349CountryPrefixContextError(AeatError, ValueError):
+    """A Modelo 349 country prefix is invalid for the filing context."""
+
+    def __init__(
+        self,
+        *,
+        country_code: str,
+        clave_operacion: str,
+        filing_year: int,
+        period: str,
+        reason: str,
+    ) -> None:
+        self.country_code = country_code
+        self.clave_operacion = clave_operacion
+        self.filing_year = filing_year
+        self.period = period
+        self.reason = reason
+        super().__init__(
+            translated_message="errors.refused.modelo_349_country_prefix_context",
+            context={
+                "country_code": country_code,
+                "clave_operacion": clave_operacion,
+                "filing_year": filing_year,
+                "period": period,
+                "reason": reason,
+            },
+        )
 
 
 class Modelo349OperadorRow(BaseModel):
@@ -272,7 +329,7 @@ class Modelo349OperadorRow(BaseModel):
     row_type: Literal["operador"] = "operador"
     codigo_pais: _IsoCountryCode
     nif_comunitario: _NifStr
-    razon_social: _NameStr = Field(default="")
+    razon_social: _RequiredNameStr
     clave_operacion: _M349_CLAVE_OPERACION
     importe: Decimal = Field(description="Base imponible o importe de la operacion en EUR")
 
@@ -298,6 +355,71 @@ class Modelo349OperadorRow(BaseModel):
         return value
 
 
+class Modelo349RectificacionRow(BaseModel):
+    """One rectificación row for Modelo 349 (manual-entry path).
+
+    Fields mirror the Tipo-2 rectificación record layout declared in
+    ``349/revisions/2020-y-siguientes/bindings/0007-bindings.toml``.
+
+    Parity assertions:
+    * ``codigo_pais`` -> ``op.codigo-pais`` (record positions 76-77)
+    * ``nif_comunitario`` -> ``op.nif-comunitario`` (record positions 78-92)
+    * ``razon_social`` -> ``op.apellidos-razon-social`` (record positions 93-132)
+    * ``clave_operacion`` -> ``op.clave-operacion`` (record position 133)
+    * ``ejercicio`` -> ``rect.ejercicio-rectificado`` (record positions 147-150)
+    * ``periodo`` -> ``rect.periodo-rectificado`` (record positions 151-152)
+    * ``base_rectificada`` -> ``rect.base-rectificada`` (record positions 153-165)
+    * ``base_anterior`` -> ``rect.base-anterior`` (record positions 166-178)
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    row_type: Literal["rectificacion"] = "rectificacion"
+    codigo_pais: _IsoCountryCode
+    nif_comunitario: _NifStr
+    razon_social: _RequiredNameStr
+    clave_operacion: _M349_CLAVE_OPERACION
+    ejercicio: Annotated[str, StringConstraints(strip_whitespace=True, min_length=4, max_length=4)]
+    periodo: _M349_RECTIFICACION_PERIODO
+    base_rectificada: Decimal = Field(description="Base imponible o importe rectificado en EUR")
+    base_anterior: Decimal = Field(description="Base imponible declarada anteriormente en EUR")
+
+    @field_validator("codigo_pais")
+    @classmethod
+    def _codigo_pais_uppercase_alpha(cls, value: str) -> str:
+        if value != value.upper() or not value.replace(" ", "").isalpha():
+            raise ValueError("codigo_pais must be an uppercase two-letter ISO 3166-1 country code (e.g. DE, FR, IT)")
+        return value
+
+    @field_validator("nif_comunitario")
+    @classmethod
+    def _nif_comunitario_not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("nif_comunitario cannot be blank")
+        return value.upper()
+
+    @field_validator("periodo", mode="before")
+    @classmethod
+    def _periodo_uppercase(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip().upper()
+        return value
+
+    @field_validator("ejercicio")
+    @classmethod
+    def _ejercicio_four_digit_year(cls, value: str) -> str:
+        if not value.isdigit():
+            raise ValueError("ejercicio must be a four-digit year")
+        return value
+
+    @field_validator("base_rectificada", "base_anterior")
+    @classmethod
+    def _bases_non_negative(cls, value: Decimal) -> Decimal:
+        if value < Decimal("0"):
+            raise ValueError("rectification bases must be non-negative per Orden HAC/174/2020 Anexo II constraint")
+        return value
+
+
 def validate_m349_nif_format(nif: str, pais: str) -> bool:
     """Return True when ``nif`` matches the expected NIF-IVA format for ``pais``.
 
@@ -313,6 +435,115 @@ def validate_m349_nif_format(nif: str, pais: str) -> bool:
     if pattern is None:
         return False
     return bool(pattern.match(normalized_nif))
+
+
+def validate_m349_country_prefix_context(
+    *,
+    country_code: str,
+    clave_operacion: str,
+    filing_year: int,
+    period: str,
+    is_rectification: bool = False,
+    rectified_year: int | None = None,
+    rectified_period: str | None = None,
+) -> None:
+    """Validate post-Brexit ``GB`` / ``XI`` rules for Modelo 349.
+
+    AEAT's Brexit IVA instructions keep ``XI`` for Northern Ireland goods
+    operations after 2021 and exclude ``S`` / ``I`` service keys from ``XI``.
+    Ordinary ``GB`` rows are not valid for post-transition periods, except for
+    the limited 2021 first-period and pre-2021 rectification cases named by
+    the official instructions.
+    """
+    country = country_code.strip().upper()
+    clave = clave_operacion.strip().upper()
+    period_code = _normalise_m349_period(period)
+    rectified_period_code = _normalise_m349_period(rectified_period) if rectified_period is not None else None
+
+    if country == _M349_NI_PREFIX:
+        if clave in _M349_SERVICE_CLAVES:
+            _raise_m349_country_context_error(
+                country_code=country,
+                clave_operacion=clave,
+                filing_year=filing_year,
+                period=period_code,
+                reason="Northern Ireland prefix XI is not accepted for service keys S or I",
+            )
+        if is_rectification and rectified_year is not None and rectified_year < 2021:
+            _raise_m349_country_context_error(
+                country_code=country,
+                clave_operacion=clave,
+                filing_year=filing_year,
+                period=period_code,
+                reason="pre-2021 rectifications use GB, not XI",
+            )
+        if not is_rectification and filing_year < 2021:
+            _raise_m349_country_context_error(
+                country_code=country,
+                clave_operacion=clave,
+                filing_year=filing_year,
+                period=period_code,
+                reason="XI applies only from 2021 onward",
+            )
+        return
+
+    if country != _M349_GB_PREFIX:
+        return
+
+    if is_rectification:
+        if rectified_year is not None and rectified_year < 2021:
+            return
+        if (
+            rectified_year == 2021
+            and rectified_period_code in _M349_2021_FIRST_PERIODS
+            and clave not in _M349_SERVICE_CLAVES
+        ):
+            return
+        _raise_m349_country_context_error(
+            country_code=country,
+            clave_operacion=clave,
+            filing_year=filing_year,
+            period=period_code,
+            reason="GB is limited to pre-2021 rectifications and the 2021 1M/1T transition case",
+        )
+
+    if filing_year < 2021:
+        return
+    if filing_year == 2021 and period_code in _M349_2021_FIRST_PERIODS and clave not in _M349_SERVICE_CLAVES:
+        return
+    _raise_m349_country_context_error(
+        country_code=country,
+        clave_operacion=clave,
+        filing_year=filing_year,
+        period=period_code,
+        reason="ordinary post-transition Modelo 349 rows use XI for Northern Ireland goods and exclude GB",
+    )
+
+
+def _normalise_m349_period(period: str | None) -> str:
+    if period is None:
+        return ""
+    token = str(period).strip().upper()
+    if len(token) == 1 and token.isdigit():
+        return f"0{token}"
+    return token
+
+
+def _raise_m349_country_context_error(
+    *,
+    country_code: str,
+    clave_operacion: str,
+    filing_year: int,
+    period: str,
+    reason: str,
+) -> None:
+    raise Modelo349CountryPrefixContextError(
+        country_code=country_code,
+        clave_operacion=clave_operacion,
+        filing_year=filing_year,
+        period=period,
+        reason=reason,
+    )
 
 
 def m349_nif_number_for_export(nif: str, pais: str) -> str:
@@ -403,7 +634,13 @@ class Modelo347ContraparteRow(BaseModel):
 # Discriminated union — single type accepted by the CLI --row argument
 # ---------------------------------------------------------------------------
 
-ModeloDetailRow = Modelo184MemberRow | Modelo232VinculadaRow | Modelo349OperadorRow | Modelo347ContraparteRow
+ModeloDetailRow = (
+    Modelo184MemberRow
+    | Modelo232VinculadaRow
+    | Modelo349OperadorRow
+    | Modelo349RectificacionRow
+    | Modelo347ContraparteRow
+)
 
 
 # ---------------------------------------------------------------------------
@@ -480,10 +717,13 @@ __all__ = [
     "Modelo232VinculadaRow",
     "Modelo347ContraparteRow",
     "Modelo347ThresholdError",
+    "Modelo349CountryPrefixContextError",
     "Modelo349OperadorRow",
+    "Modelo349RectificacionRow",
     "ModeloDetailRow",
     "m349_nif_number_for_export",
     "validate_m184_member_share_sum",
     "validate_m347_threshold",
+    "validate_m349_country_prefix_context",
     "validate_m349_nif_format",
 ]

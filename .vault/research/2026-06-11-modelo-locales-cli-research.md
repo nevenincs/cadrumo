@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#modelo-locales-cli'
 date: '2026-06-11'
-modified: '2026-06-11'
+modified: '2026-06-30'
 related:
   - '[[2026-06-08-registry-localization-backend-adr]]'
   - '[[2026-06-11-registry-schema-localization-research]]'
@@ -22,4 +22,3 @@ This research grounds the pivot from direct registry-local TOML edits to an `aea
 - Modelo schema translations are not ordinary global `tr(...)` keys. They are registry-local, lazily loaded, potentially large, and keyed by either revision-local `casilla_id` or modelo-wide `continuidad_id`. The CLI therefore needs a sub-surface that writes TOML under the registry tree rather than YAML under `src/aeat/locales`.
 - The CLI should support at least audit, scaffold, set, and remove semantics for model-local localization. Audit must report missing labels/help by modelo, revision, locale, and key. Scaffold must create or align locale TOML skeletons without overwriting translated values. Set/remove must validate containment, locale, modelo, revision, field kind, and target key before writing.
 - Completion tracking needs to be per modelo and revision. The current coverage evidence shows small complete slices are feasible, but large modelos require incremental rollout; the CLI should be able to emit coverage summaries so campaigns can coordinate without direct file inspection.
-

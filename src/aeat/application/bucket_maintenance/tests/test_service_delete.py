@@ -15,8 +15,9 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core.resources import resources
-from ....domain.buckets import BucketDeleteRefusedError, BucketEventHistoryRepository
+from ....domain.buckets import BucketDeleteRefusedError
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...user_profile import RegisterProfileCommand
@@ -25,7 +26,7 @@ from .. import BucketMaintenanceService, DeleteBucketCommand
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_BUCKET_ID = "bucket-maintenance-delete-test"
+_BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 _ORIGINAL_LABEL = "Doomed bucket"
 
 

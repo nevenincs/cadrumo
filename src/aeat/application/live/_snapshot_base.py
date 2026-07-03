@@ -40,9 +40,13 @@ from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage import Envelope, SecureObjectNamespaceDefinition
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage import (
+    ClassificationError,
+    Envelope,
+    EnvelopeVersionError,
+    SecureObjectNamespaceDefinition,
+    secure_object_repository_for_bucket,
+)
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core.errors import AeatError
 from ...core.hashing import sha256_hex
@@ -55,9 +59,9 @@ class SnapshotNotFoundError(AeatError, KeyError):
 
     Inherits from both :class:`aeat.core.errors.AeatError` and
     :class:`KeyError` so the class is enrolled in the ``ERROR_REGISTRY``
-    via the ``AeatError.__init_subclass__`` hook, and callers that catch
-    the broad ``KeyError`` family remain unaffected. ``AeatError`` is
-    listed first so MRO routes ``__init__`` through
+    via the ``AeatError.__init_subclass__`` hook while preserving the
+    mapping-style lookup-miss type. ``AeatError`` is listed first so MRO
+    routes ``__init__`` through
     ``AeatError.__init__`` (which accepts the structured
     ``suggestion=`` / ``context=`` kwargs) rather than ``KeyError``'s
     C-level constructor.
@@ -90,7 +94,7 @@ class SnapshotRepository[TPayload: BaseModel](Protocol):
     """Structural contract for bucket-scoped snapshot persistence backends.
 
     Implementations may be SecureObjectRepository-backed (Borrador100, Censo)
-    or file-system-backed (legacy stateless services).
+    or file-system-backed (stateless services).
     """
 
     @property

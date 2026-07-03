@@ -64,6 +64,7 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
         "12",
         "13",
         "14",
+        "15",
         "17",
         "19",
         "saldo-negativo-fin-periodo",
@@ -130,9 +131,7 @@ def test_committed_modelo_115_registry_snapshot_calculates_rental_withholding(
     assert {"aeat-modelo-115-180-folleto-actividades"} <= set(entries["03"].source_refs)
     assert entries["05"].operand_refs == ("03", "04")
     assert entries["05"].operand_casilla_refs == ("03", "04")
-    assert {"ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-108"} <= set(
-        entries["05"].legal_refs
-    )
+    assert {"ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-108"} <= set(entries["05"].legal_refs)
     assert {"aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"} <= set(entries["05"].source_refs)
 
 
@@ -175,12 +174,12 @@ def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape(
         snapshot,
         inputs=_inputs(
             {
-                "01-legacy": Decimal("2"),
-                "02-legacy": Decimal("1201.00"),
-                "03-legacy": Decimal("228.19"),
-                "04-legacy": Decimal("0"),
-                "05-legacy": Decimal("7.50"),
-                "07-legacy": Decimal("12.25"),
+                "01": Decimal("2"),
+                "02": Decimal("1201.00"),
+                "03": Decimal("228.19"),
+                "04": Decimal("0"),
+                "05": Decimal("7.50"),
+                "07": Decimal("12.25"),
             },
         ),
         date_context={"filing_period": date(2023, 12, 31)},
@@ -188,16 +187,16 @@ def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape(
 
     assert snapshot.revision.id == "2019-2023"
     assert tuple(casilla.id for casilla in snapshot.revision.casillas) == (
-        "01-legacy",
-        "02-legacy",
-        "03-legacy",
-        "04-legacy",
-        "05-legacy",
-        "06-legacy",
-        "07-legacy",
-        "08-legacy",
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
     )
-    assert {entry.target_casilla_id for entry in result.entries} == {"06-legacy", "08-legacy"}
+    assert {entry.target_casilla_id for entry in result.entries} == {"06", "08"}
 
 
 @pytest.mark.parametrize(
@@ -239,7 +238,7 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
 
     assert snapshot.revision.id == revision_id
     entries = {entry.target_casilla_id: entry for entry in result.entries}
-    assert set(entries) == {
+    expected_entries = {
         "04",
         "06",
         "07",
@@ -248,6 +247,19 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
         "15",
         "saldo-negativo-fin-periodo",
     }
+    if revision_id == "2025":
+        # 2025 additionally carries the estimación-objetiva módulos engine
+        # (fase 1ª rendimiento neto previo, fase 2ª rendimiento neto
+        # minorado, fase 3ª rendimiento neto de módulos, fase 4ª reducción
+        # general), a bounded first-slice computed reference figure that
+        # never substitutes for the manual casilla 01.
+        expected_entries |= {
+            "modulos-rendimiento-neto-previo",
+            "modulos-rendimiento-neto-minorado",
+            "modulos-rendimiento-neto-modulos",
+            "modulos-rendimiento-neto-actividad",
+        }
+    assert set(entries) == expected_entries
     assert entries["04"].operand_refs == ("03", "irpf.objective_no_base_fractional_payment_rate")
     assert entries["06"].operand_refs == ("05", "irpf.objective_agriculture_fractional_payment_rate")
     assert entries["07"].operand_refs == ("02", "04", "06")

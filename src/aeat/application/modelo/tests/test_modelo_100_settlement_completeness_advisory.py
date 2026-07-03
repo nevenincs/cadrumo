@@ -35,11 +35,11 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos._verification_report import (
+from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from .._actions import (
+from .._verification_actions import (
     _evaluate_advisory_predicate_fires,
     _evaluate_verification_predicates,
 )
@@ -175,11 +175,7 @@ def test_settlement_advisory_registered_on_revision(filing_year: int) -> None:
     la autoliquidación (consequent). No formula output is asserted.
     """
     snapshot = resources().modelos.authority.snapshot("100", filing_year=filing_year, period="0A")
-    matches = [
-        p
-        for p in snapshot.revision.verification_predicates
-        if p.predicate_id.endswith(_PREDICATE_ID_SUFFIX)
-    ]
+    matches = [p for p in snapshot.revision.verification_predicates if p.predicate_id.endswith(_PREDICATE_ID_SUFFIX)]
     assert len(matches) == 1, f"expected exactly one settlement guard on M100 {filing_year}"
     predicate = matches[0]
     assert predicate.finding_kind == "ADVISORY"

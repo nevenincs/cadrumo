@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#legal-grounding-centralization'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-06-14-legal-grounding-centralization-plan]]"
 ---
-
-
-
 
 # F2-interim: promote prorrata art.103.Dos (1.10) and art.9.1.c (50pp) thresholds to external_constants with legal_refs, value-identical
 

@@ -17,7 +17,6 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import resources
 from .._bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
@@ -27,12 +26,14 @@ from .._bindings import (
     resolve_foreign_asset_binding_row_values,
     resolve_refund_binding_row_values,
 )
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _modelos():
-    return resources().modelos.all()
+    modelos, _catalogues = _committed_registry_tree()
+    return modelos
 
 
 def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> None:

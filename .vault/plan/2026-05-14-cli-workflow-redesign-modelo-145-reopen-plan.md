@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-14-cli-workflow-redesign-w51-modelo-145-deferral-baseline-exec]]'
 ---
-
 
 # `cli-workflow-redesign` `modelo-145-local-payer-communication-reopening` plan
 

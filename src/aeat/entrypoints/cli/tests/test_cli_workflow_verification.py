@@ -13,7 +13,6 @@ import typer
 from typer.core import TyperGroup
 
 from ....application.operator_surface import get_operator_surface_contract
-from ....application.wizard._catalogue import SETUP_FLOW
 from ....core.config import override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import aeat_click_command, invoke_cached_cli
@@ -83,16 +82,11 @@ def _invoke(args: list[str]):
 
 def _json(result) -> dict[str, Any]:
     payload = json.loads(result.output)
-    # Emit-envelope migration: ``_emit_envelope`` wraps typed CLI
-    # payloads in ``{"schema_version", "command", "result", "warnings"}``.
-    # The round-trip helper consumes the inner ``result`` so the focused
-    # assertions read the typed payload fields directly. Non-enveloped
-    # emits (legacy ``_emit`` callers) pass through unchanged.
-    if isinstance(payload, dict) and "result" in payload and "schema_version" in payload:
-        inner = payload["result"]
-        if isinstance(inner, dict):
-            return inner
-    return payload
+    assert isinstance(payload, dict), f"expected JSON object, got {type(payload).__name__}"
+    assert "schema_version" in payload and "result" in payload, f"missing CLI output envelope keys: {sorted(payload)}"
+    inner = payload["result"]
+    assert isinstance(inner, dict), f"expected result object, got {type(inner).__name__}"
+    return inner
 
 
 def _mounted_child_names(root_name: str) -> set[str]:
@@ -139,7 +133,10 @@ def test_config_profile_create_mounts_existing_setup_wizard_flow() -> None:
     callback = create_command.callback
     assert callback is not None
     wrapped = getattr(callback, "__wrapped__", callback)
-    assert getattr(wrapped, "__wizard_flow__", None) is SETUP_FLOW
+
+    from ....core.wizard_catalogue import get_setup_flow
+
+    assert getattr(wrapped, "__wizard_flow__", None) is get_setup_flow()
 
 
 def test_rejected_aliases_do_not_reach_workflow_services() -> None:
@@ -195,7 +192,8 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
 
     Five logical stages:
 
-    1. `config profile create` — register operator profile with --accept-defaults.
+    1. `config profile create` — register operator profile with the required
+       filing identity flags and --accept-defaults.
     2. `config profile status` — verify the wizard persisted every
        required profile fact.
     3. `config auth configure/status/test --provider certificate` —
@@ -215,7 +213,9 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
             "config", "profile", "create", "operator",
             "--quiet", "--accept-defaults",
             "--tax-id", "12345678Z",
+            "--entity-type", "natural_person",
             "--name", "Operator",
+            "--surnames", "Workflow",
             "--activity", "design",
             "--iva-regime", "GENERAL",
         ],

@@ -3,15 +3,13 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-06'
-modified: '2026-05-06'
+modified: '2026-06-30'
 related:
   - '[[2026-05-06-live-parity-oracle-backend-adr]]'
   - '[[2026-05-06-live-parity-oracle-backend-research]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
 ---
-
-
 
 # `aeat-nif-iva-checker-adapter` adr: `AEAT NIF-IVA other-EU-countries verification adapter` | (**status:** `accepted`)
 

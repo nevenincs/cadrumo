@@ -12,6 +12,7 @@ operator output.
 
 from __future__ import annotations
 
+import json
 import subprocess
 from decimal import Decimal
 from pathlib import Path
@@ -19,13 +20,14 @@ from pathlib import Path
 import pytest
 import typer
 
-from ....domain.modelos._row_models import (
+from ....domain.modelos import (
     Modelo184MemberRow,
     Modelo184ShareSumError,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
     Modelo347ThresholdError,
     Modelo349OperadorRow,
+    Modelo349RectificacionRow,
     validate_m184_member_share_sum,
     validate_m347_threshold,
 )
@@ -192,17 +194,13 @@ class TestValidateM184ShareSum:
 
 
 class TestParseRowSpecM349:
-    def test_parse_operador_minimal(self) -> None:
-        """Minimal operador spec with required fields parses to Modelo349OperadorRow."""
-        result = _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE123456789 clave_operacion=E importe=50000")
-        assert isinstance(result, Modelo349OperadorRow)
-        assert result.codigo_pais == "DE"
-        assert result.nif_comunitario == "DE123456789"
-        assert result.clave_operacion == "E"
-        assert result.importe == Decimal("50000")
+    def test_parse_operador_missing_razon_social_raises(self) -> None:
+        """M349 operador rows require the official apellidos/razon-social field."""
+        with pytest.raises(typer.BadParameter, match="razon_social"):
+            _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE123456789 clave_operacion=E importe=50000")
 
     def test_parse_operador_with_razon_social(self) -> None:
-        """operador spec with optional razon_social round-trips."""
+        """operador spec with required razon_social round-trips."""
         result = _parse_row_spec(
             "operador codigo_pais=FR nif_comunitario=FR12345678901 "
             "razon_social=EntidadFR clave_operacion=S importe=30000",
@@ -211,31 +209,96 @@ class TestParseRowSpecM349:
         assert result.razon_social == "EntidadFR"
         assert result.clave_operacion == "S"
 
+    def test_parse_operador_with_quoted_razon_social_spaces(self) -> None:
+        """M349 legal names with spaces parse when quoted inside the --row value."""
+        result = _parse_row_spec(
+            'operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" '
+            "clave_operacion=E importe=1500.00",
+        )
+
+        assert isinstance(result, Modelo349OperadorRow)
+        assert result.razon_social == "DE Auto GmbH"
+        assert result.importe == Decimal("1500.00")
+
+    def test_parse_operador_with_unquoted_underscore_razon_social(self) -> None:
+        """M349 underscore/no-space legal names remain accepted."""
+        result = _parse_row_spec(
+            "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=DE_Auto_GmbH "
+            "clave_operacion=E importe=1500.00",
+        )
+
+        assert isinstance(result, Modelo349OperadorRow)
+        assert result.razon_social == "DE_Auto_GmbH"
+
     def test_parse_operador_type_case_insensitive(self) -> None:
         """TYPE token is lowercased before dispatch."""
-        result = _parse_row_spec("OPERADOR codigo_pais=IT nif_comunitario=IT12345678901 clave_operacion=M importe=1000")
+        result = _parse_row_spec(
+            "OPERADOR codigo_pais=IT nif_comunitario=IT12345678901 razon_social=EntidadIT "
+            "clave_operacion=M importe=1000",
+        )
         assert isinstance(result, Modelo349OperadorRow)
+
+    @pytest.mark.parametrize("clave_operacion", ("H", "D", "C"))
+    def test_parse_operador_accepts_current_consignment_and_import_claves(self, clave_operacion: str) -> None:
+        result = _parse_row_spec(
+            "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
+            f"clave_operacion={clave_operacion} importe=1000",
+        )
+
+        assert isinstance(result, Modelo349OperadorRow)
+        assert result.clave_operacion == clave_operacion
 
     def test_parse_operador_invalid_nif_format_raises(self) -> None:
         """operador with NIF not matching the country pattern raises BadParameter."""
         with pytest.raises(typer.BadParameter, match="NIF-IVA"):
             # DE requires 9 digits; this has only 8
-            _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE12345678 clave_operacion=E importe=1000")
+            _parse_row_spec(
+                "operador codigo_pais=DE nif_comunitario=DE12345678 razon_social=EntidadDE "
+                "clave_operacion=E importe=1000",
+            )
 
     def test_parse_operador_unsupported_country_rejected(self) -> None:
         """operador rejects country prefixes absent from the Modelo 349 table."""
         with pytest.raises(typer.BadParameter, match="NIF-IVA"):
-            _parse_row_spec("operador codigo_pais=ZZ nif_comunitario=BADVAT clave_operacion=E importe=1000")
+            _parse_row_spec(
+                "operador codigo_pais=ZZ nif_comunitario=BADVAT razon_social=EntidadZZ clave_operacion=E importe=1000",
+            )
 
     def test_parse_operador_invalid_clave_raises(self) -> None:
         """Invalid clave_operacion raises BadParameter."""
         with pytest.raises(typer.BadParameter):
-            _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE123456789 clave_operacion=Z importe=1000")
+            _parse_row_spec(
+                "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
+                "clave_operacion=Z importe=1000",
+            )
 
     def test_parse_operador_negative_importe_raises(self) -> None:
         """Negative importe raises BadParameter."""
         with pytest.raises(typer.BadParameter):
-            _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE123456789 clave_operacion=E importe=-100")
+            _parse_row_spec(
+                "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
+                "clave_operacion=E importe=-100",
+            )
+
+    def test_parse_rectificacion_with_quoted_razon_social(self) -> None:
+        result = _parse_row_spec(
+            'rectificacion codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" '
+            "clave_operacion=E ejercicio=2025 periodo=2T base_rectificada=1100.00 base_anterior=1000.00",
+        )
+
+        assert isinstance(result, Modelo349RectificacionRow)
+        assert result.razon_social == "DE Auto GmbH"
+        assert result.ejercicio == "2025"
+        assert result.periodo == "2T"
+        assert result.base_rectificada == Decimal("1100.00")
+        assert result.base_anterior == Decimal("1000.00")
+
+    def test_parse_rectificacion_invalid_nif_format_raises(self) -> None:
+        with pytest.raises(typer.BadParameter, match="NIF-IVA"):
+            _parse_row_spec(
+                "rectificacion codigo_pais=DE nif_comunitario=DE12345678 razon_social=EntidadDE "
+                "clave_operacion=E ejercicio=2025 periodo=2T base_rectificada=1100.00 base_anterior=1000.00",
+            )
 
 
 class TestParseRowSpecM347:
@@ -375,21 +438,145 @@ class TestRevisionViewSurfacesDetailRows:
             os.environ["AEAT_SECRET_STORE_BACKEND"] = "file"
             os.environ["AEAT_SECRET_STORE_DIR"] = {str(storage_root / "secrets")!r}
             os.environ["AEAT_SECRET_PASSPHRASE"] = "row-flag-revision-view-passphrase"
-            from click.testing import CliRunner
-            from typer.main import get_command
-            from aeat.entrypoints.cli import app
+            sys.argv = ["aeat", *{argv!r}]
+            from aeat.entrypoints.cli import main
 
-            result = CliRunner().invoke(get_command(app), {argv!r})
-            sys.stdout.write(result.output)
-            sys.exit(result.exit_code)
+            try:
+                main()
+            except SystemExit as exit_:
+                raise SystemExit(exit_.code)
             """
         return subprocess.run(
             [sys.executable, "-c", textwrap.dedent(code)],
             capture_output=True,
+            encoding="utf-8",
+            errors="replace",
             text=True,
             timeout=300,
             check=False,
         )
+
+    def test_work_calculate_help_documents_quoted_m349_legal_name(self, tmp_path: Path) -> None:
+        """The real CLI help shows the shell-safe M349 spaced-name row contract."""
+        result = self._run_cli(tmp_path, ["app", "modelo", "work", "calculate", "--help"])
+
+        assert result.returncode == 0, result.stderr
+        assert 'razon_social="DE Auto GmbH"' in result.stdout
+        assert "operador codigo_pais=DE" in result.stdout
+
+    def test_m349_json_calculate_materialises_operador_detail_rows(self, tmp_path: Path) -> None:
+        """M349 ``--row operador`` data reaches JSON calculate and revision payloads."""
+        setup = self._run_cli(
+            tmp_path,
+            [
+                "config",
+                "profile",
+                "create",
+                "m349",
+                "--tax-id",
+                "12345678Z",
+                "--entity-type",
+                "natural_person",
+                "--name",
+                "Ana",
+                "--surnames",
+                "M349",
+                "--irpf-income-categories",
+                "actividad_economica",
+                "--activity",
+                "consultoria intracomunitaria",
+                "--quiet",
+            ],
+        )
+        assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
+        created = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--revision",
+                "2020-y-siguientes",
+            ],
+        )
+        assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"
+
+        de_row = (
+            'operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" '
+            "clave_operacion=E importe=1500.00"
+        )
+        fr_row = (
+            'operador codigo_pais=FR nif_comunitario=FR12345678901 razon_social="Equipement Garage SARL" '
+            "clave_operacion=E importe=900.00"
+        )
+        calc = self._run_cli(
+            tmp_path,
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--row",
+                de_row,
+                "--row",
+                fr_row,
+            ],
+        )
+        assert calc.returncode == 0, f"calculate failed: {calc.stdout}\n{calc.stderr}"
+        calc_payload = json.loads(calc.stdout)["result"]
+
+        assert calc_payload["casilla_values"]["decl.numero-operadores"] == "2"
+        assert calc_payload["casilla_values"]["decl.importe-operaciones"] == "2400.00"
+        detail_rows = calc_payload["detail_rows"]
+        assert len(detail_rows) == 2
+        calc_rows_by_nif = {row["fields"]["nif_comunitario"]: row for row in detail_rows}
+        assert set(calc_rows_by_nif) == {"DE123456789", "FR12345678901"}
+        assert calc_rows_by_nif["DE123456789"]["row_type"] == "operador"
+        assert calc_rows_by_nif["DE123456789"]["fields"]["codigo_pais"] == "DE"
+        assert calc_rows_by_nif["DE123456789"]["fields"]["razon_social"] == "DE Auto GmbH"
+        assert calc_rows_by_nif["DE123456789"]["fields"]["clave_operacion"] == "E"
+        assert calc_rows_by_nif["DE123456789"]["fields"]["importe"] == "1500.00"
+        assert calc_rows_by_nif["FR12345678901"]["fields"]["codigo_pais"] == "FR"
+        assert calc_rows_by_nif["FR12345678901"]["fields"]["razon_social"] == "Equipement Garage SARL"
+        assert calc_rows_by_nif["FR12345678901"]["fields"]["importe"] == "900.00"
+
+        revision = self._run_cli(
+            tmp_path,
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "work",
+                "revision",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+            ],
+        )
+        assert revision.returncode == 0, f"revision failed: {revision.stdout}\n{revision.stderr}"
+        revision_payload = json.loads(revision.stdout)["result"]
+        revision_rows_by_nif = {row["fields"]["nif_comunitario"]: row for row in revision_payload["detail_rows"]}
+
+        assert revision_rows_by_nif == calc_rows_by_nif
 
     def test_m184_member_rows_surface_in_revision_view(self, tmp_path: Path) -> None:
         """A cold M184 ``--row`` flow renders the members as ``detail_row`` lines.
@@ -531,12 +718,12 @@ class TestRevisionViewSurfacesDetailRows:
                 "1T",
                 "--row",
                 (
-                    "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
+                    'operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" '
                     "clave_operacion=E importe=1500.00"
                 ),
                 "--row",
                 (
-                    "operador codigo_pais=FR nif_comunitario=FR12345678901 razon_social=EntidadFR "
+                    'operador codigo_pais=FR nif_comunitario=FR12345678901 razon_social="Equipement Garage SARL" '
                     "clave_operacion=E importe=900.00"
                 ),
             ],
@@ -544,6 +731,8 @@ class TestRevisionViewSurfacesDetailRows:
         assert calc.returncode == 0, f"calculate failed: {calc.stdout}\n{calc.stderr}"
         assert "casilla\tdecl.numero-operadores\t2" in calc.stdout, calc.stdout
         assert "casilla\tdecl.importe-operaciones\t2400.00" in calc.stdout, calc.stdout
+        assert "razon_social=DE Auto GmbH" in calc.stdout, calc.stdout
+        assert "razon_social=Equipement Garage SARL" in calc.stdout, calc.stdout
         assert len([line for line in calc.stdout.splitlines() if line.startswith("detail_row\t")]) == 2, calc.stdout
 
         verified = self._run_cli(
@@ -587,12 +776,83 @@ class TestRevisionViewSurfacesDetailRows:
         assert len(text) % 500 == 0, f"unexpected M349 fixed-width length: {len(text)}"
         records = [text[index : index + 500] for index in range(0, len(text), 500)]
         operator_records = {
-            record[75:77]: record
-            for record in records
-            if record.startswith("2349") and not record[146:178].strip()
+            record[75:77]: record for record in records if record.startswith("2349") and not record[146:178].strip()
         }
 
         assert operator_records["DE"][77:92].rstrip() == "123456789"
+        assert operator_records["DE"][92:132].rstrip() == "DE Auto GmbH"
         assert operator_records["FR"][77:92].rstrip() == "12345678901"
+        assert operator_records["FR"][92:132].rstrip() == "Equipement Garage SARL"
         assert "DEDE123456789" not in text
         assert "FRFR12345678901" not in text
+
+    def test_m349_post_transition_gb_operador_row_fails_before_calculation(self, tmp_path: Path) -> None:
+        """Ordinary post-transition GB rows are refused at the CLI calculation boundary."""
+        setup = self._run_cli(
+            tmp_path,
+            [
+                "config",
+                "profile",
+                "create",
+                "m349-gb",
+                "--tax-id",
+                "12345678Z",
+                "--entity-type",
+                "natural_person",
+                "--name",
+                "Ana",
+                "--surnames",
+                "M349",
+                "--irpf-income-categories",
+                "actividad_economica",
+                "--activity",
+                "consultoria intracomunitaria",
+                "--quiet",
+            ],
+        )
+        assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
+        created = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--revision",
+                "2020-y-siguientes",
+            ],
+        )
+        assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"
+
+        calc = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--row",
+                (
+                    "operador codigo_pais=GB nif_comunitario=GB123456789 razon_social=EntidadGB "
+                    "clave_operacion=E importe=1500.00"
+                ),
+            ],
+        )
+
+        output = calc.stdout + calc.stderr
+        assert calc.returncode != 0, output
+        assert "post-transition" in output
+        assert "GB" in output
+        assert "casilla\tdecl.numero-operadores" not in output

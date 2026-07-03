@@ -20,7 +20,7 @@ from ...application.modelo import (
 )
 from ...core import Period
 from ...core.i18n import tr
-from ...domain.iva_compensation._errors import IvaCompensationSeedConflictError
+from ...domain.iva_compensation import IvaCompensationSeedConflictError
 from ._common import _emit_envelope
 from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletOverrideResult, IvaWalletSeedResult
 from ._modelo_payloads_m036 import IvaWalletCorrectResult
@@ -55,8 +55,9 @@ def _register_iva_wallet_balance_command(iva_wallet_app: typer.Typer) -> None:
             "cli.app.modelo.iva_wallet.balance_help",
             default=(
                 "Show aggregated IVA compensation carry-forward balance computed from local "
-                "Modelo 303 history. Reports total_balance, lot_count, and next_expiry_year "
-                "(source_filing_year + 4 for the earliest ACTIVE lot with remaining balance)."
+                "Modelo 303 history. Reports total_balance, active_balance, expired_balance, "
+                "lot_count, and next_expiry_year (source_filing_year + 4 for the earliest "
+                "non-expired lot with remaining balance)."
             ),
         ),
     )
@@ -80,6 +81,8 @@ def _register_iva_wallet_balance_command(iva_wallet_app: typer.Typer) -> None:
         balance_result = IvaWalletBalanceResult(
             as_of_year=report.as_of_year,
             total_balance=str(report.total_balance),
+            active_balance=str(report.active_balance),
+            expired_balance=str(report.expired_balance),
             lot_count=report.lot_count,
             next_expiry_year=report.next_expiry_year,
             unallocated_applied_amount=str(report.unallocated_applied_amount),
@@ -88,6 +91,8 @@ def _register_iva_wallet_balance_command(iva_wallet_app: typer.Typer) -> None:
             "operation\tmodelo.iva-wallet.balance",
             f"as_of_year\t{report.as_of_year}",
             f"total_balance\t{report.total_balance}",
+            f"active_balance\t{report.active_balance}",
+            f"expired_balance\t{report.expired_balance}",
             f"lot_count\t{report.lot_count}",
             f"next_expiry_year\t{report.next_expiry_year}",
             f"unallocated_applied_amount\t{report.unallocated_applied_amount}",
@@ -490,8 +495,7 @@ def _register_iva_wallet_override_command(iva_wallet_app: typer.Typer, *, active
                 help=tr(
                     "cli.app.modelo.iva_wallet.override_evidence_locator_help",
                     default=(
-                        "Required locator of the evidence supporting the override "
-                        "(e.g. prior justificante reference)."
+                        "Required locator of the evidence supporting the override (e.g. prior justificante reference)."
                     ),
                 ),
             ),

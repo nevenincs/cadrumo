@@ -5,7 +5,7 @@ profiles, browser profiles, and spending-category profiles. It owns
 personal local state needed to parameterize RENTA verification.
 
 :class:`TaxResidenceProfile` and :class:`ResidenceChange` carry the
-:class:`~aeat.domain.contribuyente._ccaa.CCAA` residence axis; :class:`RentaFamilyProfile` and
+:class:`CCAA` residence axis; :class:`RentaFamilyProfile` and
 :class:`DescendantInfo` carry the Modelo 100 personal/family facts, and
 :class:`ProfileKey` exposes the wizard-registered editable profile schema.
 """
@@ -18,15 +18,19 @@ from unicodedata import category, normalize
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ._ccaa import CCAA
 from ._constants import ProfileName
+from ._deduccion_maternidad import compute_deduccion_maternidad_0611
+from ._descendant_facts import descendant_facts_from_list, descendant_list_from_facts, parse_descendiente_flag
 from ._errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
 from ._keys import (
     ProfileKey,
     ProfileKeyRequirement,
     get_profile_key,
     optional_profile_keys,
+    profile_keys,
+    register_profile_keys,
     required_profile_keys,
 )
 from ._marriage_facts import (
@@ -38,14 +42,23 @@ from ._marriage_facts import (
 )
 from ._normalise import normalise_key
 from ._renta_codes import (
+    UE_EEA_COUNTRY_CODES,
+    FiscalResidency,
     RentaDeclaracionType,
     RentaDisabilityGrade,
     RentaMaritalStatus,
     RentaSexCode,
     SituacionFamiliar,
     SituacionFamiliarM145,
+    modelo100_ecivil_export_code,
 )
-from .family import DescendantInfo, RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
+from .family import (
+    DescendantInfo,
+    RentaAscendantProfile,
+    RentaDescendantProfile,
+    RentaFamilyProfile,
+    within_multi_year_applicability_window,
+)
 
 if TYPE_CHECKING:
     # ``PROFILE_KEYS`` is defined lazily via ``__getattr__`` below so the
@@ -142,7 +155,7 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
 
 
 def parse_tax_region(raw: str) -> CCAA:
-    """Parse a CLI/user tax-region token into the closed :class:`~aeat.domain.contribuyente._ccaa.CCAA` enum."""
+    """Parse a CLI/user tax-region token into the closed :class:`CCAA` enum."""
     normalized = _normalize_region_token(raw)
     if normalized in _FORAL_ALIASES:
         raise ForalRegimeError(raw)
@@ -166,7 +179,9 @@ def _normalize_region_token(raw: str) -> str:
 __all__ = [
     "CCAA",
     "PROFILE_KEYS",
+    "UE_EEA_COUNTRY_CODES",
     "DescendantInfo",
+    "FiscalResidency",
     "ForalRegimeError",
     "ProfileKey",
     "ProfileKeyRequirement",
@@ -185,14 +200,22 @@ __all__ = [
     "SituacionFamiliarM145",
     "TaxResidenceProfile",
     "TaxResidenceProfileError",
+    "compute_deduccion_maternidad_0611",
+    "descendant_facts_from_list",
+    "descendant_list_from_facts",
     "get_profile_key",
     "marriage_date_from_facts",
     "marriage_derived_facts",
     "marriage_full_year",
     "marriage_month_start",
+    "modelo100_ecivil_export_code",
     "normalise_key",
     "optional_profile_keys",
+    "parse_descendiente_flag",
     "parse_marriage_date_flag",
     "parse_tax_region",
+    "profile_keys",
+    "register_profile_keys",
     "required_profile_keys",
+    "within_multi_year_applicability_window",
 ]

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#emit-envelope-schema-burndown'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S208'
 related:
   - "[[2026-05-31-emit-envelope-schema-burndown-plan]]"
 ---
-
-
-
 
 # run the full CLI test suite and confirm all gates are green
 
@@ -20,8 +17,6 @@ related:
 
 ## Description
 
-
 ## Outcome
 
 ## Notes
-

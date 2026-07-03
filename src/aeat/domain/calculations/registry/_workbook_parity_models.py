@@ -11,7 +11,7 @@ from ....core import STRICT_FROZEN_CONFIG
 from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, WorkbookOutputId
+from ._ids import BindingId, CasillaId, LegalRefId, SourceRefId, WorkbookOutputId
 from ._schema import EvidenceTier
 from ._workbook_parity_types import (
     ParityStatus,
@@ -161,8 +161,8 @@ class WorkbookParityComparison(WorkbookParityModel):
     actual_registry_value: Decimal | int | str | bool | None
     status: ParityStatus
     tolerance: Decimal = Decimal("0")
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     detail: str | None = None
 
 

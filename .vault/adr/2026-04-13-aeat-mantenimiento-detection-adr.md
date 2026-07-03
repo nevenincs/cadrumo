@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#aeat-mantenimiento-detection"
 date: 2026-04-13
-modified: '2026-04-13'
+modified: '2026-06-30'
 related:
   - "[[2026-04-13-aeat-mantenimiento-detection-research]]"
   - "[[2026-04-12-status-reader-adr]]"
@@ -11,7 +11,7 @@ related:
   - "[[2026-04-12-playwright-anti-bot-adr]]"
 ---
 
-# aeat-mantenimiento-detection adr: site-health-detection-and-pause-and-alert | (**status:** accepted)
+# aeat-mantenimiento-detection adr: site-health-detection-and-pause-and-alert | (**status:** `accepted`)
 
 ## Problem Statement
 

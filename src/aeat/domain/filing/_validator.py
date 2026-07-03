@@ -1,4 +1,4 @@
-"""Cross-cutting validator for :mod:`aeat.domain.filing` drafts.
+"""Cross-cutting validator for :mod:`domain.filing` drafts.
 
 The validator is intentionally pure: it consumes a draft + the
 casilla collection it was built against and returns a tuple of
@@ -270,10 +270,9 @@ def _row_binding_has_value(draft: ModeloDraft, binding_id: str) -> bool:
 
 def _m349_zero_rectifications(draft: ModeloDraft) -> bool:
     values = {str(value.casilla_id): value.value for value in draft.values}
-    return (
-        values.get(_M349_NUMERO_RECTIFICACIONES_CASILLA) == Decimal("0")
-        and values.get(_M349_IMPORTE_RECTIFICACIONES_CASILLA) == Decimal("0")
-    )
+    return values.get(_M349_NUMERO_RECTIFICACIONES_CASILLA) == Decimal("0") and values.get(
+        _M349_IMPORTE_RECTIFICACIONES_CASILLA
+    ) == Decimal("0")
 
 
 def apply_validation(

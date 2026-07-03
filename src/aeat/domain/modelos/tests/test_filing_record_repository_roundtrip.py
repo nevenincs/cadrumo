@@ -22,6 +22,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.storage import SensitivityClass
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
@@ -38,15 +39,17 @@ from .._filing_repository import (
     _FILING_CATALOGUE_VERSION,
     _FILING_NAMESPACE,
     _FILING_OBJECT_KEY,
-    ModeloRecordCatalogueRepository,
     ModeloRecordPersistenceError,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_BUCKET_ID = "modelo-runtime"
+_BUCKET_ID = "30330300-0000-4000-8000-000000000700"
+_RECORD_BUCKET_ID = "30330300-0000-4000-8000-000000000701"
 _P_2024_2T = Period.from_year_and_code(2024, "2T")
 _P_2026_01 = Period.from_year_and_code(2026, "01")
+_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 55, 0, tzinfo=UTC)
+_FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 0, 0, tzinfo=UTC)
 
 
 def _hex(seed: str) -> str:
@@ -57,7 +60,7 @@ def _hex(seed: str) -> str:
 
 
 def _populated_catalogue() -> ModeloRecordCatalogue:
-    bucket_id = "bucket-A"
+    bucket_id = _RECORD_BUCKET_ID
     work_unit_id = _hex("a")
     superseded_revision = _hex("b")
     current_revision = _hex("c")
@@ -67,13 +70,11 @@ def _populated_catalogue() -> ModeloRecordCatalogue:
     superseded_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=superseded_revision,
-        filed_at=superseded_filed_at,
         filed_by="aeat.cli.modelo.file",
     )
     current_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=current_revision,
-        filed_at=current_filed_at,
         filed_by="aeat.cli.modelo.amend",
     )
 
@@ -129,7 +130,7 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
     assert loaded == original
     assert len(loaded.records) == 2
     current = loaded.current_for(
-        bucket_id="bucket-A",
+        bucket_id=_RECORD_BUCKET_ID,
         modelo="303",
         filing_year=2024,
         period=_P_2024_2T,
@@ -152,19 +153,17 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
 def test_filing_record_catalogue_allows_distinct_current_group_members() -> None:
     """Member-scoped filing history keeps separate grupo members independent."""
 
-    bucket_id = "bucket-A"
+    bucket_id = _RECORD_BUCKET_ID
     filed_at = datetime(2026, 2, 20, 9, 0, 0, tzinfo=UTC)
     member_a_id = derive_filing_record_id(
         work_unit_id=_hex("1"),
         calculation_revision_id=_hex("2"),
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         member_nif="A00000000",
     )
     member_b_id = derive_filing_record_id(
         work_unit_id=_hex("3"),
         calculation_revision_id=_hex("4"),
-        filed_at=filed_at + timedelta(minutes=5),
         filed_by="aeat.cli.modelo.file",
         member_nif="B00000001",
     )
@@ -234,7 +233,6 @@ def test_filing_record_rejects_aeat_acceptance_without_external_evidence() -> No
     filing_id = derive_filing_record_id(
         work_unit_id=_hex("9"),
         calculation_revision_id=_hex("a"),
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
 
@@ -243,7 +241,7 @@ def test_filing_record_rejects_aeat_acceptance_without_external_evidence() -> No
             filing_record_id=filing_id,
             work_unit_id=_hex("9"),
             calculation_revision_id=_hex("a"),
-            bucket_id="bucket-A",
+            bucket_id=_RECORD_BUCKET_ID,
             modelo=ModeloCode("303"),
             filing_year=2024,
             period=_P_2024_2T,
@@ -259,14 +257,13 @@ def test_filing_record_model_copy_revalidates_aeat_acceptance_invariant() -> Non
     filing_id = derive_filing_record_id(
         work_unit_id=_hex("b"),
         calculation_revision_id=_hex("c"),
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
     record = ModeloRecord(
         filing_record_id=filing_id,
         work_unit_id=_hex("b"),
         calculation_revision_id=_hex("c"),
-        bucket_id="bucket-A",
+        bucket_id=_RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
         period=_P_2024_2T,
@@ -284,7 +281,6 @@ def test_filing_record_rejects_external_evidence_without_aeat_acceptance() -> No
     filing_id = derive_filing_record_id(
         work_unit_id=_hex("d"),
         calculation_revision_id=_hex("e"),
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
     evidence = ExternalEvidence(
@@ -298,7 +294,7 @@ def test_filing_record_rejects_external_evidence_without_aeat_acceptance() -> No
             filing_record_id=filing_id,
             work_unit_id=_hex("d"),
             calculation_revision_id=_hex("e"),
-            bucket_id="bucket-A",
+            bucket_id=_RECORD_BUCKET_ID,
             modelo=ModeloCode("303"),
             filing_year=2024,
             period=_P_2024_2T,
@@ -314,14 +310,13 @@ def test_filing_record_model_copy_revalidates_external_evidence_acceptance_invar
     filing_id = derive_filing_record_id(
         work_unit_id=_hex("f"),
         calculation_revision_id=_hex("0"),
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
     record = ModeloRecord(
         filing_record_id=filing_id,
         work_unit_id=_hex("f"),
         calculation_revision_id=_hex("0"),
-        bucket_id="bucket-A",
+        bucket_id=_RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
         period=_P_2024_2T,
@@ -345,14 +340,12 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
     first_id = derive_filing_record_id(
         work_unit_id=_hex("5"),
         calculation_revision_id=_hex("6"),
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         member_nif="A00000000",
     )
     second_id = derive_filing_record_id(
         work_unit_id=_hex("7"),
         calculation_revision_id=_hex("8"),
-        filed_at=filed_at + timedelta(minutes=5),
         filed_by="aeat.cli.modelo.file",
         member_nif="A00000000",
     )
@@ -364,7 +357,7 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                     filing_record_id=first_id,
                     work_unit_id=_hex("5"),
                     calculation_revision_id=_hex("6"),
-                    bucket_id="bucket-A",
+                    bucket_id=_RECORD_BUCKET_ID,
                     modelo=ModeloCode("322"),
                     filing_year=2026,
                     period=_P_2026_01,
@@ -376,7 +369,7 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                     filing_record_id=second_id,
                     work_unit_id=_hex("7"),
                     calculation_revision_id=_hex("8"),
-                    bucket_id="bucket-A",
+                    bucket_id=_RECORD_BUCKET_ID,
                     modelo=ModeloCode("322"),
                     filing_year=2026,
                     period=_P_2026_01,
@@ -452,7 +445,7 @@ def test_filing_record_catalogue_wrong_inner_classification_is_localized(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[ModeloRecordCatalogue](
             schema_version=_FILING_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC).replace(microsecond=0),
+            written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.AUDIT,
             payload=ModeloRecordCatalogue(),
         )
@@ -487,7 +480,7 @@ def test_filing_record_catalogue_unsupported_inner_version_is_localized(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[ModeloRecordCatalogue](
             schema_version=stored_schema_version,
-            written_at=datetime.now(UTC).replace(microsecond=0),
+            written_at=_FUTURE_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.FINANCIAL,
             payload=ModeloRecordCatalogue(),
         )
@@ -523,14 +516,13 @@ def test_filing_record_source_transaction_ids_survive_roundtrip(tmp_path: Path) 
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
     record = ModeloRecord(
         filing_record_id=filing_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        bucket_id="bucket-A",
+        bucket_id=_RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
         period=_P_2024_2T,
@@ -558,7 +550,6 @@ def test_derive_filing_record_id_is_stable_regardless_of_source_transaction_ids(
     derived = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
 
@@ -566,7 +557,7 @@ def test_derive_filing_record_id_is_stable_regardless_of_source_transaction_ids(
         filing_record_id=derived,
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        bucket_id="bucket-A",
+        bucket_id=_RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
         period=_P_2024_2T,
@@ -590,14 +581,13 @@ def test_filing_record_absent_source_transaction_ids_defaults_to_empty(tmp_path:
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
     record = ModeloRecord(
         filing_record_id=filing_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
-        bucket_id="bucket-A",
+        bucket_id=_RECORD_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
         period=_P_2024_2T,
@@ -638,3 +628,82 @@ def test_filing_record_absent_source_transaction_ids_defaults_to_empty(tmp_path:
     (mutated_record,) = mutated.records.values()
     assert mutated_record.source_transaction_ids == ()
     assert mutated != original
+
+
+def test_filing_record_id_is_clock_free_and_outcome_pinned() -> None:
+    """filed_at is excluded from the filing-record identity; the outcome inputs define it.
+
+    Two records that differ ONLY in filed_at share the same content-addressed id
+    (the model validator accepts both), so a re-file of the same revision by the
+    same actor collapses onto one record rather than minting a time-stamped
+    duplicate; a different actor diverges the identity.
+    """
+    work_unit_id = _hex("d")
+    revision_id = _hex("e")
+    record_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_by="operator-A",
+    )
+    early = ModeloRecord(
+        filing_record_id=record_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id=_RECORD_BUCKET_ID,
+        modelo=ModeloCode("303"),
+        filing_year=2026,
+        period=_P_2026_01,
+        filed_at=datetime(2026, 1, 31, 9, 0, 0, tzinfo=UTC),
+        filed_by="operator-A",
+        status=ModeloRecordStatus.VIGENTE,
+    )
+    late = ModeloRecord(
+        filing_record_id=record_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id=_RECORD_BUCKET_ID,
+        modelo=ModeloCode("303"),
+        filing_year=2026,
+        period=_P_2026_01,
+        filed_at=datetime(2026, 1, 31, 23, 59, 0, tzinfo=UTC),
+        filed_by="operator-A",
+        status=ModeloRecordStatus.VIGENTE,
+    )
+    assert early.filing_record_id == late.filing_record_id == record_id
+    assert early.filed_at != late.filed_at
+    # A different actor diverges the outcome identity.
+    other_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_by="operator-B",
+    )
+    assert other_id != record_id
+
+
+def test_filing_record_rejects_id_not_matching_outcome() -> None:
+    """Anti-tautology: a ModeloRecord whose id does not match the outcome derivation is refused.
+
+    The id is derived for ``operator-Z`` but the record carries ``operator-A``;
+    the model validator re-derives the outcome-pinned id and raises, with
+    ``filed_at`` populated non-default to confirm it never participates in the id.
+    """
+    work_unit_id = _hex("f")
+    revision_id = _hex("e")
+    mismatched_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_by="operator-Z",
+    )
+    with pytest.raises(ValidationError):
+        ModeloRecord(
+            filing_record_id=mismatched_id,
+            work_unit_id=work_unit_id,
+            calculation_revision_id=revision_id,
+            bucket_id=_RECORD_BUCKET_ID,
+            modelo=ModeloCode("303"),
+            filing_year=2026,
+            period=_P_2026_01,
+            filed_at=datetime(2026, 1, 31, 12, 0, 0, tzinfo=UTC),
+            filed_by="operator-A",
+            status=ModeloRecordStatus.VIGENTE,
+        )

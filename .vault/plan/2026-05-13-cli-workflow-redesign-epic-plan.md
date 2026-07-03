@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 tier: L4
 related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
@@ -79,7 +79,6 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-list-vs-query-leaf-semantics-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-integrity-warning-stability-adr]]'
 ---
-
 
 # `cli-workflow-redesign` `epic` plan
 

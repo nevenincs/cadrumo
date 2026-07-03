@@ -1,7 +1,8 @@
 # M210 IRNR base-imponible formula.
 #
-# Per TRLIRNR Art 24.1: non-imputed branches keep the identity
-# base = gross rendimientos path. For tipo_renta="inmobiliaria",
+# Per TRLIRNR Art 24.1: non-imputed branches start from gross rendimientos.
+# Art 24.6 permits directly linked expenses on the UE/EEE path. For
+# tipo_renta="inmobiliaria",
 # TRLIRNR Art 13.1.h identifies the Spanish-source imputed income
 # and Art 24.5 routes the base to the IRPF imputation mechanics now
 # in LIRPF Art 85.
@@ -12,6 +13,8 @@ target_casilla_id = "base_imponible"
 expression = { op = "m210_resolve_base_imponible", args = [
     { casilla_id = "tipo_renta" },
     { casilla_id = "rendimientos_integros" },
+    { casilla_id = "gastos_deducibles" },
+    { binding = "m210-2025-profile-country-of-fiscal-residence" },
     { casilla_id = "valor_catastral" },
     { casilla_id = "coeficiente_imputacion_inmobiliaria" },
     { casilla_id = "dias_imputacion" },
@@ -23,11 +26,15 @@ expression = { op = "m210_resolve_base_imponible", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
-source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano", "boe-modelo-210-2026-deadline-update"]
 
 [[revisions."2025".formulas.source_citations]]
 source_ref = "aeat-modelo-210-procedure"
 required_text = ["rendimientos", "no residentes"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "boe-modelo-210-2026-deadline-update"
+required_text = ["desglose de gastos deducibles", "inmuebles arrendados"]
 
 [[revisions."2025".formulas.source_citations]]
 source_ref = "aeat-irnr-renta-imputada-inmueble-urbano"

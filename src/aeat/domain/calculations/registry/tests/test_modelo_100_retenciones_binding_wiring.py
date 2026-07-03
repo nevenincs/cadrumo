@@ -28,7 +28,15 @@ from decimal import Decimal
 
 import pytest
 
-from .. import BindingId, CasillaId, RegistrySnapshot, RelationId, calculate_registry_snapshot, validated_casilla_id
+from .. import (
+    BindingId,
+    CasillaId,
+    RegistrySnapshot,
+    RegistryValidationError,
+    RelationId,
+    calculate_registry_snapshot,
+    validated_casilla_id,
+)
 from .._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -44,42 +52,251 @@ _M100_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id("0610", surfac
 
 _DATE_CONTEXT_2024 = {"filing_period": date(2024, 12, 31)}
 _DATE_BINDINGS_2024: dict[BindingId, date] = {"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)}
+_DATE_CONTEXT_2025 = {"filing_period": date(2025, 12, 31)}
+_DATE_BINDINGS_2025: dict[BindingId, date] = {"renta-2025-profile-taxpayer-birth-date": date(1975, 6, 15)}
 
 _RELATION_VALUES_2024: dict[RelationId, Decimal] = {
     "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-115-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
     "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
     "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
 }
+_RELATION_VALUES_2025: dict[RelationId, Decimal] = {
+    "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
+    "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
+}
 
 
-def _base_binding_values(*, m111: Decimal = Decimal("0"), m123: Decimal = Decimal("0")) -> dict[BindingId, Decimal]:
-    return {
+def _base_binding_values(
+    *,
+    m111: Decimal | None = None,
+    certificado_trabajo: Decimal | None = None,
+    m123: Decimal | None = None,
+    m193: Decimal | None = None,
+) -> dict[BindingId, Decimal]:
+    values: dict[BindingId, Decimal] = {
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-2024-modelo-111-retenciones-periodicas": m111,
-        "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
-        "renta-2024-modelo-123-retenciones-periodicas": m123,
-        "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
         "renta-2024-profile-declaration-type": Decimal("1"),
         "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
         # Art. 81 bis LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
         "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+        "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
         "renta-2024-profile-marriage-full-year": Decimal("0"),
         "renta-2024-profile-marriage-month-start": Decimal("0"),
         "renta-2024-profile-marriage-month-end": Decimal("0"),
         # BIN-pendiente fresh-filer baseline.
         "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
+    if m111 is not None:
+        values["renta-2024-modelo-111-retenciones-periodicas"] = m111
+    if certificado_trabajo is not None:
+        values["renta-2024-certificado-trabajo-retenciones"] = certificado_trabajo
+    if m123 is not None:
+        values["renta-2024-modelo-123-retenciones-periodicas"] = m123
+    if m193 is not None:
+        values["renta-2024-modelo-193-retenciones-anuales"] = m193
+    return values
+
+
+def _base_binding_values_2025(
+    *,
+    m111: Decimal | None = None,
+    m190: Decimal | None = None,
+    certificado_trabajo: Decimal | None = None,
+    m123: Decimal | None = None,
+    m193: Decimal | None = None,
+) -> dict[BindingId, Decimal]:
+    values: dict[BindingId, Decimal] = {
+        "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+        "renta-2025-profile-declaration-type": Decimal("1"),
+        "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-2025-profile-marriage-full-year": Decimal("0"),
+        "renta-2025-profile-marriage-month-start": Decimal("0"),
+        "renta-2025-profile-marriage-month-end": Decimal("0"),
+        "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
+    }
+    if m111 is not None:
+        values["renta-2025-modelo-111-retenciones-periodicas"] = m111
+    if m190 is not None:
+        values["renta-2025-modelo-190-retenciones-anuales"] = m190
+    if certificado_trabajo is not None:
+        values["renta-2025-certificado-trabajo-retenciones"] = certificado_trabajo
+    if m123 is not None:
+        values["renta-2025-modelo-123-retenciones-periodicas"] = m123
+    if m193 is not None:
+        values["renta-2025-modelo-193-retenciones-anuales"] = m193
+    return values
 
 
 @pytest.fixture
 def m100_2024_snapshot(registry_authority: ValidatedRegistryAuthority):
     return registry_authority.snapshot("100", filing_year=2024, period="0A")
+
+
+@pytest.fixture
+def m100_2025_snapshot(registry_authority: ValidatedRegistryAuthority):
+    return registry_authority.snapshot("100", filing_year=2025, period="0A")
+
+
+def test_m190_annual_retenciones_binding_populates_2025_casilla_0596(
+    m100_2025_snapshot: RegistrySnapshot,
+) -> None:
+    """M190 annual retenciones are a reviewed equivalent source for M100/2025 0596.
+
+    Regression guard for Marta: the binding was accepted but left 0596 at zero.
+    This exercises binding projection and formula propagation, not a duplicated
+    rental or salary arithmetic oracle.
+    """
+    annual_retenciones = Decimal("4200.00")
+
+    result = calculate_registry_snapshot(
+        m100_2025_snapshot,
+        inputs={"0003": Decimal("32000"), "0102": Decimal("9600")},
+        date_context=_DATE_CONTEXT_2025,
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        binding_values=_base_binding_values_2025(m190=annual_retenciones),
+        relation_values=_RELATION_VALUES_2025,
+        date_binding_values=_DATE_BINDINGS_2025,
+    )
+
+    assert result.values[_M100_RETENCIONES_M111_CASILLA] == annual_retenciones, (
+        f"casilla 0596 = {result.values[_M100_RETENCIONES_M111_CASILLA]!r}; expected {annual_retenciones!r} "
+        "from equivalent binding renta-2025-modelo-190-retenciones-anuales."
+    )
+    assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == annual_retenciones, (
+        "0609 must include the M190-sourced work-retention credit instead of "
+        f"silently treating 0596 as zero; got {result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]!r}."
+    )
+    observation = next(obs for obs in result.observations if obs.casilla_id == _M100_RETENCIONES_M111_CASILLA)
+    assert not observation.absent_by_design
+    assert "boe-modelo-190-2025-form" in observation.source_refs
+
+
+def test_salary_certificate_retenciones_binding_populates_2024_casilla_0596(
+    m100_2024_snapshot: RegistrySnapshot,
+) -> None:
+    """Payee salary-certificate withholding is a public M100/2024 source for 0596."""
+    suffered_retenciones = Decimal("4500.00")
+
+    result = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("30000.00")},
+        date_context=_DATE_CONTEXT_2024,
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        binding_values=_base_binding_values(certificado_trabajo=suffered_retenciones),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_DATE_BINDINGS_2024,
+    )
+
+    assert result.values[_M100_RETENCIONES_M111_CASILLA] == suffered_retenciones
+    assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == suffered_retenciones
+    observation = next(obs for obs in result.observations if obs.casilla_id == _M100_RETENCIONES_M111_CASILLA)
+    assert not observation.absent_by_design
+    assert "aeat-renta-2024-manual-parte1" in observation.source_refs
+
+
+def test_conflicting_2024_m111_and_salary_certificate_retenciones_refuse_before_calculation(
+    m100_2024_snapshot: RegistrySnapshot,
+) -> None:
+    """Filed/payer relation evidence and payee certificate input must agree exactly."""
+    with pytest.raises(RegistryValidationError, match="conflicting equivalent binding values"):
+        calculate_registry_snapshot(
+            m100_2024_snapshot,
+            inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("30000.00")},
+            date_context=_DATE_CONTEXT_2024,
+            enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+            binding_values=_base_binding_values(
+                m111=Decimal("4500.00"),
+                certificado_trabajo=Decimal("4499.99"),
+            ),
+            relation_values=_RELATION_VALUES_2024,
+            date_binding_values=_DATE_BINDINGS_2024,
+        )
+
+
+def test_salary_certificate_retenciones_binding_populates_2025_casilla_0596(
+    m100_2025_snapshot: RegistrySnapshot,
+) -> None:
+    """2025 keeps parity for the payee salary-certificate withholding input."""
+    suffered_retenciones = Decimal("4500.00")
+
+    result = calculate_registry_snapshot(
+        m100_2025_snapshot,
+        inputs={"0003": Decimal("30000.00"), "0102": Decimal("9600")},
+        date_context=_DATE_CONTEXT_2025,
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        binding_values=_base_binding_values_2025(certificado_trabajo=suffered_retenciones),
+        relation_values=_RELATION_VALUES_2025,
+        date_binding_values=_DATE_BINDINGS_2025,
+    )
+
+    assert result.values[_M100_RETENCIONES_M111_CASILLA] == suffered_retenciones
+    assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == suffered_retenciones
+
+
+def test_conflicting_2025_m111_and_m190_retenciones_refuse_before_calculation(
+    m100_2025_snapshot: RegistrySnapshot,
+) -> None:
+    """Equivalent M111/M190 sources must agree exactly or calculation refuses."""
+    with pytest.raises(RegistryValidationError, match="conflicting equivalent binding values"):
+        calculate_registry_snapshot(
+            m100_2025_snapshot,
+            inputs={"0003": Decimal("32000"), "0102": Decimal("9600")},
+            date_context=_DATE_CONTEXT_2025,
+            enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+            binding_values=_base_binding_values_2025(m111=Decimal("4200.00"), m190=Decimal("4100.00")),
+            relation_values=_RELATION_VALUES_2025,
+            date_binding_values=_DATE_BINDINGS_2025,
+        )
+
+
+def test_m193_annual_retenciones_binding_populates_2025_casilla_0597(
+    m100_2025_snapshot: RegistrySnapshot,
+) -> None:
+    """M193 annual capital-mobiliario retentions are equivalent source evidence for 0597."""
+    annual_retenciones = Decimal("975.31")
+
+    result = calculate_registry_snapshot(
+        m100_2025_snapshot,
+        inputs={"0003": Decimal("32000"), "0102": Decimal("9600")},
+        date_context=_DATE_CONTEXT_2025,
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        binding_values=_base_binding_values_2025(m193=annual_retenciones),
+        relation_values=_RELATION_VALUES_2025,
+        date_binding_values=_DATE_BINDINGS_2025,
+    )
+
+    assert result.values[_M100_RETENCIONES_M123_CASILLA] == annual_retenciones, (
+        f"casilla 0597 = {result.values[_M100_RETENCIONES_M123_CASILLA]!r}; expected {annual_retenciones!r} "
+        "from equivalent binding renta-2025-modelo-193-retenciones-anuales."
+    )
+    assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == annual_retenciones
+    observation = next(obs for obs in result.observations if obs.casilla_id == _M100_RETENCIONES_M123_CASILLA)
+    assert "boe-modelo-193-2011-form" in observation.source_refs
+
+
+def test_conflicting_2025_m123_and_m193_retenciones_refuse_before_calculation(
+    m100_2025_snapshot: RegistrySnapshot,
+) -> None:
+    """Equivalent M123/M193 capital-mobiliario sources must agree exactly."""
+    with pytest.raises(RegistryValidationError, match="conflicting equivalent binding values"):
+        calculate_registry_snapshot(
+            m100_2025_snapshot,
+            inputs={"0003": Decimal("32000"), "0102": Decimal("9600")},
+            date_context=_DATE_CONTEXT_2025,
+            enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+            binding_values=_base_binding_values_2025(m123=Decimal("975.31"), m193=Decimal("975.30")),
+            relation_values=_RELATION_VALUES_2025,
+            date_binding_values=_DATE_BINDINGS_2025,
+        )
 
 
 def test_m123_retenciones_binding_populates_casilla_0597(m100_2024_snapshot: RegistrySnapshot) -> None:
@@ -109,6 +326,46 @@ def test_m123_retenciones_binding_populates_casilla_0597(m100_2024_snapshot: Reg
         "Check 2024/casillas/0579-0597.toml: must have "
         'input_kind = "bound" and binding = "renta-2024-modelo-123-retenciones-periodicas".'
     )
+
+
+def test_m193_annual_retenciones_binding_populates_2024_casilla_0597(
+    m100_2024_snapshot: RegistrySnapshot,
+) -> None:
+    """M193 annual capital-mobiliario retentions must not be silently dropped in 2024."""
+    annual_retenciones = Decimal("864.20")
+    result = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
+        date_context=_DATE_CONTEXT_2024,
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        binding_values=_base_binding_values(m193=annual_retenciones),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_DATE_BINDINGS_2024,
+    )
+
+    assert result.values[_M100_RETENCIONES_M123_CASILLA] == annual_retenciones, (
+        f"casilla 0597 = {result.values[_M100_RETENCIONES_M123_CASILLA]!r}; expected {annual_retenciones!r} "
+        "from equivalent binding renta-2024-modelo-193-retenciones-anuales."
+    )
+    assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == annual_retenciones
+    observation = next(obs for obs in result.observations if obs.casilla_id == _M100_RETENCIONES_M123_CASILLA)
+    assert "boe-modelo-193-2011-form" in observation.source_refs
+
+
+def test_conflicting_2024_m123_and_m193_retenciones_refuse_before_calculation(
+    m100_2024_snapshot: RegistrySnapshot,
+) -> None:
+    """Equivalent M123/M193 capital-mobiliario sources must agree exactly."""
+    with pytest.raises(RegistryValidationError, match="conflicting equivalent binding values"):
+        calculate_registry_snapshot(
+            m100_2024_snapshot,
+            inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
+            date_context=_DATE_CONTEXT_2024,
+            enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+            binding_values=_base_binding_values(m123=Decimal("864.20"), m193=Decimal("864.21")),
+            relation_values=_RELATION_VALUES_2024,
+            date_binding_values=_DATE_BINDINGS_2024,
+        )
 
 
 def test_m111_retenciones_binding_populates_casilla_0596(m100_2024_snapshot: RegistrySnapshot) -> None:
@@ -213,12 +470,9 @@ def test_m123_retenciones_change_reflects_proportionally_in_0610(m100_2024_snaps
         date_binding_values=_DATE_BINDINGS_2024,
     )
 
-    delta_0597 = (
-        result_high.values[_M100_RETENCIONES_M123_CASILLA] - result_low.values[_M100_RETENCIONES_M123_CASILLA]
-    )
+    delta_0597 = result_high.values[_M100_RETENCIONES_M123_CASILLA] - result_low.values[_M100_RETENCIONES_M123_CASILLA]
     delta_0609 = (
-        result_high.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]
-        - result_low.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]
+        result_high.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] - result_low.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]
     )
     delta_0610 = (
         result_low.values[_M100_CUOTA_DIFERENCIAL_CASILLA] - result_high.values[_M100_CUOTA_DIFERENCIAL_CASILLA]

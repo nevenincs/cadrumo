@@ -41,6 +41,7 @@ legal_refs = [
     "ley-37-1992:art-95",
     "ley-37-1992:art-99",
     "orden-eha-3786-2008:art-1",
+    "orden-hac-1347-2024:anexo-i-iva-instrucciones",
     "orden-hac-819-2024:art-1",
     "rd-1624-1992:art-29",
     "rd-1624-1992:art-30",
@@ -246,6 +247,10 @@ casilla_id = "158"
 number = "158"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "18"
+number = "18"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "21"
 number = "21"
 
@@ -272,3 +277,30 @@ number = "07"
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "28"
 number = "28"
+
+# Régimen-simplificado de IVA módulos engine inputs (2026-07-01-modelo-303-
+# regimen-simplificado-adr, Phase 2). The epígrafe IAE plus the three módulo
+# unit-count casillas are operator-declared manual inputs to the modulos-IVA
+# cuota-devengada computation (LIVA art. 123.Dos.1 + Orden HAC/1347/2024 Anexo I
+# instrucciones apartado 2.1). They enter the calculation closure as expression
+# operands of the modulos formulas, so — like the M131 estimación-objetiva
+# modulos-*-unidades inputs (#516) — they belong in the completeness manifest.
+# The two internal_only computed casillas they feed (modulos-iva-cuota-devengada /
+# -derivada) are correctly absent: derive_calculation_completeness_casillas drops
+# internal_only casillas from the single-segment manifest, matching the export
+# gate that omits them as advisory-support figures absent from the AEAT Diseño.
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "modulos-iva-epigrafe"
+number = "modulos-iva-epigrafe"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "modulos-iva-1-unidades"
+number = "modulos-iva-1-unidades"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "modulos-iva-2-unidades"
+number = "modulos-iva-2-unidades"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "modulos-iva-3-unidades"
+number = "modulos-iva-3-unidades"

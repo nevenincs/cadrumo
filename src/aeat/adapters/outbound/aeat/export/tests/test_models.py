@@ -116,7 +116,7 @@ class TestModeloPresentado:
                     "draft_id": "draft-1",
                     "modelo": "130",
                     "period": Period.from_year_and_code(2026, "1T"),
-                    "profile_tax_id": "X1",
+                    "profile_tax_id": "X1234567L",
                     "status": "SUBMITTED",
                     "submitted_at": datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
                     "attempts": [_attempt().model_dump()],

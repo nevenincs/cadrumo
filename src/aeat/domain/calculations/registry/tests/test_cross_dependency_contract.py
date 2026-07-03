@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from functools import lru_cache
+from collections.abc import Iterator, Mapping
+from functools import cache
 from typing import Protocol
 
 import pytest
@@ -11,8 +11,8 @@ import pytest
 from .....core.aggregation import RelationAggregationOp
 from .....core.resources import bundled_path
 from .. import binding_source_casilla_ids
+from .._binding_selector_utils import selector_as_dict
 from .._errors import RegistryValidationError
-from .._loader import load_registry_tree
 from .._relation_aggregation import relation_aggregation_op
 from .._relations import relation_source_requirements
 from .._runtime_graph import expression_relation_refs
@@ -26,18 +26,19 @@ from .._schema import (
     RelationDefinition,
 )
 from .._validate import RegistryValidator
+from .._validate_relation_periods import select_relation_source_revisions
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _CALCULATION_ROLES = {"direct_calculation", "instalment_to_final_settlement", "periodic_to_annual_summary"}
 
 
 def _registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    return load_registry_tree(_REGISTRY_ROOT)
+    return _committed_registry_tree()
 
 
-@lru_cache(maxsize=1)
+@cache
 def _validated_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     modelos, catalogues = _registry_tree()
     RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
@@ -61,23 +62,31 @@ def _algorithm_relation_refs(revision: ModeloRevision) -> set[str]:
     }
 
 
-def _revision_matches_selector(revision: ModeloRevision, selector: Mapping[str, str | int]) -> bool:
-    year = selector.get("year")
-    if isinstance(year, int):
-        return revision.period_selector.includes_year(year)
-    year_from = selector.get("year_from")
-    if isinstance(year_from, int):
-        year_to = selector.get("year_to")
-        if not isinstance(year_to, int):
-            year_to = 2999
-        revision_from = revision.period_selector.year_from or min(revision.period_selector.years)
-        revision_to = revision.period_selector.year_to
-        if revision_to is None and revision.period_selector.years:
-            revision_to = max(revision.period_selector.years)
-        if revision_to is None:
-            revision_to = 2999
-        return revision_from <= year_to and year_from <= revision_to
-    return isinstance(selector.get("filing_year_delta"), int)
+def _walk_expression(expression: object) -> Iterator[object]:
+    yield expression
+    for arg in getattr(expression, "args", ()) or ():
+        yield from _walk_expression(arg)
+
+
+def _formula_binding_refs(revision: ModeloRevision) -> set[str]:
+    refs: set[str] = set()
+    for formula in revision.formulas:
+        for node in _walk_expression(formula.expression):
+            binding_ref = getattr(node, "binding", None)
+            if binding_ref:
+                refs.add(str(binding_ref))
+    return refs
+
+
+def _consumed_relation_refs(revision: ModeloRevision) -> set[str]:
+    consumed = _formula_relation_refs(revision) | _algorithm_relation_refs(revision)
+    casilla_bindings = {casilla.binding for casilla in revision.casillas if casilla.binding is not None}
+    formula_bindings = _formula_binding_refs(revision)
+    consumed_bindings = casilla_bindings | formula_bindings
+    for relation in revision.relations:
+        if relation.target_binding in consumed_bindings:
+            consumed.add(relation.id)
+    return consumed
 
 
 def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
@@ -89,25 +98,28 @@ def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
                 # previous period or a prior filing year; same-period
                 # self-source relations would be circular.
                 if relation.source_modelo == modelo.id:
-                    selector = relation.source_revision_selector or {}
-                    filing_year_delta = selector.get("filing_year_delta", 0)
-                    assert isinstance(filing_year_delta, int), (
-                        f"filing_year_delta must be int, got {type(filing_year_delta).__name__}"
-                    )
+                    filing_year_delta = relation.source_revision_selector.filing_year_delta or 0
                     assert relation.kind == "previous_period" or filing_year_delta < 0, (
                         f"{modelo.id}/{revision.id}/{relation.id}"
                     )
                 _assert_relation_role_contract(relation, scope=f"{modelo.id}/{revision.id}/{relation.id}")
 
 
-_PROFILE_SCHEDULE_SOURCE_MODELOS = frozenset({"036", "037", "840"})
+_PROFILE_SCHEDULE_SOURCE_MODELOS = frozenset({"036", "840"})
 
 
 def _assert_periodic_to_annual_summary_contract(relation: RelationDefinition, *, scope: str) -> None:
     assert relation.kind == "annual_summary", scope
     assert relation.target_periods == ("0A",), scope
-    assert len(relation.source_periods) > 1, scope
-    assert relation_aggregation_op(relation) == RelationAggregationOp.SUM, scope
+    aggregation_op = relation_aggregation_op(relation)
+    if aggregation_op == RelationAggregationOp.SUM:
+        assert len(relation.source_periods) > 1, scope
+        return
+    if aggregation_op == RelationAggregationOp.COPY:
+        assert relation.source_periods == ("4T",), scope
+        assert "simplificado" in relation.id, scope
+        return
+    raise AssertionError(scope)
 
 
 def _assert_instalment_to_final_settlement_contract(relation: RelationDefinition, *, scope: str) -> None:
@@ -189,6 +201,45 @@ def test_cross_dependency_source_requirements_are_derivable_for_target_periods()
                     )
 
 
+def test_dependency_classifications_exclude_inactive_census_modelo_037() -> None:
+    modelos, _catalogues = _validated_registry_tree()
+    offenders = [
+        f"{modelo.id}/{revision.id}/{classification.id}"
+        for modelo in modelos
+        for revision in modelo.revisions.values()
+        for classification in revision.dependency_classifications
+        if classification.source_modelo == "037"
+    ]
+
+    assert not offenders, "inactive Modelo 037 must not be an active dependency source: " + ", ".join(offenders)
+
+
+def test_unconsumed_factual_evidence_relations_use_evidence_treatment() -> None:
+    modelos, _catalogues = _validated_registry_tree()
+    offenders: list[str] = []
+
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            classifications_by_source = {
+                classification.source_modelo: classification for classification in revision.dependency_classifications
+            }
+            consumed = _consumed_relation_refs(revision)
+            for relation in revision.relations:
+                if relation.dependency_role != "factual_evidence" or relation.id in consumed:
+                    continue
+                classification = classifications_by_source.get(relation.source_modelo)
+                if classification is not None and classification.treatment != "factual_evidence":
+                    offenders.append(
+                        f"{modelo.id}/{revision.id}/{relation.id}: classification {classification.id!r} "
+                        f"treatment={classification.treatment!r}"
+                    )
+
+    assert not offenders, (
+        "Unconsumed factual-evidence relation(s) must not advertise direct annual-settlement treatment:\n"
+        + "\n".join(f"  * {offender}" for offender in offenders)
+    )
+
+
 def test_formula_bearing_revisions_consume_calculation_relations() -> None:
     modelos, _catalogues = _validated_registry_tree()
 
@@ -196,7 +247,7 @@ def test_formula_bearing_revisions_consume_calculation_relations() -> None:
         for revision in modelo.revisions.values():
             if not revision.formulas and not revision.algorithm_bindings:
                 continue
-            consumed = _formula_relation_refs(revision) | _algorithm_relation_refs(revision)
+            consumed = _consumed_relation_refs(revision)
             required = {
                 relation.id
                 for relation in revision.relations
@@ -256,7 +307,7 @@ def _assert_relation_binding_mirrors_source(
     materialisation strategy agrees with what the relation
     declared.
     """
-    selector = binding.selector
+    selector = selector_as_dict(binding)
     selector_modelo = selector.get("source_modelo", selector.get("modelo"))
     selector_periods = selector.get("source_periods")
     selector_source_casilla_ids = binding_source_casilla_ids(binding)
@@ -299,11 +350,11 @@ def test_relation_source_casilla_ids_are_filing_grade_source_casilla_ids() -> No
         for revision in modelo.revisions.values():
             for relation in revision.relations:
                 source_modelo = modelos_by_id[relation.source_modelo]
-                source_revisions = tuple(
-                    source_revision
-                    for source_revision in source_modelo.revisions.values()
-                    if _revision_matches_selector(source_revision, relation.source_revision_selector)
+                source_revisions, selector_failures = select_relation_source_revisions(
+                    source_modelo,
+                    relation.source_revision_selector,
                 )
+                assert not selector_failures, f"{modelo.id}/{revision.id}/{relation.id}: {selector_failures!r}"
                 assert source_revisions, f"{modelo.id}/{revision.id}/{relation.id}"
                 for source_revision in source_revisions:
                     casillas = {casilla.id: casilla for casilla in source_revision.casillas}
@@ -342,6 +393,36 @@ def test_dependency_classifications_preserve_relation_authority_basis() -> None:
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
+def test_dependency_classification_sources_require_official_source_guidance() -> None:
+    modelos, catalogues = _registry_tree()
+    modelo, _revision, classification, _relation = _first_classified_relation(modelos)
+    sources = dict(catalogues.sources)
+    for source_ref in classification.source_refs:
+        sources[source_ref] = sources[source_ref].model_copy(update={"evidence_tier": "layout_authority"})
+    mutated_catalogues = catalogues.model_copy(update={"sources": sources})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"dependency classification .* requires official_source_guidance source evidence",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
+def test_dependency_classification_legal_refs_require_legal_authority() -> None:
+    modelos, catalogues = _registry_tree()
+    modelo, _revision, classification, _relation = _first_classified_relation(modelos)
+    legal = dict(catalogues.legal)
+    legal_ref = classification.legal_refs[0]
+    legal[legal_ref] = legal[legal_ref].model_copy(update={"evidence_tier": "official_source_guidance"})
+    mutated_catalogues = catalogues.model_copy(update={"legal": legal})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"dependency classification .* legal ref .* is not legal authority",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
 def test_relation_target_bindings_preserve_relation_authority_basis() -> None:
     modelos, catalogues = _registry_tree()
     modelo, revision, relation = _first_relation(modelos)
@@ -357,6 +438,36 @@ def test_relation_target_bindings_preserve_relation_authority_basis() -> None:
         match=r"relation .* target binding .* does not include relation legal refs",
     ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+
+
+def test_relation_sources_require_official_source_guidance() -> None:
+    modelos, catalogues = _registry_tree()
+    modelo, _revision, relation = _first_relation(modelos)
+    sources = dict(catalogues.sources)
+    for source_ref in relation.source_refs:
+        sources[source_ref] = sources[source_ref].model_copy(update={"evidence_tier": "layout_authority"})
+    mutated_catalogues = catalogues.model_copy(update={"sources": sources})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"relation .* requires official_source_guidance source evidence",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
+def test_relation_legal_refs_require_legal_authority() -> None:
+    modelos, catalogues = _registry_tree()
+    modelo, _revision, relation = _first_relation(modelos)
+    legal = dict(catalogues.legal)
+    legal_ref = relation.legal_refs[0]
+    legal[legal_ref] = legal[legal_ref].model_copy(update={"evidence_tier": "official_source_guidance"})
+    mutated_catalogues = catalogues.model_copy(update={"legal": legal})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"relation .* legal ref .* is not legal authority",
+    ):
+        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
 def _first_relation(

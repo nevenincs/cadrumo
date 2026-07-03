@@ -1,17 +1,25 @@
-"""Tripwire test that the built wheel bundles every git-tracked shipped data file.
+"""Tripwire test that the built wheel bundles every shipped data file except corpus source binaries.
 
 The corpus-registry packaging contract
 relocates both data trees under ``src/aeat/_data/`` so the existing
 ``packages = ["src/aeat"]`` hatchling directive carries them inside
 the wheel without any force-include declaration. The terminology tree
-uses the same shipped-data contract. This test verifies
-that contract end-to-end by driving the real build pipeline:
+uses the same shipped-data contract. The wheel-split packaging decision
+then excludes the corpus SOURCE binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``)
+from this slim ``aeat`` wheel — they ship in the separate ``aeat-data``
+companion distribution — while every derived surface the runtime reads
+(extracted text, normative html, registry, terminology, agent data) stays.
+This test verifies that contract end-to-end by driving the real build pipeline:
 
 1. ``uv build --wheel`` is invoked into a temporary output directory.
 2. The resulting wheel archive is opened as a zip.
 3. Every path reported by ``git ls-files`` under the shipped data
-   subtrees is asserted to appear in the archive at the corresponding
-   ``aeat/_data/<relative-path>`` prefix.
+   subtrees, EXCEPT the excluded corpus source binaries, is asserted to
+   appear in the archive at the corresponding ``aeat/_data/<relative-path>``
+   prefix.
+4. The corpus source binaries are asserted ABSENT from the slim wheel; the
+   companion ``aeat-data`` distribution is what carries them
+   (``test_aeat_data_distribution`` proves that side).
 
 No mocks, fakes, or skips. If the worktree is missing the ``uv``
 binary the test fails loudly so the locator's bundling guarantee is
@@ -34,6 +42,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DATA_ROOT = SRC_AEAT / "_data"
 _WHEEL_DATA_PREFIX = "aeat/_data"
+
+# Corpus source binaries excluded from the slim ``aeat`` wheel (they ship in the
+# ``aeat-data`` companion). A path is an excluded corpus source binary when it
+# lives under ``_data/corpus/`` and carries one of these suffixes.
+_CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
+
+
+def _is_corpus_source_binary(source_relative: str) -> bool:
+    """Return True for a ``src/aeat/_data/corpus`` path that is an excluded source binary."""
+
+    return source_relative.startswith("src/aeat/_data/corpus/") and source_relative.lower().endswith(
+        _CORPUS_BINARY_SUFFIXES
+    )
 
 
 def _git_ls_files_data() -> list[str]:
@@ -62,14 +83,33 @@ def _git_ls_files_data() -> list[str]:
 
 
 def _expected_archive_paths(tracked: list[str]) -> set[str]:
-    """Translate worktree paths to their expected wheel-archive locations."""
+    """Translate worktree paths to their expected wheel-archive locations.
+
+    Excludes any ``tests/`` subtree under the shipped data root: the build
+    config sheds
+    every ``tests/`` package from the wheel — including the test-only
+    ``corpus/tests`` module pool, which serves no installed consumer — and
+    :mod:`test_wheel_content_boundary` is the dedicated gate proving that
+    exclude end-to-end both ways. This gate's job is bundling parity for the
+    shipped *functional* payload, so it must not expect the excluded test
+    pool to appear in the archive.
+
+    Also excludes the corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``):
+    the wheel-split decision moves them to the ``aeat-data`` companion, so they
+    are legitimately absent from this slim wheel and must not be expected here.
+    """
 
     prefix = "src/aeat/_data/"
     expected: set[str] = set()
     for path in tracked:
         if not path.startswith(prefix):
             raise AssertionError(f"git ls-files returned a path outside src/aeat/_data/: {path!r}")
-        expected.add(f"{_WHEEL_DATA_PREFIX}/{path[len(prefix) :]}")
+        if _is_corpus_source_binary(path):
+            continue
+        relative = path[len(prefix) :]
+        if any(part == "tests" for part in Path(relative).parts):
+            continue
+        expected.add(f"{_WHEEL_DATA_PREFIX}/{relative}")
     return expected
 
 
@@ -90,9 +130,9 @@ def built_wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
         text=True,
         check=True,
     )
-    wheels = sorted(out_dir.glob("aeat-*.whl"))
+    wheels = sorted(out_dir.glob("aeat_cli-*.whl"))
     if len(wheels) != 1:
-        raise AssertionError(f"expected exactly one aeat-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
+        raise AssertionError(f"expected exactly one aeat_cli-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
     return wheels[0]
 
 
@@ -121,15 +161,39 @@ def test_wheel_archive_contains_every_tracked_data_file(built_wheel: Path) -> No
     assert not missing, f"wheel is missing {len(missing)} bundled files; first ten: {missing[:10]!r}"
 
 
-def test_wheel_archive_includes_renta_pdf_allow_list(built_wheel: Path) -> None:
-    """The seven gitignore-allow-listed Renta source.pdf files ship in the wheel."""
+def test_wheel_excludes_renta_source_pdfs(built_wheel: Path) -> None:
+    """The Renta ``source.pdf`` corpus binaries are absent from the slim wheel.
 
-    expected_pdfs = {
+    They are corpus source binaries and ship in the ``aeat-data`` companion, not
+    this wheel; asserting their absence pins the wheel-split boundary at exactly
+    the highest-value binaries the prior contract force-shipped.
+    """
+
+    renta_pdfs = {
         f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/{year}/part1/source.pdf"
         for year in ("2020", "2021", "2022", "2023", "2024", "2025")
     }
-    expected_pdfs.add(f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf")
+    renta_pdfs.add(f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf")
     with zipfile.ZipFile(built_wheel) as archive:
         names = {info.filename for info in archive.infolist()}
-    missing = sorted(expected_pdfs - names)
-    assert not missing, f"wheel is missing Renta allow-list PDFs: {missing!r}"
+    leaked = sorted(renta_pdfs & names)
+    assert not leaked, (
+        f"the slim wheel still ships Renta corpus source PDFs the wheel-split excludes: {leaked!r}; "
+        "they belong in the aeat-data companion distribution"
+    )
+
+
+def test_wheel_ships_no_corpus_source_binaries(built_wheel: Path) -> None:
+    """No ``_data/corpus`` pdf/xls/xlsx member survives in the slim wheel."""
+
+    with zipfile.ZipFile(built_wheel) as archive:
+        names = {info.filename for info in archive.infolist()}
+    corpus_binaries = sorted(
+        name
+        for name in names
+        if name.startswith(f"{_WHEEL_DATA_PREFIX}/corpus/") and name.lower().endswith(_CORPUS_BINARY_SUFFIXES)
+    )
+    assert not corpus_binaries, (
+        f"the slim wheel ships {len(corpus_binaries)} corpus source binary member(s) the split excludes; "
+        f"first ten: {corpus_binaries[:10]!r}"
+    )

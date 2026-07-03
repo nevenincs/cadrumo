@@ -10,7 +10,7 @@ from ...core.errors import AeatError
 
 
 class UserProfileError(AeatError):
-    """Base error for every :mod:`aeat.domain.user_profile` failure mode."""
+    """Base error for every :mod:`domain.user_profile` failure mode."""
 
 
 class UserProfileSchemaLoadError(UserProfileError):
@@ -83,15 +83,15 @@ class StoredProfileDriftError(UserProfileError):
 
     The record was valid when it was written; schema evolution or an
     out-of-band edit caused the on-disk representation to drift from the
-    current :class:`~aeat.domain.user_profile.UserProfileRecord` schema.
+    current :class:`~domain.user_profile.UserProfileRecord` schema.
     The original :exc:`pydantic.ValidationError` is preserved on
     ``original_exception`` so callers can inspect the typed field
     errors without losing the deserialization detail.
 
     The CLI boundary catches this typed error and routes it to
-    :exc:`~aeat.entrypoints.cli._errors.CliStoredDataValidationBoundaryError`
+    :exc:`~entrypoints.cli._errors.CliStoredDataValidationBoundaryError`
     (distinct from the input-time
-    :exc:`~aeat.entrypoints.cli._errors.CliValidationBoundaryError`) so
+    :exc:`~entrypoints.cli._errors.CliValidationBoundaryError`) so
     operators see a repair-oriented message rather than a generic refusal.
 
     Attributes:

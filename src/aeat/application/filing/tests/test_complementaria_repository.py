@@ -1,9 +1,9 @@
-"""Tests for the governed-persistence :class:`ModeloAmendmentRepository`.
+"""Tests for the governed-persistence :class:`~aeat.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`.
 
 Exercises the round-trip save/load API, list/iter/delete behaviour,
 the AUDIT classification gate, the unsafe-id rejection, the
 per-amendment lock isolation of
-:class:`aeat.domain.filing.ModeloAmendmentRepository`.
+:class:`~aeat.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`.
 """
 
 from __future__ import annotations
@@ -14,15 +14,15 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
+from ....adapters.persistence.storage import Envelope, SensitivityClass
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.filing._amendment import CasillaChange, ModeloComplementaria
-from ....domain.filing._complementaria_repository import (
-    ModeloAmendmentRepository,
-)
-from ....domain.filing._schema import (
+from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
+from ....domain.filing import (
+    CasillaChange,
+    ModeloComplementaria,
     ModeloDraft,
     ModeloDraftStatus,
     ModeloValue,
@@ -32,6 +32,16 @@ from ....domain.filing._schema import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _AMENDMENT_CASILLA: CasillaId = validated_casilla_id("01", surface="_AMENDMENT_CASILLA")
+_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 17, 0, 0, tzinfo=UTC)
+
+
+def _snapshot_ref(*, modelo: str, period: Period, schema_version: str) -> RegistrySnapshotRef:
+    return RegistrySnapshotRef(
+        modelo=modelo,
+        revision_id=schema_version,
+        modelo_year=period.filing_year,
+        period=period.registry_token,
+    )
 
 
 def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
@@ -45,17 +55,20 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
         ),
     )
     _period = Period.from_year_and_code(2026, "1T")
+    snapshot_ref = _snapshot_ref(modelo="130", period=_period, schema_version="test-schema-v1")
     amended_draft = ModeloDraft(
         draft_id=compute_modelo_draft_id(
             modelo="130",
             period=_period,
             profile_tax_id="00000000T",
-            schema_version="test-schema-v1",
+            snapshot_ref=snapshot_ref,
             values=values,
         ),
         modelo="130",
         period=_period,
         profile_tax_id="00000000T",
+        subject_tax_id="00000000T",
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.VALIDADO,
         values=values,
         created_at=now,
@@ -81,6 +94,19 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
     )
 
 
+def _save_two_amendments(repo: ModeloAmendmentRepository) -> tuple[ModeloComplementaria, ModeloComplementaria]:
+    a1 = _make_amendment(amendment_id="amend-a")
+    a2 = _make_amendment(amendment_id="amend-b")
+    repo.save(a1)
+    repo.save(a2)
+    return a1, a2
+
+
+@pytest.fixture
+def repo() -> ModeloAmendmentRepository:
+    return ModeloAmendmentRepository()
+
+
 def _database_bytes(tmp_path: Path) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
@@ -88,18 +114,15 @@ def _database_bytes(tmp_path: Path) -> bytes:
 
 
 class TestEmptyState:
-    def test_load_returns_none_when_absent(self) -> None:
-        repo = ModeloAmendmentRepository()
+    def test_load_returns_none_when_absent(self, repo: ModeloAmendmentRepository) -> None:
         assert repo.load("missing-id") is None
 
-    def test_object_marker_identifies_secure_backend(self) -> None:
-        repo = ModeloAmendmentRepository()
+    def test_object_marker_identifies_secure_backend(self, repo: ModeloAmendmentRepository) -> None:
         assert repo.envelope_path_for("xyz").as_posix().endswith("aeat.domain.filing.amendments/xyz")
 
 
 class TestSaveLoad:
-    def test_round_trip(self) -> None:
-        repo = ModeloAmendmentRepository()
+    def test_round_trip(self, repo: ModeloAmendmentRepository) -> None:
         amendment = _make_amendment()
         repo.save(amendment)
         loaded = ModeloAmendmentRepository().load(amendment.amendment_id)
@@ -107,12 +130,8 @@ class TestSaveLoad:
 
 
 class TestListIter:
-    def test_list_and_iter(self) -> None:
-        repo = ModeloAmendmentRepository()
-        a1 = _make_amendment(amendment_id="amend-a")
-        a2 = _make_amendment(amendment_id="amend-b")
-        repo.save(a1)
-        repo.save(a2)
+    def test_list_and_iter(self, repo: ModeloAmendmentRepository) -> None:
+        a1, a2 = _save_two_amendments(repo)
         ids = repo.list_amendment_ids()
         assert ids == ("amend-a", "amend-b")
         loaded = {a.amendment_id: a for a in repo.iter_amendments()}
@@ -120,21 +139,22 @@ class TestListIter:
 
 
 class TestDelete:
-    def test_delete_removes(self) -> None:
-        repo = ModeloAmendmentRepository()
+    def test_delete_removes(self, repo: ModeloAmendmentRepository) -> None:
         amendment = _make_amendment()
         repo.save(amendment)
         assert repo.delete(amendment.amendment_id) is True
         assert repo.load(amendment.amendment_id) is None
 
-    def test_delete_missing_returns_false(self) -> None:
-        repo = ModeloAmendmentRepository()
+    def test_delete_missing_returns_false(self, repo: ModeloAmendmentRepository) -> None:
         assert repo.delete("nope") is False
 
 
 class TestClassificationGate:
-    def test_database_payload_is_encrypted_audit_data(self, tmp_path: Path) -> None:
-        repo = ModeloAmendmentRepository()
+    def test_database_payload_is_encrypted_audit_data(
+        self,
+        repo: ModeloAmendmentRepository,
+        tmp_path: Path,
+    ) -> None:
         amendment = _make_amendment()
         repo.save(amendment)
         raw = _database_bytes(tmp_path)
@@ -143,17 +163,14 @@ class TestClassificationGate:
         assert b"Test correction" not in raw
         assert amendment.amendment_id.encode("utf-8") not in raw
 
-    def test_foreign_class_object_refused(self) -> None:
-        from ....adapters.persistence.storage import Envelope, SensitivityClass
-
+    def test_foreign_class_object_refused(self, repo: ModeloAmendmentRepository) -> None:
         amendment = _make_amendment()
         bad = Envelope[ModeloComplementaria](
             schema_version=1,
-            written_at=datetime.now(UTC),
+            written_at=_FOREIGN_CLASS_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=amendment,
         )
-        repo = ModeloAmendmentRepository()
         SecureObjectRepository().save(
             namespace="aeat.domain.filing.amendments",
             object_key=amendment.amendment_id,
@@ -167,11 +184,7 @@ class TestClassificationGate:
 
 
 class TestUnsafeAmendmentIds:
-    @pytest.mark.parametrize(
-        "bad",
-        ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
-    )
-    def test_unsafe_id_rejected(self, bad: str) -> None:
-        repo = ModeloAmendmentRepository()
-        with pytest.raises(ValueError):
-            repo.envelope_path_for(bad)
+    def test_unsafe_id_rejected(self, repo: ModeloAmendmentRepository) -> None:
+        for bad in ("", "..", ".", ".hidden", "../escape", "a/b", "a\\b"):
+            with pytest.raises(ValueError):
+                repo.envelope_path_for(bad)

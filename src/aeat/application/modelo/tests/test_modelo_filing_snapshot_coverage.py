@@ -17,12 +17,12 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._work_unit import derive_work_unit_id
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -33,7 +33,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...aggregation._ledger_filing_snapshot import (
+from ...aggregation import (
     LedgerFilingSnapshot,
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
@@ -55,7 +55,7 @@ def _tx(
     category_id: str = "material_oficina",
 ) -> Transaction:
     raw = RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 4, 5),
         value_date=date(2026, 4, 5),
         amount=raw_amount,
@@ -76,6 +76,8 @@ def _tx(
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),

@@ -1,11 +1,12 @@
-"""Pydantic command + result records for ``BucketMaintenanceService``.
+"""Pydantic command + result records for :class:`BucketMaintenanceService`.
 
-Used by: :mod:`~._service` (BucketMaintenanceService) to implement bucket operations.
+Used by: :mod:`~._service` to implement bucket operations.
 
 The contract records sit at the package boundary so a programmatic
 caller (the CLI handler, a future MCP surface) gets the same typed
 input + output shape that the service consumes. Closed-value axes are
 typed as their core enums per the architecture-boundaries discipline.
+Every bucket selector is a :class:`BucketId`.
 """
 
 from __future__ import annotations
@@ -22,11 +23,11 @@ from ...core.identity import BucketId
 class RenameBucketCommand(BaseModel):
     """Operator request to relabel a bucket.
 
-    Bucket identity is the stable UUID; only the operator-visible label
-    moves. The service forwards the relabel to the profile-rename
-    single-writer primitive, which holds the cross-store atomicity
-    (encrypted record ``display_name`` and plaintext manifest ``label``
-    move together).
+    ``bucket_id`` is the stable :class:`BucketId`; only the
+    operator-visible label moves. The service forwards the relabel to
+    the profile-rename single-writer primitive, which holds the
+    cross-store atomicity (encrypted record ``display_name`` and
+    plaintext manifest ``label`` move together).
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -59,12 +60,20 @@ class DeleteBucketCommand(BaseModel):
     programmatic caller observes the same guarantee the CLI ``--yes``
     flag provides. The active bucket cannot be deleted; the operator
     must switch profiles first.
+
+    ``acknowledge_retention_override`` is the explicit legal-retention
+    override: when a filed tax record is still inside its four-year LGT
+    retention window (Ley 58/2003 art. 66/70) the erase is refused
+    unless this flag is ``True`` AND ``retention_override_reason`` is a
+    non-empty justification the audit trail records.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     confirmed: bool = False
+    acknowledge_retention_override: bool = False
+    retention_override_reason: str | None = Field(default=None, min_length=1, max_length=512)
 
 
 class DeleteBucketResult(BaseModel):
@@ -72,6 +81,11 @@ class DeleteBucketResult(BaseModel):
 
     Carries the deleted bucket's prior label so the operator-facing
     emitter can render a confirming line without re-reading anything.
+    ``retention_override_used`` records whether a still-retained record
+    was erased under the explicit legal-retention override, and
+    ``latest_safe_erase_date`` names the instant the erased set would
+    otherwise have become safe to erase (``None`` when nothing was
+    inside its window).
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -79,6 +93,8 @@ class DeleteBucketResult(BaseModel):
     bucket_id: BucketId
     previous_label: str = Field(min_length=1, max_length=160)
     occurred_at: datetime
+    retention_override_used: bool = False
+    latest_safe_erase_date: datetime | None = None
 
 
 class BrowseBucketCommand(BaseModel):
@@ -141,10 +157,11 @@ class ExportBucketCommand(BaseModel):
 class ExportBucketResult(BaseModel):
     """Outcome of a successful bucket export.
 
-    Carries the written archive path plus the manifest digest that
-    the importer cross-checks at unseal time. Operator emitters
-    render the archive path so the operator can locate the file for
-    backup or transfer.
+    Carries the written archive path plus the manifest digest recorded
+    in the sealed archive header. The digest is bound into the payload's
+    AEAD associated data, so import refuses a tampered header at
+    decryption; operator emitters render the path so the operator can
+    locate the file for backup or transfer.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -176,10 +193,11 @@ class ImportBucketCommand(BaseModel):
 class ImportBucketResult(BaseModel):
     """Outcome of a successful bucket import.
 
-    Carries the imported bucket's identity and the manifest digest
-    the archive header declared. Downstream consumers cross-check
-    the digest against the freshly-provisioned manifest as a
-    pre-flight integrity gate.
+    Carries the imported :class:`BucketId` and the manifest digest the
+    archive header declared. The digest is evidence of the sealed
+    archive header that authenticated the payload; it is not recomputed
+    against the freshly provisioned host manifest because import-host
+    lifecycle timestamps legitimately differ.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -188,3 +206,38 @@ class ImportBucketResult(BaseModel):
     manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
     archive_schema_version: int = Field(ge=1)
     occurred_at: datetime
+
+
+class InspectBucketArchiveCommand(BaseModel):
+    """Operator request to inspect a sealed bucket archive without restoring it.
+
+    Read-only: the source archive is neither decrypted nor written to. This
+    lets an operator confirm which bucket a backup file holds, when it was
+    written, and whether it carries a recovery-wrap member, without needing
+    the sealing key.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_path: Path
+
+
+class InspectBucketArchiveResult(BaseModel):
+    """Outcome of a successful sealed-archive inspection.
+
+    Every field is read from the archive's plaintext header plus the
+    on-disk file size; the AEAD-encrypted payload itself is never opened,
+    so this result cannot report per-store row counts. ``manifest_digest``
+    is the header's integrity anchor (unverified here — verification only
+    happens during a real ``import``, where it is authenticated as AEAD
+    associated data at decryption).
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    recovery_wrap_present: bool
+    archive_schema_version: int = Field(ge=1)
+    created_at: datetime
+    size_bytes: int = Field(ge=0)

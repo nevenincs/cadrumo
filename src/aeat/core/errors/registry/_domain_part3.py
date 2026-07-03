@@ -1,23 +1,12 @@
-"""Ordered domain :class:`~aeat.core.errors.ErrorCode` registry shard.
+"""Ordered domain :class:`~core.errors.ErrorCode` registry shard.
 
 Rows map domain-layer exception qualnames to stable
-:class:`~aeat.core.errors.ErrorCategory` values and locale message keys.
+:class:`~core.errors.ErrorCategory` values and locale message keys.
 """
 
 from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
-    (
-        "aeat.domain.normatives._errors.NormativeValidationError",
-        ErrorCode(
-            code="ERROR_NORMATIVES_VALIDATION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_normatives_validation",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
     (
         "aeat.domain.portals._errors.PortalValidationError",
         ErrorCode(
@@ -90,6 +79,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_PROFILE_ASSET_VALIDATION",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_profile_asset_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.bienes_inversion.BienInversionRecordError",
+        ErrorCode(
+            code="ERROR_PROFILE_BIENES_INVERSION_RECORD",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_profile_bienes_inversion_record",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.bienes_inversion.BienInversionValidationError",
+        ErrorCode(
+            code="REFUSED_PROFILE_BIENES_INVERSION_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_bienes_inversion_validation",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -475,6 +486,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_RECONCILIATION_DRIFT",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.reconciliation_drift",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._row_models.Modelo349CountryPrefixContextError",
+        ErrorCode(
+            code="REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_349_country_prefix_context",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#modelo-enum-hardening'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - '[[2026-06-10-modelo-enum-hardening-research]]'
 ---
-
-
 
 # `modelo-enum-hardening` adr: `Modelo identifiers as a registry-bound core enum; regulatory values centralised` | (**status:** `accepted`)
 
@@ -83,7 +81,6 @@ registry directory plus an enum member, with the gate flagging an omission, and
 the registry-resolver pattern is the template for further rate centralisation.
 
 ## Codification candidates
-
 
 - **Rule slug:** `modelo-identifiers-use-core-enum`.
   **Rule:** Production code MUST reference AEAT modelo identifiers through the

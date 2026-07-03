@@ -42,9 +42,9 @@ Start with the local filing context:
   [classify them](classify-transactions.md). The annual ledger totals depend on
   the active profile's classified IVA rows.
 - Prepare the same year's Modelo 303 periods first. Standard quarterly profiles
-  use `1T`, `2T`, `3T`, and `4T`; SII/monthly cases need extra review because
-  the current Modelo 390 bindings are modelled against the quarterly 303
-  periods.
+  use `1T`, `2T`, `3T`, and `4T`; monthly IVA-liquidation cases need extra
+  review because the current Modelo 390 bindings are modelled against the
+  quarterly 303 periods.
 - Finish the Modelo 303 review path before relying on its values. See
   [Prepare a Modelo 303 IVA filing](modelo-303.md).
 

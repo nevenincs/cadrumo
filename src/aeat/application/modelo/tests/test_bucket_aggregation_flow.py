@@ -9,14 +9,17 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....core.errors import resolve_error_message
+from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.modelos import CalculationRevision
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -24,7 +27,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
@@ -41,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
-
+_BUCKET_ID = "26262626-2626-4262-8262-262626262626"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -77,7 +79,7 @@ _M303_RESULT_OPERAND_CASILLAS: set[CasillaId] = {
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
 
@@ -86,7 +88,7 @@ def _repositories(objects: SecureObjectRepository):
         WorkUnitCatalogueRepository(objects=objects),
         CalculationRevisionCatalogueRepository(objects=objects),
         BucketEventHistoryRepository(objects=objects),
-        TransactionCatalogueRepository(bucket_id="bucket-a", objects=objects),
+        TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
     )
 
 
@@ -97,7 +99,7 @@ def _raw_transaction(
     amount: Decimal,
 ) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=booked_date,
         value_date=booked_date,
         amount=amount,
@@ -129,6 +131,8 @@ def _transaction(
         {
             "raw": _raw_transaction(provider_id, amount=amount, booked_date=booked_date),
             "direction": direction,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "category_id": "test_iva_operation",
             "taxable_base": taxable_base,
@@ -147,7 +151,7 @@ def _seed_303_work_unit(
 ):
     typed_period = Period.from_year_and_code(2026, period)
     return create_work_unit(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2026,
         period=typed_period,
@@ -162,11 +166,55 @@ def _seed_303_work_unit(
 
 
 def _store_profile(objects: SecureObjectRepository) -> None:
-    UserProfileLifecycleRepository(bucket_id="bucket-a", objects=objects).save(
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
-            profile_id="bucket-a",
+            profile_id=_BUCKET_ID,
             display_name="Test runtime profile",
-            facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Ready"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="design"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
+            ),
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
+
+
+def _store_first_period_profile(objects: SecureObjectRepository) -> None:
+    """Store a profile whose IVA activity begins inside the 2026 1T filing period.
+
+    A taxpayer whose ``censo.activity_start_date`` falls within the target period
+    has no in-scope prior Modelo 303 period, so the prior-compensation dependency
+    is pre-activity and the IVA wallet gate grounds a ``first_period_zero``
+    decision instead of blocking. This is the genuine new-filer / sin-actividad
+    scenario: the first Modelo 303 with an empty ledger.
+    """
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+        UserProfileRecord(
+            profile_id=_BUCKET_ID,
+            display_name="Test runtime profile",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Ready"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="design"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2026, 1, 15)),
+            ),
             created_at=_T0,
             updated_at=_T0,
         ),
@@ -253,7 +301,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
         calculation_repository=cr_repo,
         bucket_event_repository=event_repo,
         transaction_repository=TransactionCatalogueRepository(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             objects=secure_objects,
         ),
         clock=_T1,
@@ -296,7 +344,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
     assert computed_result.legal_refs
     assert computed_result.source_refs
 
-    events = event_repo.load().for_bucket("bucket-a")
+    events = event_repo.load().for_bucket(_BUCKET_ID)
     calculation_events = [event for event in events if event.event_type == BucketEventType.MODELO_CALCULATION_CREATED]
     assert len(calculation_events) == 1
     assert calculation_events[0].payload["casilla_count"] == str(len(revision.casilla_values))
@@ -306,6 +354,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
 def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_preflight_blocks(
     secure_objects: SecureObjectRepository,
 ) -> None:
+    _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
     incomplete = _transaction(
@@ -328,7 +377,42 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
             clock=_T1,
         )
     assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    rendered = resolve_error_message(exc_info.value)
+    assert "%{detail}" not in rendered
+    assert "deductible-expense ledger transaction has no category_id" in rendered
 
+    assert len(cr_repo.load()) == 0
+
+
+def test_m303_still_blocks_base_only_rows_missing_iva_facts(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """IVA-owned modelos still require IVA amount/rate facts for equivalent base-only rows."""
+    _store_profile(secure_objects)
+    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
+    work_unit = _seed_303_work_unit(wu_repo)
+    base_only = _transaction(
+        "purchase-base-only",
+        direction=TransactionDirection.OUTGOING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    ).model_copy(update={"iva_amount": None, "iva_rate": None})
+    tx_repo.save(TransactionCatalogue.from_transactions((base_only,)))
+
+    with pytest.raises(ModeloAggregationBindingError) as exc_info:
+        calculate_modelo_revision_from_bucket_aggregation(
+            work_unit.work_unit_id,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=event_repo,
+            transaction_repository=tx_repo,
+            clock=_T1,
+        )
+
+    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    assert exc_info.value.context["reason"] == "missing_iva_amount"
     assert len(cr_repo.load()) == 0
 
 
@@ -499,6 +583,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_binding_input(
     secure_objects: SecureObjectRepository,
 ) -> None:
+    _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
     tx_repo.save(
@@ -537,6 +622,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_ledger_binding_injection(
     secure_objects: SecureObjectRepository,
 ) -> None:
+    _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
 
@@ -562,6 +648,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_casilla_injection(
     secure_objects: SecureObjectRepository,
 ) -> None:
+    _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
 
@@ -582,3 +669,59 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_
     assert all(
         event.event_type != BucketEventType.MODELO_CALCULATION_CREATED for event in event_repo.load().events.values()
     )
+
+
+def test_first_period_empty_ledger_m303_calculates_zero_sin_actividad(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A first-period filer with an empty ledger files a valid zero (sin actividad) Modelo 303.
+
+    Art. 164.Uno.6.º LIVA (Ley 37/1992) obliges every sujeto pasivo to present the
+    periodic ``declaración-liquidación`` regardless of activity, so a period with no
+    operations is a legitimate zero-result filing, not an error. When the taxpayer's
+    ``censo.activity_start_date`` falls inside the target period there is no in-scope
+    prior compensation dependency, so the IVA wallet gate grounds a ``first_period_zero``
+    decision and the calculate produces a zero result with NO ledger import, NO seed,
+    and NO manual override — the path a new filer needs (issue #555).
+    """
+    _store_first_period_profile(secure_objects)
+    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
+    work_unit = _seed_303_work_unit(wu_repo)
+
+    # Empty ledger: no transactions saved at all, no overrides, no seed.
+    revision = calculate_modelo_revision_from_bucket_aggregation(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=event_repo,
+        transaction_repository=tx_repo,
+        clock=_T1,
+    )
+
+    prior_compensacion_casilla = _casilla_id("iva.compensacion-pendiente-periodos-anteriores")
+    assert revision.source_transaction_ids == ()
+    assert revision.casilla_values[_M303_REPERCUTIDO_GENERAL_CASILLA] == Decimal("0")
+    assert revision.casilla_values[_M303_SOPORTADO_INTERIORES_CASILLA] == Decimal("0")
+    assert revision.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("0.00")
+    assert revision.casilla_values[prior_compensacion_casilla] == Decimal("0")
+
+    # The revision is persisted and the calculation lifecycle event fired.
+    assert len(cr_repo.load().revisions) == 1
+    calculation_events = [
+        event
+        for event in event_repo.load().for_bucket(_BUCKET_ID)
+        if event.event_type == BucketEventType.MODELO_CALCULATION_CREATED
+    ]
+    assert len(calculation_events) == 1
+
+    # The IVA wallet authority recorded a non-blocking first-period zero decision,
+    # so prior compensation was grounded rather than silently assumed.
+    decision = IvaWalletDecisionRepository(objects=secure_objects).load_decision(
+        "12345678Z",
+        Period.from_year_and_code(2026, "1T"),
+    )
+    assert decision is not None
+    assert decision.blocked is False
+    assert decision.selected_amount == Decimal("0")
+    assert str(decision.divergence) == "first_period_zero"

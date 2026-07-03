@@ -19,6 +19,7 @@ from __future__ import annotations
 import ast
 import builtins
 import importlib
+import inspect
 import pkgutil
 from pathlib import Path
 
@@ -108,6 +109,25 @@ def test_every_aeat_error_subclass_has_a_registered_code() -> None:
 
     bound = {error_type: get_registered_error_code(error_type) for error_type in subclasses}
     assert len(bound) == len(subclasses)
+
+
+def test_modelo_calculate_input_errors_have_registered_codes() -> None:
+    """The public calculate CLI imports this module before handling overrides."""
+
+    module = importlib.import_module("aeat.application.modelo._calculate_input")
+    concrete_errors = [
+        error_type
+        for _, error_type in inspect.getmembers(module, inspect.isclass)
+        if error_type.__module__ == module.__name__ and issubclass(error_type, AeatError)
+    ]
+
+    assert concrete_errors
+    missing: list[str] = []
+    for error_type in concrete_errors:
+        code = get_registered_error_code(error_type)
+        if code.code not in ERROR_REGISTRY:
+            missing.append(f"{error_type.__module__}.{error_type.__name__}")
+    assert missing == []
 
 
 def test_every_registered_code_maps_to_exactly_one_error_subclass() -> None:

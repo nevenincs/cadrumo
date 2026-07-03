@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 related:
   - "[[2026-05-19-schema-hardening-m100-section-inventory-audit]]"
   - "[[2026-05-19-schema-hardening-role-taxonomy-reference]]"
@@ -277,7 +277,7 @@ applies per id, not per role; multiple ids sharing a role is correct and expecte
 Eight casilla ids in this cluster carry `data_type = "text"` for NIF-style fields
 that may legally hold a foreign fiscal identifier:
 
-`1406`, `1408`, `1411`, `1413`, `1416`, `1418` — financing expense provider NIF  
+`1406`, `1408`, `1411`, `1413`, `1416`, `1418` — financing expense provider NIF
 `1422`, `1425`, `1428`, `1432`, `1435`, `1438` — improvement contractor NIF
 
 These are given the new role `irpf_inmueble_gasto_financiacion_proveedor_nif` and

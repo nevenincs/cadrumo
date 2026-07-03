@@ -21,11 +21,12 @@ from .._idle_timeout import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NOW = datetime(2026, 5, 14, 12, 0, 0, tzinfo=UTC)
+_BUCKET_ID = "66666666-6666-4666-8666-666666666666"
 
 
 def _open_session(idle_minutes: int = 15) -> BucketSession:
     return BucketSession.open(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         kek=bytes(range(32)),
         dek=bytes(range(32, 64)),
         idle_minutes=idle_minutes,

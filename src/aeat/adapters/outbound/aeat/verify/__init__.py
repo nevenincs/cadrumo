@@ -1,8 +1,8 @@
 """Read-only CSV verification against AEAT's Sede electrónica.
 
 The :func:`verify_csv` helper is opt-in: it only runs when the caller supplies
-or constructs a :class:`aeat.adapters.outbound.aeat.browser.DefaultBrowserSession`.
-It is guarded by :class:`aeat.domain.calculations.registry.RemoteStateGuardPolicy`
+or constructs a :class:`adapters.outbound.aeat.browser.DefaultBrowserSession`.
+It is guarded by :class:`domain.calculations.registry.RemoteStateGuardPolicy`
 and never mutates AEAT-side state. The contract is:
 
 * open the Sede verification page,
@@ -12,7 +12,7 @@ and never mutates AEAT-side state. The contract is:
 
 The function degrades gracefully when a browser cannot be
 constructed and surfaces the underlying error to the caller via
-:class:`aeat.domain.justificante.JustificanteVerificationError`.
+:class:`domain.justificante.JustificanteVerificationError`.
 
 Public surface: :func:`verify_csv` plus the Playwright protocol
 types (:class:`VerifyBrowserKeyboardLike`, :class:`VerifyBrowserPageLike`,
@@ -21,12 +21,12 @@ types (:class:`VerifyBrowserKeyboardLike`, :class:`VerifyBrowserPageLike`,
 without spinning up a real browser.
 
 See Also:
-    :func:`aeat.adapters.outbound.aeat.browser.default_browser_session_factory`
+    :func:`adapters.outbound.aeat.browser.default_browser_session_factory`
         Production factory used by :data:`DEFAULT_BROWSER_SESSION_FACTORY`.
-    :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`
+    :class:`adapters.outbound.aeat.browser.BrowserSession`
         Concrete browser session whose context/page surface these protocols
         mirror.
-    :func:`aeat.domain.calculations.registry.assert_remote_operation_allowed`
+    :func:`domain.calculations.registry.assert_remote_operation_allowed`
         Guard used to allow only the reviewed read-only CSV verification URL and
         browser action token.
 """
@@ -50,9 +50,9 @@ from .....domain.calculations.registry import (
 from .....domain.calculations.registry import (
     assert_remote_operation_allowed as _assert_remote_operation_allowed,
 )
-from .....domain.justificante._errors import JustificanteVerificationError as _JustificanteVerificationError
+from .....domain.justificante import JustificanteVerificationError as _JustificanteVerificationError
 from .._playwright import PlaywrightError as _PlaywrightError
-from ..sede._errors import BrowserAdapterTypeError as _BrowserAdapterTypeError
+from ..sede import BrowserAdapterTypeError as _BrowserAdapterTypeError
 
 _logger = _get_logger(__name__)
 
@@ -136,15 +136,16 @@ class VerifyBrowserSessionLike(Protocol):
     """Browser-session surface consumed by :func:`verify_csv`.
 
     The ``create_context`` signature mirrors
-    :meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.create_context`
+    :meth:`adapters.outbound.aeat.browser.BrowserSession.create_context`
     so static checkers see no unsafe overlap between this protocol and
     the concrete browser sessions. ``verify_csv`` itself calls
     ``create_context()`` with no arguments; production and test
     sessions accept the same optional kwargs as the central
-    :class:`~aeat.adapters.outbound.aeat.browser.BrowserSession` so the protocol
+    :class:`adapters.outbound.aeat.browser.BrowserSession` so the protocol
     stays structurally honest.
     """
 
+    # ADAPTER-INTERNAL-ALIAS-RATIONALE-BROWSER-CONTEXT: mirrors optional Playwright/browser session kwargs.
     async def create_context(
         self,
         *,
@@ -182,8 +183,8 @@ async def _build_default_browser_session(
 ) -> VerifyBrowserSessionLike:
     """Construct the default :class:`VerifyBrowserSessionLike`.
 
-    Loads :func:`aeat.core.config.load_settings`, materialises the
-    central :func:`aeat.adapters.outbound.aeat.browser.default_browser_session_factory`,
+    Loads :func:`core.config.load_settings`, materialises the
+    central :func:`adapters.outbound.aeat.browser.default_browser_session_factory`,
     checks the result with :func:`_is_verify_browser_session_like`, and returns
     a session the caller is responsible for closing.
 
@@ -213,6 +214,7 @@ async def verify_csv(
     csv: str,
     *,
     browser: VerifyBrowserSessionLike | None = None,
+    browser_session_factory: VerifyBrowserSessionFactory | None = None,
 ) -> bool:
     """Verify a justificante CSV against AEAT's Sede electrónica.
 
@@ -220,13 +222,15 @@ async def verify_csv(
     URL under the read-only guard, submits the CSV, and parses the returned HTML
     for AEAT confirmation tokens. Passing ``browser`` borrows the session from
     the caller; omitting it builds a self-owned session through
-    :data:`DEFAULT_BROWSER_SESSION_FACTORY` and closes that session after the
-    round-trip.
+    ``browser_session_factory`` or :data:`DEFAULT_BROWSER_SESSION_FACTORY` and
+    closes that session after the round-trip.
 
     Args:
         csv: The Código Seguro de Verificación as printed on the receipt.
         browser: An already-constructed :class:`VerifyBrowserSessionLike`.
             When ``None``, one is built from the default settings/profile.
+        browser_session_factory: Optional no-argument factory for the
+            self-owned path. Ignored when ``browser`` is supplied.
 
     Returns:
         ``True`` if AEAT confirms the CSV as valid; ``False`` if AEAT reports
@@ -245,7 +249,8 @@ async def verify_csv(
     session = browser
     if session is None:
         try:
-            session = await DEFAULT_BROWSER_SESSION_FACTORY()
+            factory = browser_session_factory or DEFAULT_BROWSER_SESSION_FACTORY
+            session = await factory()
             own_browser = True
         except (_PlaywrightError, _AeatError) as exc:
             raise _JustificanteVerificationError(f"failed to construct default BrowserSession: {exc}") from exc

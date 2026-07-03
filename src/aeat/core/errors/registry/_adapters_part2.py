@@ -448,6 +448,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.outbound.storage._errors.OutboundStoragePathTooLongError",
+        ErrorCode(
+            code="ERROR_OUTBOUND_STORAGE_PATH_TOO_LONG",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_outbound_storage_path_too_long",
+            default_suggestion="aeat config check",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.outbound.storage._errors.OutboundStorageQuotaError",
         ErrorCode(
             code="REFUSED_OUTBOUND_STORAGE_QUOTA",
@@ -553,6 +564,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_storage_bucket_already_present",
             default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.bucket._errors.BucketPathTooLongError",
+        ErrorCode(
+            code="ERROR_STORAGE_BUCKET_PATH_TOO_LONG",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_storage_bucket_path_too_long",
+            default_suggestion="aeat config check",
             retryable=False,
             runbook_id=None,
         ),

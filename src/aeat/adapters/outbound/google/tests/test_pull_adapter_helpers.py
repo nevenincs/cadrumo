@@ -15,7 +15,6 @@ Guards behaviour of two load-bearing helpers:
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -23,15 +22,19 @@ import pytest
 from .....application.storage.calc_sheets import registry_sha
 from .....core.decimal import coerce_decimal as _coerce_decimal
 from .....core.i18n import tr
-from .....core.resources import resources
-from ....outbound.storage._errors import OutboundStorageConflictError, OutboundStorageValidationError
+from ...storage import (
+    OutboundStorageConflictError,
+    OutboundStorageValidationError,
+)
 from .._calc_sheets_pull import (
     MetadataMatchState,
     _classify_metadata_match,
     _coerce_value,
     _merge_developer_metadata_entries,
+    _parse_relation_metadata,
     pull_operator_edits,
 )
+from ._calc_sheets_support import modelo_130_2025_1t_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -90,17 +93,70 @@ def test_coerce_decimal_parses_int_and_float() -> None:
     assert _coerce_decimal(1500.5) == Decimal("1500.5")
 
 
+def test_parse_relation_metadata_preserves_relation_grounding() -> None:
+    """Pull metadata parser keeps source modelo, source casilla, and registry refs."""
+
+    parsed = _parse_relation_metadata(
+        "value=190.00; provenance=local_filing; source_modelo=115; source_filing_year=2026; "
+        "source_periods=1T+2T+3T+4T; source_casilla_ids=02; legal_refs=ley-35-2006:art-99; "
+        "source_refs=boe-modelo-180-2023-form; resolved_at=2026-06-30T12:00:00+00:00",
+    )
+
+    (
+        provenance,
+        source_modelo,
+        source_filing_year,
+        source_periods,
+        source_casilla_ids,
+        legal_refs,
+        source_refs,
+        resolved_at,
+    ) = parsed
+    assert provenance == "local_filing"
+    assert source_modelo == "115"
+    assert source_filing_year == 2026
+    assert source_periods == ("1T", "2T", "3T", "4T")
+    assert source_casilla_ids == ("02",)
+    assert legal_refs == ("ley-35-2006:art-99",)
+    assert source_refs == ("boe-modelo-180-2023-form",)
+    assert resolved_at is not None and resolved_at.isoformat() == "2026-06-30T12:00:00+00:00"
+
+
+def test_parse_relation_metadata_refuses_malformed_legal_ref() -> None:
+    """Relation metadata must preserve legal ref ids under the registry id contract."""
+
+    with pytest.raises(OutboundStorageValidationError) as raised:
+        _parse_relation_metadata(
+            "provenance=local_filing; legal_refs=Ley-35-2006:art-99; source_refs=boe-modelo-180-2023-form",
+        )
+
+    assert raised.value.context == {
+        "metadata_key": "legal_refs",
+        "metadata_value": "Ley-35-2006:art-99",
+    }
+
+
+def test_parse_relation_metadata_refuses_malformed_source_ref() -> None:
+    """Relation metadata must preserve source ref ids under the registry id contract."""
+
+    with pytest.raises(OutboundStorageValidationError) as raised:
+        _parse_relation_metadata(
+            "provenance=local_filing; legal_refs=ley-35-2006:art-99; source_refs=ley-35-2006:art-99",
+        )
+
+    assert raised.value.context == {
+        "metadata_key": "source_refs",
+        "metadata_value": "ley-35-2006:art-99",
+    }
+
+
 # ---------------------------------------------------------------------------
 # _classify_metadata_match
 # ---------------------------------------------------------------------------
 
 
-def _modelo_130_snapshot():
-    return resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
-
-
 def test_classify_metadata_returns_missing_for_empty_pairs() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     verdict, metadata = _classify_metadata_match({}, snapshot)
     assert verdict is MetadataMatchState.MISSING
     # Missing metadata still returns a PullMetadata placeholder so callers can
@@ -114,7 +170,7 @@ def test_classify_metadata_returns_missing_for_empty_pairs() -> None:
 
 
 def test_classify_metadata_returns_matches_for_aligned_pairs() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
         "aeat_revision_id": snapshot.revision.id,
@@ -132,7 +188,7 @@ def test_classify_metadata_returns_matches_for_aligned_pairs() -> None:
 
 
 def test_classify_metadata_returns_stale_for_mismatched_modelo() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
         "aeat_modelo_id": "131",  # different modelo
         "aeat_revision_id": snapshot.revision.id,
@@ -144,7 +200,7 @@ def test_classify_metadata_returns_stale_for_mismatched_modelo() -> None:
 
 
 def test_classify_metadata_returns_stale_for_mismatched_period() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
         "aeat_revision_id": snapshot.revision.id,
@@ -156,7 +212,7 @@ def test_classify_metadata_returns_stale_for_mismatched_period() -> None:
 
 
 def test_classify_metadata_returns_stale_for_mismatched_year() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
         "aeat_revision_id": snapshot.revision.id,
@@ -169,7 +225,7 @@ def test_classify_metadata_returns_stale_for_mismatched_year() -> None:
 
 def test_classify_metadata_returns_stale_when_filing_year_is_garbage() -> None:
     """A malformed filing_year string defaults to 0 (which never matches)."""
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
         "aeat_revision_id": snapshot.revision.id,
@@ -198,7 +254,7 @@ def test_classify_metadata_returns_stale_for_drifted_registry_sha() -> None:
     calculation surface flowed silently into the local recompute.
     """
 
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
         "aeat_revision_id": snapshot.revision.id,
@@ -221,7 +277,7 @@ def test_classify_metadata_returns_stale_for_drifted_registry_sha() -> None:
 
 
 def test_pull_operator_edits_refuses_blank_spreadsheet_id_before_service_build() -> None:
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_2025_1t_snapshot()
 
     with pytest.raises(OutboundStorageValidationError) as raised:
         pull_operator_edits(snapshot=snapshot, spreadsheet_id="  ", credentials=object())

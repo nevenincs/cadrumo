@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S27'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Implement the redeclaration conformance gate - the terminology sibling of the command-conformance gates - scanning MyST sources for prose re-declarations of enrolled terms and failing on inline redefinition (ADR D7/D8)
 

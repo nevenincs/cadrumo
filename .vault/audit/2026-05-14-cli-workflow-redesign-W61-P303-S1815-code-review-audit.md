@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-30'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-13-cli-workflow-redesign-w61-p303-s1815-exec]]'
@@ -12,8 +12,6 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]'
 ---
-
-
 
 # `cli-workflow-redesign` W61.P303.S1815 Code Review
 

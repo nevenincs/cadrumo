@@ -6,7 +6,7 @@ percentages stay outside Python source and can be revised when the law
 changes without touching engine code. Two functions are exposed:
 
 - :func:`load_recargo_bands` reads and validates the TOML into a tuple
-  of :class:`aeat.domain.deadlines.RecargoBand` records.
+  of :class:`domain.deadlines.RecargoBand` records.
 - :func:`completed_months_late` counts the COMPLETED months between the
   filing deadline and the presentation date (Art. 27.2 LGT counts only
   whole months; a fractional month does not count).

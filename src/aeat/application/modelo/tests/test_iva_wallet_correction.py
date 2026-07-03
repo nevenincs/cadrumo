@@ -28,27 +28,27 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
     derive_calculation_revision_id,
+    derive_work_unit_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...calculations import IvaCompensationHistoryRepository
-from ...user_profile._orchestration import profile_create_storage_span
-from ...user_profile._testing import register_minimal_profile
-from ...workflow._persistence import workflow_state_repository
+from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ...workflow import workflow_state_repository
 from .. import (
     ModeloIvaWalletCorrectionNoRecordError,
     ModeloIvaWalletCorrectionSealedError,
@@ -60,7 +60,8 @@ from .._iva_wallet_gate import taxpayer_nif_for_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "operator"
+_BUCKET_ID = "00000000-0000-4000-8000-000000000303"
+_BUCKET_LABEL = "operator"
 _SEED_YEAR = 2024
 _SEED_PERIOD = "4T"
 _SEED_FILING_PERIOD = Period.from_year_and_code(_SEED_YEAR, _SEED_PERIOD)
@@ -85,7 +86,11 @@ def _runtime(tmp_path: Path) -> Iterator[None]:
         profile_create_storage_span(_BUCKET_ID),
     ):
         workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID),
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=_BUCKET_ID,
+                display_name=_BUCKET_LABEL,
+            ),
         )
         yield
 

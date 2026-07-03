@@ -33,6 +33,7 @@ from __future__ import annotations
 import ast
 from collections import deque
 from collections.abc import Mapping
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -64,6 +65,14 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         "src/aeat/entrypoints/cli/_registry_corpus.py",
         "src/aeat/entrypoints/cli/_review.py",
         "src/aeat/entrypoints/cli/registry.py",
+        # aeat app quickfile / aeat app agent: same _lazy(...) dispatch as
+        # above; each has a dedicated entrypoints/cli/tests/test_app_*.py
+        # driving the real CLI end-to-end, and its payload module is only
+        # reachable through that same dynamically-dispatched command module.
+        "src/aeat/entrypoints/cli/_app_quickfile.py",
+        "src/aeat/entrypoints/cli/_app_quickfile_payloads.py",
+        "src/aeat/entrypoints/cli/_app_agent_workspace.py",
+        "src/aeat/entrypoints/cli/_app_agent_workspace_payloads.py",
         # Registry payload modules are imported by CLI/schema registration
         # paths that are exercised by docs-tool conformance gates outside the
         # production package. They must not be pulled into coverage only by a
@@ -231,6 +240,12 @@ def _transitively_reachable_from_tests(source_tree_ast: Mapping[Path, ast.AST] |
     return seen
 
 
+@cache
+def _cached_transitively_reachable_from_tests() -> set[Path]:
+    """Return the no-argument import closure once per test process."""
+    return _transitively_reachable_from_tests()
+
+
 def _has_import_graph_coverage(module: Path, reachable: set[Path]) -> bool:
     """Return True if ``module`` is in the test-rooted import closure.
 
@@ -246,9 +261,9 @@ def _has_import_graph_coverage(module: Path, reachable: set[Path]) -> bool:
     return False
 
 
-def test_import_graph_helper_recognises_aggregator_pattern(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_import_graph_helper_recognises_aggregator_pattern() -> None:
     """Positive control: portal entries are covered via _registry aggregator."""
-    reachable = _transitively_reachable_from_tests(source_tree_ast)
+    reachable = _cached_transitively_reachable_from_tests()
     # _registry.py imports every portal entry; test_registry.py imports
     # _registry. The closure must therefore include at least one of the
     # portal entry files even though no test_*.py sits next to them.
@@ -268,7 +283,7 @@ def test_import_graph_helper_skips_orphan_modules() -> None:
     assert _module_path_for_dotted("os.path") is None
 
 
-def test_every_production_module_is_reachable_from_a_test(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_every_production_module_is_reachable_from_a_test() -> None:
     """Canonical coverage gate. No allowlist.
 
     Every production module under ``src/aeat/`` (minus the narrow
@@ -294,7 +309,7 @@ def test_every_production_module_is_reachable_from_a_test(source_tree_ast: Mappi
     behavior coverage, not gate green-ness.
     """
     production_modules = _collect_production_modules()
-    reachable = _transitively_reachable_from_tests(source_tree_ast)
+    reachable = _cached_transitively_reachable_from_tests()
     gaps: list[str] = []
     for module in production_modules:
         if _has_import_graph_coverage(module, reachable):

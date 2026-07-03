@@ -15,6 +15,7 @@ Subpackages
 
    aeat.domain.attachments
    aeat.domain.auth
+   aeat.domain.bienes_inversion
    aeat.domain.buckets
    aeat.domain.calculations
    aeat.domain.categories
@@ -29,9 +30,9 @@ Subpackages
    aeat.domain.justificante
    aeat.domain.manuals
    aeat.domain.modelos
-   aeat.domain.normatives
    aeat.domain.portals
    aeat.domain.renta
+   aeat.domain.retention
    aeat.domain.submission
    aeat.domain.transactions
    aeat.domain.usage_ratios

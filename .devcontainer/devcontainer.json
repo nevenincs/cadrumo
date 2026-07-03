@@ -1,0 +1,66 @@
+{
+  "name": "aeat dev (Python 3.13 + uv + Playwright)",
+  // `dockerfile` is resolved relative to this devcontainer.json file;
+  // `context` is the build context passed to `docker build` (repo root, so
+  // the Dockerfile's `COPY . .` sees the full workspace).
+  "build": {
+    "context": "..",
+    "dockerfile": "../Dockerfile"
+  },
+  "workspaceFolder": "/workspace",
+  "remoteUser": "aeat",
+  "containerUser": "aeat",
+
+  // Persist the encrypted secure-storage root and any cached AEAT
+  // certificate/session material across container rebuilds. Per
+  // docs/workstation-setup.md and env/.env.example, this directory holds
+  // regulated personal data (DNI/NIE, cert password references, master-key
+  // material) and must never be baked into the image itself.
+  "mounts": [
+    "source=aeat-config,target=/home/aeat/.config/aeat,type=volume"
+  ],
+
+  // uv sync + Playwright + vault tooling are already pre-baked at image
+  // build time; postCreateCommand only re-syncs against the live-mounted
+  // workspace (picks up any source drift since the image was built) and
+  // provisions the local env file. `playwright install --with-deps` is
+  // deliberately NOT run here — it is unnecessary, per the Dockerfile.
+  "postCreateCommand": "just install && just env-setup",
+
+  "remoteEnv": {
+    // Headless Chromium in the container has no interactive display; the
+    // live AEAT browser paths must run headless. The certificate itself is
+    // per-user and per-machine and is never baked into the image (see
+    // docs/workstation-setup.md); mount or set AEAT_CERTIFICATE_PATH after
+    // the container starts if you need `aeat app live ...` locally.
+    "AEAT_BROWSER_HEADLESS": "true"
+  },
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/workspace/.venv/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": ["src/aeat"],
+        "editor.formatOnSave": true,
+        "editor.rulers": [120],
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": {
+            "source.organizeImports.ruff": "explicit",
+            "source.fixAll.ruff": "explicit"
+          }
+        },
+        "[toml]": {
+          "editor.defaultFormatter": "tamasfe.even-better-toml"
+        }
+      },
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "tamasfe.even-better-toml",
+        "davidanson.vscode-markdownlint"
+      ]
+    }
+  }
+}

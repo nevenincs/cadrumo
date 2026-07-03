@@ -20,10 +20,11 @@ from ....application.operator_surface import render_help_text as _render_help_te
 from ....application.wizard import build_wizard_command as _build_wizard_command
 from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
 from ....application.workflow import read_profile_bucket as _read_profile_bucket
+from ....application.workflow import resolve_profile_bucket as _resolve_profile_bucket
 from ....core import Period as _Period
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors import AeatError as _AeatError
-from ....core.external_constants import OutputLanguage
+from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import get_logger as _get_logger
@@ -36,8 +37,11 @@ from .._errors import command_error_boundary as _command_error_boundary
 from ._apoderado import apoderado_app, register_apoderado_commands
 from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
-from ._bucket_history import _parse_bucket_event_types, register_bucket_history_commands
+from ._bucket_archive import register_bucket_archive_commands
+from ._bucket_history import register_bucket_history_commands
+from ._certificate import certificate_app
 from ._custody import register_custody_commands
+from ._descendiente import register_descendiente_commands
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 from ._profile_bundle import register_profile_bundle_commands
 from ._profile_readiness import (
@@ -48,6 +52,7 @@ from ._profile_readiness import (
 )
 from ._repair_cli import register_repair_maintenance_commands
 from ._repair_profile import register_repair_profile_command
+from ._sandbox import register_sandbox_commands
 
 _log = _get_logger(__name__)
 
@@ -194,7 +199,7 @@ def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None
 @profile_app.command("list", help=tr("cli.config.list.help"))
 def config_list(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -243,7 +248,7 @@ def config_list(
 def config_profile_show(
     ctx: typer.Context,
     name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -270,7 +275,7 @@ def config_profile_show(
         # read the retained record. The verb renders the tombstoned
         # status; it never reports the profile as a live ``ready`` one.
         try:
-            pointer = _read_profile_bucket(name, include_tombstoned=True)
+            pointer = _resolve_profile_bucket(name, include_tombstoned=True)
         except _ProfileLabelAmbiguousError as exc:
             # ``ProfileLabelAmbiguousError`` is a ``WorkflowError``, NOT a
             # ``ValueError``; refuse clearly with the dedicated ambiguity
@@ -446,7 +451,7 @@ def config_profile_preflight(
         "--revision-id",
         help=tr("cli.config.profile.preflight_revision_id_help"),
     ),
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -462,8 +467,8 @@ def config_profile_preflight(
     operators discover the gap via the shell exit status.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import ProfilePreflightService
-    from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
+    from ....application.modelo import modelo_work_profile_preflight_report
+    from ....domain.user_profile import ProfileNotFoundError
 
     pointer = _resolve_active_profile_pointer()
     if pointer is None:
@@ -484,22 +489,33 @@ def config_profile_preflight(
             translated_message="cli.config.profile.preflight_revision_unresolved",
             context={"modelo": modelo, "filing_year": filing_year, "period": period},
         ) from exc
-    resolved_revision_id = _resolve_preflight_revision_id(
-        modelo=modelo,
-        period=filing_period,
-        revision_id=revision_id,
-    )
-    from ....core.resources import resources
     from .._config_payloads import ConfigProfilePreflightResult, ProfilePreflightMissingPayload
 
-    revision = resources().modelos.authority.validate_modelo(modelo).revisions[resolved_revision_id]
-    report = ProfilePreflightService(schema=load_user_profile_schema()).report(
+    report = modelo_work_profile_preflight_report(
         record=record,
         modelo=modelo,
-        revision_id=resolved_revision_id,
+        revision_id=revision_id.strip() if revision_id else "unresolved",
+        filing_year=filing_period.filing_year,
         period=filing_period,
-        revision=revision,
+        resolve_revision_when_missing=False,
     )
+    if report.ready:
+        resolved_revision_id = _resolve_preflight_revision_id(
+            modelo=modelo,
+            period=filing_period,
+            revision_id=revision_id,
+        )
+        from ....core.resources import resources
+
+        revision = resources().modelos.authority.validate_modelo(modelo).revisions[resolved_revision_id]
+        report = modelo_work_profile_preflight_report(
+            record=record,
+            modelo=modelo,
+            revision_id=resolved_revision_id,
+            filing_year=filing_period.filing_year,
+            period=filing_period,
+            revision=revision,
+        )
     result = ConfigProfilePreflightResult(
         profile_id=report.profile_id,
         modelo=report.modelo,
@@ -517,7 +533,14 @@ def config_profile_preflight(
         ],
     )
     lines = [
-        f"readiness\t{'ready' if report.ready else 'missing'}\tmissing={len(report.missing)}",
+        f"profile_readiness\t{'ready' if report.ready else 'missing'}\tmissing={len(report.missing)}",
+        "readiness_scope\tprofile_fields_only",
+        (
+            "full_modelo_readiness_command\t"
+            f"aeat app modelo readiness --modelo {report.modelo} "
+            f"--revision-id {report.revision_id} --year {report.filing_year} "
+            f"--period {report.period.registry_token}"
+        ),
         f"profile_id\t{report.profile_id}",
         f"modelo\t{report.modelo}",
         f"revision_id\t{report.revision_id}",
@@ -535,7 +558,7 @@ def config_profile_preflight(
 def config_profile_validate(
     ctx: typer.Context,
     name: str | None = typer.Argument(None, help=tr("cli.config.profile.validate_name_help")),
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -550,6 +573,7 @@ def config_profile_validate(
     payload (no fact dump).
     """
     _activate_subcommand_output_language(ctx, output_language)
+    from ....application.modelo import modelo_work_profile_baseline_validation_issues
     from ....application.user_profile import ProfileValidationService
     from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
 
@@ -589,7 +613,15 @@ def config_profile_validate(
     from .._config_payloads import ConfigProfileValidateResult, ProfileIssuePayload
 
     report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
-    blocking = [issue for issue in report.issues if issue.severity.value == "error"]
+    issues = list(report.issues)
+    seen_issues = {(issue.code, issue.path) for issue in issues}
+    for issue in modelo_work_profile_baseline_validation_issues(record):
+        key = (issue.code, issue.path)
+        if key in seen_issues:
+            continue
+        seen_issues.add(key)
+        issues.append(issue)
+    blocking = [issue for issue in issues if issue.severity.value == "error"]
     result = ConfigProfileValidateResult(
         profile_id=record.profile_id,
         display_name=record.display_name,
@@ -603,18 +635,18 @@ def config_profile_validate(
                 path=issue.path,
                 message=issue.message,
             )
-            for issue in report.issues
+            for issue in issues
         ],
     )
     lines = [
-        f"readiness\t{'blocked' if blocking else 'ready'}\tissues={len(report.issues)}",
+        f"readiness\t{'blocked' if blocking else 'ready'}\tissues={len(issues)}",
         f"profile_id\t{record.profile_id}",
         f"display_name\t{record.display_name}",
         f"status\t{record.status.value}",
         f"schema_version\t{report.schema_version}",
         f"valid\t{not blocking}",
     ]
-    for issue in report.issues:
+    for issue in issues:
         lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
     _emit_envelope(ctx, command="config.profile.validate", result=result, lines=lines)
     if blocking:
@@ -626,7 +658,7 @@ def config_profile_delete(
     ctx: typer.Context,
     name: str = typer.Argument(..., help=tr("cli.config.profile.delete_name_help")),
     confirmed: bool = typer.Option(False, "--yes", help=tr("cli.config.profile.delete_yes_help")),
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -691,7 +723,7 @@ def config_profile_duplicate(
         "--display-name",
         help=tr("cli.config.profile.duplicate_display_name_help"),
     ),
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -806,7 +838,7 @@ def config_profile_rename(
         help=tr("cli.config.profile.rename_source_help", default="Existing profile name."),
     ),
     target: str = typer.Argument(..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")),
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -887,7 +919,7 @@ def config_profile_rename(
 )
 def config_profile_logout(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -920,7 +952,7 @@ def config_profile_logout(
 @profile_app.command("status", help=tr("cli.config.status.help"))
 def config_status(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
+    output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
@@ -1163,16 +1195,27 @@ register_repair_profile_command(
 )
 register_repair_maintenance_commands(repair_app)
 register_bucket_history_commands(profile_app)
+register_bucket_archive_commands(
+    profile_app,
+    resolve_profile_by_label=_resolve_profile_by_label,
+    resolve_active_profile_pointer=_resolve_active_profile_pointer,
+)
 register_custody_commands(
     app,
     resolve_active_profile_pointer=_resolve_active_profile_pointer,
     resolve_profile_by_label=_resolve_profile_by_label,
     assert_profile_record_present=_assert_profile_record_present,
 )
+register_descendiente_commands(
+    profile_app,
+    resolve_active_profile_pointer=_resolve_active_profile_pointer,
+)
+register_sandbox_commands(profile_app)
 app.add_typer(repair_app, name="repair")
 app.add_typer(profile_app, name="profile")
 register_apoderado_commands(auth_app, resolve_active_profile_pointer=_resolve_active_profile_pointer)
 auth_app.add_typer(auth_diagnostics_app, name="diagnostics")
+auth_app.add_typer(certificate_app, name="certificate")
 app.add_typer(auth_app, name="auth")
 
 from ._google import google_app as _google_app
@@ -1180,19 +1223,21 @@ from ._google import google_app as _google_app
 app.add_typer(_google_app, name="google")
 
 __all__ = [
-    "OutputLanguage",
-    "_parse_bucket_event_types",
     "apoderado_app",
     "app",
     "auth_app",
     "auth_diagnostics_app",
+    "certificate_app",
     "profile_app",
     "register_apoderado_commands",
+    "register_bucket_archive_commands",
     "register_bucket_history_commands",
     "register_custody_commands",
+    "register_descendiente_commands",
     "register_profile_bundle_commands",
     "register_repair_maintenance_commands",
     "register_repair_profile_command",
+    "register_sandbox_commands",
     "repair_app",
     "tr",
 ]

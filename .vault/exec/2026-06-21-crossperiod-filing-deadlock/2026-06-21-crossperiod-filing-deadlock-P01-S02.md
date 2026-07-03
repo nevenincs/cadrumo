@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-21'
-modified: '2026-06-21'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - "[[2026-06-21-crossperiod-filing-deadlock-plan]]"
 ---
-
-
-
 
 # Guard the target-year compute against NoDeadlineWindowsError so a year with no registry windows degrades to NO_PENDING_OBLIGATION rather than UNHANDLED_EXCEPTION
 
@@ -28,4 +25,3 @@ related:
 Landed in commit `6e635f566`. Fixes `test_gate_aborts_when_projection_lacks_the_target`; a never-existing obligation still refuses `NO_PENDING_OBLIGATION`.
 
 ## Notes
-

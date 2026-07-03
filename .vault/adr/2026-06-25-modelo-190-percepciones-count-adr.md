@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#modelo-190-percepciones-count'
 date: '2026-06-25'
-modified: '2026-06-25'
+modified: '2026-06-30'
 related:
   - "[[2026-06-25-modelo-190-percepciones-count-research]]"
 ---
-
-
 
 # `modelo-190-percepciones-count` adr: `Modelo 190 percepciones count: distinct-(perceptor,clave) over the withholding source` | (**status:** `accepted`)
 

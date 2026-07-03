@@ -10,35 +10,52 @@ that exercise the same surface live in the sibling
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
-from functools import cache
 from pathlib import Path
-from typing import cast
 
-import click
 import pytest
-from click.testing import CliRunner, Result
-from typer.main import get_command
+from click.testing import Result
 
-from ....adapters.persistence.storage.bucket._layout import bucket_paths
-from ....adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
-from ....adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
-from ....core.config import load_settings
+from ....adapters.persistence.storage import (
+    BUCKETS_DIRNAME,
+    KEYSTORE_DIRNAME,
+)
+from ....core.i18n import tr
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._config import profile_app
-from ._profile_lifecycle_support import seed, stage_bucket_manifest
+from ._profile_lifecycle_support import distinct_nif, seed, stage_bucket_manifest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-_PROFILE_APP_RUNNER = CliRunner()
+
+_PROFILE_LABEL = tr("application.wizard.output_labels.profile", locale="en")
+_ACTIVE_PROFILE_LABEL = tr("application.wizard.output_labels.active_profile", locale="en")
+_STATUS_LABEL = tr("application.wizard.output_labels.status", locale="en")
+_NEXT_LABEL = tr("application.wizard.output_labels.next", locale="en")
+_CREATED = tr("wizard.commands.status.created", locale="en")
+_UPDATED = tr("wizard.commands.status.updated", locale="en")
+_ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS = (
+    "--quiet",
+    "--tax-id",
+    "NIF/CIF/DNI/NIE",
+    "--entity-type",
+    "natural_person",
+    "--irpf-income-categories",
+    "actividad_economica",
+    "--tax-residence-ccaa",
+    "madrid",
+    "--name",
+    "GIVEN_NAME",
+    "--surnames",
+    "FAMILY_NAMES",
+)
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
     # profile_create_storage_span (called inside seed) resolves the
     # file-backed master-key provider provisioned by this fixture.
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        yield storage_root
 
 
 def _invoke_config(args: Sequence[str]) -> Result:
@@ -49,17 +66,104 @@ def _invoke_profile(args: Sequence[str]) -> Result:
     return _invoke_config(("profile", *args))
 
 
-@cache
-def _profile_app_command() -> click.Command:
-    return cast(click.Command, get_command(profile_app))
-
-
 def _invoke_profile_app(args: Sequence[str]) -> Result:
-    return _PROFILE_APP_RUNNER.invoke(_profile_app_command(), list(args))
+    return _invoke_profile(args)
 
 
 def _invoke_repair(args: Sequence[str]) -> Result:
     return _invoke_config(("repair", *args))
+
+
+def _bucket_directories_without_manifest(storage_root: Path) -> tuple[Path, ...]:
+    buckets_root = storage_root / BUCKETS_DIRNAME
+    if not buckets_root.is_dir():
+        return ()
+    return tuple(
+        entry for entry in buckets_root.iterdir() if entry.is_dir() and not (entry / "manifest.toml").is_file()
+    )
+
+
+def test_config_profile_create_second_profile_uses_requested_identity_while_first_is_active() -> None:
+    """Creating beta in alpha's live root must not reuse alpha's active bucket."""
+
+    alpha = _invoke_profile(
+        (
+            "create",
+            "alpha",
+            "--quiet",
+            "--tax-id",
+            distinct_nif("alpha"),
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Alpha",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "alpha-design",
+            "--iva-regime",
+            "GENERAL",
+        ),
+    )
+    assert alpha.exit_code == 0, alpha.output
+    assert f"{_PROFILE_LABEL}\talpha" in alpha.output
+    assert f"{_ACTIVE_PROFILE_LABEL}\talpha" in alpha.output
+
+    beta = _invoke_profile(
+        (
+            "create",
+            "beta",
+            "--quiet",
+            "--tax-id",
+            distinct_nif("beta"),
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Beta",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "beta-consulting",
+            "--iva-regime",
+            "GENERAL",
+        ),
+    )
+    assert beta.exit_code == 0, beta.output
+    assert f"{_PROFILE_LABEL}\tbeta" in beta.output
+    assert f"{_ACTIVE_PROFILE_LABEL}\tbeta" in beta.output
+    assert f"{_PROFILE_LABEL}\talpha" not in beta.output
+    assert f"{_ACTIVE_PROFILE_LABEL}\talpha" not in beta.output
+
+    from ....application.workflow import read_profile_bucket
+
+    alpha_pointer = read_profile_bucket("alpha")
+    beta_pointer = read_profile_bucket("beta")
+    assert alpha_pointer is not None
+    assert beta_pointer is not None
+    assert alpha_pointer.bucket_id != beta_pointer.bucket_id
+
+    listing = _invoke_profile(("list",))
+    assert listing.exit_code == 0, listing.output
+    assert "active_profile\tbeta" in listing.output
+    assert " \talpha" in listing.output
+    assert "*\tbeta" in listing.output
+
+    alpha_show = invoke_cached_cli(("--profile", "alpha", "config", "profile", "show"))
+    beta_show = invoke_cached_cli(("--profile", "beta", "config", "profile", "show"))
+    assert alpha_show.exit_code == 0, alpha_show.output
+    assert beta_show.exit_code == 0, beta_show.output
+
+    assert "display_name\talpha" in alpha_show.output
+    assert "identity.name\tAlpha" in alpha_show.output
+    assert "activities.description\talpha-design" in alpha_show.output
+    assert "display_name\tbeta" not in alpha_show.output
+    assert "activities.description\tbeta-consulting" not in alpha_show.output
+
+    assert "display_name\tbeta" in beta_show.output
+    assert "identity.name\tBeta" in beta_show.output
+    assert "activities.description\tbeta-consulting" in beta_show.output
+    assert "display_name\talpha" not in beta_show.output
+    assert "activities.description\talpha-design" not in beta_show.output
 
 
 def test_config_switch_activates_existing_profile() -> None:
@@ -150,32 +254,6 @@ def test_repair_profile_named_active_clear_active_clears_pointer(tmp_path: Path)
     assert read_pointer(tmp_path) is None
 
 
-def test_repair_profile_manifest_status_backfills_legacy_active_manifest() -> None:
-    from ....application.user_profile._orchestration import profile_storage_session
-
-    seed("operator")
-    root = load_settings().aeat_local_storage_root
-    target = manifest_path(bucket_paths(root, "operator"))
-
-    # The repair scenario: a legacy manifest has no ``status`` field.  The
-    # session must be opened BEFORE stripping the status, because
-    # _bucket_key_schedule calls read_manifest which enforces status presence;
-    # the session stays open (via the context manager) while we mutate the
-    # manifest on disk and invoke the repair command.
-    with profile_storage_session("operator"):
-        legacy_text = "\n".join(
-            line for line in target.read_text(encoding="utf-8").splitlines() if not line.startswith("status = ")
-        )
-        target.write_text(f"{legacy_text}\n", encoding="utf-8")
-
-        result = _invoke_repair(("profile", "--repair-manifest-status", "--yes"))
-
-    assert result.exit_code == 0, result.output
-    assert "repaired\tTrue" in result.output
-    assert "manifest_status\tactive" in result.output
-    assert read_manifest(bucket_paths(root, "operator")).status is BucketLifecycleStatus.ACTIVE
-
-
 def test_config_profile_create_refuses_existing_profile() -> None:
     seed("operator")
 
@@ -219,11 +297,25 @@ def test_config_profile_create_bare_name_refusal_names_both_recovery_paths() -> 
     output = result.output
     # Both concrete recovery paths are named in the message body.
     assert "aeat config profile create NAME" in output
-    assert "--quiet --tax-id NIF/CIF/DNI/NIE" in output
+    advertised_command = "aeat config profile create NAME " + " ".join(_ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS)
+    assert advertised_command in output
     # No internal tokens leak into the operator-facing refusal.
     assert "flow_id" not in output
     assert "('tax-id'" not in output
     assert "missing:" not in output
+
+    concrete_replacements = {
+        "NIF/CIF/DNI/NIE": distinct_nif("advertised-create"),
+        "GIVEN_NAME": "Luna",
+        "FAMILY_NAMES": "Operator",
+    }
+    concrete_flags = tuple(
+        concrete_replacements.get(token, token) for token in _ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS
+    )
+    created = _invoke_profile(("create", "advertised-create", *concrete_flags))
+    assert created.exit_code == 0, created.output
+    assert f"{_PROFILE_LABEL}\tadvertised-create" in created.output
+    assert f"{_STATUS_LABEL}\t{_CREATED}" in created.output
 
 
 def test_config_profile_create_quiet_without_flags_names_the_missing_flags() -> None:
@@ -251,7 +343,7 @@ def test_config_profile_create_quiet_without_flags_names_the_missing_flags() -> 
 
 
 def test_config_profile_edit_refuses_missing_profile_without_creating_bucket() -> None:
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     result = _invoke_profile_app(
         (
@@ -282,25 +374,29 @@ def test_config_switch_emits_profile_activated_event() -> None:
     captures workflow-state-level selection).
     """
 
-    from ....application.user_profile._orchestration import profile_storage_session
-    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ....application.user_profile import profile_storage_session
+    from ....application.workflow import read_profile_bucket
+    from ....domain.buckets import BucketEventType
 
     seed("operator")
+    pointer = read_profile_bucket("operator")
+    assert pointer is not None
     result = _invoke_config(("switch", "operator"))
     assert result.exit_code == 0, result.output
 
     # The bucket-event-history catalogue is encrypted; reading it requires an
-    # active session for the "operator" bucket.
-    with profile_storage_session("operator"):
+    # active session for the operator profile's UUID bucket.
+    with profile_storage_session(pointer.bucket_id):
         catalogue = BucketEventHistoryRepository().load()
     matching = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.PROFILE_ACTIVATED and event.object_id == "operator"
+        if event.event_type is BucketEventType.PROFILE_ACTIVATED and event.object_id == pointer.bucket_id
     ]
     assert matching, [event.event_type for event in catalogue.events.values()]
-    assert matching[-1].payload["profile_id"] == "operator"
-    assert matching[-1].payload["active_profile"] == "operator"
+    assert matching[-1].payload["profile_id"] == pointer.bucket_id
+    assert matching[-1].payload["active_profile"] == pointer.bucket_id
 
 
 def test_config_profile_show_emits_active_profile_facts() -> None:
@@ -396,6 +492,27 @@ def test_config_profile_show_reports_a_tombstoned_profile_as_tombstoned() -> Non
     assert "record_validity\tvalid" not in result.output
 
 
+def test_config_profile_show_inspects_a_tombstoned_profile_by_label_and_uuid() -> None:
+    """``show`` preserves tombstoned inspect behavior for label and UUID targets."""
+
+    from ....application.workflow import read_profile_bucket
+
+    seed("operator")
+    pointer = read_profile_bucket("operator")
+    assert pointer is not None
+    tombstoned_uuid = pointer.bucket_id
+
+    assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
+    by_label = _invoke_profile(("show", "operator"))
+    by_uuid = _invoke_profile(("show", tombstoned_uuid))
+
+    for result in (by_label, by_uuid):
+        assert result.exit_code == 0, result.output
+        assert "status\ttombstoned" in result.output
+        assert "record_validity\ttombstoned" in result.output
+        assert "Unknown profile" not in result.output
+
+
 def test_config_profile_duplicate_copies_to_new_id() -> None:
     seed("operator")
     result = _invoke_profile_app(("duplicate", "operator", "operator-spouse", "--display-name", "Spouse"))
@@ -410,7 +527,7 @@ def test_config_profile_duplicate_copies_to_new_id() -> None:
     assert f"source_profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert f"target_profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\tSpouse" in result.output
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     assert read_profile_bucket("Spouse") is not None
 
@@ -442,7 +559,7 @@ def test_config_profile_duplicate_target_token_is_the_addressable_label() -> Non
     assert duplicated.exit_code == 0, duplicated.output
     assert "display_name\toperator-copy" in duplicated.output
 
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.workflow import read_profile_bucket
 
     assert read_profile_bucket("operator-copy") is not None
 
@@ -492,7 +609,21 @@ def test_show_and_status_do_not_contradict_on_a_freshly_created_profile() -> Non
     shows ``readiness ready`` on one surface and ``readiness blocked`` on
     the other.
     """
-    create_result = _invoke_profile(("create", "maria", "--quiet", "--tax-id", "12345678Z"))
+    create_result = _invoke_profile(
+        (
+            "create",
+            "maria",
+            "--quiet",
+            "--tax-id",
+            "12345678Z",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Maria",
+            "--surnames",
+            "Operator",
+        ),
+    )
     assert create_result.exit_code == 0, create_result.output
 
     show_result = _invoke_profile(("show", "maria"))
@@ -548,8 +679,12 @@ def test_config_profile_create_quiet_emits_confirmation() -> None:
             "--quiet",
             "--tax-id",
             "12345678Z",
+            "--entity-type",
+            "natural_person",
             "--name",
             "Test",
+            "--surnames",
+            "Operator",
             "--activity",
             "Design",
             "--iva-regime",
@@ -558,10 +693,10 @@ def test_config_profile_create_quiet_emits_confirmation() -> None:
     )
 
     assert result.exit_code == 0, result.output
-    assert "profile\tfreshprofile" in result.output
-    assert "Status\tcreated" in result.output
-    assert "active_profile\tfreshprofile" in result.output
-    assert "next\t" in result.output
+    assert f"{_PROFILE_LABEL}\tfreshprofile" in result.output
+    assert f"{_STATUS_LABEL}\t{_CREATED}" in result.output
+    assert f"{_ACTIVE_PROFILE_LABEL}\tfreshprofile" in result.output
+    assert f"{_NEXT_LABEL}\t" in result.output
 
 
 def test_config_profile_edit_quiet_emits_updated_confirmation() -> None:
@@ -586,8 +721,8 @@ def test_config_profile_edit_quiet_emits_updated_confirmation() -> None:
     )
 
     assert result.exit_code == 0, result.output
-    assert "profile\teditme" in result.output
-    assert "Status\tupdated" in result.output
+    assert f"{_PROFILE_LABEL}\teditme" in result.output
+    assert f"{_STATUS_LABEL}\t{_UPDATED}" in result.output
 
 
 def test_config_profile_edit_non_tty_recovery_hint_points_at_edit() -> None:
@@ -659,3 +794,99 @@ def test_config_profile_create_nif_error_does_not_leak_internal_keys() -> None:
     assert "question_id" not in result.output
     # The plain-language diagnostic must be present.
     assert "NIF" in result.output or "nif" in result.output or "tax" in result.output.lower()
+
+
+def test_config_profile_create_joint_family_validation_names_failing_flags() -> None:
+    """A cross-field profile refusal must name the concrete CLI flags."""
+
+    result = _invoke_profile(
+        (
+            "create",
+            "joint-family",
+            "--quiet",
+            "--tax-id",
+            distinct_nif("joint-family"),
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Joint",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "Design",
+            "--iva-regime",
+            "GENERAL",
+            "--taxation-type",
+            "2",
+            "--family-minor-children-in-unit",
+        ),
+    )
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert "La entrada del comando no superó la validación" not in result.output
+    assert "command input failed validation" not in result.output
+    assert "config repair" not in result.output
+    assert "--spouse-tax-id" in result.output
+    assert "--taxation-type" in result.output
+
+
+def test_config_profile_create_invalid_nif_does_not_leave_orphan_bucket(_isolated_backend: Path) -> None:
+    """A NIF validation failure must not leave a manifest-less bucket behind."""
+
+    result = _invoke_profile(
+        (
+            "create",
+            "badnif",
+            "--quiet",
+            "--tax-id",
+            "NOTANIF",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Test",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "Design",
+            "--iva-regime",
+            "GENERAL",
+        ),
+    )
+
+    assert result.exit_code != 0
+    assert "NIF" in result.output or "nif" in result.output or "tax" in result.output.lower()
+    assert _bucket_directories_without_manifest(_isolated_backend) == ()
+    keystore_root = _isolated_backend / KEYSTORE_DIRNAME
+    assert not keystore_root.is_dir() or tuple(keystore_root.iterdir()) == ()
+
+    valid = _invoke_profile(
+        (
+            "create",
+            "goodnif",
+            "--quiet",
+            "--tax-id",
+            distinct_nif("goodnif"),
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Valid",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "Design",
+            "--iva-regime",
+            "GENERAL",
+        ),
+    )
+    assert valid.exit_code == 0, valid.output
+
+    listing = _invoke_profile(("list",))
+    assert listing.exit_code == 0, listing.output
+    assert "*\tgoodnif" in listing.output
+    assert "badnif" not in listing.output
+
+    shown = _invoke_profile(("show", "goodnif"))
+    assert shown.exit_code == 0, shown.output
+    assert "display_name\tgoodnif" in shown.output
+    assert _bucket_directories_without_manifest(_isolated_backend) == ()

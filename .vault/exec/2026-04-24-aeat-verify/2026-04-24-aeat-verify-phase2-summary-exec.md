@@ -3,14 +3,12 @@ tags:
   - '#exec'
   - '#aeat-verify'
 date: '2026-04-24'
-modified: '2026-04-24'
+modified: '2026-06-30'
 related:
   - "[[2026-04-24-aeat-verify-plan]]"
   - "[[2026-04-24-aeat-verify-adr]]"
   - "[[2026-04-24-aeat-verify-phase1-summary-exec]]"
 ---
-
-
 
 # `aeat-verify` `phase-2` `navigation-and-parsers`
 

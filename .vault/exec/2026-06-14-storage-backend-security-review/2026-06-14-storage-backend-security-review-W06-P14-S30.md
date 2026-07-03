@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#storage-backend-security-review'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S30'
 related:
   - "[[2026-06-14-storage-backend-security-review-plan]]"
 ---
-
-
-
 
 # Make secure-object namespace enumeration stream decrypted rows instead of materialising and sorting the full set
 
@@ -19,7 +16,6 @@ related:
 - `src/aeat/adapters/persistence/storage/sql/secure_objects.py`
 
 ## Description
-
 
 - Audit the enumeration path: `SecureObjectRepository.iter_records_with_failures` already streams the raw SQL scan (`stream_results=True`, `yield_per`, `ORDER BY object_key`, per-row decrypt, fault-isolated).
 - Trace the materialise+sort named by M8 to `SecureBoundRepository.iter_ids` / `iter_records` (`envelope/_secure_repository.py`): both buffer every decrypted row and `sorted(...)` in Python.
@@ -52,7 +48,6 @@ streaming would weaken this was avoided by streaming *through* `list_records`
 rather than bypassing it). The contract test now compares order-independently.
 
 ## Notes
-
 
 The earlier deferral judged this net-negative on the assumption that relaxing the
 ordering contract churned consumers for no gain. Re-framed under the completion

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-workflow-redesign'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-05-21-taxpayer-type-applicability-adr]]'
@@ -12,7 +12,6 @@ related:
   - '[[2026-05-21-cli-testimonial-audit]]'
   - '[[2026-05-26-corporate-tax-runtime-plan]]'
 ---
-
 
 # `cli-workflow-redesign` plan: taxpayer entity-type / regime / enrolment model
 

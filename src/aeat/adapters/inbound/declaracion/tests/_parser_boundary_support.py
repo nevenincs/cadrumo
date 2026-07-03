@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
 
@@ -16,7 +17,7 @@ from .....core.resources import resources
 from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .....domain.justificante import PdfModeloImportError
 from .....tests import FIXTURES_DIR
-from ...pdf._utils import source_pdf_reference_path
+from ...pdf import source_pdf_reference_path
 from .. import parse_declaracion
 from .._errors import DeclaracionParseError, TemplateNotDetectedError
 from .._parser import _extract_pages_words
@@ -60,6 +61,7 @@ __all__ = [
     "TemplateNotDetectedError",
     "_casilla_id",
     "_casilla_ids",
+    "_expected_casilla_values",
     "_expected_period",
     "_extract_pages_words",
     "_modelo_130_snapshot",
@@ -116,6 +118,10 @@ def _casilla_ids(*values: object) -> tuple[CasillaId, ...]:
     return tuple(_casilla_id(value) for value in values)
 
 
+def _expected_casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
+    return {_casilla_id(casilla_id): amount for casilla_id, amount in values.items()}
+
+
 _MODELO_130_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(*(f"{index:02d}" for index in range(1, 20)))
 
 _MODELO_111_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(
@@ -155,7 +161,7 @@ _MODELO_123_CURRENT_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(
 )
 
 _MODELO_123_HISTORICAL_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(
-    *(f"{index:02d}-legacy" for index in range(1, 9)),
+    *(f"{index:02d}" for index in range(1, 9)),
 )
 
 

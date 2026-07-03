@@ -9,25 +9,21 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import IVARegime
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    LedgerFilingSnapshot,
     derive_calculation_revision_id,
+    derive_work_unit_id,
+    upsert_calculation_revision,
 )
-from ....domain.modelos._ledger_filing_snapshot import LedgerFilingSnapshot
-from ....domain.modelos._work_unit import derive_work_unit_id
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile._orchestration import profile_create_storage_span
-from ...user_profile._testing import register_minimal_profile
-from ...workflow._persistence import workflow_state_repository
+from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ...workflow import workflow_state_repository
 from .._export import (
     ModeloExportCommand,
     ModeloExportEvidenceMissingError,
@@ -45,9 +41,12 @@ _CUOTA_CASILLA: CasillaId = validated_casilla_id("cuota", surface="_CUOTA_CASILL
 
 @pytest.fixture
 def active_profile(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span("operator"):
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
+    ):
         workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="operator"),
+            lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"),
         )
         yield
 

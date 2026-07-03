@@ -20,7 +20,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ......core.errors import ERROR_REGISTRY, build_error_envelope
-from ...bucket._errors import RecoveryVerificationError
+from ...bucket import RecoveryVerificationError
 from .._recovery import (
     decode_mnemonic,
     encode_mnemonic,

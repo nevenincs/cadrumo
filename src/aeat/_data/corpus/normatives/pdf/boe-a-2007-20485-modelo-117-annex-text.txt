@@ -1,0 +1,39 @@
+Impuesto sobre la Renta de las Personas Fisicas
+Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes
+
+Retenciones e ingresos a cuenta / Pago a cuenta
+Rentas o ganancias patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos
+de acciones y participaciones representativas del capital o del patrimonio de las instituciones
+de inversion colectiva y de las transmisiones de derechos de suscripcion.
+
+Modelo 117
+
+Liquidacion
+
+Rentas o ganancias patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos
+de acciones y participaciones representativas del capital o del patrimonio de las instituciones
+de inversion colectiva:
+
+Numero de perceptores: 01
+Base de retenciones e ingresos a cuenta: 02
+Retenciones e ingresos a cuenta: 03
+
+Rentas o ganancias patrimoniales obtenidas como consecuencia de las transmisiones de derechos
+de suscripcion:
+
+Numero de perceptores: 04
+Base de retenciones e ingresos a cuenta: 05
+Retenciones e ingresos a cuenta: 06
+
+Pago a cuenta previsto en la disposicion adicional decimonovena de la Ley 35/2006:
+
+Base del pago a cuenta: 07
+Pago a cuenta: 08
+
+Total liquidacion:
+Suma de retenciones, ingresos a cuenta, pagos a cuenta y regularizacion, en su caso ([03] + [06] + [08]): 09
+
+A deducir:
+Resultados a ingresar de anteriores declaraciones por el mismo concepto, ejercicio y periodo: 10
+
+Resultado a ingresar ([09] - [10]): 11

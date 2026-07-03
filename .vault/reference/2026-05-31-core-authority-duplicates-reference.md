@@ -9,7 +9,6 @@ related:
   - '[[2026-05-31-core-authority-adr]]'
 ---
 
-
 # Core authority duplicates reference
 
 Mechanical breadth scan of src/aeat/ for declarations with identical names across 2+ modules, classified as semantic duplicates vs accidental name collisions.

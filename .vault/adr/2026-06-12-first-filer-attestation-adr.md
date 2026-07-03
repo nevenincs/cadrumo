@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#first-filer-attestation'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-29'
 related:
   - "[[2026-06-12-first-filer-attestation-research]]"
 ---
@@ -22,7 +22,7 @@ The research establishes the precise mechanics: `cross_period_dependency_require
 
 ## Considerations
 
-The research grounds the legal reality this ADR depends on. Spanish tax law does not require a first-period filer to have filed anything for periods before activity began. The Modelo 130 obligation arises from carrying on economic activity (RD 439/2007 art. 110, cumulative-from-start-of-activity computation); the resultados-negativos-anteriores carry is a same-ejercicio prior-quarter carry only (RD 439/2007 art. 110.5; `max_year_delta = 0`), so a quarter before activity began has no prior saldo to carry: the carry is null, not unevidenced. The Modelo 100 prior-year-negative carry cites Ley 35/2006 art. 48; a first-year filer has no prior ejercicio that could have generated the saldo.
+The research grounds the legal reality this ADR depends on. Spanish tax law does not require a first-period filer to have filed anything for periods before activity began. The Modelo 130 obligation arises from carrying on economic activity (RD 439/2007 art. 110, cumulative-from-start-of-activity payment framework); the resultados-negativos-anteriores carry is a same-ejercicio prior-quarter carry only (`max_year_delta = 0`), so a quarter before activity began has no prior saldo to carry: the carry is null, not unevidenced. Current verification on 2026-06-29 rejects the old `RD 439/2007 art. 110.5` premise: the current BOE consolidated art. 110 has no vigente apartado 5, and the casilla 15 mechanics are grounded in AEAT Modelo 130 instructions. The Modelo 100 prior-year-negative carry cites Ley 35/2006 art. 48; a first-year filer has no prior ejercicio that could have generated the saldo.
 
 The real-world evidence that activity started in a given period is the alta de nueva actividad in the censo (Modelo 036/037), which AEAT publishes on the G313 Mis Datos Censales page. The codebase already captures it: `CensoSnapshot.censo_facts` carries the dotted key `censo.activity_start_date`, populated from the live G313 sede read; the snapshot is persisted at IDENTITY sensitivity, content-addressed, and lifecycle-managed, with AEAT documented as the binding legal source of truth and the local profile a cache that must be kept honest. The fact is captured but never consumed by the clean-state gate, the calculation actions, or the overview calendar.
 

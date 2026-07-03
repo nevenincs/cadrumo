@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -14,6 +14,11 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.storage.sql import SecureObjectRepository
@@ -38,33 +43,21 @@ from ....application.ledger import (
 from ....core import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.attachments import Attachment, AttachmentKind, AttachmentSource
-from ....domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepository,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.categories import SpendingCategory
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
+from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
+    WorkUnitCatalogue,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -72,7 +65,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
     TransactionValidationError,
@@ -93,6 +85,8 @@ def _casilla_id(value: object) -> CasillaId:
 
 
 _REVISION_CASILLA: CasillaId = _casilla_id("01")
+_BUCKET_ID = "26262626-2626-4626-8626-262626262626"
+_OTHER_BUCKET_ID = "27272727-2727-4727-8727-272727272727"
 
 __all__ = [
     "POST_UPDATE_EVENT_PAYLOADS",
@@ -101,6 +95,8 @@ __all__ = [
     "TAXABLE_IVA_EXPECTATIONS",
     "UPDATED_FIELD_EXPECTATIONS",
     "UTC",
+    "_BUCKET_ID",
+    "_OTHER_BUCKET_ID",
     "Attachment",
     "AttachmentKind",
     "AttachmentSource",
@@ -132,6 +128,7 @@ __all__ = [
     "TransactionLifecycleState",
     "TransactionValidationError",
     "UsageRatioProfile",
+    "_create_manual_row",
     "_repositories",
     "archive_manual_transaction",
     "attach_manual_transaction_evidence",
@@ -159,15 +156,44 @@ __all__ = [
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
 
-def _repositories(objects: SecureObjectRepository, *, bucket_id: str = "bucket-a"):
+def _repositories(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID):
     return (
         TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
         BucketEventHistoryRepository(objects=objects),
     )
+
+
+def _create_manual_row(
+    secure_objects: SecureObjectRepository,
+    *,
+    description: str,
+    idempotency_key: str,
+    amount: Decimal | None = None,
+    booked_date: date | None = None,
+    occurred_at: datetime | None = None,
+) -> tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, ManualLedgerTransactionResult]:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    resolved_booked_date = booked_date if booked_date is not None else date(2026, 5, 2)
+    resolved_amount = amount if amount is not None else Decimal("25.00")
+    resolved_occurred_at = occurred_at if occurred_at is not None else datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
+    created = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=_BUCKET_ID,
+            booked_date=resolved_booked_date,
+            amount=resolved_amount,
+            direction=TransactionDirection.OUTGOING,
+            description=description,
+            idempotency_key=idempotency_key,
+        ),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=resolved_occurred_at,
+    )
+    return transaction_repository, event_repository, created
 
 
 def _purchase_invoice() -> Invoice:
@@ -182,7 +208,7 @@ def _purchase_invoice() -> Invoice:
     return Invoice.model_validate(
         {
             "kind": InvoiceKind.RECEIVED,
-            "bucket_id": "bucket-a",
+            "bucket_id": _BUCKET_ID,
             "invoice_number": "P-2026-001",
             "issued_at": date(2026, 5, 2),
             "counterparty_name": "Proveedor SL",
@@ -205,7 +231,7 @@ def _raw_import_transaction(
     description: str = "provider import row",
 ) -> RawTransaction:
     return RawTransaction(
-        transaction_id=transaction_id,
+        provider_transaction_id=transaction_id,
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
         amount=amount,
@@ -257,8 +283,10 @@ def _persist_verified_revision_citing_transaction(
     objects: SecureObjectRepository,
     *,
     transaction_id: str,
-    bucket_id: str = "bucket-a",
+    additional_transaction_ids: Iterable[str] = (),
+    bucket_id: str = _BUCKET_ID,
 ) -> None:
+    source_transaction_ids = (transaction_id, *tuple(additional_transaction_ids))
     period = Period.from_year_and_code(2026, "1T")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -272,7 +300,7 @@ def _persist_verified_revision_citing_transaction(
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
         casilla_values={_REVISION_CASILLA: Decimal("1")},
-        source_transaction_ids=(transaction_id,),
+        source_transaction_ids=source_transaction_ids,
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -292,7 +320,7 @@ def _persist_verified_revision_citing_transaction(
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
-        source_transaction_ids=(transaction_id,),
+        source_transaction_ids=source_transaction_ids,
         casilla_values={_REVISION_CASILLA: Decimal("1")},
         observations=registry_grounded_observations(
             modelo="303",
@@ -319,9 +347,15 @@ def persist_verified_revision_citing_transaction(
     objects: SecureObjectRepository,
     *,
     transaction_id: str,
-    bucket_id: str = "bucket-a",
+    additional_transaction_ids: Iterable[str] = (),
+    bucket_id: str = _BUCKET_ID,
 ) -> None:
-    _persist_verified_revision_citing_transaction(objects, transaction_id=transaction_id, bucket_id=bucket_id)
+    _persist_verified_revision_citing_transaction(
+        objects,
+        transaction_id=transaction_id,
+        additional_transaction_ids=additional_transaction_ids,
+        bucket_id=bucket_id,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -358,7 +392,7 @@ def _drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> 
     purchase_evidence = _purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     command = ManualLedgerTransactionCommand(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         booked_date=date(2026, 5, 2),
         value_date=date(2026, 5, 3),
         amount=Decimal("121.00"),
@@ -387,7 +421,7 @@ def _drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> 
     persisted = reloaded.get(result.ref.transaction_id)
     assert persisted is not None
     assert tuple(reloaded.transactions) == (result.ref.transaction_id,)
-    events = event_repository.load().for_bucket("bucket-a")
+    events = event_repository.load().for_bucket(_BUCKET_ID)
     return _CreateManualOutcome(
         result=result,
         persisted=persisted,

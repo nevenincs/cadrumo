@@ -15,12 +15,13 @@ import typer
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import list_manual_transactions, resolve_transaction_id
 from ...core.i18n import tr
 from ...domain.categories import SpendingCategory
-from ...domain.contribuyente._renta_codes import FiscalResidency
-from ...domain.deadlines._models import IrpfSpecialRegime
-from ...domain.transactions import TransactionCatalogueRepository, TransactionIdPrefixError
+from ...domain.contribuyente import FiscalResidency
+from ...domain.deadlines import IrpfSpecialRegime
+from ...domain.transactions import TransactionIdPrefixError, TransactionValidationError
 from ._common import _bad, parse_decimal_amount, parse_optional_decimal_amount
 
 
@@ -78,7 +79,7 @@ def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
     """Resolve a CLI-supplied id or unambiguous prefix to a live transaction id.
 
     The single shared CLI-boundary wrapper over the canonical
-    :func:`aeat.application.ledger.resolve_transaction_id`. Used by the *mutation*
+    :func:`resolve_transaction_id`. Used by the *mutation*
     verbs (update, classify, allocate, link, attach, doclink, archive, stash,
     restore, remove, split, merge). It matches only ids of rows still in the
     catalogue, because a mutation always targets a live row. Read verbs use the
@@ -244,6 +245,16 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
         tr(
             "cli.ledger.errors.command_input_invalid",
             details=details or tr("cli.ledger.errors.command_input_invalid_fallback"),
+        ),
+    )
+
+
+def _ledger_transaction_validation_bad(error: TransactionValidationError) -> typer.BadParameter:
+    """Convert a typed transaction validation error into a specific refusal."""
+    return _bad(
+        tr(
+            "cli.ledger.errors.command_input_invalid",
+            details=str(error) or tr("cli.ledger.errors.command_input_invalid_fallback"),
         ),
     )
 

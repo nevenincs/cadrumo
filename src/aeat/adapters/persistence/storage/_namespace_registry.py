@@ -27,6 +27,7 @@ BUCKET_BLOBS_DIRNAME = "blobs"
 BUCKET_AUDIT_DIRNAME = "audit"
 BUCKET_MANIFEST_FILENAME = "manifest.toml"
 BUCKET_LOCK_FILENAME = ".lock"
+BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME = "output-language.hint"
 KEYSTORE_DIRNAME = "keystore"
 BUCKET_DEK_FILENAME = "bucket.dek.json"
 BLOB_MANIFEST_SCHEMA_VERSION = 1
@@ -40,6 +41,33 @@ class StorageNamespaceScope(StrEnum):
     PROFILE_LOCAL = "profile_local"
     BUCKET_LOCAL = "bucket_local"
     PROCESS_LOCAL = "process_local"
+
+
+class StorageCustodyDisposition(StrEnum):
+    """Transport custody disposition for one secure-object namespace."""
+
+    STRUCTURED_CUSTODY = "structured_custody"
+    FULL_CUSTODY_ONLY = "full_custody_only"
+    DERIVED_REBUILDABLE = "derived_rebuildable"
+    PROCESS_LOCAL = "process_local"
+
+
+class StorageCustodyProfile(StrEnum):
+    """Secure-object custody transport profile."""
+
+    FULL = "full"
+    STRUCTURED = "structured"
+
+
+_CUSTODY_PROFILE_DISPOSITIONS: dict[StorageCustodyProfile, frozenset[StorageCustodyDisposition]] = {
+    StorageCustodyProfile.FULL: frozenset(
+        {
+            StorageCustodyDisposition.STRUCTURED_CUSTODY,
+            StorageCustodyDisposition.FULL_CUSTODY_ONLY,
+        },
+    ),
+    StorageCustodyProfile.STRUCTURED: frozenset({StorageCustodyDisposition.STRUCTURED_CUSTODY}),
+}
 
 
 class StorageRemoteMirrorPolicy(StrEnum):
@@ -71,6 +99,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
     schema_version: int = Field(ge=1)
     object_key_grammar: str = Field(min_length=1)
     scope: StorageNamespaceScope
+    custody_disposition: StorageCustodyDisposition
     default_object_key: str | None = Field(default=None, min_length=1)
     remote_mirror_policy: StorageRemoteMirrorPolicy = StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA
     remote_mirror_requires_revision: bool = True
@@ -198,6 +227,14 @@ class StorageHierarchyRegistry(BaseModel):
                 return path
         raise KeyError(key)
 
+    def namespaces_for_custody_profile(
+        self,
+        profile: StorageCustodyProfile,
+    ) -> tuple[SecureObjectNamespaceDefinition, ...]:
+        """Return carried :class:`SecureObjectNamespaceDefinition` rows for a custody profile."""
+        dispositions = _CUSTODY_PROFILE_DISPOSITIONS[profile]
+        return tuple(namespace for namespace in self.namespaces if namespace.custody_disposition in dispositions)
+
 
 def secure_object_logical_path(namespace: str, object_key: str) -> Path:
     """Return the registry-defined logical SQL marker for one secure object."""
@@ -222,6 +259,7 @@ WORKFLOW_STATE_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="state",
     default_object_key=SECURE_OBJECT_WORKFLOW_STATE_KEY,
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
 WORKFLOW_RUN_NAMESPACE = SecureObjectNamespaceDefinition(
     key="workflow_runs",
@@ -231,6 +269,7 @@ WORKFLOW_RUN_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{run_id}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
 USER_PROFILE_VALUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="user_profile_value",
@@ -240,6 +279,7 @@ USER_PROFILE_VALUE_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="user-profile:{profile_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 USER_PROFILE_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="user_profile_snapshot",
@@ -249,6 +289,7 @@ USER_PROFILE_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="user-profile-snapshot:{profile_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 PROFILE_INVENTORY_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_inventory_ledger",
@@ -259,6 +300,7 @@ PROFILE_INVENTORY_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="default",
     default_object_key=SECURE_OBJECT_DEFAULT_KEY,
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 PROFILE_ASSETS_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_assets_ledger",
@@ -269,6 +311,7 @@ PROFILE_ASSETS_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="default",
     default_object_key=SECURE_OBJECT_DEFAULT_KEY,
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_assets_amortization_ledger",
@@ -279,6 +322,18 @@ PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="default",
     default_object_key=SECURE_OBJECT_DEFAULT_KEY,
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
+PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="profile_bienes_inversion_iva_register",
+    namespace="aeat.persistence.profile.bienes_inversion",
+    owner="aeat.adapters.persistence.profile.bienes_inversion",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 REPAIR_INTEGRITY_DECISION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="repair_integrity_decisions",
@@ -288,6 +343,9 @@ REPAIR_INTEGRITY_DECISION_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{decision_id_sha256_hex}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    # Host-local storage-repair decisions are bound to the host that made them and
+    # are not portable bucket data; they are not carried by an export.
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
 APPLICATION_FILING_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="application_filing_history",
@@ -297,6 +355,7 @@ APPLICATION_FILING_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{modelo}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 AUTH_APODERADO_CONFIGURATION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="auth_apoderado_configuration",
@@ -306,6 +365,10 @@ AUTH_APODERADO_CONFIGURATION_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{bucket_id}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    # Durable per-bucket apoderamiento setup (represented NIF + granted scopes): it
+    # is not a host credential or session and is not re-derivable, so it must
+    # survive a recovery restore. Sealed-only because it carries identity data.
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 CALCULATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="calculation_observations",
@@ -315,6 +378,7 @@ CALCULATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{modelo}:{filing_year}:{period}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 # Per-perceptor retención records (perceptor NIF + scheme + taxable base +
 # retención) for the M180/M193 calc-mesh perceptor-count resolver. The
@@ -334,6 +398,7 @@ RETENCION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     # the encrypted payload, never in a repository identifier.
     object_key_grammar="{modelo}:{filing_year}:{period}:{sha256(perceptor_nif)}:{scheme}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 WITHHOLDING_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="withholding_observations",
@@ -347,6 +412,7 @@ WITHHOLDING_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     # are non-identifying AEAT percepcion codes, so they stay plain in the key.
     object_key_grammar="{modelo}:{filing_year}:{period}:{sha256(perceptor_tax_id)}:{clave}:{subclave}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="iva_wallet_reconciliation_decisions",
@@ -356,6 +422,7 @@ IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="iva-wallet-decision:{sha256(taxpayer_nif,target_year,target_period)}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="iva_wallet_reconciliation_decision_events",
@@ -365,6 +432,7 @@ IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE = SecureObjectNamespaceDefin
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="iva-wallet-decision-event:{sha256(decision_identity_and_payload)}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 IVA_COMPENSATION_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="iva_compensation_history",
@@ -374,6 +442,7 @@ IVA_COMPENSATION_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="303:{filing_year}:{period}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_iva_remote_state_acquisitions",
@@ -385,6 +454,7 @@ LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE = SecureObjectNamespaceDefinition(
         "live-iva-acquisition:{target_year}:{target_period}:{timestamp}:{sha256(redacted_manifest_seed)}"
     ),
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 APPLICATION_EVIDENCE_BUNDLE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="application_evidence_bundles",
@@ -394,6 +464,7 @@ APPLICATION_EVIDENCE_BUNDLE_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{bundle_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="ledger_purchase_invoice_evidence",
@@ -403,6 +474,7 @@ LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{bucket_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="ledger_business_operation_invoices",
@@ -412,6 +484,7 @@ LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{bucket_id}:{source_kind}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
     key="ledger_classification_rules",
@@ -421,6 +494,7 @@ LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{rule_id}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_borrador_100_snapshot",
@@ -430,6 +504,7 @@ LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="modelo-100-borrador-snapshot:{bucket_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 LIVE_CENSO_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_censo_snapshot",
@@ -439,6 +514,7 @@ LIVE_CENSO_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="censo-snapshot:{bucket_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 LIVE_M036_DECLARATION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_m036_declaration",
@@ -448,6 +524,7 @@ LIVE_M036_DECLARATION_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="m036-declaration:{bucket_id}:{declaration_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 TEST_SNAPSHOT_BASE_PROBE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_snapshot_base_probe",
@@ -457,42 +534,46 @@ TEST_SNAPSHOT_BASE_PROBE_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="snapshot-base-probe:{bucket_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
     remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY,
     remote_mirror_requires_revision=False,
     remote_mirror_requires_integrity_manifest=False,
 )
 TEST_SESSION_LIFECYCLE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_session_lifecycle",
-    namespace="aeat.test.session.lifecycle",
+    namespace="aeat-test.session.lifecycle",
     owner="aeat.entrypoints.cli.test_session_lifecycle_roundtrip",
     sensitivity=SensitivityClass.OPERATIONAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="roundtrip-row",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
     remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY,
     remote_mirror_requires_revision=False,
     remote_mirror_requires_integrity_manifest=False,
 )
 TEST_SECURE_BOUND_CONTRACT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_secure_bound_contract",
-    namespace="aeat.test.envelope.secure_bound_contract",
+    namespace="aeat-test.envelope.secure_bound_contract",
     owner="aeat.adapters.persistence.storage.envelope.test_secure_bound_repository_contract",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
     remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY,
     remote_mirror_requires_revision=False,
     remote_mirror_requires_integrity_manifest=False,
 )
 TEST_RUNTIME_PROFILE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_runtime_profile",
-    namespace="aeat.tests.runtime.profile",
-    owner="aeat.tests.test_secure_sql",
+    namespace="aeat-tests.runtime.profile",
+    owner="aeat-tests.test_secure_sql",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="runtime-row",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
     remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY,
     remote_mirror_requires_revision=False,
     remote_mirror_requires_integrity_manifest=False,
@@ -505,6 +586,7 @@ LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="expedientes-snapshot:{bucket_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_notifications_snapshot",
@@ -514,6 +596,7 @@ LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="notifications-snapshot:{bucket_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_justificante_capture_snapshot",
@@ -523,6 +606,7 @@ LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="justificante-capture-snapshot:{bucket_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 LIVE_VERIFY_OBSERVATION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_verify_observations",
@@ -532,6 +616,7 @@ LIVE_VERIFY_OBSERVATION_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="verify-observation:{bucket_id}:{observation_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 ATTACHMENT_BLOB_NAMESPACE = SecureObjectNamespaceDefinition(
     key="attachment_blobs",
@@ -541,6 +626,7 @@ ATTACHMENT_BLOB_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{sha256_hex}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 ATTACHMENT_MANIFEST_NAMESPACE = SecureObjectNamespaceDefinition(
     key="attachment_manifests",
@@ -550,6 +636,7 @@ ATTACHMENT_MANIFEST_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{attachment_id_sha256_hex}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 AEAT_BROWSER_SESSION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="aeat_browser_sessions",
@@ -559,6 +646,7 @@ AEAT_BROWSER_SESSION_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{storage_state_path_posix}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
 CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="clave_movil_diagnostics",
@@ -568,6 +656,7 @@ CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{diagnostic_id_or_timestamp_iso}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
 GOOGLE_OAUTH_CLIENT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_oauth_client",
@@ -577,6 +666,7 @@ GOOGLE_OAUTH_CLIENT_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{profile}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
 GOOGLE_OAUTH_TOKEN_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_oauth_token",
@@ -586,6 +676,7 @@ GOOGLE_OAUTH_TOKEN_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{profile}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
 GOOGLE_OAUTH_METADATA_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_oauth_metadata",
@@ -595,6 +686,7 @@ GOOGLE_OAUTH_METADATA_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{profile}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
 GOOGLE_DRIVE_CONFIG_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_drive_config",
@@ -604,6 +696,7 @@ GOOGLE_DRIVE_CONFIG_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{profile}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
 LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_cache",
@@ -613,6 +706,7 @@ LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{logical_root}|{provider}|{model}|{prompt_hash}|{args_hash}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
 LLM_USAGE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_usage",
@@ -622,6 +716,17 @@ LLM_USAGE_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{logical_root}|{created_at_iso}|{request_id}|{uuid4_hex}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+)
+LLM_RUN_TELEMETRY_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="llm_run_telemetry",
+    namespace="aeat.outbound.llm.run_telemetry",
+    owner="aeat.adapters.outbound.llm",
+    sensitivity=SensitivityClass.DIAGNOSTIC,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{logical_root}|{started_at_iso}|{run_id}|{uuid4_hex}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
 AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="aeat_filed_declaration_artefacts",
@@ -631,6 +736,7 @@ AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{sha256_hex}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="aeat_filed_declaration_observations",
@@ -640,6 +746,7 @@ AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{sha256(modelo,ejercicio,period,expediente_id)}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="aeat_iva_wallet_observations",
@@ -649,6 +756,7 @@ AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{sha256(taxpayer_nif,target_year,target_period,captured_at)}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 
 BUCKET_EVENT_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
@@ -660,6 +768,7 @@ BUCKET_EVENT_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="catalogue",
     default_object_key=SECURE_OBJECT_CATALOGUE_KEY,
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 SUBMISSION_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="submission_records",
@@ -669,6 +778,7 @@ SUBMISSION_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{submission_id}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 JUSTIFICANTE_METADATA_NAMESPACE = SecureObjectNamespaceDefinition(
     key="justificante_metadata",
@@ -678,6 +788,7 @@ JUSTIFICANTE_METADATA_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{csv}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 FILING_DRAFTS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="filing_drafts",
@@ -687,6 +798,7 @@ FILING_DRAFTS_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{draft_id}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 FILING_AMENDMENTS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="filing_amendments",
@@ -696,6 +808,7 @@ FILING_AMENDMENTS_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{amendment_id}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 INVOICE_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="invoice_catalogue",
@@ -706,6 +819,7 @@ INVOICE_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="catalogue",
     default_object_key=SECURE_OBJECT_CATALOGUE_KEY,
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 TRANSACTION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="transaction_catalogue",
@@ -715,6 +829,7 @@ TRANSACTION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="transaction-catalogue:{bucket_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 USAGE_RATIO_PROFILE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="usage_ratio_profile",
@@ -724,6 +839,7 @@ USAGE_RATIO_PROFILE_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="profile:{bucket_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 MODELO_WORK_UNIT_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="modelo_work_unit_catalogue",
@@ -734,6 +850,7 @@ MODELO_WORK_UNIT_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="catalogue",
     default_object_key=SECURE_OBJECT_CATALOGUE_KEY,
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="modelo_verification_report_catalogue",
@@ -744,6 +861,7 @@ MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition
     object_key_grammar="catalogue",
     default_object_key=SECURE_OBJECT_CATALOGUE_KEY,
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 MODELO_FILING_RECORD_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="modelo_filing_record_catalogue",
@@ -754,6 +872,7 @@ MODELO_FILING_RECORD_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="catalogue",
     default_object_key=SECURE_OBJECT_CATALOGUE_KEY,
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="modelo_calculation_revision_catalogue",
@@ -764,6 +883,7 @@ MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinitio
     object_key_grammar="catalogue",
     default_object_key=SECURE_OBJECT_CATALOGUE_KEY,
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 TRANSACTION_PARTICIPATION_INDEX_NAMESPACE = SecureObjectNamespaceDefinition(
     key="transaction_participation_index",
@@ -773,6 +893,7 @@ TRANSACTION_PARTICIPATION_INDEX_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{transaction_id}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.DERIVED_REBUILDABLE,
 )
 DOMAIN_NAMESPACE_DEFINITIONS = (
     BUCKET_EVENT_HISTORY_NAMESPACE,
@@ -834,6 +955,13 @@ STORAGE_PATH_DEFINITIONS = (
         segment=BUCKET_LOCK_FILENAME,
     ),
     StoragePathDefinition(
+        key="bucket_output_language_hint",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/buckets/<bucket_id>/output-language.hint",
+        owner="aeat.adapters.persistence.storage.bucket",
+        segment=BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME,
+    ),
+    StoragePathDefinition(
         key="keystore_bucket",
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/keystore/<bucket_id>/",
@@ -871,6 +999,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         PROFILE_INVENTORY_LEDGER_NAMESPACE,
         PROFILE_ASSETS_LEDGER_NAMESPACE,
         PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
+        PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
         REPAIR_INTEGRITY_DECISION_NAMESPACE,
         APPLICATION_FILING_HISTORY_NAMESPACE,
         AUTH_APODERADO_CONFIGURATION_NAMESPACE,
@@ -906,6 +1035,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         GOOGLE_DRIVE_CONFIG_NAMESPACE,
         LLM_CACHE_NAMESPACE,
         LLM_USAGE_NAMESPACE,
+        LLM_RUN_TELEMETRY_NAMESPACE,
         AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
         AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
         AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
@@ -955,9 +1085,11 @@ __all__ = [
     "LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE",
     "LIVE_VERIFY_OBSERVATION_NAMESPACE",
     "LLM_CACHE_NAMESPACE",
+    "LLM_RUN_TELEMETRY_NAMESPACE",
     "LLM_USAGE_NAMESPACE",
     "PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE",
     "PROFILE_ASSETS_LEDGER_NAMESPACE",
+    "PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE",
     "PROFILE_INVENTORY_LEDGER_NAMESPACE",
     "REPAIR_INTEGRITY_DECISION_NAMESPACE",
     "SECRET_RECORD_SCHEMA_VERSION",
@@ -975,6 +1107,8 @@ __all__ = [
     "WORKFLOW_RUN_NAMESPACE",
     "WORKFLOW_STATE_NAMESPACE",
     "SecureObjectNamespaceDefinition",
+    "StorageCustodyDisposition",
+    "StorageCustodyProfile",
     "StorageHierarchyRegistry",
     "StorageNamespaceScope",
     "StoragePathDefinition",

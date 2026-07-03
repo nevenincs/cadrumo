@@ -16,7 +16,7 @@ intentionally tiny:
 * :data:`SubjectTaxId` — pydantic-ready alias for fields that must carry a
   validated Spanish tax identifier.
 
-The module lives in :mod:`aeat.core` because identity validation is a
+The module lives in :mod:`core` because identity validation is a
 domain concern, not a persistence concern. The persistence layer's
 redaction rule patterns remain permissive (over-redaction is the safer
 failure mode); domain code that needs a strict yes/no answer consumes
@@ -34,6 +34,14 @@ from ._documents import (
     IdentityDocument,
     IdentityError,
     validate_identity,
+)
+from ._nif_iva import (
+    NIF_IVA_FORMATS,
+    NifIvaFormatSpec,
+    NifIvaPrefix,
+    nif_iva_format_for_country,
+    nif_iva_prefix_for_country,
+    normalise_nif_iva,
 )
 from ._profile import ProfileId
 from ._snapshot import SnapshotId
@@ -62,14 +70,20 @@ malformed identifier fails fast at the model boundary with an
 """
 
 __all__ = [
+    "NIF_IVA_FORMATS",
     "BucketId",
     "IdentityDocument",
     "IdentityError",
+    "NifIvaFormatSpec",
+    "NifIvaPrefix",
     "ProfileId",
     "SnapshotId",
     "SubjectTaxId",
     "TransactionId",
     "nif_check_letter",
+    "nif_iva_format_for_country",
+    "nif_iva_prefix_for_country",
+    "normalise_nif_iva",
     "validate_identity",
     "validate_spanish_tax_id",
 ]

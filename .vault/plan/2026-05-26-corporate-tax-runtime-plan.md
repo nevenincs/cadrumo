@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#corporate-tax-runtime'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-21-corporate-entity-calculation-adr]]'
@@ -12,7 +12,6 @@ related:
   - '[[2026-06-04-corporate-tax-runtime-adr]]'
   - '[[2026-06-04-corporate-tax-runtime-research]]'
 ---
-
 
 # `corporate-tax-runtime` plan: IS micro-empresa bracket dispatch, INCN-gated Modelo 202 modality, new-entity period rate
 

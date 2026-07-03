@@ -1,7 +1,7 @@
 ---
 tags: ['#exec', '#modelo-addressing-ux']
 date: '2026-06-05'
-modified: '2026-06-05'
+modified: '2026-06-30'
 step_id: 'S25'
 related:
   - '[[2026-06-05-modelo-addressing-ux-plan]]'
@@ -48,4 +48,3 @@ Scope:
 
 - `vaultspec-rag` code search for `work resume legacy id lookup modelo year period natural key workflow run` returned `_resume.py` `find_latest_run_for_period`, `resume_modelo_workflow`, and current resume locale/help surfaces.
 - Direct `rg` inventory confirmed `_modelo_work_runs_cli.py` is the only current CLI owner of resume target parsing.
-

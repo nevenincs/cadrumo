@@ -11,6 +11,7 @@ Authority: ``2026-06-03-bucket-sealed-archive-adr``.
 
 from __future__ import annotations
 
+import gzip
 import tarfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -82,9 +83,21 @@ def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
         SealedArchiveHeaderError: When ``header.json`` fails strict
             validation as :class:`ExportArchiveHeader`.
         SealedArchivePayloadError: When the payload member cannot be
-            read (truncated archive). Decryption failures surface
-            from this same class when the caller's
-            :class:`Envelope` parse fails.
+            read, or when a torn write truncated the gzip stream so the
+            decompression layer raises ``EOFError`` / ``gzip.BadGzipFile``.
+            Decryption failures surface from this same class when the
+            caller's :class:`Envelope` parse fails.
+
+    Truncation-detection scope: a torn write that damages the gzip stream
+    (the common case) is caught here at read time and surfaces as
+    ``SealedArchivePayloadError``. A *near-complete* truncation that still
+    decompresses to the expected two or three members passes this reader;
+    it is caught downstream by the AEAD tag on the encrypted payload, which
+    the importer verifies before it provisions any bucket store, so a torn
+    archive never restores a partial bucket. Read-time detection of a
+    near-complete truncation would require a trailing integrity marker in
+    the archive format (writer + reader change); that hardening is a tracked
+    follow-up recorded in the crash-window reference.
     """
     try:
         with tarfile.open(source_path, mode="r:gz") as archive:
@@ -106,6 +119,16 @@ def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
     except tarfile.TarError as exc:
         raise SealedArchiveLayoutError(
             f"sealed-archive read refused: tar layer rejected the archive: {type(exc).__name__}: {exc}",
+        ) from exc
+    except (gzip.BadGzipFile, EOFError) as exc:
+        # A torn write truncates the gzip stream: the decompression layer
+        # raises ``EOFError`` (stream ended before the end-of-stream marker)
+        # or ``gzip.BadGzipFile`` (a damaged gzip header/CRC). Neither is an
+        # ``OSError`` on every platform, so surface them explicitly as the
+        # documented truncation error rather than leaking a raw builtin.
+        raise SealedArchivePayloadError(
+            f"sealed-archive read of {source_path!s} refused: archive is truncated or its gzip "
+            f"stream is incomplete: {type(exc).__name__}: {exc}",
         ) from exc
     except OSError as exc:
         raise SealedArchivePayloadError(

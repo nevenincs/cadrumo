@@ -1,30 +1,87 @@
-"""Application-layer command and result contracts for the user profile backend.
+"""Lazy application facade for schema-driven user-profile operations.
 
-This package owns the lifecycle API contracts for the centralised
-schema-driven profile backend. The domain layer
-(``aeat.domain.user_profile``) owns the schema, value records, and
-registry-contract validation; this package owns the application-layer
-service surface: strict Pydantic command and result records that flow
-between the CLI thin adapters, the secure-storage persistence wiring,
-and the calculation/filing/aggregation consumers.
+This package is the application boundary for the centralised profile
+backend. The domain layer (:mod:`domain.user_profile`) owns the
+schema, value records, selector registry contract, and portable-export
+payload type :class:`domain.user_profile.UserProfilePortableExport`.
+This package owns the command/result records and service entry points
+that operate on that contract: lifecycle orchestration, validation and
+preflight checks, Censo synchronisation, capability and custody helpers,
+consumer projections, bucket-scoped storage sessions, and portable
+bundle serialisation.
 
-The records here have no business logic — they are the typed contract.
-The service implementations live in sibling modules
-(``ProfileLifecycleService``, ``ProfileSnapshotService``,
-``ProfileValidationService``, ``ProfilePreflightService``) and the
-secure-storage adapters that consume these records. The aggregate passed
-across service boundaries is :class:`UserProfileRecord`.
+The records here have no business logic; they are the typed contract
+passed between CLI adapters, secure-storage persistence wiring,
+bucket-maintenance flows, Modelo readiness gates, workflow adapters, and
+calculation/filing/aggregation consumers. The aggregate passed across
+service boundaries is :class:`domain.user_profile.UserProfileRecord`.
+The service implementations live in sibling modules and are exposed as
+lazy facade members, including
+:class:`ProfileLifecycleService`,
+:class:`UserProfileSnapshotRepository`,
+:class:`ProfileValidationService`, and
+:class:`ProfilePreflightService`.
+
+Portable export composition follows the same split.
+:func:`serialize_profile_bundle` and :func:`deserialize_profile_bundle` live
+on this facade so CLI config and bucket-maintenance code compose through
+top-level re-exports, while the bundle payload remains the domain-layer
+:class:`domain.user_profile.UserProfilePortableExport`. The current v3 bundle
+is the only accepted import shape. Its default
+:attr:`adapters.persistence.storage.StorageCustodyProfile.STRUCTURED` scope
+carries the typed profile, work-unit, ledger, calculation, and filing categories
+plus registry-selected secure-object rows. Sealed bucket backup requests
+:attr:`adapters.persistence.storage.StorageCustodyProfile.FULL`,
+which asserts every populated secure-object namespace has a registry
+custody disposition before export. Generic carried rows use their natural
+object keys rather than stored HMAC lookup digests, so import can
+re-save them through the target bucket's secure-object substrate and
+re-encrypt under the recipient bucket DEK.
+
+Custody helpers exposed here are application commands over storage-owned
+secret-store primitives. :func:`mint_recovery_code`,
+:func:`verify_recovery_code`, :func:`rekey_secret_store`, and
+:func:`recover_secret_store` resolve runtime settings, update active-bucket
+recovery metadata when needed, and return typed result records while leaving key
+wrapping and recovery envelope persistence in :mod:`adapters.persistence.storage`.
+
+Projection and baseline helpers such as
+:func:`record_to_path_values`, :func:`projection_for_taxpayer`, and
+:func:`missing_filing_baseline_flags` provide the canonical schema-path and
+deadline-engine shapes consumed by filing gates instead of recreating profile
+fact decoding downstream.
 
 Every re-exported name is resolved on demand through module-level
 ``__getattr__`` (PEP 562). Top-level imports in this file are reserved
-for genuinely lightweight setup (the active-profile language-resolver
-registration) so the boundary itself does not drag the domain-record /
-registry / service module surfaces into ``sys.modules``. The
-state-free CLI surfaces (``aeat``, ``aeat --version``, ``aeat --help``)
-must not pay the registry cost via this boundary, which the
-:mod:`aeat.entrypoints.cli.test_lazy_command_tree` gate and the
+for genuinely lightweight setup (:class:`core.identity.ProfileId`
+and the active-profile language-resolver registration) so the boundary
+itself does not drag the domain portable-export / registry / service
+module surfaces into ``sys.modules``. The state-free CLI surfaces
+(``aeat``, ``aeat --version``, ``aeat --help``) must not pay the
+registry cost via this boundary, which the
+:mod:`entrypoints.cli.test_lazy_command_tree` gate and the
 producer-side probe in
-:mod:`aeat.application.user_profile.test_lazy_boundary` both enforce.
+:mod:`application.user_profile.test_lazy_boundary` both enforce.
+
+See Also:
+    :mod:`domain.user_profile`
+        Domain schema, value records, registry-selector contract, and lazy
+        portable-export payload consumed by this facade.
+    :class:`ProfileLifecycleService`
+        Application service for register, edit, rename, duplicate, snapshot, and
+        remove operations over :class:`domain.user_profile.UserProfileRecord`.
+    :class:`CensoSyncService`
+        Censo snapshot comparison and profile-fact application service.
+    :mod:`application.bucket_maintenance`
+        Bucket lifecycle facade that composes this package's portable-bundle
+        serialiser and deserialiser for sealed export/import.
+    :mod:`adapters.persistence.storage`
+        Secure-object repository, namespace custody registry, and master-key
+        recovery primitives composed by this facade without owning storage
+        policy.
+    :mod:`application.modelo`
+        Filing-grade modelo workflows that consume profile preflight and
+        projection helpers from this boundary.
 """
 
 from __future__ import annotations
@@ -88,6 +145,7 @@ if TYPE_CHECKING:
         RemoveProfileCommand,
         RenameProfileCommand,
     )
+    from ._completeness import iva_regime_required
     from ._custody import (
         CustodyRecoverResult,
         CustodyRecoveryEnrollment,
@@ -101,7 +159,15 @@ if TYPE_CHECKING:
         rekey_secret_store,
         verify_recovery_code,
     )
+    from ._custody_carry import (
+        carried_namespace_definitions,
+        restore_carried_objects,
+        serialize_carried_objects,
+    )
     from ._filing_baseline import missing_filing_baseline_flags
+    from ._integrity import ProfileIntegrityError
+    from ._keys_validation import list_profile_key_records, validate_profile_values
+    from ._language_resolver import resolve_profile_output_language_hint
     from ._lifecycle import ProfileLifecycleService
     from ._orchestration import (
         ProfileAlreadyRegisteredError,
@@ -112,10 +178,12 @@ if TYPE_CHECKING:
         profile_create_storage_span,
         profile_storage_session,
         read_active_profile,
+        refuse_duplicate_label,
         register_active_profile,
         remove_active_profile,
         remove_profile_bucket_directory,
         rename_profile,
+        require_registered_label,
         select_profile,
         select_profile_with_lifecycle_span,
         set_active_field,
@@ -138,6 +206,7 @@ if TYPE_CHECKING:
         user_profile_snapshot_object_key,
         user_profile_value_object_key,
     )
+    from ._testing import register_minimal_profile
     from ._validation import ProfileValidationService
 
 # W09.P43.S166: replace the prior side-effect import with an explicit
@@ -264,6 +333,18 @@ def __getattr__(name: str):
         from ._filing_baseline import missing_filing_baseline_flags
 
         return missing_filing_baseline_flags
+    if name == "iva_regime_required":
+        from ._completeness import iva_regime_required
+
+        return iva_regime_required
+    if name in ("list_profile_key_records", "validate_profile_values"):
+        from . import _keys_validation
+
+        return getattr(_keys_validation, name)
+    if name == "resolve_profile_output_language_hint":
+        from ._language_resolver import resolve_profile_output_language_hint
+
+        return resolve_profile_output_language_hint
     if name in (
         "ProfileAlreadyRegisteredError",
         "build_lifecycle_service",
@@ -273,10 +354,12 @@ def __getattr__(name: str):
         "profile_create_storage_span",
         "profile_storage_session",
         "read_active_profile",
+        "refuse_duplicate_label",
         "register_active_profile",
         "remove_active_profile",
         "remove_profile_bucket_directory",
         "rename_profile",
+        "require_registered_label",
         "select_profile",
         "select_profile_with_lifecycle_span",
         "set_active_field",
@@ -309,6 +392,22 @@ def __getattr__(name: str):
         from . import _capabilities
 
         return getattr(_capabilities, name)
+    if name == "ProfileIntegrityError":
+        from ._integrity import ProfileIntegrityError
+
+        return ProfileIntegrityError
+    if name in (
+        "carried_namespace_definitions",
+        "restore_carried_objects",
+        "serialize_carried_objects",
+    ):
+        from . import _custody_carry
+
+        return getattr(_custody_carry, name)
+    if name == "register_minimal_profile":
+        from ._testing import register_minimal_profile
+
+        return register_minimal_profile
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -341,6 +440,7 @@ __all__ = [
     "ProfileAlreadyRegisteredError",
     "ProfileId",
     "ProfileImportResult",
+    "ProfileIntegrityError",
     "ProfileLifecycleResult",
     "ProfileLifecycleService",
     "ProfileListResult",
@@ -366,11 +466,14 @@ __all__ = [
     "UserProfileSnapshotRepository",
     "UserProfileStatus",
     "build_lifecycle_service",
+    "carried_namespace_definitions",
     "delete_profile_with_lifecycle_span",
     "deserialize_profile_bundle",
     "fact_value",
     "facts_to_values",
     "inspect_recovery_status",
+    "iva_regime_required",
+    "list_profile_key_records",
     "logout_active_profile",
     "mint_recovery_code",
     "missing_filing_baseline_flags",
@@ -382,20 +485,27 @@ __all__ = [
     "record_to_values",
     "recover_secret_store",
     "recovery_wrap_path",
+    "refuse_duplicate_label",
     "register_active_profile",
+    "register_minimal_profile",
     "rekey_secret_store",
     "remove_active_profile",
     "remove_profile_bucket_directory",
     "rename_profile",
+    "require_registered_label",
     "resolve_active_capability",
     "resolve_capability",
+    "resolve_profile_output_language_hint",
+    "restore_carried_objects",
     "select_profile",
     "select_profile_with_lifecycle_span",
+    "serialize_carried_objects",
     "serialize_profile_bundle",
     "set_active_field",
     "set_active_fields",
     "snapshot_to_values",
     "user_profile_snapshot_object_key",
     "user_profile_value_object_key",
+    "validate_profile_values",
     "verify_recovery_code",
 ]

@@ -1,9 +1,9 @@
 """Read-side repository ports for rental-register aggregation.
 
 These :class:`~typing.Protocol` declarations are the hexagonal boundary
-between the pure :mod:`aeat.domain.fincas` aggregation logic and the
+between the pure :mod:`domain.fincas` aggregation logic and the
 ORM-backed concrete repositories that live in the persistence adapter
-(:mod:`aeat.adapters.persistence.profile.fincas`). The aggregation
+(:mod:`adapters.persistence.profile.fincas`). The aggregation
 functions in :mod:`._aggregates` annotate against these ports and depend
 only on the read methods they call, never on SQLAlchemy or the storage
 mapper rows — keeping the domain layer free of adapter coupling.
@@ -12,6 +12,18 @@ The concrete adapter repositories satisfy these ports structurally; no
 explicit subclassing is required. Each port declares exactly the read
 method the aggregation pipeline consumes (interface segregation), so a
 port change is a real change to what the domain needs.
+
+The port set is :class:`FincaReader`, :class:`ArrendamientoReader`,
+:class:`FincaRendimientoReader`, :class:`FincaGastoReader`, and
+:class:`FincaAmortizacionLedgerReader`; each returns the corresponding
+:class:`Finca`, :class:`Arrendamiento`, :class:`FincaRendimientoRecord`,
+:class:`FincaGasto`, or :class:`FincaAmortizacionLedgerEntry` record. The
+adapter implementations are
+:class:`~adapters.persistence.profile.fincas.FincaRepository`,
+:class:`~adapters.persistence.profile.fincas.ArrendamientoRepository`,
+:class:`~adapters.persistence.profile.fincas.FincaRendimientoRepository`,
+:class:`~adapters.persistence.profile.fincas.FincaGastoRepository`, and
+:class:`~adapters.persistence.profile.fincas.FincaAmortizacionLedgerRepository`.
 """
 
 from __future__ import annotations

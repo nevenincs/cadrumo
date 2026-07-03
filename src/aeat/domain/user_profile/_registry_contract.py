@@ -14,13 +14,13 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field
 
-from ..calculations._export_field_kind import CasillaFieldKind
 from ._schema import ProfileSchemaDefinition
 
 if TYPE_CHECKING:
     from ..calculations.registry import ModeloDefinition, ModeloRevision
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import BindingSourceKind
 
 
 class UserProfileRegistryContractSeverity(StrEnum):
@@ -154,7 +154,7 @@ def _binding_issues(
 ) -> tuple[UserProfileRegistryContractIssue, ...]:
     issues: list[UserProfileRegistryContractIssue] = []
     for binding in revision.bindings:
-        if binding.source != "profile":
+        if binding.source != BindingSourceKind.PROFILE:
             continue
         selectors = tuple(profile_binding_selectors(binding.selector))
         if not selectors:
@@ -260,6 +260,11 @@ def _export_issues(
     revision: ModeloRevision,
     index: UserProfileSelectorIndex,
 ) -> tuple[UserProfileRegistryContractIssue, ...]:
+    # Function-local import keeps ``aeat.domain.user_profile`` free of an
+    # eager calculation-registry load at package import (the lazy-boundary
+    # contract); this validator is the only runtime consumer of the enum.
+    from ..calculations.registry import CasillaFieldKind
+
     issues: list[UserProfileRegistryContractIssue] = []
     for layout in revision.export_layouts:
         for record in layout.records:
@@ -295,7 +300,9 @@ def _export_issues(
     return tuple(issues)
 
 
-def profile_binding_selectors(selector: Mapping[str, object]) -> tuple[str, ...]:
+def profile_binding_selectors(selector: Mapping[str, object] | BaseModel) -> tuple[str, ...]:
+    if isinstance(selector, BaseModel):
+        selector = selector.model_dump(exclude={"source"}, exclude_none=True, exclude_unset=True)
     selectors: list[str] = []
     profile_key = selector.get("profile_key")
     if isinstance(profile_key, str):

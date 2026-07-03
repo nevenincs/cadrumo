@@ -3,15 +3,13 @@ tags:
   - '#adr'
   - '#schema-hardening'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - '[[2026-05-27-schema-hardening-casilla-continuity-contract-research]]'
   - '[[2026-05-27-schema-hardening-m100-revision-drift-research]]'
   - '[[2026-05-20-registry-casilla-identity-research]]'
   - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
 ---
-
-
 
 # `schema-hardening` adr: `casilla-continuity-evolution-contract` | (**status:** `accepted`)
 

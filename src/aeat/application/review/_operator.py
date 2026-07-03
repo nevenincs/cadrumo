@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from datetime import datetime
+from decimal import Decimal
 from types import MappingProxyType
 
 from pydantic import BaseModel, Field
@@ -18,6 +19,7 @@ from ...core import BindingSourceKind
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.identity import BucketId
+from ...domain.calculations.registry import LegalRefId
 from ._aggregator import ReviewQueue
 from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
 from ._errors import ReviewError
@@ -44,7 +46,7 @@ class ReviewQueueRow(BaseModel):
     canonical_next_command: str = Field(min_length=1)
     since: datetime
     summary: str = Field(min_length=1)
-    legal_refs: tuple[str, ...] = Field(default_factory=tuple)
+    legal_refs: tuple[LegalRefId, ...] = Field(default_factory=tuple)
     """Legal references (BOE permalinks or canonical IDs) justifying the finding.
 
     Populated for ``modelo_finding`` items from the underlying
@@ -90,8 +92,18 @@ def project_review_queue(
     source_kinds: Iterable[str] = (),
     state: ReviewState = ReviewState.PENDING,
     modelo: str | None = None,
+    confidence_below: Decimal | None = None,
 ) -> ReviewQueueReport:
-    """Return a :class:`ReviewQueueReport` using accepted source-kind vocabulary."""
+    """Return a :class:`ReviewQueueReport` using accepted source-kind vocabulary.
+
+    When ``confidence_below`` is set, the queue narrows to classified
+    transactions whose ``classification_confidence`` is non-None and
+    strictly below the threshold, so the operator can triage the
+    lowest-confidence classifications first (see
+    :meth:`~aeat.application.review.ReviewQueue.collect`). Invoice and
+    finding rows carry no decision-confidence and are excluded while the
+    filter is active.
+    """
     selected = _resolve_internal_kinds((*tuple(kinds), *tuple(source_kinds)))
     bucket_id = _active_bucket_id()
     from ...core.config import load_settings as _load_settings
@@ -102,6 +114,7 @@ def project_review_queue(
         kinds=selected,
         state=state,
         modelo=modelo,
+        confidence_below=confidence_below,
     )
     accepted_kinds = frozenset(kind.strip() for kind in kinds if kind.strip())
     accepted_source_kinds = frozenset(kind.strip() for kind in source_kinds if kind.strip())

@@ -1,8 +1,9 @@
 """Ledger lifecycle and transaction-structure CLI commands.
 
 Lifecycle commands resolve transactions through the shared repository helpers
-and emit typed :class:`OutputSchema` mutation envelopes for every structural
-change.
+and emit typed :class:`OutputSchema` mutation
+payloads inside :class:`SchemaEnvelope` through
+:func:`_emit_envelope` for every structural change.
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ from ...application.ledger import (
     is_llm_provider_available,
     ledger_transaction_payload,
     ledger_transaction_review_status,
+    mark_transaction_reviewed_excluded,
     merge_transactions,
     remove_manual_transaction,
     reset_ledger_catalogue,
@@ -36,7 +38,7 @@ from ...core.external_constants import PDF_MIME_TYPE
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.time import now
-from ...domain.attachments import DocumentLinkSource
+from ...domain.attachments import AttachmentSource, DocumentLinkSource
 from ...domain.transactions import (
     BusinessClassification,
     LLMClassifierError,
@@ -62,8 +64,25 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
             default="Fetch a Drive document link and store its bytes as encrypted evidence on a ledger row.",
         ),
     )(ledger_doclink)
+    app.command(
+        "pull-folder",
+        help=tr(
+            "cli.ledger.pull_folder.help",
+            default=(
+                "Bulk-fetch every PDF/image invoice in a Drive folder and store each as encrypted "
+                "evidence (unlinked to any transaction; link with 'aeat app ledger attach' or 'link')."
+            ),
+        ),
+    )(ledger_pull_folder)
     app.command("archive", help=tr("cli.ledger.archive.help"))(ledger_archive)
     app.command("stash", help=tr("cli.ledger.stash.help"))(ledger_stash)
+    app.command(
+        "exclude",
+        help=tr(
+            "cli.ledger.exclude.help",
+            default="Mark one reviewed ledger transaction as deliberately excluded from filing.",
+        ),
+    )(ledger_exclude)
     app.command("restore", help=tr("cli.ledger.restore.help"))(ledger_restore)
     app.command("remove", help=tr("cli.ledger.remove.help"))(ledger_remove)
     app.command("reset", help=tr("cli.ledger.reset.help"))(ledger_reset)
@@ -198,19 +217,17 @@ def ledger_doclink(
     """Fetch a document link and store its bytes as encrypted evidence on a ledger row.
 
     The reference is resolved through
-    :func:`aeat.adapters.outbound.google.resolve_document_link`, which fetches
+    :func:`resolve_document_link`, which fetches
     Drive files reachable under the granted ``drive.file`` scope. The fetched
     bytes are stored through the byte-bearing
-    :func:`aeat.domain.attachments.add_attachment_bytes` path (real ``sha256``
-    and ``mime_type``), and the original link is kept as manifest provenance.
-    Gmail links, arbitrary URLs, and out-of-scope Drive files are **refused** —
-    a link is never stored as evidence.
+    :func:`add_attachment_bytes` path (real
+    ``sha256`` and ``mime_type``), and the original link is kept as manifest
+    provenance. Gmail links, arbitrary URLs, and out-of-scope Drive files are
+    **refused** — a link is never stored as evidence.
     """
-    from ...adapters.outbound.google import resolve_document_link
-    from ...adapters.outbound.google._active_profile import resolve_active_profile
-    from ...adapters.outbound.storage import OutboundStorageError
-    from ...adapters.outbound.storage._factory import _build_google_credentials
-    from ...adapters.persistence.storage.attachment import AttachmentStore
+    from ...adapters.outbound.google import resolve_active_profile, resolve_document_link
+    from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
+    from ...adapters.persistence.storage import AttachmentStore
     from ...domain.attachments import AttachmentKind, add_attachment_bytes
 
     attachment_source = source.to_attachment_source()
@@ -220,7 +237,7 @@ def ledger_doclink(
 
     profile = resolve_active_profile()
     try:
-        credentials = _build_google_credentials(profile=profile)
+        credentials = build_google_credentials(profile=profile)
         data = resolve_document_link(
             source=attachment_source,
             reference=reference,
@@ -279,6 +296,215 @@ def ledger_doclink(
         result.bucket_event_ids,
         command="ledger.doclink",
         result_cls=LedgerAttachResult,
+    )
+
+
+def _parse_drive_folder_reference(reference: str) -> str:
+    """Resolve a Drive folder id/URL/reference to a bare folder id.
+
+    Reuses the same id-extraction grammar as a single Drive document link
+    (:func:`~aeat.adapters.outbound.google.parse_drive_file_id`); a Drive
+    folder id has the same shape as a file id, only the ``in parents`` query
+    disambiguates the two on the Drive side. Refuses a reference with no
+    recognisable Drive id rather than sending an unparsed string to the API.
+    """
+    from ...adapters.outbound.google import parse_drive_file_id
+
+    folder_id = parse_drive_file_id(reference)
+    if folder_id is None:
+        raise _bad(
+            tr(
+                "cli.ledger.pull_folder.errors.folder_id_unrecognised",
+                reference=reference,
+                default=(
+                    f"Google Drive folder reference {reference!r} does not contain a recognisable "
+                    "folder id. Pass a Drive folder URL or its bare folder id."
+                ),
+            ),
+        )
+    return folder_id
+
+
+def ledger_pull_folder(
+    ctx: typer.Context,
+    folder: str = typer.Option(
+        ...,
+        "--folder",
+        help=tr(
+            "cli.ledger.pull_folder.folder_help",
+            default="Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images from.",
+        ),
+    ),
+    note: str = typer.Option(
+        "",
+        "--note",
+        help=tr("cli.ledger.pull_folder.note_help", default="Optional note recorded on every fetched attachment."),
+    ),
+) -> None:
+    """Bulk-fetch every PDF/image child of a Drive folder into encrypted evidence.
+
+    Lists the folder's children through
+    :func:`~aeat.adapters.outbound.google.list_drive_folder_documents` (the
+    same ``drive.file``-scoped minimal-scope posture
+    :func:`ledger_doclink` uses for a single document), then fetches and
+    encrypts each PDF/image child through
+    :func:`~aeat.adapters.outbound.google.resolve_document_link` and
+    :func:`~aeat.domain.attachments.add_attachment_bytes` — the identical
+    fetch-and-encrypt primitive ``doclink`` composes, never re-implemented
+    here. Fetched attachments are content-addressed and deduplicate by
+    SHA-256, so re-running the sweep is idempotent. Attachments are stored
+    unlinked to any transaction; bind them afterwards with
+    ``aeat app ledger attach --attachment-id`` or ``aeat app ledger link``.
+
+    A file the app cannot reach under the ``drive.file`` scope is refused
+    individually — evidence bytes are never stored as a link-only pointer,
+    and one refused file does not abort the rest of the sweep. Gmail bulk
+    fetch is out of scope pending a separate ``gmail.readonly``
+    scope-upgrade decision.
+    """
+    from ...adapters.outbound.google import (
+        list_drive_folder_documents,
+        resolve_active_profile,
+        resolve_document_link,
+    )
+    from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
+    from ...adapters.persistence.storage import AttachmentStore
+    from ...domain.attachments import AttachmentKind, add_attachment_bytes
+    from ._ledger_payloads import LedgerDocLinkPullFolderFilePayload, LedgerDocLinkPullFolderResult
+
+    folder_id = _parse_drive_folder_reference(folder)
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    bucket_id = transaction_repository.bucket_id
+
+    profile = resolve_active_profile()
+    credentials = build_google_credentials(profile=profile)
+    try:
+        listing = list_drive_folder_documents(folder_id=folder_id, credentials=credentials)
+    except OutboundStorageError as exc:
+        required_scope = ""
+        if exc.context is not None:
+            required_scope = str(exc.context.get("required_scope", ""))
+        scope_hint = f" (requires the {required_scope} scope)" if required_scope else ""
+        raise _bad(
+            tr(
+                "cli.ledger.pull_folder.errors.folder_refused",
+                folder_id=folder_id,
+                scope_hint=scope_hint,
+                default=(
+                    f"Cannot list the Drive folder {folder_id!r}{scope_hint}: the folder must be "
+                    "reachable under the drive.file scope (created by the app or explicitly picked "
+                    "by the operator), or grant the required Google scope and retry."
+                ),
+            ),
+        ) from exc
+
+    store = AttachmentStore()
+    rows: list[LedgerDocLinkPullFolderFilePayload] = []
+    fetched_count = 0
+    refused_count = 0
+    for document in listing.documents:
+        reference = f"https://drive.google.com/file/d/{document.file_id}/view"
+        try:
+            data = resolve_document_link(
+                source=AttachmentSource.GOOGLE_DRIVE,
+                reference=reference,
+                credentials=credentials,
+            )
+        except OutboundStorageError as exc:
+            required_scope = ""
+            if exc.context is not None:
+                required_scope = str(exc.context.get("required_scope", ""))
+            refused_count += 1
+            rows.append(
+                LedgerDocLinkPullFolderFilePayload(
+                    file_id=document.file_id,
+                    name=document.name,
+                    mime_type=document.mime_type,
+                    fetched=False,
+                    refusal_reason=(
+                        f"not reachable under the drive.file scope"
+                        f"{f' (requires {required_scope})' if required_scope else ''}: {exc}"
+                    ),
+                ),
+            )
+            continue
+        attachment = add_attachment_bytes(
+            store,
+            data=data,
+            kind=AttachmentKind.DRIVE_DOCUMENT,
+            source=AttachmentSource.GOOGLE_DRIVE,
+            source_reference=reference,
+            mime_type=document.mime_type or _sniff_document_mime_type(document.name, data),
+            captured_at=now(),
+            bucket_id=bucket_id,
+            metadata={
+                "source": AttachmentSource.GOOGLE_DRIVE.value,
+                "source_reference": reference,
+                "drive_folder_id": folder_id,
+                "drive_file_name": document.name,
+            },
+            notes=note,
+        )
+        fetched_count += 1
+        rows.append(
+            LedgerDocLinkPullFolderFilePayload(
+                file_id=document.file_id,
+                name=document.name,
+                mime_type=document.mime_type,
+                fetched=True,
+                attachment_id=attachment.attachment_id,
+            ),
+        )
+
+    result = LedgerDocLinkPullFolderResult.model_validate(
+        {
+            "bucket_id": bucket_id,
+            "folder_id": folder_id,
+            "total_documents": len(listing.documents),
+            "fetched_count": fetched_count,
+            "refused_count": refused_count,
+            "skipped_non_document_count": listing.skipped_non_document_count,
+            "files": [row.model_dump(mode="json") for row in rows],
+        },
+    )
+    lines = [
+        f"{tr('cli.ledger.pull_folder.labels.folder_id', default='folder_id')}\t{folder_id}",
+        f"{tr('cli.ledger.pull_folder.labels.total', default='total_documents')}\t{len(listing.documents)}",
+        f"{tr('cli.ledger.pull_folder.labels.fetched', default='fetched_count')}\t{fetched_count}",
+        f"{tr('cli.ledger.pull_folder.labels.refused', default='refused_count')}\t{refused_count}",
+        f"{tr('cli.ledger.pull_folder.labels.skipped', default='skipped_non_document_count')}"
+        f"\t{listing.skipped_non_document_count}",
+    ]
+    lines.extend(
+        f"{row.name}\t{row.mime_type}\t{'fetched' if row.fetched else 'refused'}\t"
+        f"{row.attachment_id or row.refusal_reason or ''}"
+        for row in rows
+    )
+    notices: list[Notice] = []
+    if refused_count:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.pull_folder.files_refused",
+                message=tr(
+                    "cli.ledger.pull_folder.notices.files_refused",
+                    refused_count=refused_count,
+                    default=(
+                        f"{refused_count} file(s) in this folder could not be fetched under the "
+                        "drive.file scope; download them manually and attach with "
+                        "'aeat app ledger attach --attachment-id ...'."
+                    ),
+                ),
+                context={"folder_id": folder_id, "refused_count": refused_count},
+            ),
+        )
+    _emit_envelope(
+        ctx,
+        command="ledger.pull_folder",
+        result=result,
+        lines=lines,
+        notices=notices or None,
     )
 
 
@@ -345,6 +571,54 @@ def ledger_stash(
         result.bucket_event_ids,
         command="ledger.stash",
         result_cls=LedgerStashResult,
+    )
+
+
+def ledger_exclude(
+    ctx: typer.Context,
+    transaction_id: str = typer.Argument(
+        ...,
+        help=tr("cli.ledger.exclude.id_help", default="Ledger transaction id."),
+    ),
+    reason: str = typer.Option(
+        "",
+        "--reason",
+        help=tr("cli.ledger.exclude.reason_help", default="Optional note recording why the row is excluded."),
+    ),
+    yes: bool = typer.Option(
+        False,
+        "--yes",
+        help=tr("cli.ledger.exclude.yes_help", default="Confirm the reviewed-excluded decision."),
+    ),
+    actor: str | None = typer.Option(
+        None,
+        "--actor",
+        help=tr("cli.ledger.exclude.actor_help", default="Operator label."),
+    ),
+) -> None:
+    """Mark one active ledger transaction as reviewed and excluded from filing."""
+    if not yes:
+        raise _bad(tr("cli.ledger.errors.confirm_required"))
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    result = mark_transaction_reviewed_excluded(
+        bucket_id=transaction_repository.bucket_id,
+        transaction_id=resolved_id,
+        actor=actor or resolve_active_bucket_id() or "operator",
+        reason=reason,
+        source_command="aeat app ledger exclude",
+        transaction_repository=transaction_repository,
+    )
+    from ._ledger_payloads import LedgerExcludeResult
+
+    _emit_update_result(
+        ctx,
+        result.transaction,
+        result.ref.bucket_id,
+        result.bucket_event_ids,
+        command="ledger.exclude",
+        result_cls=LedgerExcludeResult,
     )
 
 
@@ -562,9 +836,7 @@ def ledger_split(
         f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
         f"{tr('cli.ledger.labels.children')}\t{len(result.child_transaction_ids)}",
     ]
-    lines.extend(
-        f"{tr('cli.ledger.labels.child_id')}\t{row.display_id}\t{row.full_id}" for row in child_id_rows
-    )
+    lines.extend(f"{tr('cli.ledger.labels.child_id')}\t{row.display_id}\t{row.full_id}" for row in child_id_rows)
     lines.append(f"{tr('cli.ledger.labels.event_id')}\t{result.bucket_event_id}")
     lines.extend(f"ADVISORY\t{notice.message}" for notice in notices)
     _emit_envelope(
@@ -598,8 +870,7 @@ def _split_child_id_rows(child_transaction_ids: tuple[str, ...]) -> list[LedgerS
 
     width = compute_display_id_width(child_transaction_ids)
     return [
-        LedgerSplitChildIdPayload(full_id=child_id, display_id=child_id[:width])
-        for child_id in child_transaction_ids
+        LedgerSplitChildIdPayload(full_id=child_id, display_id=child_id[:width]) for child_id in child_transaction_ids
     ]
 
 
@@ -611,8 +882,9 @@ def _split_classification_dropped_notices(
     Split children deliberately default to ``NOT_YET_PROCESSED`` to force
     conscious per-row tax treatment; the parent's classification is not cloned.
     When the parent carried a real classified outcome (BUSINESS / PERSONAL /
-    MIXED), that drop is surfaced as an ``info`` :class:`Notice` so it is not
-    silent — the operator is told the children need re-classification.
+    MIXED), that drop is surfaced as an ``info``
+    :class:`Notice` so it is not silent — the operator
+    is told the children need re-classification.
     """
     if not is_classified(parent_classification):
         return []
@@ -650,10 +922,11 @@ def _ledger_split_llm(
     Without ``--apply`` the proposed children (derived amounts, model-selected
     categories, registry-derived IVA) are previewed and nothing is persisted.
     With ``--apply`` (and ``--yes``) the reviewed proposal drives
-    :func:`apply_evidence_split`: the single-writer split plus per-child
-    classification, registry-derived numbers, parent-invoice evidence link, and
-    ``llm:<model>`` provenance. The manual ``--child-amount`` / ``--child-description``
-    flags are the explicit operator override and cannot be combined with ``--llm``.
+    :func:`apply_evidence_split`: the single-writer
+    split plus per-child classification, registry-derived numbers,
+    parent-invoice evidence link, and ``llm:<model>`` provenance. The manual
+    ``--child-amount`` / ``--child-description`` flags are the explicit operator
+    override and cannot be combined with ``--llm``.
     """
     from ._ledger_payloads import LedgerSplitChildProposalPayload, LedgerSplitResult
 
@@ -776,9 +1049,7 @@ def _ledger_split_llm(
         f"{tr('cli.ledger.labels.split_group_id')}\t{applied.split_group_id}",
         f"{tr('cli.ledger.labels.children')}\t{len(applied.child_transaction_ids)}",
     ]
-    lines.extend(
-        f"{tr('cli.ledger.labels.child_id')}\t{row.display_id}\t{row.full_id}" for row in child_id_rows
-    )
+    lines.extend(f"{tr('cli.ledger.labels.child_id')}\t{row.display_id}\t{row.full_id}" for row in child_id_rows)
     lines.append(f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{applied.provenance}")
     _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
 
@@ -836,7 +1107,9 @@ __all__ = [
     "ledger_archive",
     "ledger_attach",
     "ledger_doclink",
+    "ledger_exclude",
     "ledger_merge",
+    "ledger_pull_folder",
     "ledger_remove",
     "ledger_reset",
     "ledger_restore",

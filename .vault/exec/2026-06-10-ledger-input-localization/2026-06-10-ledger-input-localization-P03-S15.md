@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#ledger-input-localization'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S15'
 related:
   - "[[2026-06-10-ledger-input-localization-plan]]"
 ---
-
-
-
 
 # Write real-behavior localised error-payload tests: invoke parse_decimal_amount with a bad input in each of en/es/ca/hu locale contexts and assert each error payload carries label, raw value, and expected-format hint
 

@@ -3,13 +3,11 @@ tags:
   - '#adr'
   - '#modelo-200-base-determination'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 related: []
 related:
   - '[[2026-06-04-modelo-200-base-determination-research]]'
 ---
-
-
 
 # `modelo-200-base-determination` adr: `Modelo 200 IS base-determination soundness: prevent silent zero-base under-declaration` | (**status:** `accepted`)
 

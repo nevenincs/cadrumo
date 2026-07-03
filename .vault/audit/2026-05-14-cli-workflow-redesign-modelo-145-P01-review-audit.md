@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-30'
 related:
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan]]'
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]'
@@ -11,10 +11,7 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-p01-s01-s06-exec]]'
 ---
 
-
-
 # `cli-workflow-redesign` Code Review
-
 
 MODELO-145-P01-001 | MEDIUM | Pin ADR-critical non-filing AEAT source facts
 

@@ -2,35 +2,55 @@
 
 One of three distinct prefill tiers, NOT to be merged: this is the
 RELATION tier (cross-revision aggregations declared as
-`RelationDefinition`). The other two are the previous-filing direct-carry
-tier (`_binding_prefill`) and the AEAT borrador pre-fill tier (the registry
-`aeat_prefilled` flag, an AEAT-live source). Each names a different
-mechanism and source; they share only the word "prefill".
+``RelationDefinition`` records). The other two are the previous-filing
+direct-carry tier (:mod:`application.calculations._binding_prefill`)
+and the AEAT borrador pre-fill tier (the registry ``aeat_prefilled`` flag,
+an AEAT-live source). Each names a different mechanism and source; they
+share only the word "prefill".
 
 Sits between the engine and the local observation store. The engine
 asks "what's the resolved value of every relation this revision
-declares?" and this module answers by consulting a :class:`RegistrySnapshot`
-to enumerate the declared relations:
+declares?" and this module answers by consulting a
+:class:`RegistrySnapshot` to enumerate the declared relations. The
+same-modelo first-period default resolver reads the relations and
+bindings declared on one :class:`ModeloRevision` directly:
 
-1. Reading the revision's relations to determine `(source_modelo,
-   source_revision_selector, source_periods, source_casilla_id,
-   aggregation.op)`.
-2. Scanning the local `CalculationObservationRepository` for prior
-   filings matching the source quadruple.
+1. Reading the revision's relations to determine ``source_modelo``,
+   ``source_revision_selector``, ``source_periods``, ``source_casilla_id``,
+   and ``aggregation.op``.
+2. Scanning the local
+   :class:`~application.calculations.CalculationObservationRepository`
+   for prior :class:`RegistryModeloObservation` filings matching the source
+   quadruple.
 3. Folding the source filings' casilla values through the declared
-   aggregation op (`sum`, `copy`).
-4. Returning a `RelationValues` record stamped with provenance the
-   apply adapter writes onto the workbook so the pull adapter can
-   detect stale prefills.
+   aggregation op (``sum``, ``copy``).
+4. Returning a
+   :class:`~application.storage.calc_sheets.RelationValues`
+   record stamped with provenance the apply adapter writes onto the workbook
+   so the pull adapter can detect stale prefills.
 
 When no prior filings exist for a relation, the resolver returns a
-`RelationValue` with `value=None` and `provenance="operator_manual"`
-so the engine emits a blank cell the operator must fill by hand.
+:class:`~application.storage.calc_sheets.RelationValue` with
+``value=None`` and ``provenance="operator_manual"`` so the engine emits a
+blank cell the operator must fill by hand.
 
 This is the local-tier prefill. The AEAT-live tier (parsing
 justificantes from Sede) lives in a separate adapter that produces
-the same `RelationValues` shape; callers route between tiers based
+the same
+:class:`~application.storage.calc_sheets.RelationValues`
+shape; callers route between tiers based
 on the operator's preferences and the local store's coverage.
+
+See Also:
+    :class:`~application.calculations.RelationPrefillSourceResolver`
+        Source-mesh adapter that exposes resolved relations as
+        :class:`~application.aggregation.CalculationSourceResolution`.
+    :func:`domain.calculations.registry.relation_source_requirements`
+        Registry authority that derives the source filings required by a
+        relation.
+    :func:`domain.calculations.registry.materialize_relation_binding_values`
+        Bridge from resolved relation values to declared ``relation_prefill``
+        binding slots.
 """
 
 from __future__ import annotations
@@ -40,39 +60,37 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
-from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...application.storage.calc_sheets._records import RelationValue, RelationValues
+from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import BindingSourceKind, Modelo, Period
-from ...core.aggregation import RelationAggregationOp
 from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
 from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
-    CasillaId,
+    ModeloRevision,
     RegistryFoldRequirement,
     RegistryModeloObservation,
     RegistrySnapshot,
     RegistryValidationError,
     RelationId,
     materialize_relation_binding_values,
-    relation_aggregation_op,
     relation_source_requirements,
     resolve_observed_requirement_value,
-    undeclared_casilla_ids,
-    validated_casilla_id,
 )
-from ...domain.iva_compensation import (
-    IvaCompensationPeriodState,
-    build_iva_compensation_carry_forward_report,
-    derive_iva_compensation_year_end_carry_partition,
-)
-from ..aggregation._source_mesh import (
+from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
     storage_degradation_resolution,
+)
+from ..storage.calc_sheets import (
+    RelationValue,
+    RelationValues,
+)
+from ._m111_no_retenciones import (
+    is_m111_no_retenciones_period,
+    m111_no_retenciones_periods_for_bucket,
 )
 from ._observations_repository import CalculationObservationRepository
 from ._revision_carry_gate import revision_carry_outcome
@@ -82,27 +100,9 @@ if TYPE_CHECKING:
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
+_ECONOMIC_ACTIVITY_CATEGORY: Final = "actividad_economica"
+_DIRECT_ESTIMATION_REGIMES: Final = frozenset({"directa_normal", "directa_simplificada"})
 _log = get_logger(__name__)
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="relation-prefill casilla constant")
-    except ValueError as exc:
-        raise RuntimeError(f"relation-prefill casilla constant {value!r} is not a CasillaId") from exc
-
-
-#: The shared Modelo 303 source casilla id the two Modelo 390 year-end carry boxes
-#: (97 / 662) fold. The two relations sum/copy this per-period casilla, but the
-#: 97-vs-662 split is a FIFO partition of the year's pending credit, not a
-#: per-period sum, so the relation path is OVERRIDDEN by the FIFO projection for
-#: these two bindings (ADR 2026-06-21-m390-iva-carry-boxes).
-_M303_COMPENSACION_GENERADA_SOURCE: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
-_303_GENERADA_ID: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
-_303_APLICADA_ID: Final[CasillaId] = _casilla_id("iva.compensacion-aplicada-periodo")
-_303_DISPONIBLE_ID: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
-_303_POSTERIOR_ID: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-_ZERO: Final = Decimal("0")
 
 
 def _gather_observations_for_snapshot(
@@ -110,20 +110,26 @@ def _gather_observations_for_snapshot(
     *,
     repository: CalculationObservationRepository,
     activity_start_date: date | None = None,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
 ) -> tuple[RegistryModeloObservation, ...]:
-    """Collect every observation a relation in `snapshot.revision` could need.
+    """Collect every observation a relation in ``snapshot.revision`` could need.
 
     Uses the registry relation requirement resolver to compute the set of
-    `(source_modelo, filing_year, period)` requirements, and pulls matching observations
-    from the local store. Returns the union (deduplicated) so the
-    runtime resolver can fold them through the declared aggregation
-    in one pass. ``activity_start_date`` scopes out source periods strictly
-    before the operator's activity start (a mid-year-start filer has no
-    obligation for the pre-start quarters), so the gather set matches the scoped
-    requirement set the resolver folds.
+    ``(source_modelo, filing_year, period)`` requirements, and pulls matching
+    :class:`RegistryModeloObservation` rows from
+    :class:`~application.calculations.CalculationObservationRepository`.
+    Returns the union (deduplicated) so the runtime resolver can fold them
+    through the declared aggregation in one pass. ``activity_start_date`` scopes
+    out source periods strictly before the operator's activity start (a
+    mid-year-start filer has no obligation for the pre-start quarters), so the
+    gather set matches the scoped requirement set the resolver folds.
     """
     needed: dict[tuple[str, int, str], RegistryModeloObservation] = {}
-    requirements = _scoped_relation_source_requirements(snapshot, activity_start_date)
+    requirements = _scoped_relation_source_requirements(
+        snapshot,
+        activity_start_date,
+        m111_no_retenciones_periods=m111_no_retenciones_periods,
+    )
     for requirement in requirements:
         for period in requirement.periods:
             payload = repository.load_observation(
@@ -134,18 +140,17 @@ def _gather_observations_for_snapshot(
                 continue
             # R2 carry gate (shared with binding-prefill and cross-period
             # clean-state): re-confirm the carried observation's revision stamp
-            # against the law-determined revision. A divergent stamp means the
-            # prior was filed under a revision that is no longer the law-determined
-            # revision for its source context; drop it from the fold rather than
-            # silently injecting a stale-revision value into the relation.
+            # against the law-determined revision. A divergent or unreconfirmable
+            # stamp is dropped from the fold rather than silently injecting a
+            # stale value into the relation.
             obs = payload.observation
-            diverges, _advisory = revision_carry_outcome(
+            refused = revision_carry_outcome(
                 payload.stamped_revision_id,
                 source_modelo=obs.modelo,
                 source_filing_year=obs.filing_year,
                 source_period=obs.period,
             )
-            if diverges:
+            if refused:
                 continue
             key = (obs.modelo, obs.filing_year, obs.period)
             needed.setdefault(key, obs)
@@ -167,6 +172,36 @@ def _provenance_note(
     )
 
 
+def _relation_value_grounding(
+    relation: object,
+    requirement: RegistryFoldRequirement | None,
+) -> dict[str, object]:
+    """Project registry relation source identity and grounding onto a scalar relation value."""
+    return {
+        "source_modelo": requirement.source_modelo if requirement is not None else relation.source_modelo,
+        "source_casilla_ids": (
+            requirement.source_casilla_ids if requirement is not None else (relation.source_casilla_id,)
+        ),
+        "legal_refs": tuple(relation.legal_refs),
+        "source_refs": tuple(relation.source_refs),
+    }
+
+
+def _relation_provenance_ref(item: RelationValue) -> str:
+    source_modelo = item.source_modelo or "unknown-modelo"
+    source_year = str(item.source_filing_year) if item.source_filing_year is not None else "unknown-year"
+    source_periods = ",".join(item.source_periods) if item.source_periods else "unknown-period"
+    source_casillas = ",".join(item.source_casilla_ids) if item.source_casilla_ids else "unknown-casilla"
+    return f"{item.relation}:{source_modelo}:{source_year}:{source_periods}:{source_casillas}"
+
+
+def _relation_source_filing_year(relation: object, *, filing_year: int) -> int:
+    selector = relation.source_revision_selector
+    if selector.year is not None:
+        return selector.year
+    return filing_year + (selector.filing_year_delta or 0)
+
+
 def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     """Wizard-free canonical projection of the bucket's profile, or ``None`` when absent.
 
@@ -181,14 +216,60 @@ def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     Returns ``None`` only when there is genuinely no profile for the bucket.
     """
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile._profile_repository import ProfileRepository
-    from ..user_profile._projections import record_to_path_values
+    from ..user_profile import ProfileRepository, record_to_path_values
 
     try:
         aggregate = ProfileRepository().load(bucket_id)
     except ProfileNotFoundError:
         return None
     return record_to_path_values(aggregate.record)
+
+
+def _contains_profile_token(raw: object, token: str) -> bool | None:
+    """Return whether a profile projection value contains ``token``, or None if absent."""
+    if raw is None:
+        return None
+    if isinstance(raw, str):
+        stripped = raw.strip()
+        if not stripped:
+            return None
+        return token in {item.strip() for item in stripped.replace(";", ",").split(",") if item.strip()}
+    try:
+        # TYPE-IGNORE-RATIONALE-PROFILE-TOKEN-CONTAINER: ``raw`` is an untyped
+        # profile projection value; a non-iterable raises TypeError, caught
+        # below, so the runtime is already defensive against the static escape.
+        return token in set(raw)  # type: ignore[arg-type]
+    except TypeError:
+        return False
+
+
+def _pagos_fraccionados_not_applicable_source_modelos(bucket_id: str) -> frozenset[str]:
+    """Return M130/M131 source modelos positively not applicable for the bucket profile.
+
+    This mirrors the clean-state profile split: no actividad economica means
+    neither quarterly pagos-fraccionados modelo applies; direct estimation means
+    M130 applies and M131 does not; objective estimation means M131 applies and
+    M130 does not. Missing profile facts fail closed by returning an empty set.
+    """
+    values = _profile_path_values_for_bucket(bucket_id)
+    if values is None:
+        return frozenset()
+
+    has_economic_activity = _contains_profile_token(
+        values.get("taxpayer_type.irpf_income_categories"),
+        _ECONOMIC_ACTIVITY_CATEGORY,
+    )
+    if has_economic_activity is False:
+        return frozenset({str(Modelo.M130), str(Modelo.M131)})
+    if has_economic_activity is None:
+        return frozenset()
+
+    estimation_regime = str(values.get("irpf.estimation_regime") or "").strip()
+    if estimation_regime in _DIRECT_ESTIMATION_REGIMES:
+        return frozenset({str(Modelo.M131)})
+    if estimation_regime == "objetiva":
+        return frozenset({str(Modelo.M130)})
+    return frozenset()
 
 
 def _parse_canonical_iso_date(raw: str | None) -> date | None:
@@ -273,55 +354,85 @@ def _activity_start_date_for_bucket(bucket_id: str) -> date | None:
 def _scoped_relation_source_requirements(
     snapshot: RegistrySnapshot,
     activity_start_date: date | None,
+    *,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
 ) -> tuple[RegistryFoldRequirement, ...]:
-    """``relation_source_requirements`` with pre-activity-start source periods scoped out.
+    """Return ``relation_source_requirements`` with no-obligation periods scoped out.
 
     A quarterly source period STRICTLY before the operator-declared activity
     start is a period in which the taxpayer had no filing obligation, so its
     absence must NOT unresolve the whole fold (the partial-year-start
     enhancement for a mid-year-start filer). Reuses the cross-period clean-state
-    gate's :func:`_period_strictly_before_activity_start` predicate — one shared
-    partition governs both the gate and the relation fold-in (one-aggregation-
-    path; no parallel scoping math). Non-calendar instalment claves (1P/2P/3P)
-    have no date span and are never scoped, so sociedad Modelo 202 cumulation is
-    unaffected. A genuinely-absent IN-SCOPE quarter still unresolves the
-    requirement downstream, preserving ``no-silent-under-declaration``. Returns
-    the requirements unchanged when ``activity_start_date`` is ``None`` (the
-    common full-year / fail-closed case).
+    gate's ``_period_strictly_before_activity_start`` predicate - one shared
+    partition governs both the gate and the relation fold-in
+    (one-aggregation-path; no parallel scoping math). Non-calendar instalment
+    claves (1P/2P/3P) have no date span and are never scoped, so sociedad
+    Modelo 202 cumulation is unaffected. A genuinely-absent IN-SCOPE quarter
+    still unresolves the requirement downstream, preserving
+    ``no-silent-under-declaration``. Returns the requirements unchanged when
+    ``activity_start_date`` is ``None`` (the common full-year / fail-closed
+    case). Explicit M111 no-retenciones period attestations also scope out only
+    the named source periods: AEAT instructions say no M111 should be presented
+    when no subject rents were paid, so M190 can fold the remaining filed
+    quarters without requiring a nonexistent blank M111.
     """
     requirements = relation_source_requirements(
         snapshot.revision,
         filing_year=snapshot.filing_year,
         period=snapshot.period,
     )
-    if activity_start_date is None:
+    attested_m111_periods = m111_no_retenciones_periods or frozenset()
+    if activity_start_date is None and not attested_m111_periods:
         return requirements
-
-    from ._cross_period_clean_state import _period_strictly_before_activity_start
 
     scoped: list[RegistryFoldRequirement] = []
     for requirement in requirements:
         kept = tuple(
             token
             for token in requirement.periods
-            if not _period_strictly_before_activity_start(
-                Period.from_year_and_code(requirement.filing_year, token),
-                activity_start_date,
+            if not _relation_period_scoped_out(
+                requirement.source_modelo,
+                requirement.filing_year,
+                token,
+                activity_start_date=activity_start_date,
+                m111_no_retenciones_periods=attested_m111_periods,
             )
         )
         if len(kept) == len(requirement.periods):
             scoped.append(requirement)
         elif kept:
-            kept_filing = tuple(
-                period
-                for period in requirement.filing_periods
-                if not _period_strictly_before_activity_start(period, activity_start_date)
-            )
+            kept_filing = tuple(period for period in requirement.filing_periods if period.registry_token in kept)
             scoped.append(requirement.model_copy(update={"periods": kept, "filing_periods": kept_filing}))
         # else: EVERY source period is strictly pre-activity → no obligation at
         # all; drop the requirement (its ``periods`` field is min_length=1 and
         # cannot be emptied). The relation then resolves to None as before.
     return tuple(scoped)
+
+
+def _relation_period_scoped_out(
+    source_modelo: str,
+    filing_year: int,
+    period_token: str,
+    *,
+    activity_start_date: date | None,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]],
+) -> bool:
+    """Return whether a relation source period is absent by explicit no-obligation evidence."""
+    if is_m111_no_retenciones_period(
+        source_modelo=source_modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+        attested_periods=m111_no_retenciones_periods,
+    ):
+        return True
+    if activity_start_date is None:
+        return False
+    from ._cross_period_clean_state import _period_strictly_before_activity_start
+
+    return _period_strictly_before_activity_start(
+        Period.from_year_and_code(filing_year, period_token),
+        activity_start_date,
+    )
 
 
 def resolve_relations_from_local_store(
@@ -331,14 +442,17 @@ def resolve_relations_from_local_store(
     captured_at: datetime | None = None,
     modelo_202_first_year_cuota: bool = False,
     activity_start_date: date | None = None,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
+    not_applicable_source_modelos: frozenset[str] | None = None,
 ) -> RelationValues:
-    """Build a :class:`RelationValues` record from the local observation store.
+    """Build a relation-value record from the local observation store.
 
     Args:
-        snapshot: The :class:`RegistrySnapshot` whose declared relations are resolved
-            from prior observation records in the local store.
+        snapshot: The :class:`RegistrySnapshot` whose declared relations are
+            resolved from prior observation records in the local store.
         repository: Optional observation repository. Defaults to the active
-            profile's calculation observation repository.
+            profile's
+            :class:`~application.calculations.CalculationObservationRepository`.
         captured_at: Optional timestamp for relation provenance. Defaults to
             the current clock.
         modelo_202_first_year_cuota: When ``True`` (IS-3), an otherwise-unresolved
@@ -352,13 +466,23 @@ def resolve_relations_from_local_store(
             so a mid-year-start filer folds only the quarters it actually had an
             obligation for instead of leaving the annual fold unresolved. ``None``
             (the default / fail-closed case) keeps the full all-quarters behaviour.
+        m111_no_retenciones_periods: Explicit ``(year, period)`` M111 no-obligation
+            attestations. Each named source period is removed from M111 relation
+            folds only; unknown/non-M111 periods keep the normal filing-grade
+            requirement.
+        not_applicable_source_modelos: Source modelos positively determined as
+            not applicable for this bucket profile. M100's mutually exclusive
+            M130/M131 pagos-fraccionados relations use this to resolve the absent
+            leg to explicit zero instead of requiring fake zero filings.
 
-    Returns a :class:`RelationValues` whose ``values`` tuple has one
-    ``RelationValue`` per relation declared in the snapshot's
-    revision, with provenance stamped per entry. Relations the
-    local store cannot resolve get ``value=None`` and
-    ``provenance="operator_manual"`` so the engine emits a blank cell
-    the operator can fill by hand.
+    Returns a
+    :class:`~application.storage.calc_sheets.RelationValues`
+    whose ``values`` tuple has one
+    :class:`~application.storage.calc_sheets.RelationValue` per
+    relation declared in the snapshot's revision, with provenance stamped per
+    entry. Relations the local store cannot resolve get ``value=None`` and
+    ``provenance="operator_manual"`` so the engine emits a blank cell the
+    operator can fill by hand.
     """
     repo = repository if repository is not None else CalculationObservationRepository()
     when = captured_at if captured_at is not None else now()
@@ -373,14 +497,35 @@ def resolve_relations_from_local_store(
         active_bucket_id = resolve_active_bucket_id()
         if active_bucket_id is not None:
             activity_start_date = _activity_start_date_for_bucket(active_bucket_id)
+    if m111_no_retenciones_periods is None:
+        from ...core import resolve_active_bucket_id
+
+        active_bucket_id = resolve_active_bucket_id()
+        m111_no_retenciones_periods = (
+            m111_no_retenciones_periods_for_bucket(active_bucket_id) if active_bucket_id is not None else frozenset()
+        )
+    if not_applicable_source_modelos is None:
+        from ...core import resolve_active_bucket_id
+
+        active_bucket_id = resolve_active_bucket_id()
+        not_applicable_source_modelos = (
+            _pagos_fraccionados_not_applicable_source_modelos(active_bucket_id)
+            if active_bucket_id is not None
+            else frozenset()
+        )
     observations = _gather_observations_for_snapshot(
         snapshot,
         repository=repo,
         activity_start_date=activity_start_date,
+        m111_no_retenciones_periods=m111_no_retenciones_periods,
     )
     requirements_by_relation = {
         relation_id: requirement
-        for requirement in _scoped_relation_source_requirements(snapshot, activity_start_date)
+        for requirement in _scoped_relation_source_requirements(
+            snapshot,
+            activity_start_date,
+            m111_no_retenciones_periods=m111_no_retenciones_periods,
+        )
         for relation_id in requirement.relation_ids
     }
 
@@ -392,14 +537,10 @@ def resolve_relations_from_local_store(
         target_year = (
             requirement.filing_year
             if requirement is not None
-            else snapshot.filing_year
-            + int(
-                relation.source_revision_selector.get("filing_year_delta", 0)
-                if relation.source_revision_selector
-                else 0,
-            )
+            else _relation_source_filing_year(relation, filing_year=snapshot.filing_year)
         )
         source_periods = requirement.periods if requirement is not None else tuple(relation.source_periods)
+        grounding = _relation_value_grounding(relation, requirement)
         resolved = resolved_map.get(relation.id)
         if resolved is None:
             # IS-3 / ADR 2026-06-19-m202-first-period-attestation: a first-year IS
@@ -424,6 +565,7 @@ def resolve_relations_from_local_store(
                         provenance="operator_manual",
                         source_filing_year=target_year,
                         source_periods=source_periods,
+                        **grounding,
                         resolved_at=when,
                         note=(
                             "first-year IS filer under modalidad cuota (LIS art. 40.2): no Modelo 202 "
@@ -432,7 +574,24 @@ def resolve_relations_from_local_store(
                     ),
                 )
                 continue
-            values.append(RelationValue(relation=relation.id, value=None))
+            if requirement is not None and requirement.source_modelo in not_applicable_source_modelos:
+                values.append(
+                    RelationValue(
+                        relation=relation.id,
+                        value=Decimal("0"),
+                        provenance="operator_manual",
+                        source_filing_year=target_year,
+                        source_periods=source_periods,
+                        **grounding,
+                        resolved_at=when,
+                        note=(
+                            f"source modelo {requirement.source_modelo} is not applicable for the bucket "
+                            "profile; relation resolved to 0 without a synthetic filing"
+                        ),
+                    ),
+                )
+                continue
+            values.append(RelationValue(relation=relation.id, value=None, **grounding))
             continue
         values.append(
             RelationValue(
@@ -441,6 +600,7 @@ def resolve_relations_from_local_store(
                 provenance=_LOCAL_FILING_PROVENANCE,
                 source_filing_year=target_year,
                 source_periods=source_periods,
+                **grounding,
                 resolved_at=when,
                 note=_provenance_note(
                     relation.id,
@@ -531,130 +691,16 @@ def _unresolved_relation_diagnostics(
     return tuple(diagnostics)
 
 
-def _observed_value(values: Mapping[CasillaId, Decimal], casilla_id: CasillaId) -> Decimal | None:
-    return values.get(casilla_id)
-
-
-def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
-    from ...core.resources import resources
-
-    snapshot = resources().modelos.authority.snapshot(
-        observation.modelo,
-        filing_year=observation.filing_year,
-        period=observation.period,
-    )
-    invalid = undeclared_casilla_ids(snapshot.revision, observation.casilla_values)
-    if invalid:
-        raise RegistryValidationError(
-            "Modelo 303 compensation observations must use canonical casilla.id values declared by "
-            f"revision {snapshot.revision.id}; got noncanonical references {invalid!r}",
-        )
-
-
-def _period_state_from_303_observation(observation: RegistryModeloObservation) -> IvaCompensationPeriodState:
-    """Reconstruct one filed Modelo 303 period's FIFO compensation state.
-
-    Reads the compensación casillas the 303 calculation already produces
-    (generated / applied / disponible / posterior). The disponible
-    (``available_end_amount``) is the saldo the period carries forward — when
-    absent (an observation that only carries the per-period generada casilla,
-    with no carry chain) it falls back to ``posterior + generated``, which for a
-    stand-alone period equals its own generated credit.
-    """
-    _validate_303_observation_casilla_ids(observation)
-    values = observation.casilla_values
-    generated = _observed_value(values, _303_GENERADA_ID) or _ZERO
-    applied = _observed_value(values, _303_APLICADA_ID) or _ZERO
-    posterior = _observed_value(values, _303_POSTERIOR_ID)
-    available = _observed_value(values, _303_DISPONIBLE_ID)
-    if available is None:
-        available = (posterior or _ZERO) + generated
-    period = Period.from_year_and_code(observation.filing_year, observation.period)
-    return IvaCompensationPeriodState(
-        taxpayer_nif="relation-prefill",
-        filing_year=observation.filing_year,
-        period=period,
-        expediente_id=f"obs-{observation.filing_year}-{observation.period}",
-        status="filed",
-        presented_at=now(),
-        prior_pending_amount=None,
-        applied_amount=applied,
-        pending_for_later_amount=posterior,
-        period_result_amount=None,
-        final_result_amount=None,
-        generated_amount=generated,
-        available_end_amount=available,
-        source_observation_key=f"303:{observation.filing_year}:{observation.period}:relation-prefill",
-    )
-
-
-def _compensation_carry_binding_ids(snapshot: RegistrySnapshot) -> tuple[BindingId | None, BindingId | None]:
-    """Identify the annual carry binding ids for the FIFO partition.
-
-    Resolved structurally from the revision's relations: both fold the shared
-    303 ``iva.compensacion-generada-periodo`` source casilla id;
-    ``iva.anual.compensacion-ultimo-periodo-97`` is the ``copy`` of the last
-    period (its ``source_periods`` does not span the early quarters), and
-    ``iva.anual.compensacion-generada-ejercicio-no-97`` is the ``sum`` of the
-    non-last periods. Either binding id is ``None`` when the revision declares
-    no such relation (every non-390 revision).
-    """
-    last_period_binding_id: BindingId | None = None
-    generated_not_in_last_binding_id: BindingId | None = None
-    for relation in snapshot.revision.relations:
-        if relation.source_casilla_id != _M303_COMPENSACION_GENERADA_SOURCE:
-            continue
-        # The typed relation op self-documents the FIFO partition: the COPY of the
-        # last period is box 97, the SUM of the non-last periods is box 662
-        # (m390-iva-carry-boxes / #25). Both carry-box relations declare an explicit
-        # op, so the COPY default is never relied on here.
-        if relation_aggregation_op(relation) == RelationAggregationOp.COPY:
-            last_period_binding_id = relation.target_binding
-        else:
-            generated_not_in_last_binding_id = relation.target_binding
-    return last_period_binding_id, generated_not_in_last_binding_id
-
-
-def _fifo_compensation_carry_binding_values(
-    snapshot: RegistrySnapshot,
-    observations: tuple[RegistryModeloObservation, ...],
-) -> dict[BindingId, Decimal]:
-    """Derive Modelo 390 annual carry binding values from the FIFO partition.
-
-    The two Modelo 390 year-end carry boxes are ONE FIFO partition of the year's
-    pending compensation credit (no double-count, no drop, the AEAT identity
-    ``[97] + [662] = year pending``), so they are computed together from the
-    single :func:`build_iva_compensation_carry_forward_report` projection over
-    the year's filed 303 period states — never as two independent per-period
-    303-casilla sums. Returns the slot values for whichever of the two bindings
-    the revision declares; empty when the revision has no carry boxes.
-    """
-    last_period_binding_id, generated_not_in_last_binding_id = _compensation_carry_binding_ids(snapshot)
-    if last_period_binding_id is None and generated_not_in_last_binding_id is None:
-        return {}
-    states = tuple(
-        _period_state_from_303_observation(observation)
-        for observation in observations
-        if observation.modelo == Modelo.M303.value and observation.filing_year == snapshot.filing_year
-    )
-    if not states:
-        return {}
-    report = build_iva_compensation_carry_forward_report(states, as_of_year=snapshot.filing_year)
-    partition = derive_iva_compensation_year_end_carry_partition(
-        report,
-        states,
-        filing_year=snapshot.filing_year,
-    )
-    overrides: dict[BindingId, Decimal] = {}
-    if last_period_binding_id is not None:
-        overrides[last_period_binding_id] = partition.last_period_amount
-    if generated_not_in_last_binding_id is not None:
-        overrides[generated_not_in_last_binding_id] = partition.generated_not_in_last_amount
-    return overrides
-
-
 class RelationPrefillSourceResolver:
-    """Source mesh adapter for local relation prefill values."""
+    """Source-mesh adapter for local ``relation_prefill`` values.
+
+    Resolves registry relations through :func:`resolve_relations_from_local_store`,
+    materialises resolved relation values into declared target-binding slots, and
+    returns a :class:`~application.aggregation.CalculationSourceResolution`
+    carrying relation values, binding values, diagnostics for unresolved formula
+    relations, and provenance for local
+    :class:`RegistryModeloObservation` filings.
+    """
 
     resolver_id = "relation_prefill"
     owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.RELATION_PREFILL,)
@@ -686,6 +732,8 @@ class RelationPrefillSourceResolver:
         # the whole fold. Derived once from the bucket profile and shared by the
         # resolution and the diagnostic so both see the same scoped requirement set.
         activity_start_date = _activity_start_date_for_bucket(str(context.bucket_id))
+        m111_no_retenciones_periods = m111_no_retenciones_periods_for_bucket(str(context.bucket_id))
+        not_applicable_source_modelos = _pagos_fraccionados_not_applicable_source_modelos(str(context.bucket_id))
         try:
             relation_values = resolve_relations_from_local_store(
                 snapshot,
@@ -703,6 +751,8 @@ class RelationPrefillSourceResolver:
                     )
                 ),
                 activity_start_date=activity_start_date,
+                m111_no_retenciones_periods=m111_no_retenciones_periods,
+                not_applicable_source_modelos=not_applicable_source_modelos,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
@@ -713,7 +763,11 @@ class RelationPrefillSourceResolver:
             )
         requirements_by_relation = {
             relation_id: requirement
-            for requirement in _scoped_relation_source_requirements(snapshot, activity_start_date)
+            for requirement in _scoped_relation_source_requirements(
+                snapshot,
+                activity_start_date,
+                m111_no_retenciones_periods=m111_no_retenciones_periods,
+            )
             for relation_id in requirement.relation_ids
         }
         resolved = tuple(item for item in relation_values.values if item.value is not None)
@@ -754,21 +808,14 @@ class RelationPrefillSourceResolver:
             resolved_relation_values,
             period=context.period.registry_token,
         )
-        # Modelo 390 year-end carry boxes 97 / 662 are ONE FIFO partition of the
-        # year's pending compensation credit, not two independent per-period 303
-        # sums. The per-period relation values materialised above double-count or
-        # drop the carried pending; override the two slots with the values
-        # derived TOGETHER from the FIFO carry projection so they partition the
-        # year's pending with no double-count and no drop (the AEAT identity).
-        # Only the slots the per-period relation already materialised are
-        # replaced — the box stays owned by this single resolver, so the mesh
-        # exclusive-ownership guard is unaffected.
-        if binding_values:
-            repo = self._repository if self._repository is not None else CalculationObservationRepository()
-            observations = _gather_observations_for_snapshot(snapshot, repository=repo)
-            for binding_id, fifo_value in _fifo_compensation_carry_binding_values(snapshot, observations).items():
-                if binding_id in binding_values:
-                    binding_values[binding_id] = fifo_value
+        binding_values = {
+            **_modelo_202_first_period_previous_payment_defaults(
+                snapshot.revision,
+                modelo=str(context.modelo),
+                period=context.period.registry_token,
+            ),
+            **binding_values,
+        }
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -788,11 +835,44 @@ class RelationPrefillSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="relation_prefill",
-                    source_ref=(f"{item.relation}:{item.source_filing_year}:{','.join(item.source_periods)}"),
+                    source_ref=_relation_provenance_ref(item),
+                    relation_id=item.relation,
+                    source_modelo=item.source_modelo,
+                    source_filing_year=item.source_filing_year,
+                    source_periods=item.source_periods,
+                    source_casilla_ids=item.source_casilla_ids,
+                    legal_refs=item.legal_refs,
+                    source_refs=item.source_refs,
                 )
                 for item in resolved
             ),
         )
+
+
+def _modelo_202_first_period_previous_payment_defaults(
+    revision: ModeloRevision,
+    *,
+    modelo: str,
+    period: str,
+) -> dict[BindingId, Decimal]:
+    """Resolve M202 same-model previous-payment carries to zero before their first target period."""
+    if modelo != Modelo.M202.value:
+        return {}
+    relations_by_target: dict[BindingId, list] = {}
+    for relation in revision.relations:
+        relations_by_target.setdefault(relation.target_binding, []).append(relation)
+    values: dict[BindingId, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source is not BindingSourceKind.RELATION_PREFILL:
+            continue
+        relations = tuple(relations_by_target.get(binding.id, ()))
+        if not relations:
+            continue
+        if any(not relation.target_periods or period in relation.target_periods for relation in relations):
+            continue
+        if all(relation.kind == "previous_period" and str(relation.source_modelo) == modelo for relation in relations):
+            values[binding.id] = Decimal("0")
+    return values
 
 
 __all__ = ["RelationPrefillSourceResolver", "resolve_relations_from_local_store"]

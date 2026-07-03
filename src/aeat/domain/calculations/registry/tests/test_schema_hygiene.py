@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable, Iterator
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -17,9 +18,9 @@ from pydantic import ValidationError
 
 from .....core.aggregation import BindingTypedEnumKind
 from .....core.paths import PROJECT_ROOT
-from .....core.resources import bundled_path
+from .....core.resources import bundled_path, resources
 from ..._export_field_kind import CasillaFieldKind
-from .. import load_registry_tree, revision_reference_identity_failures
+from .. import revision_reference_identity_failures
 from .._ids import CasillaId, validated_casilla_id
 from .._schema import DataBindingDefinition, ModeloDefinition
 
@@ -36,9 +37,10 @@ _FORBIDDEN_XML_ROOT_TOKENS = frozenset(
     },
 )
 
+
+@cache
 def _all_modelos() -> tuple[ModeloDefinition, ...]:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return modelos
+    return resources().modelos.all()
 
 
 def test_bundled_revisions_produce_no_ambiguous_reference_identity_failures() -> None:
@@ -68,9 +70,7 @@ def test_operator_input_id_map_contains_only_casilla_ids() -> None:
             observed = input_casilla_id_map(revision)
             extra_keys = sorted(set(observed) - expected)
             wrong_values = sorted(
-                f"{key}->{value}"
-                for key, value in observed.items()
-                if key not in expected or value != key
+                f"{key}->{value}" for key, value in observed.items() if key not in expected or value != key
             )
             if extra_keys or wrong_values:
                 offences.append(
@@ -208,8 +208,7 @@ def _renta_replay_captured_targets(replay_dir: Path) -> set[CasillaId]:
             section = document.get(key) or {}
             if isinstance(section, dict):
                 captured.update(
-                    _renta_replay_casilla_id(k, payload_path=payload_path, section_name=key)
-                    for k in section
+                    _renta_replay_casilla_id(k, payload_path=payload_path, section_name=key) for k in section
                 )
     return captured
 
@@ -253,7 +252,7 @@ def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage()
 
     replay_dir = bundled_path("corpus", "parity_replays", "renta_web_open")
     captured_targets = _renta_replay_captured_targets(replay_dir)
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos = _all_modelos()
     declared_casillas = _modelo_100_casilla_ids(modelos)
     dangling_replay_targets = sorted(captured_targets - declared_casillas)
     assert not dangling_replay_targets, (
@@ -293,7 +292,7 @@ def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
     free-form strings at runtime.
     """
 
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos = _all_modelos()
     offences: list[str] = []
     for binding in _modelo_100_bindings(modelos):
         offence = _typed_enum_offence(binding, expectations=_RENTA_TYPED_BINDING_BRIDGES)
@@ -317,7 +316,7 @@ def test_declared_typed_enum_hydrates_to_binding_typed_enum_kind() -> None:
     declares a ``typed_enum`` exposes a member (which still equals its string
     value, keeping the ``str`` consumers byte-compatible).
     """
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos = _all_modelos()
     seen: set[BindingTypedEnumKind] = set()
     for modelo in modelos:
         for revision in modelo.revisions.values():

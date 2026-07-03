@@ -44,31 +44,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("suffix", "content", "provider_type"),
-    [
-        (".pdf", b"%PDF-1.4\n% financial statement sample\n", PdfN26Provider),
-        (".xlsx", b"PK\x03\x04 workbook container sample", XlsxProvider),
-        (".ofx", b"<OFX><BANKMSGSRSV1></BANKMSGSRSV1></OFX>", OfxProvider),
-        (".qfx", b"<OFX><BANKMSGSRSV1></BANKMSGSRSV1></OFX>", OfxProvider),
-        (".csv", b"date,description,amount\n", CsvProvider),
-        (".txt", b"date,description,amount\n", CsvProvider),
-    ],
-    ids=("pdf", "xlsx", "ofx", "qfx", "csv", "txt-csv"),
-)
-def test_ordered_candidates_known_suffix_leads_with_declared_provider(
-    tmp_path: Path,
-    suffix: str,
-    content: bytes,
-    provider_type: type[object],
-) -> None:
+def test_ordered_candidates_known_suffix_leads_with_declared_provider(tmp_path: Path) -> None:
     """Known suffixes take precedence before content sniffing."""
-    target = tmp_path / f"statement{suffix}"
-    target.write_bytes(content)
+    cases = (
+        ("pdf", ".pdf", b"%PDF-1.4\n% financial statement sample\n", PdfN26Provider),
+        ("xlsx", ".xlsx", b"PK\x03\x04 workbook container sample", XlsxProvider),
+        ("ofx", ".ofx", b"<OFX><BANKMSGSRSV1></BANKMSGSRSV1></OFX>", OfxProvider),
+        ("qfx", ".qfx", b"<OFX><BANKMSGSRSV1></BANKMSGSRSV1></OFX>", OfxProvider),
+        ("csv", ".csv", b"date,description,amount\n", CsvProvider),
+        ("txt-csv", ".txt", b"date,description,amount\n", CsvProvider),
+    )
 
-    candidates = _ordered_candidates(target)
+    for case_id, suffix, content, provider_type in cases:
+        target = tmp_path / f"statement-{case_id}{suffix}"
+        target.write_bytes(content)
+        candidates = _ordered_candidates(target)
 
-    assert isinstance(candidates[0], provider_type)
+        assert isinstance(candidates[0], provider_type), case_id
 
 
 # ---------------------------------------------------------------------------
@@ -76,28 +68,23 @@ def test_ordered_candidates_known_suffix_leads_with_declared_provider(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("content", "provider_type"),
-    [
-        (b"%PDF-1.4\n% financial statement sample\n", PdfN26Provider),
-        (b"PK\x03\x04 workbook container sample", XlsxProvider),
-        (b"<?xml version='1.0'?><OFX><BODY/></OFX>", OfxProvider),
-        (b"<HEADER/>\n<BANKTRANLIST>" + b"x" * 50, OfxProvider),
-    ],
-    ids=("pdf-magic", "zip-magic", "ofx-envelope", "banktranlist-marker"),
-)
 def test_ordered_candidates_unknown_suffix_magic_bytes_lead_with_declared_provider(
     tmp_path: Path,
-    content: bytes,
-    provider_type: type[object],
 ) -> None:
     """Unknown suffixes fall through to the documented magic-byte dispatch."""
-    target = tmp_path / "statement.bin"
-    target.write_bytes(content)
+    cases = (
+        ("pdf-magic", b"%PDF-1.4\n% financial statement sample\n", PdfN26Provider),
+        ("zip-magic", b"PK\x03\x04 workbook container sample", XlsxProvider),
+        ("ofx-envelope", b"<?xml version='1.0'?><OFX><BODY/></OFX>", OfxProvider),
+        ("banktranlist-marker", b"<HEADER/>\n<BANKTRANLIST>" + b"x" * 50, OfxProvider),
+    )
 
-    candidates = _ordered_candidates(target)
+    for case_id, content, provider_type in cases:
+        target = tmp_path / f"statement-{case_id}.bin"
+        target.write_bytes(content)
+        candidates = _ordered_candidates(target)
 
-    assert isinstance(candidates[0], provider_type)
+        assert isinstance(candidates[0], provider_type), case_id
 
 
 # ---------------------------------------------------------------------------

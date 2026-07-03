@@ -28,7 +28,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core.config import Settings
 from .. import AuthProviderKind
 from .._sessions import storage_state_paths
 
@@ -54,33 +53,23 @@ def active_profile(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _settings(token_dir: Path) -> Settings:
-    return Settings(aeat_token_dir=token_dir)
-
-
-def test_storage_state_paths_certificate_uses_storage_stem(tmp_path: Path) -> None:
-    settings = _settings(tmp_path)
-
-    result = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
+def test_storage_state_paths_certificate_uses_storage_stem() -> None:
+    result = storage_state_paths(AuthProviderKind.CERTIFICATE)
 
     assert result.storage_state == Path(".aeat/auth/sessions/operator-storage.json")
 
 
-def test_storage_state_paths_clave_movil_uses_clave_movil_storage_stem(tmp_path: Path) -> None:
-    settings = _settings(tmp_path)
-
-    result = storage_state_paths(settings, AuthProviderKind.CLAVE_MOVIL)
+def test_storage_state_paths_clave_movil_uses_clave_movil_storage_stem() -> None:
+    result = storage_state_paths(AuthProviderKind.CLAVE_MOVIL)
 
     assert result.storage_state == Path(".aeat/auth/sessions/operator-clave-movil-storage.json")
 
 
-def test_storage_state_paths_none_defaults_to_certificate(tmp_path: Path) -> None:
+def test_storage_state_paths_none_defaults_to_certificate() -> None:
     """The default kind is CERTIFICATE; explicit None and unsupplied
     kwarg return the same path as explicit CERTIFICATE."""
-    settings = _settings(tmp_path)
-
-    default_result = storage_state_paths(settings)
-    explicit_result = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
+    default_result = storage_state_paths()
+    explicit_result = storage_state_paths(AuthProviderKind.CERTIFICATE)
 
     assert default_result.storage_state == explicit_result.storage_state
 
@@ -94,13 +83,11 @@ def test_storage_state_paths_composes_profile_name_into_filename(tmp_path: Path)
 
     from ....core.config import override_settings
 
-    settings = _settings(tmp_path)
-
     with override_settings(aeat_active_profile="operator"):
-        result_a = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
+        result_a = storage_state_paths(AuthProviderKind.CERTIFICATE)
 
     with override_settings(aeat_active_profile="other-profile"):
-        result_b = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
+        result_b = storage_state_paths(AuthProviderKind.CERTIFICATE)
 
     assert result_a.storage_state == Path(".aeat/auth/sessions/operator-storage.json")
     assert result_b.storage_state == Path(".aeat/auth/sessions/other-profile-storage.json")
@@ -108,12 +95,15 @@ def test_storage_state_paths_composes_profile_name_into_filename(tmp_path: Path)
 
 
 def test_storage_state_paths_is_independent_of_plaintext_token_dir(tmp_path: Path) -> None:
-    """Encrypted session object keys must not drift with the legacy token dir."""
-    settings_a = _settings(tmp_path / "tokens-a")
-    settings_b = _settings(tmp_path / "tokens-b")
+    """Encrypted session object keys must not depend on the plaintext token dir."""
+    from ....core.config import Settings, override_settings
 
-    result_a = storage_state_paths(settings_a, AuthProviderKind.CERTIFICATE)
-    result_b = storage_state_paths(settings_b, AuthProviderKind.CERTIFICATE)
+    with override_settings(aeat_token_dir=tmp_path / "tokens-a"):
+        Settings()
+        result_a = storage_state_paths(AuthProviderKind.CERTIFICATE)
+    with override_settings(aeat_token_dir=tmp_path / "tokens-b"):
+        Settings()
+        result_b = storage_state_paths(AuthProviderKind.CERTIFICATE)
 
     assert result_a.storage_state == result_b.storage_state
     assert result_a.storage_state == Path(".aeat/auth/sessions/operator-storage.json")
@@ -122,9 +112,7 @@ def test_storage_state_paths_is_independent_of_plaintext_token_dir(tmp_path: Pat
 def test_storage_state_paths_returns_strict_frozen_model(tmp_path: Path) -> None:
     """The returned StorageStatePaths is a strict/frozen pydantic
     model; attempting to mutate the storage_state field raises."""
-    settings = _settings(tmp_path)
-
-    result = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
+    result = storage_state_paths(AuthProviderKind.CERTIFICATE)
 
     attr = "storage_state"
     with pytest.raises(ValidationError, match="frozen"):

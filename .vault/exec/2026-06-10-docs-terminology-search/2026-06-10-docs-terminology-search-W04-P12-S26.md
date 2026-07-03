@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S26'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Delete the hand-written glossary page, the explanation mini-glossary, and every inline term re-definition in the same change, converting prose to term-role references so the nitpicky build gate enforces enrolment and single declaration (ADR D7, no-legacy rule)
 

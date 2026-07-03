@@ -1,7 +1,7 @@
 """Profile bundle import/export command registration for ``aeat config profile``.
 
 Profile import/export emits
-:class:`~aeat.domain.buckets.BucketEventHistoryRepository` lifecycle events
+:class:`BucketEventHistoryRepository` lifecycle events
 around portable bundle writes and reads.
 """
 
@@ -44,7 +44,159 @@ def register_profile_bundle_commands(
         resolve_profile_by_label=resolve_profile_by_label,
         resolve_active_profile_pointer=resolve_active_profile_pointer,
     )
+    _register_profile_sar_command(
+        profile_app,
+        profile_state=profile_state,
+        resolve_profile_by_label=resolve_profile_by_label,
+        resolve_active_profile_pointer=resolve_active_profile_pointer,
+    )
     _register_profile_import_command(profile_app, atomic_create_profile=atomic_create_profile)
+
+
+#: Personal-data categories the portable bundle carries, surfaced in the SAR
+#: data catalogue so a subject can see what the archive holds. These mirror the
+#: v3 :class:`UserProfilePortableExport` typed fields.
+_SAR_DATA_CATEGORIES: tuple[str, ...] = (
+    "profile_identity_and_facts",
+    "modelo_work_units",
+    "ledger_transactions",
+    "calculation_revisions",
+    "filing_records",
+)
+
+
+def _register_profile_sar_command(
+    profile_app: typer.Typer,
+    *,
+    profile_state: Callable[[], WorkflowStateRepository],
+    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
+    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
+) -> None:
+    @profile_app.command(
+        "subject-access-request",
+        help=tr(
+            "cli.config.profile.sar_help",
+            default=(
+                "Export all personal data held for a profile as a GDPR "
+                "right-of-access archive (the portable profile bundle)."
+            ),
+        ),
+    )
+    def config_profile_subject_access_request(
+        ctx: typer.Context,
+        name: str | None = typer.Argument(
+            None,
+            help=tr("cli.config.profile.export_name_help", default="Profile to export; defaults to active."),
+        ),
+        out: Path = typer.Option(
+            ...,
+            "--to",
+            help=tr("cli.config.profile.export_out_help", default="Destination path for the JSON bundle."),
+        ),
+        output_language: OutputLanguage | None = typer.Option(
+            None,
+            "--output-language",
+            "--language",
+            help=tr("cli.config.auth.output_language_help"),
+        ),
+    ) -> None:
+        """Produce the operator's own personal-data archive (GDPR right of access)."""
+        from ....application.user_profile import profile_storage_session, serialize_profile_bundle
+        from ....domain.buckets import BucketEventType
+        from ....domain.user_profile import ProfileNotFoundError, UserProfilePortableExport
+        from .._config_payloads import ConfigProfileSubjectAccessRequestResult
+
+        _activate_subcommand_output_language(ctx, output_language)
+        profile_state().load()
+        if name is not None:
+            pointer = resolve_profile_by_label(name)
+        else:
+            pointer = resolve_active_profile_pointer()
+            if pointer is None:
+                raise _CliRefusedBoundaryError(translated_message="cli.config.errors.no_active_profile")
+
+        def _serialize_and_record() -> UserProfilePortableExport:
+            serialized = serialize_profile_bundle(bucket_id=pointer.bucket_id)
+            _emit_profile_lifecycle_event(
+                event_type=BucketEventType.PROFILE_EXPORTED,
+                bucket_id=pointer.bucket_id,
+                object_id=pointer.bucket_id,
+                payload={
+                    "display_name": pointer.label or "",
+                    "out": str(out),
+                    "schema_version": str(serialized.bundle_schema_version),
+                    "subject_access_request": "true",
+                },
+            )
+            return serialized
+
+        try:
+            from ....adapters.persistence.storage.master_key import has_active_bucket_session
+            from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
+
+            if pointer.bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
+                bundle = _serialize_and_record()
+            else:
+                with profile_storage_session(pointer.bucket_id):
+                    bundle = _serialize_and_record()
+        except ProfileNotFoundError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.unknown_profile",
+                context={"name": pointer.label},
+            ) from exc
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
+
+        result = ConfigProfileSubjectAccessRequestResult(
+            profile_id=pointer.bucket_id,
+            display_name=pointer.label,
+            out=str(out),
+            schema_version=bundle.bundle_schema_version,
+            data_categories=list(_SAR_DATA_CATEGORIES),
+        )
+        sensitivity_notice = _build_export_sensitivity_notice(out)
+        catalogue_notice = _build_sar_catalogue_notice()
+        _emit_envelope(
+            ctx,
+            command="config.profile.subject_access_request",
+            result=result,
+            lines=(
+                f"profile_id\t{pointer.bucket_id}",
+                f"display_name\t{pointer.label}",
+                f"out\t{out}",
+                f"schema_version\t{bundle.bundle_schema_version}",
+                f"data_categories\t{','.join(_SAR_DATA_CATEGORIES)}",
+                f"INFO\t{catalogue_notice.message}",
+                f"WARNING\t{sensitivity_notice.message}",
+            ),
+            notices=(catalogue_notice, sensitivity_notice),
+        )
+
+
+def _build_sar_catalogue_notice() -> Notice:
+    """Build the data-catalogue notice naming the personal-data categories held.
+
+    A GDPR right-of-access response must tell the subject what categories of
+    their personal data are held, not only hand over a blob. This info
+    :class:`Notice` enumerates the portable-bundle categories and carries them
+    machine-readably in ``context`` per
+    ``cli-notices-are-the-only-diagnostic-channel``.
+    """
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="config.profile.subject_access_request.data_catalogue",
+        message=tr(
+            "cli.config.profile.sar_catalogue_info",
+            default=(
+                "This archive holds every personal-data category kept for the "
+                "profile: identity and profile facts, modelo work units, ledger "
+                "transactions, calculation revisions, and filing records. "
+                "Attachment evidence bytes and AEAT captures stay in encrypted "
+                "storage; use the encrypted recovery archive to include them."
+            ),
+        ),
+        context={"data_categories": ",".join(_SAR_DATA_CATEGORIES)},
+    )
 
 
 def _register_profile_export_command(
@@ -82,8 +234,7 @@ def _register_profile_export_command(
         """Serialize a profile bundle to a JSON file."""
         from ....application.user_profile import profile_storage_session, serialize_profile_bundle
         from ....domain.buckets import BucketEventType
-        from ....domain.user_profile import ProfileNotFoundError
-        from ....domain.user_profile._portable_export import UserProfilePortableExport
+        from ....domain.user_profile import ProfileNotFoundError, UserProfilePortableExport
         from .._config_payloads import ConfigProfileExportResult
 
         _activate_subcommand_output_language(ctx, output_language)
@@ -112,7 +263,7 @@ def _register_profile_export_command(
             return serialized
 
         try:
-            from ....adapters.persistence.storage import has_active_bucket_session
+            from ....adapters.persistence.storage.master_key import has_active_bucket_session
             from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 
             if pointer.bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
@@ -174,7 +325,9 @@ def _build_export_sensitivity_notice(out: Path) -> Notice:
                 "This bundle is UNENCRYPTED and contains sensitive financial data: "
                 "the raw tax id (not redacted), the full ledger, calculation revisions, "
                 "and filing records. It was written to {out}. Delete it after transfer; "
-                "do not email, sync, or leave it on disk."
+                "do not email, sync, or leave it on disk. It is NOT a full backup: "
+                "attachment evidence bytes, AEAT captures, and the audit trail are "
+                "excluded. Use the encrypted recovery archive for a complete backup."
             ),
             out=str(out),
         ),
@@ -225,7 +378,7 @@ def _register_profile_import_command(
         from ....application.workflow import read_profile_bucket as _read_profile_bucket
         from ....application.workflow import read_profile_bucket_by_id
         from ....domain.buckets import BucketEventType
-        from ....domain.user_profile._portable_export import UserProfilePortableExport
+        from ....domain.user_profile import UserProfilePortableExport
         from .._config_payloads import ConfigProfileImportResult
 
         if not path.is_file():
@@ -257,9 +410,8 @@ def _register_profile_import_command(
         bundle_profile_id = record.profile_id
 
         explicit_label = label.strip() if label is not None and label.strip() else None
-        fresh_uuid_mode = explicit_label is not None
 
-        if not fresh_uuid_mode and read_profile_bucket_by_id(bundle_profile_id) is not None:
+        if read_profile_bucket_by_id(bundle_profile_id) is not None:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.import_uuid_collision",
                 context={"profile_id": bundle_profile_id},
@@ -276,7 +428,7 @@ def _register_profile_import_command(
             target_id = atomic_create_profile(
                 display_name=target_label,
                 facts=record.facts,
-                profile_id=None if fresh_uuid_mode else bundle_profile_id,
+                profile_id=bundle_profile_id,
             )
         except ProfileAlreadyRegisteredError as exc:
             raise _CliRefusedBoundaryError(
@@ -294,7 +446,6 @@ def _register_profile_import_command(
                     "display_name": target_label,
                     "source_path": str(path),
                     "schema_version": str(bundle.bundle_schema_version),
-                    "fresh_uuid_mode": str(fresh_uuid_mode).lower(),
                 },
             )
 
@@ -371,9 +522,7 @@ def _validate_imported_profile_tax_id(record: object) -> None:
     from ....core.identity import IdentityError, validate_spanish_tax_id
 
     tax_id_values = [
-        fact.value
-        for fact in getattr(record, "facts", ())
-        if getattr(fact, "path", None) == _PROFILE_TAX_ID_PATH
+        fact.value for fact in getattr(record, "facts", ()) if getattr(fact, "path", None) == _PROFILE_TAX_ID_PATH
     ]
     if len(tax_id_values) != 1:
         raise _invalid_import_tax_id(
@@ -417,10 +566,10 @@ def _emit_profile_lifecycle_event(
     payload: dict[str, str],
 ) -> None:
     """Append a profile-lifecycle event to the bucket-event-history catalogue."""
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ....domain.buckets import (
         BucketEvent,
         BucketEventHistoryCatalogue,
-        BucketEventHistoryRepository,
         BucketEventObjectType,
         derive_bucket_event_id,
     )

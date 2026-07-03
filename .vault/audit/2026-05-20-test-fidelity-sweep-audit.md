@@ -3,23 +3,17 @@ tags:
   - '#audit'
   - '#test-fidelity-sweep'
 date: '2026-05-20'
-modified: '2026-05-20'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `test-fidelity-sweep` audit: `test-fidelity-false-positive-swarm-audit`
 
 ## Scope
 
-
 ## Findings
 
-
 ## Recommendations
-
-
 
 ## Context
 
@@ -194,4 +188,3 @@ AEAT-workbook authority where one exists, otherwise converted to graph-
 wiring / validation / provenance / primitive-evaluator-contract tests.
 Anti-tautology proofs narrow to the specific expected exception.
 Vacuous CLI assertions assert real output and exit code unconditionally.
-

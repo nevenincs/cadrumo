@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
@@ -12,7 +12,6 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]"
   - '[[2026-06-03-profile-lifecycle-cli-cascade-supersession-adr]]'
 ---
-
 
 # `cli-workflow-redesign` adr: `Config profile use shortcut and cross-surface profile list with status` | (**status:** `superseded by [[2026-05-16-profile-lifecycle-cli-adr]]`)
 

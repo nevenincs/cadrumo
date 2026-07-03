@@ -3,13 +3,12 @@ tags:
   - "#exec"
   - "#cross-domain-continuity"
 date: 2026-05-27
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
 
 # cross-domain-continuity Code Review
-
 
 ## S353 — casilla 0505 formula (commits 94b424c6b / eb8793d07 / 227350dc9)
 

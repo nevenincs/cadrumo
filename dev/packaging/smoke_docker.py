@@ -11,8 +11,11 @@ import textwrap
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Final
 
 from .smoke_core import _build_wheel, _executable, _manifest_path, _write_smoke_manifest
+
+_UTF_8: Final[str] = "utf-8"
 
 
 @dataclass(frozen=True)
@@ -46,7 +49,7 @@ def _work_dir(repo_root: Path, requested: str | None, mode: str) -> Path:
 def _write_probe(work_dir: Path, filename: str, source: str) -> Path:
     """Write a container probe script into the mounted work directory."""
     path = work_dir / filename
-    path.write_text(textwrap.dedent(source).lstrip(), encoding="utf-8")
+    path.write_text(textwrap.dedent(source).lstrip(), encoding=_UTF_8)
     return path
 
 
@@ -371,7 +374,7 @@ os.environ.update(env)
 Path(env["AEAT_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
 Path(env["PLAYWRIGHT_BROWSERS_PATH"]).mkdir(parents=True, exist_ok=True)
 
-target = f"aeat[browser] @ {wheel.as_uri()}"
+target = f"aeat-cli[browser] @ {wheel.as_uri()}"
 run([sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "--no-cache-dir", target], env=env)
 run([sys.executable, "-m", "pip", "check"], env=env)
 run([sys.executable, "-c", "import playwright.async_api, playwright_stealth"], env=env)

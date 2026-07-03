@@ -7,7 +7,7 @@ runner_required = false
 tolerance = "0.01"
 legal_refs = [
     "rd-439-2007:art-110",
-    "orden-eha-672-2007:art-1",
+    "orden-eha-672-2007:art-3",
     "orden-hac-1264-2018:art-4",
     "orden-hac-1164-2019:art-4",
     "orden-hac-1155-2020:art-4",

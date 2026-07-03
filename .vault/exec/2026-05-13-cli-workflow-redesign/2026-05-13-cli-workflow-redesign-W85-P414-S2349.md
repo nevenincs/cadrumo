@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 step_id: 'S2349'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
 ---
-
-
-
 
 # W85.P414.S2349 Modelo 036 lifecycle verbs registered
 
@@ -34,4 +31,3 @@ related:
 ## Notes
 
 - Landed end-to-end via the ADR-driven 3-commit landing plan: precondition bundle (commit 1) -> service implementation (commit 2) -> CLI verb mount + locales + shape tests (commit 3).
-

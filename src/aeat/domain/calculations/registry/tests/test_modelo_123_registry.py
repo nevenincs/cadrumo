@@ -8,19 +8,14 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .. import (
-    CasillaId,
-    RegistrySnapshot,
-    RegistryValidator,
-    build_snapshot,
-    calculate_registry_snapshot,
-    load_registry_tree,
-    validated_casilla_id,
-)
+from .._formula_runtime import calculate_registry_snapshot
+from .._ids import CasillaId, validated_casilla_id
+from .._schema import RegistrySnapshot
+from .._snapshot import build_snapshot
+from .._validate import RegistryValidator
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -41,19 +36,50 @@ _M123_RETENCIONES_RESTO_CASILLA: CasillaId = _casilla_id("08")
 _M123_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("10")
 _M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: CasillaId = _casilla_id("11")
 _M123_A_INGRESAR_CASILLA: CasillaId = _casilla_id("13")
-_M123_2019_2023_NPERCEPTORES_CASILLA: CasillaId = _casilla_id("01-legacy")
-_M123_2019_2023_BASE_CASILLA: CasillaId = _casilla_id("02-legacy")
-_M123_2019_2023_RETENCIONES_CASILLA: CasillaId = _casilla_id("03-legacy")
-_M123_2019_2023_REGULARIZACION_CASILLA: CasillaId = _casilla_id("04-legacy")
-_M123_2019_2023_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("05-legacy")
-_M123_2019_2023_RESULTADO_CASILLA: CasillaId = _casilla_id("06-legacy")
-_M123_2019_2023_INGRESO_CASILLA: CasillaId = _casilla_id("07-legacy")
+_M123_2019_2023_NPERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
+_M123_2019_2023_BASE_CASILLA: CasillaId = _casilla_id("02")
+_M123_2019_2023_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
+_M123_2019_2023_REGULARIZACION_CASILLA: CasillaId = _casilla_id("04")
+_M123_2019_2023_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("05")
+_M123_2019_2023_RESULTADO_CASILLA: CasillaId = _casilla_id("06")
+_M123_2019_2023_INGRESO_CASILLA: CasillaId = _casilla_id("07")
 
 
-def _load_modelo(modelo_id: str):
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == modelo_id)
-    return modelo, catalogues
+def test_modelo_123_guidance_and_layout_sources_are_separated() -> None:
+    modelo, catalogues = _committed_modelo("123")
+
+    procedure = catalogues.sources["aeat-modelo-123-procedure"]
+    assert "aeat-modelo-123-procedure" in modelo.source_refs
+    assert procedure.evidence_tier == "official_source_guidance"
+    assert procedure.authority == "aeat"
+    assert procedure.kind == "instructions"
+    assert (bundled_path() / procedure.corpus_path).is_file()
+
+    assert catalogues.sources["aeat-dr-123-2024-v20"].evidence_tier == "layout_authority"
+    assert catalogues.sources["aeat-dr-123-2019-2023-v13"].evidence_tier == "layout_authority"
+    assert catalogues.sources["aeat-dr-123-2024-v20-form-text"].evidence_tier == "layout_authority"
+    assert catalogues.sources["aeat-dr-123-2019-2023-v13-form-text"].evidence_tier == "layout_authority"
+    assert catalogues.sources["boe-modelo-123-2007-form"].evidence_tier == "layout_authority"
+    assert catalogues.sources["boe-modelo-123-2024-form"].evidence_tier == "layout_authority"
+
+    formula_sources = {
+        "2019-2023": "boe-modelo-123-2007-form-text",
+        "2024-y-siguientes": "boe-modelo-123-2024-form-text",
+    }
+    for revision_id, source_ref in formula_sources.items():
+        source = catalogues.sources[source_ref]
+        assert source.evidence_tier == "official_source_guidance"
+        assert source.authority == "boe"
+        assert source.kind == "form_spec"
+        assert (bundled_path() / source.corpus_path).is_file()
+
+        revision = modelo.revisions[revision_id]
+        assert source_ref in revision.source_refs
+        for formula in revision.formulas:
+            assert source_ref in formula.source_refs
+            assert not any(str(ref).startswith("aeat-dr-123-") for ref in formula.source_refs)
+            for citation in formula.source_citations:
+                assert citation.source_ref == source_ref
 
 
 @pytest.mark.parametrize(
@@ -96,7 +122,7 @@ def test_modelo_123_validated_snapshot_owns_workflow_surfaces(
     filing_year: int,
     required_surfaces: set[str],
 ) -> None:
-    modelo, catalogues = _load_modelo("123")
+    modelo, catalogues = _committed_modelo("123")
 
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
@@ -118,15 +144,15 @@ def test_modelo_123_validated_snapshot_owns_workflow_surfaces(
 # ---------------------------------------------------------------------------
 # Casilla 06 arithmetic oracle (Aitor #211)
 #
-# Authority: Orden HAC/56/2024 Anexo II + form text citation
-# "Base de retenciones e ingresos a cuenta. Totales [06]" = [04] + [05].
+# Authority: Orden HAC/56/2024 Anexo II + BOE annex form text.
+# "Base de retenciones e ingresos a cuenta" in the Totales column = [04] + [05].
 # Casilla 06 must equal the sum of the two base sub-totals only.
 # Perceptor counts (casillas 01, 02, 03) must NOT contribute to casilla 06.
 # ---------------------------------------------------------------------------
 
 
 def _snapshot_2024(filing_year: int = 2024):
-    modelo, catalogues = _load_modelo("123")
+    modelo, catalogues = _committed_modelo("123")
     return build_snapshot(
         modelo,
         catalogues,
@@ -169,8 +195,8 @@ def _calculate_2024(
 def test_m123_casilla_06_equals_base_dividendos_plus_base_resto() -> None:
     """Casilla 06 = [04] + [05] (base total).
 
-    Oracle authority: Orden HAC/56/2024 form text, field label
-    "Base de retenciones e ingresos a cuenta. Totales [06]".
+    Oracle authority: Orden HAC/56/2024 BOE annex text, field label
+    "Base de retenciones e ingresos a cuenta" in the Totales column.
 
     With base_dividendos=42000 and base_resto=0, casilla 06 must be 42000.
     The perceptor count (nperceptores=7 split as 01=4, 02=3) must not
@@ -241,21 +267,21 @@ def test_m123_casilla_06_invariant_to_nperceptores() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 2019-2023 revision: casilla 06-legacy semantic is different
-# ("Suma de retenciones y regularizacion" = [03-legacy] + [05-legacy]).
-# Perceptor count (01-legacy) and base (02-legacy) must NOT contribute.
+# 2019-2023 revision: casilla 06 semantic is different
+# ("Suma de retenciones y regularizacion" = [03] + [05]).
+# Perceptor count (01) and base (02) must NOT contribute.
 # ---------------------------------------------------------------------------
 
 
-def test_m123_legacy_casilla_06_invariant_to_nperceptores_and_base() -> None:
-    """2019-2023 revision: casilla 06-legacy is retenciones+regularizacion, not base.
+def test_m123_2019_2023_casilla_06_invariant_to_nperceptores_and_base() -> None:
+    """2019-2023 revision: casilla 06 is retenciones+regularizacion, not base.
 
-    Authority: 2019-2023 form text citation "[03] + [05]".
-    Inputs 01-legacy (nperceptores) and 02-legacy (base retenciones) are
+    Authority: BOE Modelo 123 annex text citation "( 03 + 05 )".
+    Inputs 01 (nperceptores) and 02 (base retenciones) are
     manual pass-through casillas with no formula; they must not affect
-    casilla 06-legacy (Suma de retenciones y regularizacion = [03-legacy] + [05-legacy]).
+    casilla 06 (Suma de retenciones y regularizacion = [03] + [05]).
     """
-    modelo, catalogues = _load_modelo("123")
+    modelo, catalogues = _committed_modelo("123")
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -277,7 +303,41 @@ def test_m123_legacy_casilla_06_invariant_to_nperceptores_and_base() -> None:
     )
     casilla_06 = result.values[_M123_2019_2023_RESULTADO_CASILLA]
     assert casilla_06 == Decimal("100.00"), (
-        f"casilla 06-legacy (suma retenciones+regularizacion = [03]+[05]) "
+        f"casilla 06 (suma retenciones+regularizacion = [03]+[05]) "
         f"should be 100.00 (= retenciones + 0), got {casilla_06}; "
-        f"nperceptores (01-legacy=7) and base (02-legacy=42000) must not contribute"
+        f"nperceptores (01=7) and base (02=42000) must not contribute"
     )
+
+
+# ---------------------------------------------------------------------------
+# No-silent-under-declaration advisory: casilla 06 (base total) implies
+# casilla 09 (retenciones total) -- modelo verify nonzero guards.
+# ---------------------------------------------------------------------------
+
+
+def test_m123_2024_carries_base_total_implies_retenciones_total_advisory() -> None:
+    """The M123 2024-y-siguientes revision guards the base-to-retenciones handoff.
+
+    Casilla 06 (base total = [04] + [05]) and casilla 09 (retenciones total =
+    [07] + [08]) are both formula-computed from independently manual leaf
+    casillas. A positive base total with a zero retenciones total has no
+    legitimate cause under RD 439/2007 arts. 75 and 90: art. 75 identifies
+    capital-mobiliario rents subject to withholding and the type-based
+    exceptions, while art. 90 sets the positive rate for the withholding base.
+    The ADVISORY `implies_nonzero` predicate therefore surfaces a finding
+    rather than silently granting VERIFICADO_COMPLETO.
+    """
+    snapshot = _snapshot_2024()
+
+    predicate_id = "modelo-123-2024-base-total-implica-retenciones-total"
+    predicate = next(p for p in snapshot.revision.verification_predicates if p.predicate_id == predicate_id)
+
+    assert predicate.expression == 'implies_nonzero(["06", "09"])'
+    assert predicate.finding_kind == "ADVISORY", (
+        "must stay non-blocking: a category whose payer applied no withholding "
+        "in one leaf while the other leaf covers it must not refuse the draft"
+    )
+    legal_refs = tuple(str(r) for r in predicate.legal_refs)
+    assert "rd-439-2007:art-90" in legal_refs
+    assert "rd-439-2007:art-75" in legal_refs
+    assert "ley-35-2006:art-101" in legal_refs

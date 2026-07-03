@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
 from html import unescape
 
 import pytest
@@ -15,17 +14,16 @@ from .. import (
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,
-    load_registry_tree,
     resolve_export_layout,
     validated_casilla_id,
 )
 from .._errors import RegistryValidationError
+from .._legal import verify_legal_catalogue
 from .._runtime_graph import expression_casilla_refs
 from .._schema import InputKind
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _m200_casilla(value: object, *, surface: str = "test_modelo_200_registry.casilla") -> CasillaId:
@@ -75,6 +73,7 @@ _M200_BASE_NIVELACION_CASILLA: CasillaId = validated_casilla_id(
     surface="_M200_BASE_NIVELACION_CASILLA",
 )
 _M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("DP200014:00562", surface="_M200_CUOTA_INTEGRA_CASILLA")
+_M200_FORM_ORDER_REF = "orden-hac-657-2025:modelo-200"
 
 
 def _base_inputs(
@@ -92,11 +91,8 @@ def _base_inputs(
     }
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_200():
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "200")
-    return modelo, catalogues
+    return _committed_modelo("200")
 
 
 def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> None:
@@ -150,6 +146,25 @@ def test_modelo_200_calendar_year_2024_deadline_matches_boe_order() -> None:
     assert window.opens_on == date(2025, 7, 1)
     assert window.closes_on == date(2025, 7, 25)
     assert window.payment_cutoff_on == date(2025, 7, 22)
+
+
+def test_modelo_200_form_order_is_boe_corpus_backed() -> None:
+    modelo, catalogues = _load_modelo_200()
+    revision = modelo.revisions["2024-y-siguientes"]
+    legal = {_M200_FORM_ORDER_REF: catalogues.legal[_M200_FORM_ORDER_REF]}
+
+    verify_legal_catalogue(legal, source_root=bundled_path())
+
+    assert _M200_FORM_ORDER_REF in modelo.legal_refs
+    assert _M200_FORM_ORDER_REF in revision.legal_refs
+    assert revision.orden_aplicabilidad == (_M200_FORM_ORDER_REF,)
+    assert catalogues.sources["aeat-modelo-200-manual-2024"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-200-2025-form"].evidence_tier == "layout_authority"
+    reference = legal[_M200_FORM_ORDER_REF]
+    assert reference.document_id == "BOE-A-2025-12818"
+    assert reference.kind == "orden"
+    assert reference.article == "modelo 200"
+    assert "aprobado en el artículo 1 de la presente orden" in reference.required_text
 
 
 def test_modelo_200_schedule_is_annual_for_calendar_year_entities() -> None:
@@ -287,21 +302,24 @@ def test_modelo_200_liquidacion_014_014b_formulas_and_exports_use_segment_identi
         _m200_casilla("DP200014:00577"),
         _m200_casilla("DP200014:00581"),
     } <= ajustada_refs
-    assert not {
-        "00567",
-        "00568",
-        "00563",
-        "00566",
-        "00576",
-        "00569",
-        "00570",
-        "00572",
-        "00571",
-        "00575",
-        "00577",
-        "00581",
-        "00582",
-    } & ajustada_refs
+    assert (
+        not {
+            "00567",
+            "00568",
+            "00563",
+            "00566",
+            "00576",
+            "00569",
+            "00570",
+            "00572",
+            "00571",
+            "00575",
+            "00577",
+            "00581",
+            "00582",
+        }
+        & ajustada_refs
+    )
 
     liquida_refs = set(expression_casilla_refs(formulas_by_target[_M200_CUOTA_LIQUIDA_CASILLA].expression))
     assert {
@@ -316,18 +334,21 @@ def test_modelo_200_liquidacion_014_014b_formulas_and_exports_use_segment_identi
         _m200_casilla("DP200014B:00399"),
         _m200_casilla("DP200014B:00082"),
     } <= liquida_refs
-    assert not {
-        "00582",
-        "00619",
-        "00583",
-        "00585",
-        "00584",
-        "00588",
-        "00565",
-        "00590",
-        "00399",
-        "00082",
-    } & liquida_refs
+    assert (
+        not {
+            "00582",
+            "00619",
+            "00583",
+            "00585",
+            "00584",
+            "00588",
+            "00565",
+            "00590",
+            "00399",
+            "00082",
+        }
+        & liquida_refs
+    )
 
     layout = resolve_export_layout(snapshot, "modelo-200-fichero-boe")
     expected_exports: dict[str, CasillaId] = {

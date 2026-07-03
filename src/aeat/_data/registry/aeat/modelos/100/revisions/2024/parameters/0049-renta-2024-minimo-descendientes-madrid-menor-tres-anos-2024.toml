@@ -1,0 +1,16 @@
+[[revisions."2024".parameters]]
+id = "renta-2024-minimo-descendientes-madrid-menor-tres-anos-2024"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["madrid-dl-1-2010:art-2"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Comunidad Autónoma de Madrid", "se aumentará en 3.005,16 euros anuales"]
+
+[[revisions."2024".parameters.values]]
+value = "3005.16"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31

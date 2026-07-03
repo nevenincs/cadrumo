@@ -14,6 +14,11 @@ Key types:
 * :class:`BundleVerificationState` — closed lifecycle states for
   offline bundle verification.
 * :func:`derive_bundle_id` — content-addressed id derivation.
+
+Bundle manifests reference work-unit, calculation-revision, and
+filing-record payloads without replacing those catalogues as the source
+of truth. Verification replays the manifest against supplied object
+bytes and reports reachability and digest results without contacting AEAT.
 """
 
 from __future__ import annotations
@@ -29,8 +34,8 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...core.time import now
-from ...domain.buckets._event import BucketEventObjectType
-from ...domain.modelos._ids import (
+from ...domain.buckets import BucketEventObjectType
+from ...domain.modelos import (
     CalculationRevisionId,
     FilingRecordId,
     WorkUnitId,
@@ -107,9 +112,9 @@ class EvidenceBundleCheckResult(BaseModel):
 class EvidenceRecordRef(BaseModel):
     """One referenced record entry inside an :class:`EvidenceBundle` manifest.
 
-    ``object_type`` names the ``BucketEventObjectType`` of the record;
-    ``object_id`` is its stable store key; ``content_sha256`` is the
-    SHA-256 hex digest of the record's raw payload bytes;
+    ``object_type`` names the :class:`BucketEventObjectType` of the
+    record; ``object_id`` is its stable store key; ``content_sha256`` is
+    the SHA-256 hex digest of the record's raw payload bytes;
     ``payload_size_bytes`` is the byte count used for
     completeness-ratio calculation.
     """
@@ -160,7 +165,13 @@ def derive_bundle_id(
     calculation_revision_id: str | None = None,
     filing_record_id: str | None = None,
 ) -> str:
-    """Compute the content-addressed bundle_id (SHA-256 hex of canonical inputs)."""
+    """Compute the content-addressed ``bundle_id`` for canonical inputs.
+
+    The digest covers manifest version, bucket id, work-unit id,
+    optional calculation revision id, optional filing record id, and the
+    ordered :class:`EvidenceRecordRef` object type/id/content-digest
+    triples.
+    """
     payload_parts: list[str] = [
         f"version={manifest_version}",
         f"bucket={bucket_id}",
@@ -177,7 +188,7 @@ def derive_bundle_id(
 
 
 def utcnow() -> datetime:
-    """Return the current UTC timestamp via :func:`aeat.core.time.now`."""
+    """Return the current UTC timestamp via :func:`core.time.now`."""
     return now()
 
 

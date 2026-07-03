@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#profile-lifecycle-cli'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S69'
 related:
   - "[[2026-05-16-profile-lifecycle-cli-plan]]"
 ---
-
-
-
 
 # run a manual operator smoke against a fresh root and capture the transcript
 

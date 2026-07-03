@@ -1,9 +1,9 @@
 """Internal SQLAlchemy ORM mapper classes.
 
 Backs the declarative schema consumed by Alembic autogenerate.
-Intentionally kept out of the :mod:`aeat.adapters.persistence.storage`
+Intentionally kept out of the :mod:`adapters.persistence.storage`
 public API: the public surface exposes pydantic v2 records (see
-:mod:`aeat.adapters.persistence.storage.sql.records`) and the
+:mod:`adapters.persistence.storage.sql.records`) and the
 per-domain repositories bridge between the ORM rows and the typed
 records.
 """
@@ -28,7 +28,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from ..crypto._encrypted_columns import EncryptedString, HashedLookup
+from ..crypto import (
+    EncryptedString,
+    HashedLookup,
+)
 
 _HASH_HEX_LENGTH = 64
 
@@ -211,7 +214,7 @@ class FincaRow(Base):
     """Row in the ``rental_fincas`` table.
 
     Models one Spanish urban property. The address column is encrypted
-    at rest via :class:`aeat.adapters.persistence.storage.crypto.EncryptedString`
+    at rest via :class:`~adapters.persistence.storage.crypto.EncryptedString`
     because finca addresses identify the contribuyente through the
     Catastro stable reference and qualify as personal data under GDPR.
 
@@ -266,7 +269,7 @@ class ArrendamientoRow(Base):
 
     Per-contract metadata used by the LIRPF art. 23.2 tier resolver.
     Tenant identifying fields, when added by future schema versions,
-    will use :class:`aeat.adapters.persistence.storage.crypto.EncryptedString`.
+    will use :class:`~adapters.persistence.storage.crypto.EncryptedString`.
     The current schema models only counts and flags so the row itself
     is not PII-bearing.
 

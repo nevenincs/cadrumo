@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S05'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Implement PDF text extraction over the 73 corpus manual/instruction PDFs including the over-10MB tail, emitting schema-conformant output with per-file provenance (ADR D6)
 
@@ -131,4 +128,3 @@ header - and its attribution pins the official AEAT download URL
 - The committed sidecar tree retires when the upstream `vaultspec-rag`
   preprocess-hook lands (the established retirement trigger);
   `PreprocessOutput` precursor-compatibility is intact.
-

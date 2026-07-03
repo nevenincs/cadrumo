@@ -19,9 +19,11 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import BindingSourceKind, Period
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
     BindingId,
     DataBindingDefinition,
@@ -30,14 +32,11 @@ from ....domain.calculations.registry import (
     RegistrySnapshot,
     RelationId,
 )
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation._source_mesh import CalculationSourceResolution
+from ...aggregation import CalculationSourceResolution
 from ...user_profile import UserProfileLifecycleRepository
-from .. import calculate_modelo_revision, create_work_unit
-from .._actions import ModeloError
+from .. import ModeloError, calculate_modelo_revision, create_work_unit
 from .._profile_binding import (
     ProfileBindingResolutionError,
     resolve_profile_sourced_bindings,
@@ -45,7 +44,8 @@ from .._profile_binding import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "operator"
+_PROFILE_ID = "10000000-0000-4000-8000-000000000476"
+_BUCKET_ID = _PROFILE_ID
 _YEAR = 2025
 _PERIOD = "0A"
 _TYPED_PERIOD = Period.from_year_and_code(_YEAR, _PERIOD)
@@ -93,16 +93,18 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
     return UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="tax_residence.ccaa", value=ccaa),
             # M100 2025 added age_at_year_end date binding + declaration-type
             # and derived marriage facts. Seed minimum values so M100 calculate
             # resolves the profile-sourced bindings.
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
@@ -148,7 +150,7 @@ def test_profile_resolution_skips_caller_supplied_bindings() -> None:
 def test_profile_resolution_is_empty_when_no_profile_fact_is_set() -> None:
     """A profile without the CCAA fact contributes nothing for that binding."""
     record = UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         created_at=_CLOCK,
@@ -195,7 +197,7 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> Non
     """
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
     record = UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -340,7 +342,7 @@ def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistryS
 
 def _profile_with_bool_fact(value: bool) -> UserProfileRecord:
     return UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -410,7 +412,7 @@ class TestBoolTypedProfileBinding:
         # by a bool fact — a mis-wired scenario the guard must catch.
         snapshot = _modelo_100_snapshot()
         bool_profile = UserProfileRecord(
-            profile_id=_BUCKET_ID,
+            profile_id=_PROFILE_ID,
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -443,7 +445,7 @@ def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value(
     """
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
     record = UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

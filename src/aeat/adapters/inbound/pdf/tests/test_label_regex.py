@@ -24,9 +24,9 @@ _TEST_LABEL_CASILLA: CasillaId = validated_casilla_id("01", surface="_TEST_LABEL
 class TestParseSpanishDecimal:
     """:func:`parse_spanish_decimal` round-trip and tolerance coverage."""
 
-    @pytest.mark.parametrize(
-        ("raw", "expected"),
-        [
+    def test_parses(self) -> None:
+        """Each canonical Spanish-decimal shape decodes to the expected Decimal."""
+        cases: tuple[tuple[str, Decimal | None], ...] = (
             ("1.234,56", Decimal("1234.56")),
             ("0,00", Decimal("0.00")),
             ("-42,50", Decimal("-42.50")),
@@ -35,48 +35,43 @@ class TestParseSpanishDecimal:
             ("", None),
             ("-", None),
             ("not a number", None),
-        ],
-    )
-    def test_parses(self, raw: str, expected: Decimal | None) -> None:
-        """Each canonical Spanish-decimal shape decodes to the expected Decimal."""
-        assert parse_spanish_decimal(raw) == expected
+        )
 
-    @pytest.mark.parametrize(
-        ("raw", "expected"),
-        [
+        for raw, expected in cases:
+            assert parse_spanish_decimal(raw) == expected, raw
+
+    def test_parses_whitespace_thousands_separator(self) -> None:
+        """Whitespace-thousands forms decode at the parse layer."""
+        cases: tuple[tuple[str, str, Decimal], ...] = (
             # parse_spanish_decimal() tolerates every unicode
             # whitespace variant (including ASCII / tab) for robustness
             # on messy input. The REGEX capture is stricter (NBSP / narrow
             # NBSP only — see TestSpanishAmountGroupRegex) to avoid
             # crossing column-separator whitespace on AEAT PDFs.
-            ("1\xa0234,56", Decimal("1234.56")),  # U+00A0 non-breaking space
-            ("1 234,56", Decimal("1234.56")),  # ASCII space — parse tolerates
-            ("1\t234,56", Decimal("1234.56")),  # tab — parse tolerates
-        ],
-        ids=["nbsp", "ascii-space", "tab"],
-    )
-    def test_parses_whitespace_thousands_separator(self, raw: str, expected: Decimal) -> None:
-        """Whitespace-thousands forms decode at the parse layer."""
-        assert parse_spanish_decimal(raw) == expected
+            ("nbsp", "1\xa0234,56", Decimal("1234.56")),  # U+00A0 non-breaking space
+            ("ascii-space", "1 234,56", Decimal("1234.56")),  # ASCII space — parse tolerates
+            ("tab", "1\t234,56", Decimal("1234.56")),  # tab — parse tolerates
+        )
+
+        for case_id, raw, expected in cases:
+            assert parse_spanish_decimal(raw) == expected, case_id
 
 
 class TestSpanishAmountGroupRegex:
     """Capture-group behaviour of :data:`SPANISH_AMOUNT_GROUP`."""
 
-    @pytest.mark.parametrize(
-        ("line", "expected"),
-        [
-            ("01 Ingresos 1.234,56", Decimal("1234.56")),
-            ("01 Ingresos 1\xa0234,56", Decimal("1234.56")),  # U+00A0 NBSP
-        ],
-        ids=["dot-sep", "nbsp"],
-    )
-    def test_regex_captures_nbsp_thousands(self, line: str, expected: Decimal) -> None:
+    def test_regex_captures_nbsp_thousands(self) -> None:
         """The regex captures both dot-separated and NBSP-separated thousands."""
         pattern = re.compile(rf"(?m)^\s*01\s.*?{SPANISH_AMOUNT_GROUP}")
-        hits = apply_label_regex(line, {"01": pattern})
-        assert "01" in hits, f"regex failed to match {line!r}"
-        assert hits["01"].decimal_value == expected
+        cases: tuple[tuple[str, str, Decimal], ...] = (
+            ("dot-sep", "01 Ingresos 1.234,56", Decimal("1234.56")),
+            ("nbsp", "01 Ingresos 1\xa0234,56", Decimal("1234.56")),  # U+00A0 NBSP
+        )
+
+        for case_id, line, expected in cases:
+            hits = apply_label_regex(line, {"01": pattern})
+            assert "01" in hits, f"{case_id}: regex failed to match {line!r}"
+            assert hits["01"].decimal_value == expected, case_id
 
     def test_regex_does_not_cross_column_ascii_space(self) -> None:
         """ASCII column-separator whitespace must not act as a thousands separator.

@@ -3,15 +3,13 @@ tags:
   - '#audit'
   - '#rental-income-hardening'
 date: '2026-04-29'
-modified: '2026-04-29'
+modified: '2026-06-30'
 related:
   - "[[2026-04-29-rental-income-hardening-plan]]"
   - "[[2026-04-29-rental-income-hardening-adr]]"
   - "[[2026-04-29-rental-income-hardening-research]]"
   - "[[2026-04-29-rental-income-hardening-summary-exec]]"
 ---
-
-
 
 # `rental-income-hardening` audit: code review against 8 safety invariants — PASS
 

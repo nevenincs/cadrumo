@@ -4,7 +4,7 @@ tags:
   - "#exec"
   - "#cross-domain-continuity"
 date: 2026-05-27
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
@@ -20,7 +20,7 @@ supplied the engine used 0 and cuota integra silently became 0.
 
 ## Commits
 
-`94b424c6b` — S353: add renta-2024/2025-base-liquidable-general-sometida-a-gravamen formula  
+`94b424c6b` — S353: add renta-2024/2025-base-liquidable-general-sometida-a-gravamen formula
 `eb8793d07` — S353: regression tests for casilla 0505 computed formula + migrate leaf inputs
 
 ## Changes

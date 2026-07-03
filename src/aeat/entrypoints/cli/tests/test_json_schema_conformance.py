@@ -23,7 +23,7 @@ import pytest
 import typer
 from typer.main import get_command as _typer_get_command
 
-from ....application.ledger._models import (
+from ....application.ledger import (
     LedgerCatalogueResetReport,
     LedgerRemovalBlocker,
     LedgerTransactionRemovalReport,
@@ -72,7 +72,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # sides in its failure diagnostic.
 
 _APP_NAMESPACE_PASSTHROUGH = frozenset({"live"})
-_APP_NAMESPACE_FLATTEN = frozenset({"ledger", "modelo", "overview", "registry", "review"})
+_APP_NAMESPACE_FLATTEN = frozenset({"diagnostics", "ledger", "modelo", "overview", "registry", "review"})
 
 
 class _PayloadWithStaleDraftRefs(Protocol):
@@ -208,6 +208,18 @@ _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
         "root.status",
         "root.app",
         "ledger.participation",
+        # ``aeat app contract`` is an ``invoke_without_command`` group whose
+        # callback emits the operator capability manifest under ``contract``.
+        # It registers no leaf subcommand, so the leaf walker cannot reach it.
+        "contract",
+        # ``aeat app agent --output DIR`` is the same shape: an
+        # ``invoke_without_command`` group-callback that materialises the operator
+        # workspace under ``agent``, with no leaf subcommand.
+        "agent",
+        # ``aeat app quickfile`` is the same shape: an ``invoke_without_command``
+        # group-callback that runs the full readiness -> calculate -> verify ->
+        # export chain and emits under ``quickfile``, with no leaf subcommand.
+        "quickfile",
     },
 )
 

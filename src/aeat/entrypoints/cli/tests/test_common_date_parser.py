@@ -20,7 +20,7 @@ import pytest
 import typer
 
 from ....core.config import override_settings
-from ....core.i18n._render import clear_output_language_cache
+from ....core.i18n import clear_output_language_cache
 from .._common import (
     _parse_iso_date,
     _parse_iso_date_str,

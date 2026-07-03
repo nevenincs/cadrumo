@@ -26,8 +26,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.setup_answers import SetupAnswers
-from ....domain.contribuyente._ccaa import CCAA
-from ....domain.deadlines._models import IVARegime
+from ....domain.contribuyente import CCAA
+from ....domain.deadlines import IVARegime
 from .._verifier import (
     WizardCheckFinding,
     WizardCheckSeverity,
@@ -131,6 +131,19 @@ def test_obligations_consistency_ok_when_neither_flag_set() -> None:
     """The default SetupAnswers shape — both flags False — satisfies
     the check; the OK message_key is emitted."""
     answers = _individual_answers()
+
+    finding = _finding(answers, "obligations_consistency")
+
+    assert finding.severity is WizardCheckSeverity.OK
+    assert finding.message_key == "wizard.setup.verifier.obligations_consistency_ok"
+
+
+def test_obligations_consistency_ok_for_art109_activity_coverage_without_professional_payer() -> None:
+    """The full Art. 109 coverage fact is not limited to professional fees."""
+    answers = _individual_answers(
+        art109_activity_income_withholding_ge_70pct=True,
+        pays_professionals_with_retencion=False,
+    )
 
     finding = _finding(answers, "obligations_consistency")
 

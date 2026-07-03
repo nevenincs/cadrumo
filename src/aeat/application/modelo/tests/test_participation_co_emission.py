@@ -12,27 +12,28 @@ entry carries the ``filing_record_id``, and that the lifecycle write-guard
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....application.ledger._actions_common import _blocking_modelo_references
 from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
     derive_calculation_revision_id,
+    derive_work_unit_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._participation_index import TransactionParticipationIndexRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from .._revision_persistence import persist_filed_revision
 from .._verification_actions import _persist_verified_revision_evidence
@@ -84,11 +85,12 @@ def _seed_borrador(
 
     source_transaction_ids = (_TX_A, _TX_B)
     input_values_by_casilla_id = {_IVA_BASE_IMPONIBLE_CASILLA: "1000.00"}
+    casilla_values = {_IVA_BASE_IMPONIBLE_CASILLA: Decimal("1000.00")}
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides={},
-        casilla_values={},
+        casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
     )
     revision = CalculationRevision(
@@ -97,6 +99,15 @@ def _seed_borrador(
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=input_values_by_casilla_id,
         source_transaction_ids=source_transaction_ids,
+        casilla_values=casilla_values,
+        observations=(
+            CasillaObservation(
+                casilla_id=_IVA_BASE_IMPONIBLE_CASILLA,
+                value=Decimal("1000.00"),
+                legal_refs=("ley-37-1992:art-164",),
+                source_refs=("participation-co-emission-test",),
+            ),
+        ),
         created_at=_T0,
         updated_at=_T0,
     )
@@ -186,6 +197,6 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
 
 
 def _bucket_event_repository():
-    from ....domain.buckets import BucketEventHistoryRepository
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 
     return BucketEventHistoryRepository()

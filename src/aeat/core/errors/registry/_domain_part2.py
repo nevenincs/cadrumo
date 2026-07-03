@@ -184,6 +184,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.calculations.registry._formula_runtime_ops.UnresolvedFormulaDependencyError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_UNRESOLVED_FORMULA_DEPENDENCY",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_snapshot",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.calculations.registry._formula_runtime_ops.UnresolvedFormulaOutcomeError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_UNRESOLVED_FORMULA_OUTCOME",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_snapshot",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.calculations.registry._errors.NoRevisionForPeriodError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_NO_REVISION_FOR_PERIOD",
@@ -298,7 +320,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_MODELO_WORKFLOW_GATE",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_modelo_workflow_gate",
+            message_key="application.modelo.errors.workflow_gate_no_pending_obligation",
             default_suggestion="aeat app modelo work list",
             retryable=False,
             runbook_id=None,
@@ -582,12 +604,45 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._action_errors.AmendmentKindNotPermittedError",
+        ErrorCode(
+            code="REFUSED_MODELO_AMENDMENT_KIND_NOT_PERMITTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_amendment_kind_not_permitted",
+            default_suggestion="aeat app modelo work amend-wizard",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._action_errors.AmendmentComplementariaLiabilityDecreaseError",
+        ErrorCode(
+            code="REFUSED_MODELO_AMENDMENT_COMPLEMENTARIA_LIABILITY_DECREASE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_amendment_complementaria_liability_decrease",
+            default_suggestion="aeat app modelo work amend-wizard",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._action_errors.ExternalModeloImportError",
         ErrorCode(
             code="ERROR_MODELO_EXTERNAL_FILING_IMPORT",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_modelo_external_filing_import",
             default_suggestion="aeat app live filed pull",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._action_errors.ModeloLocalObservationError",
+        ErrorCode(
+            code="REFUSED_MODELO_LOCAL_OBSERVATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_modelos",
+            default_suggestion="aeat app modelo filing-record observe-local --help",
             retryable=False,
             runbook_id=None,
         ),

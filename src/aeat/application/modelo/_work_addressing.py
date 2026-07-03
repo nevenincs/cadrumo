@@ -1,16 +1,30 @@
 """Application-level addressing for modelo work commands.
 
-The address facade converts exact ids and visible modelo/year/period targets
-into :class:`ModeloWorkAddress` values, resolves them through the selector
-contracts, and returns the matching
-:class:`~aeat.domain.modelos._work_unit.WorkUnit` or
-:class:`CalculationRevision`.
+The address facade converts visible modelo/year/period filing targets and exact
+work-unit ids into :class:`ModeloWorkAddress` values, resolves them through the
+central selector contract, and returns the matching
+:class:`~aeat.domain.modelos.WorkUnit` or :class:`CalculationRevision`.
+
+This module is the application facade over the accepted addressing policy:
+operators address the active bucket/profile plus modelo, filing year, and period;
+raw ids remain advanced exact-addressing escape hatches. Ambiguous visible
+targets, contradictory exact-id plus natural-key flags, and discarded default
+matches are handled by :mod:`~aeat.application.modelo._selectors` rather than by
+CLI-local string logic.
 
 Creation flows validate the law-determined registry revision before delegating
-to :func:`~aeat.application.modelo._work_lifecycle.create_work_unit`. Revision
-flows apply :class:`ModeloCalculationRevisionSelector` defaults so verify,
-file, and export commands consume only the lifecycle states they are allowed to
-handle.
+to :func:`~aeat.application.modelo.create_work_unit`; an explicit
+``--revision`` is an assertion of the selected legal revision, not a free
+override. Revision flows apply
+:class:`~aeat.application.modelo.ModeloCalculationRevisionSelector`
+defaults so verify, file, and export commands consume only the lifecycle states
+they are allowed to handle.
+
+See Also:
+    :mod:`~aeat.application.modelo._selectors`:
+        The authoritative visible-target and revision-selector resolver.
+    :mod:`~aeat.entrypoints.cli._modelo`:
+        CLI commands that project operator flags into this facade.
 """
 
 from __future__ import annotations
@@ -19,14 +33,17 @@ from dataclasses import dataclass
 
 from ...core import Period
 from ...core.resources import resources
-from ...domain.calculations.registry._errors import RegistrySnapshotError
-from ...domain.calculations.registry._temporal import select_revision
+from ...domain.calculations.registry import RegistrySnapshotError, select_revision
 from ...domain.contribuyente import CCAA
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos._codes import ModeloCode
-from ...domain.modelos._errors import ModeloError
-from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
-from ...domain.modelos._work_unit import WorkUnit
+from ...domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionId,
+    CalculationRevisionState,
+    ModeloCode,
+    ModeloError,
+    WorkUnit,
+    WorkUnitId,
+)
 from ._calculation_actions import get_calculation_revision
 from ._registry_discovery import declared_modelo_period_tokens
 from ._selectors import (
@@ -50,7 +67,12 @@ class ModeloRevisionPickError(ModeloError, ValueError):
 
 @dataclass(frozen=True, slots=True)
 class ModeloVisibleFilingTarget:
-    """Operator-visible modelo filing target under one bucket/profile."""
+    """Operator-visible modelo filing target under one bucket/profile.
+
+    This is the normal user-facing address: bucket/profile plus modelo, filing
+    year, and period, with an optional registry-revision assertion for
+    disambiguation.
+    """
 
     modelo: str
     filing_year: int
@@ -59,7 +81,7 @@ class ModeloVisibleFilingTarget:
     bucket_id: str | None = None
 
     def to_work_address(self) -> ModeloWorkAddress:
-        """Project the visible target into the legacy-compatible :class:`ModeloWorkAddress` shape."""
+        """Project the visible target into the shared :class:`ModeloWorkAddress` shape."""
         return ModeloWorkAddress(
             modelo=self.modelo,
             filing_year=self.filing_year,
@@ -71,19 +93,29 @@ class ModeloVisibleFilingTarget:
 
 @dataclass(frozen=True, slots=True)
 class ModeloExactWorkUnitTarget:
-    """Advanced exact-addressing target for one content-addressed work unit."""
+    """Advanced exact-addressing target for one content-addressed work unit.
+
+    Use this only when the caller already has an authoritative ``WorkUnitId``;
+    visible filing targets remain the default operator path.
+    """
 
     work_unit_id: WorkUnitId
     bucket_id: str | None = None
 
     def to_work_address(self) -> ModeloWorkAddress:
-        """Project the exact target into the legacy-compatible :class:`ModeloWorkAddress` shape."""
+        """Project the exact target into the shared :class:`ModeloWorkAddress` shape."""
         return ModeloWorkAddress(work_unit_id=self.work_unit_id, bucket_id=self.bucket_id)
 
 
 @dataclass(frozen=True, slots=True)
 class ModeloRevisionPick:
-    """Command-specific calculation-revision pick under a resolved work target."""
+    """Command-specific calculation-revision pick under a resolved work target.
+
+    ``default_for`` applies the command policy owned by
+    :mod:`~aeat.application.modelo._selectors`: verify selects a draft, file
+    selects a verified-complete revision, and export prefers the current filed
+    revision before falling back to an unambiguous verified revision.
+    """
 
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT
     calculation_revision_id: CalculationRevisionId | None = None
@@ -114,7 +146,11 @@ class ModeloRevisionPick:
 
 @dataclass(frozen=True, slots=True)
 class ModeloResolvedWorkProjection:
-    """Support-safe projection of a resolved modelo work target."""
+    """Support-safe projection of a resolved modelo work target.
+
+    The projection exposes the visible filing coordinates plus short ids for
+    support guidance without making raw ids the normal operator workflow.
+    """
 
     work_unit_id: WorkUnitId
     short_work_unit_id: str
@@ -132,7 +168,7 @@ class ModeloResolvedWorkProjection:
 
     @classmethod
     def from_work_unit(cls, work_unit: WorkUnit) -> ModeloResolvedWorkProjection:
-        """Project an internal :class:`WorkUnit` into a :class:`ModeloResolvedWorkProjection`."""
+        """Project an internal :class:`~aeat.domain.modelos.WorkUnit` into a :class:`ModeloResolvedWorkProjection`."""
         return cls(
             work_unit_id=work_unit.work_unit_id,
             short_work_unit_id=work_unit.work_unit_id[-12:],
@@ -152,7 +188,11 @@ class ModeloResolvedWorkProjection:
 
 @dataclass(frozen=True, slots=True)
 class ModeloResolvedRevisionProjection:
-    """Support-safe projection of a resolved calculation revision."""
+    """Support-safe projection of a resolved calculation revision.
+
+    Carries the selected revision, selector policy, lifecycle state, and short
+    ids used by CLI guidance after a work target has been resolved.
+    """
 
     calculation_revision_id: CalculationRevisionId
     short_calculation_revision_id: str
@@ -191,11 +231,10 @@ class ModeloResolvedRevisionProjection:
 class ModeloWorkAddress:
     """Operator-facing or exact modelo work address.
 
-    This is the legacy-compatible transport shape consumed by existing
-    callers. New code should prefer ``ModeloVisibleFilingTarget`` for
-    model/year/period addressing or ``ModeloExactWorkUnitTarget`` for
-    the advanced exact-id escape hatch, then project into this shape at
-    the application facade boundary.
+    This is the shared transport shape consumed at the application facade
+    boundary. Prefer ``ModeloVisibleFilingTarget`` for model/year/period
+    addressing or ``ModeloExactWorkUnitTarget`` for the advanced exact-id
+    escape hatch, then project into this shape before selector resolution.
     """
 
     work_unit_id: WorkUnitId | None = None
@@ -301,7 +340,12 @@ def modelo_work_address_from_operator_target(
     registry_revision_id: str | None,
     bucket_id: str | None = None,
 ) -> ModeloWorkAddress:
-    """Build a :class:`ModeloWorkAddress` from exact or visible operator input."""
+    """Build a :class:`ModeloWorkAddress` from exact or visible operator input.
+
+    A complete visible target is ``modelo`` + ``year`` + typed ``Period``. If no
+    visible target is supplied, an exact ``work_unit_id`` is required. Period year
+    mismatches fail here before the selector sees the request.
+    """
     if modelo is not None and year is not None and period is not None:
         period = _modelo_work_period_from_core(year, period, modelo=modelo)
         year = period.year
@@ -328,7 +372,11 @@ def resolve_modelo_work_unit_for_operator_target(
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkUnit:
-    """Resolve exact or visible operator input to one active :class:`WorkUnit`."""
+    """Resolve exact or visible operator input to one active :class:`~aeat.domain.modelos.WorkUnit`.
+
+    The result comes from the shared selector boundary, so ambiguity and
+    exact-id/natural-key contradictions surface as typed selector errors.
+    """
     return resolve_modelo_work_address_unit(
         modelo_work_address_from_operator_target(
             work_unit_id=work_unit_id,
@@ -353,7 +401,12 @@ def resolve_modelo_revision_for_operator_target(
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
     default_for: ModeloCalculationRevisionDefault | None = None,
 ) -> CalculationRevision:
-    """Resolve one :class:`CalculationRevision` from exact or visible operator input."""
+    """Resolve one :class:`CalculationRevision` from exact or visible operator input.
+
+    An explicit calculation-revision id can stand alone as the exact escape hatch.
+    Otherwise the work target is resolved first and the selector/default policy is
+    applied under that work unit.
+    """
     if (
         calculation_revision_id is not None
         and work_unit_id is None
@@ -401,7 +454,8 @@ def resolve_modelo_revision_for_operator_target(
 def resolve_modelo_work_target(target: ModeloWorkTarget) -> ModeloWorkResolution:
     """Resolve any supported modelo target through the shared selector boundary.
 
-    Returns a :class:`ModeloWorkResolution`.
+    Returns a :class:`ModeloWorkResolution` containing the resolved work unit or
+    typed absence/ambiguity metadata from :mod:`~aeat.application.modelo._selectors`.
     """
     return resolve_modelo_work_address(work_address_for_modelo_target(target))
 
@@ -438,7 +492,7 @@ def resolve_registry_revision_for_work_target(
     ``(modelo, filing_year, period)`` is returned unconditionally.
 
     When ``registry_revision_id`` is supplied it is treated as an
-    *assertion parameter* (per :class:`select_revision`'s structural property):
+    *assertion parameter* (per :func:`~aeat.domain.calculations.registry._temporal.select_revision`):
     an explicit ``--revision`` is accepted only when it names exactly the revision
     that ``select_revision`` would pick from ``(filing_year, period)`` alone.  If
     the supplied id diverges from the law-determined revision the call refuses with
@@ -449,6 +503,14 @@ def resolve_registry_revision_for_work_target(
     ``--revision`` is thereby demoted from a free override to an
     idempotence/assertion handle, mirroring the operator-surface ADR's D8
     shape for ``preflight --revision-id``.
+
+    Returns:
+        The revision id selected by
+        :func:`~aeat.domain.calculations.registry._temporal.select_revision`.
+
+    Raises:
+        ModeloWorkRegistryYearMismatchError: The supplied revision id is not the
+            law-determined revision for the visible filing period.
     """
     definition = resources().modelos.authority.modelo(modelo.strip())
     if registry_revision_id is None:
@@ -490,10 +552,17 @@ def ensure_modelo_work_unit_for_visible_target(
     name: str | None = None,
     actor: str = "operator",
     causante_ccaa: CCAA | None = None,
+    enforce_applicability: bool = True,
 ) -> ModeloWorkEnsureResult:
     """Resume or create the active work unit for one visible filing target.
 
-    Returns a :class:`ModeloWorkEnsureResult`.
+    The visible target is resolved first. If one active unit exists, it is reused
+    after profile-readiness validation and optional rename. If none exists, the
+    law-determined registry revision is selected and a work unit is created.
+
+    Returns:
+        A :class:`ModeloWorkEnsureResult` marking whether the unit was reused or
+        newly created.
     """
     requested_revision = registry_revision_id.strip() if registry_revision_id is not None else None
     resolution = resolve_optional_modelo_work_address(
@@ -509,7 +578,7 @@ def ensure_modelo_work_unit_for_visible_target(
         unit = resolution.work_unit
         from ._profile_readiness_gate import require_profile_ready_for_work_unit
 
-        require_profile_ready_for_work_unit(unit)
+        require_profile_ready_for_work_unit(unit, enforce_applicability=enforce_applicability)
         name_applied: str | None = None
         if name is not None and name.strip() and name.strip() != unit.name:
             unit = rename_work_unit(unit.work_unit_id, name, actor=actor)
@@ -531,12 +600,13 @@ def ensure_modelo_work_unit_for_visible_target(
         name=name,
         actor=actor,
         causante_ccaa=causante_ccaa,
+        enforce_applicability=enforce_applicability,
     )
     return ModeloWorkEnsureResult(work_unit=unit, reused=False)
 
 
 def resolve_modelo_work_address(address: ModeloWorkAddress) -> ModeloWorkResolution:
-    """Resolve an operator-facing modelo work address and return a :class:`ModeloWorkResolution`."""
+    """Resolve an operator-facing modelo work address to a required :class:`ModeloWorkResolution`."""
     resolution = resolve_optional_modelo_work_address(address)
     if resolution.state is ModeloWorkSelectorState.ABSENT or resolution.work_unit is None:
         raise ModeloWorkAddressNotFoundError("no active modelo work unit matches the supplied address")
@@ -544,7 +614,7 @@ def resolve_modelo_work_address(address: ModeloWorkAddress) -> ModeloWorkResolut
 
 
 def resolve_optional_modelo_work_address(address: ModeloWorkAddress) -> ModeloWorkResolution:
-    """Resolve an operator-facing modelo work address and return a :class:`ModeloWorkResolution`, allowing absence."""
+    """Resolve an operator-facing modelo work address to a :class:`ModeloWorkResolution`."""
     resolution = resolve_modelo_work_unit(
         ModeloWorkSelectorRequest(
             work_unit_id=address.work_unit_id,
@@ -559,7 +629,7 @@ def resolve_optional_modelo_work_address(address: ModeloWorkAddress) -> ModeloWo
 
 
 def resolve_modelo_work_address_unit(address: ModeloWorkAddress) -> WorkUnit:
-    """Resolve an operator-facing modelo work address to one :class:`WorkUnit`."""
+    """Resolve an operator-facing modelo work address to one :class:`~aeat.domain.modelos.WorkUnit`."""
     resolution = resolve_modelo_work_address(address)
     assert resolution.work_unit is not None
     return resolution.work_unit
@@ -572,7 +642,12 @@ def resolve_modelo_calculation_revision_address(
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
     default_for: ModeloCalculationRevisionDefault | None = None,
 ) -> CalculationRevision:
-    """Resolve a :class:`CalculationRevision` by exact id or under a modelo work address."""
+    """Resolve a :class:`CalculationRevision` by exact id or under a modelo work address.
+
+    ``default_for`` applies the command-specific selector default after the work
+    unit is resolved. A bare exact calculation-revision id bypasses work-address
+    resolution and loads the revision directly.
+    """
     if calculation_revision_id is not None and address == ModeloWorkAddress():
         return get_calculation_revision(calculation_revision_id)
 
@@ -590,7 +665,7 @@ def resolve_modelo_revision_pick(
     target: ModeloWorkTarget,
     pick: ModeloRevisionPick | None = None,
 ) -> ModeloResolvedRevisionProjection:
-    """Resolve and project a :class:`ModeloResolvedRevisionProjection` for a visible or exact work target."""
+    """Resolve and project a revision selection as :class:`ModeloResolvedRevisionProjection`."""
     if pick is None:
         pick = ModeloRevisionPick()
     work_unit = resolve_modelo_work_address_unit(work_address_for_modelo_target(target))
@@ -624,7 +699,7 @@ def resolve_verifiable_modelo_calculation_revision_address(
     calculation_revision_id: str | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
 ) -> CalculationRevision:
-    """Resolve the :class:`CalculationRevision` that ``work verify`` may consume."""
+    """Resolve the draft :class:`CalculationRevision` that ``work verify`` may consume."""
     revision = resolve_modelo_calculation_revision_address(
         address=address,
         calculation_revision_id=calculation_revision_id,
@@ -644,7 +719,7 @@ def resolve_fileable_modelo_calculation_revision_address(
     calculation_revision_id: str | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
 ) -> CalculationRevision:
-    """Resolve the :class:`CalculationRevision` that ``work file`` may consume."""
+    """Resolve the verified-complete :class:`CalculationRevision` that ``work file`` may consume."""
     revision = resolve_modelo_calculation_revision_address(
         address=address,
         calculation_revision_id=calculation_revision_id,
@@ -664,7 +739,7 @@ def resolve_exportable_modelo_calculation_revision_address(
     calculation_revision_id: str | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
 ) -> CalculationRevision:
-    """Resolve the :class:`CalculationRevision` that ``modelo export`` may consume."""
+    """Resolve the filed or verified-complete :class:`CalculationRevision` that ``modelo export`` may consume."""
     revision = resolve_modelo_calculation_revision_address(
         address=address,
         calculation_revision_id=calculation_revision_id,

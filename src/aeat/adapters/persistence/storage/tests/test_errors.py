@@ -15,14 +15,13 @@ from ..errors import (
     SecureStorageError,
     StorageError,
 )
-from ..master_key._active_session import NoActiveBucketSessionError
+from ..master_key import NoActiveBucketSessionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-@pytest.mark.parametrize(
-    "error_type",
-    [
+def test_secure_storage_errors_reuse_central_aeat_error_registry() -> None:
+    for error_type in (
         SecureStorageError,
         StorageError,
         RepositoryError,
@@ -31,11 +30,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
         DecryptionError,
         BucketError,
         NoActiveBucketSessionError,
-    ],
-)
-def test_secure_storage_errors_reuse_central_aeat_error_registry(error_type: type[BaseException]) -> None:
-    assert issubclass(error_type, AeatError)
-    assert issubclass(error_type, SecureStorageError)
+    ):
+        assert issubclass(error_type, AeatError), error_type.__name__
+        assert issubclass(error_type, SecureStorageError), error_type.__name__
+
+
+def test_secure_storage_base_error_is_registered() -> None:
     assert get_registered_error_code(SecureStorageError).code == "FAIL_SECURE_STORAGE"
 
 

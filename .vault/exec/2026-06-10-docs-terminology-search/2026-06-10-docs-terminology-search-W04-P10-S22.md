@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S22'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Vendor and pin the Pagefind binary/wheel for the offline-hermetic build and add the post-build index pass over the built HTML (addDirectory), keeping the nitpicky Sphinx gate untouched
 

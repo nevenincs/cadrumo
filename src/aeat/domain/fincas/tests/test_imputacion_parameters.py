@@ -12,8 +12,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.resources import bundled_path
-from ...calculations.registry import load_legal_parameters_only
+from ....core.resources import bundled_path, resources
 from .._errors import FincaValidationError
 from .._imputacion_parameters import (
     LirpfArt85ImputacionParameters,
@@ -106,7 +105,7 @@ def test_loader_record_validates_inputs_in_pydantic_strict_mode() -> None:
 
 
 def test_missing_lirpf_art_85_parameter_raises_finca_validation_error() -> None:
-    parameters = dict(load_legal_parameters_only(bundled_path("registry", "aeat")))
+    parameters = dict(resources().modelos.authority.catalogues.parameters)
     del parameters["lirpf-art-85:catastral-revision-lookback-years"]
 
     with pytest.raises(FincaValidationError, match=r"catastral-revision-lookback-years"):

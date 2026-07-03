@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#domain-boundary-audit'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `domain-boundary-audit` audit: `Domain ownership and cross-boundary outlier audit`
 
@@ -42,7 +40,6 @@ holds 25 packages (401 files); `adapters/` 369; `entrypoints/` 142; `core/` 101.
 Total tracked Python surface is 1701 files.
 
 ## Findings
-
 
 ### DB-01 (MEDIUM) — `profile` / `user_profile` / renta family-facts have no single canonical home
 
@@ -2099,7 +2096,6 @@ remediation is currently HELD at audit-only per the active action policy.
   (`.importlinter` stale ignores) and S109 (`test_cli_surface` session flake).
 
 ## Codification candidates
-
 
 None yet. This is an early discovery pass; the durable lessons it points at
 (substitutability pre-filter, RAG-cluster-then-rg-verify discipline) are already

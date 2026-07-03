@@ -2,21 +2,17 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
-
 import pytest
 
 from .....core import TaxDomain
-from .....core.resources import bundled_path
-from .. import load_registry_tree
 from .._schema import ModeloDefinition
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@lru_cache(maxsize=1)
 def _load_modelos() -> tuple[ModeloDefinition, ...]:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _ = _committed_registry_tree()
     return modelos
 
 

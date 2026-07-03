@@ -1,0 +1,77 @@
+"""Registered payload for the guided ``aeat app modelo work wizard`` command.
+
+The wizard walks an operator through a work unit's outstanding manual-input
+casillas and bindings/relations in plain language, then calls the same
+:func:`~aeat.application.modelo.calculate_modelo_work_revision` composition
+path :mod:`_modelo_work_calculate_cli` uses. This module documents the JSON
+transport shape only; the wizard's step-by-step prompting and calculation
+delegation live in :mod:`_modelo_work_wizard_cli`. Every payload here is an
+:class:`OutputSchema` subclass registered on the JSON-contract surface.
+"""
+
+from __future__ import annotations
+
+from pydantic import Field
+
+from ...domain.calculations.registry import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId
+from ...domain.modelos import CalculationRevisionId, WorkUnitId
+from ._modelo_revision_payload_parts import DetailRowPayload, ObservationPayload, ResultSummaryRowPayload
+from ._schemas import OutputSchema, register_schema
+
+
+class WizardPromptedCasillaPayload(OutputSchema):
+    """One manual-input casilla the wizard prompted for, with the answer given.
+
+    Carries the same grounding parity (``legal_refs`` / ``source_refs``) the
+    ``casilla`` discovery command exposes, so a scripted or JSON-mode caller
+    can audit exactly what was asked and what was answered, without needing a
+    live terminal.
+    """
+
+    casilla_id: CasillaId
+    number: str
+    label: str
+    channel: str
+    """Either ``casilla`` (a direct ``--casilla`` override) or ``binding``/``relation``."""
+    key: str
+    """The ``--casilla`` / ``--binding`` / ``--relation`` key supplied to the calculation."""
+    value: str
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
+    help_text: str | None = None
+
+
+@register_schema("modelo.work.wizard")
+class WorkWizardResult(OutputSchema):
+    """Successful ``aeat app modelo work wizard`` result payload.
+
+    Mirrors the shape of :class:`~aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult`
+    (the wizard composes the exact same calculation path) plus the
+    ``prompted_casillas`` audit trail of what the wizard asked and what the
+    operator (or the scripted answer queue) supplied.
+    """
+
+    operation: str = "modelo.work.wizard"
+    saved: bool = True
+    saved_confirmation: str
+    calculation_revision_id: CalculationRevisionId
+    work_unit_id: WorkUnitId
+    state: str
+    casilla_values: dict[CasillaId, str]
+    observations: tuple[ObservationPayload, ...]
+    result_summary: tuple[ResultSummaryRowPayload, ...] = ()
+    detail_rows: tuple[DetailRowPayload, ...] = ()
+    binding_overrides: dict[BindingId, str]
+    relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
+    input_values_by_casilla_id: dict[CasillaId, str]
+    created_at: str
+    updated_at: str
+    verified_at: str | None = None
+    verified_by: str | None = None
+    filed_at: str | None = None
+    filed_by: str | None = None
+    superseded_at: str | None = None
+    prompted_casillas: tuple[WizardPromptedCasillaPayload, ...] = ()
+
+
+__all__ = ["WizardPromptedCasillaPayload", "WorkWizardResult"]

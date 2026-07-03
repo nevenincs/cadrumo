@@ -18,7 +18,7 @@ The :class:`Topic` records are core-level resources: they depend only
 on core primitives and the bundled registry path. They are loaded into
 a :class:`TopicCatalogue` by :func:`load_topic_catalogue` and consumed
 through the
-:class:`~aeat.core.resources._repos.topics.TopicCatalogueRepository`
+:class:`core.resources._repos.topics.TopicCatalogueRepository`
 singleton, keeping ``core`` free of any import into the application
 layer.
 """
@@ -64,7 +64,7 @@ class Topic(BaseModel):
     title_key: str = Field(min_length=1, max_length=128)
     body_key: str = Field(min_length=1, max_length=128)
     see_also: tuple[str, ...] = Field(default=())
-    legal_refs: tuple[str, ...] = Field(default=())
+    legal_refs: tuple[str, ...] = Field(min_length=1)
 
 
 class TopicCatalogue(BaseModel):

@@ -52,7 +52,7 @@ _BROAD_EXCEPT_MANDATE: list[tuple[Path, str]] = [
     ),
     (
         _SRC / "adapters/inbound/financial/providers/_ofx.py",
-        "BROAD-EXCEPT-RATIONALE-OFX-TEARDOWN",
+        "BROAD-EXCEPT-RATIONALE-OFX-PARSE",
     ),
 ]
 

@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#secure-persistence-foundation'
 date: '2026-04-30'
-modified: '2026-04-30'
+modified: '2026-06-30'
 related:
   - "[[2026-04-30-secure-persistence-foundation-wave6-adr]]"
   - "[[2026-04-30-secure-persistence-foundation-wave6-research]]"
   - "[[2026-04-30-secure-persistence-foundation-wave5-audit]]"
 ---
-
-
 
 # `secure-persistence-foundation` wave-6 audit gate | (**status:** `passed`)
 

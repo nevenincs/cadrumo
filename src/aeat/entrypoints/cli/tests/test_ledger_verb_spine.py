@@ -41,6 +41,7 @@ EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
         "merge",
         "preflight",
         "providers",
+        "pull-folder",
         "remove",
         "reset",
         "restore",
@@ -91,15 +92,15 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
 # list / update / remove / archive / reset) plus the ratified orthogonal axes
 # (link / check / preflight) plus the ratified workflow axes (allocate / attach
 # / categories / classify / doclink / export / history / import / merge /
-# providers / review / split / stash / status / track). Counting them independently of the set membership
-# catches accidental verb-count drift (e.g. a verb silently re-parented but
-# replaced by a similarly-named alias) that an exact-set match might still
-# happen to satisfy if both the missing and the extra are accounted for in the
-# expected set update.
+# providers / pull-folder / review / split / stash / status / track). Counting
+# them independently of the set membership catches accidental verb-count
+# drift (e.g. a verb silently re-parented but replaced by a similarly-named
+# alias) that an exact-set match might still happen to satisfy if both the
+# missing and the extra are accounted for in the expected set update.
 _CRUD_SPINE_COUNT: int = 7  # add, view, list, update, remove, archive, reset
 _RATIFIED_ORTHOGONAL_AXIS_COUNT: int = 3  # link, check, preflight
-_RATIFIED_WORKFLOW_AXIS_COUNT: int = 16  # allocate attach categories classify
-# doclink export history import merge providers restore review split stash status track
+_RATIFIED_WORKFLOW_AXIS_COUNT: int = 17  # allocate attach categories classify
+# doclink export history import merge providers pull-folder restore review split stash status track
 _EXPECTED_LEDGER_VERB_COUNT: int = _CRUD_SPINE_COUNT + _RATIFIED_ORTHOGONAL_AXIS_COUNT + _RATIFIED_WORKFLOW_AXIS_COUNT
 
 
@@ -154,6 +155,15 @@ def test_ledger_help_enumerates_every_registered_verb() -> None:
     assert result.exit_code == 0, result.output
     missing = sorted(cmd.name for cmd in ledger_app.registered_commands if cmd.name and cmd.name not in result.output)
     assert not missing, f"`aeat app ledger --help` omits registered verbs {missing!r}; help output: {result.output!r}"
+
+
+def test_ledger_attach_help_names_purchase_evidence_creation_path() -> None:
+    """`ledger attach --help` tells operators how to create the evidence id it consumes."""
+
+    result = _invoke(["app", "ledger", "attach", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "aeat app ledger evidence add" in result.output
+    assert "--purchase-invoice-evidence-id" in result.output
 
 
 def test_modelo_help_enumerates_every_registered_verb() -> None:

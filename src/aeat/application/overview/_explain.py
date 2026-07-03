@@ -1,11 +1,12 @@
 """Overview explain: per-(modelo, year) applicability decomposition.
 
-`build_overview_explain` is the application service backing
+:func:`build_overview_explain` is the application service backing
 ``aeat app overview explain MODELO [--year YYYY]``. The ``applicable``
 verdict is DERIVED from the three-axis
-:class:`~aeat.domain.deadlines.TaxpayerProfile` taxpayer model through
-the registry-grounded rule table in :mod:`._applicability` — never
-assumed from an autónomo default. An undeclared taxpayer
+:class:`~domain.deadlines.TaxpayerProfile` taxpayer model through
+the registry-grounded
+:func:`~domain.calculations.registry.applicability.derive_modelo_applicability`
+rule table, never assumed from an autónomo default. An undeclared taxpayer
 model yields an explicit ``incomplete`` verdict: the service
 reports "declare your taxpayer type first" rather than a confident
 wrong obligation.
@@ -25,7 +26,9 @@ from typing import Protocol
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
 from ...core.time import now
+from ...domain.calculations.registry import LegalRefId
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -50,24 +53,40 @@ remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
 """
 
 
+_UNMODELED_MODELO_DESCRIPTIONS: dict[str, str] = {str(code): desc for code, desc in _UNMODELED_OBLIGATIONS.items()}
+"""Recognized-but-unmodeled obligations keyed by bare modelo code.
+
+Derived once from :data:`~core.UNMODELED_OBLIGATIONS` so ``explain`` can
+tell an operator that a code like ``"216"`` is a real AEAT obligation the app
+does not model yet — distinct from an unknown-identifier typo.
+"""
+
+
 class DeadlineExplanationEngine(Protocol):
+    """Protocol for the deadline engine's scheduling-rationale method."""
+
     def explain(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> str: ...
 
 
 class OverviewExplain(BaseModel):
     """Outcome of ``build_overview_explain``.
 
+    The model separates the registry-applicability verdict from the optional
+    deadline-engine scheduling rationale. That keeps
+    :class:`ApplicabilityVerdict` authoritative even when a known modelo has no
+    registered filing window for the requested year.
+
     Attributes:
         modelo: AEAT modelo identifier the explanation is for.
         year: The fiscal year the applicability was evaluated against.
         applicable: Whether the modelo positively applies to the
             profile this year. Only an
-            :attr:`~._applicability.ApplicabilityVerdict.APPLICABLE`
+            :attr:`ApplicabilityVerdict.APPLICABLE`
             verdict is ``True``; ``NOT_APPLICABLE`` and ``INCOMPLETE``
             are both ``False`` — the operator is never told a modelo
             applies unless the taxpayer model positively justifies it.
         verdict: The three-state
-            :class:`~._applicability.ApplicabilityVerdict` derived from
+            :class:`ApplicabilityVerdict` derived from
             the taxpayer model. ``INCOMPLETE`` means the operator must
             declare their taxpayer type first.
         rationale: Operator-facing prose explaining the verdict,
@@ -79,9 +98,10 @@ class OverviewExplain(BaseModel):
             registered for the year. ``None`` when no deadline-window
             data exists (registry-track gap R1) — the applicability
             ``verdict`` is independent of it.
-        profile_facts: Subset of the operator's :class:`TaxpayerProfile`
-            fields the answer depends on. Keys are stable field names;
-            values are JSON-serialisable scalars.
+        profile_facts: Subset of the operator's
+            :class:`~domain.deadlines.TaxpayerProfile` fields the answer
+            depends on. Keys are stable field names; values are
+            JSON-serialisable scalars.
         generated_at: UTC timestamp of when the aggregator ran.
     """
 
@@ -92,7 +112,7 @@ class OverviewExplain(BaseModel):
     applicable: bool
     verdict: ApplicabilityVerdict
     rationale: str = Field(min_length=1)
-    legal_refs: tuple[str, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     scheduling_rationale: str | None = None
     profile_facts: dict[str, _ProfileFactValue] = Field(default_factory=dict)
     generated_at: datetime
@@ -106,13 +126,13 @@ _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
     "iva_regime",
     "has_employees",
     "pays_professionals_with_retencion",
-    "professional_income_withholding_ge_70pct",
+    "art109_activity_income_withholding_ge_70pct",
     "pays_rent_with_retencion",
     "pays_capital_income_with_retencion",
-    "uses_objective_estimation_irpf",
     "does_intracomunitario",
     "third_party_transactions_above_347_threshold",
     "bienes_extranjero_above_threshold",
+    "monedas_virtuales_extranjero_above_threshold",
 )
 
 
@@ -144,6 +164,8 @@ def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactVa
     if iva is not None:
         facts["iva.roi_enrolled"] = iva.roi_enrolled
         facts["iva.oss_enrolled"] = iva.oss_enrolled
+        facts["iva.group_member_enrolled"] = iva.group_member_enrolled
+        facts["iva.group_dominant_entity_enrolled"] = iva.group_dominant_entity_enrolled
         facts["iva.intracommunity_operations_exceed_50000_eur"] = iva.intracommunity_operations_exceed_50000_eur
     return facts
 
@@ -157,8 +179,7 @@ def _modelo_is_registered(modelo: str) -> bool:
     a registry-data gap the CLI should degrade gracefully around rather
     than crash on.
     """
-    from ...core.resources import resources
-    from ...core.resources._errors import ResourceNotFoundError
+    from ...core.resources import ResourceNotFoundError, resources
 
     try:
         resources().modelos.get(modelo)
@@ -177,7 +198,8 @@ def build_overview_explain(
     """Decompose a modelo's applicability against the operator's profile.
 
     The ``applicable`` flag and the ``verdict`` are DERIVED from the
-    three-axis taxpayer model through :func:`derive_modelo_applicability`
+    three-axis taxpayer model through
+    :func:`~domain.calculations.registry.applicability.derive_modelo_applicability`
     — never from an autónomo default. An undeclared taxpayer
     model yields an ``INCOMPLETE`` verdict: the service
     reports "declare your taxpayer type first" instead of a confident
@@ -192,50 +214,62 @@ def build_overview_explain(
     :class:`OverviewExplainError`.
 
     Args:
-        profile: The :class:`TaxpayerProfile` whose attributes determine
-            applicability.
+        profile: The :class:`~domain.deadlines.TaxpayerProfile` whose
+            attributes determine applicability.
         modelo: Modelo identifier to explain (e.g. ``"130"``).
         year: Optional calendar year. Defaults to the current year.
-        engine: Optional deadline engine override.
+        engine: Optional :class:`DeadlineExplanationEngine` override.
 
     Returns:
         An :class:`OverviewExplain` carrying the applicability verdict,
-        optional scheduling rationale, and applicable obligation windows.
+        optional scheduling rationale, and profile facts used by the verdict.
 
     Raises:
         OverviewExplainError: When the modelo identifier is blank or
             unknown to the registry, or when the deadline engine fails
             for a reason other than a missing deadline-window dataset.
     """
-    if not modelo.strip():
+    modelo_id = modelo.strip()
+    if not modelo_id:
         raise OverviewExplainError(
             translated_message="application.overview.explain.errors.modelo_blank",
         )
     resolved_year = year or date.today().year
 
-    applicability = derive_modelo_applicability(profile, modelo)
+    if not _modelo_is_registered(modelo_id):
+        unmodeled_description = _UNMODELED_MODELO_DESCRIPTIONS.get(modelo_id)
+        if unmodeled_description is not None:
+            # A recognized AEAT obligation the registry does not model: it is a
+            # real obligation, not an operator typo, so distinguish it from an
+            # unknown identifier. The coverage reconciliation advises it as
+            # ``registry_unmodeled``; explain says the same in prose.
+            raise OverviewExplainError(
+                f"modelo {modelo_id!r} ({unmodeled_description}) is a recognized AEAT "
+                "obligation the application does not model yet: it cannot be positively "
+                "scoped here (coverage: registry_unmodeled). Investigate whether it "
+                "applies and file it through AEAT.",
+            )
+        # Refuse operator typos before calling the domain applicability
+        # model: the domain schema validates known ModeloId shape and
+        # must not leak a Pydantic error through the overview boundary.
+        raise OverviewExplainError(
+            f"could not evaluate modelo {modelo_id!r} for year {resolved_year}: modelo is not registered",
+        )
+
+    applicability = derive_modelo_applicability(profile, modelo_id)
     # The scheduling rationale is independent of the applicability
     # verdict: it explains the filing window, not whether the taxpayer
     # owes the modelo. It is only meaningful when the registry carries
     # deadline windows for the modelo/year.
     scheduling_rationale = _scheduling_rationale(
         profile,
-        modelo=modelo,
+        modelo=modelo_id,
         year=resolved_year,
         engine=engine,
     )
 
-    if applicability.verdict is ApplicabilityVerdict.INCOMPLETE and not _modelo_is_registered(modelo):
-        # A modelo identifier the registry knows nothing about is an
-        # operator typo, not an undeclared-profile case. Keep the
-        # historic refusal so a typo does not masquerade as "declare
-        # your taxpayer type first".
-        raise OverviewExplainError(
-            f"could not evaluate modelo {modelo!r} for year {resolved_year}: modelo is not registered",
-        )
-
     return OverviewExplain(
-        modelo=modelo,
+        modelo=modelo_id,
         year=resolved_year,
         applicable=applicability.applicable,
         verdict=applicability.verdict,
@@ -259,7 +293,9 @@ def _scheduling_rationale(
     ``None`` is returned when the registry has no deadline windows for
     the modelo/year (registry-track gap R1) — a data gap the CLI
     degrades gracefully around. A genuinely unknown modelo identifier
-    is left for :func:`build_overview_explain` to refuse.
+    is left for :func:`build_overview_explain` to refuse. Other
+    :class:`~domain.deadlines.DeadlineValidationError` failures remain
+    typed :class:`OverviewExplainError` refusals.
     """
     deadline_engine = engine or DeadlineEngine()
     try:

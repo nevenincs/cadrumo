@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#ledger-input-localization'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-ledger-input-localization-research]]"
 ---
-
-
 
 # `ledger-input-localization` adr: `Enforce canonical amount and date input with localised actionable rejection` | (**status:** `accepted`)
 

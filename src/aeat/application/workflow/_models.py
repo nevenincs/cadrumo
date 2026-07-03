@@ -5,13 +5,37 @@ defined here as a frozen, strict, ``extra="forbid"``
 :class:`pydantic.BaseModel` or as an :class:`enum.StrEnum` for closed
 enumerations. :attr:`WorkflowStep.details` is reserved for string-valued
 diagnostics emitted by workflow diagnostics. Some helpers accept an
-optional :class:`SecureObjectRepository` so callers can supply a custom
-storage backend without going through the runtime default. The
+optional :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` so
+callers can supply a custom storage backend without going through the runtime
+default. The
 :class:`WorkflowState` record carries a reference to the active-bucket
 :class:`TransactionCatalogueRepository` when one is needed downstream.
 
 This module uses :class:`WorkflowResult`, :class:`WorkflowEngine`,
 and :class:`UserProfileRecord` for workflow persistence and state management.
+:class:`WorkflowEvent` and the review-annotation field types embedded on
+:class:`WorkflowState` (``InvoiceReviewRecord``, ``LedgerReviewRecord``) are
+defined in the shared leaf module
+:mod:`aeat.application._workflow_review_models` rather than here or in
+:mod:`aeat.application.review`, because :mod:`aeat.application.review` embeds
+:class:`WorkflowEvent` as a field type in turn — a genuine mutual runtime
+dependency that a shared leaf module resolves without either package
+importing the other.
+
+See Also:
+    :class:`~aeat.application.workflow.WorkflowEngine`
+        Produces :class:`WorkflowResult` records and advances
+        :class:`WorkflowStage` values.
+    :class:`~aeat.application.workflow.WorkflowPurpose`
+        Selects the local FILE or VERIFY policy that controls deadline and
+        preflight treatment.
+    :class:`~aeat.application.workflow.WorkflowRunRepository`
+        Persists terminal :class:`WorkflowResult` records in secure storage.
+    :class:`~aeat.application.workflow.WorkflowStateRepository`
+        Persists the encrypted :class:`WorkflowState` envelope.
+    :mod:`aeat.application.modelo._workflow_gate`
+        Drives calculation revisions through the workflow and persists the
+        resulting run record before verification or local filing state changes.
 
 Import ordering note
 --------------------
@@ -38,53 +62,29 @@ from ...core import (
 )
 from ...core import (
     Period,
-    require_active_bucket_id,
-    resolve_active_bucket_id,
+)
+from ...core import (
+    require_active_bucket_id as _require_active_bucket_id,
+)
+from ...core import (
+    resolve_active_bucket_id as _resolve_active_bucket_id,
 )
 from ...core.identity import BucketId
 from ...core.logging import get_logger
-from ..auth._models import AuthState
+from .._workflow_review_models import (
+    InvoiceReviewRecord,
+    LedgerReviewRecord,
+    WorkflowEvent,
+)
+from ..auth import AuthState
 from ._utils import utc_now
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.sql import SecureObjectRepository
-    from ...domain.transactions import TransactionCatalogueRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ...adapters.persistence.storage import SecureObjectRepository
     from ...domain.user_profile import UserProfileRecord
-    from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
 
 _log = get_logger(__name__)
-
-
-class WorkflowEvent(BaseModel):
-    """One operator-visible event emitted by a mutating workflow verb.
-
-    Events are appended to :attr:`WorkflowState.bucket_events` so the
-    operator can audit which actions ran, when, and against which object.
-    ``action`` names the verb (e.g. ``"profile.created"``); ``reason``
-    carries a free-form human-readable annotation; ``bucket_id`` and
-    ``object_id`` are optional pointers to the affected resource.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    action: str = Field(min_length=1)
-    reason: str = ""
-    bucket_id: BucketId | None = None
-    object_id: str | None = None
-    at: datetime = Field(default_factory=utc_now)
-
-    @field_validator("action", "reason")
-    @classmethod
-    def _trim_text(cls, value: str) -> str:
-        return value.strip()
-
-    @field_validator("bucket_id", "object_id")
-    @classmethod
-    def _trim_optional_text(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        return trimmed or None
 
 
 class WorkflowStage(StrEnum):
@@ -246,15 +246,15 @@ class WorkflowState(BaseModel):
         """Return the active :class:`UserProfileRecord` from its secure bucket.
 
         The active bucket id resolves via the precedence chain in
-        :func:`resolve_active_bucket_id` (env var > pointer file > state
+        :func:`aeat.core.resolve_active_bucket_id` (env var > pointer file
         fallback). The bucket id and profile name are 1:1 by orchestration
         convention, so the resolved id is the lifecycle-service read key.
         """
-        bucket_id = resolve_active_bucket_id()
+        bucket_id = _resolve_active_bucket_id()
         if bucket_id is None:
             return None
         from ...domain.user_profile import ProfileNotFoundError
-        from ..user_profile._orchestration import build_lifecycle_service
+        from ..user_profile import build_lifecycle_service
 
         service = build_lifecycle_service(bucket_id=bucket_id)
         try:
@@ -265,7 +265,7 @@ class WorkflowState(BaseModel):
 
     def active_profile_bucket_id(self) -> str | None:
         """Return the active profile's secure bucket id via the precedence chain."""
-        return resolve_active_bucket_id()
+        return _resolve_active_bucket_id()
 
 
 def active_transaction_catalogue_repository(
@@ -277,14 +277,16 @@ def active_transaction_catalogue_repository(
 
     Args:
         state: The current workflow state used to resolve the active bucket.
-        objects: Optional :class:`SecureObjectRepository` override passed through
-            to the returned repository.
+        objects: Optional
+            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+            override passed through to the returned repository.
     """
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...core.errors import NoActiveProfileError
-    from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogueRepository
+    from ...domain.transactions import LedgerNoActiveBucketError
 
     try:
-        bucket_id = require_active_bucket_id()
+        bucket_id = _require_active_bucket_id()
     except NoActiveProfileError as exc:
         raise LedgerNoActiveBucketError(
             translated_message="application.workflow.errors.no_active_profile_bucket",
@@ -353,14 +355,8 @@ def update_declaration_pointer(
 # already present in sys.modules['aeat.application.workflow._models'].
 # ---------------------------------------------------------------------------
 
-from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
+from ...adapters.outbound.aeat.browser import SiteHealthStatus
 from ...domain.deadlines import ModeloDeadline
-from ..review._models import (
-    InvoiceReviewRecord,
-    LedgerReviewRecord,
-)
-
-WorkflowState.model_rebuild()
 
 
 class SiteHealthAlert(BaseModel):

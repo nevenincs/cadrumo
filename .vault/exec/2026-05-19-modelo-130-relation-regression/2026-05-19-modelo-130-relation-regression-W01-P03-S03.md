@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-130-relation-regression'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-05-19-modelo-130-relation-regression-plan]]"
 ---
-
-
-
 
 # update cross-dependency calculation coverage for Modelo 130 edge-year and same-year prior-period observations
 

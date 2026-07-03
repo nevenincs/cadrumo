@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#cert-auth"
 date: 2026-04-12
-modified: '2026-04-12'
+modified: '2026-06-13'
 title: "cert-auth phase1 summary"
 related:
   - "[[2026-04-12-cert-auth-plan]]"

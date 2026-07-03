@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-addressing-ux'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-06-03-cli-workflow-redesign-epic-adr]]'
   - '[[2026-06-04-cli-workflow-redesign-epic-research]]'
 ---
-
 
 <!-- RETIRED: W07, W08, W09, P13, P14, P15, P16, P22, P23, P24, P25, P26, P27, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S55, S56, S57, S58, S59, S60, S79, S80, S81, S82, S83, S84, S85, S86, S87, S88, S89, S90, S91, S92, S93, S94, S95, S96, S97, S98, S99, S100, S101, S102, S103, S104, S105, S106, S107, S108, S109, S110, S111, S112, S113, S114, S115, S116, S117, S118, S129, S131, S135, S138, S141, S144, S148, S152, S154, S155, S156, S157, S158, S159, S160, S161, S162, S163, S164, S165, S166, S167, S168, S169, S170, S171, S172, S173, S174, S175, S176, S177, S178, S179, S180, S181, S182, S183, S184 -->
 

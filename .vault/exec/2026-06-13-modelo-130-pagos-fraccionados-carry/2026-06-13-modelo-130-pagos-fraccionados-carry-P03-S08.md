@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S08'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
 ---
-
-
-
 
 # intersect the expanding-span candidate-quarter set with the periods for which a filing obligation actually existed, reading the operator-declared activity_start_date axis (the same field the deadline engine consumes for pre-alta suppression) so the alta-containing quarter is the first owed quarter and the span starts strictly after it, per the first-filer-attestation authority
 

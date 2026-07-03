@@ -41,9 +41,11 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
     BindingId,
     CasillaId,
@@ -51,14 +53,12 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_report import ModeloVerificationFindingKind
+from ....domain.modelos import ModeloVerificationFindingKind
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit
-from ...modelo._actions import _evaluate_verification_predicates
+from ...modelo._verification_actions import _evaluate_verification_predicates
 from ...user_profile import UserProfileLifecycleRepository
 from .._observations_repository import CalculationObservationRepository
 
@@ -75,7 +75,8 @@ _APLICADA_MAXIMA_FORMULA_ID = "renta-2025-base-liquidable-negativa-general-2024-
 _ANEXO_C_BASE_NEGATIVA_GENERAL_CONSTRUCT_ID = "renta-anexo-c-base-liquidable-negativa-general"
 
 _MODELO = "100"
-_BUCKET_ID = "operator"
+_PROFILE_ID = "10010000-0000-4100-8100-000000000100"
+_BUCKET_ID = _PROFILE_ID
 _PERIOD = "0A"
 _FILING_YEAR = 2025
 
@@ -85,6 +86,7 @@ def _casilla_id(value: object) -> CasillaId:
         return validated_casilla_id(value, surface="test casilla id")
     except ValueError as exc:
         raise AssertionError(f"M100 base negativa fixture casilla key {value!r} is not a CasillaId") from exc
+
 
 #: Anexo-C base-liquidable-general-negativa casillas (ejercicio-2024 origin).
 _PENDIENTE_INICIO: CasillaId = _casilla_id("1388")  # opening pending (bound from prior 1391)
@@ -106,14 +108,22 @@ _CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 def _seed_taxpayer_unit_profile() -> None:
     """Seed a single-taxpayer profile so the profile-sourced bindings resolve."""
     record = UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Operator"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="varon"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
+            UserProfileFact(path="renta_taxpayer.sex", value="H"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),

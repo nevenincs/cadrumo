@@ -1,10 +1,18 @@
-"""Projection helpers for the ``aeat app ledger list`` CLI command."""
+"""Projection helpers for the ``aeat app ledger list`` CLI command.
+
+The CLI parser turns ``--filter`` clauses into
+:class:`LedgerReviewFilterSpec`, asks
+:func:`query_ledger_review_rows` for review-derived
+rows, and emits :class:`LedgerListRowPayload`
+instances.
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import override
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...application.ledger import (
     LedgerReviewQuery,
     ManualLedgerTransactionResult,
@@ -17,19 +25,14 @@ from ...application.ledger import (
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core import LedgerSortField, LedgerSortOrder
 from ...core.i18n import tr
-from ...domain.buckets import (
-    BucketEventHistoryCatalogue,
-    BucketEventHistoryRepository,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ...domain.buckets import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
 from ...domain.transactions import Transaction, TransactionCatalogueRepositoryProtocol
 from ._ledger_payloads import LedgerListRowPayload
 
 
 @dataclass(frozen=True)
 class LedgerListProjection:
-    """Rendered payload inputs for ``ledger list``."""
+    """Rendered :class:`LedgerListRowPayload` inputs for ``ledger list``."""
 
     bucket_id: str
     rows: list[LedgerListRowPayload]
@@ -47,7 +50,7 @@ def parse_ledger_list_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
 
 
 def ledger_filter_parse_error_message(exc: FilterParseError, *, year: int | None = None) -> str:
-    """Render a CLI message for a parsed ledger filter error."""
+    """Render a CLI message for a parsed :class:`FilterParseError`."""
     if exc.reason == "invalid-value-ledger-period":
         return tr("cli.common.errors.period_unrecognised", raw=_filter_period_value(exc))
     if exc.reason == "ledger-period-year-pairing":
@@ -169,6 +172,8 @@ LLM_DECISION_EVENT_TYPES = (
 def latest_llm_decision_is_rejection(event_catalogue: BucketEventHistoryCatalogue, transaction_id: str) -> bool:
     """Return True when the row's most recent LLM decision was a rejection.
 
+    Reads :class:`BucketEventHistoryCatalogue` entries whose
+    type belongs to :data:`LLM_DECISION_EVENT_TYPES`.
     The standing LLM decision is the latest of {classified, llm-suggestion-rejected}
     for the transaction. A row whose latest such event is a rejection has been
     reviewed-and-declined and should drop out of the pending review queue when the
@@ -201,10 +206,12 @@ def project_ledger_list(
     sort_order: LedgerSortOrder = LedgerSortOrder.ASC,
     exclude_llm_rejected: bool = False,
 ) -> LedgerListProjection:
-    """Project, page, and render one ``ledger list`` result set and return a :class:`LedgerListProjection`.
+    """Project, page, and render one ``ledger list`` result set.
+
+    Returns a :class:`LedgerListProjection`.
 
     When ``sort_by`` is supplied the result set is stably sorted on that closed
-    :class:`aeat.core.LedgerSortField` axis (ascending by default,
+    :class:`LedgerSortField` axis (ascending by default,
     ``sort_order=DESC`` for descending), applied *after* the C6 filter and the
     ``--group`` selection and *before* paging, with a deterministic final
     tie-break on the content-addressed ``transaction_id`` (D5). ``--by-group``
@@ -317,10 +324,7 @@ def _ledger_list_rows_and_lines(
     rows: list[LedgerListRowPayload] = []
     lines = [
         tr("cli.ledger.list.header"),
-        tr(
-            "cli.ledger.list.column_header",
-            default="id\tfull_id\tdate\tamount\tdescription\treview_status",
-        ),
+        _ledger_list_column_header(),
     ]
     display_width = compute_display_id_width(all_transaction_ids)
     current_group: str | None = None
@@ -348,11 +352,24 @@ def _ledger_list_rows_and_lines(
                 },
             ),
         )
+        iva_category = review_payload.iva_category or ""
         lines.append(
             f"{display_id}\t{transaction.transaction_id}\t{review_payload.date}\t"
-            f"{review_payload.amount}\t{review_payload.description}\t{review_status}",
+            f"{review_payload.amount}\t{review_payload.description}\t{iva_category}\t{review_status}",
         )
     return rows, lines
+
+
+def _ledger_list_column_header() -> str:
+    base_header = tr(
+        "cli.ledger.list.column_header",
+        default="id\tfull_id\tdate\tamount\tdescription\treview_status",
+    )
+    iva_category_label = tr("cli.ledger.labels.iva_category")
+    columns = base_header.split("\t")
+    if len(columns) >= 2:
+        return "\t".join((*columns[:-1], iva_category_label, columns[-1]))
+    return f"{base_header}\t{iva_category_label}"
 
 
 __all__ = [

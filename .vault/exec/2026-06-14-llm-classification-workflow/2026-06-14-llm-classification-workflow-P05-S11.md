@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-classification-workflow'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S11'
 related:
   - "[[2026-06-14-llm-classification-workflow-plan]]"
 ---
-
-
-
 
 # Surface the latest LLM rejection on ledger view as a typed info notice reading the row's LLM-decision events
 
@@ -34,4 +31,3 @@ related:
 ## Notes
 
 The notice rides the Notice channel (cli-notices-are-the-only-diagnostic-channel); `ledger view`'s result schema is unchanged. review_status stays a pure projection (the rejection is surfaced, not folded into status).
-

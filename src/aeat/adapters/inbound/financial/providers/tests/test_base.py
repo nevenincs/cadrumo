@@ -36,7 +36,7 @@ def test_raw_transaction_round_trip_uses_mapping_field() -> None:
     """RawTransaction should round-trip through JSON with immutable raw_fields."""
     original = RawTransaction.model_validate(
         {
-            "transaction_id": "csv-provider-deadbeef-2",
+            "provider_transaction_id": "csv-provider-deadbeef-2",
             "booked_date": date(2026, 4, 10),
             "value_date": date(2026, 4, 10),
             "amount": Decimal("123.45"),
@@ -67,20 +67,17 @@ def test_provider_validation_defaults() -> None:
     assert validation.detected_dialect is None
 
 
-@pytest.mark.parametrize(
-    ("fixture_name", "provider_name"),
-    [
+def test_detect_provider_uses_extension_and_validation() -> None:
+    """detect_provider should select the correct provider for each fixture."""
+    for fixture_name, provider_name in (
         ("synthetic-transactions.csv", "CSV provider"),
         ("synthetic-transactions.xlsx", "XLSX provider"),
         ("synthetic-transactions.ofx", "OFX provider"),
         ("n26/n26-savings-2025-01.pdf", "n26-pdf"),
-    ],
-)
-def test_detect_provider_uses_extension_and_validation(fixture_name: str, provider_name: str) -> None:
-    """detect_provider should select the correct provider for each fixture."""
-    provider = detect_provider(_FIXTURES / fixture_name)
-    assert provider is not None
-    assert provider.name == provider_name
+    ):
+        provider = detect_provider(_FIXTURES / fixture_name)
+        assert provider is not None, fixture_name
+        assert provider.name == provider_name, fixture_name
 
 
 def test_parse_amount_value_respects_explicit_decimal_separator() -> None:
@@ -99,48 +96,49 @@ _ALL_PROVIDERS = [CsvProvider(), OfxProvider(), XlsxProvider(), PdfN26Provider()
 _VALID_VERIFICATION_SOURCES = frozenset({"real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"})
 
 
-@pytest.mark.parametrize("provider", _ALL_PROVIDERS, ids=lambda p: p.name)
-def test_provider_declares_verification_source(provider: object) -> None:
+def test_provider_declares_verification_source() -> None:
     """Every provider must declare a valid verification_source class variable.
 
     This is a structural gate: a newly enrolled provider that forgets to
     declare the attribute fails loudly here rather than shipping with an
     unverified corpus posture.
     """
-    source = getattr(type(provider), "verification_source", None)
-    assert source is not None, f"{type(provider).__name__} is missing verification_source"
-    assert source in _VALID_VERIFICATION_SOURCES, (
-        f"{type(provider).__name__}.verification_source={source!r} is not one of {sorted(_VALID_VERIFICATION_SOURCES)}"
-    )
+    for provider in _ALL_PROVIDERS:
+        source = getattr(type(provider), "verification_source", None)
+        assert source is not None, f"{type(provider).__name__} is missing verification_source"
+        assert source in _VALID_VERIFICATION_SOURCES, (
+            f"{type(provider).__name__}.verification_source={source!r} "
+            f"is not one of {sorted(_VALID_VERIFICATION_SOURCES)}"
+        )
 
 
-@pytest.mark.parametrize("provider", _ALL_PROVIDERS, ids=lambda p: p.name)
-def test_provider_declares_provisional_pending_specimen(provider: object) -> None:
+def test_provider_declares_provisional_pending_specimen() -> None:
     """Every provider must declare provisional_pending_specimen as a bool.
 
     A provider with no_corpus must set it True; a provider with a
     confirmed corpus round-trip sets it False.
     """
-    flag = getattr(type(provider), "provisional_pending_specimen", None)
-    assert flag is not None, f"{type(provider).__name__} is missing provisional_pending_specimen"
-    assert isinstance(flag, bool), (
-        f"{type(provider).__name__}.provisional_pending_specimen must be bool, got {type(flag)}"
-    )
+    for provider in _ALL_PROVIDERS:
+        flag = getattr(type(provider), "provisional_pending_specimen", None)
+        assert flag is not None, f"{type(provider).__name__} is missing provisional_pending_specimen"
+        assert isinstance(flag, bool), (
+            f"{type(provider).__name__}.provisional_pending_specimen must be bool, got {type(flag)}"
+        )
 
 
-@pytest.mark.parametrize("provider", _ALL_PROVIDERS, ids=lambda p: p.name)
-def test_provider_no_corpus_implies_provisional(provider: object) -> None:
+def test_provider_no_corpus_implies_provisional() -> None:
     """A provider with verification_source='no_corpus' must be provisional.
 
     This invariant prevents a no_corpus provider from shipping with
     provisional_pending_specimen=False, which would falsely assert that
     an absent corpus has been round-trip-verified.
     """
-    cls = type(provider)
-    if getattr(cls, "verification_source", None) == "no_corpus":
-        assert getattr(cls, "provisional_pending_specimen", False) is True, (
-            f"{cls.__name__}: no_corpus provider must have provisional_pending_specimen=True"
-        )
+    for provider in _ALL_PROVIDERS:
+        cls = type(provider)
+        if getattr(cls, "verification_source", None) == "no_corpus":
+            assert getattr(cls, "provisional_pending_specimen", False) is True, (
+                f"{cls.__name__}: no_corpus provider must have provisional_pending_specimen=True"
+            )
 
 
 # ---------------------------------------------------------------------------

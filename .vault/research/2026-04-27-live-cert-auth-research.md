@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#live-cert-auth'
 date: '2026-04-27'
-modified: '2026-04-27'
+modified: '2026-06-30'
 related:
   - "[[2026-04-12-cert-auth-research]]"
   - "[[2026-04-18-auth-protocol-research]]"
@@ -12,8 +12,6 @@ related:
   - "[[2026-04-18-cert-provider-migration-review-audit]]"
   - "[[2026-04-21-live-cert-auth-supersession-adr]]"
 ---
-
-
 
 # `live-cert-auth` research: supersession of issue-141 pr-148 by merged auth protocol work
 

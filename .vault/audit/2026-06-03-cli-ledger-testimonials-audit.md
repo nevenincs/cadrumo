@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#cli-ledger-testimonials'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `cli-ledger-testimonials` audit: `CLI ledger-operator persona testimonials — graded findings + hardening`
 
@@ -174,7 +172,6 @@ recargo (Art. 27 LGT) warning; error-message "Did you mean …" remediation.
   fast-landing shared worktree.
 
 ## Codification candidates
-
 
 Two candidates meet the bar (cross-session, constraint-shaped, project-bound).
 Per the codify discipline they are recorded here for evaluation at campaign

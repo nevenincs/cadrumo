@@ -18,23 +18,22 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile._orchestration import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
 _FIX = FIXTURES_DIR / "financial"
 _MARTA_CSV = _FIX / "ledger-corpus" / "n26-savings.csv"
 _RETAILER_CSV = _FIX / "ledger-corpus-retailer" / "bbva-retail-eur.csv"
+_MARTA_PROFILE_ID = "2c2c2c2c-2c2c-4c2c-8c2c-2c2c2c2c2c2c"
+_RETAILER_PROFILE_ID = "3d3d3d3d-3d3d-4d3d-8d3d-3d3d3d3d3d3d"
 
 
 @pytest.fixture(autouse=True)
@@ -50,19 +49,24 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-def _register(name: str) -> None:
+def _register(*, profile_id: str, label: str) -> None:
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id=name, enforce_unique_tax_id=False),
+        lambda state: register_minimal_profile(
+            state,
+            profile_id=profile_id,
+            display_name=label,
+            enforce_unique_tax_id=False,
+        ),
     )
 
 
 def _import(csv_path: Path) -> None:
-    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    result = invoke_cached_cli(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
     assert result.exit_code == 0, result.output
 
 
 def _list_ids() -> set[str]:
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     rows = json.loads(listed.output)["result"]["rows"]
     return {r.get("full_id") or r["transaction_id"] for r in rows}
@@ -71,13 +75,13 @@ def _list_ids() -> set[str]:
 def test_two_profiles_keep_independent_ledgers_across_unlocks() -> None:
     # Provision + load each profile into its own bucket, importing a distinct
     # statement while that profile's session is the active one.
-    with profile_create_storage_span("marta"):
-        _register("marta")
+    with profile_create_storage_span(_MARTA_PROFILE_ID):
+        _register(profile_id=_MARTA_PROFILE_ID, label="marta")
         _import(_MARTA_CSV)
         marta_ids = _list_ids()
 
-    with profile_create_storage_span("retailer"):
-        _register("retailer")
+    with profile_create_storage_span(_RETAILER_PROFILE_ID):
+        _register(profile_id=_RETAILER_PROFILE_ID, label="retailer")
         _import(_RETAILER_CSV)
         retailer_ids = _list_ids()
 
@@ -86,12 +90,12 @@ def test_two_profiles_keep_independent_ledgers_across_unlocks() -> None:
 
     # Unlocking a profile reopens its session and surfaces only that profile's
     # ledger -- no bleed-through.
-    with profile_create_storage_span("marta"):
-        unlocked = _RUNNER.invoke(app, ["config", "switch", "marta"])
+    with profile_create_storage_span(_MARTA_PROFILE_ID):
+        unlocked = invoke_cached_cli(["config", "switch", "marta"])
         assert unlocked.exit_code == 0, unlocked.output
         back = _list_ids()
     assert back == marta_ids
     assert back.isdisjoint(retailer_ids)
 
-    with profile_create_storage_span("retailer"):
+    with profile_create_storage_span(_RETAILER_PROFILE_ID):
         assert _list_ids() == retailer_ids

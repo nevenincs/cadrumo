@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 step_id: 'S15'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-plan]]"
 ---
-
-
-
 
 # Author one declared disposition mapping keyed by BindingSourceKind member to its resolution state replacing the _pre_mesh_handled and _BUCKET_AGGREGATION_OWNED_SOURCES structures and the service provider enum, re-reading the LIVE mesh sets at execution time so every member carries its HEAD-at-execution disposition including r2's newly-enrolled withholding source as enrolled (not deferred), applying the apply-cached-on-collision drive against the concurrent r2 #28 withholding-enrollment and codex typing WIP
 

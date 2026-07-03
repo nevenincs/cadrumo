@@ -3,7 +3,7 @@ tags:
   - "#audit"
   - "#aeat-restructure"
 date: 2026-05-01
-modified: '2026-05-01'
+modified: '2026-06-30'
 related:
   - "[[2026-04-30-aeat-restructure-adr]]"
   - "[[2026-04-30-aeat-restructure-summary-exec]]"
@@ -315,7 +315,6 @@ For the top-level code feature directories under src/aeat/, checked against .vau
 | adapters/persistence/storage | Y (data-storage, secure-persistence-foundation) | Y | Y | Y |
 | entrypoints/cli | Y (aeat-cli-wireframe, json-output-contract) | Y | Y | Y |
 | entrypoints/mcp | Y (google-workspace-mcp-auth, gsuite-bootstrap) | Y | Y | Y |
-
 
 Findings:
 

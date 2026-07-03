@@ -29,7 +29,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile._repository import UserProfileLifecycleRepository
+from ....application.user_profile import UserProfileLifecycleRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
@@ -43,7 +43,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # Fixture helpers
 # ---------------------------------------------------------------------------
 
-_PROFILE_ID = "oracle-calc-test-profile"
+_PROFILE_ID = "0ac1e000-0000-4000-8000-000000000001"
 
 
 @pytest.fixture
@@ -92,6 +92,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             ),
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="provenance.source", value="manual_cli"),
@@ -129,6 +130,8 @@ def _seed_legal_entity_profile(
             path="taxpayer_type.new_entity_first_two_profit_periods",
             value=new_entity,
         ),
+        UserProfileFact(path="activities.description", value="economic activity"),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
         UserProfileFact(path="tax_residence.ccaa", value="madrid"),
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     ]

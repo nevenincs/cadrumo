@@ -66,6 +66,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
@@ -74,14 +78,10 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
-from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,
@@ -92,7 +92,7 @@ from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-m200-self-carry-fold"
+_BUCKET_ID = "e30320c1-7532-458b-b0ba-a8b8f4b70c9e"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _M200 = "200"
@@ -187,8 +187,11 @@ def _seed_m200_sociedad_profile() -> None:
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345678"),
+            UserProfileFact(path="identity.legal_name", value="Test Runtime Profile SL"),
+            UserProfileFact(path="activities.description", value="software consultancy"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
             UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
@@ -375,8 +378,7 @@ def test_m200_self_carries_resolve_zero_with_no_prior_filing_on_live_calculate(
 
     values = result.revision.casilla_values
     assert Decimal(values[_BIN_PENDIENTE_INICIO]) == Decimal("0"), (
-        f"M200 {_FILING_YEAR} casilla 00670 with no prior 00671 must resolve zero; "
-        f"got {values[_BIN_PENDIENTE_INICIO]}"
+        f"M200 {_FILING_YEAR} casilla 00670 with no prior 00671 must resolve zero; got {values[_BIN_PENDIENTE_INICIO]}"
     )
     assert Decimal(values[_SALDO_INICIAL_NO_CUMPLIDO]) == Decimal("0"), (
         f"M200 {_FILING_YEAR} casilla 01494 with no prior 01498 must resolve zero; "

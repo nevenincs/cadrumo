@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#live-justificante-reconcile'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S06'
 related:
   - "[[2026-06-10-live-justificante-reconcile-plan]]"
 ---
-
-
-
 
 # Add a live end-to-end capture test gated by AEAT_LIVE_TESTS_ENABLED that pulls and persists a real justificante, env-driven and never xfail or skip-marker
 

@@ -10,14 +10,15 @@ boundary refusals; the per-persona derivation matrix lives in
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import (
+from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
+    TaxpayerProfile,
 )
 from .._errors import OverviewExplainError
 from .._explain import OverviewExplain, build_overview_explain
@@ -61,6 +62,17 @@ def test_explain_returns_typed_envelope_for_applicable_modelo() -> None:
     assert result.profile_facts["entity_type"] == "natural_person"
 
 
+def test_explain_rejects_blank_legal_ref_payload() -> None:
+    """OverviewExplain keeps applicability grounding on the typed registry-id contract."""
+
+    result = build_overview_explain(_autonomo_profile(), modelo="303", year=2026)
+    payload = result.model_dump(mode="json")
+    payload["legal_refs"] = [" "]
+
+    with pytest.raises(ValidationError, match="legal_refs"):
+        OverviewExplain.model_validate(payload)
+
+
 def test_explain_refuses_unknown_modelo() -> None:
     """A modelo identifier the registry has no knowledge of surfaces as
     OverviewExplainError rather than an undeclared-profile case."""
@@ -97,6 +109,8 @@ def test_explain_profile_facts_surface_taxpayer_model_axes() -> None:
     # Nested IVA sub-model facts must also be flattened.
     assert "iva.roi_enrolled" in result.profile_facts
     assert "iva.oss_enrolled" in result.profile_facts
+    assert "iva.group_member_enrolled" in result.profile_facts
+    assert "iva.group_dominant_entity_enrolled" in result.profile_facts
 
 
 def test_explain_undeclared_profile_yields_incomplete_verdict() -> None:
@@ -162,6 +176,24 @@ def test_explain_applicable_flag_matches_derived_verdict() -> None:
     assert result.verdict is derived.verdict
 
 
+def test_explain_721_depends_on_crypto_abroad_threshold_fact() -> None:
+    profile = TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
+        iva_regime=IVARegime.GENERAL,
+        bienes_extranjero_above_threshold=False,
+        monedas_virtuales_extranjero_above_threshold=True,
+    )
+
+    result = build_overview_explain(profile, modelo="721", year=2024)
+
+    assert result.verdict is ApplicabilityVerdict.APPLICABLE
+    assert result.applicable is True
+    assert result.profile_facts["bienes_extranjero_above_threshold"] is False
+    assert result.profile_facts["monedas_virtuales_extranjero_above_threshold"] is True
+
+
 def test_scheduling_rationale_propagates_genuine_registry_fault() -> None:
     """The public explain builder lets a genuine registry-integrity fault
     propagate after its catch was narrowed to ``NoDeadlineWindowsError``.
@@ -172,7 +204,7 @@ def test_scheduling_rationale_propagates_genuine_registry_fault() -> None:
     scheduling rationale. The narrowed catch lets the genuine fault
     surface (round-4 #40)."""
 
-    from ....domain.deadlines._errors import (
+    from ....domain.deadlines import (
         NoDeadlineWindowsError,
         ScheduleComputationError,
     )
@@ -207,7 +239,7 @@ def test_scheduling_rationale_degrades_on_benign_no_windows() -> None:
     """The benign no-windows fault still degrades to ``None`` through
     the public explain builder after the catch narrowing."""
 
-    from ....domain.deadlines._errors import NoDeadlineWindowsError
+    from ....domain.deadlines import NoDeadlineWindowsError
 
     class _NoWindowsEngine:
         """Raises the benign no-windows fault on explain."""

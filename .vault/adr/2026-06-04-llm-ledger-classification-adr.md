@@ -3,13 +3,11 @@ tags:
   - '#adr'
   - '#llm-ledger-classification'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-30'
 related:
   - "[[2026-06-03-llm-ledger-classification-adr]]"
   - "[[2026-06-03-llm-ledger-classification-research]]"
 ---
-
-
 
 # `llm-ledger-classification` adr: `Saturate transactions with grounded rich tax metadata via LLM (stage 2)` | (**status:** `accepted`)
 

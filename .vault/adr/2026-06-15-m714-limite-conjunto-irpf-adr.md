@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#m714-limite-conjunto-irpf'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-29'
 related:
   - '[[2026-06-15-m714-limite-conjunto-irpf-research]]'
 ---
-
-
 
 # `m714-limite-conjunto-irpf` adr: `Modelo 714 patrimonio cuota: limite conjunto IRPF+IP (art. 31)` | (**status:** `accepted`)
 
@@ -46,17 +44,17 @@ manual input.
 
 ## Constraints
 
-Parent-feature stability: BLOCKED at authoring time by the in-flight peer
-`bindings-interface-hardening` refactor (`BindingAggregationOp`) that has the registry in a
-non-loading state — the relation-prefill resolver and the calculate mesh are the exact
-surface being refactored, so neither the relation nor its formula can be added or
-gate-verified until that lands. The cross-modelo relation also requires the filer's M100
-revision to be filed/available for the same year (the IRPF cuota/base must exist as a
-resolvable output), so the M714 límite is a SECOND-PASS computation after the M100 cuota
-chain — and the M100 cuota chain itself was only just grounded this campaign
-(`gravamenes_res` per-box). No external numeric oracle beyond AEAT worked examples exists;
-any calc test must be derived from an AEAT/BOE worked example, never hand-computed from the
-same formula (`no-tautological-calculation-tests`).
+The cross-modelo relation requires the filer's M100 revision to be filed/available for the
+same year (the IRPF cuota/base must exist as a resolvable output), so the M714 límite is a
+SECOND-PASS computation after the M100 cuota chain. The relation schema/runtime now has the
+canonical `cross_model_output` surface needed for same-year fold-ins, but the current M100
+registry does not yet expose the art. 31 exclusion-specific values: the base-del-ahorro part
+from qualifying long-term patrimonial gains/losses, the corresponding IRPF cuota slice, and
+the IP cuota part for assets not susceptible of producing IRPF-taxed income. A formula that
+uses only broad M100 base/cuota totals would over-reduce the IP cuota in exclusion cases,
+creating under-declaration risk. No external numeric oracle beyond AEAT worked examples
+exists; any calc test must be derived from an AEAT/BOE worked example, never hand-computed
+from the same formula (`no-tautological-calculation-tests`).
 
 ## Implementation
 
@@ -80,9 +78,9 @@ A cross-modelo relation plus a límite formula:
 Modelling the fold-in as a relation (not a binding) follows the canonical-mechanism rule:
 a same-year cross-modelo value is a relation, exactly the M100←M130 / M353←M322 family.
 The 80%-suelo is already grounded (casilla 39), so the límite reuses verified law. Deferring
-implementation behind the engine refactor and the M100 cuota availability matches the
-verify-before-ship discipline — the límite is meaningless until the M100 cuota it folds in
-is itself computed and the relation surface is stable.
+implementation until the exclusion-specific M100/IP evidence is represented matches the
+verify-before-ship discipline — the límite is not legally complete if it folds in only the
+broad M100 cuota/base totals.
 
 ## Consequences
 
@@ -94,6 +92,20 @@ saldo broken out by holding period. Pitfalls: applying the 60% límite without t
 long-term-ganancia exclusion over-reduces the IP cuota (a wrong, under-declared result) —
 the exclusion is load-bearing, not optional.
 
+## 2026-06-29 currentization
+
+The original authoring-time relation-runtime blocker is obsolete for this gap: current
+registry schemas support same-year `cross_model_output` relations. The blocker is now legal
+source granularity. The bundled M100 2024/2025 registry exposes broad IRPF bases and cuotas,
+but not the art. 31 exclusion slices required by Ley 19/1991: the qualifying long-term
+patrimonial gains/losses in the savings base, the corresponding IRPF quota part, and the IP
+quota part for non-income-producing assets. Therefore the current safe state is:
+
+- keep casilla 29 (art. 30 cuota íntegra) and casilla 39 (art. 31 80% floor reference) as
+  computed and grounded;
+- keep casillas 33/40/45/55 manual until those exclusion sources or explicit blocking inputs
+  are grounded; and
+- reject any partial formula based only on broad M100 totals because it can silently
+  under-declare by over-reducing the IP cuota.
+
 ## Codification candidates
-
-

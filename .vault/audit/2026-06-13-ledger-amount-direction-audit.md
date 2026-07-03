@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#ledger-amount-direction'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-ledger-amount-direction-plan]]"
 ---
-
-
 
 # `ledger-amount-direction` audit: `C1 suite green-pass triage: S15 owner-vs-peer`
 

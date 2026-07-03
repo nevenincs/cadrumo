@@ -1,12 +1,12 @@
 """Filing-record store paired with filed calculation revisions.
 
-A :class:`ModeloRecord` is the durable receipt of an internal filing
-event: at time T, actor A marked calculation revision R of work unit
-W as the current filed answer for (bucket, modelo, year, period).
-The filing record holds filing-event state (filed timestamp, actor,
-notes, AEAT-acceptance bit, supersession link); the filed calculation
-revision holds the immutable calculation result. The two are paired
-so the calculation revision never accretes filing-side concerns.
+A :class:`ModeloRecord` is the durable receipt of an
+internal filing event: at time T, actor A marked calculation revision R of work
+unit W as the current filed answer for (bucket, modelo, year, period). The
+filing record holds filing-event state (filed timestamp, actor, notes,
+AEAT-acceptance bit, supersession link); the filed calculation revision holds
+the immutable calculation result. The two are paired so the calculation revision
+never accretes filing-side concerns.
 
 There is at most one *current* filing record per (bucket_id, modelo,
 filing_year, period) tuple. When a later verified revision is filed,
@@ -18,8 +18,10 @@ catalogue for audit.
 
 The ``aeat_accepted`` flag defaults to ``False`` and is independent
 of internal filing. It exists only to record an externally-observed
-AEAT acceptance imported into the bucket through read-only live
-signals. The filing record itself never initiates a live submission.
+AEAT acceptance imported into the bucket through evidence channels such as
+justificante/CSV imports or read-only live capture. When true,
+``external_evidence`` must carry :class:`ExternalEvidence`;
+the filing record itself never initiates a live submission.
 """
 
 from __future__ import annotations
@@ -75,11 +77,11 @@ class ModeloRecordStatus(StrEnum):
 class ExternalEvidenceKind(StrEnum):
     """Closed catalogue of external-evidence kinds.
 
-    A filing record marked with one of these kinds carries imported
-    official evidence (an AEAT justificante PDF, a CSV-attested
-    receipt) rather than a tool-computed calculation revision. This
-    is the gate the modelo-amend path requires before it accepts an
-    amendment baseline.
+    A :class:`ModeloRecord` marked with one of these kinds
+    carries imported official evidence (justificante, CSV register, or live
+    capture) rather than a tool-computed calculation revision. This is the gate
+    :func:`~aeat.application.modelo.amend_modelo_revision` requires before it
+    accepts an amendment baseline.
     """
 
     AEAT_JUSTIFICANTE_PDF = "aeat_justificante_pdf"
@@ -96,10 +98,11 @@ _EvidenceReference = Annotated[
 class ExternalEvidence(BaseModel):
     """Imported-evidence metadata for an externally-filed return.
 
-    Populated by the filing-record import path (justificante reader,
-    CSV register importer, AEAT live capture); consumed by the
-    modelo-amend path as the gate that proves the baseline is
-    AEAT-attested and not a fabricated local draft.
+    Populated by
+    :func:`~aeat.application.modelo.import_external_filing_evidence` for a
+    current :class:`ModeloRecord`; consumed by
+    :func:`~aeat.application.modelo.amend_modelo_revision` as the gate that
+    proves the baseline is AEAT-attested and not a fabricated local draft.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -113,24 +116,23 @@ def derive_filing_record_id(
     *,
     work_unit_id: str,
     calculation_revision_id: str,
-    filed_at: datetime,
     filed_by: str,
     member_nif: str | None = None,
 ) -> str:
     """Deterministic 64-char SHA-256 id for a filing record.
 
-    The id is content-addressed by the parent work unit, the filed
-    calculation revision, the filing timestamp, and the actor. Two
-    operators filing the same revision at the same instant produce
-    the same id, which is impossible in practice because the timestamp
-    guarantees uniqueness. Member-scoped group filings include the
-    member NIF in the identity; single-filer records omit it so legacy
-    record ids remain stable.
+    Content-addressed by the filing *outcome* - the parent work unit, the
+    filed calculation revision, the actor, and (for member-scoped group
+    filings) the member NIF. ``filed_at`` is deliberately excluded from the
+    identity so a re-file of the same revision by the same actor resolves to
+    the same record (an idempotent re-file is a no-op, not a new time-stamped
+    duplicate); ``filed_at`` is retained on :class:`ModeloRecord` as a
+    non-identity last-seen field. Member-scoped group filings include the
+    member NIF in the identity; single-filer records omit it.
     """
     payload = {
         "work_unit_id": work_unit_id.strip(),
         "calculation_revision_id": calculation_revision_id.strip(),
-        "filed_at": filed_at.isoformat(),
         "filed_by": filed_by.strip(),
     }
     if member_nif is not None:
@@ -141,16 +143,21 @@ def derive_filing_record_id(
 class ModeloRecord(BaseModel):
     """Durable receipt of one internal filing event for an AEAT modelo (tax form).
 
-    Pairs a filed :class:`CalculationRevisionId` with the filing event
-    metadata (actor, timestamp, notes, AEAT-acceptance bit, supersession
-    link). The id is content-addressed by ``work_unit_id``,
-    ``calculation_revision_id``, ``filed_at``, and ``filed_by`` via
-    :func:`derive_filing_record_id`; a ``model_validator`` enforces the
-    derivation on construction.
+    Pairs a filed :obj:`CalculationRevisionId` with the
+    filing event metadata (actor, timestamp, notes, AEAT-acceptance bit,
+    supersession link). The id is content-addressed by the filing outcome -
+    ``work_unit_id``, ``calculation_revision_id``, ``filed_by``, and (for
+    member-scoped group filings) ``member_nif`` - via
+    :func:`derive_filing_record_id`; ``filed_at`` is a non-identity last-seen
+    field, so a re-file of the same revision by the same actor is an
+    idempotent no-op rather than a new record. A ``model_validator`` enforces
+    the derivation on construction.
 
-    ``aeat_accepted`` records an externally-observed AEAT acceptance
-    signal imported through read-only live signals — it does not imply
-    that the application submitted anything.
+    ``aeat_accepted`` records externally-observed AEAT acceptance imported
+    through evidence channels; it does not imply that the application submitted
+    anything. It must travel with
+    :class:`ExternalEvidence`, while locally filed records
+    created by :func:`~aeat.application.modelo.file_modelo_revision` carry neither.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -198,7 +205,6 @@ class ModeloRecord(BaseModel):
         derived = derive_filing_record_id(
             work_unit_id=self.work_unit_id,
             calculation_revision_id=self.calculation_revision_id,
-            filed_at=self.filed_at,
             filed_by=self.filed_by,
             member_nif=self.member_nif,
         )
@@ -340,7 +346,7 @@ class ModeloRecordCatalogue(BaseModel):
         return self.records.values()
 
     @override
-    def __iter__(self) -> Iterator[ModeloRecord]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[ModeloRecord]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
         """Iterate over :class:`ModeloRecord` values (not ``(key, value)`` pairs)."""
         return iter(self.records.values())
 

@@ -4,14 +4,24 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from decimal import Decimal
-from typing import Protocol
+from typing import Literal, Protocol
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
+from ....core.aggregation import BindingSourceKind
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition
 
 __all__ = [
+    "BindingExportDataType",
+    "BindingExportSelector",
+    "BindingFixedExportSelector",
+    "BindingRowExportSelector",
+    "BindingRowSetSelector",
+    "BooleanBindingEncodedValue",
+    "binding_export_selector",
+    "binding_row_set_selector",
+    "boolean_binding_encoded_values",
     "intracommunity_clave_validator",
     "invariant_diagnostics",
     "selector_against_model",
@@ -22,12 +32,237 @@ __all__ = [
 ]
 
 
+BindingExportDataType = Literal["text", "integer", "decimal", "money", "date", "boolean"]
+
+
+class BindingFixedExportSelector(BaseModel):
+    """Typed fixed-width export projection carried by a binding selector."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    record: str = Field(min_length=1, max_length=64)
+    offset: int = Field(ge=1)
+    length: int = Field(ge=1)
+    data_type: BindingExportDataType
+    field: str | None = Field(default=None, min_length=1, max_length=128)
+
+
+class BindingRowExportSelector(BaseModel):
+    """Typed row-field export projection carried by a binding selector."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    record: str = Field(min_length=1, max_length=64)
+    row_field: str = Field(min_length=1, max_length=128)
+
+
+BindingExportSelector = BindingFixedExportSelector | BindingRowExportSelector
+
+
+class BindingRowSetSelector(BaseModel):
+    """Typed row-set projection carried by a row-producing binding selector."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    fact: Literal["row_field"] = "row_field"
+    row_field: str = Field(min_length=1, max_length=128)
+    grouping: str = Field(min_length=1, max_length=64)
+    record: str | None = Field(default=None, min_length=1, max_length=64)
+
+
+class _BindingExportProjection(BaseModel):
+    """Projection model for export-specific keys embedded in source-family selectors."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="ignore")
+
+    record: str | None = Field(default=None, min_length=1, max_length=64)
+    row_field: str | None = Field(default=None, min_length=1, max_length=128)
+    offset: int | None = Field(default=None, ge=1)
+    length: int | None = Field(default=None, ge=1)
+    data_type: BindingExportDataType | None = None
+    field: str | None = Field(default=None, min_length=1, max_length=128)
+
+    def export_selector(self, *, binding_id: str) -> BindingExportSelector | None:
+        """Return the typed export selector, or ``None`` for non-export selectors."""
+        if self.record is None:
+            if self.offset is not None or self.length is not None:
+                raise RegistryValidationError(
+                    f"binding {binding_id!r} export selector projection must declare record with offset or length",
+                )
+            return None
+
+        fixed_values = (self.offset, self.length, self.data_type)
+        fixed_count = sum(value is not None for value in fixed_values)
+        if fixed_count == len(fixed_values):
+            if self.row_field is not None:
+                raise RegistryValidationError(
+                    f"binding {binding_id!r} export selector projection cannot declare row_field "
+                    "with offset/length/data_type",
+                )
+            assert self.offset is not None
+            assert self.length is not None
+            assert self.data_type is not None
+            return BindingFixedExportSelector(
+                record=self.record,
+                offset=self.offset,
+                length=self.length,
+                data_type=self.data_type,
+                field=self.field,
+            )
+        if fixed_count:
+            missing = [
+                key
+                for key, value in (
+                    ("offset", self.offset),
+                    ("length", self.length),
+                    ("data_type", self.data_type),
+                )
+                if value is None
+            ]
+            raise RegistryValidationError(
+                f"binding {binding_id!r} export selector projection is missing fixed-field keys {missing!r}",
+            )
+        if self.row_field is not None:
+            return BindingRowExportSelector(record=self.record, row_field=self.row_field)
+        raise RegistryValidationError(
+            f"binding {binding_id!r} export selector projection must declare row_field or offset/length/data_type",
+        )
+
+
+class _BindingRowSetProjection(BaseModel):
+    """Projection model for row-set keys embedded in source-family selectors."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="ignore")
+
+    fact: str | None = Field(default=None, min_length=1, max_length=64)
+    row_field: str | None = Field(default=None, min_length=1, max_length=128)
+    grouping: str | None = Field(default=None, min_length=1, max_length=64)
+    record: str | None = Field(default=None, min_length=1, max_length=64)
+
+    def row_set_selector(self, *, binding_id: str) -> BindingRowSetSelector | None:
+        """Return the typed :class:`BindingRowSetSelector`, or ``None`` for non-row selectors."""
+        has_row_set_key = self.row_field is not None or self.grouping is not None
+        if self.fact is None:
+            if self.grouping is not None:
+                raise RegistryValidationError(
+                    f"binding {binding_id!r} row-set selector projection must declare fact 'row_field' with grouping",
+                )
+            return None
+        if self.fact != "row_field":
+            if has_row_set_key:
+                raise RegistryValidationError(
+                    f"binding {binding_id!r} row-set selector projection declares row-set keys "
+                    f"with non-row fact {self.fact!r}",
+                )
+            return None
+        if self.row_field is None:
+            raise RegistryValidationError(
+                f"binding {binding_id!r} row-set selector projection is missing row_field",
+            )
+        if self.grouping is None:
+            raise RegistryValidationError(
+                f"binding {binding_id!r} row-set selector projection is missing grouping",
+            )
+        return BindingRowSetSelector(row_field=self.row_field, grouping=self.grouping, record=self.record)
+
+
 def selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
     """Return a plain selector mapping without injected source metadata."""
     selector = binding.selector
     if isinstance(selector, BaseModel):
-        return selector.model_dump(exclude={"source"}, exclude_none=True)
+        return selector.model_dump(exclude={"source"}, exclude_none=True, exclude_unset=True)
     return {key: value for key, value in selector.items() if key != "source"}
+
+
+class BooleanBindingEncodedValue(BaseModel):
+    """One accepted decimal encoding of a boolean-casilla ``manual_input`` binding.
+
+    A ``manual_input`` binding whose selector declares ``data_type = "boolean"``
+    (the Modelo 100 estimación-directa modality flag is the canonical case) is
+    consumed by the registry formulas as a numeric ``1`` / ``0`` operand. The
+    operator therefore supplies a decimal on the ``--binding`` channel, yet the
+    accepted values and their meaning are opaque from the raw
+    :class:`DataBindingDefinition`. This record makes one accepted value
+    explicit: ``encoded_value`` is the decimal the operator types,
+    ``boolean_meaning`` is the affirmative/negative sense it carries, and
+    ``registry_value`` is the underlying casilla token the boolean maps to (the
+    selector's declared ``true_value`` / ``false_value``).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    encoded_value: str
+    boolean_meaning: bool
+    registry_value: str
+
+
+def boolean_binding_encoded_values(
+    binding: DataBindingDefinition,
+) -> tuple[BooleanBindingEncodedValue, ...]:
+    """Return the decimal encoding of a boolean-casilla ``manual_input`` binding.
+
+    The result is empty for every binding that is not a boolean-casilla
+    ``manual_input`` selector, so a caller can read a non-empty result as "this
+    binding is a decimal-encoded boolean flag". The encoding follows the
+    registry convention that a boolean operand is consumed as ``1`` (true) /
+    ``0`` (false); each sense is paired with the selector's declared
+    ``true_value`` / ``false_value`` casilla token, so the mapping is derived
+    from the binding definition, never hardcoded per modelo.
+
+    Returns:
+        Zero or two :class:`BooleanBindingEncodedValue` rows.
+    """
+    if binding.source is not BindingSourceKind.MANUAL_INPUT:
+        return ()
+    selector = selector_as_dict(binding)
+    if selector.get("data_type") != "boolean":
+        return ()
+    true_value = selector.get("true_value")
+    false_value = selector.get("false_value")
+    if not isinstance(true_value, str) or not isinstance(false_value, str):
+        return ()
+    return (
+        BooleanBindingEncodedValue(encoded_value="1", boolean_meaning=True, registry_value=true_value),
+        BooleanBindingEncodedValue(encoded_value="0", boolean_meaning=False, registry_value=false_value),
+    )
+
+
+def binding_export_selector(binding: DataBindingDefinition) -> BindingExportSelector | None:
+    """Return the typed export projection embedded in ``binding.selector``.
+
+    Binding source-family selectors remain authoritative for business facts.
+    Export record resolution only needs the official record-coordinate
+    projection; this helper parses that projection once into a typed fixed-field
+    or row-field selector instead of letting callers probe the raw selector map.
+    """
+    try:
+        projection = _BindingExportProjection.model_validate(selector_as_dict(binding))
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed export selector projection: {exc}",
+        ) from exc
+    return projection.export_selector(binding_id=binding.id)
+
+
+def binding_row_set_selector(binding: DataBindingDefinition) -> BindingRowSetSelector | None:
+    """Return the typed row-set projection embedded in ``binding.selector``.
+
+    Source-family selectors remain the authority for fact-specific filters.
+    Row-set consumers only need the common ``fact = "row_field"`` projection
+    that names the detail grouping and the emitted row field, so callers parse
+    that projection once instead of probing the raw selector map.
+
+    Returns:
+        The parsed :class:`BindingRowSetSelector`, or ``None`` when the binding
+        selector does not declare a row-set projection.
+    """
+    try:
+        projection = _BindingRowSetProjection.model_validate(selector_as_dict(binding))
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed row-set selector projection: {exc}",
+        ) from exc
+    return projection.row_set_selector(binding_id=binding.id)
 
 
 def selector_against_model(

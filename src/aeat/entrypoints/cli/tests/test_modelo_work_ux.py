@@ -22,204 +22,22 @@ pin the modelo-work findings reported by the persona fleet:
 
 from __future__ import annotations
 
-import json
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-
-# Importing the wizard catalogue + persistence modules triggers
-# register_wizard_catalogue() at import time, exactly as the production CLI
-# startup does (cli.__init__ registers it for profile-key resolution). Without
-# this, an in-process `modelo work create` reaches _guard_modelo_applicability ->
-# projection_for_taxpayer -> get_setup_flow() and raises
-# WizardCatalogueNotRegisteredError (the catalogue is a process-global the real
-# CLI registers at startup; the in-process test must do the same).
-from ....application.wizard import _catalogue as _wizard_catalogue
-from ....application.wizard import _persistence as _wizard_persistence
-from ....core import Modelo
-from ....core.config import override_settings
-from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....core.resources import resources
+from ._modelo_work_ux_support import (
+    _create_calculable_work_unit,
+    _create_gb_non_resident_profile,
+    _create_profile,
+    _create_work_unit,
+    _invoke,
+)
+from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
-
-#: Profile id every test in this module creates via the CLI inside the span.
-_PROFILE_ID = "operator"
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    """Isolated storage root; each invoke opens the active UUID bucket session."""
-    dispose_engine()
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        try:
-            yield
-        finally:
-            dispose_engine()
-
-
-def _invoke(args: list[str]):
-    return invoke_cached_cli(args)
-
-
-def _create_profile(*, activity_start_date: str | None = None) -> None:
-    args = [
-        "config", "profile", "create", "operator",
-        "--quiet", "--accept-defaults",
-        "--entity-type", "natural_person",
-        "--irpf-income-categories", "actividad_economica",
-        "--tax-id", "12345678Z",
-        "--name", "Operator",
-        "--surnames", "Readiness",
-        "--activity", "design",
-    ]
-    if activity_start_date is not None:
-        args.extend(["--activity-start-date", activity_start_date])
-    result = _invoke(args)  # fmt: skip
-    assert result.exit_code == 0, result.output
-
-
-def _set_gb_non_resident_axes() -> None:
-    result = _invoke(
-        [
-            "config", "profile", "edit", "operator",
-            "--quiet",
-            "--fiscal-residency", "non_resident_irnr",
-            "--country-of-fiscal-residence", "GB",
-            "--representante-fiscal-nif", "12345678Z",
-            "--representante-fiscal-nombre", "Test Representative",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-
-
-def _attempt_incomplete_profile_create():
-    return _invoke(
-        [
-            "--format", "json",
-            "config", "profile", "create", _PROFILE_ID,
-            "--quiet", "--accept-defaults",
-            "--tax-id", "12345678Z",
-            "--activity", "design",
-        ],
-    )  # fmt: skip
-
-
-def _create_work_unit() -> str:
-    result = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
-            "--revision", "2019-y-siguientes",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return _payload(result.output)["work_unit_id"]
-
-
-def test_profile_create_refuses_incomplete_profile_before_modelo_work() -> None:
-    """Incomplete profiles must fail before a modelo work unit can exist."""
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
-
-    result = _attempt_incomplete_profile_create()
-
-    assert result.exit_code != 0
-    payload = json.loads(result.output)
-    assert payload["status"] == "error"
-    assert payload["error"]["code"] == "REFUSED_WIZARD_MISSING_FLAG"
-    assert payload["error"]["category"] == "REFUSED"
-    message = payload["error"]["message"]
-    assert "--entity-type" in message
-    assert "--name" in message
-    assert "--surnames" in message
-    assert read_profile_bucket(_PROFILE_ID) is None
-    assert "work_unit_id" not in result.output
-    assert "Traceback" not in result.output
-
-
-def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
-    _create_profile(activity_start_date="2026-05-01")
-
-    result = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "303",
-            "--year", "2026",
-            "--period", "1T",
-        ],
-    )  # fmt: skip
-
-    assert result.exit_code != 0
-    payload = json.loads(result.output)
-    assert payload["status"] == "error"
-    assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
-    message = payload["error"]["message"]
-    assert "pre-activity period" in message
-    assert "2026-05-01" in message
-    assert "2026-03-31" in message
-    assert "Traceback" not in result.output
-
-    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
-    assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
-
-
-def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
-    _create_profile(activity_start_date="2026-07-15")
-
-    result = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", Modelo.M130.value,
-            "--year", "2026",
-            "--period", "2T",
-            "--revision", "2019-y-siguientes",
-        ],
-    )  # fmt: skip
-
-    assert result.exit_code != 0
-    payload = json.loads(result.output)
-    assert payload["status"] == "error"
-    assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
-    message = payload["error"]["message"]
-    assert f"Modelo {Modelo.M130.value} 2026 2T is before" in message
-    assert "pre-activity period" in message
-    assert "2026-07-15" in message
-    assert "2026-06-30" in message
-    assert "Traceback" not in result.output
-
-    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
-    assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
-
-
-def _create_calculable_work_unit() -> str:
-    """Create a modelo 111 work unit whose `work calculate` succeeds with
-    no operator-supplied inputs - 111 has only manual casillas and formulas,
-    no source bindings that require ledger, profile, or prior-period data."""
-
-    result = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
-            "--revision", "2019-y-siguientes",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return _payload(result.output)["work_unit_id"]
 
 
 def test_work_history_records_creation_event(_isolated_cli_backend: Path) -> None:
@@ -323,6 +141,66 @@ def test_work_list_surfaces_revision_pointer_fields(_isolated_cli_backend: Path)
     assert unit["current_calculation_revision_id"] == revision_id
     assert unit["short_current_calculation_revision_id"] == revision_id[-12:]
     assert unit["filed_calculation_revision_id"] is None
+
+
+def test_work_status_and_list_show_presentado_after_file(_isolated_cli_backend: Path) -> None:
+    _create_profile(activity_start_date="2025-10-01")
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "4T",
+            "--revision", "2019-y-siguientes",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    work_unit_id = _payload(created.output)["work_unit_id"]
+
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            "--casilla", "05=0.00",
+            "--casilla", "06=0.00",
+            "--binding", "irpf.previous_year_economic_activity_net_income=13000",
+            "--binding", "modelo-130-resultados-negativos-anteriores=0",
+        ],
+    )  # fmt: skip
+    assert calculated.exit_code == 0, calculated.output
+
+    verified = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "verify",
+            "--modelo", "130", "--year", "2025", "--period", "4T",
+        ],
+    )  # fmt: skip
+    assert verified.exit_code == 0, verified.output
+    assert _payload(verified.output)["granted_verificado_completo"] is True
+
+    filed = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "file",
+            "--modelo", "130", "--year", "2025", "--period", "4T",
+        ],
+    )  # fmt: skip
+    assert filed.exit_code == 0, filed.output
+    filed_revision_id = _payload(filed.output)["calculation_revision_id"]
+
+    status = _invoke(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    assert status.exit_code == 0, status.output
+    status_payload = _payload(status.output)
+    assert status_payload["state"] == "presentado"
+    assert status_payload["filed_calculation_revision_id"] == filed_revision_id
+
+    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    list_payload = _payload(listed.output)
+    matching = [unit for unit in list_payload["work_units"] if unit["work_unit_id"] == work_unit_id]
+    assert len(matching) == 1
+    assert matching[0]["state"] == "presentado"
+    assert matching[0]["filed_calculation_revision_id"] == filed_revision_id
 
 
 def test_work_revisions_resolves_a_visible_filing_target(_isolated_cli_backend: Path) -> None:
@@ -437,11 +315,14 @@ def test_work_file_defaults_to_current_verified_for_visible_target(_isolated_cli
         [
             "app", "modelo", "work", "file",
             "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--output-language", "ca",
         ],
     )  # fmt: skip
     assert result.exit_code != 0
     assert "file requires a verified-complete revision" not in result.output
-    assert "filing-obligation window is not open" in result.output or "NO_PENDING_OBLIGATION" in result.output
+    assert "No pending filing obligation" not in result.output
+    assert "No hi ha cap obligació de presentació pendent" in result.output
+    assert "NO_PENDING_OBLIGATION" in result.output
 
 
 def test_work_dependencies_lists_cross_period_inventory(_isolated_cli_backend: Path) -> None:
@@ -516,8 +397,10 @@ def test_work_dependencies_honours_activity_start_date_pre_activity_scoping(
         [
             "config", "profile", "create", "operator",
             "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
             "--tax-id", "12345678Z",
             "--name", "Operator",
+            "--surnames", "Readiness",
             "--activity", "design",
             "--activity-start-date", "2025-01-01",
         ],
@@ -673,6 +556,43 @@ def test_work_create_without_revision_resumes_existing_visible_target(_isolated_
     assert second_payload["work_unit_id"] == first_payload["work_unit_id"]
 
 
+def test_work_create_without_revision_uses_registry_revision_for_supplied_year(
+    _isolated_cli_backend: Path,
+) -> None:
+    """A fresh create without ``--revision`` binds to the law-selected registry revision."""
+
+    created = _invoke(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--irpf-income-categories", "actividad_economica",
+            "--irpf-estimation-regime", "objetiva",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Readiness",
+            "--activity", "objective-estimation activity",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    expected_revision = resources().modelos.authority.snapshot("131", filing_year=2026, period="2T").revision.id
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "131", "--year", "2026", "--period", "2T",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert payload["status"] == "created"
+    assert payload["modelo"] == "131"
+    assert payload["filing_year"] == 2026
+    assert payload["period"] == {"filing_year": 2026, "code": "2T"}
+    assert payload["revision_id"] == expected_revision
+
+
 def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_backend: Path) -> None:
     """A different --name supplied on an idempotent re-create is not
     silently dropped: it is applied as a rename and the result says so."""
@@ -739,8 +659,7 @@ def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident(
 ) -> None:
     """A non-resident M210 profile gets discovery/Sede guidance, not work-create."""
 
-    _create_profile()
-    _set_gb_non_resident_axes()
+    _create_gb_non_resident_profile()
     added = _invoke(
         [
             "app", "ledger", "add",
@@ -773,7 +692,20 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year(
     DANA rules do not apply to a 2024 filing.
     """
 
-    _create_profile()
+    created = _invoke(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--irpf-income-categories", "actividad_economica",
+            "--irpf-estimation-regime", "objetiva",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Readiness",
+            "--activity", "objective-estimation activity",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
     result = _invoke(
         [
             "app", "modelo", "work", "create",

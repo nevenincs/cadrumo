@@ -25,6 +25,9 @@ from .._ratios import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "19191919-1919-4919-8919-191919191919"
+_OTHER_BUCKET_ID = "20202020-2020-4020-8020-202020202020"
+
 
 class TestEligible:
     def test_eligible_lists_every_eligible_category(self) -> None:
@@ -56,10 +59,10 @@ class TestEligible:
 class TestValidate:
     def test_validate_empty_profile_is_clean(self) -> None:
         report = validate_ratios_profile(
-            bucket_id="bucket-001",
+            bucket_id=_BUCKET_ID,
             profile=UsageRatioProfile(),
         )
-        assert report.bucket_id == "bucket-001"
+        assert report.bucket_id == _BUCKET_ID
         assert report.profile_present is False
         assert report.overrides_count == 0
         assert report.findings == ()
@@ -81,7 +84,7 @@ class TestValidate:
         present, absent = categories[0], categories[1]
         profile = UsageRatioProfile(ratios={present: Decimal("0.30")})
         report = validate_ratios_profile(
-            bucket_id="b1",
+            bucket_id=_BUCKET_ID,
             profile=profile,
             require_overrides_for=(present, absent),
         )
@@ -97,7 +100,7 @@ class TestValidate:
         non_eligible = next(c for c in all_categories if c not in ELIGIBLE_USAGE_RATIO_CATEGORIES)
         profile = UsageRatioProfile()
         report = validate_ratios_profile(
-            bucket_id="b1",
+            bucket_id=_BUCKET_ID,
             profile=profile,
             require_overrides_for=(non_eligible,),
         )
@@ -118,7 +121,7 @@ class TestValidate:
         required = categories[:2] if len(categories) >= 2 else categories[:1]
         profile = UsageRatioProfile(ratios={c: Decimal("0.50") for c in required})
         report = validate_ratios_profile(
-            bucket_id="b1",
+            bucket_id=_BUCKET_ID,
             profile=profile,
             require_overrides_for=required,
         )
@@ -128,13 +131,13 @@ class TestValidate:
 
 class TestReportFields:
     def test_report_eligible_count_matches_domain_set(self) -> None:
-        report = validate_ratios_profile(bucket_id="b1", profile=UsageRatioProfile())
+        report = validate_ratios_profile(bucket_id=_BUCKET_ID, profile=UsageRatioProfile())
         assert report.eligible_count == len(ELIGIBLE_USAGE_RATIO_CATEGORIES)
 
 
 class TestRuntimeFacade:
     def test_bucket_wrappers_round_trip_through_active_runtime_bucket(self, tmp_path: Path) -> None:
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
             prior = set_usage_ratio(
                 bucket_id=profile.bucket_id,
                 category=SpendingCategory.TELEFONIA_MOVIL,
@@ -156,13 +159,13 @@ class TestRuntimeFacade:
             assert validate_ratios_for_bucket(bucket_id=profile.bucket_id).profile_present is False
 
     def test_bucket_wrappers_fail_closed_for_inactive_runtime_bucket(self, tmp_path: Path) -> None:
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a"):
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
             with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
                 set_usage_ratio(
-                    bucket_id="bucket-b",
+                    bucket_id=_OTHER_BUCKET_ID,
                     category=SpendingCategory.TELEFONIA_MOVIL,
                     ratio=Decimal("0.42"),
                 )
 
             with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
-                validate_ratios_for_bucket(bucket_id="bucket-b")
+                validate_ratios_for_bucket(bucket_id=_OTHER_BUCKET_ID)

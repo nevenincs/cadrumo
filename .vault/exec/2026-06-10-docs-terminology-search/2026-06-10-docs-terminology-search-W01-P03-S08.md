@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S08'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Build the golden-query retrieval verification sweep (prorrata, casilla labels, disposicion transitoria, Disenos field positions, four-language probes) asserting hits land on the preprocessed surfaces above an agreed score floor before sweep outputs are trusted (ADR D6)
 

@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from ....core.config import Settings, override_settings
+from ....core.resources import resources
 from ....tests.aeat_literal_fixtures import aeat_host
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -96,7 +97,7 @@ _UNSUPPORTED_WORK_CASES = (
         year=2024,
         period="0A",
         revision="2023-y-siguientes",
-        required_groups=(("HFP/887/2023",), ("50",), (_SEDE_HOST, "Sede")),
+        required_groups=(("HFP/886/2023",), ("50",), (_SEDE_HOST, "Sede")),
     ),
 )
 
@@ -131,6 +132,8 @@ def test_work_create_unsupported_modelo_refuses_with_legal_authority(case: Unsup
         assert any(token in output for token in required_group), (
             f"modelo {case.modelo} output did not contain any of {required_group!r}: {output!r}"
         )
+    if case.modelo == "721":
+        assert "HFP/887/2023" not in output, "M721 must not cite the custodian-side 172/173 order"
     assert "Modelo desconocido" not in output
     assert "could not evaluate" not in output
 
@@ -138,15 +141,13 @@ def test_work_create_unsupported_modelo_refuses_with_legal_authority(case: Unsup
 def test_registry_entries_for_unsupported_local_work_are_legally_grounded() -> None:
     """Manual-casilla registry entries for unsupported work-create modelos cite their legal corpus."""
 
-    from ....core.resources import bundled_path
-    from ....domain.calculations.registry import load_registry_tree
-
     expected = {
         "151": ("ley-35-2006:art-93", "boe-modelo-151-form"),
         "714": ("ley-19-1991:art-28", "boe-modelo-714-form"),
         "721": ("ley-11-2021:da-10", "boe-modelo-721-2023-form"),
     }
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos = resources().modelos.all()
+    catalogues = resources().modelos.authority.catalogues
     modelo_ids = {modelo.id for modelo in modelos}
 
     for modelo, (legal_id, source_id) in expected.items():

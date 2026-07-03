@@ -21,10 +21,9 @@ Covered:
   as an explicit ``UNSUPPORTED_IVA_CATEGORY`` issue (non-silent), never a silent
   mis-bucket into a normal deduction.
 
-The export / domestic-reverse-charge routing gaps surfaced during this verification
-are reported separately (no M303 binding selects ``export_third_country_zero_rated``
-or ``domestic_reverse_charge``); they are findings for the coordinator to grade, not
-fixed here.
+The domestic-reverse-charge routing gap surfaced during this verification is
+reported separately; export and export-assimilated base rows are current Modelo 303
+ledger bindings.
 
 Legal grounding: LIVA (Ley 37/1992) art. 84.Uno.2 (inversion del sujeto pasivo en
 adquisiciones intracomunitarias), art. 92 (cuotas deducibles), arts. 148-163
@@ -47,7 +46,7 @@ from ....domain.calculations.registry import (
     resolve_bound_inputs_by_casilla_id,
     validated_casilla_id,
 )
-from ....domain.iva._schema import IvaCategory
+from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -58,7 +57,10 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation._iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
+from ...aggregation import (
+    IvaLedgerAggregationIssueReason,
+    aggregate_iva_ledger_observations,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -138,7 +140,7 @@ def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota(tmp_path:
             inputs=inputs,
             binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
-    )
+        )
 
     # The intracom cuota self-assesses as output IVA (devengada leg, art. 84)...
     assert result.values[_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA] == intracom_cuota
@@ -180,10 +182,10 @@ def test_intracom_cuota_is_not_silently_dropped_from_deducible(tmp_path: Path) -
 
 def _recargo_purchase() -> Transaction:
     """A recargo-equivalencia retailer purchase: input IVA + RE surcharge, non-deductible."""
-    from ....domain.transactions._models import derive_transaction_id
+    from ....domain.transactions import derive_transaction_id
 
     raw = RawTransaction(
-        transaction_id="recargo-purchase-001",
+        provider_transaction_id="recargo-purchase-001",
         booked_date=date(2025, 2, 1),
         value_date=date(2025, 2, 1),
         amount=Decimal("121.00"),
@@ -204,7 +206,9 @@ def _recargo_purchase() -> Transaction:
         transaction_id=derive_transaction_id(raw),
         raw=raw,
         direction=TransactionDirection.OUTGOING,
+        group_label=None,
         business_classification=BusinessClassification.BUSINESS,
+        source_jurisdiction="ES",
         iva_category=IvaCategory.RECARGO_EQUIVALENCIA,
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("0.21"),

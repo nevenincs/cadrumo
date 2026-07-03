@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import lru_cache
 
 import pytest
 
@@ -18,13 +19,14 @@ from .....core.resources import bundled_path
 
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via _scenarios.
-from .. import CasillaId, validated_casilla_id
+from .._ids import CasillaId, validated_casilla_id
 from .._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -40,11 +42,13 @@ def _casilla_id(value: object) -> CasillaId:
 
 _C0003 = _casilla_id("0003")
 _C0426 = _casilla_id("0426")
+_C0427 = _casilla_id("0427")
 _C0429 = _casilla_id("0429")
 _C0432 = _casilla_id("0432")
 _C0433 = _casilla_id("0433")
 _C0435 = _casilla_id("0435")
 _C0461 = _casilla_id("0461")
+_C0463 = _casilla_id("0463")
 _C0467 = _casilla_id("0467")
 _C0468 = _casilla_id("0468")
 _C0500 = _casilla_id("0500")
@@ -86,14 +90,53 @@ _C1585 = _casilla_id("1585")
 _RELATION_ZERO_VALUES_2025 = {
     "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
     "renta-2025-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2025-rel-115-retenciones-trimestrales": Decimal("0"),
     "renta-2025-rel-123-retenciones-trimestrales": Decimal("0"),
     "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
     "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
-    "renta-2025-rel-180-retenciones-anuales": Decimal("0"),
     "renta-2025-rel-190-retenciones-anuales": Decimal("0"),
     "renta-2025-rel-193-retenciones-anuales": Decimal("0"),
 }
+
+
+@lru_cache(maxsize=1)
+def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]]:
+    modelo, _catalogues = _committed_modelo("100")
+    revision = modelo.revisions["2025"]
+    refs: dict[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]] = {
+        casilla.id: (
+            tuple(str(ref) for ref in casilla.legal_refs),
+            tuple(str(ref) for ref in casilla.source_refs),
+        )
+        for casilla in revision.casillas
+    }
+    refs.update(
+        {
+            formula.target_casilla_id: (
+                tuple(str(ref) for ref in formula.legal_refs),
+                tuple(str(ref) for ref in formula.source_refs),
+            )
+            for formula in revision.formulas
+        },
+    )
+    return refs
+
+
+def _expected_output(
+    *,
+    target_casilla_id: CasillaId,
+    value: Decimal,
+    operand_refs: tuple[object, ...] = (),
+    operand_casilla_refs: tuple[CasillaId, ...] = (),
+) -> RegistryScenarioExpectedOutput:
+    legal_refs, source_refs = _m100_2025_refs_by_target()[target_casilla_id]
+    return RegistryScenarioExpectedOutput(
+        target_casilla_id=target_casilla_id,
+        value=value,
+        operand_refs=tuple(str(ref) for ref in operand_refs),
+        operand_casilla_refs=operand_casilla_refs,
+        legal_refs=legal_refs,
+        source_refs=source_refs,
+    )
 
 
 def _base_2025_inputs() -> dict[CasillaId, Decimal]:
@@ -110,8 +153,10 @@ def _base_2025_inputs() -> dict[CasillaId, Decimal]:
         # 0511 and 0512 are now computed via lookup_parameter against
         # renta-2025-minimo-contribuyente-base-2025 (state and per-CCAA
         # autonomic), and cannot be supplied as inputs.
-        _C0513: Decimal("0"),
-        _C0514: Decimal("0"),
+        # 0513 and 0514 are now computed via the mínimo por descendientes
+        # engine (renta-2025-profile-minimo-descendientes-estatal binding)
+        # and cannot be supplied
+        # as inputs; see the binding_values entry in _scenario_2025.
         _C0515: Decimal("0"),
         _C0516: Decimal("0"),
         _C0517: Decimal("0"),
@@ -172,6 +217,9 @@ def _scenario_2025(
             "renta-2025-profile-marriage-month-end": Decimal("0"),
             # BIN-pendiente fresh-filer baseline (2025 binding).
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
+            # aggregate is zero (Option A engine).
+            "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
@@ -190,10 +238,7 @@ def test_minimo_personal_y_familiar_aggregates_all_four_components_estatal() -> 
     covered by the live Renta WEB Open replay parity tests.
     """
 
-    from .._loader import load_registry_tree
-
-    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(m for m in modelos if m.id == "100")
+    modelo, _catalogues = _committed_modelo("100")
     revision = modelo.revisions["2025"]
     formula = next(f for f in revision.formulas if f.target_casilla_id == _C0519)
     expression = formula.expression.model_dump(exclude_none=True)
@@ -211,28 +256,31 @@ def test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_min
     for a contributor with no age/discapacidad/descendientes mínimos, so
     0519 = 5550.
 
-    0505 is computed as max(0, 0500 - 0527). Supplying 0003 (rendimientos trabajo)
-    = 1000 with all reductions and anualidades at 0 produces 0505 = 1000.
+    0505 is computed as max(0, 0500 - 0527). Casilla 0019 ("otros gastos", art.
+    19.2.f LIRPF) deducts min(2.000, rendimiento íntegro) before 0432, so
+    0003 (rendimientos trabajo) = 3000 nets to 0432 = 3000 - 2000 = 1000 with
+    all reductions and anualidades at 0, producing 0505 = 1000.
     With 0505 = 1000 < 0519 = 5550, 0521 must clip to 0505 = 1000.
     """
     expected_minimo = Decimal("5550.00")
     scenario = _scenario_2025(
         "minimo-clip-to-base-liquidable",
-        # 0003 → 0025 → 0432 = 1000 → 0435 = 1000 → 0500 = 1000 (no reductions)
+        # 0003 = 3000 → 0019 (otros gastos) = min(2000, 3000) = 2000
+        # → 0025 → 0432 = 3000 - 2000 = 1000 → 0435 = 1000 → 0500 = 1000 (no reductions)
         # → 0505 = max(0, 1000 - 0) = 1000  (0527 anualidades alimentos = 0)
-        overrides={_C0003: Decimal("1000.00")},
+        overrides={_C0003: Decimal("3000.00")},
         expected=(
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0500, value=Decimal("1000.00")),
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0505, value=Decimal("1000.00")),
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0519, value=expected_minimo),
-            RegistryScenarioExpectedOutput(
+            _expected_output(target_casilla_id=_C0500, value=Decimal("1000.00")),
+            _expected_output(target_casilla_id=_C0505, value=Decimal("1000.00")),
+            _expected_output(target_casilla_id=_C0519, value=expected_minimo),
+            _expected_output(
                 target_casilla_id=_C0521,
                 value=Decimal("1000.00"),
                 operand_refs=(_C0505, _C0519),
                 operand_casilla_refs=(_C0505, _C0519),
             ),
             # 0522 = min(0519 - 0521, 0510) = min(5550 - 1000, 0) = 0 (0510 default 0)
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0522, value=Decimal("0.00")),
+            _expected_output(target_casilla_id=_C0522, value=Decimal("0.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
@@ -252,15 +300,17 @@ def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> No
     #   0421 = max(0, 0419 - 0418) = 5000
     #   0433 = min(0421, 25% of 0432) = min(5000, 7500) = 5000
     # Expected: 0435 = 30000 - 5000 - 0 = 25000.
+    # 0003 = 32000 nets to 0432 = 30000 after the 0019 "otros gastos" deduction
+    # (art. 19.2.f LIRPF, min(2000, rendimiento íntegro)).
     scenario = _scenario_2025(
         "base-imponible-with-negative-capital-gains",
         overrides={
-            _C0003: Decimal("30000.00"),  # trabajo income → propagates to 0025 → 0432
+            _C0003: Decimal("32000.00"),  # trabajo income → nets to 0432 = 30000 after otros gastos
             _C1585: Decimal("5000.00"),  # G/P pérdidas → 1607 → 0419 → 0421 → 0433 cap
         },
         expected=(
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0432, value=Decimal("30000.00")),
-            RegistryScenarioExpectedOutput(
+            _expected_output(target_casilla_id=_C0432, value=Decimal("30000.00")),
+            _expected_output(
                 target_casilla_id=_C0435,
                 value=Decimal("25000.00"),
                 operand_refs=(_C0432, _C0433, _C1389),
@@ -281,7 +331,9 @@ def test_base_liquidable_general_applies_reductions() -> None:
     base_inputs = _base_2025_inputs()
     base_inputs.update(
         {
-            _C0003: Decimal("40000.00"),  # → 0432 = 40000 → 0435 = 40000
+            # 0003 = 42000 nets to 0432 = 40000 after the 0019 "otros gastos"
+            # deduction (art. 19.2.f LIRPF, min(2000, rendimiento íntegro)).
+            _C0003: Decimal("42000.00"),  # → 0432 = 40000 → 0435 = 40000
             _C0501: Decimal("1000.00"),  # compensación bases liquidables negativas
         },
     )
@@ -304,16 +356,19 @@ def test_base_liquidable_general_applies_reductions() -> None:
             "renta-2025-profile-marriage-month-end": Decimal("0"),
             # BIN-pendiente fresh-filer baseline (2025 binding).
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
+            # aggregate is zero (Option A engine).
+            "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
         # Age 44 at year-end 2025 → no age increment → 0511 = 5,550 base only.
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
         expected_outputs=(
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0435, value=Decimal("40000.00")),
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0461, value=Decimal("3400.00")),
+            _expected_output(target_casilla_id=_C0435, value=Decimal("40000.00")),
+            _expected_output(target_casilla_id=_C0461, value=Decimal("3400.00")),
             # 0500 = 0435 - 0461 - 0501 = 40000 - 3400 - 1000 = 35600
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0500, value=Decimal("35600.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("35600.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
@@ -324,7 +379,8 @@ def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
     """0468 = min(0467, 10000, 30% * 0432) — aportación below both caps, full reducción applies.
 
     Oracle derivation (Art. 52 LIRPF, AEAT Renta 2025 Manual Parte 1):
-      trabajo rendimientos (0003) = 56,500 → 0025 = 0432 = 56,500
+      trabajo rendimientos (0003) = 58,500 → 0019 (otros gastos, art. 19.2.f)
+        = min(2000, 58500) = 2,000 → 0025 = 0432 = 58,500 - 2,000 = 56,500
       30% cap = 0.30 * 56,500 = 16,950
       plan de empleo aportación (0426) = 4,200 → 0467 = 4,200
       0468 = min(4200, 10000, 16950) = 4,200   (below both caps)
@@ -336,13 +392,91 @@ def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
     scenario = _scenario_2025(
         "plan-empleo-reduccion-below-caps",
         overrides={
-            _C0003: Decimal("56500.00"),  # trabajo → 0432 = 56,500
+            _C0003: Decimal("58500.00"),  # trabajo → nets to 0432 = 56,500 after otros gastos
             _C0426: Decimal("4200.00"),  # plan de empleo aportación → 0467 = 4,200
         },
         expected=(
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0467, value=Decimal("4200.00")),
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0468, value=Decimal("4200.00")),
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0500, value=Decimal("52300.00")),
+            _expected_output(target_casilla_id=_C0467, value=Decimal("4200.00")),
+            _expected_output(target_casilla_id=_C0468, value=Decimal("4200.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("52300.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    assert_registry_scenario_matches(report)
+
+
+def test_individual_aportaciones_prevision_social_reduce_base_general() -> None:
+    """Individual pension-plan contributions (casilla 0463) reduce the base imponible general.
+
+    Guards issue #574: an individual's own contributions to a personal
+    previsión-social system (plan de pensiones individual) give an Art. 51/52
+    LIRPF reducción to the base imponible general. Casilla 0463 ("Aportaciones
+    individuales y contribuciones empresariales ...", semantic_role
+    ``irpf_red_prevision_social_aportaciones_individuales``) is the individual
+    input box. The existing chain tests exercise the plan-de-empleo worker box
+    (0426) and the #545 employer box (0427); this locks the individual-side
+    (0463) path the issue names explicitly, flowing 0463 → 0467 → 0468 → base
+    liquidable general 0500.
+
+    Oracle derivation (Art. 52 LIRPF, AEAT Renta 2025 Manual Parte 1 —
+    "Reducciones por aportaciones a sistemas de previsión social"): an
+    individual aportación below the general €1.500 individual limit and below
+    the 30 % net-yield limit is fully reducible from the base general.
+      trabajo rendimientos (0003) = 32,000 → 0019 (otros gastos, art. 19.2.f)
+        = min(2000, 32000) = 2,000 → 0025 = 0432 = 32,000 - 2,000 = 30,000
+      30% cap = 0.30 * 30,000 = 9,000
+      individual aportación (0463) = 1,200 → 0467 = 1,200
+      1,200 < 1,500 (individual limit) and 1,200 < 9,000 (30% limit)
+      0468 = min(1200, 10000, 9000) = 1,200   (below every cap → full reducción)
+      0435 = 30,000 (no negative G/P balance); 0461 = 0; 0501 = 0
+      0500 = 30,000 - 1,200 - 0 - 0 = 28,800
+    """
+    scenario = _scenario_2025(
+        "individual-aportaciones-prevision-social-reduces-base",
+        overrides={
+            _C0003: Decimal("32000.00"),  # trabajo → nets to 0432 = 30,000 after otros gastos
+            _C0463: Decimal("1200.00"),  # individual aportación → 0467 = 1,200
+        },
+        expected=(
+            _expected_output(target_casilla_id=_C0467, value=Decimal("1200.00")),
+            _expected_output(target_casilla_id=_C0468, value=Decimal("1200.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("28800.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    assert_registry_scenario_matches(report)
+
+
+def test_plan_de_empleo_employer_contribution_reduces_base_general() -> None:
+    """Employer plan-de-empleo contributions (casilla 0427) reduce the base imponible general.
+
+    Guards issue #545: the Art. 52 LIRPF reducción for employer pension-plan
+    (plan de empleo) contributions must flow through the previsión-social chain
+    and reduce the base liquidable general. Casilla 0427 ("Contribuciones
+    empresariales a sistemas de previsión social, excepto ... seguros colectivos
+    de dependencia") is the employer-side input box; the existing chain tests
+    exercise the worker-side box (0426), so this locks the 0427 path the issue
+    names explicitly.
+
+    Oracle derivation (Art. 51/52 LIRPF, AEAT Renta 2025 Manual Parte 1):
+      trabajo rendimientos (0003) = 42,000 → 0019 (otros gastos, art. 19.2.f)
+        = min(2000, 42000) = 2,000 → 0025 = 0432 = 42,000 - 2,000 = 40,000
+      30% cap = 0.30 * 40,000 = 12,000
+      employer contribution (0427) = 6,000 → 0467 = 6,000
+      0468 = min(6000, 10000, 12000) = 6,000   (below both caps)
+      0435 = 40,000 (no negative G/P balance); 0461 = 0; 0501 = 0
+      0500 = 40,000 - 6,000 - 0 - 0 = 34,000
+    """
+    scenario = _scenario_2025(
+        "plan-empleo-employer-contribution-reduces-base",
+        overrides={
+            _C0003: Decimal("42000.00"),  # trabajo → nets to 0432 = 40,000 after otros gastos
+            _C0427: Decimal("6000.00"),  # employer contribution → 0467 = 6,000
+        },
+        expected=(
+            _expected_output(target_casilla_id=_C0467, value=Decimal("6000.00")),
+            _expected_output(target_casilla_id=_C0468, value=Decimal("6000.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("34000.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
@@ -353,7 +487,8 @@ def test_plan_de_empleo_reduccion_capped_at_10000() -> None:
     """0468 capped at €10,000 absolute limit when aportación exceeds the cap.
 
     Oracle derivation (Art. 52 LIRPF):
-      trabajo rendimientos (0003) = 80,000 → 0432 = 80,000
+      trabajo rendimientos (0003) = 82,000 → 0019 (otros gastos, art. 19.2.f)
+        = min(2000, 82000) = 2,000 → 0432 = 82,000 - 2,000 = 80,000
       30% cap = 0.30 * 80,000 = 24,000
       plan de empleo aportación (0426) = 15,000 → 0467 = 15,000
       0468 = min(15000, 10000, 24000) = 10,000   (€10k absolute cap applies)
@@ -362,14 +497,14 @@ def test_plan_de_empleo_reduccion_capped_at_10000() -> None:
     scenario = _scenario_2025(
         "plan-empleo-reduccion-capped-10k",
         overrides={
-            _C0003: Decimal("80000.00"),  # trabajo → 0432 = 80,000
+            _C0003: Decimal("82000.00"),  # trabajo → nets to 0432 = 80,000 after otros gastos
             _C0426: Decimal("15000.00"),  # plan de empleo aportación → 0467 = 15,000
         },
         expected=(
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0467, value=Decimal("15000.00")),
+            _expected_output(target_casilla_id=_C0467, value=Decimal("15000.00")),
             # 0468 = min(15000, 10000, 24000) = 10,000
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0468, value=Decimal("10000.00")),
-            RegistryScenarioExpectedOutput(target_casilla_id=_C0500, value=Decimal("70000.00")),
+            _expected_output(target_casilla_id=_C0468, value=Decimal("10000.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("70000.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())

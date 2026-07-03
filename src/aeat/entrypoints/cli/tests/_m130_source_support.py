@@ -6,7 +6,8 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from ....application.user_profile._orchestration import profile_storage_session
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....application.user_profile import profile_storage_session
 from ....core import resolve_active_bucket_id
 from ....domain.transactions import (
     BusinessClassification,
@@ -15,7 +16,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 
@@ -41,7 +41,7 @@ def seed_m130_income_transaction(
     income = Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id=f"m130-income-{source_key}-{filing_year}",
+                provider_transaction_id=f"m130-income-{source_key}-{filing_year}",
                 booked_date=value_date,
                 value_date=value_date,
                 amount=amount,
@@ -59,7 +59,9 @@ def seed_m130_income_transaction(
                 raw_fields={"source_kind": "m130_oracle_income", "source_key": source_key},
             ),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
             "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
             "business_pct": None,
             "category_id": None,
             "taxable_base": amount,
@@ -102,7 +104,7 @@ def seed_m130_expense_transaction(
     expense = Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id=f"m130-expense-{source_key}-{filing_year}",
+                provider_transaction_id=f"m130-expense-{source_key}-{filing_year}",
                 booked_date=value_date,
                 value_date=value_date,
                 amount=amount,
@@ -120,7 +122,9 @@ def seed_m130_expense_transaction(
                 raw_fields={"source_kind": "m130_oracle_expense", "source_key": source_key},
             ),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
             "business_pct": None,
             "category_id": None,
             "taxable_base": amount,
