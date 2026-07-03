@@ -235,17 +235,6 @@ def _resolve_advisory_message_default(predicate_id: str) -> str | None:
             "rehabilitation amounts); the deducción was abolished for later acquisitions. "
             "Confirm the acquisition date qualifies before filing."
         )
-    if predicate_id in {
-        "modelo-100-2024-anualidades-alimentos-hijos-revisar-cuota-escala-separada",
-        "modelo-100-2025-anualidades-alimentos-hijos-revisar-cuota-escala-separada",
-    }:
-        return (
-            "Anualidades por alimentos a favor de los hijos are declared (casilla 0527 > 0). "
-            "These amounts receive a separate-escala treatment (LIRPF art. 64 for the state "
-            "scale and art. 75 for the autonomic scale) that is applied in the current cuota "
-            "chain without the statutory mínimo-por-descendientes gating, so the resulting "
-            "cuota may under-tax the payer. Review the cuota íntegra before filing."
-        )
     return None
 
 
@@ -260,11 +249,10 @@ _PREDICATE_PROFILE_FLAG_ENABLED = _re.compile(r'^profile_flag_enabled\("(?P<fiel
 # advisory_when_positive(["casilla_id"]) — single-casilla positive advisory:
 # fires (advisory shown) iff the one named casilla value is strictly > 0.
 # ADVISORY-only; see the advisory_when_positive branch in
-# _evaluate_advisory_predicate_fires. Authored for the M100 anualidades por
-# alimentos (casilla 0527), whose separate-escala treatment (LIRPF art. 64 /
-# art. 75) runs without the statutory mínimo-descendientes gating in the current
-# cuota chain — a payer declaring anualidades may be under-taxed, so the
-# populated box surfaces a non-blocking cuota-review prompt.
+# _evaluate_advisory_predicate_fires. A generic single-casilla positive-value
+# advisory operator; it carries no modelo-specific prose of its own (the M100
+# anualidades por alimentos separate-escala it was first authored for is now a
+# fully computed, correctly-gated chain and no longer uses this advisory).
 _PREDICATE_ADVISORY_WHEN_POSITIVE = _re.compile(
     r"^advisory_when_positive\(\[(?P<ids>[^\]]*)\]\)$",
 )
