@@ -338,3 +338,30 @@ def test_amend_wizard_non_interactive_host_refuses_with_instructive_message() ->
     assert result.exit_code != 0
     assert "Traceback" not in result.output
     assert "interactive" in result.output.lower() or "console" in result.output.lower()
+
+
+def test_amend_wizard_kind_prompt_restricts_choices_to_period_permitted_set() -> None:
+    """The kind prompt offers and accepts only the resolved period's legally
+    permitted amendment kinds -- it never offers rectificativa for a
+    pre-boundary M303 period, matching the period-aware guard
+    ``amend_modelo_revision`` re-asserts downstream."""
+    import typer
+
+    from ....domain.modelos import CalculationRevisionAmendmentKind
+    from .._modelo_amend_wizard_cli import _prompt_amendment_kind
+
+    pre_boundary_period = Period.from_year_and_code(2024, "2T")
+    prompter = _ScriptedTextPrompter(deque(["complementaria"]))
+    kind = _prompt_amendment_kind(prompter, modelo="303", period=pre_boundary_period)
+    assert kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
+    assert "rectificativa" not in prompter.asked_prompts[0]
+
+    rejecting_prompter = _ScriptedTextPrompter(deque(["rectificativa"]))
+    with pytest.raises(typer.BadParameter):
+        _prompt_amendment_kind(rejecting_prompter, modelo="303", period=pre_boundary_period)
+
+    post_boundary_period = Period.from_year_and_code(2024, "3T")
+    post_prompter = _ScriptedTextPrompter(deque(["rectificativa"]))
+    post_kind = _prompt_amendment_kind(post_prompter, modelo="303", period=post_boundary_period)
+    assert post_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
+    assert "complementaria" not in post_prompter.asked_prompts[0]

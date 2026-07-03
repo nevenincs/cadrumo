@@ -685,6 +685,8 @@ application:
         unsupported_modelo: A tervezetkotes nem tamogatott a(z) %{modelo} modellhez;
           a regiszter manifesztjenek deklaralnia kell a tervezet kepesseget.
     errors:
+      amendment_complementaria_liability_decrease: 'A(z) {modelo} nyomtatvány {filing_year} adóévi {period} időszakára vonatkozó kiegészítő bevallás (complementaria) csökkentené a bevallott eredményt {baseline_result} értékről {corrected_result} értékre. Az autoliquidación rectificativa egységesítése előtt az önállóan benyújtott kiegészítő bevallás jogszerűen nem csökkentheti az adótartozást; ehelyett a helyesbítési kérelem eljárását kell alkalmazni.'
+      amendment_kind_not_permitted: 'A kért módosítási típus ({requested_kind}) jogilag nem elérhető a(z) {modelo} nyomtatványhoz, {filing_year} adóévhez, {period} időszakhoz. Az ehhez az időszakhoz elfogadott típusok: {accepted_kinds}.'
       amendment_registry_root_missing: Registry root %{registry_root} is missing;
         amendment overrides cannot be validated.
       amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -2870,6 +2872,7 @@ cli:
     summary_lifecycle: 'Modelo eletciklus: {steps}'
     summary_roots: 'Gyokerek: {roots}'
   diagnostics:
+    app_help: 'Helyi futásállapot- és munkamenet-diagnosztika.'
     browser:
       http_status_label: HTTP-állapot
       markers_label: Jelzők
@@ -2901,6 +2904,17 @@ cli:
       profile_label: Profil
       python_label: Python
       version_label: Verzió
+    run_health:
+      auth_header: 'Hitelesítési munkamenet:'
+      bad_date: '%{option} értékének ISO dátumnak kell lennie (ÉÉÉÉ-HH-NN); a kapott érték: %{value}.'
+      header: 'LLM-futásállapot:'
+      help: 'A legutóbbi LLM-futások időtartamának és a tárolt AEAT-munkamenet elévülésének helyi jelentése.'
+      no_run_data: 'Még nincs rögzített LLM-futásadat. Futtass egy LLM-alapú besorolást az adatok létrehozásához.'
+      no_session_message: 'Nem található tárolt AEAT-munkamenet a lemezen.'
+      provider_help: 'Az LLM-futásidő szakasz szűkítése erre a szolgáltatóra (pl. claude, antigravity, codex).'
+      session_stale_message: 'A tárolt AEAT-munkamenet túllépte az inaktivitási határidőt; egy élő olvasás újra hitelesíteni fog.'
+      since_help: 'Az LLM-futásnaplók alsó (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).'
+      until_help: 'Az LLM-futásnaplók felső (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).'
     summary:
       auth_no_session: A(z) %{provider} hitelesítési szolgáltatónak nincs kész munkamenete.
       auth_none: A hitelesítés nincs konfigurálva.
@@ -3743,11 +3757,18 @@ cli:
       pending: '%{count} AEAT bevallás utáni esemény igényel figyelmet: %{kinds}.
         Tekintsd át őket az ''aeat app live notifications list'' paranccsal.'
     prepare:
-      help: 'Végigvezet az adatelőkészítés lépésein egy modellhez/időszakhoz sorban: tranzakciók importálása, besorolásuk, beszerzési számla igazolások csatolása, üzleti számlák rögzítése, a főkönyv előkészítési hiányosságainak megoldása, majd a modell munkaegység elindítása vagy folytatása. Megmutatja az egyes lépések aktuális állapotát és a következő futtatandó parancsot. Csak olvasható; ismételten biztonságosan futtatható; soha nem lép kapcsolatba az AEAT-tal.'
-      modelo_help: 'Az AEAT modellazonosító, amelyhez az adatokat elő kell készíteni (pl. 130, 303, 100).'
+      help: 'Végigvezet az adatelőkészítés lépésein egy modellhez/időszakhoz sorban:
+        tranzakciók importálása, besorolásuk, beszerzési számla igazolások csatolása,
+        üzleti számlák rögzítése, a főkönyv előkészítési hiányosságainak megoldása,
+        majd a modell munkaegység elindítása vagy folytatása. Megmutatja az egyes
+        lépések aktuális állapotát és a következő futtatandó parancsot. Csak olvasható;
+        ismételten biztonságosan futtatható; soha nem lép kapcsolatba az AEAT-tal.'
+      modelo_help: Az AEAT modellazonosító, amelyhez az adatokat elő kell készíteni
+        (pl. 130, 303, 100).
       modelo_period_error: '{message}'
-      period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves), 01-12 (hónapok). Kombinálja a --year kapcsolóval az év kiválasztásához.'
-      year_help: 'Bevallási év (pl. 2026).'
+      period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
+        01-12 (hónapok). Kombinálja a --year kapcsolóval az év kiválasztásához.'
+      year_help: Bevallási év (pl. 2026).
     status:
       drafts_empty: Nincs mentett bevallástervezet.
       drafts_empty_with_work_units: Nincs mentett bevallástervezet – ez normális,
@@ -4950,6 +4971,8 @@ errors:
     refused_llm_validation: Egy nyelvi modell objektum nem ment át az érvényesítésen.
     refused_modelo_100_borrador_binding: A Modelo 100 tervezet értékei nem vehetők
       fel a számításhoz.
+    refused_modelo_amendment_complementaria_liability_decrease: 'A kiegészítő bevallás (complementaria) az autoliquidación rectificativa egységesítése előtt jogszerűen nem csökkentheti az adózó bevallott tartozását. Használja a helyesbítési kérelem eljárását a tartozást csökkentő javításhoz.'
+    refused_modelo_amendment_kind_not_permitted: 'A kért módosítási típus jogilag nem elérhető a feloldott bevallási időszakhoz. Az elfogadott típusok listája a hiba kontextusában található.'
     refused_modelo_amendment_override_casilla: A módosítás felülbírálata olyan mezőre
       irányul, amelyet a nyilvántartás nem deklarál az adott modelóhoz, évhez és időszakhoz.
     refused_modelo_amendment_verification: A módosítás javított mező-leképezése nem

@@ -18,7 +18,9 @@ import click
 import typer
 
 from ...application.modelo import (
+    AmendmentComplementariaLiabilityDecreaseError,
     AmendmentEvidenceMissingError,
+    AmendmentKindNotPermittedError,
     AmendmentTargetStateError,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -1081,6 +1083,8 @@ def work_amend(
         ModeloRecordNotFoundError,
         AmendmentEvidenceMissingError,
         AmendmentTargetStateError,
+        AmendmentKindNotPermittedError,
+        AmendmentComplementariaLiabilityDecreaseError,
         CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
         WorkUnitNotFoundError,

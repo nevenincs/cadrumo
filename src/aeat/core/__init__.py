@@ -57,6 +57,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ._amendment_kind_regime import (
+    AmendmentKindRegime,
+    AmendmentLiabilityDirection,
+    classify_amendment_liability_direction,
+    modelo_has_codified_amendment_regime,
+    permitted_amendment_kind_values,
+    resolve_amendment_kind_regime,
+)
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
@@ -127,6 +135,8 @@ __all__: list[str] = [
     "OUT_OF_SCOPE_OBLIGATIONS",
     "STRICT_FROZEN_CONFIG",
     "UNMODELED_OBLIGATIONS",
+    "AmendmentKindRegime",
+    "AmendmentLiabilityDirection",
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",
@@ -151,14 +161,17 @@ __all__: list[str] = [
     "TipoRentaIrnr",
     "accepted_period_codes",
     "accepted_period_patterns",
+    "classify_amendment_liability_direction",
     "classify_post_filing_event_kind",
     "derive_result_disposition",
     "freeze_toml",
     "freeze_toml_value",
     "iban_mod_97",
+    "modelo_has_codified_amendment_regime",
     "modelo_has_codified_disposition",
     "optional_extra_available",
     "parse_toml_text",
+    "permitted_amendment_kind_values",
     "pointer_path",
     "post_filing_event_is_actionable",
     "read_pointer",
@@ -166,6 +179,7 @@ __all__: list[str] = [
     "require_active_bucket_id",
     "require_optional_extra",
     "resolve_active_bucket_id",
+    "resolve_amendment_kind_regime",
     "resolve_repository_bucket_id",
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",

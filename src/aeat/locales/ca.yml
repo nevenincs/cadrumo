@@ -740,6 +740,8 @@ application:
         unsupported_modelo: El binding d'esborrany no esta suportat per al model %{modelo};
           el manifest del registre ha de declarar la capacitat d'esborrany.
     errors:
+      amendment_complementaria_liability_decrease: 'Una complementària per al model {modelo}, exercici {filing_year}, període {period} rebaixaria el resultat declarat de {baseline_result} a {corrected_result}. Abans de la unificació de l''autoliquidació rectificativa, una complementària presentada pel mateix obligat no pot disminuir legalment el deute; utilitzeu el procediment de sol·licitud de rectificació.'
+      amendment_kind_not_permitted: 'El tipus de rectificació sol·licitat {requested_kind} no està legalment disponible per al model {modelo}, exercici {filing_year}, període {period}. Tipus acceptats per a aquest període: {accepted_kinds}.'
       amendment_registry_root_missing: Registry root %{registry_root} is missing;
         amendment overrides cannot be validated.
       amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -2911,6 +2913,7 @@ cli:
     summary_lifecycle: 'Cicle de vida del model: {steps}'
     summary_roots: 'Arrels: {roots}'
   diagnostics:
+    app_help: 'Diagnòstic local de l''estat de les execucions i de la sessió.'
     browser:
       http_status_label: Estat HTTP
       markers_label: Marcadors
@@ -2943,6 +2946,17 @@ cli:
       profile_label: Perfil
       python_label: Python
       version_label: Versió
+    run_health:
+      auth_header: 'Sessió d''autenticació:'
+      bad_date: '%{option} ha de ser una data ISO (AAAA-MM-DD); s''ha rebut %{value}.'
+      header: 'Estat de les execucions de l''LLM:'
+      help: 'Mostra el temps recent de les execucions de l''LLM i l''estat de la sessió d''AEAT persistida (només local).'
+      no_run_data: 'Encara no hi ha telemetria d''execucions de l''LLM. Executa una classificació assistida per LLM per generar-la.'
+      no_session_message: 'No s''ha trobat cap sessió d''AEAT persistida al disc.'
+      provider_help: 'Restringeix la secció de temps de l''LLM a aquest proveïdor (p. ex. claude, antigravity, codex).'
+      session_stale_message: 'La sessió d''AEAT persistida ha superat el seu termini d''inactivitat; una lectura en viu tornarà a autenticar-se.'
+      since_help: 'Data ISO (AAAA-MM-DD) inferior inclusiva per als registres d''execució de l''LLM.'
+      until_help: 'Data ISO (AAAA-MM-DD) superior inclusiva per als registres d''execució de l''LLM.'
     summary:
       auth_no_session: El proveïdor d'autenticació %{provider} no té cap sessió preparada
       auth_none: L'autenticació no està configurada
@@ -3771,11 +3785,18 @@ cli:
       pending: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT requereixen
         atenció: %{kinds}. Revisa''ls amb ''aeat app live notifications list''.'
     prepare:
-      help: 'Recorre els passos de preparació de dades per a un model/període en ordre: importar transaccions, classificar-les, adjuntar justificants de factures de compra, registrar factures de negoci, resoldre les incidències de preparació del llibre i, finalment, iniciar o represa la unitat de treball del model. Mostra el progrés actual de cada pas i l''ordre exacta a executar a continuació. Només lectura; segur d''executar repetidament; mai contacta amb l''AEAT.'
-      modelo_help: 'Identificador de model AEAT per al qual preparar les dades (p. ex. 130, 303, 100).'
+      help: 'Recorre els passos de preparació de dades per a un model/període en ordre:
+        importar transaccions, classificar-les, adjuntar justificants de factures
+        de compra, registrar factures de negoci, resoldre les incidències de preparació
+        del llibre i, finalment, iniciar o represa la unitat de treball del model.
+        Mostra el progrés actual de cada pas i l''ordre exacta a executar a continuació.
+        Només lectura; segur d''executar repetidament; mai contacta amb l''AEAT.'
+      modelo_help: Identificador de model AEAT per al qual preparar les dades (p.
+        ex. 130, 303, 100).
       modelo_period_error: '{message}'
-      period_help: 'Període de declaració com a token AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
-      year_help: 'Any de declaració (p. ex. 2026).'
+      period_help: 'Període de declaració com a token AEAT: 1T-4T (trimestres), 0A
+        (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
+      year_help: Any de declaració (p. ex. 2026).
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
       drafts_empty_with_work_units: No hi ha esborranys de declaracions desats; es
@@ -5053,6 +5074,8 @@ errors:
     refused_llm_validation: Un objecte del model de llenguatge no ha superat la validació.
     refused_modelo_100_borrador_binding: Els valors de l'esborrany del Model 100 no
       es poden fer servir per al càlcul.
+    refused_modelo_amendment_complementaria_liability_decrease: 'Una complementària no pot disminuir legalment el deute declarat abans de la unificació de l''autoliquidació rectificativa. Utilitzeu el procediment de sol·licitud de rectificació per a una correcció que redueixi el deute.'
+    refused_modelo_amendment_kind_not_permitted: 'El tipus de rectificació sol·licitat no està legalment disponible per al període de declaració resolt. El conjunt de tipus acceptats figura en el context de l''error.'
     refused_modelo_amendment_override_casilla: Una sobreescriptura de la declaració
       complementària apunta a una casella que el registre no declara per a aquest
       model, any i període.
