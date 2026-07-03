@@ -105,6 +105,12 @@ from ._errors import (
     OverviewError,
     OverviewExplainError,
 )
+from ._pipeline_health import (
+    ModeloHealthRow,
+    ModeloReadinessState,
+    PipelineHealthReport,
+    build_pipeline_health_report,
+)
 
 if TYPE_CHECKING:
     from ..state_projection import OperatorStateProjection
@@ -286,6 +292,8 @@ __all__ = [
     "DataPrepStepId",
     "DataPrepStepState",
     "DataPrepWalkthrough",
+    "ModeloHealthRow",
+    "ModeloReadinessState",
     "ObligationCoverageReport",
     "OverviewAeatSubmissionState",
     "OverviewAgendaError",
@@ -303,6 +311,7 @@ __all__ = [
     "OverviewLocalFilingState",
     "OverviewPeriodState",
     "OverviewStatusReport",
+    "PipelineHealthReport",
     "SuppressedCalendarEntry",
     "actionable_post_filing_events",
     "build_data_prep_walkthrough",
@@ -314,6 +323,7 @@ __all__ = [
     "build_overview_calendar_events",
     "build_overview_explain",
     "build_overview_status_report",
+    "build_pipeline_health_report",
     "build_unsupported_work_create_modelos",
     "calendar_applicability_profile_keys_for_modelo",
     "calendar_censo_enrolment_profile_keys",

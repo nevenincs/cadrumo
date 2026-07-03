@@ -1,21 +1,25 @@
 """CLI commands for the ``aeat app overview`` subcommand group.
 
 Provides the ``status``, ``calendar``, ``agenda``, ``backlog``, ``explain``,
-and ``prepare`` verbs. All verbs are local-only: they never contact AEAT
-and apply no mutations to stored state. Help strings are localized via
-:func:`tr`; the docstrings here document internal logic and are not surfaced as
-operator-facing CLI help.
+``prepare``, and ``pipeline`` verbs. All verbs are local-only: they never
+contact AEAT and apply no mutations to stored state. Help strings are
+localized via :func:`tr`; the docstrings here document internal logic and are
+not surfaced as operator-facing CLI help.
 
 This module is the transport adapter over the application overview builders:
 :func:`build_overview_status_report`, :func:`build_overview_calendar`,
 :func:`build_overview_calendar_events`,
 :func:`calendar_events_from_modelo_records`,
-:func:`calendar_filing_evidence_from_sources`, and
-:func:`~aeat.application.overview.build_data_prep_walkthrough`. Each command
+:func:`calendar_filing_evidence_from_sources`,
+:func:`~aeat.application.overview.build_data_prep_walkthrough`, and
+:func:`~aeat.application.overview.build_pipeline_health_report`. Each command
 emits a typed payload such as :class:`OverviewStatusResult`,
 :class:`OverviewCalendarResult`, :class:`OverviewAgendaResult`,
-:class:`OverviewBacklogResult`, :class:`OverviewExplainResult`, or
-:class:`OverviewPrepareResult` through :func:`_emit_envelope`.
+:class:`OverviewBacklogResult`, :class:`OverviewExplainResult`,
+:class:`OverviewPrepareResult`, or :class:`OverviewPipelineResult` through
+:func:`_emit_envelope`. The ``pipeline`` verb resolves each period work
+unit's current :class:`~aeat.domain.modelos.CalculationRevision` to derive its
+readiness row.
 """
 
 from __future__ import annotations
@@ -61,6 +65,8 @@ from ._overview_payloads import (
     OverviewBacklogResult,
     OverviewCalendarResult,
     OverviewExplainResult,
+    OverviewPipelineModeloPayload,
+    OverviewPipelineResult,
     OverviewPrepareResult,
     OverviewPrepareStepPayload,
     OverviewStatusResult,
@@ -1318,3 +1324,169 @@ def overview_prepare(
                 ),
             )
     _emit_envelope(ctx, command="overview.prepare", result=typed_result, lines=lines, notices=notices)
+
+
+@app.command(
+    "pipeline",
+    help=tr(
+        "cli.overview.pipeline.help",
+        default=(
+            "Show cross-domain pipeline health for one filing period in one table: "
+            "ledger classification/review state, modelo readiness (calculated / "
+            "verified / filed / blocked) for every work unit in the period, and "
+            "outstanding verification findings. Read-only; safe to run repeatedly; "
+            "never contacts AEAT."
+        ),
+    ),
+)
+def overview_pipeline(
+    ctx: typer.Context,
+    year: int = typer.Option(
+        ...,
+        "--year",
+        help=tr("cli.overview.pipeline.year_help", default="Filing year (e.g. 2026)."),
+    ),
+    period: str = typer.Option(
+        ...,
+        "--period",
+        help=tr(
+            "cli.overview.pipeline.period_help",
+            default=(
+                "Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), "
+                "01-12 (months). Combine with --year to choose the year."
+            ),
+        ),
+    ),
+) -> None:
+    """Emit the cross-domain pipeline health report for one (filing_year, period) scope.
+
+    Delegates the readiness composition to
+    :func:`~aeat.application.overview.build_pipeline_health_report`; this
+    adapter resolves the active bucket, loads the period-scoped ledger status
+    report, the period's modelo work units, their current calculation
+    revisions, and the latest verification report per revision, then renders
+    the typed envelope plus outstanding-finding notices.
+    """
+    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...application.ledger import summarize_manual_transactions
+    from ...application.modelo import get_calculation_revision, list_verification_reports, list_work_units
+    from ...application.overview import ModeloReadinessState, build_pipeline_health_report
+    from ...domain.modelos import CalculationRevision, VerificationReport
+    from ._ledger_payloads import LedgerStatusResult
+
+    current = _state()
+    bucket_id = current.active_profile_bucket_id()
+    if bucket_id is None:
+        raise _no_active_profile_refusal()
+
+    canonical_period = _canonical_period(period, year=year)
+    transaction_repository = _tx_repo(current)
+    ledger_report = summarize_manual_transactions(
+        bucket_id=bucket_id,
+        period=canonical_period,
+        transaction_repository=transaction_repository,
+    )
+
+    all_work_units = list_work_units(
+        bucket_id=bucket_id,
+        include_discarded=False,
+        repository=WorkUnitCatalogueRepository(bucket_id=bucket_id),
+    )
+    work_units = tuple(
+        unit
+        for unit in all_work_units
+        if unit.filing_year == canonical_period.filing_year
+        and unit.period.registry_token == canonical_period.registry_token
+    )
+
+    calculation_repository = CalculationRevisionCatalogueRepository(bucket_id=bucket_id)
+    verification_repository = VerificationReportCatalogueRepository(bucket_id=bucket_id)
+    revisions_by_id: dict[str, CalculationRevision] = {}
+    reports_by_revision_id: dict[str, tuple[VerificationReport, ...]] = {}
+    for unit in work_units:
+        if unit.current_calculation_revision_id is None:
+            continue
+        revision = get_calculation_revision(
+            unit.current_calculation_revision_id,
+            calculation_repository=calculation_repository,
+        )
+        revisions_by_id[revision.calculation_revision_id] = revision
+        reports_by_revision_id[revision.calculation_revision_id] = list_verification_reports(
+            calculation_revision_id=revision.calculation_revision_id,
+            verification_repository=verification_repository,
+        )
+
+    report = build_pipeline_health_report(
+        bucket_id=bucket_id,
+        filing_year=canonical_period.filing_year,
+        period=canonical_period,
+        ledger_report=ledger_report,
+        work_units=work_units,
+        revisions_by_id=revisions_by_id,
+        reports_by_revision_id=reports_by_revision_id,
+    )
+
+    typed_result = OverviewPipelineResult(
+        filing_year=report.filing_year,
+        period=report.period,
+        ledger=LedgerStatusResult.model_validate(report.ledger.model_dump(mode="json")),
+        modelos=[
+            OverviewPipelineModeloPayload(
+                modelo=row.modelo,
+                work_unit_id=row.work_unit_id,
+                state=row.state.value,
+                blocking_finding_count=row.blocking_finding_count,
+                warning_finding_count=row.warning_finding_count,
+                summary=row.summary,
+                next_command=row.next_command,
+            )
+            for row in report.modelos
+        ],
+        total_blocking_findings=report.total_blocking_findings,
+        total_warning_findings=report.total_warning_findings,
+        ready=report.ready,
+    )
+
+    lines: list[str] = [
+        f"{tr('cli.overview.labels.period', default='Period')}\t{report.period} {report.filing_year}",
+        f"{tr('cli.overview.pipeline.labels.ready', default='ready')}\t{str(report.ready).lower()}",
+        "",
+        tr("cli.overview.pipeline.labels.ledger_section", default="Ledger:"),
+        f"  {tr('cli.ledger.labels.rows')}\t{report.ledger.total_count}",
+        f"  {tr('cli.ledger.labels.pending')}\t{report.ledger.pending_review_count}",
+        f"  {tr('cli.ledger.labels.reviewed')}\t{report.ledger.reviewed_count}",
+        f"  {tr('cli.ledger.labels.skipped')}\t{report.ledger.skipped_count}",
+        f"  {tr('cli.ledger.labels.readiness_issues')}\t{report.ledger.readiness_issue_count}",
+        "",
+        tr("cli.overview.pipeline.labels.modelos_section", default="Modelos:"),
+    ]
+    notices: list[Notice] = []
+    if not report.modelos:
+        no_units_message = tr(
+            "cli.overview.pipeline.no_work_units",
+            default="No modelo work units for this period yet.",
+        )
+        lines.append(f"  {no_units_message}")
+    for row in report.modelos:
+        lines.append(f"  [{row.state.value}] Modelo {row.modelo}: {row.summary}")
+        lines.append(f"    next: {row.next_command}")
+        if row.state is not ModeloReadinessState.FILED:
+            severity = NoticeSeverity.WARNING if row.state is ModeloReadinessState.BLOCKED else NoticeSeverity.INFO
+            notices.append(
+                Notice(
+                    severity=severity,
+                    code=f"overview.pipeline.modelo.{row.state.value}",
+                    message=row.summary,
+                    suggestion=row.next_command,
+                    context={"modelo": row.modelo, "state": row.state.value},
+                ),
+            )
+    lines.append("")
+    lines.append(
+        f"{tr('cli.overview.pipeline.labels.findings_section', default='Findings:')} "
+        f"{report.total_blocking_findings} blocking, {report.total_warning_findings} warning",
+    )
+
+    _emit_envelope(ctx, command="overview.pipeline", result=typed_result, lines=lines, notices=notices)

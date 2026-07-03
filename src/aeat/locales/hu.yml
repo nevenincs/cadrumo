@@ -2738,23 +2738,32 @@ cli:
       rename_source_help: A meglévő profilnév.
       rename_target_help: Az új profilnév.
       sandbox:
-        already_exists: 'Már létezik %{label} nevű sandbox. Válasszon másik nevet, vagy előbb dobja el a meglévőt.'
-        create_active_info: 'A sandbox most már az AKTÍV profil; minden parancs erre fut, amíg át nem vált vagy el nem dobja.'
-        create_from_profile_help: 'A sandbox feltöltése egy meglévő profil adataival (a forrás profilt csak olvassa).'
-        create_help: 'Új, elkülönített sandbox létrehozása és aktiválása.'
-        create_name_help: 'A sandbox neve.'
-        discard_active_profile: 'A(z) %{name} sandbox az aktív profil; váltson másik profilra, mielőtt eldobná.'
-        discard_help: 'Egy sandbox véglegesen törlése.'
-        discard_name_help: 'A sandbox neve (előtag nélkül).'
-        discard_not_a_sandbox: '%{name} nem sandbox; a sandbox felület megtagadja egy valódi profil eldobását.'
-        discard_requires_yes: 'A sandbox eldobása destruktív. Futtassa újra: ''aeat config profile sandbox discard %{name} --yes'' a megerősítéshez.'
-        discard_yes_help: 'A destruktív törlés megerősítése.'
-        help: 'Futtass kísérleteket egy elkülönített, eldobható workspace-ben, amely soha nem érinti a fő profil állapotát.'
-        list_help: 'Minden sandbox listázása.'
-        source_not_found: 'Nincs %{name} nevű élő profil, amelyből a sandbox feltölthető lenne.'
-        unknown_sandbox: 'Ismeretlen sandbox: %{name}. Futtassa az ''aeat config profile sandbox list'' parancsot a regisztrált sandboxok megtekintéséhez.'
-        use_help: 'Az aktív profil váltása egy meglévő sandboxra.'
-        use_name_help: 'A sandbox neve (előtag nélkül).'
+        already_exists: Már létezik %{label} nevű sandbox. Válasszon másik nevet,
+          vagy előbb dobja el a meglévőt.
+        create_active_info: A sandbox most már az AKTÍV profil; minden parancs erre
+          fut, amíg át nem vált vagy el nem dobja.
+        create_from_profile_help: A sandbox feltöltése egy meglévő profil adataival
+          (a forrás profilt csak olvassa).
+        create_help: Új, elkülönített sandbox létrehozása és aktiválása.
+        create_name_help: A sandbox neve.
+        discard_active_profile: A(z) %{name} sandbox az aktív profil; váltson másik
+          profilra, mielőtt eldobná.
+        discard_help: Egy sandbox véglegesen törlése.
+        discard_name_help: A sandbox neve (előtag nélkül).
+        discard_not_a_sandbox: '%{name} nem sandbox; a sandbox felület megtagadja
+          egy valódi profil eldobását.'
+        discard_requires_yes: 'A sandbox eldobása destruktív. Futtassa újra: ''aeat
+          config profile sandbox discard %{name} --yes'' a megerősítéshez.'
+        discard_yes_help: A destruktív törlés megerősítése.
+        help: Futtass kísérleteket egy elkülönített, eldobható workspace-ben, amely
+          soha nem érinti a fő profil állapotát.
+        list_help: Minden sandbox listázása.
+        source_not_found: Nincs %{name} nevű élő profil, amelyből a sandbox feltölthető
+          lenne.
+        unknown_sandbox: 'Ismeretlen sandbox: %{name}. Futtassa az ''aeat config profile
+          sandbox list'' parancsot a regisztrált sandboxok megtekintéséhez.'
+        use_help: Az aktív profil váltása egy meglévő sandboxra.
+        use_name_help: A sandbox neve (előtag nélkül).
       sar_catalogue_info: 'Ez az archívum a profilhoz tárolt összes személyesadat-kategóriát
         tartalmazza: azonosító és profiladatok, modelo munkaegységek, főkönyvi tételek,
         számítási revíziók és benyújtási nyilvántartások. A csatolt bizonyítékok bájtjai
@@ -3776,6 +3785,8 @@ cli:
       modelo_help: AEAT-nyomtatványazonosító (pl. 303, 130, 100).
       year_help: 'Az alkalmazhatóság-értékelés adóéve; alapértelmezés: az aktuális
         év.'
+    labels:
+      period: 'Időszak'
     local_work_units_unavailable: A helyi Modelo munkaegység-állapot nem tölthető
       be; ez az áttekintés a határidőnaptárból származik, és egy folyamatban lévő
       piszkozatot még esedékesként túljelezhet, vagy régebbi folyamatban lévő piszkozatokat
@@ -3783,6 +3794,16 @@ cli:
     period: Időszak
     period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
       01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
+    pipeline:
+      help: 'Mutassa a keresztdomén-folyamat állapotát egy adóbevallási időszakra egyetlen táblázatban: a főkönyv besorolási/felülvizsgálati állapota, az egyes modellek felkészültsége (kiszámítva / ellenőrizve / benyújtva / blokkolva) az időszak minden munkaegységéhez, valamint a fennálló ellenőrzési megállapítások. Csak olvasható; biztonságosan újra futtatható; soha nem lép kapcsolatba az AEAT-tal.'
+      labels:
+        findings_section: 'Megállapítások:'
+        ledger_section: 'Főkönyv:'
+        modelos_section: 'Modelók:'
+        ready: 'kész'
+      no_work_units: 'Ehhez az időszakhoz még nincs modell munkaegység.'
+      period_help: 'Bevallási időszak AEAT-tokenként: 1T-4T (negyedévek), 0A (éves), 01-12 (hónapok). Az évhez kombináld a --year kapcsolóval.'
+      year_help: 'Bevallási év (pl. 2026).'
     post_filing:
       pending: '%{count} AEAT bevallás utáni esemény igényel figyelmet: %{kinds}.
         Tekintsd át őket az ''aeat app live notifications list'' paranccsal.'

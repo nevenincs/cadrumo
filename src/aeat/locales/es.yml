@@ -2815,23 +2815,32 @@ cli:
       rename_source_help: Nombre actual del perfil
       rename_target_help: Nuevo nombre del perfil
       sandbox:
-        already_exists: 'Ya existe un sandbox llamado %{label}. Elija otro nombre o descarte primero el existente.'
-        create_active_info: 'El sandbox es ahora el perfil ACTIVO; todos los comandos se ejecutan sobre él hasta que cambie de perfil o lo descarte.'
-        create_from_profile_help: 'Copia los datos de un perfil existente al sandbox (el perfil de origen solo se lee).'
-        create_help: 'Crea un nuevo sandbox aislado y lo activa.'
-        create_name_help: 'Nombre del sandbox.'
-        discard_active_profile: 'El sandbox %{name} es el perfil activo; cambie a otro perfil antes de descartarlo.'
-        discard_help: 'Elimina permanentemente un sandbox.'
-        discard_name_help: 'Nombre del sandbox (sin el prefijo).'
-        discard_not_a_sandbox: '%{name} no es un sandbox; la superficie de sandbox se niega a descartar un perfil real.'
-        discard_requires_yes: 'Descartar un sandbox es destructivo. Vuelva a ejecutar ''aeat config profile sandbox discard %{name} --yes'' para confirmar.'
-        discard_yes_help: 'Confirma la eliminación destructiva.'
-        help: 'Ejecuta experimentos en un bucket aislado y descartable que nunca afecta al estado del perfil principal.'
-        list_help: 'Lista todos los sandboxes.'
-        source_not_found: 'No existe ningún perfil activo llamado %{name} para copiar al sandbox.'
-        unknown_sandbox: 'Sandbox desconocido: %{name}. Ejecute ''aeat config profile sandbox list'' para ver los sandboxes registrados.'
-        use_help: 'Cambia el perfil activo a un sandbox existente.'
-        use_name_help: 'Nombre del sandbox (sin el prefijo).'
+        already_exists: Ya existe un sandbox llamado %{label}. Elija otro nombre o
+          descarte primero el existente.
+        create_active_info: El sandbox es ahora el perfil ACTIVO; todos los comandos
+          se ejecutan sobre él hasta que cambie de perfil o lo descarte.
+        create_from_profile_help: Copia los datos de un perfil existente al sandbox
+          (el perfil de origen solo se lee).
+        create_help: Crea un nuevo sandbox aislado y lo activa.
+        create_name_help: Nombre del sandbox.
+        discard_active_profile: El sandbox %{name} es el perfil activo; cambie a otro
+          perfil antes de descartarlo.
+        discard_help: Elimina permanentemente un sandbox.
+        discard_name_help: Nombre del sandbox (sin el prefijo).
+        discard_not_a_sandbox: '%{name} no es un sandbox; la superficie de sandbox
+          se niega a descartar un perfil real.'
+        discard_requires_yes: Descartar un sandbox es destructivo. Vuelva a ejecutar
+          'aeat config profile sandbox discard %{name} --yes' para confirmar.
+        discard_yes_help: Confirma la eliminación destructiva.
+        help: Ejecuta experimentos en un bucket aislado y descartable que nunca afecta
+          al estado del perfil principal.
+        list_help: Lista todos los sandboxes.
+        source_not_found: No existe ningún perfil activo llamado %{name} para copiar
+          al sandbox.
+        unknown_sandbox: 'Sandbox desconocido: %{name}. Ejecute ''aeat config profile
+          sandbox list'' para ver los sandboxes registrados.'
+        use_help: Cambia el perfil activo a un sandbox existente.
+        use_name_help: Nombre del sandbox (sin el prefijo).
       sar_catalogue_info: 'Este archivo contiene todas las categorías de datos personales
         del perfil: identidad y datos del perfil, unidades de trabajo de modelos,
         movimientos del libro, revisiones de cálculo y registros de presentación.
@@ -3844,6 +3853,8 @@ cli:
       modelo_help: Identificador del modelo AEAT (p. ej. 303, 130, 100).
       year_help: Ejercicio fiscal para evaluar la aplicabilidad; por defecto, el año
         actual.
+    labels:
+      period: 'Periodo'
     local_work_units_unavailable: No se pudo cargar el estado local de las unidades
       de trabajo de Modelo; esta vista se deriva del calendario de plazos y puede
       sobrenotificar un borrador en curso como aún pendiente u omitir borradores en
@@ -3851,6 +3862,16 @@ cli:
     period: Periodo
     period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual),
       01-12 (meses). Combínelo con --year para elegir el año.'
+    pipeline:
+      help: 'Muestra la salud del flujo de trabajo entre dominios para un periodo de declaración en una sola tabla: estado de clasificación y revisión del libro contable, preparación de cada modelo (calculado / verificado / presentado / bloqueado) para cada unidad de trabajo del periodo, y hallazgos de verificación pendientes. Solo lectura; seguro de ejecutar repetidamente; nunca contacta con la AEAT.'
+      labels:
+        findings_section: 'Hallazgos:'
+        ledger_section: 'Libro contable:'
+        modelos_section: 'Modelos:'
+        ready: 'preparado'
+      no_work_units: 'Todavía no hay unidades de trabajo de modelo para este periodo.'
+      period_help: 'Periodo de declaración como token de la AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (meses). Combínalo con --year para elegir el año.'
+      year_help: 'Año de declaración (p. ej. 2026).'
     post_filing:
       pending: '%{count} evento(s) posteriores a la presentación de AEAT requieren
         atención: %{kinds}. Revísalos con ''aeat app live notifications list''.'
