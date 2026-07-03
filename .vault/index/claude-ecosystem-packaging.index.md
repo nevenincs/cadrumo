@@ -50,7 +50,8 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-W04-P11-S42]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W05-P12-S43]]'
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
-  - '[[2026-07-03-claude-ecosystem-packaging-audit]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-close-honesty-review-audit]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-code-review-audit]]'
   - '[[2026-07-03-claude-ecosystem-packaging-plan]]'
   - '[[2026-07-03-claude-ecosystem-packaging-research]]'
 ---
@@ -67,7 +68,8 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 
 ### audit
 
-- `2026-07-03-claude-ecosystem-packaging-audit` - `claude-ecosystem-packaging` audit: `campaign code review`
+- `2026-07-03-claude-ecosystem-packaging-close-honesty-review-audit` - `claude-ecosystem-packaging` audit: `campaign close honesty review`
+- `2026-07-03-claude-ecosystem-packaging-code-review-audit` - `claude-ecosystem-packaging` audit: `campaign code review`
 
 ### exec
 
