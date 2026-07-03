@@ -26,20 +26,20 @@ aeat config auth providers
 ```
 
 The list marks each provider as `disponible` (available now) or `reservado (no
-disponible aún)` (reserved, not available yet). Only two are available:
+disponible aún)` (reserved, not available yet). Three are available:
 
 - `certificate` — your digital certificate file (certificado digital).
   Available.
-- `clave_movil` — mobile-based Cl@ve. Available.
+- `clave_movil` — mobile-based Cl@ve, confirmed on your phone. Available.
+- `clave_permanente` — Cl@ve Permanente, a DNI/NIE and password login.
+  Available.
 
-Three more are listed but reserved, so you cannot configure them yet:
+Two more are listed but reserved, so you cannot configure them yet:
 
 - `clave_pin` — Cl@ve PIN (a one-time code system from AEAT). Reserved.
-- `clave_permanente` — Cl@ve Permanente (a username and password for
-  government services). Reserved.
 - `dnie_pkcs` — the national ID card (DNI electrónico). Reserved.
 
-Configure one of the two available providers.
+Configure one of the available providers.
 
 ## Configure a provider
 

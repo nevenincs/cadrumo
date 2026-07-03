@@ -23,7 +23,7 @@ def test_catalogue_carries_supported_entries() -> None:
 
 
 def test_catalogue_distinguishes_implemented_and_reserved_slots() -> None:
-    assert implemented_auth_provider_ids() == ("certificate", "clave_movil")
+    assert implemented_auth_provider_ids() == ("certificate", "clave_movil", "clave_permanente")
     assert known_auth_provider_ids() == (
         "certificate",
         "clave_movil",
@@ -32,7 +32,7 @@ def test_catalogue_distinguishes_implemented_and_reserved_slots() -> None:
         "dnie_pkcs",
     )
     reserved = {entry.id for entry in AUTH_PROVIDER_CATALOGUE if not entry.implemented}
-    assert reserved == {"clave_pin", "clave_permanente", "dnie_pkcs"}
+    assert reserved == {"clave_pin", "dnie_pkcs"}
 
 
 def test_list_auth_providers_returns_a_non_empty_immutable_catalogue() -> None:
