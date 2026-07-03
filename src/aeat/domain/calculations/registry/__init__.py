@@ -209,7 +209,13 @@ from ._convenio import (
     ConvenioTreaty,
     load_convenio_authority,
 )
-from ._corpus_catalogue import verify_source_catalogue, verify_source_file
+from ._corpus_catalogue import (
+    CORPUS_SOURCES_INSTALL_HINT,
+    CorpusCompanionAdvisory,
+    is_companion_corpus_binary,
+    verify_source_catalogue,
+    verify_source_file,
+)
 from ._coverage import (
     EvidenceTierCoverageGate,
     ModelLawCoverageLedger,
@@ -476,6 +482,7 @@ __all__ = [
     "CENSO_MODELO_ERROR_CODES",
     "CENSO_MODELO_EVENT_KINDS",
     "CENSO_MODELO_SERVICE_OWNER",
+    "CORPUS_SOURCES_INSTALL_HINT",
     "GROI_ORACLE_ID",
     "INVOICE_BINDING_SOURCE_KINDS",
     "IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS",
@@ -519,6 +526,7 @@ __all__ = [
     "ConvenioOverride",
     "ConvenioOverrideRow",
     "ConvenioTreaty",
+    "CorpusCompanionAdvisory",
     "CounterpartAggregationObservation",
     "CounterpartObservationRequirement",
     "CounterpartSourceKind",
@@ -746,6 +754,7 @@ __all__ = [
     "inventory_workbook_coverage",
     "invoice_binding_requirements",
     "is_active_censo_modelo",
+    "is_companion_corpus_binary",
     "is_registry_id",
     "iter_modelo_applicability_rules",
     "load_catalogue_file",

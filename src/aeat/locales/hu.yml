@@ -3899,6 +3899,13 @@ cli:
     diff_revisions_modelo_help: Az összehasonlítandó modelo azonosítója
     diff_revisions_to_year_help: A későbbi adóév, amelynek fedő revízióját az alaphoz
       hasonlítjuk
+    errors:
+      capability:
+        manuals_verify: 'kézikönyvek ellenőrzése'
+        parity: 'nyilvántartási paritás futtatása és visszajátszása'
+        registry_verify: 'nyilvántartás-integritás ellenőrzése'
+        workbooks_verify: 'munkafüzet-paritás ellenőrzése'
+      corpus_companion_absent: 'Elutasítva. Ez a parancs (%{capability}) az opcionális aeat-data kiegészítő csomagban szállított korpusz bináris fájljait igényli, amely nincs telepítve. Telepítse a következővel: %{install}'
     inspect_help: A nyilvántartás állapotának és hivatkozásainak vizsgálata.
     inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának elérési útja.
     manuals:
