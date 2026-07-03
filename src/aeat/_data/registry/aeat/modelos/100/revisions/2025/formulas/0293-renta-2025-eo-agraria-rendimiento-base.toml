@@ -23,12 +23,29 @@
 # test_modelo_100_eo_agraria_rendimiento_base.py.
 #
 # Rendimiento neto previo (casilla 1537) sums every producto's rendimiento
-# base — the Fase 1a aggregate across the codigo-producto catalogue. Fase 2a
-# (amortización), Fase 3a (índices correctores 1540-1547), Fase 4a
-# (reducciones) and Fase 5a (art. 32 irregularidad) remain the manual
-# operator-entered casillas already declared on this revision
-# (irpf_eo_agr_amortizacion, irpf_eo_agr_indice_* series,
-# irpf_eo_agr_reduccion_*) — this slice is bounded to Fase 1a per the
+# base — the Fase 1a aggregate across the codigo-producto catalogue.
+#
+# Fase 2a: rendimiento neto minorado (casilla 1539, instrucción 2.2 of the
+# same Anexo I). The instrucción deducts, elemento por elemento, the
+# amortización del inmovilizado material e intangible afecto a la actividad
+# (excluidas las actividades forestales) per the Anexo I amortization table
+# (coeficiente lineal máximo / período máximo per grupo patrimonial). This
+# engine does not model a per-element libro registro de bienes de inversión
+# (acquisition value, coefficient, elapsed period per asset) — the same
+# honest-scalar approach the M131 estimación-objetiva módulos engine uses for
+# its own minoración por incentivos a la inversión
+# (orden-hac-1347-2024:instruccion-2-2-b, modelo 131 Fase 2ª,
+# test_modelo_131_modulos_engine.py). Casilla 1538 ("Amortización del
+# inmovilizado material e intangible") is the operator-declared euro amount
+# already published by AEAT's own Diseño de Registros; a blank amortización
+# never over-states the reduction (it simply omits a legitimate additional
+# reduction the operator may or may not be claiming), and it never fabricates
+# a per-asset depreciation figure the engine has no register to derive.
+#
+# Fase 3a (índices correctores 1540-1547), Fase 4a (reducciones) and Fase 5a
+# (art. 32 irregularidad) remain the manual operator-entered casillas already
+# declared on this revision (irpf_eo_agr_indice_* series,
+# irpf_eo_agr_reduccion_*) — this slice extends Fase 1a to Fase 2a per the
 # 2026-07-01-modelo-131-eo-modulos-engine-adr's incremental phasing
 # discipline (agrarian índice-corrector engine scoped for later phases).
 
@@ -257,3 +274,22 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 [[revisions."2025".formulas.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["El rendimiento neto es el resultante de la suma de los rendimientos netos que correspondan"]
+
+# Fase 2a: rendimiento neto minorado (casilla 1539) = rendimiento neto previo
+# (casilla 1537) minus the operator-declared amortización del inmovilizado
+# material e intangible (casilla 1538, instrucción 2.2 of the same Anexo I).
+# A blank amortización subtracts zero, never fabricating a depreciation
+# figure the engine has no per-element asset register to derive.
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-neto-minorado"
+target_casilla_id = "1539"
+expression = { op = "subtract", args = [
+    { casilla_id = "1537" },
+    { casilla_id = "1538" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-2"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Fase 2ª: Determinación del rendimiento neto minorado"]
