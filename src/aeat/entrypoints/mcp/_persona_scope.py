@@ -259,8 +259,24 @@ PERSONA_HANDOFF_DENIALS: dict[AgentPersona, frozenset[str]] = {
 }
 
 
+#: The mounted-command family that owns the irreversible filing handoff. The
+#: R6(iii) denial is specifically the *modelo* filing boundary (its ``export``
+#: and record-marker ``file`` leaves), so the deny check is scoped to this
+#: family. Without the family guard the bare leaf-name match would also fire on
+#: an unrelated ``<family>.export`` / ``<family>.file`` verb (e.g. a future
+#: ledger-exporting persona's ``ledger.export``) - fail-safe and masked by the
+#: current persona scopes, but a spurious refusal waiting to surface.
+_HANDOFF_FAMILY = "modelo"
+
+
 def is_handoff_denied(*, persona: AgentPersona, command_key: str) -> bool:
     """True when ``command_key`` is a handoff leaf this persona is structurally denied.
+
+    The denial is the irreversible *modelo* filing handoff, so it fires only for
+    a command in the ``modelo`` family whose leaf is a denied handoff verb - a
+    same-named ``export`` / ``file`` leaf in another family is never caught by
+    this rule (it is out of a modelo persona's scope anyway; the family guard
+    keeps the rule precise rather than relying on scope to mask it).
 
     Runs in the same ``PreToolUse`` layer as :func:`is_tool_in_persona_scope`
     and is checked by both ``_list_tools`` (the denied tool is not even
@@ -268,6 +284,8 @@ def is_handoff_denied(*, persona: AgentPersona, command_key: str) -> bool:
     """
     denied_leaves = PERSONA_HANDOFF_DENIALS.get(persona)
     if not denied_leaves:
+        return False
+    if _family_token_for_command_key(command_key) != _HANDOFF_FAMILY:
         return False
     return command_key.rsplit(".", 1)[-1] in denied_leaves
 
