@@ -108,7 +108,7 @@ consumer path is the **Claude plugin** — generated from the harness source by
 `aeat app agent --layout plugin`, served from the marketplace tree under
 `packaging/marketplace/`, installable one-click across Claude Cowork / Claude
 Code / Claude Desktop. Its `.mcp.json` launches the server via
-`uvx --from aeat==<version> aeat-mcp` from the published PyPI package (slim
+`uvx --from "aeat-cli[agent]==<version>" aeat-mcp` from the published PyPI package (slim
 ~39 MB wheel; corpus source binaries ride the optional `aeat-data` companion
 via `aeat[corpus-sources]`). The old `.mcpb` bundle under `packaging/mcpb/` is
 a DEMOTED secondary — do not document it as the install path. See RELEASING.md
@@ -210,7 +210,7 @@ tree in `docs/index.md`. Illustrative, not authorised:
 - **How-to: connect a client** — install the aeat plugin from the marketplace
   (Cowork/Desktop plugin browser or `claude plugin install`), choose a persona
   in the plugin's configure step (the `persona` option feeds
-  `AEAT_MCP_PERSONA`); power users wire `uvx --from aeat==<version> aeat-mcp`
+  `AEAT_MCP_PERSONA`); power users wire `uvx --from "aeat-cli[agent]==<version>" aeat-mcp`
   into any MCP client's config; confirm the first-run privacy notice. State the
   verified support matrix honestly (see
   `docs/verification/claude-code-install-proof.md`).

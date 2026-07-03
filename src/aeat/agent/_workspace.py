@@ -71,13 +71,18 @@ _PLUGIN_SCHEMA = "https://anthropic.com/claude-code/plugin.schema.json"
 # The plugin's stdio MCP server. ``uvx`` boots ``aeat-mcp`` from the published
 # wheel pinned to the plugin's own version (D2a), so a machine with ``uv`` but no
 # project checkout runs the exact server the plugin release was cut against. The
-# active persona is wired from the ``userConfig`` persona option through the
-# documented ``${user_config.persona}`` interpolation; the server validates and
-# refuses an unknown persona (server-side validation is the refusal surface).
+# PyPI distribution name (``aeat-cli``, the operator's registered project) differs
+# from the plugin name (``aeat``) and the import package (``aeat``); the pin MUST
+# carry the ``[agent]`` extra — the MCP SDK the server runs on rides that extra,
+# and a bare install makes ``aeat-mcp`` refuse with the install hint. The active
+# persona is wired from the ``userConfig`` persona option through the documented
+# ``${user_config.persona}`` interpolation; the server validates and refuses an
+# unknown persona (server-side validation is the refusal surface).
 _MCP_CONFIG = ".mcp.json"
 _MCP_SERVER_NAME = "aeat"
 _MCP_LAUNCHER = "uvx"
 _MCP_CONSOLE_SCRIPT = "aeat-mcp"
+_PYPI_DISTRIBUTION = "aeat-cli"
 _MCP_PERSONA_ENV = "AEAT_MCP_PERSONA"
 _MCP_PERSONA_INTERPOLATION = "${user_config.persona}"
 
@@ -323,7 +328,7 @@ def _mcp_config_document(version: str) -> dict[str, object]:
         "mcpServers": {
             _MCP_SERVER_NAME: {
                 "command": _MCP_LAUNCHER,
-                "args": ["--from", f"{_PLUGIN_NAME}=={version}", _MCP_CONSOLE_SCRIPT],
+                "args": ["--from", f"{_PYPI_DISTRIBUTION}[agent]=={version}", _MCP_CONSOLE_SCRIPT],
                 "env": {_MCP_PERSONA_ENV: _MCP_PERSONA_INTERPOLATION},
             },
         },

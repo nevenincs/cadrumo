@@ -1,5 +1,5 @@
 [project]
-name = "aeat"
+name = "aeat-cli"
 version = "0.1.0"
 description = "A utility that turns your financial records into Spanish tax-form (modelo) data, ready to submit to the AEAT"
 readme = "README.md"
@@ -85,7 +85,7 @@ dependencies = [
 
 [project.scripts]
 aeat = "aeat.entrypoints.cli:main"
-# Operator MCP server (the `aeat[agent]` capability). Refuses with an install
+# Operator MCP server (the `aeat-cli[agent]` capability). Refuses with an install
 # hint when the agent extra is absent, so a bare-core install carries the script
 # without the runtime.
 aeat-mcp = "aeat.entrypoints.mcp:main"
@@ -172,13 +172,13 @@ corpus-sources = [
 # Convenience aggregate: every optional integration at once. `corpus-sources`
 # is deliberately excluded until the aeat-data distribution is published on
 # PyPI (its file-size grant rides the first release; see RELEASING.md) —
-# including it now would make `aeat[all]` unresolvable.
+# including it now would make `aeat-cli[all]` unresolvable.
 all = [
-  "aeat[google]",
-  "aeat[browser]",
-  "aeat[anthropic]",
-  "aeat[agent]",
-  "aeat[search]",
+  "aeat-cli[google]",
+  "aeat-cli[browser]",
+  "aeat-cli[anthropic]",
+  "aeat-cli[agent]",
+  "aeat-cli[search]",
 ]
 
 [build-system]
@@ -201,7 +201,7 @@ exclude = [
   # wheel's compressed weight and serve only the always-on registry integrity
   # hash chain and the opt-in `aeat app registry` verification verbs at runtime.
   # They ship in the separate `aeat-data` companion distribution (installed via
-  # the `aeat[corpus-sources]` extra) under a mirrored `aeat_data/_data/corpus`
+  # the `aeat-cli[corpus-sources]` extra) under a mirrored `aeat_data/_data/corpus`
   # tree; the corpus locator resolves either root. Every derived surface the
   # grounding search and legal gates read at runtime — extracted text
   # (`*.extracted.md`/`.json`), normative html, registry, terminology — stays in
@@ -242,7 +242,7 @@ torch = [
 ]
 # aeat-data is not on PyPI until its file-size grant lands (RELEASING.md), so
 # the dev resolver builds the companion from its in-repo project. uv sources
-# never reach the published wheel metadata: an installed `aeat[corpus-sources]`
+# never reach the published wheel metadata: an installed `aeat-cli[corpus-sources]`
 # still resolves the bare `aeat-data==0.1.0` pin from the index.
 aeat-data = { path = "packaging/aeat_data" }
 
@@ -886,11 +886,11 @@ ignore_decorators = [
 "PyYAML" = ["yaml"]
 "pyyaml" = ["yaml"]
 [tool.deptry.per_rule_ignores]
-# `aeat`: the `all` convenience extra self-references the capability extras
-# (`aeat[google]` etc.); deptry reads the self-reference as an unused dependency.
+# `aeat-cli`: the `all` convenience extra self-references the capability extras
+# (`aeat-cli[google]` etc.); deptry reads the self-reference as an unused dependency.
 # `aeat-data`: a data-only companion distribution with no importable code the
 # scanner can see; the corpus locator reaches its `aeat_data` package
 # dynamically through `importlib.resources` (the corpus-binary resolution seam).
-DEP002 = ["aeat", "aeat-data", "formulas", "python-dotenv", "rich", "tzdata"]
+DEP002 = ["aeat-cli", "aeat-data", "formulas", "python-dotenv", "rich", "tzdata"]
 DEP003 = ["click", "pydantic_core"]
 DEP004 = ["pytest", "reportlab"]
