@@ -80,9 +80,9 @@ Give the registry source-verification gate the companion-aware absent branch: pr
 
 Add the corpus-sources extra pinning aeat-data and a split-install packaging-smoke lane proving the advisory path without the companion and the byte-identical path with it.
 
-- [ ] `W02.P06.S20` - Add the corpus-sources optional extra pinning aeat-data at an exact version; `pyproject.toml`.
-- [ ] `W02.P06.S21` - Add a split-install packaging-smoke lane proving the advisory path with the core wheel alone and the byte-identical path with the companion installed; `dev/packaging/smoke_split_install.py`.
-- [ ] `W02.P06.S22` - Wire the split-install smoke lane into the just packaging-smoke recipe set; `justfile`.
+- [x] `W02.P06.S20` - Add the corpus-sources optional extra pinning aeat-data at an exact version; `pyproject.toml`.
+- [x] `W02.P06.S21` - Add a split-install packaging-smoke lane proving the advisory path with the core wheel alone and the byte-identical path with the companion installed; `dev/packaging/smoke_split_install.py`.
+- [x] `W02.P06.S22` - Wire the split-install smoke lane into the just packaging-smoke recipe set; `justfile`.
 
 ## Wave `W03` - Plugin generation
 
