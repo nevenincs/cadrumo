@@ -17,6 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ......adapters.persistence.profile.submission import SubmissionRepository
 from ......application.auth import AuthProviderDescription, AuthProviderKind
 from ......core import Period
+from ......core.access_gate import AeatAccessGate, LiveSubmitForbiddenError
 from ......core.config import Settings
 from ......domain.submission import (
     ModeloDraftStatus,
@@ -143,6 +144,54 @@ class TestTransportRefusal:
         assert not hasattr(engine, "submit_draft")
         assert not hasattr(engine, "submit_amendment")
         assert not (tmp_path / "submissions").exists()
+
+    def test_engine_public_surface_carries_no_transport_shaped_name(self, tmp_path: Path) -> None:
+        """No public attribute on the engine is named like a write/transport verb.
+
+        Closes the deferred #590 "parity" item honestly: the historical
+        ``_submit_with_transport`` method this item was written against no
+        longer exists anywhere in the codebase (excised by the live-write
+        removal that predates this engine's current read-only shape — see
+        :mod:`aeat.adapters.outbound.aeat.export._submitters`), so there is no
+        transport code path left to compare against
+        :meth:`AeatAccessGate.require_live_write`. The durable, re-checkable
+        assertion is structural: the engine's entire public surface is free of
+        any write-shaped name, for every current and future public attribute,
+        not just the two named methods above.
+        """
+        engine = _build_engine(tmp_path)
+        transport_shaped_tokens = ("submit", "present", "sign", "pay", "transport", "write")
+        public_attrs = [name for name in dir(engine) if not name.startswith("_")]
+        assert public_attrs, "engine must expose some public surface to make this assertion meaningful"
+        offending = [name for name in public_attrs if any(token in name.lower() for token in transport_shaped_tokens)]
+        assert offending == []
+
+    def test_engine_has_no_write_path_that_could_disagree_with_the_access_gate(self, tmp_path: Path) -> None:
+        """Cross-module agreement: no engine call can ever reach AEAT once past the gate.
+
+        The engine has no transport method for :meth:`AeatAccessGate.require_live_write`
+        to disagree with; this proves the two surfaces cannot diverge by
+        proving there is nothing on the engine's public surface a caller could
+        invoke to attempt a live AEAT write, while also confirming (in the same
+        test) that the gate itself refuses unconditionally. Together they
+        establish the invariant the original parity test intended: whichever
+        path an operator takes, a live AEAT write is unreachable.
+        """
+        engine = _build_engine(tmp_path)
+        write_shaped_methods = [
+            name
+            for name in dir(engine)
+            if not name.startswith("_") and callable(getattr(engine, name, None)) and name not in {"preflight"}
+        ]
+        # preflight() is a read-only gate check, not a write; every other
+        # callable public method is a pure historical-record reader.
+        for name in write_shaped_methods:
+            assert name in {"load_submission", "list_submissions"}, (
+                f"unexpected callable public method {name!r} on SubmissionEngine; "
+                "confirm it cannot reach AEAT before widening this allowlist"
+            )
+        with pytest.raises(LiveSubmitForbiddenError, match="permanently forbidden"):
+            AeatAccessGate(Settings()).require_live_write()
 
 
 class TestHistoricalRecords:

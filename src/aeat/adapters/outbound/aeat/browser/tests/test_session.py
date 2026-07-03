@@ -191,6 +191,8 @@ class ContentFailingPage:
 @pytest.mark.asyncio
 async def test_browser_session_creation(tmp_path: Path) -> None:
     """Test creating a browser context with a concrete Playwright adapter."""
+    from ...auth import CERTIFICATE_CONTEXT_MARKER
+
     settings = Settings()
     profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
     evasion = _RecordingEvasion()
@@ -208,7 +210,7 @@ async def test_browser_session_creation(tmp_path: Path) -> None:
     assert context.kwargs["locale"] == "es-ES"
     assert context.kwargs["timezone_id"] == "Europe/Madrid"
     assert "storage_state" not in context.kwargs
-    assert not hasattr(context, "_aeat_certificate_thumbprint")
+    assert not hasattr(context, CERTIFICATE_CONTEXT_MARKER)
 
 
 @pytest.mark.asyncio
