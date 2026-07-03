@@ -17,8 +17,8 @@ from typing import ClassVar, override
 import pytest
 from PIL import Image
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core.config import override_settings
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.transactions import (
     RawProvenance,
     RawTransaction,

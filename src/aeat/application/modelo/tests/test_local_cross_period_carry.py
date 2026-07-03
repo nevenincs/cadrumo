@@ -37,11 +37,11 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
     IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
     MODELO_303_IVA_COMPENSATION_BINDING_ID,

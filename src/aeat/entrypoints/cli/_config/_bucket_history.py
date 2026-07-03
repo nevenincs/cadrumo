@@ -74,7 +74,7 @@ def register_bucket_history_commands(profile_app: typer.Typer) -> None:
     ) -> None:
         """Browse the active profile's append-only event history."""
         _activate_subcommand_output_language(ctx, output_language)
-        from ....domain.buckets import BucketEventHistoryRepository
+        from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
         from .._config_payloads import BucketHistoryResult
 
         profile_label, bucket_id = _resolve_profile_history_target(profile)

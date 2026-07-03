@@ -718,6 +718,16 @@ LLM_USAGE_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
+LLM_RUN_TELEMETRY_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="llm_run_telemetry",
+    namespace="aeat.outbound.llm.run_telemetry",
+    owner="aeat.adapters.outbound.llm",
+    sensitivity=SensitivityClass.DIAGNOSTIC,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{logical_root}|{started_at_iso}|{run_id}|{uuid4_hex}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+)
 AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="aeat_filed_declaration_artefacts",
     namespace="aeat.outbound.aeat.sede.filed_declaration.artefacts",
@@ -1025,6 +1035,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         GOOGLE_DRIVE_CONFIG_NAMESPACE,
         LLM_CACHE_NAMESPACE,
         LLM_USAGE_NAMESPACE,
+        LLM_RUN_TELEMETRY_NAMESPACE,
         AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
         AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
         AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
@@ -1074,6 +1085,7 @@ __all__ = [
     "LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE",
     "LIVE_VERIFY_OBSERVATION_NAMESPACE",
     "LLM_CACHE_NAMESPACE",
+    "LLM_RUN_TELEMETRY_NAMESPACE",
     "LLM_USAGE_NAMESPACE",
     "PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE",
     "PROFILE_ASSETS_LEDGER_NAMESPACE",

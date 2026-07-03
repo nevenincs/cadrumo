@@ -18,7 +18,7 @@ _SOURCE_ROOT = REPO_ROOT / "src"
 _CONTRACT_RE = re.compile(r"^\[importlinter:contract:(?P<contract>[^\]]+)\]$")
 _IGNORE_EDGE_RE = re.compile(r"^\s*(?P<source>aeat\.[\w.*]+)\s*->\s*(?P<target>aeat\.[\w.*]+)\s*$")
 
-_APPLICATION_TO_ADAPTERS_BASELINE = 557  # bumped: invoices ports-inversion (W02.P04.S06, +48 pinned consumers)
+_APPLICATION_TO_ADAPTERS_BASELINE = 656  # bumped: buckets ports-inversion (W01.P03.S05, +99)
 _APPLICATION_SOURCE_MODULE_BASELINE = 77
 _DOMAIN_TO_ADAPTERS_BASELINE = 66  # bumped: modelos_work_units domain test-fixture edge
 

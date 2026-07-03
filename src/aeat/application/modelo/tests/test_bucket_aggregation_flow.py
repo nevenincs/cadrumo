@@ -9,11 +9,12 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.errors import resolve_error_message
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import CalculationRevision, CalculationRevisionCatalogueRepository

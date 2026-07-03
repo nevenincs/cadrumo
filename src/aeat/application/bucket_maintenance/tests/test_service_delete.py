@@ -15,8 +15,9 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core.resources import resources
-from ....domain.buckets import BucketDeleteRefusedError, BucketEventHistoryRepository
+from ....domain.buckets import BucketDeleteRefusedError
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...user_profile import RegisterProfileCommand

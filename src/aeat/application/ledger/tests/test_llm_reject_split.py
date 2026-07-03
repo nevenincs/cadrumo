@@ -6,8 +6,9 @@ from decimal import Decimal
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.buckets import BucketEventType
 from ....domain.categories import SpendingCategory
 from ....domain.transactions import (
     BusinessClassification,

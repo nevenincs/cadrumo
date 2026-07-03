@@ -663,9 +663,9 @@ def _finalise_reconciliation(
     on the same verdict derivation, report assembly, and append-only
     bucket-event persistence.
     """
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...domain.buckets import (
         BucketEvent,
-        BucketEventHistoryRepository,
         BucketEventObjectType,
         BucketEventType,
         append_bucket_event,
@@ -1144,7 +1144,8 @@ def list_modelo_reconciliations(
     none for the requested work unit) returns an empty tuple — the clean "no
     reconciliations recorded yet" signal, not an error.
     """
-    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...domain.buckets import BucketEventType
 
     catalogue = BucketEventHistoryRepository().load()
     events = catalogue.for_bucket(bucket_id, event_types=(BucketEventType.MODELO_RECONCILED,))

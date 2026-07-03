@@ -10,11 +10,12 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.sql import dispose_engine
 from ....application.diagnostics import build_cli_version_report
 from ....core.config import SecretStoreBackend, load_settings, override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.buckets import BucketEventType
 from ....domain.transactions import TransactionCatalogueRepository
 from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app
 from .. import _import_failure_surface, _startup_import_error_text

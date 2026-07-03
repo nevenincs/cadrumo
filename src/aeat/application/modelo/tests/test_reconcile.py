@@ -9,9 +9,10 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.justificante import parse_justificante
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.buckets import BucketEventType
 from ....domain.modelos import (
     ModeloCode,
     WorkUnit,

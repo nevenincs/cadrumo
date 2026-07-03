@@ -24,13 +24,13 @@ import json
 import secrets
 from typing import TYPE_CHECKING, NamedTuple
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import StorageCustodyProfile
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
 from ...domain.buckets import (
     BucketDeleteRefusedError,
     BucketEvent,
-    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     BucketImportError,

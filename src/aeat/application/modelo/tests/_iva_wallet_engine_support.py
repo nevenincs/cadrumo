@@ -10,11 +10,11 @@ from functools import cache
 from pathlib import Path
 
 from ....adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
     BindingId,
     CasillaId,

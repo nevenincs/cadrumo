@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,

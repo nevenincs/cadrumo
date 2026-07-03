@@ -39,11 +39,11 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision

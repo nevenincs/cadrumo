@@ -103,7 +103,7 @@ def build_lifecycle_service(
     engine, which had no URL until an active profile existed - every
     ``register`` then crashed before its first event landed.
     """
-    from ...domain.buckets import BucketEventHistoryRepository
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ._repository import _secure_objects_for_bucket
 
     schema = schema or _shared_schema()
@@ -354,9 +354,9 @@ def register_active_profile(
 
 def _append_profile_activated_event(*, profile_id: str, active_profile: str | None) -> None:
     """Append a PROFILE_ACTIVATED event to the active bucket-event catalogue."""
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...domain.buckets import (
         BucketEvent,
-        BucketEventHistoryRepository,
         BucketEventObjectType,
         BucketEventType,
         append_bucket_event,

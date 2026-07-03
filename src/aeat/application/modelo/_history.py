@@ -39,17 +39,13 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
-from ...domain.buckets import (
-    BucketEventHistoryRepository,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.modelos import (
     CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,

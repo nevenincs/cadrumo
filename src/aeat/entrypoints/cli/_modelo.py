@@ -1169,7 +1169,8 @@ def modelo_history(
     ] = None,
 ) -> None:
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
-    from ...domain.buckets import BucketEvent, BucketEventHistoryRepository, BucketEventType
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...domain.buckets import BucketEvent, BucketEventType
 
     def _event_filing_year(payload: dict[str, str]) -> str:
         return (payload.get("filing_year") or payload.get("year") or "").strip()

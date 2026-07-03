@@ -609,12 +609,12 @@ def register_capture_as_filing_evidence(
             captured ``(modelo, filing_year, period)`` — the operator must file
             the period before attaching live-capture evidence to it.
     """
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...adapters.persistence.profile.justificante import JustificanteRepository
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...core.time import now
     from ...domain.buckets import (
         BucketEvent,
-        BucketEventHistoryRepository,
         BucketEventObjectType,
         BucketEventType,
         append_bucket_event,

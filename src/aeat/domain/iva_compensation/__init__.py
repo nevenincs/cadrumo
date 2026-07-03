@@ -40,7 +40,7 @@ See Also:
     :mod:`application.modelo`
         Work-unit calculation and IVA-wallet gate that apply the persisted
         authority decision to registry snapshots.
-    :class:`domain.buckets.BucketEventHistoryRepository`
+    :class:`adapters.persistence.profile.buckets.BucketEventHistoryRepository`
         Bucket audit trail for persisted decisions and capture orchestration,
         outside this pure domain package.
 """

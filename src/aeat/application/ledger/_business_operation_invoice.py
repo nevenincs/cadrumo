@@ -36,6 +36,7 @@ from typing import override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import (
     LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
     SecureBoundRepository,
@@ -50,7 +51,6 @@ from ...core.identity import BucketId
 from ...core.time import now as _utc_now
 from ...domain import canonical_decimal_string
 from ...domain.buckets import (
-    BucketEventHistoryRepository,
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,

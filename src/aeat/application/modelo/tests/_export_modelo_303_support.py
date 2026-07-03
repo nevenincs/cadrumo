@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -13,7 +14,6 @@ from ....adapters.persistence.storage.runtime import inspect_bucket_storage_runt
 from ....core import Period
 from ....core.config import Settings
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import BindingId, RegistryModeloObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation import (

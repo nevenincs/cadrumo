@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core.config import Settings
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

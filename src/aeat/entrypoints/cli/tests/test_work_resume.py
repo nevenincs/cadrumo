@@ -296,7 +296,7 @@ def test_resume_emits_no_bucket_event() -> None:
     runner and asserts that the real BucketEventHistoryRepository (backed by
     the isolated SQLite engine) has zero entries after the command completes.
     """
-    from ....domain.buckets import BucketEventHistoryRepository
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 
     run_id = "d" * 16
     save_run(_aborted_run(run_id, reason=WorkflowAbortReason.SITE_UNAVAILABLE))

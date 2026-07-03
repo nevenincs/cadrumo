@@ -21,8 +21,8 @@ from typing import override
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage import SecureObjectRepository, SecureObjectWrite
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

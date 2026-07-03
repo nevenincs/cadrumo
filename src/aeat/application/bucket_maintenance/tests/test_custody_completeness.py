@@ -17,13 +17,13 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....core.resources import resources
 from ....domain.attachments import AttachmentValidationError
 from ....domain.buckets import (
     BucketEvent,
     BucketEventHistoryCatalogue,
-    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     derive_bucket_event_id,

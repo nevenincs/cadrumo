@@ -58,6 +58,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import (
@@ -66,7 +67,6 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,

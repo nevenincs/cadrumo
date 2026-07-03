@@ -22,9 +22,9 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core.hashing import sha256_hex
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile

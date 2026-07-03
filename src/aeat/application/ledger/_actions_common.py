@@ -21,6 +21,7 @@ from ...core.time import now
 if TYPE_CHECKING:
     pass
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
@@ -29,7 +30,6 @@ from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationE
 from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
     BucketEvent,
-    BucketEventHistoryRepository,
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,

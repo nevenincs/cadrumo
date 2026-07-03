@@ -566,10 +566,10 @@ def _emit_profile_lifecycle_event(
     payload: dict[str, str],
 ) -> None:
     """Append a profile-lifecycle event to the bucket-event-history catalogue."""
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ....domain.buckets import (
         BucketEvent,
         BucketEventHistoryCatalogue,
-        BucketEventHistoryRepository,
         BucketEventObjectType,
         derive_bucket_event_id,
     )

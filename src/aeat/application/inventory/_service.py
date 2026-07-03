@@ -18,6 +18,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ...adapters.persistence.storage import secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG
@@ -25,7 +26,6 @@ from ...core.config import Settings
 from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ...core.time import now as _now_utc
 from ...domain.buckets import (
-    BucketEventHistoryRepository,
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
