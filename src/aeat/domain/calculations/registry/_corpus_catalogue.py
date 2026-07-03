@@ -20,6 +20,7 @@ stays in the runtime wheel, so its absence remains a hard failure as before.
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
@@ -165,23 +166,44 @@ def _source_file_fingerprint(path: str, byte_count: int, modified_ns: int) -> tu
     return length, hex_digest
 
 
+def _corpus_companion_advisory(missing_corpus_paths: list[str]) -> str:
+    """Build the single loud advisory naming the absent companion set and install hint."""
+    unique = sorted(set(missing_corpus_paths))
+    missing = ", ".join(unique)
+    return (
+        f"{len(unique)} corpus source binary file(s) declared by the registry are absent from both "
+        f"the runtime tree and the optional aeat_data companion distribution; corpus byte-integrity "
+        f"verification and the aeat app registry verification verbs are degraded until it is "
+        f"installed. Missing: {missing}. Install the companion to restore full verification: "
+        f"{CORPUS_SOURCES_INSTALL_HINT}"
+    )
+
+
 def verify_source_catalogue(root: Path, sources: Mapping[str, SourceReference]) -> tuple[str, ...]:
     """Verify every source reference in a source catalogue mapping.
 
     Present binaries stay byte-exact hash-enforced (a mismatch or an absent
     non-companion file raises :class:`RegistryValidationError`). Absent companion
-    binaries are accumulated and returned as advisories rather than raising, so
-    the split-install degradation is surfaced, never silenced.
+    binaries are accumulated into ONE loud advisory naming the missing set and
+    the ``aeat[corpus-sources]`` install hint: the advisory is both emitted
+    through :class:`CorpusCompanionAdvisory` (so a split-install run surfaces it
+    loudly at first registry load) and returned to the caller, so the
+    degradation is never silenced. When every declared binary is present the
+    return is empty and no advisory is emitted.
     """
     verified: set[tuple[Path, int, str]] = set()
-    advisories: list[str] = []
+    missing_companion: list[str] = []
     for source in sources.values():
         key = ((root / source.corpus_path).resolve(), source.bytes, source.sha256)
         if key in verified:
             continue
         advisory = verify_source_file(root, source)
         if advisory is not None:
-            advisories.append(advisory)
+            missing_companion.append(source.corpus_path)
             continue
         verified.add(key)
-    return tuple(advisories)
+    if not missing_companion:
+        return ()
+    message = _corpus_companion_advisory(missing_companion)
+    warnings.warn(message, CorpusCompanionAdvisory, stacklevel=2)
+    return (message,)
