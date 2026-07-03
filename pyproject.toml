@@ -556,6 +556,10 @@ convention = "google"
 # literal argv (no user/untrusted input), in an isolated subprocess so the
 # build's package imports and global state do not leak into the test process.
 "dev/docs/tests/test_docs_build.py" = ["S603"]
+# The aeat-data distribution gate builds the companion wheel with the trusted
+# `uv` build driver and enumerates corpus binaries via `git ls-files` (partial
+# paths resolved from PATH by design), mirroring the src/aeat wheel-build gates.
+"dev/packaging/tests/test_aeat_data_distribution.py" = ["S603", "S607"]
 "src/aeat/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
 "src/aeat/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]
