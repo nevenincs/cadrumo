@@ -25,9 +25,12 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     SANDBOX_LABEL_PREFIX,
     DiscardSandboxCommand,
+    PreviewDiscardSandboxCommand,
     SandboxDiscardRefusedError,
     discard_sandbox,
     is_sandbox_label,
+    list_sandboxes,
+    preview_discard_sandbox,
     sandbox_label,
 )
 
@@ -80,3 +83,19 @@ def test_discard_of_non_sandbox_bucket_erases_nothing_on_refusal(runtime: TestRu
     # The guard fires before BucketMaintenanceService.delete runs; the
     # manifest this test seeded must still be exactly where it was.
     assert manifest_path(paths).is_file()
+
+
+def test_preview_discard_refuses_a_non_sandbox_labelled_bucket_by_default(runtime: TestRuntimeProfile) -> None:
+    """``preview_discard_sandbox`` applies the identical non-sandbox refusal ``discard_sandbox`` does.
+
+    A preview must never suggest an erase the real discard verb would refuse:
+    the guard fires before any read-only session is opened against the
+    target bucket.
+    """
+    with pytest.raises(SandboxDiscardRefusedError):
+        preview_discard_sandbox(PreviewDiscardSandboxCommand(bucket_id=runtime.bucket_id))
+
+
+def test_list_sandboxes_excludes_a_non_sandbox_labelled_bucket(runtime: TestRuntimeProfile) -> None:
+    """``list_sandboxes`` never names a bucket whose label lacks the reserved prefix."""
+    assert list_sandboxes() == ()

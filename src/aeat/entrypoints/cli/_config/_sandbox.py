@@ -48,6 +48,7 @@ def register_sandbox_commands(profile_app: typer.Typer) -> None:
     _register_sandbox_list_command(sandbox_app)
     _register_sandbox_use_command(sandbox_app)
     _register_sandbox_discard_command(sandbox_app)
+    _register_sandbox_prune_command(sandbox_app)
     profile_app.add_typer(sandbox_app, name="sandbox")
 
 
@@ -258,6 +259,14 @@ def _register_sandbox_discard_command(app: typer.Typer) -> None:
             "--yes",
             help=tr("cli.config.profile.sandbox.discard_yes_help", default="Confirm the destructive erase."),
         ),
+        dry_run: bool = typer.Option(
+            False,
+            "--dry-run/--no-dry-run",
+            help=tr(
+                "cli.config.profile.sandbox.discard_dry_run_help",
+                default="Preview what the discard would remove without removing anything.",
+            ),
+        ),
         output_language: OutputLanguage | None = typer.Option(
             None,
             "--output-language",
@@ -265,18 +274,20 @@ def _register_sandbox_discard_command(app: typer.Typer) -> None:
             help=tr("cli.config.auth.output_language_help"),
         ),
     ) -> None:
-        """Discard a sandbox bucket through ``discard_sandbox``."""
+        """Discard a sandbox bucket through ``discard_sandbox``, or preview it with ``--dry-run``."""
         _activate_subcommand_output_language(ctx, output_language)
         from ....application.bucket_maintenance import (
             DiscardSandboxCommand,
+            PreviewDiscardSandboxCommand,
             SandboxDiscardRefusedError,
             SandboxNotFoundError,
             discard_sandbox,
+            preview_discard_sandbox,
             sandbox_label,
         )
         from ....application.workflow import read_profile_bucket
         from ....domain.buckets import BucketDeleteRefusedError
-        from .._config_payloads import ConfigProfileSandboxDiscardResult
+        from .._config_payloads import ConfigProfileSandboxDiscardResult, SandboxNamespacePayload
 
         label = sandbox_label(name)
         pointer = read_profile_bucket(label)
@@ -285,6 +296,41 @@ def _register_sandbox_discard_command(app: typer.Typer) -> None:
                 translated_message="cli.config.profile.sandbox.unknown_sandbox",
                 context={"name": name},
             )
+
+        if dry_run:
+            try:
+                preview = preview_discard_sandbox(
+                    PreviewDiscardSandboxCommand(bucket_id=pointer.bucket_id),
+                )
+            except SandboxNotFoundError as exc:
+                raise _CliRefusedBoundaryError(
+                    translated_message="cli.config.profile.sandbox.unknown_sandbox",
+                    context={"name": name},
+                ) from exc
+            except SandboxDiscardRefusedError as exc:
+                raise _CliRefusedBoundaryError(
+                    translated_message="cli.config.profile.sandbox.discard_not_a_sandbox",
+                    context={"name": name},
+                ) from exc
+
+            result = ConfigProfileSandboxDiscardResult(
+                dry_run=True,
+                bucket_id=preview.bucket_id,
+                namespaces=[
+                    SandboxNamespacePayload(namespace=row.namespace, row_count=row.row_count)
+                    for row in preview.namespaces
+                ],
+            )
+            lines = [
+                "dry_run\ttrue",
+                f"bucket_id\t{preview.bucket_id}",
+                f"label\t{preview.label}",
+                f"would_discard_active\t{str(preview.is_active).lower()}",
+                *(f"namespace:{row.namespace}\t{row.row_count}" for row in preview.namespaces),
+            ]
+            _emit_envelope(ctx, command="config.profile.sandbox.discard", result=result, lines=lines)
+            return
+
         if not confirmed:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.sandbox.discard_requires_yes",
@@ -311,6 +357,7 @@ def _register_sandbox_discard_command(app: typer.Typer) -> None:
             ) from exc
 
         result = ConfigProfileSandboxDiscardResult(
+            dry_run=False,
             bucket_id=outcome.bucket_id,
             previous_label=outcome.previous_label,
         )
@@ -319,10 +366,122 @@ def _register_sandbox_discard_command(app: typer.Typer) -> None:
             command="config.profile.sandbox.discard",
             result=result,
             lines=(
+                "dry_run\tfalse",
                 f"bucket_id\t{outcome.bucket_id}",
                 f"previous_label\t{outcome.previous_label}",
             ),
         )
+
+
+def _register_sandbox_prune_command(app: typer.Typer) -> None:
+    @app.command(
+        "prune",
+        help=tr(
+            "cli.config.profile.sandbox.prune_help",
+            default="Discard every sandbox bucket at once.",
+        ),
+    )
+    def config_profile_sandbox_prune(
+        ctx: typer.Context,
+        confirmed: bool = typer.Option(
+            False,
+            "--yes",
+            help=tr("cli.config.profile.sandbox.prune_yes_help", default="Confirm discarding every sandbox."),
+        ),
+        dry_run: bool = typer.Option(
+            False,
+            "--dry-run/--no-dry-run",
+            help=tr(
+                "cli.config.profile.sandbox.prune_dry_run_help",
+                default="Preview which sandboxes would be discarded without discarding them.",
+            ),
+        ),
+        output_language: OutputLanguage | None = typer.Option(
+            None,
+            "--output-language",
+            "--language",
+            help=tr("cli.config.auth.output_language_help"),
+        ),
+    ) -> None:
+        """Discard every sandbox-labelled bucket, composing ``discard_sandbox`` per row.
+
+        Never touches a non-sandbox profile: the enumeration source
+        (``list_sandboxes``) only ever names sandbox-labelled buckets, and each
+        row is still discarded through the same guarded ``discard_sandbox``
+        primitive ``sandbox discard`` uses. The currently active sandbox (if
+        any) is deliberately NOT auto-switched away from and forced-discarded;
+        it is skipped with an advisory so the operator can switch away and
+        re-run, mirroring ``discard``'s own active-bucket refusal rather than
+        silently forcing a profile switch as a side effect of a bulk verb.
+        """
+        _activate_subcommand_output_language(ctx, output_language)
+        from ....application.bucket_maintenance import (
+            DiscardSandboxCommand,
+            discard_sandbox,
+            list_sandboxes,
+        )
+        from ....core import resolve_active_bucket_id
+        from .._config_payloads import ConfigProfileSandboxPruneResult
+
+        sandboxes = list_sandboxes()
+        active_bucket_id = resolve_active_bucket_id()
+
+        if not confirmed and not dry_run:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.sandbox.prune_requires_yes",
+            )
+
+        if dry_run:
+            result = ConfigProfileSandboxPruneResult(
+                dry_run=True,
+                total=len(sandboxes),
+                sandboxes=[label for _, label in sandboxes],
+            )
+            lines = [
+                "dry_run\ttrue",
+                f"total\t{len(sandboxes)}",
+                *(f"would_discard\t{label}" for _, label in sandboxes),
+            ]
+            _emit_envelope(ctx, command="config.profile.sandbox.prune", result=result, lines=lines)
+            return
+
+        discarded: list[str] = []
+        skipped_active: list[str] = []
+        for bucket_id, label in sandboxes:
+            if bucket_id == active_bucket_id:
+                skipped_active.append(label)
+                continue
+            outcome = discard_sandbox(DiscardSandboxCommand(bucket_id=bucket_id, confirmed=True))
+            discarded.append(outcome.previous_label)
+
+        result = ConfigProfileSandboxPruneResult(
+            dry_run=False,
+            total=len(sandboxes),
+            discarded=discarded,
+        )
+        lines = [
+            "dry_run\tfalse",
+            f"total\t{len(sandboxes)}",
+            *(f"discarded\t{label}" for label in discarded),
+        ]
+        notices: tuple[Notice, ...] = ()
+        if skipped_active:
+            skipped_notice = Notice(
+                severity=NoticeSeverity.WARNING,
+                code="config.profile.sandbox.prune.skipped_active",
+                message=tr(
+                    "cli.config.profile.sandbox.prune_skipped_active_info",
+                    default=(
+                        "Skipped the active sandbox %{names}; switch to another profile and re-run "
+                        "'aeat config profile sandbox prune --yes' to discard it."
+                    ),
+                    names=", ".join(skipped_active),
+                ),
+                suggestion="aeat config switch",
+            )
+            notices = (skipped_notice,)
+            lines.append(f"INFO\t{skipped_notice.message}")
+        _emit_envelope(ctx, command="config.profile.sandbox.prune", result=result, lines=lines, notices=notices)
 
 
 __all__ = ["register_sandbox_commands", "sandbox_app"]

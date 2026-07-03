@@ -26,6 +26,15 @@ The service delegates every write to an existing primitive
 - :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.delete
   composes the existing soft-tombstone-then-hard-erase primitives to discard
   the sandbox bucket entirely.
+- :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.browse
+  (via a read-only lifecycle session, not the active bucket) backs
+  :func:`preview_discard_sandbox`, so an operator can see what a discard would
+  remove before confirming it.
+
+:func:`list_sandboxes` is the read-only enumeration shared by ``sandbox list``
+and ``sandbox prune`` — the composition-verb pattern this module follows: a
+bulk verb composes the same single-bucket primitives per row rather than
+re-implementing bucket erasure.
 
 The destructive-action protocol mirrors
 :class:`~aeat.application.bucket_maintenance.DeleteBucketCommand`: a discard
@@ -96,6 +105,51 @@ class SandboxNotFoundError(Exception):
 
 class SandboxDiscardRefusedError(Exception):
     """Raised when discarding a bucket is refused by the sandbox destructive-action gate."""
+
+
+class PreviewDiscardSandboxCommand(BaseModel):
+    """Operator request to preview what a sandbox discard would remove.
+
+    Read-only counterpart to :class:`DiscardSandboxCommand`: it never opens
+    the target bucket for write and never calls
+    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.delete.
+    ``allow_non_sandbox`` mirrors the discard command's escape hatch so a
+    preview against a non-sandbox bucket reports the same "not a sandbox"
+    refusal a real discard would, rather than silently previewing an erase
+    the real verb would never allow.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    allow_non_sandbox: bool = False
+
+
+class PreviewDiscardSandboxResult(BaseModel):
+    """Read-only preview of what discarding a sandbox would remove.
+
+    ``namespaces`` is the same per-namespace row-count inventory
+    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.browse
+    returns for the active bucket, computed here for a bucket that need not
+    be active. ``is_active`` flags whether the target is the current session
+    — a real discard of it would be refused until the operator switches away.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    label: str
+    is_active: bool
+    namespaces: tuple[SandboxNamespaceInventoryRow, ...]
+
+
+class SandboxNamespaceInventoryRow(BaseModel):
+    """One namespace row in a sandbox discard preview."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    namespace: str = Field(min_length=1)
+    row_count: int = Field(ge=0)
 
 
 class CreateSandboxCommand(BaseModel):
@@ -228,6 +282,69 @@ def create_sandbox(command: CreateSandboxCommand) -> CreateSandboxResult:
     return CreateSandboxResult(bucket_id=profile_id, label=label, seeded_from=command.from_profile)
 
 
+def preview_discard_sandbox(command: PreviewDiscardSandboxCommand) -> PreviewDiscardSandboxResult:
+    """Report what discarding ``command.bucket_id`` would remove, without removing it.
+
+    Reads the target bucket's namespace inventory through a read-only
+    lifecycle session (:func:`~aeat.application.user_profile.profile_storage_session`)
+    — the identical read-only pattern :func:`create_sandbox` already uses to
+    seed from a non-active source profile — so a sandbox need not be the
+    active bucket to be previewed. No write primitive is invoked; the target
+    bucket, its manifest, and its records are untouched.
+
+    Applies the same non-sandbox refusal :func:`discard_sandbox` applies, so
+    a preview can never suggest an erase the real verb would refuse.
+
+    Returns:
+        :class:`PreviewDiscardSandboxResult` describing the bucket's current
+        contents.
+    """
+    from ...core import resolve_active_bucket_id
+    from ..user_profile import profile_storage_session
+    from ._contracts import BrowseBucketCommand
+    from ._service import BucketMaintenanceService
+
+    pointer = read_profile_bucket_by_id(command.bucket_id)
+    if pointer is None:
+        raise SandboxNotFoundError(command.bucket_id)
+    if not is_sandbox_label(pointer.label) and not command.allow_non_sandbox:
+        raise SandboxDiscardRefusedError(
+            f"bucket {command.bucket_id!r} (label {pointer.label!r}) is not a sandbox; "
+            "pass allow_non_sandbox=True to preview a non-sandbox profile",
+        )
+
+    with profile_storage_session(command.bucket_id):
+        browsed = BucketMaintenanceService().browse(BrowseBucketCommand(bucket_id=command.bucket_id))
+
+    return PreviewDiscardSandboxResult(
+        bucket_id=command.bucket_id,
+        label=pointer.label,
+        is_active=resolve_active_bucket_id() == command.bucket_id,
+        namespaces=tuple(
+            SandboxNamespaceInventoryRow(namespace=row.namespace, row_count=row.row_count) for row in browsed.rows
+        ),
+    )
+
+
+def list_sandboxes() -> tuple[tuple[BucketId, str], ...]:
+    """Return every ``(bucket_id, label)`` pair currently carrying the sandbox prefix.
+
+    Read-only enumeration shared by ``sandbox list`` and ``sandbox prune``.
+    """
+    from ..workflow import list_profile_buckets
+
+    return tuple(
+        sorted(
+            (
+                (pointer.bucket_id, pointer.label)
+                for pointer in list_profile_buckets().values()
+                if is_sandbox_label(pointer.label)
+            ),
+            key=lambda row: row[1].casefold(),
+        ),
+    )
+
+
 def discard_sandbox(command: DiscardSandboxCommand) -> DiscardSandboxResult:
     """Permanently erase the sandbox bucket identified by ``command.bucket_id``.
 
@@ -266,12 +383,17 @@ __all__ = [
     "CreateSandboxResult",
     "DiscardSandboxCommand",
     "DiscardSandboxResult",
+    "PreviewDiscardSandboxCommand",
+    "PreviewDiscardSandboxResult",
     "SandboxAlreadyExistsError",
     "SandboxDiscardRefusedError",
+    "SandboxNamespaceInventoryRow",
     "SandboxNotFoundError",
     "SandboxSourceNotFoundError",
     "create_sandbox",
     "discard_sandbox",
     "is_sandbox_label",
+    "list_sandboxes",
+    "preview_discard_sandbox",
     "sandbox_label",
 ]

@@ -47,7 +47,10 @@ experiment-workspace lifecycle over the same primitives: a sandbox is an
 ordinary bucket labelled with the reserved :data:`SANDBOX_LABEL_PREFIX`,
 created (optionally forked from a live profile's facts) through the
 canonical atomic-create span and discarded through this package's
-:meth:`BucketMaintenanceService.delete`.
+:meth:`BucketMaintenanceService.delete`. :func:`preview_discard_sandbox`
+reports what a discard would remove without removing it, and
+:func:`list_sandboxes` enumerates every live sandbox for bulk operations
+such as ``sandbox prune``.
 
 See Also:
     :mod:`application.user_profile`
@@ -92,13 +95,18 @@ from ._sandbox import (
     CreateSandboxResult,
     DiscardSandboxCommand,
     DiscardSandboxResult,
+    PreviewDiscardSandboxCommand,
+    PreviewDiscardSandboxResult,
     SandboxAlreadyExistsError,
     SandboxDiscardRefusedError,
+    SandboxNamespaceInventoryRow,
     SandboxNotFoundError,
     SandboxSourceNotFoundError,
     create_sandbox,
     discard_sandbox,
     is_sandbox_label,
+    list_sandboxes,
+    preview_discard_sandbox,
     sandbox_label,
 )
 from ._service import BucketMaintenanceService
@@ -121,15 +129,20 @@ __all__ = [
     "ImportBucketResult",
     "InspectBucketArchiveCommand",
     "InspectBucketArchiveResult",
+    "PreviewDiscardSandboxCommand",
+    "PreviewDiscardSandboxResult",
     "RenameBucketCommand",
     "RenameBucketResult",
     "SandboxAlreadyExistsError",
     "SandboxDiscardRefusedError",
+    "SandboxNamespaceInventoryRow",
     "SandboxNotFoundError",
     "SandboxSourceNotFoundError",
     "compute_manifest_digest",
     "create_sandbox",
     "discard_sandbox",
     "is_sandbox_label",
+    "list_sandboxes",
+    "preview_discard_sandbox",
     "sandbox_label",
 ]
