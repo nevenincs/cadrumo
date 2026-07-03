@@ -63,8 +63,8 @@ Exclude the corpus source binaries from the aeat wheel and package exactly those
 
 Add a resolution seam to the bundled-data locator that tries the aeat tree first then the aeat_data companion, so full-checkout and split-install corpus reads are uniform.
 
-- [ ] `W02.P04.S13` - Add a corpus-binary resolution seam that resolves a _data/corpus path from the aeat tree first, then the aeat_data companion package root; `src/aeat/core/resources/_boundary.py`.
-- [ ] `W02.P04.S14` - Test the seam resolves a corpus binary identically whether it lives under the aeat tree or the aeat_data companion root; `src/aeat/core/resources/tests/test_corpus_companion_seam.py`.
+- [x] `W02.P04.S13` - Add a corpus-binary resolution seam that resolves a _data/corpus path from the aeat tree first, then the aeat_data companion package root; `src/aeat/core/resources/_boundary.py`.
+- [x] `W02.P04.S14` - Test the seam resolves a corpus binary identically whether it lives under the aeat tree or the aeat_data companion root; `src/aeat/core/resources/tests/test_corpus_companion_seam.py`.
 
 ### Phase `W02.P05` - Companion-aware integrity gate
 
@@ -124,7 +124,7 @@ Stand up the distribution surface: a dedicated marketplace repository layout wit
 
 Define the marketplace repository layout and marketplace.json, and have the generator emit the plugin tree the marketplace serves.
 
-- [ ] `W04.P10.S36` - Define the marketplace repository layout and a .claude-plugin/marketplace.json with name, owner and a plugins[] entry sourcing the aeat plugin tree (verify the marketplace.json schema against live official docs at execution time); `packaging/marketplace/marketplace.json`.
+- [x] `W04.P10.S36` - Define the marketplace repository layout and a .claude-plugin/marketplace.json with name, owner and a plugins[] entry sourcing the aeat plugin tree (verify the marketplace.json schema against live official docs at execution time); `packaging/marketplace/marketplace.json`.
 - [ ] `W04.P10.S37` - Have the plugin generator emit the marketplace-served plugin tree so marketplace and plugin cannot drift; `src/aeat/agent/_workspace.py`.
 - [ ] `W04.P10.S38` - Test the generator emits a schema-shaped marketplace tree whose plugins[] entry resolves to the emitted plugin; `src/aeat/agent/tests/test_marketplace_generation.py`.
 

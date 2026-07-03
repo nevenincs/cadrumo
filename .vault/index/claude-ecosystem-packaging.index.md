@@ -18,6 +18,8 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S10]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S11]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S12]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P04-S13]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P04-S14]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S23]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S24]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S25]]'
@@ -31,6 +33,7 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P09-S33]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P09-S34]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P09-S35]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W04-P10-S36]]'
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
   - '[[2026-07-03-claude-ecosystem-packaging-plan]]'
   - '[[2026-07-03-claude-ecosystem-packaging-research]]'
@@ -60,6 +63,8 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 - `2026-07-03-claude-ecosystem-packaging-W02-P03-S10` - Add a wheel-content test asserting the aeat wheel ships zero corpus pdf/xls/xlsx members while keeping the extracted-text, normative-html, registry and agent payload
 - `2026-07-03-claude-ecosystem-packaging-W02-P03-S11` - Add a test that the aeat-data wheel packages exactly the corpus binaries under aeat_data with mirrored relative paths and nothing else
 - `2026-07-03-claude-ecosystem-packaging-W02-P03-S12` - Keep the _data size-budget gate meaningful per distribution after the split so the budget is not evaded by moving bytes to the companion
+- `2026-07-03-claude-ecosystem-packaging-W02-P04-S13` - Add a corpus-binary resolution seam that resolves a _data/corpus path from the aeat tree first, then the aeat_data companion package root
+- `2026-07-03-claude-ecosystem-packaging-W02-P04-S14` - Test the seam resolves a corpus binary identically whether it lives under the aeat tree or the aeat_data companion root
 - `2026-07-03-claude-ecosystem-packaging-W03-P07-S23` - Add a plugin layout target that emits .claude-plugin/plugin.json with a kebab-case name, defaultEnabled false, an author object and the version read from installed package metadata
 - `2026-07-03-claude-ecosystem-packaging-W03-P07-S24` - Emit the plugin skills/ tree (SKILL.md plus reference material) from the single authored harness source
 - `2026-07-03-claude-ecosystem-packaging-W03-P07-S25` - Emit the plugin agents/ tree mapping persona frontmatter to Claude-native fields (tools/disallowedTools), never the non-Claude mode: field
@@ -73,6 +78,7 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 - `2026-07-03-claude-ecosystem-packaging-W03-P09-S33` - Verify the mcp Python SDK annotation extension surface accepts the anthropic/requiresUserInteraction tool annotation before adopting it (frontier: confirm against the live mcp SDK and official docs)
 - `2026-07-03-claude-ecosystem-packaging-W03-P09-S34` - Add the anthropic/requiresUserInteraction annotation to CONFIRM-tier (state-mutating) MCP tools alongside the existing destructiveHint matrix
 - `2026-07-03-claude-ecosystem-packaging-W03-P09-S35` - Test the requiresUserInteraction annotation is present on every CONFIRM-tier tool and absent on read-only tools
+- `2026-07-03-claude-ecosystem-packaging-W04-P10-S36` - Define the marketplace repository layout and a .claude-plugin/marketplace.json with name, owner and a plugins[] entry sourcing the aeat plugin tree (verify the marketplace.json schema against live official docs at execution time)
 
 ### plan
 
