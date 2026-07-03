@@ -38,7 +38,7 @@
   ],
   "prompts_generated": true,
   "keywords": ["tax", "aeat", "spain", "irpf", "iva", "modelo"],
-  "license": "see repository",
+  "license": "Apache-2.0",
   "compatibility": {
     "runtimes": {
       "python": ">=3.12"
