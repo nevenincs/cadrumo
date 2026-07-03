@@ -748,8 +748,15 @@ application:
         unsupported_modelo: El binding de borrador no está soportado para el modelo
           %{modelo}; el manifiesto del registro debe declarar la capacidad de borrador.
     errors:
-      amendment_complementaria_liability_decrease: 'Una complementaria para el modelo {modelo}, ejercicio {filing_year}, período {period} rebajaría el resultado declarado de {baseline_result} a {corrected_result}. Antes de la unificación de la autoliquidación rectificativa, una complementaria presentada por el propio obligado no puede disminuir legalmente la deuda; utilice el procedimiento de solicitud de rectificación.'
-      amendment_kind_not_permitted: 'El tipo de rectificación solicitado {requested_kind} no está legalmente disponible para el modelo {modelo}, ejercicio {filing_year}, período {period}. Tipos aceptados para este período: {accepted_kinds}.'
+      amendment_complementaria_liability_decrease: Una complementaria para el modelo
+        {modelo}, ejercicio {filing_year}, período {period} rebajaría el resultado
+        declarado de {baseline_result} a {corrected_result}. Antes de la unificación
+        de la autoliquidación rectificativa, una complementaria presentada por el
+        propio obligado no puede disminuir legalmente la deuda; utilice el procedimiento
+        de solicitud de rectificación.
+      amendment_kind_not_permitted: 'El tipo de rectificación solicitado {requested_kind}
+        no está legalmente disponible para el modelo {modelo}, ejercicio {filing_year},
+        período {period}. Tipos aceptados para este período: {accepted_kinds}.'
       amendment_registry_root_missing: Registry root %{registry_root} is missing;
         amendment overrides cannot be validated.
       amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -2807,6 +2814,24 @@ cli:
       rename_help: Renombra un perfil y mueve el puntero activo automáticamente
       rename_source_help: Nombre actual del perfil
       rename_target_help: Nuevo nombre del perfil
+      sandbox:
+        already_exists: 'Ya existe un sandbox llamado %{label}. Elija otro nombre o descarte primero el existente.'
+        create_active_info: 'El sandbox es ahora el perfil ACTIVO; todos los comandos se ejecutan sobre él hasta que cambie de perfil o lo descarte.'
+        create_from_profile_help: 'Copia los datos de un perfil existente al sandbox (el perfil de origen solo se lee).'
+        create_help: 'Crea un nuevo sandbox aislado y lo activa.'
+        create_name_help: 'Nombre del sandbox.'
+        discard_active_profile: 'El sandbox %{name} es el perfil activo; cambie a otro perfil antes de descartarlo.'
+        discard_help: 'Elimina permanentemente un sandbox.'
+        discard_name_help: 'Nombre del sandbox (sin el prefijo).'
+        discard_not_a_sandbox: '%{name} no es un sandbox; la superficie de sandbox se niega a descartar un perfil real.'
+        discard_requires_yes: 'Descartar un sandbox es destructivo. Vuelva a ejecutar ''aeat config profile sandbox discard %{name} --yes'' para confirmar.'
+        discard_yes_help: 'Confirma la eliminación destructiva.'
+        help: 'Ejecuta experimentos en un bucket aislado y descartable que nunca afecta al estado del perfil principal.'
+        list_help: 'Lista todos los sandboxes.'
+        source_not_found: 'No existe ningún perfil activo llamado %{name} para copiar al sandbox.'
+        unknown_sandbox: 'Sandbox desconocido: %{name}. Ejecute ''aeat config profile sandbox list'' para ver los sandboxes registrados.'
+        use_help: 'Cambia el perfil activo a un sandbox existente.'
+        use_name_help: 'Nombre del sandbox (sin el prefijo).'
       sar_catalogue_info: 'Este archivo contiene todas las categorías de datos personales
         del perfil: identidad y datos del perfil, unidades de trabajo de modelos,
         movimientos del libro, revisiones de cálculo y registros de presentación.
@@ -2948,7 +2973,7 @@ cli:
     summary_lifecycle: 'Ciclo de vida del modelo: {steps}'
     summary_roots: 'Raices: {roots}'
   diagnostics:
-    app_help: 'Diagnóstico local del estado de las ejecuciones y de la sesión.'
+    app_help: Diagnóstico local del estado de las ejecuciones y de la sesión.
     browser:
       http_status_label: Estado HTTP
       markers_label: Marcadores
@@ -2985,13 +3010,19 @@ cli:
       auth_header: 'Sesión de autenticación:'
       bad_date: '%{option} debe ser una fecha ISO (AAAA-MM-DD); se recibió %{value}.'
       header: 'Estado de las ejecuciones del LLM:'
-      help: 'Muestra el tiempo reciente de las ejecuciones del LLM y el estado de la sesión de AEAT persistida (solo local).'
-      no_run_data: 'Aún no hay telemetría de ejecuciones del LLM. Ejecuta una clasificación asistida por LLM para generarla.'
-      no_session_message: 'No se encontró ninguna sesión de AEAT persistida en disco.'
-      provider_help: 'Restringe la sección de tiempos del LLM a este proveedor (p. ej. claude, antigravity, codex).'
-      session_stale_message: 'La sesión de AEAT persistida ha superado su plazo de inactividad; una lectura en vivo volverá a autenticarse.'
-      since_help: 'Fecha ISO (AAAA-MM-DD) inferior inclusiva para los registros de ejecución del LLM.'
-      until_help: 'Fecha ISO (AAAA-MM-DD) superior inclusiva para los registros de ejecución del LLM.'
+      help: Muestra el tiempo reciente de las ejecuciones del LLM y el estado de la
+        sesión de AEAT persistida (solo local).
+      no_run_data: Aún no hay telemetría de ejecuciones del LLM. Ejecuta una clasificación
+        asistida por LLM para generarla.
+      no_session_message: No se encontró ninguna sesión de AEAT persistida en disco.
+      provider_help: Restringe la sección de tiempos del LLM a este proveedor (p.
+        ej. claude, antigravity, codex).
+      session_stale_message: La sesión de AEAT persistida ha superado su plazo de
+        inactividad; una lectura en vivo volverá a autenticarse.
+      since_help: Fecha ISO (AAAA-MM-DD) inferior inclusiva para los registros de
+        ejecución del LLM.
+      until_help: Fecha ISO (AAAA-MM-DD) superior inclusiva para los registros de
+        ejecución del LLM.
     summary:
       auth_no_session: El proveedor de autenticación %{provider} no tiene una sesión
         lista
@@ -5117,8 +5148,13 @@ errors:
     refused_llm_validation: Un objeto del modelo de lenguaje no superó la validación.
     refused_modelo_100_borrador_binding: Los valores del borrador de Modelo 100 no
       se pueden usar para el cálculo.
-    refused_modelo_amendment_complementaria_liability_decrease: 'Una complementaria no puede disminuir legalmente la deuda declarada antes de la unificación de la autoliquidación rectificativa. Utilice el procedimiento de solicitud de rectificación para una corrección que reduzca la deuda.'
-    refused_modelo_amendment_kind_not_permitted: 'El tipo de rectificación solicitado no está legalmente disponible para el período de declaración resuelto. El conjunto de tipos aceptados figura en el contexto del error.'
+    refused_modelo_amendment_complementaria_liability_decrease: Una complementaria
+      no puede disminuir legalmente la deuda declarada antes de la unificación de
+      la autoliquidación rectificativa. Utilice el procedimiento de solicitud de rectificación
+      para una corrección que reduzca la deuda.
+    refused_modelo_amendment_kind_not_permitted: El tipo de rectificación solicitado
+      no está legalmente disponible para el período de declaración resuelto. El conjunto
+      de tipos aceptados figura en el contexto del error.
     refused_modelo_amendment_override_casilla: Una sobrescritura de la declaración
       complementaria apunta a una casilla que el registro no declara para ese modelo,
       año y periodo.
