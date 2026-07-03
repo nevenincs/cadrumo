@@ -10,6 +10,11 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S02]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S03]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S04]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S08]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S09]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S10]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S11]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S12]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P09-S33]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P09-S34]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P09-S35]]'
@@ -34,6 +39,11 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 - `2026-07-03-claude-ecosystem-packaging-W01-P01-S02` - Root aeat_local_storage_root at the platform user-data directory for installed runs while preserving the PROJECT_ROOT var/storage default for a source checkout
 - `2026-07-03-claude-ecosystem-packaging-W01-P01-S03` - Assert the derived tokens, logs, secret, blob and audit roots follow the installed platform base through the existing state-root validators
 - `2026-07-03-claude-ecosystem-packaging-W01-P01-S04` - Prove installed-mode storage resolves off the platform directory and never off PROJECT_ROOT with a fresh-install roundtrip test
+- `2026-07-03-claude-ecosystem-packaging-W02-P03-S08` - Exclude _data/corpus source binaries (*.pdf, *.xls, *.xlsx) from the aeat wheel via hatchling wheel excludes
+- `2026-07-03-claude-ecosystem-packaging-W02-P03-S09` - Scaffold the aeat-data distribution build with its own pyproject reading the same source tree, force-including the corpus binaries under an aeat_data package with mirrored relative paths
+- `2026-07-03-claude-ecosystem-packaging-W02-P03-S10` - Add a wheel-content test asserting the aeat wheel ships zero corpus pdf/xls/xlsx members while keeping the extracted-text, normative-html, registry and agent payload
+- `2026-07-03-claude-ecosystem-packaging-W02-P03-S11` - Add a test that the aeat-data wheel packages exactly the corpus binaries under aeat_data with mirrored relative paths and nothing else
+- `2026-07-03-claude-ecosystem-packaging-W02-P03-S12` - Keep the _data size-budget gate meaningful per distribution after the split so the budget is not evaded by moving bytes to the companion
 - `2026-07-03-claude-ecosystem-packaging-W03-P09-S33` - Verify the mcp Python SDK annotation extension surface accepts the anthropic/requiresUserInteraction tool annotation before adopting it (frontier: confirm against the live mcp SDK and official docs)
 - `2026-07-03-claude-ecosystem-packaging-W03-P09-S34` - Add the anthropic/requiresUserInteraction annotation to CONFIRM-tier (state-mutating) MCP tools alongside the existing destructiveHint matrix
 - `2026-07-03-claude-ecosystem-packaging-W03-P09-S35` - Test the requiresUserInteraction annotation is present on every CONFIRM-tier tool and absent on read-only tools
