@@ -4810,7 +4810,7 @@ errors:
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
   internal:
-    internal_cli_unexpected_boundary: El comando falló por un error interno inesperado.
+    internal_cli_unexpected_boundary: 'El comando falló por un error interno inesperado, no por un problema de datos almacenados. Consulte los registros de diagnóstico para ver qué falló.'
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
     internal_master_key_type: 'Internal error: master-key operation received a value
