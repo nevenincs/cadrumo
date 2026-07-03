@@ -81,7 +81,9 @@ from ...domain.modelos import (
     validate_m349_nif_format,
 )
 from ._action_errors import (
+    AmendmentComplementariaLiabilityDecreaseError,
     AmendmentEvidenceMissingError,
+    AmendmentKindNotPermittedError,
     AmendmentOverrideCasillaError,
     AmendmentTargetStateError,
     AmendmentVerificationRefusedError,
@@ -409,7 +411,9 @@ __all__ = [
     "QUICKFILE_STAGE_ORDER",
     "STUB_MODELO_LOCALE_KEYS",
     "STUB_ONLY_MODELOS",
+    "AmendmentComplementariaLiabilityDecreaseError",
     "AmendmentEvidenceMissingError",
+    "AmendmentKindNotPermittedError",
     "AmendmentOverrideCasillaError",
     "AmendmentTargetStateError",
     "AmendmentVerificationRefusedError",

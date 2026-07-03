@@ -672,6 +672,8 @@ application:
         unsupported_modelo: Borrador binding is not supported for modelo %{modelo};
           the registry manifest must declare the borrador capability.
     errors:
+      amendment_complementaria_liability_decrease: 'A complementaria for modelo {modelo} filing year {filing_year} period {period} would lower the declared result from {baseline_result} to {corrected_result}. Before the autoliquidación rectificativa unification, a self-filed complementaria cannot lawfully decrease liability; use the solicitud de rectificación procedure instead.'
+      amendment_kind_not_permitted: 'The requested amendment kind {requested_kind} is not legally available for modelo {modelo} filing year {filing_year} period {period}. Accepted kinds for this period: {accepted_kinds}.'
       amendment_registry_root_missing: Registry root %{registry_root} is missing;
         amendment overrides cannot be validated.
       amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -2737,6 +2739,7 @@ cli:
     summary_lifecycle: 'Modelo lifecycle: {steps}'
     summary_roots: 'Roots: {roots}'
   diagnostics:
+    app_help: 'Local-only operator run-health and session diagnostics.'
     browser:
       http_status_label: HTTP status
       markers_label: Markers
@@ -2768,6 +2771,17 @@ cli:
       profile_label: Profile
       python_label: Python
       version_label: Version
+    run_health:
+      auth_header: 'Auth session:'
+      bad_date: '%{option} must be an ISO date (YYYY-MM-DD); got %{value}.'
+      header: 'LLM run health:'
+      help: 'Report recent local LLM run timing and persisted AEAT session staleness.'
+      no_run_data: 'No LLM run telemetry recorded yet. Run an LLM-assisted classification to populate it.'
+      no_session_message: 'No persisted AEAT session found on disk.'
+      provider_help: 'Restrict the LLM run-timing section to this provider label (e.g. claude, antigravity, codex).'
+      session_stale_message: 'The persisted AEAT session has passed its idle deadline; a live read will re-authenticate.'
+      since_help: 'Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.'
+      until_help: 'Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.'
     summary:
       auth_no_session: Authentication provider %{provider} has no ready session
       auth_none: Authentication is not configured
@@ -3563,11 +3577,16 @@ cli:
       pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review
         them with ''aeat app live notifications list''.'
     prepare:
-      help: 'Walk through the data-preparation steps for one modelo/period in order: import transactions, classify them, attach purchase-invoice evidence, register business invoices, resolve ledger readiness gaps, then start or resume the modelo work unit. Shows each step''s current progress and the exact next command to run. Read-only; safe to run repeatedly; never contacts AEAT.'
-      modelo_help: 'AEAT modelo identifier to prepare data for (e.g. 130, 303, 100).'
+      help: 'Walk through the data-preparation steps for one modelo/period in order:
+        import transactions, classify them, attach purchase-invoice evidence, register
+        business invoices, resolve ledger readiness gaps, then start or resume the
+        modelo work unit. Shows each step''s current progress and the exact next command
+        to run. Read-only; safe to run repeatedly; never contacts AEAT.'
+      modelo_help: AEAT modelo identifier to prepare data for (e.g. 130, 303, 100).
       modelo_period_error: '{message}'
-      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
-      year_help: 'Filing year (e.g. 2026).'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
+        01-12 (months). Combine with --year to choose the year.'
+      year_help: Filing year (e.g. 2026).
     status:
       drafts_empty: No saved declaration drafts were found.
       drafts_empty_with_work_units: No declaration drafts are saved - this is normal
@@ -4763,6 +4782,8 @@ errors:
     refused_llm_validation: A language-model object failed validation.
     refused_modelo_100_borrador_binding: The Modelo 100 borrador values cannot be
       consumed for the calculation.
+    refused_modelo_amendment_complementaria_liability_decrease: 'A complementaria cannot lawfully decrease the taxpayer''s declared liability before the autoliquidación rectificativa unification. Use the solicitud de rectificación procedure for a liability-decreasing correction instead.'
+    refused_modelo_amendment_kind_not_permitted: 'The requested amendment kind is not legally available for the resolved filing period. The accepted kind set is listed in the error context.'
     refused_modelo_amendment_override_casilla: An amendment override targets a casilla
       the registry does not declare for that modelo, year and period.
     refused_modelo_amendment_verification: The corrected casilla map of the amendment
