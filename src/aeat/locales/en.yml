@@ -1035,7 +1035,8 @@ application:
         {year} {part}.
       manual_section_requires_structure: Manual section requires extracted structure
         for {manual_key}.
-      no_revision_for_diff_year: 'No registry revision of {modelo} covers filing year {filing_year}. Declared revisions: {available_revisions}.'
+      no_revision_for_diff_year: 'No registry revision of {modelo} covers filing year
+        {filing_year}. Declared revisions: {available_revisions}.'
   repair_integrity:
     errors:
       conflicting_list_filters: 'Repair list filters are mutually exclusive: {filters}.
@@ -3228,19 +3229,29 @@ cli:
       help: List which subprocess LLM providers have a usable CLI on PATH.
     pull_folder:
       errors:
-        folder_id_unrecognised: 'Google Drive folder reference %{reference} does not contain a recognisable folder id. Pass a Drive folder URL or its bare folder id.'
-        folder_refused: 'Cannot list the Drive folder %{folder_id}%{scope_hint}: the folder must be reachable under the drive.file scope (created by the app or explicitly picked by the operator), or grant the required Google scope and retry.'
-      folder_help: 'Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images from.'
-      help: 'Bulk-fetch every PDF/image invoice in a Drive folder and store each as encrypted evidence (unlinked to any transaction; link with ''aeat app ledger attach'' or ''link'').'
+        folder_id_unrecognised: Google Drive folder reference %{reference} does not
+          contain a recognisable folder id. Pass a Drive folder URL or its bare folder
+          id.
+        folder_refused: 'Cannot list the Drive folder %{folder_id}%{scope_hint}: the
+          folder must be reachable under the drive.file scope (created by the app
+          or explicitly picked by the operator), or grant the required Google scope
+          and retry.'
+      folder_help: Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images
+        from.
+      help: Bulk-fetch every PDF/image invoice in a Drive folder and store each as
+        encrypted evidence (unlinked to any transaction; link with 'aeat app ledger
+        attach' or 'link').
       labels:
-        fetched: 'fetched_count'
-        folder_id: 'folder_id'
-        refused: 'refused_count'
-        skipped: 'skipped_non_document_count'
-        total: 'total_documents'
-      note_help: 'Optional note recorded on every fetched attachment.'
+        fetched: fetched_count
+        folder_id: folder_id
+        refused: refused_count
+        skipped: skipped_non_document_count
+        total: total_documents
+      note_help: Optional note recorded on every fetched attachment.
       notices:
-        files_refused: '%{refused_count} file(s) in this folder could not be fetched under the drive.file scope; download them manually and attach with ''aeat app ledger attach --attachment-id ...''.'
+        files_refused: '%{refused_count} file(s) in this folder could not be fetched
+          under the drive.file scope; download them manually and attach with ''aeat
+          app ledger attach --attachment-id ...''.'
     remove:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction
@@ -3520,7 +3531,9 @@ cli:
       show_suppressed_help: Include filtered (non-applicable) obligations in the output
         with their applicability verdict and reason.
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
-    calendar_local_filing_evidence_unavailable: 'Overview calendar local filing evidence could not be loaded; the calendar is derived from the deadline schedule and may over-report an obligation as still due.'
+    calendar_local_filing_evidence_unavailable: Overview calendar local filing evidence
+      could not be loaded; the calendar is derived from the deadline schedule and
+      may over-report an obligation as still due.
     calendar_local_live_events_unavailable: Local live-event evidence is unavailable
       for this calendar row.
     calendar_local_modelo_events_unavailable: Local modelo event evidence is unavailable
@@ -3540,13 +3553,21 @@ cli:
       modelo_help: AEAT modelo identifier (e.g. 303, 130, 100).
       year_help: Fiscal year for the applicability evaluation; defaults to the current
         year.
-    local_work_units_unavailable: 'Local Modelo work-unit state could not be loaded; this overview is derived from the deadline schedule and may over-report an in-progress draft as still due or omit older in-progress drafts.'
+    local_work_units_unavailable: Local Modelo work-unit state could not be loaded;
+      this overview is derived from the deadline schedule and may over-report an in-progress
+      draft as still due or omit older in-progress drafts.
     period: Period
     period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12
       (months). Combine with --year to choose the year.'
     post_filing:
       pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review
         them with ''aeat app live notifications list''.'
+    prepare:
+      help: 'Walk through the data-preparation steps for one modelo/period in order: import transactions, classify them, attach purchase-invoice evidence, register business invoices, resolve ledger readiness gaps, then start or resume the modelo work unit. Shows each step''s current progress and the exact next command to run. Read-only; safe to run repeatedly; never contacts AEAT.'
+      modelo_help: 'AEAT modelo identifier to prepare data for (e.g. 130, 303, 100).'
+      modelo_period_error: '{message}'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
+      year_help: 'Filing year (e.g. 2026).'
     status:
       drafts_empty: No saved declaration drafts were found.
       drafts_empty_with_work_units: No declaration drafts are saved - this is normal
@@ -3617,10 +3638,13 @@ cli:
       tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
       verify_help: Verify the legal-norm corpus integrity
       view_help: Show one legal authority and, optionally, one of its articles
-    diff_revisions_from_year_help: 'Earlier filing year whose covering revision is the diff baseline'
-    diff_revisions_help: 'Diff the registry revisions of one modelo across two filing years'
-    diff_revisions_modelo_help: 'Modelo identifier to diff'
-    diff_revisions_to_year_help: 'Later filing year whose covering revision is compared against the baseline'
+    diff_revisions_from_year_help: Earlier filing year whose covering revision is
+      the diff baseline
+    diff_revisions_help: Diff the registry revisions of one modelo across two filing
+      years
+    diff_revisions_modelo_help: Modelo identifier to diff
+    diff_revisions_to_year_help: Later filing year whose covering revision is compared
+      against the baseline
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
     manuals:
@@ -4117,7 +4141,7 @@ errors:
     error_categories: An error occurred in the expense categories.
     error_categories_validation: A category record failed validation.
     error_config_boundary: The config command encountered an unexpected internal error.
-    error_corpus_search: 'The on-host corpus search could not be completed.'
+    error_corpus_search: The on-host corpus search could not be completed.
     error_deadlines_deadline: An error occurred in the deadline calculation.
     error_deadlines_missing_windows: Deadline windows are missing.
     error_deadlines_profile: The self-employed profile could not be loaded or validated
@@ -4504,7 +4528,8 @@ errors:
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
   internal:
-    internal_cli_unexpected_boundary: 'The command failed due to an unexpected internal error, not a stored-data problem. Inspect the diagnostic logs to see what failed.'
+    internal_cli_unexpected_boundary: The command failed due to an unexpected internal
+      error, not a stored-data problem. Inspect the diagnostic logs to see what failed.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
     internal_master_key_type: 'Internal error: master-key operation received a value
@@ -4660,8 +4685,9 @@ errors:
       command's arguments or run `aeat --help`.
     refused_config_reset_unconfirmed: The configuration reset was not confirmed. Re-run
       the command confirming the operation.
-    refused_corpus_search_dependency: 'This corpus-search operation needs the optional semantic-search components; install them and retry.'
-    refused_corpus_search_input: 'The corpus search request could not be satisfied.'
+    refused_corpus_search_dependency: This corpus-search operation needs the optional
+      semantic-search components; install them and retry.
+    refused_corpus_search_input: The corpus search request could not be satisfied.
     refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
       violated; check that exactly one of next_action or dead_end is set for fail/warn
       rows, and neither is set for ok rows.
@@ -4963,7 +4989,14 @@ mcp:
       that no tool result in this session produced. Verify the figure against a calculate/revision
       read before relying on it.'
   harness:
-    off_host_consent: 'Privacy notice — read before continuing. This console is operated by an AI assistant running on your chosen LLM provider. Your words, and the figures the assistant works with (amounts, casilla values, obligations), are sent to that provider to operate the console. Your SOURCE DOCUMENTS — invoices, bank statements, and any evidence bytes — NEVER leave your machine: they stay in encrypted local storage and are never transmitted. If you are acting for a third party (a gestor or professional), confirm this is acceptable before you proceed.'
+    off_host_consent: 'Privacy notice — read before continuing. This console is operated
+      by an AI assistant running on your chosen LLM provider. Your words, and the
+      figures the assistant works with (amounts, casilla values, obligations), are
+      sent to that provider to operate the console. Your SOURCE DOCUMENTS — invoices,
+      bank statements, and any evidence bytes — NEVER leave your machine: they stay
+      in encrypted local storage and are never transmitted. If you are acting for
+      a third party (a gestor or professional), confirm this is acceptable before
+      you proceed.'
   persona:
     handoff_denied: '''{command}'' is the irreversible filing-handoff boundary, owned
       by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied
@@ -5026,6 +5059,7 @@ sheets:
     headers:
       acquisition_date: Acquisition date
       amount: Amount
+      amount_donated: Amount donated
       asset_class_code: Asset class code
       asset_identifier: Asset identifier
       base_imponible: Tax base
@@ -5035,7 +5069,11 @@ sheets:
       counterparty_tax_id: Counterparty tax id
       country_code: Country code
       currency_code: Currency code
+      deduction_percentage: Deduction percentage
+      donor_legal_name: Donor legal name
+      donor_tax_id: Donor tax id
       ingreso_a_cuenta: In-kind tax credit
+      is_recurrent: Recurrent donation
       member_legal_name: Member legal name
       member_state_code: Member state
       member_tax_id: Member tax id

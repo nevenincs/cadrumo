@@ -337,3 +337,34 @@ class OverviewExplainResult(OutputSchema):
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
+
+
+class OverviewPrepareStepPayload(OutputSchema):
+    """One ordered row in the ``aeat app overview prepare`` checklist.
+
+    Mirrors :class:`~aeat.application.overview.DataPrepStep`: a closed step
+    identifier, its current readiness state, a human-readable progress
+    summary, and the exact next ``aeat`` command to run.
+    """
+
+    step_id: str
+    state: str
+    summary: str
+    next_command: str
+
+
+@register_schema("overview.prepare")
+class OverviewPrepareResult(OutputSchema):
+    """JSON envelope result for ``aeat app overview prepare``.
+
+    Wraps :class:`~aeat.application.overview.DataPrepWalkthrough`: the ordered
+    data-prep checklist for one ``(modelo, filing_year, period)`` scope,
+    read-only over the active profile bucket's ledger, invoice, evidence, and
+    modelo work-unit state. Never contacts AEAT and persists nothing.
+    """
+
+    modelo: str
+    filing_year: int
+    period: str
+    steps: list[OverviewPrepareStepPayload] = []
+    ready_for_calculation: bool = False

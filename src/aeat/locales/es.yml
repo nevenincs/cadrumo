@@ -1128,7 +1128,8 @@ application:
         {year} {part}.
       manual_section_requires_structure: La seccion del manual requiere estructura
         extraida para {manual_key}.
-      no_revision_for_diff_year: 'Ninguna revisión del registro de {modelo} cubre el ejercicio {filing_year}. Revisiones declaradas: {available_revisions}.'
+      no_revision_for_diff_year: 'Ninguna revisión del registro de {modelo} cubre
+        el ejercicio {filing_year}. Revisiones declaradas: {available_revisions}.'
   repair_integrity:
     errors:
       conflicting_list_filters: 'Los filtros de lista de reparacion son mutuamente
@@ -3458,19 +3459,29 @@ cli:
       help: Lista los proveedores LLM en subproceso con CLI disponible en PATH.
     pull_folder:
       errors:
-        folder_id_unrecognised: 'La referencia de carpeta de Drive %{reference} no contiene un id de carpeta reconocible. Indica una URL de carpeta de Drive o su id.'
-        folder_refused: 'No se puede listar la carpeta de Drive %{folder_id}%{scope_hint}: la carpeta debe ser accesible bajo el permiso drive.file (creada por la app o elegida explicitamente por el operador), o concede el permiso de Google requerido y vuelve a intentarlo.'
-      folder_help: 'URL de la carpeta de Drive o su id para obtener en bloque las facturas PDF/imagen.'
-      help: 'Obtiene en bloque cada PDF/imagen de factura en una carpeta de Drive y guarda cada una como evidencia cifrada (sin vincular a ningun movimiento; vincula con ''aeat app ledger attach'' o ''link'').'
+        folder_id_unrecognised: La referencia de carpeta de Drive %{reference} no
+          contiene un id de carpeta reconocible. Indica una URL de carpeta de Drive
+          o su id.
+        folder_refused: 'No se puede listar la carpeta de Drive %{folder_id}%{scope_hint}:
+          la carpeta debe ser accesible bajo el permiso drive.file (creada por la
+          app o elegida explicitamente por el operador), o concede el permiso de Google
+          requerido y vuelve a intentarlo.'
+      folder_help: URL de la carpeta de Drive o su id para obtener en bloque las facturas
+        PDF/imagen.
+      help: Obtiene en bloque cada PDF/imagen de factura en una carpeta de Drive y
+        guarda cada una como evidencia cifrada (sin vincular a ningun movimiento;
+        vincula con 'aeat app ledger attach' o 'link').
       labels:
-        fetched: 'obtenidos'
-        folder_id: 'id_carpeta'
-        refused: 'rechazados'
-        skipped: 'omitidos_no_documento'
-        total: 'total_documentos'
-      note_help: 'Nota opcional registrada en cada archivo adjunto obtenido.'
+        fetched: obtenidos
+        folder_id: id_carpeta
+        refused: rechazados
+        skipped: omitidos_no_documento
+        total: total_documentos
+      note_help: Nota opcional registrada en cada archivo adjunto obtenido.
       notices:
-        files_refused: '%{refused_count} archivo(s) de esta carpeta no se pudieron obtener bajo el permiso drive.file; descargalos manualmente y adjuntalos con ''aeat app ledger attach --attachment-id ...''.'
+        files_refused: '%{refused_count} archivo(s) de esta carpeta no se pudieron
+          obtener bajo el permiso drive.file; descargalos manualmente y adjuntalos
+          con ''aeat app ledger attach --attachment-id ...''.'
     remove:
       actor_help: Nombre del operador registrado en el evento del bucket
       dry_run_help: Informar los efectos sin eliminar el movimiento del libro
@@ -3766,7 +3777,9 @@ cli:
       show_suppressed_help: Mostrar también las entradas suprimidas (no aplicables)
         en el calendario.
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
-    calendar_local_filing_evidence_unavailable: 'No se pudo cargar la evidencia de presentación local del calendario; el calendario se deriva del calendario de plazos y puede sobrenotificar una obligación como aún pendiente.'
+    calendar_local_filing_evidence_unavailable: No se pudo cargar la evidencia de
+      presentación local del calendario; el calendario se deriva del calendario de
+      plazos y puede sobrenotificar una obligación como aún pendiente.
     calendar_local_live_events_unavailable: La evidencia local de eventos en vivo
       no esta disponible para esta fila del calendario.
     calendar_local_modelo_events_unavailable: La evidencia local de eventos de modelo
@@ -3786,13 +3799,22 @@ cli:
       modelo_help: Identificador del modelo AEAT (p. ej. 303, 130, 100).
       year_help: Ejercicio fiscal para evaluar la aplicabilidad; por defecto, el año
         actual.
-    local_work_units_unavailable: 'No se pudo cargar el estado local de las unidades de trabajo de Modelo; esta vista se deriva del calendario de plazos y puede sobrenotificar un borrador en curso como aún pendiente u omitir borradores en curso más antiguos.'
+    local_work_units_unavailable: No se pudo cargar el estado local de las unidades
+      de trabajo de Modelo; esta vista se deriva del calendario de plazos y puede
+      sobrenotificar un borrador en curso como aún pendiente u omitir borradores en
+      curso más antiguos.
     period: Periodo
     period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual),
       01-12 (meses). Combínelo con --year para elegir el año.'
     post_filing:
       pending: '%{count} evento(s) posteriores a la presentación de AEAT requieren
         atención: %{kinds}. Revísalos con ''aeat app live notifications list''.'
+    prepare:
+      help: 'Recorre los pasos de preparación de datos para un modelo/periodo en orden: importar transacciones, clasificarlas, adjuntar justificantes de facturas de compra, registrar facturas de negocio, resolver las incidencias de preparación del libro y, por último, iniciar o retomar la unidad de trabajo del modelo. Muestra el progreso actual de cada paso y el comando exacto a ejecutar a continuación. Solo lectura; seguro de ejecutar repetidamente; nunca contacta con la AEAT.'
+      modelo_help: 'Identificador de modelo AEAT para el que preparar los datos (p. ej. 130, 303, 100).'
+      modelo_period_error: '{message}'
+      period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
+      year_help: 'Año de declaración (p. ej. 2026).'
     status:
       drafts_empty: No se encontraron borradores de declaraciones guardados.
       drafts_empty_with_work_units: No hay borradores de declaraciones guardados;
@@ -3867,10 +3889,13 @@ cli:
       tag_help: Filtrar por etiqueta de dominio fiscal (p. ej. 'irpf', 'iva')
       verify_help: Verificar la integridad del corpus normativo
       view_help: Mostrar una autoridad legal y, opcionalmente, uno de sus artículos
-    diff_revisions_from_year_help: 'Ejercicio fiscal anterior cuya revisión cubridora es la base de la comparación'
-    diff_revisions_help: 'Compara las revisiones del registro de un modelo entre dos ejercicios fiscales'
-    diff_revisions_modelo_help: 'Identificador del modelo a comparar'
-    diff_revisions_to_year_help: 'Ejercicio fiscal posterior cuya revisión cubridora se compara con la base'
+    diff_revisions_from_year_help: Ejercicio fiscal anterior cuya revisión cubridora
+      es la base de la comparación
+    diff_revisions_help: Compara las revisiones del registro de un modelo entre dos
+      ejercicios fiscales
+    diff_revisions_modelo_help: Identificador del modelo a comparar
+    diff_revisions_to_year_help: Ejercicio fiscal posterior cuya revisión cubridora
+      se compara con la base
     inspect_help: Inspeccionar el estado del registro y las referencias
     inspect_registry_root_help: Ruta al directorio raíz del registro
     manuals:
@@ -4390,7 +4415,7 @@ errors:
     error_categories: Se produjo un error en las categorías de gasto.
     error_categories_validation: Un registro de categoría no superó la validación.
     error_config_boundary: El comando de configuración encontró un error interno inesperado.
-    error_corpus_search: 'No se pudo completar la búsqueda local en el corpus.'
+    error_corpus_search: No se pudo completar la búsqueda local en el corpus.
     error_deadlines_deadline: Se produjo un error en el cálculo de plazos.
     error_deadlines_missing_windows: Faltan las ventanas de plazo de presentacion.
     error_deadlines_profile: El perfil de autónomo no se pudo cargar o validar para
@@ -4817,7 +4842,9 @@ errors:
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
   internal:
-    internal_cli_unexpected_boundary: 'El comando falló por un error interno inesperado, no por un problema de datos almacenados. Consulte los registros de diagnóstico para ver qué falló.'
+    internal_cli_unexpected_boundary: El comando falló por un error interno inesperado,
+      no por un problema de datos almacenados. Consulte los registros de diagnóstico
+      para ver qué falló.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
     internal_master_key_type: 'Internal error: master-key operation received a value
@@ -4983,8 +5010,10 @@ errors:
       Compruebe los argumentos o ejecute `aeat --help`.
     refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
       confirmó. Vuelve a ejecutar el comando confirmando la operación.
-    refused_corpus_search_dependency: 'Esta operación de búsqueda en el corpus necesita los componentes opcionales de búsqueda semántica; instálelos y reinténtelo.'
-    refused_corpus_search_input: 'No se pudo satisfacer la solicitud de búsqueda en el corpus.'
+    refused_corpus_search_dependency: Esta operación de búsqueda en el corpus necesita
+      los componentes opcionales de búsqueda semántica; instálelos y reinténtelo.
+    refused_corpus_search_input: No se pudo satisfacer la solicitud de búsqueda en
+      el corpus.
     refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnostico
       incumplida.'
     refused_evidence_bundle_not_found: No existe ningún paquete de evidencias con
@@ -5307,7 +5336,14 @@ mcp:
       que ningún resultado de herramienta de esta sesión ha producido. Verifica la
       cifra con una lectura de calculate/revision antes de confiar en ella.'
   harness:
-    off_host_consent: 'Aviso de privacidad — léalo antes de continuar. Esta consola la maneja un asistente de IA que se ejecuta en el proveedor de LLM que usted elija. Sus palabras, y las cifras con las que trabaja el asistente (importes, valores de casilla, obligaciones), se envían a ese proveedor para operar la consola. Sus DOCUMENTOS DE ORIGEN — facturas, extractos bancarios y cualquier byte de evidencia — NUNCA salen de su equipo: permanecen en almacenamiento local cifrado y nunca se transmiten. Si actúa por cuenta de un tercero (un gestor o profesional), confirme que esto es aceptable antes de continuar.'
+    off_host_consent: 'Aviso de privacidad — léalo antes de continuar. Esta consola
+      la maneja un asistente de IA que se ejecuta en el proveedor de LLM que usted
+      elija. Sus palabras, y las cifras con las que trabaja el asistente (importes,
+      valores de casilla, obligaciones), se envían a ese proveedor para operar la
+      consola. Sus DOCUMENTOS DE ORIGEN — facturas, extractos bancarios y cualquier
+      byte de evidencia — NUNCA salen de su equipo: permanecen en almacenamiento local
+      cifrado y nunca se transmiten. Si actúa por cuenta de un tercero (un gestor
+      o profesional), confirme que esto es aceptable antes de continuar.'
   persona:
     handoff_denied: '''{command}'' es la frontera irreversible de entrega de la presentación,
       propiedad de la persona ''{owner}''; la persona ''{persona}'' la tiene denegada
@@ -5373,6 +5409,7 @@ sheets:
     headers:
       acquisition_date: Fecha de adquisición
       amount: Importe
+      amount_donated: Importe donado
       asset_class_code: Clave del bien
       asset_identifier: Identificación del bien
       base_imponible: Base imponible
@@ -5382,7 +5419,11 @@ sheets:
       counterparty_tax_id: NIF de la contraparte
       country_code: Código de país
       currency_code: Código de divisa
+      deduction_percentage: Porcentaje de deducción
+      donor_legal_name: Nombre o razón social del donante
+      donor_tax_id: NIF del donante
       ingreso_a_cuenta: Ingreso a cuenta
+      is_recurrent: Donativo recurrente
       member_legal_name: Razón social del miembro
       member_state_code: Estado miembro
       member_tax_id: NIF del miembro
