@@ -438,13 +438,26 @@ def _assert_wheel_metadata_matches_pyproject(repo_root: Path, wheel: Path) -> No
         raise SystemExit(f"dev-only dependencies leaked into wheel metadata: {leaked_dev!r}")
 
 
-def _export_names(output: str) -> set[str]:
-    """Return normalized package names from a requirements export."""
+def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
+    """Return normalized package names from a requirements export.
+
+    A dependency resolved through a ``[tool.uv.sources]`` path source (the
+    not-yet-published ``aeat-data`` companion) exports as a bare local path
+    row (``./packaging/aeat_data``) rather than a requirement string; resolve
+    such a row to the referenced project's own ``[project].name`` so the
+    surface checks see the real package name.
+    """
     names: set[str] = set()
     for line in output.splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
+        if stripped.startswith(("./", "../")) and repo_root is not None:
+            local_pyproject = (repo_root / stripped / "pyproject.toml").resolve()
+            if local_pyproject.is_file():
+                local = tomllib.loads(local_pyproject.read_text(encoding=_UTF_8))
+                names.add(_normalize_name(local["project"]["name"]))
+                continue
         names.add(_requirement_name(stripped))
     return names
 
@@ -477,9 +490,9 @@ def _validate_frozen_exports(repo_root: Path, uv: str) -> None:
         [uv, "export", "--frozen", "--all-extras", "--all-groups", "--no-emit-project", "--no-hashes"],
         cwd=repo_root,
     )
-    core_names = _export_names(core.stdout)
-    extras_names = _export_names(extras.stdout)
-    dev_names = _export_names(dev.stdout)
+    core_names = _export_names(core.stdout, repo_root=repo_root)
+    extras_names = _export_names(extras.stdout, repo_root=repo_root)
+    dev_names = _export_names(dev.stdout, repo_root=repo_root)
     _assert_export_surface(
         "core",
         core_names,
