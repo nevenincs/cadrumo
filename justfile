@@ -476,7 +476,7 @@ release:
     echo "▶ release-please release-pr --dry-run --debug (output → $LOG)"
     npx --yes release-please@16 release-pr \
         --token "$TOKEN" \
-        --repo-url wgergely/aeat \
+        --repo-url nevenincs/aeat \
         --target-branch main \
         --config-file release-please-config.json \
         --manifest-file .release-please-manifest.json \
@@ -507,7 +507,7 @@ release:
     Write-Host "▶ release-please release-pr --dry-run --debug (output → $log)"
     & npx --yes release-please@16 release-pr `
         --token $token `
-        --repo-url wgergely/aeat `
+        --repo-url nevenincs/aeat `
         --target-branch main `
         --config-file release-please-config.json `
         --manifest-file .release-please-manifest.json `
