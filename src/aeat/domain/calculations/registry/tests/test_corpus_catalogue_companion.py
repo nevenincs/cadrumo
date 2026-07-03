@@ -22,7 +22,10 @@ import pytest
 
 from .....core.resources import bundled_path
 from .._corpus_catalogue import (
+    CORPUS_SOURCES_INSTALL_HINT,
+    CorpusCompanionAdvisory,
     is_companion_corpus_binary,
+    verify_source_catalogue,
     verify_source_file,
 )
 from .._errors import RegistryValidationError
@@ -44,6 +47,20 @@ def _committed_present_companion_binary() -> SourceReference:
     raise AssertionError("no present companion corpus binary found in the committed catalogue")
 
 
+def _absent_source(*, corpus_path: str, kind: str) -> SourceReference:
+    """Build a source reference pointing at an absent corpus path with a plausible hash."""
+    template = next(iter(_committed_registry_tree()[1].sources.values()))
+    return template.model_copy(
+        update={
+            "id": "aeat-companion-probe",
+            "kind": kind,
+            "corpus_path": corpus_path,
+            "sha256": "0" * 64,
+            "bytes": 1024,
+        },
+    )
+
+
 def test_corrupted_present_corpus_binary_still_hard_fails(tmp_path: Path) -> None:
     source = _committed_present_companion_binary()
     real_path = bundled_path(*source.corpus_path.split("/"))
@@ -63,3 +80,36 @@ def test_corrupted_present_corpus_binary_still_hard_fails(tmp_path: Path) -> Non
 
     with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
         verify_source_file(tmp_path, source)
+
+
+def test_absent_companion_binary_surfaces_a_loud_advisory(tmp_path: Path) -> None:
+    corpus_path = "corpus/aeat_official/disenos_registro/modelo_absent_probe/files/absent-companion.xlsx"
+    source = _absent_source(corpus_path=corpus_path, kind="record_design")
+    assert is_companion_corpus_binary(source)
+
+    # verify_source_file returns an advisory (never raises) that names the file
+    # and the install hint.
+    advisory = verify_source_file(tmp_path, source)
+    assert advisory is not None
+    assert corpus_path in advisory
+    assert CORPUS_SOURCES_INSTALL_HINT in advisory
+
+    # verify_source_catalogue carries the advisory in its result (never silently
+    # accepted) and emits the loud CorpusCompanionAdvisory warning.
+    with pytest.warns(CorpusCompanionAdvisory, match="corpus source binary"):
+        result = verify_source_catalogue(tmp_path, {source.id: source})
+    assert result != ()
+    assert any(corpus_path in message for message in result)
+    assert all(CORPUS_SOURCES_INSTALL_HINT in message for message in result)
+
+
+def test_absent_non_companion_corpus_file_still_hard_fails(tmp_path: Path) -> None:
+    corpus_path = "corpus/normatives/html/absent-probe.html"
+    source = _absent_source(corpus_path=corpus_path, kind="form_spec")
+    assert not is_companion_corpus_binary(source)
+
+    with pytest.raises(RegistryValidationError, match="missing corpus file"):
+        verify_source_file(tmp_path, source)
+
+    with pytest.raises(RegistryValidationError, match="missing corpus file"):
+        verify_source_catalogue(tmp_path, {source.id: source})
