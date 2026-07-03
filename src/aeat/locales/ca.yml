@@ -3930,6 +3930,13 @@ cli:
     diff_revisions_modelo_help: Identificador del model a comparar
     diff_revisions_to_year_help: Exercici fiscal posterior la revisió del qual es
       compara amb la base
+    errors:
+      capability:
+        manuals_verify: 'verificació de manuals'
+        parity: 'execució i reproducció de paritat del registre'
+        registry_verify: 'verificació d''integritat del registre'
+        workbooks_verify: 'verificació de paritat de llibres de càlcul'
+      corpus_companion_absent: 'Rebutjat. Aquesta ordre (%{capability}) necessita els fitxers binaris del corpus inclosos en la distribució complementària opcional aeat-data, que no està instal·lada. Instal·leu-la amb: %{install}'
     inspect_help: Inspeccionar l'estat del registre i les referències
     inspect_registry_root_help: Ruta al directori arrel del registre
     manuals:
