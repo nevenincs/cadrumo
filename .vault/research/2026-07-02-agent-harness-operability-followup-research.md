@@ -41,9 +41,9 @@ and hardening items; the large/blocked items are dispositioned honestly below.
 | 8 handoff-scope tighten (LOW) | LANDED | `cc8f5aa7cd` `is_handoff_denied` gated on the modelo family |
 | 8b corpus_search errors → AeatError (L1) | LANDED | `34607acf8f` registered as REFUSED/ERROR codes (they had collapsed to exit-6 INTERNAL) |
 | 4 off-host consent notice (H3) | LANDED | `5aa6f79f75` standing R9 disclosure on the `harness.load` floor, surfaced first |
-| 1 live-model measurement (C2) | IN PROGRESS | live Opus persona re-run validating the landed fixes; report persisted to the vault |
-| 2 + 3 semantic grounding provisioning + footprint (H1/H2) | DEFERRED — pipeline-worthy | Requires resolving the S79↔S87 contradiction as an explicit architecture decision (the `pyproject` comment says "corpus vectors ship as plain data" while `test_corpus_search_package_ships_no_model_artifacts` enforces "no matrix ships" — a genuine contradiction), plus `model2vec` provisioning that is not installed in this env. Warrants an ADR + plan, not an ad-hoc reversal of an enforced gate. |
-| 5 bundle signing (M1) | BLOCKED | Needs a real release identity/certificate; signing must never be faked. Defer until an identity exists. |
+| 1 live-model measurement (C2) | LANDED | `3452e24265` live Opus persona (PASS) + persisted vault measurement (`2026-07-03-agent-harness-operability-followup-audit`) |
+| 2 + 3 semantic grounding provisioning + footprint (H1/H2) | LANDED | `cc1504bfa4` — S79↔S87 resolved (vectors BUILT behind the extra, never shipped; `pyproject` comment corrected to match the gate); `ensure_corpus_embeddings` build-on-first-use wired into `search_corpus`; REAL potion hybrid recall proven (cross-lingual hit lexical-only misses); footprint measured (~0.5 GB weight / ~2.1 GB HF cache). Residual minor hardening: pin `POTION_MODEL_REVISION` from `"main"` to a commit hash, and perfect the app-cache-dir passthrough (this model2vec version routes the download to the default HF hub cache). |
+| 5 bundle signing (M1) | MECHANISM LOCKED; signing blocked on identity | `a5bb01f279` — the sign path is proven-wired and honest (unsigned + never fabricated without a signer; invokes `mcpb sign` when a signer exists). The actual signature still needs a real release identity/certificate that must never be faked; when one exists `python packaging/mcpb/build.py` signs with no code change. |
 
 ### Deferred items carried forward from the refoundation close
 
