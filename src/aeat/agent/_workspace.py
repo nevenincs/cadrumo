@@ -24,7 +24,9 @@ the reviewed harness markdown (no secrets, no tax data) and computes no value.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
+from importlib import metadata as _metadata
 from importlib.resources.abc import Traversable
 from pathlib import Path
 
@@ -41,6 +43,112 @@ _AGENTS_SUBDIR = "agents"
 _SKILLS_SUBDIR = "skills"
 _SKILL_ENTRYPOINT = "SKILL.md"
 _CLAUDE_MEMORY_FILE = "CLAUDE.md"
+
+# --- Claude plugin layout -------------------------------------------------
+#
+# The plugin layout target (ADR "Plugin generation") re-materialises the SAME
+# authored harness source as a one-click Claude plugin: a ``.claude-plugin/``
+# manifest, a top-level ``skills/`` and ``agents/`` tree, and an ``.mcp.json``
+# declaring the stdio ``aeat-mcp`` server. The manifest schema is the one the
+# live ``claude plugin validate --strict`` oracle accepts; every field name here
+# is verified against that validator, not trusted from documentation.
+_PLUGIN_DIR = ".claude-plugin"
+_PLUGIN_MANIFEST = "plugin.json"
+_PLUGIN_NAME = "aeat"
+_PLUGIN_DISPLAY_NAME = "AEAT Spanish tax assistant"
+# Distilled from the mcpb manifest one-liner; keeps the never-files-live boundary
+# stated on the operator-facing surface.
+_PLUGIN_DESCRIPTION = (
+    "Operate the aeat Spanish-tax CLI: grounded search over the bundled BOE/AEAT "
+    "legal corpus, situation-keyed guided workflows, and gated execution that "
+    "never files to AEAT."
+)
+_PLUGIN_AUTHOR_NAME = "AEAT tax assistant project"
+_PLUGIN_LICENSE = "Apache-2.0"
+_PLUGIN_KEYWORDS = ("tax", "aeat", "spain", "irpf", "iva", "modelo")
+_PLUGIN_SCHEMA = "https://anthropic.com/claude-code/plugin.schema.json"
+
+
+def _plugin_version() -> str:
+    """Resolve the plugin version from installed package metadata.
+
+    Reads the ``aeat`` distribution version through :mod:`importlib.metadata`,
+    falling back to the in-package ``__version__`` when the distribution is not
+    installed (an editable checkout run straight from the source tree).
+    """
+    try:
+        return _metadata.version(_PLUGIN_NAME)
+    except _metadata.PackageNotFoundError:
+        from .. import __version__
+
+        return __version__
+
+
+class PluginManifest(BaseModel):
+    """Result of materialising a Claude plugin from the shipped harness source.
+
+    ``skills_written`` / ``agents_written`` count the ``skills/<name>/SKILL.md``
+    and ``agents/<persona>.md`` documents written at the plugin root;
+    ``persona_default`` is the ``userConfig`` persona default baked into the
+    manifest (empty string = the full tool surface).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    output_path: str = Field(min_length=1)
+    plugin_name: str = Field(min_length=1)
+    version: str = Field(min_length=1)
+    skills_written: int = Field(ge=0)
+    agents_written: int = Field(ge=0)
+    persona_default: str = ""
+
+
+def _write_json(dest_dir: Path, name: str, document: object) -> None:
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    (dest_dir / name).write_text(json.dumps(document, indent=2) + "\n", encoding=_UTF_8)
+
+
+def _plugin_manifest_document(version: str) -> dict[str, object]:
+    """Build the ``.claude-plugin/plugin.json`` manifest document.
+
+    ``name`` is the sole validator-required field; the remaining fields are the
+    publication metadata a first-class external-service plugin declares.
+    ``defaultEnabled`` is ``false`` per the external-service recommendation so
+    the plugin never auto-activates its MCP server on install.
+    """
+    return {
+        "$schema": _PLUGIN_SCHEMA,
+        "name": _PLUGIN_NAME,
+        "displayName": _PLUGIN_DISPLAY_NAME,
+        "description": _PLUGIN_DESCRIPTION,
+        "version": version,
+        "author": {"name": _PLUGIN_AUTHOR_NAME},
+        "license": _PLUGIN_LICENSE,
+        "keywords": list(_PLUGIN_KEYWORDS),
+        "defaultEnabled": False,
+    }
+
+
+def materialise_plugin(output_dir: Path, *, version: str | None = None) -> PluginManifest:
+    """Write the shipped harness under ``output_dir`` as a Claude plugin.
+
+    Emits ``.claude-plugin/plugin.json`` carrying the plugin manifest. The
+    ``version`` is resolved from installed package metadata when not supplied.
+
+    Returns:
+        :class:`PluginManifest` describing the plugin written.
+    """
+    resolved_version = version or _plugin_version()
+
+    _write_json(output_dir / _PLUGIN_DIR, _PLUGIN_MANIFEST, _plugin_manifest_document(resolved_version))
+
+    return PluginManifest(
+        output_path=str(output_dir),
+        plugin_name=_PLUGIN_NAME,
+        version=resolved_version,
+        skills_written=0,
+        agents_written=0,
+    )
 
 
 class WorkspaceManifest(BaseModel):
