@@ -40,6 +40,7 @@ from .. import (
     AeatLoginAssertionError,
     AeatSession,
     AeatSessionExpiredError,
+    AuthConfigurationError,
     BrowserContextLike,
     BrowserSessionLike,
     CertificateLoginAssertionDetail,
@@ -266,6 +267,12 @@ class _RaisingBrowserContext:
 
 
 class _RecordingBrowserSession:
+    # ``BrowserSessionProfileLike`` conformance: ``None`` exercises the
+    # settings-derived storage-state fallback in
+    # ``AeatAuthenticator._resolve_storage_state_path`` rather than
+    # raising ``AttributeError`` on plain attribute access.
+    profile: None = None
+
     def __init__(
         self,
         cert_ok: bool = True,
@@ -827,8 +834,9 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, _settings_factor
     across the subsequent ``authenticate()`` call. Proves the
     single-lock invariant by reauthenticating and confirming no
     timeout. Does NOT prove correct delegation (no happy-path
-    browser factory is injected here); that is covered by the live
-    test suite in ``test_authenticator_live.py``.
+    browser factory is injected here); that is covered by
+    ``test_reauthenticate_happy_path_with_fake_browser_factory`` in
+    ``test_authenticator_part2.py``.
     """
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
@@ -846,10 +854,15 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, _settings_factor
             subject="CN=x",
         )
         # authenticate() without an injected browser_session_factory
-        # raises AeatLoginAssertionError; we only care that the call
-        # returns in bounded time (no deadlock).
-        with pytest.raises(AeatLoginAssertionError, match=r"login|browser|session|factory|reauthenticate"):
+        # raises AuthConfigurationError (missing-factory taxonomy, per
+        # AeatAuthenticator._resolve_browser_session); we only care that
+        # the call returns in bounded time (no deadlock).
+        with pytest.raises(AuthConfigurationError, match=r"browser.*session factory"):
             await asyncio.wait_for(auth.reauthenticate(session), timeout=5.0)
+    # The handshake runs before browser-session resolution inside
+    # authenticate(), so the verifier is invoked once (for the delegated
+    # authenticate() call) even though that call ultimately fails at the
+    # later missing-factory step.
     assert verifier.calls == 1
 
 
@@ -931,8 +944,6 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, _settings_
             return None
 
     class _SuspendingContext:
-        _aeat_certificate_thumbprint: str = ""
-
         async def new_page(self) -> _SuspendingPage:
             return _SuspendingPage()
 
@@ -941,7 +952,7 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, _settings_
 
     cert = authenticator.load_certificate()
     ctx = _SuspendingContext()
-    ctx._aeat_certificate_thumbprint = cert.sha256_thumbprint
+    setattr(ctx, CERTIFICATE_CONTEXT_MARKER, cert.sha256_thumbprint)
     authenticator._context = cast(BrowserContextLike, ctx)
 
     now = datetime.now(UTC)
