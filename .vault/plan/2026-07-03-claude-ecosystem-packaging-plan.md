@@ -132,10 +132,10 @@ Define the marketplace repository layout and marketplace.json, and have the gene
 
 Add LOCAL-ONLY HUMAN-GATED just publish recipes over uv publish plus a scoped token, the name-claim and aeat-data grant sequencing, and the RELEASING.md checklist.
 
-- [ ] `W04.P11.S39` - Add a LOCAL-ONLY HUMAN-GATED just publish recipe over uv publish with a scoped PyPI token, refusing to run in CI and mirroring the release-please discipline; `justfile`.
-- [ ] `W04.P11.S40` - Document the name-claim sequencing: publish the slim aeat wheel first (no grant needed) to claim the name; `RELEASING.md`.
-- [ ] `W04.P11.S41` - Document the aeat-data file-size grant request template and the publish-when-granted flow so the plugin delivery is not hard-blocked on the grant; `RELEASING.md`.
-- [ ] `W04.P11.S42` - Document the full release checklist joining versioning, wheel build, name claim, grant and plugin/marketplace push in RELEASING.md; `RELEASING.md`.
+- [x] `W04.P11.S39` - Add a LOCAL-ONLY HUMAN-GATED just publish recipe over uv publish with a scoped PyPI token, refusing to run in CI and mirroring the release-please discipline; `justfile`.
+- [x] `W04.P11.S40` - Document the name-claim sequencing: publish the slim aeat wheel first (no grant needed) to claim the name; `RELEASING.md`.
+- [x] `W04.P11.S41` - Document the aeat-data file-size grant request template and the publish-when-granted flow so the plugin delivery is not hard-blocked on the grant; `RELEASING.md`.
+- [x] `W04.P11.S42` - Document the full release checklist joining versioning, wheel build, name claim, grant and plugin/marketplace push in RELEASING.md; `RELEASING.md`.
 
 ## Wave `W05` - Live-client verification
 
