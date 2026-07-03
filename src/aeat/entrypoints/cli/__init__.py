@@ -711,6 +711,7 @@ _LAZY_COMMAND_MODULES: frozenset[str] = frozenset(
     {
         "._app_agent_workspace",
         "._app_contract",
+        "._app_diagnostics",
         "._app_live",
         "._app_quickfile",
         "._config",
@@ -766,6 +767,7 @@ def _lazy(group_name: str, name: str, module_name: str) -> None:
 _lazy("app", "overview", "._overview")
 _lazy("app", "contract", "._app_contract")
 _lazy("app", "agent", "._app_agent_workspace")
+_lazy("app", "diagnostics", "._app_diagnostics")
 _lazy("app", "ledger", "._ledger")
 _lazy("app", "live", "._app_live")
 _lazy("app", "modelo", "._modelo")

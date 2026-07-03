@@ -2674,7 +2674,8 @@ cli:
         create_name_help: Sandbox name.
         discard_active_profile: Sandbox %{name} is the active profile; switch to another
           profile before discarding it.
-        discard_dry_run_help: 'Preview what the discard would remove without removing anything.'
+        discard_dry_run_help: Preview what the discard would remove without removing
+          anything.
         discard_help: Permanently erase a sandbox bucket.
         discard_name_help: Sandbox name (without the prefix).
         discard_not_a_sandbox: '%{name} is not a sandbox; the sandbox surface refuses
@@ -2685,11 +2686,15 @@ cli:
         help: Run experiments in an isolated, discardable bucket that never touches
           main profile state.
         list_help: List every sandbox bucket.
-        prune_dry_run_help: 'Preview which sandboxes would be discarded without discarding them.'
-        prune_help: 'Discard every sandbox bucket at once.'
-        prune_requires_yes: 'Pruning every sandbox is destructive. Re-run ''aeat config profile sandbox prune --yes'' to confirm.'
-        prune_skipped_active_info: 'Skipped the active sandbox %{names}; switch to another profile and re-run ''aeat config profile sandbox prune --yes'' to discard it.'
-        prune_yes_help: 'Confirm discarding every sandbox.'
+        prune_dry_run_help: Preview which sandboxes would be discarded without discarding
+          them.
+        prune_help: Discard every sandbox bucket at once.
+        prune_requires_yes: Pruning every sandbox is destructive. Re-run 'aeat config
+          profile sandbox prune --yes' to confirm.
+        prune_skipped_active_info: Skipped the active sandbox %{names}; switch to
+          another profile and re-run 'aeat config profile sandbox prune --yes' to
+          discard it.
+        prune_yes_help: Confirm discarding every sandbox.
         source_not_found: No live profile named %{name} to seed the sandbox from.
         unknown_sandbox: 'Unknown sandbox: %{name}. Run ''aeat config profile sandbox
           list'' to see registered sandboxes.'
@@ -2841,16 +2846,26 @@ cli:
         profile and not something you can fix yourself.
     errors:
       header: 'LLM run errors:'
-      help: 'Break down recent failed local LLM runs by provider and error kind.'
-      no_failures: 'No failed LLM runs recorded in this range.'
-      provider_help: 'Restrict the breakdown to this provider label (e.g. claude, antigravity, codex).'
-      since_help: 'Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.'
-      until_help: 'Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.'
+      help: Break down recent failed local LLM runs by provider and error kind.
+      no_failures: No failed LLM runs recorded in this range.
+      provider_help: Restrict the breakdown to this provider label (e.g. claude, antigravity,
+        codex).
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
     latency:
       header: 'LLM run latency:'
-      help: 'Report P50/P95/P99 duration percentiles over recent local LLM runs.'
+      help: Report P50/P95/P99 duration percentiles over recent local LLM runs.
+      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
+        to populate it.
+      provider_help: Restrict the report to this provider label (e.g. claude, antigravity,
+        codex).
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
+    llm_usage:
+      header: 'LLM run usage:'
+      help: 'Report LLM run-usage totals (counts, durations, success rate) by provider and model.'
       no_run_data: 'No LLM run telemetry recorded yet. Run an LLM-assisted classification to populate it.'
-      provider_help: 'Restrict the report to this provider label (e.g. claude, antigravity, codex).'
+      provider_help: 'Restrict the summary to this provider label (e.g. claude, antigravity, codex).'
       since_help: 'Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.'
       until_help: 'Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.'
     next_action:

@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-registry-format-plan]]"
 ---
 
-
-
-
 # Migrate modelo 128 inline revision to the fragmented layout in one atomic commit gated by the equality test and a green registry validator
 
 ## Scope

@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#schema-hardening'
 date: '2026-06-15'
-modified: '2026-07-02'
+modified: '2026-07-03'
 related:
   - '[[2026-05-18-schema-hardening-adr]]'
   - '[[2026-05-18-schema-hardening-nif-coverage-m100-audit]]'

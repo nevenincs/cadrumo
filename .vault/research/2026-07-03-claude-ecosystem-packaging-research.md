@@ -12,8 +12,6 @@ related:
   - '[[2026-07-01-agent-harness-adr]]'
 ---
 
-
-
 # `claude-ecosystem-packaging` research: `Claude ecosystem as the first packaged product destination`
 
 Research into making the Claude ecosystem (Claude Cowork, Claude Code, Claude

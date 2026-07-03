@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-registry-format-plan]]"
 ---
 
-
-
-
 # Delete the parameterised compiled-schema equality harness now that migration is complete
 
 ## Scope

@@ -116,14 +116,31 @@ class _PersistedTransactionTimestampWitness(BaseModel):
         cls.model_validate(payload)
 
 
-def _validate_persisted_transaction_timestamps(payload: bytes) -> None:
-    """Reject a persisted per-transaction row missing the mandatory D6 timestamps."""
+def _decode_persisted_transaction_row(payload: bytes) -> dict[str, object] | None:
+    """Return the parsed envelope dict for one persisted row, or ``None`` if not JSON.
+
+    Centralises the single JSON decode of a stored row's plaintext bytes so
+    the D6 timestamp guard and the authoritative :class:`Envelope` validation
+    share one parse instead of each independently re-decoding the same bytes
+    (a real O(n) cost at ledger scale: see the P95 scale benchmark in
+    ``application/aggregation/tests/test_ledger_scale_benchmark.py``).
+    """
     try:
         decoded = json.loads(payload.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError):
-        return
-    if not isinstance(decoded, dict):
-        return
+        return None
+    return decoded if isinstance(decoded, dict) else None
+
+
+def _validate_persisted_transaction_timestamps(decoded: dict[str, object]) -> None:
+    """Reject a persisted per-transaction row missing the mandatory D6 timestamps.
+
+    Takes the already-JSON-decoded envelope dict (see
+    :func:`_decode_persisted_transaction_row`) rather than re-parsing the raw
+    bytes, so this guard adds only a cheap pydantic pass over the small
+    ``{created_at, modified_at}`` sub-shape -- not a second full JSON decode
+    of the whole row.
+    """
     transaction_payload = decoded.get("payload")
     if not isinstance(transaction_payload, dict):
         return
@@ -208,7 +225,17 @@ class TransactionCatalogueRepository:
             if transaction_id is None:
                 continue  # the index row, or (shared store) another bucket's row
             try:
-                _validate_persisted_transaction_timestamps(record.payload)
+                decoded_row = _decode_persisted_transaction_row(record.payload)
+                if decoded_row is not None:
+                    # Reuse the same JSON decode for the cheap D6 timestamp
+                    # guard; the authoritative Envelope validation below still
+                    # parses the original bytes via ``model_validate_json``
+                    # (JSON mode), which is required for correct string ->
+                    # datetime / string -> enum coercion under the envelope's
+                    # ``strict=True`` config -- ``model_validate`` on an
+                    # already-decoded dict runs in *python* mode and rejects
+                    # those coercions outright under strict config.
+                    _validate_persisted_transaction_timestamps(decoded_row)
                 envelope = Envelope[Transaction].model_validate_json(record.payload)
             except ValidationError as exc:
                 _log.error(

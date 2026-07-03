@@ -184,14 +184,13 @@ def collect_prior_payment_not_deducted_diagnostics(
             reason="prior_payment_not_deducted",
             source_kind="modelo_130_prior_pago_fraccionado",
             message=(
-                f"Modelo 130 {period_token} is cumulative from the start of the ejercicio, but "
-                f"casilla 05 ('Pagos fraccionados anteriores') is zero while a prior-trimestre "
-                f"{filing_year} filing exists; casilla 07 = 04 - 05 - 06 therefore does not deduct "
-                f"the pago fraccionado already paid in {', '.join(prior_codes)}, so this filing "
-                f"over-declares (RD 439/2007 art. 110). The casilla-05 carry could not populate the "
-                f"deduction from the prior filing's observation (it is absent or unreadable); re-file "
-                f"the prior trimestre through the app so the carry resolves, or enter the prior pago "
-                f"fraccionado in casilla 05 before filing"
+                f"Modelo 130 {period_token} is cumulative, but casilla 05 ('Pagos fraccionados "
+                f"anteriores') is zero while a prior-trimestre {filing_year} filing exists; casilla "
+                f"07 = 04 - 05 - 06 does not deduct the pago fraccionado already paid in "
+                f"{', '.join(prior_codes)}, so this filing over-declares (RD 439/2007 art. 110). "
+                f"The casilla-05 carry could not populate from the prior filing's observation "
+                f"(absent or unreadable); re-file the prior trimestre or enter its pago fraccionado "
+                f"in casilla 05 before filing"
             ),
             casilla_id=_PRIOR_PAYMENT_CASILLA,
         ),

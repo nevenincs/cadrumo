@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-registry-format-plan]]"
 ---
 
-
-
-
 # Delete the loader inline-parsing branches now that no revision declares bindings or formulas inline
 
 ## Scope
@@ -29,3 +26,7 @@ Done in `e99a3a9ad3` (peer registry refactor): `_merge_revision_manifest` reads 
 ## Notes
 
 Landed by a peer alongside the module split; verified at HEAD, not re-implemented.
+
+## Honesty-review correction (2026-07-03)
+
+The Outcome above cites the wrong commit. Independent verification (`git log -S "_merge_revision_manifest"`) shows the loader inline-parsing deletion landed in `2cf772da94`, not `e99a3a9ad3` (which is the unrelated module-size split of `_loader.py`). Correction recorded by the D6 campaign-close honesty review; see the 2026-07-03 arch-remediation-registry-format audit.

@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-registry-format-plan]]"
 ---
 
-
-
-
 # Add a loud loader refusal that raises a load error naming the fragmented layout when an inline bindings or formulas table appears in revision.toml
 
 ## Scope
@@ -29,3 +26,7 @@ Done in `e99a3a9ad3`: `_merge_revision_manifest` raises RegistryLoadError naming
 ## Notes
 
 Verified live at HEAD (injection test).
+
+## Honesty-review correction (2026-07-03)
+
+The Outcome above cites the wrong commit. The loud loader refusal landed in `2cf772da94`, not `e99a3a9ad3`. Durable non-tautological regression tests for the refusal were added later in `f431e6a819` (`test_loader_directory_mode.py`). Correction recorded by the D6 campaign-close honesty review; see the 2026-07-03 arch-remediation-registry-format audit.
