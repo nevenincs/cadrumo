@@ -125,6 +125,7 @@ from ._participation_index import (
 from ._protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
+    TransactionParticipationIndexRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
@@ -200,6 +201,7 @@ __all__ = (
     "ModeloVerificationFindingKind",
     "ModeloVerificationFindingSeverity",
     "TransactionParticipationIndexPersistenceError",
+    "TransactionParticipationIndexRepositoryProtocol",
     "TransactionRevisionParticipation",
     "TransactionRevisionParticipationIndex",
     "VerificationCompletenessStatus",

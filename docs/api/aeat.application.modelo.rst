@@ -17,7 +17,6 @@ Submodules
    aeat.application.modelo._amendment_actions
    aeat.application.modelo._art109_activity_income
    aeat.application.modelo._art20_advisory
-   aeat.application.modelo._bienes_inversion_advisory
    aeat.application.modelo._binding_readiness
    aeat.application.modelo._binding_resolution
    aeat.application.modelo._borrador_binding
