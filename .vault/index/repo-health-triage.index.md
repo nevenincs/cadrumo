@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#repo-health-triage'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-03'
+modified: '2026-07-03'
 related:
   - '[[2026-06-04-repo-health-triage-W01-P01-S01]]'
   - '[[2026-06-04-repo-health-triage-W01-P01-S02]]'
@@ -61,6 +61,8 @@ related:
   - '[[2026-06-04-repo-health-triage-W06-P20-S81]]'
   - '[[2026-06-04-repo-health-triage-W06-P20-S82]]'
   - '[[2026-06-04-repo-health-triage-W06-P21-S83]]'
+  - '[[2026-06-04-repo-health-triage-W06-P21-S84]]'
+  - '[[2026-06-04-repo-health-triage-W06-P21-S85]]'
   - '[[2026-06-04-repo-health-triage-adr]]'
   - '[[2026-06-04-repo-health-triage-audit]]'
   - '[[2026-06-04-repo-health-triage-code-review-audit]]'
@@ -107,6 +109,7 @@ related:
   - '[[2026-06-04-repo-health-triage-w06-p19-s71-exec]]'
   - '[[2026-06-04-repo-health-triage-w06-p19-s72-exec]]'
   - '[[2026-06-04-repo-health-triage-w06-p19-s73-exec]]'
+  - '[[2026-07-03-repo-health-triage-audit]]'
 ---
 
 # `repo-health-triage` feature index
@@ -126,6 +129,7 @@ Auto-generated index of all documents tagged with `#repo-health-triage`.
 - `2026-06-04-repo-health-triage-live-auth-split-invariants-audit` - `repo-health-triage` Live/Auth Split Invariants Audit
 - `2026-06-04-repo-health-triage-typecheck-baseline-audit` - `repo-health-triage` W02 Typecheck Baseline
 - `2026-06-04-repo-health-triage-w03-p10-s33-code-review-audit` - `repo-health-triage` W03.P10.S33 Code Review
+- `2026-07-03-repo-health-triage-audit` - `repo-health-triage` audit: `2026-07-03 final diagnostic surface`
 
 ### exec
 
@@ -221,6 +225,8 @@ Auto-generated index of all documents tagged with `#repo-health-triage`.
 - `2026-06-04-repo-health-triage-W06-P20-S81` - W06.P20.S81 Semgrep Security Policy Burn-Down
 - `2026-06-04-repo-health-triage-W06-P20-S82` - W06.P20.S82 Duplication Ratchet
 - `2026-06-04-repo-health-triage-W06-P21-S83` - W06.P21.S83 Hard Gate Attempt
+- `2026-06-04-repo-health-triage-W06-P21-S84` - Run full quality-audit and persist final diagnostic matrix
+- `2026-06-04-repo-health-triage-W06-P21-S85` - Complete mandatory code review and close all-green campaign state
 
 ### plan
 
