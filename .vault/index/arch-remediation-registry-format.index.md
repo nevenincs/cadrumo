@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-registry-format'
-date: '2026-07-02'
-modified: '2026-07-02'
+date: '2026-07-03'
+modified: '2026-07-03'
 related:
   - '[[2026-07-02-arch-remediation-registry-format-P01-S01]]'
   - '[[2026-07-02-arch-remediation-registry-format-P01-S02]]'
@@ -19,6 +19,10 @@ related:
   - '[[2026-07-02-arch-remediation-registry-format-P02-S11]]'
   - '[[2026-07-02-arch-remediation-registry-format-P02-S12]]'
   - '[[2026-07-02-arch-remediation-registry-format-P03-S13]]'
+  - '[[2026-07-02-arch-remediation-registry-format-P03-S14]]'
+  - '[[2026-07-02-arch-remediation-registry-format-P03-S15]]'
+  - '[[2026-07-02-arch-remediation-registry-format-P03-S16]]'
+  - '[[2026-07-02-arch-remediation-registry-format-P03-S17]]'
   - '[[2026-07-02-arch-remediation-registry-format-adr]]'
   - '[[2026-07-02-arch-remediation-registry-format-plan]]'
 ---
@@ -48,6 +52,10 @@ Auto-generated index of all documents tagged with `#arch-remediation-registry-fo
 - `2026-07-02-arch-remediation-registry-format-P02-S11` - Migrate the M369 inline schemas to the fragmented layout in one atomic commit gated by the equality test plus the M369 filing-grade suites
 - `2026-07-02-arch-remediation-registry-format-P02-S12` - Migrate the M303 2009-y-siguientes inline revision to the fragmented layout in one atomic commit gated by the equality test plus the M303 filing-grade suites, scheduled per board state because it validates against the whole revision and waits on dirty peer WIP in that tree
 - `2026-07-02-arch-remediation-registry-format-P03-S13` - Confirm zero inline revisions remain by grep before deleting inline support
+- `2026-07-02-arch-remediation-registry-format-P03-S14` - Delete the loader inline-parsing branches now that no revision declares bindings or formulas inline
+- `2026-07-02-arch-remediation-registry-format-P03-S15` - Add a loud loader refusal that raises a load error naming the fragmented layout when an inline bindings or formulas table appears in revision.toml
+- `2026-07-02-arch-remediation-registry-format-P03-S16` - Converge the registry-revision-content-inline-or-fragmented discovery rule at its vaultspec source to record the convergence and retire the dual-format caveat, then run vaultspec-core sync
+- `2026-07-02-arch-remediation-registry-format-P03-S17` - Delete the parameterised compiled-schema equality harness now that migration is complete
 
 ### plan
 

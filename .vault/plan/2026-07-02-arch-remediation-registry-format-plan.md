@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#arch-remediation-registry-format'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-03'
 tier: L2
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
@@ -50,10 +50,10 @@ Migrate the two large calc-grade inline surfaces (M303 2009-y-siguientes and the
 At zero inline revisions, delete the loader inline-parsing branches, add the loud inline-refusal load error, converge the discovery rule at its vaultspec source, and delete the parameterised equality test.
 
 - [x] `P03.S13` - Confirm zero inline revisions remain by grep before deleting inline support; `src/aeat/_data/registry/aeat/modelos`.
-- [ ] `P03.S14` - Delete the loader inline-parsing branches now that no revision declares bindings or formulas inline; `src/aeat/domain/calculations/registry/_loader.py`.
-- [ ] `P03.S15` - Add a loud loader refusal that raises a load error naming the fragmented layout when an inline bindings or formulas table appears in revision.toml; `src/aeat/domain/calculations/registry/_loader.py`.
-- [ ] `P03.S16` - Converge the registry-revision-content-inline-or-fragmented discovery rule at its vaultspec source to record the convergence and retire the dual-format caveat, then run vaultspec-core sync; `.vaultspec/rules/registry-revision-content-inline-or-fragmented.md`.
-- [ ] `P03.S17` - Delete the parameterised compiled-schema equality harness now that migration is complete; `src/aeat/domain/calculations/registry/tests/test_inline_fragment_equality.py`.
+- [x] `P03.S14` - Delete the loader inline-parsing branches now that no revision declares bindings or formulas inline; `src/aeat/domain/calculations/registry/_loader.py`.
+- [x] `P03.S15` - Add a loud loader refusal that raises a load error naming the fragmented layout when an inline bindings or formulas table appears in revision.toml; `src/aeat/domain/calculations/registry/_loader.py`.
+- [x] `P03.S16` - Converge the registry-revision-content-inline-or-fragmented discovery rule at its vaultspec source to record the convergence and retire the dual-format caveat, then run vaultspec-core sync; `.vaultspec/rules/registry-revision-content-inline-or-fragmented.md`.
+- [x] `P03.S17` - Delete the parameterised compiled-schema equality harness now that migration is complete; `src/aeat/domain/calculations/registry/tests/test_inline_fragment_equality.py`.
 
 ## Description
 
