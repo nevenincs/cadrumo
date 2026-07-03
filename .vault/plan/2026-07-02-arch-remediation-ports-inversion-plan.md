@@ -67,7 +67,7 @@ Relocate the justificante repository behind a domain port.
 
 Verify the attachments domain inventory and relocate its repository behind a port if a production domain-to-adapters edge exists.
 
-- [ ] `W02.P06.S08` - Verify the attachments domain pinned inventory at execution time and relocate its repository behind a port if a production domain-to-adapters edge exists, otherwise confirm the domain is already ports-compliant and remove any stale test-edge entries; `src/aeat/domain/attachments`.
+- [x] `W02.P06.S08` - Verify the attachments domain pinned inventory at execution time and relocate its repository behind a port if a production domain-to-adapters edge exists, otherwise confirm the domain is already ports-compliant and remove any stale test-edge entries; `src/aeat/domain/attachments`.
 
 ### Phase `W02.P07` - transactions repository inversion
 
