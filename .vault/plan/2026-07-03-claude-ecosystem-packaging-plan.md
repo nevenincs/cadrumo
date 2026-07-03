@@ -146,7 +146,7 @@ The acceptance gate: a real-client install proof from the marketplace into Claud
 Install the plugin from the marketplace into Claude Code CLI, Claude Desktop, and Cowork, resolving the cloud-vs-local MCP execution question; operator-gated where a real client or account is required.
 
 - [x] `W05.P12.S43` - Install the plugin from the marketplace into the Claude Code CLI and confirm the local stdio aeat-mcp server runs (the confirmed floor); `docs/verification/claude-code-install-proof.md`.
-- [ ] `W05.P12.S44` - Operator-gated: install the plugin into Claude Desktop and confirm the local server executes (needs a real Claude Desktop install); `docs/verification/claude-desktop-install-proof.md`.
+- [x] `W05.P12.S44` - Operator-gated: install the plugin into Claude Desktop and confirm the local server executes (needs a real Claude Desktop install); `docs/verification/claude-desktop-install-proof.md`.
 - [ ] `W05.P12.S45` - Operator-gated: install the plugin into Cowork and resolve whether the local stdio server runs on-host or connectors execute in Anthropic's cloud (needs a real Cowork install); `docs/verification/cowork-install-proof.md`.
 
 ### Phase `W05.P13` - Golden itinerary and support matrix
