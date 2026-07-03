@@ -37,12 +37,25 @@ from .. import build_export_plan
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # (modelo, filing_year, period, on) — fixed-width modelos whose workbook plan and
-# fichero-BOE layout both build, so the cross-transport invariant is checkable.
+# fichero-BOE layout both build. Spanned across multiple filing years (and across
+# revision boundaries) so the cross-transport invariant is locked for every year a
+# revision covers, not just one. Modelo 303 in particular crosses the
+# 2009-y-siguientes -> 2023-y-siguientes boundary (2022 vs 2023+), and 2023-2026 all
+# resolve the 2023-y-siguientes revision whose internal-only módulos casillas the
+# workbook must omit for every one of those years.
 _COVERED = [
+    ("130", 2024, "1T", date(2024, 4, 1)),
     ("130", 2025, "1T", date(2025, 4, 1)),
+    ("111", 2024, "1T", date(2024, 4, 1)),
     ("111", 2025, "1T", date(2025, 4, 1)),
+    ("115", 2024, "1T", date(2024, 4, 1)),
     ("115", 2025, "1T", date(2025, 4, 1)),
+    ("303", 2022, "1T", date(2022, 4, 1)),
+    ("303", 2023, "1T", date(2023, 4, 1)),
+    ("303", 2024, "1T", date(2024, 4, 1)),
     ("303", 2025, "1T", date(2025, 4, 1)),
+    ("303", 2026, "1T", date(2026, 4, 1)),
+    ("200", 2024, "0A", date(2025, 7, 1)),
     ("200", 2025, "0A", date(2026, 7, 1)),
 ]
 
