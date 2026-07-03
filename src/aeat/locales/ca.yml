@@ -5261,6 +5261,8 @@ mcp:
     advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]
       que cap resultat d''eina d''aquesta sessió ha produït. Verifica la xifra amb
       una lectura de calculate/revision abans de confiar-hi.'
+  harness:
+    off_host_consent: 'Avís de privadesa — llegiu-lo abans de continuar. Aquesta consola la controla un assistent d''IA que s''executa en el proveïdor de LLM que trieu. Les vostres paraules, i les xifres amb què treballa l''assistent (imports, valors de casella, obligacions), s''envien a aquest proveïdor per operar la consola. Els vostres DOCUMENTS D''ORIGEN — factures, extractes bancaris i qualsevol byte d''evidència — MAI no surten del vostre equip: romanen en emmagatzematge local xifrat i mai no es transmeten. Si actueu per compte d''un tercer (un gestor o professional), confirmeu que això és acceptable abans de continuar.'
   persona:
     handoff_denied: '''{command}'' és la frontera irreversible de lliurament de la
       presentació, propietat de la persona ''{owner}''; la persona ''{persona}'' la
