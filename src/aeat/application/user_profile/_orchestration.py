@@ -423,6 +423,18 @@ def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
     return aggregate.record
 
 
+def reactivate_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
+    """Restore a tombstoned ``profile_id`` inside an application-owned bucket session.
+
+    Symmetric inverse of :func:`delete_profile_with_lifecycle_span`.
+    Returns the reactivated :class:`~aeat.domain.user_profile.UserProfileRecord`
+    from :meth:`~aeat.application.user_profile.ProfileRepository.reactivate`.
+    """
+    with profile_storage_session(profile_id):
+        aggregate = ProfileRepository().reactivate(profile_id)
+    return aggregate.record
+
+
 def logout_active_profile() -> str | None:
     """Clear the active profile pointer and return the profile that was logged out."""
     from ...core import resolve_active_bucket_id
@@ -817,6 +829,7 @@ __all__ = [
     "logout_active_profile",
     "profile_create_storage_span",
     "profile_storage_session",
+    "reactivate_profile_with_lifecycle_span",
     "read_active_profile",
     "register_active_profile",
     "remove_active_profile",

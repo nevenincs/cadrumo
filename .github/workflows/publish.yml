@@ -21,6 +21,7 @@ on:
         options:
           - aeat
           - aeat-data
+          - aeat-data-placeholder
         default: aeat
 
 permissions:
@@ -45,6 +46,12 @@ jobs:
       - name: Build aeat-data companion
         if: ${{ inputs.distribution == 'aeat-data' }}
         run: uv build --wheel --project packaging/aeat_data --out-dir dist
+
+      # Empty 0.0.0 release creating the aeat-data project ahead of its
+      # size-limit request, per the pypi/support template's own instruction.
+      - name: Build aeat-data 0.0.0 placeholder
+        if: ${{ inputs.distribution == 'aeat-data-placeholder' }}
+        run: uv build --wheel --project packaging/aeat_data_placeholder --out-dir dist
 
       - name: Guard the artifact (size cap, slim-wheel split)
         run: |

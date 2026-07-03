@@ -286,6 +286,26 @@ _PREDICATE_ROLL_FORWARD_BALANCES = _re.compile(r"^roll_forward_balances\(\[(?P<i
 _PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO = _re.compile(
     r"^casilla_equals_implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$",
 )
+# casilla_equals_implies_diverges(["antecedent_casilla_id", "literal",
+# "casilla_a_id", "casilla_b_id"]) — categorical-conditional divergence
+# check: fires when the antecedent TEXT casilla's operator-entered raw value
+# equals the literal AND the two named (Decimal) casillas differ by more
+# than one cent. ADVISORY-only (no BLOCKING_RULE branch); sibling of
+# casilla_equals_implies_nonzero (whose consequent test is "== 0" rather
+# than a cross-casilla divergence). See the
+# casilla_equals_implies_diverges branch in
+# _evaluate_advisory_predicate_fires and the
+# 2026-07-01-modelo-131-eo-modulos-engine-adr. Authored for the M131/M100
+# estimación-objetiva índice corrector de exceso (b.3), which Orden
+# HAC/1347/2024 Anexo II instrucción 2.3 declares incompatible with the
+# índices correctores especiales (a.2 transporte por autotaxis, a.4
+# transporte de mercancías por carretera / servicios de mudanzas) for the
+# activities that carry both — a shape no existing operator can express
+# because it combines a categorical epígrafe equality with a Decimal-pair
+# divergence test.
+_PREDICATE_CASILLA_EQUALS_IMPLIES_DIVERGES = _re.compile(
+    r"^casilla_equals_implies_diverges\(\[(?P<ids>[^\]]*)\]\)$",
+)
 # deduccion_requires_adquisicion_before(["amount_id", "acquisition_date_id",
 # "construction_date_id", "cutoff_iso"]) — eligibility-conditional advisory:
 # fires when the amount (Decimal) casilla is strictly positive but neither the
@@ -652,6 +672,18 @@ def _evaluate_advisory_predicate_fires(
       not fire. ``text_values`` defaults to an empty mapping for callers that
       have no text-casilla channel (every other operator ignores it). See the
       m210-categorical-conditional-predicate ADR.
+    - ``casilla_equals_implies_diverges(["antecedent_casilla_id", "literal",
+      "casilla_a_id", "casilla_b_id"])`` — categorical-conditional divergence
+      check: fires when the named antecedent TEXT casilla's operator-entered
+      raw value (read from ``text_values``) equals the literal AND the two
+      named (Decimal) casillas differ by more than one cent. A missing or
+      differing antecedent value, or two casillas within a cent of each
+      other, does not fire. Sibling of ``casilla_equals_implies_nonzero``
+      (whose consequent test is "== 0" rather than a cross-casilla
+      divergence). Authored for the M131/M100 estimación-objetiva índice
+      corrector de exceso (b.3), incompatible per Orden HAC/1347/2024 Anexo
+      II instrucción 2.3 with the índices correctores especiales for the
+      activities that carry both.
     """
     expr = expression.strip()
     m = _PREDICATE_ADVISORY_WHEN_RATIO_GE.match(expr)
@@ -744,6 +776,27 @@ def _evaluate_advisory_predicate_fires(
             return False
         consequent = casilla_values.get(consequent_id, Decimal(0))
         return consequent == Decimal(0)
+    m = _PREDICATE_CASILLA_EQUALS_IMPLIES_DIVERGES.match(expr)
+    if m:
+        # casilla_equals_implies_diverges(["antecedent_id", "literal",
+        # "casilla_a_id", "casilla_b_id"]) — fires (advisory shown) when the
+        # antecedent TEXT casilla's operator-entered raw value equals the
+        # literal AND the two named (Decimal) casillas differ by more than
+        # one cent. A malformed arity, or an antecedent absent from
+        # text_values / not equal to the literal, does not fire (defensive,
+        # same convention as casilla_equals_implies_nonzero).
+        tokens = _parse_predicate_raw_tokens(m.group("ids"))
+        if len(tokens) != 4:
+            return False
+        antecedent_id = _validated_predicate_casilla_id(tokens[0])
+        literal = tokens[1]
+        casilla_a_id = _validated_predicate_casilla_id(tokens[2])
+        casilla_b_id = _validated_predicate_casilla_id(tokens[3])
+        if text_values.get(antecedent_id) != literal:
+            return False
+        casilla_a = casilla_values.get(casilla_a_id, Decimal(0))
+        casilla_b = casilla_values.get(casilla_b_id, Decimal(0))
+        return abs(casilla_a - casilla_b) > Decimal("0.01")
     m = _PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE.match(expr)
     if m:
         # deduccion_requires_adquisicion_before(["amount_id",

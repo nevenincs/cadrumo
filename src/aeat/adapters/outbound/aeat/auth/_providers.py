@@ -96,6 +96,32 @@ class ClaveMovilSessionDetail(BaseModel):
     )
 
 
+class ClavePermanenteSessionDetail(BaseModel):
+    """Detail shape for a Cl@ve Permanente-authenticated AEAT session.
+
+    :class:`aeat.adapters.outbound.aeat.auth.ClavePermanenteAuthProvider`
+    populates this detail for DNI/NIE + password logins. Unlike Cl@ve Móvil,
+    the flow carries no verification code and no phone-approval state — the
+    login form is fully headless-automatable for AEAT read paths.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    kind: Literal[AuthProviderKind.CLAVE_PERMANENTE] = AuthProviderKind.CLAVE_PERMANENTE
+    dni_nie: str = Field(
+        min_length=1,
+        description="DNI/NIE used as the Cl@ve Permanente login username (authoritative identity).",
+    )
+    landing_url: str | None = Field(
+        default=None,
+        description=(
+            "Concrete authenticated AEAT URL observed after login. "
+            "Used by live verification and resume probes so the provider "
+            "does not re-enter the auth selector when a session is already live."
+        ),
+    )
+
+
 class CertificateLoginAssertionDetail(BaseModel):
     """Login-assertion detail for certificate-backed AEAT verification.
 
@@ -139,9 +165,36 @@ class ClaveMovilLoginAssertionDetail(BaseModel):
     )
 
 
-AuthSessionDetail = CertificateSessionDetail | ClaveMovilSessionDetail
+class ClavePermanenteLoginAssertionDetail(BaseModel):
+    """Verification detail for a Cl@ve Permanente-backed session probe.
 
-AuthLoginAssertionDetail = CertificateLoginAssertionDetail | ClaveMovilLoginAssertionDetail
+    After a successful Cl@ve Permanente login, the provider probes an AEAT
+    Sede page to confirm the session cookies are still live. This detail
+    records the cookie and landing-URL signals carried by
+    :class:`aeat.adapters.outbound.aeat.auth.AeatLoginAssertion`.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    kind: Literal[AuthProviderKind.CLAVE_PERMANENTE] = AuthProviderKind.CLAVE_PERMANENTE
+    session_cookie_present: bool = Field(
+        default=False,
+        description=(
+            "True when the probe response carried an AEAT session cookie; "
+            "primary signal that Cl@ve Permanente login is still live."
+        ),
+    )
+    landing_url: str | None = Field(
+        default=None,
+        description="Final URL Playwright landed on after following redirects.",
+    )
+
+
+AuthSessionDetail = CertificateSessionDetail | ClaveMovilSessionDetail | ClavePermanenteSessionDetail
+
+AuthLoginAssertionDetail = (
+    CertificateLoginAssertionDetail | ClaveMovilLoginAssertionDetail | ClavePermanenteLoginAssertionDetail
+)
 
 
 class BrowserContextKwargs(TypedDict, total=False):
@@ -271,6 +324,8 @@ __all__ = [
     "CertificateSessionDetail",
     "ClaveMovilLoginAssertionDetail",
     "ClaveMovilSessionDetail",
+    "ClavePermanenteLoginAssertionDetail",
+    "ClavePermanenteSessionDetail",
     "describe_certificate_provider",
     "describe_provider_operator_impact",
 ]

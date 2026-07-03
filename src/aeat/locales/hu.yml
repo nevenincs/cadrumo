@@ -531,6 +531,8 @@ application:
           `aeat config auth test` parancsot az AEAT adatok olvasása előtt.
   bucket_maintenance:
     errors:
+      archive_active_bucket: 'Az aktív bucket nem archiválható; válts előbb másik profilra.'
+      archive_not_confirmed: 'Az archiválás visszafordítható állapotátmenet, de kifejezett megerősítést igényel.'
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -541,6 +543,7 @@ application:
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
+      restore_not_archived: 'A bucket nincs archiválva (nincs törölve); nincs mit visszaállítani.'
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
   calculations:
     iva_compensation:
@@ -1173,6 +1176,7 @@ application:
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil
         használja; egy adózónak egy profilja lehet.
       lifecycle_profile_already_exists: Már létezik profil az aktív bucketben.
+      lifecycle_profile_not_tombstoned: 'A profil nincs törölve; az újraaktiválás elutasítja az élő profilt.'
       lifecycle_profile_tombstoned_duplicate: Törölt profil nem duplikálható.
       lifecycle_profile_tombstoned_rename: Törölt profil nem nevezhető át.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
@@ -2793,6 +2797,13 @@ cli:
       sandbox:
         already_exists: Már létezik %{label} nevű sandbox. Válasszon másik nevet,
           vagy előbb dobja el a meglévőt.
+        archive_active_profile: 'A(z) %{name} sandbox az aktív profil; válts másik profilra, mielőtt archiválnád.'
+        archive_dry_run_help: 'Előnézetet ad az archiválásról anélkül, hogy a sandboxot eltávolítaná az aktív felületről.'
+        archive_help: 'A sandboxot visszafordítható nyugalmi állapotba helyezi anélkül, hogy törölné.'
+        archive_name_help: 'A sandbox neve (előtag nélkül).'
+        archive_requires_yes: 'A sandbox archiválása állapotátmenet. Futtasd újra: ''aeat config profile sandbox archive %{name} --yes'' a megerősítéshez.'
+        archive_restorable_info: 'A sandbox most nyugalmi állapotban van; futtasd az ''aeat config profile sandbox restore %{name}'' parancsot a visszaállításához.'
+        archive_yes_help: 'Megerősíti az archiválást.'
         create_active_info: A sandbox most már az AKTÍV profil; minden parancs erre
           fut, amíg át nem vált vagy el nem dobja.
         create_from_profile_help: A sandbox feltöltése egy meglévő profil adataival
@@ -2822,6 +2833,9 @@ cli:
           profilra, majd futtasd ujra: ''aeat config profile sandbox prune --yes''
           a torleshez.'
         prune_yes_help: Az osszes sandbox torlesenek megerositese.
+        restore_help: 'Visszaállít egy archivált sandboxot aktív állapotba.'
+        restore_name_help: 'A sandbox neve (előtag nélkül).'
+        restore_not_archived: 'A(z) %{name} nincs archiválva; nincs mit visszaállítani.'
         source_not_found: Nincs %{name} nevű élő profil, amelyből a sandbox feltölthető
           lenne.
         unknown_sandbox: 'Ismeretlen sandbox: %{name}. Futtassa az ''aeat config profile
@@ -3006,11 +3020,14 @@ cli:
       until_help: Az LLM futtatási rekordok felső (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).
     llm_usage:
       header: 'LLM-futtatások felhasználása:'
-      help: 'LLM-futtatási felhasználási összesítők jelentése (darabszám, időtartam, sikerarány) szolgáltató és modell szerint.'
-      no_run_data: 'Még nem rögzítettek LLM-futtatási telemetriát. Futtass egy LLM-alapú osztályozást az adatok létrehozásához.'
-      provider_help: 'Korlátozza az összesítést erre a szolgáltatócímkére (pl. claude, antigravity, codex).'
-      since_help: 'Alsó, záró ISO-dátumhatár (ÉÉÉÉ-HH-NN) az LLM-futtatási rekordokra.'
-      until_help: 'Felső, záró ISO-dátumhatár (ÉÉÉÉ-HH-NN) az LLM-futtatási rekordokra.'
+      help: LLM-futtatási felhasználási összesítők jelentése (darabszám, időtartam,
+        sikerarány) szolgáltató és modell szerint.
+      no_run_data: Még nem rögzítettek LLM-futtatási telemetriát. Futtass egy LLM-alapú
+        osztályozást az adatok létrehozásához.
+      provider_help: Korlátozza az összesítést erre a szolgáltatócímkére (pl. claude,
+        antigravity, codex).
+      since_help: Alsó, záró ISO-dátumhatár (ÉÉÉÉ-HH-NN) az LLM-futtatási rekordokra.
+      until_help: Felső, záró ISO-dátumhatár (ÉÉÉÉ-HH-NN) az LLM-futtatási rekordokra.
     next_action:
       inspect_registry_toml: Vizsgálja meg a nyilvántartás TOML-forrásait a hiba azonosításához.
     repair:

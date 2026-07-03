@@ -41,6 +41,25 @@ irpf_expediente_detail_year_suffix = "RVlt"
 notificaciones = "/wlpl/TC-UTIL/NOT-L/Notificacion"
 iva_compensation_wallet = "/wlpl/DAI3-RUTI/CarteraCuotas"
 
+[aeat.clave_permanente]
+# Cl@ve Permanente reuses AEAT's auth-method selector page (the same
+# entry point Cl@ve Movil uses) with the same `aut=CP` (Cl@ve) selector
+# value; the Cl@ve IdP itself then branches to the DNI/NIE + password
+# form for Permanente rather than the QR/push screen Movil shows.
+# Exact IdP form selectors are captured from the live Cl@ve login page
+# and may drift with a Cl@ve frontend release (`needs-design` in #283);
+# the values below are the current observed IdP form shape.
+selector_access_url_template = "https://sede.agenciatributaria.gob.es/static_files/common/html/selector_acceso/SelectorAccesos.html?rep=S&ref={target}&aut=CP"
+selector_access_path_marker = "SelectorAccesos"
+idp_host_marker = "clave.gob.es"
+username_input_selector = "#usuario_login"
+password_input_selector = "#password_login"
+submit_button_selector = "#enviar_login"
+elevation_sms_marker = "codigo de un solo uso"
+invalid_credentials_marker = "usuario o contrasena incorrectos"
+account_locked_marker = "cuenta bloqueada"
+password_expired_marker = "contrasena ha caducado"
+
 [aeat.clave_movil]
 selector_access_url_template = "https://sede.agenciatributaria.gob.es/static_files/common/html/selector_acceso/SelectorAccesos.html?rep=S&ref={target}&aut=CP"
 selector_access_path_marker = "SelectorAccesos"

@@ -575,6 +575,57 @@ class ProfileRepository:
         tombstoned_record = result.profile
         return aggregate.model_copy(update={"record": tombstoned_record, "status": tombstoned_record.status})
 
+    # ── reactivate ─────────────────────────────────────────────────
+
+    def reactivate(self, profile_id: str) -> ProfileAggregate:
+        """Restore a tombstoned profile to active status; symmetric inverse of :meth:`delete`.
+
+        ``reactivate`` never opened by ``delete``'s counterpart before:
+        it is a pure lifecycle-status flip back to active. The bucket
+        directory, manifest, and encrypted record were all left intact
+        by the soft tombstone, so no directory or key-schedule
+        provisioning happens here.
+
+        The write order is the mirror image of :meth:`delete`'s own
+        crash-safety reasoning: the encrypted record is reactivated
+        FIRST, the plaintext manifest mirror SECOND. A crash between
+        the two leaves the manifest saying ``tombstoned`` over a
+        now-active record — the safe direction, because the manifest
+        scan (``list`` / ``switch`` / name-uniqueness) still excludes
+        the profile from every live surface until the manifest write
+        lands. The reverse order would leave the manifest claiming
+        ``active`` over a record the encrypted-store lifecycle service
+        still refuses to reactivate-confirm, re-opening the same
+        exposure window :meth:`delete` avoids.
+
+        Args:
+            profile_id: The UUID of the profile to reactivate.
+
+        Returns:
+            The updated :class:`ProfileAggregate` with active status.
+
+        Raises:
+            ProfileNotFoundError: If the profile is not currently tombstoned,
+                or if the bucket directory or manifest is absent.
+        """
+        from ._commands import ReactivateProfileCommand
+
+        aggregate = self.load(profile_id)
+        # Step 1: reactivate the encrypted record first (mirrors delete's
+        # step ordering in reverse).
+        result = self._lifecycle_service(profile_id).reactivate(
+            ReactivateProfileCommand(profile_id=profile_id),
+        )
+        reactivated_record = result.profile
+        # Step 2: mirror the reactivation onto the plaintext manifest.
+        paths = bucket_paths(self._root, profile_id)
+        manifest = read_manifest(paths)
+        write_manifest(
+            paths,
+            manifest.model_copy(update={"status": BucketLifecycleStatus.ACTIVE}),
+        )
+        return aggregate.model_copy(update={"record": reactivated_record, "status": reactivated_record.status})
+
     # ── select ─────────────────────────────────────────────────────
 
     def select(self, profile_id: str) -> ProfileAggregate:

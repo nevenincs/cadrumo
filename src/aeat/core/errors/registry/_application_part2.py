@@ -755,4 +755,37 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.modelo._review_package_signing.ReviewPackageSigningError",
+        ErrorCode(
+            code="ERROR_MODELO_REVIEW_PACKAGE_SIGNING",
+            category=ErrorCategory.ERROR,
+            message_key="application.modelo.errors.review_package_generic",
+            default_suggestion="aeat app modelo review-package build --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._review_package_signing.ReviewPackageSigningKeyNotFoundError",
+        ErrorCode(
+            code="REFUSED_MODELO_REVIEW_PACKAGE_SIGNING_KEY_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.review_package_generic",
+            default_suggestion="aeat app modelo review-package build --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._review_package_counter_sign.ReviewPackageCounterSigningError",
+        ErrorCode(
+            code="ERROR_MODELO_REVIEW_PACKAGE_COUNTER_SIGNING",
+            category=ErrorCategory.ERROR,
+            message_key="application.modelo.errors.review_package_generic",
+            default_suggestion="aeat app modelo review-package build --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
