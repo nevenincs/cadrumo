@@ -1318,7 +1318,9 @@ auth:
     clave_movil_description: 'Push-jóváhagyásos hitelesítés a Cl@ve-nél regisztrált
       telefon segítségével. Szükséges: DNI/NIE, Cl@ve-regisztráció és párosított eszköz.'
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: 'DNI/NIE- és jelszóalapú hitelesítés a Cl@ve Permanente személyazonosság-szolgáltatón keresztül. Az AEAT olvasási folyamataihoz automatizálható felügyelet nélkül; DNI/NIE és jelszó szükséges.'
+    clave_permanente_description: DNI/NIE- és jelszóalapú hitelesítés a Cl@ve Permanente
+      személyazonosság-szolgáltatón keresztül. Az AEAT olvasási folyamataihoz automatizálható
+      felügyelet nélkül; DNI/NIE és jelszó szükséges.
     clave_permanente_label: Cl@ve Permanente
     clave_pin_description: Fenntartott zárt szolgáltatói hely a Cl@ve PIN számára.
     clave_pin_label: Cl@ve PIN
@@ -1928,21 +1930,35 @@ cli:
         build_help: Megosztható, checksummal ellenőrizhető áttekintő csomag (fichero-BOE
           tervezet, a revízió eredete és a csatolt könyvelési bizonyíték) összeállítása
           a könyvelőnek való átadáshoz. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+        counter_sign_help: 'Ellenjegyzi az operátor által már aláírt felülvizsgálati csomagot a fogadó könyvelő nevében, és a nyugta-borítékot a --output útvonalra írja. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
+        counter_sign_note_help: 'Az ellenjegyző szabad szöveges megjegyzése vagy véleménye (pl. ''ellenőrizve, nincs változás'').'
+        counter_sign_output_help: 'Az elérési út, ahová az ellenjegyzett nyugtát JSON formátumban írja.'
+        counter_signer_public_key_help: 'A könyvelő (ellenjegyző) nyilvános kulcsa, 64 kisbetűs hexadecimális karakterként.'
         errors:
           output_required: Adja meg a --output ÚTVONAL kapcsolót az áttekintő csomag
             ZIP fájljához.
           package_not_found: 'Nem található áttekintő csomag itt: {package_path}.'
+          receipt_not_found: 'A nyugta nem található itt: {receipt_path}.'
+          signature_not_found: 'Az aláírás-boríték nem található itt: {signature_path}.'
         group_help: Megosztható áttekintő csomag összeállítása és integritásának ellenőrzése.
         notes_help: A csomag leírójába ágyazott szabad szöveges megjegyzés (pl. a
           megosztás oka).
+        operator_public_key_help: 'Az operátor (eredeti aláíró) nyilvános kulcsa, 64 kisbetűs hexadecimális karakterként.'
         output_help: Az elérési út, ahová az áttekintő csomag ZIP fájlját írni kell.
         package_path_help: Az ellenőrizendő áttekintő csomag ZIP fájljának elérési
           útja.
+        public_key_help: 'Az aláíró nyilvános kulcsa, 64 kisbetűs hexadecimális karakterként.'
+        receipt_path_help: 'A `counter-sign` által létrehozott ellenjegyzett nyugta JSON elérési útja.'
         revision_help: A csomagolandó számítási revízió azonosítója; alapértelmezés
           szerint a munkaegység legutóbbi ellenőrzött-teljes vagy benyújtott revíziója.
+        sign_help: 'Aláírja egy felülvizsgálati csomag ellenőrző manifesztjét a bucket Ed25519 aláíró kulcspárjával (első használatkor generálva), és az aláírás-borítékot a --output útvonalra írja. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
+        sign_output_help: 'Az elérési út, ahová az aláírás-borítékot JSON formátumban írja.'
+        signature_path_help: 'A `sign` által létrehozott aláírás-boríték JSON elérési útja.'
         verify_help: Egy áttekintő csomag checksum-manifestjének ellenőrzése (csak
           integritás; nem igazolja, ki állította össze). Csak helyi; soha nem kapcsolódik
           az AEAT-hoz.
+        verify_receipt_help: 'Ellenőrzi egy felülvizsgálati csomag ellenjegyzett nyugtájának mindkét aláírási rétegét: az operátor eredeti aláírását és a könyvelő ellenjegyzését. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
+        verify_signature_help: 'Ellenőrzi egy felülvizsgálati csomag Ed25519 aláírását az aláíró nyilvános kulcsával szemben (hitelesség-ellenőrzés; előbb megismétli a manifeszt-integritás ellenőrzését). Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
         work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
       verification_report:
         app_help: Rögzített ellenőrzési jelentések vizsgálata.
@@ -2407,15 +2423,18 @@ cli:
           name_help: Az eltávolítandó regisztrált tanúsítványforrás
         remove_help: Egy regisztrált tanúsítványforrás eltávolítása
         secret:
-          help: 'A nevesitett tanusitvanyforrashoz kotott jelszo kezelese'
+          help: A nevesitett tanusitvanyforrashoz kotott jelszo kezelese
           remove:
-            name_help: 'A regisztralt tanusitvanyforras, amelynek jelszavat el kell tavolitani'
-          remove_help: 'Eltavolitja egy regisztralt tanusitvanyforrashoz kotott jelszot'
+            name_help: A regisztralt tanusitvanyforras, amelynek jelszavat el kell
+              tavolitani
+          remove_help: Eltavolitja egy regisztralt tanusitvanyforrashoz kotott jelszot
           set:
-            backend_help: 'Titok-hattertar: secure_storage (alapertelmezett, titkositva tarolva) vagy keyring (operacios rendszer kulcstartoja)'
-            name_help: 'A regisztralt tanusitvanyforras, amelyhez a jelszo kapcsolodik'
-            secret_help: 'A PKCS#12 jelszo (bekerdezve, elrejtve, soha nem jelenik meg)'
-          set_help: 'Beallitja (vagy megujitja) egy regisztralt tanusitvanyforras jelszavat'
+            backend_help: 'Titok-hattertar: secure_storage (alapertelmezett, titkositva
+              tarolva) vagy keyring (operacios rendszer kulcstartoja)'
+            name_help: A regisztralt tanusitvanyforras, amelyhez a jelszo kapcsolodik
+            secret_help: A PKCS#12 jelszo (bekerdezve, elrejtve, soha nem jelenik
+              meg)
+          set_help: Beallitja (vagy megujitja) egy regisztralt tanusitvanyforras jelszavat
         select:
           name_help: Az aktiválandó regisztrált tanúsítványforrás
         select_help: Az aktív tanúsítványforrás kiválasztása

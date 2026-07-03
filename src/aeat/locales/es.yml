@@ -1395,7 +1395,9 @@ auth:
     clave_movil_description: Autenticación con aprobación push en el móvil del titular
       registrado en Cl@ve. Requiere DNI/NIE, registro en Cl@ve, y el dispositivo emparejado.
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: 'Autenticación con DNI/NIE y contraseña a través del proveedor de identidad Cl@ve Permanente. Automatizable sin intervención para los flujos de lectura de la AEAT; requiere DNI/NIE y contraseña.'
+    clave_permanente_description: Autenticación con DNI/NIE y contraseña a través
+      del proveedor de identidad Cl@ve Permanente. Automatizable sin intervención
+      para los flujos de lectura de la AEAT; requiere DNI/NIE y contraseña.
     clave_permanente_label: Cl@ve Permanente
     clave_pin_description: Hueco reservado y cerrado para Cl@ve PIN.
     clave_pin_label: Cl@ve PIN
@@ -2011,19 +2013,33 @@ cli:
         build_help: Ensambla un paquete de revisión compartible y verificable por
           checksum (borrador fichero-BOE, procedencia de la revisión y evidencia contable
           incluida) para entregar al asesor. Solo local; nunca contacta con la AEAT.
+        counter_sign_help: 'Contrafirma un paquete de revisión ya firmado por el operador en nombre del asesor fiscal que lo recibe y escribe el sobre del recibo en --output. Solo local; nunca contacta con la AEAT.'
+        counter_sign_note_help: 'Nota o veredicto libre del contrafirmante (por ejemplo, ''revisado, sin cambios'').'
+        counter_sign_output_help: 'Ruta donde escribir el recibo contrafirmado en formato JSON.'
+        counter_signer_public_key_help: 'Clave pública del asesor fiscal (contrafirmante), en 64 caracteres hexadecimales en minúscula.'
         errors:
           output_required: Indique --output RUTA para el ZIP del paquete de revisión.
           package_not_found: No se encontró el paquete de revisión en {package_path}.
+          receipt_not_found: 'No se encontró el recibo en {receipt_path}.'
+          signature_not_found: 'No se encontró el sobre de firma en {signature_path}.'
         group_help: Construye un paquete de revisión compartible y verifica su integridad.
         notes_help: Nota de texto libre incluida en el descriptor del paquete (p.
           ej. el motivo del envío).
+        operator_public_key_help: 'Clave pública del operador (firmante original), en 64 caracteres hexadecimales en minúscula.'
         output_help: Ruta donde escribir el ZIP del paquete de revisión.
         package_path_help: Ruta del ZIP del paquete de revisión a verificar.
+        public_key_help: 'Clave pública del firmante, en 64 caracteres hexadecimales en minúscula.'
+        receipt_path_help: 'Ruta del recibo contrafirmado en formato JSON generado por `counter-sign`.'
         revision_help: Id de la revisión de cálculo a empaquetar; por defecto la revisión
           verificada-completa o presentada más reciente de la unidad de trabajo.
+        sign_help: 'Firma el manifiesto de comprobación de un paquete de revisión con el par de claves Ed25519 del bucket (generado en el primer uso) y escribe el sobre de firma en --output. Solo local; nunca contacta con la AEAT.'
+        sign_output_help: 'Ruta donde escribir el sobre de firma en formato JSON.'
+        signature_path_help: 'Ruta del sobre de firma JSON generado por `sign`.'
         verify_help: Verifica el manifiesto de checksum de un paquete de revisión
           (solo integridad; no certifica quién lo construyó). Solo local; nunca contacta
           con la AEAT.
+        verify_receipt_help: 'Verifica ambas capas de firma de un recibo contrafirmado de un paquete de revisión: la firma original del operador y la contrafirma del asesor fiscal. Solo local; nunca contacta con la AEAT.'
+        verify_signature_help: 'Verifica la firma Ed25519 de un paquete de revisión frente a la clave pública del firmante (comprobación de autenticidad; primero repite la comprobación de integridad del manifiesto). Solo local; nunca contacta con la AEAT.'
         work_unit_id_help: Id de la unidad de trabajo (SHA-256 o prefijo inequívoco).
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
@@ -2489,15 +2505,19 @@ cli:
           name_help: Origen de certificado registrado que se eliminará
         remove_help: Eliminar un origen de certificado registrado
         secret:
-          help: 'Gestiona la contrasena vinculada a una fuente de certificado con nombre'
+          help: Gestiona la contrasena vinculada a una fuente de certificado con nombre
           remove:
-            name_help: 'Fuente de certificado registrada cuya contrasena debe eliminarse'
-          remove_help: 'Elimina la contrasena vinculada a una fuente de certificado registrada'
+            name_help: Fuente de certificado registrada cuya contrasena debe eliminarse
+          remove_help: Elimina la contrasena vinculada a una fuente de certificado
+            registrada
           set:
-            backend_help: 'Backend del secreto: secure_storage (por defecto, cifrado en reposo) o keyring (llavero del sistema operativo)'
-            name_help: 'Fuente de certificado registrada a la que se vincula la contrasena'
-            secret_help: 'La contrasena del PKCS#12 (se solicita, oculta, nunca se muestra)'
-          set_help: 'Establece (o rota) la contrasena de una fuente de certificado registrada'
+            backend_help: 'Backend del secreto: secure_storage (por defecto, cifrado
+              en reposo) o keyring (llavero del sistema operativo)'
+            name_help: Fuente de certificado registrada a la que se vincula la contrasena
+            secret_help: La contrasena del PKCS#12 (se solicita, oculta, nunca se
+              muestra)
+          set_help: Establece (o rota) la contrasena de una fuente de certificado
+            registrada
         select:
           name_help: Origen de certificado registrado que se activará
         select_help: Seleccionar el origen de certificado activo

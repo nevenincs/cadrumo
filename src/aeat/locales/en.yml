@@ -1292,7 +1292,9 @@ auth:
     clave_movil_description: Push-approval authentication via the holder's phone registered
       with Cl@ve. Requires DNI/NIE, Cl@ve enrolment, and a paired device.
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: 'DNI/NIE and password authentication via the Cl@ve Permanente identity provider. Headless-automatable for AEAT read paths; requires DNI/NIE and password.'
+    clave_permanente_description: DNI/NIE and password authentication via the Cl@ve
+      Permanente identity provider. Headless-automatable for AEAT read paths; requires
+      DNI/NIE and password.
     clave_permanente_label: Cl@ve Permanente
     clave_pin_description: Reserved closed provider slot for Cl@ve PIN.
     clave_pin_label: Cl@ve PIN
@@ -1870,18 +1872,32 @@ cli:
         build_help: Assemble a shareable, checksum-verifiable review package (fichero-BOE
           draft, revision provenance, and bundled ledger evidence) for accountant
           handoff. Local-only; never contacts AEAT.
+        counter_sign_help: 'Counter-sign an operator-signed review package on behalf of the receiving accountant and write the receipt envelope to --output. Local-only; never contacts AEAT.'
+        counter_sign_note_help: 'Free-text counter-signer note or verdict (e.g. ''reviewed, no changes'').'
+        counter_sign_output_help: 'Path to write the counter-signed receipt JSON to.'
+        counter_signer_public_key_help: 'The accountant''s (counter-signer''s) public key, as 64 lowercase hex characters.'
         errors:
           output_required: Supply --output PATH for the review package ZIP.
           package_not_found: Review package not found at {package_path}.
+          receipt_not_found: 'Receipt envelope not found at {receipt_path}.'
+          signature_not_found: 'Signature envelope not found at {signature_path}.'
         group_help: Build a shareable review package and verify its integrity.
         notes_help: Free-text note embedded in the package descriptor (e.g. why it
           was shared).
+        operator_public_key_help: 'The operator''s (original signer''s) public key, as 64 lowercase hex characters.'
         output_help: Path to write the review package ZIP to.
         package_path_help: Path to the review package ZIP to verify.
+        public_key_help: 'Signer''s public key, as 64 lowercase hex characters.'
+        receipt_path_help: 'Path to the counter-signed receipt JSON produced by `counter-sign`.'
         revision_help: Calculation revision id to package; defaults to the work unit's
           most recent verified-complete or filed revision.
+        sign_help: 'Sign a review package''s checksum manifest with the bucket''s Ed25519 signing keypair (minted on first use) and write the signature envelope to --output. Local-only; never contacts AEAT.'
+        sign_output_help: 'Path to write the signature envelope JSON to.'
+        signature_path_help: 'Path to the signature envelope JSON produced by `sign`.'
         verify_help: Verify a review package's checksum manifest (integrity only;
           does not assert who built it). Local-only; never contacts AEAT.
+        verify_receipt_help: 'Verify both signature layers of a counter-signed review-package receipt: the operator''s original signature and the accountant''s counter-signature. Local-only; never contacts AEAT.'
+        verify_signature_help: 'Verify a review package''s Ed25519 signature envelope against a signer''s public key (authenticity check; re-runs the checksum-manifest integrity check first). Local-only; never contacts AEAT.'
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       verification_report:
         app_help: Inspect recorded verification reports
@@ -2316,15 +2332,16 @@ cli:
           name_help: cli.config.auth.certificate.remove.name_help
         remove_help: cli.config.auth.certificate.remove_help
         secret:
-          help: 'Manage the passphrase bound to a named certificate source'
+          help: Manage the passphrase bound to a named certificate source
           remove:
-            name_help: 'Registered certificate source whose passphrase should be removed'
-          remove_help: 'Remove the passphrase bound to a registered certificate source'
+            name_help: Registered certificate source whose passphrase should be removed
+          remove_help: Remove the passphrase bound to a registered certificate source
           set:
-            backend_help: 'Secret backend: secure_storage (default, encrypted at rest) or keyring (OS keychain)'
-            name_help: 'Registered certificate source the passphrase is bound to'
-            secret_help: 'The PKCS#12 passphrase (prompted, hidden, never echoed)'
-          set_help: 'Set (or rotate) the passphrase for a registered certificate source'
+            backend_help: 'Secret backend: secure_storage (default, encrypted at rest)
+              or keyring (OS keychain)'
+            name_help: Registered certificate source the passphrase is bound to
+            secret_help: The PKCS#12 passphrase (prompted, hidden, never echoed)
+          set_help: Set (or rotate) the passphrase for a registered certificate source
         select:
           name_help: cli.config.auth.certificate.select.name_help
         select_help: cli.config.auth.certificate.select_help

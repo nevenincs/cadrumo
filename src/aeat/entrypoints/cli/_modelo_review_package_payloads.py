@@ -39,7 +39,8 @@ class ModeloReviewPackageVerifyResult(OutputSchema):
     ``is_clean`` summarises ``missing`` / ``unexpected`` / ``mismatched``
     (empty across all three iff clean). This is an INTEGRITY check only —
     it does not assert who built the package; cryptographic signing and
-    counter-sign verification are a deferred follow-up slice.
+    counter-sign verification are surfaced by the sibling ``sign`` /
+    ``verify-signature`` / ``counter-sign`` / ``verify-receipt`` verbs.
     """
 
     operation: str = "modelo.review_package.verify"
@@ -60,7 +61,73 @@ class ModeloReviewPackageVerifyResult(OutputSchema):
     built_at: str
 
 
+@register_schema("modelo.review_package.sign")
+class ModeloReviewPackageSignResult(OutputSchema):
+    """Review-package signing result.
+
+    Carries only the exportable public half of the signer's keypair and the
+    path to the written signature envelope — the private key never appears
+    in this payload (it stays inside the encrypted per-bucket keystore; see
+    :func:`~aeat.application.modelo.ensure_review_package_signing_keypair`).
+    """
+
+    operation: str = "modelo.review_package.sign"
+    package_path: str
+    signature_path: str
+    bucket_id: str
+    calculation_revision_id: str
+    manifest_sha256: str
+    signer_public_key_hex: str
+    signed_at: str
+
+
+@register_schema("modelo.review_package.verify_signature")
+class ModeloReviewPackageVerifySignatureResult(OutputSchema):
+    """Review-package Ed25519 signature-verification result (authenticity check)."""
+
+    operation: str = "modelo.review_package.verify_signature"
+    package_path: str
+    signature_path: str
+    signer_public_key_hex: str
+    is_valid: bool
+
+
+@register_schema("modelo.review_package.counter_sign")
+class ModeloReviewPackageCounterSignResult(OutputSchema):
+    """Review-package accountant counter-sign result.
+
+    Carries only the exportable public half of the counter-signer's keypair
+    and the path to the written receipt envelope — the private key never
+    appears in this payload.
+    """
+
+    operation: str = "modelo.review_package.counter_sign"
+    package_path: str
+    signature_path: str
+    receipt_path: str
+    bucket_id: str
+    note: str
+    counter_signer_public_key_hex: str
+    counter_signed_at: str
+
+
+@register_schema("modelo.review_package.verify_receipt")
+class ModeloReviewPackageVerifyReceiptResult(OutputSchema):
+    """Review-package counter-signed receipt verification result (both layers)."""
+
+    operation: str = "modelo.review_package.verify_receipt"
+    package_path: str
+    receipt_path: str
+    operator_public_key_hex: str
+    counter_signer_public_key_hex: str
+    is_valid: bool
+
+
 __all__ = [
     "ModeloReviewPackageBuildResult",
+    "ModeloReviewPackageCounterSignResult",
+    "ModeloReviewPackageSignResult",
+    "ModeloReviewPackageVerifyReceiptResult",
     "ModeloReviewPackageVerifyResult",
+    "ModeloReviewPackageVerifySignatureResult",
 ]
