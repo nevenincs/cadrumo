@@ -43,6 +43,7 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-W04-P11-S40]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W04-P11-S41]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W04-P11-S42]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W05-P12-S43]]'
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
   - '[[2026-07-03-claude-ecosystem-packaging-plan]]'
   - '[[2026-07-03-claude-ecosystem-packaging-research]]'
@@ -97,6 +98,7 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 - `2026-07-03-claude-ecosystem-packaging-W04-P11-S40` - Document the name-claim sequencing: publish the slim aeat wheel first (no grant needed) to claim the name
 - `2026-07-03-claude-ecosystem-packaging-W04-P11-S41` - Document the aeat-data file-size grant request template and the publish-when-granted flow so the plugin delivery is not hard-blocked on the grant
 - `2026-07-03-claude-ecosystem-packaging-W04-P11-S42` - Document the full release checklist joining versioning, wheel build, name claim, grant and plugin/marketplace push in RELEASING.md
+- `2026-07-03-claude-ecosystem-packaging-W05-P12-S43` - Install the plugin from the marketplace into the Claude Code CLI and confirm the local stdio aeat-mcp server runs (the confirmed floor)
 
 ### plan
 
