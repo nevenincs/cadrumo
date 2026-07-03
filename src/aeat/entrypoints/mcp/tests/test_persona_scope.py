@@ -25,6 +25,7 @@ from ....application.operator_surface import OperatorMutability
 from .._persona_scope import (
     PERSONA_TOOL_SCOPES,
     AgentPersona,
+    is_handoff_denied,
     is_tool_in_persona_scope,
     live_family_mutability,
     scope_for_persona,
@@ -158,3 +159,25 @@ def test_is_tool_in_persona_scope_fails_closed_on_an_unknown_family() -> None:
     # is what would trigger the "granted but unmounted" fail-closed branch in
     # `is_tool_in_persona_scope` if a persona ever declared it.
     assert "not_a_real_family" not in live_family_mutability()
+
+
+def test_handoff_denial_fires_for_the_modelo_filing_leaves() -> None:
+    # The R6(iii) irreversible-boundary denial: the modelo-preparer and the
+    # reconciler are structurally barred from the modelo export and record marker.
+    for persona in (AgentPersona.MODELO_PREPARER, AgentPersona.RECONCILER):
+        assert is_handoff_denied(persona=persona, command_key="app.modelo.export") is True
+        assert is_handoff_denied(persona=persona, command_key="app.modelo.file") is True
+    # The verifier owns the handoff and is never denied it.
+    assert is_handoff_denied(persona=AgentPersona.VERIFIER, command_key="app.modelo.export") is False
+
+
+def test_handoff_denial_is_scoped_to_the_modelo_family_not_any_export_leaf() -> None:
+    # Precision guard: the deny rule matches the modelo filing boundary, not a
+    # same-named `export` / `file` leaf in another family. A future
+    # ledger-exporting verb (`ledger.export`) must NOT trip a spurious refusal
+    # for a modelo persona — the family guard keeps the rule exact rather than
+    # relying on persona scope to mask the bare leaf-name match.
+    assert is_handoff_denied(persona=AgentPersona.MODELO_PREPARER, command_key="ledger.export") is False
+    assert is_handoff_denied(persona=AgentPersona.RECONCILER, command_key="app.ledger.file") is False
+    # A persona with no denial rows is never denied anything.
+    assert is_handoff_denied(persona=AgentPersona.VERIFIER, command_key="ledger.export") is False
