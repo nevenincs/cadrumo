@@ -394,10 +394,15 @@ def _expected_wheel_data_paths(repo_root: Path) -> set[str]:
     Corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``) are excluded:
     the wheel-split build config sheds them from this wheel and ships them in the
     ``aeat-data`` companion, so they are legitimately absent from the archive.
+    Test modules under a ``_data`` ``tests/`` folder are excluded by the
+    data-budget wheel boundary (tests serve no installed consumer) and are
+    likewise legitimately absent.
     """
     expected: set[str] = set()
     for path in _tracked_source_data_paths(repo_root):
         if _is_corpus_source_binary(path):
+            continue
+        if "/tests/" in path:
             continue
         expected.add(f"{_WHEEL_DATA_PREFIX}/{path.removeprefix(_SOURCE_DATA_PREFIX)}")
     return expected
