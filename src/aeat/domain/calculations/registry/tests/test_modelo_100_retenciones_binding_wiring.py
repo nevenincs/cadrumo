@@ -85,6 +85,7 @@ def _base_binding_values(
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-menores-3": Decimal("0"),
         "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
         "renta-2024-profile-marriage-full-year": Decimal("0"),
         "renta-2024-profile-marriage-month-start": Decimal("0"),
         "renta-2024-profile-marriage-month-end": Decimal("0"),
@@ -120,6 +121,7 @@ def _base_binding_values_2025(
         "renta-2025-profile-marriage-month-end": Decimal("0"),
         "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
         "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     if m111 is not None:
         values["renta-2025-modelo-111-retenciones-periodicas"] = m111

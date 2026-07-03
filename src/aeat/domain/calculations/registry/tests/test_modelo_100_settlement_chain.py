@@ -167,6 +167,7 @@ def _binding_values() -> dict[BindingId, Decimal]:
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-menores-3": Decimal("0"),
         "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
         "renta-2024-profile-marriage-full-year": Decimal("0"),
         "renta-2024-profile-marriage-month-start": Decimal("0"),
         "renta-2024-profile-marriage-month-end": Decimal("0"),

@@ -159,6 +159,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (modelo-100-minimo-descendientes-engine ADR).
             "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
@@ -284,6 +285,7 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
             "renta-2025-profile-marriage-month-end": Decimal("0"),
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
             "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
@@ -339,6 +341,7 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
             "renta-2025-profile-marriage-month-end": Decimal("0"),
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
             "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
@@ -418,6 +421,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
             "renta-2025-profile-marriage-month-end": Decimal("0"),
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
             "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
@@ -594,6 +598,7 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
             "renta-2025-profile-marriage-month-end": Decimal("0"),
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
             "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
             # 0596/0597 retención credits fold from M111/M123.
             "renta-2025-modelo-111-retenciones-periodicas": Decimal("40.00"),
             "renta-2025-modelo-123-retenciones-periodicas": Decimal("50.00"),
