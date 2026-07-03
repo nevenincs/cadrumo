@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.buckets import (
@@ -20,7 +21,6 @@ from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
     ModeloError,
     ModeloRecordCatalogueRepository,
-    VerificationReportCatalogueRepository,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile

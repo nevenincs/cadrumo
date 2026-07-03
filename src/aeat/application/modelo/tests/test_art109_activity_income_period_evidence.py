@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
@@ -18,7 +19,6 @@ from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
-    VerificationReportCatalogueRepository,
 )
 from ....domain.transactions import (
     BusinessClassification,

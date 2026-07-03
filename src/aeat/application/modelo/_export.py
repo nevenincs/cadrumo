@@ -45,6 +45,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, RefundElection, ResultDisposition, result_disposition_is_refund
@@ -75,7 +76,6 @@ from ...domain.modelos import (
     ModeloExportError,
     ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
-    VerificationReportCatalogueRepository,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
     WorkUnitId,

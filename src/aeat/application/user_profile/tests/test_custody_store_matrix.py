@@ -275,14 +275,15 @@ def _verify_invoice_catalogue(bucket_id: str) -> None:
 
 
 def _seed_verification_reports(bucket_id: str) -> None:
-    from ....domain.modelos import VerificationReportCatalogue, VerificationReportCatalogueRepository
+    from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+    from ....domain.modelos import VerificationReportCatalogue
 
     # An empty catalogue still persists one secure-object row to carry.
     VerificationReportCatalogueRepository().save(VerificationReportCatalogue())
 
 
 def _verify_verification_reports(bucket_id: str) -> None:
-    from ....domain.modelos import VerificationReportCatalogueRepository
+    from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 
     assert VerificationReportCatalogueRepository().load() is not None, "verification reports lost"
 

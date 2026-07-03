@@ -30,6 +30,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
@@ -48,7 +49,6 @@ from ....domain.modelos import (
     ModeloRecordCatalogueRepository,
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
-    VerificationReportCatalogueRepository,
     WorkUnit,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord

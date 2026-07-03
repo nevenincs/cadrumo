@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.submission import SubmissionRepository
 from ....core import Period
@@ -45,7 +46,6 @@ from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
-    VerificationReportCatalogueRepository,
     WorkUnit,
     upsert_work_unit,
 )

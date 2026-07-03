@@ -9,6 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
@@ -19,7 +20,6 @@ from ....domain.modelos import (
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordCatalogueRepository,
-    VerificationReportCatalogueRepository,
     WorkUnit,
     derive_filing_record_id,
     upsert_calculation_revision,

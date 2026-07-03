@@ -39,6 +39,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
@@ -53,7 +54,6 @@ from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
-    VerificationReportCatalogueRepository,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnitId,
 )

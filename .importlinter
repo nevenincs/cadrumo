@@ -706,7 +706,6 @@ ignore_imports =
     # SecureObjectWrite), confirmed by lint-imports trace - re-pinned below.
     aeat.domain.modelos._calculation_repository -> aeat.adapters.persistence.storage
     aeat.domain.modelos._filing_repository -> aeat.adapters.persistence.storage
-    aeat.domain.modelos._verification_repository -> aeat.adapters.persistence.storage
     aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.crypto
     aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.profile.submission
     aeat.domain.submission.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.profile.submission
@@ -928,6 +927,36 @@ ignore_imports =
     aeat.application.modelo._revision_persistence -> aeat.adapters.persistence.profile.participation_index
     aeat.application.modelo._participation_index_rebuild -> aeat.adapters.persistence.profile.participation_index
     aeat.application.modelo._verification_actions -> aeat.adapters.persistence.profile.participation_index
+    # ── arch-remediation-ports-inversion: modelos verification-report repository ──
+    aeat.adapters.persistence.storage.tests._runtime_attached_repositories_support -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.calculations.tests._cross_period_clean_state_support -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.calculations.tests.test_carry_gate_parity -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.calculations.tests.test_cross_period_clean_state_provenance -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.calculations.tests.test_modelo_130_carry_forward_continuity -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.calculations.tests.test_modelo_130_casilla_05_carry -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo._export -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo._filing_actions -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo._history -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo._verification_actions -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests._export_modelo_303_support -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests._file_flow_support -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests._import_flow_support -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests._verification_substance_support -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests.test_amend_flow -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests.test_art109_activity_income_period_evidence -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests.test_cross_period_clean_state_gates -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests.test_e2e_ledger_m303_quarters_to_m390_annual -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests.test_export_iva_wallet -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests.test_history -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests.test_local_cross_period_carry -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests.test_modelo_202_modality_lifecycle -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests.test_modelo_303_deductible_evidence_gate -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests.test_modelo_303_official_box_under_declaration -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests.test_renta_annual_reconciliations_fold_in_live -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests.test_verificado_completo_regression -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.modelo.tests.test_verification_substance_workflow -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.application.user_profile.tests.test_custody_store_matrix -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.domain.modelos.tests.test_verification_report_roundtrip -> aeat.adapters.persistence.profile.modelos_verification_reports
     aeat.application.modelo.tests.test_participation_rebuild -> aeat.adapters.persistence.profile.participation_index
     aeat.application.modelo.tests.test_participation_co_emission -> aeat.adapters.persistence.profile.participation_index
     # ── application production edges: modelos_work_units catalogue repository

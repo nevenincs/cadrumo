@@ -37,6 +37,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
@@ -50,7 +51,6 @@ from ....domain.calculations.registry import (
 from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
     ModeloRecordCatalogueRepository,
-    VerificationReportCatalogueRepository,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
@@ -384,10 +384,10 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     cross-YEAR non-official prior still blocks. The within-year reconstruction can reach
     export; the operator files every period with AEAT externally.
     """
+    from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
     from ....domain.modelos import (
         CalculationRevisionState,
         ModeloRecordCatalogueRepository,
-        VerificationReportCatalogueRepository,
         upsert_calculation_revision,
     )
     from ...calculations import CrossPeriodCleanStateBlocker
@@ -671,7 +671,8 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
     verdict is clean => the quarter is reachable to verify/export. If suppression did NOT
     cover the previous_filing M100 dep, this verdict would be unclean (a real gap).
     """
-    from ....domain.modelos import ModeloRecordCatalogueRepository, VerificationReportCatalogueRepository
+    from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+    from ....domain.modelos import ModeloRecordCatalogueRepository
     from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos

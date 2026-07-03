@@ -18,6 +18,7 @@ Submodules
    aeat.adapters.persistence.profile.fincas
    aeat.adapters.persistence.profile.inventory
    aeat.adapters.persistence.profile.justificante
+   aeat.adapters.persistence.profile.modelos_verification_reports
    aeat.adapters.persistence.profile.modelos_work_units
    aeat.adapters.persistence.profile.participation_index
    aeat.adapters.persistence.profile.submission
