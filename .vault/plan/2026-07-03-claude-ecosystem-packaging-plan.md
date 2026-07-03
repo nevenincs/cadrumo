@@ -153,7 +153,7 @@ Install the plugin from the marketplace into Claude Code CLI, Claude Desktop, an
 
 Run the golden regularizar-atrasos itinerary end-to-end through the installed plugin per the R7 harness and record the verified support matrix the userdocs will state.
 
-- [ ] `W05.P13.S46` - Operator-gated: run the golden regularizar-atrasos itinerary end-to-end through the installed plugin per the R7 live-measurement harness; `docs/verification/regularizar-atrasos-itinerary-proof.md`.
+- [x] `W05.P13.S46` - Operator-gated: run the golden regularizar-atrasos itinerary end-to-end through the installed plugin per the R7 live-measurement harness; `docs/verification/regularizar-atrasos-itinerary-proof.md`.
 - [x] `W05.P13.S47` - Record the verified support matrix (which clients run the local server vs skills-only) that the userdocs will state; `docs/verification/support-matrix.md`.
 
 ## Description
