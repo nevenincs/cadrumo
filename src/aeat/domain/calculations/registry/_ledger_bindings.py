@@ -581,14 +581,28 @@ def unsupported_ledger_iva_observations(
 # ---------------------------------------------------------------------------
 
 # Casilla IDs covered by the first Renta expense slice (Modelo 100, period 0A).
-# These must stay in sync with the binding selectors in the TOML; they are
-# validated at registry load time so mismatches surface before any calculation.
+# These must stay in sync with the binding selectors in the TOML and with
+# aeat.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS (the
+# domain-owned SpendingCategory -> casilla routing table this registry-layer
+# module cannot import directly without reversing the hexagonal dependency
+# direction); they are validated at registry load time so mismatches surface
+# before any calculation. See issue #589 (29-of-40 SpendingCategory coverage gap).
 _RENTA_100_FIRST_SLICE_CASILLAS: frozenset[CasillaId] = _casilla_id_set(
     "_RENTA_100_FIRST_SLICE_CASILLAS",
+    "0183",
     "0186",
+    "0191",
     "0192",
+    "0193",
+    "0194",
+    "0195",
     "0199",
+    "0200",
+    "0202",
     "0203",
+    "0206",
+    "0208",
+    "0217",
 )
 
 
@@ -733,6 +747,38 @@ def unsupported_ledger_renta_expense_observations(
         ):
             unsupported.append(observation)
     return tuple(unsupported)
+
+
+def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> frozenset[CasillaId]:
+    """Return the ``target_casilla_id`` set this revision's own bindings route to.
+
+    Unlike :data:`aeat.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS`
+    (the universal BOE-prescribed routing table spanning every filing year the
+    application supports), this returns only the casillas a
+    ``ledger_renta_expense_aggregation`` binding on THIS revision actually
+    targets. Older Modelo 100 revisions (2020-2023) declare no such bindings
+    at all -- the first-slice ledger-aggregation mechanism did not yet exist
+    for them -- so their required set is legitimately empty even though the
+    universal routing table's codomain is wider. The snapshot-time
+    referential-integrity gate
+    (:mod:`aeat.domain.renta._first_slice_routing_integrity`) uses this
+    per-revision set rather than the universal table so it only fails when a
+    binding THIS revision actually declares points at a casilla absent from
+    that same revision -- the real defect class the gate exists to catch,
+    not "does every filing year's estimación directa casilla exist on every
+    other filing year's revision" (it does not, by BOE design: casillas are
+    added, split, and renumbered across years).
+
+    Args:
+        revision: The :class:`ModeloRevision` whose own
+            ``ledger_renta_expense_aggregation`` binding selectors are
+            inspected.
+    """
+    return frozenset(
+        _renta_ledger_expense_selector(binding).target_casilla_id
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION
+    )
 
 
 class _RentaLedgerIncomeSelector(BaseModel):

@@ -28,11 +28,20 @@ class CrossDomainSnapshotCheck(Protocol):
     every registered check at snapshot-build time without naming the
     peer.
 
-    A check receives the modelo id and the snapshot's casilla id set
-    and returns a list of failure strings (empty when consistent).
+    A check receives the modelo id, the snapshot's casilla id set, and
+    the revision's OWN renta first-slice ledger-aggregation binding
+    target casillas (a strict subset of the universal routing table's
+    codomain -- older revisions may declare no such bindings at all, so
+    their required set is legitimately empty) and returns a list of
+    failure strings (empty when consistent).
     """
 
-    def __call__(self, modelo_id: str, casilla_ids: frozenset[CasillaId]) -> list[str]: ...
+    def __call__(
+        self,
+        modelo_id: str,
+        casilla_ids: frozenset[CasillaId],
+        renta_first_slice_binding_targets: frozenset[CasillaId],
+    ) -> list[str]: ...
 
 
 _CROSS_DOMAIN_SNAPSHOT_CHECKS: list[CrossDomainSnapshotCheck] = []
@@ -82,7 +91,10 @@ def check_cross_domain_snapshot_routing(
     known-required gate, fail loudly so the missing registration
     surfaces at snapshot build instead of as a later runtime KeyError.
     """
+    from ._ledger_bindings import renta_first_slice_binding_target_casillas
+
     casilla_ids = frozenset(checker.casilla_ids)
+    renta_first_slice_binding_targets = renta_first_slice_binding_target_casillas(snapshot.revision)
     if snapshot.modelo.id == Modelo.M100 and not _CROSS_DOMAIN_SNAPSHOT_CHECKS:
         checker.failures.append(
             f"{checker.prefix}: modelo 100 requires the renta first-slice "
@@ -92,5 +104,5 @@ def check_cross_domain_snapshot_routing(
             "runs before validation",
         )
     for check in _CROSS_DOMAIN_SNAPSHOT_CHECKS:
-        for failure in check(snapshot.modelo.id, casilla_ids):
+        for failure in check(snapshot.modelo.id, casilla_ids, renta_first_slice_binding_targets):
             checker.failures.append(f"{checker.prefix}: {failure}")
