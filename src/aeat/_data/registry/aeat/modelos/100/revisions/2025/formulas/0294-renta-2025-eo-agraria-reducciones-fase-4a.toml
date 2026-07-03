@@ -80,11 +80,13 @@ required_text = ["Reducción agricultores jóvenes: 25 por 100"]
 # gastos extraordinarios (1552, Fase 4a apartado 3, permanece manual — un
 # importe declarado por el operador cuando concurren circunstancias
 # excepcionales comunicadas a la AEAT), menos la reduccion por irregularidad
-# del articulo 32.1 (1554, Fase 5a, permanece manual y fuera de alcance de
-# este slice). Sigue el mismo patron de resta anidada sin suelo en cero que
-# el resto de la cadena de estimacion objetiva (ver
-# renta-2025-estimacion-directa-rendimiento-neto-reducido-total y
-# renta-2025-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total).
+# del articulo 32.1 (1554, Fase 5a — ver
+# 0295-renta-2025-eo-agraria-reduccion-irregularidad.toml, computada a
+# partir de la base declarada por el operador
+# [eo-agraria-reduccion-irregularidad-base]). Sigue el mismo patron de
+# resta anidada sin suelo en cero que el resto de la cadena de estimacion
+# objetiva (ver renta-2025-estimacion-directa-rendimiento-neto-reducido-total
+# y renta-2025-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total).
 [[revisions."2025".formulas]]
 id = "renta-2025-eo-agraria-rendimiento-neto-reducido-por-actividad"
 target_casilla_id = "1555"

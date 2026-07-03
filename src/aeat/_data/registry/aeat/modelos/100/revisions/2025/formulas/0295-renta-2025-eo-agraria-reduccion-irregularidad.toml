@@ -1,0 +1,36 @@
+# Modelo 100 2025 estimacion objetiva agraria (Anexo I, Orden HAC/1347/2024)
+# Fase 5a: reduccion por irregularidad (art. 32.1 LIRPF).
+#
+# LIRPF art. 32.1: "Los rendimientos netos con un periodo de generacion
+# superior a dos anos, asi como aquellos que se califiquen reglamentariamente
+# como obtenidos de forma notoriamente irregular en el tiempo, se reduciran
+# en un 30 por ciento... La cuantia del rendimiento neto a que se refiere
+# este apartado sobre la que se aplicara la citada reduccion no podra
+# superar el importe de 300.000 euros anuales." AEAT's own Diseno de
+# Registros declares casilla 1554 (IMPE5AL) as a single "Importe de la
+# deduccion" amount field with no separate base sub-field (see
+# 2238-eo-agraria-reduccion-irregularidad-base.toml); which portion of the
+# rendimiento neto is genuinely irregular/multi-year is a taxpayer/preparer
+# fact this app cannot derive from any other casilla, so the base is
+# operator-declared and the 30 por 100 x min(base, 300.000) computation
+# is mechanical from there. A blank/zero declared base yields a zero
+# reduccion (never fabricated), matching the manual's own worked example
+# ("Al no computarse ningun tipo de rendimiento con periodo de generacion
+# superior a dos anos... no procede aplicar reduccion alguna por este
+# concepto").
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-reduccion-irregularidad"
+target_casilla_id = "1554"
+expression = { op = "percent", args = [
+    { op = "min", args = [
+        { casilla_id = "eo-agraria-reduccion-irregularidad-base" },
+        { parameter = "renta-2025-eo-agraria-reduccion-irregularidad-cap" },
+    ] },
+    { parameter = "renta-2025-eo-agraria-reduccion-irregularidad-rate" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["REDUCCIÓN POR IRREGULARIDAD", "30 POR 100"]

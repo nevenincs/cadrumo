@@ -1,4 +1,4 @@
-"""Modelo 100 2025 estimación objetiva agraria — Fase 4ª reducciones.
+"""Modelo 100 2025 estimación objetiva agraria — Fase 4ª/5ª reducciones.
 
 Non-tautological: the target rendimiento neto de módulos (13.233,98 euros),
 the 5 por 100 reducción general (661,70 euros), and the resulting
@@ -11,7 +11,11 @@ lands casilla 1548 on 13.233,98 euros there). The manual states: "Reducción
 de carácter general: 5% s/13.233,98 = 661,70 euros" and, because Don L.H.I.
 has neither gastos extraordinarios nor derecho a la reducción por
 agricultores jóvenes, "el rendimiento neto de la actividad es el siguiente:
-13.233,98 – 661,70 = 12.572,28 euros".
+13.233,98 – 661,70 = 12.572,28 euros". The manual's own Fase 5ª for this
+example also has zero irregularidad ("Al no computarse ningún tipo de
+rendimiento con período de generación superior a dos años... no procede
+aplicar reducción alguna por este concepto"), reproduced by
+``TestReduccionIrregularidadMatchesManualWorkedExample``.
 
 The reducción agricultores jóvenes (25 por 100, LIRPF DA-6ª / instrucción 3
 del Anexo I Orden HAC/1347/2024) has no applied worked example in the
@@ -20,7 +24,14 @@ mechanism is exercised structurally: the externally-sourced 25 por 100 rate
 applied to the externally-sourced post-general-reducción base (casilla
 1550), gated by the AJ eligibility casilla — the same composition-testing
 convention ``test_two_declared_indices_compose_sequentially`` already uses
-in the sibling Fase 3ª suite for the índices correctores cascade.
+in the sibling Fase 3ª suite for the índices correctores cascade. The Fase
+5ª art. 32.1 irregularidad reducción (30 por 100, capped at 300.000 euros
+anuales) has no POSITIVE applied worked example in the bundled 2025 manual
+either (every agraria caso práctico in Capítulo 9 declares zero
+rendimientos irregulares), so its mechanism — the 30 por 100 rate and the
+300.000 euros cap, both grounded in LIRPF art. 32.1 — is exercised
+structurally in ``TestReduccionIrregularidadAppliesThirtyPercentCappedAt300000``,
+the same pattern.
 """
 
 from __future__ import annotations
@@ -75,6 +86,7 @@ _CASILLA_1552_GASTOS_EXTRAORDINARIOS = validated_casilla_id("1552", surface="tes
 _CASILLA_1554_REDUCCION_IRREGULARIDAD = validated_casilla_id("1554", surface="test")
 _CASILLA_1555_RENDIMIENTO_NETO_REDUCIDO = validated_casilla_id("1555", surface="test")
 _CASILLA_AJ_JOVENES_FLAG = validated_casilla_id("AJ", surface="test")
+_CASILLA_REDUCCION_IRREGULARIDAD_BASE = validated_casilla_id("eo-agraria-reduccion-irregularidad-base", surface="test")
 
 
 def _modelo_100_2025_snapshot():
@@ -110,7 +122,7 @@ def _run_calculation(
     indice_personal_asalariado: Decimal | None = _INDICE_PERSONAL_ASALARIADO,
     agricultor_joven: Decimal = Decimal("0"),
     gastos_extraordinarios: Decimal = Decimal("0"),
-    reduccion_irregularidad: Decimal = Decimal("0"),
+    reduccion_irregularidad_base: Decimal = Decimal("0"),
 ) -> Mapping[CasillaId, Decimal]:
     snapshot = _modelo_100_2025_snapshot()
     revision = snapshot.revision
@@ -120,7 +132,7 @@ def _run_calculation(
         _CASILLA_1538_AMORTIZACION: amortizacion,
         _CASILLA_AJ_JOVENES_FLAG: agricultor_joven,
         _CASILLA_1552_GASTOS_EXTRAORDINARIOS: gastos_extraordinarios,
-        _CASILLA_1554_REDUCCION_IRREGULARIDAD: reduccion_irregularidad,
+        _CASILLA_REDUCCION_IRREGULARIDAD_BASE: reduccion_irregularidad_base,
     }
     if indice_personal_asalariado is not None:
         inputs[_CASILLA_1541_PERSONAL_ASALARIADO] = indice_personal_asalariado
@@ -202,10 +214,10 @@ class TestReduccionJovenesAppliesOnlyWhenEligibilityFlagIsDeclared:
         assert values[_CASILLA_1551_REDUCCION_JOVENES] == Decimal("0")
 
 
-class TestGastosExtraordinariosAndIrregularidadRemainManualDeductions:
-    """Fase 4ª apartado 3 (gastos extraordinarios) and Fase 5ª (art. 32.1
-    irregularidad) stay operator-declared amounts; casilla 1555 subtracts
-    whatever is declared, never fabricating a value when they are blank.
+class TestGastosExtraordinariosRemainsAManualDeduction:
+    """Fase 4ª apartado 3 (gastos extraordinarios) stays an operator-declared
+    amount; casilla 1555 subtracts whatever is declared, never fabricating a
+    value when it is blank.
     """
 
     def test_declared_gastos_extraordinarios_reduce_1555(self) -> None:
@@ -213,7 +225,52 @@ class TestGastosExtraordinariosAndIrregularidadRemainManualDeductions:
         values = _run_calculation(gastos_extraordinarios=gastos)
         assert values[_CASILLA_1555_RENDIMIENTO_NETO_REDUCIDO] == _EXPECTED_RENDIMIENTO_NETO_ACTIVIDAD - gastos
 
-    def test_declared_reduccion_irregularidad_reduces_1555(self) -> None:
-        irregularidad = Decimal("50.00")
-        values = _run_calculation(reduccion_irregularidad=irregularidad)
-        assert values[_CASILLA_1555_RENDIMIENTO_NETO_REDUCIDO] == _EXPECTED_RENDIMIENTO_NETO_ACTIVIDAD - irregularidad
+
+class TestReduccionIrregularidadMatchesManualWorkedExample:
+    """Fase 5ª: reducción por irregularidad (casilla 1554, art. 32.1 LIRPF).
+
+    Don L.H.I. has no rendimientos con período de generación superior a dos
+    años ni obtenidos de forma notoriamente irregular: the manual states "no
+    procede aplicar reducción alguna por este concepto" and "Rendimiento
+    neto reducido de la actividad = Rendimiento neto de la actividad
+    (12.572,28 euros)" — casilla 1554 stays zero and 1555 equals the Fase 4ª
+    terminal figure, reproduced exactly.
+    """
+
+    def test_blank_base_yields_zero_reduccion_irregularidad(self) -> None:
+        values = _run_calculation()
+        assert values[_CASILLA_1554_REDUCCION_IRREGULARIDAD] == Decimal("0")
+        assert values[_CASILLA_1555_RENDIMIENTO_NETO_REDUCIDO] == _EXPECTED_RENDIMIENTO_NETO_ACTIVIDAD
+
+
+class TestReduccionIrregularidadAppliesThirtyPercentCappedAt300000:
+    """Fase 5ª mechanism: 30 por 100 sobre min(base declarada, 300.000 euros).
+
+    No agraria caso práctico in the bundled 2025 manual declares a positive
+    rendimiento irregular (every worked example in Capítulo 9 states "no
+    procede aplicar reducción alguna"), so the mechanism is exercised
+    structurally — the same composition-testing convention the sibling
+    reducción agricultores jóvenes test above already uses. LIRPF art. 32.1:
+    "se reducirán en un 30 por ciento" and "no podrá superar el importe de
+    300.000 euros anuales".
+    """
+
+    def test_declared_base_under_cap_applies_thirty_percent(self) -> None:
+        base = Decimal("1000.00")
+        values = _run_calculation(reduccion_irregularidad_base=base)
+        expected_reduccion = (base * Decimal("30") / Decimal("100")).quantize(Decimal("0.01"))
+        assert values[_CASILLA_1554_REDUCCION_IRREGULARIDAD] == expected_reduccion
+        assert (
+            values[_CASILLA_1555_RENDIMIENTO_NETO_REDUCIDO] == _EXPECTED_RENDIMIENTO_NETO_ACTIVIDAD - expected_reduccion
+        )
+
+    def test_declared_base_over_cap_is_capped_at_300000_before_the_thirty_percent(self) -> None:
+        base = Decimal("350000.00")
+        values = _run_calculation(reduccion_irregularidad_base=base)
+        expected_reduccion = (Decimal("300000") * Decimal("30") / Decimal("100")).quantize(Decimal("0.01"))
+        assert values[_CASILLA_1554_REDUCCION_IRREGULARIDAD] == expected_reduccion
+        assert values[_CASILLA_1554_REDUCCION_IRREGULARIDAD] == Decimal("90000.00")
+
+    def test_zero_declared_base_never_fabricates_a_reduccion(self) -> None:
+        values = _run_calculation(reduccion_irregularidad_base=Decimal("0"))
+        assert values[_CASILLA_1554_REDUCCION_IRREGULARIDAD] == Decimal("0")
