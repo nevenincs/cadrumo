@@ -911,19 +911,35 @@ def _untranslatable_internal_only_casillas(
     stays in the workbook — the exclusion is scoped to the untranslatable custom
     ops, not to ``internal_only`` as a whole.
 
-    The probe uses a first-pass layout so leaf references resolve; the M303
-    módulos ops fail on the unsupported op itself, independent of leaf layout.
+    The exclusion is computed to a fixpoint. Excluding a casilla removes its cell
+    from the layout, so an ``internal_only`` casilla that references it (e.g. the
+    M303 ``modulos-iva-cuota-derivada`` ``max`` over ``modulos-iva-cuota-devengada``)
+    becomes untranslatable in turn once the dependency is gone -- it must then be
+    excluded as well, or ``_formula_cells`` would fail translating a leaf reference
+    to a cell the layout no longer carries. Each pass rebuilds the probe layout with
+    the exclusions found so far and re-checks the remaining ``internal_only``
+    casillas until no new one is untranslatable. The custom-runtime M303 módulos ops
+    fail on the unsupported op itself regardless of layout, so the first pass always
+    seeds the chain.
     """
-    probe_layout = plan_layout(revision, bracket_filter_date=bracket_filter_date)
     formulas = {formula.id: formula for formula in revision.formulas}
     excluded: set[CasillaId] = set()
-    for casilla in revision.casillas:
-        if not casilla.internal_only or casilla.formula is None:
-            continue
-        formula = formulas[casilla.formula]
-        if not is_translatable(formula.expression, layout=probe_layout):
-            excluded.add(casilla.id)
-    return frozenset(excluded)
+    while True:
+        probe_layout = plan_layout(
+            revision,
+            bracket_filter_date=bracket_filter_date,
+            excluded_casilla_ids=frozenset(excluded),
+        )
+        newly_excluded: set[CasillaId] = set()
+        for casilla in revision.casillas:
+            if not casilla.internal_only or casilla.formula is None or casilla.id in excluded:
+                continue
+            formula = formulas[casilla.formula]
+            if not is_translatable(formula.expression, layout=probe_layout):
+                newly_excluded.add(casilla.id)
+        if not newly_excluded:
+            return frozenset(excluded)
+        excluded |= newly_excluded
 
 
 def build_export_plan(
