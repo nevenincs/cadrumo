@@ -215,11 +215,22 @@ def _run_subprocess_tool(
     env path rather than an interactive prompt, which is the only correct mode
     for an agent-operated console.
     """
+    # Decode the child's output as UTF-8 explicitly. The CLI always emits UTF-8
+    # (its stdout JSON is UTF-8 and `write_stderr` reconfigures stderr to UTF-8),
+    # but `text=True` alone would decode with the platform default —
+    # ``locale.getpreferredencoding()`` is cp1252 on Windows — turning every
+    # accented Spanish character in a relayed envelope or error into double-
+    # encoded mojibake (``encontró`` -> ``encontrÃ³``) for the LLM client. The
+    # live-model persona measurement observed exactly this. ``errors="replace"``
+    # matches the CLI's own emit-side fallback so a stray non-UTF-8 byte degrades
+    # to the replacement character rather than raising.
     argv = ["aeat", *cli_argv_for(descriptor.verb_schema, arguments)]
     completed = subprocess.run(  # noqa: S603
         argv,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
         stdin=subprocess.DEVNULL,
     )
