@@ -105,3 +105,29 @@ def test_domain_to_adapters_pin_count_does_not_grow() -> None:
     )
 
     assert len(domain_adapter_edges) <= _DOMAIN_TO_ADAPTERS_BASELINE
+
+
+def test_zero_production_domain_to_adapters_edges() -> None:
+    """The ports-inversion campaign seam is closed: no PRODUCTION domain module
+    may pin a domain -> adapters ignore edge in any contract.
+
+    Every production domain repository now sits behind a Protocol port with its
+    concrete class under ``adapters.persistence.profile`` (arch-remediation-ports
+    -inversion, W04.P10.S19). Only test-file roundtrip / anti-tautology edges —
+    which legitimately construct the concrete adapter to exercise the encrypted
+    boundary — may remain. A production domain -> adapters edge reappearing here
+    is a seam regression and must fail loudly, not ratchet.
+    """
+    production_domain_adapter_edges = tuple(
+        edge
+        for edge in _ignore_edges()
+        if edge.source.startswith("aeat.domain.")
+        and edge.target.startswith("aeat.adapters")
+        and ".tests." not in edge.source
+        and not edge.source.endswith(".conftest")
+    )
+
+    assert production_domain_adapter_edges == (), (
+        "production domain -> adapters ignore edges must be zero after the ports-inversion "
+        f"seam closeout; found: {[f'line {e.line_no}: {e.source} -> {e.target}' for e in production_domain_adapter_edges]}"
+    )

@@ -102,6 +102,85 @@ ignore_imports =
     aeat.domain.calculations.registry.tests.test_referential_integrity_part4 -> aeat.application.diagnostics
     aeat.domain.modelos.tests.test_work_unit -> aeat.application.user_profile
 
+[importlinter:contract:domain-not-adapters]
+name = Domain must not import adapters
+# ── arch-remediation-ports-inversion (W04.P10.S20): declare the seam exhaustively ──
+# The ports-inversion campaign migrated every production domain repository
+# behind a Protocol port with its concrete under adapters.persistence.profile,
+# so PRODUCTION domain -> adapters coupling is zero. This first-class forbidden
+# contract (sibling of domain-not-application) replaces the per-production-edge
+# exception list the layered contract carried: a new non-deferred production
+# domain -> adapters import now fails loudly here rather than being absorbed as
+# a layered-contract ignore. Only sanctioned test-file roundtrip/anti-tautology
+# edges — which legitimately construct the concrete adapter to exercise the
+# encrypted boundary end-to-end — remain, pinned individually below.
+unmatched_ignore_imports_alerting = error
+# Scoped to DIRECT imports: production direct coupling here is zero; transitive
+# chains through test files are sanctioned roundtrip noise and the layered
+# contract enforces the full ordering comprehensively.
+allow_indirect_imports = true
+type = forbidden
+source_modules =
+    aeat.domain
+forbidden_modules =
+    aeat.adapters
+ignore_imports =
+    # ── sanctioned domain test-file edges: roundtrip / anti-tautology suites
+    #    constructing the concrete persistence adapter (roundtrip-discipline rule) ──
+    aeat.domain.attachments.tests.test_attachment_store_no_uri_list -> aeat.adapters.persistence.storage.attachment
+    aeat.domain.attachments.tests.test_repository -> aeat.adapters.persistence.storage.attachment
+    aeat.domain.attachments.tests.test_service -> aeat.adapters.persistence.storage.attachment
+    aeat.domain.calculations.registry.tests.test_renta_web_open_oracle -> aeat.adapters.outbound.aeat.sede
+    aeat.domain.currency.tests.test_service -> aeat.adapters.outbound.fx
+    aeat.domain.filing.tests.test_amendment_roundtrip -> aeat.adapters.persistence.profile.filing_amendments
+    aeat.domain.filing.tests.test_amendment_roundtrip -> aeat.adapters.persistence.storage
+    aeat.domain.filing.tests.test_amendment_roundtrip -> aeat.adapters.persistence.storage.crypto
+    aeat.domain.filing.tests.test_amendment_roundtrip -> aeat.adapters.persistence.storage.sql
+    aeat.domain.filing.tests.test_amendment_roundtrip -> aeat.adapters.persistence.storage.sql.session
+    aeat.domain.filing.tests.test_binding_value_provenance_roundtrip -> aeat.adapters.persistence.profile.filing_drafts
+    aeat.domain.filing.tests.test_binding_value_provenance_roundtrip -> aeat.adapters.persistence.storage.crypto
+    aeat.domain.filing.tests.test_binding_value_provenance_roundtrip -> aeat.adapters.persistence.storage.sql
+    aeat.domain.filing.tests.test_binding_value_provenance_roundtrip -> aeat.adapters.persistence.storage.sql.session
+    aeat.domain.filing.tests.test_roundtrip_anti_tautology -> aeat.adapters.persistence.profile.filing_drafts
+    aeat.domain.filing.tests.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.crypto
+    aeat.domain.filing.tests.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.sql
+    aeat.domain.filing.tests.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.sql.session
+    aeat.domain.filing.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.profile.filing_drafts
+    aeat.domain.filing.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.profile.modelos_calculation
+    aeat.domain.fincas.tests.test_aggregates -> aeat.adapters.persistence.profile.fincas
+    aeat.domain.fincas.tests.test_aggregates -> aeat.adapters.persistence.storage
+    aeat.domain.fincas.tests.test_aggregates -> aeat.adapters.persistence.storage.sql.engine
+    aeat.domain.invoices.tests.test_reconciliation -> aeat.adapters.persistence.profile.invoices
+    aeat.domain.invoices.tests.test_reconciliation -> aeat.adapters.persistence.profile.transactions
+    aeat.domain.modelos.tests.test_filing_record_repository_roundtrip -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.domain.modelos.tests.test_filing_record_repository_roundtrip -> aeat.adapters.persistence.storage
+    aeat.domain.modelos.tests.test_participation_index_roundtrip -> aeat.adapters.persistence.profile.participation_index
+    aeat.domain.modelos.tests.test_participation_index_roundtrip -> aeat.adapters.persistence.storage
+    aeat.domain.modelos.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.domain.modelos.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage
+    aeat.domain.modelos.tests.test_verification_report_roundtrip -> aeat.adapters.persistence.profile.modelos_verification_reports
+    aeat.domain.modelos.tests.test_verification_report_roundtrip -> aeat.adapters.persistence.storage
+    aeat.domain.modelos.tests.test_work_unit -> aeat.adapters.persistence.profile.buckets
+    aeat.domain.modelos.tests.test_work_unit -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.profile.submission
+    aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.storage
+    aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.storage.sql
+    aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.storage.sql.engine
+    aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.storage.sql.session
+    aeat.domain.submission.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.profile.submission
+    aeat.domain.submission.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.crypto
+    aeat.domain.submission.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql
+    aeat.domain.submission.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql.session
+    aeat.domain.tests.test_runtime_repository_enrollment -> aeat.adapters.persistence.profile.invoices
+    aeat.domain.tests.test_runtime_repository_enrollment -> aeat.adapters.persistence.profile.transactions
+    aeat.domain.transactions.tests.test_cross_bucket_isolation -> aeat.adapters.persistence.profile.transactions
+    aeat.domain.transactions.tests.test_cross_bucket_isolation -> aeat.adapters.persistence.storage
+    aeat.domain.usage_ratios.tests.test_censo_refuse_load -> aeat.adapters.persistence.profile.usage_ratios
+    aeat.domain.usage_ratios.tests.test_service -> aeat.adapters.persistence.profile.usage_ratios
+    aeat.domain.usage_ratios.tests.test_service -> aeat.adapters.persistence.storage
+    aeat.domain.usage_ratios.tests.test_service -> aeat.adapters.persistence.storage.errors
+
 [importlinter:contract:core-not-outer]
 name = Core must not import outer layers
 # ── S22: Core must not import outer layers ────────────────────────────────────
@@ -678,19 +757,18 @@ ignore_imports =
     aeat.application.setup.tests.test_cli -> aeat.tests.cli_runner
     aeat.application.tests.test_config_parity -> aeat.tests.cli_runner
     # ── domain → adapters (repositories backed by persistence substrate) ──
-    # Many domain repositories directly import the SQL persistence substrate.
-    # Full inversion (Protocol + adapter injection) tracked by the
-    # arch-remediation-ports-inversion campaign; usage_ratios persistence has
-    # migrated to adapters.persistence.profile.usage_ratios.
+    # The arch-remediation-ports-inversion campaign completed the seam: every
+    # production domain repository now sits behind a Protocol port with its
+    # concrete class under adapters.persistence.profile, so ZERO production
+    # domain → adapters edges remain (asserted by the count-ratchet gate). Only
+    # the test-file edges below persist — roundtrip/anti-tautology suites that
+    # legitimately construct the concrete adapter to exercise the encrypted
+    # boundary end-to-end (test-topology, sanctioned).
     aeat.domain.attachments.tests.test_repository -> aeat.adapters.persistence.storage.attachment
-    # modelos_work_units consolidation: domain.modelos._repository (the
-    # work-unit catalogue repository) no longer imports adapters directly -
-    # persistence now routes through
-    # aeat.adapters.persistence.profile.modelos_work_units at the
-    # application/adapter wiring layer. Its three sibling repository modules
-    # (calculation/filing/verification) still hold real lazy function-local
-    # adapters.persistence.storage imports (SecureObjectRepository, Envelope,
-    # SecureObjectWrite), confirmed by lint-imports trace - re-pinned below.
+    # modelos catalogue repositories (work-units, calculation, filing,
+    # verification) and the participation index no longer import adapters
+    # directly; persistence routes through the adapters.persistence.profile.*
+    # concretes at the application/adapter wiring layer.
     aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.profile.submission
     aeat.domain.submission.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.profile.submission
     aeat.domain.usage_ratios.tests.test_censo_refuse_load -> aeat.adapters.persistence.profile.usage_ratios
