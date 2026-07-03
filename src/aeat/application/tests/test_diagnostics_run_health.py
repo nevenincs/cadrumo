@@ -25,6 +25,7 @@ from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..diagnostics_run_health import (
     build_error_breakdown,
     build_latency_report,
+    build_llm_usage_report,
     build_run_health_report,
     list_recent_runs,
 )
@@ -410,3 +411,119 @@ def test_build_error_breakdown_succeeded_only_reports_no_failures(profile: TestR
     assert report.total_failed == 0
     assert report.has_failures is False
     assert report.by_error_kind == ()
+
+
+def _seed_usage(recorder: LLMRunTelemetryRecorder) -> None:
+    """Write six real run-timing records across two providers and three models.
+
+    ``llm:claude:test-model`` uses ``model-a`` (two succeeded: 100ms, 300ms)
+    and ``model-b`` (one succeeded 200ms, one failed 400ms);
+    ``llm:codex:test-model`` uses only ``model-a`` (two succeeded: 50ms,
+    150ms). This exercises both the provider-level fold and the nested
+    per-model fold within a provider using more than one model.
+    """
+    seeds = (
+        ("u-1", "llm:claude:test-model", "model-a", 100, True, ""),
+        ("u-2", "llm:claude:test-model", "model-a", 300, True, ""),
+        ("u-3", "llm:claude:test-model", "model-b", 200, True, ""),
+        ("u-4", "llm:claude:test-model", "model-b", 400, False, "LLMClassifierError"),
+        ("u-5", "llm:codex:test-model", "model-a", 50, True, ""),
+        ("u-6", "llm:codex:test-model", "model-a", 150, True, ""),
+    )
+    for index, (run_id, provider, model, duration_ms, succeeded, error_kind) in enumerate(seeds, start=1):
+        recorder.record(
+            LLMRunRecord(
+                run_id=run_id,
+                caller="test",
+                provider=provider,
+                model=model,
+                duration_ms=duration_ms,
+                succeeded=succeeded,
+                error_kind=error_kind,
+                started_at=datetime(2026, 6, index, tzinfo=UTC),
+            ),
+        )
+
+
+def test_build_llm_usage_report_aggregates_by_provider_and_model(profile: TestRuntimeProfile) -> None:
+    """Real recorded runs fold per-provider, and per-model within each provider."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed_usage(recorder)
+
+    report = build_llm_usage_report(run_telemetry_recorder=recorder)
+
+    assert report.has_run_data is True
+    assert report.total_runs == 6
+    assert report.total_succeeded == 5
+    assert report.total_failed == 1
+    assert report.overall_success_rate == Decimal("0.8333")
+
+    providers = {row.provider: row for row in report.by_provider}
+    assert set(providers) == {"llm:claude:test-model", "llm:codex:test-model"}
+
+    claude = providers["llm:claude:test-model"]
+    assert claude.runs == 4
+    assert claude.succeeded == 3
+    assert claude.failed == 1
+    assert claude.min_duration_ms == 100
+    assert claude.max_duration_ms == 400
+    assert claude.total_duration_ms == 1000
+    assert claude.success_rate == Decimal("0.7500")
+
+    claude_models = {row.model: row for row in claude.models}
+    assert set(claude_models) == {"model-a", "model-b"}
+    assert claude_models["model-a"].runs == 2
+    assert claude_models["model-a"].succeeded == 2
+    assert claude_models["model-a"].total_duration_ms == 400
+    assert claude_models["model-a"].success_rate == Decimal("1.0000")
+    assert claude_models["model-b"].runs == 2
+    assert claude_models["model-b"].succeeded == 1
+    assert claude_models["model-b"].failed == 1
+    assert claude_models["model-b"].success_rate == Decimal("0.5000")
+
+    codex = providers["llm:codex:test-model"]
+    assert codex.runs == 2
+    assert codex.succeeded == 2
+    assert codex.failed == 0
+    assert len(codex.models) == 1
+    assert codex.models[0].model == "model-a"
+    assert codex.models[0].runs == 2
+
+
+def test_build_llm_usage_report_provider_filter_scopes_the_summary(profile: TestRuntimeProfile) -> None:
+    """``provider`` restricts the summary to one provider's runs."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed_usage(recorder)
+
+    report = build_llm_usage_report(provider="llm:codex:test-model", run_telemetry_recorder=recorder)
+
+    assert len(report.by_provider) == 1
+    assert report.by_provider[0].provider == "llm:codex:test-model"
+    assert report.total_runs == 2
+    assert report.total_succeeded == 2
+    assert report.total_failed == 0
+
+
+def test_build_llm_usage_report_date_range_scopes_the_summary(profile: TestRuntimeProfile) -> None:
+    """``since``/``until`` narrow the usage summary by date."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    _seed_usage(recorder)
+
+    report = build_llm_usage_report(since=date(2026, 6, 1), until=date(2026, 6, 1), run_telemetry_recorder=recorder)
+
+    assert report.total_runs == 1
+    assert len(report.by_provider) == 1
+    assert report.by_provider[0].provider == "llm:claude:test-model"
+    assert report.by_provider[0].models[0].model == "model-a"
+
+
+def test_build_llm_usage_report_empty_store_reports_no_run_data(profile: TestRuntimeProfile) -> None:
+    """An empty run-telemetry store reports ``has_run_data = False``, not an error."""
+    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+
+    report = build_llm_usage_report(run_telemetry_recorder=recorder)
+
+    assert report.has_run_data is False
+    assert report.by_provider == ()
+    assert report.total_runs == 0
+    assert report.overall_success_rate == Decimal("0")
