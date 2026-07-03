@@ -265,10 +265,15 @@ required_text = ["Determinación del rendimiento neto"]
 
 # Fase 1a aggregate: rendimiento neto previo (casilla 1537) sums every
 # producto's rendimiento base producto across the codigo-producto catalogue.
-# Only one producto is normally populated per actividad_agr iteration (the
-# taxpayer selects one "Actividad realizada. Clave", casilla 1486); the
-# unselected products' ingresos/índice stay blank (zero), so the sum never
-# double-counts.
+# Each producto slot is independent: a taxpayer with a mixed
+# agrícola-ganadera explotación may legitimately populate several products
+# simultaneously. The AEAT Manual práctico de Renta 2025, Parte 1,
+# Capítulo 9 full worked example (Don L.H.I.) itself declares ingresos
+# computables for three simultaneous productos — maíz, corderos (ganado
+# ovino de carne), and productos hortícolas — within the single actividad
+# he files (see test_modelo_100_eo_agraria_reducciones_fase_4a.py). An
+# unselected product's ingresos/índice simply stay blank (zero), so the sum
+# never fabricates a rendimiento for a product the taxpayer did not declare.
 [[revisions."2025".formulas]]
 id = "renta-2025-eo-agraria-rendimiento-neto-previo"
 target_casilla_id = "1537"
