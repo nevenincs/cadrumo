@@ -14,11 +14,12 @@ full calculation surface and legitimately emits casillas the fichero-BOE does no
 file (internal carries the official DR record omits, e.g. Modelo 130
 ``saldo-negativo-fin-periodo``).
 
-Modelo 303 is intentionally excluded: its 2025 módulos (régimen simplificado)
-uses a ``keyed_bracket_table`` parameter and a keyed-lookup formula that the
-workbook engine cannot yet render (tariff-table materialisation and spreadsheet
-formula translation), so ``build_export_plan`` cannot produce a 303 plan. That is
-a separate workbook feature gap tracked in the fichero-boe-parity-gate audit.
+Modelo 303 is covered: its 2025 módulos (régimen simplificado) advisory-support
+figures use a ``keyed_bracket_table`` parameter and custom-runtime keyed-lookup
+ops that have no spreadsheet translation, but they are ``internal_only`` casillas
+the workbook correctly omits from the export (transitively, including the
+``max`` casilla that depends on them), so ``build_export_plan`` produces a valid
+303 plan and the consistency invariant holds.
 """
 
 from __future__ import annotations
@@ -41,6 +42,7 @@ _COVERED = [
     ("130", 2025, "1T", date(2025, 4, 1)),
     ("111", 2025, "1T", date(2025, 4, 1)),
     ("115", 2025, "1T", date(2025, 4, 1)),
+    ("303", 2025, "1T", date(2025, 4, 1)),
     ("200", 2025, "0A", date(2026, 7, 1)),
 ]
 
