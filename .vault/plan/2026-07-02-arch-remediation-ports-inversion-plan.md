@@ -11,6 +11,15 @@ related:
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `arch-remediation-ports-inversion` plan
 
@@ -64,7 +73,7 @@ Verify the attachments domain inventory and relocate its repository behind a por
 
 Relocate the transactions repository behind a domain port.
 
-- [ ] `W02.P07.S09` - Relocate the transactions repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/transactions/_repository.py`.
+- [x] `W02.P07.S09` - Relocate the transactions repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/transactions/_repository.py`.
 
 ## Wave `W03` - filing repositories
 
