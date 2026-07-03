@@ -314,6 +314,12 @@ from ._review_package import (
     build_review_package,
     verify_review_package,
 )
+from ._review_package_counter_sign import (
+    CounterSignedReceipt,
+    ReviewPackageCounterSigningError,
+    counter_sign_review_package,
+    verify_counter_signed_receipt,
+)
 from ._review_package_signing import (
     ReviewPackageSigningError,
     ReviewPackageSigningKeyNotFoundError,
@@ -449,6 +455,7 @@ __all__ = [
     "CasillaDivergence",
     "CasillaDivergenceKind",
     "CasillaProvenanceMissingError",
+    "CounterSignedReceipt",
     "DataInventoryCasilla",
     "DataInventoryChecklist",
     "ExternalModeloImportError",
@@ -566,6 +573,7 @@ __all__ = [
     "ReconciliationEvidenceInvalidError",
     "ResultSummaryRow",
     "ReviewPackageBuildResult",
+    "ReviewPackageCounterSigningError",
     "ReviewPackageError",
     "ReviewPackageIntegrityError",
     "ReviewPackageManifest",
@@ -610,6 +618,7 @@ __all__ = [
     "compare_taxation_for_work_unit",
     "compare_taxation_modes",
     "correct_iva_compensation_period_for_bucket",
+    "counter_sign_review_package",
     "create_work_unit",
     "data_inventory_checklist",
     "declared_modelo_period_tokens",
@@ -711,6 +720,7 @@ __all__ = [
     "sign_review_package",
     "validate_m349_country_prefix_context",
     "validate_m349_nif_format",
+    "verify_counter_signed_receipt",
     "verify_modelo_revision",
     "verify_review_package",
     "verify_review_package_signature",
