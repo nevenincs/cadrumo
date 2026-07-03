@@ -13,9 +13,9 @@ See Also:
         filing-history payloads.
     :func:`aeat.adapters.persistence.storage.secure_object_repository_for_bucket`
         Storage-runtime factory used after the filing bucket id is resolved.
-    :mod:`aeat.domain.filing._runtime_repository`
-        Parallel domain helper used by governed draft and amendment
-        repositories.
+    :mod:`aeat.adapters.persistence.profile._filing_runtime`
+        Parallel persistence-adapter helper used by the governed draft and
+        amendment repositories.
 """
 
 from __future__ import annotations
