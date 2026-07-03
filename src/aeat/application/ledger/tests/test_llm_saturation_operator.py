@@ -7,13 +7,10 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    TransactionCatalogueRepository,
-    TransactionValidationError,
-)
+from ....domain.transactions import BusinessClassification, TransactionValidationError
 from .. import OperatorIvaDerivationResult, derive_operator_iva_substrate
 from ._llm_saturation_support import (
     _BUCKET,

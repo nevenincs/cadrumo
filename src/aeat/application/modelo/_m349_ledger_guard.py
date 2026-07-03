@@ -11,15 +11,12 @@ that refusal condition; it does not resolve registry binding values itself.
 
 from __future__ import annotations
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import Modelo
 from ...domain.iva import IvaCategory
 from ...domain.modelos import Modelo349OperadorRow, ModeloDetailRow, WorkUnit
 from ...domain.period import period_end_date, period_start_date
-from ...domain.transactions import (
-    TransactionCatalogueRepository,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionLifecycleState,
-)
+from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionLifecycleState
 from ._action_errors import ModeloAggregationBindingError
 
 _M349_INTRACOM_LEDGER_CATEGORIES = frozenset(

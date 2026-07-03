@@ -10,12 +10,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
 )

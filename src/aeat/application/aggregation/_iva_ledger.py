@@ -30,6 +30,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -59,7 +60,6 @@ from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,

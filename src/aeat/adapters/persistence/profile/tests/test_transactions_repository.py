@@ -7,15 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from ....core.errors import get_registered_error_code
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .. import (
-    LedgerNoActiveBucketError,
-    LedgerStorageError,
-    TransactionCatalogueRepository,
-)
+from .....core.errors import get_registered_error_code
+from .....domain.transactions import LedgerNoActiveBucketError, LedgerStorageError
+from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ..transactions import TransactionCatalogueRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "32323232-3232-4323-8323-323232323232"
 
@@ -40,7 +37,7 @@ def test_transaction_repository_logs_bucket_fields(
 ) -> None:
     repo = TransactionCatalogueRepository(bucket_id=runtime_profile.bucket_id)
 
-    with caplog.at_level("INFO", logger="aeat.domain.transactions._repository"):
+    with caplog.at_level("INFO", logger="aeat.adapters.persistence.profile.transactions"):
         repo.save(repo.load())
 
     messages = [record.getMessage() for record in caplog.records]

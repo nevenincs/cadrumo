@@ -23,9 +23,9 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.iva import IvaCategory
-from ....domain.transactions import TransactionCatalogueRepository
 from .. import (
     LLMProvider,
     LLMSplitSuggestion,

@@ -12,6 +12,7 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.errors import resolve_error_message
@@ -26,7 +27,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord

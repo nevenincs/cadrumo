@@ -11,6 +11,7 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -18,12 +19,7 @@ from ...domain.invoices import (
     InvoiceLinkError,
     link_transaction,
 )
-from ...domain.transactions import (
-    TransactionCatalogue,
-    TransactionCatalogueRepository,
-    TransactionCatalogueRepositoryProtocol,
-    link_invoice,
-)
+from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepositoryProtocol, link_invoice
 
 
 class InvoiceTransactionLinkResult(BaseModel):

@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.user_profile import profile_storage_session
 from ....core import resolve_active_bucket_id
 from ....domain.transactions import (
@@ -15,7 +16,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 

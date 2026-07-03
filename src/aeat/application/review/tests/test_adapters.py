@@ -19,6 +19,7 @@ from ....adapters.persistence.profile.invoices import (
     _INVOICE_OBJECT_KEY,
     InvoiceCatalogueRepository,
 )
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....core import Period
 from ....core.classification import SensitivityClass
@@ -35,7 +36,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ...filing import (

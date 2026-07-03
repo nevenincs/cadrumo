@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core import Period
@@ -21,7 +22,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile

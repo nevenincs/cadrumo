@@ -24,6 +24,7 @@ import pytest
 from click.testing import Result
 
 from ....adapters.outbound.llm import LLMProvider, LLMResponse, UsageRecorder
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.user_profile import profile_create_storage_span, register_minimal_profile
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
@@ -34,7 +35,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     set_classification,
 )

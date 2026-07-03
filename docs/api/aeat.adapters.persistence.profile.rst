@@ -26,4 +26,5 @@ Submodules
    aeat.adapters.persistence.profile.modelos_work_units
    aeat.adapters.persistence.profile.participation_index
    aeat.adapters.persistence.profile.submission
+   aeat.adapters.persistence.profile.transactions
    aeat.adapters.persistence.profile.usage_ratios

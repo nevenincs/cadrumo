@@ -27,6 +27,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core import Period
 from ....core.config import override_settings
@@ -38,7 +39,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact

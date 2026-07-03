@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.ledger import MediaKind, PurchaseInvoiceEvidence, preflight_ledger_tax_readiness
 from ....core import BindingSourceKind, Period
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
@@ -29,7 +30,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile

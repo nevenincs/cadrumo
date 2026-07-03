@@ -276,13 +276,13 @@ def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ....adapters.persistence.storage.master_key import (
         activate_master_key_provider,
         get_master_key_provider,
     )
     from ....core import resolve_active_bucket_id
     from ....core.config import override_settings
-    from ....domain.transactions import TransactionCatalogueRepository
 
     bundle_path = tmp_path / "source-bundle.json"
     source_bucket_id = _seed_and_export(tmp_path, bundle_path)

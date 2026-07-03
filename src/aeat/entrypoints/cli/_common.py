@@ -49,6 +49,7 @@ from ...core.output_rendering import render_command_output
 # resolving them.
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.auth import AuthProviderListing
     from ...application.workflow import WorkflowState
     from ...core import Period
@@ -56,7 +57,7 @@ if TYPE_CHECKING:
     from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft, ModeloDraftRepository
     from ...domain.invoices import InvoiceCatalogue
-    from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
+    from ...domain.transactions import TransactionCatalogue
 
 __all__ = [
     "emit_help_text",

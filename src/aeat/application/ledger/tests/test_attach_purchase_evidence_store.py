@@ -22,11 +22,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....domain.transactions import (
-    TransactionCatalogueRepository,
-    TransactionDirection,
-    TransactionValidationError,
-)
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....domain.transactions import TransactionDirection, TransactionValidationError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     ManualLedgerTransactionCommand,
