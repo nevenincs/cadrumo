@@ -247,7 +247,13 @@ figures the official DR record does not file. The 303 workbook now builds and pa
 the parity gate, and 303 is included in the workbook<->fichero-BOE consistency lock.
 The broader calc-sheets suite (75 tests) stays green. No keyed-table workbook
 rendering was needed -- the design already intends these casillas to be omitted; the
-bug was only that the omission was not transitive.
+bug was only that the omission was not transitive. Verified across FILING YEARS: the
+303 workbook builds and the boe-subset-of-workbook invariant holds for 2022
+(2009-y-siguientes revision, no módulos surface) through 2026 (2023-y-siguientes,
+módulos omitted for every year 2023/2024/2025/2026); the parity and consistency
+gates were widened to span these years and revision boundaries (26 consistency + 27
+parity cases). So the fix is not 2025-specific -- it covers every year each 303
+revision serves.
 
 ## Recommendations
 
