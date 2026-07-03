@@ -55,7 +55,7 @@ Migrate the remaining independent single-repository domains: invoices, justifica
 
 Relocate the invoices repository behind a domain port.
 
-- [ ] `W02.P04.S06` - Relocate the invoices repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/invoices/_repository.py`.
+- [x] `W02.P04.S06` - Relocate the invoices repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/invoices/_repository.py`.
 
 ### Phase `W02.P05` - justificante repository inversion
 
