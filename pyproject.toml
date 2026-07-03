@@ -446,6 +446,7 @@ convention = "google"
 # Developer quality/docs/audit runners invoke fixed tool argv or explicit
 # wrapper argv; Ruff's subprocess heuristic cannot infer those local contracts.
 "dev/audit/complexity.py" = ["S603"]
+"dev/audit/report.py" = ["S603"]
 "dev/audit/semantic.py" = ["S603"]
 "dev/docs/build.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]
