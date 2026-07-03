@@ -13,6 +13,7 @@ related:
   - '[[2026-07-02-arch-remediation-ports-inversion-W01-P03-S05]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W02-P04-S06]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W02-P05-S07]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W02-P07-S09]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W04-P09-S14]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W04-P09-S15]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'
@@ -38,6 +39,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-ports-inver
 - `2026-07-02-arch-remediation-ports-inversion-W02-P05-S07` - Relocate the justificante repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 - `2026-07-02-arch-remediation-ports-inversion-W01-P03-S05` - Relocate the buckets event repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 - `2026-07-02-arch-remediation-ports-inversion-W02-P04-S06` - Relocate the invoices repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
+- `2026-07-02-arch-remediation-ports-inversion-W02-P07-S09` - Relocate the transactions repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 - `2026-07-02-arch-remediation-ports-inversion-W04-P09-S14` - Relocate the modelos filing repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 - `2026-07-02-arch-remediation-ports-inversion-W04-P09-S15` - Relocate the modelos calculation repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 
