@@ -92,21 +92,21 @@ Extend the aeat app agent materialiser and CLI with a Claude plugin layout targe
 
 Extend the workspace materialiser with a plugin layout target emitting the plugin manifest, skills, agents with Claude-native frontmatter, and the MCP server declaration from the single authored harness source.
 
-- [ ] `W03.P07.S23` - Add a plugin layout target that emits .claude-plugin/plugin.json with a kebab-case name, defaultEnabled false, an author object and the version read from installed package metadata; `src/aeat/agent/_workspace.py`.
-- [ ] `W03.P07.S24` - Emit the plugin skills/ tree (SKILL.md plus reference material) from the single authored harness source; `src/aeat/agent/_workspace.py`.
-- [ ] `W03.P07.S25` - Emit the plugin agents/ tree mapping persona frontmatter to Claude-native fields (tools/disallowedTools), never the non-Claude mode: field; `src/aeat/agent/_workspace.py`.
-- [ ] `W03.P07.S26` - Emit the plugin .mcp.json declaring the stdio aeat-mcp server launched via uvx aeat at a pinned version with AEAT_MCP_PERSONA wired from the userConfig persona interpolation; `src/aeat/agent/_workspace.py`.
-- [ ] `W03.P07.S27` - Declare the userConfig persona string option with a default in the plugin manifest, keeping server-side validation as the refusal surface; `src/aeat/agent/_workspace.py`.
-- [ ] `W03.P07.S28` - Test the plugin materialiser emits a schema-shaped plugin tree from the authored source with the persona and version correctly interpolated; `src/aeat/agent/tests/test_plugin_workspace.py`.
+- [x] `W03.P07.S23` - Add a plugin layout target that emits .claude-plugin/plugin.json with a kebab-case name, defaultEnabled false, an author object and the version read from installed package metadata; `src/aeat/agent/_workspace.py`.
+- [x] `W03.P07.S24` - Emit the plugin skills/ tree (SKILL.md plus reference material) from the single authored harness source; `src/aeat/agent/_workspace.py`.
+- [x] `W03.P07.S25` - Emit the plugin agents/ tree mapping persona frontmatter to Claude-native fields (tools/disallowedTools), never the non-Claude mode: field; `src/aeat/agent/_workspace.py`.
+- [x] `W03.P07.S26` - Emit the plugin .mcp.json declaring the stdio aeat-mcp server launched via uvx aeat at a pinned version with AEAT_MCP_PERSONA wired from the userConfig persona interpolation; `src/aeat/agent/_workspace.py`.
+- [x] `W03.P07.S27` - Declare the userConfig persona string option with a default in the plugin manifest, keeping server-side validation as the refusal surface; `src/aeat/agent/_workspace.py`.
+- [x] `W03.P07.S28` - Test the plugin materialiser emits a schema-shaped plugin tree from the authored source with the persona and version correctly interpolated; `src/aeat/agent/tests/test_plugin_workspace.py`.
 
 ### Phase `W03.P08` - Plugin CLI target and validation gate
 
 Surface the plugin layout through the aeat app agent CLI and make claude plugin validate --strict a packaging gate where the CLI is available.
 
-- [ ] `W03.P08.S29` - Extend the aeat app agent CLI with a plugin layout target option selecting the plugin materialisation over the workspace layout; `src/aeat/entrypoints/cli/_app_agent_workspace.py`.
-- [ ] `W03.P08.S30` - Add the typed result payload for the plugin materialisation summary emitted through the CLI envelope; `src/aeat/entrypoints/cli/_app_agent_workspace_payloads.py`.
-- [ ] `W03.P08.S31` - Add a claude plugin validate --strict packaging gate that runs against a freshly materialised plugin when the claude CLI is on PATH and skips honestly when it is not (verify the validate flag against live official docs at execution time); `dev/packaging/smoke_plugin_validate.py`.
-- [ ] `W03.P08.S32` - Test the CLI materialises a schema-valid plugin tree end-to-end to an output directory; `src/aeat/entrypoints/cli/tests/test_app_agent_plugin.py`.
+- [x] `W03.P08.S29` - Extend the aeat app agent CLI with a plugin layout target option selecting the plugin materialisation over the workspace layout; `src/aeat/entrypoints/cli/_app_agent_workspace.py`.
+- [x] `W03.P08.S30` - Add the typed result payload for the plugin materialisation summary emitted through the CLI envelope; `src/aeat/entrypoints/cli/_app_agent_workspace_payloads.py`.
+- [x] `W03.P08.S31` - Add a claude plugin validate --strict packaging gate that runs against a freshly materialised plugin when the claude CLI is on PATH and skips honestly when it is not (verify the validate flag against live official docs at execution time); `dev/packaging/smoke_plugin_validate.py`.
+- [x] `W03.P08.S32` - Test the CLI materialises a schema-valid plugin tree end-to-end to an output directory; `src/aeat/entrypoints/cli/tests/test_app_agent_plugin.py`.
 
 ### Phase `W03.P09` - CONFIRM annotation hardening
 
