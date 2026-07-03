@@ -852,3 +852,178 @@ valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["reducción general del 5 por 100"]
+
+# Fase 2ª — minoración por incentivos al empleo (Orden HAC/1347/2024 Anexo II,
+# instrucción 2.2.a). Coeficiente por incremento del número de personas
+# asalariadas: 0,40 applied to the positive year-over-year increase in the
+# módulo "personal asalariado" unit count, cross-checked byte-identical
+# against the AEAT Manual práctico de Renta 2025 worked example (epígrafe
+# 673.1: incremento 0,66 x 0,40 = 0,264).
+[[revisions."2025".parameters]]
+id = "m131-modulos-coeficiente-incremento-asalariados-2025"
+data_type = "ratio"
+unit = "coefficient"
+legal_refs = ["orden-hac-1347-2024:instruccion-2-2-a"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.values]]
+value = "0.40"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Coeficiente por incremento del número de personas asalariadas: 0,40"]
+
+# Fase 2ª — coeficiente por tramos del número de unidades del módulo
+# "personal asalariado" (Orden HAC/1347/2024 Anexo II, instrucción 2.2.a).
+# A progressive cumulative-bracket schedule structurally identical to an
+# IRPF escala: fixed_addition per tramo is the cumulative coefficient sum up
+# to lower_bound, marginal_rate is the tramo's own coefficient. Reused via
+# lookup_bracket (resolve_bracket): coeficiente(3,00) = 0 + 0,10x(1,00-0) +
+# ... equivalently 0,10 (hasta 1,00) + 0,15x(3,00-1,00) = 0,10+0,30 = 0,40,
+# matching the manual worked example (epígrafe 673.1, base_tramos=3,00).
+[[revisions."2025".parameters]]
+id = "m131-modulos-coeficiente-tramos-asalariados-2025"
+data_type = "bracket_table"
+unit = "coefficient"
+bracket_axis = "filing_period"
+legal_refs = ["orden-hac-1347-2024:instruccion-2-2-a"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "1.00"
+fixed_addition = "0"
+marginal_rate = "0.10"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "1.00"
+upper_bound = "3.00"
+fixed_addition = "0.10"
+marginal_rate = "0.15"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "3.00"
+upper_bound = "5.00"
+fixed_addition = "0.40"
+marginal_rate = "0.20"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "5.00"
+upper_bound = "8.00"
+fixed_addition = "0.80"
+marginal_rate = "0.25"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "8.00"
+fixed_addition = "1.55"
+marginal_rate = "0.30"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Hasta 1,00 0,10", "Entre 1,01 y 3,00 0,15", "Entre 5,01 y 8,00 0,25", "Más de 8,00 0,30"]
+
+# Fase 3ª — índice corrector de exceso (Orden HAC/1347/2024 Anexo II,
+# instrucción 2.3.b.3). Índice 1,30 aplicado al exceso del rendimiento neto
+# minorado sobre la cuantía tabulada por actividad.
+[[revisions."2025".parameters]]
+id = "m131-modulos-indice-exceso-2025"
+data_type = "ratio"
+unit = "coefficient"
+legal_refs = ["orden-hac-1347-2024:instruccion-2-3-b-3"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.values]]
+value = "1.30"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["índice corrector de exceso, debido"]
+
+# Fase 3ª — cuantía a efectos del índice corrector de exceso, por epígrafe
+# IAE (Orden HAC/1347/2024 Anexo II, instrucción 2.3.b.3, tabla de cuantías).
+# Keyed-bracket-table parameter mirroring m131-modulos-coeficientes-2025's
+# lookup shape (exact-match on epígrafe, discrete per-activity catalogue).
+# Cross-checked byte-identical against the AEAT Manual práctico de Renta
+# 2025 Apéndice per-activity "Cuantía a efectos del índice corrector de
+# exceso" lines, and against the bundled Orden Anexo II cuantía table.
+# Phased dataset: only the epígrafes already tabled in
+# m131-modulos-coeficientes-2025's Phase 1/2 slice are grounded here
+# (peluquería 972.1, transporte por autotaxis 721.2, transporte de
+# mercancías 722, restaurantes 671.4/671.5, cafeterías 672.1, cafés y bares
+# 673.1/673.2). An untabled epígrafe resolves to the minorado figure
+# unchanged (see _m131_modulos_cuantia_exceso docstring) — never a silent
+# fabricated cuantía.
+[[revisions."2025".parameters]]
+id = "m131-modulos-cuantia-exceso-2025"
+data_type = "keyed_bracket_table"
+unit = "euro"
+legal_refs = ["orden-hac-1347-2024:instruccion-2-3-b-3"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "972.1"
+value = "18051.81"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "721.2"
+value = "33640.86"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "722"
+value = "33640.86"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.4"
+value = "51617.08"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "671.5"
+value = "38081.38"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "672.1"
+value = "39070.26"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.1"
+value = "30586.03"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "673.2"
+value = "19084.78"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Cuantía a efectos del índice corrector de exceso: 30.586,03 euros"]
