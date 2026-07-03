@@ -3,9 +3,11 @@ generated: true
 tags:
   - '#index'
   - '#domain-boundary-audit'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-03'
+modified: '2026-07-03'
 related:
+  - '[[2026-06-01-domain-boundary-audit-W10-P33-S109]]'
+  - '[[2026-06-01-domain-boundary-audit-W11-P37-S108]]'
   - '[[2026-06-01-domain-boundary-audit-adr]]'
   - '[[2026-06-01-domain-boundary-audit-audit]]'
   - '[[2026-06-01-domain-boundary-audit-plan]]'
@@ -25,6 +27,11 @@ Auto-generated index of all documents tagged with `#domain-boundary-audit`.
 ### audit
 
 - `2026-06-01-domain-boundary-audit-audit` - `domain-boundary-audit` audit: `Domain ownership and cross-boundary outlier audit`
+
+### exec
+
+- `2026-06-01-domain-boundary-audit-W10-P33-S109` - Investigate the 13 pre-existing test_cli_surface ledger-lifecycle 'No active bucket session is open' failures (test_app_ledger_lifecycle_reset_*, test_app_ledger_import_reimport_*). Proven unrelated to W10 (fail identically on the old import) but only 1 of 13 individually confirmed
+- `2026-06-01-domain-boundary-audit-W11-P37-S108` - Prune/update the stale .importlinter ignore entries that W11's repoint left unmatched: the domain repo edges now target the top-level package, so entries naming aeat.adapters.persistence.storage.envelope / .sql / .envelope._envelope for filing/justificante/submission/buckets/transactions/invoices _repository are unmatched (the 15->22 unmatched-ignore warning bump). Update each to the current '-> aeat.adapters.persistence.storage' edge (or delete if the new edge is deferred/unflagged)
 
 ### plan
 
