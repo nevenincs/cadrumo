@@ -743,6 +743,14 @@ casilla_id = "1537"
 number = "1537"
 
 [[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "1538"
+number = "1538"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "1539"
+number = "1539"
+
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "1548"
 number = "1548"
 

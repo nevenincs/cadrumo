@@ -6,6 +6,7 @@ legal_refs = [
     "ley-35-2006:art-32",
     "orden-hac-1347-2024:art-4",
     "orden-hac-1347-2024:anexo-i-instruccion-2-1",
+    "orden-hac-1347-2024:anexo-i-instruccion-2-2",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -35,4 +36,5 @@ formulas = [
     "renta-2025-eo-agraria-rendimiento-base-otros-trabajos-accesorios",
     "renta-2025-eo-agraria-rendimiento-base-cria-guarda-engorde-ganado",
     "renta-2025-eo-agraria-rendimiento-neto-previo",
+    "renta-2025-eo-agraria-rendimiento-neto-minorado",
 ]

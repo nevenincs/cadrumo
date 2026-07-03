@@ -827,6 +827,27 @@ required_text = [
     "por el «índice de rendimiento neto» que corresponda a cada uno de ellos",
 ]
 
+[legal."orden-hac-1347-2024:anexo-i-instruccion-2-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-i-instruccion-2-2"
+document_id = "BOE-A-2024-24949"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 2.2 Fase 2: Rendimiento neto minorado"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-03
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+notes = "Fase 2a agraria: rendimiento neto minorado. El rendimiento neto minorado se obtiene deduciendo del rendimiento neto previo (fase 1a) las cantidades que, en concepto de amortizacion del inmovilizado material e intangible (excluidas las actividades forestales), correspondan a la depreciacion efectiva que sufran los distintos elementos afectos por funcionamiento, uso, disfrute u obsolescencia, calculada elemento por elemento conforme a la tabla de amortizacion de este mismo Anexo I (para grupos no tabulados en el Anexo I, la orden remite a la letra b) del punto 2.2 del Anexo II). El primer slice del motor no modela un registro de bienes de inversion por elemento (valor de adquisicion, coeficiente, periodo transcurrido por bien); la amortizacion se recoge como un importe declarado por el operador, grounded en esta instruccion, y se resta del rendimiento neto previo (casilla 1538 del Modelo 100, minorando la casilla 1537 para obtener la casilla 1539). Mismo patron honesto-escalar que la minoracion por incentivos a la inversion del motor de modulos del Anexo II (instruccion 2.2.b), ver orden-hac-1347-2024:instruccion-2-2-b."
+required_text = [
+    "2.2 Fase 2: Rendimiento neto minorado.",
+    "El rendimiento neto minorado se obtiene deduciendo del anterior las cantidades que, en concepto de amortización del inmovilizado material e intangible correspondan a la depreciación efectiva",
+    "No obstante, los elementos patrimoniales del inmovilizado descritos a continuación, se amortizarán conforme a la siguiente tabla",
+]
+
 [legal."real-decreto-ley-13-2025:art-2"]
 evidence_tier = "legal_authority"
 authority = "boe"
