@@ -1,7 +1,7 @@
 """CLI commands for the ``aeat app overview`` subcommand group.
 
-Provides the ``status``, ``calendar``, ``agenda``, ``backlog``, and
-``explain`` verbs. All verbs are local-only: they never contact AEAT
+Provides the ``status``, ``calendar``, ``agenda``, ``backlog``, ``explain``,
+and ``prepare`` verbs. All verbs are local-only: they never contact AEAT
 and apply no mutations to stored state. Help strings are localized via
 :func:`tr`; the docstrings here document internal logic and are not surfaced as
 operator-facing CLI help.
@@ -9,12 +9,13 @@ operator-facing CLI help.
 This module is the transport adapter over the application overview builders:
 :func:`build_overview_status_report`, :func:`build_overview_calendar`,
 :func:`build_overview_calendar_events`,
-:func:`calendar_events_from_modelo_records`, and
-:func:`calendar_filing_evidence_from_sources`. Each command emits a typed
-payload such as :class:`OverviewStatusResult`,
+:func:`calendar_events_from_modelo_records`,
+:func:`calendar_filing_evidence_from_sources`, and
+:func:`~aeat.application.overview.build_data_prep_walkthrough`. Each command
+emits a typed payload such as :class:`OverviewStatusResult`,
 :class:`OverviewCalendarResult`, :class:`OverviewAgendaResult`,
-:class:`OverviewBacklogResult`, or :class:`OverviewExplainResult` through
-:func:`_emit_envelope`.
+:class:`OverviewBacklogResult`, :class:`OverviewExplainResult`, or
+:class:`OverviewPrepareResult` through :func:`_emit_envelope`.
 """
 
 from __future__ import annotations
@@ -25,6 +26,9 @@ from pathlib import Path
 import typer
 
 from ...application import overview as _overview_application
+from ...application.overview import (
+    DataPrepStepState as _DataPrepStepState,
+)
 from ...application.overview import (
     OverviewCalendar,
     OverviewCalendarEvent,
@@ -41,12 +45,15 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ._common import (
     _bad,
+    _canonical_period,
     _emit_envelope,
     _load_drafts,
+    _load_invoices,
     _no_active_profile_refusal,
     _parse_iso_date,
     _profile_to_taxpayer,
     _state,
+    _tx_repo,
     activate_subcommand_output_language,
 )
 from ._overview_payloads import (
@@ -54,6 +61,8 @@ from ._overview_payloads import (
     OverviewBacklogResult,
     OverviewCalendarResult,
     OverviewExplainResult,
+    OverviewPrepareResult,
+    OverviewPrepareStepPayload,
     OverviewStatusResult,
 )
 from ._overview_rendering import (
@@ -274,9 +283,9 @@ def _local_calendar_filing_evidence(
     try:
         from ...adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
         from ...adapters.persistence.profile.justificante import JustificanteRepository
+        from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
         from ...application.calculations import CalculationObservationRepository
         from ...application.live import JustificanteCaptureSnapshotService
-        from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         justificantes = tuple(JustificanteRepository().iter_justificantes())
@@ -1174,3 +1183,138 @@ def overview_explain(
     for fact_name, fact_value in sorted(result.profile_facts.items()):
         lines.append(f"profile_fact\t{fact_name}\t{fact_value}")
     _emit_envelope(ctx, command="overview.explain", result=typed_explain, lines=lines)
+
+
+@app.command(
+    "prepare",
+    help=tr(
+        "cli.overview.prepare.help",
+        default=(
+            "Walk through the data-preparation steps for one modelo/period in order: "
+            "import transactions, classify them, attach purchase-invoice evidence, "
+            "register business invoices, resolve ledger readiness gaps, then start or "
+            "resume the modelo work unit. Shows each step's current progress and the "
+            "exact next command to run. Read-only; safe to run repeatedly; never "
+            "contacts AEAT."
+        ),
+    ),
+)
+def overview_prepare(
+    ctx: typer.Context,
+    modelo: str = typer.Option(
+        ...,
+        "--modelo",
+        help=tr(
+            "cli.overview.prepare.modelo_help",
+            default="AEAT modelo identifier to prepare data for (e.g. 130, 303, 100).",
+        ),
+    ),
+    year: int = typer.Option(
+        ...,
+        "--year",
+        help=tr("cli.overview.prepare.year_help", default="Filing year (e.g. 2026)."),
+    ),
+    period: str = typer.Option(
+        ...,
+        "--period",
+        help=tr(
+            "cli.overview.prepare.period_help",
+            default=(
+                "Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), "
+                "01-12 (months). Combine with --year to choose the year."
+            ),
+        ),
+    ),
+) -> None:
+    """Emit the ordered data-prep walkthrough for one (modelo, period) scope.
+
+    Delegates the readiness composition to
+    :func:`~aeat.application.overview.build_data_prep_walkthrough`; this
+    adapter resolves the active bucket, validates the modelo/period against
+    the registry, loads the ledger/invoice/evidence/work-unit state, and
+    renders the typed envelope plus per-step next-command notices.
+    """
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...application.ledger import PurchaseInvoiceEvidenceService, preflight_ledger_tax_readiness
+    from ...application.modelo import list_work_units, registry_describe_modelo_for_scope
+    from ...application.overview import build_data_prep_walkthrough
+    from ...domain.calculations.registry import RegistrySnapshotError
+
+    current = _state()
+    bucket_id = current.active_profile_bucket_id()
+    if bucket_id is None:
+        raise _no_active_profile_refusal()
+
+    canonical_period = _canonical_period(period, year=year)
+    try:
+        registry_describe_modelo_for_scope(modelo, period=canonical_period)
+    except (ValueError, RegistrySnapshotError) as exc:
+        raise _bad(
+            tr(
+                "cli.overview.prepare.modelo_period_error",
+                message=str(exc),
+                default="{message}",
+            ),
+        ) from exc
+
+    transaction_repository = _tx_repo(current)
+    invoice_catalogue = _load_invoices()
+    evidence_records = PurchaseInvoiceEvidenceService().list_all(bucket_id=bucket_id)
+    preflight_report = preflight_ledger_tax_readiness(
+        bucket_id=bucket_id,
+        period=canonical_period,
+        transaction_repository=transaction_repository,
+    )
+    work_units = list_work_units(
+        bucket_id=bucket_id,
+        include_discarded=False,
+        repository=WorkUnitCatalogueRepository(bucket_id=bucket_id),
+    )
+
+    walkthrough = build_data_prep_walkthrough(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        period=canonical_period,
+        transaction_repository=transaction_repository,
+        invoice_catalogue=invoice_catalogue,
+        evidence_records=evidence_records,
+        preflight_report=preflight_report,
+        work_units=work_units,
+    )
+
+    typed_result = OverviewPrepareResult(
+        modelo=walkthrough.modelo,
+        filing_year=walkthrough.filing_year,
+        period=walkthrough.period,
+        steps=[
+            OverviewPrepareStepPayload(
+                step_id=step.step_id.value,
+                state=step.state.value,
+                summary=step.summary,
+                next_command=step.next_command,
+            )
+            for step in walkthrough.steps
+        ],
+        ready_for_calculation=walkthrough.ready_for_calculation,
+    )
+    lines: list[str] = [
+        f"modelo\t{walkthrough.modelo}",
+        f"period\t{walkthrough.period} {walkthrough.filing_year}",
+        f"ready_for_calculation\t{str(walkthrough.ready_for_calculation).lower()}",
+        "",
+    ]
+    notices: list[Notice] = []
+    for index, step in enumerate(walkthrough.steps, start=1):
+        lines.append(f"{index}. [{step.state.value}] {step.summary}")
+        lines.append(f"   next: {step.next_command}")
+        if step.state is not _DataPrepStepState.DONE:
+            notices.append(
+                Notice(
+                    severity=NoticeSeverity.INFO,
+                    code=f"overview.prepare.next_step.{step.step_id.value}",
+                    message=step.summary,
+                    suggestion=step.next_command,
+                    context={"state": step.state.value},
+                ),
+            )
+    _emit_envelope(ctx, command="overview.prepare", result=typed_result, lines=lines, notices=notices)

@@ -1060,7 +1060,8 @@ application:
       manual_section_not_found: A(z) {section} kezikonyvszakasz nem talalhato.
       manual_section_requires_structure: 'A(z) {section} kezikonyvszakasz kivont strukturat
         igenyel ehhez: {manual_key}.'
-      no_revision_for_diff_year: 'A(z) {modelo} nyilvántartás egyetlen revíziója sem fedi le a(z) {filing_year} adóévet. Deklarált revíziók: {available_revisions}.'
+      no_revision_for_diff_year: 'A(z) {modelo} nyilvántartás egyetlen revíziója sem
+        fedi le a(z) {filing_year} adóévet. Deklarált revíziók: {available_revisions}.'
   repair_integrity:
     errors:
       conflicting_list_filters: 'A javitasi lista szuroi kizarjak egymast: {filters}.
@@ -3391,19 +3392,29 @@ cli:
         a PATH-en.
     pull_folder:
       errors:
-        folder_id_unrecognised: 'A(z) %{reference} Google Drive mappahivatkozás nem tartalmaz felismerhető mappaazonosítót. Adj meg egy Drive mappa-URL-t vagy a puszta mappaazonosítót.'
-        folder_refused: 'A(z) %{folder_id}%{scope_hint} Drive mappa nem listázható: a mappának elérhetőnek kell lennie a drive.file hatókörben (az alkalmazás hozta létre, vagy az operátor kifejezetten kiválasztotta), vagy add meg a szükséges Google hatókört, és próbáld újra.'
-      folder_help: 'Drive mappa-URL vagy puszta mappaazonosító a PDF-/kép-számlák tömeges letöltéséhez.'
-      help: 'Egy Drive mappa minden PDF-/kép-számláját tömegesen letölti, és mindegyiket titkosított bizonyítékként tárolja (tranzakcióhoz nem kapcsolva; kapcsold az ''aeat app ledger attach'' vagy ''link'' paranccsal).'
+        folder_id_unrecognised: A(z) %{reference} Google Drive mappahivatkozás nem
+          tartalmaz felismerhető mappaazonosítót. Adj meg egy Drive mappa-URL-t vagy
+          a puszta mappaazonosítót.
+        folder_refused: 'A(z) %{folder_id}%{scope_hint} Drive mappa nem listázható:
+          a mappának elérhetőnek kell lennie a drive.file hatókörben (az alkalmazás
+          hozta létre, vagy az operátor kifejezetten kiválasztotta), vagy add meg
+          a szükséges Google hatókört, és próbáld újra.'
+      folder_help: Drive mappa-URL vagy puszta mappaazonosító a PDF-/kép-számlák tömeges
+        letöltéséhez.
+      help: Egy Drive mappa minden PDF-/kép-számláját tömegesen letölti, és mindegyiket
+        titkosított bizonyítékként tárolja (tranzakcióhoz nem kapcsolva; kapcsold
+        az 'aeat app ledger attach' vagy 'link' paranccsal).
       labels:
-        fetched: 'letoltott_db'
-        folder_id: 'mappa_azonosito'
-        refused: 'elutasitott_db'
-        skipped: 'kihagyott_nem_dokumentum_db'
-        total: 'osszes_dokumentum'
-      note_help: 'Minden letöltött mellékleten rögzített opcionális megjegyzés.'
+        fetched: letoltott_db
+        folder_id: mappa_azonosito
+        refused: elutasitott_db
+        skipped: kihagyott_nem_dokumentum_db
+        total: osszes_dokumentum
+      note_help: Minden letöltött mellékleten rögzített opcionális megjegyzés.
       notices:
-        files_refused: 'Ebben a mappában %{refused_count} fájlt nem sikerült letölteni a drive.file hatókörben; töltsd le őket kézzel, és csatold az ''aeat app ledger attach --attachment-id ...'' paranccsal.'
+        files_refused: Ebben a mappában %{refused_count} fájlt nem sikerült letölteni
+          a drive.file hatókörben; töltsd le őket kézzel, és csatold az 'aeat app
+          ledger attach --attachment-id ...' paranccsal.
     remove:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       dry_run_help: Az eltávolítás hatásainak jelentése a főkönyvi tranzakció törlése
@@ -3699,7 +3710,9 @@ cli:
         sabado: Szombat
       show_suppressed_help: Elnyomott bejegyzések megjelenítése is a naptárban.
       to_help: A naptárablak záró dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).
-    calendar_local_filing_evidence_unavailable: 'A naptár helyi benyújtási bizonyítéka nem tölthető be; a naptár a határidőnaptárból származik, és egy kötelezettséget még esedékesként túljelezhet.'
+    calendar_local_filing_evidence_unavailable: A naptár helyi benyújtási bizonyítéka
+      nem tölthető be; a naptár a határidőnaptárból származik, és egy kötelezettséget
+      még esedékesként túljelezhet.
     calendar_local_live_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
       élő eseménybizonyíték.
     calendar_local_modelo_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
@@ -3719,13 +3732,22 @@ cli:
       modelo_help: AEAT-nyomtatványazonosító (pl. 303, 130, 100).
       year_help: 'Az alkalmazhatóság-értékelés adóéve; alapértelmezés: az aktuális
         év.'
-    local_work_units_unavailable: 'A helyi Modelo munkaegység-állapot nem tölthető be; ez az áttekintés a határidőnaptárból származik, és egy folyamatban lévő piszkozatot még esedékesként túljelezhet, vagy régebbi folyamatban lévő piszkozatokat kihagyhat.'
+    local_work_units_unavailable: A helyi Modelo munkaegység-állapot nem tölthető
+      be; ez az áttekintés a határidőnaptárból származik, és egy folyamatban lévő
+      piszkozatot még esedékesként túljelezhet, vagy régebbi folyamatban lévő piszkozatokat
+      kihagyhat.
     period: Időszak
     period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
       01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
     post_filing:
       pending: '%{count} AEAT bevallás utáni esemény igényel figyelmet: %{kinds}.
         Tekintsd át őket az ''aeat app live notifications list'' paranccsal.'
+    prepare:
+      help: 'Végigvezet az adatelőkészítés lépésein egy modellhez/időszakhoz sorban: tranzakciók importálása, besorolásuk, beszerzési számla igazolások csatolása, üzleti számlák rögzítése, a főkönyv előkészítési hiányosságainak megoldása, majd a modell munkaegység elindítása vagy folytatása. Megmutatja az egyes lépések aktuális állapotát és a következő futtatandó parancsot. Csak olvasható; ismételten biztonságosan futtatható; soha nem lép kapcsolatba az AEAT-tal.'
+      modelo_help: 'Az AEAT modellazonosító, amelyhez az adatokat elő kell készíteni (pl. 130, 303, 100).'
+      modelo_period_error: '{message}'
+      period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves), 01-12 (hónapok). Kombinálja a --year kapcsolóval az év kiválasztásához.'
+      year_help: 'Bevallási év (pl. 2026).'
     status:
       drafts_empty: Nincs mentett bevallástervezet.
       drafts_empty_with_work_units: Nincs mentett bevallástervezet – ez normális,
@@ -3796,10 +3818,13 @@ cli:
       tag_help: Szűrés adójogi tag alapján (pl. irpf, iva).
       verify_help: A jogi norma-korpusz integritásának ellenőrzése.
       view_help: Egy jogi hivatkozás és opcionálisan egy cikkének megjelenítése.
-    diff_revisions_from_year_help: 'A korábbi adóév, amelynek fedő revíziója az összehasonlítás alapja'
-    diff_revisions_help: 'Egy modelo nyilvántartási revízióinak összehasonlítása két adóév között'
-    diff_revisions_modelo_help: 'Az összehasonlítandó modelo azonosítója'
-    diff_revisions_to_year_help: 'A későbbi adóév, amelynek fedő revízióját az alaphoz hasonlítjuk'
+    diff_revisions_from_year_help: A korábbi adóév, amelynek fedő revíziója az összehasonlítás
+      alapja
+    diff_revisions_help: Egy modelo nyilvántartási revízióinak összehasonlítása két
+      adóév között
+    diff_revisions_modelo_help: Az összehasonlítandó modelo azonosítója
+    diff_revisions_to_year_help: A későbbi adóév, amelynek fedő revízióját az alaphoz
+      hasonlítjuk
     inspect_help: A nyilvántartás állapotának és hivatkozásainak vizsgálata.
     inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának elérési útja.
     manuals:
@@ -4311,7 +4336,7 @@ errors:
     error_categories: Hiba történt a kiadáskategóriákban.
     error_categories_validation: Egy kategória-rekord nem ment át az érvényesítésen.
     error_config_boundary: A konfigurációs parancs váratlan belső hibát észlelt.
-    error_corpus_search: 'A helyi korpuszkeresés nem fejeződött be.'
+    error_corpus_search: A helyi korpuszkeresés nem fejeződött be.
     error_deadlines_deadline: Hiba történt a határidő-számítás során.
     error_deadlines_missing_windows: Hianyoznak a hatarido-ablakok.
     error_deadlines_profile: Az önálló vállalkozói profilt nem sikerült betölteni
@@ -4694,7 +4719,9 @@ errors:
     profile_import_signature: A profil-archívum nem ment át az aláírás- vagy integritás-ellenőrzésen.
       Ne importáljon archívumot nem megbízható forrásból.
   internal:
-    internal_cli_unexpected_boundary: 'A parancs váratlan belső hiba miatt hiúsult meg, nem tárolt adatokkal kapcsolatos probléma miatt. Nézze meg a diagnosztikai naplókat, hogy mi hiúsult meg.'
+    internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt hiúsult
+      meg, nem tárolt adatokkal kapcsolatos probléma miatt. Nézze meg a diagnosztikai
+      naplókat, hogy mi hiúsult meg.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
     internal_master_key_type: 'Internal error: master-key operation received a value
@@ -4847,8 +4874,9 @@ errors:
       Ellenőrizze az argumentumokat, vagy futtassa az `aeat --help` parancsot.
     refused_config_reset_unconfirmed: A konfigurációs visszaállítást nem erősítette
       meg. Futtassa újra a parancsot, megerősítve a műveletet.
-    refused_corpus_search_dependency: 'Ez a korpuszkeresési művelet az opcionális szemantikus keresési összetevőket igényli; telepítse őket, és próbálja újra.'
-    refused_corpus_search_input: 'A korpuszkeresési kérés nem teljesíthető.'
+    refused_corpus_search_dependency: Ez a korpuszkeresési művelet az opcionális szemantikus
+      keresési összetevőket igényli; telepítse őket, és próbálja újra.
+    refused_corpus_search_input: A korpuszkeresési kérés nem teljesíthető.
     refused_diagnostic_model_invariant: A DiagnosticCheck konstrukciós invariánsa
       sérült; ellenőrizze, hogy az elmaradás/figyelmeztetés sorokban pontosan az egyik
       next_action vagy dead_end van-e beállítva, az ok sorokban pedig egyik sem.
@@ -5154,7 +5182,14 @@ mcp:
       elő. Ellenőrizd az összeget calculate/revision olvasással, mielőtt támaszkodnál
       rá.'
   harness:
-    off_host_consent: 'Adatvédelmi tájékoztató — olvassa el a folytatás előtt. Ezt a konzolt egy mesterséges intelligencia asszisztens működteti az Ön által választott LLM-szolgáltatón. Az Ön szavai és az asszisztens által kezelt számok (összegek, casilla-értékek, kötelezettségek) elküldésre kerülnek ehhez a szolgáltatóhoz a konzol működtetéséhez. A FORRÁSDOKUMENTUMAI — számlák, bankkivonatok és bármilyen bizonyítékbájt — SOHA nem hagyják el a gépét: titkosított helyi tárolóban maradnak, és soha nem kerülnek továbbításra. Ha harmadik fél (könyvelő vagy szakember) nevében jár el, a folytatás előtt erősítse meg, hogy ez elfogadható.'
+    off_host_consent: 'Adatvédelmi tájékoztató — olvassa el a folytatás előtt. Ezt
+      a konzolt egy mesterséges intelligencia asszisztens működteti az Ön által választott
+      LLM-szolgáltatón. Az Ön szavai és az asszisztens által kezelt számok (összegek,
+      casilla-értékek, kötelezettségek) elküldésre kerülnek ehhez a szolgáltatóhoz
+      a konzol működtetéséhez. A FORRÁSDOKUMENTUMAI — számlák, bankkivonatok és bármilyen
+      bizonyítékbájt — SOHA nem hagyják el a gépét: titkosított helyi tárolóban maradnak,
+      és soha nem kerülnek továbbításra. Ha harmadik fél (könyvelő vagy szakember)
+      nevében jár el, a folytatás előtt erősítse meg, hogy ez elfogadható.'
   persona:
     handoff_denied: A(z) '{command}' a benyújtás-átadás visszafordíthatatlan határa,
       amely a(z) '{owner}' personához tartozik; a(z) '{persona}' persona számára szerkezetileg
@@ -5220,6 +5255,7 @@ sheets:
     headers:
       acquisition_date: Szerzés dátuma
       amount: Összeg
+      amount_donated: Adományozott összeg
       asset_class_code: Eszközosztály kód
       asset_identifier: Eszközazonosító
       base_imponible: Adóalap
@@ -5229,7 +5265,11 @@ sheets:
       counterparty_tax_id: Szerződő fél adóazonosítója
       country_code: Országkód
       currency_code: Pénznemkód
+      deduction_percentage: Levonási százalék
+      donor_legal_name: Adományozó neve
+      donor_tax_id: Adományozó adóazonosítója
       ingreso_a_cuenta: Természetbeni adójóváírás
+      is_recurrent: Ismétlődő adomány
       member_legal_name: Tag neve
       member_state_code: Tagállam
       member_tax_id: Tag adóazonosítója
