@@ -72,6 +72,7 @@ class AuthProviderKindSetting(StrEnum):
 
     CERTIFICATE = "certificate"
     CLAVE_MOVIL = "clave_movil"
+    CLAVE_PERMANENTE = "clave_permanente"
 
 
 class StorageRouteKind(StrEnum):
@@ -109,6 +110,13 @@ def default_clave_sede_access_url_template() -> str:
     from .external_constants import load_external_constants
 
     return load_external_constants().aeat.clave_movil.selector_access_url_template
+
+
+def default_clave_permanente_sede_access_url_template() -> str:
+    """Return the configured Cl@ve Permanente selector access URL template."""
+    from .external_constants import load_external_constants
+
+    return load_external_constants().aeat.clave_permanente.selector_access_url_template
 
 
 def default_sede_expedientes_path() -> str:

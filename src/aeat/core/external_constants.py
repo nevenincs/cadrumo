@@ -168,6 +168,29 @@ class AeatClaveMovilSurface(_Frozen):
         return value
 
 
+class AeatClavePermanenteSurface(_Frozen):
+    """Externally-defined Cl@ve Permanente selector-page and IdP form markers.
+
+    Cl@ve Permanente reuses the same AEAT auth-method selector page as Cl@ve
+    Movil (:attr:`selector_access_url_template`); the Cl@ve IdP itself then
+    renders a DNI/NIE + password form rather than the QR/push screen. These
+    IdP form selectors and error markers are the least stable part of this
+    surface — they track the Cl@ve frontend, not an AEAT-published contract —
+    and are the ``needs-design`` surface tracked by issue #283.
+    """
+
+    selector_access_url_template: str = Field(min_length=1)
+    selector_access_path_marker: str = Field(min_length=1)
+    idp_host_marker: str = Field(min_length=1)
+    username_input_selector: str = Field(min_length=1)
+    password_input_selector: str = Field(min_length=1)
+    submit_button_selector: str = Field(min_length=1)
+    elevation_sms_marker: str = Field(min_length=1)
+    invalid_credentials_marker: str = Field(min_length=1)
+    account_locked_marker: str = Field(min_length=1)
+    password_expired_marker: str = Field(min_length=1)
+
+
 class AeatPre303Surface(_Frozen):
     """Externally-defined Pre303 and IVA compensation wallet surface markers."""
 
@@ -313,6 +336,7 @@ class AeatSection(_Frozen):
     domains: AeatDomains
     sede_paths: AeatSedePaths
     clave_movil: AeatClaveMovilSurface
+    clave_permanente: AeatClavePermanenteSurface
     # ANY-RETURN-RATIONALE-PRE303-RAW-STAGING:
     # Raw TOML parse staging slot; cached_property converts to typed
     # AeatPre303Surface boundary model.
