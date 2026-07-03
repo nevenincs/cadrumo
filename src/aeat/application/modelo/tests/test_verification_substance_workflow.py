@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
@@ -19,7 +20,6 @@ from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
     ModeloValidationError,
     ModeloVerificationFindingKind,
-    VerificationReportCatalogueRepository,
     derive_calculation_revision_id,
     upsert_calculation_revision,
 )

@@ -16,6 +16,7 @@ from typing import Annotated, Any
 
 import typer
 
+from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...application.calculations import (
     CalculationObservationRepository,
     CrossPeriodCleanStateVerdict,
@@ -49,7 +50,6 @@ from ...domain.modelos import (
     CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ModeloRecordCatalogueRepository,
-    VerificationReportCatalogueRepository,
 )
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_payloads import (

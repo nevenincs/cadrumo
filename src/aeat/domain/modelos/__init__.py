@@ -155,7 +155,7 @@ from ._verification_report import (
     VerificationReportCatalogue,
     derive_verification_report_id,
 )
-from ._verification_repository import VerificationReportCatalogueRepository, upsert_verification_report
+from ._verification_repository import upsert_verification_report
 from ._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 
 __all__ = (
@@ -205,7 +205,6 @@ __all__ = (
     "VerificationCompletenessStatus",
     "VerificationReport",
     "VerificationReportCatalogue",
-    "VerificationReportCatalogueRepository",
     "VerificationReportCatalogueRepositoryProtocol",
     "VerificationReportId",
     "WorkUnit",
