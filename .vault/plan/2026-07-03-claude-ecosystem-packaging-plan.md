@@ -41,9 +41,9 @@ Resolve the installed-run storage state root to a platform user-data directory w
 
 Demote the developer-only vaultspec-rag search stack out of the base dependency set and align the stale mcpb manifest license field, so a published product wheel carries no dev tooling and states its real Apache-2.0 license.
 
-- [ ] `W01.P02.S05` - Demote vaultspec-rag[mcp] out of [project.dependencies] into the dev dependency group so a published product wheel carries no developer search tooling; `pyproject.toml`.
-- [ ] `W01.P02.S06` - Confirm deptry and the packaging-smoke dependency-surface gate stay clean after the demotion; `dev/packaging/dependency_surface.py`.
-- [ ] `W01.P02.S07` - Align the mcpb manifest license field from 'see repository' to the real Apache-2.0 SPDX expression; `packaging/mcpb/manifest.json`.
+- [x] `W01.P02.S05` - Demote vaultspec-rag[mcp] out of [project.dependencies] into the dev dependency group so a published product wheel carries no developer search tooling; `pyproject.toml`.
+- [x] `W01.P02.S06` - Confirm deptry and the packaging-smoke dependency-surface gate stay clean after the demotion; `dev/packaging/dependency_surface.py`.
+- [x] `W01.P02.S07` - Align the mcpb manifest license field from 'see repository' to the real Apache-2.0 SPDX expression; `packaging/mcpb/manifest.json`.
 
 ## Wave `W02` - Wheel split and integrity-gate tolerance
 
