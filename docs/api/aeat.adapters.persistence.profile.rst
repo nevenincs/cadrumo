@@ -17,6 +17,7 @@ Submodules
    aeat.adapters.persistence.profile.assets
    aeat.adapters.persistence.profile.bienes_inversion
    aeat.adapters.persistence.profile.buckets
+   aeat.adapters.persistence.profile.filing_amendments
    aeat.adapters.persistence.profile.filing_drafts
    aeat.adapters.persistence.profile.fincas
    aeat.adapters.persistence.profile.inventory

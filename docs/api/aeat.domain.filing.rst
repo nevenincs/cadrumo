@@ -22,7 +22,6 @@ Submodules
    :maxdepth: 4
 
    aeat.domain.filing._amendment
-   aeat.domain.filing._complementaria_repository
    aeat.domain.filing._errors
    aeat.domain.filing._protocols
    aeat.domain.filing._runtime_repository

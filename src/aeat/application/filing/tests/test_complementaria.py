@@ -65,7 +65,7 @@ def _persist_original_draft(draft: ModeloDraft) -> None:
 
 
 def _persisted_amendment_ids() -> tuple[str, ...]:
-    from ....domain.filing import ModeloAmendmentRepository
+    from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 
     return ModeloAmendmentRepository().list_amendment_ids()
 

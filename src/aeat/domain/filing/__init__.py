@@ -10,11 +10,13 @@ provenance, and casilla provenance that identify and ground a local draft.
 The facade also exports :class:`ModeloValidator`, the protocol contracts
 consumed by :mod:`application.filing`, the LGT Art. 122 amendment records
 :class:`ModeloComplementaria` and :class:`ModeloSustitutiva`, their
-:class:`CasillaChange` deltas, and the governed repositories. Drafts persist
-through :class:`~aeat.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`
+:class:`CasillaChange` deltas, and the governed repository contracts. Drafts
+persist through
+:class:`~aeat.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`
 (behind :class:`ModeloDraftRepositoryProtocol`) in FINANCIAL encrypted storage;
-amendments persist through :class:`ModeloAmendmentRepository` in AUDIT
-encrypted storage.
+amendments persist through
+:class:`~aeat.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`
+(behind :class:`ModeloAmendmentRepositoryProtocol`) in AUDIT encrypted storage.
 
 The orchestration entry points (:func:`application.filing.build_draft`,
 :func:`application.filing.validate_draft`,
@@ -38,8 +40,9 @@ See Also:
         casilla provenance, and registry snapshot identity.
     :class:`ModeloValidator`
         Domain validator used by application review and approval flows.
-    :class:`ModeloAmendmentRepository`
-        Governed AUDIT persistence for complementaria and sustitutiva records.
+    :class:`ModeloAmendmentRepositoryProtocol`
+        Narrow domain-facing port for governed AUDIT persistence of
+        complementaria and sustitutiva records.
     :mod:`domain.submission`
         Local-only submission audit records paired with imported or historical
         draft baselines without turning draft records into live submissions.
@@ -64,9 +67,6 @@ from ._amendment import (
     ModeloSustitutiva,
     make_amendment_id,
 )
-from ._complementaria_repository import (
-    ModeloAmendmentRepository,
-)
 from ._errors import (
     FilingExportError,
     FilingExportValidationError,
@@ -84,6 +84,7 @@ from ._protocols import (
     CasillaSchemaProvider,
     DeadlineChecker,
     DeadlineStatus,
+    ModeloAmendmentRepositoryProtocol,
     ModeloDraftRepositoryProtocol,
     ModeloInputs,
     ModeloInputScalar,
@@ -125,7 +126,7 @@ __all__ = [
     "FilingExportValidationError",
     "FilingValidationError",
     "ModeloAmendmentError",
-    "ModeloAmendmentRepository",
+    "ModeloAmendmentRepositoryProtocol",
     "ModeloAmendmentValidationError",
     "ModeloApprovalBasis",
     "ModeloBindingValue",
