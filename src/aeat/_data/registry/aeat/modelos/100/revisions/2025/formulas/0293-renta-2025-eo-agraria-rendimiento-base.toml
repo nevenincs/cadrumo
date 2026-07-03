@@ -60,9 +60,15 @@
 # _evaluate_m100_resolve_eo_agraria_indices_correctores and
 # orden-hac-1347-2024:anexo-i-instruccion-2-3.
 #
-# Fase 4a (reducciones) and Fase 5a (art. 32 irregularidad) remain the manual
-# operator-entered casillas already declared on this revision
-# (irpf_eo_agr_reduccion_*) — bounded per the
+# Fase 4a (reduccion general 5% + reduccion agricultores jovenes 25%,
+# casillas 1549/1551, plus the rendimiento neto reducido total in casilla
+# 1555) is computed by renta-2025-eo-agraria-reduccion-general,
+# renta-2025-eo-agraria-reduccion-jovenes, and
+# renta-2025-eo-agraria-rendimiento-neto-reducido-por-actividad in
+# 0294-renta-2025-eo-agraria-reducciones-fase-4a.toml. Fase 4a apartado 3
+# (gastos extraordinarios, casilla 1552) and Fase 5a (art. 32 irregularidad,
+# casilla 1554) remain the manual operator-entered casillas already declared
+# on this revision — bounded per the
 # 2026-07-01-modelo-131-eo-modulos-engine-adr's incremental phasing
 # discipline.
 

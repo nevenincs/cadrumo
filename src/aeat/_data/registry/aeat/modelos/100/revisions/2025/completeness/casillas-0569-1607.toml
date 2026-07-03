@@ -795,8 +795,24 @@ casilla_id = "1550"
 number = "1550"
 
 [[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "1551"
+number = "1551"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "1552"
+number = "1552"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "1554"
+number = "1554"
+
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "1555"
 number = "1555"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "AJ"
+number = "*98"
 
 [[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "1558"

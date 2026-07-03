@@ -224,13 +224,25 @@ def test_modelo_100_2025_completeness_manifest_legal_refs_match_calculation_clos
 
 def test_modelo_100_2025_objective_estimation_sections_use_activity_refs_only() -> None:
     revision = _modelo_100_snapshot(2025).revision
+    # The Fase 4a EO-agraria reducciones (casillas 1549, 1551, 1555, AJ)
+    # legitimately cite their own binding provisions in addition to the
+    # section's activity-chapter default: DA-1 Orden HAC/1347/2024
+    # (reducción general 5%) and LIRPF DA-6 / anexo-i-instruccion-3
+    # (reducción agricultores jóvenes 25%) each establish a concrete
+    # regulatory value that the generic art. 27/28/30/31/32 chapter refs
+    # alone do not ground — registry-calculation-legal-grounding requires
+    # citing the specific provision that fixes the number.
+    _EO_AGRARIA_FASE_4A_EXEMPT_CASILLA_IDS = frozenset({"1549", "1551", "1555", "AJ"})
     for section, expected_count in _OBJECTIVE_ESTIMATION_2025_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
 
         assert len(checked) == expected_count
+        activity_refs_casillas = [
+            casilla for casilla in checked if casilla.id not in _EO_AGRARIA_FASE_4A_EXEMPT_CASILLA_IDS
+        ]
         offenders = {
             casilla.id: casilla.legal_refs
-            for casilla in checked
+            for casilla in activity_refs_casillas
             if set(casilla.legal_refs) != _ECONOMIC_ACTIVITY_SECTION_REFS
         }
         assert not offenders

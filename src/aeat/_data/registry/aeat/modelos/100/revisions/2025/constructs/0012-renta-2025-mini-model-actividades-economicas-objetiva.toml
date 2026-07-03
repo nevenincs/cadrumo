@@ -4,10 +4,13 @@ title = "Modelo 100 2025 estimacion objetiva aggregators"
 legal_refs = [
     "ley-35-2006:art-31",
     "ley-35-2006:art-32",
+    "ley-35-2006:da-6",
     "orden-hac-1347-2024:art-4",
+    "orden-hac-1347-2024:da-1",
     "orden-hac-1347-2024:anexo-i-instruccion-2-1",
     "orden-hac-1347-2024:anexo-i-instruccion-2-2",
     "orden-hac-1347-2024:anexo-i-instruccion-2-3",
+    "orden-hac-1347-2024:anexo-i-instruccion-3",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -19,6 +22,9 @@ formulas = [
     "renta-2025-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
     "renta-2025-estimacion-objetiva-no-agricola-suma",
     "renta-2025-estimacion-objetiva-agricola-rendimiento-neto-reducido",
+    "renta-2025-eo-agraria-reduccion-general",
+    "renta-2025-eo-agraria-reduccion-jovenes",
+    "renta-2025-eo-agraria-rendimiento-neto-reducido-por-actividad",
     "renta-2025-eo-agraria-rendimiento-base-mejillon-batea",
     "renta-2025-eo-agraria-rendimiento-base-porcino-carne",
     "renta-2025-eo-agraria-rendimiento-base-remolacha",
