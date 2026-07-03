@@ -11,6 +11,7 @@ from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from .....core import DEFAULT_WRITE_PROVENANCE, SecureObjectWrite
 from .....core.classification import SensitivityClass
 from .....core.errors import resolve_error_message
 from .....core.external_constants import UTF_8_ENCODING
@@ -46,7 +47,6 @@ from ._secure_object_integrity import (
     quarantine_unreadable_rows as _quarantine_unreadable_rows,
 )
 from ._secure_object_records import (
-    DEFAULT_WRITE_PROVENANCE,
     SecureObjectDecryptabilityRow,
     SecureObjectDeletion,
     SecureObjectListItem,
@@ -55,7 +55,6 @@ from ._secure_object_records import (
     SecureObjectRawRow,
     SecureObjectRecord,
     SecureObjectUnreadable,
-    SecureObjectWrite,
 )
 from ._secure_object_schema import (
     build_revision_ancestor_ids,
