@@ -37,7 +37,7 @@ from ...application.overview import (
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import sha256_hex
 from ...core.i18n import tr
-from ...core.json_contract import Notice
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ._common import (
     _bad,
@@ -168,29 +168,51 @@ def _local_modelo_record_calendar_events(
     )
 
 
-def _local_modelo_work_units(bucket_id: str):
-    """Return active local Modelo work units for overview obligation surfaces."""
+def _local_modelo_work_units(bucket_id: str) -> tuple[tuple[object, ...], Notice | None]:
+    """Return ``(active work units, degradation notice-or-None)``.
+
+    Work units are an OPTIONAL enrichment of the overview surfaces: they annotate
+    schedule-derived entries as in-progress and widen the lookback window back to
+    the oldest in-progress draft. The backlog and calendar themselves derive from
+    the deadline schedule plus obligation applicability, so a work-unit load
+    failure must DEGRADE the surface — proceed schedule-only — not refuse the
+    whole answer.
+
+    A fresh profile with no catalogue loads as empty (no failure). The failure
+    path is a genuine work-unit-subsystem fault; degrading over-reports an
+    in-progress draft as still-due (the safe direction — it surfaces more, never
+    hides a due obligation) and only narrows the lookback to the default window.
+    Refusing the entire overview because this optional enrichment failed left a
+    behind-but-fresh taxpayer — the exact ``regularizar-atrasos`` persona — unable
+    to answer "what have I missed"; the WARNING notice discloses the degradation
+    instead.
+    """
     try:
         from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
         from ...application.modelo import list_work_units
 
         repository = WorkUnitCatalogueRepository(bucket_id=bucket_id)
-        return list_work_units(bucket_id=bucket_id, include_discarded=False, repository=repository)
-    except Exception as exc:
+        return list_work_units(bucket_id=bucket_id, include_discarded=False, repository=repository), None
+    except Exception:
         logger.warning(
-            "overview: failed to load local modelo work units for bucket %s",
+            "overview: work-unit enrichment unavailable for bucket %s; deriving from schedule only",
             bucket_id,
             exc_info=True,
         )
-        raise _bad(
-            tr(
+        notice = Notice(
+            severity=NoticeSeverity.WARNING,
+            code="overview.work_units_degraded",
+            message=tr(
                 "cli.overview.local_work_units_unavailable",
                 default=(
-                    "Overview local Modelo work-unit state is unavailable; "
-                    "refusing to render without persisted work state."
+                    "Local Modelo work-unit state could not be loaded; this overview is "
+                    "derived from the deadline schedule and may over-report an in-progress "
+                    "draft as still due or omit older in-progress drafts."
                 ),
             ),
-        ) from exc
+            context={},
+        )
+        return (), notice
 
 
 def _live_censo_verified_profile_keys(record) -> tuple[str, ...]:
@@ -666,7 +688,7 @@ def overview_calendar(
         events,
         expected_tax_id=workflow_profile.tax_id,
     )
-    work_units = _local_modelo_work_units(bucket_id)
+    work_units, work_units_notice = _local_modelo_work_units(bucket_id)
     cal: OverviewCalendar = build_overview_calendar(
         workflow_profile,
         rng,
@@ -728,12 +750,16 @@ def overview_calendar(
     post_filing_notices = overview_post_filing_event_notices(cal.events)
     for notice in post_filing_notices:
         lines.append(f"post_filing_pending\t{len(notice.context)}\t{notice.message}")
+    calendar_notices = [*coverage_notices, *post_filing_notices]
+    if work_units_notice is not None:
+        lines.append(f"work_units_degraded\t{work_units_notice.message}")
+        calendar_notices.append(work_units_notice)
     _emit_envelope(
         ctx,
         command="overview.calendar",
         result=typed_cal,
         lines=lines,
-        notices=[*coverage_notices, *post_filing_notices],
+        notices=calendar_notices,
     )
 
 
@@ -794,7 +820,10 @@ def _overview_calendar_all_profiles(
                     events,
                     expected_tax_id=taxpayer.tax_id,
                 )
-                work_units = _local_modelo_work_units(bucket_id)
+                # The multi-profile view already degrades per profile (it skips an
+                # unreadable one below); a work-unit enrichment failure just means
+                # this profile's calendar is schedule-only, so drop the notice here.
+                work_units, _ = _local_modelo_work_units(bucket_id)
         except typer.BadParameter:
             raise
         except Exception:
@@ -1031,7 +1060,7 @@ def overview_backlog(
     bucket_id = current.active_profile_bucket_id()
     if bucket_id is None:
         raise _bad(tr("cli.config.errors.no_active_profile"))
-    work_units = _local_modelo_work_units(bucket_id)
+    work_units, work_units_notice = _local_modelo_work_units(bucket_id)
     backlog = build_overview_backlog(
         _profile_to_taxpayer(current),
         from_date=parsed_from,
@@ -1067,7 +1096,11 @@ def overview_backlog(
     coverage_notices = overview_coverage_notices(backlog.coverage)
     for notice in coverage_notices:
         lines.append(f"coverage_advised\t{len(backlog.coverage.advised)}\t{notice.message}")
-    _emit_envelope(ctx, command="overview.backlog", result=typed_backlog, lines=lines, notices=coverage_notices)
+    backlog_notices = [*coverage_notices]
+    if work_units_notice is not None:
+        lines.append(f"work_units_degraded\t{work_units_notice.message}")
+        backlog_notices.append(work_units_notice)
+    _emit_envelope(ctx, command="overview.backlog", result=typed_backlog, lines=lines, notices=backlog_notices)
 
 
 @app.command(
