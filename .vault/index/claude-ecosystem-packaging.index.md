@@ -25,6 +25,9 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P05-S17]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P05-S18]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P05-S19]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P06-S20]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P06-S21]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P06-S22]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S23]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S24]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S25]]'
@@ -47,6 +50,7 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-W04-P11-S42]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W05-P12-S43]]'
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-audit]]'
   - '[[2026-07-03-claude-ecosystem-packaging-plan]]'
   - '[[2026-07-03-claude-ecosystem-packaging-research]]'
 ---
@@ -60,6 +64,10 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 ### adr
 
 - `2026-07-03-claude-ecosystem-packaging-adr` - `claude-ecosystem-packaging` adr: `Claude ecosystem plugin as the first product distribution` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-03-claude-ecosystem-packaging-audit` - `claude-ecosystem-packaging` audit: `campaign code review`
 
 ### exec
 
@@ -82,6 +90,9 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 - `2026-07-03-claude-ecosystem-packaging-W02-P05-S17` - Make the four aeat app registry verification verbs refuse instructively when the companion is required and absent
 - `2026-07-03-claude-ecosystem-packaging-W02-P05-S18` - Add an anti-tautology test that a corrupted PRESENT corpus binary still hard-fails the byte-exact hash gate
 - `2026-07-03-claude-ecosystem-packaging-W02-P05-S19` - Add an anti-tautology test that an absent companion binary surfaces a loud advisory and is never silently accepted
+- `2026-07-03-claude-ecosystem-packaging-W02-P06-S20` - Add the corpus-sources optional extra pinning aeat-data at an exact version
+- `2026-07-03-claude-ecosystem-packaging-W02-P06-S21` - Add a split-install packaging-smoke lane proving the advisory path with the core wheel alone and the byte-identical path with the companion installed
+- `2026-07-03-claude-ecosystem-packaging-W02-P06-S22` - Wire the split-install smoke lane into the just packaging-smoke recipe set
 - `2026-07-03-claude-ecosystem-packaging-W03-P07-S23` - Add a plugin layout target that emits .claude-plugin/plugin.json with a kebab-case name, defaultEnabled false, an author object and the version read from installed package metadata
 - `2026-07-03-claude-ecosystem-packaging-W03-P07-S24` - Emit the plugin skills/ tree (SKILL.md plus reference material) from the single authored harness source
 - `2026-07-03-claude-ecosystem-packaging-W03-P07-S25` - Emit the plugin agents/ tree mapping persona frontmatter to Claude-native fields (tools/disallowedTools), never the non-Claude mode: field
