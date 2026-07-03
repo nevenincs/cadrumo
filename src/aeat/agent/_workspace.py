@@ -129,11 +129,31 @@ def _plugin_manifest_document(version: str) -> dict[str, object]:
     }
 
 
+def _emit_plugin_skills(output_dir: Path) -> int:
+    """Copy every shipped skill subtree under the plugin's top-level ``skills/``.
+
+    The plugin skill layout (``skills/<name>/SKILL.md`` plus each skill's
+    ``reference/`` progressive-disclosure material) is the same authored source
+    the workspace layout emits, moved from ``.claude/skills`` to the plugin root
+    so a Claude plugin loads it natively.
+    """
+    skills = 0
+    skills_root = harness_root().joinpath(_SKILLS_SUBDIR)
+    if skills_root.is_dir():
+        for skill_dir in sorted(skills_root.iterdir(), key=lambda item: item.name):
+            if skill_dir.is_dir() and skill_dir.joinpath(_SKILL_ENTRYPOINT).is_file():
+                _copy_skill(skill_dir, output_dir / _SKILLS_SUBDIR / skill_dir.name)
+                skills += 1
+    return skills
+
+
 def materialise_plugin(output_dir: Path, *, version: str | None = None) -> PluginManifest:
     """Write the shipped harness under ``output_dir`` as a Claude plugin.
 
-    Emits ``.claude-plugin/plugin.json`` carrying the plugin manifest. The
-    ``version`` is resolved from installed package metadata when not supplied.
+    Emits ``.claude-plugin/plugin.json`` carrying the plugin manifest, and the
+    top-level ``skills/<name>/SKILL.md`` tree (plus each skill's ``reference/``
+    material) from the single authored harness source. The ``version`` is
+    resolved from installed package metadata when not supplied.
 
     Returns:
         :class:`PluginManifest` describing the plugin written.
@@ -141,12 +161,13 @@ def materialise_plugin(output_dir: Path, *, version: str | None = None) -> Plugi
     resolved_version = version or _plugin_version()
 
     _write_json(output_dir / _PLUGIN_DIR, _PLUGIN_MANIFEST, _plugin_manifest_document(resolved_version))
+    skills = _emit_plugin_skills(output_dir)
 
     return PluginManifest(
         output_path=str(output_dir),
         plugin_name=_PLUGIN_NAME,
         version=resolved_version,
-        skills_written=0,
+        skills_written=skills,
         agents_written=0,
     )
 
