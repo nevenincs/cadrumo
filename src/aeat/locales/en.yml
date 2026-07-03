@@ -4963,6 +4963,8 @@ mcp:
     advisory: 'FAITHFULNESS ADVISORY: the call''s arguments cite amount(s) [{values}]
       that no tool result in this session produced. Verify the figure against a calculate/revision
       read before relying on it.'
+  harness:
+    off_host_consent: 'Privacy notice — read before continuing. This console is operated by an AI assistant running on your chosen LLM provider. Your words, and the figures the assistant works with (amounts, casilla values, obligations), are sent to that provider to operate the console. Your SOURCE DOCUMENTS — invoices, bank statements, and any evidence bytes — NEVER leave your machine: they stay in encrypted local storage and are never transmitted. If you are acting for a third party (a gestor or professional), confirm this is acceptable before you proceed.'
   persona:
     handoff_denied: '''{command}'' is the irreversible filing-handoff boundary, owned
       by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied

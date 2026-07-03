@@ -5155,6 +5155,8 @@ mcp:
       hivatkoznak, amelyeket ebben a munkamenetben egyetlen eszközeredmény sem állított
       elő. Ellenőrizd az összeget calculate/revision olvasással, mielőtt támaszkodnál
       rá.'
+  harness:
+    off_host_consent: 'Adatvédelmi tájékoztató — olvassa el a folytatás előtt. Ezt a konzolt egy mesterséges intelligencia asszisztens működteti az Ön által választott LLM-szolgáltatón. Az Ön szavai és az asszisztens által kezelt számok (összegek, casilla-értékek, kötelezettségek) elküldésre kerülnek ehhez a szolgáltatóhoz a konzol működtetéséhez. A FORRÁSDOKUMENTUMAI — számlák, bankkivonatok és bármilyen bizonyítékbájt — SOHA nem hagyják el a gépét: titkosított helyi tárolóban maradnak, és soha nem kerülnek továbbításra. Ha harmadik fél (könyvelő vagy szakember) nevében jár el, a folytatás előtt erősítse meg, hogy ez elfogadható.'
   persona:
     handoff_denied: A(z) '{command}' a benyújtás-átadás visszafordíthatatlan határa,
       amely a(z) '{owner}' personához tartozik; a(z) '{persona}' persona számára szerkezetileg
