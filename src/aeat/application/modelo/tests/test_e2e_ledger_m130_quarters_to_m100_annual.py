@@ -52,6 +52,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
@@ -67,7 +68,7 @@ from ....domain.calculations.registry import (
 )
 from ....domain.categories import SpendingCategory
 from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
-from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+from ....domain.invoices import InvoiceCatalogue
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,

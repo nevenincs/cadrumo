@@ -8,11 +8,11 @@ from pathlib import Path
 
 import pytest
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...tests.secure_sql import isolated_runtime_profile
 from ..invoices import (
     Invoice,
     InvoiceCatalogue,
-    InvoiceCatalogueRepository,
     InvoiceLine,
     IvaRate,
     PaymentStatus,

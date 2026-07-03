@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.errors import StorageValidationError
@@ -47,14 +48,7 @@ from ....domain.buckets import (
 )
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.categories import SpendingCategory
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
+from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
 from ....domain.modelos import (
     CalculationRevision,

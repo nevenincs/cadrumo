@@ -24,10 +24,11 @@ Ledger ``purchase_invoice_evidence_id`` references must resolve to
 bucket-owned :class:`Invoice` records with matching ``linked_transaction_ids``
 before aggregation treats them as purchase evidence.
 
-Persistence is exposed through the concrete
-:class:`InvoiceCatalogueRepository` and the narrow
-:class:`InvoiceCatalogueRepositoryProtocol`. The repository stores the
-active-bucket catalogue singleton through
+Persistence is exposed through the narrow
+:class:`InvoiceCatalogueRepositoryProtocol` port; the concrete
+:class:`~aeat.adapters.persistence.profile.invoices.InvoiceCatalogueRepository`
+lives in the persistence adapter and stores the active-bucket catalogue
+singleton through
 :class:`adapters.persistence.storage.SecureObjectRepository` as
 ``FINANCIAL`` :class:`adapters.persistence.storage.SensitivityClass`
 payloads wrapped in :class:`adapters.persistence.storage.Envelope`; no
@@ -41,9 +42,6 @@ See Also:
         bucket, tax-substrate, and linked-transaction facts.
     :class:`InvoiceCatalogue`
         Frozen aggregate persisted as the encrypted invoice catalogue.
-    :class:`InvoiceCatalogueRepository`
-        Governed repository that stores the catalogue through secure-object
-        persistence.
     :class:`InvoiceCatalogueRepositoryProtocol`
         Narrow port used by application services that only need load/save
         semantics.
@@ -84,7 +82,6 @@ from ..iva import (
 )
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from ._protocols import InvoiceCatalogueRepositoryProtocol
-from ._repository import InvoiceCatalogueRepository
 from ._service import (
     LinkInconsistency,
     ReconciliationSuggestion,
@@ -100,7 +97,6 @@ __all__ = [
     "Invoice",
     "InvoiceCatalogue",
     "InvoiceCatalogueError",
-    "InvoiceCatalogueRepository",
     "InvoiceCatalogueRepositoryProtocol",
     "InvoiceError",
     "InvoiceLine",

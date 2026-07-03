@@ -48,13 +48,14 @@ from ...core.output_rendering import render_command_output
 # runtime import; the ``TYPE_CHECKING`` block keeps static checkers
 # resolving them.
 if TYPE_CHECKING:
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...application.auth import AuthProviderListing
     from ...application.workflow import WorkflowState
     from ...core import Period
     from ...core.json_contract import Notice
     from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft, ModeloDraftRepository
-    from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+    from ...domain.invoices import InvoiceCatalogue
     from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 
 __all__ = [
@@ -442,7 +443,7 @@ def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
 
 
 def _invoice_repo(*, bucket_id: str | None = None) -> InvoiceCatalogueRepository:
-    from ...domain.invoices import InvoiceCatalogueRepository
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 
     return InvoiceCatalogueRepository(bucket_id=bucket_id)
 

@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....application.invoices import link_invoice_transaction_repositories
 from ....tests.secure_sql import isolated_runtime_profile
 from ...iva import InvoiceKind
@@ -23,7 +24,6 @@ from ...transactions import (
 )
 from .._enums import IvaRate, PaymentStatus
 from .._models import Invoice, InvoiceCatalogue, InvoiceLine
-from .._repository import InvoiceCatalogueRepository
 from .._service import (
     suggest_reconciliations,
     verify_link_consistency,

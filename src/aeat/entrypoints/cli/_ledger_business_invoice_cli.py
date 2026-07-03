@@ -557,7 +557,7 @@ def catalogue_list(
     ),
 ) -> None:
     """List the rich reconciliation catalogue invoices for the active bucket."""
-    from ...domain.invoices import InvoiceCatalogueRepository
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 
     bucket_id = _business_invoice_bucket_id()
     catalogue = InvoiceCatalogueRepository(bucket_id=bucket_id).load()

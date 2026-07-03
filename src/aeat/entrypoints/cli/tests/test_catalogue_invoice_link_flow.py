@@ -31,11 +31,12 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....application.invoices import build_catalogue_invoice
 from ....application.user_profile import profile_create_storage_span, register_minimal_profile
 from ....application.workflow import workflow_state_repository
 from ....core import IntracomOperationType
-from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root

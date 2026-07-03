@@ -223,10 +223,11 @@ def _m303_transaction(
 
 
 def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
+    from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ....application.calculations import IvaWalletDecisionRepository
     from ....application.invoices import build_catalogue_invoice
     from ....application.user_profile import profile_storage_session
-    from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+    from ....domain.invoices import InvoiceCatalogue
     from ....domain.iva import InvoiceKind
 
     purchase_invoice = build_catalogue_invoice(

@@ -14,13 +14,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....tests.secure_sql import isolated_runtime_profile
-from ...iva import InvoiceKind
-from .._enums import IvaRate, PaymentStatus
-from .._models import Invoice, InvoiceCatalogue, InvoiceLine
-from .._repository import _INVOICE_NAMESPACE, InvoiceCatalogueRepository
+from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine
+from .....domain.invoices._enums import IvaRate, PaymentStatus
+from .....domain.iva import InvoiceKind
+from .....tests.secure_sql import isolated_runtime_profile
+from ..invoices import _INVOICE_NAMESPACE, InvoiceCatalogueRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def _populated_invoice(invoice_number: str = "F-2025-001") -> Invoice:
@@ -119,13 +119,13 @@ def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(tmp_path: Pa
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto import (
+    from ...storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....adapters.persistence.storage.sql import SecureObjectRow
-    from ....adapters.persistence.storage.sql.session import session_scope
+    from ...storage.sql import SecureObjectRow
+    from ...storage.sql.session import session_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         invoice = _populated_invoice(invoice_number="F-2025-001")

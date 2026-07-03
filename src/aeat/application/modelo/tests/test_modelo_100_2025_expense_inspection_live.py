@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
@@ -26,7 +27,7 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.categories import SpendingCategory
-from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+from ....domain.invoices import InvoiceCatalogue
 from ....domain.modelos import CalculationRevisionCatalogueRepository
 from ....domain.transactions import (
     BusinessClassification,

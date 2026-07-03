@@ -221,7 +221,7 @@ def invoices_pending(
 
 
 def _load_invoices(settings: Settings, *, bucket_id: str) -> InvoiceCatalogue | None:
-    from ...domain.invoices import InvoiceCatalogueRepository
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 
     del settings
     repository = InvoiceCatalogueRepository(bucket_id=bucket_id)

@@ -21,6 +21,7 @@ from ...core.time import now
 if TYPE_CHECKING:
     pass
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ...core.time import coerce_utc_aware
@@ -35,7 +36,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceCatalogueRepositoryProtocol
+from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
 from ...domain.modelos import (
     CalculationRevisionCatalogueRepository,

@@ -830,8 +830,9 @@ def ledger_link(
     ),
 ) -> None:
     """Bind a transaction to invoice / evidence references in one call."""
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...application.invoices import link_invoice_transaction_repositories
-    from ...domain.invoices import InvoiceCatalogueRepository, InvoiceLinkError
+    from ...domain.invoices import InvoiceLinkError
 
     if invoice_id is None and evidence_id is None:
         raise _bad(

@@ -8,14 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
 from ....domain.transactions import (
     RawProvenance,

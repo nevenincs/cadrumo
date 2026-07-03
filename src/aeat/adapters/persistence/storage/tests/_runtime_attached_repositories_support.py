@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from .....adapters.persistence.profile.justificante import JustificanteRepository
 from .....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -82,15 +83,7 @@ from .....domain.filing import (
     ModeloValueKind,
     make_amendment_id,
 )
-from .....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-    derive_invoice_id,
-)
+from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
 from .....domain.iva import InvoiceKind
 from .....domain.iva_compensation import IvaCompensationPeriodState, IvaCompensationReconciliationDecision
 from .....domain.justificante import Justificante

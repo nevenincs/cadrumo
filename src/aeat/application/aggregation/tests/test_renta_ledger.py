@@ -10,20 +10,14 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
 from ....domain.categories import SpendingCategory
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
+from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
 from ....domain.renta import RentaExpenseDirection
 from ....domain.transactions import (

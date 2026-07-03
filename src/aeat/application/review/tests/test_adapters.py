@@ -13,6 +13,12 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import (
+    _INVOICE_CATALOGUE_VERSION,
+    _INVOICE_NAMESPACE,
+    _INVOICE_OBJECT_KEY,
+    InvoiceCatalogueRepository,
+)
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....core import Period
 from ....core.classification import SensitivityClass
@@ -20,19 +26,7 @@ from ....core.config import Settings
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
 from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
-from ....domain.invoices._repository import (
-    _INVOICE_CATALOGUE_VERSION,
-    _INVOICE_NAMESPACE,
-    _INVOICE_OBJECT_KEY,
-)
+from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
 from ....domain.transactions import (
     BusinessClassification,

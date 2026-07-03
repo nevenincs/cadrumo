@@ -47,6 +47,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import Modelo
 from ...core.aggregation import BindingSourceKind
@@ -69,7 +70,6 @@ from ...domain.calculations.registry import (
     selector_as_dict,
     validated_text_input_casilla_ids,
 )
-from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,
