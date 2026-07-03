@@ -3124,8 +3124,9 @@ cli:
       reason_empty: Elutasítva. A --reason mezőnek rögzítenie kell, miért sorolja
         be ezt a tranzakciót. Adjon meg nem üres indokot, vagy hagyja el a --reason
         kapcsolót.
-      reason_help: Szabadszöveges indok, amelyet kézi besoroláskor a tranzakció jegyzeteibe,
-        vagy egy --reject döntéssel együtt rögzít.
+      reason_help: Szabadszöveges indok, amelyet kézi besoroláskor a tranzakció jegyzeteibe
+        és a besorolási döntés eredetadataiba (a ledger view parancsban látható) is
+        rögzít, vagy egy --reject döntéssel együtt rögzít.
       reject_apply_exclusive: 'A --reject nem kombinálható a --apply kapcsolóval:
         a reject elutasított javaslatot, az apply elfogadottat rögzít.'
       reject_help: A modell javaslatának kifejezett elutasítását naplóeseményként
@@ -3252,6 +3253,10 @@ cli:
       checked: Ellenőrzött tranzakciók
       child_id: Gyermektranzakció-azonosító
       children: Gyermek elemek
+      classification_confidence: Osztályozás megbízhatósága
+      classification_reason: Osztályozás indoklása
+      classified_at: Osztályozás időpontja
+      classified_by: Osztályozta
       counterparty: Szerződő fél
       counterparty_eu_member_state: EU-s szerződő fél
       created_event_id: Létrehozó bucket-esemény

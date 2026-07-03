@@ -3162,7 +3162,8 @@ cli:
       reason_empty: Rebutjat. --reason ha de registrar per què classifiques aquesta
         transacció. Indica un motiu no buit, o omet --reason.
       reason_help: Motiu en text lliure que es registra com a notes de la transacció
-        en una classificació manual, o amb una decisió --reject.
+        i com a motiu de procedència de la decisió de classificació (visible a ledger
+        view), o amb una decisió --reject.
       reject_apply_exclusive: '--reject no es pot combinar amb --apply: reject registra
         un suggeriment rebutjat, apply un d''acceptat.'
       reject_help: Registra un rebuig explícit del suggeriment del model com a esdeveniment
@@ -3290,6 +3291,10 @@ cli:
       checked: Moviments comprovats
       child_id: Id de transacció filla
       children: filles
+      classification_confidence: Confiança de la classificació
+      classification_reason: Motiu de la classificació
+      classified_at: Classificat el
+      classified_by: Classificat per
       counterparty: Contrapart
       counterparty_eu_member_state: Contrapart UE
       created_event_id: Esdeveniment bucket de creació
