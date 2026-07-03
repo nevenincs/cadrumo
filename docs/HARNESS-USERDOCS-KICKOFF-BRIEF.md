@@ -103,10 +103,17 @@ surface; **distil, never transcribe** — they are agent instructions, not prose
 - `_server.py`, `_tools.py`, `_toolsets.py`, `_annotations.py` — the tool surface
   itself (every CLI leaf as an MCP tool, mutability-annotated).
 
-**Distribution:** `packaging/mcpb/` builds the `.mcpb` Desktop Extension bundle a
-non-technical user installs into a compatible client (`manifest.json`,
-`build.py`). It ships **unsigned** today (installs with an "unverified
-publisher" warning) — document that honestly; do not imply a signed release.
+**Distribution (updated 2026-07-03, `claude-ecosystem-packaging` ADR):** the
+consumer path is the **Claude plugin** — generated from the harness source by
+`aeat app agent --layout plugin`, served from the marketplace tree under
+`packaging/marketplace/`, installable one-click across Claude Cowork / Claude
+Code / Claude Desktop. Its `.mcp.json` launches the server via
+`uvx --from aeat==<version> aeat-mcp` from the published PyPI package (slim
+~39 MB wheel; corpus source binaries ride the optional `aeat-data` companion
+via `aeat[corpus-sources]`). The old `.mcpb` bundle under `packaging/mcpb/` is
+a DEMOTED secondary — do not document it as the install path. See RELEASING.md
+for the publish sequencing and `docs/verification/claude-code-install-proof.md`
+for the live install proof and verified support matrix.
 
 **The capability catalogue** the assistant reads first is
 `aeat app contract --format json` — useful for the docs author to see the whole
@@ -200,9 +207,13 @@ tree in `docs/index.md`. Illustrative, not authorised:
 - **Explanation** — "What the AI assistant is (and isn't)": the operating-layer
   model (CLI computes, assistant operates, you file), the safety gates, the
   off-host privacy boundary, why it never files live. One page, understanding-only.
-- **How-to: connect a client** — install the `.mcpb` bundle (honest about
-  unsigned), or wire `aeat-mcp` into a client's MCP config; pick a persona via
-  `AEAT_MCP_PERSONA`; confirm the first-run privacy notice.
+- **How-to: connect a client** — install the aeat plugin from the marketplace
+  (Cowork/Desktop plugin browser or `claude plugin install`), choose a persona
+  in the plugin's configure step (the `persona` option feeds
+  `AEAT_MCP_PERSONA`); power users wire `uvx --from aeat==<version> aeat-mcp`
+  into any MCP client's config; confirm the first-run privacy notice. State the
+  verified support matrix honestly (see
+  `docs/verification/claude-code-install-proof.md`).
 - **How-to: situation itineraries** — a tight user-facing recipe per situation
   skill, led by `regularizar-atrasos` ("I'm behind — what have I missed?"),
   `cierre-trimestre`, `resumen-anual`. Each: what to ask the assistant, what it
