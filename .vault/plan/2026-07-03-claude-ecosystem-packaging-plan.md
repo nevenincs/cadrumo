@@ -112,9 +112,9 @@ Surface the plugin layout through the aeat app agent CLI and make claude plugin 
 
 Adopt the anthropic/requiresUserInteraction annotation on CONFIRM-tier MCP tools after verifying the mcp SDK annotation extension surface, making the human gate bypass-proof in Claude clients.
 
-- [ ] `W03.P09.S33` - Verify the mcp Python SDK annotation extension surface accepts the anthropic/requiresUserInteraction tool annotation before adopting it (frontier: confirm against the live mcp SDK and official docs); `src/aeat/entrypoints/mcp/_annotations.py`.
-- [ ] `W03.P09.S34` - Add the anthropic/requiresUserInteraction annotation to CONFIRM-tier (state-mutating) MCP tools alongside the existing destructiveHint matrix; `src/aeat/entrypoints/mcp/_annotations.py`.
-- [ ] `W03.P09.S35` - Test the requiresUserInteraction annotation is present on every CONFIRM-tier tool and absent on read-only tools; `src/aeat/entrypoints/mcp/tests/test_annotations.py`.
+- [x] `W03.P09.S33` - Verify the mcp Python SDK annotation extension surface accepts the anthropic/requiresUserInteraction tool annotation before adopting it (frontier: confirm against the live mcp SDK and official docs); `src/aeat/entrypoints/mcp/_annotations.py`.
+- [x] `W03.P09.S34` - Add the anthropic/requiresUserInteraction annotation to CONFIRM-tier (state-mutating) MCP tools alongside the existing destructiveHint matrix; `src/aeat/entrypoints/mcp/_annotations.py`.
+- [x] `W03.P09.S35` - Test the requiresUserInteraction annotation is present on every CONFIRM-tier tool and absent on read-only tools; `src/aeat/entrypoints/mcp/tests/test_annotations.py`.
 
 ## Wave `W04` - Marketplace and release lane
 
