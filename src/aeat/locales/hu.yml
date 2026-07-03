@@ -3699,9 +3699,7 @@ cli:
         sabado: Szombat
       show_suppressed_help: Elnyomott bejegyzések megjelenítése is a naptárban.
       to_help: A naptárablak záró dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).
-    calendar_local_filing_evidence_unavailable: Az attekinto naptar helyi bevallasi
-      bizonyiteka nem erheto el; a megjelenites megtagadva perzisztalt AEAT bevallasi
-      allapot nelkul.
+    calendar_local_filing_evidence_unavailable: 'A naptár helyi benyújtási bizonyítéka nem tölthető be; a naptár a határidőnaptárból származik, és egy kötelezettséget még esedékesként túljelezhet.'
     calendar_local_live_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
       élő eseménybizonyíték.
     calendar_local_modelo_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi

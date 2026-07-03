@@ -3766,9 +3766,7 @@ cli:
       show_suppressed_help: Mostrar también las entradas suprimidas (no aplicables)
         en el calendario.
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
-    calendar_local_filing_evidence_unavailable: La evidencia local de presentacion
-      del calendario no esta disponible; se rechaza el renderizado sin estado de presentacion
-      AEAT persistido.
+    calendar_local_filing_evidence_unavailable: 'No se pudo cargar la evidencia de presentación local del calendario; el calendario se deriva del calendario de plazos y puede sobrenotificar una obligación como aún pendiente.'
     calendar_local_live_events_unavailable: La evidencia local de eventos en vivo
       no esta disponible para esta fila del calendario.
     calendar_local_modelo_events_unavailable: La evidencia local de eventos de modelo
