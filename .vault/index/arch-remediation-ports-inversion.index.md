@@ -15,9 +15,17 @@ related:
   - '[[2026-07-02-arch-remediation-ports-inversion-W02-P05-S07]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W02-P06-S08]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W02-P07-S09]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W03-P08-S10]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W03-P08-S11]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W03-P08-S12]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W04-P09-S13]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W04-P09-S14]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W04-P09-S15]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W04-P09-S16]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W04-P09-S17]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W04-P09-S18]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W04-P10-S19]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W04-P10-S20]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-plan]]'
 ---
@@ -43,9 +51,17 @@ Auto-generated index of all documents tagged with `#arch-remediation-ports-inver
 - `2026-07-02-arch-remediation-ports-inversion-W02-P04-S06` - Relocate the invoices repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 - `2026-07-02-arch-remediation-ports-inversion-W02-P06-S08` - Verify the attachments domain pinned inventory at execution time and relocate its repository behind a port if a production domain-to-adapters edge exists, otherwise confirm the domain is already ports-compliant and remove any stale test-edge entries
 - `2026-07-02-arch-remediation-ports-inversion-W02-P07-S09` - Relocate the transactions repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
+- `2026-07-02-arch-remediation-ports-inversion-W03-P08-S10` - Relocate the filing repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
+- `2026-07-02-arch-remediation-ports-inversion-W03-P08-S11` - Relocate the filing complementaria repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
+- `2026-07-02-arch-remediation-ports-inversion-W03-P08-S12` - Relocate the filing runtime repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters runtime_repository entry
+- `2026-07-02-arch-remediation-ports-inversion-W04-P09-S13` - Relocate the modelos repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 - `2026-07-02-arch-remediation-ports-inversion-W04-P09-S14` - Relocate the modelos filing repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 - `2026-07-02-arch-remediation-ports-inversion-W04-P09-S15` - Relocate the modelos calculation repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
+- `2026-07-02-arch-remediation-ports-inversion-W04-P09-S16` - Relocate the modelos verification repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 - `2026-07-02-arch-remediation-ports-inversion-W04-P09-S17` - Relocate the modelos runtime repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters runtime_repository entry
+- `2026-07-02-arch-remediation-ports-inversion-W04-P09-S18` - Relocate the modelos participation index behind a port in one atomic commit after verifying its pinned edge inventory at execution time, preserving the derived-and-rebuildable invariant
+- `2026-07-02-arch-remediation-ports-inversion-W04-P10-S19` - Assert zero production domain-to-adapters pinned entries remain in the ledger via the count-ratchet gate landed by the gates-ratchet campaign
+- `2026-07-02-arch-remediation-ports-inversion-W04-P10-S20` - Declare the domain-not-adapters layer contract exhaustively rather than by exception list now that the seam is at zero
 
 ### plan
 
