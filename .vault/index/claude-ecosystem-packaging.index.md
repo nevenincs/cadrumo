@@ -20,6 +20,11 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S12]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P04-S13]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P04-S14]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P05-S15]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P05-S16]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P05-S17]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P05-S18]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W02-P05-S19]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S23]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S24]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S25]]'
@@ -65,6 +70,11 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 - `2026-07-03-claude-ecosystem-packaging-W02-P03-S12` - Keep the _data size-budget gate meaningful per distribution after the split so the budget is not evaded by moving bytes to the companion
 - `2026-07-03-claude-ecosystem-packaging-W02-P04-S13` - Add a corpus-binary resolution seam that resolves a _data/corpus path from the aeat tree first, then the aeat_data companion package root
 - `2026-07-03-claude-ecosystem-packaging-W02-P04-S14` - Test the seam resolves a corpus binary identically whether it lives under the aeat tree or the aeat_data companion root
+- `2026-07-03-claude-ecosystem-packaging-W02-P05-S15` - Give verify_source_file a companion-aware absent branch: present binary stays byte-exact hash-enforced, absent-but-companion-declared binary returns an accumulable advisory rather than hard-failing
+- `2026-07-03-claude-ecosystem-packaging-W02-P05-S16` - Make verify_source_catalogue accumulate absent companion binaries into one loud advisory naming the missing set and the aeat[corpus-sources] install hint
+- `2026-07-03-claude-ecosystem-packaging-W02-P05-S17` - Make the four aeat app registry verification verbs refuse instructively when the companion is required and absent
+- `2026-07-03-claude-ecosystem-packaging-W02-P05-S18` - Add an anti-tautology test that a corrupted PRESENT corpus binary still hard-fails the byte-exact hash gate
+- `2026-07-03-claude-ecosystem-packaging-W02-P05-S19` - Add an anti-tautology test that an absent companion binary surfaces a loud advisory and is never silently accepted
 - `2026-07-03-claude-ecosystem-packaging-W03-P07-S23` - Add a plugin layout target that emits .claude-plugin/plugin.json with a kebab-case name, defaultEnabled false, an author object and the version read from installed package metadata
 - `2026-07-03-claude-ecosystem-packaging-W03-P07-S24` - Emit the plugin skills/ tree (SKILL.md plus reference material) from the single authored harness source
 - `2026-07-03-claude-ecosystem-packaging-W03-P07-S25` - Emit the plugin agents/ tree mapping persona frontmatter to Claude-native fields (tools/disallowedTools), never the non-Claude mode: field
