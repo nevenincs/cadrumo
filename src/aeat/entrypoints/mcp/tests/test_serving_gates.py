@@ -51,6 +51,29 @@ async def _accept_confirmation(
     return mcp_types.ElicitResult(action="accept", content={"confirm": True})
 
 
+async def _decline_confirmation(
+    context: object,
+    params: object,
+) -> mcp_types.ElicitResult:
+    return mcp_types.ElicitResult(action="decline", content=None)
+
+
+async def _cancel_confirmation(
+    context: object,
+    params: object,
+) -> mcp_types.ElicitResult:
+    return mcp_types.ElicitResult(action="cancel", content=None)
+
+
+async def _accept_but_unconfirmed(
+    context: object,
+    params: object,
+) -> mcp_types.ElicitResult:
+    # An "accept" whose confirm flag is false: the malformed / half-hearted
+    # confirmation the degradation matrix must still treat as a refusal.
+    return mcp_types.ElicitResult(action="accept", content={"confirm": False})
+
+
 async def _list_tool_names(persona: AgentPersona | None) -> set[str]:
     server = build_server(build_tool_descriptors(), persona=persona)
     async with connect(server) as session:
@@ -165,6 +188,43 @@ def test_telemetry_records_payload_free_rows(tmp_path: Path) -> None:
     assert _UNGROUNDED_AMOUNT not in raw
     assert "command_families" not in raw
     assert "manifest_version" not in raw
+
+
+@pytest.mark.parametrize(
+    ("elicit", "outcome_token"),
+    [
+        (_decline_confirmation, "refused_declined"),
+        (_cancel_confirmation, "refused_cancelled"),
+        (_accept_but_unconfirmed, "refused_not_confirmed"),
+    ],
+)
+def test_confirm_elicitation_refuses_over_the_wire_when_not_confirmed(
+    elicit: object,
+    outcome_token: str,
+) -> None:
+    # e2e over the memory-transport wire: a handoff verb (leaf ``export``) routes
+    # to the CONFIRM elicitation tier, the server elicits the client, and the
+    # client answers with a non-proceed action. The gate must refuse BEFORE any
+    # dispatch — decline, cancel, and accept-without-confirm all fail closed.
+    result = _run(_call(None, _EXPORT_TOOL, {}, elicit=elicit))
+    assert result.isError
+    text = "\n".join(_texts(result))
+    assert "modelo.export" in text
+    # The refusal is the not-confirmed message carrying the concrete decision,
+    # not a dispatched CLI envelope (a refusal is a single content block).
+    assert outcome_token in text
+    assert len(result.content) == 1
+
+
+def test_confirm_elicitation_records_the_declined_route_in_telemetry(tmp_path: Path) -> None:
+    # The declined round-trip is telemetered payload-free with the route label
+    # carrying the decision, proving the gate fired (not a silent pass).
+    writer = SessionTelemetryWriter(session_id="confirm-decline-test", directory=tmp_path)
+    _run(_call(None, _EXPORT_TOOL, {}, elicit=_decline_confirmation, telemetry=writer))
+    records = read_session_records(writer.path)
+    assert len(records) == 1
+    assert records[0].is_error is True
+    assert "refused_declined" in records[0].route
 
 
 def test_meta_execute_fail_closes_a_handoff_tier_confirm() -> None:
