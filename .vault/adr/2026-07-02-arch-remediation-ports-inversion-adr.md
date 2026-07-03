@@ -142,3 +142,35 @@ a file CI reads, not a claim in a status report.
   zero, the two remaining deliberate deviations (application→adapters
   wiring, core resource loaders) are the only sanctioned holes, each
   ADR-documented.
+
+## Post-close honesty review (2026-07-03)
+
+The campaign-close honesty review (an independent pass complementary to the
+filing-close audit of the same date) returned PASS: the deliverable — zero
+production `domain → adapters.persistence` static import coupling — is sound and
+sealed (`test_zero_production_domain_to_adapters_edges`, the `domain-not-adapters`
+forbidden contract, and the grimp runtime graph all confirm zero). Two scope
+precisions are recorded so the claim is not overstated:
+
+- The "zero domain→adapters" framing is scoped to STATIC import edges. The seal
+  reads the import-linter / grimp graph, which cannot see dynamic string-target
+  imports. One sanctioned dynamic `domain → adapters.inbound` edge remains, out
+  of this seam's scope by design: the registry extraction-parser validation
+  (`domain.calculations.registry._validate_extraction_profiles`) dynamically
+  imports the `adapters.inbound.{borrador,declaracion}` parser modules by
+  public-facade string target to confirm registry `parser =` dotted paths
+  resolve — sanctioned per `dynamic-import-targets-the-public-facade`, and
+  targeting `adapters.inbound` rather than the `adapters.persistence` D2 seam.
+  Inverting it via a domain-owned parser-resolver injection point (the
+  `register_cross_domain_snapshot_check` Protocol pattern already used for the
+  snapshot cross-check) is a candidate follow-up, not a D2 blocker.
+- F2 (deferred, peer-owned): the shared `test_importlinter_ledger.py`
+  application→adapters ratchet is red at HEAD from an unrelated `#407` commit
+  that added an `application.diagnostics_run_health → aeat.adapters.**` wildcard
+  ignore without bumping the baseline. Out of ports-inversion scope per
+  `full-tree-gate-must-distinguish-owner`; handed to the `#407` owner to
+  de-wildcard the pin and bump the baseline.
+
+The literal-purity follow-up (relocating the `SecureObjectWrite` boundary DTO to
+`core.secure_object_write`) closed the last STATIC TYPE_CHECKING
+`domain → adapters` edge; grimp production `domain → adapters` edges are now zero.
