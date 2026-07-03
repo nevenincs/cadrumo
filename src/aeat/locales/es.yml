@@ -2467,6 +2467,7 @@ cli:
           list_help: Listar los ámbitos de apoderado aceptados
         status_help: Mostrar la configuración de apoderado activa
       certificate:
+        check_help: cli.config.auth.certificate.check_help
         help: Gestionar orígenes de certificado con nombre para el proveedor de autenticación
           por certificado
         list_help: Listar todos los orígenes de certificado registrados
@@ -2875,6 +2876,7 @@ cli:
         create_name_help: Nombre del sandbox.
         discard_active_profile: El sandbox %{name} es el perfil activo; cambie a otro
           perfil antes de descartarlo.
+        discard_dry_run_help: 'Muestra una vista previa de lo que eliminaria el descarte sin eliminar nada.'
         discard_help: Elimina permanentemente un sandbox.
         discard_name_help: Nombre del sandbox (sin el prefijo).
         discard_not_a_sandbox: '%{name} no es un sandbox; la superficie de sandbox
@@ -2885,6 +2887,11 @@ cli:
         help: Ejecuta experimentos en un bucket aislado y descartable que nunca afecta
           al estado del perfil principal.
         list_help: Lista todos los sandboxes.
+        prune_dry_run_help: 'Muestra una vista previa de que sandboxes se descartarian sin descartarlos.'
+        prune_help: 'Descarta todos los sandboxes a la vez.'
+        prune_requires_yes: 'Descartar todos los sandboxes es destructivo. Vuelve a ejecutar ''aeat config profile sandbox prune --yes'' para confirmar.'
+        prune_skipped_active_info: 'Se omitio el sandbox activo %{names}; cambia a otro perfil y vuelve a ejecutar ''aeat config profile sandbox prune --yes'' para descartarlo.'
+        prune_yes_help: 'Confirma el descarte de todos los sandboxes.'
         source_not_found: No existe ningún perfil activo llamado %{name} para copiar
           al sandbox.
         unknown_sandbox: 'Sandbox desconocido: %{name}. Ejecute ''aeat config profile

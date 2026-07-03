@@ -252,6 +252,7 @@ from ._certificate_sources import (
     CertificateSourceNotFoundError as StateCertificateSourceNotFoundError,
 )
 from ._certificate_sources_operator import (
+    check_operator_certificate_sources,
     list_operator_certificate_sources,
     register_operator_certificate_source,
     remove_operator_certificate_source,
@@ -295,6 +296,8 @@ from ._operator_results import (
     AuthProvidersReport,
     AuthStatusResult,
     AuthTestResult,
+    CertificateSourceCheckEntry,
+    CertificateSourceCheckReport,
     CertificateSourceListResult,
     CertificateSourceMutationResult,
     CertificateSourceNotFoundError,
@@ -353,6 +356,8 @@ __all__ = [
     "AuthStatusResult",
     "AuthTestResult",
     "AuthenticatedAeatSessionResult",
+    "CertificateSourceCheckEntry",
+    "CertificateSourceCheckReport",
     "CertificateSourceListResult",
     "CertificateSourceMutationResult",
     "CertificateSourceNoActiveBucketError",
@@ -371,6 +376,7 @@ __all__ = [
     "auth_acquisition_lock_path",
     "auth_lock_ttl_seconds",
     "build_live_auth_preflight_report",
+    "check_operator_certificate_sources",
     "clear_auth_acquisition_lock",
     "clear_operator_auth",
     "configure_operator_auth",

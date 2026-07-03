@@ -2296,6 +2296,7 @@ cli:
           list_help: List accepted apoderado scopes
         status_help: Show active apoderado configuration
       certificate:
+        check_help: cli.config.auth.certificate.check_help
         help: cli.config.auth.certificate.help
         list_help: cli.config.auth.certificate.list_help
         register:
@@ -2673,6 +2674,7 @@ cli:
         create_name_help: Sandbox name.
         discard_active_profile: Sandbox %{name} is the active profile; switch to another
           profile before discarding it.
+        discard_dry_run_help: 'Preview what the discard would remove without removing anything.'
         discard_help: Permanently erase a sandbox bucket.
         discard_name_help: Sandbox name (without the prefix).
         discard_not_a_sandbox: '%{name} is not a sandbox; the sandbox surface refuses
@@ -2683,6 +2685,11 @@ cli:
         help: Run experiments in an isolated, discardable bucket that never touches
           main profile state.
         list_help: List every sandbox bucket.
+        prune_dry_run_help: 'Preview which sandboxes would be discarded without discarding them.'
+        prune_help: 'Discard every sandbox bucket at once.'
+        prune_requires_yes: 'Pruning every sandbox is destructive. Re-run ''aeat config profile sandbox prune --yes'' to confirm.'
+        prune_skipped_active_info: 'Skipped the active sandbox %{names}; switch to another profile and re-run ''aeat config profile sandbox prune --yes'' to discard it.'
+        prune_yes_help: 'Confirm discarding every sandbox.'
         source_not_found: No live profile named %{name} to seed the sandbox from.
         unknown_sandbox: 'Unknown sandbox: %{name}. Run ''aeat config profile sandbox
           list'' to see registered sandboxes.'

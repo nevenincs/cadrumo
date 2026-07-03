@@ -8,6 +8,14 @@ listing, selecting, or removing a named certificate source is exposed
 through ``aeat config auth certificate ...`` with identical safety
 guarantees.
 
+:func:`check_operator_certificate_sources` extends the registry with
+expiry/rotation awareness: it re-runs the same local PKCS#12 health
+probe the single-certificate ``auth test`` path already performs
+(:mod:`application.auth._operator_probes`) against every registered
+source rather than only the active ``certificate_path``, so a gestor
+managing several apoderado certificates gets a renewal reminder for
+each one individually.
+
 See Also:
     :mod:`application.auth._certificate_sources`
         Pure :class:`application.workflow.WorkflowState` transformations
@@ -16,6 +24,10 @@ See Also:
         Sibling operator verb configuring the active auth *provider*;
         this module manages named certificate *sources* within the
         certificate provider.
+    :func:`application.auth.probe_provider_configuration`
+        Sibling single-certificate expiry probe this module's
+        :func:`check_operator_certificate_sources` reuses per named
+        source.
 """
 
 from __future__ import annotations
@@ -39,6 +51,8 @@ from ._certificate_sources import (
 from ._operator_results import (
     AuthConfigureDanglingActiveProfileError,
     AuthConfigureNoActiveBucketError,
+    CertificateSourceCheckEntry,
+    CertificateSourceCheckReport,
     CertificateSourceListResult,
     CertificateSourceMutationResult,
     CertificateSourceNotFoundError,
@@ -46,6 +60,7 @@ from ._operator_results import (
 )
 
 if TYPE_CHECKING:
+    from ...core.config import Settings
     from ...domain.buckets import BucketEventType
     from ..workflow import WorkflowState
 
@@ -288,7 +303,63 @@ def remove_operator_certificate_source(*, name: str) -> CertificateSourceMutatio
     return CertificateSourceMutationResult(name=name.strip(), removed=removed)
 
 
+def check_operator_certificate_sources(*, settings: Settings | None = None) -> CertificateSourceCheckReport:
+    """Classify expiry/rotation health for every registered certificate source.
+
+    Reuses the same local PKCS#12 probe
+    (:func:`application.auth._operator_probes._probe_certificate_bundle`)
+    the single-certificate ``auth test`` path already runs — parsing each
+    source's bundle with the shared
+    :attr:`core.config.Settings.aeat_certificate_password_secret`
+    passphrase and classifying ``ok`` / ``expiring`` / ``expired`` /
+    ``corrupt`` / ``unreadable`` / ``file_missing`` — but applies it to
+    every named source in the registry rather than only the active
+    ``certificate_path``. A gestor with several apoderado certificates
+    therefore gets one renewal reminder per entity, not only for
+    whichever certificate happens to be selected.
+
+    This is a pure read: it does not require an active profile bucket
+    beyond what loading workflow state needs, and it never mutates
+    state or emits a bucket event.
+
+    Returns:
+        A :class:`application.auth.CertificateSourceCheckReport` with one
+        :class:`application.auth.CertificateSourceCheckEntry` per
+        registered source, sorted by name (matching
+        :func:`list_operator_certificate_sources`).
+    """
+    from ...core.config import load_settings
+    from ..workflow import workflow_state_repository
+    from ._operator_probes import ProviderProbeResult, _probe_certificate_bundle
+
+    resolved_settings = settings or load_settings()
+    state = workflow_state_repository().load()
+    active_record = _active_certificate_source(state)
+    active_name = active_record.name if active_record is not None else None
+    sources = list_certificate_sources(state)
+
+    entries: list[CertificateSourceCheckEntry] = []
+    has_warnings = False
+    for record in sources:
+        outcome = _probe_certificate_bundle(record.certificate_path, settings=resolved_settings)
+        if outcome.result in (ProviderProbeResult.EXPIRING, ProviderProbeResult.EXPIRED):
+            has_warnings = True
+        entries.append(
+            CertificateSourceCheckEntry(
+                name=record.name,
+                certificate_path=record.certificate_path,
+                friendly_name=record.friendly_name or "",
+                active=record.name == active_name,
+                result=str(outcome.result),
+                summary=outcome.summary,
+                days_until_expiry=outcome.days_until_expiry,
+            ),
+        )
+    return CertificateSourceCheckReport(entries=tuple(entries), has_warnings=has_warnings)
+
+
 __all__ = [
+    "check_operator_certificate_sources",
     "list_operator_certificate_sources",
     "register_operator_certificate_source",
     "remove_operator_certificate_source",

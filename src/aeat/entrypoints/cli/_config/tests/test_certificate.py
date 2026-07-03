@@ -2,21 +2,30 @@
 
 Exercises the real Typer command tree against a real profile bucket and
 real encrypted secure-object storage — no mocks. See GitHub issue #591
-(multi-cert source resolution slice).
+(multi-cert source resolution and expiry/rotation awareness slices).
 """
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.serialization import pkcs12
+from cryptography.x509.oid import NameOID
 
 from .....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+from .....core.config import override_settings
 from .....tests.cli_runner import invoke_typer_app
 from .....tests.secure_sql import isolated_profile_storage_root
 from ... import app as root_app
 from ..._errors import CliRefusedBoundaryError
 from ..__init__ import app as config_app
+
+_CERT_SECRET = "correct-horse-battery-staple"  # noqa: S105 - synthetic test fixture, not a secret
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -170,3 +179,132 @@ def test_certificate_remove_unregistered_name_is_a_no_op(tmp_path: Path) -> None
             )
         assert result.exit_code == 0, f"remove of unregistered name must not error: {result.output}"
         assert "removed\tFalse" in result.output
+
+
+# ── certificate check (expiry/rotation awareness, GitHub issue #591) ────────
+
+
+def _build_pkcs12(
+    tmp_path: Path,
+    *,
+    not_valid_before: datetime,
+    not_valid_after: datetime,
+    name: str,
+) -> Path:
+    """Generate a real self-signed PKCS#12 bundle with the given validity window."""
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = issuer = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
+            x509.NameAttribute(NameOID.COMMON_NAME, name),
+        ],
+    )
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(not_valid_before)
+        .not_valid_after(not_valid_after)
+        .sign(key, hashes.SHA256())
+    )
+    pfx_bytes = pkcs12.serialize_key_and_certificates(
+        name=name.encode("utf-8"),
+        key=key,
+        cert=cert,
+        cas=None,
+        encryption_algorithm=serialization.BestAvailableEncryption(_CERT_SECRET.encode("utf-8")),
+    )
+    out = tmp_path / f"{name}.p12"
+    out.write_bytes(pfx_bytes)
+    return out
+
+
+def test_certificate_check_reports_ok_and_expiring_per_source(tmp_path: Path) -> None:
+    """``certificate check`` classifies each registered source independently.
+
+    A gestor with one valid certificate and one certificate inside the
+    renewal window must see both verdicts in one report, with a
+    non-blocking warning naming the expiring source — never silently
+    masked by the valid one.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        now = datetime.now(UTC)
+        valid_cert = _build_pkcs12(
+            tmp_path,
+            not_valid_before=now - timedelta(days=1),
+            not_valid_after=now + timedelta(days=300),
+            name="personal",
+        )
+        expiring_cert = _build_pkcs12(
+            tmp_path,
+            not_valid_before=now - timedelta(days=1),
+            not_valid_after=now + timedelta(days=10),
+            name="apoderado-acme",
+        )
+
+        with activate_master_key_provider(get_master_key_provider()):
+            invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "register", "--name", "personal", "--file", str(valid_cert)],
+            )
+            invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "register",
+                    "--name",
+                    "apoderado-acme",
+                    "--file",
+                    str(expiring_cert),
+                ],
+            )
+            with override_settings(aeat_certificate_password_secret=_CERT_SECRET):
+                checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
+
+        assert checked.exit_code == 0, f"check failed: {checked.output}"
+        assert "personal" in checked.output
+        assert "\tok\t" in checked.output
+        assert "apoderado-acme" in checked.output
+        assert "\texpiring\t" in checked.output
+        assert "WARNING\tapoderado-acme" in checked.output
+
+
+def test_certificate_check_reports_expired_certificate(tmp_path: Path) -> None:
+    """``certificate check`` classifies an already-lapsed certificate as expired, never corrupt."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        now = datetime.now(UTC)
+        expired_cert = _build_pkcs12(
+            tmp_path,
+            not_valid_before=now - timedelta(days=400),
+            not_valid_after=now - timedelta(days=5),
+            name="expired-cert",
+        )
+
+        with activate_master_key_provider(get_master_key_provider()):
+            invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "register", "--name", "expired-cert", "--file", str(expired_cert)],
+            )
+            with override_settings(aeat_certificate_password_secret=_CERT_SECRET):
+                checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
+
+        assert checked.exit_code == 0, f"check failed: {checked.output}"
+        assert "\texpired\t" in checked.output
+        assert "WARNING\texpired-cert" in checked.output
+
+
+def test_certificate_check_with_no_registered_sources_reports_none(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+
+        with activate_master_key_provider(get_master_key_provider()):
+            result = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
+
+        assert result.exit_code == 0, f"check failed: {result.output}"
+        assert "sources\t<none>" in result.output

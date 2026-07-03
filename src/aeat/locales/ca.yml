@@ -2439,6 +2439,7 @@ cli:
           list_help: List accepted apoderado scopes
         status_help: Show active apoderado configuration
       certificate:
+        check_help: cli.config.auth.certificate.check_help
         help: Gestionar orígens de certificat amb nom per al proveïdor d'autenticació
           per certificat
         list_help: Llistar tots els orígens de certificat registrats
@@ -2842,6 +2843,7 @@ cli:
         create_name_help: Nom del sandbox.
         discard_active_profile: El sandbox %{name} és el perfil actiu; canvieu a un
           altre perfil abans de descartar-lo.
+        discard_dry_run_help: 'Mostra una previsualitzacio del que eliminaria el descart sense eliminar res.'
         discard_help: Elimina permanentment un sandbox.
         discard_name_help: Nom del sandbox (sense el prefix).
         discard_not_a_sandbox: '%{name} no és un sandbox; la superfície de sandbox
@@ -2852,6 +2854,11 @@ cli:
         help: Executa experiments en un bucket aïllat i descartable que mai afecta
           l'estat del perfil principal.
         list_help: Llista tots els sandboxes.
+        prune_dry_run_help: 'Mostra una previsualitzacio de quins sandboxes es descartarien sense descartar-los.'
+        prune_help: 'Descarta tots els sandboxes alhora.'
+        prune_requires_yes: 'Descartar tots els sandboxes es destructiu. Torna a executar ''aeat config profile sandbox prune --yes'' per confirmar.'
+        prune_skipped_active_info: 'S''ha omes el sandbox actiu %{names}; canvia a un altre perfil i torna a executar ''aeat config profile sandbox prune --yes'' per descartar-lo.'
+        prune_yes_help: 'Confirma el descart de tots els sandboxes.'
         source_not_found: No existeix cap perfil actiu anomenat %{name} per copiar
           al sandbox.
         unknown_sandbox: 'Sandbox desconegut: %{name}. Executeu ''aeat config profile
