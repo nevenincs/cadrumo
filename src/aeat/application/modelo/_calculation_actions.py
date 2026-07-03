@@ -49,6 +49,7 @@ from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import Modelo
 from ...core.aggregation import BindingSourceKind
@@ -73,7 +74,6 @@ from ...domain.calculations.registry import (
 )
 from ...domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     Modelo349OperadorRow,

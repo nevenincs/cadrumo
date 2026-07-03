@@ -16,6 +16,7 @@ import pytest
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.errors import StorageValidationError
@@ -49,7 +50,6 @@ from ....domain.iva import InvoiceKind
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ModeloCode,
     WorkUnit,

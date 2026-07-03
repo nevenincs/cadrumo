@@ -20,6 +20,7 @@ Submodules
    aeat.adapters.persistence.profile.inventory
    aeat.adapters.persistence.profile.invoices
    aeat.adapters.persistence.profile.justificante
+   aeat.adapters.persistence.profile.modelos_calculation
    aeat.adapters.persistence.profile.modelos_filing
    aeat.adapters.persistence.profile.modelos_verification_reports
    aeat.adapters.persistence.profile.modelos_work_units

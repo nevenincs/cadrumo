@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistryModeloObservation
@@ -20,7 +21,6 @@ from ....domain.deadlines import (
 )
 from ....domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ExternalEvidenceKind,
     ModeloRecordStatus,

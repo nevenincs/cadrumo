@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
@@ -25,7 +26,6 @@ from ....core import Period
 from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ModeloCode,
     WorkUnit,

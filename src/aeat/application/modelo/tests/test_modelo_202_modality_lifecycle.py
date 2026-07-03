@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -23,7 +24,6 @@ from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ExternalEvidenceKind,
     WorkUnit,

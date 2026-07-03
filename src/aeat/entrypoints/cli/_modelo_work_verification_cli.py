@@ -16,6 +16,7 @@ from typing import Annotated, Any
 
 import typer
 
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...application.calculations import (
@@ -47,10 +48,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepository,
-    CalculationRevisionState,
-)
+from ...domain.modelos import CalculationRevisionState
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_payloads import (
     CrossPeriodCleanStatePayload,

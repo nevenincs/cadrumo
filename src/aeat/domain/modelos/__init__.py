@@ -71,7 +71,7 @@ See Also:
 
 from __future__ import annotations
 
-from ._calculation_repository import CalculationRevisionCatalogueRepository, upsert_calculation_revision
+from ._calculation_repository import upsert_calculation_revision
 from ._calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
@@ -164,7 +164,6 @@ __all__ = (
     "CalculationRevision",
     "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",
-    "CalculationRevisionCatalogueRepository",
     "CalculationRevisionCatalogueRepositoryProtocol",
     "CalculationRevisionId",
     "CalculationRevisionState",

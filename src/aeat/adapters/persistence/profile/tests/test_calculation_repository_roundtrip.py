@@ -29,30 +29,30 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import SensitivityClass
-from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.registry import (
+from .....domain.calculations.registry import (
     CasillaId,
     CasillaObservation,
     RegistryCalculationUnresolvedOutcome,
     RegistryUnresolvedOutcomeReason,
     validated_casilla_id,
 )
-from .._calculation_repository import (
-    _CALCULATION_CATALOGUE_VERSION,
-    _CALCULATION_NAMESPACE,
-    _CALCULATION_OBJECT_KEY,
-    CalculationRevisionCatalogueRepository,
-    CalculationRevisionPersistenceError,
-)
-from .._calculation_revision import (
+from .....domain.modelos._calculation_repository import CalculationRevisionPersistenceError
+from .....domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from .....tests.secure_sql import isolated_runtime_profile
+from ...storage import SensitivityClass
+from ..modelos_calculation import (
+    _CALCULATION_CATALOGUE_VERSION,
+    _CALCULATION_NAMESPACE,
+    _CALCULATION_OBJECT_KEY,
+    CalculationRevisionCatalogueRepository,
+)
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "modelo-runtime"
 _CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 45, 0, tzinfo=UTC)
@@ -245,7 +245,7 @@ def test_calculation_revision_catalogue_wrong_inner_classification_is_localized(
 ) -> None:
     """A corrupted envelope classification raises a translated persistence error."""
 
-    from ....adapters.persistence.storage import Envelope
+    from ...storage import Envelope
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[CalculationRevisionCatalogue](
@@ -279,7 +279,7 @@ def test_calculation_revision_catalogue_unsupported_storage_version_is_localized
 ) -> None:
     """A future inner envelope schema version raises a translated persistence error."""
 
-    from ....adapters.persistence.storage import Envelope
+    from ...storage import Envelope
 
     stored_schema_version = _CALCULATION_CATALOGUE_VERSION + 1
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:

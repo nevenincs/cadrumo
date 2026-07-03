@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -20,11 +21,7 @@ from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogueRepository,
-    ExternalEvidenceKind,
-)
+from ....domain.modelos import CalculationRevision, ExternalEvidenceKind
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import (
     CalculationObservationRepository,

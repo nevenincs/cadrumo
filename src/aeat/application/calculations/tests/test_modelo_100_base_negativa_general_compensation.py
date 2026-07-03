@@ -42,6 +42,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
@@ -52,10 +53,7 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos import (
-    CalculationRevisionCatalogueRepository,
-    ModeloVerificationFindingKind,
-)
+from ....domain.modelos import ModeloVerificationFindingKind
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile

@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ...core.time import coerce_utc_aware
@@ -39,7 +40,6 @@ from ...domain.buckets import (
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
 from ...domain.modelos import (
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     WorkUnitCatalogueRepositoryProtocol,

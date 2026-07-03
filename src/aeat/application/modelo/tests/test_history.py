@@ -10,15 +10,13 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.buckets import BucketEventObjectType, BucketEventType
-from ....domain.modelos import (
-    CalculationRevisionCatalogueRepository,
-    ModeloError,
-)
+from ....domain.modelos import ModeloError
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository

@@ -198,11 +198,11 @@ def test_calculation_revision_observations_survive_encrypted_storage(
     drop them silently.
     """
 
+    from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...calculations.registry import CasillaObservation
     from ...modelos import (
         CalculationRevision,
         CalculationRevisionCatalogue,
-        CalculationRevisionCatalogueRepository,
         CalculationRevisionState,
         derive_calculation_revision_id,
     )

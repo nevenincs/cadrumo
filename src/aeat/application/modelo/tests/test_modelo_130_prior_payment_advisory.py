@@ -40,6 +40,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
@@ -48,7 +49,6 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
-from ....domain.modelos import CalculationRevisionCatalogueRepository
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

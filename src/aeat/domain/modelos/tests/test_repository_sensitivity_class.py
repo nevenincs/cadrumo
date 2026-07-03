@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _REPOSITORY_SOURCES: tuple[tuple[str, Path], ...] = (
     (
         "CalculationRevisionCatalogueRepository",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "modelos" / "_calculation_repository.py",
+        PROJECT_ROOT / "src" / "aeat" / "adapters" / "persistence" / "profile" / "modelos_calculation.py",
     ),
     (
         "ModeloRecordCatalogueRepository",

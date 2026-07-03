@@ -12,6 +12,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period
@@ -26,10 +27,7 @@ from ....domain.calculations.registry import (
     RelationId,
     validated_casilla_id,
 )
-from ....domain.modelos import (
-    CalculationRevisionCatalogueRepository,
-    derive_calculation_revision_id,
-)
+from ....domain.modelos import derive_calculation_revision_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile

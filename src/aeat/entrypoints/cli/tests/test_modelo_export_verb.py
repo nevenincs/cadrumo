@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo import resolve_registry_revision_for_work_target
@@ -23,7 +24,6 @@ from ....application.workflow import workflow_state_repository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ModeloCode,
     WorkUnit,
