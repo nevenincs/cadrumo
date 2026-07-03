@@ -222,7 +222,7 @@ and legitimately emits internal carries the DR record omits (e.g. Modelo 130
 `saldo-negativo-fin-periodo`, present in the workbook and manifest but not
 representable in the `.boe`). Locked by `test_workbook_boe_consistency.py`.
 
-### workbook-303-modulos-gap | medium | the workbook cannot render Modelo 303 2025 módulos (régimen simplificado)
+### workbook-303-modulos-gap | medium | RESOLVED — the workbook now renders Modelo 303 2025 módulos
 
 The consistency slice surfaced a real, pre-existing workbook regression: the Modelo
 303 2025 revision's módulos-IVA coefficients are a `keyed_bracket_table` parameter
@@ -232,13 +232,22 @@ workbook engine supports neither. `build_export_plan("303")` failed two ways: (1
 before its non-scalar skip-check, crashing the whole export -- fixed in
 `e00f0d800c` by skipping non-scalar types before scalar resolution; and (2) the
 keyed-lookup formula cannot be translated to a spreadsheet formula
-(`TranslationError` in `_translator`), which remains. So the 303 workbook parity
-tests (`test_modelo_export_parity.py[303-*]`) are red on the módulos-rendering gap,
-NOT on the crash, and 303 is excluded from the consistency lock. Full 303 workbook
-support (keyed-table materialisation as a workbook lookup + keyed-lookup formula
-translation) is a separate calc-sheets feature slice. The fichero-BOE side already
-files and value-checks 303 correctly (validated by the roundtrip test), so this gap
-is workbook-only and does not affect the operator's uploadable `.boe`.
+(`TranslationError` in `_translator`). RESOLUTION (`7e5900da84`): the second failure
+was NOT a missing keyed-lookup translation feature but a transitive-exclusion bug.
+The engine already omits untranslatable `internal_only` advisory casillas from the
+export (`_untranslatable_internal_only_casillas`), but it probed translatability
+against a layout with every casilla present, so it caught
+`modulos-iva-cuota-devengada` (custom op, untranslatable regardless of layout) but
+missed `modulos-iva-cuota-derivada` (a `max` over it) -- which only becomes
+untranslatable once the dependency's cell is excluded. `_formula_cells` then crashed
+translating that `max`'s reference to a missing cell. Computing the exclusion to a
+fixpoint (rebuild the probe layout with the exclusions found so far, re-check until
+none newly fails) omits both módulos casillas, both `internal_only` advisory-support
+figures the official DR record does not file. The 303 workbook now builds and passes
+the parity gate, and 303 is included in the workbook<->fichero-BOE consistency lock.
+The broader calc-sheets suite (75 tests) stays green. No keyed-table workbook
+rendering was needed -- the design already intends these casillas to be omitted; the
+bug was only that the omission was not transitive.
 
 ## Recommendations
 
