@@ -125,8 +125,8 @@ Stand up the distribution surface: a dedicated marketplace repository layout wit
 Define the marketplace repository layout and marketplace.json, and have the generator emit the plugin tree the marketplace serves.
 
 - [x] `W04.P10.S36` - Define the marketplace repository layout and a .claude-plugin/marketplace.json with name, owner and a plugins[] entry sourcing the aeat plugin tree (verify the marketplace.json schema against live official docs at execution time); `packaging/marketplace/marketplace.json`.
-- [ ] `W04.P10.S37` - Have the plugin generator emit the marketplace-served plugin tree so marketplace and plugin cannot drift; `src/aeat/agent/_workspace.py`.
-- [ ] `W04.P10.S38` - Test the generator emits a schema-shaped marketplace tree whose plugins[] entry resolves to the emitted plugin; `src/aeat/agent/tests/test_marketplace_generation.py`.
+- [x] `W04.P10.S37` - Have the plugin generator emit the marketplace-served plugin tree so marketplace and plugin cannot drift; `src/aeat/agent/_workspace.py`.
+- [x] `W04.P10.S38` - Test the generator emits a schema-shaped marketplace tree whose plugins[] entry resolves to the emitted plugin; `src/aeat/agent/tests/test_marketplace_generation.py`.
 
 ### Phase `W04.P11` - Publish recipes and release sequencing
 

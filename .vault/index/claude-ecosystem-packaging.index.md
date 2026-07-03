@@ -39,6 +39,8 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P09-S34]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P09-S35]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W04-P10-S36]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W04-P10-S37]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W04-P10-S38]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W04-P11-S39]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W04-P11-S40]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W04-P11-S41]]'
@@ -94,6 +96,8 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 - `2026-07-03-claude-ecosystem-packaging-W03-P09-S34` - Add the anthropic/requiresUserInteraction annotation to CONFIRM-tier (state-mutating) MCP tools alongside the existing destructiveHint matrix
 - `2026-07-03-claude-ecosystem-packaging-W03-P09-S35` - Test the requiresUserInteraction annotation is present on every CONFIRM-tier tool and absent on read-only tools
 - `2026-07-03-claude-ecosystem-packaging-W04-P10-S36` - Define the marketplace repository layout and a .claude-plugin/marketplace.json with name, owner and a plugins[] entry sourcing the aeat plugin tree (verify the marketplace.json schema against live official docs at execution time)
+- `2026-07-03-claude-ecosystem-packaging-W04-P10-S37` - Have the plugin generator emit the marketplace-served plugin tree so marketplace and plugin cannot drift
+- `2026-07-03-claude-ecosystem-packaging-W04-P10-S38` - Test the generator emits a schema-shaped marketplace tree whose plugins[] entry resolves to the emitted plugin
 - `2026-07-03-claude-ecosystem-packaging-W04-P11-S39` - Add a LOCAL-ONLY HUMAN-GATED just publish recipe over uv publish with a scoped PyPI token, refusing to run in CI and mirroring the release-please discipline
 - `2026-07-03-claude-ecosystem-packaging-W04-P11-S40` - Document the name-claim sequencing: publish the slim aeat wheel first (no grant needed) to claim the name
 - `2026-07-03-claude-ecosystem-packaging-W04-P11-S41` - Document the aeat-data file-size grant request template and the publish-when-granted flow so the plugin delivery is not hard-blocked on the grant
