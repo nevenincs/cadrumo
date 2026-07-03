@@ -81,6 +81,27 @@ _MCP_CONSOLE_SCRIPT = "aeat-mcp"
 _MCP_PERSONA_ENV = "AEAT_MCP_PERSONA"
 _MCP_PERSONA_INTERPOLATION = "${user_config.persona}"
 
+# --- Claude marketplace layout --------------------------------------------
+#
+# The marketplace layout target (ADR "Marketplace") emits the git-repo content
+# a dedicated public marketplace repository serves: a ``.claude-plugin/``
+# ``marketplace.json`` listing the aeat plugin plus the plugin tree it points
+# at, materialised UNDER the marketplace root at ``plugins/aeat`` via the same
+# ``materialise_plugin`` emitter, so the marketplace manifest and the plugin it
+# serves cannot drift. Every field name here is the one the live
+# ``claude plugin validate --strict`` oracle accepts for a marketplace manifest;
+# note the validator checks the manifest shape only and does NOT resolve the
+# ``plugins[].source`` path, so the generator materialises the pointed-at plugin
+# itself rather than trusting the manifest alone.
+_MARKETPLACE_MANIFEST = "marketplace.json"
+_MARKETPLACE_NAME = "aeat-marketplace"
+_MARKETPLACE_DESCRIPTION = "Distribution marketplace for the aeat Spanish-tax Claude plugin."
+_MARKETPLACE_OWNER_NAME = _PLUGIN_AUTHOR_NAME
+_MARKETPLACE_PLUGINS_SUBDIR = "plugins"
+# The relative source the marketplace manifest points at, resolved from the
+# marketplace repo root (the directory holding ``.claude-plugin/``).
+_MARKETPLACE_PLUGIN_SOURCE = f"./{_MARKETPLACE_PLUGINS_SUBDIR}/{_PLUGIN_NAME}"
+
 
 def _plugin_version() -> str:
     """Resolve the plugin version from installed package metadata.
@@ -114,6 +135,23 @@ class PluginManifest(BaseModel):
     skills_written: int = Field(ge=0)
     agents_written: int = Field(ge=0)
     persona_default: str = ""
+
+
+class MarketplaceManifest(BaseModel):
+    """Result of materialising the marketplace-served tree from the harness source.
+
+    ``plugin_source`` is the relative ``plugins[].source`` the marketplace
+    manifest points at (``./plugins/aeat``); ``plugin`` is the nested
+    :class:`PluginManifest` for the plugin materialised under that source, so the
+    marketplace and the plugin it serves are one emission and cannot drift.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    output_path: str = Field(min_length=1)
+    marketplace_name: str = Field(min_length=1)
+    plugin_source: str = Field(min_length=1)
+    plugin: PluginManifest
 
 
 def _write_json(dest_dir: Path, name: str, document: object) -> None:
@@ -329,6 +367,57 @@ def materialise_plugin(
         skills_written=skills,
         agents_written=agents,
         persona_default=persona_default,
+    )
+
+
+def _marketplace_manifest_document() -> dict[str, object]:
+    """Build the ``.claude-plugin/marketplace.json`` manifest document.
+
+    ``name``, ``owner`` (object), and ``plugins[]`` are the validator-required
+    fields; ``description`` is required additionally under ``--strict`` (its
+    absence is a strict-failing warning). The single ``plugins[]`` entry sources
+    the plugin from the relative ``./plugins/aeat`` subtree this generator
+    materialises alongside the manifest.
+    """
+    return {
+        "name": _MARKETPLACE_NAME,
+        "description": _MARKETPLACE_DESCRIPTION,
+        "owner": {"name": _MARKETPLACE_OWNER_NAME},
+        "plugins": [
+            {"name": _PLUGIN_NAME, "source": _MARKETPLACE_PLUGIN_SOURCE},
+        ],
+    }
+
+
+def materialise_marketplace(
+    output_dir: Path,
+    *,
+    version: str | None = None,
+    persona_default: str = "",
+) -> MarketplaceManifest:
+    """Write the marketplace-served tree under ``output_dir`` from the harness source.
+
+    Emits ``.claude-plugin/marketplace.json`` listing the aeat plugin and, under
+    the relative ``plugins/aeat`` source it points at, the full plugin tree via
+    :func:`materialise_plugin`. Because both come from one call, the marketplace
+    manifest and the plugin it serves cannot drift. ``version`` and
+    ``persona_default`` pass straight through to the plugin emission.
+
+    Returns:
+        :class:`MarketplaceManifest` describing the marketplace tree written.
+    """
+    _write_json(output_dir / _PLUGIN_DIR, _MARKETPLACE_MANIFEST, _marketplace_manifest_document())
+    plugin = materialise_plugin(
+        output_dir / _MARKETPLACE_PLUGINS_SUBDIR / _PLUGIN_NAME,
+        version=version,
+        persona_default=persona_default,
+    )
+
+    return MarketplaceManifest(
+        output_path=str(output_dir),
+        marketplace_name=_MARKETPLACE_NAME,
+        plugin_source=_MARKETPLACE_PLUGIN_SOURCE,
+        plugin=plugin,
     )
 
 
