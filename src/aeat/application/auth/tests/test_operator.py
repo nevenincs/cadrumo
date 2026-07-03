@@ -11,13 +11,14 @@ from pydantic import SecretStr
 
 from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....core import Period
 from ....core.config import Settings, load_settings, override_settings
 from ....core.time import frozen_clock
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import RegistrySnapshotRef
-from ....domain.filing import ModeloDraft, ModeloDraftRepository
+from ....domain.filing import ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...user_profile import profile_create_storage_span, register_minimal_profile

@@ -48,6 +48,7 @@ from ...core.output_rendering import render_command_output
 # runtime import; the ``TYPE_CHECKING`` block keeps static checkers
 # resolving them.
 if TYPE_CHECKING:
+    from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.auth import AuthProviderListing
@@ -55,7 +56,7 @@ if TYPE_CHECKING:
     from ...core import Period
     from ...core.json_contract import Notice
     from ...domain.deadlines import TaxpayerProfile
-    from ...domain.filing import ModeloDraft, ModeloDraftRepository
+    from ...domain.filing import ModeloDraft
     from ...domain.invoices import InvoiceCatalogue
     from ...domain.transactions import TransactionCatalogue
 
@@ -450,7 +451,7 @@ def _invoice_repo(*, bucket_id: str | None = None) -> InvoiceCatalogueRepository
 
 
 def _draft_repo(*, bucket_id: str | None = None) -> ModeloDraftRepository:
-    from ...domain.filing import ModeloDraftRepository
+    from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 
     return ModeloDraftRepository(bucket_id=bucket_id)
 

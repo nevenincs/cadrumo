@@ -329,7 +329,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.domain.submission.records"] = _bound_resolver(_submission_repo)
 
     def _draft_repo() -> object:
-        from ...domain.filing import ModeloDraftRepository
+        from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 
         return ModeloDraftRepository()
 

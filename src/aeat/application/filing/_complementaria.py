@@ -31,6 +31,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Protocol, runtime_checkable
 
+from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ...core import Period
 from ...core.logging import get_logger
 from ...domain.filing import (
@@ -44,7 +45,6 @@ from ...domain.filing import (
     ModeloCode,
     ModeloComplementaria,
     ModeloDraft,
-    ModeloDraftRepository,
     ModeloInputs,
     ModeloInputValue,
     ModeloSustitutiva,

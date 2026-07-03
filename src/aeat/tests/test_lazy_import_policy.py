@@ -659,6 +659,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.preflight", "domain.portals"),
             ImportEdge("application.provisioning", "application.ledger"),
             ImportEdge("application.repair_integrity", "adapters.persistence.storage"),
+            ImportEdge("application.review._adapters", "adapters.persistence.profile.filing_drafts"),
             ImportEdge("application.review._adapters", "adapters.persistence.profile.invoices"),
             ImportEdge("application.review._adapters", "domain.filing"),
             ImportEdge("application.review._operator", "core"),
@@ -696,6 +697,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.user_profile._custody", "adapters.persistence.storage.bucket"),
             ImportEdge("application.user_profile._custody", "core"),
             ImportEdge("application.user_profile._custody_carry", "adapters.outbound.aeat.sede"),
+            ImportEdge("application.user_profile._custody_carry", "adapters.persistence.profile.filing_drafts"),
             ImportEdge("application.user_profile._custody_carry", "adapters.persistence.profile.justificante"),
             ImportEdge("application.user_profile._custody_carry", "adapters.persistence.profile.submission"),
             ImportEdge("application.user_profile._custody_carry", "adapters.persistence.storage"),
@@ -794,7 +796,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 170,  # +8: transactions storage deferral sites (W02.P07.S09)
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 35,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 502,  # +2: transactions adapter deferral sites (W02.P07.S09)
+    UnsanctionedClass.APPLICATION_DEFERRAL: 504,  # +2: filing-draft repository deferral sites (W03.P08.S10)
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -804,7 +806,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 488
+_ALLOWLIST_EDGE_CEILING: int = 489  # +2: filing-draft repository deferral edges (W03.P08.S10)
 
 
 def _aeat_relative(dotted: str) -> str:

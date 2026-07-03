@@ -14,6 +14,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from .....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from .....adapters.persistence.profile.justificante import JustificanteRepository
 from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -80,7 +81,6 @@ from .....domain.filing import (
     ModeloAmendmentRepository,
     ModeloComplementaria,
     ModeloDraft,
-    ModeloDraftRepository,
     ModeloValue,
     ModeloValueKind,
     make_amendment_id,

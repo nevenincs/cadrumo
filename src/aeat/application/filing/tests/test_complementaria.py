@@ -59,7 +59,7 @@ _UNSUPPORTED_M998_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _persist_original_draft(draft: ModeloDraft) -> None:
-    from ....domain.filing import ModeloDraftRepository
+    from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 
     ModeloDraftRepository().save(draft)
 

@@ -684,7 +684,6 @@ ignore_imports =
     # migrated to adapters.persistence.profile.usage_ratios.
     aeat.domain.attachments.tests.test_repository -> aeat.adapters.persistence.storage.attachment
     aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.storage
-    aeat.domain.filing._repository -> aeat.adapters.persistence.storage
     # modelos_work_units consolidation: domain.modelos._repository (the
     # work-unit catalogue repository) no longer imports adapters directly -
     # persistence now routes through
@@ -972,6 +971,20 @@ ignore_imports =
     aeat.application.modelo.tests.test_renta_annual_reconciliations_fold_in_live -> aeat.adapters.persistence.profile.modelos_filing
     aeat.application.modelo.tests.test_verificado_completo_regression -> aeat.adapters.persistence.profile.modelos_filing
     aeat.domain.modelos.tests.test_filing_record_repository_roundtrip -> aeat.adapters.persistence.profile.modelos_filing
+    # ── filing draft repository ports-inversion (W03.P08.S10):
+    #    the concrete ModeloDraftRepository moved to the persistence
+    #    adapter behind ModeloDraftRepositoryProtocol ──
+    aeat.application.auth.tests.test_operator -> aeat.adapters.persistence.profile.filing_drafts
+    aeat.application.filing._complementaria -> aeat.adapters.persistence.profile.filing_drafts
+    aeat.application.filing.tests.test_complementaria -> aeat.adapters.persistence.profile.filing_drafts
+    aeat.application.filing.tests.test_repository -> aeat.adapters.persistence.profile.filing_drafts
+    aeat.application.review._adapters -> aeat.adapters.persistence.profile.filing_drafts
+    aeat.application.review.tests.test_adapters -> aeat.adapters.persistence.profile.filing_drafts
+    aeat.application.review.tests.test_aggregator -> aeat.adapters.persistence.profile.filing_drafts
+    aeat.application.user_profile.tests.test_custody_store_matrix -> aeat.adapters.persistence.profile.filing_drafts
+    aeat.domain.filing.tests.test_binding_value_provenance_roundtrip -> aeat.adapters.persistence.profile.filing_drafts
+    aeat.domain.filing.tests.test_roundtrip_anti_tautology -> aeat.adapters.persistence.profile.filing_drafts
+    aeat.domain.filing.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.profile.filing_drafts
     # ── invoices catalogue repository ports-inversion (W02.P04.S06):
     #    the concrete InvoiceCatalogueRepository moved to the persistence
     #    adapter behind InvoiceCatalogueRepositoryProtocol ──

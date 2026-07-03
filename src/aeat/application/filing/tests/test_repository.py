@@ -1,4 +1,4 @@
-"""Tests for the governed-persistence :class:`ModeloDraftRepository`.
+"""Tests for the governed-persistence :class:`~aeat.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`.
 
 Exercises round-trip save/load, idempotent saves, list/iter, deletion,
 the FINANCIAL classification gate, the unsafe-id rejection, and the
@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....adapters.persistence.storage import Envelope, SensitivityClass
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -20,7 +21,6 @@ from ....core import Period
 from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from ....domain.filing import (
     ModeloDraft,
-    ModeloDraftRepository,
     ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
