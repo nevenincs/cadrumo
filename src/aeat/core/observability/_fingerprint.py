@@ -174,8 +174,9 @@ def compute_db_sha256(var_dir: Path) -> str:
 
     - ``var/runs/`` — observability's own output (self-reference).
     - ``var/browser-traces/`` — Playwright session traces.
-    - ``var/llm-cache/``, ``var/llm-usage/`` — LLM prompt cache + usage
-      meters; drift on every model call.
+    - ``var/llm-cache/``, ``var/llm-usage/``, ``var/llm-run-telemetry/`` — LLM
+      prompt cache, usage meters, and run-timing telemetry; drift on every
+      model call.
     - ``var/status-cache/`` — AEAT status-reader cache.
     - ``var/backups/`` — storage layer backups (non-canonical copies).
     - ``var/packaging-smoke/``, ``var/editable-smoke/`` — release
@@ -202,6 +203,7 @@ def compute_db_sha256(var_dir: Path) -> str:
                 "browser-traces",
                 "llm-cache",
                 "llm-usage",
+                "llm-run-telemetry",
                 "status-cache",
                 "backups",
                 "packaging-smoke",
