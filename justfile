@@ -212,6 +212,12 @@ packaging-smoke-extras: packaging-smoke-source
 packaging-smoke-dev: packaging-smoke-source
     @uv run --no-sync python -m dev.packaging.smoke_dev
 
+# Build the slim aeat wheel plus the aeat-data companion, install the slim
+# wheel alone (loud advisory path; verification verbs refuse instructively),
+# then add the companion and prove byte-identical source verification.
+packaging-smoke-split: packaging-smoke-source
+    @uv run --no-sync python -m dev.packaging.smoke_split_install
+
 # Build the wheel, install it with the browser extra, provision Chromium in an
 # isolated Playwright cache, and run the no-secret browser health check.
 packaging-smoke-browser: packaging-smoke-source
@@ -238,7 +244,7 @@ packaging-smoke-docker-browser: packaging-smoke-source
 packaging-smoke-docker: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-docker-core packaging-smoke-docker-browser
 
 # Local release-artifact smoke gates that do not need host package-manager access.
-packaging-smoke: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-browser
+packaging-smoke: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-split packaging-smoke-browser
 
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
