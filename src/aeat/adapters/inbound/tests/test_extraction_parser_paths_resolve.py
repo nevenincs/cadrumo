@@ -1,0 +1,73 @@
+"""Adapter-legal resolution gate for registry extraction-parser dotted paths.
+
+The domain registry validator (:func:`validate_dotted_callable`) checks only the
+STRUCTURAL shape of a ``parser =`` dotted path, so the domain registry validation
+stays free of any ``adapters`` coupling (the ports-inversion seam — the domain
+must not name or import a parser module, even by string). This gate enforces the
+other half — that every ``parser =`` path declared anywhere in the bundled
+registry resolves to a real callable under a sanctioned parser authority — from
+the adapter layer, where importing ``aeat.adapters.inbound`` parsers is legal.
+
+The registry is bundled, shipped data, so a CI gate is the authoritative
+resolution check: a ``parser =`` path that is structurally valid but names a
+non-existent / non-callable target, or a target outside the sanctioned parser
+authorities, fails here. This is the adapter-owned complement the ports-inversion
+ADR's post-close honesty-review note (finding F1) calls for.
+"""
+
+from __future__ import annotations
+
+import re
+from importlib import import_module
+from pathlib import Path
+
+import pytest
+
+import aeat
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+# Sanctioned parser authorities: the two inbound-PDF parser packages, plus the
+# registry's own in-tree export-payload parser (a domain-internal callable).
+_ALLOWED_PARSER_AUTHORITY_PREFIXES: tuple[str, ...] = (
+    "aeat.adapters.inbound.borrador",
+    "aeat.adapters.inbound.declaracion",
+    "aeat.domain.calculations.registry",
+)
+
+_REGISTRY_ROOT = Path(aeat.__file__).parent / "_data" / "registry"
+_PARSER_LINE_RE = re.compile(r'^\s*parser\s*=\s*"([^"]+)"', re.MULTILINE)
+
+
+def _declared_parser_paths() -> list[str]:
+    """Every distinct ``parser =`` dotted path declared in the bundled registry TOML."""
+    paths: set[str] = set()
+    for toml_path in _REGISTRY_ROOT.rglob("*.toml"):
+        paths.update(_PARSER_LINE_RE.findall(toml_path.read_text(encoding="utf-8")))
+    return sorted(paths)
+
+
+def test_bundled_registry_declares_parser_paths() -> None:
+    """Anti-vacuity guard: the scan must find parser paths, else the gate is empty.
+
+    If the registry layout or the ``parser =`` key changes and this scan silently
+    returns nothing, the parametrized resolution gate below would pass with zero
+    cases — a false green. This test fails loudly in that event.
+    """
+    assert _declared_parser_paths(), (
+        f"no 'parser =' paths found under {_REGISTRY_ROOT}; the registry layout or the "
+        "scan changed and the resolution gate would be vacuous"
+    )
+
+
+@pytest.mark.parametrize("dotted_path", _declared_parser_paths())
+def test_extraction_parser_paths_resolve(dotted_path: str) -> None:
+    """Each registry ``parser =`` path resolves to a callable under a sanctioned authority."""
+    module_name, separator, attribute = dotted_path.rpartition(".")
+    assert separator and module_name and attribute, f"parser {dotted_path!r} is not a dotted callable path"
+    assert module_name.startswith(_ALLOWED_PARSER_AUTHORITY_PREFIXES), (
+        f"parser {dotted_path!r} must resolve under one of {sorted(_ALLOWED_PARSER_AUTHORITY_PREFIXES)!r}"
+    )
+    module = import_module(module_name)
+    resolved = getattr(module, attribute, None)
+    assert callable(resolved), f"parser {dotted_path!r} does not resolve to a callable"

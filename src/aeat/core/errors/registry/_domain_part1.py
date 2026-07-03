@@ -96,6 +96,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.buckets._errors.BucketArchiveRefusedError",
+        ErrorCode(
+            code="REFUSED_DOMAIN_BUCKET_ARCHIVE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion="aeat config profile sandbox archive --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.buckets._errors.BucketRestoreRefusedError",
+        ErrorCode(
+            code="REFUSED_DOMAIN_BUCKET_RESTORE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion="aeat config profile sandbox restore --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.retention._errors.RetentionError",
         ErrorCode(
             code="ERROR_DOMAIN_RETENTION",

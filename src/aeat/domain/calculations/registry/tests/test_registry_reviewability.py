@@ -19,10 +19,11 @@ _MAX_BASELINE_TOML_LINES = 1_400
 _MAX_BASELINE_TOML_LINE_CHARS = 520
 _MAX_NEW_VALIDATOR_MODULE_LINES = 300
 _VALIDATOR_MODULE_LINE_BASELINES = {
-    # +1 line from the M131 EO modulos engine dataset commit (#516), which
-    # added one workbook-layout-authority-source guidance line; re-pinned to
-    # the present size.
-    "_validate_surfaces.py": 561,
+    # +83 lines from the M131 índice-exceso incompatibility advisory fix
+    # (#594), which added the casilla_equals_implies_diverges bespoke arity
+    # validator and its registry-gate dispatch (mirroring
+    # casilla_equals_implies_nonzero's shape); re-pinned to the present size.
+    "_validate_surfaces.py": 644,
     "_validate_cross_revision.py": 424,
     "_validate_record_sections.py": 305,
     "_validate_references.py": 312,

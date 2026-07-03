@@ -439,6 +439,7 @@ def test_lirpf_economic_activity_chapter_links_to_full_boe_corpus() -> None:
                 "rendimientos netos con un período de generación superior a dos años",
                 "el saldo resultante no podrá ser negativo",
                 "inicien el ejercicio de una actividad económica",
+                "no podrá superar el importe de 300.000 euros anuales",
             ),
         ),
     )

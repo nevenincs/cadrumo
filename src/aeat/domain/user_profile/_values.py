@@ -185,6 +185,23 @@ class UserProfileRecord(BaseModel):
             },
         )
 
+    def reactivate(self, *, reactivated_at: datetime | None = None) -> UserProfileRecord:
+        """Return an active :class:`UserProfileRecord` copy of a tombstoned profile root.
+
+        The symmetric inverse of :meth:`tombstone`: clears ``removed_at``
+        and restores ``status`` to :attr:`UserProfileStatus.ACTIVE` so the
+        lifecycle invariant (``active`` profiles never carry
+        ``removed_at``) holds on the returned copy.
+        """
+        instant = reactivated_at or utc_now()
+        return self.model_copy(
+            update={
+                "status": UserProfileStatus.ACTIVE,
+                "updated_at": instant,
+                "removed_at": None,
+            },
+        )
+
 
 class UserProfileSnapshot(BaseModel):
     """Immutable filing/export profile snapshot."""

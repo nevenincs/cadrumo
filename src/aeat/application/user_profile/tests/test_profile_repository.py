@@ -111,6 +111,12 @@ def _delete(repository: ProfileRepository, profile_id: str):
         return repository.delete(profile_id)
 
 
+def _reactivate(repository: ProfileRepository, profile_id: str):
+    """Wrap ``repository.reactivate`` in a ``profile_storage_session``."""
+    with profile_storage_session(profile_id):
+        return repository.reactivate(profile_id)
+
+
 def _select(repository: ProfileRepository, profile_id: str):
     """Wrap ``repository.select`` in a ``profile_storage_session``."""
     with profile_storage_session(profile_id):
@@ -495,6 +501,89 @@ def test_select_refuses_a_tombstoned_profile(_backend: Path) -> None:
         _select(repository, created.profile_id)
     assert excinfo.value.translated_message == "application.user_profile.errors.profile_tombstoned_not_selectable"
     assert excinfo.value.context == {"profile": created.profile_id}
+
+
+def test_reactivate_restores_active_status_and_the_live_scan(_backend: Path) -> None:
+    """``reactivate`` is the symmetric inverse of ``delete``: the record and manifest both flip back to active.
+
+    After a delete -> reactivate cycle the profile is indistinguishable
+    from a profile that was never tombstoned on every live-surface
+    read: ``read_profile_bucket`` resolves it again, ``list_profile_buckets``
+    (without ``include_tombstoned``) includes it again, and the manifest
+    ``status`` mirror agrees with the record.
+    """
+    from ....adapters.persistence.storage.bucket import BucketLifecycleStatus, read_manifest
+
+    repository = ProfileRepository()
+    created = _create(repository, label="Reactivation Candidate", facts=_VALID_FACTS)
+    _delete(repository, created.profile_id)
+    assert read_profile_bucket("Reactivation Candidate", root=_backend) is None
+
+    reactivated = _reactivate(repository, created.profile_id)
+
+    assert reactivated.status is UserProfileStatus.ACTIVE
+    assert reactivated.record.status is UserProfileStatus.ACTIVE
+    assert reactivated.record.removed_at is None
+    manifest = read_manifest(bucket_paths(_backend, created.profile_id))
+    assert manifest.status is BucketLifecycleStatus.ACTIVE
+    # Back on every live surface.
+    assert read_profile_bucket("Reactivation Candidate", root=_backend) is not None
+    assert created.profile_id in list_profile_buckets(root=_backend)
+    # Facts and label survive the round trip untouched.
+    reloaded = _load(repository, created.profile_id)
+    assert reloaded.record.facts == _VALID_FACTS
+    assert reloaded.label == "Reactivation Candidate"
+
+
+def test_reactivate_refuses_an_already_active_profile(_backend: Path) -> None:
+    """``reactivate`` refuses a profile that is not currently tombstoned.
+
+    A reactivate can never silently no-op against a live profile — the
+    symmetric contract to ``rename``/``duplicate`` refusing a tombstoned
+    source.
+    """
+    repository = ProfileRepository()
+    created = _create(repository, label="Already Active", facts=_VALID_FACTS)
+
+    with pytest.raises(ProfileNotFoundError) as excinfo:
+        _reactivate(repository, created.profile_id)
+    assert excinfo.value.context == {"profile_id": created.profile_id, "action": "reactivate"}
+
+
+def test_reactivated_profile_is_selectable_again(_backend: Path) -> None:
+    """A reactivated profile passes ``select``'s tombstoned-profile refusal again.
+
+    Closes the loop on ``test_select_refuses_a_tombstoned_profile``: once
+    reactivated, the same profile that was refused becomes selectable.
+    """
+    repository = ProfileRepository()
+    created = _create(repository, label="Selectable Again", facts=_VALID_FACTS)
+    _delete(repository, created.profile_id)
+    with pytest.raises(ProfileNotFoundError):
+        _select(repository, created.profile_id)
+
+    _reactivate(repository, created.profile_id)
+
+    selected = _select(repository, created.profile_id)
+    assert selected.status is UserProfileStatus.ACTIVE
+
+
+def test_delete_reactivate_round_trip_preserves_created_at(_backend: Path) -> None:
+    """A delete -> reactivate cycle changes ``updated_at``/``removed_at`` but never ``created_at``.
+
+    The profile's original creation instant is immutable identity
+    metadata; only the lifecycle timestamps move.
+    """
+    repository = ProfileRepository()
+    created = _create(repository, label="Timestamp Guard", facts=_VALID_FACTS)
+
+    deleted = _delete(repository, created.profile_id)
+    assert deleted.record.removed_at is not None
+
+    reactivated = _reactivate(repository, created.profile_id)
+    assert reactivated.record.created_at == created.record.created_at
+    assert reactivated.record.removed_at is None
+    assert reactivated.record.updated_at >= deleted.record.updated_at
 
 
 def test_deleted_profile_name_is_reusable(_backend: Path) -> None:

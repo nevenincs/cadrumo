@@ -270,6 +270,78 @@ class CertificateSourceMutationResult(BaseModel):
     removed: bool = False
 
 
+class CertificateSourceCheckEntry(BaseModel):
+    """Expiry/rotation verdict for one registered certificate source.
+
+    Reuses the same local PKCS#12 health classification
+    :func:`application.auth.probe_provider_configuration` runs for the
+    single-certificate provider path (``ok`` / ``expiring`` / ``expired`` /
+    ``corrupt`` / ``unreadable`` / ``file_missing``), applied per named
+    source in :class:`application.auth.AuthState.certificate_sources`
+    rather than only the active ``certificate_path``. Never carries
+    certificate passwords or key material.
+
+    Attributes:
+        name: The registered source name.
+        certificate_path: Filesystem path of the source's PKCS#12 bundle.
+        friendly_name: Optional human-readable label.
+        active: Whether this source is the currently selected one.
+        result: Typed :class:`application.auth.ProviderProbeResult` verdict
+            (as its string value, matching the sibling ``AuthTestResult``
+            convention).
+        summary: Localised one-line operator-facing verdict.
+        days_until_expiry: Whole days until ``not_after``, when the
+            certificate could be parsed; negative when already expired;
+            ``None`` when expiry could not be determined (unreadable,
+            corrupt, missing path/file, or no configured decode password).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    name: str
+    certificate_path: str
+    friendly_name: str = ""
+    active: bool = False
+    result: str = ""
+    summary: str = ""
+    days_until_expiry: int | None = None
+
+
+class CertificateSourceCheckReport(BaseModel):
+    """Result of ``aeat config auth certificate check``.
+
+    ``has_warnings`` is ``True`` when at least one entry's ``result`` is
+    ``expiring`` or ``expired``, letting the CLI decide whether to attach
+    a non-blocking rotation-reminder :class:`~core.json_contract.Notice`
+    per entry without re-deriving the same predicate.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    entries: tuple[CertificateSourceCheckEntry, ...] = ()
+    has_warnings: bool = False
+
+
+class CertificateSourceSecretMutationResult(BaseModel):
+    """Result of setting, rotating, or removing a named certificate source's secret.
+
+    Never carries the secret value itself — only whether one is now
+    registered, which backend holds it, and whether the call rotated an
+    existing secret (``rotated``) or set one for the first time. Mirrors
+    the ``sensitive-financial-data-secure-storage-only`` and
+    ``no-silent-under-declaration`` disciplines: the secret's *presence*
+    is observable, its *value* never is.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    name: str
+    backend: str = ""
+    has_secret: bool = False
+    rotated: bool = False
+    removed: bool = False
+
+
 __all__ = [
     "AuthClearResult",
     "AuthConfigureDanglingActiveProfileError",
@@ -282,9 +354,12 @@ __all__ = [
     "AuthProvidersReport",
     "AuthStatusResult",
     "AuthTestResult",
+    "CertificateSourceCheckEntry",
+    "CertificateSourceCheckReport",
     "CertificateSourceListResult",
     "CertificateSourceMutationResult",
     "CertificateSourceNotFoundError",
     "CertificateSourcePayload",
+    "CertificateSourceSecretMutationResult",
     "LiveAuthPreflightReport",
 ]

@@ -41,7 +41,30 @@ class CorpusManifestDriftError(CorpusManifestError):
     """
 
 
+class CorpusBundleError(CorpusManifestError):
+    """Base error for corpus bundle build/verify failures.
+
+    Raised for structural bundle problems (not a zip archive, missing or
+    structurally invalid embedded manifest, unsupported manifest
+    version) that are distinct from a checksum-level verification
+    failure (:class:`CorpusBundleVerificationError`).
+    """
+
+
+class CorpusBundleVerificationError(CorpusBundleError):
+    """Raised when a bundle's embedded manifest does not match its archived files.
+
+    Carries the same missing/unexpected/mismatched vocabulary as
+    :class:`CorpusManifestDriftError` so a bundle-integrity failure and a
+    live-corpus-drift failure read the same way to an operator; the
+    distinguishing detail is that this failure is about a zip archive's
+    contents, not the corpus already on disk.
+    """
+
+
 __all__ = [
+    "CorpusBundleError",
+    "CorpusBundleVerificationError",
     "CorpusManifestDriftError",
     "CorpusManifestError",
     "CorpusManifestTamperError",

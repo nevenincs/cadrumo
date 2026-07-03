@@ -130,9 +130,9 @@ def built_wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
         text=True,
         check=True,
     )
-    wheels = sorted(out_dir.glob("aeat-*.whl"))
+    wheels = sorted(out_dir.glob("aeat_cli-*.whl"))
     if len(wheels) != 1:
-        raise AssertionError(f"expected exactly one aeat-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
+        raise AssertionError(f"expected exactly one aeat_cli-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
     return wheels[0]
 
 

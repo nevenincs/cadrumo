@@ -16,12 +16,23 @@ This is the durable capture half of the local-only run-diagnostics surface
 (``aeat app diagnostics run-health``): a slow or failing LLM-backed
 classification run is otherwise invisible until an operator notices a stuck
 CLI invocation.
+
+:meth:`LLMRunTelemetryRecorder.prune` bounds this store's growth with a
+retention window (:attr:`~aeat.core.config.Settings.aeat_llm_run_telemetry_retention_days`)
+and a maximum record count
+(:attr:`~aeat.core.config.Settings.aeat_llm_run_telemetry_max_records`),
+mirroring :meth:`~aeat.adapters.outbound.llm.LLMCache.prune`'s
+list-then-delete-by-reconstructed-key shape. The object key each record was
+saved under embeds a random UUID4 suffix (so two runs starting in the same
+microsecond never collide); that suffix is persisted inside the record's own
+payload alongside its natural fields so pruning can reconstruct the exact
+save-time key and issue a matching delete, without a parallel index.
 """
 
 from __future__ import annotations
 
 import json
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
@@ -31,6 +42,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ....adapters.persistence.storage import LLM_RUN_TELEMETRY_NAMESPACE
 from ....core.config import load_settings
 from ....core.hashing import canonical_json_bytes
+from ....core.time import now
 from ._errors import LLMCacheError
 
 __all__ = ["LLMRunRecord", "LLMRunTelemetryRecorder", "LLMRunTelemetrySummary"]
@@ -116,14 +128,21 @@ class LLMRunTelemetryRecorder:
         from ....core.classification import SensitivityClass
 
         path = self.root_dir / f"run-telemetry-{record.started_at.date().isoformat()}.jsonl"
+        # The uuid4 suffix is minted once here and persisted inside the
+        # payload (rather than only folded into the object key) so
+        # ``prune`` can reconstruct the exact save-time key from a listed
+        # record and issue a matching ``delete`` -- there is no parallel
+        # index to keep in sync.
+        object_key_uuid = uuid4().hex
         payload = {
             "logical_root": self._logical_root(),
+            "object_key_uuid": object_key_uuid,
             "record": record.model_dump(mode="json"),
         }
         try:
             secure_object_repository_for_active_bucket().save(
                 namespace=_RUN_TELEMETRY_NAMESPACE,
-                object_key=self._object_key_for(record),
+                object_key=self._object_key_for(record, object_key_uuid),
                 classification=SensitivityClass.DIAGNOSTIC,
                 schema_version=_RUN_TELEMETRY_VERSION,
                 written_at=record.started_at,
@@ -144,10 +163,23 @@ class LLMRunTelemetryRecorder:
         Returns:
             Loaded :class:`LLMRunRecord` entries in file-iteration order.
         """
+        return tuple(record for record, _ in self._load_records_with_object_keys(since=since, until=until))
+
+    def _load_records_with_object_keys(
+        self,
+        since: date | None = None,
+        until: date | None = None,
+    ) -> tuple[tuple[LLMRunRecord, str], ...]:
+        """Load run-telemetry records paired with their reconstructed save-time object key.
+
+        Internal helper shared by :meth:`load_records` and :meth:`prune`;
+        the object key is needed only for pruning and is not part of the
+        public :meth:`load_records` contract.
+        """
         from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
 
-        records: list[LLMRunRecord] = []
+        rows: list[tuple[LLMRunRecord, str]] = []
         for stored in secure_object_repository_for_active_bucket().list_records(
             _RUN_TELEMETRY_NAMESPACE,
             expected_class=SensitivityClass.DIAGNOSTIC,
@@ -162,8 +194,13 @@ class LLMRunTelemetryRecorder:
                 continue
             if until is not None and record_date > until:
                 continue
-            records.append(record)
-        return tuple(sorted(records, key=lambda item: (item.started_at, item.run_id)))
+            try:
+                object_key_uuid = decoded["object_key_uuid"]
+            except KeyError as exc:
+                msg = "LLM run-telemetry payload is missing its object_key_uuid; cannot reconstruct its save-time key."
+                raise LLMCacheError(msg) from exc
+            rows.append((record, self._object_key_for(record, object_key_uuid)))
+        return tuple(sorted(rows, key=lambda item: (item[0].started_at, item[0].run_id)))
 
     def summarize(
         self,
@@ -197,17 +234,81 @@ class LLMRunTelemetryRecorder:
             mean_duration_ms=(sum(durations, start=Decimal("0")) / Decimal(len(durations))).quantize(Decimal("0.01")),
         )
 
+    def prune(
+        self,
+        *,
+        retention_days: int | None = None,
+        max_records: int | None = None,
+    ) -> int:
+        """Delete records older than the retention window or beyond the count cap.
+
+        Applies a two-stage bound, mirroring
+        :meth:`~aeat.adapters.outbound.llm.LLMCache.prune`'s
+        list-then-delete-by-reconstructed-key shape: first every record
+        older than ``retention_days`` (measured against the current time) is
+        removed, then -- if more than ``max_records`` remain -- the oldest
+        excess records beyond the cap are removed too. Both bounds default to
+        the centralized :attr:`~aeat.core.config.Settings.aeat_llm_run_telemetry_retention_days`
+        and :attr:`~aeat.core.config.Settings.aeat_llm_run_telemetry_max_records`
+        settings.
+
+        Args:
+            retention_days: Age cutoff in days; records strictly older than
+                this are removed. Defaults to the centralized setting.
+            max_records: Maximum record count to retain after the age cutoff
+                is applied; the oldest excess records beyond this count are
+                removed. Defaults to the centralized setting.
+
+        Returns:
+            Number of removed run-telemetry objects. A record whose key no
+            longer resolves (e.g. removed by a concurrent prune) is silently
+            skipped rather than counted or raised.
+        """
+        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
+
+        settings = load_settings()
+        effective_retention_days = (
+            retention_days if retention_days is not None else settings.aeat_llm_run_telemetry_retention_days
+        )
+        effective_max_records = max_records if max_records is not None else settings.aeat_llm_run_telemetry_max_records
+
+        cutoff = now() - timedelta(days=effective_retention_days)
+        rows = self._load_records_with_object_keys()
+
+        to_remove: list[str] = [object_key for record, object_key in rows if record.started_at < cutoff]
+        remaining = [row for row in rows if row[0].started_at >= cutoff]
+        if len(remaining) > effective_max_records:
+            excess_count = len(remaining) - effective_max_records
+            # ``rows`` is sorted oldest-first (see
+            # ``_load_records_with_object_keys``), so the leading slice of
+            # the still-retained rows is the oldest excess beyond the cap.
+            to_remove.extend(object_key for _, object_key in remaining[:excess_count])
+
+        repository = secure_object_repository_for_active_bucket()
+        removed = 0
+        for object_key in to_remove:
+            if repository.delete(_RUN_TELEMETRY_NAMESPACE, object_key):
+                removed += 1
+        return removed
+
     def _logical_root(self) -> str:
         """Return the stable logical run-telemetry partition."""
         return self.root_dir.resolve().as_posix()
 
-    def _object_key_for(self, record: LLMRunRecord) -> str:
-        """Return a unique natural key for one run-telemetry append."""
+    def _object_key_for(self, record: LLMRunRecord, object_key_uuid: str) -> str:
+        """Return the unique natural key one run-telemetry append was saved under.
+
+        Args:
+            record: The run-timing record.
+            object_key_uuid: The random suffix minted at save time and
+                persisted inside the record's payload, so the exact save-time
+                key can be reconstructed later for pruning.
+        """
         return "|".join(
             (
                 self._logical_root(),
                 record.started_at.isoformat(),
                 record.run_id,
-                uuid4().hex,
+                object_key_uuid,
             ),
         )

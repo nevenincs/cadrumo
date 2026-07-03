@@ -34,12 +34,14 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.core._amendment_kind_regime
    aeat.core._bucket_pointer
    aeat.core._bucket_pointer_io
    aeat.core._capabilities
    aeat.core._casilla_id
    aeat.core._config_live_tests
    aeat.core._config_runtime_fields
+   aeat.core._config_state_root
    aeat.core._config_storage_route
    aeat.core._config_support
    aeat.core._config_timeouts
@@ -71,6 +73,7 @@ Submodules
    aeat.core.logging
    aeat.core.output_rendering
    aeat.core.paths
+   aeat.core.secure_object_write
    aeat.core.setup_answers
    aeat.core.storage_route_guidance
    aeat.core.wizard_catalogue

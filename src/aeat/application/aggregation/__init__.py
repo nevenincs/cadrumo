@@ -169,6 +169,7 @@ from ._retencion_rate_advisory import (
 )
 from ._retenciones import (
     RetencionesAggregation,
+    RetencionesTotalsParity,
     RetencionObservation,
     RetencionPerceptorRollup,
     aggregate_retenciones_111,
@@ -177,6 +178,7 @@ from ._retenciones import (
     aggregate_retenciones_180,
     aggregate_retenciones_190,
     aggregate_retenciones_193,
+    compute_retenciones_totals_parity,
 )
 from ._service import (
     ACCEPTED_SOURCE_KINDS,
@@ -282,6 +284,7 @@ __all__ = [
     "RetencionScheme",
     "RetencionesAggregation",
     "RetencionesAggregationSourceResolver",
+    "RetencionesTotalsParity",
     "SourceMeshError",
     "WithholdingObservation",
     "WithholdingSourceResolver",
@@ -311,6 +314,7 @@ __all__ = [
     "collect_unhandled_source_diagnostics",
     "compute_ledger_filing_evidence",
     "compute_ledger_filing_snapshot",
+    "compute_retenciones_totals_parity",
     "declarable_asset_classes_720",
     "declarable_class",
     "declarable_counterparty_nifs_347",

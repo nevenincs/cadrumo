@@ -39,6 +39,39 @@ def test_profile_record_is_strict_frozen_and_tombstones_live_root() -> None:
         profile.display_name = "Changed"
 
 
+def test_reactivate_is_the_symmetric_inverse_of_tombstone() -> None:
+    """``reactivate`` clears ``removed_at`` and flips status back to active.
+
+    A tombstone -> reactivate round trip restores exactly the lifecycle
+    invariant a freshly-created active profile carries (no ``removed_at``),
+    while leaving every other field (facts, created_at, display_name)
+    untouched.
+    """
+    created_at = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
+    removed_at = datetime(2026, 5, 7, 11, 0, tzinfo=UTC)
+    reactivated_at = datetime(2026, 5, 7, 12, 0, tzinfo=UTC)
+    profile = UserProfileRecord(
+        profile_id=_PROFILE_ID,
+        display_name="Default",
+        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+        created_at=created_at,
+        updated_at=created_at,
+    )
+
+    tombstoned = profile.tombstone(removed_at=removed_at)
+    reactivated = tombstoned.reactivate(reactivated_at=reactivated_at)
+
+    assert reactivated.status is UserProfileStatus.ACTIVE
+    assert reactivated.removed_at is None
+    assert reactivated.updated_at == reactivated_at
+    assert reactivated.created_at == created_at
+    assert reactivated.facts == profile.facts
+    assert reactivated.display_name == profile.display_name
+    # The intermediate tombstoned copy is untouched (strict-frozen, and
+    # the reactivate call built a fresh copy rather than mutating it).
+    assert tombstoned.status is UserProfileStatus.TOMBSTONED
+
+
 def test_profile_record_rejects_invalid_lifecycle_state() -> None:
     cases: tuple[tuple[dict[str, object], str], ...] = (
         (

@@ -576,6 +576,10 @@ application:
           auth test` antes de leer datos AEAT.
   bucket_maintenance:
     errors:
+      archive_active_bucket: El bucket activo no puede archivarse; cambia primero
+        a otro perfil.
+      archive_not_confirmed: Archivar es una transición de estado reversible, pero
+        requiere confirmación explícita.
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -586,6 +590,8 @@ application:
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
+      restore_not_archived: El bucket no está archivado (dado de baja); no hay nada
+        que recuperar.
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
   calculations:
     iva_compensation:
@@ -924,6 +930,12 @@ application:
         %{period}, pero la devolucion solo esta disponible en el ultimo periodo de
         declaracion del ano. Arrastra el credito (compensar) o elige la devolucion
         en el ultimo periodo.
+      review_package_generic: Se produjo un error al generar el paquete de revisión.
+      review_package_integrity: 'El paquete de revisión %{package_path} no superó
+        la verificación de la suma de comprobación: %{detail}.'
+      review_package_revision_state: 'La revisión de cálculo %{calculation_revision_id}
+        está en estado %{state} y no puede empaquetarse para revisión; estados admitidos:
+        %{eligible_states}.'
       revision_pick_explicit_id_required: La seleccion explicita de revision requiere
         calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id solo es
@@ -1238,6 +1250,8 @@ application:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
         debe tener un solo perfil.
       lifecycle_profile_already_exists: Ya existe un perfil en el bucket activo.
+      lifecycle_profile_not_tombstoned: El perfil no está dado de baja; la reactivación
+        rechaza un perfil activo.
       lifecycle_profile_tombstoned_duplicate: No se puede duplicar un perfil eliminado.
       lifecycle_profile_tombstoned_rename: No se puede renombrar un perfil eliminado.
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
@@ -1381,7 +1395,7 @@ auth:
     clave_movil_description: Autenticación con aprobación push en el móvil del titular
       registrado en Cl@ve. Requiere DNI/NIE, registro en Cl@ve, y el dispositivo emparejado.
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: Hueco reservado y cerrado para Cl@ve Permanente.
+    clave_permanente_description: 'Autenticación con DNI/NIE y contraseña a través del proveedor de identidad Cl@ve Permanente. Automatizable sin intervención para los flujos de lectura de la AEAT; requiere DNI/NIE y contraseña.'
     clave_permanente_label: Cl@ve Permanente
     clave_pin_description: Hueco reservado y cerrado para Cl@ve PIN.
     clave_pin_label: Cl@ve PIN
@@ -1991,6 +2005,26 @@ cli:
         section_optional: casillas_opcionales_manuales
         section_profile: derivadas_del_perfil
         section_required: casillas_obligatorias_manuales
+      review_package:
+        actor_help: Etiqueta del operador registrada en el descriptor del paquete
+          y en el evento de exportación subyacente.
+        build_help: Ensambla un paquete de revisión compartible y verificable por
+          checksum (borrador fichero-BOE, procedencia de la revisión y evidencia contable
+          incluida) para entregar al asesor. Solo local; nunca contacta con la AEAT.
+        errors:
+          output_required: Indique --output RUTA para el ZIP del paquete de revisión.
+          package_not_found: No se encontró el paquete de revisión en {package_path}.
+        group_help: Construye un paquete de revisión compartible y verifica su integridad.
+        notes_help: Nota de texto libre incluida en el descriptor del paquete (p.
+          ej. el motivo del envío).
+        output_help: Ruta donde escribir el ZIP del paquete de revisión.
+        package_path_help: Ruta del ZIP del paquete de revisión a verificar.
+        revision_help: Id de la revisión de cálculo a empaquetar; por defecto la revisión
+          verificada-completa o presentada más reciente de la unidad de trabajo.
+        verify_help: Verifica el manifiesto de checksum de un paquete de revisión
+          (solo integridad; no certifica quién lo construyó). Solo local; nunca contacta
+          con la AEAT.
+        work_unit_id_help: Id de la unidad de trabajo (SHA-256 o prefijo inequívoco).
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por
@@ -2441,6 +2475,7 @@ cli:
           list_help: Listar los ámbitos de apoderado aceptados
         status_help: Mostrar la configuración de apoderado activa
       certificate:
+        check_help: cli.config.auth.certificate.check_help
         help: Gestionar orígenes de certificado con nombre para el proveedor de autenticación
           por certificado
         list_help: Listar todos los orígenes de certificado registrados
@@ -2453,6 +2488,16 @@ cli:
         remove:
           name_help: Origen de certificado registrado que se eliminará
         remove_help: Eliminar un origen de certificado registrado
+        secret:
+          help: 'Gestiona la contrasena vinculada a una fuente de certificado con nombre'
+          remove:
+            name_help: 'Fuente de certificado registrada cuya contrasena debe eliminarse'
+          remove_help: 'Elimina la contrasena vinculada a una fuente de certificado registrada'
+          set:
+            backend_help: 'Backend del secreto: secure_storage (por defecto, cifrado en reposo) o keyring (llavero del sistema operativo)'
+            name_help: 'Fuente de certificado registrada a la que se vincula la contrasena'
+            secret_help: 'La contrasena del PKCS#12 (se solicita, oculta, nunca se muestra)'
+          set_help: 'Establece (o rota) la contrasena de una fuente de certificado registrada'
         select:
           name_help: Origen de certificado registrado que se activará
         select_help: Seleccionar el origen de certificado activo
@@ -2841,6 +2886,17 @@ cli:
       sandbox:
         already_exists: Ya existe un sandbox llamado %{label}. Elija otro nombre o
           descarte primero el existente.
+        archive_active_profile: El sandbox %{name} es el perfil activo; cambia a otro
+          perfil antes de archivarlo.
+        archive_dry_run_help: Previsualiza el archivado sin sacar el sandbox de la
+          superficie activa.
+        archive_help: Convierte un sandbox en un estado latente reversible sin eliminarlo.
+        archive_name_help: Nombre del sandbox (sin el prefijo).
+        archive_requires_yes: Archivar un sandbox es una transición de estado. Vuelve
+          a ejecutar 'aeat config profile sandbox archive %{name} --yes' para confirmar.
+        archive_restorable_info: El sandbox ahora está latente; ejecuta 'aeat config
+          profile sandbox restore %{name}' para recuperarlo.
+        archive_yes_help: Confirma el archivado.
         create_active_info: El sandbox es ahora el perfil ACTIVO; todos los comandos
           se ejecutan sobre él hasta que cambie de perfil o lo descarte.
         create_from_profile_help: Copia los datos de un perfil existente al sandbox
@@ -2849,6 +2905,8 @@ cli:
         create_name_help: Nombre del sandbox.
         discard_active_profile: El sandbox %{name} es el perfil activo; cambie a otro
           perfil antes de descartarlo.
+        discard_dry_run_help: Muestra una vista previa de lo que eliminaria el descarte
+          sin eliminar nada.
         discard_help: Elimina permanentemente un sandbox.
         discard_name_help: Nombre del sandbox (sin el prefijo).
         discard_not_a_sandbox: '%{name} no es un sandbox; la superficie de sandbox
@@ -2859,6 +2917,18 @@ cli:
         help: Ejecuta experimentos en un bucket aislado y descartable que nunca afecta
           al estado del perfil principal.
         list_help: Lista todos los sandboxes.
+        prune_dry_run_help: Muestra una vista previa de que sandboxes se descartarian
+          sin descartarlos.
+        prune_help: Descarta todos los sandboxes a la vez.
+        prune_requires_yes: Descartar todos los sandboxes es destructivo. Vuelve a
+          ejecutar 'aeat config profile sandbox prune --yes' para confirmar.
+        prune_skipped_active_info: Se omitio el sandbox activo %{names}; cambia a
+          otro perfil y vuelve a ejecutar 'aeat config profile sandbox prune --yes'
+          para descartarlo.
+        prune_yes_help: Confirma el descarte de todos los sandboxes.
+        restore_help: Recupera un sandbox archivado y lo devuelve a estado activo.
+        restore_name_help: Nombre del sandbox (sin el prefijo).
+        restore_not_archived: '%{name} no está archivado; no hay nada que recuperar.'
         source_not_found: No existe ningún perfil activo llamado %{name} para copiar
           al sandbox.
         unknown_sandbox: 'Sandbox desconocido: %{name}. Ejecute ''aeat config profile
@@ -3021,6 +3091,41 @@ cli:
         y no puede repararse manualmente.'
       registry_integrity_internal: Problema interno de la aplicación; no es un fallo
         de tu perfil ni algo que puedas corregir tú.
+    errors:
+      header: 'Errores de ejecuciones LLM:'
+      help: Desglosa las ejecuciones LLM locales fallidas recientes por proveedor
+        y tipo de error.
+      no_failures: No se han registrado ejecuciones LLM fallidas en este rango.
+      provider_help: Restringe el desglose a esta etiqueta de proveedor (por ejemplo,
+        claude, antigravity, codex).
+      since_help: Límite inferior inclusivo (AAAA-MM-DD) en los registros de ejecuciones
+        LLM.
+      until_help: Límite superior inclusivo (AAAA-MM-DD) en los registros de ejecuciones
+        LLM.
+    latency:
+      header: 'Latencia de ejecuciones LLM:'
+      help: Muestra los percentiles P50/P95/P99 de duración de las ejecuciones LLM
+        locales recientes.
+      no_run_data: Todavía no se ha registrado telemetría de ejecuciones LLM. Ejecuta
+        una clasificación asistida por LLM para generarla.
+      provider_help: Restringe el informe a esta etiqueta de proveedor (por ejemplo,
+        claude, antigravity, codex).
+      since_help: Límite inferior inclusivo (AAAA-MM-DD) en los registros de ejecuciones
+        LLM.
+      until_help: Límite superior inclusivo (AAAA-MM-DD) en los registros de ejecuciones
+        LLM.
+    llm_usage:
+      header: 'Uso de ejecuciones LLM:'
+      help: Informa de los totales de uso de ejecuciones LLM (recuentos, duraciones,
+        tasa de éxito) por proveedor y modelo.
+      no_run_data: Todavía no se ha registrado telemetría de ejecuciones LLM. Ejecuta
+        una clasificación asistida por LLM para generarla.
+      provider_help: Restringe el resumen a esta etiqueta de proveedor (p. ej. claude,
+        antigravity, codex).
+      since_help: Límite inferior inclusivo en fecha ISO (AAAA-MM-DD) sobre los registros
+        de ejecución LLM.
+      until_help: Límite superior inclusivo en fecha ISO (AAAA-MM-DD) sobre los registros
+        de ejecución LLM.
     next_action:
       inspect_registry_toml: Inspeccione las fuentes TOML del registro para identificar
         el problema.
@@ -3052,6 +3157,19 @@ cli:
         ej. claude, antigravity, codex).
       session_stale_message: La sesión de AEAT persistida ha superado su plazo de
         inactividad; una lectura en vivo volverá a autenticarse.
+      since_help: Fecha ISO (AAAA-MM-DD) inferior inclusiva para los registros de
+        ejecución del LLM.
+      until_help: Fecha ISO (AAAA-MM-DD) superior inclusiva para los registros de
+        ejecución del LLM.
+    runs:
+      header: 'Ejecuciones recientes del LLM:'
+      help: Muestra las ejecuciones recientes del LLM registradas localmente, de la
+        más reciente a la más antigua.
+      limit_help: Limita el listado a este número de ejecuciones más recientes.
+      no_run_data: Aún no hay telemetría de ejecuciones del LLM. Ejecuta una clasificación
+        asistida por LLM para generarla.
+      provider_help: Restringe el listado a este proveedor (p. ej. claude, antigravity,
+        codex).
       since_help: Fecha ISO (AAAA-MM-DD) inferior inclusiva para los registros de
         ejecución del LLM.
       until_help: Fecha ISO (AAAA-MM-DD) superior inclusiva para los registros de
@@ -4910,6 +5028,9 @@ errors:
       no superó la validación.
     integrity_storage_classification: La clase de sensibilidad declarada de un registro
       es incompatible con su repositorio.
+    integrity_storage_corpus_bundle: El paquete del corpus no pudo analizarse ni verificarse.
+    integrity_storage_corpus_bundle_verification: El paquete del corpus no superó
+      la verificación de sumas de comprobación frente a su manifiesto incorporado.
     integrity_storage_corpus_manifest: El manifiesto del corpus no se pudo leer o
       validar.
     integrity_storage_corpus_manifest_drift: 'El corpus en disco difiere de lo que

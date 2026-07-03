@@ -36,18 +36,25 @@ rows are addressed by their natural object keys, not the stored HMAC lookup
 digests, so import re-saves them through the recipient bucket's
 :class:`adapters.persistence.storage.SecureObjectRepository` and
 re-encrypts under that bucket's DEK.
-This package exposes the lifecycle composition verbs ``browse``,
-``delete``, ``export``, ``import``, ``inspect``, and ``rename``. The
-``search`` verb is deferred behind its own ADR because it must route
-through domain repositories instead of decrypting secure-object storage
-directly.
+This package exposes the lifecycle composition verbs ``archive``,
+``browse``, ``delete``, ``export``, ``import``, ``inspect``, ``rename``,
+and ``restore``. The ``search`` verb is deferred behind its own ADR
+because it must route through domain repositories instead of decrypting
+secure-object storage directly.
 
 :func:`create_sandbox` and :func:`discard_sandbox` expose a discardable
 experiment-workspace lifecycle over the same primitives: a sandbox is an
 ordinary bucket labelled with the reserved :data:`SANDBOX_LABEL_PREFIX`,
 created (optionally forked from a live profile's facts) through the
 canonical atomic-create span and discarded through this package's
-:meth:`BucketMaintenanceService.delete`.
+:meth:`BucketMaintenanceService.delete`. :func:`preview_discard_sandbox`
+reports what a discard would remove without removing it, and
+:func:`list_sandboxes` enumerates every live sandbox for bulk operations
+such as ``sandbox prune``. :func:`archive_sandbox` and
+:func:`restore_sandbox` expose a reversible-dormancy alternative to
+discard: :meth:`BucketMaintenanceService.archive` soft-tombstones the
+sandbox without removing its directory, and
+:meth:`BucketMaintenanceService.restore` reactivates it.
 
 See Also:
     :mod:`application.user_profile`
@@ -71,6 +78,8 @@ See Also:
 from __future__ import annotations
 
 from ._contracts import (
+    ArchiveBucketCommand,
+    ArchiveBucketResult,
     BrowseBucketCommand,
     BrowseBucketResult,
     BucketNamespaceInventoryRow,
@@ -84,27 +93,45 @@ from ._contracts import (
     InspectBucketArchiveResult,
     RenameBucketCommand,
     RenameBucketResult,
+    RestoreBucketCommand,
+    RestoreBucketResult,
 )
 from ._manifest_digest import compute_manifest_digest
 from ._sandbox import (
     SANDBOX_LABEL_PREFIX,
+    ArchiveSandboxCommand,
+    ArchiveSandboxResult,
     CreateSandboxCommand,
     CreateSandboxResult,
     DiscardSandboxCommand,
     DiscardSandboxResult,
+    PreviewDiscardSandboxCommand,
+    PreviewDiscardSandboxResult,
+    RestoreSandboxCommand,
+    RestoreSandboxResult,
     SandboxAlreadyExistsError,
     SandboxDiscardRefusedError,
+    SandboxNamespaceInventoryRow,
+    SandboxNotArchivedError,
     SandboxNotFoundError,
     SandboxSourceNotFoundError,
+    archive_sandbox,
     create_sandbox,
     discard_sandbox,
     is_sandbox_label,
+    list_sandboxes,
+    preview_discard_sandbox,
+    restore_sandbox,
     sandbox_label,
 )
 from ._service import BucketMaintenanceService
 
 __all__ = [
     "SANDBOX_LABEL_PREFIX",
+    "ArchiveBucketCommand",
+    "ArchiveBucketResult",
+    "ArchiveSandboxCommand",
+    "ArchiveSandboxResult",
     "BrowseBucketCommand",
     "BrowseBucketResult",
     "BucketMaintenanceService",
@@ -121,15 +148,27 @@ __all__ = [
     "ImportBucketResult",
     "InspectBucketArchiveCommand",
     "InspectBucketArchiveResult",
+    "PreviewDiscardSandboxCommand",
+    "PreviewDiscardSandboxResult",
     "RenameBucketCommand",
     "RenameBucketResult",
+    "RestoreBucketCommand",
+    "RestoreBucketResult",
+    "RestoreSandboxCommand",
+    "RestoreSandboxResult",
     "SandboxAlreadyExistsError",
     "SandboxDiscardRefusedError",
+    "SandboxNamespaceInventoryRow",
+    "SandboxNotArchivedError",
     "SandboxNotFoundError",
     "SandboxSourceNotFoundError",
+    "archive_sandbox",
     "compute_manifest_digest",
     "create_sandbox",
     "discard_sandbox",
     "is_sandbox_label",
+    "list_sandboxes",
+    "preview_discard_sandbox",
+    "restore_sandbox",
     "sandbox_label",
 ]

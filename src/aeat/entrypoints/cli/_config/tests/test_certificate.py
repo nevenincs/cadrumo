@@ -2,21 +2,37 @@
 
 Exercises the real Typer command tree against a real profile bucket and
 real encrypted secure-object storage — no mocks. See GitHub issue #591
-(multi-cert source resolution slice).
+(multi-cert source resolution and expiry/rotation awareness slices).
 """
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.serialization import pkcs12
+from cryptography.x509.oid import NameOID
 
-from .....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+from .....adapters.persistence.storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    activate_master_key_provider,
+    get_master_key_provider,
+    override_secret_store,
+)
+from .....core.config import override_settings
 from .....tests.cli_runner import invoke_typer_app
 from .....tests.secure_sql import isolated_profile_storage_root
 from ... import app as root_app
 from ..._errors import CliRefusedBoundaryError
 from ..__init__ import app as config_app
+
+_CERT_SECRET = "correct-horse-battery-staple"  # noqa: S105 - synthetic test fixture, not a secret
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -170,3 +186,256 @@ def test_certificate_remove_unregistered_name_is_a_no_op(tmp_path: Path) -> None
             )
         assert result.exit_code == 0, f"remove of unregistered name must not error: {result.output}"
         assert "removed\tFalse" in result.output
+
+
+# ── certificate check (expiry/rotation awareness, GitHub issue #591) ────────
+
+
+def _build_pkcs12(
+    tmp_path: Path,
+    *,
+    not_valid_before: datetime,
+    not_valid_after: datetime,
+    name: str,
+) -> Path:
+    """Generate a real self-signed PKCS#12 bundle with the given validity window."""
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = issuer = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
+            x509.NameAttribute(NameOID.COMMON_NAME, name),
+        ],
+    )
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(not_valid_before)
+        .not_valid_after(not_valid_after)
+        .sign(key, hashes.SHA256())
+    )
+    pfx_bytes = pkcs12.serialize_key_and_certificates(
+        name=name.encode("utf-8"),
+        key=key,
+        cert=cert,
+        cas=None,
+        encryption_algorithm=serialization.BestAvailableEncryption(_CERT_SECRET.encode("utf-8")),
+    )
+    out = tmp_path / f"{name}.p12"
+    out.write_bytes(pfx_bytes)
+    return out
+
+
+def test_certificate_check_reports_ok_and_expiring_per_source(tmp_path: Path) -> None:
+    """``certificate check`` classifies each registered source independently.
+
+    A gestor with one valid certificate and one certificate inside the
+    renewal window must see both verdicts in one report, with a
+    non-blocking warning naming the expiring source — never silently
+    masked by the valid one.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        now = datetime.now(UTC)
+        valid_cert = _build_pkcs12(
+            tmp_path,
+            not_valid_before=now - timedelta(days=1),
+            not_valid_after=now + timedelta(days=300),
+            name="personal",
+        )
+        expiring_cert = _build_pkcs12(
+            tmp_path,
+            not_valid_before=now - timedelta(days=1),
+            not_valid_after=now + timedelta(days=10),
+            name="apoderado-acme",
+        )
+
+        with activate_master_key_provider(get_master_key_provider()):
+            invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "register", "--name", "personal", "--file", str(valid_cert)],
+            )
+            invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "register",
+                    "--name",
+                    "apoderado-acme",
+                    "--file",
+                    str(expiring_cert),
+                ],
+            )
+            with override_settings(aeat_certificate_password_secret=_CERT_SECRET):
+                checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
+
+        assert checked.exit_code == 0, f"check failed: {checked.output}"
+        assert "personal" in checked.output
+        assert "\tok\t" in checked.output
+        assert "apoderado-acme" in checked.output
+        assert "\texpiring\t" in checked.output
+        assert "WARNING\tapoderado-acme" in checked.output
+
+
+def test_certificate_check_reports_expired_certificate(tmp_path: Path) -> None:
+    """``certificate check`` classifies an already-lapsed certificate as expired, never corrupt."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        now = datetime.now(UTC)
+        expired_cert = _build_pkcs12(
+            tmp_path,
+            not_valid_before=now - timedelta(days=400),
+            not_valid_after=now - timedelta(days=5),
+            name="expired-cert",
+        )
+
+        with activate_master_key_provider(get_master_key_provider()):
+            invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "register", "--name", "expired-cert", "--file", str(expired_cert)],
+            )
+            with override_settings(aeat_certificate_password_secret=_CERT_SECRET):
+                checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
+
+        assert checked.exit_code == 0, f"check failed: {checked.output}"
+        assert "\texpired\t" in checked.output
+        assert "WARNING\texpired-cert" in checked.output
+
+
+def test_certificate_check_with_no_registered_sources_reports_none(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+
+        with activate_master_key_provider(get_master_key_provider()):
+            result = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
+
+        assert result.exit_code == 0, f"check failed: {result.output}"
+        assert "sources\t<none>" in result.output
+
+
+# ── certificate secret set/remove (per-source secret backend, #591 slice) ───
+
+
+@pytest.fixture
+def _isolated_secret_store(tmp_path: Path):
+    """Inject a deterministic :class:`SecretStore` for the secret-verb CLI tests.
+
+    ``get_secret_store()`` is a process-wide singleton; overriding it for
+    the duration of each test keeps the CLI verbs' secret writes isolated
+    from any other test in the same pytest process.
+    """
+    provider = EphemeralMasterKeyProvider()
+    blob_store = EncryptedBlobStore(root_dir=tmp_path / "cli-secret-blobs", master_key_provider=provider)
+    store = SecretStore(store_dir=tmp_path / "cli-secrets", blob_store=blob_store, master_key_provider=provider)
+    override_secret_store(store)
+    try:
+        yield store
+    finally:
+        override_secret_store(None)
+
+
+def test_certificate_secret_set_requires_a_registered_source(tmp_path: Path, _isolated_secret_store) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+
+        with activate_master_key_provider(get_master_key_provider()):
+            result = invoke_typer_app(
+                config_app,
+                ["auth", "certificate", "secret", "set", "--name", "ghost", "--secret", _CERT_SECRET],
+            )
+
+        assert result.exit_code != 0
+        assert isinstance(result.exception, CliRefusedBoundaryError), (
+            f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
+        )
+
+
+def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path, _isolated_secret_store) -> None:
+    """Setting a secret, rotating it, then removing it never leaks the secret value in output."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        cert_path = tmp_path / "personal.p12"
+        cert_path.write_bytes(b"placeholder cert")
+
+        with activate_master_key_provider(get_master_key_provider()):
+            invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "register", "--name", "personal", "--file", str(cert_path)],
+            )
+            first_set = invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "secret", "set", "--name", "personal", "--secret", _CERT_SECRET],
+            )
+            second_set = invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "personal",
+                    "--secret",
+                    "a-rotated-passphrase",
+                ],
+            )
+            removed = invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "secret", "remove", "--name", "personal"],
+            )
+            removed_again = invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "secret", "remove", "--name", "personal"],
+            )
+
+        assert first_set.exit_code == 0, f"secret set failed: {first_set.output}"
+        assert "rotated\tFalse" in first_set.output
+        assert _CERT_SECRET not in first_set.output
+
+        assert second_set.exit_code == 0, f"secret rotate failed: {second_set.output}"
+        assert "rotated\tTrue" in second_set.output
+        assert "a-rotated-passphrase" not in second_set.output
+
+        assert removed.exit_code == 0, f"secret remove failed: {removed.output}"
+        assert "removed\tTrue" in removed.output
+
+        assert removed_again.exit_code == 0, f"repeat secret remove must not error: {removed_again.output}"
+        assert "removed\tFalse" in removed_again.output
+
+
+def test_certificate_secret_set_unknown_backend_refuses(tmp_path: Path, _isolated_secret_store) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        cert_path = tmp_path / "personal.p12"
+        cert_path.write_bytes(b"placeholder cert")
+
+        with activate_master_key_provider(get_master_key_provider()):
+            invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "register", "--name", "personal", "--file", str(cert_path)],
+            )
+            result = invoke_typer_app(
+                config_app,
+                [
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "personal",
+                    "--secret",
+                    _CERT_SECRET,
+                    "--backend",
+                    "not-a-real-backend",
+                ],
+            )
+
+        assert result.exit_code != 0
+        assert isinstance(result.exception, CliRefusedBoundaryError), (
+            f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
+        )

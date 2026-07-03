@@ -28,6 +28,9 @@ Submodules
    aeat.adapters.outbound.aeat.auth._clave_movil_metadata
    aeat.adapters.outbound.aeat.auth._clave_movil_page_flow
    aeat.adapters.outbound.aeat.auth._clave_movil_support
+   aeat.adapters.outbound.aeat.auth._clave_permanente
+   aeat.adapters.outbound.aeat.auth._clave_permanente_metadata
+   aeat.adapters.outbound.aeat.auth._clave_permanente_support
    aeat.adapters.outbound.aeat.auth._errors
    aeat.adapters.outbound.aeat.auth._fixtures
    aeat.adapters.outbound.aeat.auth._providers

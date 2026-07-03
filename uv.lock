@@ -26,7 +26,7 @@ wheels = [
 ]
 
 [[package]]
-name = "aeat"
+name = "aeat-cli"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
@@ -158,11 +158,11 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aeat", extras = ["agent"], marker = "extra == 'all'" },
-    { name = "aeat", extras = ["anthropic"], marker = "extra == 'all'" },
-    { name = "aeat", extras = ["browser"], marker = "extra == 'all'" },
-    { name = "aeat", extras = ["google"], marker = "extra == 'all'" },
-    { name = "aeat", extras = ["search"], marker = "extra == 'all'" },
+    { name = "aeat-cli", extras = ["agent"], marker = "extra == 'all'" },
+    { name = "aeat-cli", extras = ["anthropic"], marker = "extra == 'all'" },
+    { name = "aeat-cli", extras = ["browser"], marker = "extra == 'all'" },
+    { name = "aeat-cli", extras = ["google"], marker = "extra == 'all'" },
+    { name = "aeat-cli", extras = ["search"], marker = "extra == 'all'" },
     { name = "aeat-data", marker = "extra == 'corpus-sources'", directory = "packaging/aeat_data" },
     { name = "anthropic", marker = "extra == 'anthropic'", specifier = ">=0.74.1,<1" },
     { name = "anyio", marker = "extra == 'agent'", specifier = ">=4.5,<5" },

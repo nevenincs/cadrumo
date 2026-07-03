@@ -23,8 +23,8 @@ from ._participation_index import TransactionRevisionParticipationIndex
 from ._verification_report import VerificationReportCatalogue
 from ._work_unit import WorkUnitCatalogue
 
-if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
-    from ...adapters.persistence.storage import SecureObjectWrite
+if TYPE_CHECKING:  # pragma: no cover - typing-only boundary DTO (lives in core, not adapters)
+    from ...core import SecureObjectWrite
 
 
 @runtime_checkable

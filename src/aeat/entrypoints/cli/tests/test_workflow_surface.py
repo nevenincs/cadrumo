@@ -560,7 +560,7 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     with activate_master_key_provider(get_master_key_provider()):
         configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
         unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])
-        unsupported = _invoke(["config", "auth", "configure", "--provider", "clave_permanente"])
+        unsupported = _invoke(["config", "auth", "configure", "--provider", "clave_pin"])
         unsupported_test = _invoke(["config", "auth", "test", "--provider", "dnie_pkcs"])
         unsupported_login = _invoke(["config", "auth", "login", "--provider", "dnie_pkcs"])
         unsupported_clear = _invoke(["config", "auth", "clear", "--provider", "clave_pin"])
@@ -570,7 +570,7 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     assert unsupported_spelling.exit_code != 0
     assert "clave-movil" in unsupported_spelling.output
     assert unsupported.exit_code != 0
-    assert "clave_permanente" in unsupported.output
+    assert "clave_pin" in unsupported.output
     assert unsupported_test.exit_code != 0
     assert "dnie_pkcs" in unsupported_test.output
     assert unsupported_login.exit_code != 0

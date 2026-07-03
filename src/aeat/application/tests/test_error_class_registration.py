@@ -219,15 +219,17 @@ def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_try_load_certificate_metadata_does_not_swallow_unrelated_exceptions() -> None:
-    """_try_load_certificate_metadata propagates RuntimeError (not in the narrow catch)."""
-    # We only verify that the function is importable and the except clause is narrow.
-    # The real certificate load path requires a PKCS#12 file; we exercise the guard via
-    # the password=None early-exit path (returns None without exception).
-    from ..auth._operator_probes import _try_load_certificate_metadata
+def test_probe_certificate_bundle_does_not_swallow_unrelated_exceptions() -> None:
+    """_probe_certificate_bundle propagates a non-CertificateError, non-OSError failure.
 
-    result = _try_load_certificate_metadata.__doc__
-    assert result is not None  # function exists and has a docstring
+    The narrowed ``except CertificateError`` clause around the PKCS#12
+    health evaluation must not widen back to a bare ``except Exception``
+    that would mask a genuine programmer error as a merely-corrupt
+    certificate.
+    """
+    from ..auth._operator_probes import _probe_certificate_bundle
+
+    assert _probe_certificate_bundle.__doc__ is not None  # function exists and has a docstring
 
 
 def test_live_auth_identity_state_does_not_swallow_unrelated_exceptions() -> None:

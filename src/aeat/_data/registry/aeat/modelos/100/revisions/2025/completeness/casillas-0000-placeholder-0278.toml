@@ -455,6 +455,18 @@ casilla_id = "0156"
 number = "0156"
 
 [[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "0157"
+number = "0157"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "0158"
+number = "0158"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "0159"
+number = "0159"
+
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "0171"
 number = "0171"
 

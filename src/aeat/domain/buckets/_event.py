@@ -88,6 +88,7 @@ class BucketEventType(StrEnum):
     PROFILE_VALUES_UPDATED = "profile.values.updated"
     PROFILE_VALUES_CLEARED = "profile.values.cleared"
     PROFILE_TOMBSTONED = "profile.tombstoned"
+    PROFILE_REACTIVATED = "profile.reactivated"
     PROFILE_DUPLICATED = "profile.duplicated"
     PROFILE_RENAMED = "profile.renamed"
     PROFILE_EXPORTED = "profile.exported"
@@ -117,6 +118,8 @@ class BucketEventType(StrEnum):
     BUCKET_IMPORTED = "bucket.imported"
     BUCKET_RENAMED = "bucket.renamed"
     BUCKET_DELETED = "bucket.deleted"
+    BUCKET_ARCHIVED = "bucket.archived"
+    BUCKET_RESTORED = "bucket.restored"
 
     # ledger usage-ratio mutations
     LEDGER_RATIOS_SET = "ledger.ratios.set"
@@ -131,6 +134,9 @@ class BucketEventType(StrEnum):
     AUTH_CERTIFICATE_SOURCE_REGISTERED = "auth.certificate_source.registered"
     AUTH_CERTIFICATE_SOURCE_SELECTED = "auth.certificate_source.selected"
     AUTH_CERTIFICATE_SOURCE_REMOVED = "auth.certificate_source.removed"
+    AUTH_CERTIFICATE_SOURCE_SECRET_SET = "auth.certificate_source.secret_set"  # noqa: S105 - event-type label, not a secret
+    AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED = "auth.certificate_source.secret_rotated"  # noqa: S105 - event-type label
+    AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED = "auth.certificate_source.secret_removed"  # noqa: S105 - event-type label
 
     # ledger transaction lifecycle
     LEDGER_TRANSACTION_CREATED = "ledger.transaction.created"

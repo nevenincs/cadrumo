@@ -72,7 +72,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # sides in its failure diagnostic.
 
 _APP_NAMESPACE_PASSTHROUGH = frozenset({"live"})
-_APP_NAMESPACE_FLATTEN = frozenset({"ledger", "modelo", "overview", "registry", "review"})
+_APP_NAMESPACE_FLATTEN = frozenset({"diagnostics", "ledger", "modelo", "overview", "registry", "review"})
 
 
 class _PayloadWithStaleDraftRefs(Protocol):

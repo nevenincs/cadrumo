@@ -310,6 +310,7 @@ ignore_imports =
     aeat.application.aggregation.tests.test_source_mesh_profile_live -> aeat.adapters.outbound.aeat.sede
     aeat.application.aggregation.tests.test_source_mesh_profile_live -> aeat.tests.secure_sql
     aeat.application.auth.tests.test_apoderado -> aeat.tests.secure_sql
+    aeat.application.auth.tests.test_certificate_secret_backend -> aeat.adapters.persistence.storage
     aeat.application.auth.tests.test_diagnostics -> aeat.adapters.persistence.storage
     aeat.application.auth.tests.test_diagnostics -> aeat.tests.secure_sql
     aeat.application.auth.tests.test_ensure_session -> aeat.adapters.outbound.aeat.auth
@@ -422,6 +423,7 @@ ignore_imports =
     aeat.application.tests.test_diagnostics -> aeat.adapters.persistence.storage.sql
     aeat.application.tests.test_diagnostics -> aeat.adapters.persistence.storage.sql.secure_objects
     aeat.application.tests.test_diagnostics -> aeat.tests.secure_sql
+    aeat.application.tests.test_diagnostics_run_health -> aeat.adapters.outbound.llm
     aeat.application.tests.test_repair_integrity -> aeat.adapters.persistence.storage
     aeat.application.tests.test_repair_integrity -> aeat.adapters.persistence.storage.runtime_repository
     aeat.application.tests.test_repair_integrity -> aeat.adapters.persistence.storage.sql.engine
@@ -644,6 +646,8 @@ ignore_imports =
     aeat.application.aggregation._withholding_source -> aeat.adapters.**
     aeat.application.auth -> aeat.adapters.**
     aeat.application.auth._apoderado -> aeat.adapters.**
+    aeat.application.auth._certificate_secret_backend -> aeat.adapters.**
+    aeat.application.auth._certificate_sources_operator -> aeat.adapters.**
     aeat.application.auth._diagnostics -> aeat.adapters.**
     aeat.application.auth._operator -> aeat.adapters.**
     aeat.application.auth._operator_probes -> aeat.adapters.**
@@ -658,6 +662,7 @@ ignore_imports =
     aeat.application.calculations._observations_repository -> aeat.adapters.**
     aeat.application.calculations._relation_prefill -> aeat.adapters.**
     aeat.application.diagnostics -> aeat.adapters.**
+    aeat.application.diagnostics_run_health -> aeat.adapters.**
     aeat.application.evidence._service -> aeat.adapters.**
     aeat.application.filing._history_repository -> aeat.adapters.**
     aeat.application.filing._import -> aeat.adapters.**

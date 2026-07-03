@@ -1,0 +1,142 @@
+"""Calculate-path advisory wiring for the capital-goods IVA regularización register.
+
+Exercises :func:`~aeat.application.modelo._bienes_inversion_advisory.collect_bienes_inversion_regularizacion_diagnostics`
+against a REAL encrypted register persisted through
+:class:`~aeat.adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`
+inside a genuine bucket runtime (``isolated_runtime_profile``) — no mocks, no
+stubs. The pure art-109 math itself is proven in
+``domain/bienes_inversion/tests/test_regularizacion.py`` and the pure advisory
+projection in
+``application/calculations/tests/test_bienes_inversion_regularizacion.py``; this
+module proves the register is actually READ on the live calculate path, which
+was the gap the first-slice ADR left open (the register and the pure projection
+shipped, but nothing called them from ``_calculation_diagnostics``).
+"""
+
+from __future__ import annotations
+
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from ....adapters.persistence.profile.bienes_inversion import (
+    BienesInversionIvaRegisterRepository,
+)
+from ....core import BindingSourceKind
+from ....domain.bienes_inversion import BienInversionIvaRecord, BienInversionKind
+from ....tests.secure_sql import isolated_runtime_profile
+from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_BUCKET = "bi-advisory-bucket"
+
+
+def _record(identifier: str = "bi-2022-maquina") -> BienInversionIvaRecord:
+    return BienInversionIvaRecord(
+        identifier=identifier,
+        description="Máquina afecta a la actividad",
+        acquisition_year=2022,
+        cuota_soportada=Decimal("5000.00"),
+        prorrata_inicial_pct=Decimal("80"),
+        kind=BienInversionKind.MUEBLE,
+    )
+
+
+def test_advisory_fires_on_m303_settlement_period_with_in_window_good(tmp_path: Path) -> None:
+    """A registered in-window good raises the advisory on the 4T settlement period.
+
+    The good is acquired in 2022 (mueble, 4-year window: 2023-2026), so 2024 is
+    in-window. The current-year definitive percentage is the separately-deferred
+    input, so this collector supplies none and the good is reported pending it —
+    the advisory still fires (no-silent-under-declaration).
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        BienesInversionIvaRegisterRepository(objects=profile.repository).add(_record())
+
+        diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            modelo="303",
+            period_token="4T",
+            filing_year=2024,
+            bucket_id=_BUCKET,
+        )
+
+    assert len(diagnostics) == 1
+    diagnostic = diagnostics[0]
+    assert diagnostic.binding_source is BindingSourceKind.BIENES_INVERSION_REGULARIZACION
+    assert "43" in diagnostic.message
+    assert "pendiente" in diagnostic.message
+
+
+def test_advisory_fires_on_m303_annual_period(tmp_path: Path) -> None:
+    """The annual period token (``0A``) is also a valid settlement period."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        BienesInversionIvaRegisterRepository(objects=profile.repository).add(_record())
+
+        diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            modelo="303",
+            period_token="0A",
+            filing_year=2024,
+            bucket_id=_BUCKET,
+        )
+
+    assert len(diagnostics) == 1
+
+
+def test_no_advisory_on_mid_year_quarter(tmp_path: Path) -> None:
+    """A mid-year quarter (1T) is never a regularisation event (LIVA art. 107.Siete)."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        BienesInversionIvaRegisterRepository(objects=profile.repository).add(_record())
+
+        diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            modelo="303",
+            period_token="1T",
+            filing_year=2024,
+            bucket_id=_BUCKET,
+        )
+
+    assert diagnostics == ()
+
+
+def test_no_advisory_for_non_m303_modelo(tmp_path: Path) -> None:
+    """Only Modelo 303 declares casilla 43; every other modelo is out of scope."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        BienesInversionIvaRegisterRepository(objects=profile.repository).add(_record())
+
+        diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            modelo="390",
+            period_token="0A",
+            filing_year=2024,
+            bucket_id=_BUCKET,
+        )
+
+    assert diagnostics == ()
+
+
+def test_no_advisory_when_register_empty(tmp_path: Path) -> None:
+    """An untouched register (no bienes declared) raises no advisory (no noise)."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET):
+        diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            modelo="303",
+            period_token="4T",
+            filing_year=2024,
+            bucket_id=_BUCKET,
+        )
+
+    assert diagnostics == ()
+
+
+def test_no_advisory_when_good_is_out_of_window(tmp_path: Path) -> None:
+    """A good acquired in 2022 (mueble, 4yr window through 2026) is out of window by 2030."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        BienesInversionIvaRegisterRepository(objects=profile.repository).add(_record())
+
+        diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            modelo="303",
+            period_token="4T",
+            filing_year=2030,
+            bucket_id=_BUCKET,
+        )
+
+    assert diagnostics == ()

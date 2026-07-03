@@ -78,6 +78,10 @@ from ._clave_movil import (
     ClaveMovilFailureMode,
 )
 from ._clave_movil_support import classify_identity
+from ._clave_permanente import (
+    ClavePermanenteAuthProvider,
+    ClavePermanenteFailureMode,
+)
 from ._errors import (
     AeatLoginAssertionError,
     AeatSessionExpiredError,
@@ -95,6 +99,8 @@ from ._providers import (
     CertificateSessionDetail,
     ClaveMovilLoginAssertionDetail,
     ClaveMovilSessionDetail,
+    ClavePermanenteLoginAssertionDetail,
+    ClavePermanenteSessionDetail,
     describe_certificate_provider,
 )
 from .certificate import (
@@ -166,6 +172,10 @@ __all__ = [
     "ClaveMovilFailureMode",
     "ClaveMovilLoginAssertionDetail",
     "ClaveMovilSessionDetail",
+    "ClavePermanenteAuthProvider",
+    "ClavePermanenteFailureMode",
+    "ClavePermanenteLoginAssertionDetail",
+    "ClavePermanenteSessionDetail",
     "HandshakeResult",
     "LoadedCertificate",
     "build_client_certificates_kwarg",
@@ -207,6 +217,11 @@ def select_provider(
         )
     if kind is AuthProviderKind.CLAVE_MOVIL:
         return ClaveMovilAuthProvider(
+            settings,
+            browser_session_factory=browser_session_factory,
+        )
+    if kind is AuthProviderKind.CLAVE_PERMANENTE:
+        return ClavePermanenteAuthProvider(
             settings,
             browser_session_factory=browser_session_factory,
         )

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -22,9 +21,6 @@ from ...core.time import now
 from . import AuthProviderKind
 from ._operator_scope import active_profile_storage_span
 from ._sessions import load_persisted_session
-
-if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth.certificate import LoadedCertificate
 
 _log = get_logger(__name__)
 
@@ -166,6 +162,7 @@ class _ProviderProbeOutcome(BaseModel):
 
     result: ProviderProbeResult | str = ""
     summary: str = ""
+    days_until_expiry: int | None = None
 
 
 class ProviderConfigurationProbe(BaseModel):
@@ -254,14 +251,19 @@ def _probe_certificate_bundle(
 
     Resolves the three certificate-state cases distinctly: no path,
     path-set-file-missing, path-set-file-present. The file-present case
-    additionally opens the bundle and inspects expiry through the
-    health classifier so the probe distinguishes a corrupt envelope
-    from an expired-but-readable certificate.
+    additionally opens the bundle and inspects expiry through
+    :func:`adapters.outbound.aeat.auth.certificate.health`, which
+    reports :attr:`~adapters.outbound.aeat.auth.certificate.CertificateHealthSeverity.EXPIRED`
+    for an already-lapsed certificate rather than raising — an expired
+    but otherwise well-formed bundle must classify as ``expired``, never
+    ``corrupt``.
     """
     from ...adapters.outbound.aeat.auth.certificate import (
         CertificateError,
         CertificateHealthSeverity,
-        evaluate_loaded_certificate_health,
+    )
+    from ...adapters.outbound.aeat.auth.certificate import (
+        health as evaluate_certificate_health,
     )
 
     resolved_settings = settings or load_settings()
@@ -282,12 +284,8 @@ def _probe_certificate_bundle(
                 path=str(path),
             ),
         )
-    # Inspect the bundle without requiring the password: parse the
-    # PKCS#12 envelope, derive expiry, and classify health. A wrong /
-    # missing password surfaces as ``unreadable``; a malformed file
-    # surfaces as ``corrupt``.
     try:
-        bundle_bytes = path.read_bytes()
+        path.read_bytes()
     except OSError as exc:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.UNREADABLE,
@@ -296,19 +294,23 @@ def _probe_certificate_bundle(
                 error=type(exc).__name__,
             ),
         )
-    loaded = _try_load_certificate_metadata(path, bundle_bytes, resolved_settings)
-    if loaded is None:
+    password = resolved_settings.aeat_certificate_password_secret
+    if password is None:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.CORRUPT,
             summary=tr("application.auth.operator.probe.certificate_corrupt"),
         )
     try:
-        health = evaluate_loaded_certificate_health(
-            loaded,
+        bundle_health = evaluate_certificate_health(
+            path,
+            password=password,
             warn_days=resolved_settings.aeat_cert_warn_days,
             critical_days=resolved_settings.aeat_cert_critical_days,
+            friendly_name=resolved_settings.aeat_certificate_friendly_name,
+            backend=resolved_settings.aeat_certificate_backend,
         )
     except CertificateError as exc:
+        _log.warning("certificate load failed; treating bundle as unparseable", exc_info=True)
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.CORRUPT,
             summary=tr(
@@ -316,61 +318,33 @@ def _probe_certificate_bundle(
                 error=str(exc),
             ),
         )
-    severity = health.severity
+    severity = bundle_health.severity
     if severity is CertificateHealthSeverity.EXPIRED:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.EXPIRED,
             summary=tr(
                 "application.auth.operator.probe.certificate_expired",
-                days=abs(health.days_until_expiry),
+                days=abs(bundle_health.days_until_expiry),
             ),
+            days_until_expiry=bundle_health.days_until_expiry,
         )
     if severity is CertificateHealthSeverity.CRITICAL or severity is CertificateHealthSeverity.WARN:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.EXPIRING,
             summary=tr(
                 "application.auth.operator.probe.certificate_expiring",
-                days=health.days_until_expiry,
+                days=bundle_health.days_until_expiry,
             ),
+            days_until_expiry=bundle_health.days_until_expiry,
         )
     return _ProviderProbeOutcome(
         result=ProviderProbeResult.OK,
         summary=tr(
             "application.auth.operator.probe.certificate_ok",
-            days=health.days_until_expiry,
+            days=bundle_health.days_until_expiry,
         ),
+        days_until_expiry=bundle_health.days_until_expiry,
     )
-
-
-def _try_load_certificate_metadata(
-    path: Path,
-    bundle_bytes: bytes,
-    settings: Settings,
-) -> LoadedCertificate | None:
-    """Parse the PKCS#12 envelope and return a :class:`LoadedCertificate` or ``None``.
-
-    Returns ``None`` when the bundle cannot be parsed for any reason
-    (wrong password, malformed envelope, unsupported encoding) so the
-    caller can classify the failure as ``corrupt`` without surfacing
-    a stack trace to the operator.
-    """
-    from ...adapters.outbound.aeat.auth.certificate import CertificateBundle, load_certificate
-
-    del bundle_bytes  # the loader reads the file via the bundle path
-    password = settings.aeat_certificate_password_secret
-    if password is None:
-        return None
-    try:
-        bundle = CertificateBundle(
-            path=path,
-            password=password,
-            friendly_name=settings.aeat_certificate_friendly_name,
-            backend=settings.aeat_certificate_backend,
-        )
-        return load_certificate(bundle)
-    except (OSError, ValueError, AeatError):
-        _log.warning("certificate load failed; treating bundle as unparseable", exc_info=True)
-        return None
 
 
 def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _ProviderProbeOutcome:

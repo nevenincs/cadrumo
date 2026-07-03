@@ -26,6 +26,20 @@ The service delegates every write to an existing primitive
 - :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.delete
   composes the existing soft-tombstone-then-hard-erase primitives to discard
   the sandbox bucket entirely.
+- :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.archive
+  composes the soft-tombstone-only primitive to move a sandbox into reversible
+  dormancy (the bucket directory, manifest, and encrypted record survive
+  intact); :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.restore
+  is its symmetric inverse.
+- :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.browse
+  (via a read-only lifecycle session, not the active bucket) backs
+  :func:`preview_discard_sandbox`, so an operator can see what a discard would
+  remove before confirming it.
+
+:func:`list_sandboxes` is the read-only enumeration shared by ``sandbox list``
+and ``sandbox prune`` — the composition-verb pattern this module follows: a
+bulk verb composes the same single-bucket primitives per row rather than
+re-implementing bucket erasure.
 
 The destructive-action protocol mirrors
 :class:`~aeat.application.bucket_maintenance.DeleteBucketCommand`: a discard
@@ -46,7 +60,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ..workflow import read_profile_bucket_by_id
-from ._contracts import DeleteBucketCommand
+from ._contracts import ArchiveBucketCommand, DeleteBucketCommand, RestoreBucketCommand
 from ._service import BucketMaintenanceService
 
 SANDBOX_LABEL_PREFIX = "sandbox:"
@@ -96,6 +110,59 @@ class SandboxNotFoundError(Exception):
 
 class SandboxDiscardRefusedError(Exception):
     """Raised when discarding a bucket is refused by the sandbox destructive-action gate."""
+
+
+class SandboxNotArchivedError(Exception):
+    """Raised when ``restore_sandbox`` targets a sandbox that is not currently archived."""
+
+    def __init__(self, bucket_id: str) -> None:
+        super().__init__(f"bucket {bucket_id!r} is not archived; there is nothing to restore")
+        self.bucket_id = bucket_id
+
+
+class PreviewDiscardSandboxCommand(BaseModel):
+    """Operator request to preview what a sandbox discard would remove.
+
+    Read-only counterpart to :class:`DiscardSandboxCommand`: it never opens
+    the target bucket for write and never calls
+    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.delete.
+    ``allow_non_sandbox`` mirrors the discard command's escape hatch so a
+    preview against a non-sandbox bucket reports the same "not a sandbox"
+    refusal a real discard would, rather than silently previewing an erase
+    the real verb would never allow.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    allow_non_sandbox: bool = False
+
+
+class PreviewDiscardSandboxResult(BaseModel):
+    """Read-only preview of what discarding a sandbox would remove.
+
+    ``namespaces`` is the same per-namespace row-count inventory
+    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.browse
+    returns for the active bucket, computed here for a bucket that need not
+    be active. ``is_active`` flags whether the target is the current session
+    — a real discard of it would be refused until the operator switches away.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    label: str
+    is_active: bool
+    namespaces: tuple[SandboxNamespaceInventoryRow, ...]
+
+
+class SandboxNamespaceInventoryRow(BaseModel):
+    """One namespace row in a sandbox discard preview."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    namespace: str = Field(min_length=1)
+    row_count: int = Field(ge=0)
 
 
 class CreateSandboxCommand(BaseModel):
@@ -152,6 +219,58 @@ class DiscardSandboxResult(BaseModel):
 
     bucket_id: BucketId
     previous_label: str
+    occurred_at: datetime
+
+
+class ArchiveSandboxCommand(BaseModel):
+    """Operator request to move a sandbox into reversible dormancy.
+
+    Unlike :class:`DiscardSandboxCommand`, ``archive`` never removes the
+    sandbox bucket: it composes
+    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.archive
+    (soft tombstone only), so the bucket directory, manifest, and
+    encrypted record all survive intact and :func:`restore_sandbox` can
+    bring the same sandbox back. ``confirmed=True`` mirrors
+    :class:`DiscardSandboxCommand`'s boundary contract.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    confirmed: bool = False
+    allow_non_sandbox: bool = False
+
+
+class ArchiveSandboxResult(BaseModel):
+    """Outcome of a successful sandbox archive."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    label: str
+    occurred_at: datetime
+
+
+class RestoreSandboxCommand(BaseModel):
+    """Operator request to bring an archived sandbox back to active status.
+
+    Symmetric inverse of :class:`ArchiveSandboxCommand`. Refuses when the
+    target is not currently archived (tombstoned).
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    allow_non_sandbox: bool = False
+
+
+class RestoreSandboxResult(BaseModel):
+    """Outcome of a successful sandbox restore."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    label: str
     occurred_at: datetime
 
 
@@ -228,16 +347,80 @@ def create_sandbox(command: CreateSandboxCommand) -> CreateSandboxResult:
     return CreateSandboxResult(bucket_id=profile_id, label=label, seeded_from=command.from_profile)
 
 
+def preview_discard_sandbox(command: PreviewDiscardSandboxCommand) -> PreviewDiscardSandboxResult:
+    """Report what discarding ``command.bucket_id`` would remove, without removing it.
+
+    Reads the target bucket's namespace inventory through a read-only
+    lifecycle session (:func:`~aeat.application.user_profile.profile_storage_session`)
+    — the identical read-only pattern :func:`create_sandbox` already uses to
+    seed from a non-active source profile — so a sandbox need not be the
+    active bucket to be previewed. No write primitive is invoked; the target
+    bucket, its manifest, and its records are untouched.
+
+    Applies the same non-sandbox refusal :func:`discard_sandbox` applies, so
+    a preview can never suggest an erase the real verb would refuse.
+
+    Returns:
+        :class:`PreviewDiscardSandboxResult` describing the bucket's current
+        contents.
+    """
+    from ...core import resolve_active_bucket_id
+    from ..user_profile import profile_storage_session
+    from ._contracts import BrowseBucketCommand
+    from ._service import BucketMaintenanceService
+
+    pointer = read_profile_bucket_by_id(command.bucket_id)
+    if pointer is None:
+        raise SandboxNotFoundError(command.bucket_id)
+    if not is_sandbox_label(pointer.label) and not command.allow_non_sandbox:
+        raise SandboxDiscardRefusedError(
+            f"bucket {command.bucket_id!r} (label {pointer.label!r}) is not a sandbox; "
+            "pass allow_non_sandbox=True to preview a non-sandbox profile",
+        )
+
+    with profile_storage_session(command.bucket_id):
+        browsed = BucketMaintenanceService().browse(BrowseBucketCommand(bucket_id=command.bucket_id))
+
+    return PreviewDiscardSandboxResult(
+        bucket_id=command.bucket_id,
+        label=pointer.label,
+        is_active=resolve_active_bucket_id() == command.bucket_id,
+        namespaces=tuple(
+            SandboxNamespaceInventoryRow(namespace=row.namespace, row_count=row.row_count) for row in browsed.rows
+        ),
+    )
+
+
+def list_sandboxes() -> tuple[tuple[BucketId, str], ...]:
+    """Return every ``(bucket_id, label)`` pair currently carrying the sandbox prefix.
+
+    Read-only enumeration shared by ``sandbox list`` and ``sandbox prune``.
+    """
+    from ..workflow import list_profile_buckets
+
+    return tuple(
+        sorted(
+            (
+                (pointer.bucket_id, pointer.label)
+                for pointer in list_profile_buckets().values()
+                if is_sandbox_label(pointer.label)
+            ),
+            key=lambda row: row[1].casefold(),
+        ),
+    )
+
+
 def discard_sandbox(command: DiscardSandboxCommand) -> DiscardSandboxResult:
     """Permanently erase the sandbox bucket identified by ``command.bucket_id``.
 
     Composes :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.delete
     — the same soft-tombstone-then-hard-directory-removal primitive
-    ``config profile delete`` / ``config profile archive`` use — after
-    confirming the target either carries the reserved sandbox label or the
-    caller explicitly set ``allow_non_sandbox=True``. Refuses (via the
-    composed service) to discard the currently active bucket; the operator
-    must switch away first.
+    ``config profile delete`` uses — after confirming the target either
+    carries the reserved sandbox label or the caller explicitly set
+    ``allow_non_sandbox=True``. Refuses (via the composed service) to
+    discard the currently active bucket; the operator must switch away
+    first. For a reversible alternative that never erases the bucket, see
+    :func:`archive_sandbox`.
 
     Returns:
         :class:`DiscardSandboxResult` describing the erased sandbox.
@@ -260,18 +443,88 @@ def discard_sandbox(command: DiscardSandboxCommand) -> DiscardSandboxResult:
     )
 
 
+def archive_sandbox(command: ArchiveSandboxCommand) -> ArchiveSandboxResult:
+    """Move the sandbox bucket identified by ``command.bucket_id`` into reversible dormancy.
+
+    Composes :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.archive
+    — the same soft-tombstone-only primitive that leaves the bucket
+    directory, manifest, and encrypted record intact — after confirming
+    the target either carries the reserved sandbox label or the caller
+    explicitly set ``allow_non_sandbox=True``. Refuses (via the composed
+    service) to archive the currently active bucket; the operator must
+    switch away first. Unlike :func:`discard_sandbox`, the archived
+    sandbox can be brought back with :func:`restore_sandbox`.
+
+    Returns:
+        :class:`ArchiveSandboxResult` describing the archived sandbox.
+    """
+    pointer = read_profile_bucket_by_id(command.bucket_id)
+    if pointer is None:
+        raise SandboxNotFoundError(command.bucket_id)
+    if not is_sandbox_label(pointer.label) and not command.allow_non_sandbox:
+        raise SandboxDiscardRefusedError(
+            f"bucket {command.bucket_id!r} (label {pointer.label!r}) is not a sandbox; "
+            "pass allow_non_sandbox=True to archive a non-sandbox profile",
+        )
+    outcome = BucketMaintenanceService().archive(
+        ArchiveBucketCommand(bucket_id=command.bucket_id, confirmed=command.confirmed),
+    )
+    return ArchiveSandboxResult(bucket_id=outcome.bucket_id, label=outcome.label, occurred_at=outcome.occurred_at)
+
+
+def restore_sandbox(command: RestoreSandboxCommand) -> RestoreSandboxResult:
+    """Bring the archived sandbox bucket identified by ``command.bucket_id`` back to active.
+
+    Composes :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.restore
+    — the symmetric inverse of :func:`archive_sandbox` — after confirming
+    the target either carries the reserved sandbox label or the caller
+    explicitly set ``allow_non_sandbox=True``. Refuses when the target is
+    not currently archived.
+
+    Returns:
+        :class:`RestoreSandboxResult` describing the restored sandbox.
+    """
+    pointer = read_profile_bucket_by_id(command.bucket_id)
+    if pointer is None:
+        raise SandboxNotFoundError(command.bucket_id)
+    if not is_sandbox_label(pointer.label) and not command.allow_non_sandbox:
+        raise SandboxDiscardRefusedError(
+            f"bucket {command.bucket_id!r} (label {pointer.label!r}) is not a sandbox; "
+            "pass allow_non_sandbox=True to restore a non-sandbox profile",
+        )
+    from ...domain.buckets import BucketRestoreRefusedError
+
+    try:
+        outcome = BucketMaintenanceService().restore(RestoreBucketCommand(bucket_id=command.bucket_id))
+    except BucketRestoreRefusedError as exc:
+        raise SandboxNotArchivedError(command.bucket_id) from exc
+    return RestoreSandboxResult(bucket_id=outcome.bucket_id, label=outcome.label, occurred_at=outcome.occurred_at)
+
+
 __all__ = [
     "SANDBOX_LABEL_PREFIX",
+    "ArchiveSandboxCommand",
+    "ArchiveSandboxResult",
     "CreateSandboxCommand",
     "CreateSandboxResult",
     "DiscardSandboxCommand",
     "DiscardSandboxResult",
+    "PreviewDiscardSandboxCommand",
+    "PreviewDiscardSandboxResult",
+    "RestoreSandboxCommand",
+    "RestoreSandboxResult",
     "SandboxAlreadyExistsError",
     "SandboxDiscardRefusedError",
+    "SandboxNamespaceInventoryRow",
+    "SandboxNotArchivedError",
     "SandboxNotFoundError",
     "SandboxSourceNotFoundError",
+    "archive_sandbox",
     "create_sandbox",
     "discard_sandbox",
     "is_sandbox_label",
+    "list_sandboxes",
+    "preview_discard_sandbox",
+    "restore_sandbox",
     "sandbox_label",
 ]

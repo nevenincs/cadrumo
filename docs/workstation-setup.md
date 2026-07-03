@@ -80,10 +80,10 @@ Anthropic-API provider are optional package extras. Install only the ones you
 need:
 
 ```bash
-pip install "aeat[google]"
-pip install "aeat[browser]"
-pip install "aeat[anthropic]"
-pip install "aeat[all]"
+pip install "aeat-cli[google]"
+pip install "aeat-cli[browser]"
+pip install "aeat-cli[anthropic]"
+pip install "aeat-cli[all]"
 ```
 
 `aeat config check` lists each extra and prints the exact install command for any

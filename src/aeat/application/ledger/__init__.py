@@ -40,7 +40,9 @@ Major declarations:
   proportionality rules to persisted usage-ratio overrides.
 * :class:`PurchaseInvoiceEvidenceService` - the
   evidence lifecycle for receipts or supplier invoice artefacts attached to
-  ledger transactions.
+  ledger transactions, and :func:`extract_invoice_fields` with
+  :class:`InvoiceDraft` - the on-host field-extraction primitive an operator
+  reviews before minting a :class:`domain.invoices.Invoice` from a PDF.
 * :class:`PayableInvoiceService`,
   :class:`CollectibleInvoiceService`, and
   :class:`BusinessOperationInvoiceRepository` - the
@@ -139,6 +141,7 @@ from ._evidence import (
     PurchaseInvoiceEvidenceRepository,
     PurchaseInvoiceEvidenceService,
 )
+from ._evidence_draft import InvoiceDraft, extract_invoice_fields
 from ._id_resolution import (
     MINIMUM_DISPLAY_ID_WIDTH,
     compute_display_id_width,
@@ -254,6 +257,7 @@ __all__ = [
     "CollectibleInvoiceService",
     "EligibleCategoryRow",
     "ExportSerializationFormat",
+    "InvoiceDraft",
     "LLMClassificationSuggestion",
     "LLMProvider",
     "LLMProviderAvailability",
@@ -327,6 +331,7 @@ __all__ = [
     "derive_operator_iva_substrate",
     "eligible_ratio_categories",
     "export_ledger_transactions",
+    "extract_invoice_fields",
     "get_manual_transaction",
     "get_transaction_participation",
     "import_ledger_source",

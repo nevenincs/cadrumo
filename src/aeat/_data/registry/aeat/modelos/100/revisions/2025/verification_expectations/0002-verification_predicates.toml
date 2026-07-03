@@ -73,3 +73,83 @@ predicate_id = "modelo-100-2025-deduccion-vivienda-habitual-requiere-adquisicion
 expression = 'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "2013-01-01"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-35-2006:dt-18"]
+
+# EO agraria Fase 3ª índices correctores incompatibility gates
+# (no-silent-under-declaration: declaring two mutually-incompatible índices
+# silently compounds a correction the Anexo I only permits once). Orden
+# HAC/1347/2024, Anexo I, instrucción 2.3 fixes two binding exclusivity
+# rules the índice-cascade formula (m100_resolve_eo_agraria_indices_correctores,
+# 0293-renta-2025-eo-agraria-rendimiento-base.toml) applies each declared
+# índice unconditionally, without cross-checking either rule:
+#
+#   - letra a)/b): "Cuando resulte aplicable el índice corrector de la letra
+#     a) anterior no podrá aplicarse el contenido en esta letra b)" — medios
+#     de producción ajenos (casilla 1540, letra a) and personal asalariado
+#     (casilla 1541, letra b) are MUTUALLY EXCLUSIVE.
+#   - letra h): "A las actividades forestales únicamente le será aplicable
+#     el índice señalado en la letra h) anterior" — forestal (casilla 1547,
+#     letra h) EXCLUDES every other letra (a to g) for that activity.
+#
+# ADVISORY (non-blocking): a preparer may hold several unrelated
+# agricultural/livestock activities within the same casilla set across
+# actividad_agr iterations, so an operator-facing prompt (not a refusal) is
+# the correct response per no-silent-under-declaration — the gate exists to
+# surface the incompatibility for review, not to reject legitimate multi-
+# actividad filings the engine cannot fully disambiguate at this granularity.
+#
+# Casilla 1543 (índice 4, piensos adquiridos a terceros, letra d) is
+# excluded from the forestal-exclusion gate below: the AEAT Diseño de
+# Registros declares it field type ``X`` (text), so its operator-entered
+# value never reaches the Decimal ``casilla_values`` mapping
+# ``at_most_one_positive`` reads — only ``target.input_values_by_casilla_id``
+# (the text channel) carries it (see
+# ``_evaluate_verification_predicates`` and the
+# ``_m100_eo_agraria_read_indice`` formula-runtime helper for the same
+# text/decimal duality). A ``["1547", "1543"]`` pair would therefore never
+# fire even when both índices are genuinely declared — a silently-dead
+# gate, which no-silent-under-declaration itself forbids. Re-add it if a
+# text-aware mutual-exclusion DSL operator is authored; until then this
+# one letra-pair is a documented, non-silent gap rather than a fabricated
+# check.
+
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-100-2025-eo-agraria-indice-medios-ajenos-personal-asalariado-incompatibles"
+expression = 'at_most_one_positive(["1540", "1541"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]
+
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-100-2025-eo-agraria-indice-forestal-excluye-medios-ajenos"
+expression = 'at_most_one_positive(["1547", "1540"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]
+
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-100-2025-eo-agraria-indice-forestal-excluye-personal-asalariado"
+expression = 'at_most_one_positive(["1547", "1541"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]
+
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-100-2025-eo-agraria-indice-forestal-excluye-tierras-arrendadas"
+expression = 'at_most_one_positive(["1547", "1542"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]
+
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-100-2025-eo-agraria-indice-forestal-excluye-agricultura-ecologica"
+expression = 'at_most_one_positive(["1547", "1544"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]
+
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-100-2025-eo-agraria-indice-forestal-excluye-regadio-electrico"
+expression = 'at_most_one_positive(["1547", "1545"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]
+
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-100-2025-eo-agraria-indice-forestal-excluye-pequena-empresa"
+expression = 'at_most_one_positive(["1547", "1546"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]

@@ -131,6 +131,7 @@ from ._modelo_rendering import (
 from ._modelo_rendering import (
     verification_report_payload as _verification_report_payload,
 )
+from ._modelo_review_package_cli import register_review_package_commands
 from ._modelo_work import create_work_app
 from ._modelo_work_calculate_cli import register_work_calculate_commands
 from ._modelo_work_lifecycle_cli import register_work_lifecycle_commands
@@ -1244,6 +1245,9 @@ register_reconcile_commands(
 
 
 register_audit_commands(app)
+
+
+register_review_package_commands(app)
 
 
 register_export_commands(

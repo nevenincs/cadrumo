@@ -544,7 +544,7 @@ def _build_wheel(repo_root: Path, work_dir: Path, uv: str) -> Path:
     wheel_dir = work_dir / "wheel"
     wheel_dir.mkdir(parents=True, exist_ok=True)
     _run([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=repo_root)
-    wheels = sorted(wheel_dir.glob("aeat-*.whl"))
+    wheels = sorted(wheel_dir.glob("aeat_cli-*.whl"))
     if len(wheels) != 1:
         raise SystemExit(f"expected exactly one aeat wheel in {wheel_dir}; got {[wheel.name for wheel in wheels]!r}")
     _assert_wheel_contains_tracked_data(repo_root, wheels[0], expected_data_paths)
@@ -563,7 +563,7 @@ def _install_wheel(
     """Install the built wheel into a fresh virtualenv and return the venv path."""
     venv = work_dir / "venv"
     _run([uv, "venv", str(venv), "--python", python], cwd=repo_root)
-    target = str(wheel) if not extras else f"aeat[{','.join(extras)}] @ {wheel.resolve().as_uri()}"
+    target = str(wheel) if not extras else f"aeat-cli[{','.join(extras)}] @ {wheel.resolve().as_uri()}"
     _run(
         [uv, "pip", "install", "--python", str(_venv_python(venv)), target],
         cwd=repo_root,

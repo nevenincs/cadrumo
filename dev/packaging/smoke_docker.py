@@ -374,7 +374,7 @@ os.environ.update(env)
 Path(env["AEAT_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
 Path(env["PLAYWRIGHT_BROWSERS_PATH"]).mkdir(parents=True, exist_ok=True)
 
-target = f"aeat[browser] @ {wheel.as_uri()}"
+target = f"aeat-cli[browser] @ {wheel.as_uri()}"
 run([sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "--no-cache-dir", target], env=env)
 run([sys.executable, "-m", "pip", "check"], env=env)
 run([sys.executable, "-c", "import playwright.async_api, playwright_stealth"], env=env)

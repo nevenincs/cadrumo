@@ -38,6 +38,7 @@ from ..storage import (
     SensitivityClass,
     secure_object_logical_path,
     secure_object_repository_for_active_bucket,
+    secure_object_repository_for_bucket,
 )
 
 _log = get_logger(__name__)
@@ -97,9 +98,32 @@ class BienesInversionIvaRegisterRepository:
     :class:`adapters.persistence.storage.SecureObjectRepository`.
     """
 
-    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
-        """Initialise the repository, defaulting to the active-bucket secure object store."""
-        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
+    def __init__(
+        self,
+        *,
+        bucket_id: str | None = None,
+        objects: SecureObjectRepository | None = None,
+    ) -> None:
+        """Initialise the repository.
+
+        Args:
+            bucket_id: Explicit bucket to bind to, resolved through
+                :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`.
+                Lets a caller that already knows the target bucket (e.g. the
+                calculate-path advisory collector, which receives ``bucket_id``
+                from its context rather than the process-global active-profile
+                pointer) load the register for that bucket explicitly. Ignored
+                when ``objects`` is supplied.
+            objects: Explicit :class:`SecureObjectRepository` override (tests).
+                When neither ``objects`` nor ``bucket_id`` is supplied, defaults
+                to the active-bucket secure object store.
+        """
+        if objects is not None:
+            self._objects = objects
+        elif bucket_id is not None:
+            self._objects = secure_object_repository_for_bucket(bucket_id)
+        else:
+            self._objects = secure_object_repository_for_active_bucket()
 
     @property
     def envelope_path(self) -> Path:

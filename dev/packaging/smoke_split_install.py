@@ -7,7 +7,7 @@ contract in a fresh stdlib venv:
 
 - **Core alone (advisory path):** the registry authority loads and validates
   non-fatally while emitting the loud :class:`CorpusCompanionAdvisory` naming
-  the missing set and the ``aeat[corpus-sources]`` install hint, and the
+  the missing set and the ``aeat-cli[corpus-sources]`` install hint, and the
   companion-guarded ``aeat app registry verify`` verb refuses instructively.
 - **With the companion (byte-identical path):** the same venv, after
   installing the ``aeat-data`` wheel, resolves the binaries through the corpus
@@ -50,7 +50,7 @@ advisories = [w for w in caught if issubclass(w.category, CorpusCompanionAdvisor
 if not advisories:
     raise SystemExit("expected the loud CorpusCompanionAdvisory in a companion-less split install")
 message = str(advisories[0].message)
-if "aeat[corpus-sources]" not in message:
+if "aeat-cli[corpus-sources]" not in message:
     raise SystemExit(f"advisory does not name the install hint: {message!r}")
 print("split-advisory-ok")
 """
@@ -95,7 +95,7 @@ def _build_slim_wheel(build_root: Path, work_dir: Path, uv: str) -> Path:
     wheel_dir = work_dir / "wheel"
     wheel_dir.mkdir(parents=True, exist_ok=True)
     _run([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=build_root)
-    wheels = sorted(wheel_dir.glob("aeat-*.whl"))
+    wheels = sorted(wheel_dir.glob("aeat_cli-*.whl"))
     if len(wheels) != 1:
         raise SystemExit(f"expected exactly one aeat wheel in {wheel_dir}; got {[w.name for w in wheels]!r}")
     with zipfile.ZipFile(wheels[0]) as bundle:

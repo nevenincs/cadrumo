@@ -47,6 +47,7 @@ Submodules
    :maxdepth: 4
 
    aeat.application._errors
+   aeat.application._workflow_review_models
    aeat.application.config_reset
    aeat.application.diagnostics
    aeat.application.diagnostics_run_health

@@ -531,6 +531,9 @@ application:
           `aeat config auth test` parancsot az AEAT adatok olvasása előtt.
   bucket_maintenance:
     errors:
+      archive_active_bucket: Az aktív bucket nem archiválható; válts előbb másik profilra.
+      archive_not_confirmed: Az archiválás visszafordítható állapotátmenet, de kifejezett
+        megerősítést igényel.
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -541,6 +544,7 @@ application:
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
+      restore_not_archived: A bucket nincs archiválva (nincs törölve); nincs mit visszaállítani.
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
   calculations:
     iva_compensation:
@@ -858,6 +862,12 @@ application:
         visszariteres (devolver) lett kivalasztva, de visszateritites csak az ev utolso
         bevallasi idoszakaban kerheto. Vigye at a jovairast (compensar), vagy valassza
         a visszateritest az utolso idoszakban.
+      review_package_generic: Hiba történt az áttekintő csomag összeállítása közben.
+      review_package_integrity: 'A(z) %{package_path} áttekintő csomag nem felelt
+        meg az integritás-ellenőrzésnek: %{detail}.'
+      review_package_revision_state: 'A(z) %{calculation_revision_id} számítási revízió
+        állapota %{state}, ezért nem csomagolható áttekintésre; elfogadott állapotok:
+        %{eligible_states}.'
       revision_pick_explicit_id_required: Az explicit revízió kiválasztásához calculation_revision_id
         szükséges.
       revision_pick_id_requires_explicit_selector: A calculation_revision_id csak
@@ -1167,6 +1177,8 @@ application:
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil
         használja; egy adózónak egy profilja lehet.
       lifecycle_profile_already_exists: Már létezik profil az aktív bucketben.
+      lifecycle_profile_not_tombstoned: A profil nincs törölve; az újraaktiválás elutasítja
+        az élő profilt.
       lifecycle_profile_tombstoned_duplicate: Törölt profil nem duplikálható.
       lifecycle_profile_tombstoned_rename: Törölt profil nem nevezhető át.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
@@ -1306,8 +1318,7 @@ auth:
     clave_movil_description: 'Push-jóváhagyásos hitelesítés a Cl@ve-nél regisztrált
       telefon segítségével. Szükséges: DNI/NIE, Cl@ve-regisztráció és párosított eszköz.'
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: Fenntartott zárt szolgáltatói hely a Cl@ve Permanente
-      számára.
+    clave_permanente_description: 'DNI/NIE- és jelszóalapú hitelesítés a Cl@ve Permanente személyazonosság-szolgáltatón keresztül. Az AEAT olvasási folyamataihoz automatizálható felügyelet nélkül; DNI/NIE és jelszó szükséges.'
     clave_permanente_label: Cl@ve Permanente
     clave_pin_description: Fenntartott zárt szolgáltatói hely a Cl@ve PIN számára.
     clave_pin_label: Cl@ve PIN
@@ -1911,6 +1922,28 @@ cli:
         section_optional: opcionalis_kezi_mezok
         section_profile: profilbol_szarmazo
         section_required: kotelezo_kezi_mezok
+      review_package:
+        actor_help: A csomag leírójába és a mögöttes exportálási eseménybe rögzített
+          operátorcímke.
+        build_help: Megosztható, checksummal ellenőrizhető áttekintő csomag (fichero-BOE
+          tervezet, a revízió eredete és a csatolt könyvelési bizonyíték) összeállítása
+          a könyvelőnek való átadáshoz. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
+        errors:
+          output_required: Adja meg a --output ÚTVONAL kapcsolót az áttekintő csomag
+            ZIP fájljához.
+          package_not_found: 'Nem található áttekintő csomag itt: {package_path}.'
+        group_help: Megosztható áttekintő csomag összeállítása és integritásának ellenőrzése.
+        notes_help: A csomag leírójába ágyazott szabad szöveges megjegyzés (pl. a
+          megosztás oka).
+        output_help: Az elérési út, ahová az áttekintő csomag ZIP fájlját írni kell.
+        package_path_help: Az ellenőrizendő áttekintő csomag ZIP fájljának elérési
+          útja.
+        revision_help: A csomagolandó számítási revízió azonosítója; alapértelmezés
+          szerint a munkaegység legutóbbi ellenőrzött-teljes vagy benyújtott revíziója.
+        verify_help: Egy áttekintő csomag checksum-manifestjének ellenőrzése (csak
+          integritás; nem igazolja, ki állította össze). Csak helyi; soha nem kapcsolódik
+          az AEAT-hoz.
+        work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
       verification_report:
         app_help: Rögzített ellenőrzési jelentések vizsgálata.
         list_help: Ellenőrzési jelentések listázása, opcionálisan egy számítási revízióra
@@ -2360,6 +2393,7 @@ cli:
           list_help: Elfogadott apoderado hatókörök listázása.
         status_help: Aktív apoderado-konfiguráció megjelenítése.
       certificate:
+        check_help: cli.config.auth.certificate.check_help
         help: Névvel ellátott tanúsítványforrások kezelése a tanúsítványalapú hitelesítési
           szolgáltatóhoz
         list_help: Az összes regisztrált tanúsítványforrás felsorolása
@@ -2372,6 +2406,16 @@ cli:
         remove:
           name_help: Az eltávolítandó regisztrált tanúsítványforrás
         remove_help: Egy regisztrált tanúsítványforrás eltávolítása
+        secret:
+          help: 'A nevesitett tanusitvanyforrashoz kotott jelszo kezelese'
+          remove:
+            name_help: 'A regisztralt tanusitvanyforras, amelynek jelszavat el kell tavolitani'
+          remove_help: 'Eltavolitja egy regisztralt tanusitvanyforrashoz kotott jelszot'
+          set:
+            backend_help: 'Titok-hattertar: secure_storage (alapertelmezett, titkositva tarolva) vagy keyring (operacios rendszer kulcstartoja)'
+            name_help: 'A regisztralt tanusitvanyforras, amelyhez a jelszo kapcsolodik'
+            secret_help: 'A PKCS#12 jelszo (bekerdezve, elrejtve, soha nem jelenik meg)'
+          set_help: 'Beallitja (vagy megujitja) egy regisztralt tanusitvanyforras jelszavat'
         select:
           name_help: Az aktiválandó regisztrált tanúsítványforrás
         select_help: Az aktív tanúsítványforrás kiválasztása
@@ -2764,6 +2808,18 @@ cli:
       sandbox:
         already_exists: Már létezik %{label} nevű sandbox. Válasszon másik nevet,
           vagy előbb dobja el a meglévőt.
+        archive_active_profile: A(z) %{name} sandbox az aktív profil; válts másik
+          profilra, mielőtt archiválnád.
+        archive_dry_run_help: Előnézetet ad az archiválásról anélkül, hogy a sandboxot
+          eltávolítaná az aktív felületről.
+        archive_help: A sandboxot visszafordítható nyugalmi állapotba helyezi anélkül,
+          hogy törölné.
+        archive_name_help: A sandbox neve (előtag nélkül).
+        archive_requires_yes: 'A sandbox archiválása állapotátmenet. Futtasd újra:
+          ''aeat config profile sandbox archive %{name} --yes'' a megerősítéshez.'
+        archive_restorable_info: A sandbox most nyugalmi állapotban van; futtasd az
+          'aeat config profile sandbox restore %{name}' parancsot a visszaállításához.
+        archive_yes_help: Megerősíti az archiválást.
         create_active_info: A sandbox most már az AKTÍV profil; minden parancs erre
           fut, amíg át nem vált vagy el nem dobja.
         create_from_profile_help: A sandbox feltöltése egy meglévő profil adataival
@@ -2772,6 +2828,8 @@ cli:
         create_name_help: A sandbox neve.
         discard_active_profile: A(z) %{name} sandbox az aktív profil; váltson másik
           profilra, mielőtt eldobná.
+        discard_dry_run_help: Elonezet arrol, hogy mit tavolitana el a torles, anelkul,
+          hogy barmit is eltavolitana.
         discard_help: Egy sandbox véglegesen törlése.
         discard_name_help: A sandbox neve (előtag nélkül).
         discard_not_a_sandbox: '%{name} nem sandbox; a sandbox felület megtagadja
@@ -2782,6 +2840,18 @@ cli:
         help: Futtass kísérleteket egy elkülönített, eldobható workspace-ben, amely
           soha nem érinti a fő profil állapotát.
         list_help: Minden sandbox listázása.
+        prune_dry_run_help: Elonezet arrol, mely sandboxokat torolne, anelkul, hogy
+          torolne oket.
+        prune_help: Az osszes sandbox egyszerre torlese.
+        prune_requires_yes: 'Az osszes sandbox torlese visszavonhatatlan. Futtasd
+          ujra: ''aeat config profile sandbox prune --yes'' a megerositeshez.'
+        prune_skipped_active_info: 'Kihagyva az aktiv sandbox %{names}; valts masik
+          profilra, majd futtasd ujra: ''aeat config profile sandbox prune --yes''
+          a torleshez.'
+        prune_yes_help: Az osszes sandbox torlesenek megerositese.
+        restore_help: Visszaállít egy archivált sandboxot aktív állapotba.
+        restore_name_help: A sandbox neve (előtag nélkül).
+        restore_not_archived: A(z) %{name} nincs archiválva; nincs mit visszaállítani.
         source_not_found: Nincs %{name} nevű élő profil, amelyből a sandbox feltölthető
           lenne.
         unknown_sandbox: 'Ismeretlen sandbox: %{name}. Futtassa az ''aeat config profile
@@ -2945,6 +3015,35 @@ cli:
         javítható manuálisan.'
       registry_integrity_internal: Belső alkalmazáshiba; nem az Ön profiljával kapcsolatos,
         és Ön nem tudja maga javítani.
+    errors:
+      header: 'LLM futtatási hibák:'
+      help: A közelmúltbeli sikertelen helyi LLM-futtatásokat szolgáltató és hibatípus
+        szerint bontja le.
+      no_failures: Ebben az időszakban nincs rögzített sikertelen LLM-futtatás.
+      provider_help: Szűkítse a bontást erre a szolgáltatói címkére (pl. claude, antigravity,
+        codex).
+      since_help: Az LLM futtatási rekordok alsó (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).
+      until_help: Az LLM futtatási rekordok felső (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).
+    latency:
+      header: 'LLM futtatási késleltetés:'
+      help: A közelmúltbeli helyi LLM-futtatások időtartamának P50/P95/P99 percentiliseit
+        jelenti.
+      no_run_data: Még nincs rögzített LLM futtatási telemetria. Futtass egy LLM-alapú
+        besorolást a létrehozásához.
+      provider_help: Szűkítse a jelentést erre a szolgáltatói címkére (pl. claude,
+        antigravity, codex).
+      since_help: Az LLM futtatási rekordok alsó (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).
+      until_help: Az LLM futtatási rekordok felső (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).
+    llm_usage:
+      header: 'LLM-futtatások felhasználása:'
+      help: LLM-futtatási felhasználási összesítők jelentése (darabszám, időtartam,
+        sikerarány) szolgáltató és modell szerint.
+      no_run_data: Még nem rögzítettek LLM-futtatási telemetriát. Futtass egy LLM-alapú
+        osztályozást az adatok létrehozásához.
+      provider_help: Korlátozza az összesítést erre a szolgáltatócímkére (pl. claude,
+        antigravity, codex).
+      since_help: Alsó, záró ISO-dátumhatár (ÉÉÉÉ-HH-NN) az LLM-futtatási rekordokra.
+      until_help: Felső, záró ISO-dátumhatár (ÉÉÉÉ-HH-NN) az LLM-futtatási rekordokra.
     next_action:
       inspect_registry_toml: Vizsgálja meg a nyilvántartás TOML-forrásait a hiba azonosításához.
     repair:
@@ -2976,6 +3075,17 @@ cli:
         antigravity, codex).
       session_stale_message: A tárolt AEAT-munkamenet túllépte az inaktivitási határidőt;
         egy élő olvasás újra hitelesíteni fog.
+      since_help: Az LLM-futásnaplók alsó (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).
+      until_help: Az LLM-futásnaplók felső (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).
+    runs:
+      header: 'Legutóbbi LLM-futások:'
+      help: A helyileg rögzített legutóbbi LLM-futásokat listázza, a legújabbtól a
+        legrégebbiig.
+      limit_help: A listát erre a legutóbbi futásszámra korlátozza.
+      no_run_data: Még nincs rögzített LLM-futásadat. Futtass egy LLM-alapú besorolást
+        az adatok létrehozásához.
+      provider_help: A listát erre a szolgáltatóra szűkíti (pl. claude, antigravity,
+        codex).
       since_help: Az LLM-futásnaplók alsó (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).
       until_help: Az LLM-futásnaplók felső (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).
     summary:
@@ -4789,6 +4899,10 @@ errors:
       teljesítette az érvényesítést.
     integrity_storage_classification: Egy rekord deklarált érzékenységi osztálya nem
       kompatibilis az adattárával.
+    integrity_storage_corpus_bundle: A corpuscsomagot nem sikerült feldolgozni vagy
+      ellenőrizni.
+    integrity_storage_corpus_bundle_verification: A corpuscsomag nem teljesítette
+      az ellenőrzőösszeg-ellenőrzést a beágyazott jegyzékkel szemben.
     integrity_storage_corpus_manifest: A corpus manifesztet nem sikerült elemezni
       vagy érvényesíteni.
     integrity_storage_corpus_manifest_drift: 'A lemezen lévő corpus eltér a manifeszttől:

@@ -389,6 +389,17 @@ audit-debt-dashboard:
     @echo "=== security ==="
     -@just check-security
 
+# Monthly code-health report: shadowing, duplication, layering, complexity,
+# each classified red/amber/green. Composes the scanners above (plus
+# lint-imports) into one contributor-facing verdict. Exits 1 if any
+# dimension is RED; AMBER dimensions are advisory debt, not a gate.
+audit-health-report:
+    @uv run --no-sync python -m dev.audit.report
+
+# Same report, machine-readable.
+audit-health-report-json:
+    @uv run --no-sync python -m dev.audit.report --json
+
 # ── Documentation ────────────────────────────────────────────────────────────
 
 # Build changed narrative and API reference documents.
@@ -465,7 +476,7 @@ release:
     echo "▶ release-please release-pr --dry-run --debug (output → $LOG)"
     npx --yes release-please@16 release-pr \
         --token "$TOKEN" \
-        --repo-url wgergely/aeat \
+        --repo-url nevenincs/aeat \
         --target-branch main \
         --config-file release-please-config.json \
         --manifest-file .release-please-manifest.json \
@@ -496,7 +507,7 @@ release:
     Write-Host "▶ release-please release-pr --dry-run --debug (output → $log)"
     & npx --yes release-please@16 release-pr `
         --token $token `
-        --repo-url wgergely/aeat `
+        --repo-url nevenincs/aeat `
         --target-branch main `
         --config-file release-please-config.json `
         --manifest-file .release-please-manifest.json `
@@ -604,7 +615,7 @@ publish confirm="":
     uv build --out-dir var/release/dist
     echo "▶ uv publish (aeat v$VERSION)"
     uv publish var/release/dist/*
-    echo "✔ published aeat v$VERSION — verify at https://pypi.org/project/aeat/$VERSION/"
+    echo "✔ published aeat v$VERSION — verify at https://pypi.org/project/aeat-cli/$VERSION/"
 
 [windows]
 publish confirm="":
@@ -639,7 +650,7 @@ publish confirm="":
     Write-Host "▶ uv publish (aeat v$version)"
     & uv publish (Get-ChildItem var/release/dist/*)
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ published aeat v$version - verify at https://pypi.org/project/aeat/$version/"
+    Write-Host "✔ published aeat v$version - verify at https://pypi.org/project/aeat-cli/$version/"
 
 # Publish the aeat-data corpus companion to PyPI (same gates as publish).
 # Requires the per-file size grant on the aeat-data project (RELEASING.md).

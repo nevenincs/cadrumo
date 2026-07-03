@@ -2,16 +2,9 @@
 
 from __future__ import annotations
 
-from importlib import import_module
 from pathlib import Path
 
 from ._schema import ExtractionProfileDefinition, ExtractionTargetDefinition
-
-_ALLOWED_EXTRACTION_PARSER_MODULE_PREFIXES: tuple[str, ...] = (
-    "aeat.adapters.inbound.borrador",
-    "aeat.adapters.inbound.declaracion",
-    "aeat.domain.calculations.registry",
-)
 
 
 def validate_declaracion_pdf_specimen_gate(
@@ -147,23 +140,16 @@ def validate_extraction_profile_artefacts(
 
 
 def validate_dotted_callable(scope: str, owner: str, dotted_path: str) -> list[str]:
+    """Validate that ``dotted_path`` is well-formed as a ``module.attribute`` path.
+
+    Structural shape only: the domain registry validation must not name or import
+    the adapter parser modules. Resolution — the allowed-authority prefix,
+    importability, and callability of the target — is enforced by the
+    adapter-legal CI gate ``test_extraction_parser_paths_resolve``, so this
+    validator stays free of any ``adapters`` coupling (static or dynamic). See
+    the ports-inversion ADR's post-close honesty-review note.
+    """
     module_name, separator, attribute = dotted_path.rpartition(".")
     if not separator or not module_name or not attribute:
         return [f"{scope}: {owner} parser {dotted_path!r} must be a dotted callable path"]
-    if not module_name.startswith(_ALLOWED_EXTRACTION_PARSER_MODULE_PREFIXES):
-        return [
-            f"{scope}: {owner} parser {dotted_path!r} must resolve under one of "
-            f"{sorted(_ALLOWED_EXTRACTION_PARSER_MODULE_PREFIXES)!r}",
-        ]
-    try:
-        # Module names are constrained to the parser authority prefixes above.
-        module = import_module(module_name)  # nosemgrep
-    except (ImportError, ValueError, SyntaxError) as exc:
-        return [f"{scope}: {owner} parser {dotted_path!r} cannot import module {module_name!r}: {exc}"]
-    try:
-        resolved = getattr(module, attribute)
-    except AttributeError as exc:
-        return [f"{scope}: {owner} parser {dotted_path!r} does not resolve attribute {attribute!r}: {exc}"]
-    if not callable(resolved):
-        return [f"{scope}: {owner} parser {dotted_path!r} is not callable"]
     return []

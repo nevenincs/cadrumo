@@ -301,6 +301,74 @@ def _casilla_equals_implies_nonzero_predicate_failures(
     return failures
 
 
+# casilla_equals_implies_diverges(["antecedent_casilla_id", "literal",
+# "casilla_a_id", "casilla_b_id"]) — categorical-conditional divergence
+# check. Unlike the other casilla-list operators, the second token is a
+# literal string, not a casilla id, so it cannot route through the generic
+# _casilla_list_predicate_failures. Mirrors
+# casilla_equals_implies_nonzero's bespoke-validator shape: this
+# authoring-time gate rejects a malformed arity, an unknown antecedent or
+# consequent-pair casilla id, a non-text antecedent, a text consequent
+# casilla, or an empty literal at registry load, rather than letting the
+# runtime evaluator's defensive bad-arity branch (returns False — never
+# fires) silently mask a typo.
+_CASILLA_EQUALS_IMPLIES_DIVERGES_PREDICATE = _re.compile(
+    r"^casilla_equals_implies_diverges\(\[(?P<ids>[^\]]*)\]\)$",
+)
+
+
+def _casilla_equals_implies_diverges_predicate_failures(
+    prefix: str,
+    owner: str,
+    expression: str,
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> list[str]:
+    """Return failures for a malformed ``casilla_equals_implies_diverges`` predicate."""
+    match = _CASILLA_EQUALS_IMPLIES_DIVERGES_PREDICATE.match(expression.strip())
+    if match is None:
+        return [
+            f"{prefix}: {owner} casilla_equals_implies_diverges expression {expression!r} is malformed; "
+            'expected casilla_equals_implies_diverges(["antecedent_casilla_id", "literal", '
+            '"casilla_a_id", "casilla_b_id"])',
+        ]
+    tokens = _parse_predicate_casilla_id_tokens(match.group("ids"))
+    failures: list[str] = []
+    if len(tokens) != 4:
+        failures.append(
+            f"{prefix}: {owner} casilla_equals_implies_diverges must name exactly four tokens "
+            f"(antecedent casilla id, literal, casilla_a id, casilla_b id), got {len(tokens)}: {tokens!r}",
+        )
+        return failures
+    antecedent_id, literal, casilla_a_id, casilla_b_id = tokens
+    antecedent = casilla_by_id.get(antecedent_id)
+    if antecedent_id not in casillas:
+        failures.append(
+            f"{prefix}: {owner} casilla_equals_implies_diverges references unknown antecedent "
+            f"casilla {antecedent_id!r}",
+        )
+    elif antecedent is not None and antecedent.data_type != "text":
+        failures.append(
+            f"{prefix}: {owner} casilla_equals_implies_diverges antecedent casilla {antecedent_id!r} "
+            "must have data_type 'text'",
+        )
+    if not literal:
+        failures.append(f"{prefix}: {owner} casilla_equals_implies_diverges literal must be non-empty")
+    for role, consequent_id in (("casilla_a", casilla_a_id), ("casilla_b", casilla_b_id)):
+        consequent = casilla_by_id.get(consequent_id)
+        if consequent_id not in casillas:
+            failures.append(
+                f"{prefix}: {owner} casilla_equals_implies_diverges references unknown {role} casilla "
+                f"{consequent_id!r}",
+            )
+        elif consequent is not None and consequent.data_type == "text":
+            failures.append(
+                f"{prefix}: {owner} casilla_equals_implies_diverges {role} casilla {consequent_id!r} "
+                "must not have data_type 'text'",
+            )
+    return failures
+
+
 # deduccion_requires_adquisicion_before(["amount_id", "acquisition_date_id",
 # "construction_date_id", "cutoff_iso"]) — eligibility-conditional advisory.
 # Mixes three casilla ids with a trailing ISO-date literal, so it cannot route
@@ -473,6 +541,21 @@ def validate_verification_expectation_section(
             # casilla, or an empty literal at authoring time.
             failures.extend(
                 _casilla_equals_implies_nonzero_predicate_failures(
+                    prefix,
+                    owner,
+                    predicate.expression,
+                    casillas,
+                    casilla_by_id,
+                ),
+            )
+        elif op_name == "casilla_equals_implies_diverges":
+            # casilla_equals_implies_diverges(["antecedent_id", "literal",
+            # "casilla_a_id", "casilla_b_id"]) mixes three casilla ids with a
+            # literal string; reject a malformed arity, an unknown
+            # antecedent/consequent-pair casilla, a non-text antecedent, a
+            # text consequent, or an empty literal at authoring time.
+            failures.extend(
+                _casilla_equals_implies_diverges_predicate_failures(
                     prefix,
                     owner,
                     predicate.expression,

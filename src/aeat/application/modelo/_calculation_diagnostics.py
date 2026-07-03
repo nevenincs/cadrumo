@@ -26,6 +26,8 @@ See Also:
         Emits Modelo 130 prior-payment carry degradation advisories.
     :func:`~aeat.application.modelo._settlement_grade_advisory.collect_settlement_not_computed_diagnostics`:
         Emits structural settlement-completeness advisories for partially modelled revisions.
+    :func:`~aeat.application.modelo._bienes_inversion_advisory.collect_bienes_inversion_regularizacion_diagnostics`:
+        Emits the Modelo 303 capital-goods IVA regularización proposed-casilla-43 advisory.
 """
 
 from __future__ import annotations
@@ -36,6 +38,7 @@ from decimal import Decimal
 from ...domain.calculations.registry import CasillaId, ModeloRevision
 from ..aggregation import CalculationSourceDiagnostic
 from ..calculations import CalculationObservationRepository
+from ._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 from ._minimo_descendientes_advisory import collect_minimo_descendientes_undeclared_diagnostics
 from ._official_box_advisory import collect_official_box_unpopulated_diagnostics
 from ._prior_payment_advisory import (
@@ -60,10 +63,12 @@ def collect_bucket_aggregation_advisory_diagnostics(
 
     Runs the calculate-path advisory collectors in tuple order:
     official-box transcription, Modelo 130 prior-payment under-deduction, Modelo
-    130 prior-payment minoracion capture, settlement-not-computed structure, and
-    the Modelo 100 mínimo-por-descendientes undeclared-facts advisory. These
-    diagnostics are informational and non-blocking; the calculation result already
-    exists, and the caller merely appends these rows to the source mesh's existing
+    130 prior-payment minoracion capture, settlement-not-computed structure, the
+    Modelo 100 mínimo-por-descendientes undeclared-facts advisory, and the Modelo
+    303 capital-goods IVA regularización (LIVA arts. 107-110) proposed-casilla-43
+    advisory. These diagnostics are informational and non-blocking; the
+    calculation result already exists, and the caller merely appends these rows
+    to the source mesh's existing
     :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
     sequence.
 
@@ -127,6 +132,12 @@ def collect_bucket_aggregation_advisory_diagnostics(
             revision,
             casilla_values,
             modelo=modelo,
+            bucket_id=bucket_id,
+        )
+        + collect_bienes_inversion_regularizacion_diagnostics(
+            modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
             bucket_id=bucket_id,
         )
     )

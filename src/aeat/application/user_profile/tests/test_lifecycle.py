@@ -27,6 +27,7 @@ from .. import (
     EditProfileFieldCommand,
     ProfileLifecycleService,
     ProfileValidationService,
+    ReactivateProfileCommand,
     RegisterProfileCommand,
     RemoveProfileCommand,
     RenameProfileCommand,
@@ -168,6 +169,79 @@ def test_remove_tombstones_the_profile(secure_objects: SecureObjectRepository, s
     result = svc.remove(RemoveProfileCommand(profile_id="11111111-1111-4111-8111-111111111111"))
     assert result.profile.status is UserProfileStatus.TOMBSTONED
     assert result.profile.removed_at is not None
+
+
+def test_reactivate_restores_a_tombstoned_profile(
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """``reactivate`` is the symmetric inverse of ``remove``: status flips back, ``removed_at`` clears."""
+    svc = _service(secure_objects, schema)
+    registered = svc.register(
+        RegisterProfileCommand(
+            profile_id="11111111-1111-4111-8111-111111111111",
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        ),
+    )
+    svc.remove(RemoveProfileCommand(profile_id="11111111-1111-4111-8111-111111111111"))
+
+    result = svc.reactivate(ReactivateProfileCommand(profile_id="11111111-1111-4111-8111-111111111111"))
+
+    assert result.profile.status is UserProfileStatus.ACTIVE
+    assert result.profile.removed_at is None
+    assert result.profile.facts == registered.profile.facts
+    assert result.profile.created_at == registered.profile.created_at
+
+    # The persisted record reflects the reactivation.
+    reloaded = svc.read("11111111-1111-4111-8111-111111111111")
+    assert reloaded.status is UserProfileStatus.ACTIVE
+    assert reloaded.removed_at is None
+
+
+def test_reactivate_refuses_a_live_profile(
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """``reactivate`` on a live (never-tombstoned) profile is refused."""
+    svc = _service(secure_objects, schema)
+    svc.register(
+        RegisterProfileCommand(
+            profile_id="11111111-1111-4111-8111-111111111111",
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        ),
+    )
+
+    with pytest.raises(ProfileNotFoundError):
+        svc.reactivate(ReactivateProfileCommand(profile_id="11111111-1111-4111-8111-111111111111"))
+
+
+def test_reactivate_emits_profile_reactivated_event(
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """``reactivate`` emits ``PROFILE_REACTIVATED`` — the symmetric inverse of ``PROFILE_TOMBSTONED``."""
+    events = BucketEventHistoryRepository(objects=secure_objects)
+    svc = ProfileLifecycleService(
+        repository=UserProfileLifecycleRepository(bucket_id=_PROFILE_BUCKET_ID, objects=secure_objects),
+        validator=ProfileValidationService(schema=schema),
+        events=events,
+    )
+    svc.register(
+        RegisterProfileCommand(
+            profile_id="11111111-1111-4111-8111-111111111111",
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        ),
+    )
+    svc.remove(RemoveProfileCommand(profile_id="11111111-1111-4111-8111-111111111111"))
+    svc.reactivate(ReactivateProfileCommand(profile_id="11111111-1111-4111-8111-111111111111"))
+
+    catalogue = events.load()
+    event_types = [event.event_type for event in catalogue.events.values()]
+    assert BucketEventType.PROFILE_TOMBSTONED in event_types
+    assert BucketEventType.PROFILE_REACTIVATED in event_types
 
 
 def test_duplicate_copies_to_a_new_id(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> None:

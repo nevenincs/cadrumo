@@ -319,16 +319,113 @@ def aggregate_retenciones_193(
     return _aggregate_for_modelo(observations, modelo=Modelo.M193.value, period=period)
 
 
+class RetencionesTotalsParity(BaseModel):
+    """Totals-parity verdict between the dedicated per-perceptor retención store and a resumen-anual summary.
+
+    Modelo 193's (and Modelo 180's) monetary resumen casillas
+    (``decl.base-total``, ``decl.retenciones-total``) are computed by the
+    registry as a SUM of the taxpayer's four Modelo 123 (Modelo 115 for 180)
+    quarterly filings (``source = "relation_prefill"``), and the distinct-NIF
+    perceptor count (``decl.total-perceptores``) is bound to
+    :func:`aggregate_retenciones_193` / :func:`aggregate_retenciones_180` over
+    the dedicated per-perceptor retención store
+    (:class:`RetencionesAggregation`, RET-1). Both are independently sourced:
+    nothing in the registry cross-checks that the quarterly-relation totals and
+    the per-perceptor store's totals agree.
+
+    This model is the pure comparison result of that cross-check: the
+    aggregation's ``total_perceptors`` / ``total_taxable_base`` /
+    ``total_retencion`` against the resolved summary casilla values.
+    ``is_consistent`` is ``True`` only when every delta is within
+    ``tolerance`` (the perceptor-count delta is compared as an exact integer
+    match) — a divergence on any axis surfaces as a loud, actionable finding
+    (``no-silent-under-declaration``), never a silent pass.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    perceptores_aggregation_total: int = Field(ge=0)
+    perceptores_summary_total: int = Field(ge=0)
+    perceptores_delta: int
+    base_aggregation_total: Decimal = Field(ge=Decimal("0"))
+    base_summary_total: Decimal = Field(ge=Decimal("0"))
+    base_delta: Decimal
+    retenciones_aggregation_total: Decimal = Field(ge=Decimal("0"))
+    retenciones_summary_total: Decimal = Field(ge=Decimal("0"))
+    retenciones_delta: Decimal
+    tolerance: Decimal = Field(ge=Decimal("0"))
+    is_consistent: bool
+
+
+def compute_retenciones_totals_parity(
+    aggregation: RetencionesAggregation,
+    *,
+    perceptores_summary_total: int,
+    base_summary_total: Decimal,
+    retenciones_summary_total: Decimal,
+    tolerance: Decimal = Decimal("0.01"),
+) -> RetencionesTotalsParity:
+    """Cross-check a :class:`RetencionesAggregation` against a resumen-anual summary's casillas.
+
+    Args:
+        aggregation: The real per-perceptor :class:`RetencionesAggregation`
+            (typically :func:`aggregate_retenciones_193` or
+            :func:`aggregate_retenciones_180`) built from the dedicated
+            per-perceptor retención store for the filing year.
+        perceptores_summary_total: The resolved value of casilla
+            ``decl.total-perceptores`` (already sourced from the SAME
+            aggregation via the ``retenciones_aggregation`` binding, so this
+            axis is expected to always match; included for completeness and
+            to catch a stale/desynchronised binding read).
+        base_summary_total: The resolved value of casilla
+            ``decl.base-total`` (the relation-prefill sum of the taxpayer's
+            quarterly filings' base casilla).
+        retenciones_summary_total: The resolved value of casilla
+            ``decl.retenciones-total`` (the relation-prefill sum of the
+            taxpayer's quarterly filings' retenciones casilla).
+        tolerance: Maximum absolute EUR delta that does not surface a
+            divergence on the monetary axes. Defaults to one cent, matching
+            the registry's standard rounding tolerance.
+
+    Returns:
+        A :class:`RetencionesTotalsParity` verdict. ``is_consistent`` is
+        ``False`` whenever the perceptor count differs at all, or either
+        monetary total diverges from its corresponding summary casilla by more
+        than ``tolerance`` — a dropped or double-counted perceptor row, or a
+        quarterly filing missing from the relation-prefill sum, must surface
+        as a divergence, never silently collapse into ``is_consistent=True``.
+    """
+    perceptores_delta = aggregation.total_perceptors - perceptores_summary_total
+    base_delta = aggregation.total_taxable_base - base_summary_total
+    retenciones_delta = aggregation.total_retencion - retenciones_summary_total
+    is_consistent = perceptores_delta == 0 and abs(base_delta) <= tolerance and abs(retenciones_delta) <= tolerance
+    return RetencionesTotalsParity(
+        perceptores_aggregation_total=aggregation.total_perceptors,
+        perceptores_summary_total=perceptores_summary_total,
+        perceptores_delta=perceptores_delta,
+        base_aggregation_total=aggregation.total_taxable_base,
+        base_summary_total=base_summary_total,
+        base_delta=base_delta,
+        retenciones_aggregation_total=aggregation.total_retencion,
+        retenciones_summary_total=retenciones_summary_total,
+        retenciones_delta=retenciones_delta,
+        tolerance=tolerance,
+        is_consistent=is_consistent,
+    )
+
+
 __all__ = [
     "RETENCIONES_MODELO_SCHEME_CATALOGUE",
     "RetencionObservation",
     "RetencionPerceptorRollup",
     "RetencionScheme",
     "RetencionesAggregation",
+    "RetencionesTotalsParity",
     "aggregate_retenciones_111",
     "aggregate_retenciones_115",
     "aggregate_retenciones_123",
     "aggregate_retenciones_180",
     "aggregate_retenciones_190",
     "aggregate_retenciones_193",
+    "compute_retenciones_totals_parity",
 ]

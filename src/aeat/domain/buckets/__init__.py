@@ -70,6 +70,7 @@ See Also:
 from __future__ import annotations
 
 from ._errors import (
+    BucketArchiveRefusedError,
     BucketBrowseError,
     BucketDeleteRefusedError,
     BucketEventValidationError,
@@ -77,6 +78,7 @@ from ._errors import (
     BucketImportError,
     BucketMaintenanceError,
     BucketRenameError,
+    BucketRestoreRefusedError,
     BucketsError,
 )
 from ._event import (
@@ -93,6 +95,7 @@ from ._event_repository import (
 from ._protocols import BucketEventHistoryRepositoryProtocol
 
 __all__ = [
+    "BucketArchiveRefusedError",
     "BucketBrowseError",
     "BucketDeleteRefusedError",
     "BucketEvent",
@@ -106,6 +109,7 @@ __all__ = [
     "BucketImportError",
     "BucketMaintenanceError",
     "BucketRenameError",
+    "BucketRestoreRefusedError",
     "BucketsError",
     "append_bucket_event",
     "derive_bucket_event_id",

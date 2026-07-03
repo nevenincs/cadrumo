@@ -516,6 +516,10 @@ application:
           before reading AEAT data.
   bucket_maintenance:
     errors:
+      archive_active_bucket: The active bucket cannot be archived; switch to another
+        profile first.
+      archive_not_confirmed: Archiving is a reversible state transition, but it still
+        requires explicit confirmation.
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -526,6 +530,8 @@ application:
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
+      restore_not_archived: The bucket is not archived (tombstoned); there is nothing
+        to restore.
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
   calculations:
     iva_compensation:
@@ -842,6 +848,11 @@ application:
         %{filing_year} %{period}, but a refund is only available in the year's last
         filing period. Carry the credit forward (compensar), or make the election
         in the last period.
+      review_package_generic: An error occurred while building the review package.
+      review_package_integrity: 'Review package %{package_path} failed checksum verification:
+        %{detail}.'
+      review_package_revision_state: 'Calculation revision %{calculation_revision_id}
+        is in state %{state} and cannot be packaged for review; eligible states: %{eligible_states}.'
       revision_pick_explicit_id_required: Explicit revision picks require calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id is only
         valid with the explicit revision selector.
@@ -1143,6 +1154,8 @@ application:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
         one taxpayer must have one profile.
       lifecycle_profile_already_exists: A profile already exists in the active bucket.
+      lifecycle_profile_not_tombstoned: The profile is not tombstoned; reactivate
+        refuses a live profile.
       lifecycle_profile_tombstoned_duplicate: A removed profile cannot be duplicated.
       lifecycle_profile_tombstoned_rename: A removed profile cannot be renamed.
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
@@ -1279,7 +1292,7 @@ auth:
     clave_movil_description: Push-approval authentication via the holder's phone registered
       with Cl@ve. Requires DNI/NIE, Cl@ve enrolment, and a paired device.
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: Reserved closed provider slot for Cl@ve Permanente.
+    clave_permanente_description: 'DNI/NIE and password authentication via the Cl@ve Permanente identity provider. Headless-automatable for AEAT read paths; requires DNI/NIE and password.'
     clave_permanente_label: Cl@ve Permanente
     clave_pin_description: Reserved closed provider slot for Cl@ve PIN.
     clave_pin_label: Cl@ve PIN
@@ -1851,6 +1864,25 @@ cli:
         section_optional: optional_manual
         section_profile: profile_derivable
         section_required: required_manual
+      review_package:
+        actor_help: Operator label recorded into the package descriptor and the underlying
+          export event.
+        build_help: Assemble a shareable, checksum-verifiable review package (fichero-BOE
+          draft, revision provenance, and bundled ledger evidence) for accountant
+          handoff. Local-only; never contacts AEAT.
+        errors:
+          output_required: Supply --output PATH for the review package ZIP.
+          package_not_found: Review package not found at {package_path}.
+        group_help: Build a shareable review package and verify its integrity.
+        notes_help: Free-text note embedded in the package descriptor (e.g. why it
+          was shared).
+        output_help: Path to write the review package ZIP to.
+        package_path_help: Path to the review package ZIP to verify.
+        revision_help: Calculation revision id to package; defaults to the work unit's
+          most recent verified-complete or filed revision.
+        verify_help: Verify a review package's checksum manifest (integrity only;
+          does not assert who built it). Local-only; never contacts AEAT.
+        work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
@@ -2272,6 +2304,7 @@ cli:
           list_help: List accepted apoderado scopes
         status_help: Show active apoderado configuration
       certificate:
+        check_help: cli.config.auth.certificate.check_help
         help: cli.config.auth.certificate.help
         list_help: cli.config.auth.certificate.list_help
         register:
@@ -2282,6 +2315,16 @@ cli:
         remove:
           name_help: cli.config.auth.certificate.remove.name_help
         remove_help: cli.config.auth.certificate.remove_help
+        secret:
+          help: 'Manage the passphrase bound to a named certificate source'
+          remove:
+            name_help: 'Registered certificate source whose passphrase should be removed'
+          remove_help: 'Remove the passphrase bound to a registered certificate source'
+          set:
+            backend_help: 'Secret backend: secure_storage (default, encrypted at rest) or keyring (OS keychain)'
+            name_help: 'Registered certificate source the passphrase is bound to'
+            secret_help: 'The PKCS#12 passphrase (prompted, hidden, never echoed)'
+          set_help: 'Set (or rotate) the passphrase for a registered certificate source'
         select:
           name_help: cli.config.auth.certificate.select.name_help
         select_help: cli.config.auth.certificate.select_help
@@ -2641,6 +2684,17 @@ cli:
       sandbox:
         already_exists: A sandbox named %{label} already exists. Pick a different
           name or discard the existing one first.
+        archive_active_profile: Sandbox %{name} is the active profile; switch to another
+          profile before archiving it.
+        archive_dry_run_help: Preview the archive without moving the sandbox out of
+          the live surface.
+        archive_help: Move a sandbox into reversible dormancy without erasing it.
+        archive_name_help: Sandbox name (without the prefix).
+        archive_requires_yes: Archiving a sandbox is a state transition. Re-run 'aeat
+          config profile sandbox archive %{name} --yes' to confirm.
+        archive_restorable_info: The sandbox is now dormant; run 'aeat config profile
+          sandbox restore %{name}' to bring it back.
+        archive_yes_help: Confirm the archive.
         create_active_info: The sandbox is now the ACTIVE profile; every command runs
           against it until you switch away or discard it.
         create_from_profile_help: Seed the sandbox with an existing profile's facts
@@ -2649,6 +2703,8 @@ cli:
         create_name_help: Sandbox name.
         discard_active_profile: Sandbox %{name} is the active profile; switch to another
           profile before discarding it.
+        discard_dry_run_help: Preview what the discard would remove without removing
+          anything.
         discard_help: Permanently erase a sandbox bucket.
         discard_name_help: Sandbox name (without the prefix).
         discard_not_a_sandbox: '%{name} is not a sandbox; the sandbox surface refuses
@@ -2659,6 +2715,18 @@ cli:
         help: Run experiments in an isolated, discardable bucket that never touches
           main profile state.
         list_help: List every sandbox bucket.
+        prune_dry_run_help: Preview which sandboxes would be discarded without discarding
+          them.
+        prune_help: Discard every sandbox bucket at once.
+        prune_requires_yes: Pruning every sandbox is destructive. Re-run 'aeat config
+          profile sandbox prune --yes' to confirm.
+        prune_skipped_active_info: Skipped the active sandbox %{names}; switch to
+          another profile and re-run 'aeat config profile sandbox prune --yes' to
+          discard it.
+        prune_yes_help: Confirm discarding every sandbox.
+        restore_help: Bring an archived sandbox back to active status.
+        restore_name_help: Sandbox name (without the prefix).
+        restore_not_archived: '%{name} is not archived; there is nothing to restore.'
         source_not_found: No live profile named %{name} to seed the sandbox from.
         unknown_sandbox: 'Unknown sandbox: %{name}. Run ''aeat config profile sandbox
           list'' to see registered sandboxes.'
@@ -2808,6 +2876,33 @@ cli:
         and cannot be repaired manually.'
       registry_integrity_internal: Internal application problem; not a fault in your
         profile and not something you can fix yourself.
+    errors:
+      header: 'LLM run errors:'
+      help: Break down recent failed local LLM runs by provider and error kind.
+      no_failures: No failed LLM runs recorded in this range.
+      provider_help: Restrict the breakdown to this provider label (e.g. claude, antigravity,
+        codex).
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
+    latency:
+      header: 'LLM run latency:'
+      help: Report P50/P95/P99 duration percentiles over recent local LLM runs.
+      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
+        to populate it.
+      provider_help: Restrict the report to this provider label (e.g. claude, antigravity,
+        codex).
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
+    llm_usage:
+      header: 'LLM run usage:'
+      help: Report LLM run-usage totals (counts, durations, success rate) by provider
+        and model.
+      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
+        to populate it.
+      provider_help: Restrict the summary to this provider label (e.g. claude, antigravity,
+        codex).
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
     next_action:
       inspect_registry_toml: Inspect the registry TOML sources to identify the problem.
     repair:
@@ -2837,6 +2932,16 @@ cli:
         claude, antigravity, codex).
       session_stale_message: The persisted AEAT session has passed its idle deadline;
         a live read will re-authenticate.
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
+    runs:
+      header: 'Recent LLM runs:'
+      help: List recent local LLM run-timing records, most-recent-first.
+      limit_help: Cap the listing to this many most-recent runs.
+      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
+        to populate it.
+      provider_help: Restrict the listing to this provider label (e.g. claude, antigravity,
+        codex).
       since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
       until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
     summary:
@@ -4588,6 +4693,9 @@ errors:
       validation.
     integrity_storage_classification: A record's declared sensitivity class is incompatible
       with its repository.
+    integrity_storage_corpus_bundle: The corpus bundle could not be parsed or verified.
+    integrity_storage_corpus_bundle_verification: The corpus bundle failed checksum
+      verification against its embedded manifest.
     integrity_storage_corpus_manifest: The corpus manifest could not be parsed or
       validated.
     integrity_storage_corpus_manifest_drift: 'The on-disk corpus diverges from its
