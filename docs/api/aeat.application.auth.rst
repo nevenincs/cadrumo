@@ -17,6 +17,8 @@ Submodules
    aeat.application.auth._actions
    aeat.application.auth._apoderado
    aeat.application.auth._catalogue
+   aeat.application.auth._certificate_sources
+   aeat.application.auth._certificate_sources_operator
    aeat.application.auth._diagnostics
    aeat.application.auth._errors
    aeat.application.auth._models

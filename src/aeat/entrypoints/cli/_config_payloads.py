@@ -931,6 +931,57 @@ class ApoderadoScopesListResult(OutputSchema):
 
 
 # ---------------------------------------------------------------------------
+# Certificate source registry verb result schemas
+# ---------------------------------------------------------------------------
+
+
+class CertificateSourcePayloadEntry(OutputSchema):
+    """One registered certificate source row.
+
+    Mirrors :class:`application.auth.CertificateSourcePayload`; nested in
+    :class:`CertificateSourceListPayload`, not registered independently.
+    """
+
+    name: str
+    certificate_path: str
+    friendly_name: str = ""
+    active: bool = False
+    registered_at: str = ""
+
+
+@register_schema("config.auth.certificate.register")
+class CertificateSourceMutationPayload(OutputSchema):
+    """JSON envelope for ``certificate register`` / ``select`` / ``remove``.
+
+    Field set is 1:1 with the application
+    :class:`application.auth.CertificateSourceMutationResult`. The same
+    schema class is registered under the three distinct command paths
+    below because ``register``, ``select``, and ``remove`` all emit the
+    identical mutation-result shape.
+    """
+
+    name: str
+    certificate_path: str = ""
+    active: bool = False
+    removed: bool = False
+
+
+register_schema("config.auth.certificate.select")(CertificateSourceMutationPayload)
+register_schema("config.auth.certificate.remove")(CertificateSourceMutationPayload)
+
+
+@register_schema("config.auth.certificate.list")
+class CertificateSourceListPayload(OutputSchema):
+    """JSON envelope for ``aeat config auth certificate list``.
+
+    Mirrors :class:`application.auth.CertificateSourceListResult`.
+    """
+
+    sources: list[CertificateSourcePayloadEntry] = []
+    active_source: str = ""
+
+
+# ---------------------------------------------------------------------------
 # Auth diagnostics verb result schemas
 # ---------------------------------------------------------------------------
 

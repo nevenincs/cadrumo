@@ -39,6 +39,7 @@ from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
 from ._bucket_archive import register_bucket_archive_commands
 from ._bucket_history import register_bucket_history_commands
+from ._certificate import certificate_app
 from ._custody import register_custody_commands
 from ._descendiente import register_descendiente_commands
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
@@ -1214,6 +1215,7 @@ app.add_typer(repair_app, name="repair")
 app.add_typer(profile_app, name="profile")
 register_apoderado_commands(auth_app, resolve_active_profile_pointer=_resolve_active_profile_pointer)
 auth_app.add_typer(auth_diagnostics_app, name="diagnostics")
+auth_app.add_typer(certificate_app, name="certificate")
 app.add_typer(auth_app, name="auth")
 
 from ._google import google_app as _google_app
@@ -1225,6 +1227,7 @@ __all__ = [
     "app",
     "auth_app",
     "auth_diagnostics_app",
+    "certificate_app",
     "profile_app",
     "register_apoderado_commands",
     "register_bucket_archive_commands",

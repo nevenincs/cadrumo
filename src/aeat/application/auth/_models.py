@@ -12,9 +12,41 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
+
+
+class CertificateSourceRecord(BaseModel):
+    """One named, registered PKCS#12 certificate source.
+
+    A gestor managing several entities (their own personal certificate
+    plus one or more apoderado certificates) registers each certificate
+    under a distinct ``name`` so the active one can be selected without
+    re-supplying the filesystem path. Only the filesystem reference is
+    stored here; certificate passwords, private keys, and session
+    material never enter this record (or any persisted workflow
+    state), matching the existing single-certificate contract.
+
+    Attributes:
+        name: Operator-chosen identifier for this certificate source
+            (e.g. ``"personal"``, ``"apoderado-empresa-x"``). Unique
+            within the active profile's registry.
+        certificate_path: Filesystem path to the PKCS#12 (.p12/.pfx)
+            bundle.
+        friendly_name: Optional human-readable label distinct from
+            ``name``, mirroring
+            :attr:`core.config.Settings.aeat_certificate_friendly_name`.
+        registered_at: UTC timestamp the source was registered or last
+            re-pointed at a different path.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    name: str = Field(min_length=1, max_length=160)
+    certificate_path: str = Field(min_length=1)
+    friendly_name: str | None = None
+    registered_at: datetime
 
 
 class AuthState(BaseModel):
@@ -26,6 +58,16 @@ class AuthState(BaseModel):
     read the canonical projection into
     :class:`application.auth.AuthStatusResult` and
     :class:`application.auth.AuthTestResult`.
+
+    ``certificate_sources`` and ``active_certificate_source`` extend the
+    single-certificate contract with a named multi-certificate registry:
+    an operator (typically a gestor) may register several PKCS#12
+    sources — one per entity they act for — and select which one is
+    active. ``certificate_path`` remains the single field the rest of
+    the auth surface (backend probes, live login, health reporting)
+    reads; selecting an active source mirrors its path onto
+    ``certificate_path`` so every existing consumer keeps working
+    unchanged.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -35,3 +77,5 @@ class AuthState(BaseModel):
     configured_at: datetime | None = None
     authenticated_at: datetime | None = None
     subject: str | None = None
+    certificate_sources: dict[str, CertificateSourceRecord] = Field(default_factory=dict)
+    active_certificate_source: str | None = None
