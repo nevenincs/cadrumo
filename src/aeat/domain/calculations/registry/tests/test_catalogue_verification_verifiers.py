@@ -95,7 +95,7 @@ def test_verify_source_catalogue_checks_every_entry(tmp_path: Path) -> None:
     catalogue = {"aeat-source": _source_reference("corpus/source.xlsx", payload)}
     assert len(catalogue) == 1
     result = verify_source_catalogue(tmp_path, catalogue)
-    assert result is None
+    assert result == ()
 
 
 def test_verify_legal_catalogue_rejects_known_bad_citation_role() -> None:
