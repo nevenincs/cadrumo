@@ -2617,23 +2617,31 @@ cli:
       rename_source_help: Existing profile name
       rename_target_help: New profile name
       sandbox:
-        already_exists: 'A sandbox named %{label} already exists. Pick a different name or discard the existing one first.'
-        create_active_info: 'The sandbox is now the ACTIVE profile; every command runs against it until you switch away or discard it.'
-        create_from_profile_help: 'Seed the sandbox with an existing profile''s facts (read-only source).'
-        create_help: 'Fork a new isolated sandbox bucket and activate it.'
-        create_name_help: 'Sandbox name.'
-        discard_active_profile: 'Sandbox %{name} is the active profile; switch to another profile before discarding it.'
-        discard_help: 'Permanently erase a sandbox bucket.'
-        discard_name_help: 'Sandbox name (without the prefix).'
-        discard_not_a_sandbox: '%{name} is not a sandbox; the sandbox surface refuses to discard a real profile.'
-        discard_requires_yes: 'Discarding a sandbox is destructive. Re-run ''aeat config profile sandbox discard %{name} --yes'' to confirm.'
-        discard_yes_help: 'Confirm the destructive erase.'
-        help: 'Run experiments in an isolated, discardable bucket that never touches main profile state.'
-        list_help: 'List every sandbox bucket.'
-        source_not_found: 'No live profile named %{name} to seed the sandbox from.'
-        unknown_sandbox: 'Unknown sandbox: %{name}. Run ''aeat config profile sandbox list'' to see registered sandboxes.'
-        use_help: 'Switch the active profile to an existing sandbox.'
-        use_name_help: 'Sandbox name (without the prefix).'
+        already_exists: A sandbox named %{label} already exists. Pick a different
+          name or discard the existing one first.
+        create_active_info: The sandbox is now the ACTIVE profile; every command runs
+          against it until you switch away or discard it.
+        create_from_profile_help: Seed the sandbox with an existing profile's facts
+          (read-only source).
+        create_help: Fork a new isolated sandbox bucket and activate it.
+        create_name_help: Sandbox name.
+        discard_active_profile: Sandbox %{name} is the active profile; switch to another
+          profile before discarding it.
+        discard_help: Permanently erase a sandbox bucket.
+        discard_name_help: Sandbox name (without the prefix).
+        discard_not_a_sandbox: '%{name} is not a sandbox; the sandbox surface refuses
+          to discard a real profile.'
+        discard_requires_yes: Discarding a sandbox is destructive. Re-run 'aeat config
+          profile sandbox discard %{name} --yes' to confirm.
+        discard_yes_help: Confirm the destructive erase.
+        help: Run experiments in an isolated, discardable bucket that never touches
+          main profile state.
+        list_help: List every sandbox bucket.
+        source_not_found: No live profile named %{name} to seed the sandbox from.
+        unknown_sandbox: 'Unknown sandbox: %{name}. Run ''aeat config profile sandbox
+          list'' to see registered sandboxes.'
+        use_help: Switch the active profile to an existing sandbox.
+        use_name_help: Sandbox name (without the prefix).
       sar_catalogue_info: 'This archive holds every personal-data category kept for
         the profile: identity and profile facts, modelo work units, ledger transactions,
         calculation revisions, and filing records. Attachment evidence bytes and AEAT
@@ -3594,12 +3602,24 @@ cli:
       modelo_help: AEAT modelo identifier (e.g. 303, 130, 100).
       year_help: Fiscal year for the applicability evaluation; defaults to the current
         year.
+    labels:
+      period: 'Period'
     local_work_units_unavailable: Local Modelo work-unit state could not be loaded;
       this overview is derived from the deadline schedule and may over-report an in-progress
       draft as still due or omit older in-progress drafts.
     period: Period
     period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12
       (months). Combine with --year to choose the year.'
+    pipeline:
+      help: 'Show cross-domain pipeline health for one filing period in one table: ledger classification/review state, modelo readiness (calculated / verified / filed / blocked) for every work unit in the period, and outstanding verification findings. Read-only; safe to run repeatedly; never contacts AEAT.'
+      labels:
+        findings_section: 'Findings:'
+        ledger_section: 'Ledger:'
+        modelos_section: 'Modelos:'
+        ready: 'ready'
+      no_work_units: 'No modelo work units for this period yet.'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
+      year_help: 'Filing year (e.g. 2026).'
     post_filing:
       pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review
         them with ''aeat app live notifications list''.'

@@ -22,3 +22,4 @@ Submodules
    aeat.application.overview._data_prep
    aeat.application.overview._errors
    aeat.application.overview._explain
+   aeat.application.overview._pipeline_health
