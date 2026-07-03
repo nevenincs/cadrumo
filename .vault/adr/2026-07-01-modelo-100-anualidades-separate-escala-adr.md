@@ -3,12 +3,12 @@ tags:
   - '#adr'
   - '#modelo-100-anualidades-separate-escala'
 date: '2026-07-01'
-modified: '2026-07-01'
+modified: '2026-07-03'
 related:
   - "[[2026-07-01-modelo-100-anualidades-separate-escala-research]]"
 ---
 
-# `modelo-100-anualidades-separate-escala` adr: `Modelo 100 anualidades por alimentos separate-escala determination` | (**status:** `proposed`)
+# `modelo-100-anualidades-separate-escala` adr: `Modelo 100 anualidades por alimentos separate-escala determination` | (**status:** `accepted`)
 
 ## Problem Statement
 

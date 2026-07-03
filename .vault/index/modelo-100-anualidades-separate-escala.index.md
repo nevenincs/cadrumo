@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-100-anualidades-separate-escala'
-date: '2026-07-01'
-modified: '2026-07-01'
+date: '2026-07-03'
+modified: '2026-07-03'
 related:
   - '[[2026-07-01-modelo-100-anualidades-separate-escala-adr]]'
   - '[[2026-07-01-modelo-100-anualidades-separate-escala-research]]'
@@ -18,7 +18,7 @@ Auto-generated index of all documents tagged with `#modelo-100-anualidades-separ
 
 ### adr
 
-- `2026-07-01-modelo-100-anualidades-separate-escala-adr` - `modelo-100-anualidades-separate-escala` adr: `Modelo 100 anualidades por alimentos separate-escala determination` | (**status:** `proposed`)
+- `2026-07-01-modelo-100-anualidades-separate-escala-adr` - `modelo-100-anualidades-separate-escala` adr: `Modelo 100 anualidades por alimentos separate-escala determination` | (**status:** `accepted`)
 
 ### research
 
