@@ -26,13 +26,11 @@ from typing import TYPE_CHECKING
 
 from ....core.logging import get_logger
 from ....core.time import now
-from ....domain.modelos._calculation_repository import CalculationRevisionPersistenceError
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevisionCatalogue,
+    CalculationRevisionPersistenceError,
     assert_revision_snapshot_evidence_coverage,
-)
-from ....domain.modelos._errors import raise_catalogue_integrity_error
-from ....domain.modelos._runtime_repository import (
+    raise_catalogue_integrity_error,
     resolve_modelo_repository_bucket_id,
     secure_objects_for_modelo_bucket,
 )
@@ -64,6 +62,7 @@ class CalculationRevisionCatalogueRepository:
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
+        """Bind the repository to a bucket id and/or an explicit secure-object store."""
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         if objects is not None:
             self._objects = objects

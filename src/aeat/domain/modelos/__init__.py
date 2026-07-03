@@ -71,12 +71,13 @@ See Also:
 
 from __future__ import annotations
 
-from ._calculation_repository import upsert_calculation_revision
+from ._calculation_repository import CalculationRevisionPersistenceError, upsert_calculation_revision
 from ._calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
+    assert_revision_snapshot_evidence_coverage,
     derive_calculation_revision_id,
 )
 from ._codes import ModeloCode
@@ -99,7 +100,7 @@ from ._filing_record import (
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from ._filing_repository import upsert_filing_record
+from ._filing_repository import ModeloRecordPersistenceError, upsert_filing_record
 from ._ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
 from ._ledger_filing_snapshot import (
     LedgerEvidenceRow,
@@ -155,7 +156,7 @@ from ._verification_report import (
     VerificationReportCatalogue,
     derive_verification_report_id,
 )
-from ._verification_repository import upsert_verification_report
+from ._verification_repository import VerificationReportPersistenceError, upsert_verification_report
 from ._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 
 __all__ = (
@@ -166,6 +167,7 @@ __all__ = (
     "CalculationRevisionCatalogue",
     "CalculationRevisionCatalogueRepositoryProtocol",
     "CalculationRevisionId",
+    "CalculationRevisionPersistenceError",
     "CalculationRevisionState",
     "Dt12WindowEligibility",
     "ExternalEvidence",
@@ -192,6 +194,7 @@ __all__ = (
     "ModeloRecord",
     "ModeloRecordCatalogue",
     "ModeloRecordCatalogueRepositoryProtocol",
+    "ModeloRecordPersistenceError",
     "ModeloRecordStatus",
     "ModeloValidationError",
     "ModeloVerificationFinding",
@@ -205,12 +208,14 @@ __all__ = (
     "VerificationReportCatalogue",
     "VerificationReportCatalogueRepositoryProtocol",
     "VerificationReportId",
+    "VerificationReportPersistenceError",
     "WorkUnit",
     "WorkUnitCatalogue",
     "WorkUnitCatalogueRepositoryProtocol",
     "WorkUnitId",
     "WorkUnitPersistenceError",
     "WorkUnitState",
+    "assert_revision_snapshot_evidence_coverage",
     "compute_dt12_reduccion_plan_pensiones",
     "compute_sal_reserva_especial_dotacion",
     "derive_calculation_revision_id",
