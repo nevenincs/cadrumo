@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#fichero-boe-export-layouts'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-03'
+modified: '2026-07-03'
 related:
   - '[[2026-05-21-fichero-boe-export-layouts-P01-S01]]'
   - '[[2026-05-21-fichero-boe-export-layouts-P01-S02]]'
@@ -29,6 +29,7 @@ related:
   - '[[2026-05-21-fichero-boe-export-layouts-P04-S21]]'
   - '[[2026-05-21-fichero-boe-export-layouts-P04-S22]]'
   - '[[2026-05-21-fichero-boe-export-layouts-P04-S23]]'
+  - '[[2026-05-21-fichero-boe-export-layouts-P06-S25]]'
   - '[[2026-05-21-fichero-boe-export-layouts-plan]]'
   - '[[2026-05-31-fichero-boe-export-layouts-P05-S24]]'
   - '[[2026-06-04-fichero-boe-export-layouts-adr]]'
@@ -71,6 +72,7 @@ Auto-generated index of all documents tagged with `#fichero-boe-export-layouts`.
 - `2026-05-21-fichero-boe-export-layouts-P04-S22` - `fichero-boe-export-layouts` `P04.S22`
 - `2026-05-21-fichero-boe-export-layouts-P04-S23` - `fichero-boe-export-layouts` `P04.S23`
 - `2026-05-31-fichero-boe-export-layouts-P05-S24` - fichero-boe-export-layouts P05.S24 — coverage ledger
+- `2026-05-21-fichero-boe-export-layouts-P06-S25` - Author the M390 fixed-width export layout grounded in the bundled AEAT Diseno de Registros, wire export_refs on the manifest casillas and computed totals, add the export application_link, and cover with the completeness-parity, thin-draft anti-tautology, and export-parse roundtrip gates
 
 ### plan
 
