@@ -70,11 +70,11 @@ Add a resolution seam to the bundled-data locator that tries the aeat tree first
 
 Give the registry source-verification gate the companion-aware absent branch: present binaries stay byte-exact hash-enforced, absent-but-companion-declared binaries accumulate into one loud advisory with the install hint, and the registry verification verbs refuse instructively, with anti-tautology proofs.
 
-- [ ] `W02.P05.S15` - Give verify_source_file a companion-aware absent branch: present binary stays byte-exact hash-enforced, absent-but-companion-declared binary returns an accumulable advisory rather than hard-failing; `src/aeat/domain/calculations/registry/_corpus_catalogue.py`.
-- [ ] `W02.P05.S16` - Make verify_source_catalogue accumulate absent companion binaries into one loud advisory naming the missing set and the aeat[corpus-sources] install hint; `src/aeat/domain/calculations/registry/_corpus_catalogue.py`.
-- [ ] `W02.P05.S17` - Make the four aeat app registry verification verbs refuse instructively when the companion is required and absent; `src/aeat/entrypoints/cli/registry.py`.
-- [ ] `W02.P05.S18` - Add an anti-tautology test that a corrupted PRESENT corpus binary still hard-fails the byte-exact hash gate; `src/aeat/domain/calculations/registry/tests/test_corpus_catalogue_companion.py`.
-- [ ] `W02.P05.S19` - Add an anti-tautology test that an absent companion binary surfaces a loud advisory and is never silently accepted; `src/aeat/domain/calculations/registry/tests/test_corpus_catalogue_companion.py`.
+- [x] `W02.P05.S15` - Give verify_source_file a companion-aware absent branch: present binary stays byte-exact hash-enforced, absent-but-companion-declared binary returns an accumulable advisory rather than hard-failing; `src/aeat/domain/calculations/registry/_corpus_catalogue.py`.
+- [x] `W02.P05.S16` - Make verify_source_catalogue accumulate absent companion binaries into one loud advisory naming the missing set and the aeat[corpus-sources] install hint; `src/aeat/domain/calculations/registry/_corpus_catalogue.py`.
+- [x] `W02.P05.S17` - Make the four aeat app registry verification verbs refuse instructively when the companion is required and absent; `src/aeat/entrypoints/cli/registry.py`.
+- [x] `W02.P05.S18` - Add an anti-tautology test that a corrupted PRESENT corpus binary still hard-fails the byte-exact hash gate; `src/aeat/domain/calculations/registry/tests/test_corpus_catalogue_companion.py`.
+- [x] `W02.P05.S19` - Add an anti-tautology test that an absent companion binary surfaces a loud advisory and is never silently accepted; `src/aeat/domain/calculations/registry/tests/test_corpus_catalogue_companion.py`.
 
 ### Phase `W02.P06` - corpus-sources extra and split-install smoke lane
 
