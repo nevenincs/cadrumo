@@ -53,7 +53,10 @@ def _untranslatable_internal_only_ids(snapshot: RegistrySnapshot) -> set[str]:
 # a live-formula workbook can be built and held to official-casilla parity.
 _COVERED = [
     ("130", 2025, "1T", date(2025, 4, 1)),  # pagos fraccionados actividad
+    ("303", 2023, "1T", date(2023, 4, 1)),  # IVA trimestral — 2023-y-siguientes (módulos)
+    ("303", 2024, "1T", date(2024, 4, 1)),  # IVA trimestral — módulos omitted across every year
     ("303", 2025, "1T", date(2025, 4, 1)),  # IVA trimestral
+    ("303", 2026, "1T", date(2026, 4, 1)),  # IVA trimestral — módulos omitted for 2026 too
     ("390", 2025, "0A", date(2026, 1, 20)),  # IVA resumen anual
     ("111", 2025, "1T", date(2025, 4, 1)),  # retenciones trabajo
     ("115", 2025, "1T", date(2025, 4, 1)),  # retenciones arrendamientos
