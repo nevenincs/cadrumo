@@ -10,6 +10,9 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S02]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S03]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S04]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W01-P02-S05]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W01-P02-S06]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W01-P02-S07]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S08]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S09]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S10]]'
@@ -49,6 +52,9 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 - `2026-07-03-claude-ecosystem-packaging-W01-P01-S02` - Root aeat_local_storage_root at the platform user-data directory for installed runs while preserving the PROJECT_ROOT var/storage default for a source checkout
 - `2026-07-03-claude-ecosystem-packaging-W01-P01-S03` - Assert the derived tokens, logs, secret, blob and audit roots follow the installed platform base through the existing state-root validators
 - `2026-07-03-claude-ecosystem-packaging-W01-P01-S04` - Prove installed-mode storage resolves off the platform directory and never off PROJECT_ROOT with a fresh-install roundtrip test
+- `2026-07-03-claude-ecosystem-packaging-W01-P02-S05` - Demote vaultspec-rag[mcp] out of [project.dependencies] into the dev dependency group so a published product wheel carries no developer search tooling
+- `2026-07-03-claude-ecosystem-packaging-W01-P02-S06` - Confirm deptry and the packaging-smoke dependency-surface gate stay clean after the demotion
+- `2026-07-03-claude-ecosystem-packaging-W01-P02-S07` - Align the mcpb manifest license field from 'see repository' to the real Apache-2.0 SPDX expression
 - `2026-07-03-claude-ecosystem-packaging-W02-P03-S08` - Exclude _data/corpus source binaries (*.pdf, *.xls, *.xlsx) from the aeat wheel via hatchling wheel excludes
 - `2026-07-03-claude-ecosystem-packaging-W02-P03-S09` - Scaffold the aeat-data distribution build with its own pyproject reading the same source tree, force-including the corpus binaries under an aeat_data package with mirrored relative paths
 - `2026-07-03-claude-ecosystem-packaging-W02-P03-S10` - Add a wheel-content test asserting the aeat wheel ships zero corpus pdf/xls/xlsx members while keeping the extracted-text, normative-html, registry and agent payload
