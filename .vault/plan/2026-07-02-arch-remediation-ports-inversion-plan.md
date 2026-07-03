@@ -85,7 +85,7 @@ Relocate the three filing repositories behind domain ports in the shared filing 
 
 - [x] `W03.P08.S10` - Relocate the filing repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/filing/_repository.py`.
 - [x] `W03.P08.S11` - Relocate the filing complementaria repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/filing/_complementaria_repository.py`.
-- [ ] `W03.P08.S12` - Relocate the filing runtime repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters runtime_repository entry; `src/aeat/domain/filing/_runtime_repository.py`.
+- [x] `W03.P08.S12` - Relocate the filing runtime repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters runtime_repository entry; `src/aeat/domain/filing/_runtime_repository.py`.
 
 ## Wave `W04` - modelos repositories and closeout
 
