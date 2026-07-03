@@ -14,8 +14,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine
-from .....domain.invoices._enums import IvaRate, PaymentStatus
+from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from .....domain.iva import InvoiceKind
 from .....tests.secure_sql import isolated_runtime_profile
 from ..invoices import _INVOICE_NAMESPACE, InvoiceCatalogueRepository

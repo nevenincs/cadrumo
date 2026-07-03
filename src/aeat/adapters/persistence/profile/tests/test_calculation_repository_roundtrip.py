@@ -36,10 +36,10 @@ from .....domain.calculations.registry import (
     RegistryUnresolvedOutcomeReason,
     validated_casilla_id,
 )
-from .....domain.modelos._calculation_repository import CalculationRevisionPersistenceError
-from .....domain.modelos._calculation_revision import (
+from .....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
+    CalculationRevisionPersistenceError,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )

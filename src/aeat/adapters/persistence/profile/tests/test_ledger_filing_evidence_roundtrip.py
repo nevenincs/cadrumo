@@ -12,14 +12,16 @@ from pydantic import ValidationError
 
 from .....core import Period
 from .....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
-from .....domain.modelos._calculation_revision import (
+from .....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
+    LedgerEvidenceRow,
+    LedgerFilingEvidence,
+    ManualFactBasisEntry,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from .....domain.modelos._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
-from .....domain.modelos._work_unit import derive_work_unit_id
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage.sql import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
