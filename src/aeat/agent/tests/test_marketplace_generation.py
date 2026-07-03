@@ -1,0 +1,99 @@
+"""Tests for the Claude marketplace materialiser.
+
+Asserts the marketplace layout target (ADR "Marketplace") emits, in ONE call,
+the ``.claude-plugin/marketplace.json`` manifest and the plugin tree its
+``plugins[].source`` points at, so the marketplace and the plugin it serves
+cannot drift: the served plugin is byte-identical to a standalone
+``materialise_plugin`` emission, and the checked-in scaffold under
+``packaging/marketplace`` stays in lock-step with the generator's manifest.
+Where the ``claude`` CLI is on PATH the emitted marketplace additionally passes
+``claude plugin validate --strict``; the structural assertions always run so
+the suite never silently degrades to a validator-only skip.
+"""
+
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from .._workspace import materialise_marketplace, materialise_plugin
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+
+_UTF_8 = "utf-8"
+
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+_SCAFFOLD_MANIFEST = _REPO_ROOT / "packaging" / "marketplace" / ".claude-plugin" / "marketplace.json"
+
+
+def test_marketplace_manifest_is_schema_shaped_and_resolves_to_the_plugin(tmp_path: Path) -> None:
+    manifest = materialise_marketplace(tmp_path)
+    assert manifest.marketplace_name == "aeat-marketplace"
+
+    document = json.loads((tmp_path / ".claude-plugin" / "marketplace.json").read_text(encoding=_UTF_8))
+    assert document["name"] == "aeat-marketplace"
+    assert isinstance(document["owner"], dict) and document["owner"]["name"]
+    assert document["description"]
+    (entry,) = document["plugins"]
+    assert entry["name"] == "aeat"
+    assert entry["source"] == manifest.plugin_source == "./plugins/aeat"
+
+    # The relative source resolves, from the marketplace root, to the plugin
+    # tree materialised in the same call.
+    served = tmp_path / "plugins" / "aeat"
+    assert (served / ".claude-plugin" / "plugin.json").is_file()
+    assert (served / ".mcp.json").is_file()
+    assert manifest.plugin.skills_written > 0
+    assert manifest.plugin.agents_written > 0
+
+
+def test_served_plugin_equals_the_standalone_plugin_emission(tmp_path: Path) -> None:
+    """No drift by construction: the served plugin is the standalone emission."""
+    marketplace_dir = tmp_path / "marketplace"
+    standalone_dir = tmp_path / "standalone"
+    materialise_marketplace(marketplace_dir, version="1.2.3")
+    materialise_plugin(standalone_dir, version="1.2.3")
+
+    served_root = marketplace_dir / "plugins" / "aeat"
+    served = {p.relative_to(served_root).as_posix(): p for p in sorted(served_root.rglob("*")) if p.is_file()}
+    standalone = {p.relative_to(standalone_dir).as_posix(): p for p in sorted(standalone_dir.rglob("*")) if p.is_file()}
+    assert served.keys() == standalone.keys()
+    for relative, served_path in served.items():
+        assert served_path.read_bytes() == standalone[relative].read_bytes(), relative
+
+
+def test_checked_in_marketplace_scaffold_matches_the_generator(tmp_path: Path) -> None:
+    """The ``packaging/marketplace`` scaffold cannot drift from the generator."""
+    materialise_marketplace(tmp_path)
+    generated = json.loads((tmp_path / ".claude-plugin" / "marketplace.json").read_text(encoding=_UTF_8))
+    scaffold = json.loads(_SCAFFOLD_MANIFEST.read_text(encoding=_UTF_8))
+    assert scaffold == generated
+
+
+def test_emitted_marketplace_passes_claude_validate_strict_when_cli_present(tmp_path: Path) -> None:
+    """The emitted marketplace is schema-valid; where ``claude`` exists, prove it strict.
+
+    The structural materialisation and its assertions always run; the live
+    validator is an ADDITIONAL gate, never a substitute, so a missing CLI
+    degrades to "structure checked" rather than a silent skip.
+    """
+    manifest = materialise_marketplace(tmp_path)
+    assert (tmp_path / ".claude-plugin" / "marketplace.json").is_file()
+    assert (tmp_path / "plugins" / "aeat" / ".claude-plugin" / "plugin.json").is_file()
+    assert manifest.plugin.skills_written > 0
+
+    claude = shutil.which("claude")
+    if claude is not None:
+        completed = subprocess.run(  # noqa: S603 - claude resolved from PATH, fixed args
+            [claude, "plugin", "validate", "--strict", str(tmp_path)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert completed.returncode == 0, (
+            f"claude plugin validate --strict failed:\n{completed.stdout}\n{completed.stderr}"
+        )
