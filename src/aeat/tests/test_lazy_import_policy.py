@@ -193,7 +193,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
         {
             ImportEdge("domain.filing._complementaria_repository", "adapters.persistence.storage"),
             ImportEdge("domain.filing._runtime_repository", "adapters.persistence.storage"),
-            ImportEdge("domain.modelos._runtime_repository", "adapters.persistence.storage"),
         }
     ),
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: frozenset(

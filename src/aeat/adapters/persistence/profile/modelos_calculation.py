@@ -31,9 +31,8 @@ from ....domain.modelos import (
     CalculationRevisionPersistenceError,
     assert_revision_snapshot_evidence_coverage,
     raise_catalogue_integrity_error,
-    resolve_modelo_repository_bucket_id,
-    secure_objects_for_modelo_bucket,
 )
+from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository, SecureObjectWrite
