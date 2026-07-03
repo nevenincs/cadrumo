@@ -178,6 +178,19 @@ exclude = [
   "src/aeat/tests/**",
   "src/aeat/**/tests",
   "src/aeat/**/tests/**",
+  # Corpus source binaries (the AEAT/BOE manuals and workbooks) are 94% of the
+  # wheel's compressed weight and serve only the always-on registry integrity
+  # hash chain and the opt-in `aeat app registry` verification verbs at runtime.
+  # They ship in the separate `aeat-data` companion distribution (installed via
+  # the `aeat[corpus-sources]` extra) under a mirrored `aeat_data/_data/corpus`
+  # tree; the corpus locator resolves either root. Every derived surface the
+  # grounding search and legal gates read at runtime — extracted text
+  # (`*.extracted.md`/`.json`), normative html, registry, terminology — stays in
+  # this wheel. Excluding only the source binaries keeps the slim `aeat` wheel
+  # under PyPI's 100 MB cap with no file-size grant on the critical path.
+  "src/aeat/_data/corpus/**/*.pdf",
+  "src/aeat/_data/corpus/**/*.xls",
+  "src/aeat/_data/corpus/**/*.xlsx",
 ]
 # The recovery-key BIP-39 wordlist is shipped as package data so
 # `importlib.resources.files()` can locate it at runtime in installed
