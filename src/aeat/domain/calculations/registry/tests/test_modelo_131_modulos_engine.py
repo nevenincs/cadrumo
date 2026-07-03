@@ -1,15 +1,23 @@
-"""Modelo 131 estimación-objetiva módulos engine (Fase 1ª + Fase 4ª, phased dataset).
+"""Modelo 131 estimación-objetiva módulos engine (Fases 1ª-4ª, phased dataset).
 
 Non-tautological: expected values are transcribed independently from the
 bundled Orden HAC/1347/2024 Anexo II coefficient tables
 (``corpus/normatives/html/orden-hac-1347-2024.html``), not re-derived from the
-registry formula under test. The 5 por ciento reducción general is grounded
+registry formula under test. Fase 2ª's minoración por incentivos al empleo
+(employ-only, the coeficiente por incremento + coeficiente por tramos
+mechanism) is cross-checked byte-identical against the AEAT Manual práctico de
+Renta 2025 full worked example (epígrafe 673.1, Capítulo 8) — see
+``TestCafesEspecial6731EstimacionObjetiva.test_full_manual_worked_example_fases_1_a_4``.
+Fase 3ª's índice corrector de exceso is grounded in the same Orden's tabled
+cuantía/índice constants via the shared ``_expected_modulos`` helper (an
+independent reproduction, not a re-derivation of the formula under test's own
+intermediate output). The 5 por ciento reducción general (Fase 4ª) is grounded
 in the same Orden's disposición adicional primera.
 """
 
 from __future__ import annotations
 
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 import pytest
 
@@ -330,6 +338,139 @@ _CHOCOLATERIAS_676 = {
 
 _REDUCCION_GENERAL_2025 = Decimal("0.05")
 
+# Fase 2ª — coeficiente por tramos del número de unidades del módulo
+# "personal asalariado" (Orden HAC/1347/2024 Anexo II, instrucción 2.2.a),
+# independently transcribed for cross-check against the registry's
+# m131-modulos-coeficiente-tramos-asalariados-2025 bracket_table parameter.
+_COEFICIENTE_INCREMENTO_ASALARIADOS = Decimal("0.40")
+_TRAMOS_ASALARIADOS = (
+    (Decimal("0"), Decimal("1.00"), Decimal("0.10")),
+    (Decimal("1.00"), Decimal("3.00"), Decimal("0.15")),
+    (Decimal("3.00"), Decimal("5.00"), Decimal("0.20")),
+    (Decimal("5.00"), Decimal("8.00"), Decimal("0.25")),
+    (Decimal("8.00"), None, Decimal("0.30")),
+)
+
+# Fase 3ª — índice corrector de exceso (Orden HAC/1347/2024 Anexo II,
+# instrucción 2.3.b.3): índice 1,30 aplied to the excess over the tabled
+# cuantía. Cuantías independently transcribed from the same bundled Orden
+# Anexo II table, matching the registry's m131-modulos-cuantia-exceso-2025
+# keyed_bracket_table parameter for the epígrafes tabled in this first
+# slice (2026-07-01-modelo-131-eo-modulos-engine-adr Phase 2).
+_INDICE_EXCESO = Decimal("1.30")
+_CUANTIA_EXCESO = {
+    "972.1": Decimal("18051.81"),
+    "721.2": Decimal("33640.86"),
+    "722": Decimal("33640.86"),
+    "671.4": Decimal("51617.08"),
+    "671.5": Decimal("38081.38"),
+    "672.1": Decimal("39070.26"),
+    "673.1": Decimal("30586.03"),
+    "673.2": Decimal("19084.78"),
+}
+
+# Módulo 1 ("personal asalariado") rendimiento-anual-por-unidad coefficient
+# per epígrafe, keyed to the same activity dicts the Fase 1ª tests already
+# cross-check against the bundled Orden Anexo II — reused here (not
+# re-derived from the registry formula under test) so the Fase 2ª test
+# helper can compute the minoración's "coefficient x módulo-1 coefficient"
+# product independently.
+_MODULO_1_COEFICIENTE_BY_EPIGRAFE = {
+    "972.1": _PELUQUERIA_972_1[1],
+    "721.2": _AUTOTAXI_721_2[1],
+    "722": _MERCANCIAS_722[1],
+    "671.4": _RESTAURANTE_DOS_TENEDORES_671_4[1],
+    "671.5": _RESTAURANTE_UN_TENEDOR_671_5[1],
+    "672.1": _CAFETERIAS_672_1[1],
+    "673.1": _CAFES_ESPECIAL_673_1[1],
+    "673.2": _OTROS_CAFES_673_2[1],
+    "644.1": _PAN_PASTELERIA_644_1[1],
+    "647.2": _AUTOSERVICIO_647_2[1],
+    "642.5": _HUEVOS_AVES_642_5[1],
+    "643.1": _PESCADOS_643_1[1],
+    "644.2": _DESPACHOS_PAN_644_2[1],
+    "644.3": _PASTELERIA_644_3[1],
+    "644.6": _MASAS_FRITAS_644_6[1],
+    "651.1": _TEXTIL_651_1[1],
+    "681": _HOSPEDAJE_HOTEL_681[1],
+    "721.1": _TRANSPORTE_URBANO_721_1[1],
+    "659.4a": _PAPELERIA_659_4A[1],
+    "691.9b": _REPARACION_OTROS_BIENES_691_9B[1],
+    "751.5": _ENGRASE_LAVADO_751_5[1],
+    "849.5": _MENSAJERIA_849_5[1],
+    "933.1": _AUTOESCUELA_933_1[1],
+    "967.2": _ESCUELAS_DEPORTE_967_2[1],
+    "971.1": _TINTORERIA_971_1[1],
+    "972.2": _INSTITUTOS_BELLEZA_972_2[1],
+    "973.3": _COPISTERIA_973_3[1],
+    "641": _FRUTAS_VERDURAS_641[1],
+    "675": _QUIOSCOS_SERVICIOS_675[1],
+    "676": _CHOCOLATERIAS_676[1],
+    "642.6": _CASQUERIAS_642_6[1],
+    "659.4b": _QUIOSCOS_PRENSA_659_4B[1],
+    "691.9a": _REPARACION_CALZADO_691_9A[1],
+    "757": _MUDANZAS_757[1],
+    "933.9": _OTRAS_ENSENANZAS_933_9[1],
+}
+
+
+def _module_1_coefficient(epigrafe: str) -> Decimal:
+    return _MODULO_1_COEFICIENTE_BY_EPIGRAFE[epigrafe]
+
+
+def _coeficiente_tramos(base: Decimal) -> Decimal:
+    """Reproduce the coeficiente-por-tramos progressive-bracket lookup.
+
+    Mirrors the registry's ``m131-modulos-coeficiente-tramos-asalariados-2025``
+    bracket_table (cumulative fixed_addition + marginal_rate x remainder),
+    independently transcribed here rather than re-derived from the formula
+    under test.
+    """
+    if base <= Decimal("0"):
+        return Decimal("0")
+    for lower, upper, rate in _TRAMOS_ASALARIADOS:
+        if upper is None or base <= upper:
+            cumulative = Decimal("0")
+            for prior_lower, prior_upper, prior_rate in _TRAMOS_ASALARIADOS:
+                if prior_upper is not None and prior_upper <= lower:
+                    cumulative += prior_rate * (prior_upper - prior_lower)
+            return cumulative + rate * (base - lower)
+    raise AssertionError("unreachable: open-ended top tramo always matches")
+
+
+def _money_round(value: Decimal) -> Decimal:
+    """Round to euro-cent precision with half-up semantics (mirrors ``apply_rounding('money-2')``)."""
+    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def _expected_minorado(
+    previo: Decimal,
+    *,
+    epigrafe: str,
+    modulo_1: Decimal,
+    modulo_1_anterior: Decimal,
+    modulo_1_coefficient: Decimal,
+) -> Decimal:
+    """Reproduce Fase 2ª (minoración por incentivos al empleo, employ-only)."""
+    incremento = (
+        modulo_1 - modulo_1_anterior
+        if modulo_1_anterior > Decimal("0") and modulo_1 > modulo_1_anterior
+        else Decimal("0")
+    )
+    coeficiente_incremento = incremento * _COEFICIENTE_INCREMENTO_ASALARIADOS
+    base_tramos = modulo_1 - incremento
+    coeficiente_tramos = _coeficiente_tramos(base_tramos)
+    minoracion = (coeficiente_incremento + coeficiente_tramos) * modulo_1_coefficient
+    return _money_round(previo - minoracion)
+
+
+def _expected_modulos(minorado: Decimal, *, epigrafe: str) -> Decimal:
+    """Reproduce Fase 3ª (índice corrector de exceso only)."""
+    cuantia = _CUANTIA_EXCESO.get(epigrafe)
+    if cuantia is None or minorado <= cuantia:
+        return minorado
+    return _money_round(cuantia + _INDICE_EXCESO * (minorado - cuantia))
+
 
 def _run_modulos_engine(
     epigrafe: str | None,
@@ -341,7 +482,8 @@ def _run_modulos_engine(
     modulo_5: Decimal = Decimal("0"),
     modulo_6: Decimal = Decimal("0"),
     modulo_7: Decimal = Decimal("0"),
-) -> tuple[Decimal, Decimal]:
+    modulo_1_anterior: Decimal = Decimal("0"),
+) -> tuple[Decimal, Decimal, Decimal, Decimal]:
     snapshot = _committed_snapshot("131", 2025, "1T")
     text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
     result = calculate_registry_snapshot(
@@ -354,12 +496,18 @@ def _run_modulos_engine(
             "modulos-5-unidades": modulo_5,
             "modulos-6-unidades": modulo_6,
             "modulos-7-unidades": modulo_7,
+            "modulos-1-unidades-anterior": modulo_1_anterior,
         },
         text_inputs=text_inputs,
         date_context={"filing_period": snapshot.filing_period.end_date},
     )
     values = result.values
-    return values["modulos-rendimiento-neto-previo"], values["modulos-rendimiento-neto-actividad"]
+    return (
+        values["modulos-rendimiento-neto-previo"],
+        values["modulos-rendimiento-neto-minorado"],
+        values["modulos-rendimiento-neto-modulos"],
+        values["modulos-rendimiento-neto-actividad"],
+    )
 
 
 def _quantize(value: Decimal) -> Decimal:
@@ -371,7 +519,7 @@ class TestPeluqueria9721EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 2 personal asalariado, 1 personal no asalariado, 50 m2 local, 30 (100 kWh).
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "972.1",
             modulo_1=Decimal("2"),
             modulo_2=Decimal("1"),
@@ -387,15 +535,25 @@ class TestPeluqueria9721EstimacionObjetiva:
         assert previo == expected_previo == Decimal("23153.67")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "972.1",
             modulo_1=Decimal("2"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("50"),
             modulo_4=Decimal("30"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("21995.99")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="972.1",
+            modulo_1=Decimal("2"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("972.1"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="972.1")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestAutotaxi7212EstimacionObjetiva:
@@ -403,7 +561,7 @@ class TestAutotaxi7212EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 0 personal asalariado, 1 personal no asalariado (titular), 40 (1.000 km).
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "721.2",
             modulo_1=Decimal("0"),
             modulo_2=Decimal("1"),
@@ -413,14 +571,24 @@ class TestAutotaxi7212EstimacionObjetiva:
         assert previo == expected_previo == Decimal("9460.09")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "721.2",
             modulo_1=Decimal("0"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("40"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("8987.09")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="721.2",
+            modulo_1=Decimal("0"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("721.2"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="721.2")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestTransporteMercancias722EstimacionObjetiva:
@@ -428,7 +596,7 @@ class TestTransporteMercancias722EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 0 personal no asalariado, 8 toneladas carga.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "722",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("0"),
@@ -444,7 +612,7 @@ class TestRestauranteDosTenedores6714EstimacionObjetiva:
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 2 personal asalariado, 1 personal no asalariado, 8 kW potencia
         # eléctrica, 3 mesas, 1 máquina tipo «A».
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "671.4",
             modulo_1=Decimal("2"),
             modulo_2=Decimal("1"),
@@ -462,7 +630,7 @@ class TestRestauranteDosTenedores6714EstimacionObjetiva:
         assert previo == expected_previo == Decimal("29301.08")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "671.4",
             modulo_1=Decimal("2"),
             modulo_2=Decimal("1"),
@@ -470,8 +638,18 @@ class TestRestauranteDosTenedores6714EstimacionObjetiva:
             modulo_4=Decimal("3"),
             modulo_5=Decimal("1"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("27836.03")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="671.4",
+            modulo_1=Decimal("2"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("671.4"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="671.4")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestRestauranteUnTenedor6715EstimacionObjetiva:
@@ -480,7 +658,7 @@ class TestRestauranteUnTenedor6715EstimacionObjetiva:
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 0 personal no asalariado, 6 kW potencia
         # eléctrica, 4 mesas, 2 máquinas tipo «B».
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "671.5",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("0"),
@@ -497,7 +675,7 @@ class TestRestauranteUnTenedor6715EstimacionObjetiva:
         assert previo == expected_previo == Decimal("12861.72")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "671.5",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("0"),
@@ -505,8 +683,18 @@ class TestRestauranteUnTenedor6715EstimacionObjetiva:
             modulo_4=Decimal("4"),
             modulo_6=Decimal("2"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("12218.63")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="671.5",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("671.5"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="671.5")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestCafeterias6721EstimacionObjetiva:
@@ -515,7 +703,7 @@ class TestCafeterias6721EstimacionObjetiva:
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 3 personal asalariado, 1 personal no asalariado, 10 kW potencia
         # eléctrica.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "672.1",
             modulo_1=Decimal("3"),
             modulo_2=Decimal("1"),
@@ -529,14 +717,24 @@ class TestCafeterias6721EstimacionObjetiva:
         assert previo == expected_previo == Decimal("22876.50")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "672.1",
             modulo_1=Decimal("3"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("10"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("21732.68")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="672.1",
+            modulo_1=Decimal("3"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("672.1"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="672.1")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestComercioCarne6421EstimacionObjetiva:
@@ -545,7 +743,7 @@ class TestComercioCarne6421EstimacionObjetiva:
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 1 personal no asalariado, 40 m2 superficie
         # local no independiente.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "642.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -568,7 +766,7 @@ class TestPanPasteleria6441EstimacionObjetiva:
         # del horno, 629,86 €/unit) — the exact over-truncation risk the
         # modelo-131-eo-modulos-engine decision record rejected (the option
         # that capped the engine at 4 slots).
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "644.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -586,7 +784,7 @@ class TestPanPasteleria6441EstimacionObjetiva:
         assert previo == expected_previo == Decimal("24570.90")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "644.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -594,8 +792,18 @@ class TestPanPasteleria6441EstimacionObjetiva:
             modulo_4=Decimal("30"),
             modulo_7=Decimal("2"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("23342.36")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="644.1",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("644.1"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="644.1")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestComercioAlimenticios6471EstimacionObjetiva:
@@ -603,7 +811,7 @@ class TestComercioAlimenticios6471EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 40 m2 superficie del local independiente.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "647.1",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("40"),
@@ -617,7 +825,7 @@ class TestCafesEspecial6731EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 5 metros longitud de barra.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "673.1",
             modulo_1=Decimal("1"),
             modulo_5=Decimal("5"),
@@ -628,13 +836,72 @@ class TestCafesEspecial6731EstimacionObjetiva:
         assert previo == expected_previo == Decimal("5914.40")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "673.1",
             modulo_1=Decimal("1"),
             modulo_5=Decimal("5"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("5618.68")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="673.1",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("673.1"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="673.1")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
+
+    def test_full_manual_worked_example_fases_1_a_4(self) -> None:
+        """AEAT Manual práctico de Renta 2025, Parte 1, Capítulo 8, caso práctico.
+
+        Bar de categoría especial (epígrafe 673.1): 3,66 personal asalariado,
+        1,00 personal no asalariado, 35,00 kW potencia eléctrica, 8,00 mesas,
+        10,00 metros de barra, 0,00 máquinas tipo «A», 1,00 máquina tipo «B»;
+        3,00 personas del módulo "personal asalariado" en el ejercicio
+        anterior (2024). The Fase 1ª and Fase 2ª figures below are
+        transcribed byte-identical from the manual's printed solution — Fase
+        1ª rendimiento neto previo 50.111,95; Fase 2ª minoración por
+        incentivos al empleo 2.693,38 (coeficiente de minoración 0,664, del
+        cual 0,264 por incremento y 0,40 por tramos, sobre el módulo
+        "personal asalariado" 4.056,30 euros/unidad). The minoración por
+        incentivos a la inversión (6.050,00 euros, an asset-register figure
+        this first slice does not model) is NOT applied here, so this test's
+        own ``minorado`` (47.418,57) diverges from the manual's printed
+        rendimiento neto minorado (41.368,57 = 50.111,95 - 2.693,38 - 6.050);
+        the divergence is the documented, legitimate consequence of the
+        not-yet-modelled inversión reduction, never a computation error. The
+        manual's own Fase 3ª (índice corrector de exceso applied to
+        41.368,57, giving rendimiento neto de módulos 44.603,33) does not
+        apply against this test's employ-only minorado and is intentionally
+        NOT asserted here to avoid re-deriving a "manual" figure the manual
+        never printed for this base; Fase 3ª's índice-de-exceso mechanism
+        against the tabled cuantía is instead covered structurally by
+        ``test_fase_4_rendimiento_neto_actividad_applies_reduccion_general``
+        (shared ``_expected_modulos`` helper, cross-checked against the
+        Orden's own tabled cuantía/índice constants).
+        """
+        previo, minorado, _modulos, _actividad = _run_modulos_engine(
+            "673.1",
+            modulo_1=Decimal("3.66"),
+            modulo_2=Decimal("1.00"),
+            modulo_3=Decimal("35.00"),
+            modulo_4=Decimal("8.00"),
+            modulo_5=Decimal("10.00"),
+            modulo_6=Decimal("0.00"),
+            modulo_7=Decimal("1.00"),
+            modulo_1_anterior=Decimal("3.00"),
+        )
+        assert previo == Decimal("50111.95")
+        # Fase 2ª: coeficiente por incremento 0,40 x 0,66 = 0,264; coeficiente
+        # por tramos sobre 3,00 unidades restantes = 0,10 + 0,30 = 0,40;
+        # coeficiente de minoración 0,264 + 0,40 = 0,664; minoración empleo =
+        # 0,664 x 4.056,30 = 2.693,38 (manual, redondeado).
+        minoracion_empleo = _money_round(previo - minorado)
+        assert minoracion_empleo == Decimal("2693.38")
+        assert minorado == Decimal("47418.57")
 
 
 class TestOtrosCafes6732EstimacionObjetiva:
@@ -642,7 +909,7 @@ class TestOtrosCafes6732EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 1 personal no asalariado, 3 mesas.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "673.2",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -656,14 +923,24 @@ class TestOtrosCafes6732EstimacionObjetiva:
         assert previo == expected_previo == Decimal("13416.02")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "673.2",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
             modulo_4=Decimal("3"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("12745.22")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="673.2",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("673.2"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="673.2")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestHuevosAves6425EstimacionObjetiva:
@@ -671,7 +948,7 @@ class TestHuevosAves6425EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 20 m2 superficie local independiente.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "642.5",
             modulo_1=Decimal("1"),
             modulo_4=Decimal("20"),
@@ -682,13 +959,23 @@ class TestHuevosAves6425EstimacionObjetiva:
         assert previo == expected_previo == Decimal("3923.96")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "642.5",
             modulo_1=Decimal("1"),
             modulo_4=Decimal("20"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("3727.76")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="642.5",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("642.5"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="642.5")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestCasquerias6426EstimacionObjetiva:
@@ -696,7 +983,7 @@ class TestCasquerias6426EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal no asalariado, 30 m2 superficie local no independiente.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "642.6",
             modulo_2=Decimal("1"),
             modulo_4=Decimal("30"),
@@ -707,13 +994,23 @@ class TestCasquerias6426EstimacionObjetiva:
         assert previo == expected_previo == Decimal("13176.54")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "642.6",
             modulo_2=Decimal("1"),
             modulo_4=Decimal("30"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("12517.71")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="642.6",
+            modulo_1=Decimal("0"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("642.6"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="642.6")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestPescados6431EstimacionObjetiva:
@@ -721,7 +1018,7 @@ class TestPescados6431EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 1 personal no asalariado.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "643.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -732,13 +1029,23 @@ class TestPescados6431EstimacionObjetiva:
         assert previo == expected_previo == Decimal("17119.61")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "643.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("16263.63")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="643.1",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("643.1"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="643.1")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestDespachosPan6442EstimacionObjetiva:
@@ -746,7 +1053,7 @@ class TestDespachosPan6442EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado de fabricación, 1 personal no asalariado.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "644.2",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("1"),
@@ -757,13 +1064,23 @@ class TestDespachosPan6442EstimacionObjetiva:
         assert previo == expected_previo == Decimal("20401.19")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "644.2",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("1"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("19381.13")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="644.2",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("644.2"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="644.2")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestPasteleria6443EstimacionObjetiva:
@@ -771,7 +1088,7 @@ class TestPasteleria6443EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado de fabricación, 20 m2 superficie del local de fabricación.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "644.3",
             modulo_1=Decimal("1"),
             modulo_4=Decimal("20"),
@@ -782,13 +1099,23 @@ class TestPasteleria6443EstimacionObjetiva:
         assert previo == expected_previo == Decimal("7237.09")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "644.3",
             modulo_1=Decimal("1"),
             modulo_4=Decimal("20"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("6875.24")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="644.3",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("644.3"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="644.3")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestMasasFritas6446EstimacionObjetiva:
@@ -796,7 +1123,7 @@ class TestMasasFritas6446EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado de fabricación, 1 resto personal asalariado.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "644.6",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -807,13 +1134,23 @@ class TestMasasFritas6446EstimacionObjetiva:
         assert previo == expected_previo == Decimal("9107.78")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "644.6",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("8652.39")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="644.6",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("644.6"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="644.6")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestAutoservicio6472EstimacionObjetiva:
@@ -821,7 +1158,7 @@ class TestAutoservicio6472EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 30 m2 superficie del local.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "647.2",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("30"),
@@ -832,13 +1169,23 @@ class TestAutoservicio6472EstimacionObjetiva:
         assert previo == expected_previo == Decimal("2488.10")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "647.2",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("30"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("2363.70")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="647.2",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("647.2"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="647.2")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestLenceria6513EstimacionObjetiva:
@@ -848,7 +1195,7 @@ class TestLenceria6513EstimacionObjetiva:
         # 1 personal asalariado, 1 personal no asalariado. Proves the registry
         # holds the AEAT Manual's "11.998,85" figure, not the bundled Orden
         # HTML's literal typo "11.998.85".
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "651.3",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -864,7 +1211,7 @@ class TestTextil6511EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 1 personal no asalariado, 20 m2 local independiente.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "651.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -876,14 +1223,24 @@ class TestTextil6511EstimacionObjetiva:
         assert previo == expected_previo == Decimal("17529.19")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "651.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
             modulo_4=Decimal("20"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("16652.73")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="651.1",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("651.1"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="651.1")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestMuebles6531EstimacionObjetiva:
@@ -891,7 +1248,7 @@ class TestMuebles6531EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 1 personal no asalariado, 30 m2 local.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "653.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -908,7 +1265,7 @@ class TestRecambios6542EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 10 CVF potencia fiscal vehículo.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "654.2",
             modulo_1=Decimal("1"),
             modulo_4=Decimal("10"),
@@ -924,7 +1281,7 @@ class TestOptica6593EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 1 personal no asalariado.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "659.3",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -940,7 +1297,7 @@ class TestAmbulanteAlimentacion6631EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 2 CVF potencia fiscal vehículo.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "663.1",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("2"),
@@ -956,7 +1313,7 @@ class TestHospedajeHotel681EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 1 personal no asalariado, 20 plazas.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "681",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -970,14 +1327,24 @@ class TestHospedajeHotel681EstimacionObjetiva:
         assert previo == expected_previo == Decimal("34094.40")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "681",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("20"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("32389.68")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="681",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("681"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="681")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestReparacionVehiculos6912EstimacionObjetiva:
@@ -985,7 +1352,7 @@ class TestReparacionVehiculos6912EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 30 m2 superficie del local.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "691.2",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("30"),
@@ -1001,7 +1368,7 @@ class TestTransporteUrbano7211EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 2 personal asalariado, 1 personal no asalariado, 30 asientos.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "721.1",
             modulo_1=Decimal("2"),
             modulo_2=Decimal("1"),
@@ -1015,14 +1382,24 @@ class TestTransporteUrbano7211EstimacionObjetiva:
         assert previo == expected_previo == Decimal("25621.01")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "721.1",
             modulo_1=Decimal("2"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("30"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("24339.96")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="721.1",
+            modulo_1=Decimal("2"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("721.1"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="721.1")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestPapeleria6594AEstimacionObjetiva:
@@ -1031,7 +1408,7 @@ class TestPapeleria6594AEstimacionObjetiva:
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 1 personal no asalariado, 20 (100 kWh),
         # 15 m2 local, 1 vehículo (CVF).
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "659.4a",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -1049,7 +1426,7 @@ class TestPapeleria6594AEstimacionObjetiva:
         assert previo == expected_previo == Decimal("23981.75")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "659.4a",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -1057,8 +1434,18 @@ class TestPapeleria6594AEstimacionObjetiva:
             modulo_4=Decimal("15"),
             modulo_5=Decimal("1"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("22782.66")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="659.4a",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("659.4a"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="659.4a")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestQuioscosPrensa6594BEstimacionObjetiva:
@@ -1066,7 +1453,7 @@ class TestQuioscosPrensa6594BEstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal no asalariado, 10 (100 kWh), 4 m2 local.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "659.4b",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("10"),
@@ -1080,22 +1467,36 @@ class TestQuioscosPrensa6594BEstimacionObjetiva:
         assert previo == expected_previo == Decimal("24627.57")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "659.4b",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("10"),
             modulo_4=Decimal("4"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("23396.19")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="659.4b",
+            modulo_1=Decimal("0"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("659.4b"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="659.4b")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
     def test_bare_unsuffixed_epigrafe_collision_code_stays_untabled(self) -> None:
         # The bare "659.4" (no "a"/"b" disambiguating suffix) must NOT resolve
         # to either collision activity's coefficients — a lookup on the
         # unsuffixed code would silently misattribute one activity's figures
         # to the other. It stays untabled behind the advisory guard.
-        previo, actividad = _run_modulos_engine("659.4", modulo_1=Decimal("1"), modulo_2=Decimal("1"))
+        previo, minorado, modulos, actividad = _run_modulos_engine(
+            "659.4", modulo_1=Decimal("1"), modulo_2=Decimal("1")
+        )
         assert previo == Decimal("0")
+        assert minorado == Decimal("0")
+        assert modulos == Decimal("0")
         assert actividad == Decimal("0")
 
 
@@ -1104,7 +1505,7 @@ class TestReparacionCalzado6919AEstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal no asalariado, 20 (100 kWh).
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "691.9a",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("20"),
@@ -1115,13 +1516,23 @@ class TestReparacionCalzado6919AEstimacionObjetiva:
         assert previo == expected_previo == Decimal("12534.18")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "691.9a",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("20"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("11907.47")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="691.9a",
+            modulo_1=Decimal("0"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("691.9a"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="691.9a")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestReparacionOtrosBienes6919BEstimacionObjetiva:
@@ -1129,7 +1540,7 @@ class TestReparacionOtrosBienes6919BEstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 25 m2 local.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "691.9b",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("25"),
@@ -1140,17 +1551,31 @@ class TestReparacionOtrosBienes6919BEstimacionObjetiva:
         assert previo == expected_previo == Decimal("5227.85")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "691.9b",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("25"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("4966.46")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="691.9b",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("691.9b"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="691.9b")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
     def test_bare_unsuffixed_epigrafe_collision_code_stays_untabled(self) -> None:
-        previo, actividad = _run_modulos_engine("691.9", modulo_1=Decimal("1"), modulo_2=Decimal("1"))
+        previo, minorado, modulos, actividad = _run_modulos_engine(
+            "691.9", modulo_1=Decimal("1"), modulo_2=Decimal("1")
+        )
         assert previo == Decimal("0")
+        assert minorado == Decimal("0")
+        assert modulos == Decimal("0")
         assert actividad == Decimal("0")
 
 
@@ -1159,7 +1584,7 @@ class TestEngraseLavado7515EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 1 personal no asalariado, 40 m2 local.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "751.5",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -1173,14 +1598,24 @@ class TestEngraseLavado7515EstimacionObjetiva:
         assert previo == expected_previo == Decimal("25068.33")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "751.5",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("40"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("23814.91")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="751.5",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("751.5"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="751.5")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestMudanzas757EstimacionObjetiva:
@@ -1188,7 +1623,7 @@ class TestMudanzas757EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal no asalariado, 15 toneladas carga vehículos.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "757",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("15"),
@@ -1197,13 +1632,23 @@ class TestMudanzas757EstimacionObjetiva:
         assert previo == expected_previo == Decimal("10896.33")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "757",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("15"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("10351.51")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="757",
+            modulo_1=Decimal("0"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("757"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="757")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestMensajeria8495EstimacionObjetiva:
@@ -1211,7 +1656,7 @@ class TestMensajeria8495EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 3 toneladas carga vehículos.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "849.5",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("3"),
@@ -1220,13 +1665,23 @@ class TestMensajeria8495EstimacionObjetiva:
         assert previo == expected_previo == Decimal("3107.22")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "849.5",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("3"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("2951.86")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="849.5",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("849.5"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="849.5")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestAutoescuela9331EstimacionObjetiva:
@@ -1234,7 +1689,7 @@ class TestAutoescuela9331EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 1 personal no asalariado, 2 vehículos, 4 CVF.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "933.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -1250,15 +1705,25 @@ class TestAutoescuela9331EstimacionObjetiva:
         assert previo == expected_previo == Decimal("26246.27")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "933.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("2"),
             modulo_4=Decimal("4"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("24933.96")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="933.1",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("933.1"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="933.1")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestOtrasEnsenanzas9339EstimacionObjetiva:
@@ -1266,7 +1731,7 @@ class TestOtrasEnsenanzas9339EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal no asalariado, 40 m2 local.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "933.9",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("40"),
@@ -1277,13 +1742,23 @@ class TestOtrasEnsenanzas9339EstimacionObjetiva:
         assert previo == expected_previo == Decimal("18222.02")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "933.9",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("40"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("17310.92")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="933.9",
+            modulo_1=Decimal("0"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("933.9"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="933.9")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestEscuelasDeporte9672EstimacionObjetiva:
@@ -1291,7 +1766,7 @@ class TestEscuelasDeporte9672EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 60 m2 local.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "967.2",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("60"),
@@ -1302,13 +1777,23 @@ class TestEscuelasDeporte9672EstimacionObjetiva:
         assert previo == expected_previo == Decimal("9076.15")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "967.2",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("60"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("8622.34")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="967.2",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("967.2"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="967.2")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestTintoreria9711EstimacionObjetiva:
@@ -1316,7 +1801,7 @@ class TestTintoreria9711EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 1 personal no asalariado, 30 (100 kWh).
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "971.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -1330,14 +1815,24 @@ class TestTintoreria9711EstimacionObjetiva:
         assert previo == expected_previo == Decimal("22706.49")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "971.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("30"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("21571.17")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="971.1",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("971.1"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="971.1")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestInstitutosBelleza9722EstimacionObjetiva:
@@ -1345,7 +1840,7 @@ class TestInstitutosBelleza9722EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal no asalariado, 40 m2 local, 20 (100 kWh).
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "972.2",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("40"),
@@ -1359,14 +1854,24 @@ class TestInstitutosBelleza9722EstimacionObjetiva:
         assert previo == expected_previo == Decimal("19532.01")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "972.2",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("40"),
             modulo_4=Decimal("20"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("18555.41")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="972.2",
+            modulo_1=Decimal("0"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("972.2"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="972.2")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestCopisteria9733EstimacionObjetiva:
@@ -1374,7 +1879,7 @@ class TestCopisteria9733EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal no asalariado, 3 KW contratado.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "973.3",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("3"),
@@ -1383,13 +1888,23 @@ class TestCopisteria9733EstimacionObjetiva:
         assert previo == expected_previo == Decimal("18669.07")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "973.3",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("3"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("17735.62")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="973.3",
+            modulo_1=Decimal("0"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("973.3"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="973.3")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestFrutasVerduras641EstimacionObjetiva:
@@ -1398,7 +1913,7 @@ class TestFrutasVerduras641EstimacionObjetiva:
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 1 personal no asalariado, 30 m2 local
         # independiente, 500 kg carga elementos de transporte.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "641",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -1414,15 +1929,25 @@ class TestFrutasVerduras641EstimacionObjetiva:
         assert previo == expected_previo == Decimal("15212.04")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "641",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("30"),
             modulo_5=Decimal("500"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("14451.44")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="641",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("641"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="641")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestQuioscosServicios675EstimacionObjetiva:
@@ -1430,7 +1955,7 @@ class TestQuioscosServicios675EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal no asalariado, 5 KW contratado, 10 m2 local.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "675",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("5"),
@@ -1444,14 +1969,24 @@ class TestQuioscosServicios675EstimacionObjetiva:
         assert previo == expected_previo == Decimal("15261.45")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "675",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("5"),
             modulo_4=Decimal("10"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("14498.38")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="675",
+            modulo_1=Decimal("0"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("675"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="675")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestChocolaterias676EstimacionObjetiva:
@@ -1459,7 +1994,7 @@ class TestChocolaterias676EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 3 KW contratado, 5 mesas, 1 máquina tipo A.
-        previo, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "676",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("3"),
@@ -1475,15 +2010,25 @@ class TestChocolaterias676EstimacionObjetiva:
         assert previo == expected_previo == Decimal("5952.19")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "676",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("3"),
             modulo_4=Decimal("5"),
             modulo_5=Decimal("1"),
         )
-        expected_actividad = _quantize(previo - previo * _REDUCCION_GENERAL_2025)
-        assert actividad == expected_actividad == Decimal("5654.58")
+        expected_minorado = _expected_minorado(
+            previo,
+            epigrafe="676",
+            modulo_1=Decimal("1"),
+            modulo_1_anterior=Decimal("0"),
+            modulo_1_coefficient=_module_1_coefficient("676"),
+        )
+        expected_modulos = _expected_modulos(minorado, epigrafe="676")
+        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        assert minorado == expected_minorado
+        assert modulos == expected_modulos
+        assert actividad == expected_actividad
 
 
 class TestModulosEngineNoSilentFabrication:
@@ -1495,23 +2040,29 @@ class TestModulosEngineNoSilentFabrication:
         # multiplied by a wrong or absent coefficient; the internal
         # reference casilla resolves to zero, and the operator-declared
         # casilla 01 remains the authoritative manual input.
-        previo, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = _run_modulos_engine(
             "699.9",  # not an Orden Anexo II epígrafe — remains untabled
             modulo_1=Decimal("5"),
             modulo_2=Decimal("3"),
         )
         assert previo == Decimal("0")
+        assert minorado == Decimal("0")
+        assert modulos == Decimal("0")
         assert actividad == Decimal("0")
 
     def test_blank_epigrafe_resolves_to_zero(self) -> None:
-        previo, actividad = _run_modulos_engine(None, modulo_1=Decimal("5"))
+        previo, minorado, modulos, actividad = _run_modulos_engine(None, modulo_1=Decimal("5"))
         assert previo == Decimal("0")
+        assert minorado == Decimal("0")
+        assert modulos == Decimal("0")
         assert actividad == Decimal("0")
 
     def test_zero_units_on_tabled_epigrafe_resolves_to_zero(self) -> None:
         # A tabled epígrafe with no units declared (e.g. no activity conducted
         # yet this period) legitimately resolves to zero — not a silent-zero
         # violation, since the antecedent itself is zero.
-        previo, actividad = _run_modulos_engine("972.1")
+        previo, minorado, modulos, actividad = _run_modulos_engine("972.1")
         assert previo == Decimal("0")
+        assert minorado == Decimal("0")
+        assert modulos == Decimal("0")
         assert actividad == Decimal("0")

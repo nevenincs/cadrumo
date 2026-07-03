@@ -1169,6 +1169,19 @@ def _evaluate_m131_resolve_modulos_minoracion_empleo(expression: FormulaExpressi
       structurally the same cumulative-progressive-scale shape as an IRPF
       escala).
 
+    The prior-year módulo 1 casilla (``modulos-1-unidades-anterior``) is an
+    optional manual input that defaults to ``Decimal('0')`` when the
+    operator has not declared a prior-year comparison. Because a genuinely
+    zero prior-year headcount is legally indistinguishable, at this op's
+    boundary, from "no comparison declared", a non-positive ``anterior`` is
+    treated as "no incremento claimed" — the coeficiente por incremento is
+    skipped (never fabricated) and the coeficiente por tramos runs on the
+    full current-year módulo 1 units. This never over-states the minoración
+    (a real, undeclared increment simply goes uncredited, mirroring the
+    ADR's "omitting an undeclared reduction does not over-state the figure"
+    principle) and keeps a blank optional input from silently manufacturing
+    an increment credit.
+
     Both a blank epígrafe and an untabled epígrafe (no módulo 1 coefficient
     row) resolve to ``Decimal('0')`` — this op feeds the same internal-only
     advisory-support casilla chain as Fase 1ª
@@ -1195,7 +1208,7 @@ def _evaluate_m131_resolve_modulos_minoracion_empleo(expression: FormulaExpressi
     ctx.operand_values.append(modulo_1_coefficient)
     actual = _m210_numeric_casilla_value(args.modulo_1_actual_casilla_id, ctx)
     anterior = _m210_numeric_casilla_value(args.modulo_1_anterior_casilla_id, ctx)
-    incremento = actual - anterior if actual > anterior else _ZERO
+    incremento = actual - anterior if anterior > _ZERO and actual > anterior else _ZERO
     incremento_rate = _m100_scalar_parameter_value(
         args.incremento_rate_parameter,
         ctx,

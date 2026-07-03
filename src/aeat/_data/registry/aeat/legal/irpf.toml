@@ -743,6 +743,48 @@ required_text = [
     "Esta reducción se tendrá en cuenta para cuantificar el rendimiento neto a efectos de los pagos fraccionados correspondientes a 2025",
 ]
 
+[legal."orden-hac-1347-2024:instruccion-2-2-a"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-ii-instruccion-2-2-a"
+document_id = "BOE-A-2024-24949"
+section = "Anexo II, instrucción 2.2.a) Minoración por incentivos al empleo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-03
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+notes = "Fase 2a: minoracion por incentivos al empleo. El rendimiento neto previo se minora en el coeficiente de minoracion (incremento del modulo personal asalariado x 0,40, mas el coeficiente por tramos del numero de unidades restante) multiplicado por el rendimiento anual por unidad del modulo personal asalariado. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, worked example epigrafe 673.1."
+required_text = [
+    "2.2 Fase 2: Rendimiento neto minorado.",
+    "El rendimiento neto previo se minorará en el importe de los incentivos al empleo y la inversión",
+    "a) Minoración por incentivos al empleo.",
+    "Si la diferencia resultase positiva, a ésta se aplicará el coeficiente 0,40",
+]
+
+[legal."orden-hac-1347-2024:instruccion-2-3-b-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-ii-instruccion-2-3-b-3"
+document_id = "BOE-A-2024-24949"
+section = "Anexo II, instrucción 2.3.b.3) Índice corrector de exceso"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-03
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantia tabulada para la actividad, al exceso sobre dicha cuantia se le aplica el indice 1,30. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, worked example epigrafe 673.1 (cuantia 30.586,03 euros)."
+required_text = [
+    "b.3) Índice corrector de exceso:",
+    "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
+]
+
 [legal."real-decreto-ley-13-2025:art-2"]
 evidence_tier = "legal_authority"
 authority = "boe"
