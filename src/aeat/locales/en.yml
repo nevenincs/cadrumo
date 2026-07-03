@@ -3713,13 +3713,6 @@ cli:
     diff_revisions_modelo_help: Modelo identifier to diff
     diff_revisions_to_year_help: Later filing year whose covering revision is compared
       against the baseline
-    errors:
-      capability:
-        manuals_verify: 'manual verification'
-        parity: 'registry parity run and replay'
-        registry_verify: 'registry integrity verification'
-        workbooks_verify: 'workbook parity verification'
-      corpus_companion_absent: 'Refused. This command (%{capability}) needs the corpus source binaries shipped in the optional aeat-data companion distribution, which is not installed. Install it with: %{install}'
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
     manuals:

@@ -3971,13 +3971,6 @@ cli:
     diff_revisions_modelo_help: Identificador del modelo a comparar
     diff_revisions_to_year_help: Ejercicio fiscal posterior cuya revisión cubridora
       se compara con la base
-    errors:
-      capability:
-        manuals_verify: 'verificación de manuales'
-        parity: 'ejecución y reproducción de paridad del registro'
-        registry_verify: 'verificación de integridad del registro'
-        workbooks_verify: 'verificación de paridad de libros de cálculo'
-      corpus_companion_absent: 'Rechazado. Este comando (%{capability}) necesita los archivos binarios del corpus incluidos en la distribución complementaria opcional aeat-data, que no está instalada. Instálela con: %{install}'
     inspect_help: Inspeccionar el estado del registro y las referencias
     inspect_registry_root_help: Ruta al directorio raíz del registro
     manuals:
