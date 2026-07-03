@@ -1100,6 +1100,21 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # _evaluate_advisory_predicate_fires and the
         # m210-categorical-conditional-predicate ADR.
         "casilla_equals_implies_nonzero",
+        # casilla_equals_implies_diverges(["antecedent_casilla_id", "literal",
+        # "casilla_a_id", "casilla_b_id"]) — categorical-conditional
+        # divergence check: when the operator-entered raw text value of the
+        # named TEXT antecedent casilla equals the literal, the two named
+        # (Decimal) casillas must not differ by more than one cent.
+        # ADVISORY-only (no BLOCKING_RULE branch is implemented), sibling of
+        # casilla_equals_implies_nonzero (consequent test "== 0") and
+        # advisory_when_computed_diverges (no categorical gate). Authored for
+        # the M131/M100 estimación-objetiva índice corrector de exceso (b.3),
+        # incompatible per Orden HAC/1347/2024 Anexo II instrucción 2.3 with
+        # the índices correctores especiales (a.2 autotaxi, a.4 transporte de
+        # mercancías/mudanzas) for the activities that carry both. See the
+        # casilla_equals_implies_diverges branch in
+        # _evaluate_advisory_predicate_fires.
+        "casilla_equals_implies_diverges",
         # deduccion_requires_adquisicion_before(["amount_casilla_id",
         # "acquisition_date_casilla_id", "construction_date_casilla_id",
         # "cutoff_iso"]) — eligibility-conditional advisory: FIRES (ADVISORY
@@ -1292,6 +1307,26 @@ class VerificationPredicateDefinition(RegistryModel):
       no-silent-under-declaration shape neither ``implies_nonzero`` (numeric
       antecedent) nor ``casilla_equals_implies_nonzero`` (categorical text
       equality) can express because its trigger is a DATE threshold.
+    - ``casilla_equals_implies_diverges(["antecedent_casilla_id", "literal",
+      "casilla_a_id", "casilla_b_id"])`` — categorical-conditional divergence
+      check: predicate FIRES (ADVISORY shown) iff the operator-entered raw
+      text value of the named antecedent (TEXT) casilla equals the literal
+      AND the two named (Decimal) casillas differ by more than one cent. A
+      missing or differing antecedent value, or two casillas within a cent of
+      each other, holds trivially (no advisory). Sibling of
+      ``casilla_equals_implies_nonzero`` (that operator's consequent test is
+      "== 0"; this operator's is "casilla_a != casilla_b"). ADVISORY-only: no
+      ``BLOCKING_RULE`` branch is implemented, mirroring the
+      ``casilla_equals_implies_nonzero`` / ``advisory_when_computed_diverges``
+      ADVISORY-only convention. Authored for the M131/M100 estimación-objetiva
+      índice corrector de exceso (b.3): Orden HAC/1347/2024 Anexo II
+      instrucción 2.3 declares the índice corrector de exceso INCOMPATIBLE
+      with the índices correctores especiales (a.2 autotaxi, a.4 transporte de
+      mercancías/mudanzas) for the activities that carry both — a
+      no-silent-under-declaration shape neither ``implies_nonzero`` (numeric
+      antecedent) nor ``advisory_when_computed_diverges`` (no categorical
+      gate) can express because the trigger combines a categorical epígrafe
+      equality with a Decimal-pair divergence.
     """
 
     predicate_id: str = Field(min_length=1, max_length=128)

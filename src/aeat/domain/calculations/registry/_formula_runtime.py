@@ -1326,6 +1326,30 @@ def _evaluate_m131_resolve_modulos_indice_exceso(expression: FormulaExpression, 
     figure unchanged — this op feeds the same internal-only advisory-support
     casilla chain as Fases 1ª/2ª, never a filed figure standing in for the
     operator's manual casilla 01.
+
+    **Incompatibility gap (not modelled in this first slice).** Orden
+    HAC/1347/2024 Anexo II, instrucción 2.3 (see
+    ``orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades``)
+    declares the índice de exceso (b.3) applied here INCOMPATIBLE with two
+    other índices this op does not model: "Cuando resulte aplicable el índice
+    corrector para empresas de pequeña dimensión (b.1) no se aplicará el
+    índice corrector de exceso (b.3)" (b.1 excludes b.3 outright), and the
+    índices correctores especiales (a.2 transporte por autotaxis, a.3
+    transporte urbano colectivo, a.4 transporte de mercancías por carretera y
+    servicios de mudanzas, a.5) are legally incompatible with b.1 for the
+    same activities — so an activity eligible for a.2/a.4 that is ALSO
+    eligible for b.1 must never apply b.3 either. Two of the tabled epígrafes
+    in ``m131-modulos-cuantia-exceso-2025`` carry a documented índice especial
+    ("721.2" transporte por autotaxis, letra a.2; "722" transporte de
+    mercancías por carretera / servicios de mudanzas, letra a.4); this op
+    applies b.3 to them unconditionally whenever ``minorado > cuantia``,
+    without checking either exclusivity rule. The
+    ``modelo-131-2025-modulos-indice-exceso-incompatible-autotaxi`` /
+    ``-mercancias`` ADVISORY verification predicates surface a non-blocking
+    review prompt for these two epígrafes when the índice-exceso path
+    activates, per no-silent-under-declaration — full modelling of b.1 and
+    a.2/a.4 is deferred to Phase 2/3 of the
+    2026-07-01-modelo-131-eo-modulos-engine-adr.
     """
     args = _m131_resolve_modulos_indice_exceso_args(expression)
     minorado = _m210_numeric_casilla_value(args.minorado_casilla_id, ctx)
