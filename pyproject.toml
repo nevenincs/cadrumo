@@ -91,9 +91,9 @@ aeat = "aeat.entrypoints.cli:main"
 aeat-mcp = "aeat.entrypoints.mcp:main"
 
 [project.urls]
-Homepage = "https://github.com/wgergely/aeat"
-Issues = "https://github.com/wgergely/aeat/issues"
-Repository = "https://github.com/wgergely/aeat"
+Homepage = "https://github.com/nevenincs/aeat"
+Issues = "https://github.com/nevenincs/aeat/issues"
+Repository = "https://github.com/nevenincs/aeat"
 
 [project.optional-dependencies]
 workbook-windows = [
