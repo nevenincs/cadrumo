@@ -189,11 +189,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.overview._coverage", "application.modelo"),
         }
     ),
-    UnsanctionedClass.PORTS_INVERSION_PENDING: frozenset(
-        {
-            ImportEdge("domain.filing._runtime_repository", "adapters.persistence.storage"),
-        }
-    ),
+    UnsanctionedClass.PORTS_INVERSION_PENDING: frozenset(),
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: frozenset(
         {
             ImportEdge("domain.calculations._export_field_kind", "domain.calculations.registry"),
@@ -456,6 +452,13 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.auth", "core.i18n"),
             ImportEdge("application.auth._acquisition_lock", "core"),
             ImportEdge("application.auth._apoderado", "core.config"),
+            # certificate-source registry operator verbs (#591 slice): mirrors
+            # the sibling `_operator` deferrals below for the same targets.
+            ImportEdge("application.auth._certificate_sources_operator", "adapters.persistence.profile.buckets"),
+            ImportEdge("application.auth._certificate_sources_operator", "adapters.persistence.storage"),
+            ImportEdge("application.auth._certificate_sources_operator", "application.workflow"),
+            ImportEdge("application.auth._certificate_sources_operator", "core"),
+            ImportEdge("application.auth._certificate_sources_operator", "domain.buckets"),
             ImportEdge("application.auth._operator", "adapters.persistence.storage"),
             ImportEdge("application.auth._operator", "application.state_projection"),
             ImportEdge("application.auth._operator", "application.user_profile"),
@@ -799,7 +802,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 176,  # +6: filing-amendment repository deferral sites (W03.P08.S11)
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 35,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 504,  # +2: filing-draft repository deferral sites (W03.P08.S10)
+    UnsanctionedClass.APPLICATION_DEFERRAL: 516,  # +13: certificate-source registry operator verbs (#591 slice)
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -809,7 +812,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 489  # +2: filing-draft repository deferral edges (W03.P08.S10)
+_ALLOWLIST_EDGE_CEILING: int = 488  # -1: filing runtime-helper edge retired (W03.P08.S12)
 
 
 def _aeat_relative(dotted: str) -> str:

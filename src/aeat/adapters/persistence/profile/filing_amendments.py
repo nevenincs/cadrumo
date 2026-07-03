@@ -42,10 +42,7 @@ from ....domain.filing import (
     ModeloComplementaria,
     ModeloSustitutiva,
 )
-from ....domain.filing._runtime_repository import (
-    resolve_filing_repository_bucket_id,
-    secure_objects_for_filing_bucket,
-)
+from ._filing_runtime import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository

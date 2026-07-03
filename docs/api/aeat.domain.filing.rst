@@ -24,6 +24,5 @@ Submodules
    aeat.domain.filing._amendment
    aeat.domain.filing._errors
    aeat.domain.filing._protocols
-   aeat.domain.filing._runtime_repository
    aeat.domain.filing._schema
    aeat.domain.filing._validator
