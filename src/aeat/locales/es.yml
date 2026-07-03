@@ -1395,6 +1395,8 @@ cli:
         de Claude (.claude/ y un CLAUDE.md).
       summary: 'Espacio de trabajo del operador escrito en {path}: {rules} reglas,
         {personas} personas, {skills} habilidades.'
+      layout_help: 'Formato de materialización: «workspace» para un espacio de trabajo .claude nativo de Claude, o «plugin» para un plugin de Claude de un solo clic.'
+      plugin_summary: 'Plugin de Claude escrito en {path}: {skills} habilidades, {agents} agentes ({name} v{version}).'
   app:
     ledger:
       bienes_inversion:

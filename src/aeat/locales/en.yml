@@ -1293,6 +1293,8 @@ cli:
         plus a CLAUDE.md) into.
       summary: 'Wrote operator workspace to {path}: {rules} rules, {personas} personas,
         {skills} skills.'
+      layout_help: 'Materialisation layout: ''workspace'' for a Claude-native .claude project mirror, or ''plugin'' for a one-click Claude plugin.'
+      plugin_summary: 'Wrote Claude plugin to {path}: {skills} skills, {agents} agents ({name} v{version}).'
   app:
     ledger:
       bienes_inversion:

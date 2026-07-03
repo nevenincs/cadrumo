@@ -1321,6 +1321,8 @@ cli:
         és egy CLAUDE.md) írja.
       summary: 'Operator munkaterulet kiirva: {path}: {rules} szabaly, {personas}
         persona, {skills} keszseg.'
+      layout_help: 'Materializálási elrendezés: „workspace” a Claude-natív .claude munkaterülethez, vagy „plugin” egy egykattintásos Claude bővítményhez.'
+      plugin_summary: 'Claude bővítmény kiírva ide: {path}: {skills} készség, {agents} ügynök ({name} v{version}).'
   app:
     ledger:
       bienes_inversion:
