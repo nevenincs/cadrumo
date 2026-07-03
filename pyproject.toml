@@ -143,8 +143,12 @@ agent = [
 # lexical-only mode. This extra gates only the SEMANTIC half: model2vec supplies
 # the potion-multilingual-128M static query embedder (MIT code and weights, no
 # torch/onnxruntime), snowballstemmer the Spanish stemmed FTS column, and numpy
-# the precomputed-vector cosine search. Corpus vectors ship as plain data; no
-# model weights are ever bundled (per shipped-search-licence-clean).
+# the precomputed-vector cosine search. Neither the ~0.5 GB model weights NOR
+# the derived corpus-vector matrix (.npy) are ever bundled in the wheel (the
+# shipped-search-licence-clean gate forbids both): the corpus vectors are BUILT
+# behind this extra on first use by `ensure_corpus_embeddings` into an
+# app-controlled cache, and a bare-core install keeps the degraded lexical-only
+# mode.
 search = [
   "model2vec>=0.8,<1",
   "snowballstemmer>=2.2,<4",
