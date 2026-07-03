@@ -327,6 +327,13 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         notes=transaction.notes,
         lifecycle_state=transaction.lifecycle_state.value,
         classified_by=transaction.classified_by,
+        classified_at=transaction.classified_at.isoformat() if transaction.classified_at is not None else None,
+        classification_reason=transaction.classification_reason,
+        classification_confidence=(
+            _display_decimal(transaction.classification_confidence)
+            if transaction.classification_confidence is not None
+            else None
+        ),
         source_jurisdiction=transaction.source_jurisdiction,
         value_in_eur=_display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
         fx_rate=_display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
@@ -1043,7 +1050,13 @@ def _transaction_from_command(
             {
                 "classified_at": occurred_at,
                 "classified_by": command.classified_by_override or CLASSIFIED_BY_MANUAL,
-                "classification_reason": command.source_command,
+                # #231: the operator's free-text rationale (the manual `classify
+                # --reason` value, threaded through as `command.notes`) is the
+                # real "why" behind the decision and takes precedence; the
+                # invoking command name remains the fallback for classification
+                # paths that carry no operator-supplied reason (e.g. bulk
+                # `--from-csv` rows with no `notes` column).
+                "classification_reason": command.notes or command.source_command,
                 "classification_confidence": Decimal("1"),
             },
         )

@@ -852,6 +852,11 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
             f"\t{_field(transaction_payload.purchase_invoice_evidence_id)}",
             f"{tr('cli.ledger.labels.attachment_ids')}\t{_field(', '.join(transaction_payload.attachment_ids))}",
             f"{tr('cli.ledger.labels.lifecycle_state')}\t{_field(transaction_payload.lifecycle_state)}",
+            f"{tr('cli.ledger.labels.classified_by')}\t{_field(transaction_payload.classified_by)}",
+            f"{tr('cli.ledger.labels.classified_at')}\t{_field(transaction_payload.classified_at)}",
+            f"{tr('cli.ledger.labels.classification_confidence')}"
+            f"\t{_field(transaction_payload.classification_confidence)}",
+            f"{tr('cli.ledger.labels.classification_reason')}\t{_field(transaction_payload.classification_reason)}",
             f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
         ]
         from ._ledger_payloads import LedgerViewResult

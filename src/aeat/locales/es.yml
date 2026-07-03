@@ -3200,7 +3200,8 @@ cli:
       reason_empty: Rechazado. --reason debe registrar por qué clasificas esta transacción.
         Indica un motivo no vacío, u omite --reason.
       reason_help: Motivo en texto libre que se registra como notas de la transacción
-        en una clasificación manual, o con una decisión --reject.
+        y como el motivo de procedencia de la decisión de clasificación (visible en
+        ledger view), o con una decisión --reject.
       reject_apply_exclusive: '--reject no se puede combinar con --apply: reject registra
         una sugerencia rechazada, apply una aceptada.'
       reject_help: Registra un rechazo explícito de la sugerencia del modelo como
@@ -3326,6 +3327,10 @@ cli:
       checked: Movimientos comprobados
       child_id: Id de transacción hija
       children: hijas
+      classification_confidence: Confianza de la clasificación
+      classification_reason: Motivo de la clasificación
+      classified_at: Clasificado el
+      classified_by: Clasificado por
       counterparty: Contraparte
       counterparty_eu_member_state: Contraparte UE
       created_event_id: Evento bucket de creación
