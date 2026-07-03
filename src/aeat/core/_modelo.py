@@ -236,7 +236,6 @@ UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
     Modelo.M165: "certificaciones a socios de entidades de nueva o reciente creacion (informativa anual)",
     Modelo.M179: "cesion de uso de viviendas con fines turisticos (informativa anual)",
     Modelo.M181: "prestamos, creditos y operaciones financieras sobre inmuebles (informativa anual)",
-    Modelo.M182: "donativos, donaciones y aportaciones recibidas (informativa anual)",
     Modelo.M233: "gastos en guarderias o centros de educacion infantil autorizados (informativa anual)",
     Modelo.M238: "operadores de plataformas DAC7 (informativa anual)",
     Modelo.M270: "resumen anual de retenciones del gravamen especial sobre premios de loterias",
