@@ -3,12 +3,22 @@ tags:
   - '#plan'
   - '#import-centralization'
 date: '2026-07-01'
-modified: '2026-07-02'
+modified: '2026-07-04'
 tier: L4
 related:
   - '[[2026-07-01-import-centralization-adr]]'
   - '[[2026-07-01-import-centralization-research]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: P01, S365, S366, S367, S370, S371, S372, S373, S374, S375, S376, S380, S381, S385, S386 -->
 
@@ -549,7 +559,7 @@ Repoint every production import in `aeat.application.invoices` that reaches into
 
 Repoint every production import in `aeat.application.workflow` that reaches into a foreign package private module onto that package promoted top-level facade, behavior-preserving only.
 
-- [ ] `W02.P51.S248` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.browser`, `aeat.application.auth`, `aeat.application.review`, `aeat.application.user_profile`; `src/aeat/application/workflow/_models.py`.
+- [x] `W02.P51.S248` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.browser`, `aeat.application.auth`, `aeat.application.review`, `aeat.application.user_profile`; `src/aeat/application/workflow/_models.py`.
 - [x] `W02.P51.S249` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.i18n`; `src/aeat/application/workflow/_persistence.py`.
 - [x] `W02.P51.S250` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`; `src/aeat/application/workflow/_profile_health.py`.
 - [x] `W02.P51.S251` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.submission`; `src/aeat/application/workflow/_protocols.py`.
@@ -558,9 +568,9 @@ Repoint every production import in `aeat.application.workflow` that reaches into
 
 Repoint every production import in `aeat.application.review` that reaches into a foreign package private module onto that package promoted top-level facade, behavior-preserving only.
 
-- [ ] `W02.P52.S252` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.workflow`; `src/aeat/application/review/_actions.py`.
+- [x] `W02.P52.S252` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.workflow`; `src/aeat/application/review/_actions.py`.
 - [x] `W02.P52.S253` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`; `src/aeat/application/review/_adapters.py`.
-- [ ] `W02.P52.S254` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.workflow`, `aeat.core.time`; `src/aeat/application/review/_models.py`.
+- [x] `W02.P52.S254` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.workflow`, `aeat.core.time`; `src/aeat/application/review/_models.py`.
 
 ### Phase `W02.P53` - rewire aeat.application.storage consumers
 
@@ -893,14 +903,14 @@ Confirm the scanner reports zero production Family-1 violations and flip the Wav
 
 Confirm the scanner reports zero production Family-1 violations, flip the Wave W04 gate to hard-zero, run the full suite green, and run an independent structural and honesty review before declaring the campaign structurally complete.
 
-- [ ] `W06.P90.S382` - Run pytest --collect-only -q across src/aeat and confirm clean collection with no import errors; `src/aeat`.
-- [ ] `W06.P90.S383` - Run the full src/aeat test suite and confirm green, sequentially re-running any registry-suite failure before triaging it as a regression; `src/aeat`.
-- [ ] `W06.P90.S384` - Dispatch a vaultspec-code-review structural audit over the full campaign diff, confirming every promoted facade, every rewritten consumer, and the retired umbrella re-exports are behavior-preserving; `.vault/audit/2026-07-01-import-centralization-audit.md`.
+- [x] `W06.P90.S382` - Run pytest --collect-only -q across src/aeat and confirm clean collection with no import errors; `src/aeat`.
+- [x] `W06.P90.S383` - Run the full src/aeat test suite and confirm green, sequentially re-running any registry-suite failure before triaging it as a regression; `src/aeat`.
+- [x] `W06.P90.S384` - Dispatch a vaultspec-code-review structural audit over the full campaign diff, confirming every promoted facade, every rewritten consumer, and the retired umbrella re-exports are behavior-preserving; `.vault/audit/2026-07-01-import-centralization-audit.md`.
 - [x] `W06.P90.S387` - Codify the durable lessons: refine service-imports-via-top-level-reexports with the mechanical-vs-disposition promotion split, and author a new rule dynamic-import-targets-the-public-facade capturing the setup_answers lazy-import retargeting lesson; `.vaultspec/rules/rules/`.
-- [ ] `W06.P90.S399` - Re-run dev/import_hygiene_scan.py and confirm zero production Family-1 cross-package private-import violations, then flip the Wave W04 ratchet gate to hard-zero mode; `dev/import_hygiene_scan.py`.
-- [ ] `W06.P90.S400` - Run a fresh-context honesty review against the campaign closure summary per the campaign-close-honesty-review discipline before declaring the campaign structurally complete, tracking every surfaced item as a new Step or a formally deferred follow-up; `.vault/audit/2026-07-01-import-centralization-audit.md`.
-- [ ] `W06.P90.S401` - Persist Step Records for every closed Step and rebuild the feature index, then confirm vaultspec-core vault plan status reports the plan fully closed; `.vault/exec/2026-07-01-import-centralization`.
-- [ ] `W06.P90.S402` - Extend the import-hygiene scanner to detect underscore-named __all__ entries and dispose the 8 pre-existing hits surfaced by honesty-review finding #7; `dev/import_hygiene_scan.py`.
+- [x] `W06.P90.S399` - Re-run dev/import_hygiene_scan.py and confirm zero production Family-1 cross-package private-import violations, then flip the Wave W04 ratchet gate to hard-zero mode; `dev/import_hygiene_scan.py`.
+- [x] `W06.P90.S400` - Run a fresh-context honesty review against the campaign closure summary per the campaign-close-honesty-review discipline before declaring the campaign structurally complete, tracking every surfaced item as a new Step or a formally deferred follow-up; `.vault/audit/2026-07-01-import-centralization-audit.md`.
+- [x] `W06.P90.S401` - Persist Step Records for every closed Step and rebuild the feature index, then confirm vaultspec-core vault plan status reports the plan fully closed; `.vault/exec/2026-07-01-import-centralization`.
+- [x] `W06.P90.S402` - Extend the import-hygiene scanner to detect underscore-named __all__ entries and dispose the 8 pre-existing hits surfaced by honesty-review finding #7; `dev/import_hygiene_scan.py`.
 
 ## Parallelization
 

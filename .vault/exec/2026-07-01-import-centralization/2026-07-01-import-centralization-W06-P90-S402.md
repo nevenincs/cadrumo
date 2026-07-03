@@ -94,3 +94,7 @@ related:
   Step. Per the harness mandate for this dispatch, `vault plan step check` /
   `vault feature index` / `vault check all` were not run; the Step's
   checkbox remains unchecked pending the coordinator's own closure pass.
+
+### Closeout verification (2026-07-04)
+
+Re-ran `dev/import_hygiene_scan.py` at HEAD: `FAMILY 4: underscore-named entries in __all__: 0 total`. The Family-4 detector (`find_underscore_in_all_violations`, landed in commit `350a42157c`) is present and wired into the text report, the `MAGNITUDE` summary, and the `--json` payload. The hard-zero gate `test_family4_no_underscore_named_entries_in_any_facade_all` in `src/aeat/tests/test_import_hygiene_gate.py` passes against the live tree. All 8 pre-existing hits stay disposed. This Step's acceptance criterion is met at HEAD; the checkbox is closed here.
