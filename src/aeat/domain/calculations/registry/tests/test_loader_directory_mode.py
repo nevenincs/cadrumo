@@ -165,6 +165,45 @@ def test_directory_mode_rejects_duplicate_revision_ids_across_files(tmp_path: Pa
         load_modelo_directory(target)
 
 
+def test_directory_mode_rejects_inline_section_in_revision_manifest(tmp_path: Path) -> None:
+    """A fragment-directory revision.toml must not carry an inline section table.
+
+    Sections (bindings, formulas, casillas, …) live in per-section fragment
+    subdirectories; an inline array-of-tables in revision.toml is a loud load
+    error naming the fragmented layout it belongs in.
+    """
+
+    target = tmp_path / "inline_section_manifest"
+    revision_dir = _minimal_fragment_revision_layout(target)
+    (revision_dir / "revision.toml").write_text(
+        '[revisions."2025"]\n'
+        "valid_from = 2025-01-01\n"
+        '[[revisions."2025".bindings]]\n'
+        'id = "inline-binding"\n'
+        'source = "previous_filing"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(RegistryLoadError, match="'bindings' section must live in a 'bindings/' fragment subdirectory"):
+        load_modelo_directory(target)
+
+
+def test_directory_mode_rejects_inline_formulas_section_in_revision_manifest(tmp_path: Path) -> None:
+    """The manifest refusal covers every section field, including formulas."""
+
+    target = tmp_path / "inline_formulas_manifest"
+    revision_dir = _minimal_fragment_revision_layout(target)
+    (revision_dir / "revision.toml").write_text(
+        '[revisions."2025"]\n'
+        "valid_from = 2025-01-01\n"
+        '[[revisions."2025".formulas]]\n'
+        'id = "inline-formula"\n'
+        'target_casilla_id = "01"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(RegistryLoadError, match="'formulas' section must live in a 'formulas/' fragment subdirectory"):
+        load_modelo_directory(target)
+
+
 def test_directory_mode_rejects_duplicate_revision_id_across_file_and_fragment_dir(tmp_path: Path) -> None:
     """A revision id cannot be owned by both ``revisions/<id>.toml`` and ``revisions/<id>/``."""
 
