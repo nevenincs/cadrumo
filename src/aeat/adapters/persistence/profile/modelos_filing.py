@@ -20,10 +20,10 @@ from typing import TYPE_CHECKING
 
 from ....core.logging import get_logger
 from ....core.time import now
-from ....domain.modelos import ModeloRecordCatalogue
-from ....domain.modelos._errors import raise_catalogue_integrity_error
-from ....domain.modelos._filing_repository import ModeloRecordPersistenceError
-from ....domain.modelos._runtime_repository import (
+from ....domain.modelos import (
+    ModeloRecordCatalogue,
+    ModeloRecordPersistenceError,
+    raise_catalogue_integrity_error,
     resolve_modelo_repository_bucket_id,
     secure_objects_for_modelo_bucket,
 )
