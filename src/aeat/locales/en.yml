@@ -842,6 +842,9 @@ application:
         %{filing_year} %{period}, but a refund is only available in the year's last
         filing period. Carry the credit forward (compensar), or make the election
         in the last period.
+      review_package_generic: 'An error occurred while building the review package.'
+      review_package_integrity: 'Review package %{package_path} failed checksum verification: %{detail}.'
+      review_package_revision_state: 'Calculation revision %{calculation_revision_id} is in state %{state} and cannot be packaged for review; eligible states: %{eligible_states}.'
       revision_pick_explicit_id_required: Explicit revision picks require calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id is only
         valid with the explicit revision selector.
@@ -1851,6 +1854,19 @@ cli:
         section_optional: optional_manual
         section_profile: profile_derivable
         section_required: required_manual
+      review_package:
+        actor_help: 'Operator label recorded into the package descriptor and the underlying export event.'
+        build_help: 'Assemble a shareable, checksum-verifiable review package (fichero-BOE draft, revision provenance, and bundled ledger evidence) for accountant handoff. Local-only; never contacts AEAT.'
+        errors:
+          output_required: 'Supply --output PATH for the review package ZIP.'
+          package_not_found: 'Review package not found at {package_path}.'
+        group_help: 'Build a shareable review package and verify its integrity.'
+        notes_help: 'Free-text note embedded in the package descriptor (e.g. why it was shared).'
+        output_help: 'Path to write the review package ZIP to.'
+        package_path_help: 'Path to the review package ZIP to verify.'
+        revision_help: 'Calculation revision id to package; defaults to the work unit''s most recent verified-complete or filed revision.'
+        verify_help: 'Verify a review package''s checksum manifest (integrity only; does not assert who built it). Local-only; never contacts AEAT.'
+        work_unit_id_help: 'Work unit id (SHA-256 or unambiguous prefix).'
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
@@ -2837,6 +2853,16 @@ cli:
         claude, antigravity, codex).
       session_stale_message: The persisted AEAT session has passed its idle deadline;
         a live read will re-authenticate.
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
+    runs:
+      header: 'Recent LLM runs:'
+      help: List recent local LLM run-timing records, most-recent-first.
+      limit_help: Cap the listing to this many most-recent runs.
+      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
+        to populate it.
+      provider_help: Restrict the listing to this provider label (e.g. claude, antigravity,
+        codex).
       since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
       until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
     summary:
@@ -4588,8 +4614,9 @@ errors:
       validation.
     integrity_storage_classification: A record's declared sensitivity class is incompatible
       with its repository.
-    integrity_storage_corpus_bundle: 'The corpus bundle could not be parsed or verified.'
-    integrity_storage_corpus_bundle_verification: 'The corpus bundle failed checksum verification against its embedded manifest.'
+    integrity_storage_corpus_bundle: The corpus bundle could not be parsed or verified.
+    integrity_storage_corpus_bundle_verification: The corpus bundle failed checksum
+      verification against its embedded manifest.
     integrity_storage_corpus_manifest: The corpus manifest could not be parsed or
       validated.
     integrity_storage_corpus_manifest_drift: 'The on-disk corpus diverges from its

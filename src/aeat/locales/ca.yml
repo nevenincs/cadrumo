@@ -912,6 +912,9 @@ application:
       refund_election_not_eligible: S'ha triat tornar per al Model %{modelo} %{filing_year}
         %{period}, pero la devolucio nomes esta disponible en l'ultim periode de declaracio
         de l'any. Arrossega el credit (compensar) o tria la devolucio en l'ultim periode.
+      review_package_generic: 'S''ha produït un error en construir el paquet de revisió.'
+      review_package_integrity: 'El paquet de revisió %{package_path} no ha superat la verificació d''integritat: %{detail}.'
+      review_package_revision_state: 'La revisió de càlcul %{calculation_revision_id} és en estat %{state} i no es pot empaquetar per a revisió; estats admesos: %{eligible_states}.'
       revision_pick_explicit_id_required: La seleccio explicita de revisio requereix
         calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id nomes es
@@ -1963,6 +1966,19 @@ cli:
         section_optional: caselles_opcionals_manuals
         section_profile: derivades_del_perfil
         section_required: caselles_obligatories_manuals
+      review_package:
+        actor_help: 'Etiqueta de l''operador registrada al descriptor del paquet i a l''esdeveniment d''exportació subjacent.'
+        build_help: 'Assembla un paquet de revisió compartible i verificable per checksum (esborrany fichero-BOE, procedència de la revisió i evidència comptable inclosa) per lliurar a l''assessor. Només local; mai contacta amb l''AEAT.'
+        errors:
+          output_required: 'Indiqueu --output CAMÍ per al ZIP del paquet de revisió.'
+          package_not_found: 'No s''ha trobat el paquet de revisió a {package_path}.'
+        group_help: 'Construeix un paquet de revisió compartible i verifica''n la integritat.'
+        notes_help: 'Nota de text lliure inclosa al descriptor del paquet (p. ex. el motiu de l''enviament).'
+        output_help: 'Camí on escriure el ZIP del paquet de revisió.'
+        package_path_help: 'Camí del ZIP del paquet de revisió a verificar.'
+        revision_help: 'Id de la revisió de càlcul a empaquetar; per defecte la revisió verificada-completa o presentada més recent de la unitat de treball.'
+        verify_help: 'Verifica el manifest de checksum d''un paquet de revisió (només integritat; no certifica qui l''ha construït). Només local; mai contacta amb l''AEAT.'
+        work_unit_id_help: 'Id de la unitat de treball (SHA-256 o prefix inequívoc).'
       verification_report:
         app_help: Inspeccionar els informes de verificació registrats
         list_help: Llistar els informes de verificació, opcionalment filtrats per
@@ -3021,6 +3037,14 @@ cli:
         de l'LLM.
       until_help: Data ISO (AAAA-MM-DD) superior inclusiva per als registres d'execució
         de l'LLM.
+    runs:
+      header: 'Execucions recents de l''LLM:'
+      help: 'Mostra les execucions recents de l''LLM registrades localment, de la més recent a la més antiga.'
+      limit_help: 'Limita el llistat a aquest nombre d''execucions més recents.'
+      no_run_data: 'Encara no hi ha telemetria d''execucions de l''LLM. Executa una classificació assistida per LLM per generar-la.'
+      provider_help: 'Restringeix el llistat a aquest proveïdor (p. ex. claude, antigravity, codex).'
+      since_help: 'Data ISO (AAAA-MM-DD) inferior inclusiva per als registres d''execució de l''LLM.'
+      until_help: 'Data ISO (AAAA-MM-DD) superior inclusiva per als registres d''execució de l''LLM.'
     summary:
       auth_no_session: El proveïdor d'autenticació %{provider} no té cap sessió preparada
       auth_none: L'autenticació no està configurada
@@ -4868,8 +4892,10 @@ errors:
       no ha superat la validació.
     integrity_storage_classification: La classe de sensibilitat declarada d'un registre
       és incompatible amb el seu repositori.
-    integrity_storage_corpus_bundle: 'El paquet del corpus no s''ha pogut analitzar ni verificar.'
-    integrity_storage_corpus_bundle_verification: 'El paquet del corpus no ha superat la verificació de sumes de comprovació respecte al seu manifest incorporat.'
+    integrity_storage_corpus_bundle: El paquet del corpus no s'ha pogut analitzar
+      ni verificar.
+    integrity_storage_corpus_bundle_verification: El paquet del corpus no ha superat
+      la verificació de sumes de comprovació respecte al seu manifest incorporat.
     integrity_storage_corpus_manifest: El manifest del corpus no s'ha pogut llegir
       o validar.
     integrity_storage_corpus_manifest_drift: 'El corpus en disc difereix del que descriu

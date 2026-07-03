@@ -1,17 +1,21 @@
 """CLI commands for the ``aeat app diagnostics`` subcommand group.
 
-Provides the ``run-health`` verb: a local-only, read-only report combining
-recent LLM classification/completion run timing (duration, provider, outcome)
-with the persisted-AEAT-session staleness probe, so an operator can diagnose a
-slow LLM-backed run or a stale/expired auth session without leaving the host
-(GitHub issue #407). Never contacts AEAT and never performs a network call;
+Provides the ``run-health`` and ``runs`` verbs: local-only, read-only reports
+over recent LLM classification/completion run timing (duration, provider,
+outcome), so an operator can diagnose a slow LLM-backed run or a stale/expired
+auth session without leaving the host (GitHub issue #407). ``run-health``
+folds the run telemetry with the persisted-AEAT-session staleness probe into
+one aggregate-by-provider report; ``runs`` lists the individual recorded runs,
+most-recent-first. Neither verb ever contacts AEAT or performs a network call;
 LLM run telemetry is read from encrypted local secure-object storage and the
 auth probe reads only the locally persisted session token's metadata.
 
 This module is the transport adapter over
-:func:`~aeat.application.diagnostics_run_health.build_run_health_report`. It
-emits :class:`~aeat.entrypoints.cli._diagnostics_payloads.RunHealthResult`
-through :func:`_emit_envelope`.
+:func:`~aeat.application.diagnostics_run_health.build_run_health_report` and
+:func:`~aeat.application.diagnostics_run_health.list_recent_runs`. It emits
+:class:`~aeat.entrypoints.cli._diagnostics_payloads.RunHealthResult` and
+:class:`~aeat.entrypoints.cli._diagnostics_payloads.RunsListResult` through
+:func:`_emit_envelope`.
 """
 
 from __future__ import annotations
@@ -23,7 +27,12 @@ import typer
 
 from ...core.i18n import tr
 from ._common import _emit_envelope
-from ._diagnostics_payloads import LlmRunProviderPayload, RunHealthResult
+from ._diagnostics_payloads import (
+    LlmRunProviderPayload,
+    RunHealthResult,
+    RunRecordPayload,
+    RunsListResult,
+)
 
 app = typer.Typer(
     name="diagnostics",
@@ -196,6 +205,111 @@ def diagnostics_run_health(
         notices.append(notice)
 
     _emit_envelope(ctx, command="diagnostics.run_health", result=result, lines=lines, notices=notices)
+
+
+@app.command(
+    "runs",
+    help=tr(
+        "cli.diagnostics.runs.help",
+        default="List recent local LLM run-timing records, most-recent-first.",
+    ),
+)
+def diagnostics_runs(
+    ctx: typer.Context,
+    since: str | None = typer.Option(
+        None,
+        "--since",
+        help=tr(
+            "cli.diagnostics.runs.since_help",
+            default="Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.",
+        ),
+    ),
+    until: str | None = typer.Option(
+        None,
+        "--until",
+        help=tr(
+            "cli.diagnostics.runs.until_help",
+            default="Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.",
+        ),
+    ),
+    provider: str | None = typer.Option(
+        None,
+        "--provider",
+        help=tr(
+            "cli.diagnostics.runs.provider_help",
+            default="Restrict the listing to this provider label (e.g. claude, antigravity, codex).",
+        ),
+    ),
+    limit: int | None = typer.Option(
+        None,
+        "--limit",
+        min=1,
+        help=tr(
+            "cli.diagnostics.runs.limit_help",
+            default="Cap the listing to this many most-recent runs.",
+        ),
+    ),
+) -> None:
+    """List recent local LLM run-timing records, most-recent-first."""
+    from ...application.diagnostics_run_health import list_recent_runs
+    from ...core.json_contract import Notice, NoticeSeverity
+
+    since_date = _parse_iso_date(since, "--since")
+    until_date = _parse_iso_date(until, "--until")
+
+    rows = list_recent_runs(since=since_date, until=until_date, provider=provider, limit=limit)
+
+    result = RunsListResult(
+        since=since_date.isoformat() if since_date is not None else None,
+        until=until_date.isoformat() if until_date is not None else None,
+        provider=provider,
+        limit=limit,
+        runs=[
+            RunRecordPayload(
+                run_id=row.run_id,
+                caller=row.caller,
+                provider=row.provider,
+                model=row.model,
+                duration_ms=row.duration_ms,
+                succeeded=row.succeeded,
+                error_kind=row.error_kind,
+                started_at=row.started_at.isoformat(),
+            )
+            for row in rows
+        ],
+        total_runs=len(rows),
+        has_run_data=bool(rows),
+    )
+
+    lines: list[str] = [tr("cli.diagnostics.runs.header", default="Recent LLM runs:")]
+    if not rows:
+        lines.append(
+            tr(
+                "cli.diagnostics.runs.no_run_data",
+                default="No LLM run telemetry recorded yet. Run an LLM-assisted classification to populate it.",
+            ),
+        )
+    else:
+        for row in rows:
+            outcome = "ok" if row.succeeded else f"failed({row.error_kind})"
+            lines.append(
+                f"{row.started_at.isoformat()}\t{row.provider}\t{row.caller}\t{outcome}\tduration_ms={row.duration_ms}",
+            )
+
+    notices: list[Notice] = []
+    if not rows:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="diagnostics.runs.no_run_data",
+                message=tr(
+                    "cli.diagnostics.runs.no_run_data",
+                    default="No LLM run telemetry recorded yet. Run an LLM-assisted classification to populate it.",
+                ),
+            ),
+        )
+
+    _emit_envelope(ctx, command="diagnostics.runs", result=result, lines=lines, notices=notices)
 
 
 def _optional_decimal_text(value: Decimal | None) -> str | None:

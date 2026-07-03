@@ -422,6 +422,7 @@ ignore_imports =
     aeat.application.tests.test_diagnostics -> aeat.adapters.persistence.storage.sql
     aeat.application.tests.test_diagnostics -> aeat.adapters.persistence.storage.sql.secure_objects
     aeat.application.tests.test_diagnostics -> aeat.tests.secure_sql
+    aeat.application.tests.test_diagnostics_run_health -> aeat.adapters.outbound.llm
     aeat.application.tests.test_repair_integrity -> aeat.adapters.persistence.storage
     aeat.application.tests.test_repair_integrity -> aeat.adapters.persistence.storage.runtime_repository
     aeat.application.tests.test_repair_integrity -> aeat.adapters.persistence.storage.sql.engine
@@ -658,6 +659,7 @@ ignore_imports =
     aeat.application.calculations._observations_repository -> aeat.adapters.**
     aeat.application.calculations._relation_prefill -> aeat.adapters.**
     aeat.application.diagnostics -> aeat.adapters.**
+    aeat.application.diagnostics_run_health -> aeat.adapters.**
     aeat.application.evidence._service -> aeat.adapters.**
     aeat.application.filing._history_repository -> aeat.adapters.**
     aeat.application.filing._import -> aeat.adapters.**
