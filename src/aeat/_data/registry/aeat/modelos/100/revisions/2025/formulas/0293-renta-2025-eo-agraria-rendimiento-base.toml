@@ -42,12 +42,29 @@
 # reduction the operator may or may not be claiming), and it never fabricates
 # a per-asset depreciation figure the engine has no register to derive.
 #
-# Fase 3a (índices correctores 1540-1547), Fase 4a (reducciones) and Fase 5a
-# (art. 32 irregularidad) remain the manual operator-entered casillas already
-# declared on this revision (irpf_eo_agr_indice_* series,
-# irpf_eo_agr_reduccion_*) — this slice extends Fase 1a to Fase 2a per the
+# Fase 3a: índices correctores y rendimiento neto de módulos (casilla 1548,
+# instrucción 2.3 of the same Anexo I). Each índice casilla (1540-1547, one
+# per letra a) to h) of the instrucción) is an operator/preparer-declared
+# rate (AEAT Diseño de Registros field type P012, fields E5AI1-E5AI8) — the
+# taxpayer reads the applicable índice off the Anexo I table and enters it
+# directly, exactly like the Fase 1a per-producto índice de rendimiento neto
+# above. The instrucción states each índice applies "sobre el rendimiento
+# neto minorado o, en su caso, sobre el rectificado por aplicación de los
+# [índices] anteriores" — a sequential cascade in the Anexo's own letra
+# order, not a single-índice pick nor a simultaneous product. A blank índice
+# casilla is never fabricated into a reduction (the cascade step is skipped);
+# a non-positive rendimiento neto minorado never receives índices correctores
+# (the general estimación objetiva principle). Índice 9 (mejillón en batea,
+# letra i) is out of scope for this dispatcher — it applies to the separate
+# mejillón producto (casilla 0160), not to this 1539→1548 cascade. See
+# _evaluate_m100_resolve_eo_agraria_indices_correctores and
+# orden-hac-1347-2024:anexo-i-instruccion-2-3.
+#
+# Fase 4a (reducciones) and Fase 5a (art. 32 irregularidad) remain the manual
+# operator-entered casillas already declared on this revision
+# (irpf_eo_agr_reduccion_*) — bounded per the
 # 2026-07-01-modelo-131-eo-modulos-engine-adr's incremental phasing
-# discipline (agrarian índice-corrector engine scoped for later phases).
+# discipline.
 
 [[revisions."2025".formulas]]
 id = "renta-2025-eo-agraria-rendimiento-base-mejillon-batea"
@@ -293,3 +310,34 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 [[revisions."2025".formulas.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Fase 2ª: Determinación del rendimiento neto minorado"]
+
+# Fase 3a: rendimiento neto de módulos (casilla 1548) = rendimiento neto
+# minorado (casilla 1539) with the índices correctores 1540-1547 (letras a a
+# h of instrucción 2.3, in that exact order) applied in sequence, per the
+# AEAT's own field order (E5AI1-E5AI8). See
+# _evaluate_m100_resolve_eo_agraria_indices_correctores.
+# Cross-checked against the AEAT Manual práctico de Renta 2025, Parte 1,
+# Capítulo 9 full worked example (Don L.H.I.): rendimiento neto minorado
+# 14.704,42 euros x índice corrector por personal asalariado 0,90 (único
+# índice aplicable en ese ejemplo) = rendimiento neto de módulos 13.233,98
+# euros. See test_modelo_100_eo_agraria_indices_correctores.py.
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-neto-modulos"
+target_casilla_id = "1548"
+expression = { op = "m100_resolve_eo_agraria_indices_correctores", args = [
+    { casilla_id = "1539" },
+    { casilla_id = "1540" },
+    { casilla_id = "1541" },
+    { casilla_id = "1542" },
+    { casilla_id = "1543" },
+    { casilla_id = "1544" },
+    { casilla_id = "1545" },
+    { casilla_id = "1546" },
+    { casilla_id = "1547" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-3"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["3ª Fase: Índices correctores y determinación del rendimiento neto de módulos"]

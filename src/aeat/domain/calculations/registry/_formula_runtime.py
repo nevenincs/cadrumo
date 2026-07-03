@@ -586,6 +586,8 @@ def _evaluate_expression(
         return _evaluate_m131_resolve_modulos_minoracion_empleo(expression, ctx)
     if op == "m131_resolve_modulos_indice_exceso":
         return _evaluate_m131_resolve_modulos_indice_exceso(expression, ctx)
+    if op == "m100_resolve_eo_agraria_indices_correctores":
+        return _evaluate_m100_resolve_eo_agraria_indices_correctores(expression, ctx)
     if op == "m303_resolve_modulos_iva_cuota_devengada":
         return _evaluate_m303_resolve_modulos_iva_cuota_devengada(expression, ctx)
     if op == "m303_resolve_modulos_iva_cuota_minima_pct":
@@ -1346,6 +1348,141 @@ def _evaluate_m131_resolve_modulos_indice_exceso(expression: FormulaExpression, 
         op="m131_resolve_modulos_indice_exceso",
     )
     return cuantia + indice * (minorado - cuantia)
+
+
+#: Índice-corrector casilla count the M100 estimación-objetiva agraria Fase 3ª
+#: dispatcher carries (Anexo I instrucción 2.3, letras a) to h) — índices 1 to 8;
+#: índice 9, mejillón en batea (letra i), applies to a separate producto
+#: (casilla 0160) outside this cascade).
+_M100_EO_AGRARIA_INDICE_COUNT = 8
+
+
+@dataclass(frozen=True, slots=True)
+class _M100ResolveEoAgrariaIndicesCorrectoresArgs:
+    """Resolved registry ids for the M100 EO-agraria Fase 3ª índices-correctores dispatcher."""
+
+    minorado_casilla_id: CasillaId
+    indice_casilla_ids: tuple[CasillaId, ...]
+
+
+def _m100_resolve_eo_agraria_indices_correctores_args(
+    expression: FormulaExpression,
+) -> _M100ResolveEoAgrariaIndicesCorrectoresArgs:
+    op = "m100_resolve_eo_agraria_indices_correctores"
+    expected_arg_count = 1 + _M100_EO_AGRARIA_INDICE_COUNT
+    if len(expression.args) != expected_arg_count:
+        raise RegistryValidationError(
+            f"formula op {op!r} expects {expected_arg_count} args, got {len(expression.args)}",
+            translated_message="errors.calc.lookup_dispatch_arg_count",
+            context={"op": op, "expected": str(expected_arg_count)},
+        )
+    minorado_arg = expression.args[0]
+    if minorado_arg.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[0] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[0]", "expected_kind": "casilla"},
+        )
+    indice_casilla_ids: list[CasillaId] = []
+    for position, indice_arg in enumerate(expression.args[1:], start=1):
+        if indice_arg.casilla_id is None:
+            raise RegistryValidationError(
+                f"formula op {op!r} requires args[{position}] to be a casilla leaf",
+                translated_message="errors.calc.lookup_dispatch_arg_kind",
+                context={"op": op, "position": f"args[{position}]", "expected_kind": "casilla"},
+            )
+        indice_casilla_ids.append(indice_arg.casilla_id)
+    return _M100ResolveEoAgrariaIndicesCorrectoresArgs(
+        minorado_casilla_id=minorado_arg.casilla_id,
+        indice_casilla_ids=tuple(indice_casilla_ids),
+    )
+
+
+def _m100_eo_agraria_read_indice(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
+    """Read one Fase 3ª índice-corrector casilla, tolerating either declared type.
+
+    Every índice casilla in the Anexo I instrucción 2.3 cascade (letras a) to
+    h)) is a rate the operator/preparer reads off the Anexo table, but the
+    AEAT Diseño de Registros declares one of the eight (índice 4, «piensos
+    adquiridos a terceros», casilla 1543) with field type ``X`` (text) while
+    the other seven use ``P012`` (decimal) — an AEAT dictionary quirk, not a
+    semantic difference in the índice itself. A text-typed casilla's value
+    only ever reaches :attr:`_EvalContext.text_values`, never
+    :attr:`_EvalContext.values` (the numeric map defaults it to zero and never
+    receives the operator's real figure), so reading it through
+    :func:`~aeat.domain.calculations.registry._formula_runtime_ops.numeric_casilla_value`
+    alone would silently and permanently treat índice 4 as never declared.
+    Checking ``text_values`` first — and falling back to the numeric map only
+    when the casilla is genuinely absent from ``text_values`` (true for every
+    ``P012`` índice, which a caller never routes through ``text_inputs``) —
+    lets the same cascade loop handle both declared types without a
+    position-keyed special case. An unparsable or blank text value resolves to
+    zero, the same "índice not applied" signal a blank decimal casilla gives.
+    """
+    if casilla_id in ctx.text_values:
+        ctx.operand_refs.append(casilla_id)
+        ctx.operand_casilla_refs.append(casilla_id)
+        raw_text = ctx.text_values[casilla_id].strip()
+        try:
+            value = Decimal(raw_text) if raw_text else _ZERO
+        except ArithmeticError:
+            value = _ZERO
+        ctx.operand_values.append(value)
+        return value
+    return _m210_numeric_casilla_value(casilla_id, ctx)
+
+
+def _evaluate_m100_resolve_eo_agraria_indices_correctores(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Resolve the M100 estimación-objetiva agraria Fase 3ª índices correctores.
+
+    Orden HAC/1347/2024, Anexo I, instrucción 2.3 (letras a) to h)) fixes the
+    mechanism: the rendimiento neto minorado (Fase 2ª, casilla 1539) is
+    corrected by applying, in sequence, the índice or índices correctores that
+    correspond to the activity — each índice applying "sobre el rendimiento
+    neto minorado o, en su caso, sobre el rectificado por aplicación de los
+    [índices] anteriores": a sequential cascade over the Anexo's own letra
+    ordering (a → h), not a single-index pick nor a simultaneous product.
+
+    Each índice casilla (1540 to 1547, one per letra a) to h)) is an
+    operator/preparer-declared rate (AEAT Diseño de Registros field type
+    ``P012`` for seven of the eight, ``X`` for índice 4 — see
+    :func:`_m100_eo_agraria_read_indice`, fields ``E5AI1`` to ``E5AI8``) — the
+    taxpayer reads the applicable índice off the Anexo I table for their
+    activity and enters it directly, mirroring how the M131
+    estimación-objetiva módulos engine resolves its own índice corrector de
+    exceso (:func:`_evaluate_m131_resolve_modulos_indice_exceso`). A blank
+    índice casilla resolves to zero (indistinguishable, at this op's
+    boundary, from "not declared"); because every real índice in the Anexo I
+    table is strictly positive (0,50 to 0,95), a non-positive read is treated
+    as "índice not applied" — the cascade step is skipped (factor of 1, never
+    a fabricated zero-out) rather than multiplying the accumulator by zero.
+    This never over-states nor under-states the reduction: a real but
+    undeclared índice simply goes uncredited, and a declared índice is
+    applied exactly once, in the Anexo's own order.
+
+    A non-positive rendimiento neto minorado never receives índices
+    correctores (the general estimación-objetiva principle applied uniformly
+    across Anexo I and Anexo II — see the M131 índice-de-exceso guard above)
+    and resolves to the minorado figure unchanged.
+
+    Índice 9 (mejillón en batea, letra i) is NOT modelled by this dispatcher:
+    it applies to a separate producto (casilla 0160) outside the 1539→1548
+    cascade, per the Anexo I 2025 "Novedad" note that only índice 9 applies to
+    that activity.
+    """
+    args = _m100_resolve_eo_agraria_indices_correctores_args(expression)
+    minorado = _m210_numeric_casilla_value(args.minorado_casilla_id, ctx)
+    ctx.operand_refs.append(args.minorado_casilla_id)
+    ctx.operand_casilla_refs.append(args.minorado_casilla_id)
+    if minorado <= _ZERO:
+        return minorado
+    rendimiento = minorado
+    for indice_casilla_id in args.indice_casilla_ids:
+        indice = _m100_eo_agraria_read_indice(indice_casilla_id, ctx)
+        if indice <= _ZERO:
+            continue
+        rendimiento = rendimiento * indice
+    return rendimiento
 
 
 @dataclass(frozen=True, slots=True)
