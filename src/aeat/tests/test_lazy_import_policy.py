@@ -194,7 +194,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("domain.buckets._event_repository", "adapters.persistence.storage"),
             ImportEdge("domain.filing._complementaria_repository", "adapters.persistence.storage"),
             ImportEdge("domain.filing._runtime_repository", "adapters.persistence.storage"),
-            ImportEdge("domain.invoices._repository", "adapters.persistence.storage"),
             ImportEdge("domain.modelos._calculation_repository", "adapters.persistence.storage"),
             ImportEdge("domain.modelos._runtime_repository", "adapters.persistence.storage"),
             ImportEdge("domain.transactions._repository", "adapters.persistence.storage"),
@@ -218,6 +217,10 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("domain.calculations.registry._schema", "domain.calculations.registry._bindings"),
             ImportEdge("domain.calculations.registry._validate", "domain.user_profile"),
             ImportEdge(
+                "domain.calculations.registry._validate_cross_domain_snapshot",
+                "domain.calculations.registry._ledger_bindings",
+            ),
+            ImportEdge(
                 "domain.calculations.registry._validate_reference_sections", "domain.calculations.registry._bindings"
             ),
             ImportEdge(
@@ -233,8 +236,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("domain.fincas._amortization_ledger", "domain.calculations.registry"),
             ImportEdge("domain.fincas._imputacion_parameters", "domain.calculations.registry"),
             ImportEdge("domain.fincas._tier_resolver", "domain.calculations.registry"),
-            ImportEdge("domain.invoices._repository", "core"),
-            ImportEdge("domain.invoices._repository", "core.config"),
             ImportEdge("domain.iva._invoice_classification", "domain.calculations.registry"),
             ImportEdge("domain.iva._invoice_classification", "domain.invoices"),
             ImportEdge("domain.iva._recargo_equivalencia", "domain.calculations.registry"),
@@ -299,6 +300,9 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("adapters.outbound.storage._factory", "adapters.persistence.storage.bucket"),
             ImportEdge("adapters.persistence.profile.fincas", "adapters.persistence.storage"),
             ImportEdge("adapters.persistence.profile.fincas", "adapters.persistence.storage.sql"),
+            ImportEdge("adapters.persistence.profile.invoices", "adapters.persistence.storage"),
+            ImportEdge("adapters.persistence.profile.invoices", "core"),
+            ImportEdge("adapters.persistence.profile.invoices", "core.config"),
             ImportEdge("adapters.persistence.profile.modelos_filing", "adapters.persistence.storage"),
             ImportEdge("adapters.persistence.profile.modelos_work_units", "adapters.persistence.storage"),
             ImportEdge("adapters.persistence.profile.modelos_verification_reports", "adapters.persistence.storage"),
@@ -628,8 +632,8 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.preflight", "domain.portals"),
             ImportEdge("application.provisioning", "application.ledger"),
             ImportEdge("application.repair_integrity", "adapters.persistence.storage"),
+            ImportEdge("application.review._adapters", "adapters.persistence.profile.invoices"),
             ImportEdge("application.review._adapters", "domain.filing"),
-            ImportEdge("application.review._adapters", "domain.invoices"),
             ImportEdge("application.review._adapters", "domain.transactions"),
             ImportEdge("application.review._operator", "core"),
             ImportEdge("application.review._operator", "core.config"),
@@ -762,7 +766,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 148,
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 156,
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 35,
     UnsanctionedClass.APPLICATION_DEFERRAL: 489,
 }
@@ -774,7 +778,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 479
+_ALLOWLIST_EDGE_CEILING: int = 480
 
 
 def _aeat_relative(dotted: str) -> str:

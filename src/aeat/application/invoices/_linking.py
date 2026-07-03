@@ -10,10 +10,10 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
-    InvoiceCatalogueRepository,
     InvoiceCatalogueRepositoryProtocol,
     InvoiceLinkError,
     link_transaction,

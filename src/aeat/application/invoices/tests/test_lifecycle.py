@@ -18,13 +18,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceNotFoundError,
-    InvoiceValidationError,
-)
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceNotFoundError, InvoiceValidationError
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (

@@ -17,9 +17,10 @@ from pathlib import Path
 
 import pytest
 
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ...iva import InvoiceKind
-from ...transactions import (
+from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine
+from .....domain.invoices._enums import IvaRate, PaymentStatus
+from .....domain.iva import InvoiceKind
+from .....domain.transactions import (
     RawProvenance,
     RawTransaction,
     SourceFormat,
@@ -28,11 +29,10 @@ from ...transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
 )
-from .._enums import IvaRate, PaymentStatus
-from .._models import Invoice, InvoiceCatalogue, InvoiceLine
-from .._repository import InvoiceCatalogueRepository
+from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ..invoices import InvoiceCatalogueRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "17171717-1717-4171-8171-171717171717"
 
@@ -46,7 +46,7 @@ def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 def _invoice(invoice_number: str = "INV-001") -> Invoice:
     line = InvoiceLine.model_validate(
         {
-            "description": "ConsultorÝa",
+            "description": "Consultoría",
             "quantity": Decimal("1"),
             "unit_price": Decimal("100.00"),
             "subtotal": Decimal("100.00"),
@@ -98,7 +98,7 @@ def _transaction(provider_id: str = "row-1") -> Transaction:
 
 
 class TestInvoiceCatalogueRoundTrip:
-    """Save ÔåÆ fresh repository ÔåÆ load must yield a value-equal catalogue."""
+    """Save -> fresh repository -> load must yield a value-equal catalogue."""
 
     def test_empty_catalogue_loads_when_nothing_persisted(self) -> None:
         catalogue = InvoiceCatalogueRepository().load()
@@ -130,7 +130,7 @@ class TestInvoiceCatalogueRoundTrip:
 
 
 class TestTransactionCatalogueRoundTrip:
-    """Save ÔåÆ fresh repository ÔåÆ load must yield a value-equal catalogue."""
+    """Save -> fresh repository -> load must yield a value-equal catalogue."""
 
     def test_empty_catalogue_loads_when_nothing_persisted(self) -> None:
         catalogue = TransactionCatalogueRepository(bucket_id=_BUCKET_ID).load()

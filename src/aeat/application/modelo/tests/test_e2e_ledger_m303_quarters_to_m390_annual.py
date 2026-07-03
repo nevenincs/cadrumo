@@ -47,6 +47,7 @@ from typing import Literal
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -57,7 +58,7 @@ from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
-from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import EUMemberState, InvoiceKind, IvaCategory
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import (

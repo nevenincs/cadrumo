@@ -13,10 +13,10 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
-    InvoiceCatalogueRepository,
     LinkInconsistency,
     find_invoice,
     find_unmatched,

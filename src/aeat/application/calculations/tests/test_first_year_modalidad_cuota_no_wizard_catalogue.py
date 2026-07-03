@@ -63,7 +63,7 @@ from aeat.application.calculations._relation_prefill import (
 )
 from aeat.core import Period
 from aeat.core.resources import resources
-from aeat.domain.invoices import InvoiceCatalogueRepository
+from aeat.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from aeat.domain.transactions import TransactionCatalogueRepository

@@ -1,30 +1,36 @@
 """Governed-persistence repository for the invoice catalogue.
 
 :class:`InvoiceCatalogueRepository` is the sanctioned read/write path for the
-:class:`InvoiceCatalogue`. It stores the catalogue as an encrypted byte object
-via :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
+:class:`~aeat.domain.invoices.InvoiceCatalogue`. It stores the catalogue as an
+encrypted byte object via
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
 ``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass` using
 an :class:`~aeat.adapters.persistence.storage.Envelope` wrapper; no plaintext
 invoice row, JSON catalogue, or envelope file lands on disk.
-The storage contract is declared by
-:data:`aeat.adapters.persistence.storage.INVOICE_CATALOGUE_NAMESPACE`; its
-default object key is the singleton ``catalogue`` row.
+
+This concrete repository is the persistence adapter behind the read-side
+:class:`~aeat.domain.invoices.InvoiceCatalogueRepositoryProtocol`. It lives in
+the persistence adapter (not in :mod:`aeat.domain.invoices`) because its
+secure-object coupling is SQL/crypto-bound; the domain package owns only the
+typed :class:`~aeat.domain.invoices.InvoiceCatalogue` model, its narrow port,
+and the :class:`~aeat.domain.invoices.InvoicePersistenceError` boundary error.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core.logging import get_logger
-from ...core.time import now
-from ._errors import InvoicePersistenceError
-from ._models import InvoiceCatalogue
+from ....core.logging import get_logger
+from ....core.time import now
+from ....domain.invoices import InvoiceCatalogue, InvoicePersistenceError
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage import SecureObjectRepository, SecureObjectWrite
+    from ..storage import SecureObjectRepository, SecureObjectWrite
 
 _log = get_logger(__name__)
 
+# namespace/version constants redeclared here (the persistence contract now lives
+# with the adapter); the string is preserved to avoid orphaning persisted envelopes
 _INVOICE_CATALOGUE_VERSION = 1
 _INVOICE_NAMESPACE = "aeat.domain.invoices"
 _INVOICE_OBJECT_KEY = "catalogue"
@@ -32,8 +38,8 @@ _INVOICE_OBJECT_KEY = "catalogue"
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
     """Return the runtime-created secure-object repository for ``bucket_id``."""
-    from ...adapters.persistence.storage import secure_object_repository_for_bucket
-    from ...core.config import load_settings
+    from ....core.config import load_settings
+    from ..storage import secure_object_repository_for_bucket
 
     return secure_object_repository_for_bucket(bucket_id, load_settings())
 
@@ -42,7 +48,7 @@ def _resolve_invoice_bucket_id(bucket_id: str | None) -> str:
     trimmed = (bucket_id or "").strip()
     if trimmed:
         return trimmed
-    from ...core import resolve_active_bucket_id
+    from ....core import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()
     if active is None:
@@ -68,6 +74,13 @@ class InvoiceCatalogueRepository:
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
+        """Bind to a profile bucket's secure-object store, or an injected one.
+
+        Args:
+            bucket_id: Profile bucket whose encrypted store backs this repository;
+                resolved from the active session when ``None``.
+            objects: Optional injected secure-object repository (testing seam).
+        """
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         if bucket_id is not None and not self._bucket_id:
             raise InvoicePersistenceError(
@@ -103,7 +116,7 @@ class InvoiceCatalogueRepository:
                 If the envelope schema version is higher than the consumer
                 supports.
         """
-        from ...adapters.persistence.storage import (
+        from ..storage import (
             Envelope,
             SensitivityClass,
         )
@@ -119,14 +132,14 @@ class InvoiceCatalogueRepository:
             return InvoiceCatalogue()
         envelope = Envelope[InvoiceCatalogue].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not SensitivityClass.FINANCIAL:
-            from ...adapters.persistence.storage import ClassificationError
+            from ..storage import ClassificationError
 
             raise ClassificationError(
                 f"invoice catalogue has classification {envelope.classification}; "
                 f"consumer expected {SensitivityClass.FINANCIAL}",
             )
         if envelope.schema_version > _INVOICE_CATALOGUE_VERSION:
-            from ...adapters.persistence.storage import EnvelopeVersionError
+            from ..storage import EnvelopeVersionError
 
             raise EnvelopeVersionError(
                 f"invoice catalogue is at version {envelope.schema_version}; "
@@ -147,7 +160,7 @@ class InvoiceCatalogueRepository:
         Args:
             catalogue: The :class:`InvoiceCatalogue` to persist.
         """
-        from ...adapters.persistence.storage import (
+        from ..storage import (
             Envelope,
             SensitivityClass,
         )
@@ -179,7 +192,7 @@ class InvoiceCatalogueRepository:
         Args:
             catalogue: The :class:`InvoiceCatalogue` to serialise.
         """
-        from ...adapters.persistence.storage import Envelope, SecureObjectWrite, SensitivityClass
+        from ..storage import Envelope, SecureObjectWrite, SensitivityClass
 
         envelope = Envelope[InvoiceCatalogue](
             schema_version=_INVOICE_CATALOGUE_VERSION,

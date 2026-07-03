@@ -396,8 +396,6 @@ ignore_imports =
     aeat.domain.filing.tests.test_secure_storage_roundtrip -> aeat.tests.secure_sql
     aeat.domain.fincas.tests.test_aggregates -> aeat.tests.secure_sql
     aeat.domain.invoices.tests.test_reconciliation -> aeat.tests.secure_sql
-    aeat.domain.invoices.tests.test_repository -> aeat.tests.secure_sql
-    aeat.domain.invoices.tests.test_secure_storage_roundtrip -> aeat.tests.secure_sql
     aeat.domain.modelos.tests.test_calculation_repository_roundtrip -> aeat.tests.secure_sql
     aeat.domain.modelos.tests.test_filing_record_repository_roundtrip -> aeat.tests.secure_sql
     aeat.domain.modelos.tests.test_secure_storage_roundtrip -> aeat.tests.secure_sql
@@ -695,7 +693,6 @@ ignore_imports =
     aeat.domain.buckets._event_repository -> aeat.adapters.persistence.storage
     aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.storage
     aeat.domain.filing._repository -> aeat.adapters.persistence.storage
-    aeat.domain.invoices._repository -> aeat.adapters.persistence.storage
     # modelos_work_units consolidation: domain.modelos._repository (the
     # work-unit catalogue repository) no longer imports adapters directly -
     # persistence now routes through
@@ -745,7 +742,6 @@ ignore_imports =
     aeat.domain.filing.tests.test_binding_value_provenance_roundtrip -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.filing.tests.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.fincas.tests.test_aggregates -> aeat.adapters.persistence.storage
-    aeat.domain.invoices.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.modelos.tests.test_filing_record_repository_roundtrip -> aeat.adapters.persistence.storage
     aeat.domain.modelos.tests.test_ledger_filing_evidence_roundtrip -> aeat.adapters.persistence.storage.sql
     aeat.domain.modelos.tests.test_ledger_filing_evidence_roundtrip -> aeat.tests.secure_sql
@@ -908,8 +904,6 @@ ignore_imports =
     aeat.domain.modelos.tests.test_participation_index_roundtrip -> aeat.adapters.persistence.profile.participation_index
     aeat.domain.buckets.tests.test_event_history_roundtrip -> aeat.adapters.persistence.storage.crypto
     aeat.domain.buckets.tests.test_event_history_roundtrip -> aeat.adapters.persistence.storage.sql
-    aeat.domain.invoices.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.crypto
-    aeat.domain.invoices.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql
     aeat.domain.filing.tests.test_amendment_roundtrip -> aeat.adapters.persistence.storage.crypto
     aeat.domain.filing.tests.test_amendment_roundtrip -> aeat.adapters.persistence.storage.sql
     aeat.domain.filing.tests.test_binding_value_provenance_roundtrip -> aeat.adapters.persistence.storage.crypto
@@ -1000,6 +994,59 @@ ignore_imports =
     aeat.application.modelo.tests.test_renta_annual_reconciliations_fold_in_live -> aeat.adapters.persistence.profile.modelos_filing
     aeat.application.modelo.tests.test_verificado_completo_regression -> aeat.adapters.persistence.profile.modelos_filing
     aeat.domain.modelos.tests.test_filing_record_repository_roundtrip -> aeat.adapters.persistence.profile.modelos_filing
+    # ── invoices catalogue repository ports-inversion (W02.P04.S06):
+    #    the concrete InvoiceCatalogueRepository moved to the persistence
+    #    adapter behind InvoiceCatalogueRepositoryProtocol ──
+    aeat.application.aggregation._renta_ledger -> aeat.adapters.persistence.profile.invoices
+    aeat.application.aggregation.tests.test_modelo_source_mesh_ledger -> aeat.adapters.persistence.profile.invoices
+    aeat.application.aggregation.tests.test_renta_ledger -> aeat.adapters.persistence.profile.invoices
+    aeat.application.calculations.tests.test_pull_path_calculate_path_casilla_parity -> aeat.adapters.persistence.profile.invoices
+    aeat.application.invoices._creation -> aeat.adapters.persistence.profile.invoices
+    aeat.application.invoices._importing -> aeat.adapters.persistence.profile.invoices
+    aeat.application.invoices._lifecycle -> aeat.adapters.persistence.profile.invoices
+    aeat.application.invoices._linking -> aeat.adapters.persistence.profile.invoices
+    aeat.application.invoices._queries -> aeat.adapters.persistence.profile.invoices
+    aeat.application.invoices._reconciliation -> aeat.adapters.persistence.profile.invoices
+    aeat.application.invoices.tests.test_creation -> aeat.adapters.persistence.profile.invoices
+    aeat.application.invoices.tests.test_lifecycle -> aeat.adapters.persistence.profile.invoices
+    aeat.application.invoices.tests.test_linking -> aeat.adapters.persistence.profile.invoices
+    aeat.application.invoices.tests.test_queries -> aeat.adapters.persistence.profile.invoices
+    aeat.application.invoices.tests.test_reconciliation -> aeat.adapters.persistence.profile.invoices
+    aeat.application.invoices.tests.test_source_resolver -> aeat.adapters.persistence.profile.invoices
+    aeat.application.ledger._actions_lifecycle -> aeat.adapters.persistence.profile.invoices
+    aeat.application.ledger.tests._action_test_support -> aeat.adapters.persistence.profile.invoices
+    aeat.application.ledger.tests._llm_evidence_split_support -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo._calculation_actions -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_dormant_ledger_resolvers_fire_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_dormant_m349_invoice_resolver_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_dormant_m369_oss_resolver_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_m111_retenciones_observation_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_100_2025_retenciones_credit_fold_in_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_100_negative_general_base_carry_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_200_2024_ejemplo1_tributacion_minima_manual_worked_example -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_200_accounting_input_guard -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_200_first_year_cuota_e2e -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_200_fold_in_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_202_2025_pago_fraccionado_manual_worked_example -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_202_sociedades_fold_in_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_390_303_fold_in_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_390_303_simplificado_fold_in_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_390_fifo_carried_pending -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_relation_fold_in_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_renta_annual_reconciliations_fold_in_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_source_boundary_and_enrollment -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_source_mesh_calculation -> aeat.adapters.persistence.profile.invoices
+    aeat.application.review._adapters -> aeat.adapters.persistence.profile.invoices
+    aeat.application.review.tests.test_adapters -> aeat.adapters.persistence.profile.invoices
+    aeat.application.review.tests.test_aggregator -> aeat.adapters.persistence.profile.invoices
+    aeat.application.user_profile.tests.test_custody_store_matrix -> aeat.adapters.persistence.profile.invoices
+    aeat.domain.invoices.tests.test_reconciliation -> aeat.adapters.persistence.profile.invoices
+    aeat.domain.tests.test_runtime_repository_enrollment -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_e2e_ledger_m130_quarters_to_m100_annual -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_e2e_ledger_m303_quarters_to_m390_annual -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_100_2025_expense_inspection_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_100_pagos_fraccionados_fold_in_live -> aeat.adapters.persistence.profile.invoices
+    aeat.application.modelo.tests.test_modelo_100_retenciones_credit_fold_in_live -> aeat.adapters.persistence.profile.invoices
     aeat.application.modelo.tests.test_participation_rebuild -> aeat.adapters.persistence.profile.participation_index
     aeat.application.modelo.tests.test_participation_co_emission -> aeat.adapters.persistence.profile.participation_index
     # ── application production edges: modelos_work_units catalogue repository

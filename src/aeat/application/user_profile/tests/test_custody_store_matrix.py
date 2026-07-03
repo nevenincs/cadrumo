@@ -233,14 +233,8 @@ def _verify_usage_ratios(bucket_id: str) -> None:
 
 
 def _seed_invoice_catalogue(bucket_id: str) -> None:
-    from ....domain.invoices import (
-        Invoice,
-        InvoiceCatalogue,
-        InvoiceCatalogueRepository,
-        InvoiceLine,
-        IvaRate,
-        PaymentStatus,
-    )
+    from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
     from ....domain.iva import InvoiceKind
 
     line = InvoiceLine(
@@ -269,7 +263,7 @@ def _seed_invoice_catalogue(bucket_id: str) -> None:
 
 
 def _verify_invoice_catalogue(bucket_id: str) -> None:
-    from ....domain.invoices import InvoiceCatalogueRepository
+    from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 
     assert InvoiceCatalogueRepository().load().invoices, "invoice catalogue lost"
 

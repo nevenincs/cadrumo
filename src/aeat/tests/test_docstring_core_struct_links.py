@@ -57,7 +57,6 @@ CORE_STRUCTS: dict[str, str] = {
     "TransactionCatalogue": "aeat.domain.transactions._models",
     "TransactionCatalogueRepository": "aeat.domain.transactions._repository",
     "InvoiceCatalogue": "aeat.domain.invoices._models",
-    "InvoiceCatalogueRepository": "aeat.domain.invoices._repository",
     "BucketEventHistoryRepository": "aeat.domain.buckets._event_repository",
     # Profile, deadlines, and filing records
     "TaxpayerProfile": "aeat.domain.deadlines._models",
