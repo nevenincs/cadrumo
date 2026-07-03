@@ -848,6 +848,27 @@ required_text = [
     "No obstante, los elementos patrimoniales del inmovilizado descritos a continuación, se amortizarán conforme a la siguiente tabla",
 ]
 
+[legal."orden-hac-1347-2024:anexo-i-instruccion-2-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-i-instruccion-2-3"
+document_id = "BOE-A-2024-24949"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 2.3 Fase 3: Rendimiento neto de módulos"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-03
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+notes = "Fase 3a agraria: rendimiento neto de modulos. Sobre el rendimiento neto minorado (fase 2a) se aplican, cuando corresponda, los indices correctores letras a) a i) de esta instruccion, cada uno sobre el rendimiento minorado o, en su caso, sobre el ya rectificado por los indices anteriores (aplicacion secuencial, no simultanea, siguiendo el orden de letras del Anexo). El motor implementa las letras a) a h) (indices 1 a 8, casillas 1540-1547 del Modelo 100: medios de produccion ajenos 0,75; personal asalariado 0,90/0,85/0,80/0,75 por tramos; tierras arrendadas 0,90; piensos de terceros 0,50; agricultura ecologica 0,95; regadio electrico 0,75; pequena empresa (rendimiento minorado <= 9.447,91 euros) 0,90; forestales 0,80) sobre la casilla 1539 para obtener la casilla 1548 (rendimiento neto de modulos); el indice 9 (mejillon en batea, letra i) se aplica en un producto separado (casilla 0160) fuera de esta cascada. Cada indice es un valor P012 declarado por el operador/preparador segun el Diseno de Registros AEAT (aeat-dr-100-2025-dictionary, campos E5AI1-E5AI8); una casilla en blanco no aplica ningun indice (factor neutro), nunca fabrica una reduccion no declarada. Si el rendimiento neto minorado no es positivo, no se aplica ningun indice corrector (principio general de estimacion objetiva, ver el paralelo Anexo II instruccion 2.3 aplicado por el motor de modulos M131)."
+required_text = [
+    "Rendimiento neto de módulos.",
+    "Sobre el rendimiento neto minorado se aplicarán, cuando correspondan, los índices correctores que se establecen a continuación",
+    "según las circunstancias, cuantía, orden e incompatibilidad que se indica a continuación, sobre el rendimiento neto minorado o, en su caso, sobre el rectificado por aplicación de los mismos",
+]
+
 [legal."real-decreto-ley-13-2025:art-2"]
 evidence_tier = "legal_authority"
 authority = "boe"

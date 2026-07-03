@@ -108,6 +108,7 @@ FormulaOperator = Literal[
     "m131_resolve_modulos_previo",
     "m131_resolve_modulos_minoracion_empleo",
     "m131_resolve_modulos_indice_exceso",
+    "m100_resolve_eo_agraria_indices_correctores",
     "m303_resolve_modulos_iva_cuota_devengada",
     "m303_resolve_modulos_iva_cuota_minima_pct",
 ]
