@@ -18,8 +18,7 @@ from pathlib import Path
 import pytest
 
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine
-from .....domain.invoices._enums import IvaRate, PaymentStatus
+from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from .....domain.iva import InvoiceKind
 from .....domain.transactions import (
     RawProvenance,
