@@ -15,11 +15,11 @@ from collections.abc import Iterable
 from datetime import date, datetime
 from typing import Literal
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...core.errors import BaseSeverity
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
     BucketEvent,
-    BucketEventHistoryRepository,
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,

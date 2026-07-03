@@ -1025,3 +1025,53 @@ class ConfigProfileDescendienteRemoveResult(OutputSchema):
     profile: str
     removed_index: int
     total: int
+
+
+@register_schema("config.profile.sandbox.create")
+class ConfigProfileSandboxCreateResult(OutputSchema):
+    """JSON envelope for ``aeat config profile sandbox create``.
+
+    Reports the new sandbox bucket identity and label; the sandbox is now the
+    active profile. ``seeded_from`` names the live profile whose facts were
+    copied in, or ``None`` when the sandbox started empty.
+    """
+
+    bucket_id: str
+    label: str
+    seeded_from: str | None = None
+
+
+@register_schema("config.profile.sandbox.list")
+class ConfigProfileSandboxListResult(OutputSchema):
+    """JSON envelope for ``aeat config profile sandbox list``.
+
+    Reuses :class:`ProfilePointerPayload` rows, filtered to buckets whose
+    label carries the reserved sandbox prefix.
+    """
+
+    active_profile: str | None = None
+    sandboxes: list[ProfilePointerPayload]
+
+
+@register_schema("config.profile.sandbox.use")
+class ConfigProfileSandboxUseResult(OutputSchema):
+    """JSON envelope for ``aeat config profile sandbox use``.
+
+    Same shape as :class:`ConfigSwitchResult`; registered under its own
+    command path since ``sandbox use`` delegates to the canonical
+    select-lifecycle-span primitive rather than the root ``config switch``
+    command.
+    """
+
+    active_profile: str
+
+
+@register_schema("config.profile.sandbox.discard")
+class ConfigProfileSandboxDiscardResult(OutputSchema):
+    """JSON envelope for ``aeat config profile sandbox discard``.
+
+    Reports the erased sandbox's identity and prior label.
+    """
+
+    bucket_id: str
+    previous_label: str

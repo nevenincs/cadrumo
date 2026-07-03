@@ -47,13 +47,17 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import Modelo
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal import coerce_decimal_strict
 from ...core.money import round_to_cents
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepository, BucketEventHistoryRepositoryProtocol
+from ...domain.buckets import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
     IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
     BindingId,
@@ -69,10 +73,8 @@ from ...domain.calculations.registry import (
     selector_as_dict,
     validated_text_input_casilla_ids,
 )
-from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     Modelo349OperadorRow,
@@ -82,7 +84,6 @@ from ...domain.modelos import (
     WorkUnitCatalogueRepositoryProtocol,
     upsert_calculation_revision,
 )
-from ...domain.transactions import TransactionCatalogueRepository
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
 from ..live import Borrador100SnapshotRepository
 from ._action_errors import (

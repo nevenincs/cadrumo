@@ -21,13 +21,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.bucket import read_manifest
 from ....core.resources import resources
-from ....domain.buckets import (
-    BucketEventHistoryRepository,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ....domain.buckets import BucketEventObjectType, BucketEventType
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...user_profile import RegisterProfileCommand

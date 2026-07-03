@@ -672,6 +672,14 @@ application:
         unsupported_modelo: Borrador binding is not supported for modelo %{modelo};
           the registry manifest must declare the borrador capability.
     errors:
+      amendment_complementaria_liability_decrease: A complementaria for modelo {modelo}
+        filing year {filing_year} period {period} would lower the declared result
+        from {baseline_result} to {corrected_result}. Before the autoliquidación rectificativa
+        unification, a self-filed complementaria cannot lawfully decrease liability;
+        use the solicitud de rectificación procedure instead.
+      amendment_kind_not_permitted: 'The requested amendment kind {requested_kind}
+        is not legally available for modelo {modelo} filing year {filing_year} period
+        {period}. Accepted kinds for this period: {accepted_kinds}.'
       amendment_registry_root_missing: Registry root %{registry_root} is missing;
         amendment overrides cannot be validated.
       amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -1035,6 +1043,8 @@ application:
         {year} {part}.
       manual_section_requires_structure: Manual section requires extracted structure
         for {manual_key}.
+      no_revision_for_diff_year: 'No registry revision of {modelo} covers filing year
+        {filing_year}. Declared revisions: {available_revisions}.'
   repair_integrity:
     errors:
       conflicting_list_filters: 'Repair list filters are mutually exclusive: {filters}.
@@ -2606,6 +2616,32 @@ cli:
       rename_help: Rename a profile in place; the active-profile pointer follows automatically
       rename_source_help: Existing profile name
       rename_target_help: New profile name
+      sandbox:
+        already_exists: A sandbox named %{label} already exists. Pick a different
+          name or discard the existing one first.
+        create_active_info: The sandbox is now the ACTIVE profile; every command runs
+          against it until you switch away or discard it.
+        create_from_profile_help: Seed the sandbox with an existing profile's facts
+          (read-only source).
+        create_help: Fork a new isolated sandbox bucket and activate it.
+        create_name_help: Sandbox name.
+        discard_active_profile: Sandbox %{name} is the active profile; switch to another
+          profile before discarding it.
+        discard_help: Permanently erase a sandbox bucket.
+        discard_name_help: Sandbox name (without the prefix).
+        discard_not_a_sandbox: '%{name} is not a sandbox; the sandbox surface refuses
+          to discard a real profile.'
+        discard_requires_yes: Discarding a sandbox is destructive. Re-run 'aeat config
+          profile sandbox discard %{name} --yes' to confirm.
+        discard_yes_help: Confirm the destructive erase.
+        help: Run experiments in an isolated, discardable bucket that never touches
+          main profile state.
+        list_help: List every sandbox bucket.
+        source_not_found: No live profile named %{name} to seed the sandbox from.
+        unknown_sandbox: 'Unknown sandbox: %{name}. Run ''aeat config profile sandbox
+          list'' to see registered sandboxes.'
+        use_help: Switch the active profile to an existing sandbox.
+        use_name_help: Sandbox name (without the prefix).
       sar_catalogue_info: 'This archive holds every personal-data category kept for
         the profile: identity and profile facts, modelo work units, ledger transactions,
         calculation revisions, and filing records. Attachment evidence bytes and AEAT
@@ -2735,6 +2771,7 @@ cli:
     summary_lifecycle: 'Modelo lifecycle: {steps}'
     summary_roots: 'Roots: {roots}'
   diagnostics:
+    app_help: Local-only operator run-health and session diagnostics.
     browser:
       http_status_label: HTTP status
       markers_label: Markers
@@ -2766,6 +2803,20 @@ cli:
       profile_label: Profile
       python_label: Python
       version_label: Version
+    run_health:
+      auth_header: 'Auth session:'
+      bad_date: '%{option} must be an ISO date (YYYY-MM-DD); got %{value}.'
+      header: 'LLM run health:'
+      help: Report recent local LLM run timing and persisted AEAT session staleness.
+      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
+        to populate it.
+      no_session_message: No persisted AEAT session found on disk.
+      provider_help: Restrict the LLM run-timing section to this provider label (e.g.
+        claude, antigravity, codex).
+      session_stale_message: The persisted AEAT session has passed its idle deadline;
+        a live read will re-authenticate.
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
     summary:
       auth_no_session: Authentication provider %{provider} has no ready session
       auth_none: Authentication is not configured
@@ -2979,8 +3030,9 @@ cli:
       reaffirmed: Classification reaffirmed.
       reason_empty: Refused. --reason must record why you are classifying this transaction.
         Pass a non-empty rationale, or omit --reason.
-      reason_help: Free-text reason recorded as the transaction notes for a manual
-        classification, or with a --reject decision.
+      reason_help: Free-text reason recorded as the transaction notes and as the classification
+        decision's provenance reason (visible on ledger view), or with a --reject
+        decision.
       reject_apply_exclusive: '--reject cannot be combined with --apply: reject records
         a declined suggestion, apply records an accepted one.'
       reject_help: Record an explicit rejection of the LLM suggestion as an audit
@@ -3098,6 +3150,10 @@ cli:
       checked: Checked transactions
       child_id: Child transaction id
       children: Children
+      classification_confidence: Classification confidence
+      classification_reason: Classification reason
+      classified_at: Classified at
+      classified_by: Classified by
       counterparty: Counterparty
       counterparty_eu_member_state: EU counterparty
       created_event_id: Created bucket event
@@ -3222,19 +3278,29 @@ cli:
       help: List which subprocess LLM providers have a usable CLI on PATH.
     pull_folder:
       errors:
-        folder_id_unrecognised: 'Google Drive folder reference %{reference} does not contain a recognisable folder id. Pass a Drive folder URL or its bare folder id.'
-        folder_refused: 'Cannot list the Drive folder %{folder_id}%{scope_hint}: the folder must be reachable under the drive.file scope (created by the app or explicitly picked by the operator), or grant the required Google scope and retry.'
-      folder_help: 'Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images from.'
-      help: 'Bulk-fetch every PDF/image invoice in a Drive folder and store each as encrypted evidence (unlinked to any transaction; link with ''aeat app ledger attach'' or ''link'').'
+        folder_id_unrecognised: Google Drive folder reference %{reference} does not
+          contain a recognisable folder id. Pass a Drive folder URL or its bare folder
+          id.
+        folder_refused: 'Cannot list the Drive folder %{folder_id}%{scope_hint}: the
+          folder must be reachable under the drive.file scope (created by the app
+          or explicitly picked by the operator), or grant the required Google scope
+          and retry.'
+      folder_help: Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images
+        from.
+      help: Bulk-fetch every PDF/image invoice in a Drive folder and store each as
+        encrypted evidence (unlinked to any transaction; link with 'aeat app ledger
+        attach' or 'link').
       labels:
-        fetched: 'fetched_count'
-        folder_id: 'folder_id'
-        refused: 'refused_count'
-        skipped: 'skipped_non_document_count'
-        total: 'total_documents'
-      note_help: 'Optional note recorded on every fetched attachment.'
+        fetched: fetched_count
+        folder_id: folder_id
+        refused: refused_count
+        skipped: skipped_non_document_count
+        total: total_documents
+      note_help: Optional note recorded on every fetched attachment.
       notices:
-        files_refused: '%{refused_count} file(s) in this folder could not be fetched under the drive.file scope; download them manually and attach with ''aeat app ledger attach --attachment-id ...''.'
+        files_refused: '%{refused_count} file(s) in this folder could not be fetched
+          under the drive.file scope; download them manually and attach with ''aeat
+          app ledger attach --attachment-id ...''.'
     remove:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction
@@ -3515,7 +3581,8 @@ cli:
         with their applicability verdict and reason.
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
     calendar_local_filing_evidence_unavailable: Overview calendar local filing evidence
-      is unavailable; refusing to render without persisted AEAT filing state.
+      could not be loaded; the calendar is derived from the deadline schedule and
+      may over-report an obligation as still due.
     calendar_local_live_events_unavailable: Local live-event evidence is unavailable
       for this calendar row.
     calendar_local_modelo_events_unavailable: Local modelo event evidence is unavailable
@@ -3535,14 +3602,38 @@ cli:
       modelo_help: AEAT modelo identifier (e.g. 303, 130, 100).
       year_help: Fiscal year for the applicability evaluation; defaults to the current
         year.
-    local_work_units_unavailable: Overview local Modelo work-unit state is unavailable;
-      refusing to render without persisted work state.
+    labels:
+      period: 'Period'
+    local_work_units_unavailable: Local Modelo work-unit state could not be loaded;
+      this overview is derived from the deadline schedule and may over-report an in-progress
+      draft as still due or omit older in-progress drafts.
     period: Period
     period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12
       (months). Combine with --year to choose the year.'
+    pipeline:
+      help: 'Show cross-domain pipeline health for one filing period in one table: ledger classification/review state, modelo readiness (calculated / verified / filed / blocked) for every work unit in the period, and outstanding verification findings. Read-only; safe to run repeatedly; never contacts AEAT.'
+      labels:
+        findings_section: 'Findings:'
+        ledger_section: 'Ledger:'
+        modelos_section: 'Modelos:'
+        ready: 'ready'
+      no_work_units: 'No modelo work units for this period yet.'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
+      year_help: 'Filing year (e.g. 2026).'
     post_filing:
       pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review
         them with ''aeat app live notifications list''.'
+    prepare:
+      help: 'Walk through the data-preparation steps for one modelo/period in order:
+        import transactions, classify them, attach purchase-invoice evidence, register
+        business invoices, resolve ledger readiness gaps, then start or resume the
+        modelo work unit. Shows each step''s current progress and the exact next command
+        to run. Read-only; safe to run repeatedly; never contacts AEAT.'
+      modelo_help: AEAT modelo identifier to prepare data for (e.g. 130, 303, 100).
+      modelo_period_error: '{message}'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
+        01-12 (months). Combine with --year to choose the year.'
+      year_help: Filing year (e.g. 2026).
     status:
       drafts_empty: No saved declaration drafts were found.
       drafts_empty_with_work_units: No declaration drafts are saved - this is normal
@@ -3613,6 +3704,13 @@ cli:
       tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
       verify_help: Verify the legal-norm corpus integrity
       view_help: Show one legal authority and, optionally, one of its articles
+    diff_revisions_from_year_help: Earlier filing year whose covering revision is
+      the diff baseline
+    diff_revisions_help: Diff the registry revisions of one modelo across two filing
+      years
+    diff_revisions_modelo_help: Modelo identifier to diff
+    diff_revisions_to_year_help: Later filing year whose covering revision is compared
+      against the baseline
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
     manuals:
@@ -4109,6 +4207,7 @@ errors:
     error_categories: An error occurred in the expense categories.
     error_categories_validation: A category record failed validation.
     error_config_boundary: The config command encountered an unexpected internal error.
+    error_corpus_search: The on-host corpus search could not be completed.
     error_deadlines_deadline: An error occurred in the deadline calculation.
     error_deadlines_missing_windows: Deadline windows are missing.
     error_deadlines_profile: The self-employed profile could not be loaded or validated
@@ -4495,7 +4594,8 @@ errors:
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
   internal:
-    internal_cli_unexpected_boundary: 'The command failed due to an unexpected internal error, not a stored-data problem. Inspect the diagnostic logs to see what failed.'
+    internal_cli_unexpected_boundary: The command failed due to an unexpected internal
+      error, not a stored-data problem. Inspect the diagnostic logs to see what failed.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
     internal_master_key_type: 'Internal error: master-key operation received a value
@@ -4651,6 +4751,9 @@ errors:
       command's arguments or run `aeat --help`.
     refused_config_reset_unconfirmed: The configuration reset was not confirmed. Re-run
       the command confirming the operation.
+    refused_corpus_search_dependency: This corpus-search operation needs the optional
+      semantic-search components; install them and retry.
+    refused_corpus_search_input: The corpus search request could not be satisfied.
     refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
       violated; check that exactly one of next_action or dead_end is set for fail/warn
       rows, and neither is set for ok rows.
@@ -4726,6 +4829,13 @@ errors:
     refused_llm_validation: A language-model object failed validation.
     refused_modelo_100_borrador_binding: The Modelo 100 borrador values cannot be
       consumed for the calculation.
+    refused_modelo_amendment_complementaria_liability_decrease: A complementaria cannot
+      lawfully decrease the taxpayer's declared liability before the autoliquidación
+      rectificativa unification. Use the solicitud de rectificación procedure for
+      a liability-decreasing correction instead.
+    refused_modelo_amendment_kind_not_permitted: The requested amendment kind is not
+      legally available for the resolved filing period. The accepted kind set is listed
+      in the error context.
     refused_modelo_amendment_override_casilla: An amendment override targets a casilla
       the registry does not declare for that modelo, year and period.
     refused_modelo_amendment_verification: The corrected casilla map of the amendment
@@ -4951,6 +5061,15 @@ mcp:
     advisory: 'FAITHFULNESS ADVISORY: the call''s arguments cite amount(s) [{values}]
       that no tool result in this session produced. Verify the figure against a calculate/revision
       read before relying on it.'
+  harness:
+    off_host_consent: 'Privacy notice — read before continuing. This console is operated
+      by an AI assistant running on your chosen LLM provider. Your words, and the
+      figures the assistant works with (amounts, casilla values, obligations), are
+      sent to that provider to operate the console. Your SOURCE DOCUMENTS — invoices,
+      bank statements, and any evidence bytes — NEVER leave your machine: they stay
+      in encrypted local storage and are never transmitted. If you are acting for
+      a third party (a gestor or professional), confirm this is acceptable before
+      you proceed.'
   persona:
     handoff_denied: '''{command}'' is the irreversible filing-handoff boundary, owned
       by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied
@@ -5013,6 +5132,7 @@ sheets:
     headers:
       acquisition_date: Acquisition date
       amount: Amount
+      amount_donated: Amount donated
       asset_class_code: Asset class code
       asset_identifier: Asset identifier
       base_imponible: Tax base
@@ -5022,7 +5142,11 @@ sheets:
       counterparty_tax_id: Counterparty tax id
       country_code: Country code
       currency_code: Currency code
+      deduction_percentage: Deduction percentage
+      donor_legal_name: Donor legal name
+      donor_tax_id: Donor tax id
       ingreso_a_cuenta: In-kind tax credit
+      is_recurrent: Recurrent donation
       member_legal_name: Member legal name
       member_state_code: Member state
       member_tax_id: Member tax id

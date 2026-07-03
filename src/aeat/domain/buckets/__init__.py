@@ -23,28 +23,29 @@ Public surface:
 * :class:`BucketEventObjectType` — closed catalogue of affected object kinds.
 * :class:`BucketEventHistoryCatalogue` — frozen mapping of every
   event in storage, with bucket / object / type queries.
-* :class:`BucketEventHistoryRepository` — encrypted SQL repository
-  over
-  :class:`adapters.persistence.storage.SecureObjectRepository`,
-  storing a ``FINANCIAL``
-  :class:`adapters.persistence.storage.Envelope` singleton.
+* :class:`BucketEventHistoryRepositoryProtocol` — narrow read/write
+  port over the catalogue; the concrete encrypted-SQL implementation
+  (:class:`adapters.persistence.profile.buckets.BucketEventHistoryRepository`)
+  lives in the persistence adapter and stores a ``FINANCIAL``
+  :class:`adapters.persistence.storage.Envelope` singleton through
+  :class:`adapters.persistence.storage.SecureObjectRepository`.
 * :func:`derive_bucket_event_id` — deterministic SHA-256 event id.
 * :func:`append_bucket_event` — pure helper to insert one event
   into a catalogue (idempotent on identical content).
 
-The repository also exposes
-:meth:`BucketEventHistoryRepository.to_secure_object_write` so sibling
-catalogue updates can co-emit the same encrypted event-history write. Ordinary
-operators consume this history through profile and application services such as
-:mod:`application.bucket_maintenance`; this domain facade does not create
+The adapter repository also exposes a ``to_secure_object_write`` method so
+sibling catalogue updates can co-emit the same encrypted event-history write.
+Ordinary operators consume this history through profile and application services
+such as :mod:`application.bucket_maintenance`; this domain facade does not create
 an operator-facing bucket command root.
 
 See Also:
     :class:`BucketEvent`
         Append-only event record emitted by workflow, modelo, ledger, profile,
         and bucket-maintenance transitions.
-    :class:`BucketEventHistoryRepository`
-        Encrypted per-bucket repository for the append-only history.
+    :class:`BucketEventHistoryRepositoryProtocol`
+        Narrow read/write port for the append-only history; its concrete
+        encrypted per-bucket implementation lives in the persistence adapter.
     :class:`BucketEventHistoryPersistenceError`
         Storage-boundary error raised when the encrypted catalogue cannot be
         loaded or persisted safely.
@@ -87,7 +88,6 @@ from ._event import (
 )
 from ._event_repository import (
     BucketEventHistoryPersistenceError,
-    BucketEventHistoryRepository,
     append_bucket_event,
 )
 from ._protocols import BucketEventHistoryRepositoryProtocol
@@ -98,7 +98,6 @@ __all__ = [
     "BucketEvent",
     "BucketEventHistoryCatalogue",
     "BucketEventHistoryPersistenceError",
-    "BucketEventHistoryRepository",
     "BucketEventHistoryRepositoryProtocol",
     "BucketEventObjectType",
     "BucketEventType",

@@ -29,6 +29,7 @@ from pydantic_settings import SettingsConfigDict
 
 from . import _config_live_tests as _live_test_config
 from ._config_runtime_fields import AeatRuntimeSettings
+from ._config_state_root import default_storage_root
 from ._config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
 from ._config_support import (
     AuthProviderKindSetting,
@@ -294,11 +295,17 @@ class Settings(AeatRuntimeSettings):
         ),
     )
     aeat_local_storage_root: Path = Field(
-        default=PROJECT_ROOT / "var" / "storage",
+        default_factory=default_storage_root,
         description=(
             "Root directory for the LocalFileSystemProvider backend. Each namespace "
             "becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` file "
-            "paired with a `.meta.json` sidecar."
+            "paired with a `.meta.json` sidecar. The default is installed-run aware: a "
+            "source checkout resolves to `PROJECT_ROOT/var/storage`, while an installed "
+            "distribution roots at the platform user-data directory "
+            "(`%LOCALAPPDATA%/aeat/storage`, `$XDG_DATA_HOME/aeat/storage` or "
+            "`~/Library/Application Support/aeat/storage`) so the encrypted store never "
+            "lands inside a virtualenv or uv cache. An explicit `AEAT_LOCAL_STORAGE_ROOT` "
+            "override wins over the derived default."
         ),
     )
     aeat_google_drive_root_folder_id: str | None = Field(
@@ -670,6 +677,10 @@ class Settings(AeatRuntimeSettings):
     aeat_llm_usage_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "llm-usage",
         description="Directory for append-only LLM usage JSONL logs",
+    )
+    aeat_llm_run_telemetry_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "llm-run-telemetry",
+        description="Directory for append-only local LLM run-timing telemetry logs",
     )
     aeat_llm_default_timeout_s: int = Field(
         default=60,
@@ -1099,6 +1110,7 @@ class Settings(AeatRuntimeSettings):
         "aeat_certificate_path",
         "aeat_llm_cache_dir",
         "aeat_llm_usage_dir",
+        "aeat_llm_run_telemetry_dir",
         "aeat_submissions_dir",
         "aeat_submission_browser_trace_dir",
         "aeat_inbox_dir",

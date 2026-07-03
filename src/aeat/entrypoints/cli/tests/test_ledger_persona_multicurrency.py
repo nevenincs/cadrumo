@@ -249,7 +249,7 @@ def test_import_computes_eur_equivalent_for_foreign_rows() -> None:
     inspecting the domain field directly.
     """
     _import_revolut()
-    from ....domain.transactions import TransactionCatalogueRepository
+    from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 
     repo = TransactionCatalogueRepository(bucket_id="default")
     catalogue = repo.load()

@@ -148,7 +148,7 @@ def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | Non
 
 
 def _load_transactions(settings: Settings, *, bucket_id: str) -> TransactionCatalogue | None:
-    from ...domain.transactions import TransactionCatalogueRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 
     del settings
     repository = TransactionCatalogueRepository(bucket_id=bucket_id)
@@ -221,7 +221,7 @@ def invoices_pending(
 
 
 def _load_invoices(settings: Settings, *, bucket_id: str) -> InvoiceCatalogue | None:
-    from ...domain.invoices import InvoiceCatalogueRepository
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 
     del settings
     repository = InvoiceCatalogueRepository(bucket_id=bucket_id)

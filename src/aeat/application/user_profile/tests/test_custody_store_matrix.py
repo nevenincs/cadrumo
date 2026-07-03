@@ -22,9 +22,9 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core.hashing import sha256_hex
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
@@ -233,14 +233,8 @@ def _verify_usage_ratios(bucket_id: str) -> None:
 
 
 def _seed_invoice_catalogue(bucket_id: str) -> None:
-    from ....domain.invoices import (
-        Invoice,
-        InvoiceCatalogue,
-        InvoiceCatalogueRepository,
-        InvoiceLine,
-        IvaRate,
-        PaymentStatus,
-    )
+    from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
     from ....domain.iva import InvoiceKind
 
     line = InvoiceLine(
@@ -269,20 +263,21 @@ def _seed_invoice_catalogue(bucket_id: str) -> None:
 
 
 def _verify_invoice_catalogue(bucket_id: str) -> None:
-    from ....domain.invoices import InvoiceCatalogueRepository
+    from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 
     assert InvoiceCatalogueRepository().load().invoices, "invoice catalogue lost"
 
 
 def _seed_verification_reports(bucket_id: str) -> None:
-    from ....domain.modelos import VerificationReportCatalogue, VerificationReportCatalogueRepository
+    from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+    from ....domain.modelos import VerificationReportCatalogue
 
     # An empty catalogue still persists one secure-object row to carry.
     VerificationReportCatalogueRepository().save(VerificationReportCatalogue())
 
 
 def _verify_verification_reports(bucket_id: str) -> None:
-    from ....domain.modelos import VerificationReportCatalogueRepository
+    from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 
     assert VerificationReportCatalogueRepository().load() is not None, "verification reports lost"
 

@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 EXPECTED_OVERVIEW_VERBS: frozenset[str] = frozenset(
-    {"status", "calendar", "agenda", "backlog", "explain"},
+    {"status", "calendar", "agenda", "backlog", "explain", "prepare", "pipeline"},
 )
 
 
@@ -35,9 +35,9 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 def test_overview_verb_roster_locks_five_verb_tree() -> None:
     """Boundary regression: the overview noun-group must expose exactly
-    the five canonical verbs: status / calendar / agenda / backlog /
-    explain. Adding or removing one without updating the reviewed
-    surface contract is drift."""
+    the canonical verb set: status / calendar / agenda / backlog /
+    explain / prepare / pipeline. Adding or removing one without
+    updating the reviewed surface contract is drift."""
 
     registered = frozenset(cmd.name for cmd in overview_app.registered_commands if cmd.name is not None)
     missing = EXPECTED_OVERVIEW_VERBS - registered

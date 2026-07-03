@@ -663,9 +663,9 @@ def _finalise_reconciliation(
     on the same verdict derivation, report assembly, and append-only
     bucket-event persistence.
     """
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...domain.buckets import (
         BucketEvent,
-        BucketEventHistoryRepository,
         BucketEventObjectType,
         BucketEventType,
         append_bucket_event,
@@ -1030,7 +1030,7 @@ def _filed_revision_for_work_unit(work_unit: WorkUnit) -> CalculationRevision | 
     persisted revision so a total reconcile and a casilla reconcile can never
     silently disagree about which revision represents "what was filed."
     """
-    from ...domain.modelos import CalculationRevisionCatalogueRepository
+    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 
     catalogue = CalculationRevisionCatalogueRepository().load()
     return _select_filed_revision(catalogue.for_work_unit(str(work_unit.work_unit_id)))
@@ -1144,7 +1144,8 @@ def list_modelo_reconciliations(
     none for the requested work unit) returns an empty tuple — the clean "no
     reconciliations recorded yet" signal, not an error.
     """
-    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...domain.buckets import BucketEventType
 
     catalogue = BucketEventHistoryRepository().load()
     events = catalogue.for_bucket(bucket_id, event_types=(BucketEventType.MODELO_RECONCILED,))

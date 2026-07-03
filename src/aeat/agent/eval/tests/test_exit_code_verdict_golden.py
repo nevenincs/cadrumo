@@ -28,6 +28,7 @@ from typing import Any
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile import profile_storage_session
 from ....core import resolve_active_bucket_id
@@ -40,7 +41,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....entrypoints.cli import command_schema_refs

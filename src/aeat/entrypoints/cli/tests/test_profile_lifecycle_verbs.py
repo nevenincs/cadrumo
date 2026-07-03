@@ -374,9 +374,10 @@ def test_config_switch_emits_profile_activated_event() -> None:
     captures workflow-state-level selection).
     """
 
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ....application.user_profile import profile_storage_session
     from ....application.workflow import read_profile_bucket
-    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....domain.buckets import BucketEventType
 
     seed("operator")
     pointer = read_profile_bucket("operator")

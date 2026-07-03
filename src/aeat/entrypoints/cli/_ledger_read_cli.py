@@ -20,6 +20,8 @@ from typing import Any
 
 import typer
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
     LedgerExportCommand,
@@ -38,18 +40,13 @@ from ...core.decimal import coerce_decimal_strict
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.parsing import parse_iso8601_date
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepository,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.categories import (
     CATEGORY_FAMILY_MEMBERS,
     SpendingCategory,
     SpendingCategoryFamily,
 )
-from ...domain.transactions import Transaction, TransactionCatalogueRepository, ledger_irpf_category_catalogue
+from ...domain.transactions import Transaction, ledger_irpf_category_catalogue
 from ._common import _bad, _canonical_period, _emit_envelope, _optional_canonical_period, _state, _tx_repo
 from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,
@@ -852,6 +849,11 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
             f"\t{_field(transaction_payload.purchase_invoice_evidence_id)}",
             f"{tr('cli.ledger.labels.attachment_ids')}\t{_field(', '.join(transaction_payload.attachment_ids))}",
             f"{tr('cli.ledger.labels.lifecycle_state')}\t{_field(transaction_payload.lifecycle_state)}",
+            f"{tr('cli.ledger.labels.classified_by')}\t{_field(transaction_payload.classified_by)}",
+            f"{tr('cli.ledger.labels.classified_at')}\t{_field(transaction_payload.classified_at)}",
+            f"{tr('cli.ledger.labels.classification_confidence')}"
+            f"\t{_field(transaction_payload.classification_confidence)}",
+            f"{tr('cli.ledger.labels.classification_reason')}\t{_field(transaction_payload.classification_reason)}",
             f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
         ]
         from ._ledger_payloads import LedgerViewResult
@@ -928,9 +930,9 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
                 lines.append(
                     _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail),
                 )
+        from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
         from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
         from ...application.aggregation import stale_filed_revisions
-        from ...domain.modelos import CalculationRevisionCatalogueRepository
 
         revisions = CalculationRevisionCatalogueRepository().load().revisions
         work_units = WorkUnitCatalogueRepository().load()

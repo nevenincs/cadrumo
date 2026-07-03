@@ -18,16 +18,12 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_bucket,
 )
 from ....application.workflow import read_profile_bucket
-from ....domain.buckets import (
-    BucketEventHistoryCatalogue,
-    BucketEventHistoryRepository,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ....domain.buckets import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ._profile_lifecycle_support import create_profile_via_cli

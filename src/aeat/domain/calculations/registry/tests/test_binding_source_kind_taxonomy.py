@@ -109,17 +109,6 @@ _DEFERRED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         # the provisional-carry store is wired; surfaces an advisory rather than
         # resolving silently to zero.
         BindingSourceKind.PRORRATA_REGULARIZACION,
-        # Modelo 182 (Ley 49/2002 art. 24, Orden EHA/3021/2007) per-donor
-        # detail-record source. The binding-source-kind taxonomy, the
-        # per-family selector/validator module, and the DEFERRED_SOURCE_KINDS
-        # mesh registration have landed (matching the M184/M232/M720/M360
-        # detail-record shape), but the modelo-182 registry TOML skeleton
-        # (manifest.toml / revision.toml) that would declare a
-        # ``donativo_donor`` binding is temporarily absent from the working
-        # tree pending an unrelated in-flight registry-restructure sweep.
-        # Move this member's declaration into the M182 revision bindings and
-        # remove the carve-out entry once that skeleton is restored.
-        BindingSourceKind.DONATIVO_DONOR,
     },
 )
 

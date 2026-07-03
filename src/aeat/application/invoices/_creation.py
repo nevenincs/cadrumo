@@ -26,11 +26,11 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import IntracomOperationType
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
-    InvoiceCatalogueRepository,
     InvoiceCatalogueRepositoryProtocol,
     InvoiceValidationError,
     IvaRate,

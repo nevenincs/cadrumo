@@ -28,6 +28,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios_with_censo_guard
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
@@ -39,7 +40,6 @@ from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
     TransactionValidationError,

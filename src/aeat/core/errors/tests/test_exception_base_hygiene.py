@@ -34,11 +34,6 @@ _ALLOWLIST = {
         "agent-harness live-eval scaffolding runtime error; intentionally a plain RuntimeError "
         "(a harness-boundary execution signal), not an operator-facing registry-bound filing error"
     ),
-    "aeat.application.corpus_search._errors.CorpusSearchError": (
-        "on-host corpus-search grounding-surface base error; the module docstring documents this "
-        "as an intentionally-plain Exception whose promotion to a registered AeatError (which needs "
-        "locale message_keys in all four catalogues) is deliberately deferred"
-    ),
 }
 
 

@@ -207,8 +207,10 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
             "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
-            # aggregate is zero (Option A engine).
+            # aggregate is zero (Option A engine) for both estatal and
+            # autonómico halves, regardless of the Madrid tax residence below.
             "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={relation.id: Decimal("0") for relation in revision.relations},

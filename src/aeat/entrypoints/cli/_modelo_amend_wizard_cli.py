@@ -39,7 +39,9 @@ from typing import TYPE_CHECKING, Annotated, Any
 import typer
 
 from ...application.modelo import (
+    AmendmentComplementariaLiabilityDecreaseError,
     AmendmentEvidenceMissingError,
+    AmendmentKindNotPermittedError,
     AmendmentOverrideCasillaError,
     AmendmentTargetStateError,
     AmendmentVerificationRefusedError,
@@ -51,6 +53,7 @@ from ...application.modelo import (
     get_filing_record,
     registry_casillas_for_registry_scope,
 )
+from ...core import Period, permitted_amendment_kind_values
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import output_language, tr
 from ...domain.calculations.registry import RegistrySnapshotError, validated_casilla_id
@@ -236,7 +239,7 @@ def run_modelo_work_amend_wizard(
             ),
         )
 
-    amendment_kind = _prompt_amendment_kind(active_prompter)
+    amendment_kind = _prompt_amendment_kind(active_prompter, modelo=str(baseline.modelo), period=baseline.period)
     reason = _prompt_reason(active_prompter)
 
     overrides = {row.casilla_id: value for row, _previous, value in corrections}
@@ -254,6 +257,8 @@ def run_modelo_work_amend_wizard(
         AmendmentTargetStateError,
         AmendmentOverrideCasillaError,
         AmendmentVerificationRefusedError,
+        AmendmentKindNotPermittedError,
+        AmendmentComplementariaLiabilityDecreaseError,
         CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
         WorkUnitNotFoundError,
@@ -382,8 +387,24 @@ def _prompt_corrections(
     return tuple(corrections)
 
 
-def _prompt_amendment_kind(prompter: _TextAnswerPrompter) -> CalculationRevisionAmendmentKind:
-    choices = ", ".join(repr(kind.value) for kind in CalculationRevisionAmendmentKind)
+def _prompt_amendment_kind(
+    prompter: _TextAnswerPrompter,
+    *,
+    modelo: str,
+    period: Period,
+) -> CalculationRevisionAmendmentKind:
+    """Prompt for the amendment kind, restricted to what the period legally permits.
+
+    Reads the codified :func:`~aeat.core.resolve_amendment_kind_regime` for
+    ``modelo`` and ``period`` so the wizard only offers (and only accepts) the
+    kinds legally available for this filing — e.g. it never offers
+    ``rectificativa`` for a pre-adoption period. ``amend_modelo_revision``
+    re-asserts the same guard downstream, so an answer outside the permitted
+    set is refused there too if this prompt is ever bypassed (a scripted
+    answer in tests).
+    """
+    permitted = permitted_amendment_kind_values(modelo, period)
+    choices = ", ".join(repr(kind.value) for kind in CalculationRevisionAmendmentKind if kind.value in permitted)
     prompt = tr(
         "cli.app.modelo.work.amend_wizard_kind_prompt",
         choices=choices,
@@ -394,12 +415,13 @@ def _prompt_amendment_kind(prompter: _TextAnswerPrompter) -> CalculationRevision
         default=(
             "complementaria adds to the prior tax due; sustitutiva fully replaces the prior "
             "filing; rectificativa is the unified correction mechanism for modelos whose "
-            "orden implements it (e.g. Modelo 303 from 2023-y-siguientes)."
+            "orden implements it (e.g. Modelo 303 from 2023-y-siguientes). Only the kinds "
+            "legally available for this filing's period are accepted."
         ),
     )
     raw = prompter.ask_text(prompt, help_text=help_text).strip()
     try:
-        return CalculationRevisionAmendmentKind(raw)
+        kind = CalculationRevisionAmendmentKind(raw)
     except ValueError as exc:
         raise typer.BadParameter(
             tr(
@@ -408,6 +430,15 @@ def _prompt_amendment_kind(prompter: _TextAnswerPrompter) -> CalculationRevision
                 kind=raw,
             ),
         ) from exc
+    if kind.value not in permitted:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.invalid_amendment_kind",
+                choices=choices,
+                kind=raw,
+            ),
+        )
+    return kind
 
 
 def _prompt_reason(prompter: _TextAnswerPrompter) -> str:

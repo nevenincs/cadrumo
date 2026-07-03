@@ -91,12 +91,25 @@ from ._coverage import (
     ObligationCoverageReport,
     build_obligation_coverage,
 )
+from ._data_prep import (
+    DataPrepStep,
+    DataPrepStepId,
+    DataPrepStepState,
+    DataPrepWalkthrough,
+    build_data_prep_walkthrough,
+)
 from ._errors import (
     OverviewAgendaError,
     OverviewBacklogError,
     OverviewCalendarError,
     OverviewError,
     OverviewExplainError,
+)
+from ._pipeline_health import (
+    ModeloHealthRow,
+    ModeloReadinessState,
+    PipelineHealthReport,
+    build_pipeline_health_report,
 )
 
 if TYPE_CHECKING:
@@ -275,6 +288,12 @@ __all__ = [
     "CalendarCompleteness",
     "CalendarWarning",
     "CoverageAdviceReason",
+    "DataPrepStep",
+    "DataPrepStepId",
+    "DataPrepStepState",
+    "DataPrepWalkthrough",
+    "ModeloHealthRow",
+    "ModeloReadinessState",
     "ObligationCoverageReport",
     "OverviewAeatSubmissionState",
     "OverviewAgendaError",
@@ -292,8 +311,10 @@ __all__ = [
     "OverviewLocalFilingState",
     "OverviewPeriodState",
     "OverviewStatusReport",
+    "PipelineHealthReport",
     "SuppressedCalendarEntry",
     "actionable_post_filing_events",
+    "build_data_prep_walkthrough",
     "build_filing_obligation_advisories",
     "build_obligation_coverage",
     "build_overview_agenda",
@@ -302,6 +323,7 @@ __all__ = [
     "build_overview_calendar_events",
     "build_overview_explain",
     "build_overview_status_report",
+    "build_pipeline_health_report",
     "build_unsupported_work_create_modelos",
     "calendar_applicability_profile_keys_for_modelo",
     "calendar_censo_enrolment_profile_keys",

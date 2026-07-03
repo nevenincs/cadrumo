@@ -7,6 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
@@ -16,12 +19,7 @@ from ....adapters.persistence.storage import (
 )
 from ....core import Period
 from ....core.config import Settings
-from ....domain.modelos import (
-    CalculationRevisionCatalogueRepository,
-    CalculationRevisionState,
-    ModeloRecordCatalogueRepository,
-    VerificationReportCatalogueRepository,
-)
+from ....domain.modelos import CalculationRevisionState
 from ...calculations import IvaWalletDecisionRepository
 from .. import (
     ModeloIvaWalletReconciliationBlocked,

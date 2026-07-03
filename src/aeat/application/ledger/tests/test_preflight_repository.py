@@ -6,12 +6,9 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.transactions import (
-    TransactionCatalogue,
-    TransactionCatalogueRepository,
-    TransactionValidationError,
-)
+from ....domain.transactions import TransactionCatalogue, TransactionValidationError
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import preflight_ledger_tax_readiness
 from ._preflight_test_support import (

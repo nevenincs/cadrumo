@@ -30,6 +30,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ...adapters.persistence.storage import (
     ClassificationError,
@@ -58,7 +59,6 @@ from ...domain.calculations.registry import (
 )
 from ...domain.invoices import (
     Invoice,
-    InvoiceCatalogueRepository,
     InvoiceCatalogueRepositoryProtocol,
     InvoicePersistenceError,
     invoice_line_to_iva_observation,

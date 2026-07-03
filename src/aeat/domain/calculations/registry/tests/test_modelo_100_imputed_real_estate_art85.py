@@ -42,6 +42,7 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         f"renta-{year}-profile-marriage-month-end": Decimal("0"),
         f"renta-{year}-base-liquidable-negativa-general-anterior": Decimal("0"),
         f"renta-{year}-profile-minimo-descendientes-estatal": Decimal("0"),
+        f"renta-{year}-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     if year == 2025:
         values["renta-2025-modelo-184-atribucion-actividades-economicas"] = Decimal("0")

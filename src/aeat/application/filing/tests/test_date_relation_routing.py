@@ -170,6 +170,8 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes aggregate
             # is zero (modelo-100-minimo-descendientes-engine decision record, Option A).
             "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
+            # Parte autonómica (#593): non-Madrid profile mirrors the estatal zero.
+            "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
             "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
             "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
             "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),

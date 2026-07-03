@@ -20,14 +20,14 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.modelos import (
     ModeloCode,
     ModeloRecord,
     ModeloRecordCatalogue,
-    ModeloRecordCatalogueRepository,
     derive_filing_record_id,
 )
 from ....domain.retention import RetentionBlockingRecord, RetentionFloorAssessment, RetentionFloorError

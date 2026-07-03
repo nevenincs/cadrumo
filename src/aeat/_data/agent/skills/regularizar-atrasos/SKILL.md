@@ -40,11 +40,17 @@ outside this itinerary's scope, and saying so plainly is the honest answer.
 
 ## Procedure
 
-1. Surface the backlog: `aeat app overview backlog`. Read `late_count` and
+1. Surface the backlog: `aeat app overview backlog`. This is answerable for a
+   behind-but-fresh taxpayer who has never filed and has no work units yet — the
+   backlog is derived from the profile's obligation applicability and the
+   deadline schedule, not from any persisted work state. Read `late_count` and
    the items, which arrive oldest-first. Bound the range with `--from` and
    `--to` only when the taxpayer asks about a specific stretch. Relay any
    warning or `coverage_advised` line as an open question to the taxpayer —
-   an advised obligation is unresolved, not inapplicable.
+   an advised obligation is unresolved, not inapplicable. If a
+   `work_units_degraded` notice appears, the local Modelo work-unit state could
+   not be loaded; the backlog is still valid (schedule-derived) but may
+   over-report an in-progress draft as still due — note it and continue.
 2. When applicability of any surfaced modelo is in doubt, confirm it
    explicitly: `aeat app overview explain <MODELO> --year <YEAR>`. Read
    `verdict` and `rationale`; never assume from memory whether an

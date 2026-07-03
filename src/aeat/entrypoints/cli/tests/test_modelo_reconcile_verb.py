@@ -130,7 +130,8 @@ def test_reconcile_file_refuses_unknown_work_unit() -> None:
 
 def test_reconcile_file_by_flag_lands_in_modelo_reconciled_event() -> None:
     """The --by override attaches to the MODELO_RECONCILED event's actor field."""
-    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ....domain.buckets import BucketEventType
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     result = invoke_cached_cli(

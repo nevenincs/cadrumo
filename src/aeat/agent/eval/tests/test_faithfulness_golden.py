@@ -36,6 +36,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.user_profile import UserProfileLifecycleRepository, profile_storage_session
 from ....core import resolve_active_bucket_id
 from ....domain.transactions import (
@@ -45,7 +46,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus

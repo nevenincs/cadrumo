@@ -31,6 +31,7 @@ from typing import override
 
 from pydantic import BaseModel, Field, field_serializer
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import (
     LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
     AttachmentStore,
@@ -48,7 +49,6 @@ from ...domain import canonical_decimal_string
 from ...domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ...domain.buckets import (
     BucketEvent,
-    BucketEventHistoryRepository,
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,

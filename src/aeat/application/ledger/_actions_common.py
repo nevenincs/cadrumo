@@ -21,24 +21,26 @@ from ...core.time import now
 if TYPE_CHECKING:
     pass
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ...core.time import coerce_utc_aware
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
     BucketEvent,
-    BucketEventHistoryRepository,
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceCatalogueRepositoryProtocol
+from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
 from ...domain.modelos import (
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     WorkUnitCatalogueRepositoryProtocol,
@@ -48,7 +50,6 @@ from ...domain.transactions import (
     BucketTransactionRef,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionCatalogueRepositoryProtocol,
     TransactionNotFoundError,
     TransactionValidationError,

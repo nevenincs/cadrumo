@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.buckets import BucketEventType
 from .._business_operation_invoice import BusinessOperationInvoicePatch, PayableInvoiceService
 from ._business_operation_invoice_support import (
     _BUCKET_ID,

@@ -18,10 +18,10 @@ from typing import TYPE_CHECKING
 import typer
 from typer.core import TyperGroup
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import get_transaction_participation
 from ...application.modelo import rebuild_participation_index
 from ...core.i18n import tr
-from ...domain.transactions import TransactionCatalogueRepository
 from ._common import _active_bucket_id_or_bad, _emit_envelope, _state, _tx_repo, emit_help_text
 
 if TYPE_CHECKING:

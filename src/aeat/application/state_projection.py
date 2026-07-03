@@ -77,7 +77,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core import BindingSourceKind, Period, resolve_active_bucket_id
@@ -93,9 +96,7 @@ from ..domain.deadlines import (
     compute_obligation_schedule,
 )
 from ..domain.filing import ModeloDraftRepository
-from ..domain.invoices import InvoiceCatalogueRepository
-from ..domain.modelos import CalculationRevisionCatalogueRepository, WorkUnitState
-from ..domain.transactions import TransactionCatalogueRepository
+from ..domain.modelos import WorkUnitState
 from .auth import AuthProviderKind, select_provider
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
 from .user_profile import ProfilePreflightRequirement

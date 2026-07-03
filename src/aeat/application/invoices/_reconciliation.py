@@ -12,9 +12,10 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...domain.invoices import (
     InvoiceCatalogue,
-    InvoiceCatalogueRepository,
     InvoiceCatalogueRepositoryProtocol,
     InvoiceError,
     ReconciliationSuggestion,
@@ -23,7 +24,6 @@ from ...domain.invoices import (
 )
 from ...domain.transactions import (
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionCatalogueRepositoryProtocol,
     TransactionError,
     link_invoice,

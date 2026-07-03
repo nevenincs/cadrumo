@@ -42,27 +42,23 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.justificante import JustificanteRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import Period
 from ...core.time import now as _utc_now
-from ...domain.buckets import (
-    BucketEventHistoryRepository,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import BindingId, CasillaId, RelationId
 from ...domain.justificante import Justificante
 from ...domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
-    ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloRecordStatus,
     WorkUnit,

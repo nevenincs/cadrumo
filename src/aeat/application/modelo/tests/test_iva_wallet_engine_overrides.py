@@ -8,12 +8,12 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....domain.calculations.registry import CasillaId
 from ....domain.iva_compensation import IvaCompensationOverride
 from ....domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     derive_calculation_revision_id,
     upsert_calculation_revision,

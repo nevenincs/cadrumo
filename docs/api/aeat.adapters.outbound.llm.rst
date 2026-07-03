@@ -26,4 +26,5 @@ Submodules
    aeat.adapters.outbound.llm._errors
    aeat.adapters.outbound.llm._models
    aeat.adapters.outbound.llm._pricing
+   aeat.adapters.outbound.llm._run_telemetry
    aeat.adapters.outbound.llm._usage

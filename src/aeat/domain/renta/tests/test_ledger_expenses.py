@@ -316,7 +316,17 @@ def test_exclusive_use_profiles_require_confirmation() -> None:
     assert confirmed.deductible_amount == Decimal("200.00")
 
 
-def test_first_slice_rejects_eligible_amortizable_category_without_contract_mapping() -> None:
+def test_first_slice_routes_every_eligible_category_to_a_real_casilla() -> None:
+    """Every :class:`SpendingCategory` builds a real observation (issue #589).
+
+    ``FIRST_SLICE_EXPENSE_CASILLAS`` is a total mapping: no eligible
+    deductibility result is rejected for lacking a first-slice
+    casilla. This is the closed-gap counterpart of the routing table's
+    own ``test_every_spending_category_routes_to_a_first_slice_casilla``:
+    it proves the observation-construction boundary (not just the
+    routing table) reflects the closed set for a representative
+    previously-unrouted amortizable category.
+    """
     fact = _fact(category=SpendingCategory.HARDWARE_AMORTIZABLE, amount=Decimal("55.00"))
     result = evaluate_renta_deductibility(
         fact,
@@ -324,8 +334,9 @@ def test_first_slice_rejects_eligible_amortizable_category_without_contract_mapp
         _context(),
     )
 
-    with pytest.raises(ValueError, match="outside the first Renta expense slice"):
-        build_renta_deductible_expense_observation(fact, result, tax_year=2025)
+    observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
+
+    assert observation.target_casilla_id == "0208"
 
 
 def test_tax_year_mismatch_is_rejected_before_observation_creation() -> None:

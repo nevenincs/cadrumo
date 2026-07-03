@@ -82,6 +82,7 @@ def _binding_values_2024() -> dict[BindingId, Decimal]:
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-menores-3": Decimal("0"),
         "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
         # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
         "renta-2024-profile-marriage-full-year": Decimal("0"),
         "renta-2024-profile-marriage-month-start": Decimal("0"),
@@ -216,6 +217,7 @@ def _binding_values_2025() -> dict[BindingId, Decimal]:
         "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
         "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
         "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
 
 

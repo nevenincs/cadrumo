@@ -23,6 +23,7 @@ from dataclasses import replace as _dataclass_replace
 from datetime import date
 from decimal import Decimal
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import Modelo
 from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision, RelationId
 from ...domain.deadlines import IVARegime
@@ -32,12 +33,7 @@ from ...domain.modelos import (
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ...domain.period import period_end_date, period_start_date
-from ...domain.transactions import (
-    BusinessClassification,
-    TransactionCatalogueRepository,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ...domain.transactions import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..calculations import IvaWalletDecisionRepository
 from ..live import Borrador100SnapshotRepository
 from . import _iva_wallet_gate

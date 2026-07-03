@@ -23,11 +23,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _REPOSITORY_SOURCES: tuple[tuple[str, Path], ...] = (
     (
         "CalculationRevisionCatalogueRepository",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "modelos" / "_calculation_repository.py",
+        PROJECT_ROOT / "src" / "aeat" / "adapters" / "persistence" / "profile" / "modelos_calculation.py",
     ),
     (
         "ModeloRecordCatalogueRepository",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "modelos" / "_filing_repository.py",
+        PROJECT_ROOT / "src" / "aeat" / "adapters" / "persistence" / "profile" / "modelos_filing.py",
     ),
     (
         "WorkUnitCatalogueRepository",
@@ -35,11 +35,11 @@ _REPOSITORY_SOURCES: tuple[tuple[str, Path], ...] = (
     ),
     (
         "VerificationReportCatalogueRepository",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "modelos" / "_verification_repository.py",
+        PROJECT_ROOT / "src" / "aeat" / "adapters" / "persistence" / "profile" / "modelos_verification_reports.py",
     ),
     (
         "BucketEventHistoryRepository",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "buckets" / "_event_repository.py",
+        PROJECT_ROOT / "src" / "aeat" / "adapters" / "persistence" / "profile" / "buckets.py",
     ),
 )
 

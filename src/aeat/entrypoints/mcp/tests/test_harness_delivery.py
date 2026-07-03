@@ -89,6 +89,32 @@ def test_floor_text_embeds_both_the_rules_and_the_active_persona() -> None:
     assert _shipped_persona_text("reconciler") in text
 
 
+def test_floor_payload_carries_the_off_host_consent_disclosure() -> None:
+    # ADR R9: the off-host privacy disclosure rides on every floor load, for
+    # every persona (and the un-personified session), so it can never be skipped.
+    from .._harness_tools import off_host_consent_text
+
+    for persona in (None, AgentPersona.VERIFIER, AgentPersona.MODELO_PREPARER):
+        payload = build_harness_floor_payload(persona=persona)
+        assert payload.off_host_consent == off_host_consent_text()
+        assert payload.off_host_consent.strip()
+        # The disclosure names the off-host provider (localized, so assert the
+        # brand token present across every locale rather than English prose).
+        assert "LLM" in payload.off_host_consent
+
+
+def test_floor_text_surfaces_the_consent_before_the_operating_rules() -> None:
+    # The disclosure must be read FIRST — before any off-host-visible interaction —
+    # so it precedes the operating-rules heading in the rendered floor text.
+    payload = build_harness_floor_payload(persona=None)
+    text = render_harness_floor_text(payload)
+    consent_at = text.find(payload.off_host_consent)
+    rules_at = text.find("# aeat operator operating rules")
+    assert consent_at != -1
+    assert rules_at != -1
+    assert consent_at < rules_at
+
+
 # --- resource enumeration + read (SDK-independent) ----------------------------
 
 

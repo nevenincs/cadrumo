@@ -14,15 +14,10 @@ from typing import Any, NotRequired, TypedDict, cast
 
 from pydantic import BaseModel, ConfigDict
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
 from ...core.logging import get_logger
-from ...domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceCatalogueRepositoryProtocol,
-    InvoiceValidationError,
-)
+from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol, InvoiceValidationError
 from ...domain.iva import InvoiceKind
 
 _log = get_logger(__name__)

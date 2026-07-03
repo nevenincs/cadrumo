@@ -16,6 +16,7 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore,
 )
 from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....application.calculations import CalculationObservationRepository
 from ....application.user_profile import (
     profile_create_storage_span,
@@ -25,7 +26,7 @@ from ....application.user_profile import (
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....domain.calculations.registry import RegistryModeloObservation
-from ....domain.modelos import ModeloRecordCatalogueRepository, upsert_filing_record
+from ....domain.modelos import upsert_filing_record
 from ....tests import FIXTURES_DIR
 from .._overview import _local_calendar_filing_evidence
 from ._overview_calendar_support import (

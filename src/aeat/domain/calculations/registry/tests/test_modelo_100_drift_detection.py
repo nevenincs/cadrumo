@@ -302,6 +302,41 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         "renta-2025-minimo-discapacidad-gastos-asistencia-2025",
         "renta-2025-minimo-discapacidad-grado-33-2025",
         "renta-2025-minimo-discapacidad-grado-65-2025",
+        # Comunidad de Madrid mínimo por descendientes autonómico (#593,
+        # Decreto Legislativo 1/2010 art. 2). Consumed by the SAME
+        # out-of-formula pattern as the estatal mínimo-por-descendientes
+        # parameters above: the application-layer injector
+        # ``_minimo_descendientes_parameter`` / ``_resolved_minimo_descendientes_
+        # tranches`` (``src/aeat/application/modelo/_profile_binding.py``) reads
+        # these by manually iterating ``snapshot.revision.parameters`` rather
+        # than calling ``read_parameter(...)``, and lives under
+        # ``src/aeat/application/`` rather than ``src/aeat/domain/`` — outside
+        # both branches this gate's AST scan can see. Verified consumed by
+        # ``test_minimo_descendientes_engine.py``'s Madrid-tranche tests.
+        "renta-2020-minimo-descendientes-madrid-tercer-hijo-2020",
+        "renta-2020-minimo-descendientes-madrid-cuarto-y-siguientes-2020",
+        "renta-2021-minimo-descendientes-madrid-tercer-hijo-2021",
+        "renta-2021-minimo-descendientes-madrid-cuarto-y-siguientes-2021",
+        "renta-2022-minimo-descendientes-madrid-primer-hijo-2022",
+        "renta-2022-minimo-descendientes-madrid-segundo-hijo-2022",
+        "renta-2022-minimo-descendientes-madrid-tercer-hijo-2022",
+        "renta-2022-minimo-descendientes-madrid-cuarto-y-siguientes-2022",
+        "renta-2022-minimo-descendientes-madrid-menor-tres-anos-2022",
+        "renta-2023-minimo-descendientes-madrid-primer-hijo-2023",
+        "renta-2023-minimo-descendientes-madrid-segundo-hijo-2023",
+        "renta-2023-minimo-descendientes-madrid-tercer-hijo-2023",
+        "renta-2023-minimo-descendientes-madrid-cuarto-y-siguientes-2023",
+        "renta-2023-minimo-descendientes-madrid-menor-tres-anos-2023",
+        "renta-2024-minimo-descendientes-madrid-primer-hijo-2024",
+        "renta-2024-minimo-descendientes-madrid-segundo-hijo-2024",
+        "renta-2024-minimo-descendientes-madrid-tercer-hijo-2024",
+        "renta-2024-minimo-descendientes-madrid-cuarto-y-siguientes-2024",
+        "renta-2024-minimo-descendientes-madrid-menor-tres-anos-2024",
+        "renta-2025-minimo-descendientes-madrid-primer-hijo-2025",
+        "renta-2025-minimo-descendientes-madrid-segundo-hijo-2025",
+        "renta-2025-minimo-descendientes-madrid-tercer-hijo-2025",
+        "renta-2025-minimo-descendientes-madrid-cuarto-y-siguientes-2025",
+        "renta-2025-minimo-descendientes-madrid-menor-tres-anos-2025",
     },
 )
 

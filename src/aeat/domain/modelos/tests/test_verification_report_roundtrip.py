@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.storage import SensitivityClass
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import CasillaId, validated_casilla_id
@@ -32,7 +33,6 @@ from .._verification_repository import (
     _VERIFICATION_CATALOGUE_VERSION,
     _VERIFICATION_NAMESPACE,
     _VERIFICATION_OBJECT_KEY,
-    VerificationReportCatalogueRepository,
     VerificationReportPersistenceError,
 )
 

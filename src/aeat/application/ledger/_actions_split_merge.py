@@ -21,12 +21,9 @@ from ...core.hashing import sha256_hex
 if TYPE_CHECKING:
     pass
 
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepository,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventType,
-)
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventType
 from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
@@ -40,7 +37,6 @@ from ...domain.transactions import (
     SplitRole,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionCatalogueRepositoryProtocol,
     TransactionLifecycleLineageEntry,
     TransactionLifecycleState,

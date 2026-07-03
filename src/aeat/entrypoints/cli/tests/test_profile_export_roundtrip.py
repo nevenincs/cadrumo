@@ -125,6 +125,8 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
     Returns the source ``bucket_id`` (== ``profile_id``) for D5 checks.
     """
 
+    from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ....adapters.persistence.storage.master_key import (
         activate_master_key_provider,
@@ -135,10 +137,8 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
     from ....core.config import override_settings
     from ....domain.modelos import (
         CalculationRevision,
-        CalculationRevisionCatalogueRepository,
         CalculationRevisionState,
         ModeloRecord,
-        ModeloRecordCatalogueRepository,
         ModeloRecordStatus,
         derive_calculation_revision_id,
         derive_filing_record_id,
@@ -273,18 +273,16 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
 def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     """All four financial-history categories survive export/import with strict equality."""
 
+    from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ....adapters.persistence.storage.master_key import (
         activate_master_key_provider,
         get_master_key_provider,
     )
     from ....core import resolve_active_bucket_id
     from ....core.config import override_settings
-    from ....domain.modelos import (
-        CalculationRevisionCatalogueRepository,
-        ModeloRecordCatalogueRepository,
-    )
-    from ....domain.transactions import TransactionCatalogueRepository
 
     bundle_path = tmp_path / "source-bundle.json"
     source_bucket_id = _seed_and_export(tmp_path, bundle_path)
@@ -390,12 +388,12 @@ def test_v3_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
     is not enforcing provenance preservation.
     """
 
+    from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ....adapters.persistence.storage.master_key import (
         activate_master_key_provider,
         get_master_key_provider,
     )
     from ....core.config import override_settings
-    from ....domain.modelos import CalculationRevisionCatalogueRepository
     from ....domain.user_profile import UserProfilePortableExport
 
     bundle_path = tmp_path / "tautology-bundle.json"

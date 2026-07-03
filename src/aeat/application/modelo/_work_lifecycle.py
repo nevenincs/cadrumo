@@ -29,15 +29,11 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import Period
 from ...core.time import now as _utc_now
-from ...domain.buckets import (
-    BucketEventHistoryRepository,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.contribuyente import CCAA
 from ...domain.modelos import (
     ModeloCode,

@@ -23,6 +23,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import (
     ClassificationError,
     DecryptionError,
@@ -39,7 +40,7 @@ from ...domain.calculations.registry import (
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
-from ...domain.invoices import Invoice, InvoiceCatalogueRepository, InvoiceCatalogueRepositoryProtocol
+from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind, IvaCategory
 from ...domain.modelos import Modelo349OperadorRow, validate_m349_country_prefix_context
 from ..aggregation import (

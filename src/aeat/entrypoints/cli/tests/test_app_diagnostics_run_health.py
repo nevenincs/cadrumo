@@ -1,0 +1,188 @@
+"""Real-behavior CLI tests for ``aeat app diagnostics run-health``.
+
+Exercises the diagnose verb end to end against the real CLI, the real
+:func:`~aeat.application.diagnostics_run_health.build_run_health_report`
+aggregator, real encrypted SQLite persistence in an isolated storage root, and
+the real :func:`~aeat.application.auth.test_operator_auth` session probe. No
+test doubles: LLM run telemetry is seeded through its production writer
+(:class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`) and the verb
+reports it back typed, alongside a real auth-session staleness verdict for a
+profile with no configured auth provider.
+"""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Iterator
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+import pytest
+from click.testing import Result
+
+from ....adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
+from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.workflow import workflow_state_repository
+from ....core.config import override_settings
+from ....tests.cli_runner import invoke_cached_cli
+from ....tests.secure_sql import isolated_profile_storage_root
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_BUCKET_ID = "11111111-2222-4333-8444-555555555555"
+
+
+def _invoke(args: list[str]) -> Result:
+    return invoke_cached_cli(args)
+
+
+def _json_result(result: Result) -> dict[str, Any]:
+    return json.loads(result.output)["result"]
+
+
+@pytest.fixture
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span(_BUCKET_ID),
+    ):
+        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
+        yield
+
+
+def _seed_runs() -> None:
+    """Write three real run-timing records: two claude (one failed), one codex."""
+    recorder = LLMRunTelemetryRecorder()
+    recorder.record(
+        LLMRunRecord(
+            run_id="run-1",
+            caller="aeat.application.ledger.llm_classification",
+            provider="llm:claude:test-model",
+            model="test-model",
+            duration_ms=1200,
+            succeeded=True,
+            started_at=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+        ),
+    )
+    recorder.record(
+        LLMRunRecord(
+            run_id="run-2",
+            caller="aeat.application.ledger.llm_classification",
+            provider="llm:claude:test-model",
+            model="test-model",
+            duration_ms=45000,
+            succeeded=False,
+            error_kind="LLMClassifierError",
+            started_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+        ),
+    )
+    recorder.record(
+        LLMRunRecord(
+            run_id="run-3",
+            caller="aeat.application.ledger.llm_classification",
+            provider="llm:codex:test-model",
+            model="test-model",
+            duration_ms=800,
+            succeeded=True,
+            started_at=datetime(2026, 4, 3, 9, 0, tzinfo=UTC),
+        ),
+    )
+
+
+def test_run_health_reports_seeded_llm_runs_and_no_session(_isolated_backend: None) -> None:
+    """The verb reports the seeded run telemetry typed and a no-session auth verdict."""
+    _seed_runs()
+
+    result = _invoke(["--format", "json", "app", "diagnostics", "run-health"])
+    assert result.exit_code == 0, result.output
+    payload = _json_result(result)
+
+    assert payload["has_run_data"] is True
+    providers = {row["provider"]: row for row in payload["llm_providers"]}
+    assert set(providers) == {"llm:claude:test-model", "llm:codex:test-model"}
+
+    claude = providers["llm:claude:test-model"]
+    assert claude["runs"] == 2
+    assert claude["succeeded"] == 1
+    assert claude["failed"] == 1
+    assert claude["min_duration_ms"] == 1200
+    assert claude["max_duration_ms"] == 45000
+
+    codex = providers["llm:codex:test-model"]
+    assert codex["runs"] == 1
+    assert codex["succeeded"] == 1
+    assert codex["failed"] == 0
+
+    assert payload["total_runs"] == 3
+    assert payload["total_succeeded"] == 2
+    assert payload["total_failed"] == 1
+
+    # No auth provider is configured for this fresh profile, so the probe
+    # reports no persisted session -- a real, non-mocked verdict.
+    assert payload["auth_configured"] is False
+    assert payload["persisted_session_present"] is False
+    assert payload["session_stale"] is False
+
+
+def test_run_health_empty_is_instructive(_isolated_backend: None) -> None:
+    """With no LLM run telemetry the verb reports empty and surfaces a guidance notice."""
+    result = _invoke(["--format", "json", "app", "diagnostics", "run-health"])
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.output)
+    payload = envelope["result"]
+
+    assert payload["has_run_data"] is False
+    assert payload["llm_providers"] == []
+    assert payload["total_runs"] == 0
+
+    codes = {notice["code"] for notice in envelope.get("notices", [])}
+    assert "diagnostics.run_health.no_session" in codes
+
+
+def test_run_health_provider_filter_scopes_the_report(_isolated_backend: None) -> None:
+    """``--provider`` restricts the LLM run-timing section to one provider label."""
+    _seed_runs()
+
+    result = _invoke(
+        ["--format", "json", "app", "diagnostics", "run-health", "--provider", "llm:codex:test-model"],
+    )
+    assert result.exit_code == 0, result.output
+    payload = _json_result(result)
+
+    assert len(payload["llm_providers"]) == 1
+    assert payload["llm_providers"][0]["provider"] == "llm:codex:test-model"
+    assert payload["total_runs"] == 1
+
+
+def test_run_health_since_until_scopes_by_date(_isolated_backend: None) -> None:
+    """``--since``/``--until`` narrow the LLM run-timing section by date."""
+    _seed_runs()
+
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "diagnostics",
+            "run-health",
+            "--since",
+            "2026-04-01",
+            "--until",
+            "2026-04-01",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = _json_result(result)
+
+    assert payload["total_runs"] == 1
+    assert payload["llm_providers"][0]["provider"] == "llm:claude:test-model"
+    assert payload["llm_providers"][0]["runs"] == 1
+
+
+def test_run_health_rejects_malformed_date(_isolated_backend: None) -> None:
+    """A malformed ``--since`` value is refused instructively with a non-zero exit."""
+    result = _invoke(["--format", "json", "app", "diagnostics", "run-health", "--since", "01/04/2026"])
+    assert result.exit_code != 0
+    assert "ISO date" in result.output

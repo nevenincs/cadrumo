@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId
 from ....domain.deadlines import (
@@ -35,7 +36,6 @@ from ....domain.deadlines import (
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ModeloValidationError,
     WorkUnit,

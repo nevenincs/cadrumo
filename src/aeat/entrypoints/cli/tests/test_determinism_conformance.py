@@ -34,6 +34,8 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.ledger import (
     ManualLedgerTransactionCommand,
     PurchaseInvoiceEvidenceService,
@@ -51,8 +53,7 @@ from ....core.observability import (
     mask_document,
 )
 from ....core.time import frozen_clock
-from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.transactions import TransactionCatalogueRepository, TransactionDirection
+from ....domain.transactions import TransactionDirection
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._ledger_payloads import EvidenceAddResult, LedgerAddResult
 

@@ -171,6 +171,15 @@ from ._corpus import (
     verify_registry_citations,
     verify_registry_manual,
 )
+from ._diff import (
+    BindingDiff,
+    CasillaDiff,
+    FormulaDiff,
+    ParameterDiff,
+    RegistryRevisionDiffReport,
+    RenumberedCasilla,
+    diff_registry_revisions,
+)
 from ._errors import RegistryApplicationError, RegistryApplicationInputError
 
 _ORACLE_ENVIRONMENT_VALUES: tuple[str, ...] = tuple(sorted(member.value for member in _OracleEnvironment))
@@ -657,7 +666,11 @@ def _load_filed_observation(path: Path):
 
 
 __all__ = [
+    "BindingDiff",
+    "CasillaDiff",
     "FiledStateVerificationReport",
+    "FormulaDiff",
+    "ParameterDiff",
     "RegistryApplicationError",
     "RegistryApplicationInputError",
     "RegistryCitationArticleProjection",
@@ -681,9 +694,12 @@ __all__ = [
     "RegistryManualsListCommand",
     "RegistryManualsListReport",
     "RegistryOracleAuditReport",
+    "RegistryRevisionDiffReport",
     "RegistryTopicProjection",
     "RegistryTreeReport",
+    "RenumberedCasilla",
     "audit_registry_oracles",
+    "diff_registry_revisions",
     "inspect_registry_tree",
     "list_registry_citations",
     "list_registry_manual_rules",

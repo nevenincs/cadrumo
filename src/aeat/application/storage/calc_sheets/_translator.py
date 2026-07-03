@@ -96,6 +96,28 @@ def translate_formula(
     return _translate(expression, layout=layout)
 
 
+def is_translatable(
+    expression: FormulaExpression,
+    *,
+    layout: SheetLayout,
+) -> bool:
+    """Return whether `expression` has a closed-form Sheets translation.
+
+    This is the honest ``translate_formula`` would-succeed probe: it
+    attempts the full closed-form compilation against the same layout and
+    reports failure iff a :class:`TranslationError` is raised (an
+    unsupported op such as the M303 régimen-simplificado
+    ``m303_resolve_modulos_iva_cuota_devengada`` custom runtime dispatch,
+    or a leaf the layout has not materialised). It never re-implements the
+    supported-op set, so it cannot drift from the real translator.
+    """
+    try:
+        _translate(expression, layout=layout)
+    except TranslationError:
+        return False
+    return True
+
+
 def _translate(expression: FormulaExpression, *, layout: SheetLayout) -> str:
     if expression.op is None:
         return _translate_leaf(expression, layout=layout)

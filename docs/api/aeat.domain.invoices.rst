@@ -18,6 +18,5 @@ Submodules
    aeat.domain.invoices._ids
    aeat.domain.invoices._models
    aeat.domain.invoices._protocols
-   aeat.domain.invoices._repository
    aeat.domain.invoices._service
    aeat.domain.invoices._validators

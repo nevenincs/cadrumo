@@ -112,8 +112,8 @@ def _set_group(tx_id: str, label: str) -> None:
 
 
 def _active_repo() -> Any:
+    from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ....core import resolve_active_bucket_id
-    from ....domain.transactions import TransactionCatalogueRepository
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None

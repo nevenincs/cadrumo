@@ -121,6 +121,7 @@ def _run(
         f"renta-{year}-modelo-123-retenciones-periodicas": Decimal("0"),
         f"renta-{year}-profile-anualidades-sin-minimo-descendientes": flag,
         f"renta-{year}-profile-minimo-descendientes-estatal": Decimal("0"),
+        f"renta-{year}-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     relation_values = {
         f"renta-{year}-rel-130-pagos-fraccionados": Decimal("0"),
@@ -273,6 +274,7 @@ def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields
         "renta-2021-modelo-123-retenciones-periodicas": Decimal("0"),
         "renta-2021-profile-anualidades-sin-minimo-descendientes": Decimal("1"),
         "renta-2021-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-2021-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     relation_values = {
         "renta-2021-rel-130-pagos-fraccionados": Decimal("0"),

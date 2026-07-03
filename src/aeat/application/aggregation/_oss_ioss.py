@@ -30,6 +30,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
 from ...domain.calculations.registry import (
@@ -39,7 +40,7 @@ from ...domain.calculations.registry import (
     resolve_ledger_oss_aggregation_binding_values,
     unsupported_ledger_oss_observations,
 )
-from ...domain.invoices import Invoice, InvoiceCatalogueRepository, InvoiceLine, iva_rate_kind
+from ...domain.invoices import Invoice, InvoiceLine, iva_rate_kind
 from ...domain.iva import (
     EUMemberState,
     InvoiceKind,

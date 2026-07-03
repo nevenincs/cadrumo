@@ -12,9 +12,11 @@ import pytest
 from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore,
 )
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import Period
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
     RegistryValidationError,
@@ -23,7 +25,6 @@ from ....domain.iva_compensation import IvaCompensationPeriodState
 from ....domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,
-    ModeloRecordCatalogueRepository,
 )
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import (

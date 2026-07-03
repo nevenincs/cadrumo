@@ -17,6 +17,8 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....application.ledger._actions_common import _blocking_modelo_references
@@ -24,10 +26,8 @@ from ....core import Period
 from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ModeloCode,
-    ModeloRecordCatalogueRepository,
     WorkUnit,
     derive_calculation_revision_id,
     derive_work_unit_id,
@@ -197,6 +197,6 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
 
 
 def _bucket_event_repository():
-    from ....domain.buckets import BucketEventHistoryRepository
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 
     return BucketEventHistoryRepository()

@@ -14,7 +14,11 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.storage.sql import SecureObjectRepository
@@ -39,27 +43,14 @@ from ....application.ledger import (
 from ....core import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.attachments import Attachment, AttachmentKind, AttachmentSource
-from ....domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepository,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.categories import SpendingCategory
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
+from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ModeloCode,
     WorkUnit,
@@ -74,7 +65,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
     TransactionValidationError,

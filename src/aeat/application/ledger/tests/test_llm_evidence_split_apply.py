@@ -6,14 +6,11 @@ from decimal import Decimal
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    TransactionCatalogueRepository,
-    TransactionLifecycleState,
-)
+from ....domain.transactions import BusinessClassification, TransactionLifecycleState
 from .. import (
     LLMProvider,
     LLMSplitApplyResult,

@@ -41,18 +41,18 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import Modelo
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.time import now as _utc_now
-from ...domain.buckets import (
-    BucketEventHistoryRepository,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     CasillaDefinition,
@@ -70,14 +70,12 @@ from ...domain.deadlines import FiscalResidency, TaxpayerProfile
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     LedgerFilingEvidence,
     LedgerFilingSnapshot,
     ManualFactBasisEntry,
     ModeloError,
-    ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloValidationError,
     ModeloVerificationFinding,
@@ -86,7 +84,6 @@ from ...domain.modelos import (
     TransactionRevisionParticipation,
     VerificationCompletenessStatus,
     VerificationReport,
-    VerificationReportCatalogueRepository,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
     WorkUnitCatalogueRepositoryProtocol,
@@ -96,7 +93,6 @@ from ...domain.modelos import (
     upsert_verification_report,
     upsert_work_unit,
 )
-from ...domain.transactions import TransactionCatalogueRepository
 from ..aggregation import (
     MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
     CalculationSourceDiagnostic,

@@ -106,6 +106,8 @@ FormulaOperator = Literal[
     "cross_model_sum",
     "age_at_year_end",
     "m131_resolve_modulos_previo",
+    "m131_resolve_modulos_minoracion_empleo",
+    "m131_resolve_modulos_indice_exceso",
     "m303_resolve_modulos_iva_cuota_devengada",
     "m303_resolve_modulos_iva_cuota_minima_pct",
 ]

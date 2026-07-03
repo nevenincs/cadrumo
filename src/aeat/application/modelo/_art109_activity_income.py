@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import Modelo, Period
 from ...domain.modelos import WorkUnit
 from ...domain.transactions import (
@@ -34,7 +35,6 @@ from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,

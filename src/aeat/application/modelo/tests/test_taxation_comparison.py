@@ -130,8 +130,12 @@ _BASE_BINDINGS = {
     # No Madrid nacimiento/adopción-eligible descendants in these scenarios.
     "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
     # Childless couple: Art. 58/61 LIRPF mínimo por descendientes aggregate is
-    # zero (Option A engine).
+    # zero (Option A engine) for both the estatal and autonómico halves — a
+    # childless profile resolves to zero regardless of the Madrid tax
+    # residence declared below (#593's per-CCAA divergence only matters when
+    # eligible descendants exist).
     "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+    "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
 }
 
 _BASE_ENUM_BINDINGS = {"renta-2025-profile-tax-residence-ccaa": "madrid"}

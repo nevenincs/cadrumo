@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.storage import (
     activate_master_key_provider,
     get_master_key_provider,
@@ -15,7 +16,7 @@ from .....adapters.persistence.storage import (
 from .....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .....application.workflow import WorkflowState, workflow_state_repository
 from .....core.config import override_settings
-from .....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from .....domain.buckets import BucketEventType
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.secure_sql import isolated_profile_storage_root
 

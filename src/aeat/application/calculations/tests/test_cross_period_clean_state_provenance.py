@@ -7,17 +7,17 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....core import Period
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ExternalEvidenceKind,
-    ModeloRecordCatalogueRepository,
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
-    VerificationReportCatalogueRepository,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit, verify_modelo_revision

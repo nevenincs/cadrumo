@@ -24,13 +24,13 @@ import json
 import secrets
 from typing import TYPE_CHECKING, NamedTuple
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import StorageCustodyProfile
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
 from ...domain.buckets import (
     BucketDeleteRefusedError,
     BucketEvent,
-    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     BucketImportError,
@@ -281,7 +281,7 @@ class BucketMaintenanceService:
         delegates the pure floor evaluation to
         :func:`~domain.retention.assess_retention_floor`.
         """
-        from ...domain.modelos import ModeloRecordCatalogueRepository
+        from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
         from ...domain.retention import assess_retention_floor
 
         with profile_storage_session(bucket_id):

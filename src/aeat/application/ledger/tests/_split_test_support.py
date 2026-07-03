@@ -9,9 +9,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.transactions import TransactionCatalogueRepository, TransactionDirection
+from ....domain.transactions import TransactionDirection
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import ManualLedgerTransactionCommand, create_manual_transaction
 

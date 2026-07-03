@@ -1,0 +1,16 @@
+[[revisions."2023".parameters]]
+id = "renta-2023-minimo-descendientes-madrid-menor-tres-anos-2023"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["madrid-dl-1-2010:art-2"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunidad de Madrid", "se aumentará en 3.005,16 euros anuales"]
+
+[[revisions."2023".parameters.values]]
+value = "3005.16"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31

@@ -235,9 +235,10 @@ def test_apply_emits_censo_applied_bucket_event() -> None:
     catalogue before this assertion landed — the emission was
     implemented but not witnessed end-to-end."""
 
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ....application.workflow import workflow_state_repository
     from ....core import resolve_active_bucket_id
-    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....domain.buckets import BucketEventType
 
     _seed_active_profile()
     snapshot_id = _capture_snapshot()

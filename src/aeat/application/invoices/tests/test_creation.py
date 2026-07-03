@@ -15,14 +15,11 @@ from decimal import Decimal
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....core import IntracomOperationType, Period
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import load_modelo_path
-from ....domain.invoices import (
-    InvoiceCatalogueRepository,
-    InvoiceValidationError,
-    PaymentStatus,
-)
+from ....domain.invoices import InvoiceValidationError, PaymentStatus
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext

@@ -15,4 +15,5 @@ Submodules
 
    aeat.application.bucket_maintenance._contracts
    aeat.application.bucket_maintenance._manifest_digest
+   aeat.application.bucket_maintenance._sandbox
    aeat.application.bucket_maintenance._service

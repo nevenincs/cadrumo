@@ -63,7 +63,7 @@ from ._records import (
     _utc_now,
 )
 from ._styling import compute_styling
-from ._translator import translate_formula
+from ._translator import is_translatable, translate_formula
 
 _ENGINE_VERSION: Final[str] = "calc-sheets/0.1.0"
 _ACQUISITION_MIRROR_BINDING_SUFFIX: Final[str] = "-adquisicion"
@@ -886,6 +886,62 @@ def _anchors(layout: SheetLayout) -> tuple[SheetAnchor, ...]:
 RelationResolver = Callable[[RegistrySnapshot], RelationValues]
 
 
+def _untranslatable_internal_only_casillas(
+    revision: ModeloRevision,
+    *,
+    bracket_filter_date: date,
+) -> frozenset[CasillaId]:
+    """Return the ``internal_only`` computed casillas that cannot be exported.
+
+    An ``internal_only`` casilla is app-internal calculation-support that the
+    AEAT-published Diseño de Registros omits (it carries no ``export_refs`` and
+    never reaches a filed casilla — the ``modelo-export-mirrors-official-structure``
+    rule binds the workbook to the *official* structure). When such a casilla's
+    formula additionally has no closed-form Sheets translation — the M303
+    régimen-simplificado módulos advisory-support figures resolve through the
+    custom runtime-dispatch ops ``m303_resolve_modulos_iva_cuota_devengada`` /
+    ``m303_resolve_modulos_iva_cuota_minima_pct``, which key a per-epígrafe módulo
+    coefficient table with no spreadsheet equivalent — it cannot be rendered as a
+    live workbook formula at all. It is therefore omitted from the export layout
+    entirely: it is neither an official casilla the workbook must mirror nor a
+    translatable cell.
+
+    A *translatable* ``internal_only`` casilla (e.g. the Modelo 200
+    ``bin-aplicada-maxima`` ceiling, computed from ``min``/``max``/``percent``)
+    stays in the workbook — the exclusion is scoped to the untranslatable custom
+    ops, not to ``internal_only`` as a whole.
+
+    The exclusion is computed to a fixpoint. Excluding a casilla removes its cell
+    from the layout, so an ``internal_only`` casilla that references it (e.g. the
+    M303 ``modulos-iva-cuota-derivada`` ``max`` over ``modulos-iva-cuota-devengada``)
+    becomes untranslatable in turn once the dependency is gone -- it must then be
+    excluded as well, or ``_formula_cells`` would fail translating a leaf reference
+    to a cell the layout no longer carries. Each pass rebuilds the probe layout with
+    the exclusions found so far and re-checks the remaining ``internal_only``
+    casillas until no new one is untranslatable. The custom-runtime M303 módulos ops
+    fail on the unsupported op itself regardless of layout, so the first pass always
+    seeds the chain.
+    """
+    formulas = {formula.id: formula for formula in revision.formulas}
+    excluded: set[CasillaId] = set()
+    while True:
+        probe_layout = plan_layout(
+            revision,
+            bracket_filter_date=bracket_filter_date,
+            excluded_casilla_ids=frozenset(excluded),
+        )
+        newly_excluded: set[CasillaId] = set()
+        for casilla in revision.casillas:
+            if not casilla.internal_only or casilla.formula is None or casilla.id in excluded:
+                continue
+            formula = formulas[casilla.formula]
+            if not is_translatable(formula.expression, layout=probe_layout):
+                newly_excluded.add(casilla.id)
+        if not newly_excluded:
+            return frozenset(excluded)
+        excluded |= newly_excluded
+
+
 def build_export_plan(
     snapshot: RegistrySnapshot,
     *,
@@ -939,7 +995,12 @@ def build_export_plan(
     # window selection) at the snapshot's filing date so the workbook
     # mirrors the same registry slice the local runtime would consult.
     filing_anchor = date(snapshot.filing_year, 12, 31)
-    layout = plan_layout(revision, bracket_filter_date=filing_anchor)
+    excluded = _untranslatable_internal_only_casillas(revision, bracket_filter_date=filing_anchor)
+    layout = plan_layout(
+        revision,
+        bracket_filter_date=filing_anchor,
+        excluded_casilla_ids=excluded,
+    )
     relations = _relation_values_with_registry_grounding(snapshot, layout, supplied_relations)
 
     entradas = _value_cells_for_entradas(revision, layout, inputs)

@@ -279,6 +279,7 @@ def plan_layout(
     revision: ModeloRevision,
     *,
     bracket_filter_date: date | None = None,
+    excluded_casilla_ids: frozenset[CasillaId] = frozenset(),
 ) -> SheetLayout:
     """Plan tab + row + column addresses for every casilla and parameter.
 
@@ -289,6 +290,14 @@ def plan_layout(
             the `Tarifas` rows the engine emits match the registry
             runtime's `_resolve_bracket` selection. When `None`, every
             bracket entry is emitted in `lower_bound` order.
+        excluded_casilla_ids: Casillas to omit from the layout entirely.
+            The engine uses this to drop ``internal_only`` computed
+            casillas whose custom runtime-dispatch formula op has no
+            closed-form Sheets translation (the M303 régimen-simplificado
+            módulos advisory-support figures): they are absent from the
+            AEAT official Diseño de Registros and cannot be rendered as a
+            live spreadsheet formula, so they do not belong in the
+            official-structure workbook.
 
     Returns:
         A :class:`SheetLayout` carrying cell addresses for every casilla,
@@ -297,7 +306,11 @@ def plan_layout(
     value_column = _ENTRADAS_VALUE_COLUMN
     anchor_column = _TARIFFS_ANCHOR_COLUMN
 
-    casilla_plan = _layout_casillas(revision, value_column=value_column)
+    casilla_plan = _layout_casillas(
+        revision,
+        value_column=value_column,
+        excluded_casilla_ids=excluded_casilla_ids,
+    )
     binding_plan = _layout_bindings(
         revision,
         value_column=value_column,
@@ -354,13 +367,21 @@ class _CasillaPlan:
     entradas_next_row: int
 
 
-def _layout_casillas(revision: ModeloRevision, *, value_column: int) -> _CasillaPlan:
+def _layout_casillas(
+    revision: ModeloRevision,
+    *,
+    value_column: int,
+    excluded_casilla_ids: frozenset[CasillaId] = frozenset(),
+) -> _CasillaPlan:
     """Assign each casilla a tab + row + value-cell address.
 
     Operator-input + informational casillas land on the Entradas
     tab in declaration order; computed casillas land on the
     Calculos tab. ``entradas_next_row`` is returned so the binding
     layout below appends rows below the casilla block on Entradas.
+
+    ``excluded_casilla_ids`` casillas receive no cell or row (they are
+    omitted from the workbook entirely — see :func:`plan_layout`).
     """
     entradas_cells: dict[CasillaId, SheetCellAddress] = {}
     calculos_cells: dict[CasillaId, SheetCellAddress] = {}
@@ -369,6 +390,8 @@ def _layout_casillas(revision: ModeloRevision, *, value_column: int) -> _Casilla
     entradas_row = _DATA_HEADER_ROW + 1
     calculos_row = _DATA_HEADER_ROW + 1
     for casilla in revision.casillas:
+        if casilla.id in excluded_casilla_ids:
+            continue
         if _is_computed(casilla):
             calculos_cells[casilla.id] = SheetCellAddress.at(TabName.CALCULOS, calculos_row, value_column)
             calculos_rows.append(

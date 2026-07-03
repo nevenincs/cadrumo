@@ -10,6 +10,7 @@ from collections.abc import Callable
 
 import typer
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import (
     LedgerReviewQuery,
     LedgerReviewQueryResult,
@@ -19,7 +20,6 @@ from ...application.ledger import (
 )
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core.i18n import tr
-from ...domain.transactions import TransactionCatalogueRepository
 from ._common import _bad, _emit_envelope, _state, _tx_repo
 from ._ledger_list import ledger_filter_parse_error_message
 

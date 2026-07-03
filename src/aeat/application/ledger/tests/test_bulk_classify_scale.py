@@ -21,8 +21,9 @@ from typing import override
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository, SecureObjectWrite
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -30,7 +31,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile

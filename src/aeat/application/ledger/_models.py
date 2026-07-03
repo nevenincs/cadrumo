@@ -328,6 +328,12 @@ class LedgerTransactionPayload(BaseModel):
     notes: str = ""
     lifecycle_state: str = Field(min_length=1)
     classified_by: str = Field(min_length=1)
+    # Decision-provenance fields (#231): the "why" behind the active
+    # classification decision, surfaced alongside `classified_by` so an
+    # operator can answer "why was this classified as X" from one read.
+    classified_at: str | None = None
+    classification_reason: str = ""
+    classification_confidence: str | None = None
     source_jurisdiction: str | None = None
     # FX provenance for foreign-currency rows (ledger-fx-conversion ADR): the
     # EUR-equivalent and the applied CCY->EUR rate, so list/review/export surface

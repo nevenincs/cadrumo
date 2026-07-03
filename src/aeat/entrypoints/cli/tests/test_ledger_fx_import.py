@@ -18,12 +18,12 @@ from typing import Any
 import pytest
 from click.testing import Result
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile import profile_create_storage_span, register_minimal_profile
 from ....application.workflow import workflow_state_repository
 from ....core import resolve_active_bucket_id
 from ....core.config import override_settings
-from ....domain.transactions import TransactionCatalogueRepository
 from ....tests import FIXTURES_DIR
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root

@@ -16,24 +16,24 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage import Envelope, SensitivityClass
-from ....tests.secure_sql import isolated_runtime_profile
-from .._event import (
+from .....domain.buckets import (
     BucketEvent,
     BucketEventHistoryCatalogue,
+    BucketEventHistoryPersistenceError,
     BucketEventObjectType,
     BucketEventType,
     derive_bucket_event_id,
 )
-from .._event_repository import (
+from .....tests.secure_sql import isolated_runtime_profile
+from ...storage import Envelope, SensitivityClass
+from ..buckets import (
     _CATALOGUE_VERSION,
     _NAMESPACE,
     _OBJECT_KEY,
-    BucketEventHistoryPersistenceError,
     BucketEventHistoryRepository,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _OCCURRED_AT = datetime(2026, 5, 28, 9, 0, 0, tzinfo=UTC)
 
@@ -137,13 +137,13 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto import (
+    from ...storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....adapters.persistence.storage.sql import SecureObjectRow
-    from ....adapters.persistence.storage.sql.session import session_scope
+    from ...storage.sql import SecureObjectRow
+    from ...storage.sql.session import session_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         bucket_id = "b" * 32

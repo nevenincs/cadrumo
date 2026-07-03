@@ -27,10 +27,10 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...domain.buckets import (
     BucketEvent,
-    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,

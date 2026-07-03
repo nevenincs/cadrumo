@@ -9,8 +9,9 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core.config import AuthProviderKindSetting, Settings
-from ....domain.modelos import CalculationRevisionState, ModeloRecordCatalogueRepository, ModeloRecordStatus
+from ....domain.modelos import CalculationRevisionState, ModeloRecordStatus
 from ...calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,

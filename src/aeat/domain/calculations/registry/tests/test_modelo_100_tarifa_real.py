@@ -321,6 +321,11 @@ def _base_binding_values() -> dict[BindingId, Decimal]:
         # childless profile; scenarios that exercise real descendientes
         # override this key directly.
         "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
+        # Parte autonómica (casilla 0514, #593): every scenario in this file
+        # runs a Cataluña-resident profile, which is absent from the wired
+        # per-CCAA divergence table, so the autonómico aggregate mirrors the
+        # estatal one exactly — zero baseline here for the same reason.
+        "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
         # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
         "renta-2024-profile-marriage-full-year": Decimal("0"),
         "renta-2024-profile-marriage-month-start": Decimal("0"),
@@ -377,6 +382,7 @@ def test_m100_2024_cuota_estatal_pere_age_70_with_age_supplement(
         binding_values={
             **_base_binding_values(),
             "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_PERE_AGE_70_BIRTH_DATE_BINDINGS_2024,
@@ -426,6 +432,7 @@ def test_m100_2024_cuota_estatal_two_descendants_one_under_three(
         binding_values={
             **_base_binding_values(),
             "renta-2024-profile-minimo-descendientes-estatal": Decimal("7900"),
+            "renta-2024-profile-minimo-descendientes-autonomico": Decimal("7900"),
         },
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,

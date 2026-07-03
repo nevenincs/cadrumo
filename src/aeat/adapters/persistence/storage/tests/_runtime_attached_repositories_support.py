@@ -13,8 +13,14 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from .....adapters.persistence.profile.justificante import JustificanteRepository
+from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from .....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from .....application.auth import ApoderadoService, list_auth_diagnostics
 from .....application.calculations import (
     CalculationObservationRepository,
@@ -54,7 +60,6 @@ from .....domain.attachments import AttachmentNotFoundError
 from .....domain.buckets import (
     BucketEvent,
     BucketEventHistoryCatalogue,
-    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     derive_bucket_event_id,
@@ -80,33 +85,22 @@ from .....domain.filing import (
     ModeloValueKind,
     make_amendment_id,
 )
-from .....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-    derive_invoice_id,
-)
+from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
 from .....domain.iva import InvoiceKind
 from .....domain.iva_compensation import IvaCompensationPeriodState, IvaCompensationReconciliationDecision
 from .....domain.justificante import Justificante
 from .....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloCode,
     ModeloRecord,
     ModeloRecordCatalogue,
-    ModeloRecordCatalogueRepository,
     VerificationCompletenessStatus,
     VerificationReport,
     VerificationReportCatalogue,
-    VerificationReportCatalogueRepository,
     WorkUnit,
     WorkUnitCatalogue,
     WorkUnitState,
@@ -128,7 +122,6 @@ from .....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from .....domain.usage_ratios import UsageRatioProfile

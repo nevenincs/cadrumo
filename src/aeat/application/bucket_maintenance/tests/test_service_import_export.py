@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.bucket import ExportArchiveHeader, read_sealed_archive, write_sealed_archive
 from ....adapters.persistence.storage.crypto import encrypt_record
 from ....adapters.persistence.storage.master_key import (
@@ -24,7 +25,7 @@ from ....adapters.persistence.storage.master_key import (
 )
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType, BucketImportError
+from ....domain.buckets import BucketEventType, BucketImportError
 from ....domain.user_profile import (
     ProfileSchemaDefinition,
     UserProfileFact,

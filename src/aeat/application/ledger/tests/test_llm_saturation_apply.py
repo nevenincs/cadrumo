@@ -6,13 +6,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    TransactionCatalogueRepository,
-    TransactionValidationError,
-)
+from ....domain.transactions import BusinessClassification, TransactionValidationError
 from .. import (
     LLMProvider,
     apply_saturated_llm_classification,

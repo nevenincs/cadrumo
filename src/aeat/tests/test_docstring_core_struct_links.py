@@ -55,10 +55,8 @@ CORE_STRUCTS: dict[str, str] = {
     "PortalCategory": "aeat.domain.portals._categories",
     # Financial-input aggregates and their repositories
     "TransactionCatalogue": "aeat.domain.transactions._models",
-    "TransactionCatalogueRepository": "aeat.domain.transactions._repository",
+    "TransactionCatalogueRepository": "aeat.adapters.persistence.profile.transactions",
     "InvoiceCatalogue": "aeat.domain.invoices._models",
-    "InvoiceCatalogueRepository": "aeat.domain.invoices._repository",
-    "BucketEventHistoryRepository": "aeat.domain.buckets._event_repository",
     # Profile, deadlines, and filing records
     "TaxpayerProfile": "aeat.domain.deadlines._models",
     "Schedule": "aeat.domain.deadlines._models",

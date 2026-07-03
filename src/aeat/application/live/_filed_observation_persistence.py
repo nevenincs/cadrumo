@@ -37,7 +37,9 @@ from ...adapters.outbound.aeat.sede import (
     SedeParseError,
     registry_observation_from_filed_declaration,
 )
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.justificante import JustificanteRepository
+from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...application.calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
@@ -50,7 +52,6 @@ from ...core.logging import get_logger
 from ...core.resources import resources
 from ...domain.buckets import (
     BucketEvent,
-    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
@@ -70,7 +71,6 @@ from ...domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
-    ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
     upsert_filing_record,
 )

@@ -8,10 +8,11 @@ from typing import cast
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.i18n import tr
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.buckets import BucketEventType
 from ....domain.user_profile import (
     ProfileAlreadyExistsError,
     ProfileNotFoundError,

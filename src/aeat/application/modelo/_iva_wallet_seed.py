@@ -196,8 +196,8 @@ def _sealed_modelo_303_blocker_for_period(
     ``(work_unit_id, calculation_revision_id, filing_year, period)`` of the
     offending revision, or ``None`` when no sealed Modelo 303 consumed the seed.
     """
+    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...domain.modelos import CalculationRevisionCatalogueRepository
 
     seeded_key = (period.filing_year, _period_order_key(period))
     work_units = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
@@ -339,10 +339,10 @@ def _emit_iva_wallet_corrected_event(
     reason: str,
 ) -> None:
     """Append the ``MODELO_IVA_WALLET_CORRECTED`` audit event for a correction."""
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...core.time import now
     from ...domain.buckets import (
         BucketEvent,
-        BucketEventHistoryRepository,
         BucketEventObjectType,
         BucketEventType,
         append_bucket_event,
@@ -533,10 +533,10 @@ def _emit_iva_wallet_override_event(
     evidence_locator: str,
 ) -> None:
     """Append the ``MODELO_IVA_WALLET_OVERRIDE_RECORDED`` audit event for an override."""
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...core.time import now
     from ...domain.buckets import (
         BucketEvent,
-        BucketEventHistoryRepository,
         BucketEventObjectType,
         BucketEventType,
         append_bucket_event,

@@ -42,6 +42,13 @@ This package exposes the lifecycle composition verbs ``browse``,
 through domain repositories instead of decrypting secure-object storage
 directly.
 
+:func:`create_sandbox` and :func:`discard_sandbox` expose a discardable
+experiment-workspace lifecycle over the same primitives: a sandbox is an
+ordinary bucket labelled with the reserved :data:`SANDBOX_LABEL_PREFIX`,
+created (optionally forked from a live profile's facts) through the
+canonical atomic-create span and discarded through this package's
+:meth:`BucketMaintenanceService.delete`.
+
 See Also:
     :mod:`application.user_profile`
         Lifecycle and portable-bundle single-writer primitives composed by this
@@ -79,15 +86,35 @@ from ._contracts import (
     RenameBucketResult,
 )
 from ._manifest_digest import compute_manifest_digest
+from ._sandbox import (
+    SANDBOX_LABEL_PREFIX,
+    CreateSandboxCommand,
+    CreateSandboxResult,
+    DiscardSandboxCommand,
+    DiscardSandboxResult,
+    SandboxAlreadyExistsError,
+    SandboxDiscardRefusedError,
+    SandboxNotFoundError,
+    SandboxSourceNotFoundError,
+    create_sandbox,
+    discard_sandbox,
+    is_sandbox_label,
+    sandbox_label,
+)
 from ._service import BucketMaintenanceService
 
 __all__ = [
+    "SANDBOX_LABEL_PREFIX",
     "BrowseBucketCommand",
     "BrowseBucketResult",
     "BucketMaintenanceService",
     "BucketNamespaceInventoryRow",
+    "CreateSandboxCommand",
+    "CreateSandboxResult",
     "DeleteBucketCommand",
     "DeleteBucketResult",
+    "DiscardSandboxCommand",
+    "DiscardSandboxResult",
     "ExportBucketCommand",
     "ExportBucketResult",
     "ImportBucketCommand",
@@ -96,5 +123,13 @@ __all__ = [
     "InspectBucketArchiveResult",
     "RenameBucketCommand",
     "RenameBucketResult",
+    "SandboxAlreadyExistsError",
+    "SandboxDiscardRefusedError",
+    "SandboxNotFoundError",
+    "SandboxSourceNotFoundError",
     "compute_manifest_digest",
+    "create_sandbox",
+    "discard_sandbox",
+    "is_sandbox_label",
+    "sandbox_label",
 ]
