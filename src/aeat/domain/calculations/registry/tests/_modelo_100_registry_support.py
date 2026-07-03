@@ -687,7 +687,7 @@ _CAPITAL_GAINS_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
 }
 _OBJECTIVE_ESTIMATION_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
     ("toma_datos_ampliada", "reg_estima_obj"): 39,
-    ("toma_datos_ampliada", "reg_estima_obj_agricola"): 74,
+    ("toma_datos_ampliada", "reg_estima_obj_agricola"): 75,
 }
 _AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
     ("resultados", "deduccion_autonomica_res"): 482,
@@ -744,7 +744,7 @@ _NO_FRACTIONAL_PAYMENT_2025_INPUT_SECTION_COUNTS: Mapping[tuple[str, ...], int] 
     ("toma_datos_ampliada", "red_base_imponible"): 25,
     ("toma_datos_ampliada", "reg_estima_directa"): 5,
     ("toma_datos_ampliada", "reg_estima_obj"): 39,
-    ("toma_datos_ampliada", "reg_estima_obj_agricola"): 74,
+    ("toma_datos_ampliada", "reg_estima_obj_agricola"): 75,
     ("toma_datos_ampliada", "regimen_especial"): 19,
     ("toma_datos_ampliada", "regimenes_especiales"): 66,
 }
@@ -753,7 +753,7 @@ _NO_PAYMENTS_ON_ACCOUNT_2025_INPUT_SECTION_COUNTS: Mapping[tuple[str, str], int]
     ("toma_datos_ampliada", "gp_otros_inmuebles"): 67,
     ("toma_datos_ampliada", "gp_premios"): 25,
     ("toma_datos_ampliada", "reg_estima_obj"): 39,
-    ("toma_datos_ampliada", "reg_estima_obj_agricola"): 74,
+    ("toma_datos_ampliada", "reg_estima_obj_agricola"): 75,
     ("toma_datos_ampliada", "regimenes_especiales"): 66,
 }
 _M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE: Mapping[str, frozenset[str]] = {
