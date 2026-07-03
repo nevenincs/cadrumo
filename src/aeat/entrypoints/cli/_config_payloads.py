@@ -981,6 +981,34 @@ class CertificateSourceListPayload(OutputSchema):
     active_source: str = ""
 
 
+class CertificateSourceCheckEntryPayload(OutputSchema):
+    """One certificate source's expiry/rotation verdict row.
+
+    Mirrors :class:`application.auth.CertificateSourceCheckEntry`; nested
+    in :class:`CertificateSourceCheckPayload`, not registered
+    independently.
+    """
+
+    name: str
+    certificate_path: str
+    friendly_name: str = ""
+    active: bool = False
+    result: str = ""
+    summary: str = ""
+    days_until_expiry: int | None = None
+
+
+@register_schema("config.auth.certificate.check")
+class CertificateSourceCheckPayload(OutputSchema):
+    """JSON envelope for ``aeat config auth certificate check``.
+
+    Mirrors :class:`application.auth.CertificateSourceCheckReport`.
+    """
+
+    entries: list[CertificateSourceCheckEntryPayload] = []
+    has_warnings: bool = False
+
+
 # ---------------------------------------------------------------------------
 # Auth diagnostics verb result schemas
 # ---------------------------------------------------------------------------
@@ -1117,12 +1145,45 @@ class ConfigProfileSandboxUseResult(OutputSchema):
     active_profile: str
 
 
+class SandboxNamespacePayload(OutputSchema):
+    """One secure-object namespace row in a sandbox discard preview.
+
+    Mirrors :class:`~aeat.application.bucket_maintenance.SandboxNamespaceInventoryRow`:
+    only the namespace name and stored-row count, never decrypted payload
+    material.
+    """
+
+    namespace: str
+    row_count: int
+
+
 @register_schema("config.profile.sandbox.discard")
 class ConfigProfileSandboxDiscardResult(OutputSchema):
     """JSON envelope for ``aeat config profile sandbox discard``.
 
-    Reports the erased sandbox's identity and prior label.
+    Covers both the ``--dry-run`` preview branch (``dry_run=True``, no
+    mutation — ``namespaces`` lists what would be removed) and the confirmed
+    erase branch (``dry_run=False`` — ``previous_label`` reports the erased
+    sandbox's prior label; ``namespaces`` stays empty).
     """
 
+    dry_run: bool = False
     bucket_id: str
-    previous_label: str
+    previous_label: str | None = None
+    namespaces: list[SandboxNamespacePayload] = []
+
+
+@register_schema("config.profile.sandbox.prune")
+class ConfigProfileSandboxPruneResult(OutputSchema):
+    """JSON envelope for ``aeat config profile sandbox prune``.
+
+    Covers the ``--dry-run`` preview branch (``sandboxes`` names every
+    sandbox that would be discarded, nothing removed) and the confirmed
+    branch (``discarded`` names every sandbox actually erased). Both
+    branches report the total count considered.
+    """
+
+    dry_run: bool = False
+    total: int
+    sandboxes: list[str] = []
+    discarded: list[str] = []
