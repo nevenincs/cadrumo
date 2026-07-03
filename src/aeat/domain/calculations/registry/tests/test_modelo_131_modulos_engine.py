@@ -4,11 +4,16 @@ Non-tautological: expected values are transcribed independently from the
 bundled Orden HAC/1347/2024 Anexo II coefficient tables
 (``corpus/normatives/html/orden-hac-1347-2024.html``), not re-derived from the
 registry formula under test. Fase 2ª's minoración por incentivos al empleo
-(employ-only, the coeficiente por incremento + coeficiente por tramos
-mechanism) is cross-checked byte-identical against the AEAT Manual práctico de
-Renta 2025 full worked example (epígrafe 673.1, Capítulo 8) — see
+(the coeficiente por incremento + coeficiente por tramos mechanism) is
+cross-checked byte-identical against the AEAT Manual práctico de Renta 2025
+full worked example (epígrafe 673.1, Capítulo 8) — see
 ``TestCafesEspecial6731EstimacionObjetiva.test_full_manual_worked_example_fases_1_a_4``.
-Fase 3ª's índice corrector de exceso is grounded in the same Orden's tabled
+Fase 2ª's minoración por incentivos a la inversión is an operator-declared
+euro amount (this engine does not model a per-element libro registro de
+bienes de inversión); its subtraction is cross-checked against the same
+manual worked example's printed 6.050,00 euros figure — see
+``test_full_manual_worked_example_incluye_minoracion_inversion``. Fase 3ª's
+índice corrector de exceso is grounded in the same Orden's tabled
 cuantía/índice constants via the shared ``_expected_modulos`` helper (an
 independent reproduction, not a re-derivation of the formula under test's own
 intermediate output). The 5 por ciento reducción general (Fase 4ª) is grounded
@@ -450,8 +455,9 @@ def _expected_minorado(
     modulo_1: Decimal,
     modulo_1_anterior: Decimal,
     modulo_1_coefficient: Decimal,
+    minoracion_inversion: Decimal = Decimal("0"),
 ) -> Decimal:
-    """Reproduce Fase 2ª (minoración por incentivos al empleo, employ-only)."""
+    """Reproduce Fase 2ª (minoración por incentivos al empleo + a la inversión)."""
     incremento = (
         modulo_1 - modulo_1_anterior
         if modulo_1_anterior > Decimal("0") and modulo_1 > modulo_1_anterior
@@ -460,8 +466,8 @@ def _expected_minorado(
     coeficiente_incremento = incremento * _COEFICIENTE_INCREMENTO_ASALARIADOS
     base_tramos = modulo_1 - incremento
     coeficiente_tramos = _coeficiente_tramos(base_tramos)
-    minoracion = (coeficiente_incremento + coeficiente_tramos) * modulo_1_coefficient
-    return _money_round(previo - minoracion)
+    minoracion_empleo = (coeficiente_incremento + coeficiente_tramos) * modulo_1_coefficient
+    return _money_round(previo - minoracion_empleo - minoracion_inversion)
 
 
 def _expected_modulos(minorado: Decimal, *, epigrafe: str) -> Decimal:
@@ -483,6 +489,7 @@ def _run_modulos_engine(
     modulo_6: Decimal = Decimal("0"),
     modulo_7: Decimal = Decimal("0"),
     modulo_1_anterior: Decimal = Decimal("0"),
+    minoracion_inversion: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
     snapshot = _committed_snapshot("131", 2025, "1T")
     text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
@@ -497,6 +504,7 @@ def _run_modulos_engine(
             "modulos-6-unidades": modulo_6,
             "modulos-7-unidades": modulo_7,
             "modulos-1-unidades-anterior": modulo_1_anterior,
+            "modulos-minoracion-inversion": minoracion_inversion,
         },
         text_inputs=text_inputs,
         date_context={"filing_period": snapshot.filing_period.end_date},
@@ -902,6 +910,50 @@ class TestCafesEspecial6731EstimacionObjetiva:
         minoracion_empleo = _money_round(previo - minorado)
         assert minoracion_empleo == Decimal("2693.38")
         assert minorado == Decimal("47418.57")
+
+    def test_full_manual_worked_example_incluye_minoracion_inversion(self) -> None:
+        """AEAT Manual práctico de Renta 2025, Parte 1, Capítulo 8, caso práctico.
+
+        Same activity and inputs as
+        ``test_full_manual_worked_example_fases_1_a_4``, now supplying the
+        operator-declared minoración por incentivos a la inversión the
+        manual's own libro registro de bienes de inversión yields: mobiliario
+        viejo ya amortizado (0), cafetera 9.400 euros amortización pendiente
+        1.000 (25% coeficiente máximo topado por el saldo pendiente),
+        vitrina térmica 4.000 euros x 25% = 1.000, instalación de aire
+        acondicionado 6.600 euros x 25% = 1.650, mesas y sillas nuevas 2.400
+        euros amortizadas libremente (elementos nuevos ≤ 601,01 euros/unidad
+        y ≤ 3.005,06 euros en conjunto) = 2.400; total minoración por
+        incentivos a la inversión = 1.000 + 1.000 + 1.650 + 2.400 = 6.050,00
+        euros, transcribed byte-identical from the manual's printed table.
+        With this declared amount, this test's rendimiento neto minorado
+        (50.111,95 − 2.693,38 − 6.050,00 = 41.368,57) and rendimiento neto de
+        módulos (30.586,03 + 1,30 x (41.368,57 − 30.586,03) = 44.603,33) both
+        reproduce the manual's own printed Fase 2ª and Fase 3ª figures
+        exactly — an independent, non-tautological proof that the engine's
+        minoración-por-inversión subtraction and the índice-corrector-de-
+        exceso chain compose correctly once the operator supplies the
+        amortization figure.
+        """
+        previo, minorado, modulos, _actividad = _run_modulos_engine(
+            "673.1",
+            modulo_1=Decimal("3.66"),
+            modulo_2=Decimal("1.00"),
+            modulo_3=Decimal("35.00"),
+            modulo_4=Decimal("8.00"),
+            modulo_5=Decimal("10.00"),
+            modulo_6=Decimal("0.00"),
+            modulo_7=Decimal("1.00"),
+            modulo_1_anterior=Decimal("3.00"),
+            minoracion_inversion=Decimal("6050.00"),
+        )
+        assert previo == Decimal("50111.95")
+        assert minorado == Decimal("41368.57")
+        # Fase 3ª: rendimiento neto minorado 41.368,57 supera la cuantía
+        # tabulada 30.586,03; exceso 10.782,54 x índice 1,30 = 14.017,30;
+        # rendimiento neto de módulos = 30.586,03 + 14.017,30 = 44.603,33
+        # (manual, redondeado).
+        assert modulos == Decimal("44603.33")
 
 
 class TestOtrosCafes6732EstimacionObjetiva:

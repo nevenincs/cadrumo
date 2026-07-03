@@ -31,35 +31,40 @@ required_text = [
     "Rendimientos anuales por unidad de módulo antes de amortización aplicables en el ejercicio 2025",
 ]
 
-# Fase 2ª — rendimiento neto minorado: previo minus the minoración por
-# incentivos al empleo (Orden HAC/1347/2024 Anexo II, instrucción 2.2.a).
-# Dispatches through the m131_resolve_modulos_minoracion_empleo op, which
-# reads the epígrafe, the current-year and prior-year módulo 1 (personal
-# asalariado) unit counts, the módulo coefficient table (for the módulo 1
-# rendimiento anual por unidad), the coeficiente-por-tramos bracket table,
-# and the coeficiente-por-incremento constant. La minoración por incentivos
-# a la inversión (amortizaciones) is intentionally omitted from this
-# first slice — a LEGITIMATE additional reduction the taxpayer may or may
-# not claim (asset register data is not modelled), so omitting it does not
-# over-state the figure — the ADR's Option D concern (a product standing in
-# for the filed figure) does not apply to an internal advisory-support
+# Fase 2ª — rendimiento neto minorado: previo minus the sum of the minoración
+# por incentivos al empleo (Orden HAC/1347/2024 Anexo II, instrucción 2.2.a)
+# and the minoración por incentivos a la inversión (instrucción 2.2.b). The
+# empleo minoración dispatches through the m131_resolve_modulos_minoracion_
+# empleo op (epígrafe, current/prior módulo 1 unit counts, coefficient table,
+# tramos bracket table, incremento constant). The inversión minoración is the
+# operator-declared "modulos-minoracion-inversion" casilla (a euro amount) —
+# this first slice does not model a per-element libro registro de bienes de
+# inversión, so the amortization figure is supplied by the operator rather
+# than derived from an asset register the engine does not have; a blank
+# input simply omits this legitimate additional reduction (never over-states
+# the minorado, per the ADR's Option D concern about over-statement, which
+# does not apply here since omission only under-claims a reduction, never
+# fabricates one). Both minoraciones feed an internal advisory-support
 # casilla that never substitutes for the operator's manual casilla 01.
 [[revisions."2025".formulas]]
 id = "modelo-131-2025-modulos-rendimiento-neto-minorado"
 target_casilla_id = "modulos-rendimiento-neto-minorado"
 expression = { op = "subtract", args = [
     { casilla_id = "modulos-rendimiento-neto-previo" },
-    { op = "m131_resolve_modulos_minoracion_empleo", args = [
-        { casilla_id = "modulos-epigrafe" },
-        { casilla_id = "modulos-1-unidades" },
-        { casilla_id = "modulos-1-unidades-anterior" },
-        { parameter = "m131-modulos-coeficientes-2025" },
-        { parameter = "m131-modulos-coeficiente-tramos-asalariados-2025" },
-        { parameter = "m131-modulos-coeficiente-incremento-asalariados-2025" },
+    { op = "add", args = [
+        { op = "m131_resolve_modulos_minoracion_empleo", args = [
+            { casilla_id = "modulos-epigrafe" },
+            { casilla_id = "modulos-1-unidades" },
+            { casilla_id = "modulos-1-unidades-anterior" },
+            { parameter = "m131-modulos-coeficientes-2025" },
+            { parameter = "m131-modulos-coeficiente-tramos-asalariados-2025" },
+            { parameter = "m131-modulos-coeficiente-incremento-asalariados-2025" },
+        ] },
+        { casilla_id = "modulos-minoracion-inversion" },
     ] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-2-a"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-2-a", "orden-hac-1347-2024:instruccion-2-2-b"]
 source_refs = ["aeat-renta-2025-manual-parte1"]
 [[revisions."2025".formulas.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
