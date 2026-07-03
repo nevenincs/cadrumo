@@ -506,6 +506,8 @@ def test_m100_2025_registry_policy_reports_independently_grounded_fraction() -> 
         # Childless profile: Art. 58/61 LIRPF mínimo por descendientes aggregate
         # is zero (modelo-100-minimo-descendientes-engine decision record, Option A).
         "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+        # Parte autonómica (#593): non-Madrid profile mirrors the estatal zero.
+        "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
 
     result = calculate_registry_snapshot(

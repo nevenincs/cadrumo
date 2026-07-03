@@ -54,6 +54,7 @@ def _historical_m100_binding_values(year: int) -> dict[str, Decimal]:
         f"renta-{year}-modelo-111-retenciones-periodicas": Decimal("0"),
         f"renta-{year}-modelo-123-retenciones-periodicas": Decimal("0"),
         f"renta-{year}-profile-minimo-descendientes-estatal": Decimal("0"),
+        f"renta-{year}-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
 
 

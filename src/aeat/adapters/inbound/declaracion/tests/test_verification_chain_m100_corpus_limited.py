@@ -61,6 +61,8 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
         # Childless corpus fixture: Art. 58/61 LIRPF mínimo por descendientes
         # aggregate is zero (modelo-100-minimo-descendientes-engine decision record, Option A).
         "renta-2021-profile-minimo-descendientes-estatal": Decimal("0"),
+        # Parte autonómica (#593): Cataluña profile mirrors the estatal zero.
+        "renta-2021-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     enum_binding_values = {
         "renta-2021-profile-tax-residence-ccaa": "cataluna",
