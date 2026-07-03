@@ -209,6 +209,37 @@ classification is now locked by `test_manifest_classification.py` (36 cases) in
 both drift directions -- under-strict (a COMPUTED/required casilla dropped) and
 over-strict (an optional casilla added).
 
+### workbook-boe-consistency | low | the two export transports are grounded in one calculation surface
+
+The `modelo-export-mirrors-official-structure` rule binds both export transports
+(the workbook plan and the fichero-BOE). A cross-transport consistency probe over
+the fixed-width modelos confirms the containment invariant `boe_representable ⊆
+workbook_emitted` holds with zero orphans for 130/111/115/200: the fichero-BOE
+never files a casilla the workbook does not compute, so a value on disk in the
+`.boe` is always grounded in the same calculation the workbook renders. The reverse
+does not hold and is not asserted -- the workbook is the full calculation surface
+and legitimately emits internal carries the DR record omits (e.g. Modelo 130
+`saldo-negativo-fin-periodo`, present in the workbook and manifest but not
+representable in the `.boe`). Locked by `test_workbook_boe_consistency.py`.
+
+### workbook-303-modulos-gap | medium | the workbook cannot render Modelo 303 2025 módulos (régimen simplificado)
+
+The consistency slice surfaced a real, pre-existing workbook regression: the Modelo
+303 2025 revision's módulos-IVA coefficients are a `keyed_bracket_table` parameter
+(keyed by epígrafe:módulo) consumed by a keyed-lookup formula, and the calc-sheets
+workbook engine supports neither. `build_export_plan("303")` failed two ways: (1)
+`_tariff_tables` called `_resolve_scalar` on the keyed_bracket_table tariff anchor
+before its non-scalar skip-check, crashing the whole export -- fixed in
+`e00f0d800c` by skipping non-scalar types before scalar resolution; and (2) the
+keyed-lookup formula cannot be translated to a spreadsheet formula
+(`TranslationError` in `_translator`), which remains. So the 303 workbook parity
+tests (`test_modelo_export_parity.py[303-*]`) are red on the módulos-rendering gap,
+NOT on the crash, and 303 is excluded from the consistency lock. Full 303 workbook
+support (keyed-table materialisation as a workbook lookup + keyed-lookup formula
+translation) is a separate calc-sheets feature slice. The fichero-BOE side already
+files and value-checks 303 correctly (validated by the roundtrip test), so this gap
+is workbook-only and does not affect the operator's uploadable `.boe`.
+
 ## Recommendations
 
 - Correct the codified `modelo-export-mirrors-official-structure` rule text to say
