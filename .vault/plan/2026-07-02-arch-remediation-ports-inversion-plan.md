@@ -88,7 +88,7 @@ Relocate the six modelos repositories and the participation index behind domain 
 
 - [ ] `W04.P09.S13` - Relocate the modelos repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/modelos/_repository.py`.
 - [x] `W04.P09.S14` - Relocate the modelos filing repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/modelos/_filing_repository.py`.
-- [ ] `W04.P09.S15` - Relocate the modelos calculation repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/modelos/_calculation_repository.py`.
+- [x] `W04.P09.S15` - Relocate the modelos calculation repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/modelos/_calculation_repository.py`.
 - [ ] `W04.P09.S16` - Relocate the modelos verification repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries; `src/aeat/domain/modelos/_verification_repository.py`.
 - [ ] `W04.P09.S17` - Relocate the modelos runtime repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters runtime_repository entry; `src/aeat/domain/modelos/_runtime_repository.py`.
 - [ ] `W04.P09.S18` - Relocate the modelos participation index behind a port in one atomic commit after verifying its pinned edge inventory at execution time, preserving the derived-and-rebuildable invariant; `src/aeat/domain/modelos/_participation_index.py`.
