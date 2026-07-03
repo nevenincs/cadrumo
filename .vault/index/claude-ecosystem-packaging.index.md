@@ -15,6 +15,16 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S10]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S11]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W02-P03-S12]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S23]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S24]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S25]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S26]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S27]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W03-P07-S28]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W03-P08-S29]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W03-P08-S30]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W03-P08-S31]]'
+  - '[[2026-07-03-claude-ecosystem-packaging-W03-P08-S32]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P09-S33]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P09-S34]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W03-P09-S35]]'
@@ -44,6 +54,16 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 - `2026-07-03-claude-ecosystem-packaging-W02-P03-S10` - Add a wheel-content test asserting the aeat wheel ships zero corpus pdf/xls/xlsx members while keeping the extracted-text, normative-html, registry and agent payload
 - `2026-07-03-claude-ecosystem-packaging-W02-P03-S11` - Add a test that the aeat-data wheel packages exactly the corpus binaries under aeat_data with mirrored relative paths and nothing else
 - `2026-07-03-claude-ecosystem-packaging-W02-P03-S12` - Keep the _data size-budget gate meaningful per distribution after the split so the budget is not evaded by moving bytes to the companion
+- `2026-07-03-claude-ecosystem-packaging-W03-P07-S23` - Add a plugin layout target that emits .claude-plugin/plugin.json with a kebab-case name, defaultEnabled false, an author object and the version read from installed package metadata
+- `2026-07-03-claude-ecosystem-packaging-W03-P07-S24` - Emit the plugin skills/ tree (SKILL.md plus reference material) from the single authored harness source
+- `2026-07-03-claude-ecosystem-packaging-W03-P07-S25` - Emit the plugin agents/ tree mapping persona frontmatter to Claude-native fields (tools/disallowedTools), never the non-Claude mode: field
+- `2026-07-03-claude-ecosystem-packaging-W03-P07-S26` - Emit the plugin .mcp.json declaring the stdio aeat-mcp server launched via uvx aeat at a pinned version with AEAT_MCP_PERSONA wired from the userConfig persona interpolation
+- `2026-07-03-claude-ecosystem-packaging-W03-P07-S27` - Declare the userConfig persona string option with a default in the plugin manifest, keeping server-side validation as the refusal surface
+- `2026-07-03-claude-ecosystem-packaging-W03-P07-S28` - Test the plugin materialiser emits a schema-shaped plugin tree from the authored source with the persona and version correctly interpolated
+- `2026-07-03-claude-ecosystem-packaging-W03-P08-S29` - Extend the aeat app agent CLI with a plugin layout target option selecting the plugin materialisation over the workspace layout
+- `2026-07-03-claude-ecosystem-packaging-W03-P08-S30` - Add the typed result payload for the plugin materialisation summary emitted through the CLI envelope
+- `2026-07-03-claude-ecosystem-packaging-W03-P08-S31` - Add a claude plugin validate --strict packaging gate that runs against a freshly materialised plugin when the claude CLI is on PATH and skips honestly when it is not (verify the validate flag against live official docs at execution time)
+- `2026-07-03-claude-ecosystem-packaging-W03-P08-S32` - Test the CLI materialises a schema-valid plugin tree end-to-end to an output directory
 - `2026-07-03-claude-ecosystem-packaging-W03-P09-S33` - Verify the mcp Python SDK annotation extension surface accepts the anthropic/requiresUserInteraction tool annotation before adopting it (frontier: confirm against the live mcp SDK and official docs)
 - `2026-07-03-claude-ecosystem-packaging-W03-P09-S34` - Add the anthropic/requiresUserInteraction annotation to CONFIRM-tier (state-mutating) MCP tools alongside the existing destructiveHint matrix
 - `2026-07-03-claude-ecosystem-packaging-W03-P09-S35` - Test the requiresUserInteraction annotation is present on every CONFIRM-tier tool and absent on read-only tools
