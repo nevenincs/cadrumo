@@ -16,6 +16,7 @@ from ....adapters.outbound.aeat.sede import (
     RemoteNotification,
 )
 from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.storage import SensitivityClass
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....application.live import ExpedientesCapture, ExpedientesService, NotificationsService
@@ -32,7 +33,6 @@ from ....core.i18n import clear_output_language_cache
 from ....core.time import now
 from ....domain.modelos import (
     ExternalEvidenceKind,
-    ModeloRecordCatalogueRepository,
     upsert_filing_record,
 )
 from ....tests.cli_runner import invoke_cached_cli

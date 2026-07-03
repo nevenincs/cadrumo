@@ -9,12 +9,12 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import Modelo, Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,
-    ModeloRecordCatalogueRepository,
 )
 from ....domain.user_profile import UserProfileFact
 from ...user_profile import set_active_fields

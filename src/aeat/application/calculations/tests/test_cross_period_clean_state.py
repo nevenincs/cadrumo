@@ -8,12 +8,12 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import Modelo202Modality, RegistrySnapshot
 from ....domain.modelos import (
     ModeloRecordCatalogue,
-    ModeloRecordCatalogueRepository,
     ModeloRecordStatus,
 )
 from ....tests.secure_sql import isolated_runtime_profile

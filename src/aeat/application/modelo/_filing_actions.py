@@ -41,6 +41,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import RefundElection
@@ -57,7 +58,6 @@ from ...domain.modelos import (
     ModeloError,
     ModeloRecord,
     ModeloRecordCatalogue,
-    ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloRecordStatus,
     VerificationReport,

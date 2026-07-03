@@ -43,6 +43,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from ...adapters.persistence.profile.justificante import JustificanteRepository
+from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import Period
 from ...core.time import now as _utc_now
@@ -62,7 +63,6 @@ from ...domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
-    ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloRecordStatus,
     WorkUnit,

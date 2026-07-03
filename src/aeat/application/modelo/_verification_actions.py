@@ -41,6 +41,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
@@ -78,7 +79,6 @@ from ...domain.modelos import (
     LedgerFilingSnapshot,
     ManualFactBasisEntry,
     ModeloError,
-    ModeloRecordCatalogueRepository,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloValidationError,
     ModeloVerificationFinding,

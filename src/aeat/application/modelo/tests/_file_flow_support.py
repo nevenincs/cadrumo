@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.submission import SubmissionRepository
@@ -41,7 +42,6 @@ from ....domain.modelos import (
     CalculationRevisionState,
     ExternalEvidenceKind,
     ModeloRecord,
-    ModeloRecordCatalogueRepository,
     ModeloRecordStatus,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,

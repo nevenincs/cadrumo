@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.modelos import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...calculations import (
     CalculationObservationRepository,
     reconcile_modelo_303_iva_compensation,

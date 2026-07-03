@@ -40,6 +40,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.config import AuthProviderKindSetting, Settings
@@ -49,7 +50,6 @@ from ....domain.calculations.registry import CasillaId, RelationId, validated_ca
 from ....domain.deadlines import IVARegime, ModeloIVAProfile, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
-    ModeloRecordCatalogueRepository,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile

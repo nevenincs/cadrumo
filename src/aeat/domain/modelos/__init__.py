@@ -99,7 +99,7 @@ from ._filing_record import (
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from ._filing_repository import ModeloRecordCatalogueRepository, upsert_filing_record
+from ._filing_repository import upsert_filing_record
 from ._ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
 from ._ledger_filing_snapshot import (
     LedgerEvidenceRow,
@@ -192,7 +192,6 @@ __all__ = (
     "ModeloExportError",
     "ModeloRecord",
     "ModeloRecordCatalogue",
-    "ModeloRecordCatalogueRepository",
     "ModeloRecordCatalogueRepositoryProtocol",
     "ModeloRecordStatus",
     "ModeloValidationError",

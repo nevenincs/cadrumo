@@ -196,7 +196,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("domain.filing._runtime_repository", "adapters.persistence.storage"),
             ImportEdge("domain.invoices._repository", "adapters.persistence.storage"),
             ImportEdge("domain.modelos._calculation_repository", "adapters.persistence.storage"),
-            ImportEdge("domain.modelos._filing_repository", "adapters.persistence.storage"),
             ImportEdge("domain.modelos._runtime_repository", "adapters.persistence.storage"),
             ImportEdge("domain.transactions._repository", "adapters.persistence.storage"),
             ImportEdge("domain.transactions._repository", "adapters.persistence.storage.crypto"),
@@ -300,6 +299,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("adapters.outbound.storage._factory", "adapters.persistence.storage.bucket"),
             ImportEdge("adapters.persistence.profile.fincas", "adapters.persistence.storage"),
             ImportEdge("adapters.persistence.profile.fincas", "adapters.persistence.storage.sql"),
+            ImportEdge("adapters.persistence.profile.modelos_filing", "adapters.persistence.storage"),
             ImportEdge("adapters.persistence.profile.modelos_work_units", "adapters.persistence.storage"),
             ImportEdge("adapters.persistence.profile.modelos_verification_reports", "adapters.persistence.storage"),
             ImportEdge("adapters.persistence.profile.participation_index", "adapters.persistence.storage"),
@@ -444,6 +444,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.auth._sessions", "core.auth_session_keys"),
             ImportEdge("application.auth._sessions", "core.config"),
             ImportEdge("application.auth._sessions", "domain.user_profile"),
+            ImportEdge("application.bucket_maintenance._service", "adapters.persistence.profile.modelos_filing"),
             ImportEdge("application.bucket_maintenance._service", "adapters.persistence.storage.bucket"),
             ImportEdge("application.bucket_maintenance._service", "adapters.persistence.storage.crypto"),
             ImportEdge("application.bucket_maintenance._service", "adapters.persistence.storage.master_key"),
@@ -533,6 +534,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.live._iva_remote_state", "adapters.persistence.storage"),
             ImportEdge("application.live._justificante", "adapters.inbound.justificante"),
             ImportEdge("application.live._justificante", "adapters.persistence.profile.justificante"),
+            ImportEdge("application.live._justificante", "adapters.persistence.profile.modelos_filing"),
             ImportEdge("application.live._justificante", "application.modelo"),
             ImportEdge("application.live._justificante", "application.user_profile"),
             ImportEdge("application.live._justificante", "core.errors"),
@@ -643,6 +645,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.storage.calc_sheets._parity_harness", "adapters.outbound.google"),
             ImportEdge("application.storage_write_policy", "application.modelo"),
             ImportEdge("application.transactions._diagnostics", "core.i18n"),
+            ImportEdge("application.user_profile._bundle", "adapters.persistence.profile.modelos_filing"),
             ImportEdge("application.user_profile._bundle", "adapters.persistence.profile.modelos_work_units"),
             ImportEdge("application.user_profile._bundle", "adapters.persistence.storage"),
             ImportEdge("application.user_profile._bundle", "application.modelo"),
@@ -759,9 +762,9 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 146,
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 148,
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 35,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 486,
+    UnsanctionedClass.APPLICATION_DEFERRAL: 489,
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -771,7 +774,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 476
+_ALLOWLIST_EDGE_CEILING: int = 479
 
 
 def _aeat_relative(dotted: str) -> str:

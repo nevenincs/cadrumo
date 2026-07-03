@@ -47,6 +47,7 @@ from typing import Literal
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
@@ -62,7 +63,6 @@ from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,
-    ModeloRecordCatalogueRepository,
     VerificationCompletenessStatus,
     WorkUnit,
 )

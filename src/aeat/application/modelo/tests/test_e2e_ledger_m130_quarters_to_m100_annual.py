@@ -52,6 +52,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql import SecureObjectRepository
@@ -71,7 +72,6 @@ from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,
     ExternalEvidenceKind,
-    ModeloRecordCatalogueRepository,
 )
 from ....domain.transactions import (
     BusinessClassification,

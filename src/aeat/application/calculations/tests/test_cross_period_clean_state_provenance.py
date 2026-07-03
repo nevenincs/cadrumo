@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
@@ -15,7 +16,6 @@ from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ExternalEvidenceKind,
-    ModeloRecordCatalogueRepository,
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
 )

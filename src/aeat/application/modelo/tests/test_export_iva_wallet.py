@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import (
@@ -20,7 +21,6 @@ from ....core.config import Settings
 from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
-    ModeloRecordCatalogueRepository,
 )
 from ...calculations import IvaWalletDecisionRepository
 from .. import (

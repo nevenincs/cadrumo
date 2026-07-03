@@ -59,6 +59,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
@@ -75,7 +76,6 @@ from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
-    ModeloRecordCatalogueRepository,
 )
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
