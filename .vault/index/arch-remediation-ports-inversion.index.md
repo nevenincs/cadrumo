@@ -16,6 +16,7 @@ related:
   - '[[2026-07-02-arch-remediation-ports-inversion-W02-P07-S09]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W04-P09-S14]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W04-P09-S15]]'
+  - '[[2026-07-02-arch-remediation-ports-inversion-W04-P09-S17]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-plan]]'
 ---
@@ -42,6 +43,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-ports-inver
 - `2026-07-02-arch-remediation-ports-inversion-W02-P07-S09` - Relocate the transactions repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 - `2026-07-02-arch-remediation-ports-inversion-W04-P09-S14` - Relocate the modelos filing repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 - `2026-07-02-arch-remediation-ports-inversion-W04-P09-S15` - Relocate the modelos calculation repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
+- `2026-07-02-arch-remediation-ports-inversion-W04-P09-S17` - Relocate the modelos runtime repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters runtime_repository entry
 
 ### plan
 
