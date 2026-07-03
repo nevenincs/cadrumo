@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, cast
 from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede import Declaracion, Expediente, JustificanteRef, SedeCapture
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.config import Settings
@@ -17,7 +18,6 @@ from ....domain.modelos import (
     ExternalEvidence,
     ModeloCode,
     ModeloRecord,
-    ModeloRecordCatalogueRepository,
     ModeloRecordStatus,
     WorkUnit,
     derive_filing_record_id,

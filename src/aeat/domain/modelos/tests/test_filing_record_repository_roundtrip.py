@@ -22,6 +22,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.storage import SensitivityClass
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
@@ -38,7 +39,6 @@ from .._filing_repository import (
     _FILING_CATALOGUE_VERSION,
     _FILING_NAMESPACE,
     _FILING_OBJECT_KEY,
-    ModeloRecordCatalogueRepository,
     ModeloRecordPersistenceError,
 )
 

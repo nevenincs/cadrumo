@@ -12,6 +12,7 @@ from pathlib import Path
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
@@ -27,7 +28,6 @@ from ....domain.modelos import (
     ModeloCode,
     ModeloRecord,
     ModeloRecordCatalogue,
-    ModeloRecordCatalogueRepository,
     ModeloRecordStatus,
     WorkUnit,
     derive_calculation_revision_id,

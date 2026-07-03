@@ -37,6 +37,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
@@ -53,7 +54,6 @@ from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,
     ExternalEvidenceKind,
-    ModeloRecordCatalogueRepository,
     ModeloVerificationFindingKind,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord

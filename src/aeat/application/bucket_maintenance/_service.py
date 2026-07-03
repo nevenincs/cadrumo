@@ -281,7 +281,7 @@ class BucketMaintenanceService:
         delegates the pure floor evaluation to
         :func:`~domain.retention.assess_retention_floor`.
         """
-        from ...domain.modelos import ModeloRecordCatalogueRepository
+        from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
         from ...domain.retention import assess_retention_floor
 
         with profile_storage_session(bucket_id):

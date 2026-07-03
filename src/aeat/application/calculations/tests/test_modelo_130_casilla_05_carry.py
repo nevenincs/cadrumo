@@ -39,6 +39,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -49,7 +50,6 @@ from ....domain.calculations.registry import (
 )
 from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
-    ModeloRecordCatalogueRepository,
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile

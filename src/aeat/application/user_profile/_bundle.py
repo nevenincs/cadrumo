@@ -75,10 +75,10 @@ def serialize_profile_bundle(
     each object under its own bucket data-encryption key through the
     standard repository save paths on import.
     """
+    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...domain.modelos import (
         CalculationRevisionCatalogueRepository,
-        ModeloRecordCatalogueRepository,
     )
     from ...domain.transactions import TransactionCatalogueRepository
     from ...domain.user_profile import UserProfilePortableExport
@@ -325,8 +325,8 @@ def _import_calculation_revisions(bundle: UserProfilePortableExport, *, target_b
 
 
 def _import_filing_records(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
+    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...domain.modelos import (
-        ModeloRecordCatalogueRepository,
         upsert_filing_record,
     )
 

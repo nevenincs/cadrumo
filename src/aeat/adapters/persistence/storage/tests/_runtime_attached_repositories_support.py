@@ -14,6 +14,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from .....adapters.persistence.profile.justificante import JustificanteRepository
+from .....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from .....application.auth import ApoderadoService, list_auth_diagnostics
@@ -103,7 +104,6 @@ from .....domain.modelos import (
     ModeloCode,
     ModeloRecord,
     ModeloRecordCatalogue,
-    ModeloRecordCatalogueRepository,
     VerificationCompletenessStatus,
     VerificationReport,
     VerificationReportCatalogue,

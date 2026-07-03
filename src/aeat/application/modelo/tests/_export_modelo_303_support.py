@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
@@ -23,7 +24,6 @@ from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,
     ExternalEvidenceKind,
-    ModeloRecordCatalogueRepository,
 )
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import (

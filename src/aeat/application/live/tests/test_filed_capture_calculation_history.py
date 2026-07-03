@@ -13,6 +13,7 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore,
 )
 from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.calculations.registry import (
@@ -23,7 +24,6 @@ from ....domain.iva_compensation import IvaCompensationPeriodState
 from ....domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,
-    ModeloRecordCatalogueRepository,
 )
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import (

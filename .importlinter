@@ -705,7 +705,6 @@ ignore_imports =
     # adapters.persistence.storage imports (SecureObjectRepository, Envelope,
     # SecureObjectWrite), confirmed by lint-imports trace - re-pinned below.
     aeat.domain.modelos._calculation_repository -> aeat.adapters.persistence.storage
-    aeat.domain.modelos._filing_repository -> aeat.adapters.persistence.storage
     aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.crypto
     aeat.domain.submission.tests.test_repository -> aeat.adapters.persistence.profile.submission
     aeat.domain.submission.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.profile.submission
@@ -957,6 +956,50 @@ ignore_imports =
     aeat.application.modelo.tests.test_verification_substance_workflow -> aeat.adapters.persistence.profile.modelos_verification_reports
     aeat.application.user_profile.tests.test_custody_store_matrix -> aeat.adapters.persistence.profile.modelos_verification_reports
     aeat.domain.modelos.tests.test_verification_report_roundtrip -> aeat.adapters.persistence.profile.modelos_verification_reports
+    # ── modelos_filing catalogue repository ports-inversion (W04.P09.S14):
+    #    the concrete ModeloRecordCatalogueRepository moved to the persistence
+    #    adapter behind ModeloRecordCatalogueRepositoryProtocol ──
+    aeat.application.modelo._amendment_actions -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo._export -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo._external_import_actions -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo._filing_actions -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo._history -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo._participation_index_rebuild -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo._verification_actions -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.bucket_maintenance.tests.test_service_retention_floor -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.calculations.tests._cross_period_clean_state_support -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.calculations.tests.test_carry_gate_parity -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.calculations.tests.test_cross_period_clean_state -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.calculations.tests.test_cross_period_clean_state_provenance -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.calculations.tests.test_modelo_130_carry_forward_continuity -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.calculations.tests.test_modelo_130_casilla_05_carry -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.live.tests._filed_capture_history_support -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.live.tests._justificante_reconcile_support -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.live.tests.test_filed_capture_calculation_history -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.live.tests.test_justificante_capture_orchestrator -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.live.tests.test_justificante_capture_stamp -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests._export_modelo_303_support -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests._file_flow_support -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests._import_flow_support -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_amend_flow -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_cross_period_clean_state_gates -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_e2e_ledger_m130_quarters_to_m100_annual -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_e2e_ledger_m303_quarters_to_m390_annual -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_export_iva_wallet -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_history -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_iva_wallet_engine_filing -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_iva_wallet_engine_lifecycle_gate -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_local_cross_period_carry -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_modelo_202_modality_lifecycle -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_modelo_303_deductible_evidence_gate -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_modelo_303_refund_account_missing_e2e -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_modelo_303_refund_auto_carry_e2e -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_modelo_303_refund_election_e2e -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_participation_co_emission -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_participation_rebuild -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_renta_annual_reconciliations_fold_in_live -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.application.modelo.tests.test_verificado_completo_regression -> aeat.adapters.persistence.profile.modelos_filing
+    aeat.domain.modelos.tests.test_filing_record_repository_roundtrip -> aeat.adapters.persistence.profile.modelos_filing
     aeat.application.modelo.tests.test_participation_rebuild -> aeat.adapters.persistence.profile.participation_index
     aeat.application.modelo.tests.test_participation_co_emission -> aeat.adapters.persistence.profile.participation_index
     # ── application production edges: modelos_work_units catalogue repository

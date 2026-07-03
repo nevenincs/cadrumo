@@ -610,6 +610,7 @@ def register_capture_as_filing_evidence(
             the period before attaching live-capture evidence to it.
     """
     from ...adapters.persistence.profile.justificante import JustificanteRepository
+    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...core.time import now
     from ...domain.buckets import (
         BucketEvent,
@@ -622,7 +623,6 @@ def register_capture_as_filing_evidence(
     from ...domain.modelos import (
         ExternalEvidence,
         ExternalEvidenceKind,
-        ModeloRecordCatalogueRepository,
         upsert_filing_record,
     )
 
@@ -779,8 +779,8 @@ def stamp_capture_evidence_if_filed(snapshot: JustificanteCaptureSnapshot) -> Mo
     best-effort: identity, period, modelo, and existing-evidence conflicts
     propagate to the caller.
     """
+    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...domain.justificante import JustificanteParseError
-    from ...domain.modelos import ModeloRecordCatalogueRepository
 
     catalogue = ModeloRecordCatalogueRepository().load()
     current = catalogue.current_for(
