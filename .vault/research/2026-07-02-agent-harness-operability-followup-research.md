@@ -25,6 +25,26 @@ picked up.
 
 ## Findings
 
+### Resolution status (2026-07-03 execution pass)
+
+A drive-the-remaining-work pass on 2026-07-03 landed the concrete operability
+and hardening items; the large/blocked items are dispositioned honestly below.
+
+| Item | Status | Commit / disposition |
+| --- | --- | --- |
+| 9a contract brittleness (MEDIUM) | LANDED | `9a3ad86f96` graceful `app contract` degradation + resilience gate |
+| 9b regularizar-atrasos work-state (MEDIUM) | LANDED | `59317b5b47` `overview backlog`/`calendar` degrade to a `work_units_degraded` notice; derive from the deadline schedule, not persisted work state |
+| 9c misleading exit-6 hint (LOW) | LANDED | `e49c9c7520` unexpected-boundary suggests `config repair logs`, not integrity repair |
+| 9d citations-view mojibake (cosmetic) | LANDED | `1d1fd1c739` — was a real harness bug: MCP subprocess decoded CLI UTF-8 as the platform default (cp1252); pinned `encoding="utf-8"` |
+| 6 evidence-scrubbing gate (MEDIUM-3) | LANDED | `563e811e46` no result schema emits raw bytes (recursive type walk over the registry) |
+| 7 e2e gated-session test (M3) | LANDED | `e95c0f9a90` CONFIRM elicitation decline/cancel/not-confirmed fired over the memory-transport wire |
+| 8 handoff-scope tighten (LOW) | LANDED | `cc8f5aa7cd` `is_handoff_denied` gated on the modelo family |
+| 8b corpus_search errors → AeatError (L1) | LANDED | `34607acf8f` registered as REFUSED/ERROR codes (they had collapsed to exit-6 INTERNAL) |
+| 4 off-host consent notice (H3) | LANDED | `5aa6f79f75` standing R9 disclosure on the `harness.load` floor, surfaced first |
+| 1 live-model measurement (C2) | IN PROGRESS | live Opus persona re-run validating the landed fixes; report persisted to the vault |
+| 2 + 3 semantic grounding provisioning + footprint (H1/H2) | DEFERRED — pipeline-worthy | Requires resolving the S79↔S87 contradiction as an explicit architecture decision (the `pyproject` comment says "corpus vectors ship as plain data" while `test_corpus_search_package_ships_no_model_artifacts` enforces "no matrix ships" — a genuine contradiction), plus `model2vec` provisioning that is not installed in this env. Warrants an ADR + plan, not an ad-hoc reversal of an enforced gate. |
+| 5 bundle signing (M1) | BLOCKED | Needs a real release identity/certificate; signing must never be faked. Defer until an identity exists. |
+
 ### Deferred items carried forward from the refoundation close
 
 Each item names its close-review origin (C/H/M/L finding in
