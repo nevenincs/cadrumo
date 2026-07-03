@@ -4588,6 +4588,8 @@ errors:
       validation.
     integrity_storage_classification: A record's declared sensitivity class is incompatible
       with its repository.
+    integrity_storage_corpus_bundle: 'The corpus bundle could not be parsed or verified.'
+    integrity_storage_corpus_bundle_verification: 'The corpus bundle failed checksum verification against its embedded manifest.'
     integrity_storage_corpus_manifest: The corpus manifest could not be parsed or
       validated.
     integrity_storage_corpus_manifest_drift: 'The on-disk corpus diverges from its

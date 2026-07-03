@@ -4789,6 +4789,8 @@ errors:
       teljesítette az érvényesítést.
     integrity_storage_classification: Egy rekord deklarált érzékenységi osztálya nem
       kompatibilis az adattárával.
+    integrity_storage_corpus_bundle: 'A corpuscsomagot nem sikerült feldolgozni vagy ellenőrizni.'
+    integrity_storage_corpus_bundle_verification: 'A corpuscsomag nem teljesítette az ellenőrzőösszeg-ellenőrzést a beágyazott jegyzékkel szemben.'
     integrity_storage_corpus_manifest: A corpus manifesztet nem sikerült elemezni
       vagy érvényesíteni.
     integrity_storage_corpus_manifest_drift: 'A lemezen lévő corpus eltér a manifeszttől:

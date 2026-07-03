@@ -327,6 +327,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core.corpus_manifest._errors.CorpusBundleError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_CORPUS_BUNDLE",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_corpus_bundle",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.corpus_manifest._errors.CorpusBundleVerificationError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_CORPUS_BUNDLE_VERIFICATION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_corpus_bundle_verification",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core.access_gate._errors.AccessGateSubmissionError",
         ErrorCode(
             code="ERROR_ACCESS_GATE_SUBMISSION",
