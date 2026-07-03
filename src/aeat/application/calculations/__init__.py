@@ -62,6 +62,10 @@ See Also:
         verification, filing, and export workflows.
 """
 
+from ._bienes_inversion_regularizacion import (
+    CASILLA_REGULARIZACION_BIENES_INVERSION,
+    build_bienes_inversion_regularizacion_advisory,
+)
 from ._binding_prefill import (
     BindingPrefillReport,
     LocalIvaCompensationRecurrence,
@@ -146,6 +150,7 @@ from ._row_set_assembly import (
 IvaCompensationReconciliationReport.model_rebuild()
 
 __all__ = [
+    "CASILLA_REGULARIZACION_BIENES_INVERSION",
     "M111_NO_RETENCIONES_PROFILE_PATH",
     "AssembledObservations",
     "BindingPrefillReport",
@@ -184,6 +189,7 @@ __all__ = [
     "assemble_related_party_observations",
     "assemble_withholding_observations",
     "assert_enrollment_matches_manifest",
+    "build_bienes_inversion_regularizacion_advisory",
     "correct_iva_compensation_period",
     "cross_check_iva_compensation_annual_summary",
     "cross_period_dependency_inventory",

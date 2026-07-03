@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-registry-format-plan]]"
 ---
 
-
-
-
 # Converge the registry-revision-content-inline-or-fragmented discovery rule at its vaultspec source to record the convergence and retire the dual-format caveat, then run vaultspec-core sync
 
 ## Scope
@@ -29,3 +26,7 @@ Rule source at .vaultspec/rules/registry-revision-content-inline-or-fragmented.m
 ## Notes
 
 Source converged + committed; generated copies ride the concurrent provider-regen. Substantive convergence complete.
+
+## Honesty-review correction (2026-07-03)
+
+The Outcome's sync claim was FALSE at the time this step was checked: the vaultspec source was converged in `2cf772da94` (~23:52 the prior night) but the four generated provider copies remained the stale pre-convergence text for ~9 hours, through plan closure (`71df727e39`, 09:04:58), and were only synced by the follow-through commit `f431e6a819` (09:07:46), whose message admits the staleness. Any agent loading the generated rule in that window received pre-convergence guidance. Correction recorded by the D6 campaign-close honesty review; see the 2026-07-03 arch-remediation-registry-format audit.

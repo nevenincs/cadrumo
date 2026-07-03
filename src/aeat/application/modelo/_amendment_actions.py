@@ -74,6 +74,10 @@ from ._action_errors import (
     ModeloRecordNotFoundError,
     WorkUnitNotFoundError,
 )
+from ._amendment_kind_resolution import assert_amendment_kind_permitted as _assert_amendment_kind_permitted
+from ._amendment_kind_resolution import (
+    assert_complementaria_liability_direction_permitted as _assert_complementaria_liability_direction_permitted,
+)
 from ._calculation_helpers import amendment_observations as _amendment_observations
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
@@ -198,6 +202,27 @@ def amend_modelo_revision[CasillaKey](
     now = clock or _utc_now()
     corrected_values: dict[CasillaId, Decimal] = dict(baseline_revision.casilla_values)
     corrected_values.update(canonical_overrides)
+
+    # Period-aware amendment-kind routing: refuse a requested kind the
+    # resolved (modelo, period) does not legally permit (e.g. rectificativa
+    # requested for a pre-adoption period, or complementaria requested where
+    # rectificativa has replaced it), and — for a pre-rectificativa period —
+    # refuse a complementaria that would decrease the taxpayer's declared
+    # liability (that correction is a solicitud de rectificación, LGT
+    # art. 120.3, not a complementaria, LGT art. 122.2). Both guards run
+    # before any amendment state is persisted.
+    _assert_amendment_kind_permitted(
+        modelo=str(baseline.modelo),
+        period=baseline.period,
+        amendment_kind=amendment_kind,
+    )
+    _assert_complementaria_liability_direction_permitted(
+        modelo=str(baseline.modelo),
+        period=baseline.period,
+        amendment_kind=amendment_kind,
+        baseline_casilla_values=baseline_revision.casilla_values,
+        corrected_casilla_values=corrected_values,
+    )
 
     new_revision_id = derive_calculation_revision_id(
         work_unit_id=baseline.work_unit_id,

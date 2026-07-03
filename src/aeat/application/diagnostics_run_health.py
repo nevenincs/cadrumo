@@ -32,6 +32,19 @@ introduces a new capture or storage path -- both read
 :meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
 exactly as ``run-health`` and ``runs`` do, honouring
 ``composition-service-no-parallel-write-path``.
+
+:func:`build_llm_usage_report` projects the same recorded rows into a
+run-count/duration/success-rate summary grouped by provider AND by model,
+backing the ``aeat app diagnostics llm-usage`` verb (also GitHub issue #407).
+:class:`~aeat.adapters.outbound.llm.LLMRunRecord` carries only timing and
+outcome metadata -- no token counts are recorded on this store -- so the
+usage summary reports run counts, durations, and success rate rather than
+token/cost figures (those are covered by the separate
+:mod:`aeat.application.ledger._llm_diagnostics` usage/cost/confidence
+report, which folds the distinct completion-call
+:class:`~aeat.adapters.outbound.llm.UsageRecord` log). This report again
+reuses :meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+directly -- there is no parallel capture or storage path here either.
 """
 
 from __future__ import annotations
@@ -50,10 +63,14 @@ __all__ = [
     "LatencyPercentiles",
     "LatencyReport",
     "LlmRunProviderMetrics",
+    "LlmUsageModelMetrics",
+    "LlmUsageProviderMetrics",
+    "LlmUsageReport",
     "RunHealthReport",
     "RunRecordView",
     "build_error_breakdown",
     "build_latency_report",
+    "build_llm_usage_report",
     "build_run_health_report",
     "list_recent_runs",
 ]
@@ -446,6 +463,182 @@ def build_error_breakdown(
         total_runs=len(records),
         total_failed=len(failed),
         by_error_kind=tuple(rows),
+    )
+
+
+class LlmUsageModelMetrics(BaseModel):
+    """One provider's per-model aggregate of recent local LLM run telemetry.
+
+    Aggregated from :class:`~aeat.adapters.outbound.llm.LLMRunRecord` rows
+    sharing a single provider (recorded on the owning
+    :class:`LlmUsageProviderMetrics`) AND :attr:`model`. Carries only
+    run-count, duration, and outcome metadata -- :class:`LLMRunRecord` records
+    no token counts, so this is a run/timing/success-rate summary, not a
+    token-usage summary.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    model: str = ""
+    runs: int = Field(ge=0)
+    succeeded: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    min_duration_ms: int | None = None
+    max_duration_ms: int | None = None
+    mean_duration_ms: Decimal | None = None
+    total_duration_ms: int = Field(default=0, ge=0)
+
+    @property
+    def success_rate(self) -> Decimal:
+        """Return the fraction of runs that succeeded, or ``0`` when ``runs`` is ``0``."""
+        if self.runs == 0:
+            return Decimal("0")
+        return (Decimal(self.succeeded) / Decimal(self.runs)).quantize(Decimal("0.0001"))
+
+
+class LlmUsageProviderMetrics(BaseModel):
+    """One provider's aggregate of recent local LLM run telemetry, plus its per-model rows.
+
+    :attr:`models` breaks the same provider-scoped records down further by
+    :attr:`~LlmUsageModelMetrics.model`, so an operator can see which model
+    within a provider drives run volume, duration, or failures.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    provider: str = Field(min_length=1)
+    runs: int = Field(ge=0)
+    succeeded: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    min_duration_ms: int | None = None
+    max_duration_ms: int | None = None
+    mean_duration_ms: Decimal | None = None
+    total_duration_ms: int = Field(default=0, ge=0)
+    models: tuple[LlmUsageModelMetrics, ...] = ()
+
+    @property
+    def success_rate(self) -> Decimal:
+        """Return the fraction of runs that succeeded, or ``0`` when ``runs`` is ``0``."""
+        if self.runs == 0:
+            return Decimal("0")
+        return (Decimal(self.succeeded) / Decimal(self.runs)).quantize(Decimal("0.0001"))
+
+
+class LlmUsageReport(BaseModel):
+    """Typed local-only LLM usage summary: run counts, durations, and success rate.
+
+    Produced by :func:`build_llm_usage_report`. Groups the same recorded
+    :class:`~aeat.adapters.outbound.llm.LLMRunRecord` rows
+    :func:`build_run_health_report` reads by provider (:attr:`by_provider`),
+    each provider row carrying its own per-model breakdown
+    (:attr:`~LlmUsageProviderMetrics.models`). :attr:`has_run_data` is
+    ``False`` when no LLM run telemetry has been recorded yet.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    since: date | None = None
+    until: date | None = None
+    by_provider: tuple[LlmUsageProviderMetrics, ...] = ()
+    total_runs: int = Field(default=0, ge=0)
+    total_succeeded: int = Field(default=0, ge=0)
+    total_failed: int = Field(default=0, ge=0)
+
+    @property
+    def has_run_data(self) -> bool:
+        """Return ``True`` when at least one LLM run has been recorded locally."""
+        return bool(self.by_provider)
+
+    @property
+    def overall_success_rate(self) -> Decimal:
+        """Return the fraction of all recorded runs that succeeded, or ``0`` when empty."""
+        if self.total_runs == 0:
+            return Decimal("0")
+        return (Decimal(self.total_succeeded) / Decimal(self.total_runs)).quantize(Decimal("0.0001"))
+
+
+def _usage_model_metrics(items: list[LLMRunRecord]) -> LlmUsageModelMetrics:
+    """Fold ``items`` (already scoped to one provider/model pair) into one metrics row."""
+    durations = [Decimal(item.duration_ms) for item in items]
+    return LlmUsageModelMetrics(
+        model=items[0].model,
+        runs=len(items),
+        succeeded=sum(1 for item in items if item.succeeded),
+        failed=sum(1 for item in items if not item.succeeded),
+        min_duration_ms=min(item.duration_ms for item in items),
+        max_duration_ms=max(item.duration_ms for item in items),
+        mean_duration_ms=(sum(durations, start=Decimal("0")) / Decimal(len(durations))).quantize(Decimal("0.01")),
+        total_duration_ms=sum((item.duration_ms for item in items), start=0),
+    )
+
+
+def build_llm_usage_report(
+    *,
+    since: date | None = None,
+    until: date | None = None,
+    provider: str | None = None,
+    run_telemetry_recorder: LLMRunTelemetryRecorder | None = None,
+) -> LlmUsageReport:
+    """Aggregate recorded LLM run telemetry into a usage summary by provider and model.
+
+    Reuses :meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+    directly -- the same recorder every sibling diagnostics report reads --
+    so there is no parallel capture or storage path for this report
+    (``composition-service-no-parallel-write-path``).
+    :class:`~aeat.adapters.outbound.llm.LLMRunRecord` carries no token
+    counts, so this is a run-count/duration/success-rate summary rather than
+    a token-usage summary.
+
+    Args:
+        since: Inclusive lower date bound on run records, or ``None``.
+        until: Inclusive upper date bound on run records, or ``None``.
+        provider: Optional provider label filter; ``None`` aggregates every
+            provider.
+        run_telemetry_recorder: Injected recorder (dependency injection for
+            tests); defaults to the active-bucket
+            :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`.
+
+    Returns:
+        The populated :class:`LlmUsageReport`.
+    """
+    recorder = run_telemetry_recorder or LLMRunTelemetryRecorder()
+    records = recorder.load_records(since=since, until=until)
+    if provider is not None:
+        records = tuple(item for item in records if item.provider == provider)
+
+    by_provider_model: dict[str, dict[str, list[LLMRunRecord]]] = {}
+    for record in records:
+        by_provider_model.setdefault(record.provider, {}).setdefault(record.model, []).append(record)
+
+    provider_rows: list[LlmUsageProviderMetrics] = []
+    for provider_name in sorted(by_provider_model):
+        model_groups = by_provider_model[provider_name]
+        model_rows = tuple(_usage_model_metrics(model_groups[model_name]) for model_name in sorted(model_groups))
+        provider_items = [item for items in model_groups.values() for item in items]
+        durations = [Decimal(item.duration_ms) for item in provider_items]
+        provider_rows.append(
+            LlmUsageProviderMetrics(
+                provider=provider_name,
+                runs=len(provider_items),
+                succeeded=sum(1 for item in provider_items if item.succeeded),
+                failed=sum(1 for item in provider_items if not item.succeeded),
+                min_duration_ms=min(item.duration_ms for item in provider_items),
+                max_duration_ms=max(item.duration_ms for item in provider_items),
+                mean_duration_ms=(sum(durations, start=Decimal("0")) / Decimal(len(durations))).quantize(
+                    Decimal("0.01"),
+                ),
+                total_duration_ms=sum((item.duration_ms for item in provider_items), start=0),
+                models=model_rows,
+            ),
+        )
+
+    return LlmUsageReport(
+        since=since,
+        until=until,
+        by_provider=tuple(provider_rows),
+        total_runs=len(records),
+        total_succeeded=sum(1 for item in records if item.succeeded),
+        total_failed=sum(1 for item in records if not item.succeeded),
     )
 
 

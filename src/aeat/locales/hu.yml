@@ -2801,7 +2801,8 @@ cli:
         create_name_help: A sandbox neve.
         discard_active_profile: A(z) %{name} sandbox az aktív profil; váltson másik
           profilra, mielőtt eldobná.
-        discard_dry_run_help: 'Elonezet arrol, hogy mit tavolitana el a torles, anelkul, hogy barmit is eltavolitana.'
+        discard_dry_run_help: Elonezet arrol, hogy mit tavolitana el a torles, anelkul,
+          hogy barmit is eltavolitana.
         discard_help: Egy sandbox véglegesen törlése.
         discard_name_help: A sandbox neve (előtag nélkül).
         discard_not_a_sandbox: '%{name} nem sandbox; a sandbox felület megtagadja
@@ -2812,11 +2813,15 @@ cli:
         help: Futtass kísérleteket egy elkülönített, eldobható workspace-ben, amely
           soha nem érinti a fő profil állapotát.
         list_help: Minden sandbox listázása.
-        prune_dry_run_help: 'Elonezet arrol, mely sandboxokat torolne, anelkul, hogy torolne oket.'
-        prune_help: 'Az osszes sandbox egyszerre torlese.'
-        prune_requires_yes: 'Az osszes sandbox torlese visszavonhatatlan. Futtasd ujra: ''aeat config profile sandbox prune --yes'' a megerositeshez.'
-        prune_skipped_active_info: 'Kihagyva az aktiv sandbox %{names}; valts masik profilra, majd futtasd ujra: ''aeat config profile sandbox prune --yes'' a torleshez.'
-        prune_yes_help: 'Az osszes sandbox torlesenek megerositese.'
+        prune_dry_run_help: Elonezet arrol, mely sandboxokat torolne, anelkul, hogy
+          torolne oket.
+        prune_help: Az osszes sandbox egyszerre torlese.
+        prune_requires_yes: 'Az osszes sandbox torlese visszavonhatatlan. Futtasd
+          ujra: ''aeat config profile sandbox prune --yes'' a megerositeshez.'
+        prune_skipped_active_info: 'Kihagyva az aktiv sandbox %{names}; valts masik
+          profilra, majd futtasd ujra: ''aeat config profile sandbox prune --yes''
+          a torleshez.'
+        prune_yes_help: Az osszes sandbox torlesenek megerositese.
         source_not_found: Nincs %{name} nevű élő profil, amelyből a sandbox feltölthető
           lenne.
         unknown_sandbox: 'Ismeretlen sandbox: %{name}. Futtassa az ''aeat config profile
@@ -2982,18 +2987,30 @@ cli:
         és Ön nem tudja maga javítani.
     errors:
       header: 'LLM futtatási hibák:'
-      help: 'A közelmúltbeli sikertelen helyi LLM-futtatásokat szolgáltató és hibatípus szerint bontja le.'
-      no_failures: 'Ebben az időszakban nincs rögzített sikertelen LLM-futtatás.'
-      provider_help: 'Szűkítse a bontást erre a szolgáltatói címkére (pl. claude, antigravity, codex).'
-      since_help: 'Az LLM futtatási rekordok alsó (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).'
-      until_help: 'Az LLM futtatási rekordok felső (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).'
+      help: A közelmúltbeli sikertelen helyi LLM-futtatásokat szolgáltató és hibatípus
+        szerint bontja le.
+      no_failures: Ebben az időszakban nincs rögzített sikertelen LLM-futtatás.
+      provider_help: Szűkítse a bontást erre a szolgáltatói címkére (pl. claude, antigravity,
+        codex).
+      since_help: Az LLM futtatási rekordok alsó (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).
+      until_help: Az LLM futtatási rekordok felső (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).
     latency:
       header: 'LLM futtatási késleltetés:'
-      help: 'A közelmúltbeli helyi LLM-futtatások időtartamának P50/P95/P99 percentiliseit jelenti.'
-      no_run_data: 'Még nincs rögzített LLM futtatási telemetria. Futtass egy LLM-alapú besorolást a létrehozásához.'
-      provider_help: 'Szűkítse a jelentést erre a szolgáltatói címkére (pl. claude, antigravity, codex).'
-      since_help: 'Az LLM futtatási rekordok alsó (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).'
-      until_help: 'Az LLM futtatási rekordok felső (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).'
+      help: A közelmúltbeli helyi LLM-futtatások időtartamának P50/P95/P99 percentiliseit
+        jelenti.
+      no_run_data: Még nincs rögzített LLM futtatási telemetria. Futtass egy LLM-alapú
+        besorolást a létrehozásához.
+      provider_help: Szűkítse a jelentést erre a szolgáltatói címkére (pl. claude,
+        antigravity, codex).
+      since_help: Az LLM futtatási rekordok alsó (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).
+      until_help: Az LLM futtatási rekordok felső (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).
+    llm_usage:
+      header: 'LLM-futtatások felhasználása:'
+      help: 'LLM-futtatási felhasználási összesítők jelentése (darabszám, időtartam, sikerarány) szolgáltató és modell szerint.'
+      no_run_data: 'Még nem rögzítettek LLM-futtatási telemetriát. Futtass egy LLM-alapú osztályozást az adatok létrehozásához.'
+      provider_help: 'Korlátozza az összesítést erre a szolgáltatócímkére (pl. claude, antigravity, codex).'
+      since_help: 'Alsó, záró ISO-dátumhatár (ÉÉÉÉ-HH-NN) az LLM-futtatási rekordokra.'
+      until_help: 'Felső, záró ISO-dátumhatár (ÉÉÉÉ-HH-NN) az LLM-futtatási rekordokra.'
     next_action:
       inspect_registry_toml: Vizsgálja meg a nyilvántartás TOML-forrásait a hiba azonosításához.
     repair:

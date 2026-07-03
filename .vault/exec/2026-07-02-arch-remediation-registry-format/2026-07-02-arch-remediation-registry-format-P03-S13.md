@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-registry-format-plan]]"
 ---
 
-
-
-
 # Confirm zero inline revisions remain by grep before deleting inline support
 
 ## Scope

@@ -23,10 +23,20 @@ walks this catalogue and proves, by real pytest collection, that every
 enrolled wall's guarding test still exists and still collects.
 
 This is a representative subset, not the full closed-wall set (~30+ closed
-``kent-journey``-labelled issues at time of writing). Enrolling the remainder
-is scoped as a follow-up; the mechanism (this catalogue + the gate + the CI
-wiring) is what issue ``#406`` asks for, and it generalises to any number of
-future entries with no further catalogue-format change.
+``kent-journey``-labelled issues at time of writing). A follow-up enrollment
+pass added the batch of closed issues that (a) name a concrete, still-current
+Kent-observable capability and (b) resolve to a real, collectible,
+``integration``-marked guarding test at time of enrollment. Several closed
+``kent-journey`` issues are deliberately NOT enrolled because they were closed
+as duplicate, obsolete, or superseded-by-a-later-architecture (the pre-registry
+``aeat.formulas`` ruleset issues, the pre-restructure top-level CLI surfaces,
+and the Google Cloud bootstrap issues), and therefore name no guarding test that
+still exists; enrolling those would require fabricating a test binding, which
+the gate's subprocess-run mechanism would then fail on for reasons unrelated to
+a real regression. Enrolling the remainder is scoped as an ongoing follow-up;
+the mechanism (this catalogue + the gate + the CI wiring) is what issue
+``#406`` asks for, and it generalises to any number of future entries with no
+further catalogue-format change.
 """
 
 from __future__ import annotations
@@ -125,6 +135,66 @@ KENT_WALL_CATALOGUE: tuple[KentWallEntry, ...] = (
         ),
         test_module="src/aeat/entrypoints/cli/tests/test_ledger_persona_autonoma_close.py",
         test_function="test_marta_closes_1t_2025_end_to_end",
+    ),
+    KentWallEntry(
+        issue=223,
+        kent_perspective="Kent records WHY when he classifies a transaction, via a --reason flag that persists to notes.",
+        test_module="src/aeat/entrypoints/cli/tests/test_ledger_classify_ux.py",
+        test_function="test_classify_reason_persists_to_transaction_notes",
+    ),
+    KentWallEntry(
+        issue=263,
+        kent_perspective="Kent filters his transaction catalogue by an AEAT period token plus year, not a bespoke calendar grammar.",
+        test_module="src/aeat/entrypoints/cli/tests/test_ledger_period_grammar.py",
+        test_function="test_aeat_token_plus_year_resolves_to_period",
+    ),
+    KentWallEntry(
+        issue=260,
+        kent_perspective="Kent runs one command to walk the data-prep workflow and sees which step he is on.",
+        test_module="src/aeat/entrypoints/cli/tests/test_overview_prepare_verb.py",
+        test_function="test_prepare_shows_import_step_pending_on_fresh_profile",
+    ),
+    KentWallEntry(
+        issue=261,
+        kent_perspective="Kent asks what data he needs for a given modelo and period and gets a registry-grounded checklist.",
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_requires_data_inventory.py",
+        test_function="test_requires_classifies_m130_casillas_against_live_registry_no_active_profile",
+    ),
+    KentWallEntry(
+        issue=276,
+        kent_perspective="Kent backs up his local catalogue to an archive and restores it on a fresh machine without data loss.",
+        test_module="src/aeat/entrypoints/cli/tests/test_profile_archive_roundtrip.py",
+        test_function="test_archive_export_import_recovery_wrap_roundtrip",
+    ),
+    KentWallEntry(
+        issue=219,
+        kent_perspective="Kent builds a Modelo 130 draft through a guided wizard instead of hand-writing casilla-code JSON.",
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_work_wizard.py",
+        test_function="test_wizard_drives_m130_draft_through_full_prompt_sequence",
+    ),
+    KentWallEntry(
+        issue=217,
+        kent_perspective="Kent bulk-classifies hundreds of transactions from a CSV instead of one-by-one.",
+        test_module="src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py",
+        test_function="test_classify_from_csv_applies_all_valid_rows",
+    ),
+    KentWallEntry(
+        issue=423,
+        kent_perspective="Kent at 11pm on deadline night files in one command via aeat quickfile, all the way to an exported fichero.",
+        test_module="src/aeat/entrypoints/cli/tests/test_app_quickfile.py",
+        test_function="test_quickfile_runs_full_chain_to_exported_fichero",
+    ),
+    KentWallEntry(
+        issue=419,
+        kent_perspective="Kent files an Autoliquidacion Rectificativa IVA correction on Modelo 303 through the guided amend wizard.",
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_amend_wizard.py",
+        test_function="test_amend_wizard_drives_full_prompt_sequence_and_files_correction",
+    ),
+    KentWallEntry(
+        issue=425,
+        kent_perspective="Kent sees actionable post-filing AEAT events (requerimientos, propuestas, devoluciones) surfaced as a single warning notice.",
+        test_module="src/aeat/entrypoints/cli/tests/test_overview_post_filing_notices.py",
+        test_function="test_actionable_events_emit_single_warning_notice",
     ),
 )
 """The enrolled representative subset of closed Kent walls.

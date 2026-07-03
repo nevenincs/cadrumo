@@ -11,16 +11,6 @@ related:
   - '[[2026-07-02-arch-remediation-registry-format-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `arch-remediation-registry-format` plan
 
 ### Phase `P01` - mechanical majority migration
@@ -54,6 +44,7 @@ At zero inline revisions, delete the loader inline-parsing branches, add the lou
 - [x] `P03.S15` - Add a loud loader refusal that raises a load error naming the fragmented layout when an inline bindings or formulas table appears in revision.toml; `src/aeat/domain/calculations/registry/_loader.py`.
 - [x] `P03.S16` - Converge the registry-revision-content-inline-or-fragmented discovery rule at its vaultspec source to record the convergence and retire the dual-format caveat, then run vaultspec-core sync; `.vaultspec/rules/registry-revision-content-inline-or-fragmented.md`.
 - [x] `P03.S17` - Delete the parameterised compiled-schema equality harness now that migration is complete; `src/aeat/domain/calculations/registry/tests/test_inline_fragment_equality.py`.
+- [x] `P03.S18` - Retroactively document the eight unplanned inline-revision migrations (136, 189, 280, 289, 296, 345, 379, 303/2023-y-siguientes) with commit evidence and equality-proof references; `.vault/exec/2026-07-02-arch-remediation-registry-format/`.
 
 ## Description
 

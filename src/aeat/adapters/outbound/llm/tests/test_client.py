@@ -22,6 +22,7 @@ from .. import (
     LLMProviderError,
     LLMRateLimitError,
     LLMRequest,
+    LLMRunTelemetryRecorder,
     UsageRecorder,
 )
 from .._providers import ProviderRequest
@@ -123,6 +124,93 @@ def test_client_surfaces_rate_limit_error(tmp_path: Path) -> None:
     )
     with pytest.raises(LLMRateLimitError):
         asyncio.run(client.complete(LLMRequest(prompt="hello")))
+
+
+def test_client_records_run_telemetry_on_success(tmp_path: Path) -> None:
+    """A successful completion records one succeeded run-timing record."""
+
+    settings = EnvFileFreeSettings(
+        aeat_llm_provider=LLMProviderSetting.ANTHROPIC,
+        aeat_llm_model="claude-sonnet-4-6",
+        aeat_llm_cache_dir=tmp_path / "cache",
+        aeat_llm_usage_dir=tmp_path / "usage",
+        aeat_llm_run_telemetry_dir=tmp_path / "run-telemetry",
+    )
+    run_recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "run-telemetry")
+    client = LLMClient(
+        settings=settings,
+        cache=LLMCache(root_dir=tmp_path / "cache"),
+        usage_recorder=UsageRecorder(root_dir=tmp_path / "usage"),
+        run_telemetry_recorder=run_recorder,
+        adapter_override=_DeterministicAdapter(response_text="run-telemetry-check"),
+    )
+    asyncio.run(client.complete(LLMRequest(prompt="hello")))
+
+    records = run_recorder.load_records()
+    assert len(records) == 1
+    record = records[0]
+    assert record.succeeded is True
+    assert record.error_kind == ""
+    assert record.provider == "ANTHROPIC"
+    assert record.model == "claude-sonnet-4-6"
+    assert record.duration_ms >= 0
+
+
+def test_client_cache_hit_does_not_record_a_second_run(tmp_path: Path) -> None:
+    """A cache-hit completion must not append a second run-timing record.
+
+    Only the real provider call is diagnostically interesting for "how long
+    did the LLM take"; a cache hit is near-instant and would only dilute the
+    duration distribution.
+    """
+
+    settings = EnvFileFreeSettings(
+        aeat_llm_provider=LLMProviderSetting.ANTHROPIC,
+        aeat_llm_model="claude-sonnet-4-6",
+        aeat_llm_cache_dir=tmp_path / "cache",
+        aeat_llm_usage_dir=tmp_path / "usage",
+        aeat_llm_run_telemetry_dir=tmp_path / "run-telemetry",
+    )
+    run_recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "run-telemetry")
+    client = LLMClient(
+        settings=settings,
+        cache=LLMCache(root_dir=tmp_path / "cache"),
+        usage_recorder=UsageRecorder(root_dir=tmp_path / "usage"),
+        run_telemetry_recorder=run_recorder,
+        adapter_override=_DeterministicAdapter(response_text="cached-run"),
+    )
+    request = LLMRequest(prompt="hello")
+    asyncio.run(client.complete(request))
+    asyncio.run(client.complete(request))
+
+    assert len(run_recorder.load_records()) == 1
+
+
+def test_client_records_run_telemetry_on_provider_failure(tmp_path: Path) -> None:
+    """A provider failure records one failed run-timing record naming the error kind."""
+
+    settings = EnvFileFreeSettings(
+        aeat_llm_provider=LLMProviderSetting.ANTHROPIC,
+        aeat_llm_model="claude-sonnet-4-6",
+        aeat_llm_cache_dir=tmp_path / "cache",
+        aeat_llm_usage_dir=tmp_path / "usage",
+        aeat_llm_run_telemetry_dir=tmp_path / "run-telemetry",
+    )
+    run_recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "run-telemetry")
+    client = LLMClient(
+        settings=settings,
+        cache=LLMCache(root_dir=tmp_path / "cache"),
+        usage_recorder=UsageRecorder(root_dir=tmp_path / "usage"),
+        run_telemetry_recorder=run_recorder,
+        adapter_override=_DeterministicAdapter(error_mode="provider"),
+    )
+    with pytest.raises(LLMProviderError):
+        asyncio.run(client.complete(LLMRequest(prompt="hello")))
+
+    records = run_recorder.load_records()
+    assert len(records) == 1
+    assert records[0].succeeded is False
+    assert records[0].error_kind == "LLMProviderError"
 
 
 def test_secretstr_masks_llm_keys_in_settings_repr() -> None:

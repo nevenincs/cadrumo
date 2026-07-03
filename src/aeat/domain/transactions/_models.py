@@ -311,11 +311,24 @@ def _validate_non_negative_decimal(value: Decimal | None, *, field_name: str) ->
 
 
 def _coerce_raw_transaction(raw: object) -> RawTransaction:
-    """Accept a RawTransaction or a mapping/JSON-like and produce the typed record."""
+    """Accept a RawTransaction or a mapping/JSON-like and produce the typed record.
+
+    ``strict=False`` is passed explicitly because :class:`RawTransaction`'s own
+    ``model_config`` is ``strict=True`` (see ``STRICT_FROZEN_CONFIG``): under
+    strict mode, ``model_validate`` on a plain dict rejects a string-typed
+    ``datetime``/``date``/enum value outright (it demands the exact Python
+    type), which is exactly the shape every JSON-decoded storage row carries
+    -- so a strict attempt here would fail on *every* load-from-storage call,
+    permanently falling through to the ``json.dumps`` + ``model_validate_json``
+    round-trip below. Overriding to lax mode accepts both a JSON-decoded dict
+    (string dates/enums) and a genuine Python-native dict (manual construction
+    with real ``Decimal``/``date`` objects) in one pass, so the expensive
+    JSON re-encode fallback is reserved for payloads that are not a mapping.
+    """
     if isinstance(raw, RawTransaction):
         return raw
     try:
-        return RawTransaction.model_validate(raw)
+        return RawTransaction.model_validate(raw, strict=False)
     except ValidationError:
         return RawTransaction.model_validate_json(json.dumps(raw, default=_json_default, ensure_ascii=True))
 

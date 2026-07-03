@@ -2843,7 +2843,8 @@ cli:
         create_name_help: Nom del sandbox.
         discard_active_profile: El sandbox %{name} és el perfil actiu; canvieu a un
           altre perfil abans de descartar-lo.
-        discard_dry_run_help: 'Mostra una previsualitzacio del que eliminaria el descart sense eliminar res.'
+        discard_dry_run_help: Mostra una previsualitzacio del que eliminaria el descart
+          sense eliminar res.
         discard_help: Elimina permanentment un sandbox.
         discard_name_help: Nom del sandbox (sense el prefix).
         discard_not_a_sandbox: '%{name} no és un sandbox; la superfície de sandbox
@@ -2854,11 +2855,15 @@ cli:
         help: Executa experiments en un bucket aïllat i descartable que mai afecta
           l'estat del perfil principal.
         list_help: Llista tots els sandboxes.
-        prune_dry_run_help: 'Mostra una previsualitzacio de quins sandboxes es descartarien sense descartar-los.'
-        prune_help: 'Descarta tots els sandboxes alhora.'
-        prune_requires_yes: 'Descartar tots els sandboxes es destructiu. Torna a executar ''aeat config profile sandbox prune --yes'' per confirmar.'
-        prune_skipped_active_info: 'S''ha omes el sandbox actiu %{names}; canvia a un altre perfil i torna a executar ''aeat config profile sandbox prune --yes'' per descartar-lo.'
-        prune_yes_help: 'Confirma el descart de tots els sandboxes.'
+        prune_dry_run_help: Mostra una previsualitzacio de quins sandboxes es descartarien
+          sense descartar-los.
+        prune_help: Descarta tots els sandboxes alhora.
+        prune_requires_yes: Descartar tots els sandboxes es destructiu. Torna a executar
+          'aeat config profile sandbox prune --yes' per confirmar.
+        prune_skipped_active_info: S'ha omes el sandbox actiu %{names}; canvia a un
+          altre perfil i torna a executar 'aeat config profile sandbox prune --yes'
+          per descartar-lo.
+        prune_yes_help: Confirma el descart de tots els sandboxes.
         source_not_found: No existeix cap perfil actiu anomenat %{name} per copiar
           al sandbox.
         unknown_sandbox: 'Sandbox desconegut: %{name}. Executeu ''aeat config profile
@@ -3021,18 +3026,34 @@ cli:
         del teu perfil ni una cosa que puguis corregir tu.
     errors:
       header: 'Errors d''execucions LLM:'
-      help: 'Desglossa les execucions LLM locals fallides recents per proveïdor i tipus d''error.'
-      no_failures: 'No s''ha registrat cap execució LLM fallida en aquest interval.'
-      provider_help: 'Restringeix el desglossament a aquesta etiqueta de proveïdor (per exemple, claude, antigravity, codex).'
-      since_help: 'Límit inferior inclusiu (AAAA-MM-DD) en els registres d''execucions LLM.'
-      until_help: 'Límit superior inclusiu (AAAA-MM-DD) en els registres d''execucions LLM.'
+      help: Desglossa les execucions LLM locals fallides recents per proveïdor i tipus
+        d'error.
+      no_failures: No s'ha registrat cap execució LLM fallida en aquest interval.
+      provider_help: Restringeix el desglossament a aquesta etiqueta de proveïdor
+        (per exemple, claude, antigravity, codex).
+      since_help: Límit inferior inclusiu (AAAA-MM-DD) en els registres d'execucions
+        LLM.
+      until_help: Límit superior inclusiu (AAAA-MM-DD) en els registres d'execucions
+        LLM.
     latency:
       header: 'Latència d''execucions LLM:'
-      help: 'Mostra els percentils P50/P95/P99 de durada de les execucions LLM locals recents.'
+      help: Mostra els percentils P50/P95/P99 de durada de les execucions LLM locals
+        recents.
+      no_run_data: Encara no s'ha registrat telemetria d'execucions LLM. Executa una
+        classificació assistida per LLM per generar-la.
+      provider_help: Restringeix l'informe a aquesta etiqueta de proveïdor (per exemple,
+        claude, antigravity, codex).
+      since_help: Límit inferior inclusiu (AAAA-MM-DD) en els registres d'execucions
+        LLM.
+      until_help: Límit superior inclusiu (AAAA-MM-DD) en els registres d'execucions
+        LLM.
+    llm_usage:
+      header: 'Ús d''execucions LLM:'
+      help: 'Informa dels totals d''ús d''execucions LLM (recomptes, durades, taxa d''èxit) per proveïdor i model.'
       no_run_data: 'Encara no s''ha registrat telemetria d''execucions LLM. Executa una classificació assistida per LLM per generar-la.'
-      provider_help: 'Restringeix l''informe a aquesta etiqueta de proveïdor (per exemple, claude, antigravity, codex).'
-      since_help: 'Límit inferior inclusiu (AAAA-MM-DD) en els registres d''execucions LLM.'
-      until_help: 'Límit superior inclusiu (AAAA-MM-DD) en els registres d''execucions LLM.'
+      provider_help: 'Restringeix el resum a aquesta etiqueta de proveïdor (p. ex. claude, antigravity, codex).'
+      since_help: 'Límit inferior inclusiu en data ISO (AAAA-MM-DD) sobre els registres d''execució LLM.'
+      until_help: 'Límit superior inclusiu en data ISO (AAAA-MM-DD) sobre els registres d''execució LLM.'
     next_action:
       inspect_registry_toml: Inspecciona les fonts TOML del registre per identificar
         el problema.

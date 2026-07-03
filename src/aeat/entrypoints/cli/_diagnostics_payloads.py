@@ -3,8 +3,11 @@
 Every declared payload is an :class:`OutputSchema` subclass registered with
 :func:`register_schema` for the local-only run-health diagnostic surface
 carried by :class:`SchemaEnvelope` through :func:`_emit_envelope`. These
-schemas project :class:`~aeat.application.diagnostics_run_health.RunHealthReport`
-into the CLI JSON contract.
+schemas project :class:`~aeat.application.diagnostics_run_health.RunHealthReport`,
+:class:`~aeat.application.diagnostics_run_health.LatencyReport`,
+:class:`~aeat.application.diagnostics_run_health.ErrorsBreakdownReport`, and
+:class:`~aeat.application.diagnostics_run_health.LlmUsageReport` into the CLI
+JSON contract.
 """
 
 from __future__ import annotations
@@ -157,3 +160,64 @@ class ErrorsBreakdownResult(OutputSchema):
     total_failed: int
     by_error_kind: list[ErrorKindCountPayload]
     has_failures: bool
+
+
+class LlmUsageModelPayload(OutputSchema):
+    """One provider's per-model aggregated run-usage metrics.
+
+    Mirrors :class:`~aeat.application.diagnostics_run_health.LlmUsageModelMetrics`.
+    """
+
+    model: str
+    runs: int
+    succeeded: int
+    failed: int
+    min_duration_ms: int | None = None
+    max_duration_ms: int | None = None
+    mean_duration_ms: str | None = None
+    total_duration_ms: int
+    success_rate: str
+
+
+class LlmUsageProviderPayload(OutputSchema):
+    """One provider's aggregated run-usage metrics, plus its per-model breakdown.
+
+    Mirrors :class:`~aeat.application.diagnostics_run_health.LlmUsageProviderMetrics`.
+    """
+
+    provider: str
+    runs: int
+    succeeded: int
+    failed: int
+    min_duration_ms: int | None = None
+    max_duration_ms: int | None = None
+    mean_duration_ms: str | None = None
+    total_duration_ms: int
+    success_rate: str
+    models: list[LlmUsageModelPayload]
+
+
+@register_schema("diagnostics.llm_usage")
+class LlmUsageResult(OutputSchema):
+    """JSON envelope for ``aeat app diagnostics llm-usage``.
+
+    Presents a run-count/duration/success-rate usage summary grouped by
+    provider and, within each provider, by model. Sourced from
+    :func:`~aeat.application.diagnostics_run_health.build_llm_usage_report`,
+    which projects the same recorded
+    :class:`~aeat.adapters.outbound.llm.LLMRunRecord` telemetry every sibling
+    diagnostics verb reads -- no new capture or storage path. That record
+    carries no token counts, so this is a run/timing/success-rate summary
+    rather than a token-usage summary; it reports only accounting/timing
+    metadata, never prompt or response content.
+    """
+
+    since: str | None = None
+    until: str | None = None
+    provider: str | None = None
+    by_provider: list[LlmUsageProviderPayload]
+    total_runs: int
+    total_succeeded: int
+    total_failed: int
+    overall_success_rate: str
+    has_run_data: bool

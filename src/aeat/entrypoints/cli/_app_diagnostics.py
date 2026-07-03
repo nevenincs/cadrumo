@@ -1,28 +1,31 @@
 """CLI commands for the ``aeat app diagnostics`` subcommand group.
 
-Provides the ``run-health``, ``runs``, ``latency``, and ``errors`` verbs:
-local-only, read-only reports over recent LLM classification/completion run
-timing (duration, provider, outcome), so an operator can diagnose a slow
-LLM-backed run, a stale/expired auth session, or a recurring failure mode
-without leaving the host (GitHub issue #407). ``run-health`` folds the run
-telemetry with the persisted-AEAT-session staleness probe into one
-aggregate-by-provider report; ``runs`` lists the individual recorded runs,
-most-recent-first; ``latency`` reports P50/P95/P99 duration percentiles
-overall and per provider; ``errors`` breaks down failed runs by provider and
-``error_kind``. None of the four verbs ever contacts AEAT or performs a
-network call; LLM run telemetry is read from encrypted local secure-object
-storage and the auth probe reads only the locally persisted session token's
-metadata.
+Provides the ``run-health``, ``runs``, ``latency``, ``errors``, and
+``llm-usage`` verbs: local-only, read-only reports over recent LLM
+classification/completion run timing (duration, provider, outcome), so an
+operator can diagnose a slow LLM-backed run, a stale/expired auth session, or
+a recurring failure mode without leaving the host (GitHub issue #407).
+``run-health`` folds the run telemetry with the persisted-AEAT-session
+staleness probe into one aggregate-by-provider report; ``runs`` lists the
+individual recorded runs, most-recent-first; ``latency`` reports P50/P95/P99
+duration percentiles overall and per provider; ``errors`` breaks down failed
+runs by provider and ``error_kind``; ``llm-usage`` reports run counts,
+durations, and success rate grouped by provider and, within each provider, by
+model. None of the five verbs ever contacts AEAT or performs a network call;
+LLM run telemetry is read from encrypted local secure-object storage and the
+auth probe reads only the locally persisted session token's metadata.
 
 This module is the transport adapter over
 :func:`~aeat.application.diagnostics_run_health.build_run_health_report`,
 :func:`~aeat.application.diagnostics_run_health.list_recent_runs`,
-:func:`~aeat.application.diagnostics_run_health.build_latency_report`, and
-:func:`~aeat.application.diagnostics_run_health.build_error_breakdown`. It
+:func:`~aeat.application.diagnostics_run_health.build_latency_report`,
+:func:`~aeat.application.diagnostics_run_health.build_error_breakdown`, and
+:func:`~aeat.application.diagnostics_run_health.build_llm_usage_report`. It
 emits :class:`~aeat.entrypoints.cli._diagnostics_payloads.RunHealthResult`,
 :class:`~aeat.entrypoints.cli._diagnostics_payloads.RunsListResult`,
-:class:`~aeat.entrypoints.cli._diagnostics_payloads.LatencyResult`, and
-:class:`~aeat.entrypoints.cli._diagnostics_payloads.ErrorsBreakdownResult`
+:class:`~aeat.entrypoints.cli._diagnostics_payloads.LatencyResult`,
+:class:`~aeat.entrypoints.cli._diagnostics_payloads.ErrorsBreakdownResult`,
+and :class:`~aeat.entrypoints.cli._diagnostics_payloads.LlmUsageResult`
 through :func:`_emit_envelope`.
 """
 
@@ -42,6 +45,9 @@ from ._diagnostics_payloads import (
     LatencyProviderRowPayload,
     LatencyResult,
     LlmRunProviderPayload,
+    LlmUsageModelPayload,
+    LlmUsageProviderPayload,
+    LlmUsageResult,
     RunHealthResult,
     RunRecordPayload,
     RunsListResult,
@@ -497,6 +503,113 @@ def diagnostics_errors(
             lines.append(f"{row.provider}\t{row.error_kind}\tcount={row.count}")
 
     _emit_envelope(ctx, command="diagnostics.errors", result=result, lines=lines, notices=notices)
+
+
+@app.command(
+    "llm-usage",
+    help=tr(
+        "cli.diagnostics.llm_usage.help",
+        default="Report LLM run-usage totals (counts, durations, success rate) by provider and model.",
+    ),
+)
+def diagnostics_llm_usage(
+    ctx: typer.Context,
+    since: str | None = typer.Option(
+        None,
+        "--since",
+        help=tr(
+            "cli.diagnostics.llm_usage.since_help",
+            default="Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.",
+        ),
+    ),
+    until: str | None = typer.Option(
+        None,
+        "--until",
+        help=tr(
+            "cli.diagnostics.llm_usage.until_help",
+            default="Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.",
+        ),
+    ),
+    provider: str | None = typer.Option(
+        None,
+        "--provider",
+        help=tr(
+            "cli.diagnostics.llm_usage.provider_help",
+            default="Restrict the summary to this provider label (e.g. claude, antigravity, codex).",
+        ),
+    ),
+) -> None:
+    """Report LLM run-usage totals (counts, durations, success rate) by provider and model."""
+    from ...application.diagnostics_run_health import build_llm_usage_report
+    from ...core.json_contract import Notice, NoticeSeverity
+
+    since_date = _parse_iso_date(since, "--since")
+    until_date = _parse_iso_date(until, "--until")
+
+    report = build_llm_usage_report(since=since_date, until=until_date, provider=provider)
+
+    result = LlmUsageResult(
+        since=since_date.isoformat() if since_date is not None else None,
+        until=until_date.isoformat() if until_date is not None else None,
+        provider=provider,
+        by_provider=[
+            LlmUsageProviderPayload(
+                provider=row.provider,
+                runs=row.runs,
+                succeeded=row.succeeded,
+                failed=row.failed,
+                min_duration_ms=row.min_duration_ms,
+                max_duration_ms=row.max_duration_ms,
+                mean_duration_ms=_optional_decimal_text(row.mean_duration_ms),
+                total_duration_ms=row.total_duration_ms,
+                success_rate=format(row.success_rate, "f"),
+                models=[
+                    LlmUsageModelPayload(
+                        model=model_row.model,
+                        runs=model_row.runs,
+                        succeeded=model_row.succeeded,
+                        failed=model_row.failed,
+                        min_duration_ms=model_row.min_duration_ms,
+                        max_duration_ms=model_row.max_duration_ms,
+                        mean_duration_ms=_optional_decimal_text(model_row.mean_duration_ms),
+                        total_duration_ms=model_row.total_duration_ms,
+                        success_rate=format(model_row.success_rate, "f"),
+                    )
+                    for model_row in row.models
+                ],
+            )
+            for row in report.by_provider
+        ],
+        total_runs=report.total_runs,
+        total_succeeded=report.total_succeeded,
+        total_failed=report.total_failed,
+        overall_success_rate=format(report.overall_success_rate, "f"),
+        has_run_data=report.has_run_data,
+    )
+
+    lines: list[str] = [tr("cli.diagnostics.llm_usage.header", default="LLM run usage:")]
+    notices: list[Notice] = []
+    if not report.has_run_data:
+        message = tr(
+            "cli.diagnostics.llm_usage.no_run_data",
+            default="No LLM run telemetry recorded yet. Run an LLM-assisted classification to populate it.",
+        )
+        lines.append(message)
+        notices.append(Notice(severity=NoticeSeverity.INFO, code="diagnostics.llm_usage.no_run_data", message=message))
+    else:
+        for row in result.by_provider:
+            lines.append(
+                f"{row.provider}\truns={row.runs}\tok={row.succeeded}\tfailed={row.failed}"
+                f"\tsuccess_rate={row.success_rate}\ttotal_ms={row.total_duration_ms}\tmean_ms={row.mean_duration_ms}",
+            )
+            for model_row in row.models:
+                lines.append(
+                    f"  {model_row.model or '(unknown)'}\truns={model_row.runs}\tok={model_row.succeeded}"
+                    f"\tfailed={model_row.failed}\tsuccess_rate={model_row.success_rate}"
+                    f"\ttotal_ms={model_row.total_duration_ms}\tmean_ms={model_row.mean_duration_ms}",
+                )
+
+    _emit_envelope(ctx, command="diagnostics.llm_usage", result=result, lines=lines, notices=notices)
 
 
 def _optional_decimal_text(value: Decimal | None) -> str | None:
