@@ -15,14 +15,21 @@ regresses.
 Three ratcheting/pinned checks, backed by the checked-in
 ``dev/import_hygiene_baseline.json``:
 
-- **Family 1 (production cross-package private imports).** The gate fails if
-  the current non-test violation COUNT exceeds the baseline, or if the current
-  violation SET is not a subset of the named baseline sites (a new, unnamed
-  violation fails even if an old one was fixed in the same pass, keeping the
-  baseline honest as a named allowlist rather than a bare counter). A closing
-  commit that fixes a violation shrinks ``sites`` in the same commit
-  (``aeat-architecture-boundaries`` relocation-atomicity discipline). A future
-  remediation pass flips ``sites`` to ``[]`` once production reaches hard zero.
+- **Family 1 (production cross-package private imports).** HARD ZERO (2026-07)
+  for the exception this baseline was seeded to track: the
+  ``application.review`` <-> ``application.workflow`` cycle-break was
+  structurally removed by extracting the four mutually-needed runtime-bound
+  names (``WorkflowEvent``, ``utc_now``, ``InvoiceReviewRecord``,
+  ``LedgerReviewRecord``) into a shared leaf module,
+  ``aeat.application._workflow_review_models``, that neither package depends
+  on. The baseline's ``sites`` list is now permanently ``[]``. The gate keeps
+  its ratchet/named-set-equality shape (count may not exceed the baseline;
+  every current violation must be a named baseline entry) rather than a bare
+  ``== []`` assertion, so a genuinely new, unrelated production exception
+  introduced by a different in-flight campaign is forced through the same
+  documented-exception discipline instead of silently reopening tolerance for
+  the cycle-break this pass closed. In the steady state (baseline ``[]``) both
+  checks are equivalent to "zero production Family-1 violations".
 - **Family 2 (shim / pure-reexport modules).** The gate asserts the current
   shim set is EXACTLY the 6 documented bridges named in the baseline -- not a
   ceiling, an equality. A new undocumented shim fails; a bridge that stops
@@ -152,35 +159,56 @@ def test_baseline_file_is_well_formed() -> None:
     assert "family3_pinned_duplicate_symbols" in baseline
 
 
+def test_production_family1_baseline_is_hard_zero() -> None:
+    """The checked-in baseline's production Family-1 ``sites`` list must be empty.
+
+    The ``application.review`` <-> ``application.workflow`` cycle-break this
+    baseline used to carry has been structurally removed (see the shared
+    ``aeat.application._workflow_review_models`` leaf module). ``sites`` is
+    now a permanent ``[]``; this pins that the baseline itself has not
+    regressed back to a ratchet allowlist for that specific exception.
+    """
+    baseline_sites = _baseline_sites(_load_baseline())
+    assert baseline_sites == (), (
+        "dev/import_hygiene_baseline.json's production Family-1 'sites' must stay [] now that "
+        "the application.review <-> application.workflow cycle-break has been structurally "
+        "removed; do not re-populate it to tolerate that specific exception again."
+    )
+
+
 def test_production_family1_violations_do_not_exceed_baseline_count() -> None:
     """The gate fails if MORE production cross-package private imports appear than baselined.
 
-    This is the ratchet: the count may only stay flat or shrink. It is
-    computed from a live AST scan of ``src/aeat`` on every run, so it cannot
-    go stale.
+    The baseline is now hard-zero (``sites == []``) for the
+    ``application.review`` <-> ``application.workflow`` cycle-break this gate
+    was seeded to track, so in the steady state this assertion is exactly
+    ``len(current_sites) <= 0``. This is still expressed as a ratchet (not a
+    bare ``== []`` on the current scan) so that a DIFFERENT, unrelated
+    production Family-1 exception introduced by another in-flight campaign is
+    forced through the same named-exception discipline -- added to ``sites``
+    with its own reasoned entry in the same commit that introduces it -- rather
+    than silently reopening tolerance for the cycle-break this pass closed.
     """
     baseline_sites = _baseline_sites(_load_baseline())
     current_sites = _current_production_family1_sites()
 
     assert len(current_sites) <= len(baseline_sites), (
         f"production Family-1 cross-package private-import count regressed: "
-        f"{len(current_sites)} current > {len(baseline_sites)} baselined. "
+        f"{len(current_sites)} current > {len(baseline_sites)} baselined (baseline is hard-zero). "
         f"Every new site must be a documented exception added to {repo_relative(_BASELINE_PATH)} "
         "in the same commit that introduces it, or (preferably) fixed by promoting the symbol to "
-        "the owning package's public facade."
+        "the owning package's public facade or extracting a shared leaf module."
     )
 
 
 def test_production_family1_violations_are_exactly_the_named_baseline_set() -> None:
     """Every current production violation must be a NAMED baseline entry.
 
-    A bare count ratchet would let a new violation slip in unnoticed as long
-    as an old one was fixed in the same pass (net count unchanged). Asserting
-    set equality against the named sites keeps the baseline an honest,
-    reviewable allowlist -- not a silent counter -- per the
-    ``no-dormant-source-resolvers`` / ``no-silent-under-declaration`` family of
-    disciplines: an unrouted, unnamed violation must surface, never hide
-    behind another site's fix.
+    With the baseline hard-zero (``sites == []``), this reduces to asserting
+    the live scan finds zero production Family-1 sites -- but keeps the
+    named-set-equality shape (rather than a bare count) so a new, unnamed
+    violation is reported by exact site rather than only by count, and so any
+    future reasoned exception is added as a named entry, not a bare number.
     """
     baseline_sites = set(_baseline_sites(_load_baseline()))
     current_sites = set(_current_production_family1_sites())
@@ -191,7 +219,8 @@ def test_production_family1_violations_are_exactly_the_named_baseline_set() -> N
     )
     assert unnamed == [], (
         "new, undocumented production Family-1 cross-package private import(s) found "
-        f"(not present in {repo_relative(_BASELINE_PATH)}):\n  " + "\n  ".join(unnamed)
+        f"(not present in {repo_relative(_BASELINE_PATH)}, which is hard-zero for the "
+        "application.review <-> application.workflow cycle-break):\n  " + "\n  ".join(unnamed)
     )
 
 
