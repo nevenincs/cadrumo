@@ -33,13 +33,15 @@ if TYPE_CHECKING:
 
 # The distilled static embedding model. Licence: MIT code AND MIT weights,
 # distilled from BGE-m3 (MIT) on the C4 (ODC-BY) corpus — the attribution
-# line lands in THIRD_PARTY_NOTICES. The exact pinned commit SHA is the
-# research doc's single open verification item (packaged byte size),
-# resolved at the download-UX boundary (S80/packaging); until then the
-# revision below is the tracked default and rides through to the result
-# record for provenance.
+# line lands in THIRD_PARTY_NOTICES. The revision is pinned to a concrete
+# commit SHA (not the moving ``main`` branch) so a first-use download is
+# reproducible and cannot silently pull a re-published model; it rides through
+# to the result record for provenance. Measured footprint at this revision:
+# ~0.5 GB per weight file (safetensors), ~2.1 GB resident in the HF hub cache
+# (onnx + safetensors + no-symlink blob duplication) — the first-use download
+# cost of opting into the ``aeat[search]`` extra.
 POTION_MODEL_ID = "minishlab/potion-multilingual-128M"
-POTION_MODEL_REVISION = "main"
+POTION_MODEL_REVISION = "73908c3438cf03b6a01bcb9611d62b23d0726f08"
 
 
 def embed_corpus(
