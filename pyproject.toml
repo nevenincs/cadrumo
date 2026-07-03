@@ -81,7 +81,6 @@ dependencies = [
   # localise AEAT timestamps to Europe/Madrid).
   "tzdata>=2026.2 ; sys_platform == 'win32'",
   "xlrd>=2.0.1,<3",
-  "vaultspec-rag[mcp]>=0.2.28",
 ]
 
 [project.scripts]
@@ -262,9 +261,11 @@ dev = [
   # Wall-clock control for deadline/expedientes tests; banned in live files.
   "time-machine>=2.16.0",
   "ty>=0.0.1a1",
-  # Vault tooling — contributor-only; not imported by src/aeat/.
+  # Vault tooling — contributor-only; not imported by src/aeat/. vaultspec-rag
+  # carries the [mcp] extra here (demoted from the base dependency set): it is
+  # developer search tooling, so a published product wheel must not ship it.
   "vaultspec-core>=0.1.25",
-  "vaultspec-rag>=0.2.26",
+  "vaultspec-rag[mcp]>=0.2.28",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/aeat/.
   "sphinx>=8.1,<9",  # <9: sphinx-hoverxref 1.4.2 (latest) crashes on Sphinx 9's _Opt config repr at config-inited

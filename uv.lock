@@ -53,7 +53,6 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "typer" },
     { name = "tzdata", marker = "sys_platform == 'win32'" },
-    { name = "vaultspec-rag", extra = ["mcp"] },
     { name = "xlrd" },
 ]
 
@@ -148,7 +147,7 @@ dev = [
     { name = "types-reportlab" },
     { name = "types-xlrd" },
     { name = "vaultspec-core" },
-    { name = "vaultspec-rag" },
+    { name = "vaultspec-rag", extra = ["mcp"] },
     { name = "vulture" },
 ]
 
@@ -193,7 +192,6 @@ requires-dist = [
     { name = "sqlalchemy", specifier = ">=2.0.36,<3" },
     { name = "typer", specifier = ">=0.20.0,<1" },
     { name = "tzdata", marker = "sys_platform == 'win32'", specifier = ">=2026.2" },
-    { name = "vaultspec-rag", extras = ["mcp"], specifier = ">=0.2.28" },
     { name = "xlrd", specifier = ">=2.0.1,<3" },
 ]
 provides-extras = ["workbook-windows", "google", "browser", "anthropic", "agent", "search", "all"]
@@ -252,7 +250,7 @@ dev = [
     { name = "types-reportlab", specifier = ">=4.4.10.20260408" },
     { name = "types-xlrd", specifier = ">=2.0.0.20260408" },
     { name = "vaultspec-core", specifier = ">=0.1.25" },
-    { name = "vaultspec-rag", specifier = ">=0.2.26" },
+    { name = "vaultspec-rag", extras = ["mcp"], specifier = ">=0.2.28" },
     { name = "vulture", specifier = ">=2.16" },
 ]
 
