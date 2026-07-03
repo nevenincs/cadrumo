@@ -444,6 +444,10 @@ application:
         certificate_file_unresolved: A(z) %{certificate_path} tanúsítványútvonal nem
           oldódik fel létező fájlra. Futtassa az `aeat config auth configure --provider
           certificate --file ÚTVONAL` parancsot.
+        certificate_source_not_found: A(z) '%{name}' tanúsítványforrás nincs regisztrálva.
+          Futtassa a `aeat config auth certificate list` parancsot a regisztrált források
+          megtekintéséhez, vagy a `aeat config auth certificate register --name %{name}
+          --file UTVONAL` parancsot a regisztrálásához.
         dangling_active_profile: Az aktív profil mutató (%{active_profile}) nem oldódik
           fel regisztrált profil-bucket-re. Futtassa az `aeat config profile list`
           parancsot.
@@ -1317,12 +1321,14 @@ cli:
     app_help: Az operátor ügynök keretrendszerének (szabályok, perszónák, készségek)
       materializálása Claude-natív .claude munkaterületként egy ügynök futtatókörnyezethez.
     materialise:
+      layout_help: 'Materializálási elrendezés: „workspace” a Claude-natív .claude
+        munkaterülethez, vagy „plugin” egy egykattintásos Claude bővítményhez.'
       output_help: Az a könyvtár, ahová a Claude-natív operátor munkaterületet (.claude/
         és egy CLAUDE.md) írja.
+      plugin_summary: 'Claude bővítmény kiírva ide: {path}: {skills} készség, {agents}
+        ügynök ({name} v{version}).'
       summary: 'Operator munkaterulet kiirva: {path}: {rules} szabaly, {personas}
         persona, {skills} keszseg.'
-      layout_help: 'Materializálási elrendezés: „workspace” a Claude-natív .claude munkaterülethez, vagy „plugin” egy egykattintásos Claude bővítményhez.'
-      plugin_summary: 'Claude bővítmény kiírva ide: {path}: {skills} készség, {agents} ügynök ({name} v{version}).'
   app:
     ledger:
       bienes_inversion:
@@ -2353,6 +2359,22 @@ cli:
           help: Apoderado hatóköri szójegyzék kezelése.
           list_help: Elfogadott apoderado hatókörök listázása.
         status_help: Aktív apoderado-konfiguráció megjelenítése.
+      certificate:
+        help: Névvel ellátott tanúsítványforrások kezelése a tanúsítványalapú hitelesítési
+          szolgáltatóhoz
+        list_help: Az összes regisztrált tanúsítványforrás felsorolása
+        register:
+          file_help: A PKCS#12 (.p12/.pfx) csomag elérési útja
+          friendly_name_help: Opcionális, ember által olvasható címke a --name-től
+            eltérően
+          name_help: Azonosító ehhez a tanúsítványforráshoz (pl. 'personal', 'apoderado-acme')
+        register_help: Névvel ellátott tanúsítványforrás regisztrálása (vagy áthelyezése)
+        remove:
+          name_help: Az eltávolítandó regisztrált tanúsítványforrás
+        remove_help: Egy regisztrált tanúsítványforrás eltávolítása
+        select:
+          name_help: Az aktiválandó regisztrált tanúsítványforrás
+        select_help: Az aktív tanúsítványforrás kiválasztása
       clear_all_help: Minden konfigurált hitelesítési szolgáltató törlése.
       clear_help: Helyi hitelesítési metaadatok törlése.
       clear_locks_help: Hitelesítésszerzési zárolások törlése.
@@ -3788,7 +3810,7 @@ cli:
       year_help: 'Az alkalmazhatóság-értékelés adóéve; alapértelmezés: az aktuális
         év.'
     labels:
-      period: 'Időszak'
+      period: Időszak
     local_work_units_unavailable: A helyi Modelo munkaegység-állapot nem tölthető
       be; ez az áttekintés a határidőnaptárból származik, és egy folyamatban lévő
       piszkozatot még esedékesként túljelezhet, vagy régebbi folyamatban lévő piszkozatokat
@@ -3797,15 +3819,21 @@ cli:
     period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
       01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
     pipeline:
-      help: 'Mutassa a keresztdomén-folyamat állapotát egy adóbevallási időszakra egyetlen táblázatban: a főkönyv besorolási/felülvizsgálati állapota, az egyes modellek felkészültsége (kiszámítva / ellenőrizve / benyújtva / blokkolva) az időszak minden munkaegységéhez, valamint a fennálló ellenőrzési megállapítások. Csak olvasható; biztonságosan újra futtatható; soha nem lép kapcsolatba az AEAT-tal.'
+      help: 'Mutassa a keresztdomén-folyamat állapotát egy adóbevallási időszakra
+        egyetlen táblázatban: a főkönyv besorolási/felülvizsgálati állapota, az egyes
+        modellek felkészültsége (kiszámítva / ellenőrizve / benyújtva / blokkolva)
+        az időszak minden munkaegységéhez, valamint a fennálló ellenőrzési megállapítások.
+        Csak olvasható; biztonságosan újra futtatható; soha nem lép kapcsolatba az
+        AEAT-tal.'
       labels:
         findings_section: 'Megállapítások:'
         ledger_section: 'Főkönyv:'
         modelos_section: 'Modelók:'
-        ready: 'kész'
-      no_work_units: 'Ehhez az időszakhoz még nincs modell munkaegység.'
-      period_help: 'Bevallási időszak AEAT-tokenként: 1T-4T (negyedévek), 0A (éves), 01-12 (hónapok). Az évhez kombináld a --year kapcsolóval.'
-      year_help: 'Bevallási év (pl. 2026).'
+        ready: kész
+      no_work_units: Ehhez az időszakhoz még nincs modell munkaegység.
+      period_help: 'Bevallási időszak AEAT-tokenként: 1T-4T (negyedévek), 0A (éves),
+        01-12 (hónapok). Az évhez kombináld a --year kapcsolóval.'
+      year_help: Bevallási év (pl. 2026).
     post_filing:
       pending: '%{count} AEAT bevallás utáni esemény igényel figyelmet: %{kinds}.
         Tekintsd át őket az ''aeat app live notifications list'' paranccsal.'
@@ -3899,6 +3927,13 @@ cli:
     diff_revisions_modelo_help: Az összehasonlítandó modelo azonosítója
     diff_revisions_to_year_help: A későbbi adóév, amelynek fedő revízióját az alaphoz
       hasonlítjuk
+    errors:
+      capability:
+        manuals_verify: cli.registry.errors.capability.manuals_verify
+        parity: cli.registry.errors.capability.parity
+        registry_verify: cli.registry.errors.capability.registry_verify
+        workbooks_verify: cli.registry.errors.capability.workbooks_verify
+      corpus_companion_absent: cli.registry.errors.corpus_companion_absent
     inspect_help: A nyilvántartás állapotának és hivatkozásainak vizsgálata.
     inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának elérési útja.
     manuals:
@@ -4927,6 +4962,8 @@ errors:
       a megadott bemenettel.
     refused_application_registry_input: A modelo-nyilvántartás kérése nem hajtható
       végre a megadott bemenettel.
+    refused_auth_certificate_source_not_found: A megadott tanúsítványforrás nincs
+      regisztrálva.
     refused_auth_configure_dangling_active_profile: Az aktív-profil mutató nem oldódik
       fel egy regisztrált bucket-re.
     refused_auth_diagnostic_payload: errors.refused.refused_auth_diagnostic_payload

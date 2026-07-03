@@ -433,6 +433,10 @@ application:
         certificate_file_unresolved: The certificate path '%{certificate_path}' does
           not resolve to an existing file. Run `aeat config auth configure --provider
           certificate --file PATH` with a path to your PKCS#12 (.p12/.pfx) bundle.
+        certificate_source_not_found: Certificate source '%{name}' is not registered.
+          Run `aeat config auth certificate list` to see registered sources, or `aeat
+          config auth certificate register --name %{name} --file PATH` to register
+          it.
         dangling_active_profile: Active profile pointer '%{active_profile}' does not
           resolve to a registered profile bucket. Run aeat config profile list to
           inspect registered profiles, then aeat config switch NAME or aeat config
@@ -1289,12 +1293,14 @@ cli:
     app_help: Materialise the operator agent harness (rules, personas, skills) as
       a Claude-native .claude workspace for an agent runtime.
     materialise:
+      layout_help: 'Materialisation layout: ''workspace'' for a Claude-native .claude
+        project mirror, or ''plugin'' for a one-click Claude plugin.'
       output_help: Directory to write the Claude-native operator workspace (.claude/
         plus a CLAUDE.md) into.
+      plugin_summary: 'Wrote Claude plugin to {path}: {skills} skills, {agents} agents
+        ({name} v{version}).'
       summary: 'Wrote operator workspace to {path}: {rules} rules, {personas} personas,
         {skills} skills.'
-      layout_help: 'Materialisation layout: ''workspace'' for a Claude-native .claude project mirror, or ''plugin'' for a one-click Claude plugin.'
-      plugin_summary: 'Wrote Claude plugin to {path}: {skills} skills, {agents} agents ({name} v{version}).'
   app:
     ledger:
       bienes_inversion:
@@ -2265,6 +2271,20 @@ cli:
           help: Manage apoderado scope vocabulary
           list_help: List accepted apoderado scopes
         status_help: Show active apoderado configuration
+      certificate:
+        help: cli.config.auth.certificate.help
+        list_help: cli.config.auth.certificate.list_help
+        register:
+          file_help: cli.config.auth.certificate.register.file_help
+          friendly_name_help: cli.config.auth.certificate.register.friendly_name_help
+          name_help: cli.config.auth.certificate.register.name_help
+        register_help: cli.config.auth.certificate.register_help
+        remove:
+          name_help: cli.config.auth.certificate.remove.name_help
+        remove_help: cli.config.auth.certificate.remove_help
+        select:
+          name_help: cli.config.auth.certificate.select.name_help
+        select_help: cli.config.auth.certificate.select_help
       clear_all_help: Clear all configured auth providers
       clear_help: Clear local authentication metadata
       clear_locks_help: Clear auth acquisition locks
@@ -3605,7 +3625,7 @@ cli:
       year_help: Fiscal year for the applicability evaluation; defaults to the current
         year.
     labels:
-      period: 'Period'
+      period: Period
     local_work_units_unavailable: Local Modelo work-unit state could not be loaded;
       this overview is derived from the deadline schedule and may over-report an in-progress
       draft as still due or omit older in-progress drafts.
@@ -3613,15 +3633,19 @@ cli:
     period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12
       (months). Combine with --year to choose the year.'
     pipeline:
-      help: 'Show cross-domain pipeline health for one filing period in one table: ledger classification/review state, modelo readiness (calculated / verified / filed / blocked) for every work unit in the period, and outstanding verification findings. Read-only; safe to run repeatedly; never contacts AEAT.'
+      help: 'Show cross-domain pipeline health for one filing period in one table:
+        ledger classification/review state, modelo readiness (calculated / verified
+        / filed / blocked) for every work unit in the period, and outstanding verification
+        findings. Read-only; safe to run repeatedly; never contacts AEAT.'
       labels:
         findings_section: 'Findings:'
         ledger_section: 'Ledger:'
         modelos_section: 'Modelos:'
-        ready: 'ready'
-      no_work_units: 'No modelo work units for this period yet.'
-      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
-      year_help: 'Filing year (e.g. 2026).'
+        ready: ready
+      no_work_units: No modelo work units for this period yet.
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
+        01-12 (months). Combine with --year to choose the year.'
+      year_help: Filing year (e.g. 2026).
     post_filing:
       pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review
         them with ''aeat app live notifications list''.'
@@ -3713,6 +3737,13 @@ cli:
     diff_revisions_modelo_help: Modelo identifier to diff
     diff_revisions_to_year_help: Later filing year whose covering revision is compared
       against the baseline
+    errors:
+      capability:
+        manuals_verify: cli.registry.errors.capability.manuals_verify
+        parity: cli.registry.errors.capability.parity
+        registry_verify: cli.registry.errors.capability.registry_verify
+        workbooks_verify: cli.registry.errors.capability.workbooks_verify
+      corpus_companion_absent: cli.registry.errors.corpus_companion_absent
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
     manuals:
@@ -4732,6 +4763,8 @@ errors:
       with the input provided.
     refused_application_registry_input: The modelo registry request cannot be executed
       with the input provided.
+    refused_auth_certificate_source_not_found: The named certificate source is not
+      registered.
     refused_auth_configure_dangling_active_profile: The active-profile pointer does
       not resolve to a registered bucket.
     refused_auth_diagnostic_payload: 'Refused: authentication diagnostic payload is

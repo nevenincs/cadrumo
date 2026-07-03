@@ -474,6 +474,10 @@ application:
         certificate_file_unresolved: La ruta del certificat '%{certificate_path}'
           no resol a un fitxer existent. Executa `aeat config auth configure --provider
           certificate --file RUTA` amb una ruta al teu paquet PKCS#12 (.p12/.pfx).
+        certificate_source_not_found: L'origen de certificat '%{name}' no està registrat.
+          Executeu `aeat config auth certificate list` per veure els orígens registrats,
+          o `aeat config auth certificate register --name %{name} --file RUTA` per
+          registrar-lo.
         dangling_active_profile: El punter de perfil actiu '%{active_profile}' no
           resol a un bucket de perfil registrat. Executa aeat config profile list
           per inspeccionar els perfils registrats i despres aeat config switch NAME
@@ -1376,12 +1380,14 @@ cli:
     app_help: Materialitza el harness de l'agent operador (regles, perfils, habilitats)
       com un espai de treball .claude natiu de Claude per a un entorn d'agent.
     materialise:
+      layout_help: 'Format de materialització: «workspace» per a un espai de treball
+        .claude natiu de Claude, o «plugin» per a un plugin de Claude d''un sol clic.'
       output_help: Directori on escriure l'espai de treball de l'operador natiu de
         Claude (.claude/ i un CLAUDE.md).
+      plugin_summary: 'Plugin de Claude escrit a {path}: {skills} habilitats, {agents}
+        agents ({name} v{version}).'
       summary: 'Espai de treball de l''operador escrit a {path}: {rules} regles, {personas}
         persones, {skills} habilitats.'
-      layout_help: 'Format de materialització: «workspace» per a un espai de treball .claude natiu de Claude, o «plugin» per a un plugin de Claude d''un sol clic.'
-      plugin_summary: 'Plugin de Claude escrit a {path}: {skills} habilitats, {agents} agents ({name} v{version}).'
   app:
     ledger:
       bienes_inversion:
@@ -2406,6 +2412,22 @@ cli:
           help: Manage apoderado scope vocabulary
           list_help: List accepted apoderado scopes
         status_help: Show active apoderado configuration
+      certificate:
+        help: Gestionar orígens de certificat amb nom per al proveïdor d'autenticació
+          per certificat
+        list_help: Llistar tots els orígens de certificat registrats
+        register:
+          file_help: Camí al paquet PKCS#12 (.p12/.pfx)
+          friendly_name_help: Etiqueta llegible opcional diferent de --name
+          name_help: Identificador per a aquest origen de certificat (per exemple,
+            'personal', 'apoderat-acme')
+        register_help: Registrar (o redirigir) un origen de certificat amb nom
+        remove:
+          name_help: Origen de certificat registrat que s'eliminarà
+        remove_help: Eliminar un origen de certificat registrat
+        select:
+          name_help: Origen de certificat registrat que s'activarà
+        select_help: Seleccionar l'origen de certificat actiu
       clear_all_help: Netejar tots els proveïdors d'autenticació configurats
       clear_help: Netejar metadades locals d'autenticació
       clear_locks_help: Netejar bloquejos d'adquisició d'autenticació
@@ -3817,7 +3839,7 @@ cli:
       modelo_help: Identificador del modelo AEAT (p. ex. 303, 130, 100).
       year_help: Exercici fiscal per avaluar l'aplicabilitat; per defecte, l'any actual.
     labels:
-      period: 'Periode'
+      period: Periode
     local_work_units_unavailable: No s'ha pogut carregar l'estat local de les unitats
       de treball de Model; aquesta vista es deriva del calendari de terminis i pot
       sobrenotificar un esborrany en curs com a encara pendent o ometre esborranys
@@ -3826,15 +3848,20 @@ cli:
     period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
       0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
     pipeline:
-      help: 'Mostra la salut del flux de treball entre dominis per a un període de declaració en una sola taula: estat de classificació i revisió del llibre comptable, preparació de cada model (calculat / verificat / presentat / bloquejat) per a cada unitat de treball del període, i troballes de verificació pendents. Només lectura; segur d''executar repetidament; mai contacta amb l''AEAT.'
+      help: 'Mostra la salut del flux de treball entre dominis per a un període de
+        declaració en una sola taula: estat de classificació i revisió del llibre
+        comptable, preparació de cada model (calculat / verificat / presentat / bloquejat)
+        per a cada unitat de treball del període, i troballes de verificació pendents.
+        Només lectura; segur d''executar repetidament; mai contacta amb l''AEAT.'
       labels:
         findings_section: 'Troballes:'
         ledger_section: 'Llibre comptable:'
         modelos_section: 'Models:'
-        ready: 'preparat'
-      no_work_units: 'Encara no hi ha unitats de treball de model per a aquest període.'
-      period_help: 'Període de declaració com a token de l''AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
-      year_help: 'Any de declaració (p. ex. 2026).'
+        ready: preparat
+      no_work_units: Encara no hi ha unitats de treball de model per a aquest període.
+      period_help: 'Període de declaració com a token de l''AEAT: 1T-4T (trimestres),
+        0A (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
+      year_help: Any de declaració (p. ex. 2026).
     post_filing:
       pending: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT requereixen
         atenció: %{kinds}. Revisa''ls amb ''aeat app live notifications list''.'
@@ -3930,6 +3957,13 @@ cli:
     diff_revisions_modelo_help: Identificador del model a comparar
     diff_revisions_to_year_help: Exercici fiscal posterior la revisió del qual es
       compara amb la base
+    errors:
+      capability:
+        manuals_verify: cli.registry.errors.capability.manuals_verify
+        parity: cli.registry.errors.capability.parity
+        registry_verify: cli.registry.errors.capability.registry_verify
+        workbooks_verify: cli.registry.errors.capability.workbooks_verify
+      corpus_companion_absent: cli.registry.errors.corpus_companion_absent
     inspect_help: Inspeccionar l'estat del registre i les referències
     inspect_registry_root_help: Ruta al directori arrel del registre
     manuals:
@@ -5018,6 +5052,8 @@ errors:
       pot executar amb les dades indicades.
     refused_application_registry_input: La sol·licitud al registre de models no es
       pot executar amb les dades indicades.
+    refused_auth_certificate_source_not_found: L'origen de certificat indicat no està
+      registrat.
     refused_auth_configure_dangling_active_profile: El punter de perfil actiu no resol
       a un bucket registrat.
     refused_auth_diagnostic_payload: 'Refusat: la carrega de diagnostic d''autenticacio
