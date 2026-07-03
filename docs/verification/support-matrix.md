@@ -16,15 +16,16 @@ sibling install-proof documents.
 | Full MCP tool round-trip (harness floor) | PASS (R9 privacy disclosure returned first) | PASS (same runtime measurement) | PASS (same runtime measurement) |
 | Permission gate on unapproved tool calls | PASS (observed live) | PASS (same runtime) | PASS (same runtime) |
 
-## Launch-variant note
+## Launch-variant note — RESOLVED (2026-07-03, first publish)
 
-The measured server-launch used the local-preview variant
-(`uvx --from "aeat[agent] @ file:///…/aeat-0.1.0-py3-none-any.whl"
-aeat-mcp`) because the `aeat` package is not yet on PyPI. The published
-variant (`uvx --from "aeat-cli[agent]==<version>" aeat-mcp`) is command-shape identical
-and becomes verifiable the moment the first publish lands (RELEASING.md
-name-claim sequencing). Re-confirm this matrix's server rows against the
-PyPI variant after the first release.
+`aeat-cli 0.1.0` is live on PyPI (published via the Trusted Publishing
+workflow, run 28675038482; 41 MB wheel, zero corpus binaries). The matrix's
+server rows are re-verified against the PUBLISHED pin: the reinstalled
+plugin's `.mcp.json` launches `uvx --from "aeat-cli[agent]==0.1.0"
+aeat-mcp`, the package cold-resolves from the index (79 packages), and a
+live session completed the harness floor round-trip (R9 privacy disclosure
+returned first) through the published chain. The earlier local-wheel
+variant is retired.
 
 ## Out of scope of this matrix
 
