@@ -1,10 +1,38 @@
-"""LLM client, prompt registry, and cache.
+"""Public facade for outbound model-provider completion adapters.
 
-The public API is exported from this package root so callers never need to
-import internal provider or storage modules directly. Public surface
-includes :class:`LLMClient` for completions, :class:`LLMCache` for the
-on-disk content-addressed cache, :class:`PromptRegistry` for versioned
-prompt templates, and the :class:`LLMError` exception hierarchy.
+The package root defines the ``__all__`` contract for public imports. Use these
+top-level re-exports for :class:`LLMClient`, :class:`LLMRequest`,
+:class:`LLMResponse`, :class:`LLMProvider`, cache records
+(:class:`LLMCache`, :class:`CacheKey`, :class:`CacheStats`,
+:class:`CachedEntry`), prompt types (:class:`PromptRegistry` and
+:class:`PromptDefinition`), usage records (:class:`UsageRecorder`,
+:class:`UsageRecord`, and :class:`UsageSummary`), model records
+(:class:`Translation` and :class:`MultimodalImageInput`), rasterisation, and
+exported error types.
+
+The async-first :meth:`LLMClient.complete` flow reads :class:`LLMCache` before a
+provider call, writes content-addressed encrypted cache entries on misses,
+records usage on hits and misses, and returns :class:`LLMResponse`.
+Cache types include :class:`CacheKey`, :class:`CacheStats`, and
+:class:`CachedEntry`; persisted cache data is encrypted secure-object storage,
+not plaintext files.
+
+Prompt handling uses :class:`PromptRegistry` and :class:`PromptDefinition` for
+versioned prompt definitions/templates. :class:`UsageRecorder` persists
+redacted :class:`UsageRecord` values to encrypted secure-object storage and
+produces :class:`UsageSummary` reports. :class:`LLMRunTelemetryRecorder`
+persists local-only :class:`LLMRunRecord` run-timing/outcome metadata (never
+prompt or response text) and produces :class:`LLMRunTelemetrySummary` reports,
+backing the ``aeat app diagnostics run-health`` operator surface. Strict model
+types include :class:`Translation` and transient :class:`MultimodalImageInput`,
+whose base64 bytes are not persisted; only content SHA participates in cache
+keys.
+
+Use :func:`rasterise_pdf_pages_to_base64_png` for in-memory, on-host PDF-to-PNG
+rasterisation for local vision inputs. Exported exceptions include
+:exc:`LLMError`, :exc:`LLMCacheError`, :exc:`LLMConfigError`,
+:exc:`LLMPdfRasterisationError`, :exc:`LLMProviderError`, and
+:exc:`LLMRateLimitError`. Importing this outbound adapter must remain silent.
 
 Examples:
     Issue a completion via the high-level client:
@@ -45,6 +73,7 @@ from ._models import (
     UsageSummary,
 )
 from ._providers import rasterise_pdf_pages_to_base64_png
+from ._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder, LLMRunTelemetrySummary
 from ._usage import UsageRecorder
 
 __all__ = [
@@ -62,6 +91,9 @@ __all__ = [
     "LLMRateLimitError",
     "LLMRequest",
     "LLMResponse",
+    "LLMRunRecord",
+    "LLMRunTelemetryRecorder",
+    "LLMRunTelemetrySummary",
     "MultimodalImageInput",
     "PromptDefinition",
     "PromptRegistry",

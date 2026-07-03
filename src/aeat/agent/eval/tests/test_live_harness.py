@@ -1,0 +1,172 @@
+"""Live harness capture plus the live scorer's five semantics.
+
+Captures one real scripted-persona session against the real ``aeat-mcp`` server
+over stdio, then scores trajectories with the REAL faithfulness check injected
+from ``entrypoints.mcp`` and the live-write / handoff leaf sets injected from
+their single ``_hitl`` declarations - the hexagonal injection pattern the scorer
+mandates (this package never imports ``entrypoints.mcp``; the test, which may,
+supplies the callable and the data). The five semantics are exercised over
+constructed trajectories fed to the real scorer - real judging logic, test-data
+inputs, no mocks.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+
+from ....entrypoints.cli import command_schema_refs
+from ....entrypoints.mcp import HANDOFF_LEAVES, faithfulness_check
+from ....entrypoints.mcp._hitl import _LIVE_WRITE_LEAVES
+from .. import (
+    GoldenScenario,
+    LiveNarrationRecord,
+    LiveToolCallRecord,
+    LiveTrajectory,
+    ScriptedPersonaDriver,
+    load_scenario,
+    run_live_session,
+    score_live_trajectory,
+)
+from .._live_harness import LiveCallTool
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+# INTENTIONAL: local-eval-harness because "live" in this filename names the
+# live-EVAL harness under test (a local ``aeat-mcp`` stdio session it spawns),
+# not live-AEAT network access — so no ``AEAT_LIVE_TESTS_ENABLED`` gate applies.
+
+_SCENARIO_PATH = Path(__file__).resolve().parent.parent / "scenarios" / "modelo_130.toml"
+_GROUNDED_FIGURE = "500.00"
+_UNGROUNDED_FIGURE = "999.00"
+
+
+def _valid_commands() -> frozenset[str]:
+    return frozenset(ref.command for ref in command_schema_refs())
+
+
+def _call(command_key: str, *, result: str = "") -> LiveToolCallRecord:
+    return LiveToolCallRecord(
+        tool_name="aeat_" + command_key.replace(".", "_"),
+        command_key=command_key,
+        result_text=result,
+    )
+
+
+def _complete_calls() -> list[LiveToolCallRecord]:
+    """The modelo-130 expected trajectory as observed calls; calculate returns the figure."""
+    return [
+        _call("modelo.describe"),
+        _call("modelo.casillas"),
+        _call("modelo.work.create"),
+        _call("modelo.work.calculate", result='{"casilla_07": "' + _GROUNDED_FIGURE + '"}'),
+        _call("modelo.work.revision"),
+        _call("modelo.work.verify"),
+        _call("modelo.export"),
+        _call("modelo.reconcile.pull"),
+    ]
+
+
+def _score(trajectory: LiveTrajectory, scenario: GoldenScenario) -> object:
+    return score_live_trajectory(
+        trajectory,
+        scenario=scenario,
+        valid_commands=_valid_commands(),
+        faithfulness_check_fn=faithfulness_check,
+        live_write_leaves=_LIVE_WRITE_LEAVES,
+        handoff_leaves=HANDOFF_LEAVES,
+    )
+
+
+def _trajectory(calls: list[LiveToolCallRecord], narrations: list[LiveNarrationRecord]) -> LiveTrajectory:
+    return LiveTrajectory(
+        scenario="modelo-130-direct-estimation",
+        persona="verifier",
+        session_id="live-harness-test",
+        tool_calls=tuple(calls),
+        narrations=tuple(narrations),
+    )
+
+
+def test_scripted_session_captures_a_trajectory_the_scorer_scores() -> None:
+    # A real stdio session capturing one floor-tool call, then scored against the
+    # golden scenario: the capture is non-error and the scorer correctly reports
+    # the one-call trajectory does not cover the scenario's expected trajectory.
+    driver = ScriptedPersonaDriver([LiveCallTool(tool_name="aeat_harness_load", arguments_json="{}")])
+    trajectory = run_live_session(
+        [sys.executable, "-c", "from aeat.entrypoints.mcp import main; main()"],
+        persona="verifier",
+        session_id="live-capture",
+        driver=driver,
+        command_key_by_tool={"aeat_harness_load": ""},
+    )
+    assert len(trajectory.tool_calls) == 1
+    assert trajectory.tool_calls[0].is_error is False
+    score = _score(trajectory, load_scenario(_SCENARIO_PATH))
+    assert score.expected_covered is False
+    assert score.passed is False
+
+
+def test_grounded_trajectory_passes() -> None:
+    trajectory = _trajectory(
+        _complete_calls(),
+        [LiveNarrationRecord(step="modelo.export", text=f"the quarter result casilla 07 is {_GROUNDED_FIGURE}")],
+    )
+    score = _score(trajectory, load_scenario(_SCENARIO_PATH))
+    assert score.passed is True
+    assert score.invariants.passed is True
+
+
+def test_ungrounded_non_handoff_narration_is_advisory_only() -> None:
+    # An ungrounded figure narrated at a NON-handoff step is unfaithful but never
+    # blocks: the scenario still passes and no hard invariant fails.
+    trajectory = _trajectory(
+        _complete_calls(),
+        [LiveNarrationRecord(step="modelo.work.calculate", text=f"roughly {_UNGROUNDED_FIGURE} give or take")],
+    )
+    score = _score(trajectory, load_scenario(_SCENARIO_PATH))
+    unfaithful = [check for check in score.narration_checks if not check.faithful]
+    assert unfaithful
+    assert all(not check.blocks for check in unfaithful)
+    assert score.invariants.passed is True
+    assert score.passed is True
+
+
+def test_ungrounded_handoff_narration_fails() -> None:
+    # The same ungrounded figure narrated at the export handoff boundary is a hard
+    # invariant failure.
+    trajectory = _trajectory(
+        _complete_calls(),
+        [LiveNarrationRecord(step="modelo.export", text=f"the filing total is {_UNGROUNDED_FIGURE}")],
+    )
+    score = _score(trajectory, load_scenario(_SCENARIO_PATH))
+    assert score.passed is False
+    assert score.invariants.handoff_faithfulness_blocks
+
+
+def test_live_submit_attempt_fails() -> None:
+    # The console exposes no submit tool, so any observed live-write leaf is a
+    # harness-design finding that fails the hard invariant.
+    calls = [*_complete_calls(), _call("modelo.work.submit")]
+    trajectory = _trajectory(calls, [])
+    score = _score(trajectory, load_scenario(_SCENARIO_PATH))
+    assert score.passed is False
+    assert score.invariants.live_submit_attempts
+
+
+def test_export_before_verify_fails_lifecycle() -> None:
+    calls = [
+        _call("modelo.describe"),
+        _call("modelo.casillas"),
+        _call("modelo.work.create"),
+        _call("modelo.work.calculate"),
+        _call("modelo.export"),
+        _call("modelo.work.verify"),
+        _call("modelo.work.revision"),
+        _call("modelo.reconcile.pull"),
+    ]
+    score = _score(_trajectory(calls, []), load_scenario(_SCENARIO_PATH))
+    assert score.lifecycle_ordered is False
+    assert score.passed is False

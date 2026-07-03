@@ -1,11 +1,53 @@
-"""Application services for explicit read-only AEAT live workflows.
+"""Application facade for explicit read-only AEAT live workflows.
 
-Live capture services store observations as encrypted objects in a
-:class:`SecureObjectRepository` scoped to the active profile bucket.
-Parsed observations are typed as :class:`CasillaObservation` rows
-and routed through a :class:`ValidatedRegistryAuthority` to bind them
-to the correct revision. Justificante capture stamps the matching
-:class:`ModeloRecord` filings with their local filing evidence.
+Every remote navigation path enters through the live-read access gate before it
+authenticates or opens an AEAT sede surface. Most surfaces use
+:func:`_session.active_verified_session`; IVA remote-state
+acquisition enforces the same read gate before coordinating its filed-history and
+wallet reads. The package has no live-submit surface: captured notifications,
+expedientes, filed declarations, justificantes, IVA wallet rows, Borrador 100
+snapshots, and verification checks are local evidence objects, not remote filing
+mutations.
+
+Live capture services persist encrypted active-bucket evidence through
+:class:`adapters.persistence.storage.SecureObjectRepository` or the
+snapshot repositories re-exported by this facade. Parsed filed-declaration
+observations are typed as
+:class:`domain.calculations.registry.CasillaObservation` rows and routed
+through :class:`domain.calculations.registry.ValidatedRegistryAuthority`
+to bind them to the correct revision. Justificante capture may stamp the
+matching current :class:`domain.modelos.ModeloRecord` with
+:class:`domain.modelos.ExternalEvidence` only after the local filing record
+already exists.
+
+Snapshot payloads that depend on an authenticated taxpayer carry a normalised
+``authenticated_identity`` when the upstream AEAT session exposes it. The
+notifications snapshot id includes that identity so captures from different
+taxpayers do not collapse to the same local row; expedientes and notifications
+calendar projection compares the snapshot identity and row-level taxpayer ids
+against the expected active-profile tax id before surfacing observed events.
+Persisted capture/enrolment orchestration emits bucket events with sanitized
+summary payloads; non-persisting read/list surfaces remain event-free.
+
+IVA remote-state helpers separate stored-evidence reads from live acquisition.
+:func:`load_iva_remote_state` returns the local
+:class:`IvaRemoteStateStoredEvidenceReport` without
+contacting AEAT, while
+:func:`capture_iva_remote_state` returns an
+:class:`IvaRemoteStateAcquisitionReport`, persists a
+redacted :class:`IvaRemoteStateAcquisitionManifest`, and
+reports each remote surface independently so partial failures remain explicit.
+
+See Also:
+    :func:`enroll_filed_justificante_evidence`
+        Filed-history path that persists justificante metadata and stamps
+        current filing records with live-capture evidence.
+    :class:`SecureSnapshotRepository`
+        Bucket-scoped encrypted snapshot repository base used by live snapshot
+        services.
+    :mod:`application.overview`
+        Local-only summary surface that reads captured live evidence without
+        contacting AEAT and filters calendar events by active-profile identity.
 """
 
 from __future__ import annotations
@@ -40,7 +82,13 @@ from ._borrador_100 import (
     borrador_100_snapshot_object_key,
     derive_borrador_100_snapshot_id,
 )
-from ._censo import CensoSnapshotNotFoundError
+from ._censo import (
+    CensoSnapshot,
+    CensoSnapshotNotFoundError,
+    CensoSnapshotRepository,
+    CensoSnapshotService,
+    censo_snapshot_object_key,
+)
 from ._errors import (
     LiveApplicationError,
     LiveApplicationInputError,
@@ -68,21 +116,8 @@ from ._filed_observation_persistence import (
     persist_filed_calculation_observation,
     persist_filed_justificante_metadata,
 )
-from ._filed_observation_persistence import (
-    latest_declarations_by_period as _latest_declarations_by_period,
-)
-from ._filed_observation_persistence import (
-    persist_iva_compensation_history_observations_strict as _persist_iva_compensation_history_observations_strict,
-)
-from ._filed_observation_persistence import (
-    persist_latest_filed_calculation_observations as _persist_latest_filed_calculation_observations,
-)
 from ._iva_remote_state import (
     IvaRemoteStateAcquisitionManifestRepository,
-    _aggregate_iva_compensation_history_reports,
-    _await_live_iva_surface,
-    _filed_history_surface_timeout_ms,
-    _suppress_live_iva_playwright_cancellation_noise,
     build_iva_remote_state_acquisition_report,
     capture_iva_compensation_history,
     capture_iva_compensation_wallet,
@@ -146,7 +181,14 @@ from ._snapshot_base import (
 
 @dataclass(frozen=True, slots=True)
 class JustificanteCaptureOutcome:
-    """Outcome of one live justificante pull and local filing-evidence enrolment."""
+    """Outcome of one live justificante pull and local filing-evidence enrolment.
+
+    The :class:`JustificanteCaptureSnapshot` is always the persisted live
+    evidence. ``justificante`` is populated only when the PDF parsed into domain
+    metadata, and ``filing_record`` is populated only when an existing current
+    :class:`domain.modelos.ModeloRecord` could be stamped with live
+    :class:`domain.modelos.ExternalEvidence`.
+    """
 
     snapshot: JustificanteCaptureSnapshot
     justificante: Justificante | None
@@ -174,11 +216,13 @@ async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
     Uses ``walk_declarations_register`` (the same register adapter the
     filed-data list/capture verbs drive), wraps the typed declarations
     in an :class:`ExpedientesCapture`, and persists through
-    :class:`ExpedientesService` against the active bucket.
+    :class:`ExpedientesService` against the active bucket. The helper obtains
+    its session via :func:`_session.active_verified_session`,
+    so the read access gate is enforced before any remote contact.
     """
     from ._expedientes import ExpedientesCapture, ExpedientesService
 
-    session, settings = await _active_verified_session()
+    session, settings = await _active_verified_session(operation="live-expedientes-read")
     async with (
         _shared_playwright(session) as playwright,
         _open_declarations_register(session, settings=settings, playwright=playwright) as register,
@@ -396,6 +440,11 @@ async def capture_justificante_snapshot_outcome(
 ) -> JustificanteCaptureOutcome:
     """Live-pull one AEAT justificante and report local filing-evidence enrolment.
 
+    The persisted :class:`JustificanteCaptureSnapshot` is the durable evidence.
+    Metadata registration and current-record evidence stamping are best-effort
+    follow-up steps reported separately in :class:`JustificanteCaptureOutcome`.
+    A missing local filing record does not discard the captured receipt.
+
     Returns:
         A :class:`JustificanteCaptureOutcome` with the capture and enrolment result.
     """
@@ -438,15 +487,27 @@ def __getattr__(name: str):
     services trigger their own heavy imports only on first
     access).
     """
-    if name in ("VerifyService", "VerifyVerdict", "VerifySurface"):
+    if name in (
+        "VerifyService",
+        "VerifyVerdict",
+        "VerifySurface",
+        "VerifyObservation",
+        "VerifyObservationRepository",
+        "verify_observation_object_key",
+    ):
         from . import _verify as _impl_mod
 
         return getattr(_impl_mod, name)
-    if name == "NotificationsService":
+    if name in ("NotificationsService", "PersistedNotificationsSnapshot", "notifications_snapshot_object_key"):
         from . import _notifications as _impl_mod
 
         return getattr(_impl_mod, name)
-    if name in ("ExpedientesService", "ExpedientesCapture"):
+    if name in (
+        "ExpedientesService",
+        "ExpedientesCapture",
+        "PersistedExpedientesSnapshot",
+        "expedientes_snapshot_object_key",
+    ):
         from . import _expedientes as _impl_mod
 
         return getattr(_impl_mod, name)
@@ -463,7 +524,10 @@ __all__ = [
     "BorradorSnapshotNotFoundError",
     "BulkFiledDataCaptureReport",
     "BulkFiledDataListingReport",
+    "CensoSnapshot",
     "CensoSnapshotNotFoundError",
+    "CensoSnapshotRepository",
+    "CensoSnapshotService",
     "ExpedientesBulkCaptureFailureRow",
     "ExpedientesBulkCaptureReport",
     "ExpedientesCapture",
@@ -497,6 +561,8 @@ __all__ = [
     "LiveIvaReadSurface",
     "LiveIvaSurfaceTimeoutError",
     "NotificationsService",
+    "PersistedExpedientesSnapshot",
+    "PersistedNotificationsSnapshot",
     "SecureSnapshotRepository",
     "SnapshotLifecycleState",
     "SnapshotNotFoundError",
@@ -504,16 +570,11 @@ __all__ = [
     "SourceFiledDataCaptureReport",
     "StoredIvaRemoteStateAcquisitionRow",
     "StoredIvaWalletObservationRow",
+    "VerifyObservation",
+    "VerifyObservationRepository",
     "VerifyService",
     "VerifySurface",
     "VerifyVerdict",
-    "_aggregate_iva_compensation_history_reports",
-    "_await_live_iva_surface",
-    "_filed_history_surface_timeout_ms",
-    "_latest_declarations_by_period",
-    "_persist_iva_compensation_history_observations_strict",
-    "_persist_latest_filed_calculation_observations",
-    "_suppress_live_iva_playwright_cancellation_noise",
     "borrador_100_snapshot_object_key",
     "build_iva_remote_state_acquisition_report",
     "capture_expedientes_bulk",
@@ -526,10 +587,12 @@ __all__ = [
     "capture_justificante_snapshot_outcome",
     "capture_notifications",
     "capture_source_filed_data",
+    "censo_snapshot_object_key",
     "classify_live_iva_acquisition_failure",
     "derive_borrador_100_snapshot_id",
     "derive_justificante_capture_snapshot_id",
     "enroll_filed_justificante_evidence",
+    "expedientes_snapshot_object_key",
     "filed_data_capture_failure_row",
     "filed_data_listing_row",
     "justificante_capture_snapshot_object_key",
@@ -539,6 +602,7 @@ __all__ = [
     "list_iva_remote_state_acquisition_manifests",
     "load_iva_remote_state",
     "load_iva_remote_state_acquisition_manifest",
+    "notifications_snapshot_object_key",
     "parse_capture_to_justificante",
     "persist_and_reconcile_iva_compensation_wallet",
     "persist_filed_calculation_observation",
@@ -550,4 +614,5 @@ __all__ = [
     "resolve_period_expediente",
     "select_declarations_for_capture",
     "stamp_capture_evidence_if_filed",
+    "verify_observation_object_key",
 ]

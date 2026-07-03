@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#llm-evidence-classification'
 date: '2026-06-11'
-modified: '2026-06-11'
+modified: '2026-06-30'
 related:
   - '[[2026-06-10-llm-evidence-classification-plan]]'
   - '[[2026-06-10-llm-evidence-classification-adr]]'
 ---
-
-
 
 # `llm-evidence-classification` audit: `Persona roll round 1: evidence-aware LLM classification pipeline`
 
@@ -90,7 +88,6 @@ application API. Worth a `--non-interactive`/`--set` path for scripted setup.
   CLI integration tests need no application-API shim.
 
 ## Codification candidates
-
 
 - **Source:** finding F1 (a strict CLI payload schema rejected a field the
   application record now emits).

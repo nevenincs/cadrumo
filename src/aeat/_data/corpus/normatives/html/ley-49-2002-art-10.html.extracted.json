@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-49-2002-art-10.html",
+  "source_sha256": "4e3996ca52ab21839810b550b6c510e6c8d3b4d3633d199253500561f7208050",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La base imponible positiva que corresponda a las rentas derivadas de explotaciones económicas no exentas será gravada al tipo del 10 por 100.",
+      "title": "Artículo 10. Tipo de gravamen.",
+      "section": "Artículo 10. Tipo de gravamen.",
+      "anchor": null
+    }
+  ]
+}

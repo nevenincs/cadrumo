@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from pydantic import BaseModel, Field, SecretStr
 
 from .....core import STRICT_FROZEN_CONFIG
-from .....core.time._utc import coerce_utc_aware
+from .....core.time import coerce_utc_aware
 from ._errors import AeatLoginAssertionError
 from ._providers import (
     AuthLoginAssertionDetail,
@@ -150,7 +150,7 @@ class BrowserPageLike(Protocol):
         *,
         timeout: float | None = None,
     ) -> BrowserResponseLike | None:
-        """Navigate to ``url`` and return the observed response, if any."""
+        """Navigate to ``url`` and return the observed :class:`BrowserResponseLike`, if any."""
         ...
 
     async def close(self) -> None:
@@ -173,7 +173,7 @@ class BrowserContextLike(Protocol):
     """Minimal Playwright context surface used by auth providers."""
 
     async def new_page(self) -> BrowserPageLike:
-        """Create a page for a live verification or selector flow."""
+        """Create a :class:`BrowserPageLike` for a live verification or selector flow."""
         ...
 
     async def storage_state(self) -> Mapping[str, object]:
@@ -186,6 +186,21 @@ class BrowserContextLike(Protocol):
 
 
 @runtime_checkable
+class BrowserSessionProfileLike(Protocol):
+    """Minimal profile surface a browser session exposes to resume state.
+
+    Mirrors the single field auth reads off
+    :class:`aeat.adapters.outbound.aeat.browser.Profile`: the filesystem path
+    of the Playwright storage-state JSON a resumed session loads cookies from.
+    """
+
+    @property
+    def storage_state_path(self) -> Path:
+        """Path to the profile's Playwright storage-state JSON."""
+        ...
+
+
+@runtime_checkable
 class BrowserSessionLike(Protocol):
     """Browser-session factory surface used by certificate and Cl@ve auth.
 
@@ -193,7 +208,20 @@ class BrowserSessionLike(Protocol):
     :meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.create_context`:
     certificate auth may pass a context provisioner, while resume paths pass
     either a storage-state path or an in-memory storage-state mapping.
+
+    ``profile`` exposes the session's resume path so
+    :meth:`AeatAuthenticator._resolve_storage_state_path` can read it as a
+    declared member rather than duck-typing via ``getattr``; it is ``None``
+    for lightweight test doubles that rely on the settings fallback. A
+    ``close()`` coroutine is intentionally *not* mandated here — real sessions
+    own a Chromium process while doubles may not, so teardown probes for it
+    (see :meth:`AeatAuthenticator._close_browser_session`).
     """
+
+    @property
+    def profile(self) -> BrowserSessionProfileLike | None:
+        """Optional :class:`BrowserSessionProfileLike` carrying this session's resume ``storage_state_path``."""
+        ...
 
     async def create_context(
         self,
@@ -202,7 +230,7 @@ class BrowserSessionLike(Protocol):
         storage_state_path: Path | None = None,
         storage_state: Mapping[str, object] | None = None,
     ) -> BrowserContextLike:
-        """Create a browser context with optional auth provider state."""
+        """Create a :class:`BrowserContextLike` with optional auth provider state."""
         ...
 
 
@@ -241,6 +269,7 @@ __all__ = [
     "BrowserResponseLike",
     "BrowserSessionFactory",
     "BrowserSessionLike",
+    "BrowserSessionProfileLike",
     "CertificateHealthCheck",
     "_PersistedSessionInvalidError",
 ]

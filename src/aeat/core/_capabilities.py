@@ -13,8 +13,20 @@ code routes on members, and the profile schema / resolver / doctor share one
 authority for the capability identifiers.
 
 The :class:`ServiceCapability` members are consumed by
-:func:`aeat.application.user_profile.resolve_capability` and by the setup
-wizard's capability questions.
+:func:`~application.user_profile.resolve_capability`,
+:func:`~application.user_profile.resolve_active_capability`, and by the
+setup wizard's capability questions. The product doctor renders those same
+members beside :class:`~application.provisioning.DependencyStatus` rows
+from :func:`~application.provisioning.probe_ollama_vision`,
+:func:`~application.provisioning.probe_subprocess_providers`, and
+:func:`~application.provisioning.probe_optional_extras`, keeping operator
+intent separate from dependency availability.
+
+This enum is deliberately separate from
+:attr:`domain.calculations.registry.ModeloDefinition.capabilities` and
+:data:`domain.calculations.registry.ModeloFilingCapability`. Registry
+capabilities describe which workflows a modelo definition supports; service
+capabilities describe what an active profile permits the app to use.
 """
 
 from __future__ import annotations
@@ -27,7 +39,19 @@ class ServiceCapability(StrEnum):
 
     Each value is the dotted profile-schema field leaf under the ``capabilities``
     section (``capabilities.<value>``) so the enum, the schema fact path, and the
-    resolver agree on one identifier.
+    resolver agree on one identifier. Optional package availability is modeled
+    separately through :class:`~core.OptionalExtra` and
+    :func:`~core.require_optional_extra`; a capability records whether the
+    profile permits the service, not whether its import/runtime dependency is
+    installed.
+
+    See Also:
+        :class:`~application.user_profile.CapabilityDecision`
+            Resolved posture after applying gestor mode, profile facts, defaults,
+            and global settings.
+        :mod:`entrypoints.cli._config._capabilities_cli`
+            Operator-facing ``show`` and ``set`` commands that expose these enum
+            values directly.
 
     Members:
         CLOUD_EVIDENCE_UPLOAD: Whether this profile permits sending sensitive
@@ -47,7 +71,7 @@ class ServiceCapability(StrEnum):
 
     @property
     def schema_path(self) -> str:
-        """Return the dotted profile-schema fact path for this capability."""
+        """Return the dotted profile-schema fact path for this :class:`ServiceCapability`."""
         return f"capabilities.{self.value}"
 
     @property
@@ -57,6 +81,7 @@ class ServiceCapability(StrEnum):
         Cloud evidence upload defaults OFF (the regulated, sensitive path); the
         on-host vision and Google export capabilities default ON because they are
         non-sensitive or local by construction. The resolver still ANDs the global
-        safety floor on top of this default.
+        safety floor on top of this default, yielding a
+        :class:`~application.user_profile.CapabilityDecision`.
         """
         return self is not ServiceCapability.CLOUD_EVIDENCE_UPLOAD

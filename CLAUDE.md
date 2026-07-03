@@ -39,11 +39,13 @@ You MUST respect these rules at all times:
 @.claude/rules/composition-service-no-parallel-write-path.md
 @.claude/rules/core-struct-docstring-links.md
 @.claude/rules/cross-period-suppression-grounded-in-registry-classification.md
+@.claude/rules/dynamic-import-targets-the-public-facade.md
 @.claude/rules/firmware-reference-parity.builtin.md
 @.claude/rules/fixture-provenance-declared-in-sidecar.md
 @.claude/rules/full-tree-gate-must-distinguish-owner.md
 @.claude/rules/generated-reference-is-cli-owned.builtin.md
 @.claude/rules/glossary-concepts-are-taxpayer-facing.md
+@.claude/rules/iva-cuota-devengada-includes-recargo-equivalencia.md
 @.claude/rules/ledger-amount-is-absolute-direction-is-authority.md
 @.claude/rules/ledger-derived-revisions-bundle-evidence.md
 @.claude/rules/ledger-evidence-bytes-not-links.md
@@ -60,6 +62,7 @@ You MUST respect these rules at all times:
 @.claude/rules/no-silent-under-declaration.md
 @.claude/rules/no-tautological-calculation-tests.md
 @.claude/rules/one-aggregation-path-pull-equals-calculate.md
+@.claude/rules/operator-harness-cites-live-cli-surface.md
 @.claude/rules/period-filter-single-boundary-authority.md
 @.claude/rules/plan-closure-requires-exec-records.md
 @.claude/rules/registry-calculation-legal-grounding.md
@@ -71,6 +74,8 @@ You MUST respect these rules at all times:
 @.claude/rules/sensitive-financial-data-secure-storage-only.md
 @.claude/rules/service-imports-via-top-level-reexports.md
 @.claude/rules/shipped-search-licence-clean.md
+@.claude/rules/single-subject-mutation-is-idempotent-guarded.md
+@.claude/rules/subagent-commits-require-explicit-pathspec.md
 @.claude/rules/terminology-scaffold-preserve-contract.md
 @.claude/rules/terminology-single-declaration.md
 @.claude/rules/tests-live-under-domain-tests-folders.md
@@ -78,9 +83,11 @@ You MUST respect these rules at all times:
 @.claude/rules/vaultspec-archive-discipline.builtin.md
 @.claude/rules/vaultspec-cli.builtin.md
 @.claude/rules/vaultspec-codify.builtin.md
+@.claude/rules/vaultspec-discovery.builtin.md
 @.claude/rules/vaultspec-dry-run-discipline.builtin.md
 @.claude/rules/vaultspec-plan-editing-discipline.builtin.md
 @.claude/rules/vaultspec-rag.builtin.md
 @.claude/rules/vaultspec-system.builtin.md
 @.claude/rules/vaultspec.builtin.md
+@.claude/rules/verification-grounding-needs-oracle-evidence.md
 </vaultspec>

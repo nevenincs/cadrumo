@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-06-10-llm-evidence-classification-plan]]"
 ---
-
-
-
 
 # Define the unified internal multimodal evidence-input representation (media kind, bytes-or-handle, content hash)
 

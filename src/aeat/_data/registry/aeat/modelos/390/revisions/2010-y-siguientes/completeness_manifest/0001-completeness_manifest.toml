@@ -10,12 +10,15 @@ legal_refs = [
     "ley-37-1992:art-91",
     "ley-37-1992:art-92",
     "ley-37-1992:art-99",
+    "ley-37-1992:art-122",
+    "ley-37-1992:art-123",
+    "ley-37-1992:art-161",
     "orden-eha-3111-2009:art-1",
     "rd-1624-1992:art-29",
     "rd-1624-1992:art-30",
     "rd-1624-1992:art-71",
 ]
-source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97"
@@ -50,6 +53,10 @@ casilla_id = "iva.anual.reconciliacion.resultado-303"
 number = "iva.anual.reconciliacion.resultado-303"
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.reconciliacion.devengada-simplificado-303"
+number = "79"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.repercutido.general"
 number = "iva.anual.repercutido.general"
 
@@ -60,6 +67,14 @@ number = "iva.anual.repercutido.reducido"
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.repercutido.super-reducido"
 number = "iva.anual.repercutido.super-reducido"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.general"
+number = "iva.anual.repercutido.recargo.general"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.reducido"
+number = "iva.anual.repercutido.recargo.reducido"
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.resultado-regimen-general"

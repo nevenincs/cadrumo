@@ -3,13 +3,10 @@ tags:
   - '#reference'
   - '#aeat-cli-wireframe'
 date: '2026-04-24'
-modified: '2026-04-24'
+modified: '2026-06-30'
 related:
   - "[[2026-04-24-aeat-cli-wireframe-adr]]"
 ---
-
-
-
 
 # `aeat-cli-wireframe` reference: `hardening iterations 6 through 33`
 

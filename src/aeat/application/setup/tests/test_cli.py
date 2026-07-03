@@ -71,6 +71,12 @@ def test_setup_profile_roundtrip(tmp_path: Path) -> None:
             "design",
             "--tax-id",
             "12345678Z",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Operator",
+            "--surnames",
+            "Example",
         ],
         env=env,
     )
@@ -102,6 +108,10 @@ def test_setup_status_reports_missing_and_ready_steps(tmp_path: Path) -> None:
             "design",
             "--tax-id",
             "12345678Z",
+            "--entity-type",
+            "natural_person",
+            "--surnames",
+            "Example",
             "--iva-regime",
             "GENERAL",
         ],
@@ -119,9 +129,32 @@ def test_setup_status_reports_missing_and_ready_steps(tmp_path: Path) -> None:
 
 
 def test_setup_auth_rejects_unsupported_provider(tmp_path: Path) -> None:
+    env = _env(tmp_path)
+    created = invoke_cached_cli(
+        [
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--activity",
+            "design",
+            "--tax-id",
+            "12345678Z",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Operator",
+            "--surnames",
+            "Example",
+        ],
+        env=env,
+    )
+    assert created.exit_code == 0, created.output
+
     result = invoke_cached_cli(
         ["config", "auth", "configure", "--provider", "clave_permanente"],
-        env=_env(tmp_path),
+        env=env,
     )
 
     assert result.exit_code != 0

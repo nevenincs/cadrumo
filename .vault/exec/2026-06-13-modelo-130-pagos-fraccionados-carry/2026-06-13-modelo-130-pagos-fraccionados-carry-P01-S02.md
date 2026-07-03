@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
 ---
-
-
-
 
 # extend _PreviousModeloSelector model validation so the new span mode is mutually exclusive with period, source_periods, and source_period_offset_from_target and stays a direct previous_filing binding under _is_direct_previous_filing_binding, then verify the relation-source collision gate validate_slot_source_hygiene accepts the new mode without a carve-out
 

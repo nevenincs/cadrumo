@@ -1,9 +1,10 @@
 """Typed registry of bootstrap-exempt CLI verb paths.
 
 A bootstrap-exempt verb runs **without** an active
-:class:`BucketSession`. The CLI root callback skips the session
-open for these verbs; every other verb is active-gated and refused
-with a translated :class:`CliRefusedBoundaryError` when no active
+:class:`BucketSession`.
+The CLI root callback skips the session open for these verbs; every other verb
+is active-gated and refused with a translated
+:class:`CliRefusedBoundaryError` when no active
 profile resolves.
 
 The exemption list is the seam between the CLI transport layer and
@@ -43,6 +44,16 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # imported bucket establishes its own session as part of the
     # import flow.
     "config profile import",
+    # Recovery from a sealed full-custody archive: same shape as
+    # ``config profile import`` — BucketMaintenanceService.import_
+    # provisions and opens its own session as part of the restore.
+    "config profile archive import",
+    # Read-only header inspection of a sealed archive file. Delegates
+    # to the plaintext-header reader only (no decryption, no bucket
+    # session); must stay reachable even when an unrelated profile is
+    # already active and locked, or before any profile has ever been
+    # created.
+    "config profile archive inspect",
     # Custody verbs own their own session / recovery / rewrap flow. The
     # root callback must not pre-open the active bucket session before
     # these handlers can resolve passphrase or recovery material. The
@@ -56,6 +67,9 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # Diagnostic surface: must operate without a session so the
     # operator can recover from a torn workspace.
     "config repair",
+    # Bundled-registry discovery: lists public modelo metadata and must stay
+    # reachable before a profile has been unlocked.
+    "app modelo list",
     # Engineer surface: lives under a separate module entrypoint
     # and is not bound by the session-gate either, but the
     # registry includes it explicitly so the active-gate check at
@@ -68,10 +82,10 @@ def is_bootstrap_exempt(verb_path: str | None) -> bool:
     """Return whether ``verb_path`` is exempt from the active-session gate.
 
     Matching is prefix-based against
-    :data:`BOOTSTRAP_EXEMPT_VERB_PATHS`. The leading ``aeat`` is
-    elided; ``verb_path`` is the dispatched subcommand chain as
-    Typer reports it (e.g. ``"config profile create"`` for the
-    full operator invocation ``aeat config profile create alice``).
+    :data:`BOOTSTRAP_EXEMPT_VERB_PATHS`.
+    The leading ``aeat`` is elided; ``verb_path`` is the dispatched subcommand
+    chain as Typer reports it (e.g. ``"config profile create"`` for the full
+    operator invocation ``aeat config profile create alice``).
 
     Args:
         verb_path: Space-separated verb path or ``None`` for the

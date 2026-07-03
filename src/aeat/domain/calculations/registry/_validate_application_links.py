@@ -1,8 +1,17 @@
 """Application-link closure validation helpers.
 
-Validates that every surface declared on a :class:`ModeloRevision` is
-backed by a matching application link, and that link combination rules
-are satisfied.
+Validates that every application surface declared on a
+:class:`~aeat.domain.calculations.registry.ModeloRevision` is backed by a
+matching application link, and that link combination rules are satisfied before
+the revision is accepted by the registry validator.
+
+See Also:
+    :func:`aeat.domain.calculations.registry._validate_revision_closure.validate_revision_closure`
+        Revision-level closure runner that invokes these application-link
+        checks.
+    :func:`aeat.domain.calculations.registry._validate_surfaces.validate_application_link_section`
+        Reference and evidence-tier validation for individual application-link
+        declarations.
 """
 
 from __future__ import annotations
@@ -39,6 +48,13 @@ def validate_application_link_closure(
     *,
     modelo_id: str,
 ) -> list[str]:
+    """Return application-link closure failures for one modelo revision.
+
+    The supplied :class:`~aeat.domain.calculations.registry.ModeloRevision`
+    owns the declared application-link bundle and dependent surfaces. ``modelo_id``
+    contributes the Modelo 145 communication-link rule because that workflow can
+    use communication/payer-delivery surfaces in place of filing surfaces.
+    """
     surfaces = {link.surface for link in revision.application_links}
     communication_surfaces = surfaces.intersection(_COMMUNICATION_SURFACES)
     modelo_requires_communication = modelo_id == "145"

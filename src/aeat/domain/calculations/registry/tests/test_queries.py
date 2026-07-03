@@ -2,21 +2,22 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from .....core.resources import bundled_path
+from .....core.resources import resources
 from .. import CasillaId, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
 from .._errors import AmbiguousRevisionSelectionError, RegistryValidationError
-from .._queries import ModeloFormulaRow, RegistryQueryService
+from .._queries import BindingSelectorQueryProjection, ModeloFormulaRow, RegistryQueryService
 from .._schema import InputKind
+from ._loader_directory_mode_support import write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_INPUT_CASILLA")
 _TARGET_CASILLA: CasillaId = validated_casilla_id("02", surface="_TARGET_CASILLA")
 
@@ -31,6 +32,9 @@ article = "1"
 permalink = "https://example.com/test"
 effective_from = 2025-01-01
 review_status = "reviewed"
+reviewed_at = 2025-01-01
+reviewed_by = "registry-test"
+required_text = ["test provision text"]
 
 [sources."test-source-001"]
 evidence_tier = "layout_authority"
@@ -41,6 +45,17 @@ sha256 = "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f"
 bytes = 1000
 retrieved_at = 2025-01-01
 source_url = "https://example.com/test-source"
+review_status = "reviewed"
+
+[sources."test-source-002"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/test/test-source-002.pdf"
+sha256 = "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f"
+bytes = 1000
+retrieved_at = 2025-01-01
+source_url = "https://example.com/test-source-002"
 review_status = "reviewed"
 """
 
@@ -63,6 +78,7 @@ valid_from = 2025-01-01
 period_selector = {{ years = [2025], periods = ["{period}"] }}
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
+orden_aplicabilidad = ["test-ley-001:art-1"]
 
 [[revisions."{revision_id}".application_links]]
 id = "test-filing-link"
@@ -70,7 +86,7 @@ surface = "filing"
 consumer = "cli.app"
 requires_snapshot = true
 legal_refs = ["test-ley-001:art-1"]
-source_refs = ["test-source-001"]
+source_refs = ["test-source-002"]
 
 [[revisions."{revision_id}".casillas]]
 id = "01"
@@ -94,8 +110,7 @@ source_refs = ["test-source-001"]
 
 
 def _service() -> RegistryQueryService:
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=bundled_path())
-    return RegistryQueryService(authority)
+    return RegistryQueryService(resources().modelos.authority)
 
 
 def _write_year_ambiguous_registry(tmp_path) -> Path:
@@ -107,6 +122,8 @@ def _write_year_ambiguous_registry(tmp_path) -> Path:
     corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (modelos_dir / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
@@ -117,9 +134,9 @@ def _write_year_ambiguous_registry(tmp_path) -> Path:
     ):
         revision_dir = modelos_dir / "revisions" / revision_id
         revision_dir.mkdir(parents=True)
-        (revision_dir / "revision.toml").write_text(
+        write_fragmented_revision(
+            revision_dir,
             _MINIMAL_REVISION_TOML_TEMPLATE.format(revision_id=revision_id, label=label, period=period),
-            encoding="utf-8",
         )
 
     return registry_root
@@ -155,10 +172,9 @@ def test_describe_lists_every_declared_revision_id() -> None:
     ``modelo work create`` without first guessing wrong."""
 
     service = _service()
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=bundled_path())
 
     described = service.describe_modelo_for_scope("303", filing_year=2026, period="1T")
-    expected = {str(item.id) for item in authority.modelo("303").revisions.values()}
+    expected = {str(item.id) for item in resources().modelos.authority.modelo("303").revisions.values()}
 
     assert set(described.revision_ids) == expected
     # The resolved revision is always one of the listed ids.
@@ -184,6 +200,53 @@ def test_query_service_exposes_casillas_bindings_and_formulas_from_same_revision
     assert formulas.code == "303"
     assert formulas.rows
     assert any(row.input_casilla_ids or row.input_bindings or row.input_parameters for row in formulas.rows)
+
+
+def test_binding_query_rows_expose_typed_selector_projection() -> None:
+    service = _service()
+
+    report = service.bindings_for_scope("130", filing_year=2026, period="1T")
+    row = next(item for item in report.rows if item.binding_id == "modelo-130-resultados-negativos-anteriores")
+
+    assert isinstance(row.selector, BindingSelectorQueryProjection)
+    assert not isinstance(row.selector, Mapping)
+    assert row.selector.source == "previous_filing"
+    assert row.selector.keys == (
+        "max_year_delta",
+        "source_casilla_id",
+        "source_modelo",
+        "source_period_offset_from_target",
+    )
+    assert {entry.key: entry.value for entry in row.selector.entries} == {
+        "max_year_delta": 0,
+        "source_casilla_id": "saldo-negativo-fin-periodo",
+        "source_modelo": "130",
+        "source_period_offset_from_target": -1,
+    }
+
+
+def test_binding_query_rows_dump_selector_as_ordered_entries() -> None:
+    service = _service()
+
+    report = service.bindings_for_scope("130", filing_year=2026, period="1T")
+    row = next(item for item in report.rows if item.binding_id == "modelo-130-resultados-negativos-anteriores")
+    dumped = row.model_dump(mode="json")
+
+    assert dumped["selector"] == {
+        "source": "previous_filing",
+        "keys": [
+            "max_year_delta",
+            "source_casilla_id",
+            "source_modelo",
+            "source_period_offset_from_target",
+        ],
+        "entries": [
+            {"key": "max_year_delta", "value": 0},
+            {"key": "source_casilla_id", "value": "saldo-negativo-fin-periodo"},
+            {"key": "source_modelo", "value": "130"},
+            {"key": "source_period_offset_from_target", "value": -1},
+        ],
+    }
 
 
 def test_formula_row_rejects_legacy_input_casillas_key() -> None:

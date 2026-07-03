@@ -15,6 +15,7 @@ Covers:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 
 import pytest
@@ -40,16 +41,62 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_RUN_ID = "0123456789abcdef"
+_MODULE = "aeat.core.observability.test_models"
+_AWARE_STARTED_AT = datetime(2026, 4, 14, tzinfo=UTC)
+_AWARE_FINISHED_AT = datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC)
+_NAIVE_STARTED_AT = datetime(2026, 4, 14)
+_NAIVE_FINISHED_AT = datetime(2026, 4, 14, 0, 0, 1)
 
-def _make_event(payload: RunEventPayload) -> RunEvent:
+
+def _make_event(payload: RunEventPayload, *, timestamp: datetime = _AWARE_STARTED_AT) -> RunEvent:
     return RunEvent(
-        run_id="0123456789abcdef",
+        run_id=_RUN_ID,
         step_id="step-0",
         kind=RunEventKind.NAVIGATION,
         payload=payload,
-        timestamp=datetime(2026, 4, 14, tzinfo=UTC),
-        module="aeat.core.observability.test_models",
+        timestamp=timestamp,
+        module=_MODULE,
     )
+
+
+def _make_trace(
+    *,
+    run_id: str = _RUN_ID,
+    started_at: datetime = _AWARE_STARTED_AT,
+    finished_at: datetime | None = _AWARE_FINISHED_AT,
+    entrypoint: str = "aeat hello",
+    arguments: tuple[ArgumentRecord, ...] = (),
+    corpus_sha256: str = "a" * 64,
+    db_sha256: str = "b" * 64,
+    cert_fingerprint: str = "",
+    outcome: RunOutcome = RunOutcome.OK,
+    replay_of: str | None = None,
+) -> RunTrace:
+    return RunTrace(
+        run_id=run_id,
+        started_at=started_at,
+        finished_at=finished_at,
+        entrypoint=entrypoint,
+        arguments=arguments,
+        corpus_sha256=corpus_sha256,
+        db_sha256=db_sha256,
+        cert_fingerprint=cert_fingerprint,
+        outcome=outcome,
+        replay_of=replay_of,
+    )
+
+
+_PAYLOAD_VARIANTS = (
+    RunEventPayload(navigation=NavigationPayload(url="https://example.test")),
+    RunEventPayload(form_fill=FormFillPayload(form_id="f1", display_number="03", value="1.50")),
+    RunEventPayload(assertion=AssertionPayload(expectation="open", passed=True)),
+    RunEventPayload(cache_hit=CacheHitPayload(cache_name="iva", key="2025")),
+    RunEventPayload(error=ErrorPayload(error_type="X", message="boom")),
+    RunEventPayload(step=StepBoundaryPayload(step_id="s1", label="t")),
+    RunEventPayload(workflow_link=WorkflowLinkPayload(workflow_run_id="abc")),
+    RunEventPayload(generic=GenericPayload(fields=(("k", "v"),))),
+)
 
 
 class TestArgumentRecord:
@@ -67,109 +114,51 @@ class TestArgumentRecord:
 
 class TestRunEventPayload:
     def test_each_variant_round_trips(self) -> None:
-        variants: list[RunEventPayload] = [
-            RunEventPayload(navigation=NavigationPayload(url="https://example.test")),
-            RunEventPayload(
-                form_fill=FormFillPayload(form_id="f1", display_number="03", value="1.50"),
-            ),
-            RunEventPayload(
-                assertion=AssertionPayload(expectation="open", passed=True),
-            ),
-            RunEventPayload(cache_hit=CacheHitPayload(cache_name="iva", key="2025")),
-            RunEventPayload(error=ErrorPayload(error_type="X", message="boom")),
-            RunEventPayload(step=StepBoundaryPayload(step_id="s1", label="t")),
-            RunEventPayload(workflow_link=WorkflowLinkPayload(workflow_run_id="abc")),
-            RunEventPayload(generic=GenericPayload(fields=(("k", "v"),))),
-        ]
-        for payload in variants:
+        for payload in _PAYLOAD_VARIANTS:
             rebuilt = RunEventPayload.model_validate_json(payload.model_dump_json())
             assert rebuilt == payload
 
-    def test_zero_variants_rejected(self) -> None:
-        with pytest.raises(ValidationError, match=r"must set exactly one variant"):
-            RunEventPayload()
+    def test_variant_cardinality_rejected(self) -> None:
+        cases = (
+            {},
+            {
+                "navigation": NavigationPayload(url="https://x"),
+                "error": ErrorPayload(error_type="E", message="m"),
+            },
+        )
 
-    def test_two_variants_rejected(self) -> None:
-        with pytest.raises(ValidationError, match=r"must set exactly one variant"):
-            RunEventPayload(
-                navigation=NavigationPayload(url="https://x"),
-                error=ErrorPayload(error_type="E", message="m"),
-            )
+        for payload_kwargs in cases:
+            with pytest.raises(ValidationError, match=r"must set exactly one variant"):
+                RunEventPayload(**payload_kwargs)
 
 
 class TestTimezoneAwareness:
     """Naive datetimes must be rejected at the pydantic boundary."""
 
-    def test_run_event_rejects_naive_timestamp(self) -> None:
-        with pytest.raises(ValidationError, match="timezone-aware"):
-            RunEvent(
-                run_id="0123456789abcdef",
-                step_id="step-0",
-                kind=RunEventKind.NAVIGATION,
-                payload=RunEventPayload(navigation=NavigationPayload(url="https://x")),
-                timestamp=datetime(2026, 4, 14),
-                module="aeat.core.observability.test_models",
-            )
+    def test_rejects_naive_datetimes(self) -> None:
+        cases: tuple[Callable[[], object], ...] = (
+            lambda: _make_event(
+                RunEventPayload(navigation=NavigationPayload(url="https://x")),
+                timestamp=_NAIVE_STARTED_AT,
+            ),
+            lambda: _make_trace(started_at=_NAIVE_STARTED_AT),
+            lambda: _make_trace(finished_at=_NAIVE_FINISHED_AT),
+        )
 
-    def test_run_trace_rejects_naive_started_at(self) -> None:
-        with pytest.raises(ValidationError, match="timezone-aware"):
-            RunTrace(
-                run_id="0123456789abcdef",
-                started_at=datetime(2026, 4, 14),
-                finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
-                entrypoint="aeat hello",
-                arguments=(),
-                corpus_sha256="a" * 64,
-                db_sha256="b" * 64,
-                cert_fingerprint="",
-                outcome=RunOutcome.OK,
-            )
-
-    def test_run_trace_rejects_naive_finished_at(self) -> None:
-        with pytest.raises(ValidationError, match="timezone-aware"):
-            RunTrace(
-                run_id="0123456789abcdef",
-                started_at=datetime(2026, 4, 14, tzinfo=UTC),
-                finished_at=datetime(2026, 4, 14, 0, 0, 1),
-                entrypoint="aeat hello",
-                arguments=(),
-                corpus_sha256="a" * 64,
-                db_sha256="b" * 64,
-                cert_fingerprint="",
-                outcome=RunOutcome.OK,
-            )
+        for build_model in cases:
+            with pytest.raises(ValidationError, match="timezone-aware"):
+                build_model()
 
 
 class TestReplayOfField:
     """``replay_of`` defaults to ``None`` and round-trips valid run ids."""
 
     def test_default_none(self) -> None:
-        trace = RunTrace(
-            run_id="0123456789abcdef",
-            started_at=datetime(2026, 4, 14, tzinfo=UTC),
-            finished_at=None,
-            entrypoint="aeat hello",
-            arguments=(),
-            corpus_sha256="a" * 64,
-            db_sha256="b" * 64,
-            cert_fingerprint="",
-            outcome=RunOutcome.OK,
-        )
+        trace = _make_trace(finished_at=None)
         assert trace.replay_of is None
 
     def test_roundtrip_with_replay_of(self) -> None:
-        trace = RunTrace(
-            run_id="0123456789abcdef",
-            started_at=datetime(2026, 4, 14, tzinfo=UTC),
-            finished_at=None,
-            entrypoint="aeat hello",
-            arguments=(),
-            corpus_sha256="a" * 64,
-            db_sha256="b" * 64,
-            cert_fingerprint="",
-            outcome=RunOutcome.OK,
-            replay_of="fedcba9876543210",
-        )
+        trace = _make_trace(finished_at=None, replay_of="fedcba9876543210")
         rebuilt = RunTrace.model_validate_json(trace.model_dump_json())
         assert rebuilt.replay_of == "fedcba9876543210"
 
@@ -183,16 +172,9 @@ class TestRunEventAndTrace:
         assert rebuilt == evt
 
     def test_trace_round_trip(self) -> None:
-        trace = RunTrace(
-            run_id="0123456789abcdef",
-            started_at=datetime(2026, 4, 14, tzinfo=UTC),
-            finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
+        trace = _make_trace(
             entrypoint="aeat workflow run",
             arguments=(ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG),),
-            corpus_sha256="a" * 64,
-            db_sha256="b" * 64,
-            cert_fingerprint="",
-            outcome=RunOutcome.OK,
         )
         rebuilt = RunTrace.model_validate_json(trace.model_dump_json())
         assert rebuilt == trace

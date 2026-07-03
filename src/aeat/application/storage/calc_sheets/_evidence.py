@@ -4,6 +4,18 @@
 :class:`LedgerFilingEvidence` into a :class:`SheetEvidenceFacet` made of
 :class:`SheetEvidenceContributorRow` and :class:`SheetEvidenceManualEntry`
 records for the workbook evidence surface.
+
+The adapter is deliberately attribution-driven. Ledger evidence names the
+contributing transactions and manual facts; the caller supplies the mapping from
+each contributor to the canonical :class:`CasillaId` values it supports so this
+module never guesses modelo-specific tax meaning from row contents.
+
+See Also:
+    :class:`aeat.domain.modelos._ledger_filing_snapshot.LedgerFilingEvidence`
+        Bundled fact basis attached to a ledger-derived calculation revision.
+    :class:`SheetEvidenceFacet`
+        Workbook-plan evidence facet rendered into the Evidencia tab and JSON
+        sidecar.
 """
 
 from __future__ import annotations
@@ -11,7 +23,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 
 from ....domain.calculations.registry import CasillaId
-from ....domain.modelos._ledger_filing_snapshot import LedgerFilingEvidence
+from ....domain.modelos import LedgerFilingEvidence
 from ._errors import CalcSheetsEngineError
 from ._records import SheetEvidenceContributorRow, SheetEvidenceFacet, SheetEvidenceManualEntry
 
@@ -64,6 +76,8 @@ def sheet_evidence_from_ledger_filing(
             value=entry.value,
             kind=entry.kind,
             note=entry.note,
+            legal_refs=entry.legal_refs,
+            source_refs=entry.source_refs,
         )
         for entry in evidence.manual_entries
     )

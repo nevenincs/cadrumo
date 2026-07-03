@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#first-filer-attestation'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-29'
 related:
   - "[[2026-06-05-cross-period-filing-clean-state-adr]]"
   - "[[2026-06-05-cross-period-calculation-guards-adr]]"
@@ -43,7 +43,7 @@ The clean-state gate lives in `src/aeat/application/calculations/_cross_period_c
 
 ### 2. Legal reality: the alta is the real-world first-period evidence
 
-Spanish tax law does not require a first-period filer to have filed anything for periods before their activity began. The obligation to file Modelo 130 (pago fraccionado IRPF, estimacion directa) arises from carrying on economic activity; RD 439/2007 art. 110 governs the cumulative-from-start-of-activity computation. The registry income binding (`modelo-130-actividad-economica-ingresos-cumulative`) describes casilla 01 as cumulative year-to-date, and the resultados-negativos-anteriores carry is grounded in RD 439/2007 art. 110.5 as a same-ejercicio prior-quarter carry only (max_year_delta = 0; legal refs rd-439-2007:art-110, orden-eha-672-2007:art-1, ley-35-2006:art-99, rd-439-2007:art-95). A quarter before the activity began has no prior saldo to carry: the carry is null, not unevidenced. The M100 prior-year-negative carry cites Ley 35/2006 art. 48 (base imponible general negativa, four-year carry-forward); a first-year filer has no prior ejercicio that could have generated the saldo.
+Spanish tax law does not require a first-period filer to have filed anything for periods before their activity began. The obligation to file Modelo 130 (pago fraccionado IRPF, estimacion directa) arises from carrying on economic activity; RD 439/2007 art. 110 governs the cumulative-from-start-of-activity payment framework. The registry income binding (`modelo-130-actividad-economica-ingresos-cumulative`) describes casilla 01 as cumulative year-to-date, and the resultados-negativos-anteriores carry is implemented as a same-ejercicio prior-quarter carry only (`max_year_delta = 0`; legal refs `rd-439-2007:art-110`, `orden-eha-672-2007:art-1`, `ley-35-2006:art-99`, `rd-439-2007:art-95`). Current verification on 2026-06-29 rejected the old `RD 439/2007 art. 110.5` premise: the current BOE consolidated art. 110 has no vigente apartado 5, and the casilla 15 mechanics are grounded in `aeat-modelo-130-instructions`. A quarter before the activity began has no prior saldo to carry: the carry is null, not unevidenced. The M100 prior-year-negative carry cites Ley 35/2006 art. 48 (base imponible general negativa, four-year carry-forward); a first-year filer has no prior ejercicio that could have generated the saldo.
 
 The real-world evidence that activity started in period X is the alta de nueva actividad in the censo (Modelo 036/037 census declaration). AEAT publishes it on the G313 Mis Datos Censales page, and the codebase already captures it. CensoSnapshot.censo_facts (`src/aeat/application/live/_censo.py`) carries the dotted key censo.activity_start_date (line ~78), populated from the live G313 sede read; the schema field activity_start_date exists on SetupAnswers (`src/aeat/core/setup_answers.py:214`) with ISO-8601 validation, and the wizard catalogue binds profile_key = censo.activity_start_date (`application/wizard/_catalogue.py:411`). The censo snapshot is persisted at IDENTITY sensitivity, content-addressed, and lifecycle-managed (ACTIVE / SUPERSEDED / DISCARDED); the docstring states AEAT is the binding legal source of truth for censo data and the local profile is a cache that must be kept honest.
 
@@ -68,7 +68,7 @@ Evaluated against `no-silent-under-declaration`, `aeat-safety-legal-gates`, `loc
 **Option C: registry-declared first-period semantics.** Extend the selector grammar so a previous_filing selector can declare a first-period sentinel such as first_period_yields_zero = true, so the registry asserts a missing prior anchor is null.
 
 - What blocks dishonesty: the registry is authority, the strongest grounding for the value. But the registry cannot know which period is a given taxpayer first; it declares carry-forward semantics, not the activity-start boundary. C alone cannot distinguish first-period-for-this-taxpayer from an interior period the taxpayer failed to file; it must combine with A to be safe.
-- Audit trail: legal refs already cite RD 439/2007 art. 110.5; a first-period facet would be grounded in the same provision.
+- Audit trail: legal refs already cite the current RD 439/2007 art. 110 payment framework, while the casilla 15 negative-result mechanics are grounded in AEAT Modelo 130 instructions; a first-period facet must preserve that split rather than reviving the retired art. 110.5 premise.
 - Blast radius: selector schema change rippling through the loader, the strict resolvers in `_bindings_previous_filing.py`, and every revision declaring a carry. Broad and registry-wide; per `aeat-registry-authority-flow` it must ride the loader/compiler. Best a complement to A (A scopes which periods are pre-activity; C or the existing absent-by-design path materialises the zero).
 
 ### 4. Prior art in-vault

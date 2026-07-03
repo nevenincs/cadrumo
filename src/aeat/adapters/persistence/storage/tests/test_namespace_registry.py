@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -11,7 +10,12 @@ from pydantic import ValidationError
 
 from .....core.classification import SensitivityClass
 from .....core.errors import ERROR_REGISTRY, build_error_envelope
-from .....tests._inventory import ast_for_path, package_python_files, repo_relative
+from .....tests import (
+    ast_for_path,
+    leaf_name,
+    package_python_files,
+    repo_relative,
+)
 from .. import (
     AEAT_BROWSER_SESSION_NAMESPACE,
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
@@ -19,16 +23,22 @@ from .. import (
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
     APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
     ATTACHMENT_BLOB_NAMESPACE,
+    ATTACHMENT_MANIFEST_NAMESPACE,
     BLOB_MANIFEST_SCHEMA_VERSION,
     BUCKET_DB_DIRNAME,
+    BUCKET_EVENT_HISTORY_NAMESPACE,
     BUCKET_LOCK_FILENAME,
     BUCKET_MANIFEST_FILENAME,
     BUCKETS_DIRNAME,
+    CALCULATION_OBSERVATIONS_NAMESPACE,
     CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
     GOOGLE_DRIVE_CONFIG_NAMESPACE,
     GOOGLE_OAUTH_CLIENT_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
+    IVA_COMPENSATION_HISTORY_NAMESPACE,
+    IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
+    IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
     LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
     LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
     LIVE_CENSO_SNAPSHOT_NAMESPACE,
@@ -49,8 +59,11 @@ from .. import (
     TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
     TEST_SESSION_LIFECYCLE_NAMESPACE,
     TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+    TRANSACTION_PARTICIPATION_INDEX_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
+    StorageCustodyDisposition,
+    StorageCustodyProfile,
     StorageHierarchyRegistry,
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
@@ -64,14 +77,6 @@ from .._namespace_registry import (
 from ..errors import NamespaceRegistryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-def test_registry_rejects_duplicate_namespace_values() -> None:
-    first = WORKFLOW_STATE_NAMESPACE
-    duplicate = first.model_copy(update={"key": "workflow_state_duplicate"})
-
-    with pytest.raises(ValidationError, match="duplicate secure-object namespace value"):
-        type(STORAGE_NAMESPACE_REGISTRY)(namespaces=(first, duplicate), paths=())
 
 
 def test_secure_object_registry_names_application_namespaces() -> None:
@@ -176,6 +181,55 @@ def test_transaction_participation_index_namespace_is_registered() -> None:
     assert registered.scope is StorageNamespaceScope.PROFILE_LOCAL
     assert registered.schema_version == 1
     assert registered.object_key_grammar == "{transaction_id}"
+    assert registered.custody_disposition is StorageCustodyDisposition.DERIVED_REBUILDABLE
+
+
+def test_every_registered_namespace_declares_explicit_custody_disposition() -> None:
+    missing = [
+        definition.key
+        for definition in STORAGE_NAMESPACE_REGISTRY.namespaces
+        if "custody_disposition" not in definition.model_fields_set
+    ]
+
+    assert missing == []
+    assert {definition.custody_disposition for definition in STORAGE_NAMESPACE_REGISTRY.namespaces} <= set(
+        StorageCustodyDisposition,
+    )
+
+
+def test_custody_profile_projection_matches_bucket_custody_worked_examples() -> None:
+    full_namespaces = STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(StorageCustodyProfile.FULL)
+    structured_namespaces = STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(
+        StorageCustodyProfile.STRUCTURED,
+    )
+    full_keys = {definition.key for definition in full_namespaces}
+    structured_keys = {definition.key for definition in structured_namespaces}
+
+    cross_period_keys = {
+        CALCULATION_OBSERVATIONS_NAMESPACE.key,
+        IVA_COMPENSATION_HISTORY_NAMESPACE.key,
+        IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.key,
+        IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE.key,
+    }
+    evidence_keys = {
+        ATTACHMENT_BLOB_NAMESPACE.key,
+        ATTACHMENT_MANIFEST_NAMESPACE.key,
+        APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.key,
+        LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE.key,
+    }
+
+    assert cross_period_keys <= full_keys
+    assert cross_period_keys <= structured_keys
+    assert evidence_keys <= full_keys
+    assert evidence_keys.isdisjoint(structured_keys)
+    assert LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.key in full_keys
+    assert LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.key in structured_keys
+    assert LIVE_CENSO_SNAPSHOT_NAMESPACE.key in full_keys
+    assert LIVE_CENSO_SNAPSHOT_NAMESPACE.key not in structured_keys
+    assert BUCKET_EVENT_HISTORY_NAMESPACE.key in full_keys
+    assert BUCKET_EVENT_HISTORY_NAMESPACE.key not in structured_keys
+    assert TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.key not in full_keys
+    assert TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.key not in structured_keys
 
 
 def test_auth_session_cache_remote_namespaces_are_registered() -> None:
@@ -370,19 +424,6 @@ def test_registry_path_definitions_name_persisted_hierarchy_segments() -> None:
     assert blob_manifest.schema_version == BLOB_MANIFEST_SCHEMA_VERSION
 
 
-def test_namespace_definition_rejects_pathlike_namespaces() -> None:
-    with pytest.raises(ValidationError, match="namespace must not contain path separators"):
-        SecureObjectNamespaceDefinition(
-            key="bad_namespace",
-            namespace="aeat/bad",
-            owner="aeat.test",
-            sensitivity=SensitivityClass.AUDIT,
-            schema_version=1,
-            object_key_grammar="{id}",
-            scope=StorageNamespaceScope.PROFILE_LOCAL,
-        )
-
-
 # ---------------------------------------------------------------------------
 # contract: NamespaceRegistryError error-registry and real-behavior invariant tests
 # ---------------------------------------------------------------------------
@@ -403,80 +444,74 @@ def test_namespace_registry_error_round_trips_through_build_error_envelope() -> 
 def _make_namespace_definition(**overrides: object) -> SecureObjectNamespaceDefinition:
     defaults: dict[str, object] = {
         "key": "test_key",
-        "namespace": "aeat.test",
-        "owner": "aeat.test",
+        "namespace": "aeat-test",
+        "owner": "aeat-test",
         "sensitivity": SensitivityClass.AUDIT,
         "schema_version": 1,
         "object_key_grammar": "{id}",
         "scope": StorageNamespaceScope.PROFILE_LOCAL,
+        "custody_disposition": StorageCustodyDisposition.STRUCTURED_CUSTODY,
     }
     defaults.update(overrides)
     return SecureObjectNamespaceDefinition.model_validate(defaults)
 
 
-def _assert_caused_by_namespace_registry_error(error: ValidationError) -> None:
+def _assert_caused_by_namespace_registry_error(error: ValidationError, case_id: str) -> None:
     causes = [entry.get("ctx", {}).get("error") for entry in error.errors()]
-    assert any(isinstance(cause, NamespaceRegistryError) for cause in causes)
+    assert any(isinstance(cause, NamespaceRegistryError) for cause in causes), case_id
 
 
-@pytest.mark.parametrize(
-    "overrides",
-    (
-        {"key": " whitespace_key "},
-        {"key": "path/sep"},
-        {"namespace": "aeat/bad"},
-        {"namespace": " aeat.bad "},
-        {"default_object_key": " bad "},
-        {"default_object_key": "path/sep"},
-    ),
-    ids=(
-        "key-whitespace",
-        "key-path-separator",
-        "namespace-path-separator",
-        "namespace-whitespace",
-        "default-key-whitespace",
-        "default-key-path-separator",
-    ),
-)
-def test_namespace_definition_invariant_violations_raise_namespace_registry_error(
-    overrides: Mapping[str, object],
-) -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_namespace_definition(**overrides)
-
-    _assert_caused_by_namespace_registry_error(exc_info.value)
-
-
-@pytest.mark.parametrize(
-    ("overrides", "expected_message"),
-    (
+def test_namespace_definition_invariant_violations_raise_namespace_registry_error() -> None:
+    cases: tuple[tuple[str, dict[str, object], str], ...] = (
+        ("key-whitespace", {"key": " whitespace_key "}, "registry key must not carry surrounding whitespace"),
+        ("key-path-separator", {"key": "path/sep"}, "registry key must be a storage-safe slug"),
+        ("namespace-path-separator", {"namespace": "aeat/bad"}, "namespace must not contain path separators"),
+        ("namespace-whitespace", {"namespace": " aeat.bad "}, "namespace must not carry surrounding whitespace"),
         (
+            "default-key-whitespace",
+            {"default_object_key": " bad "},
+            "default object key must not carry surrounding whitespace",
+        ),
+        (
+            "default-key-path-separator",
+            {"default_object_key": "path/sep"},
+            "default object key must not contain path separators",
+        ),
+    )
+
+    for case_id, overrides, expected_message in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            _make_namespace_definition(**overrides)
+
+        errors = exc_info.value.errors()
+        _assert_caused_by_namespace_registry_error(exc_info.value, case_id)
+        assert any(expected_message in str(error) for error in errors), case_id
+
+
+def test_namespace_definition_remote_mirror_policy_constraints_are_enforced() -> None:
+    cases: tuple[tuple[str, dict[str, object], str], ...] = (
+        (
+            "ciphertext-requires-revision",
             {"remote_mirror_requires_revision": False},
             "ciphertext remote mirror namespaces require revision and integrity metadata",
         ),
         (
+            "ciphertext-requires-integrity-manifest",
             {"remote_mirror_requires_integrity_manifest": False},
             "ciphertext remote mirror namespaces require revision and integrity metadata",
         ),
         (
+            "test-only-rejects-metadata-requirements",
             {"remote_mirror_policy": StorageRemoteMirrorPolicy.TEST_ONLY},
             "local-only and test-only namespaces must not require remote mirror metadata",
         ),
-    ),
-    ids=(
-        "ciphertext-requires-revision",
-        "ciphertext-requires-integrity-manifest",
-        "test-only-rejects-metadata-requirements",
-    ),
-)
-def test_namespace_definition_remote_mirror_policy_constraints_are_enforced(
-    overrides: Mapping[str, object],
-    expected_message: str,
-) -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_namespace_definition(**overrides)
+    )
 
-    assert any(expected_message in str(error) for error in exc_info.value.errors())
+    for case_id, overrides, expected_message in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            _make_namespace_definition(**overrides)
+
+        assert any(expected_message in str(error) for error in exc_info.value.errors()), case_id
 
 
 def _make_path_definition(**overrides: object) -> StoragePathDefinition:
@@ -484,64 +519,59 @@ def _make_path_definition(**overrides: object) -> StoragePathDefinition:
         "key": "test_path",
         "kind": StoragePathKind.DIRECTORY,
         "grammar": "<root>/test/",
-        "owner": "aeat.test",
+        "owner": "aeat-test",
     }
     defaults.update(overrides)
     return StoragePathDefinition.model_validate(defaults)
 
 
-@pytest.mark.parametrize(
-    "overrides",
-    (
-        {"key": " bad_key "},
-        {"key": "path/sep"},
-        {"segment": " bad_segment "},
-        {"segment": "path/sep"},
-    ),
-    ids=(
-        "key-whitespace",
-        "key-path-separator",
-        "segment-whitespace",
-        "segment-path-separator",
-    ),
-)
-def test_path_definition_invariant_violations_raise_namespace_registry_error(
-    overrides: Mapping[str, object],
-) -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_path_definition(**overrides)
-
-    _assert_caused_by_namespace_registry_error(exc_info.value)
-
-
-def test_duplicate_namespace_keys_raise_namespace_registry_error() -> None:
-    ns = _make_namespace_definition()
-    with pytest.raises(ValidationError) as exc_info:
-        StorageHierarchyRegistry(namespaces=(ns, ns), paths=())
-    errors = exc_info.value.errors()
-    assert any("duplicate secure-object namespace registry key" in str(e) for e in errors)
-
-
-def test_duplicate_namespace_values_raise_namespace_registry_error() -> None:
-    ns1 = _make_namespace_definition(key="key_a")
-    ns2 = _make_namespace_definition(key="key_b")
-    with pytest.raises(ValidationError) as exc_info:
-        StorageHierarchyRegistry(namespaces=(ns1, ns2), paths=())
-    errors = exc_info.value.errors()
-    assert any("duplicate secure-object namespace value" in str(e) for e in errors)
-
-
-def test_duplicate_path_keys_raise_namespace_registry_error() -> None:
-    path = StoragePathDefinition(
-        key="dup_path",
-        kind=StoragePathKind.DIRECTORY,
-        grammar="<root>/dup/",
-        owner="aeat.test",
+def test_path_definition_invariant_violations_raise_namespace_registry_error() -> None:
+    cases: tuple[tuple[str, dict[str, object], str], ...] = (
+        ("key-whitespace", {"key": " bad_key "}, "path key must not carry surrounding whitespace"),
+        ("key-path-separator", {"key": "path/sep"}, "path key must not contain path separators"),
+        ("segment-whitespace", {"segment": " bad_segment "}, "path segment must not carry surrounding whitespace"),
+        ("segment-path-separator", {"segment": "path/sep"}, "path segment must be a single component"),
     )
-    with pytest.raises(ValidationError) as exc_info:
-        StorageHierarchyRegistry(namespaces=(), paths=(path, path))
-    errors = exc_info.value.errors()
-    assert any("duplicate storage path registry key" in str(e) for e in errors)
+
+    for case_id, overrides, expected_message in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            _make_path_definition(**overrides)
+
+        errors = exc_info.value.errors()
+        _assert_caused_by_namespace_registry_error(exc_info.value, case_id)
+        assert any(expected_message in str(error) for error in errors), case_id
+
+
+def test_duplicate_registry_entries_raise_namespace_registry_error() -> None:
+    namespace = _make_namespace_definition()
+    duplicate_workflow_state = WORKFLOW_STATE_NAMESPACE.model_copy(update={"key": "workflow_state_duplicate"})
+    path = _make_path_definition(key="dup_path", grammar="<root>/dup/")
+    cases = (
+        (
+            "namespace-key",
+            (namespace, namespace),
+            (),
+            "duplicate secure-object namespace registry key",
+        ),
+        (
+            "namespace-value",
+            (WORKFLOW_STATE_NAMESPACE, duplicate_workflow_state),
+            (),
+            "duplicate secure-object namespace value",
+        ),
+        (
+            "path-key",
+            (),
+            (path, path),
+            "duplicate storage path registry key",
+        ),
+    )
+
+    for case_id, namespaces, paths, expected_message in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            StorageHierarchyRegistry(namespaces=namespaces, paths=paths)
+
+        assert any(expected_message in str(error) for error in exc_info.value.errors()), case_id
 
 
 def test_secure_object_logical_path_uses_registered_sql_grammar() -> None:
@@ -564,11 +594,9 @@ def test_secure_object_namespace_logical_path_uses_registered_sql_grammar() -> N
     assert marker.as_posix() == "db:/secure_objects/aeat.domain.attachments.blobs"
 
 
-def test_every_discovered_production_secure_object_namespace_is_registered(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_every_discovered_production_secure_object_namespace_is_registered() -> None:
     registered = {definition.namespace for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
-    discovered = _discover_production_secure_object_namespaces(source_tree_ast)
+    discovered = _discover_production_secure_object_namespaces()
 
     assert {
         ATTACHMENT_BLOB_NAMESPACE.namespace,
@@ -603,10 +631,10 @@ _SECURE_BOUND_CLASS_NAMES = {
 }
 
 
-def _discover_production_secure_object_namespaces(source_tree_ast: Mapping[Path, ast.AST]) -> set[str]:
+def _discover_production_secure_object_namespaces() -> set[str]:
     namespaces: set[str] = set()
     for path in _iter_aeat_production_sources():
-        tree = ast_for_path(path, source_tree_ast)
+        tree = ast_for_path(path)
         assert tree is not None, f"{repo_relative(path)} must be parseable"
         bindings = _collect_namespace_value_bindings(tree)
         namespaces.update(_namespace_values_from_assignments(tree, bindings))
@@ -737,7 +765,7 @@ def _resolve_namespace_value(node: ast.expr, bindings: dict[str, str]) -> str | 
 
 def _namespace_values_from_call(node: ast.Call, bindings: dict[str, str]) -> set[str]:
     values: set[str] = set()
-    call_name = _call_name(node.func)
+    call_name = leaf_name(node.func)
     if call_name in _SECURE_OBJECT_METHODS:
         for keyword in node.keywords:
             if keyword.arg != "namespace":
@@ -773,11 +801,3 @@ def _is_namespace_target_name(name: str) -> bool:
 
 def _is_namespace_constant_name(name: str) -> bool:
     return name == "namespace" or "NAMESPACE" in name
-
-
-def _call_name(node: ast.AST) -> str:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return ""

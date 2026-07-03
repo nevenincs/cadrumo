@@ -53,39 +53,53 @@ after its retenciones_aggregation and monetary relations are both satisfied.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
     RegistryModeloObservation,
+    WithholdingObservation,
     validated_casilla_id,
 )
-from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.transactions import TransactionCatalogueRepository
+from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation._retencion_observations_repository import RetencionObservationRepository
-from ...aggregation._retenciones import RetencionObservation, RetencionScheme
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...aggregation import (
+    PercepcionObservationRepository,
+    RetencionObservation,
+    RetencionObservationRepository,
+    RetencionScheme,
+)
+from ...calculations import CalculationObservationRepository
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
+    verify_modelo_revision,
 )
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
+from .._revision_persistence import persist_filed_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-renta-annual-fold"
+_BUCKET_ID = "00000000-0000-4000-8000-000000000190"
+_PROFILE_LABEL = "Renta annual reconciliation profile"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _YEAR = 2024
@@ -119,8 +133,34 @@ _M123_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("09", surface="_M123_
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """Yield the active profile's real encrypted-SQLite object repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
+        _seed_ready_profile(profile.repository)
         yield profile.repository
+
+
+def _seed_ready_profile(objects: SecureObjectRepository) -> None:
+    """Persist a filing-ready withholding-operator profile for annual summaries."""
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+        UserProfileRecord(
+            profile_id=_BUCKET_ID,
+            display_name=_PROFILE_LABEL,
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="withholding operator activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            ),
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
 
 
 def _seed_quarterly_filing(
@@ -181,6 +221,37 @@ def _calculate_annual(
         modelo=modelo,
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
+        revision_id=snapshot.revision.id,
+        repository=wu_repo,
+        clock=_T0,
+    )
+    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        work_unit.work_unit_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+        clock=_T1,
+    )
+
+
+def _calculate_periodic(
+    secure_objects: SecureObjectRepository,
+    *,
+    modelo: str,
+    period: str,
+) -> BucketAggregationCalculationResult:
+    """Run the live periodic calculate for ``modelo`` / ``_YEAR`` / ``period``."""
+    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=_YEAR, period=period)
+    work_unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo=modelo,
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period),
         revision_id=snapshot.revision.id,
         repository=wu_repo,
         clock=_T0,
@@ -278,12 +349,14 @@ def _seed_retencion_perceptors(
         modelo=modelo,
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
-        observations=[
-            _retencion_observation(nif, scheme=scheme, source_prefix=f"retencion-{modelo}") for nif in nifs
-        ],
+        observations=[_retencion_observation(nif, scheme=scheme, source_prefix=f"retencion-{modelo}") for nif in nifs],
         source_kind="aggregate_pull",
     )
     return Decimal(len(set(nifs)))
+
+
+def _workflow_profile() -> TaxpayerProfile:
+    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
 
 
 def test_m180_folds_in_four_m115_quarters_on_live_calculate(secure_objects: SecureObjectRepository) -> None:
@@ -332,9 +405,7 @@ def test_m180_folds_in_four_m115_quarters_on_live_calculate(secure_objects: Secu
     # relation_prefill is a claimed source: no diagnostic names it.
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
     # M180 has no withholding detalle bindings, so the whole resolution is clean.
-    assert result.source_diagnostics == (), (
-        f"M180 source_diagnostics must be clean; got {result.source_diagnostics}"
-    )
+    assert result.source_diagnostics == (), f"M180 source_diagnostics must be clean; got {result.source_diagnostics}"
 
 
 # ---------------------------------------------------------------------------
@@ -365,6 +436,120 @@ def _m190_seed_value(output: CasillaId, period: str) -> Decimal:
     # digit is the output index and the trailing the quarter index.
     base = (int(output) * 100) + quarter_index
     return Decimal(base) + Decimal("0.50")
+
+
+def _seed_m190_withholding_detail() -> None:
+    PercepcionObservationRepository().replace_observations(
+        modelo="190",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
+        observations=[
+            WithholdingObservation(
+                source_id="m190-professional-row-001",
+                perceptor_tax_id="12345678Z",
+                perceptor_legal_name="Profesional Ejemplo",
+                transaction_date=date(_YEAR, 3, 15),
+                clave="G",
+                subclave="01",
+                percibido_dinerario=Decimal("1000.00"),
+                retencion_practicada=Decimal("150.00"),
+            ),
+        ],
+        source_kind="aggregate_pull",
+    )
+
+
+def _seed_m111_quarterly_m190_evidence() -> None:
+    obs_repo = CalculationObservationRepository()
+    all_outputs = (*_M190_IMPORTE_OUTPUTS, _M190_RETENCIONES_OUTPUT)
+    for period in _QUARTERS:
+        _seed_quarterly_filing(
+            obs_repo=obs_repo,
+            source_modelo="111",
+            period=period,
+            casilla_values={output: _m190_seed_value(output, period) for output in all_outputs},
+        )
+
+
+def _attest_m111_no_retenciones_periods(
+    secure_objects: SecureObjectRepository,
+    *,
+    periods: tuple[str, ...],
+) -> None:
+    profile_repo = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    record = profile_repo.load(_BUCKET_ID)
+    profile_repo.save(
+        record.model_copy(
+            update={
+                "facts": (
+                    *record.facts,
+                    UserProfileFact(
+                        path="withholding.modelo_111_no_retenciones_periods",
+                        value=",".join(f"{_YEAR}:{period}" for period in periods),
+                    ),
+                ),
+                "updated_at": _T1,
+            },
+        ),
+    )
+
+
+def _seed_and_file_m111_1t(secure_objects: SecureObjectRepository) -> BucketAggregationCalculationResult:
+    RetencionObservationRepository().replace_observations(
+        modelo="111",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        observations=[
+            RetencionObservation(
+                source_kind="ledger_transaction",
+                source_object_id="m111-1t-payroll-001",
+                perceptor_nif="12345678Z",
+                perceptor_name="Empleado Ejemplo",
+                scheme=RetencionScheme.WORK_INCOME,
+                taxable_base=Decimal("1000.00"),
+                retencion_amount=Decimal("150.00"),
+                accrued_on=f"{_YEAR}-03-15",
+            ),
+        ],
+        source_kind="aggregate_pull",
+    )
+    result = _calculate_periodic(secure_objects, modelo="111", period="1T")
+    report = verify_modelo_revision(
+        result.revision.calculation_revision_id,
+        actor="test-operator",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        verification_repository=VerificationReportCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        clock=_T1,
+    )
+    assert report.granted_verificado_completo is True, report.findings
+    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID)
+    work_units = wu_repo.load()
+    work_unit = work_units.get(result.revision.work_unit_id)
+    assert work_unit is not None
+    verified_revision = cr_repo.load().get(result.revision.calculation_revision_id)
+    assert verified_revision is not None
+    persist_filed_revision(
+        target=verified_revision,
+        work_unit=work_unit,
+        work_units=work_units,
+        notes=None,
+        actor="test-operator",
+        now=_T1,
+        calculation_repository=cr_repo,
+        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        work_unit_repository=wu_repo,
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+        taxpayer_nif=_workflow_profile().tax_id,
+    )
+    return result
 
 
 def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
@@ -421,6 +606,89 @@ def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
     # The relation fold is clean (claimed source, no diagnostic names it)...
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
     _assert_empty_withholding_store_source_issue(result, modelo="190")
+
+
+def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """M190 verify recognizes observed M111 values and names the missing filing-grade quarterly evidence."""
+    _seed_m111_quarterly_m190_evidence()
+    _seed_m190_withholding_detail()
+
+    result = _calculate_annual(secure_objects, modelo="190")
+    report = verify_modelo_revision(
+        result.revision.calculation_revision_id,
+        actor="test-operator",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        verification_repository=VerificationReportCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        clock=_T1,
+    )
+
+    assert Decimal(result.revision.casilla_values[_DECL_PERCEPCIONES_COUNT]) == Decimal("1")
+    assert report.granted_verificado_completo is False
+    cross_period_findings = tuple(
+        finding
+        for finding in report.findings
+        if finding.kind.value == "cross_period_dependency_unclean" and finding.severity.value == "blocking"
+    )
+    assert cross_period_findings, report.findings
+    m111_findings = tuple(finding for finding in cross_period_findings if "modelo=111 year=2024" in finding.message)
+    assert m111_findings, [finding.message for finding in cross_period_findings]
+    assert all("missing_current_filing_record" in finding.message for finding in m111_findings)
+    assert not any("missing_observation" in finding.message for finding in m111_findings)
+    assert not any("missing_observed_casilla" in finding.message for finding in m111_findings)
+
+
+def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quarters(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """M190 verify accepts a clean filed M111 1T plus explicit 2T-4T no-obligation evidence."""
+    m111_result = _seed_and_file_m111_1t(secure_objects)
+    _attest_m111_no_retenciones_periods(secure_objects, periods=("2T", "3T", "4T"))
+    _seed_m190_withholding_detail()
+
+    result = _calculate_annual(secure_objects, modelo="190")
+    expected_percepciones_amount = sum(
+        (Decimal(m111_result.revision.casilla_values[output]) for output in _M190_IMPORTE_OUTPUTS),
+        Decimal("0"),
+    )
+    expected_retenciones = Decimal(m111_result.revision.casilla_values[_M190_RETENCIONES_OUTPUT])
+    assert Decimal(result.revision.casilla_values[_DECL_PERCEPCIONES_AMOUNT]) == expected_percepciones_amount
+    assert Decimal(result.revision.casilla_values[_DECL_RETENCIONES]) == expected_retenciones
+    assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
+
+    report = verify_modelo_revision(
+        result.revision.calculation_revision_id,
+        actor="test-operator",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        verification_repository=VerificationReportCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        clock=_T1,
+    )
+
+    assert report.granted_verificado_completo is True, report.findings
+    blocking_cross_period = tuple(
+        finding
+        for finding in report.findings
+        if finding.kind.value == "cross_period_dependency_unclean" and finding.severity.value == "blocking"
+    )
+    assert not blocking_cross_period
+    messages = tuple(finding.message for finding in report.findings)
+    assert any("no-retenciones/no-obligation" in message and "period=2T" in message for message in messages)
+    assert any("no-retenciones/no-obligation" in message and "period=3T" in message for message in messages)
+    assert any("no-retenciones/no-obligation" in message and "period=4T" in message for message in messages)
+    assert not any("missing_current_filing_record" in message and "modelo=111" in message for message in messages)
 
 
 # ---------------------------------------------------------------------------

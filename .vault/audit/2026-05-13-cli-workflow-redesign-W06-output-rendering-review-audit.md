@@ -3,18 +3,15 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr]]'
 ---
 
-
-
 # `cli-workflow-redesign` W06 Output Rendering Code Review
 
 Status: REVISION REQUIRED
-
 
 W06-001 | HIGH | Registry CLI still owns backend contracts, service orchestration, and domain policy
 

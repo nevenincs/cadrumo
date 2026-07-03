@@ -35,12 +35,14 @@ if TYPE_CHECKING:
     from ...core.errors import AeatError
 
 import contextlib
+import re
 
 import click
 import click.types
 import typer
 import typer._click.types
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
+from pydantic_core import ErrorDetails
 
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ._catalogue import SETUP_FLOW
@@ -77,6 +79,11 @@ def _choice(values: list[str], *, case_sensitive: bool = True) -> typer._click.t
     return typing.cast("typer._click.types.ParamType", click.Choice(values, case_sensitive=case_sensitive))
 
 
+def _choice_metavar(values: list[str]) -> str:
+    """Render accepted choice tokens for Typer's dynamic-signature help."""
+    return "|".join(values)
+
+
 def _ccaa_choice_values() -> list[str]:
     """Return the CCAA choice tokens accepted by ``--tax-residence-ccaa``.
 
@@ -86,7 +93,7 @@ def _ccaa_choice_values() -> list[str]:
     localised redirect rather than a generic "not one of" error, but they
     are refused by the wizard persistence layer via ``ForalRegimeError``.
     """
-    from ...domain.contribuyente._ccaa import CCAA
+    from ...domain.contribuyente import CCAA
 
     common = [member.value for member in CCAA]
     foral = ["pais_vasco", "navarra"]
@@ -98,7 +105,7 @@ _CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
 
 def _fiscal_residency_choice_values() -> list[str]:
     """Return the FiscalResidency choice tokens accepted by ``--fiscal-residency``."""
-    from ...domain.deadlines._models import FiscalResidency
+    from ...domain.deadlines import FiscalResidency
 
     return [member.value for member in FiscalResidency]
 
@@ -116,7 +123,7 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
     flag choices never drift from the values the wizard catalogue and
     the profile schema validate against.
     """
-    from ...domain.deadlines._models import (
+    from ...domain.deadlines import (
         EntityType,
         IrpfEstimationRegime,
         IrpfIncomeCategory,
@@ -148,7 +155,7 @@ def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
     the wizard catalogue and the profile schema validate against.
     """
     from ...domain.contribuyente import SituacionFamiliar
-    from ...domain.deadlines._models import IrpfSpecialRegime
+    from ...domain.deadlines import IrpfSpecialRegime
 
     return (
         [member.value for member in IrpfSpecialRegime],
@@ -163,10 +170,12 @@ def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
 
 
 def _iva_regime_choice_values() -> list[str]:
-    """Return the IVARegime choice tokens accepted by ``--iva-regime``."""
-    from ...domain.deadlines._models import IVARegime
-
-    return [member.value for member in IVARegime]
+    """Return the wizard choice tokens accepted by ``--iva-regime``."""
+    for section in SETUP_FLOW.sections:
+        for question in section.questions:
+            if question.id == "iva-regime":
+                return [choice.value for choice in question.choices]
+    raise RuntimeError("SETUP_FLOW is missing the iva-regime question")
 
 
 _IVA_REGIME_CHOICE_VALUES: list[str] = _iva_regime_choice_values()
@@ -201,20 +210,25 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "taxation-type": typer.Option(
         "--taxation-type",
         click_type=_choice(["1", "2"]),
+        metavar=_choice_metavar(["1", "2"]),
         help=tr("wizard.setup.flags.taxation-type.help"),
     ),
     "output-language": typer.Option(
         "--output-language",
+        click_type=_choice(list(SUPPORTED_OUTPUT_LANGUAGES)),
+        metavar=_choice_metavar(list(SUPPORTED_OUTPUT_LANGUAGES)),
         help=tr("wizard.setup.flags.output-language.help"),
     ),
     "taxpayer-sex": typer.Option(
         "--taxpayer-sex",
         click_type=_choice(["H", "M"]),
+        metavar=_choice_metavar(["H", "M"]),
         help=tr("wizard.setup.flags.taxpayer-sex.help"),
     ),
     "taxpayer-marital-status": typer.Option(
         "--taxpayer-marital-status",
-        click_type=_choice(["1", "2", "3", "4"]),
+        click_type=_choice(["1", "2", "3", "4", "5"]),
+        metavar=_choice_metavar(["1", "2", "3", "4", "5"]),
         help=tr("wizard.setup.flags.taxpayer-marital-status.help"),
     ),
     "taxpayer-marriage-date": typer.Option(
@@ -228,6 +242,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "taxpayer-disability-grade": typer.Option(
         "--taxpayer-disability-grade",
         click_type=_choice(["1", "2", "3", "4"]),
+        metavar=_choice_metavar(["1", "2", "3", "4"]),
         help=tr("wizard.setup.flags.taxpayer-disability-grade.help"),
     ),
     "taxpayer-death-date": typer.Option(
@@ -244,11 +259,13 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "spouse-sex": typer.Option(
         "--spouse-sex",
         click_type=_choice(["H", "M"]),
+        metavar=_choice_metavar(["H", "M"]),
         help=tr("wizard.setup.flags.spouse-sex.help"),
     ),
     "spouse-disability-grade": typer.Option(
         "--spouse-disability-grade",
         click_type=_choice(["1", "2", "3", "4"]),
+        metavar=_choice_metavar(["1", "2", "3", "4"]),
         help=tr("wizard.setup.flags.spouse-disability-grade.help"),
     ),
     "spouse-non-resident-irpf": typer.Option(
@@ -274,6 +291,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "iva-regime": typer.Option(
         "--iva-regime",
         click_type=_choice(_IVA_REGIME_CHOICE_VALUES, case_sensitive=False),
+        metavar=_choice_metavar(_IVA_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.iva-regime.help"),
     ),
     "iva-roi-enrolled": typer.Option(
@@ -283,6 +301,14 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "iva-oss-enrolled": typer.Option(
         "--iva-oss-enrolled/--no-iva-oss-enrolled",
         help=tr("wizard.setup.flags.iva-oss-enrolled.help"),
+    ),
+    "iva-group-member-enrolled": typer.Option(
+        "--iva-group-member-enrolled/--no-iva-group-member-enrolled",
+        help=tr("wizard.setup.flags.iva-group-member-enrolled.help"),
+    ),
+    "iva-group-dominant-entity-enrolled": typer.Option(
+        "--iva-group-dominant-entity-enrolled/--no-iva-group-dominant-entity-enrolled",
+        help=tr("wizard.setup.flags.iva-group-dominant-entity-enrolled.help"),
     ),
     "iva-intracommunity-operations-exceed-50000-eur": typer.Option(
         "--iva-intracommunity-operations-exceed-50000-eur/--no-iva-intracommunity-operations-exceed-50000-eur",
@@ -308,6 +334,10 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--professional-income-withholding-ge-70pct/--no-professional-income-withholding-ge-70pct",
         help=tr("wizard.setup.flags.professional-income-withholding-ge-70pct.help"),
     ),
+    "art109-activity-income-withholding-ge-70pct": typer.Option(
+        "--art109-activity-income-withholding-ge-70pct/--no-art109-activity-income-withholding-ge-70pct",
+        help=tr("wizard.setup.flags.art109-activity-income-withholding-ge-70pct.help"),
+    ),
     "pays-rent-with-retencion": typer.Option(
         "--pays-rent-with-retencion/--no-pays-rent-with-retencion",
         help=tr("wizard.setup.flags.pays-rent-with-retencion.help"),
@@ -316,9 +346,9 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--pays-capital-income-with-retencion/--no-pays-capital-income-with-retencion",
         help=tr("wizard.setup.flags.pays-capital-income-with-retencion.help"),
     ),
-    "uses-objective-estimation-irpf": typer.Option(
-        "--uses-objective-estimation-irpf/--no-uses-objective-estimation-irpf",
-        help=tr("wizard.setup.flags.uses-objective-estimation-irpf.help"),
+    "modelo-111-no-retenciones-periods": typer.Option(
+        "--modelo-111-no-retenciones-periods",
+        help=tr("wizard.setup.flags.modelo-111-no-retenciones-periods.help"),
     ),
     "does-intracomunitario": typer.Option(
         "--does-intracomunitario/--no-does-intracomunitario",
@@ -332,9 +362,14 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--bienes-extranjero-above-threshold/--no-bienes-extranjero-above-threshold",
         help=tr("wizard.setup.flags.bienes-extranjero-above-threshold.help"),
     ),
+    "monedas-virtuales-extranjero-above-threshold": typer.Option(
+        "--monedas-virtuales-extranjero-above-threshold/--no-monedas-virtuales-extranjero-above-threshold",
+        help=tr("wizard.setup.flags.monedas-virtuales-extranjero-above-threshold.help"),
+    ),
     "fiscal-residency": typer.Option(
         "--fiscal-residency",
         click_type=_choice(_FISCAL_RESIDENCY_CHOICE_VALUES),
+        metavar=_choice_metavar(_FISCAL_RESIDENCY_CHOICE_VALUES),
         help=tr("wizard.setup.flags.fiscal-residency.help"),
     ),
     "country-of-fiscal-residence": typer.Option(
@@ -380,16 +415,19 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "entity-type": typer.Option(
         "--entity-type",
         click_type=_choice(_ENTITY_TYPE_CHOICE_VALUES),
+        metavar=_choice_metavar(_ENTITY_TYPE_CHOICE_VALUES),
         help=tr("wizard.setup.flags.entity-type.help"),
     ),
     "legal-entity-form": typer.Option(
         "--legal-entity-form",
         click_type=_choice(_LEGAL_ENTITY_FORM_CHOICE_VALUES),
+        metavar=_choice_metavar(_LEGAL_ENTITY_FORM_CHOICE_VALUES),
         help=tr("wizard.setup.flags.legal-entity-form.help"),
     ),
     "irpf-income-categories": typer.Option(
         "--irpf-income-categories",
         click_type=_choice(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
+        metavar=_choice_metavar(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-income-categories.help"),
     ),
     "incn-prior-12-months": typer.Option(
@@ -400,14 +438,32 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--new-entity-first-two-profit-periods/--no-new-entity-first-two-profit-periods",
         help=tr("wizard.setup.flags.new-entity-first-two-profit-periods.help"),
     ),
+    "ley-49-2002-option-declared": typer.Option(
+        "--ley-49-2002-option-declared/--no-ley-49-2002-option-declared",
+        help=tr("wizard.setup.flags.ley-49-2002-option-declared.help"),
+    ),
+    "ley-49-2002-option-date": typer.Option(
+        "--ley-49-2002-option-date",
+        help=tr("wizard.setup.flags.ley-49-2002-option-date.help"),
+    ),
+    "ley-49-2002-renunciation-declared": typer.Option(
+        "--ley-49-2002-renunciation-declared/--no-ley-49-2002-renunciation-declared",
+        help=tr("wizard.setup.flags.ley-49-2002-renunciation-declared.help"),
+    ),
+    "ley-49-2002-renunciation-date": typer.Option(
+        "--ley-49-2002-renunciation-date",
+        help=tr("wizard.setup.flags.ley-49-2002-renunciation-date.help"),
+    ),
     "irpf-estimation-regime": typer.Option(
         "--irpf-estimation-regime",
         click_type=_choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
+        metavar=_choice_metavar(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-estimation-regime.help"),
     ),
     "irpf-special-regime": typer.Option(
         "--irpf-special-regime",
         click_type=_choice(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
+        metavar=_choice_metavar(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-special-regime.help"),
     ),
     "irpf-special-regime-start-date": typer.Option(
@@ -417,6 +473,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "situacion-familiar": typer.Option(
         "--situacion-familiar",
         click_type=_choice(_SITUACION_FAMILIAR_CHOICE_VALUES),
+        metavar=_choice_metavar(_SITUACION_FAMILIAR_CHOICE_VALUES),
         help=tr("wizard.setup.flags.situacion-familiar.help"),
     ),
     "iva-sii-enrolled": typer.Option(
@@ -482,13 +539,12 @@ def _format_missing_flags(missing: tuple[str, ...]) -> str:
 
 
 def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tuple[str, ...]:
-    """Return create-time profile facts that must exist before persistence.
+    """Return filing identity facts that must exist before persistence.
 
-    The schema keeps filing identity facts optional so old records can still be
-    loaded and projected. New non-interactive profile creation and edits are
-    stricter: they must leave a taxpayer-type axis and a filing identity,
-    otherwise modelo work will refuse later and the user has to diagnose a
-    broken persisted profile.
+    Wizard answer models can carry partial values while prompts are being
+    collected or projected. Persisted create and edit operations are stricter:
+    they must leave a taxpayer-type axis and a filing identity, otherwise
+    modelo work would fail later against an already-committed profile.
     """
     from ..user_profile import missing_filing_baseline_flags as _missing_profile_filing_baseline_flags
     from ._persistence import serialise_answers
@@ -670,7 +726,7 @@ def _collect_flag_values(
     return canonical
 
 
-def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile_id: str) -> None:
+def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile_id: str) -> dict[str, str]:
     """Persist a non-interactive ``edit`` as a true patch.
 
     Only the flags the operator named on the command line are written;
@@ -678,15 +734,20 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
     from ..user_profile import profile_storage_session, read_active_profile, record_to_path_values
-    from ..workflow._persistence import workflow_state_repository
+    from ..workflow import workflow_state_repository
     from ._persistence import persist_patch, profile_values_from_patch, project_answers
+
+    patched_values = profile_values_from_patch(flow, explicit_flags)
+    merged_values: dict[str, str] | None = None
 
     with profile_storage_session(profile_id):
         repository = workflow_state_repository()
 
         def _persist_if_filing_baseline_survives(state):
+            nonlocal merged_values
             values = record_to_path_values(read_active_profile(state))
-            values.update(profile_values_from_patch(flow, explicit_flags))
+            values.update(patched_values)
+            merged_values = values
             missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
             if missing_baseline:
                 raise WizardMissingFlagError(
@@ -700,6 +761,7 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
             return persist_patch(flow, explicit_flags, state=state)
 
         repository.update(_persist_if_filing_baseline_survives)
+    return merged_values or patched_values
 
 
 def _run_full_flow(
@@ -713,7 +775,7 @@ def _run_full_flow(
     profile_id: str,
     mode: WizardPersistMode,
     explicit_question_ids: frozenset[str] = frozenset(),
-) -> None:
+) -> dict[str, str]:
     """Walk the full wizard flow and persist the resulting answer set.
 
     Used for ``create`` (every path) and for an interactive ``edit``,
@@ -730,7 +792,7 @@ def _run_full_flow(
         read_active_profile,
         record_to_path_values,
     )
-    from ..workflow._persistence import workflow_state_repository
+    from ..workflow import workflow_state_repository
     from ._persistence import persist_answers, project_answers, serialise_answers
 
     if accept_defaults:
@@ -786,6 +848,7 @@ def _run_full_flow(
     # `create` writes the full answer set. An interactive `edit`
     # re-walks every visible question, so the full answer set is the
     # operator's confirmed intent.
+    profile_values = serialise_answers(flow, answers)
     supplied_question_ids = frozenset(question.id for section in flow.sections for question in section.questions)
     if mode == "create":
         missing_baseline = _missing_filing_baseline_flags(flow, answers)
@@ -801,10 +864,11 @@ def _run_full_flow(
 
     span = profile_create_storage_span(profile_id) if mode == "create" else profile_storage_session(profile_id)
     with span as routing_profile_id:
+
         def _persist_if_filing_baseline_survives(state):
             if mode == "edit":
                 values = record_to_path_values(read_active_profile(state))
-                values.update({path: value for path, value in serialise_answers(flow, answers).items() if value})
+                values.update({path: value for path, value in profile_values.items() if value})
                 missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
                 if missing_baseline:
                     raise WizardMissingFlagError(
@@ -827,6 +891,7 @@ def _run_full_flow(
             )
 
         workflow_state_repository().update(_persist_if_filing_baseline_survives)
+    return profile_values
 
 
 def _enter_requested_output_language(kwargs: dict[str, object], language_stack: contextlib.ExitStack) -> None:
@@ -863,14 +928,14 @@ def _require_profile_name(flow: WizardFlow, raw_profile_name: object) -> str:
 def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, profile_name: str) -> str:
     """Resolve or mint the immutable profile id for the requested wizard mode."""
     from ...domain.user_profile import new_profile_id
-    from ..user_profile._orchestration import _refuse_duplicate_label, _require_registered_label
-    from ..workflow._profile_bucket_scan import read_profile_bucket
+    from ..user_profile import refuse_duplicate_label, require_registered_label
+    from ..workflow import read_profile_bucket
 
     if mode == "create":
-        _refuse_duplicate_label(profile_name)
+        refuse_duplicate_label(profile_name)
         return new_profile_id()
 
-    _require_registered_label(profile_name)
+    require_registered_label(profile_name)
     pointer = read_profile_bucket(profile_name)
     if pointer is not None:
         return pointer.bucket_id
@@ -909,6 +974,77 @@ def _refuse_foral_ccaa(canonical: dict[str, str], explicit_flags: dict[str, str]
         ) from foral_exc
 
 
+def _wizard_field_flags(flow: WizardFlow) -> dict[str, str]:
+    """Return answers-model field names mapped to their CLI flag names."""
+    return {
+        question.id.replace("-", "_"): _flag_name(question)
+        for section in flow.sections
+        for question in section.questions
+    }
+
+
+def _replace_validation_field_names(message: str, field_flags: dict[str, str]) -> str:
+    """Replace model field identifiers in ``message`` with operator-facing flags."""
+    rendered = message
+    for field_name, flag_name in sorted(field_flags.items(), key=lambda item: len(item[0]), reverse=True):
+        rendered = re.sub(rf"\b{re.escape(field_name)}\b", flag_name, rendered)
+    return rendered
+
+
+def _validation_location_flag(location: tuple[object, ...], field_flags: dict[str, str]) -> str:
+    """Render a pydantic location tuple as a flag-oriented field path."""
+    path: list[str] = []
+    for part in location:
+        if part == "__root__":
+            continue
+        if isinstance(part, str):
+            path.append(field_flags.get(part, part))
+        else:
+            path.append(str(part))
+    return ".".join(path)
+
+
+def _first_flag_mentioned(message: str, field_flags: dict[str, str]) -> str | None:
+    """Infer the failing flag from a model-level validation message."""
+    positions: list[tuple[int, str]] = []
+    for field_name, flag_name in field_flags.items():
+        match = re.search(rf"\b{re.escape(field_name)}\b", message)
+        if match is not None:
+            positions.append((match.start(), flag_name))
+    if not positions:
+        return None
+    return min(positions, key=lambda item: item[0])[1]
+
+
+def _format_wizard_validation_error(flow: WizardFlow, item: ErrorDetails) -> tuple[str, str | None]:
+    """Render one pydantic validation entry as ``--flag: message`` text."""
+    field_flags = _wizard_field_flags(flow)
+    raw_message = str(item.get("msg", "")).removeprefix("Value error, ").strip()
+    rendered_message = _replace_validation_field_names(raw_message, field_flags)
+    raw_location = tuple(item.get("loc", ()))
+    field_path = _validation_location_flag(raw_location, field_flags)
+    inferred_flag = field_path or _first_flag_mentioned(raw_message, field_flags)
+    if inferred_flag:
+        if rendered_message.startswith(f"{inferred_flag} "):
+            return rendered_message, inferred_flag
+        return f"{inferred_flag}: {rendered_message}", inferred_flag
+    return rendered_message, None
+
+
+def _wizard_validation_bad(flow: WizardFlow, error: ValidationError) -> typer.BadParameter:
+    """Convert leaked wizard answer validation into a specific CLI refusal."""
+    rendered = [_format_wizard_validation_error(flow, item) for item in error.errors()]
+    details = "; ".join(message for message, _flag in rendered)
+    message = tr(
+        "application.wizard.errors.command_input_invalid",
+        details=details or tr("application.wizard.errors.command_input_invalid_fallback"),
+    )
+    first_flag = next((flag for _message, flag in rendered if flag), None)
+    if first_flag is not None:
+        return typer.BadParameter(message, param_hint=f"'{first_flag}'")
+    return typer.BadParameter(message)
+
+
 def _run_wizard_persistence_path(
     flow: WizardFlow,
     mode: WizardPersistMode,
@@ -920,14 +1056,13 @@ def _run_wizard_persistence_path(
     accept_defaults: bool,
     profile_name: str,
     profile_id: str,
-) -> None:
+) -> dict[str, str]:
     """Dispatch to patch-edit or full-flow persistence."""
     non_interactive = quiet or accept_defaults
     if mode == "edit" and non_interactive:
-        _run_patch_edit(flow, explicit_flags, profile_id=profile_id)
-        return
+        return _run_patch_edit(flow, explicit_flags, profile_id=profile_id)
 
-    _run_full_flow(
+    return _run_full_flow(
         flow,
         canonical,
         _prompter=_prompter,
@@ -940,7 +1075,55 @@ def _run_wizard_persistence_path(
     )
 
 
-def _emit_wizard_success(mode: WizardPersistMode, profile_name: str) -> None:
+_DEFAULT_PROFILE_NEXT_COMMAND = "aeat app modelo work create"
+_NON_RESIDENT_IRNR_NEXT_COMMAND = "aeat app modelo describe 210"
+
+
+def _next_step_command_for_profile_values(profile_values: dict[str, str]) -> str:
+    fiscal_residency = profile_values.get("taxpayer_type.fiscal_residency", "").strip().lower()
+    if fiscal_residency == "non_resident_irnr":
+        return _NON_RESIDENT_IRNR_NEXT_COMMAND
+    return _DEFAULT_PROFILE_NEXT_COMMAND
+
+
+def _ccaa_was_defaulted(
+    mode: WizardPersistMode,
+    explicit_flags: dict[str, str],
+    profile_values: dict[str, str],
+    *,
+    non_interactive: bool,
+) -> bool:
+    """Return True when the comunidad autónoma was assumed, not chosen.
+
+    The wizard descriptor defaults ``tax-residence-ccaa`` to Madrid for a
+    resident-IRPF profile. That default is applied silently on the
+    non-interactive create paths (``--quiet`` / ``--accept-defaults``)
+    when the operator omits ``--tax-residence-ccaa`` — precisely the case
+    that lands a Madrid-based autonomic calculation without the operator
+    knowing. The signal is therefore: a non-interactive ``create`` where
+    the operator supplied no CCAA flag yet the persisted profile carries
+    the Madrid default. An explicitly-supplied CCAA (including an explicit
+    ``madrid``) sits in ``explicit_flags`` and is excluded; the interactive
+    path prompts for the value and is likewise excluded, as is ``edit``
+    (whose CCAA already exists on the profile).
+    """
+    from ...domain.contribuyente import CCAA
+
+    return (
+        mode == "create"
+        and non_interactive
+        and "tax-residence-ccaa" not in explicit_flags
+        and profile_values.get("tax_residence.ccaa") == CCAA.MADRID.value
+    )
+
+
+def _emit_wizard_success(
+    mode: WizardPersistMode,
+    profile_name: str,
+    *,
+    next_command: str = _DEFAULT_PROFILE_NEXT_COMMAND,
+    ccaa_defaulted: bool = False,
+) -> None:
     """Emit the success payload in JSON or tabular CLI form.
 
     The post-create / post-edit next-step hint rides on the envelope
@@ -948,21 +1131,39 @@ def _emit_wizard_success(mode: WizardPersistMode, profile_name: str) -> None:
     ``suggestion`` is the follow-on command) rather than as a bespoke
     ``next`` payload field, so next-step guidance is uniform with every
     other command's notices.
+
+    ``ccaa_defaulted`` requests an additional ``warning``-severity
+    :class:`Notice` disclosing that no comunidad autónoma was chosen and
+    that Madrid was assumed for the profile — so the operator learns the
+    autonomic deductions and autonomic tax scale are being computed for
+    Madrid rather than the value being applied silently.
     """
     import typer as _typer
 
     from ...core.click_context import json_output_requested
     from ...core.json_contract import Notice, NoticeSeverity, emit_json_success
     from ...core.output_rendering import render_command_output
+    from ...domain.contribuyente import CCAA
 
     verb = tr("wizard.commands.status.created" if mode == "create" else "wizard.commands.status.updated")
-    next_command = "aeat app modelo work create"
-    next_notice = Notice(
-        severity=NoticeSeverity.INFO,
-        code=f"config.profile.{'create' if mode == 'create' else 'edit'}.next_step",
-        message=tr("application.wizard.output_labels.next"),
-        suggestion=next_command,
-    )
+    notices: list[Notice] = [
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code=f"config.profile.{'create' if mode == 'create' else 'edit'}.next_step",
+            message=tr("application.wizard.output_labels.next"),
+            suggestion=next_command,
+        )
+    ]
+    ccaa_message = tr("application.wizard.notices.ccaa_defaulted", ccaa=CCAA.MADRID.value)
+    if ccaa_defaulted:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code=f"config.profile.{'create' if mode == 'create' else 'edit'}.ccaa_defaulted",
+                message=ccaa_message,
+                context={"assumed_ccaa": CCAA.MADRID.value},
+            )
+        )
     payload: dict[str, object] = {
         "profile_name": profile_name,
         "status": verb,
@@ -971,16 +1172,18 @@ def _emit_wizard_success(mode: WizardPersistMode, profile_name: str) -> None:
         payload["active_profile"] = profile_name
     if json_output_requested():
         command_path = "config.profile.create" if mode == "create" else "config.profile.edit"
-        emit_json_success(command_path, payload, notices=[next_notice])
+        emit_json_success(command_path, payload, notices=notices)
         return
 
     lines = [
-        f"profile\t{profile_name}",
+        f"{tr('application.wizard.output_labels.profile')}\t{profile_name}",
         f"{tr('application.wizard.output_labels.status')}\t{verb}",
     ]
     if mode == "create":
-        lines.append(f"active_profile\t{profile_name}")
-    lines.append(f"next\t{next_command}")
+        lines.append(f"{tr('application.wizard.output_labels.active_profile')}\t{profile_name}")
+    lines.append(f"{tr('application.wizard.output_labels.next')}\t{next_command}")
+    if ccaa_defaulted:
+        lines.append(ccaa_message)
     rendered = render_command_output(format_name="text", payload=payload, lines=lines)
     _typer.echo(rendered.text)
 
@@ -1002,18 +1205,31 @@ def _execute_wizard_command(
 
     _seed_output_language_from_environment(canonical)
     _refuse_foral_ccaa(canonical, explicit_flags)
-    _run_wizard_persistence_path(
-        flow,
+    try:
+        profile_values = _run_wizard_persistence_path(
+            flow,
+            mode,
+            canonical,
+            explicit_flags,
+            _prompter=_prompter,
+            quiet=quiet,
+            accept_defaults=accept_defaults,
+            profile_name=profile_name,
+            profile_id=profile_id,
+        )
+    except ValidationError as exc:
+        raise _wizard_validation_bad(flow, exc) from exc
+    _emit_wizard_success(
         mode,
-        canonical,
-        explicit_flags,
-        _prompter=_prompter,
-        quiet=quiet,
-        accept_defaults=accept_defaults,
-        profile_name=profile_name,
-        profile_id=profile_id,
+        profile_name,
+        next_command=_next_step_command_for_profile_values(profile_values),
+        ccaa_defaulted=_ccaa_was_defaulted(
+            mode,
+            explicit_flags,
+            profile_values,
+            non_interactive=quiet or accept_defaults,
+        ),
     )
-    _emit_wizard_success(mode, profile_name)
 
 
 def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callable[..., None]:

@@ -117,7 +117,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI27.s
 review_status = "reviewed"
 
 [sources."boe-modelo-347-2008-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3012-2008.html"
@@ -130,7 +130,7 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-16973"
 review_status = "reviewed"
 
 [sources."boe-modelo-347-2011-amendment"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3378-2011.html"

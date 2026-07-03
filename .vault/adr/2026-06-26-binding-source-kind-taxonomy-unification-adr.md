@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 related:
   - '[[2026-06-26-bindings-architecture-unification-audit]]'
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
@@ -11,8 +11,6 @@ related:
   - '[[2026-06-02-registry-bindings-boundary-audit]]'
   - '[[2026-06-24-retenciones-perceptor-count-adr]]'
 ---
-
-
 
 # `binding-source-kind-taxonomy-unification` adr: `source-kind taxonomy unification: one canonical core BindingSourceKind owning the registry+mesh union` | (**status:** `accepted`)
 
@@ -283,5 +281,3 @@ unification (phase 2.2), the relations-vs-previous_filing fold-in duplication (p
   member routed, deferred, or explicitly reserved. (Extension authored at phase-2.1
   review/codify, not now — the lesson must hold through execution first, per
   `vaultspec-codify`.)
-
-

@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S19'
 related:
   - '[[2026-06-10-cli-operator-surface-plan]]'
@@ -25,4 +25,3 @@ S19 is closed. Restore behavior is covered by durable application-level tests.
 ## Checks
 
 - `pytest src/aeat/application/ledger/tests/test_actions_lifecycle.py -m "unit or integration" -q --basetemp Y:/tmp/pytest-w02-restore-lineage`
-

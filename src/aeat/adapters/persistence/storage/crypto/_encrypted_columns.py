@@ -17,12 +17,19 @@ at the column level without touching the cipher directly:
   :class:`EncryptedString`-shaped value without leaking the
   plaintext.
 
-All decorators consult :func:`get_master_key_provider` lazily on
-every bind and result conversion. Tests inject an
-:class:`EphemeralMasterKeyProvider` via the
-``override_master_key_provider`` test helper so the SQLite
-round-trip uses a deterministic key without touching the OS keychain
-or the file backend.
+:class:`EncryptedPayload` validates the decoded JSON result from
+:class:`EncryptedJSON`, while the secure-object helpers bind
+``namespace``, ``object_key`` digest, and ``schema_version`` into
+payload AEAD associated data so ciphertext copied across rows fails
+authentication.
+
+All decorators and helpers resolve key bytes through
+:func:`~aeat.adapters.persistence.storage.master_key._active_session.get_active_master_key`
+on the active
+:class:`~aeat.adapters.persistence.storage.master_key._bucket_session.BucketSession`.
+Tests use :class:`~aeat.adapters.persistence.storage.master_key.EphemeralMasterKeyProvider`,
+whose context manager enters a real session without touching the OS
+keychain or file backend.
 
 The AAD (associated authenticated data) per decorator binds the
 ciphertext to its purpose: a ciphertext minted for an
@@ -48,7 +55,7 @@ from ..errors import (
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-from ..master_key._active_session import get_active_master_key
+from ..master_key import get_active_master_key
 from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 
 
@@ -127,7 +134,7 @@ def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
     """Decrypt one ``EncryptedBytes`` on-wire payload under the active master key.
 
     Exposed so iterator consumers (notably
-    :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`)
+    :class:`aeat.adapters.persistence.storage.SecureObjectRepository`)
     can decrypt rows one-by-one inside their own try/except, rather than
     delegating to SQLAlchemy's column processor whose failure mode aborts
     the entire result-set materialisation.
@@ -142,23 +149,6 @@ def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
     blob = EncryptedBlob.from_wire(wire)
     key = _resolve_master_key()
     return decrypt_record(blob, key=key, associated_data=_AAD_BYTES)
-
-
-def decrypt_encrypted_string_column(wire: bytes) -> str:
-    """Decrypt one legacy ``EncryptedString`` on-wire payload.
-
-    New lookup columns should use :class:`HashedLookup`; the
-    secure-object repository uses this helper only to migrate rows
-    written by the old randomized ``object_key`` mapper into
-    deterministic lookup digests.
-    """
-    blob = EncryptedBlob.from_wire(wire)
-    key = _resolve_master_key()
-    plaintext = decrypt_record(blob, key=key, associated_data=_AAD_STRING)
-    try:
-        return plaintext.decode("utf-8")
-    except UnicodeDecodeError as exc:
-        raise DecryptionError("legacy EncryptedString payload is not valid UTF-8") from exc
 
 
 _HASHED_LOOKUP_DIGEST_SIZE = 32

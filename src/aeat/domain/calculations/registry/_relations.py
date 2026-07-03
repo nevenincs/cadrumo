@@ -1,9 +1,17 @@
 """Relation helpers for cross-model registry dependencies.
 
 Resolves cross-modelo source requirements and materialises relation values
-for a :class:`ModeloRevision` filing. Relations declare which source filings
-and output casillas must be available before the target modelo can be
-calculated.
+for a :class:`~aeat.domain.calculations.registry.ModeloRevision` filing.
+Relations declare which source filings and output casillas must be available
+before the target modelo can be calculated.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._bindings_previous_filing`
+        Same requirement record reused by direct previous-filing carries.
+    :mod:`aeat.domain.calculations.registry._observation_fold`
+        Observation fold helpers used to gather source casilla values.
+    :mod:`aeat.domain.calculations.registry._relation_aggregation`
+        Canonical relation aggregation resolver used by this module.
 """
 
 from __future__ import annotations
@@ -19,7 +27,7 @@ from ....core import STRICT_FROZEN_CONFIG, Period
 from ....core.aggregation import RelationAggregationOp
 from ._binding_selector_utils import unique_tuple
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, RelationId
+from ._ids import BindingId, CasillaId, LegalRefId, ModeloId, RelationId, SourceRefId
 from ._observation_fold import gather_observed_requirement_values
 from ._period_offset_math import apply_period_offset
 from ._relation_aggregation import relation_aggregation_op
@@ -44,16 +52,22 @@ class RegistryFoldRequirement(BaseModel):
     cross-modelo relation fold (``relation_ids`` / ``target_bindings`` populated)
     and a same-modelo direct ``previous_filing`` carry (``binding_ids``
     populated). Both the source-period and source-casilla axes are PLURAL so the
-    record is a superset of the two prior shapes — a relation requirement fans
+    record is a superset of the two prior shapes: a relation requirement fans
     plural ``periods`` against a single ``source_casilla_ids`` member, while a
     ``previous_filing`` requirement carries a single ``periods`` member against
-    plural ``source_casilla_ids``. Each producer emits a single-element tuple
-    where its cardinality is one; no value shifts, only the record TYPE unifies.
+    plural ``source_casilla_ids``. ``legal_refs`` and ``source_refs`` retain the
+    originating relation/binding grounding for operator diagnostics. Each
+    producer emits a single-element tuple where its cardinality is one; no value
+    shifts, only the record TYPE unifies.
+
+    Consumed by :func:`relation_source_requirements`,
+    :func:`resolve_relation_values_from_observations`, and
+    :func:`aeat.domain.calculations.registry.previous_filing_observation_requirements`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_modelo: str = Field(min_length=1, max_length=8)
+    source_modelo: ModeloId
     filing_year: int = Field(ge=2000, le=2099)
     filing_periods: tuple[Period, ...] = ()
     periods: tuple[str, ...] = Field(min_length=1)
@@ -64,14 +78,20 @@ class RegistryFoldRequirement(BaseModel):
     dependency_role: str = ""
     dependency_treatment: str = ""
     aggregation_op: str = ""
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
-    _values_unique = field_validator("binding_ids", "source_casilla_ids")(unique_tuple("fold requirement tuple"))
+    _values_unique = field_validator("binding_ids", "source_casilla_ids", "legal_refs", "source_refs")(
+        unique_tuple("fold requirement tuple")
+    )
 
 
 @dataclass(slots=True)
 class _RelationRequirementBucket:
     relation_ids: set[RelationId]
     target_bindings: set[BindingId]
+    legal_refs: set[LegalRefId]
+    source_refs: set[SourceRefId]
 
 
 def relation_source_requirements(
@@ -80,14 +100,20 @@ def relation_source_requirements(
     filing_year: int,
     period: str,
 ) -> tuple[RegistryFoldRequirement, ...]:
-    """Return :class:`RegistryFoldRequirement` items needed to resolve relations for a filing.
+    """Return requirement records needed to resolve relations for a filing.
 
     Args:
-        revision: The :class:`ModeloRevision` whose relation declarations to inspect.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            relation declarations to inspect.
         filing_year: Target filing year; combined with each relation's source
             offset to derive the expected source-modelo filing year.
         period: Target period token; filters relations by ``target_periods``
             and seeds the source-period derivation.
+
+    Returns:
+        :class:`~aeat.domain.calculations.registry.RegistryFoldRequirement`
+        rows keyed by source modelo/year/period and source casilla.
     """
     classifications_by_source = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
@@ -123,9 +149,19 @@ def relation_source_requirements(
             str(classification.treatment),
             relation_aggregation_op(relation).value,
         )
-        bucket = grouped.setdefault(key, _RelationRequirementBucket(relation_ids=set(), target_bindings=set()))
+        bucket = grouped.setdefault(
+            key,
+            _RelationRequirementBucket(
+                relation_ids=set(),
+                target_bindings=set(),
+                legal_refs=set(),
+                source_refs=set(),
+            ),
+        )
         bucket.relation_ids.add(relation.id)
         bucket.target_bindings.add(relation.target_binding)
+        bucket.legal_refs.update(relation.legal_refs)
+        bucket.source_refs.update(relation.source_refs)
     return tuple(
         RegistryFoldRequirement(
             source_modelo=source_modelo,
@@ -142,6 +178,8 @@ def relation_source_requirements(
             dependency_role=dependency_role,
             dependency_treatment=dependency_treatment,
             aggregation_op=aggregation_op,
+            legal_refs=tuple(sorted(values.legal_refs)),
+            source_refs=tuple(sorted(values.source_refs)),
         )
         for (
             source_modelo,
@@ -167,11 +205,14 @@ def resolve_relation_values(
     ``{"op": "sum"}`` sums tuple values for annual summaries.
 
     Args:
-        revision: The :class:`ModeloRevision` whose relation definitions are
-            resolved against the supplied external outputs.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            relation definitions are resolved against the supplied external
+            outputs.
         external_outputs: Caller-supplied per-relation values keyed by
-            ``relation.id``; a Decimal under ``copy`` aggregation or a tuple
-            of Decimals under ``sum``.
+            :class:`~aeat.domain.calculations.registry.RelationId`; a
+            :class:`decimal.Decimal` under ``copy`` aggregation or a tuple of
+            Decimals under ``sum``.
         period: Optional period token; restricts active relations to those
             whose ``target_periods`` set contains it.
     """
@@ -207,13 +248,21 @@ def resolve_relation_values_from_observations(
     """Resolve relation values from normalized filed-declaration observations.
 
     Args:
-        revision: The :class:`ModeloRevision` whose relation declarations to resolve.
-        observations: Filed-declaration :class:`RegistryModeloObservation`
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            relation declarations to resolve.
+        observations: Filed-declaration
+            :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`
             rows that supply the source values each relation consumes.
         filing_year: Target filing year; combined with each relation's source
             offset to match observation rows.
         period: Target period token whose relation requirements drive
             observation matching.
+
+    Returns:
+        Resolved :class:`~aeat.domain.calculations.registry.RelationId` values
+        suitable for
+        :func:`aeat.domain.calculations.registry._formula_runtime.calculate_registry_snapshot`.
     """
     available = tuple(observations)
     external_outputs: dict[RelationId, Decimal | tuple[Decimal, ...]] = {}
@@ -247,11 +296,16 @@ def materialize_relation_binding_values(
     relation resolution in the application layer.
 
     Args:
-        revision: The :class:`ModeloRevision` whose relation-to-binding
-            mappings are used to populate the returned dict.
+        revision: The
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            relation-to-binding mappings are used to populate the returned dict.
         relation_values: Already-resolved relation id to Decimal mapping.
         period: Optional period token; restricts active relations to those
             whose ``target_periods`` set contains it.
+
+    Returns:
+        Target :class:`~aeat.domain.calculations.registry.BindingId` values for
+        relation-backed bound casillas.
     """
     values: dict[BindingId, Decimal] = {}
     for relation in _active_relations(revision, period=period):
@@ -279,15 +333,9 @@ def _active_relations(revision: ModeloRevision, *, period: str | None) -> tuple[
 
 def _relation_source_year(relation: RelationDefinition, *, filing_year: int) -> int:
     selector = relation.source_revision_selector
-    if "year" in selector:
-        year = selector["year"]
-        if not isinstance(year, int):
-            raise RegistryValidationError(f"relation {relation.id!r} source selector year must be an integer")
-        return year
-    delta = selector.get("filing_year_delta", 0)
-    if not isinstance(delta, int):
-        raise RegistryValidationError(f"relation {relation.id!r} source selector filing_year_delta must be an integer")
-    return filing_year + delta
+    if selector.year is not None:
+        return selector.year
+    return filing_year + (selector.filing_year_delta or 0)
 
 
 def _derive_offset_source_period(relation: RelationDefinition, *, target_period: str) -> str | None:
@@ -313,5 +361,3 @@ def _derive_offset_source_anchor(relation: RelationDefinition, *, target_period:
             f"relation {relation.id!r} source_period_offset_from_target "
             f"cannot interpret target period {target_period!r}",
         ) from exc
-
-

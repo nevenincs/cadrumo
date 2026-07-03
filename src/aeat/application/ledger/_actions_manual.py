@@ -1,10 +1,12 @@
-"""Application services for bucket-scoped manual ledger transactions.
+"""Manual ledger transaction services and read projections.
 
-Services operate over a :class:`TransactionCatalogueRepository` for ledger
-state, a :class:`BucketEventHistoryRepository` for durable audit events, and
-an optional :class:`InvoiceCatalogueRepository` for purchase-invoice evidence
-cascade on removal. The inner functions accept a :class:`TransactionCatalogue`
-or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
+The services build :class:`~aeat.domain.transactions.Transaction` records from
+:class:`~aeat.application.ledger.ManualLedgerTransactionCommand`, persist them
+in a loaded :class:`TransactionCatalogue`, append bucket events, and return
+:class:`~aeat.application.ledger.ManualLedgerTransactionResult` values.
+Evidence paths validate purchase-invoice, attachment, and
+:class:`~aeat.domain.usage_ratios.UsageRatioProfile` references before
+persistence.
 """
 
 from __future__ import annotations
@@ -22,15 +24,15 @@ if TYPE_CHECKING:
 
 from ...core import BindingSourceKind, Period
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
-from ...domain.attachments._protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
+from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
     BucketEvent,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.modelos._protocols import (
+from ...domain.invoices import InvoiceCatalogueRepositoryProtocol
+from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
@@ -41,14 +43,15 @@ from ...domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionEditLineageEntry,
     TransactionEvidenceProvenanceEntry,
     TransactionLifecycleLineageEntry,
     TransactionLifecycleState,
     TransactionValidationError,
+    derive_import_fingerprint,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios import (
     UsageRatioProfile,
 )
@@ -113,12 +116,38 @@ def create_manual_transaction(
 ) -> ManualLedgerTransactionResult:
     """Persist one manual ledger transaction in the command's bucket.
 
-    Returns a :class:`ManualLedgerTransactionResult` with the created
-    transaction and associated bucket event.
+    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    with the created transaction and associated bucket event.
     """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
     event_repository = _bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
+    catalogue = repository.load()
+    if command.idempotency_key is not None:
+        # The idempotency key is authoritative for row identity: a keyed row
+        # carries the clock-free provider id `manual:{bucket}:{key}` on
+        # raw.provider_transaction_id. Scan by that provider id (NOT the
+        # content-folding catalogue id from derive_transaction_id) so the same
+        # key always names the same logical add regardless of which content
+        # fields it carries.
+        provider_id = _provider_transaction_id(command, occurred_at=now)
+        existing = next(
+            (row for row in catalogue.values() if row.raw.provider_transaction_id == provider_id),
+            None,
+        )
+        if existing is not None:
+            if _command_matches_current(command, existing):
+                # Guarded idempotent retry: same idempotency key, identical content.
+                # Return the stored row unchanged with no new event (an empty
+                # bucket_event_ids tuple is the structural no-op signal), mirroring
+                # the create_work_unit existing-record contract.
+                return _result(command.bucket_id, existing, ())
+            raise TransactionValidationError(
+                f"ledger add idempotency-key {command.idempotency_key!r} already names a stored "
+                "transaction with different content; use a new idempotency key for a different "
+                "movement, or omit --idempotency-key to append a deliberate duplicate",
+                translated_message="application.ledger.errors.idempotency_key_conflict",
+            )
     transaction_base = _transaction_from_command(command, occurred_at=now)
     _verify_evidence_references(
         command,
@@ -136,7 +165,6 @@ def create_manual_transaction(
         payload=_event_payload(command),
     )
     transaction = _transaction_from_command(command, occurred_at=now, bucket_event_id=event.event_id)
-    catalogue = repository.load()
     _save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
@@ -165,7 +193,7 @@ def attach_manual_transaction_evidence(
 ) -> ManualLedgerTransactionResult:
     """Attach purchase evidence or supplementary attachments to one ledger transaction.
 
-    Returns a :class:`ManualLedgerTransactionResult`.
+    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`.
     """
     trimmed_actor = _require_actor(actor, operation="ledger evidence attachment")
     trimmed_source_command = _require_source_command(source_command, operation="ledger evidence attachment")
@@ -218,7 +246,7 @@ def get_manual_transaction(
     transaction_id: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Return one :class:`ManualLedgerTransactionResult` from a bucket-scoped catalogue."""
+    """Return one :class:`~aeat.application.ledger.ManualLedgerTransactionResult` from a bucket catalogue."""
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = _require_transaction(repository.load(), transaction_id)
     return _result(bucket_id, transaction, ())
@@ -231,7 +259,8 @@ def list_manual_transactions(
 ) -> tuple[ManualLedgerTransactionResult, ...]:
     """Return every transaction in a bucket, sorted by effective date and id.
 
-    Each element is a :class:`ManualLedgerTransactionResult` for one
+    Each element is a
+    :class:`~aeat.application.ledger.ManualLedgerTransactionResult` for one
     stored transaction.
     """
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
@@ -253,7 +282,7 @@ def query_ledger_review_rows(
 ) -> LedgerReviewQueryResult:
     """Return review rows for bucket-local ledger transactions.
 
-    Returns a :class:`LedgerReviewQueryResult`.
+    Returns a :class:`~aeat.application.ledger.LedgerReviewQueryResult`.
     """
     repository = _transaction_repository(bucket_id=query.bucket_id, repository=transaction_repository)
     catalogue = repository.load()
@@ -266,7 +295,7 @@ def query_ledger_review_rows(
 
 
 def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPayload:
-    """Return the :class:`LedgerTransactionPayload` for one ledger transaction."""
+    """Return the :class:`~aeat.application.ledger.LedgerTransactionPayload` for one ledger transaction."""
     raw = transaction.raw
     return LedgerTransactionPayload(
         transaction_id=transaction.transaction_id,
@@ -298,6 +327,13 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         notes=transaction.notes,
         lifecycle_state=transaction.lifecycle_state.value,
         classified_by=transaction.classified_by,
+        classified_at=transaction.classified_at.isoformat() if transaction.classified_at is not None else None,
+        classification_reason=transaction.classification_reason,
+        classification_confidence=(
+            _display_decimal(transaction.classification_confidence)
+            if transaction.classification_confidence is not None
+            else None
+        ),
         source_jurisdiction=transaction.source_jurisdiction,
         value_in_eur=_display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
         fx_rate=_display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
@@ -309,8 +345,9 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
 def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransactionReviewPayload:
     """Return one ledger transaction projection plus derived operator review status.
 
-    Returns a :class:`LedgerTransactionReviewPayload` with all operator-facing
-    fields populated from the transaction record.
+    Returns a
+    :class:`~aeat.application.ledger.LedgerTransactionReviewPayload` with all
+    operator-facing fields populated from the transaction record.
     """
     base = ledger_transaction_payload(transaction)
     return LedgerTransactionReviewPayload(
@@ -320,7 +357,10 @@ def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransac
 
 
 def ledger_transaction_result_payload(result: ManualLedgerTransactionResult) -> LedgerTransactionResultPayload:
-    """Return the canonical :class:`LedgerTransactionResultPayload` for a single ledger mutation/read result."""
+    """Return the canonical result payload for one ledger mutation/read result.
+
+    Returns a :class:`~aeat.application.ledger.LedgerTransactionResultPayload`.
+    """
     return LedgerTransactionResultPayload(
         bucket_id=result.ref.bucket_id,
         transaction_id=result.ref.transaction_id,
@@ -330,7 +370,11 @@ def ledger_transaction_result_payload(result: ManualLedgerTransactionResult) -> 
 
 
 def ledger_transaction_tracking_payload(transaction: Transaction) -> LedgerTransactionTrackingPayload:
-    """Return durable event lineage fields as a :class:`LedgerTransactionTrackingPayload` for one ledger transaction."""
+    """Return durable event lineage fields for one ledger transaction.
+
+    Returns a
+    :class:`~aeat.application.ledger.LedgerTransactionTrackingPayload`.
+    """
     return LedgerTransactionTrackingPayload(
         transaction_id=transaction.transaction_id,
         created_event_id=transaction.created_event_id,
@@ -347,7 +391,7 @@ def summarize_manual_transactions(
     period: Period | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> LedgerStatusReport:
-    """Return a read-only :class:`LedgerStatusReport` for one bucket's ledger transactions."""
+    """Return a read-only :class:`~aeat.application.ledger.LedgerStatusReport` for one bucket."""
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transactions = tuple(repository.load().values())
     status_counts: dict[LedgerReviewStatus, int] = {
@@ -391,9 +435,9 @@ def summarize_manual_transactions(
             expense_total += eur
     return LedgerStatusReport(
         bucket_id=bucket_id,
-        income_total=_display_decimal(income_total),
-        expense_total=_display_decimal(expense_total),
-        net_total=_display_decimal(income_total - expense_total),
+        business_income_total=_display_decimal(income_total),
+        business_expense_total=_display_decimal(expense_total),
+        business_net_total=_display_decimal(income_total - expense_total),
         total_count=len(transactions),
         active_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ACTIVE),
         archived_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ARCHIVED),
@@ -422,9 +466,13 @@ def update_manual_transaction(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Replace one manual ledger transaction with a validated command payload.
+    """Replace one manual ledger transaction from a validated command payload.
 
-    Returns a :class:`ManualLedgerTransactionResult`.
+    The replacement is built from
+    :class:`~aeat.application.ledger.ManualLedgerTransactionCommand` and saved
+    as a new :class:`~aeat.domain.transactions.Transaction` revision.
+
+    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`.
     """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
@@ -485,11 +533,11 @@ def _prepare_manual_transaction_update(
     attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
 ) -> tuple[Transaction, tuple[BucketEvent, ...]] | None:
-    """Build the replacement transaction + bucket events for one in-memory edit.
+    """Build a replacement transaction and bucket events for one in-memory edit.
 
     Returns ``None`` when the command is a field-for-field no-op (the caller
     decides whether that is an error or a skip). Verifies evidence and usage-ratio
-    references but performs **no** persistence and **no** catalogue load â€” the
+    references but performs **no** persistence and **no** catalogue load - the
     caller owns a single load/save so a batch re-encrypts the catalogue once
     rather than per row (the ``bulk_classify_from_csv`` load-once/save-once
     contract). Lifecycle and blocking-modelo guards remain the caller's
@@ -498,7 +546,7 @@ def _prepare_manual_transaction_update(
     replacement = _transaction_from_command(
         command,
         occurred_at=now,
-        provider_transaction_id=current.raw.transaction_id if command.idempotency_key is None else None,
+        provider_transaction_id=current.raw.provider_transaction_id if command.idempotency_key is None else None,
         created_by=current.created_by,
         created_source_command=current.source_command,
         created_event_id=current.created_event_id,
@@ -542,7 +590,7 @@ def _prepare_manual_transaction_update(
     replacement = _transaction_from_command(
         command,
         occurred_at=now,
-        provider_transaction_id=current.raw.transaction_id if command.idempotency_key is None else None,
+        provider_transaction_id=current.raw.provider_transaction_id if command.idempotency_key is None else None,
         created_by=current.created_by,
         created_source_command=current.source_command,
         created_event_id=current.created_event_id,
@@ -587,6 +635,12 @@ def update_manual_transaction_fields(
 ) -> ManualLedgerTransactionResult:
     """Apply a typed field patch to one active bucket-scoped ledger transaction.
 
+    The patch is a
+    :class:`~aeat.application.ledger.ManualLedgerTransactionPatch` converted
+    into a :class:`~aeat.application.ledger.ManualLedgerTransactionCommand`
+    before the same replacement path used by
+    :func:`~aeat.application.ledger.update_manual_transaction`.
+
     When ``reaffirm`` is :data:`True` the automatic re-affirmation no-op guard
     is bypassed and the command is forced through even if the patched fields are
     field-for-field identical to the stored transaction. This is the explicit
@@ -594,12 +648,13 @@ def update_manual_transaction_fields(
 
     ``_preloaded_catalogue`` is an internal optimisation: a caller that has
     already decrypted the bucket :class:`TransactionCatalogue` (e.g.
-    :func:`attach_manual_transaction_evidence`) passes it through so this function
-    does not decrypt the whole catalogue a second time. There is no write between
-    the caller's load and this one, so the preloaded view is current.
+    :func:`~aeat.application.ledger.attach_manual_transaction_evidence`) passes
+    it through so this function does not decrypt the whole catalogue a second
+    time. There is no write between the caller's load and this one, so the
+    preloaded view is current.
 
-    Returns a :class:`ManualLedgerTransactionResult` reflecting the updated
-    transaction state after the patch is applied.
+    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    reflecting the updated transaction state after the patch is applied.
     """
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     catalogue = _preloaded_catalogue if _preloaded_catalogue is not None else repository.load()
@@ -721,6 +776,9 @@ def _command_from_patch(
         notes=notes,
         iva_category=iva_category,
         counterparty_eu_member_state=counterparty_eu_member_state,
+        source_jurisdiction=(
+            patch.source_jurisdiction if "source_jurisdiction" in patch_fields else current.source_jurisdiction
+        ),
         group_label=group_label,
         actor=actor,
         source_command=source_command,
@@ -920,7 +978,7 @@ def _transaction_from_command(
     modified_at: datetime | None = None,
 ) -> Transaction:
     raw = RawTransaction(
-        transaction_id=provider_transaction_id or _provider_transaction_id(command, occurred_at=occurred_at),
+        provider_transaction_id=provider_transaction_id or _provider_transaction_id(command, occurred_at=occurred_at),
         booked_date=command.booked_date,
         value_date=command.value_date,
         amount=command.amount,
@@ -967,7 +1025,15 @@ def _transaction_from_command(
         "edit_lineage": (
             (*existing_edit_lineage, edit_lineage_entry) if edit_lineage_entry is not None else existing_edit_lineage
         ),
-        "import_fingerprint": import_fingerprint,
+        # Stamp the content-only movement fingerprint on manual rows when the
+        # caller does not carry one forward (every create path). Edits pass the
+        # stored fingerprint verbatim. This lets a manually-entered movement
+        # participate in the import-path duplicate/likely-duplicate advisory.
+        "import_fingerprint": (
+            import_fingerprint
+            if import_fingerprint is not None
+            else derive_import_fingerprint(raw, direction=command.direction)
+        ),
         "notes": command.notes,
         "iva_category": command.iva_category,
         "counterparty_eu_member_state": command.counterparty_eu_member_state,
@@ -984,7 +1050,13 @@ def _transaction_from_command(
             {
                 "classified_at": occurred_at,
                 "classified_by": command.classified_by_override or CLASSIFIED_BY_MANUAL,
-                "classification_reason": command.source_command,
+                # #231: the operator's free-text rationale (the manual `classify
+                # --reason` value, threaded through as `command.notes`) is the
+                # real "why" behind the decision and takes precedence; the
+                # invoking command name remains the fallback for classification
+                # paths that carry no operator-supplied reason (e.g. bulk
+                # `--from-csv` rows with no `notes` column).
+                "classification_reason": command.notes or command.source_command,
                 "classification_confidence": Decimal("1"),
             },
         )

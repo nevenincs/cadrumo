@@ -29,18 +29,18 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from ....adapters.persistence.storage.crypto._encrypted_columns import (
+from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
+from ....adapters.persistence.storage.crypto import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
-from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import BindingSourceKind, Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.registry._schema import RegistrySnapshotRef
-from .._repository import ModeloDraftRepository
+from ...calculations.registry import RegistrySnapshotRef
 from .._schema import (
     ModeloBindingValue,
     ModeloDraft,
@@ -52,6 +52,7 @@ from .._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "filing-binding-provenance"
+_DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
 _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
     "03",
     surface="_M130_RENDIMIENTO_NETO_CASILLA",
@@ -66,7 +67,6 @@ def _populated_draft() -> ModeloDraft:
     populated row index) so a save-drops-field / load-re-defaults-field
     regression cannot pass the strict-equality witness vacuously.
     """
-    now = datetime.now(UTC).replace(microsecond=0)
     return ModeloDraft(
         draft_id="b" * 64,
         modelo="130",
@@ -109,8 +109,8 @@ def _populated_draft() -> ModeloDraft:
         ),
         casilla_provenance=(),
         findings=(),
-        created_at=now,
-        updated_at=now,
+        created_at=_DRAFT_TIMESTAMP,
+        updated_at=_DRAFT_TIMESTAMP,
         schema_version="schema-2025-1",
         notes="Draft pending operator review",
     )

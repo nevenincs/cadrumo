@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -48,6 +48,7 @@ _M115_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
 _M115_BASE_CASILLA: CasillaId = _casilla_id("02")
 _M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("19")
+_M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
 
 
 def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
@@ -108,16 +109,34 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
         assert source_resolution.relation_values == {
             item.relation: item.value for item in prefill.values if item.value is not None
         }
-        assert source_resolution.owned_sources == ("relation_prefill",)
+        assert source_resolution.owned_sources == (BindingSourceKind.RELATION_PREFILL,)
         assert source_resolution.provenance
         assert all(item.source_kind == "relation_prefill" for item in source_resolution.provenance)
+        relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
+        for item in prefill.values:
+            relation = relations_by_id[item.relation]
+            assert item.source_modelo == relation.source_modelo
+            assert item.source_casilla_ids == (relation.source_casilla_id,)
+            assert item.legal_refs == tuple(relation.legal_refs)
+            assert item.source_refs == tuple(relation.source_refs)
         # RET-1: the perceptores relation is retired (decl.total-perceptores is now
         # a distinct-NIF count from the retención store); only the monetary
         # base/retenciones relations remain on the relation_prefill source.
         assert {item.source_ref for item in source_resolution.provenance} == {
-            "modelo-180-rel-115-base-anual:2026:1T,2T,3T,4T",
-            "modelo-180-rel-115-retenciones-anual:2026:1T,2T,3T,4T",
+            "modelo-180-rel-115-base-anual:115:2026:1T,2T,3T,4T:02",
+            "modelo-180-rel-115-retenciones-anual:115:2026:1T,2T,3T,4T:03",
         }
+        resolved_prefill = {item.relation: item for item in prefill.values if item.value is not None}
+        provenance_by_relation = {item.relation_id: item for item in source_resolution.provenance}
+        assert set(provenance_by_relation) == set(resolved_prefill)
+        for relation_id, provenance in provenance_by_relation.items():
+            prefilled = resolved_prefill[relation_id]
+            assert provenance.source_modelo == prefilled.source_modelo
+            assert provenance.source_filing_year == prefilled.source_filing_year
+            assert provenance.source_periods == prefilled.source_periods
+            assert provenance.source_casilla_ids == prefilled.source_casilla_ids
+            assert provenance.legal_refs == prefilled.legal_refs
+            assert provenance.source_refs == prefilled.source_refs
 
 
 def test_resolve_relations_returns_operator_manual_blanks_when_local_store_is_empty(tmp_path: Path) -> None:
@@ -223,6 +242,52 @@ def test_unresolved_non_formula_relation_with_materialised_slot_is_not_flagged(t
     )
 
 
+def test_m202_1p_previous_payments_materialises_zero_without_prior_relation(tmp_path: Path) -> None:
+    """Modelo 202 1P has no previous same-year installment to fold into casilla 30."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+        snapshot = resources().modelos.authority.snapshot("202", filing_year=2024, period="1P")
+
+        source_resolution = RelationPrefillSourceResolver(
+            repository=repository,
+            registry_snapshot=snapshot,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="202",
+                filing_year=2024,
+                period=Period.from_year_and_code(2024, "1P"),
+                revision=snapshot.revision,
+            ),
+        )
+
+    assert source_resolution.binding_values[_M202_2023_2024_PRIOR_PAYMENTS_BINDING] == Decimal("0")
+    assert source_resolution.relation_values == {}
+
+
+def test_m202_2p_previous_payments_stays_unresolved_without_prior_filing(tmp_path: Path) -> None:
+    """Modelo 202 2P still requires the actual 1P installment relation."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+        snapshot = resources().modelos.authority.snapshot("202", filing_year=2024, period="2P")
+
+        source_resolution = RelationPrefillSourceResolver(
+            repository=repository,
+            registry_snapshot=snapshot,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="202",
+                filing_year=2024,
+                period=Period.from_year_and_code(2024, "2P"),
+                revision=snapshot.revision,
+            ),
+        )
+
+    assert _M202_2023_2024_PRIOR_PAYMENTS_BINDING not in source_resolution.binding_values
+    assert source_resolution.relation_values == {}
+
+
 def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Path) -> None:
     """An unresolved non-formula relation that reaches nothing is surfaced.
 
@@ -295,9 +360,7 @@ def _m130_pagos_requirement(
     requirements: tuple[RegistryFoldRequirement, ...],
 ) -> RegistryFoldRequirement:
     return next(
-        r
-        for r in requirements
-        if r.source_modelo == "130" and r.source_casilla_ids == (_M130_RESULTADO_FINAL_CASILLA,)
+        r for r in requirements if r.source_modelo == "130" and r.source_casilla_ids == (_M130_RESULTADO_FINAL_CASILLA,)
     )
 
 

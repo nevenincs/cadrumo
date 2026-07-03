@@ -6,14 +6,3 @@ section = ["resultados", "calculo_impuesto_res", "ampliacion_deduc_mater_res"]
 semantic_role = "irpf_incremento_maternidad_guarderia_no_aplicado_2021"
 legal_refs = ["ley-35-2006:art-81"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
-
-
-# ===========================================================================
-# Auto-generated casilla schema for revision 2023 sourced from
-# corpus/aeat_official/disenos_registro/modelo_100/files/07-100-diccionario-declaracion-individual-ejercicio-2023-actualizado-29-01-2026-382-kb-otros-fi.properties
-# (the AEAT-published declaracion-individual data dictionary). Each block
-# carries the casilla number, AEAT label, section path derived from the
-# XPath, and data_type mapped from the AEAT type code (P102/P102/etc. ->
-# money, X/FEC -> text, LGC/S_N -> boolean, N102 -> decimal, SEQ -> integer).
-# Existing hand-authored casillas in this revision are preserved.
-# ===========================================================================

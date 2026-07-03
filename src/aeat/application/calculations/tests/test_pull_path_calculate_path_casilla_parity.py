@@ -52,6 +52,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
@@ -63,26 +67,28 @@ from ....domain.calculations.registry import (
     resolve_bound_inputs_by_casilla_id,
     validated_casilla_id,
 )
-from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.transactions import TransactionCatalogueRepository
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import RetencionesAggregationSourceResolver
-from ...aggregation._retencion_observations_repository import RetencionObservationRepository
-from ...aggregation._retenciones import RetencionObservation, RetencionScheme
-from ...aggregation._source_mesh import CalculationSourceContext
+from ...aggregation import (
+    CalculationSourceContext,
+    RetencionesAggregationSourceResolver,
+    RetencionObservation,
+    RetencionObservationRepository,
+    RetencionScheme,
+)
 from ...modelo import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
 )
+from ...user_profile import UserProfileLifecycleRepository
 from .. import RelationPrefillSourceResolver
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-f5-parity"
+_PROFILE_ID = "18018018-0180-4180-8180-180180180180"
+_BUCKET_ID = _PROFILE_ID
 _YEAR = 2025
 _T0 = datetime(_YEAR, 1, 5, 10, 0, tzinfo=UTC)
 _T1 = datetime(_YEAR, 3, 31, 14, 0, tzinfo=UTC)
@@ -131,9 +137,34 @@ _QUARTERS_115: dict[str, dict[CasillaId, Decimal]] = {
 }
 
 
+def _seed_ready_profile(objects: SecureObjectRepository) -> None:
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+        UserProfileRecord(
+            profile_id=_PROFILE_ID,
+            display_name="Test runtime profile",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+            ),
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
+
+
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_ready_profile(profile.repository)
         yield profile.repository
 
 

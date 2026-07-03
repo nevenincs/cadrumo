@@ -1,28 +1,41 @@
 """Shared primitives for the CLI's strict ``--json`` output contract.
 
-Defines the strict pydantic v2 base classes (:class:`OutputSchema`,
-:class:`OutputRootSchema`), the canonical envelope shape
-(:class:`SchemaEnvelope`), the schema registry
-(:data:`SCHEMA_REGISTRY`), and the streaming helpers
-(:func:`emit_json_document`, :func:`emit_json_success`) used by every
-``--json`` code path. :func:`emit_json_success` applies
-:func:`aeat.core.redaction.redact_structured_for_cli_output` to the
-entire envelope before writing stdout, so the result and
-:class:`Notice` channel share the same public-output redaction policy.
+Defines the strict pydantic v2 bases (:class:`OutputSchema`,
+:class:`OutputRootSchema`), the canonical success envelope
+(:class:`SchemaEnvelope`), the typed diagnostic channel
+(:class:`Notice`), the schema registry (:data:`SCHEMA_REGISTRY`), and
+the emit helpers (:func:`emit_json_document`, :func:`emit_json_success`)
+used by every registered machine-output path.  CLI payload modules import
+these primitives through :mod:`entrypoints.cli._schemas`, register
+result models with :func:`register_schema`, and route JSON mode through
+:func:`entrypoints.cli._common._emit_envelope`.
 
-Living in :mod:`aeat.core` keeps domain and adapter packages free of any
-dependency on :mod:`aeat.entrypoints.cli`: a wrapped command emits its
+:func:`emit_json_success` derives :class:`EnvelopeStatus` from supplied
+:class:`Notice` values via :func:`derive_status` and applies
+:func:`core.redaction.redact_structured_for_cli_output` to the
+entire envelope before writing stdout.  Text output remains owned by
+:func:`core.output_rendering.render_command_output`, so redaction
+and the ``reveal_cli_identifiers_opt_in`` switch stay consistent across
+text and JSON surfaces.
+
+Living in :mod:`core` keeps domain and adapter packages free of any
+dependency on :mod:`entrypoints.cli`: a wrapped command emits its
 strict-validated payload through :func:`emit_json_success` without
 having to know how the CLI itself wires Click options.
+
+This module owns the stdout success contract and schema registry. The
+stderr failure document is rendered by :mod:`core.errors` using the
+same :data:`ENVELOPE_SCHEMA_VERSION`, and text-mode layout remains owned
+by :mod:`core.output_rendering`.
 """
 
 from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from enum import StrEnum
-from typing import IO, Any, Protocol, runtime_checkable
+from typing import IO, Any, Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 
@@ -57,9 +70,14 @@ class EnvelopeStatus(StrEnum):
 
     ``success`` and ``warning`` ride on the stdout :class:`SchemaEnvelope`
     (``warning`` when the command attached at least one warning-severity
-    notice); ``error`` rides on the stderr error envelope. A machine
-    consumer reads this single field to learn the outcome instead of
-    branching on stdout-vs-stderr.
+    :class:`Notice`); ``error`` rides on the stderr error envelope. A
+    machine consumer reads this single field to learn the outcome instead
+    of branching on stdout-vs-stderr, and :func:`derive_status` is the
+    success-envelope authority for computing it.
+
+    :func:`emit_json_success` never emits :attr:`ERROR`; blocking
+    failures route through the shared :class:`~core.errors.AeatError`
+    boundary instead of being smuggled into stdout notices.
     """
 
     SUCCESS = "success"
@@ -73,7 +91,7 @@ class NoticeSeverity(StrEnum):
     ``info`` is a non-fatal next-step hint or informational advisory;
     ``warning`` is a non-blocking advisory the operator should act on. A
     command that attaches any ``warning`` notice resolves to
-    :attr:`EnvelopeStatus.WARNING`.
+    :attr:`EnvelopeStatus.WARNING` through :func:`derive_status`.
     """
 
     INFO = "info"
@@ -87,7 +105,10 @@ class Notice(BaseModel):
     and next-step hints across every command. Domain diagnostics (e.g.
     ``ModeloFinding``, source-resolution advisories) are projected into
     this shape rather than re-modelled as bespoke per-command payload
-    fields.
+    fields.  CLI helpers such as
+    :func:`entrypoints.cli._common._emit_envelope` pass these values
+    to :func:`emit_json_success`, while text renderers fold equivalent
+    prose into their line output.
 
     Attributes:
         severity: ``info`` or ``warning``; drives the envelope ``status``.
@@ -100,6 +121,12 @@ class Notice(BaseModel):
             source-resolution ``reason`` / ``source_kind``), mirroring the
             error envelope's ``context`` so a migrated advisory keeps its
             machine-queryable sub-fields without a bespoke payload model.
+
+    Blocking failures are not notices; they raise an
+    :class:`~core.errors.AeatError` and emit on stderr. Command payload
+    schemas should also avoid reintroducing bespoke advisory, hint, or
+    warning fields inside ``result`` when a :class:`Notice` can carry the
+    same non-blocking diagnostic.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -116,7 +143,8 @@ def derive_status(notices: Sequence[Notice]) -> EnvelopeStatus:
 
     Success documents never carry :attr:`EnvelopeStatus.ERROR`; that
     status is reserved for the stderr error envelope. The returned
-    :class:`EnvelopeStatus` is the stdout envelope status.
+    :class:`EnvelopeStatus` is the stdout :class:`SchemaEnvelope` status
+    used by :func:`emit_json_success`.
     """
     for notice in notices:
         if notice.severity is NoticeSeverity.WARNING:
@@ -129,7 +157,9 @@ class OutputSchemaError(AeatError):
 
     Triggered by :func:`register_schema` when a non-schema class is
     decorated, when a command path is registered twice with different
-    schemas, or when the command path is blank.
+    schemas, or when the command path is blank.  It deliberately inherits
+    :class:`core.errors.AeatError` so registry defects route through
+    the shared CLI error boundary instead of bypassing structured output.
     """
 
 
@@ -139,7 +169,12 @@ class OutputSchema(BaseModel):
     Subclasses inherit ``extra="forbid"``, ``frozen=True``, ``strict=True``,
     and ``validate_assignment=True`` so accidental field drift between
     contract and implementation surfaces as a validation error rather
-    than a silently-extended payload.
+    than a silently-extended payload.  Each concrete result model should
+    be decorated with :func:`register_schema` so the CLI conformance gate
+    can match command leaves against :data:`SCHEMA_REGISTRY`.
+
+    The class describes the inner ``result`` payload only; the outer
+    :class:`SchemaEnvelope` is applied later by :func:`emit_json_success`.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -150,7 +185,8 @@ class OutputRootSchema[RootT](RootModel[RootT]):
 
     Use this for commands whose top-level JSON value is a list or scalar
     rather than an object. Carries the same strict / frozen / validate-on-
-    assignment configuration as :class:`OutputSchema`.
+    assignment configuration as :class:`OutputSchema`, and participates in
+    the same :func:`register_schema` registry contract.
     """
 
     model_config = _STRICT_ROOT_CONFIG
@@ -164,6 +200,14 @@ class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
     the inner payload shape. The outer spine (``schema_version``,
     ``command``, ``status``, ``notices``) is shared with the stderr error
     envelope so one shape describes success, warning, and error outcomes.
+    :func:`emit_json_success` constructs the runtime mapping and the
+    JSON-contract conformance gate specialises this generic envelope over
+    every schema in :data:`SCHEMA_REGISTRY`.
+
+    The envelope is a wire contract, not the command dispatcher. It does
+    not discover Click/Typer leaves, choose text output, or own command
+    authorization; those layers supply a strict ``result`` and stable
+    command path before entering this contract.
 
     Attributes:
         schema_version: Envelope version; bumped only on
@@ -231,7 +275,13 @@ def emit_json_document(
     When ``stream`` exposes ``_ReconfigurableStream.reconfigure``,
     the helper pins it to ``encoding="utf-8", errors="strict"`` first so
     downstream cp1252 consoles can not silently corrupt non-ASCII
-    characters in the rendered output.
+    characters in the rendered output. This is the low-level writer used
+    by :func:`emit_json_success`; it does not itself apply the envelope or
+    redaction policy.
+
+    Use this for already-shaped JSON documents. Registered CLI success
+    payloads should normally enter through :func:`emit_json_success` so
+    the envelope, status derivation, and redaction pass remain uniform.
 
     Args:
         payload: Any object reachable by :func:`_jsonable_payload`
@@ -279,8 +329,13 @@ def emit_json_success(
     The ``status`` is derived from the supplied notices
     (:func:`derive_status`) so the JSON outcome and the shell exit code
     never disagree. The assembled envelope is redacted through
-    :func:`aeat.core.redaction.redact_structured_for_cli_output` before
+    :func:`core.redaction.redact_structured_for_cli_output` before
     :func:`emit_json_document` writes it.
+
+    This helper is stdout-only. Any raised :class:`~core.errors.AeatError`
+    is handled by the CLI error boundary, which renders the sibling stderr
+    envelope instead of returning a success document with an error-shaped
+    ``result``.
 
     Args:
         command: Stable command path string (e.g. ``"workflow list"``).
@@ -305,12 +360,39 @@ def emit_json_success(
         },
         reveal_identifiers=reveal_cli_identifiers_opt_in(),
     )
+    _record_captured_envelope(envelope_payload)
     emit_json_document(
         envelope_payload,
         indent=indent,
         sort_keys=sort_keys,
         stream=stream,
     )
+
+
+def _record_captured_envelope(envelope_payload: object) -> None:
+    """Feed the emitted envelope to the observability capture sink, best-effort.
+
+    The deterministic-output substrate captures the verbatim emitted
+    envelope so a recorded run can be replayed and asserted byte-identical
+    after masking. Capture is off by default: when no
+    :func:`core.observability.capture_envelopes` scope is active the
+    recorder is a single ``ContextVar.get`` returning ``None``. The call
+    is fully best-effort — a capture failure must never disturb the emit
+    contract. The import is lazy so :mod:`core.json_contract` keeps
+    no module-load dependency on the observability layer.
+    """
+    if not isinstance(envelope_payload, Mapping):
+        return
+    try:
+        from .observability import record_emitted_envelope
+
+        # CAST-RATIONALE-ENVELOPE-CAPTURE-MAPPING: the isinstance check above
+        # confirms only the erased runtime `Mapping` shape, not the `str, object`
+        # type parameters; the cast narrows to the capture helper's declared
+        # parameter type.
+        record_emitted_envelope(cast("Mapping[str, object]", envelope_payload))
+    except Exception:  # capture must never break emit
+        _log.debug("json_contract: envelope capture failed; continuing", exc_info=True)
 
 
 def register_schema[RegisteredSchemaT: OutputSchema | OutputRootSchema[Any]](
@@ -326,7 +408,14 @@ def register_schema[RegisteredSchemaT: OutputSchema | OutputRootSchema[Any]](
 
     The same schema may register the same path more than once
     (idempotent re-import); registering a *different* schema under an
-    existing path raises :class:`OutputSchemaError`.
+    existing path raises :class:`OutputSchemaError`.  Registered paths are
+    the authoritative command strings emitted as
+    :attr:`SchemaEnvelope.command` and compared against the Typer command
+    tree by the JSON-schema conformance tests.
+
+    Register concrete command leaves only. Aliases, helper functions, and
+    text-only utilities do not belong in :data:`SCHEMA_REGISTRY` unless a
+    real CLI path emits their strict payload through the envelope.
 
     Args:
         command_path: Stable command-path string used both as the
@@ -375,6 +464,11 @@ def _jsonable_payload(payload: object) -> object:
     element-wise, and every other value passes through unchanged (with
     :func:`json.dumps` falling back to ``default=str`` for anything
     unrecognised).
+
+    This is a transport helper, not a schema-normalisation authority.
+    Command payload classes own their field types and JSON projections;
+    this helper only prepares already-validated objects for the final
+    :func:`json.dumps` call.
     """
     if isinstance(payload, BaseModel):
         return payload.model_dump(mode="json")

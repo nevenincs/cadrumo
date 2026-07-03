@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - "[[2026-06-15-service-capabilities-research]]"
 ---
-
-
 
 # `service-capabilities` adr: `Profile-linked service capabilities: opt-in/opt-out for Google export, LLM vision, and cloud evidence upload` | (**status:** `accepted`)
 
@@ -140,5 +138,3 @@ informed (`no-silent-under-declaration`).
   the sole gate path.
 
 ## Codification candidates
-
-

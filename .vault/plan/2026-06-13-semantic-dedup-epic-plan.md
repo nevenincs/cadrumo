@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#semantic-dedup-epic'
 date: '2026-06-13'
-modified: '2026-06-15'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-13-semantic-dedup-epic-audit]]'
@@ -12,18 +12,11 @@ related:
 ---
 <!-- RETIRED: W02, P04, S08, S09, S10, S11, S12, S13, S14 -->
 
-
-
-
-
-
-
 # `semantic-dedup-epic` plan
 
 ## Wave `W01` - Pass 1 — Confirmed Duplication Removal
 
 Remove the three confirmed real-duplication clusters from discovery Pass 1 (F1 tax-id, F2 dormant fichero money stack, F3 bucket-id boilerplate). Each step names a per-file site and its action with a verification gate.
-
 
 ### Phase `W01.P01` - F1 — Consolidate Spanish tax-id validation
 
@@ -168,17 +161,8 @@ B1 secure-object catalogue integrity-error wrapper, B2 migrate hand-rolled live-
 
 ## Description
 
-
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 
-
 ## Verification
-

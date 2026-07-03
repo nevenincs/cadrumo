@@ -1,33 +1,68 @@
 """Anthropic Messages API adapter for the LLM outbound port.
 
-Implements the :class:`aeat.adapters.outbound.llm._providers.base._ProviderAdapter`
-contract by translating a normalized :class:`aeat.adapters.outbound.llm._providers.base.ProviderRequest`
-into an :class:`anthropic.AsyncAnthropic` ``messages.create`` call and
-converting the response (or any provider error) into the substrate's
-typed completion / error envelope. Network I/O is async; all SDK
-exceptions are mapped to :exc:`aeat.adapters.outbound.llm._errors.LLMProviderError`,
-:exc:`aeat.adapters.outbound.llm._errors.LLMRateLimitError`, or
-:exc:`aeat.adapters.outbound.llm._errors.LLMConfigError`.
+Implements the
+:class:`~aeat.adapters.outbound.llm._providers.base._ProviderAdapter` contract
+by translating a normalized
+:class:`~aeat.adapters.outbound.llm._providers.base.ProviderRequest` into an
+:class:`anthropic.AsyncAnthropic` ``messages.create`` call and converting the
+response (or any provider error) into the substrate's typed completion / error
+envelope. Network I/O is async; all SDK exceptions are mapped to
+:exc:`~aeat.adapters.outbound.llm.LLMProviderError`,
+:exc:`~aeat.adapters.outbound.llm.LLMRateLimitError`, or
+:exc:`~aeat.adapters.outbound.llm.LLMConfigError`.
 """
 
 from __future__ import annotations
 
-from typing import override
-
-from anthropic import (
-    APIConnectionError,
-    APIStatusError,
-    APITimeoutError,
-    AsyncAnthropic,
-    AuthenticationError,
-    BadRequestError,
-    RateLimitError,
-)
-from anthropic.types import Message, MessageParam, MetadataParam, TextBlock
+from dataclasses import dataclass
+from typing import Any, override
 
 from .._errors import LLMConfigError, LLMProviderError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
+
+
+@dataclass(frozen=True)
+class _AnthropicSdk:
+    APIConnectionError: type[BaseException]
+    APIStatusError: type[BaseException]
+    APITimeoutError: type[BaseException]
+    AuthenticationError: type[BaseException]
+    BadRequestError: type[BaseException]
+    RateLimitError: type[BaseException]
+    AsyncAnthropic: type[Any]
+    TextBlock: type[Any]
+
+
+def _load_anthropic_sdk() -> _AnthropicSdk:
+    from .....core import ANTHROPIC_EXTRA, MissingOptionalExtraError, require_optional_extra
+
+    try:
+        require_optional_extra(ANTHROPIC_EXTRA)
+    except MissingOptionalExtraError as exc:
+        raise LLMConfigError(message=str(exc), suggestion=exc.install_hint) from exc
+
+    from anthropic import (
+        APIConnectionError,
+        APIStatusError,
+        APITimeoutError,
+        AsyncAnthropic,
+        AuthenticationError,
+        BadRequestError,
+        RateLimitError,
+    )
+    from anthropic.types import TextBlock
+
+    return _AnthropicSdk(
+        APIConnectionError=APIConnectionError,
+        APIStatusError=APIStatusError,
+        APITimeoutError=APITimeoutError,
+        AuthenticationError=AuthenticationError,
+        BadRequestError=BadRequestError,
+        RateLimitError=RateLimitError,
+        AsyncAnthropic=AsyncAnthropic,
+        TextBlock=TextBlock,
+    )
 
 
 class AnthropicAdapter(_ProviderAdapter):
@@ -39,8 +74,8 @@ class AnthropicAdapter(_ProviderAdapter):
     factory.
 
     Attributes:
-        provider: The :class:`aeat.adapters.outbound.llm._models.LLMProvider`
-            tag selecting this adapter.
+        provider: The :class:`~aeat.adapters.outbound.llm.LLMProvider` tag
+            selecting this adapter.
     """
 
     provider = LLMProvider.ANTHROPIC
@@ -50,7 +85,7 @@ class AnthropicAdapter(_ProviderAdapter):
 
         Args:
             api_key: Anthropic API key. Empty string raises
-                :exc:`aeat.adapters.outbound.llm._errors.LLMConfigError`.
+                :exc:`~aeat.adapters.outbound.llm.LLMConfigError`.
             timeout_s: Default per-request timeout passed to the SDK.
 
         Raises:
@@ -59,7 +94,8 @@ class AnthropicAdapter(_ProviderAdapter):
         if not api_key:
             msg = "AEAT_LLM_ANTHROPIC_API_KEY must be set for the Anthropic provider."
             raise LLMConfigError(msg)
-        self._client = AsyncAnthropic(api_key=api_key, timeout=timeout_s)
+        self._sdk = _load_anthropic_sdk()
+        self._client = self._sdk.AsyncAnthropic(api_key=api_key, timeout=timeout_s)
 
     @override
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:
@@ -83,10 +119,11 @@ class AnthropicAdapter(_ProviderAdapter):
             LLMProviderError: On authentication failures, bad requests, connection
                 or timeout failures, and non-2xx API status codes.
         """
-        user_message: MessageParam = {"role": "user", "content": request.prompt}
-        messages: tuple[MessageParam, ...] = (user_message,)
-        metadata: MetadataParam = {"user_id": request.request_id}
-        response: Message | None = None
+        sdk = self._sdk
+        user_message: dict[str, Any] = {"role": "user", "content": request.prompt}
+        messages = (user_message,)
+        metadata = {"user_id": request.request_id}
+        response: Any = None
         try:
             if request.system is None:
                 response = await self._client.messages.create(
@@ -107,18 +144,18 @@ class AnthropicAdapter(_ProviderAdapter):
                     metadata=metadata,
                     timeout=request.timeout_s,
                 )
-        except RateLimitError as exc:
+        except sdk.RateLimitError as exc:
             headers = exc.response.headers if exc.response is not None else None
             raise_rate_limit("Anthropic rate limit exceeded.", headers.get("retry-after") if headers else None)
-        except (AuthenticationError, BadRequestError) as exc:
+        except (sdk.AuthenticationError, sdk.BadRequestError) as exc:
             raise LLMProviderError(str(exc)) from exc
-        except (APIConnectionError, APITimeoutError) as exc:
+        except (sdk.APIConnectionError, sdk.APITimeoutError) as exc:
             raise LLMProviderError(f"Anthropic connection failure: {exc}") from exc
-        except APIStatusError as exc:
+        except sdk.APIStatusError as exc:
             raise LLMProviderError(f"Anthropic API failure ({exc.status_code}).") from exc
 
         assert response is not None
-        text_parts = [block.text for block in response.content if isinstance(block, TextBlock)]
+        text_parts = [block.text for block in response.content if isinstance(block, sdk.TextBlock)]
         return ProviderCompletion(
             text="\n".join(part for part in text_parts if part).strip(),
             model=response.model,

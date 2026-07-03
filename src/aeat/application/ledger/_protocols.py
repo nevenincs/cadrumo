@@ -1,7 +1,7 @@
 """Application-layer port protocols for the ledger service.
 
 Defines structural :class:`typing.Protocol` interfaces consumed by
-:mod:`aeat.application.ledger._actions` so that the application layer
+:mod:`aeat.application.ledger._actions_import` so that the application layer
 depends only on these protocol types, not on concrete adapter classes.
 """
 

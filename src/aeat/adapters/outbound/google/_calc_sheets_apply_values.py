@@ -1,16 +1,16 @@
 """Google Sheets value-write payload builders for calc sheet exports.
 
-:mod:`aeat.adapters.outbound.google._calc_sheets_apply` clears the workbook
+:mod:`adapters.outbound.google._calc_sheets_apply` clears the workbook
 tabs and passes these payloads to the shared
-:func:`aeat.adapters.outbound.google._api.execute_request` boundary for a
+:func:`adapters.outbound.google._api.execute_request` boundary for a
 Sheets ``values.batchUpdate`` call. This module stays pure: it maps
-:class:`SheetExportPlan` facets into A1 ranges plus row values and never
-opens a Google service object itself.
+:class:`application.storage.calc_sheets.SheetExportPlan` facets into A1
+ranges plus row values and never opens a Google service object itself.
 
 See Also:
     :func:`_build_value_data` and :func:`_build_formula_data` emit the main
     workbook grid, while :func:`_build_evidence_value_data` mirrors
-    :func:`aeat.application.storage.calc_sheets.evidence_table` so the online
+    :func:`application.storage.calc_sheets.evidence_table` so the online
     Evidencia tab stays aligned with the offline workbook renderer.
 """
 
@@ -31,7 +31,7 @@ from ....application.storage.calc_sheets import (
 
 
 def _coerce_cell_value(value: Decimal | str | bool | None) -> object:
-    """Convert a :class:`SheetValueCell` value into a Sheets API scalar.
+    """Convert a :class:`application.storage.calc_sheets.SheetValueCell` value.
 
     ``None`` becomes an empty cell, booleans stay native, and
     :class:`~decimal.Decimal` values are rendered with fixed-point text so
@@ -49,7 +49,7 @@ def _coerce_cell_value(value: Decimal | str | bool | None) -> object:
 
 
 def _build_value_data(value_cells: Iterable[SheetValueCell]) -> list[dict[str, Any]]:
-    """Build ``values.batchUpdate`` entries for :class:`SheetValueCell` records."""
+    """Build ``values.batchUpdate`` entries for :class:`application.storage.calc_sheets.SheetValueCell`."""
     data: list[dict[str, Any]] = []
     for cell in value_cells:
         data.append(
@@ -62,10 +62,10 @@ def _build_value_data(value_cells: Iterable[SheetValueCell]) -> list[dict[str, A
 
 
 def _build_formula_data(formula_cells: Iterable[SheetFormulaCell]) -> list[dict[str, Any]]:
-    """Build ``values.batchUpdate`` entries for :class:`SheetFormulaCell` records.
+    """Build entries for :class:`application.storage.calc_sheets.SheetFormulaCell` records.
 
     Formula text is prefixed with ``=`` because
-    :mod:`aeat.application.storage.calc_sheets` stores formula bodies without
+    :mod:`application.storage.calc_sheets` stores formula bodies without
     the leading Sheets marker.
     """
     data: list[dict[str, Any]] = []
@@ -80,7 +80,7 @@ def _build_formula_data(formula_cells: Iterable[SheetFormulaCell]) -> list[dict[
 
 
 def _build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[dict[str, Any]]:
-    """Emit Detalle-tab header cells declaring each :class:`SheetRowSet` column."""
+    """Emit Detalle-tab header cells for :class:`application.storage.calc_sheets.SheetRowSet`."""
     data: list[dict[str, Any]] = []
     for row_set in row_sets:
         for column in row_set.columns:
@@ -96,7 +96,7 @@ def _build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[dict[str
 def _build_evidence_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
     """Build Evidencia-tab value writes for ``plan``.
 
-    Uses :func:`aeat.application.storage.calc_sheets.evidence_table`, the same
+    Uses :func:`application.storage.calc_sheets.evidence_table`, the same
     source used by the offline workbook renderer, so online Sheets output and
     offline XLSX output stay cell-for-cell aligned.
     """

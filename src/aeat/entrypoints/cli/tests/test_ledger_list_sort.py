@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.ledger import ManualLedgerTransactionResult
 from ....core import LedgerSortField, LedgerSortOrder
 from ....domain.transactions import (
@@ -29,7 +30,6 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....domain.transactions._repository import TransactionCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .._ledger_list import _sort_results, parse_ledger_list_filter_spec, project_ledger_list
 
@@ -45,7 +45,7 @@ def _transaction(
     value_date: date | None = date(2024, 4, 10),
 ) -> Transaction:
     raw = RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2024, 4, 10),
         value_date=value_date,
         amount=amount,
@@ -66,6 +66,8 @@ def _transaction(
         "raw": raw,
         "direction": TransactionDirection.OUTGOING,
         "business_classification": BusinessClassification.NOT_YET_PROCESSED,
+        "source_jurisdiction": "ES",
+        "group_label": None,
     }
     payload["created_at"] = created_at
     payload["modified_at"] = created_at

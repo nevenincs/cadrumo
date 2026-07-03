@@ -3,23 +3,17 @@ tags:
   - '#audit'
   - '#codebase-health'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `codebase-health` audit: `cross-domain-handoffs-swarm-audit-r2`
 
 ## Scope
 
-
 ## Findings
 
-
 ## Recommendations
-
-
 
 ## Context
 
@@ -207,4 +201,3 @@ This case is correctly handled — a missing-snapshot casilla raises rather than
 3. **F12 (amendment orphan-casilla test gap)** — Add one test to `src/aeat/application/modelo/test_amend_flow.py` asserting `CasillaProvenanceMissingError` when an amendment's corrected-values map references a casilla absent from the snapshot. This mirrors the existing provenance-guard test in `test_typed_observation_provenance.py` and closes the confidence gap.
 
 4. **No regressions found on the primary provenance chain** — The registry → snapshot → formula engine → `CalculationRevision.observations` → CLI JSON path is intact, storage-tested with a non-tautological anti-forgery proof, and carries `legal_refs`/`source_refs`/`formula_id` provenance end to end. The three-axis taxpayer wizard data flows correctly through to `TaxpayerProfile` and applicability routing. The ledger-preflight gate and amendment observations path are wired and tested.
-

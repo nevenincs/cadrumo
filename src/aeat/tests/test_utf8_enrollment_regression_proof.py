@@ -48,15 +48,21 @@ def _all_production_files() -> tuple[Path, ...]:
 class TestEnrolledFilesZeroViolations:
     """(a) Zero non-hash bare utf-8 literals in each enrolled file."""
 
-    @pytest.mark.parametrize("rel_path", _ENROLLED_FILES)
-    def test_zero_violations(self, rel_path: str) -> None:
-        path = _SRC_ROOT / rel_path
-        assert path.exists(), f"Enrolled file missing from tree: {rel_path}"
-        violations = bare_utf8_literal_violations(path)
-        assert violations == [], (
-            f"{rel_path} still contains {len(violations)} non-hash bare utf-8 literal(s):\n"
-            + "\n".join(f"  line {ln}: {snippet!r}" for ln, snippet in violations)
-        )
+    def test_zero_violations(self) -> None:
+        failures: list[str] = []
+        for rel_path in _ENROLLED_FILES:
+            path = _SRC_ROOT / rel_path
+            if not path.exists():
+                failures.append(f"Enrolled file missing from tree: {rel_path}")
+                continue
+            violations = bare_utf8_literal_violations(path)
+            if violations:
+                details = "\n".join(f"  line {ln}: {snippet!r}" for ln, snippet in violations)
+                failures.append(
+                    f"{rel_path} still contains {len(violations)} non-hash bare utf-8 literal(s):\n{details}"
+                )
+
+        assert failures == [], "\n".join(failures)
 
 
 class TestInventoryTestCoversFullTree:

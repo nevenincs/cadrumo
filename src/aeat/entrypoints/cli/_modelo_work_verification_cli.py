@@ -1,4 +1,13 @@
-"""Typer registration for modelo work verify and file commands."""
+"""Typer registration for modelo work verification and internal filing.
+
+This transport module resolves operator revision targets, calls
+:func:`verify_modelo_revision` or
+:func:`file_modelo_revision`, and serializes the
+resulting :class:`VerificationReport` or
+:class:`ModeloRecord` into :class:`WorkVerifyResult` and
+:class:`WorkFileResult` envelopes. Cross-period dependency inspection is read
+only and emits :class:`WorkDependenciesResult`.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +16,9 @@ from typing import Annotated, Any
 
 import typer
 
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...application.calculations import (
     CalculationObservationRepository,
     CrossPeriodCleanStateVerdict,
@@ -14,6 +26,7 @@ from ...application.calculations import (
     CrossPeriodExpectedMemberSet,
     cross_period_dependency_inventory,
     evaluate_cross_period_clean_state,
+    m111_no_retenciones_periods_for_bucket,
 )
 from ...application.modelo import (
     CalculationRevisionNotFoundError,
@@ -32,13 +45,10 @@ from ...application.workflow import workflow_state_repository
 from ...core import RefundElection
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepository,
-    ModeloRecordCatalogueRepository,
-    VerificationReportCatalogueRepository,
-)
+from ...domain.modelos import CalculationRevisionState
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_payloads import (
     CrossPeriodCleanStatePayload,
@@ -71,7 +81,7 @@ def register_work_verification_commands(
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
     calculation_revision_not_found_bad_parameter: Callable[[str, BaseException], typer.BadParameter],
 ) -> None:
-    """Register state-changing revision verification commands."""
+    """Register revision verification, dependency, and internal filing commands."""
     _register_work_verify_command(
         work_app,
         activate_output_language=activate_output_language,
@@ -160,7 +170,7 @@ def _register_work_verify_command(
             help=tr("cli.config.auth.output_language_help"),
         ),
     ) -> None:
-        """Verify a draft calculation revision against the verified-complete contract."""
+        """Persist a :class:`VerificationReport` for the selected draft revision."""
         activate_output_language(ctx, output_language)
         require_active_profile()
         try:
@@ -230,7 +240,7 @@ def _register_work_dependencies_command(
             help=tr("cli.config.auth.output_language_help"),
         ),
     ) -> None:
-        """Show registry cross-period dependencies and current clean-state blockers."""
+        """Show cross-period dependency inventory and clean-state blockers."""
         activate_output_language(ctx, output_language)
         require_active_profile()
         if period is not None and modelo is None:
@@ -259,6 +269,7 @@ def _register_work_dependencies_command(
                     taxpayer_tax_id=workflow_profile.tax_id,
                     activity_start_date=workflow_profile.activity_start_date,
                     taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
+                    m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(active_bucket_id),
                 )
         except (FileNotFoundError, RegistrySnapshotError, ValueError) as exc:
             raise bad_parameter_from_error(exc) from exc
@@ -476,7 +487,7 @@ def _register_work_file_command(
             help=tr("cli.config.auth.output_language_help"),
         ),
     ) -> None:
-        """Mark a verified modelo revision as internally filed. Does NOT submit to AEAT."""
+        """Create an internal :class:`ModeloRecord` for a verified revision."""
         activate_output_language(ctx, output_language)
         require_active_profile()
         try:
@@ -493,6 +504,11 @@ def _register_work_file_command(
             )
             require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
             workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
+            # A revision already in PRESENTADO is the current filed answer, so the
+            # file call is a guarded-idempotent no-op that returns the existing
+            # record unchanged (no duplicate filing record or lifecycle event).
+            # Capture that before the call to surface it as an info Notice.
+            already_filed = selected_revision.state is CalculationRevisionState.PRESENTADO
             record = file_modelo_revision(
                 selected_revision.calculation_revision_id,
                 actor=actor or resolve_default_actor(),
@@ -514,7 +530,25 @@ def _register_work_file_command(
         result = WorkFileResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
         lines = ["operation\tmodelo.work.file", *filing_record_lines(record)]
         lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
-        _emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines)
+        notices: list[Notice] = []
+        if already_filed:
+            noop_message = tr(
+                "cli.app.modelo.work.file_idempotent_noop",
+                calculation_revision_id=record.calculation_revision_id,
+            )
+            notices.append(
+                Notice(
+                    severity=NoticeSeverity.INFO,
+                    code="modelo.work.file.idempotent_noop",
+                    message=noop_message,
+                    context={
+                        "calculation_revision_id": record.calculation_revision_id,
+                        "filing_record_id": record.filing_record_id,
+                    },
+                ),
+            )
+            lines.append(noop_message)
+        _emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines, notices=notices or None)
 
 
 __all__ = ["register_work_verification_commands"]

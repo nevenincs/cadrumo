@@ -3,13 +3,11 @@ tags:
   - '#plan'
   - '#aeat-verify'
 date: '2026-04-24'
-modified: '2026-04-24'
+modified: '2026-06-30'
 related:
   - "[[2026-04-24-aeat-verify-adr]]"
   - "[[2026-04-24-aeat-verify-research]]"
 ---
-
-
 
 # `aeat-verify` plan: `remote-aeat-domain-and-reconciliation`
 
@@ -123,7 +121,6 @@ write-guard layers it satisfies.
   local-issue justified.
 
 ## Tasks
-
 
 - **Phase 1 — Remote domain foundation (`aeat.remote`)**
   1. Create `src/aeat/remote/__init__.py` with a sealed public API.

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#eoy-final-calculation'
 date: '2026-06-24'
-modified: '2026-06-24'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-06-22-eoy-final-calculation-plan]]"
 ---
-
-
-
 
 # Add real end-to-end regression asserting M200 cuota del ejercicio a ingresar (00599) derives from cuota integra minus pagos (no manual 00592), grounded not tautological
 

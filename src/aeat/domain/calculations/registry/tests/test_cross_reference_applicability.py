@@ -14,12 +14,14 @@ from pydantic import ValidationError
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
+from .. import ModeloDefinition, ModeloRevision, RegistryValidationError, RegistryValidator, applicable_filing_schedules
 from .._live_parity import (
     CrossReferenceApplicability,
     evaluate_cross_reference_applicability,
 )
 from .._remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
 from .._schema import LiveCrossReferenceDecision, ProfilePredicateDefinition
+from ._registry_schema_support import _committed_modelo, _with_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW2_HOST = aeat_host("www2")
@@ -140,10 +142,7 @@ def test_groi_349_binding_is_not_applicable_when_profile_is_not_intracomunitario
     arithmetic.
     """
 
-    from .. import load_registry_tree
-
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == "349")
+    modelo, _ = _committed_modelo("349")
     binding = next(
         decision
         for decision in modelo.revisions["2020-y-siguientes"].live_cross_references
@@ -168,11 +167,7 @@ def test_groi_349_binding_is_not_applicable_when_profile_is_not_intracomunitario
 
 
 def _load_binding(modelo_id: str, revision_id: str, cross_reference_id: str) -> LiveCrossReferenceDecision:
-
-    from .. import load_registry_tree
-
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == modelo_id)
+    modelo, _ = _committed_modelo(modelo_id)
     return next(
         decision
         for decision in modelo.revisions[revision_id].live_cross_references
@@ -215,10 +210,7 @@ def test_oss_369_filing_schedules_select_only_when_oss_enrolled() -> None:
     gate is then defense-in-depth at the binding layer.
     """
 
-    from .. import applicable_filing_schedules, load_registry_tree
-
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo_369 = next(modelo for modelo in modelos if modelo.id == "369")
+    modelo_369, _ = _committed_modelo("369")
 
     for revision in modelo_369.revisions.values():
         not_enrolled = applicable_filing_schedules(
@@ -292,15 +284,13 @@ def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
     deadline-window predicate validation.
     """
 
-    from ....user_profile._loader import load_user_profile_schema
-    from ....user_profile._registry_contract import (
+    from ....user_profile import (
         UserProfileRegistryContractSeverity,
+        load_user_profile_schema,
         validate_user_profile_registry_contract,
     )
-    from .. import ModeloDefinition, ModeloRevision, load_registry_tree
 
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo_349 = next(modelo for modelo in modelos if modelo.id == "349")
+    modelo_349, _ = _committed_modelo("349")
     revision = modelo_349.revisions["2020-y-siguientes"]
     binding = next(
         decision
@@ -340,6 +330,40 @@ def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
     assert matching[0].construct_id == "modelo-349-groi-spanish-counterparty-check"
 
 
+def test_validator_rejects_cross_reference_applicability_predicate_without_official_guidance_source() -> None:
+    modelo, catalogues = _committed_modelo("349")
+    revision = modelo.revisions["2020-y-siguientes"]
+    binding = next(
+        decision
+        for decision in revision.live_cross_references
+        if decision.id == "modelo-349-groi-spanish-counterparty-check"
+    )
+    predicate = binding.applicability_predicates[0]
+    mutated_predicate = predicate.model_copy(update={"source_refs": ("aeat-dr-349-2020-current",)})
+    mutated_binding = binding.model_copy(
+        update={"applicability_predicates": (mutated_predicate, *binding.applicability_predicates[1:])},
+    )
+    mutated_revision = revision.model_copy(
+        update={
+            "live_cross_references": tuple(
+                mutated_binding if decision.id == binding.id else decision
+                for decision in revision.live_cross_references
+            ),
+        },
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=(
+            r"cross-reference modelo-349-groi-spanish-counterparty-check applicability predicate "
+            r"'does_intracomunitario' requires official_source_guidance source evidence"
+        ),
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
+            _with_revision(modelo, mutated_revision),
+        )
+
+
 def test_groi_349_cross_reference_declares_does_intracomunitario_predicate() -> None:
     """The committed modelo-349-groi-spanish-counterparty-check binding must
     carry an applicability gate so non-intracom subjects skip the consult.
@@ -349,10 +373,7 @@ def test_groi_349_cross_reference_declares_does_intracomunitario_predicate() -> 
     fails alongside any TOML edit.
     """
 
-    from .. import load_registry_tree
-
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == "349")
+    modelo, _ = _committed_modelo("349")
     revision = modelo.revisions["2020-y-siguientes"]
     binding = next(
         decision

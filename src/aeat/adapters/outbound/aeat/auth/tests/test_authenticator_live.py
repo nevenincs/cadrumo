@@ -8,7 +8,7 @@ and that
 returns ``is_valid=True`` against the configured verify URL.
 
 The test uses the configured certificate and live verification URL directly.
-It skips cleanly when the cert env is not fully configured.
+After live opt-in, missing certificate configuration is a failing prerequisite.
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ from .. import (
     AeatSession,
     CertificateHealthSeverity,
     HandshakeResult,
+    extract_nif_from_subject,
 )
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
@@ -41,7 +42,7 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
     requires_live_enabled()
     settings = Settings()
     if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
-        pytest.skip("AEAT certificate env vars are not fully configured")
+        pytest.fail("AEAT certificate env vars are not fully configured after live opt-in")
 
     # Production cert loader reads the passphrase via
     # ``CertificateBundle.password`` (a SecretStr field on Settings);
@@ -65,7 +66,7 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
     assert 200 <= handshake.status_code < 500
 
     cert = authenticator.load_certificate()
-    nif = authenticator.extract_nif_from_subject(cert)
+    nif = extract_nif_from_subject(cert)
     assert nif, "could not extract NIF from FNMT certificate subject"
     # DNI: 7-8 digits + letter; NIE: X/Y/Z + 7 digits + letter.
     assert len(nif) in {8, 9}, f"unexpected NIF shape: {nif!r}"
@@ -82,7 +83,7 @@ async def test_aeat_authenticator_full_live_flow() -> None:
     requires_live_enabled()
     settings = Settings()
     if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
-        pytest.skip("AEAT certificate env vars are not fully configured")
+        pytest.fail("AEAT certificate env vars are not fully configured after live opt-in")
 
     from typing import Any, cast
 

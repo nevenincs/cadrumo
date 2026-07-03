@@ -1,0 +1,67 @@
+# Standing eval gate for the operator agent-harness.
+#
+# Runs the agent-harness assurance surface on every change to the harness:
+# the operator-rule/persona/skill drift gate, the golden-task eval (modelo 130
+# and 303), the determinism replay, the MCP tool/HITL/faithfulness tests, and the
+# workspace materialiser. This is the operator-side counterpart to the persona
+# testimonial gate: a harness change that breaks a cited verb, a trajectory, the
+# provenance grounding, the HITL tiers, or the faithfulness check fails here.
+
+name: Agent Harness Eval
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/aeat/agent/**"
+      - "src/aeat/entrypoints/mcp/**"
+      - "src/aeat/_data/agent/**"
+      - "src/aeat/application/operator_surface/**"
+      - "src/aeat/entrypoints/cli/_app_contract*.py"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/aeat/agent/**"
+      - "src/aeat/entrypoints/mcp/**"
+      - "src/aeat/_data/agent/**"
+      - "src/aeat/application/operator_surface/**"
+      - "src/aeat/entrypoints/cli/_app_contract*.py"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  agent-harness-eval:
+    name: Ubuntu / Python 3.13 / agent-harness eval
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+
+      - name: Agent-harness eval surface
+        run: >-
+          uv run --no-sync pytest
+          src/aeat/agent
+          src/aeat/entrypoints/mcp/tests
+          src/aeat/entrypoints/cli/tests/test_app_contract.py
+          src/aeat/entrypoints/cli/tests/test_app_agent_workspace.py
+          src/aeat/entrypoints/cli/tests/test_operator_surface_contract_drift.py
+          src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py
+          -m "integration or not integration"
+          -q --no-header

@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#live-justificante-reconcile'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-10-live-justificante-reconcile-adr]]'
   - '[[2026-06-10-live-justificante-reconcile-research]]'
 ---
-
 
 # `live-justificante-reconcile` `live-sourced justificante reconciliation` plan
 
@@ -79,8 +78,6 @@ risk. CSV authenticity via `verify_csv` is recorded in the ADR as a deferred
 increment and is out of scope for this plan.
 
 ## Steps
-
-
 
 ## Parallelization
 

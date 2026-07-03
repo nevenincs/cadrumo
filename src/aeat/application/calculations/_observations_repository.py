@@ -1,23 +1,36 @@
 """Encrypted persistence for past-filing casilla observations.
 
-Stores `RegistryModeloObservation` records — `(modelo, filing_year,
-period, casilla_values)` — as encrypted audit envelopes in the
-`SecureObjectRepository`. The records are the substrate the
-multi-year resolver consults so annual modelos can roll up prior
-quarterlies, IVA prorrata can compute its four-year backward mean,
-IS BIN carryforward can replay prior-year bases imponibles
-negativas, and IVA regularización inversiones can apply its 5/10
-year straight-line schedule.
+Stores :class:`~domain.calculations.registry.RegistryModeloObservation`
+records — ``(modelo, filing_year, period, casilla_values)`` — as encrypted audit
+envelopes in the
+:class:`~adapters.persistence.storage.SecureObjectRepository`.
+Past-filing value rows are bound to
+:data:`~adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`;
+IVA wallet decisions are split between the latest-state
+:data:`~adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`
+and immutable
+:data:`~adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`
+namespaces.
+The records are the substrate read by
+:class:`~._multi_year.PreviousFilingSourceResolver` and
+:class:`~._relation_prefill.RelationPrefillSourceResolver` so annual modelos
+can roll up prior quarterlies, IVA prorrata can compute its four-year backward
+mean, IS BIN carryforward can replay prior-year bases imponibles negativas, and
+IVA regularización inversiones can apply its 5/10 year straight-line schedule.
 
 Producers are out of scope for this module: the modelo filing flow
 will write here when an operator successfully files via the app,
 and the live-AEAT capture path will write here when justificantes
 are parsed. This module exposes only the typed read/write surface.
 
-Sensitivity is :class:`SensitivityClass` ``AUDIT`` — these records
-reconstruct exactly what was filed and so are identity-bearing tax
-substrate. They are stored encrypted at rest through an
-:class:`Envelope`-wrapped repository.
+Sensitivity is :class:`~adapters.persistence.storage.SensitivityClass`
+``AUDIT`` — these records reconstruct exactly what was filed and so are
+identity-bearing tax substrate. They are stored encrypted at rest through an
+:class:`~adapters.persistence.storage.Envelope`-wrapped repository.
+
+The store is value-centric. Clean-state proof still has to join these rows with
+filing records, verification reports, and justificante evidence through
+:func:`~._cross_period_clean_state.evaluate_cross_period_clean_state`.
 """
 
 from __future__ import annotations
@@ -34,40 +47,33 @@ from ...adapters.persistence.storage import (
     IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
     IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
     Envelope,
+    SecureBoundRepository,
     SensitivityClass,
     safe_repository_id,
 )
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotError, undeclared_casilla_ids
-from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ._errors import ObservationCasillaReferenceError, ObservationKeyError
 
 
 class _ObservationEnvelopePayload(BaseModel):
-    """Serialisable wrapper around a `RegistryModeloObservation`.
+    """Serialisable wrapper around a :class:`RegistryModeloObservation`.
 
-    The runtime model lives in `_bindings.py` and is itself frozen
-    pydantic v2 with `extra="forbid"`. We wrap it to keep the
-    envelope schema identical to other repositories' shape (one
-    `payload` field) and to leave room for future per-observation
-    metadata (e.g., `captured_from`, `captured_at`, evidence
-    pointer) without breaking the inner record.
+    The registry model is pure calculation evidence. This wrapper keeps the
+    envelope schema identical to other repositories' shape and carries the
+    application-side capture metadata — ``captured_at``, ``source_kind``,
+    ``member_nif``, ``stamped_revision_id``, and ``source_metadata`` — without
+    adding persistence concerns to the inner registry record.
 
     The ``stamped_revision_id`` field is the registry revision id the
-    source filing resolved to at capture time (ADR
-    ``2026-06-10-period-revision-resolution-adr``, Ruling 3 / R2).
-    It is ``None`` for legacy records persisted before this field
-    was introduced; carry-read code MUST treat a missing stamp as a
-    non-blocking advisory rather than a blocker so historical data
-    degrades loudly rather than being silently refused or silently
-    accepted. New records MUST stamp the revision id from the
-    :class:`RegistrySnapshot` the producer already holds at write
-    time.
+    source filing resolved to at capture time. It is mandatory in the stored
+    envelope so every carry-read can re-confirm the source value against the
+    law-determined registry revision before trusting it.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -91,15 +97,13 @@ class _ObservationEnvelopePayload(BaseModel):
             "single-filer (modelo, filing_year, period) key bit-for-bit."
         ),
     )
-    stamped_revision_id: str | None = Field(
-        default=None,
+    stamped_revision_id: str = Field(
         min_length=1,
         max_length=128,
         description=(
             "Registry revision id the source filing resolved to at capture time "
-            "(ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2). "
-            "None for legacy records — carry-read must surface a non-blocking "
-            "advisory rather than blocking or silently accepting unstamped records."
+            "so carry-read code can re-confirm the value against the law-determined "
+            "registry revision."
         ),
     )
     source_metadata: dict[str, str] = Field(
@@ -113,7 +117,7 @@ class _ObservationEnvelopePayload(BaseModel):
     )
 
 
-class _IvaWalletDecisionEnvelopePayload(BaseModel):
+class IvaWalletDecisionEnvelopePayload(BaseModel):
     """Serialisable wrapper for an IVA wallet reconciliation decision."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -146,11 +150,12 @@ def observation_key_for_token(modelo: str, filing_year: int, period_token: str) 
 
 
 def observation_key(modelo: str, period: Period) -> str:
-    """Stable repository key for a `(modelo, Period)` pair.
+    """Stable repository key for a ``(modelo, Period)`` pair.
 
-    Validated through `safe_repository_id` so each component is
-    constrained to the SecureObjectRepository's id contract before
-    composition.
+    Validated through :func:`~adapters.persistence.storage.safe_repository_id`
+    so each component is constrained to the
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
+    id contract before composition.
     """
     filing_period = _require_observation_period(period)
     return observation_key_for_token(modelo, filing_period.filing_year, filing_period.registry_token)
@@ -231,14 +236,12 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
     return f"iva-wallet-decision-event:{digest}"
 
 
-def _validate_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
+def _validate_observation_casilla_ids(observation: RegistryModeloObservation) -> str:
     observed_casilla_ids = frozenset(observation.casilla_values)
     operand_casilla_refs = frozenset(
         operand_ref for item in observation.observations for operand_ref in item.operand_casilla_refs
     )
     referenced_casilla_ids = observed_casilla_ids | operand_casilla_refs
-    if not referenced_casilla_ids:
-        return
     try:
         snapshot = resources().modelos.authority.snapshot(
             observation.modelo,
@@ -255,9 +258,9 @@ def _validate_observation_casilla_ids(observation: RegistryModeloObservation) ->
             },
         ) from exc
 
-    invalid = undeclared_casilla_ids(snapshot.revision, referenced_casilla_ids)
+    invalid = undeclared_casilla_ids(snapshot.revision, referenced_casilla_ids) if referenced_casilla_ids else ()
     if not invalid:
-        return
+        return str(snapshot.revision.id)
     raise ObservationCasillaReferenceError(
         "calculation observations must use canonical casilla.id values declared by the registry snapshot",
         context={
@@ -273,7 +276,22 @@ def _validate_observation_casilla_ids(observation: RegistryModeloObservation) ->
 
 
 class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelopePayload]):
-    """Repository over encrypted SQL-backed past-filing observations."""
+    """Repository over encrypted SQL-backed past-filing observations.
+
+    Stores :class:`RegistryModeloObservation` rows for
+    :func:`~._binding_prefill.resolve_bindings_from_local_store`,
+    :func:`~._relation_prefill.resolve_relations_from_local_store`, and
+    :func:`~._cross_period_clean_state.evaluate_cross_period_clean_state`.
+    It owns encrypted value history only; filing-grade source proof is assembled
+    by the clean-state service from this repository plus filing, verification,
+    and justificante repositories.
+
+    The repository binds each
+    :class:`~adapters.persistence.storage.Envelope` payload to
+    :data:`~adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`
+    through
+    :class:`~adapters.persistence.storage.SecureBoundRepository`.
+    """
 
     namespace: ClassVar[str] = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = CALCULATION_OBSERVATIONS_NAMESPACE.sensitivity
@@ -316,7 +334,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         stamped_revision_id: str | None = None,
         source_metadata: Mapping[str, str] | None = None,
     ) -> None:
-        """Persist `observation` keyed by its (modelo, filing_year, period).
+        """Persist ``observation`` keyed by its ``(modelo, filing_year, period)``.
 
         ``member_nif`` is an optional grupo-de-entidades member NIF. When
         supplied, the storage identifier is widened (see
@@ -326,33 +344,35 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         aggregation enumerates. When ``None`` the single-filer key is unchanged.
 
         ``stamped_revision_id`` is the registry revision id the source filing
-        resolved to at capture time (ADR 2026-06-10-period-revision-resolution-adr,
-        Ruling 3 / R2). Producers that hold a :class:`RegistrySnapshot` MUST
-        pass ``snapshot.revision.id`` here. Legacy callers that do not yet have
-        access to the revision id should leave this ``None``; the carry-read gate
-        will surface a non-blocking advisory rather than blocking silently.
+        resolved to at capture time. Producers that hold a
+        :class:`~domain.calculations.registry.RegistrySnapshot` MUST pass
+        ``snapshot.revision.id`` here. If omitted, the repository resolves the
+        law-determined revision from the observation's ``(modelo, filing_year,
+        period)`` before persisting.
 
         ``source_metadata`` is source-specific encrypted provenance. It is never
-        part of repository keys and must only contain data that belongs inside the
-        AUDIT-class secure payload.
+        part of repository keys and must only contain data that belongs inside
+        the AUDIT-class secure payload; live AEAT captures use it for register
+        status, expediente identity, and authenticated taxpayer/member identity
+        consumed by the cross-period clean-state proof.
         """
-        _validate_observation_casilla_ids(observation)
+        law_revision_id = _validate_observation_casilla_ids(observation)
         when = captured_at if captured_at is not None else now()
         payload = _ObservationEnvelopePayload(
             observation=observation,
             captured_at=when,
             source_kind=source_kind,
             member_nif=member_nif,
-            stamped_revision_id=stamped_revision_id,
+            stamped_revision_id=law_revision_id if stamped_revision_id is None else stamped_revision_id,
             source_metadata=dict(source_metadata or {}),
         )
         self.save(payload)
 
     def iter_modelo(self, modelo: str) -> Iterator[_ObservationEnvelopePayload]:
-        """Yield every persisted observation for `modelo` in unspecified order.
+        """Yield every persisted observation for ``modelo`` in unspecified order.
 
-        Used by the multi-year resolver to scan all known prior
-        filings for a modelo without per-year/period probing.
+        Used by grouped previous-filing and clean-state readers to enumerate all
+        known source rows for a modelo, including member-widened keys.
         """
         safe_repository_id(modelo, context="modelo")
         for payload in self.iter_records():
@@ -360,32 +380,41 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
                 yield payload
 
 
-class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelopePayload]):
+class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelopePayload]):
     """Repository over encrypted SQL-backed IVA wallet reconciliation decisions.
 
-    Holds one latest decision per `(taxpayer_nif, target_year, target_period)`
+    Holds one latest decision per ``(taxpayer_nif, target_year, target_period)``
     triple for calculation lookup, and also writes every distinct decision to
     an immutable audit-event namespace. Decisions are AUDIT-class — they record
     the resolved gap between a taxpayer's local IVA compensation recurrence and
-    the live AEAT wallet, which downstream calculation chains consult.
+    the live AEAT wallet, which downstream calculation chains consult through
+    :class:`~._iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`.
+
+    Latest-state rows use
+    :data:`~adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`;
+    immutable audit events use
+    :data:`~adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`.
+    Both store :class:`IvaCompensationReconciliationDecision` payloads in
+    :class:`~adapters.persistence.storage.Envelope` records through
+    :class:`~adapters.persistence.storage.SecureBoundRepository`.
     """
 
     namespace: ClassVar[str] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.namespace
     history_namespace: ClassVar[str] = IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.schema_version
-    payload_type: ClassVar[type[BaseModel]] = _IvaWalletDecisionEnvelopePayload
+    payload_type: ClassVar[type[BaseModel]] = IvaWalletDecisionEnvelopePayload
 
     @override
-    def extract_identifier(self, payload: _IvaWalletDecisionEnvelopePayload) -> str:
+    def extract_identifier(self, payload: IvaWalletDecisionEnvelopePayload) -> str:
         decision = payload.decision
         return iva_wallet_decision_key(decision.taxpayer_nif, decision.target_period)
 
     def save_decision(self, decision: IvaCompensationReconciliationDecision) -> None:
-        """Persist `decision` to latest lookup and immutable audit history."""
-        payload = _IvaWalletDecisionEnvelopePayload(decision=decision)
+        """Persist ``decision`` to latest lookup and immutable audit history."""
+        payload = IvaWalletDecisionEnvelopePayload(decision=decision)
         super().save(payload)
-        envelope = Envelope[_IvaWalletDecisionEnvelopePayload](
+        envelope = Envelope[IvaWalletDecisionEnvelopePayload](
             schema_version=self.schema_version,
             written_at=now(),
             classification=self.sensitivity,
@@ -444,7 +473,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
             expected_class=self.sensitivity,
             max_supported_version=self.schema_version,
         ):
-            envelope = Envelope[_IvaWalletDecisionEnvelopePayload].model_validate_json(
+            envelope = Envelope[IvaWalletDecisionEnvelopePayload].model_validate_json(
                 record.payload.decode(UTF_8_ENCODING),
             )
             decision = envelope.payload.decision

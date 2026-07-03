@@ -18,7 +18,9 @@ source_refs = [
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-100-2025-form",
     "aeat-dr-100-2025-dictionary",
+    "aeat-modelo-190-instructions-2025",
     "boe-modelo-190-2025-form",
+    "lirpf-cuota-chain-authority",
 ]
 casilla_ids = [
     "0003",
@@ -55,6 +57,7 @@ formulas = [
     "renta-2025-trabajo-suma-rendimientos-netos-previos",
     "renta-2025-trabajo-rendimiento-neto",
     "renta-2025-trabajo-rendimiento-neto-reducido",
+    "renta-2025-trabajo-otros-gastos",
 ]
 bindings = ["renta-2025-modelo-111-retenciones-periodicas", "renta-2025-modelo-190-retenciones-anuales"]
 relations = [

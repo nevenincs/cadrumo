@@ -1,0 +1,10 @@
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-115-base-retenciones"
+source = "retenciones_aggregation"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
+selector = { target_casilla_id = "02", fact = "taxable_base_sum" }
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-115-180-folleto-actividades"
+required_text = ["obligados a practicar retención", "arrendamiento o subarrendamiento de bienes inmuebles urbanos"]

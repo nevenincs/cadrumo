@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#silent-zero-base-aggregation'
 date: '2026-06-20'
-modified: '2026-06-20'
+modified: '2026-06-30'
 step_id: 'S13'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-plan]]"
 ---
-
-
-
 
 # sweep the M100 tests that supply 0171 to the bound path and rerun the M100 registry, formula-runtime, and verification gates green
 

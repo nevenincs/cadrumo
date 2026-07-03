@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-evidence-classification'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S17'
 related:
   - "[[2026-06-10-llm-evidence-classification-plan]]"
 ---
-
-
-
 
 # Extend the LocalAdapter with the Ollama images field and add on-host PDF rasterisation for a local vision model
 

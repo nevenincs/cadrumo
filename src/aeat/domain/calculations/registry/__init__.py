@@ -7,6 +7,36 @@ metadata), :class:`ModeloRevision` (one period-scoped revision of a modelo),
 :class:`ValidatedRegistryAuthority` (the production access point that loads,
 validates, and caches registry material), and :class:`CasillaObservation`
 (one typed casilla value carrying full legal and source provenance).
+
+Registry definitions are declarative authority, not application workflow state.
+:class:`ValidatedRegistryAuthority` loads bundled TOML, validates cross-file
+references, and returns snapshots. :func:`calculate_registry_snapshot` evaluates
+the snapshot with already-resolved casilla inputs, binding values, enum binding
+values, relation values, and date context. The application source mesh resolves
+those values before entering this package.
+
+The facade also exposes the typed binding and observation helpers used by mesh
+resolvers: ledger observations, invoice observations, previous-filing carries,
+relation materialisation, detail-row folds, unsupported-observation diagnostics,
+export layout resolution, applicability rules, verification expectations, live
+parity/oracle structures, workbook parity helpers, and registry query reports.
+
+See Also:
+    :class:`ValidatedRegistryAuthority`
+        Production loader, validator, and snapshot cache for bundled registry
+        material.
+    :func:`calculate_registry_snapshot`
+        Formula runtime entry point that emits
+        :class:`CasillaObservation` rows with legal and source provenance.
+    :class:`DataBindingDefinition`
+        Declarative binding contract resolved by application source owners.
+    :mod:`application.aggregation`
+        Source-mesh contract that supplies
+        :class:`application.aggregation.CalculationSourceResolution`
+        envelopes before registry calculation.
+    :mod:`application.calculations`
+        Prior-filing, relation-prefill, IVA-wallet, and row-set stores that feed
+        registry binding and relation inputs.
 """
 
 # ruff: noqa: I001
@@ -75,6 +105,7 @@ from ._bindings import (
     CounterpartAggregationObservation,
     CounterpartObservationRequirement,
     CounterpartSourceKind,
+    DonativoDonorObservation,
     InvoiceObservation,
     InvoiceObservationRequirement,
     IvaLedgerObservation,
@@ -83,24 +114,31 @@ from ._bindings import (
     OssIossLedgerObservation,
     RefundOperationObservation,
     RegistryModeloObservation,
+    ImpatriadoIncomeObservationProtocol,
     RelatedPartyOperationObservation,
     RentaGastoObservationProtocol,
     RentaIncomeObservationProtocol,
+    WithholdingClaveBreakdown,
     WithholdingObservation,
     WithholdingObservationRequirement,
+    aggregate_withholding_by_clave,
     binding_aggregation_op,
+    bound_casilla_binding_ids,
     binding_source_casilla_ids,
     counterpart_binding_requirements,
     invoice_binding_requirements,
     previous_filing_observation_requirements,
     previous_filing_source_reference,
     resolve_atribucion_binding_row_values,
+    resolve_bound_casilla_binding_value,
     resolve_bound_inputs_by_casilla_id,
     resolve_counterpart_binding_row_values,
     resolve_counterpart_binding_values,
+    resolve_donativo_binding_row_values,
     resolve_foreign_asset_binding_row_values,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
+    resolve_ledger_impatriado_income_aggregation_binding_values,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_oss_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
@@ -112,13 +150,16 @@ from ._bindings import (
     resolve_retenciones_aggregation_binding_values,
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
+    renta_first_slice_binding_target_casillas,
     selector_model_for_source,
+    unsupported_ledger_impatriado_income_observations,
     unsupported_ledger_iva_observations,
     unsupported_ledger_oss_observations,
     unsupported_ledger_renta_expense_observations,
     unsupported_ledger_renta_gasto_observations,
     unsupported_ledger_renta_income_observations,
     validate_invoice_binding_definition,
+    validate_ledger_impatriado_income_aggregation_binding_definition,
     validate_ledger_iva_aggregation_binding_definition,
     validate_ledger_oss_aggregation_binding_definition,
     validate_ledger_renta_expense_aggregation_binding_definition,
@@ -126,6 +167,13 @@ from ._bindings import (
     validate_ledger_renta_income_aggregation_binding_definition,
     validate_retenciones_aggregation_binding,
     withholding_binding_requirements,
+)
+from ._binding_selector_utils import (
+    BindingRowSetSelector,
+    BooleanBindingEncodedValue,
+    binding_row_set_selector,
+    boolean_binding_encoded_values,
+    selector_as_dict,
 )
 from ._casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -154,7 +202,20 @@ from ._censo_modelos import (
     resolve_censo_modelo_work_unit_foundation,
 )
 from ._constructs import ResolvedConstruct, ResolvedConstructMember, resolve_construct, resolve_revision_constructs
-from ._corpus_catalogue import verify_source_catalogue, verify_source_file
+from ._convenio import (
+    ConvenioAuthority,
+    ConvenioOverride,
+    ConvenioOverrideRow,
+    ConvenioTreaty,
+    load_convenio_authority,
+)
+from ._corpus_catalogue import (
+    CORPUS_SOURCES_INSTALL_HINT,
+    CorpusCompanionAdvisory,
+    is_companion_corpus_binary,
+    verify_source_catalogue,
+    verify_source_file,
+)
 from ._coverage import (
     EvidenceTierCoverageGate,
     ModelLawCoverageLedger,
@@ -177,18 +238,24 @@ from ._export import (
     export_fields_for_casilla,
     resolve_export_layout,
 )
-from ._export_parse import ParsedExportFieldValue, ParsedExportPayload, parse_export_payload
+from ._export_parse import (
+    ParsedExportFieldValue,
+    ParsedExportPayload,
+    XmlDictionaryEntry,
+    parse_export_payload,
+    xml_dictionary_entries,
+)
 from ._filed_state import RegistryFiledStateComparison, compare_calculation_to_filed_observation
 from ._formula_runtime import (
-    M210_CONVENIO_MISSING_SENTINEL,
-    M210_DEFERRED_TIPO_SENTINEL,
-    M210_NOT_YET_AUTHORED_SENTINEL,
-    M210_RATE_SENTINELS,
     RegistryCalculationEntry,
     RegistryCalculationResult,
+    RegistryCalculationUnresolvedOutcome,
+    RegistryUnresolvedOutcomeReason,
     calculate_registry_snapshot,
     read_parameter,
 )
+from ._formula_runtime_ops import resolve_parameter
+from ._formula_text_inputs import validate_text_input_targets, validated_text_input_casilla_ids
 from ._groi_oracle import (
     GROI_ORACLE_ID,
     GroiDriver,
@@ -216,10 +283,12 @@ from ._live_parity import (
 from ._loader import (
     ModeloRevisionSource,
     ModeloSource,
+    clear_fingerprint_cache,
     discover_modelo_sources,
     load_catalogue_file,
     load_legal_parameters_only,
     load_modelo_directory,
+    load_modelo_directory_without_locales,
     load_modelo_file,
     load_modelo_path,
     load_modelo_source,
@@ -244,6 +313,8 @@ from ._parity_tapes import (
     save_parity_tape,
 )
 from ._queries import (
+    BindingSelectorQueryEntry,
+    BindingSelectorQueryProjection,
     ModeloBindingQueryRow,
     ModeloBindingsReport,
     ModeloCasillaRow,
@@ -279,6 +350,10 @@ from ._relations import (
     resolve_relation_values,
     resolve_relation_values_from_observations,
 )
+from ._validate_relation_sources import (
+    IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
+    MODELO_303_IVA_COMPENSATION_BINDING_ID,
+)
 from ._remote_state_guard import (
     AEAT_WRITE_FORBIDDEN_ACTIONS,
     AEAT_WRITE_FORBIDDEN_VERB_TOKENS,
@@ -313,6 +388,7 @@ from ._runtime_graph import (
 )
 from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
 from ._schema import (
+    KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     ApplicationLinkDefinition,
     BboxAnchorSpec,
@@ -324,7 +400,6 @@ from ._schema import (
     CasillaFieldKind,
     CasillaFieldKindValue,
     ConstructDefinition,
-    ConvenioRateRow,
     DataBindingDefinition,
     DeadlineWindowDefinition,
     DecimalValue,
@@ -346,6 +421,7 @@ from ._schema import (
     ModeloRevision,
     ModeloScheduleDefinition,
     ParameterDefinition,
+    PeriodSelector,
     ProfilePredicateDefinition,
     RegistryCatalogues,
     RegistrySnapshot,
@@ -360,6 +436,7 @@ from ._schema import (
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode
 from ._snapshot import build_snapshot
+from ._temporal import select_revision
 from ._validate import RegistryValidator
 from ._validate_cross_revision import (
     CrossRevisionCasillaDriftSummary,
@@ -377,6 +454,7 @@ from ._workbook_parity import (
     WorkbookBackendVerificationReport,
     WorkbookCellRef,
     WorkbookConversionReport,
+    WorkbookKind,
     WorkbookModeloCoverage,
     WorkbookParityComparison,
     WorkbookParityRunReport,
@@ -404,14 +482,14 @@ __all__ = [
     "CENSO_MODELO_ERROR_CODES",
     "CENSO_MODELO_EVENT_KINDS",
     "CENSO_MODELO_SERVICE_OWNER",
+    "CORPUS_SOURCES_INSTALL_HINT",
     "GROI_ORACLE_ID",
     "INVOICE_BINDING_SOURCE_KINDS",
+    "IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS",
+    "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "LEDGER_BINDING_SOURCE_KINDS",
-    "M210_CONVENIO_MISSING_SENTINEL",
-    "M210_DEFERRED_TIPO_SENTINEL",
-    "M210_NOT_YET_AUTHORED_SENTINEL",
-    "M210_RATE_SENTINELS",
+    "MODELO_303_IVA_COMPENSATION_BINDING_ID",
     "AeatNifIvaCheckerOracle",
     "AeatNifIvaObservation",
     "AmbiguousRevisionSelectionError",
@@ -422,6 +500,10 @@ __all__ = [
     "BboxAnchorSpec",
     "BindingAggregationOp",
     "BindingId",
+    "BindingRowSetSelector",
+    "BindingSelectorQueryEntry",
+    "BindingSelectorQueryProjection",
+    "BooleanBindingEncodedValue",
     "BracketEntry",
     "CalculationCompletenessCasilla",
     "CalculationCompletenessManifest",
@@ -440,7 +522,11 @@ __all__ = [
     "CensoModeloRole",
     "ConstructDefinition",
     "ConstructId",
-    "ConvenioRateRow",
+    "ConvenioAuthority",
+    "ConvenioOverride",
+    "ConvenioOverrideRow",
+    "ConvenioTreaty",
+    "CorpusCompanionAdvisory",
     "CounterpartAggregationObservation",
     "CounterpartObservationRequirement",
     "CounterpartSourceKind",
@@ -458,6 +544,7 @@ __all__ = [
     "DependencyClassificationId",
     "DerivedDisenoCasilla",
     "DisenoCoverageReport",
+    "DonativoDonorObservation",
     "EvidenceTier",
     "EvidenceTierCoverageGate",
     "ExportFieldDefinition",
@@ -475,6 +562,7 @@ __all__ = [
     "GroiObservation",
     "GroiOracle",
     "GroiReplayDriver",
+    "ImpatriadoIncomeObservationProtocol",
     "InputKind",
     "InputKindValue",
     "InvoiceObservation",
@@ -526,6 +614,7 @@ __all__ = [
     "ParsedExportFieldValue",
     "ParsedExportPayload",
     "PayerFact",
+    "PeriodSelector",
     "ProfilePredicateDefinition",
     "RecordDesignField",
     "RecordDesignSheet",
@@ -533,6 +622,7 @@ __all__ = [
     "RefundOperationObservation",
     "RegistryCalculationEntry",
     "RegistryCalculationResult",
+    "RegistryCalculationUnresolvedOutcome",
     "RegistryCatalogues",
     "RegistryCoverageAudit",
     "RegistryError",
@@ -545,6 +635,7 @@ __all__ = [
     "RegistrySnapshot",
     "RegistrySnapshotError",
     "RegistrySnapshotRef",
+    "RegistryUnresolvedOutcomeReason",
     "RegistryValidationError",
     "RegistryValidator",
     "RegistryVerificationPolicy",
@@ -577,6 +668,7 @@ __all__ = [
     "VerificationExpectationDefinition",
     "VerificationExpectationId",
     "VerificationPredicateDefinition",
+    "WithholdingClaveBreakdown",
     "WithholdingObservation",
     "WithholdingObservationRequirement",
     "WorkbookArtefactReport",
@@ -584,6 +676,7 @@ __all__ = [
     "WorkbookCellRef",
     "WorkbookConversionReport",
     "WorkbookFixtureId",
+    "WorkbookKind",
     "WorkbookModeloCoverage",
     "WorkbookOutputId",
     "WorkbookParityComparison",
@@ -592,6 +685,8 @@ __all__ = [
     "WorkbookParityRunReport",
     "WorkbookRunnerAvailability",
     "WorkbookScanOptions",
+    "XmlDictionaryEntry",
+    "aggregate_withholding_by_clave",
     "applicable_filing_schedules",
     "assert_formula_workbook_runner_ready",
     "assert_remote_operation_allowed",
@@ -600,7 +695,10 @@ __all__ = [
     "audit_registry_model_law_coverage",
     "audit_registry_oracle_bindings",
     "binding_aggregation_op",
+    "binding_row_set_selector",
     "binding_source_casilla_ids",
+    "boolean_binding_encoded_values",
+    "bound_casilla_binding_ids",
     "build_censo_modelo_foundation_contract",
     "build_diseno_coverage_report",
     "build_model_law_coverage_ledger",
@@ -615,6 +713,7 @@ __all__ = [
     "casillas_by_id",
     "censo_modelo_ownership",
     "censo_modelo_ownership_map",
+    "clear_fingerprint_cache",
     "collect_applicability_declarations",
     "collect_orphan_oracle_ids",
     "compare_calculation_to_filed_observation",
@@ -655,11 +754,14 @@ __all__ = [
     "inventory_workbook_coverage",
     "invoice_binding_requirements",
     "is_active_censo_modelo",
+    "is_companion_corpus_binary",
     "is_registry_id",
     "iter_modelo_applicability_rules",
     "load_catalogue_file",
+    "load_convenio_authority",
     "load_legal_parameters_only",
     "load_modelo_directory",
+    "load_modelo_directory_without_locales",
     "load_modelo_file",
     "load_modelo_path",
     "load_modelo_source",
@@ -679,8 +781,10 @@ __all__ = [
     "relation_aggregation_op",
     "relation_source_requirements",
     "remote_state_policy_from_cross_reference",
+    "renta_first_slice_binding_target_casillas",
     "replay_parity_tape",
     "resolve_atribucion_binding_row_values",
+    "resolve_bound_casilla_binding_value",
     "resolve_bound_inputs_by_casilla_id",
     "resolve_censo_modelo_foundation",
     "resolve_censo_modelo_work_unit_foundation",
@@ -688,16 +792,19 @@ __all__ = [
     "resolve_counterpart_binding_row_values",
     "resolve_counterpart_binding_values",
     "resolve_cross_reference_oracle",
+    "resolve_donativo_binding_row_values",
     "resolve_export_layout",
     "resolve_foreign_asset_binding_row_values",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
+    "resolve_ledger_impatriado_income_aggregation_binding_values",
     "resolve_ledger_iva_aggregation_binding_values",
     "resolve_ledger_oss_aggregation_binding_values",
     "resolve_ledger_renta_expense_aggregation_binding_values",
     "resolve_ledger_renta_gasto_aggregation_binding_values",
     "resolve_ledger_renta_income_aggregation_binding_values",
     "resolve_observed_requirement_value",
+    "resolve_parameter",
     "resolve_previous_filing_binding_values",
     "resolve_refund_binding_row_values",
     "resolve_related_party_binding_row_values",
@@ -717,16 +824,20 @@ __all__ = [
     "save_parity_scenario",
     "save_parity_tape",
     "scan_workbook",
+    "select_revision",
+    "selector_as_dict",
     "selector_model_for_source",
     "summarize_non_overlapping_cross_revision_casilla_drift",
     "taxpayer_model_is_declared",
     "undeclared_casilla_ids",
+    "unsupported_ledger_impatriado_income_observations",
     "unsupported_ledger_iva_observations",
     "unsupported_ledger_oss_observations",
     "unsupported_ledger_renta_expense_observations",
     "unsupported_ledger_renta_gasto_observations",
     "unsupported_ledger_renta_income_observations",
     "validate_invoice_binding_definition",
+    "validate_ledger_impatriado_income_aggregation_binding_definition",
     "validate_ledger_iva_aggregation_binding_definition",
     "validate_ledger_oss_aggregation_binding_definition",
     "validate_ledger_renta_expense_aggregation_binding_definition",
@@ -735,12 +846,15 @@ __all__ = [
     "validate_renta_web_open_expected_casilla_ids",
     "validate_renta_web_open_expected_casilla_values",
     "validate_retenciones_aggregation_binding",
+    "validate_text_input_targets",
     "validated_casilla_id",
     "validated_casilla_id_map",
+    "validated_text_input_casilla_ids",
     "verify_legal_catalogue",
     "verify_legal_reference",
     "verify_source_catalogue",
     "verify_source_file",
     "verify_workbook_backend",
     "withholding_binding_requirements",
+    "xml_dictionary_entries",
 ]

@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#post-cleanup-verification'
 date: '2026-05-31'
-modified: '2026-05-31'
+modified: '2026-06-13'
 related:
   - "[[2026-05-22-schema-hardening-plan]]"
 ---

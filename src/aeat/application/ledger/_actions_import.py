@@ -1,10 +1,12 @@
-"""Application services for bucket-scoped manual ledger transactions.
+"""Ledger source import services for bucket-scoped transaction catalogues.
 
-Services operate over a :class:`TransactionCatalogueRepository` for ledger
-state, a :class:`BucketEventHistoryRepository` for durable audit events, and
-an optional :class:`InvoiceCatalogueRepository` for purchase-invoice evidence
-cascade on removal. The inner functions accept a :class:`TransactionCatalogue`
-or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
+Provider rows arrive as
+:class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow` objects.
+This module classifies them against a loaded :class:`TransactionCatalogue`,
+persists imported :class:`~aeat.domain.transactions.Transaction` instances,
+records ``LEDGER_TRANSACTION_IMPORTED`` bucket events, and returns
+:class:`~aeat.application.ledger.LedgerImportOperationResult` or
+:class:`~aeat.application.ledger.LedgerSourceImportResult`.
 """
 
 from __future__ import annotations
@@ -28,10 +30,10 @@ from ...core.hashing import sha256_file
 from ...core.i18n import tr
 from ...domain.buckets import (
     BucketEvent,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency import (
     CurrencyNormalizationService,
     CurrencyNormalizationStatus,
@@ -44,12 +46,12 @@ from ...domain.transactions import (
     RawTransaction,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepositoryProtocol,
     TransactionValidationError,
     derive_import_fingerprint,
     derive_movement_day_key,
     derive_transaction_id,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ..transactions import LedgerImportDiagnostic, import_ledger_with_diagnostics
 from ._actions_common import (
     _append_bucket_events,
@@ -84,17 +86,20 @@ class LedgerProviderID(StrEnum):
     PDF_N26 = "pdf-n26"
 
 
-def _transaction_dedup_fingerprint(transaction: Transaction) -> str:
-    """Return the import-dedup fingerprint for an already-stored transaction.
+def _transaction_dedup_fingerprints(transaction: Transaction) -> frozenset[str]:
+    """Return import-dedup fingerprints for an already-stored transaction.
 
     Rows imported after the cross-format dedup landed carry a stamped
-    :attr:`Transaction.import_fingerprint`; that value is the canonical
-    identity and is used verbatim. Hand-entered rows (and any legacy
-    imported row that predates the stamp) have no fingerprint, so the
+    :attr:`~aeat.domain.transactions.Transaction.import_fingerprint`; that value is the canonical
+    identity and is used verbatim. Hand-entered rows and unstamped imported
+    rows have no fingerprint, so the
     fingerprint is derived from the current ``raw`` as a best-effort
-    fallback â€” this keeps re-imports of legacy rows idempotent.
+    fallback - this keeps re-imports of unstamped rows idempotent.
     """
-    return transaction.import_fingerprint or derive_import_fingerprint(transaction.raw)
+    fingerprints = {derive_import_fingerprint(transaction.raw, direction=transaction.direction)}
+    if transaction.import_fingerprint:
+        fingerprints.add(transaction.import_fingerprint)
+    return frozenset(fingerprints)
 
 
 class _ImportRowPlan(NamedTuple):
@@ -130,7 +135,8 @@ def _apply_fx_conversion(
     """Return ``(fx_rate, value_in_eur, rate_source, rate_date_iso)`` for a raw row.
 
     EUR-native rows and non-EUR rows with no normalizer / a missing rate yield
-    all ``None``, preserving the coupling invariant on :class:`Transaction`.
+    all ``None``, preserving the coupling invariant on
+    :class:`~aeat.domain.transactions.Transaction`.
     """
     if raw.currency == DEFAULT_CURRENCY or currency_normalizer is None:
         return (None, None, None, None)
@@ -154,16 +160,22 @@ def _evaluate_import_rows(
 ) -> _ImportRowPlan:
     """Classify every parsed row as imported / skipped / likely-duplicate.
 
-    Each :class:`ParsedLedgerRow` carries the magnitude
-    :class:`RawTransaction` and the authoritative ``direction`` the provider
-    derived from the source sign at the parse boundary; this classifier never
-    re-derives flow from a sign. Deduplication keys on
-    :func:`derive_import_fingerprint` â€” an identity that is stable across both
-    later edits of a transaction and a re-export of the same movement in a
-    different file format. This single classifier backs both the persisting
-    import path and the ``--dry-run`` preview, so the preview count is exact.
+    Each :class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow`
+    carries the magnitude :class:`~aeat.domain.transactions.RawTransaction`
+    and the authoritative ``direction`` the provider derived from the source
+    sign at the parse boundary; this classifier never re-derives flow from a
+    sign. Deduplication keys on
+    :func:`~aeat.domain.transactions.derive_import_fingerprint` - a direction-
+    and currency-qualified identity that is stable across both later edits of a
+    transaction and a re-export of the same movement in a different file format.
+    This single classifier backs both the persisting import path and the
+    ``--dry-run`` preview, so the preview count is exact.
     """
-    existing_fingerprints = {_transaction_dedup_fingerprint(transaction) for transaction in catalogue.values()}
+    existing_fingerprints = {
+        fingerprint
+        for transaction in catalogue.values()
+        for fingerprint in _transaction_dedup_fingerprints(transaction)
+    }
     existing_day_keys = {derive_movement_day_key(transaction.raw) for transaction in catalogue.values()}
     imported: list[Transaction] = []
     skipped_refs: list[BucketTransactionRef] = []
@@ -171,7 +183,7 @@ def _evaluate_import_rows(
     batch_transaction_ids: set[str] = set()
     for parsed in parsed_rows:
         raw = parsed.raw
-        fingerprint = derive_import_fingerprint(raw)
+        fingerprint = derive_import_fingerprint(raw, direction=parsed.direction)
         transaction_id = derive_transaction_id(raw)
         # Re-import dedup keys on the persisted catalogue only: a fingerprint
         # already stored is the same movement seen before (re-importing the same
@@ -204,6 +216,7 @@ def _evaluate_import_rows(
                 "rate_source": rate_source,
                 "rate_date": rate_date,
                 "source_jurisdiction": _source_jurisdiction_from_raw_fields(raw.raw_fields),
+                "group_label": None,
                 # D6: an imported row is freshly created at import time.
                 "created_at": stamped_at,
                 "modified_at": stamped_at,
@@ -235,13 +248,13 @@ def import_ledger_transactions(
 ) -> LedgerImportOperationResult:
     """Import provider rows into one bucket catalogue and emit events.
 
-    Each :class:`ParsedLedgerRow` carries the magnitude
-    :class:`RawTransaction` plus the authoritative ``direction`` the provider
-    derived at the parse boundary, so the import path never re-derives flow
-    from a sign.
+    Each :class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow`
+    carries the magnitude :class:`~aeat.domain.transactions.RawTransaction`
+    plus the authoritative ``direction`` the provider derived at the parse
+    boundary, so the import path never re-derives flow from a sign.
 
-    Returns a :class:`LedgerImportOperationResult` summarising the number
-    of imported, skipped, and failed transactions.
+    Returns a :class:`~aeat.application.ledger.LedgerImportOperationResult`
+    summarising the imported, skipped, and likely-duplicate transactions.
     """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
@@ -322,7 +335,7 @@ def import_ledger_source(
 ) -> LedgerSourceImportResult:
     """Validate, ingest, and optionally persist one ledger source file.
 
-    Returns a :class:`LedgerSourceImportResult`.
+    Returns a :class:`~aeat.application.ledger.LedgerSourceImportResult`.
     """
     # Refuse a missing/unreadable source up front, before provider
     # resolution. With ``--provider auto`` resolution runs the detection
@@ -354,6 +367,9 @@ def import_ledger_source(
             tuple(parsed.raw for parsed in parsed_rows),
             existing_catalogue,
             original_source_path=command.source,
+            import_fingerprints=tuple(
+                derive_import_fingerprint(parsed.raw, direction=parsed.direction) for parsed in parsed_rows
+            ),
         )
         if command.verify
         else None
@@ -455,7 +471,7 @@ def _resolve_financial_provider(provider: str, path: Path) -> FinancialProviderP
     if provider_id is LedgerProviderID.AUTO:
         detected = detect_provider(path)
         if detected is None:
-            raise TransactionValidationError(f"auto-detection of ledger format failed for {path}")
+            raise _unsupported_import_source(path)
         return detected
     if provider_id is LedgerProviderID.CSV:
         return CsvProvider()
@@ -466,7 +482,7 @@ def _resolve_financial_provider(provider: str, path: Path) -> FinancialProviderP
     if provider_id is LedgerProviderID.N26:
         detected = detect_provider(path)
         if detected is None:
-            raise TransactionValidationError(f"auto-detection of N26 format failed for {path}")
+            raise _unsupported_import_source(path)
         return detected
     # PDF and PDF_N26
     return PdfN26Provider()
@@ -506,8 +522,22 @@ def _build_source_verification(*, source: Path | None, verify: bool) -> LedgerSo
         return LedgerSourceVerificationReport(requested=True)
     resolved = source.resolve()
     if not resolved.exists() or not resolved.is_file():
-        raise TransactionValidationError(f"source file not found: {source}")
+        raise TransactionValidationError(
+            translated_message="errors.financial.source_file_not_found",
+            context={"path": str(source)},
+        )
     return LedgerSourceVerificationReport(requested=True, path=str(resolved), sha256=sha256_file(resolved))
+
+
+def _unsupported_import_source(path: Path) -> TransactionValidationError:
+    """Build the shared translated refusal for sources no provider recognises."""
+    return TransactionValidationError(
+        translated_message="errors.transaction.ledger_import_failed",
+        context={
+            "reason": f"{tr('errors.transaction.import_source_invalid')}: {path}",
+            "path": str(path),
+        },
+    )
 
 
 def _validation_report(validation: ProviderValidation) -> LedgerSourceValidationReport:

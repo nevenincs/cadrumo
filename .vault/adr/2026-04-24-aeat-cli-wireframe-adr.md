@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#aeat-cli-wireframe'
 date: '2026-04-24'
-modified: '2026-04-24'
+modified: '2026-06-30'
 related:
   - "[[2026-04-24-aeat-cli-wireframe-research]]"
   - "[[2026-04-17-export-first-adr]]"
@@ -12,9 +12,7 @@ related:
   - "[[2026-04-18-unified-review-queue-adr]]"
 ---
 
-
-
-# `aeat-cli-wireframe` adr: `kent-first cli language system and root wireframe` | (**status:** `proposed (hardening iteration 1 applied 2026-04-24)`)
+# `aeat-cli-wireframe` adr: `kent-first cli language system and root wireframe` | (**status:** `superseded` — the 13-root wireframe was replaced by the accepted two-root `config`/`app` design in `2026-05-02-aeat-cli-redesign` → the `2026-05-12/13/14-cli-workflow-redesign-*` family → `2026-06-03-cli-workflow-redesign-epic-adr`; a third root is now barred by the `aeat-architecture-boundaries` rule. Closes issues #390 (controlling-shape decision) and #392 (33-iteration hardening EPIC, all children delivered under the two-root surface).)
 
 ## CLI Backend Boundary
 
@@ -2084,7 +2082,6 @@ to `proposed (approval-ready)` when all pre-approval blockers close. Further
 hardening iterations (6+) target meta-level production concerns: error
 taxonomy, output contract, determinism, internationalization, rollout
 sequencing.
-
 
 ## Hardening iterations 6 through 33
 

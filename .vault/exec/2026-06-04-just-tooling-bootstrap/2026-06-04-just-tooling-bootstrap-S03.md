@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#just-tooling-bootstrap'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-13'
 step_id: 'S03'
 related:
   - '[[2026-06-04-just-tooling-bootstrap-plan]]'

@@ -1,13 +1,23 @@
 """Cross-model relation and previous-filing source validation helpers.
 
-Validates cross-model relations declared on each :class:`ModeloRevision`
-against the source :class:`ModeloDefinition`, checking selector coverage,
-source-casilla-id existence, and period alignment.
+Validates cross-model relations declared on each
+:class:`~aeat.domain.calculations.registry.ModeloRevision` against the source
+:class:`~aeat.domain.calculations.registry.ModeloDefinition`, checking selector
+coverage, source-casilla-id existence, and period alignment.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._validate_source_casilla_ids`
+        Shared source-casilla membership and non-canonical token diagnostics.
+    :mod:`aeat.domain.calculations.registry._validate_relation_periods`
+        Source revision selection and period/year coverage gates.
+    :mod:`aeat.domain.calculations.registry._validate_previous_filing_sources`
+        Sibling closure check for previous-filing binding selectors.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from typing import Final
 
 from ._bindings_previous_filing import _is_direct_previous_filing_binding
 from ._errors import RegistryValidationError
@@ -32,20 +42,41 @@ from ._validate_relation_periods import (
 )
 from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 
-# The single iva-wallet-owned slot binding (aggregation-taxonomy ADR ruling D3):
-# the M303 compensación-pendiente binding is owned by the iva-wallet compensación
-# decision (resolved pre-mesh through ``_iva_wallet_gate``), NOT by the relation
-# mesh. It legitimately remains ``source = "previous_filing"`` while also being a
-# relation's ``target_binding`` — the iva-wallet gate strips it from the
-# previous-filing resolution before the mesh runs. It is therefore the documented
-# carve-out for the relation-vs-previous_filing collision gate below.
-_IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS: frozenset[str] = frozenset({"modelo-303-compensacion-pendiente-anteriores"})
+#: The single M303 compensación-pendiente binding id, owned by the iva-wallet
+#: compensación decision (aggregation-taxonomy ADR ruling D3). This is the one
+#: canonical declaration of the identifier: the registry relation-source validator
+#: (below), the calculate orchestrator's mesh exclusion, and the previous-filing
+#: exclusion all consume it rather than re-spelling the literal. It rides down here
+#: in the registry domain so both the domain validator and the application
+#: orchestrator (application -> domain) read one source of truth.
+MODELO_303_IVA_COMPENSATION_BINDING_ID: Final[str] = "modelo-303-compensacion-pendiente-anteriores"
+
+#: The iva-wallet-owned relation-target slot binding set (aggregation-taxonomy ADR
+#: ruling D3): the M303 compensación-pendiente binding is owned by the iva-wallet
+#: compensación decision (resolved pre-mesh through ``_iva_wallet_gate``), NOT by
+#: the relation mesh. It legitimately remains ``source = "previous_filing"`` while
+#: also being a relation's ``target_binding`` — the iva-wallet gate strips it from
+#: the previous-filing resolution before the mesh runs. It is therefore the
+#: documented carve-out for the relation-vs-previous_filing collision gate below,
+#: and the same set the orchestrator excludes from previous-filing resolution.
+IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS: frozenset[str] = frozenset({MODELO_303_IVA_COMPENSATION_BINDING_ID})
 
 
 def validate_relation_closure(
     modelos: Iterable[ModeloDefinition],
     modelos_by_id: Mapping[str, ModeloDefinition],
 ) -> list[str]:
+    """Validate cross-model relation closure for registry modelos.
+
+    Args:
+        modelos: Iterable of
+            :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+            entries whose :class:`~aeat.domain.calculations.registry.ModeloRevision`
+            relations are checked.
+        modelos_by_id: Mapping of modelo id to
+            :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+            used to resolve each relation's source modelo.
+    """
     failures: list[str] = []
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -90,7 +121,7 @@ def _validate_single_relation(
     failures.extend(f"{relation_scope} {failure}" for failure in selector_failures)
     if not source_revisions:
         failures.append(
-            f"{relation_scope} selector {dict(relation.source_revision_selector)!r} "
+            f"{relation_scope} selector {relation.source_revision_selector.model_dump(exclude_none=True)!r} "
             f"matches no source revisions in modelo {source_modelo.id}",
         )
         return failures
@@ -130,6 +161,9 @@ def _validate_single_relation(
 def _relation_is_prior_year_filing_carry(relation: RelationDefinition, revision: ModeloRevision) -> bool:
     """Return whether the relation is a prior-year carry of a historical filing.
 
+    The relation is a
+    :class:`~aeat.domain.calculations.registry.RelationDefinition` declared on
+    the supplied :class:`~aeat.domain.calculations.registry.ModeloRevision`.
     Two conditions, both required:
 
     - The relation's target binding has ``source = "previous_filing"`` — the
@@ -156,8 +190,8 @@ def _relation_is_prior_year_filing_carry(relation: RelationDefinition, revision:
     )
     if not targets_observation_slot:
         return False
-    delta = relation.source_revision_selector.get("filing_year_delta")
-    return isinstance(delta, int) and delta < 0
+    delta = relation.source_revision_selector.filing_year_delta
+    return delta is not None and delta < 0
 
 
 def _validate_relation_source_revision(
@@ -207,8 +241,11 @@ def validate_slot_source_hygiene(
         by the relation mesh, and is exempt from this gate.
 
     Args:
-        modelos: Iterable of :class:`ModeloDefinition` entries to validate.
-        modelos_by_id: Mapping of modelo id to :class:`ModeloDefinition` (unused
+        modelos: Iterable of
+            :class:`~aeat.domain.calculations.registry.ModeloDefinition` entries
+            to validate.
+        modelos_by_id: Mapping of modelo id to
+            :class:`~aeat.domain.calculations.registry.ModeloDefinition` (unused
             here; accepted for signature parity with the sibling closure gates).
     """
     del modelos_by_id  # signature parity with sibling closure validators
@@ -237,7 +274,7 @@ def _validate_slot_binding_source(
     failures: list[str] = []
     is_previous_filing = str(binding.source) == "previous_filing"
     is_relation_targeted = binding.id in relation_targets
-    iva_wallet_owned = binding.id in _IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
+    iva_wallet_owned = binding.id in IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
     # Gate (a): a previous_filing binding must carry a DIRECT selector.
     if is_previous_filing and not iva_wallet_owned and not _is_direct_previous_filing_binding(binding):
         failures.append(

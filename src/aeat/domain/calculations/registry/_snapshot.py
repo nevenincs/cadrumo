@@ -4,6 +4,11 @@ Validates a :class:`ModeloDefinition` and selects the matching
 :class:`ModeloRevision` for a filing context, then assembles the immutable
 :class:`RegistrySnapshot` that downstream consumers (formula engine, export
 resolver, coverage auditor) depend on.
+
+This module only has the supplied modelo and catalogues. Cross-model relation
+closure needs the full registry tree and is enforced by
+:class:`ValidatedRegistryAuthority` / :meth:`RegistryValidator.validate_registry`
+before production snapshots are served.
 """
 
 from __future__ import annotations
@@ -18,7 +23,6 @@ from ._schema import (
     CasillaDefinition,
     ModeloDefinition,
     ModeloRevision,
-    ParameterDefinition,
     RegistryCatalogues,
     RegistrySnapshot,
     filing_period_from_scope,
@@ -83,6 +87,11 @@ def build_snapshot(
     revision_id: str | None = None,
 ) -> RegistrySnapshot:
     """Validate ``modelo`` and return the selected immutable snapshot.
+
+    This helper performs model-local validation and snapshot-local reference
+    checks. It cannot validate cross-model relation closure because it does not
+    receive the full modelo tree; production callers should request snapshots
+    through :class:`ValidatedRegistryAuthority`.
 
     Args:
         modelo: The :class:`ModeloDefinition` to validate and snapshot.
@@ -170,6 +179,7 @@ def _build_validated_snapshot(
         dependency_classifications={
             classification.id: classification for classification in revision.dependency_classifications
         },
+        convenio=catalogues.convenio,
     )
     check_all_id_references(snapshot)
     return snapshot
@@ -185,6 +195,10 @@ def build_validated_snapshot(
     revision_id: str | None = None,
 ) -> RegistrySnapshot:
     """Return a selected :class:`RegistrySnapshot` for an already validated modelo.
+
+    The precondition is model-local. Callers that need cross-model relation
+    closure must validate the full registry tree first, normally by using
+    :class:`ValidatedRegistryAuthority`.
 
     Args:
         modelo: The validated :class:`ModeloDefinition` whose revision is selected.
@@ -260,9 +274,6 @@ def _collect_snapshot_ref_ids(
                 for alias in record.aliases:
                     legal_ids.update(alias.legal_refs)
                     source_ids.update(alias.source_refs)
-            if isinstance(record, ParameterDefinition):
-                for row in record.convenio_rates:
-                    legal_ids.update(row.legal_refs)
     # Cross-reference applicability predicates carry their own legal/source
     # evidence for the profile fact that gates the official/live surface.
     for cross_reference in revision.live_cross_references:

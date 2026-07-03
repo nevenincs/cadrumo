@@ -7,6 +7,9 @@ legal_refs = [
     "orden-eha-789-2010:art-1",
     "orden-eha-789-2010:art-4",
 ]
+orden_aplicabilidad = [
+    "orden-eha-789-2010:art-1",
+]
 source_refs = [
     "aeat-dr-360-2010",
     "aeat-modelo-360-procedure",

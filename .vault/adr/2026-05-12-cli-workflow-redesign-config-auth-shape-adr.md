@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-config-auth-shape-research]]"
@@ -14,7 +14,6 @@ related:
   - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-05-08-google-oauth-adr]]"
 ---
-
 
 # `cli-workflow-redesign` adr: `Config auth command surface` | (**status:** `accepted`)
 

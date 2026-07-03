@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#ledger-renta-pipeline'
 date: '2026-05-08'
-modified: '2026-05-08'
+modified: '2026-06-30'
 related:
   - "[[2026-05-08-ledger-renta-pipeline-research]]"
   - "[[2026-05-08-ledger-renta-pipeline-reference]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-05-08-ledger-renta-pipeline-plan]]"
   - "[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]"
 ---
-
-
 
 # `ledger-renta-pipeline` adr: `phase2-contract-decisions` | (**status:** `accepted`)
 

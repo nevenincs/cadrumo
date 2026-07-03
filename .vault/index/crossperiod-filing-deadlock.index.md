@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#crossperiod-filing-deadlock'
-date: '2026-06-21'
-modified: '2026-06-21'
+date: '2026-07-01'
+modified: '2026-07-01'
 related:
   - '[[2026-06-19-crossperiod-filing-deadlock-adr]]'
   - '[[2026-06-19-crossperiod-filing-deadlock-research]]'
@@ -21,6 +21,7 @@ related:
   - '[[2026-06-21-crossperiod-filing-deadlock-P02-S11]]'
   - '[[2026-06-21-crossperiod-filing-deadlock-audit]]'
   - '[[2026-06-21-crossperiod-filing-deadlock-plan]]'
+  - '[[2026-06-26-crossperiod-filing-deadlock-audit]]'
 ---
 
 # `crossperiod-filing-deadlock` feature index
@@ -36,6 +37,7 @@ Auto-generated index of all documents tagged with `#crossperiod-filing-deadlock`
 ### audit
 
 - `2026-06-21-crossperiod-filing-deadlock-audit` - `crossperiod-filing-deadlock` audit: `Cross-period filing deadlock remediation - code review`
+- `2026-06-26-crossperiod-filing-deadlock-audit` - `crossperiod-filing-deadlock` audit: `stash recovery + C3 drift remediation audit`
 
 ### exec
 

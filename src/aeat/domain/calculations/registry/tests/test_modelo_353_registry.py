@@ -3,21 +3,18 @@
 from __future__ import annotations
 
 from datetime import date
-from functools import lru_cache
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_353() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "353")
-    return modelo, catalogues
+    return _committed_modelo("353")
 
 
 def test_modelo_353_validator_accepts_committed_definition() -> None:
@@ -29,12 +26,14 @@ def test_modelo_353_validator_accepts_committed_definition() -> None:
 
 
 def test_modelo_353_metadata_matches_orden_eha_3434_2007() -> None:
-    modelo, _ = _load_modelo_353()
+    modelo, catalogues = _load_modelo_353()
     assert modelo.tax_domain == "iva"
     assert modelo.cadence == "monthly"
     assert "orden-eha-3434-2007:art-2" in modelo.legal_refs
     assert "orden-eha-3434-2007:art-8" in modelo.legal_refs
     assert "aeat-dr-353-2026" in modelo.source_refs
+    assert catalogues.sources["aeat-modelo-353-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-353-2007-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_353_revision_is_monthly_from_2008() -> None:
@@ -42,15 +41,24 @@ def test_modelo_353_revision_is_monthly_from_2008() -> None:
     revision = modelo.revisions["2008-y-siguientes"]
     assert revision.valid_from == date(2008, 1, 1)
     assert len(revision.period_selector.periods) == 12
+    assert revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-2",)
 
 
-def test_modelo_353_january_deadline_extends_to_february_28() -> None:
+def test_modelo_353_january_deadline_uses_official_calendar_shift() -> None:
     modelo, _ = _load_modelo_353()
     revision = modelo.revisions["2008-y-siguientes"]
     windows = {w.id: w for w in revision.deadline_windows}
-    jan = windows["modelo-353-2025-01"]
-    assert jan.opens_on == date(2025, 2, 1)
-    assert jan.closes_on == date(2025, 2, 28)
+    jan_2025 = windows["modelo-353-2025-01"]
+    assert jan_2025.opens_on == date(2025, 2, 1)
+    assert jan_2025.closes_on == date(2025, 2, 28)
+
+    jan_2026 = windows["modelo-353-2026-01"]
+    assert jan_2026.opens_on == date(2026, 2, 1)
+    assert jan_2026.closes_on == date(2026, 3, 2)
+    assert jan_2026.payment_cutoff_on == date(2026, 2, 25)
+    assert "aeat-modelo-353-procedure" in jan_2026.source_refs
+    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in jan_2026.source_refs
+    assert "aeat-calendario-contribuyente-2026-domiciliacion" in jan_2026.source_refs
 
 
 def test_modelo_353_other_months_close_at_30_days_following_month() -> None:
@@ -66,7 +74,10 @@ def test_modelo_353_snapshot_builds_per_month() -> None:
     modelo, catalogues = _load_modelo_353()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="06")
     assert snapshot.revision.id == "2008-y-siguientes"
+    assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-2",)
     assert "orden-eha-3434-2007:art-2" in snapshot.legal
+    assert "aeat-modelo-353-procedure" in snapshot.sources
+    assert "boe-modelo-353-2007-form" in snapshot.sources
 
 
 def test_modelo_353_live_cross_references_forbid_writes() -> None:

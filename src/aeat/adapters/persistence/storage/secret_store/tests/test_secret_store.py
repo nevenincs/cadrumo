@@ -11,10 +11,11 @@ import json
 import logging
 import secrets
 from collections.abc import Iterator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ......core.classification import SensitivityClass
 from ...blob_store import EncryptedBlobStore
@@ -32,9 +33,8 @@ from .._secret_store import SecretRecord, SecretStore
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _STORE_LOGGER_NAME = "aeat.adapters.persistence.storage.secret_store._secret_store"
 
-
-def _expiry() -> datetime:
-    return datetime.now(UTC) + timedelta(hours=1)
+_SECRET_CREATED_AT = datetime(2026, 5, 28, 11, 55, 0, tzinfo=UTC)
+_SECRET_EXPIRES_AT = datetime(2099, 5, 28, 11, 55, 0, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -68,19 +68,65 @@ def _make_record(
         value=value,
         classification=classification,
         metadata={"issued_by": "test-suite"},
-        created_at=datetime.now(UTC),
-        expires_at=expires_at if expires_at is not None else _expiry(),
+        created_at=_SECRET_CREATED_AT,
+        expires_at=expires_at if expires_at is not None else _SECRET_EXPIRES_AT,
     )
 
 
+def test_secret_record_validation_rejects_invalid_fields() -> None:
+    cases = (
+        (
+            "naive-created-at",
+            {
+                "classification": SensitivityClass.SECRET,
+                "created_at": datetime(2026, 4, 27, 12, 0, 0),
+            },
+        ),
+        (
+            "unsupported-classification",
+            {
+                "classification": SensitivityClass.FINANCIAL,
+                "created_at": _SECRET_CREATED_AT,
+            },
+        ),
+    )
+    for case_id, overrides in cases:
+        record_kwargs: dict[str, object] = {
+            "key": "x",
+            "value": b"y",
+            "classification": SensitivityClass.SECRET,
+            "created_at": _SECRET_CREATED_AT,
+            "expires_at": None,
+        }
+        record_kwargs.update(overrides)
+        with pytest.raises(ValidationError) as excinfo:
+            SecretRecord(**record_kwargs)
+        assert excinfo.value.errors(), case_id
+
+
+def test_missing_record_write_operations_raise(store: SecretStore) -> None:
+    with pytest.raises(SecretNotFoundError) as delete_exc:
+        store.delete("never-stored")
+    assert "digest" not in str(delete_exc.value)
+
+    with pytest.raises(SecretNotFoundError) as rotate_exc:
+        store.rotate("never-stored", b"x", expires_at=_SECRET_EXPIRES_AT)
+    assert "digest" not in str(rotate_exc.value)
+
+
 class TestPutAndGet:
-    def test_round_trip(self, store: SecretStore) -> None:
-        record = _make_record(value=b"sensitive-payload")
-        store.put(record)
-        loaded = store.get(record.key)
-        assert loaded.value == record.value
-        assert loaded.metadata == record.metadata
-        assert loaded.classification is SensitivityClass.SECRET
+    def test_secret_and_session_round_trip(self, store: SecretStore) -> None:
+        for classification in (SensitivityClass.SECRET, SensitivityClass.SESSION):
+            record = _make_record(
+                key=f"aeat:test:{classification.value}",
+                value=f"sensitive-payload-{classification.value}".encode(),
+                classification=classification,
+            )
+            store.put(record)
+            loaded = store.get(record.key)
+            assert loaded.value == record.value, classification.value
+            assert loaded.metadata == record.metadata, classification.value
+            assert loaded.classification is classification, classification.value
 
     def test_strict_record_round_trip_preserves_all_fields(self, store: SecretStore) -> None:
         record = SecretRecord(
@@ -115,14 +161,6 @@ class TestPutAndGet:
         with pytest.raises(BlobNotFoundError):
             store.get(record.key)
 
-    def test_session_class_round_trip(self, store: SecretStore) -> None:
-        record = _make_record(
-            key="aeat:test:session",
-            classification=SensitivityClass.SESSION,
-        )
-        store.put(record)
-        assert store.get(record.key).value == record.value
-
     def test_missing_key_raises(self, store: SecretStore) -> None:
         with pytest.raises(SecretNotFoundError) as excinfo:
             store.get("never-stored")
@@ -143,70 +181,30 @@ class TestPutAndGet:
         assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
         assert "index-corrupt" not in str(excinfo.value)
 
-    def test_index_does_not_leak_key(self, tmp_path: Path, store: SecretStore) -> None:
-        record = _make_record(key="aeat:test:plaintext-key")
+    def test_index_does_not_leak_plaintext_key_or_value(self, tmp_path: Path, store: SecretStore) -> None:
+        secret_value = b"super-leak-canary-value-not-on-disk"
+        record = _make_record(key="aeat:test:plaintext-key", value=secret_value)
         store.put(record)
         index_path = tmp_path / "secrets" / "index.json"
         contents = index_path.read_text(encoding="utf-8")
         assert "plaintext-key" not in contents
-
-    def test_index_does_not_leak_value(self, tmp_path: Path, store: SecretStore) -> None:
-        secret_value = b"super-leak-canary-value-not-on-disk"
-        record = _make_record(value=secret_value)
-        store.put(record)
-        index_path = tmp_path / "secrets" / "index.json"
-        contents = index_path.read_text(encoding="utf-8")
         assert secret_value.decode() not in contents
 
 
 class TestRetentionPolicy:
-    def test_secret_requires_expiry(self, store: SecretStore) -> None:
-        # Construct with expires_at=None explicitly so the store's
-        # retention policy (not the pydantic validator) is what raises.
-        rec = SecretRecord(
-            key="aeat:test:no-expiry",
-            value=b"x",
-            classification=SensitivityClass.SECRET,
-            created_at=datetime.now(UTC),
-            expires_at=None,
-        )
-        with pytest.raises(RetentionPolicyError):
-            store.put(rec)
-
-    def test_session_requires_expiry(self, store: SecretStore) -> None:
-        rec = SecretRecord(
-            key="aeat:test:session-no-expiry",
-            value=b"x",
-            classification=SensitivityClass.SESSION,
-            created_at=datetime.now(UTC),
-            expires_at=None,
-        )
-        with pytest.raises(RetentionPolicyError):
-            store.put(rec)
-
-    def test_naive_datetime_rejected(self) -> None:
-        from pydantic import ValidationError
-
-        with pytest.raises(ValidationError):
-            SecretRecord(
-                key="x",
-                value=b"y",
-                classification=SensitivityClass.SECRET,
-                created_at=datetime(2026, 4, 27, 12, 0, 0),
+    def test_secret_and_session_require_expiry(self, store: SecretStore) -> None:
+        for classification in (SensitivityClass.SECRET, SensitivityClass.SESSION):
+            # Construct with expires_at=None explicitly so the store's
+            # retention policy (not the pydantic validator) is what raises.
+            rec = SecretRecord(
+                key=f"aeat:test:{classification.value}:no-expiry",
+                value=b"x",
+                classification=classification,
+                created_at=_SECRET_CREATED_AT,
                 expires_at=None,
             )
-
-    def test_classification_must_be_secret_or_session(self) -> None:
-        from pydantic import ValidationError
-
-        with pytest.raises(ValidationError):
-            SecretRecord(
-                key="x",
-                value=b"y",
-                classification=SensitivityClass.FINANCIAL,
-                created_at=datetime.now(UTC),
-                expires_at=None,
-            )
+            with pytest.raises(RetentionPolicyError):
+                store.put(rec)
 
 
 class TestOverwrite:
@@ -264,11 +262,6 @@ class TestDelete:
         with pytest.raises(SecretNotFoundError):
             store.get(record.key)
 
-    def test_delete_missing_raises(self, store: SecretStore) -> None:
-        with pytest.raises(SecretNotFoundError) as excinfo:
-            store.delete("never-stored")
-        assert "digest" not in str(excinfo.value)
-
     def test_delete_logs_already_missing_blob(self, caplog: pytest.LogCaptureFixture, store: SecretStore) -> None:
         record = _make_record(key="aeat:test:delete-already-gone")
         blob_ref = store.put(record)
@@ -291,12 +284,8 @@ class TestRotate:
     def test_rotate_replaces_value(self, store: SecretStore) -> None:
         original = _make_record(value=b"v1")
         store.put(original)
-        store.rotate(original.key, b"v2", expires_at=_expiry())
+        store.rotate(original.key, b"v2", expires_at=_SECRET_EXPIRES_AT)
         assert store.get(original.key).value == b"v2"
-
-    def test_rotate_missing_raises(self, store: SecretStore) -> None:
-        with pytest.raises(SecretNotFoundError):
-            store.rotate("never-stored", b"x", expires_at=_expiry())
 
 
 class TestListDigests:

@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - '[[2026-06-10-cli-operator-surface-adr]]'
   - '[[2026-06-10-cli-operator-surface-audit]]'
@@ -111,4 +111,3 @@ No safety violation, no never-live-submission breach, no data-loss path, and no 
 The ADR already enumerates three codification candidates: operator-verbs-name-operator-intent, cli-hint-and-enum-choices-conformance-gated, set-aside-verbs-need-a-reversal-or-documented-permanence. This review surfaces one durability-worthy addition.
 
 - Source: finding F5, machine-API token retained as a shadow under a strict no-shadow rollout. Rule slug: `machine-api-tokens-are-a-named-exception-to-operator-rename`. Rule: When an operator-facing CLI verb is hard-renamed under the strict no-alias and no-shadow rollout, a stable machine-API token such as a JSON envelope key or schema registry path that downstream consumers depend on MAY be retained, but ONLY when the retention is recorded as an explicit asserted exception, a conformance-gated override with a stated rationale and never a mute allowlist, and named in the governing ADR no-shadow caveat as a deliberate machine-surface carve-out distinct from operator-facing spellings.
-

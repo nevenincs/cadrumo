@@ -1,7 +1,22 @@
 """Relation, dependency-classification, and filing-schedule validation helpers.
 
 Validates relations, dependency classifications, and filing schedules
-declared on a :class:`ModeloRevision` for reference closure and legal grounding.
+declared on a :class:`~aeat.domain.calculations.registry.ModeloRevision` for
+reference closure and legal grounding.
+
+Relation validation ties
+:class:`~aeat.domain.calculations.registry._schema.RelationDefinition` records
+back to declared :class:`~aeat.domain.calculations.registry.DataBindingDefinition`
+targets. Dependency classification validation checks
+:class:`~aeat.domain.calculations.registry.DependencyClassificationDefinition`
+rows against constructs, relations, and official-source evidence.
+
+See Also:
+    :func:`aeat.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
+        Per-revision dispatcher that invokes these section validators.
+    :func:`aeat.domain.calculations.registry.relation_source_requirements`
+        Runtime relation requirement projection that relies on validated
+        relation/dependency metadata.
 """
 
 from __future__ import annotations
@@ -18,6 +33,7 @@ from ._schema import (
     RelationDefinition,
     SourceReference,
 )
+from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import _missing_refs
 from ._validate_revision_identity import _duplicates
 
@@ -31,10 +47,21 @@ def validate_relation_section(
     binding_by_id: Mapping[BindingId, DataBindingDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
+    """Append relation reference, period, and grounding failures.
+
+    The supplied :class:`~aeat.domain.calculations.registry.ModeloRevision`
+    contributes relation declarations. Each relation must target a known
+    :class:`~aeat.domain.calculations.registry.BindingId`, include the legal and
+    source refs carried by that target binding, and stay inside the revision
+    period selector.
+    """
     for relation in revision.relations:
-        failures.extend(_missing_refs(prefix, f"relation {relation.id}", relation.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, f"relation {relation.id}", relation.source_refs, source_refs, "source"))
+        owner = f"relation {relation.id}"
+        failures.extend(_missing_refs(prefix, owner, relation.legal_refs, legal_refs, "legal"))
+        failures.extend(_missing_refs(prefix, owner, relation.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_source_tier(prefix, owner, relation.source_refs, "official_source_guidance"))
         if relation.target_binding not in bindings:
             failures.append(f"{prefix}: relation {relation.id!r} targets unknown binding {relation.target_binding!r}")
         else:
@@ -68,7 +95,16 @@ def validate_dependency_classification_section(
     relation_by_id: Mapping[str, RelationDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
+    """Append dependency-classification closure and duplicate failures.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    dependency classifications and relations. Each
+    :class:`~aeat.domain.calculations.registry.DependencyClassificationDefinition`
+    must cite known refs, point at declared constructs/relations, and cover every
+    relation source modelo with a dependency-bearing treatment.
+    """
     for classification in revision.dependency_classifications:
         _validate_single_dependency_classification(
             failures,
@@ -78,6 +114,7 @@ def validate_dependency_classification_section(
             relation_by_id=relation_by_id,
             legal_refs=legal_refs,
             source_refs=source_refs,
+            evidence=evidence,
         )
 
     for duplicate in sorted(_duplicates([item.source_modelo for item in revision.dependency_classifications])):
@@ -115,10 +152,22 @@ def _validate_single_dependency_classification(
     relation_by_id: Mapping[str, RelationDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
+    """Append failures for one dependency-classification declaration.
+
+    The
+    :class:`~aeat.domain.calculations.registry.DependencyClassificationDefinition`
+    must be grounded by the supplied legal/source maps, target declared
+    :class:`~aeat.domain.calculations.registry.ConstructDefinition` rows, and
+    mirror the source-modelo plus refs of each referenced relation.
+    """
     owner = f"dependency classification {classification.id}"
     failures.extend(_missing_refs(prefix, owner, classification.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, owner, classification.source_refs, source_refs, "source"))
+    failures.extend(
+        evidence.require_source_tier(prefix, owner, classification.source_refs, "official_source_guidance"),
+    )
     for construct_id in classification.target_constructs:
         construct = construct_by_id.get(construct_id)
         if construct is None:
@@ -157,15 +206,21 @@ def validate_filing_schedule_section(
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
+    """Append filing-schedule reference and period-selector failures.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies the
+    accepted period selector and filing-schedule declarations. Each schedule and
+    profile condition must be legally/source grounded and may only name periods
+    declared by the revision selector.
+    """
     selector_periods = set(revision.period_selector.periods)
     for schedule in revision.filing_schedules:
-        failures.extend(
-            _missing_refs(prefix, f"filing schedule {schedule.id}", schedule.legal_refs, legal_refs, "legal"),
-        )
-        failures.extend(
-            _missing_refs(prefix, f"filing schedule {schedule.id}", schedule.source_refs, source_refs, "source"),
-        )
+        owner = f"filing schedule {schedule.id}"
+        failures.extend(_missing_refs(prefix, owner, schedule.legal_refs, legal_refs, "legal"))
+        failures.extend(_missing_refs(prefix, owner, schedule.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_source_tier(prefix, owner, schedule.source_refs, "official_source_guidance"))
         unknown_periods = sorted(set(schedule.periods).difference(selector_periods))
         if unknown_periods:
             failures.append(
@@ -176,3 +231,11 @@ def validate_filing_schedule_section(
             condition_owner = f"filing schedule {schedule.id} condition {condition.field}"
             failures.extend(_missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))
             failures.extend(_missing_refs(prefix, condition_owner, condition.source_refs, source_refs, "source"))
+            failures.extend(
+                evidence.require_source_tier(
+                    prefix,
+                    condition_owner,
+                    condition.source_refs,
+                    "official_source_guidance",
+                ),
+            )

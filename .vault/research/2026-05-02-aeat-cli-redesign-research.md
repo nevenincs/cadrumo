@@ -3,14 +3,12 @@ tags:
   - '#research'
   - '#aeat-cli-redesign'
 date: '2026-05-02'
-modified: '2026-05-02'
+modified: '2026-06-30'
 related:
   - "[[2026-04-24-aeat-cli-wireframe-research]]"
   - "[[2026-04-24-aeat-cli-wireframe-adr]]"
   - "[[2026-04-21-google-auth-ux-adr]]"
 ---
-
-
 
 # `aeat-cli-redesign` research: `cli-redesign-wireframe-and-external-cli-research`
 

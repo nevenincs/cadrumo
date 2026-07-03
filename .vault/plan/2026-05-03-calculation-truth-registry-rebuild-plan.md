@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#calculation-truth-registry'
 date: '2026-05-03'
-modified: '2026-05-03'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-03-calculation-truth-inventory-research]]'
@@ -18,8 +18,6 @@ related:
   - '[[2026-05-05-modelo-100-renta-source-dependency-reference]]'
   - '[[2026-05-06-live-parity-oracle-backend-adr]]'
 ---
-
-
 
 # `calculation-truth-registry` `teardown-rebuild` plan
 
@@ -5121,7 +5119,6 @@ Residual risk must be recorded per modelo. A modelo with missing reviewed
 official evidence, incomplete legal basis, incomplete calculations, or
 incomplete export linkage is not partially supported; it is absent from
 filing-grade registry snapshots until fixed.
-
 
 ## VAT Centralization Roll-Out Ledger (added 2026-05-06)
 

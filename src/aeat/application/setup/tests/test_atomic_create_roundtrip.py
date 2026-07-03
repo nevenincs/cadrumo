@@ -60,14 +60,17 @@ def _invoke(args: list[str]):
 def _json(result: Result) -> dict[str, Any]:
     """Unwrap the emit-envelope ``result`` payload from a CLI JSON emission.
 
-    Every CLI verb now emits ``{schema_version, command, result, warnings}``
+    Every CLI verb in this roundtrip emits
+    ``{schema_version, command, status, result, notices}``
     via the centralised output schema. The tests assert against the
     operator-visible payload, which lives under ``result``.
     """
     payload = json.loads(result.output)
-    if isinstance(payload, dict) and "result" in payload and "schema_version" in payload:
-        return payload["result"]
-    return payload
+    assert isinstance(payload, dict), f"expected JSON object, got {type(payload).__name__}"
+    assert "schema_version" in payload and "result" in payload, f"missing CLI output envelope keys: {sorted(payload)}"
+    inner = payload["result"]
+    assert isinstance(inner, dict), f"expected result object, got {type(inner).__name__}"
+    return inner
 
 
 def _create(name: str, tax_id: str = "12345678Z") -> None:
@@ -77,7 +80,9 @@ def _create(name: str, tax_id: str = "12345678Z") -> None:
             "config", "profile", "create", name,
             "--quiet",
             "--tax-id", tax_id,
+            "--entity-type", "natural_person",
             "--name", name.capitalize(),
+            "--surnames", "Example",
             "--activity", "design",
             "--iva-regime", "GENERAL",
         ],
@@ -205,12 +210,10 @@ def test_atomic_create_roundtrip_duplicate_lands_through_provisioner(_cli_storag
 def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_storage: Path, tmp_path: Path) -> None:
     """A profile exported then imported into a fresh root keeps its label and facts.
 
-    The import path routes through the atomic provisioner and mints a
-    fresh UUID identity for the imported profile (the bundle's stored
-    UUID was the originating machine's identity). The operator-facing
-    label and the profile facts must survive the round trip. The import
-    lands in a *fresh* storage root so the duplicate-label guard does
-    not (correctly) refuse it.
+    The import path routes through the atomic provisioner while preserving the
+    bundle's UUID identity. The operator-facing label and profile facts must
+    survive the round trip. The import lands in a *fresh* storage root so the
+    duplicate-label guard does not (correctly) refuse it.
     """
 
     _create("alice")
@@ -218,6 +221,7 @@ def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_st
     export = _invoke(["--format", "json", "config", "profile", "export", "alice", "--to", str(bundle)])
     assert export.exit_code == 0, export.output
     assert bundle.is_file()
+    exported_id = json.loads(bundle.read_text(encoding="utf-8"))["profile"]["profile_id"]
 
     source_show = _invoke(["--format", "json", "config", "profile", "show", "alice"])
     source_facts = {row["path"]: row["value"] for row in _json(source_show)["facts"]}
@@ -241,3 +245,9 @@ def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_st
         assert _json(imported_show)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
         imported_facts = {row["path"]: row["value"] for row in _json(imported_show)["facts"]}
         assert imported_facts == source_facts
+        from ...user_profile import ProfileRepository, profile_storage_session
+
+        with profile_storage_session(exported_id):
+            imported = ProfileRepository().load(exported_id)
+        assert imported.profile_id == exported_id
+        assert imported.label == "alice"

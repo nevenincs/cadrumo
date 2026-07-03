@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#first-filer-attestation'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S06'
 related:
   - "[[2026-06-13-first-filer-attestation-plan]]"
 ---
-
-
-
 
 # Apply the same activity-start scoping filter to registry-relation-origin requirements so the suppression is uniform across both previous_filing and relation_source_requirements origins
 

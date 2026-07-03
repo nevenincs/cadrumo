@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-classification-workflow'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S04'
 related:
   - "[[2026-06-14-llm-classification-workflow-plan]]"
 ---
-
-
-
 
 # Emit typed split-recommendation Notice from classify
 
@@ -32,4 +29,3 @@ related:
 ## Notes
 
 The auto-split path costs one model call; the proposer response is both the verdict and the per-line selection set.
-

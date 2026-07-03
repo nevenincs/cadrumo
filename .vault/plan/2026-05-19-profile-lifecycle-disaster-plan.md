@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#profile-lifecycle-disaster'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-19-profile-lifecycle-disaster-adr]]'
@@ -13,7 +13,6 @@ related:
   - '[[2026-05-19-profile-lifecycle-disaster-axis-d-state-model-research]]'
   - '[[2026-05-19-profile-lifecycle-disaster-axis-e-failure-mode-research]]'
 ---
-
 
 # `profile-lifecycle-disaster` recovery plan
 

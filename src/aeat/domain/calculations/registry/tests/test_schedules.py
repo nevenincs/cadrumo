@@ -15,7 +15,7 @@ calculation tautologies.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from types import SimpleNamespace
 
 import pytest
 
@@ -48,24 +48,18 @@ def _condition(field: str, op: str, value: bool | int | str, explanation: str = 
 # ---------------------------------------------------------------------------
 
 
-def test_profile_condition_matches_equals_true() -> None:
-    condition = _condition("residence_ccaa", "equals", "madrid")
-    assert profile_condition_matches(condition, {"residence_ccaa": "madrid"}) is True
-
-
-def test_profile_condition_matches_equals_false() -> None:
-    condition = _condition("residence_ccaa", "equals", "madrid")
-    assert profile_condition_matches(condition, {"residence_ccaa": "cataluna"}) is False
-
-
-def test_profile_condition_matches_not_equals_true() -> None:
-    condition = _condition("residence_ccaa", "not_equals", "madrid")
-    assert profile_condition_matches(condition, {"residence_ccaa": "cataluna"}) is True
-
-
-def test_profile_condition_matches_not_equals_false() -> None:
-    condition = _condition("residence_ccaa", "not_equals", "madrid")
-    assert profile_condition_matches(condition, {"residence_ccaa": "madrid"}) is False
+@pytest.mark.parametrize(
+    ("op", "actual", "expected"),
+    (
+        pytest.param("equals", "madrid", True, id="equals-match"),
+        pytest.param("equals", "cataluna", False, id="equals-mismatch"),
+        pytest.param("not_equals", "cataluna", True, id="not-equals-mismatch"),
+        pytest.param("not_equals", "madrid", False, id="not-equals-match"),
+    ),
+)
+def test_profile_condition_matches_operator_truth_table(op: str, actual: str, expected: bool) -> None:
+    condition = _condition("residence_ccaa", op, "madrid")
+    assert profile_condition_matches(condition, {"residence_ccaa": actual}) is expected
 
 
 def test_profile_condition_matches_unsupported_op_raises() -> None:
@@ -91,40 +85,24 @@ def test_profile_condition_matches_unsupported_op_raises() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_resolve_profile_fact_resolves_single_level_dict_key() -> None:
-    assert _resolve_profile_fact({"age": 35}, "age") == 35
-
-
-def test_resolve_profile_fact_resolves_nested_dict_path() -> None:
-    facts = {"residence": {"ccaa": "madrid"}}
-    assert _resolve_profile_fact(facts, "residence.ccaa") == "madrid"
-
-
-@dataclass
-class _ProfileObject:
-    age: int
-    residence: object
-
-
-@dataclass
-class _ResidenceObject:
-    ccaa: str
-
-
-def test_resolve_profile_fact_resolves_single_level_object_attribute() -> None:
-    profile = _ProfileObject(age=35, residence=_ResidenceObject(ccaa="madrid"))
-    assert _resolve_profile_fact(profile, "age") == 35
-
-
-def test_resolve_profile_fact_resolves_nested_object_attribute_path() -> None:
-    profile = _ProfileObject(age=35, residence=_ResidenceObject(ccaa="madrid"))
-    assert _resolve_profile_fact(profile, "residence.ccaa") == "madrid"
+@pytest.mark.parametrize(
+    ("facts", "field", "expected"),
+    [
+        ({"age": 35}, "age", 35),
+        ({"residence": {"ccaa": "madrid"}}, "residence.ccaa", "madrid"),
+        (SimpleNamespace(age=35, residence=SimpleNamespace(ccaa="madrid")), "age", 35),
+        (SimpleNamespace(age=35, residence=SimpleNamespace(ccaa="madrid")), "residence.ccaa", "madrid"),
+    ],
+    ids=("dict-single", "dict-nested", "object-single", "object-nested"),
+)
+def test_resolve_profile_fact_resolves_present_paths(facts: object, field: str, expected: object) -> None:
+    assert _resolve_profile_fact(facts, field) == expected
 
 
 def test_resolve_profile_fact_mixes_dict_then_object_traversal() -> None:
     """The walker dispatches per-segment, so a top-level dict can contain
     a nested object whose attribute is then resolved by getattr."""
-    facts = {"residence": _ResidenceObject(ccaa="madrid")}
+    facts = {"residence": SimpleNamespace(ccaa="madrid")}
     assert _resolve_profile_fact(facts, "residence.ccaa") == "madrid"
 
 
@@ -134,7 +112,7 @@ def test_resolve_profile_fact_missing_dict_key_raises() -> None:
 
 
 def test_resolve_profile_fact_missing_object_attribute_raises() -> None:
-    profile = _ProfileObject(age=35, residence=_ResidenceObject(ccaa="madrid"))
+    profile = SimpleNamespace(age=35, residence=SimpleNamespace(ccaa="madrid"))
     with pytest.raises(RegistryValidationError, match="profile facts missing 'name'"):
         _resolve_profile_fact(profile, "name")
 
@@ -149,7 +127,7 @@ def test_resolve_profile_fact_taxpayer_entity_type_special_case() -> None:
     The special case must resolve ``taxpayer.entity_type`` against the object's
     ``entity_type`` attribute, mirroring the ``iva.regime`` -> ``iva_regime`` pattern.
     """
-    from ....deadlines._models import IVARegime
+    from ....deadlines import IVARegime
     from ....deadlines.taxpayer_model import EntityType, TaxpayerProfile
 
     profile = TaxpayerProfile(

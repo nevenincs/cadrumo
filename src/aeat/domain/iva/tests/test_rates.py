@@ -26,8 +26,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_rate_table_covers_all_27_member_states() -> None:
-    """The rate table carries an entry for every EUMemberState."""
-    assert set(load_iva_rate_table().keys()) == set(EUMemberState)
+    """The rate table carries entries for EU member states, not the XI prefix."""
+    expected = {member for member in EUMemberState if member is not EUMemberState.XI}
+    assert set(load_iva_rate_table().keys()) == expected
+    assert EUMemberState.XI not in load_iva_rate_table()
+
+
+def test_lookup_rate_raises_for_northern_ireland_prefix() -> None:
+    """XI is a Modelo 349 goods prefix, not a rate-table jurisdiction."""
+    with pytest.raises(IvaRateNotFoundError, match=r"xi"):
+        lookup_rate(EUMemberState.XI, IvaRateKind.GENERAL, date(2025, 6, 1))
 
 
 def test_rate_table_has_at_least_50_entries() -> None:

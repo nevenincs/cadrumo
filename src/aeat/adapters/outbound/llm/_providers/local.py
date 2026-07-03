@@ -2,7 +2,7 @@
 
 Speaks the Ollama ``/api/chat`` endpoint (resolved per call from
 ``Settings.aeat_llm_ollama_chat_url``) and adapts its response into the
-:class:`aeat.adapters.outbound.llm._providers.base.ProviderCompletion` shape.
+:class:`~aeat.adapters.outbound.llm._providers.base.ProviderCompletion` shape.
 The adapter assumes the runtime is reachable on localhost; remote Ollama
 deployments are out of scope.
 
@@ -71,6 +71,7 @@ def rasterise_pdf_pages_to_base64_png(pdf_bytes: bytes, *, scale: float = 2.0) -
     try:
         pages: list[str] = []
         for page in document:
+            # CAST-RATIONALE-PDFIUM-PAGE: pypdfium2 yields untyped page objects; the adapter only needs render/close.
             pdf_page = cast("_PdfiumPageLike", page)
             try:
                 bitmap = pdf_page.render(scale=scale)

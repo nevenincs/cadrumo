@@ -3,15 +3,13 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
   - "[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-audit-research]]"
   - "[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-audit]]"
 ---
-
-
 
 # `cli-workflow-redesign` adr: `unexposed-backend-capability-wave-expansion` | (**status:** `accepted`)
 

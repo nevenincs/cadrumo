@@ -6,14 +6,3 @@ section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_i_baleares"]
 semantic_role = "irpf_anexo_b_adoption_pending_claim"
 legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
-
-
-# ===========================================================================
-# Auto-generated casilla schema for revision 2024 sourced from
-# corpus/aeat_official/disenos_registro/modelo_100/files/08-100-diccionario-declaracion-individual-ejercicio-2024-actualizado-29-01-2026-393-kb-otros-fi.properties
-# (the AEAT-published declaracion-individual data dictionary). Each block
-# carries the casilla number, AEAT label, section path derived from the
-# XPath, and data_type mapped from the AEAT type code (P102/P102/etc. ->
-# money, X/FEC -> text, LGC/S_N -> boolean, N102 -> decimal, SEQ -> integer).
-# Existing hand-authored casillas in this revision are preserved.
-# ===========================================================================

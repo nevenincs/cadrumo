@@ -1,7 +1,7 @@
 """Structured error-code registry and CLI rendering helpers.
 
 Centralises AEAT's stable CLI error taxonomy. Every
-:class:`aeat.core.errors.AeatError` subclass binds to a predeclared
+:class:`core.errors.AeatError` subclass binds to a predeclared
 :class:`ErrorCode` row through :func:`bind_error_code`, so the public
 contract stays explicit, reviewable, and grep-stable. Rendering helpers
 :func:`render_error_text` and :func:`render_error_json` produce the
@@ -12,7 +12,7 @@ consume; :func:`build_error_envelope` constructs the underlying
 Secret-looking context keys (matching :data:`_SECRET_FIELD_PATTERN`) are
 redacted before they ever reach stderr — see :func:`scrub_error_context`.
 Non-secret context values are also passed through
-:func:`aeat.core.redaction.redact_for_log` so NIF, URL, and bearer-token
+:func:`core.redaction.redact_for_log` so NIF, URL, and bearer-token
 shapes share the same rule vocabulary as logs and observability.
 """
 
@@ -84,7 +84,7 @@ def _category_text_prefix(category: ErrorCategory) -> str:
 
 
 class ErrorCode(BaseModel):
-    """Stable metadata attached to an :class:`aeat.core.errors.AeatError` type."""
+    """Stable metadata attached to an :class:`core.errors.AeatError` type."""
 
     model_config = ConfigDict(
         frozen=True,
@@ -107,7 +107,7 @@ class ErrorEnvelope(BaseModel):
     Rendered as the ``error`` member of the stderr error document. The
     document-level spine (``schema_version``, ``command``, ``status``,
     ``notices``) is added by :func:`render_error_json` so the error
-    document and the success :class:`~aeat.core.json_contract.SchemaEnvelope`
+    document and the success :class:`core.json_contract.SchemaEnvelope`
     share one outer shape.
     """
 
@@ -168,7 +168,7 @@ ERROR_REGISTRY: Mapping[str, ErrorCode] = MappingProxyType(_ERROR_REGISTRY_MUTAB
 
 
 def declared_error_codes() -> tuple[tuple[str, ErrorCode], ...]:
-    """Return declared ``(qualified class name, ErrorCode)`` registry rows."""
+    """Return declared ``(qualified class name, :class:`ErrorCode`)`` registry rows."""
     return tuple(_DECLARED_CODE_BY_QUALNAME.items())
 
 
@@ -364,11 +364,11 @@ def render_error_json(
 
     The document carries the shared envelope spine (``schema_version``,
     ``command``, ``status``, ``notices``) so it is shape-compatible with
-    the success :class:`~aeat.core.json_contract.SchemaEnvelope`. The
+    the success :class:`core.json_contract.SchemaEnvelope`. The
     error detail is nested under ``error``. ``command`` is ``None``: the
     CLI error boundary terminates before the dotted command path is
     resolvable, so the field is present-but-null for spine uniformity.
-    The :data:`~aeat.core.json_contract.ENVELOPE_SCHEMA_VERSION` import is
+    The :data:`core.json_contract.ENVELOPE_SCHEMA_VERSION` import is
     function-local to avoid the ``json_contract`` <-> ``errors`` import
     cycle (``json_contract`` imports :class:`AeatError`).
     """
@@ -490,7 +490,7 @@ def _stringify_context_value(value: object) -> str:
     """Render one error-context value as an operator-safe string.
 
     This is the single defensive funnel for the CLI error boundary. An
-    :class:`aeat.core.errors.AeatError` subclass can — accidentally or
+    :class:`core.errors.AeatError` subclass can — accidentally or
     by design — carry a non-primitive object in its ``context`` mapping
     or as a public instance attribute (which
     :func:`_merge_error_context` folds into the context via

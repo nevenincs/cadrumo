@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.submission import SubmissionRepository
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._models import (
@@ -28,11 +29,11 @@ from .._models import (
     SubmissionStatus,
     make_submission_id,
 )
-from .._repository import SubmissionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PERIOD = Period.from_year_and_code(2025, "1T")
+_ACKNOWLEDGED_AT = datetime(2026, 5, 27, 10, 30, 0, tzinfo=UTC)
 
 
 def _populated_filing() -> ModeloPresentado:
@@ -46,7 +47,7 @@ def _populated_filing() -> ModeloPresentado:
     is proven to carry the structured value end-to-end.
     """
 
-    now = datetime.now(UTC).replace(microsecond=0)
+    now = _ACKNOWLEDGED_AT
     draft_id = "d" * 64
     submission_id = make_submission_id(draft_id, attempt_ordinal=2)
     return ModeloPresentado(
@@ -127,12 +128,12 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(tmp_path: Path) ->
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+    from ....adapters.persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ....adapters.persistence.storage.sql import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
 
     submission_namespace = SubmissionRepository.namespace
@@ -190,12 +191,12 @@ def test_submission_corrupted_period_surfaces_at_load(tmp_path: Path) -> None:
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+    from ....adapters.persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ....adapters.persistence.storage.sql import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
 
     submission_namespace = SubmissionRepository.namespace

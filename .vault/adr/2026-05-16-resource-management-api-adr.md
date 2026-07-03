@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#resource-management-api'
 date: '2026-05-16'
-modified: '2026-05-16'
+modified: '2026-06-30'
 related:
   - "[[2026-05-16-resource-management-api-research]]"
   - "[[2026-05-16-resource-management-api-audit]]"
@@ -15,9 +15,6 @@ related:
 > **Updated 2026-05-19**: Identifier mentions of vat_catalogues, VatCatalogueRepository, vat_rate_tables, VatRateTableRepository, and VAT_CATALOGUES_BY_YEAR in this ADR follow the Spanish-stem terminology authority and rename per the canonical rename ledger when the IVA cluster migration lands. The resource-management API direction (typed accessor surface, single env-override seam, repository taxonomy) is independent of the VAT-vs-IVA stem and is unaffected.
 > See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
 > rename ledger and Spanish-stem terminology authority.
-
-
-
 
 # `resource-management-api` adr: Centralised typed Repository-per-type resource registry | (**status:** `accepted`)
 

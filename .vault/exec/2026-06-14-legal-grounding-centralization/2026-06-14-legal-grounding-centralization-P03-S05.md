@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#legal-grounding-centralization'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S05'
 related:
   - "[[2026-06-14-legal-grounding-centralization-plan]]"
 ---
-
-
-
 
 # F3: resolve M303/M390 compensación casilla ids through the registry snapshot casilla definitions instead of inline numeric literals
 

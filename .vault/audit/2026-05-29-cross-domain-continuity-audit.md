@@ -3,16 +3,14 @@ tags:
   - '#audit'
   - '#cross-domain-continuity'
 date: '2026-05-29'
-modified: '2026-05-29'
+modified: '2026-06-30'
 related:
   - "[[2026-05-26-cross-domain-continuity-audit]]"
   - "[[2026-05-28-cross-domain-continuity-audit]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
 
-
 # `cross-domain-continuity` audit: `persona-fleet round 7`
-
 
 ## Standing review gates (active from 2026-05-27)
 
@@ -4564,7 +4562,7 @@ established pattern throughout `_actions.py`. No entrypoint-layer registry
 access introduced. **Clean.**
 
 **CLI emit path (`_modelo.py`):** `_verification_report_payload` emits
-`legal_refs` and `source_refs` as lists (correct — JSON arrays). 
+`legal_refs` and `source_refs` as lists (correct — JSON arrays).
 `_verification_report_lines` conditionally appends `finding_legal_refs` and
 `finding_source_refs` tab-separated lines when non-empty — the conditional
 guard avoids polluting output for findings with no provenance (e.g. registry
@@ -4682,7 +4680,6 @@ FU-S278-B: `LedgerTransactionReviewPayload.classified_by` is typed
 The None path is unreachable at runtime but the looser typing is imprecise.
 Tighten to `str = Field(default="auto")` in a subsequent S278 follow-up step.
 
-
 ---
 
 ## Task #139 — W05.P25.S96-S98 bulk-classify + rule engine (6c4ec924c + 666bc9c59)
@@ -4769,7 +4766,6 @@ emit path. No tautological assertions found. PASS.
 a lower bound of 1. The ADR does not specify a lower bound — this is a
 reasonable defensive constraint (priority=0 would be ambiguous with
 "unset"). No action required.
-
 
 ---
 
@@ -5349,4 +5345,3 @@ Issue as a new Step in the registry-authoring wave. Can be dispatched
 to any coder not currently on M100/M303 TOML work (S361/S353/S352 all
 touch different modelos — no conflict). Coder needs the Orden
 HFP/887/2023 form PDF accessible for casilla labels in the full pass.
-

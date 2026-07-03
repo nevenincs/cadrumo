@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#schema-hardening'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-13'
 step_id: 'S02'
 related:
   - '[[2026-05-26-schema-hardening-m130-standardization-plan]]'

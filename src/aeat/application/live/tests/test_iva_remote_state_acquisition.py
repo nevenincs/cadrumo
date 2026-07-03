@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from playwright._impl._errors import Error as PlaywrightError
 from playwright._impl._errors import TargetClosedError
+from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
 from ....adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
@@ -28,10 +29,6 @@ from .. import (
     LiveIvaReadStatus,
     LiveIvaReadSurface,
     LiveIvaSurfaceTimeoutError,
-    _aggregate_iva_compensation_history_reports,
-    _await_live_iva_surface,
-    _filed_history_surface_timeout_ms,
-    _suppress_live_iva_playwright_cancellation_noise,
     build_iva_remote_state_acquisition_report,
     capture_iva_compensation_history,
     capture_iva_compensation_wallet,
@@ -42,12 +39,19 @@ from .. import (
     load_iva_remote_state_acquisition_manifest,
     persist_iva_remote_state_acquisition_report,
 )
+from .._iva_remote_state import (
+    _aggregate_iva_compensation_history_reports,
+    _await_live_iva_surface,
+    _filed_history_surface_timeout_ms,
+    _suppress_live_iva_playwright_cancellation_noise,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CAPTURED_AT = datetime(2026, 5, 27, 12, 0, tzinfo=UTC)
 _TARGET_1T = Period.from_year_and_code(2026, "1T")
 _TARGET_2T = Period.from_year_and_code(2026, "2T")
+_BUCKET_ID = "62626262-6262-4262-8262-626262626262"
 
 
 def test_combined_acquisition_records_authenticated_success_outcome(tmp_path: Path) -> None:
@@ -170,7 +174,7 @@ def test_year_chunked_filed_history_reports_aggregate_into_one_command_report(tm
         failed_declarations=("modelo=303;ejercicio=2023;period=4T;failure_type=TimeoutError",),
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         aggregate = _aggregate_iva_compensation_history_reports(
             [report_2024, report_2023],
             output_root=tmp_path / "filed-history",
@@ -462,7 +466,7 @@ def test_live_surface_timeout_can_keep_cancellation_handler_until_loop_shutdown(
 
 
 def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         filed_history = IvaCompensationHistoryCaptureReport(
             output_root=str(tmp_path / "filed-history"),
             year_from=2022,
@@ -547,7 +551,7 @@ def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(tmp_path: Pa
         },
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         report = build_iva_remote_state_acquisition_report(
             output_root=tmp_path / "remote-state",
             year_from=2024,
@@ -589,7 +593,7 @@ def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path
         },
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         report = build_iva_remote_state_acquisition_report(
             output_root=tmp_path / "remote-state",
             year_from=2024,
@@ -620,41 +624,40 @@ def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path
     assert "https://example.test" in rendered
 
 
-def test_legacy_acquisition_manifest_without_auth_outcome_still_loads() -> None:
-    legacy = IvaRemoteStateAcquisitionReport(
-        output_root="legacy-output",
-        year_from=2024,
-        year_to=2024,
-        target_year=2026,
-        target_period=_TARGET_1T,
-        filed_history=None,
-        wallet=None,
-        outcomes=(),
-    )
+def test_acquisition_payloads_require_explicit_auth_outcome() -> None:
+    with pytest.raises(ValidationError) as report_exc:
+        IvaRemoteStateAcquisitionReport(
+            output_root="missing-auth-output",
+            year_from=2024,
+            year_to=2024,
+            target_year=2026,
+            target_period=_TARGET_1T,
+            filed_history=None,
+            wallet=None,
+            outcomes=(),
+        )
 
-    manifest = IvaRemoteStateAcquisitionManifest.model_validate(
-        {
-            "acquisition_id": "legacy",
-            "captured_at": _CAPTURED_AT,
-            "year_from": 2024,
-            "year_to": 2024,
-            "target_year": 2026,
-            "target_period": _TARGET_1T,
-            "filed_history_succeeded": False,
-            "wallet_succeeded": False,
-            "surfaces": [
-                {"surface": "filed_history", "status": "failed", "failure_type": "MissingSurfaceReport"},
-                {"surface": "wallet_cartera", "status": "failed", "failure_type": "MissingSurfaceReport"},
-            ],
-        },
-    )
+    assert any(error["loc"] == ("auth",) and error["type"] == "missing" for error in report_exc.value.errors())
 
-    assert legacy.auth.failure_type == "MissingAuthResult"
-    assert manifest.auth.failure_type == "LegacyManifestAuthOutcome"
-    assert tuple(surface.outcome_mode for surface in manifest.surfaces) == (
-        LiveIvaAcquisitionFailureMode.UNKNOWN,
-        LiveIvaAcquisitionFailureMode.UNKNOWN,
-    )
+    with pytest.raises(ValidationError) as manifest_exc:
+        IvaRemoteStateAcquisitionManifest.model_validate(
+            {
+                "acquisition_id": "missing-auth",
+                "captured_at": _CAPTURED_AT,
+                "year_from": 2024,
+                "year_to": 2024,
+                "target_year": 2026,
+                "target_period": _TARGET_1T,
+                "filed_history_succeeded": False,
+                "wallet_succeeded": False,
+                "surfaces": [
+                    {"surface": "filed_history", "status": "failed", "failure_type": "MissingSurfaceReport"},
+                    {"surface": "wallet_cartera", "status": "failed", "failure_type": "MissingSurfaceReport"},
+                ],
+            },
+        )
+
+    assert any(error["loc"] == ("auth",) and error["type"] == "missing" for error in manifest_exc.value.errors())
 
 
 def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(tmp_path: Path) -> None:

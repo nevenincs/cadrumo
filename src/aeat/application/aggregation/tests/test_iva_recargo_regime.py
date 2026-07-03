@@ -42,7 +42,7 @@ _Q2_2026 = _period(2026, "2T")
 
 def _tx(provider_id: str, *, iva_category: IvaCategory) -> Transaction:
     raw = RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 4, 5),
         value_date=date(2026, 4, 5),
         amount=Decimal("121.00"),
@@ -63,6 +63,8 @@ def _tx(provider_id: str, *, iva_category: IvaCategory) -> Transaction:
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             # Deliberately carries IVA facts: the engine must STILL refuse to emit
             # a declarable observation for these categories.

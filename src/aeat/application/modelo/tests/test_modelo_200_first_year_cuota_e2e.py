@@ -48,18 +48,18 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,
@@ -86,7 +86,7 @@ def _register_wizard_catalogue() -> None:
     from ...wizard import _catalogue  # noqa: F401  (import for registration side effect)
 
 
-_BUCKET_ID = "bucket-m200-first-year-cuota-e2e"
+_BUCKET_ID = "234af0d3-5002-452b-9eff-80bbc1de0c84"
 _T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 12, 11, 0, tzinfo=UTC)
 _M200 = "200"
@@ -123,6 +123,11 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345678"),
+            UserProfileFact(path="identity.legal_name", value="First Year Cuota Test SL"),
+            UserProfileFact(path="activities.description", value="software consultancy"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
             UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),

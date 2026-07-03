@@ -8,6 +8,7 @@ fixture and the multi-account dispatch path that drives every
 from __future__ import annotations
 
 import logging
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -22,19 +23,36 @@ _FIXTURES = FIXTURES_DIR / "financial"
 
 
 def test_ofx_provider_prefers_fitid_and_payee() -> None:
-    """OfxProvider should preserve FITID and payee-derived description."""
+    """OfxProvider should preserve FITID, payee, magnitude, and direction.
+
+    Every asserted value is read verbatim from the OFX source the parser
+    must faithfully reproduce: the credit TRNAMT 875.55 lifts to a positive
+    magnitude with INCOMING flow, and the debit TRNAMT -42.10 lifts to a
+    non-negative magnitude with the sign carried into OUTGOING direction.
+    """
     provider = OfxProvider()
     fixture = _FIXTURES / "synthetic-transactions.ofx"
     validation = provider.validate_source(fixture)
     assert validation.is_valid, validation.warnings
     parsed_rows = tuple(provider.ingest(fixture))
     assert len(parsed_rows) == 2
-    assert parsed_rows[0].raw.transaction_id == "FIT-001"
-    assert parsed_rows[0].raw.counterparty == "CLIENTE DOS"
+
+    credit = parsed_rows[0]
+    assert credit.raw.provider_transaction_id == "FIT-001"
+    assert credit.raw.counterparty == "CLIENTE DOS"
+    assert credit.raw.currency == "EUR"
+    assert credit.raw.amount == Decimal("875.55")
+    assert credit.direction is TransactionDirection.INCOMING
+    assert credit.raw.raw_fields["TRNTYPE"] == "CREDIT"
+    assert credit.raw.raw_fields["FITID"] == "FIT-001"
+
     # The second source row is a debit: stored as a non-negative magnitude
     # with the sign lifted into the authoritative OUTGOING direction.
-    assert parsed_rows[1].raw.amount >= 0
-    assert parsed_rows[1].direction is TransactionDirection.OUTGOING
+    debit = parsed_rows[1]
+    assert debit.raw.provider_transaction_id == "FIT-002"
+    assert debit.raw.amount == Decimal("42.10")
+    assert debit.raw.amount >= 0
+    assert debit.direction is TransactionDirection.OUTGOING
 
 
 def test_ofx_provider_ingests_every_account_statement(tmp_path: Path) -> None:
@@ -88,6 +106,10 @@ NEWFILEUID:NONE
             <MEMO>Invoice one
           </STMTTRN>
         </BANKTRANLIST>
+        <LEDGERBAL>
+          <BALAMT>10.00
+          <DTASOF>20260430235959
+        </LEDGERBAL>
       </STMTRS>
     </STMTTRNRS>
     <STMTTRNRS>
@@ -115,6 +137,10 @@ NEWFILEUID:NONE
             <MEMO>Invoice two
           </STMTTRN>
         </BANKTRANLIST>
+        <LEDGERBAL>
+          <BALAMT>-5.00
+          <DTASOF>20260430235959
+        </LEDGERBAL>
       </STMTRS>
     </STMTTRNRS>
   </BANKMSGSRSV1>
@@ -129,7 +155,7 @@ NEWFILEUID:NONE
     assert "ACC-1" not in validation.detected_dialect
     assert "ACC-2" not in validation.detected_dialect
     parsed_rows = tuple(provider.ingest(source))
-    assert [parsed.raw.transaction_id for parsed in parsed_rows] == ["ONE", "TWO"]
+    assert [parsed.raw.provider_transaction_id for parsed in parsed_rows] == ["ONE", "TWO"]
     assert [parsed.raw.provenance.source_row_index for parsed in parsed_rows] == [1, 2]
     assert parsed_rows[1].raw.raw_fields["ACCTID"] == "ACC-2"
 
@@ -153,3 +179,54 @@ def test_ofx_provider_invalid_source_does_not_expose_filename(
     assert str(source) not in rendered_warnings
     assert "<input-ofx>" in rendered_logs
     assert "<input-ofx>" in rendered_warnings
+
+
+def test_ofx_provider_refuses_spec_incomplete_statement(tmp_path: Path) -> None:
+    """A header-valid but spec-incomplete OFX is refused at the parse boundary.
+
+    ofxtools validates the full OFX grammar at conversion time. This statement
+    omits the required BANKTRANLIST DTSTART/DTEND and the STMTRS LEDGERBAL, so
+    the strict parser rejects it and the provider surfaces a non-valid
+    ProviderValidation rather than silently yielding a partial statement.
+    """
+    source = tmp_path / "incomplete.ofx"
+    source.write_text(
+        """OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+SECURITY:NONE
+ENCODING:USASCII
+CHARSET:1252
+COMPRESSION:NONE
+OLDFILEUID:NONE
+NEWFILEUID:NONE
+
+<OFX>
+  <BANKMSGSRSV1>
+    <STMTTRNRS>
+      <STMTRS>
+        <CURDEF>EUR
+        <BANKACCTFROM>
+          <BANKID>1234
+          <ACCTID>ES1234567890
+          <ACCTTYPE>CHECKING
+        </BANKACCTFROM>
+        <BANKTRANLIST>
+          <STMTTRN>
+            <TRNTYPE>CREDIT
+            <DTPOSTED>20260410120000
+            <TRNAMT>10.00
+            <FITID>FIT-001
+            <NAME>CLIENT ONE
+          </STMTTRN>
+        </BANKTRANLIST>
+      </STMTRS>
+    </STMTTRNRS>
+  </BANKMSGSRSV1>
+</OFX>
+""",
+        encoding="cp1252",
+    )
+    validation = OfxProvider().validate_source(source)
+    assert not validation.is_valid
+    assert validation.warnings

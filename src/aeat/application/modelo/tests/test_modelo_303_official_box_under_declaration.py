@@ -39,16 +39,17 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_report import ModeloVerificationFindingKind
-from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.modelos import ModeloVerificationFindingKind
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -56,7 +57,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
@@ -74,7 +74,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
-_BUCKET = "bucket-303-official-box"
+_BUCKET = "33333333-3333-4333-8333-333333333333"
 
 # DISTINCT non-equal cuotas so the wiring is unmistakable: one INCOMING general-21
 # sale (cuota → semantic iva.repercutido.general → official box 09) and one
@@ -84,6 +84,7 @@ _SALE_BASE = Decimal("800.00")
 _SALE_CUOTA = Decimal("168.00")
 _PURCHASE_BASE = Decimal("200.00")
 _PURCHASE_CUOTA = Decimal("42.00")
+
 
 # The official numbered boxes the sale/purchase fixtures populate via projection.
 def _casilla_id(value: object) -> CasillaId:
@@ -163,7 +164,19 @@ def _store_profile(objects: SecureObjectRepository) -> None:
         UserProfileRecord(
             profile_id=_BUCKET,
             display_name="Test runtime profile",
-            facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            ),
             created_at=_T0,
             updated_at=_T0,
         ),
@@ -181,7 +194,7 @@ def _iva_transaction(
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id=provider_id,
+                provider_transaction_id=provider_id,
                 booked_date=date(2026, 2, 10),
                 value_date=date(2026, 2, 10),
                 amount=amount,
@@ -199,6 +212,8 @@ def _iva_transaction(
                 raw_fields={"source_kind": "ledger_transaction"},
             ),
             "direction": direction,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "category_id": "test_iva_operation",
             "taxable_base": taxable_base,

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -23,9 +22,6 @@ from . import AuthProviderKind
 from ._operator_scope import active_profile_storage_span
 from ._sessions import load_persisted_session
 
-if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth.certificate import LoadedCertificate
-
 _log = get_logger(__name__)
 
 
@@ -37,8 +33,8 @@ def _live_auth_identity_state(
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return False, provider_kind is AuthProviderKind.CERTIFICATE, "not_applicable"
     try:
-        from ..user_profile._projections import record_to_path_values
-        from ..workflow._persistence import workflow_state_repository
+        from ..user_profile import record_to_path_values
+        from ..workflow import workflow_state_repository
 
         record = workflow_state_repository().load().active_profile_record()
         values = record_to_path_values(record) if record is not None else {}
@@ -63,14 +59,11 @@ def _live_auth_identity_state(
 def _live_auth_identity_kind(provider_kind: AuthProviderKind | None, *, settings: Settings) -> str:
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return ""
-    from ...adapters.outbound.aeat.auth._clave_movil import (
-        ClaveMovilConfigurationError,
-        _classify_identity,
-    )
+    from ...adapters.outbound.aeat.auth import ClaveMovilConfigurationError, classify_identity
 
     identity = unwrap_optional_secret(settings.aeat_clave_movil_dni_nie).strip()
     try:
-        return _classify_identity(identity)
+        return classify_identity(identity)
     except ClaveMovilConfigurationError:
         return "invalid_or_missing"
 
@@ -169,6 +162,50 @@ class _ProviderProbeOutcome(BaseModel):
 
     result: ProviderProbeResult | str = ""
     summary: str = ""
+    days_until_expiry: int | None = None
+
+
+class ProviderConfigurationProbe(BaseModel):
+    """Public per-provider local configuration readiness verdict.
+
+    Wraps the pure-local :func:`_probe_configured_provider` (no network,
+    no active-profile requirement) so the workstation doctor
+    (``aeat config check``) can render one certificate / Cl@ve Móvil
+    readiness row per :class:`application.auth.AuthProviderKind`
+    directly from :class:`core.config.Settings`. ``result`` is the
+    typed :class:`ProviderProbeResult`; ``summary`` is the localised
+    one-line operator-facing verdict.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    provider: str
+    result: ProviderProbeResult | str = ""
+    summary: str = ""
+
+
+def probe_provider_configuration(
+    provider: str,
+    *,
+    settings: Settings | None = None,
+) -> ProviderConfigurationProbe:
+    """Run the pure-local per-provider configuration probe for ``provider``.
+
+    Resolves the certificate path or Cl@ve Móvil identity from
+    :class:`core.config.Settings` and classifies the local
+    configuration health without any network call or active-profile
+    session. Returns a typed :class:`ProviderConfigurationProbe`; it
+    never raises for a missing or malformed configuration — an absent
+    provider surfaces as :attr:`ProviderProbeResult.NO_PATH_SET` /
+    :attr:`ProviderProbeResult.IDENTITY_UNSET`, a broken one as
+    ``expired`` / ``corrupt`` / ``invalid_identity``.
+    """
+    outcome = _probe_configured_provider(provider, "", settings=settings)
+    return ProviderConfigurationProbe(
+        provider=provider,
+        result=outcome.result,
+        summary=outcome.summary,
+    )
 
 
 def _probe_configured_provider(
@@ -214,14 +251,19 @@ def _probe_certificate_bundle(
 
     Resolves the three certificate-state cases distinctly: no path,
     path-set-file-missing, path-set-file-present. The file-present case
-    additionally opens the bundle and inspects expiry through the
-    health classifier so the probe distinguishes a corrupt envelope
-    from an expired-but-readable certificate.
+    additionally opens the bundle and inspects expiry through
+    :func:`adapters.outbound.aeat.auth.certificate.health`, which
+    reports :attr:`~adapters.outbound.aeat.auth.certificate.CertificateHealthSeverity.EXPIRED`
+    for an already-lapsed certificate rather than raising — an expired
+    but otherwise well-formed bundle must classify as ``expired``, never
+    ``corrupt``.
     """
     from ...adapters.outbound.aeat.auth.certificate import (
         CertificateError,
         CertificateHealthSeverity,
-        evaluate_loaded_certificate_health,
+    )
+    from ...adapters.outbound.aeat.auth.certificate import (
+        health as evaluate_certificate_health,
     )
 
     resolved_settings = settings or load_settings()
@@ -242,12 +284,8 @@ def _probe_certificate_bundle(
                 path=str(path),
             ),
         )
-    # Inspect the bundle without requiring the password: parse the
-    # PKCS#12 envelope, derive expiry, and classify health. A wrong /
-    # missing password surfaces as ``unreadable``; a malformed file
-    # surfaces as ``corrupt``.
     try:
-        bundle_bytes = path.read_bytes()
+        path.read_bytes()
     except OSError as exc:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.UNREADABLE,
@@ -256,19 +294,23 @@ def _probe_certificate_bundle(
                 error=type(exc).__name__,
             ),
         )
-    loaded = _try_load_certificate_metadata(path, bundle_bytes, resolved_settings)
-    if loaded is None:
+    password = resolved_settings.aeat_certificate_password_secret
+    if password is None:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.CORRUPT,
             summary=tr("application.auth.operator.probe.certificate_corrupt"),
         )
     try:
-        health = evaluate_loaded_certificate_health(
-            loaded,
+        bundle_health = evaluate_certificate_health(
+            path,
+            password=password,
             warn_days=resolved_settings.aeat_cert_warn_days,
             critical_days=resolved_settings.aeat_cert_critical_days,
+            friendly_name=resolved_settings.aeat_certificate_friendly_name,
+            backend=resolved_settings.aeat_certificate_backend,
         )
     except CertificateError as exc:
+        _log.warning("certificate load failed; treating bundle as unparseable", exc_info=True)
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.CORRUPT,
             summary=tr(
@@ -276,61 +318,33 @@ def _probe_certificate_bundle(
                 error=str(exc),
             ),
         )
-    severity = health.severity
+    severity = bundle_health.severity
     if severity is CertificateHealthSeverity.EXPIRED:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.EXPIRED,
             summary=tr(
                 "application.auth.operator.probe.certificate_expired",
-                days=abs(health.days_until_expiry),
+                days=abs(bundle_health.days_until_expiry),
             ),
+            days_until_expiry=bundle_health.days_until_expiry,
         )
     if severity is CertificateHealthSeverity.CRITICAL or severity is CertificateHealthSeverity.WARN:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.EXPIRING,
             summary=tr(
                 "application.auth.operator.probe.certificate_expiring",
-                days=health.days_until_expiry,
+                days=bundle_health.days_until_expiry,
             ),
+            days_until_expiry=bundle_health.days_until_expiry,
         )
     return _ProviderProbeOutcome(
         result=ProviderProbeResult.OK,
         summary=tr(
             "application.auth.operator.probe.certificate_ok",
-            days=health.days_until_expiry,
+            days=bundle_health.days_until_expiry,
         ),
+        days_until_expiry=bundle_health.days_until_expiry,
     )
-
-
-def _try_load_certificate_metadata(
-    path: Path,
-    bundle_bytes: bytes,
-    settings: Settings,
-) -> LoadedCertificate | None:
-    """Parse the PKCS#12 envelope and return a :class:`LoadedCertificate` or ``None``.
-
-    Returns ``None`` when the bundle cannot be parsed for any reason
-    (wrong password, malformed envelope, unsupported encoding) so the
-    caller can classify the failure as ``corrupt`` without surfacing
-    a stack trace to the operator.
-    """
-    from ...adapters.outbound.aeat.auth.certificate import CertificateBundle, load_certificate
-
-    del bundle_bytes  # the loader reads the file via the bundle path
-    password = settings.aeat_certificate_password_secret
-    if password is None:
-        return None
-    try:
-        bundle = CertificateBundle(
-            path=path,
-            password=password,
-            friendly_name=settings.aeat_certificate_friendly_name,
-            backend=settings.aeat_certificate_backend,
-        )
-        return load_certificate(bundle)
-    except (OSError, ValueError, AeatError):
-        _log.warning("certificate load failed; treating bundle as unparseable", exc_info=True)
-        return None
 
 
 def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _ProviderProbeOutcome:
@@ -340,10 +354,7 @@ def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _Provide
     ``invalid_identity``; an unset identity as ``identity_unset``. The
     probe never contacts AEAT — it validates the local configuration.
     """
-    from ...adapters.outbound.aeat.auth._clave_movil import (
-        ClaveMovilConfigurationError,
-        _classify_identity,
-    )
+    from ...adapters.outbound.aeat.auth import ClaveMovilConfigurationError, classify_identity
 
     resolved_settings = settings or load_settings()
     raw = unwrap_optional_secret(resolved_settings.aeat_clave_movil_dni_nie).strip()
@@ -353,7 +364,7 @@ def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _Provide
             summary=tr("application.auth.operator.probe.clave_movil_identity_unset"),
         )
     try:
-        _classify_identity(raw)
+        classify_identity(raw)
     except ClaveMovilConfigurationError as exc:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.INVALID_IDENTITY,

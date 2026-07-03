@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-refund-fichero-block'
 date: '2026-06-25'
-modified: '2026-06-25'
+modified: '2026-06-30'
 step_id: 'S11'
 related:
   - "[[2026-06-24-m303-refund-fichero-block-plan]]"
 ---
-
-
-
 
 # Add an end-to-end refusal case asserting a refund disposition with an empty refund-account is refused, not emitted as an empty DID page
 

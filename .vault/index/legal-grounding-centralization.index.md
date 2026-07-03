@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#legal-grounding-centralization'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-29'
 related:
   - '[[2026-06-14-legal-grounding-centralization-P01-S01]]'
   - '[[2026-06-14-legal-grounding-centralization-P01-S02]]'
@@ -41,7 +41,7 @@ Auto-generated index of all documents tagged with `#legal-grounding-centralizati
 - `2026-06-14-legal-grounding-centralization-P02-S04` - F1: wire resolve_reduccion to the dormant _resolve_tier_reduccion_rate registry reader
 - `2026-06-14-legal-grounding-centralization-P03-S05` - F3: resolve M303/M390 compensación casilla ids through the registry snapshot casilla definitions instead of inline numeric literals
 - `2026-06-14-legal-grounding-centralization-P03-S06` - F4: author the ledger_iva_aggregation base_amount_sum bindings (INTRA_COMMUNITY_SUPPLY->59, EXPORT_THIRD_COUNTRY_ZERO_RATED->60) and delete the dormant casilla_59/60 Python helpers
-- `2026-06-14-legal-grounding-centralization-P03-S07` - F2-final: decide prorrata subsystem fate — enroll as registry-declared aggregation source on 303/390 casillas OR delete the dormant subsystem per no-legacy-compatibility
+- `2026-06-14-legal-grounding-centralization-P03-S07` - F2-final: delete the exported dormant prorrata application aggregation surface; keep the active domain substrate for validated ledger prorrata references
 
 ### plan
 

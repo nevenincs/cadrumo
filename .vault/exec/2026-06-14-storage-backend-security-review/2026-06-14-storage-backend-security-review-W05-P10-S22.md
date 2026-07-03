@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#storage-backend-security-review'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S22'
 related:
   - "[[2026-06-14-storage-backend-security-review-plan]]"
 ---
-
-
-
 
 # Extend the namespace adoption gate to scan domain and adapters outbound in addition to application
 

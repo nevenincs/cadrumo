@@ -15,23 +15,26 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ModeloCode,
+    ModeloRecord,
+    ModeloRecordStatus,
+    WorkUnit,
     derive_calculation_revision_id,
+    derive_filing_record_id,
+    derive_work_unit_id,
+    upsert_calculation_revision,
+    upsert_filing_record,
+    upsert_work_unit,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._filing_record import ModeloRecord, ModeloRecordStatus, derive_filing_record_id
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository, upsert_filing_record
-from ....domain.modelos._participation_index import TransactionParticipationIndexRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from .._participation_index_rebuild import rebuild_participation_index
 
@@ -147,7 +150,6 @@ def test_rebuild_includes_finalized_excludes_borrador_and_carries_filing_record(
         filing_id = derive_filing_record_id(
             work_unit_id=filed_wu.work_unit_id,
             calculation_revision_id=filed_rev.calculation_revision_id,
-            filed_at=_T0 + timedelta(hours=2),
             filed_by="aeat.cli.modelo.file",
         )
         filing_record = ModeloRecord(

@@ -17,13 +17,11 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
 from .._temporal import select_revision
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _ACTIVIDADES_CHAPTER = frozenset({f"ley-35-2006:art-{n}" for n in (27, 28, 30, 31, 32)})
 
 # box id -> the exact capital-inmobiliario articles that govern it (verified
@@ -58,9 +56,8 @@ _CHAIN_GROUNDING: dict[str, frozenset[str]] = {
 
 
 def _m100_casillas_by_id(filing_year: int):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelos_by_id = {m.id: m for m in modelos}
-    rev = select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    modelo, _ = _committed_modelo("100")
+    rev = select_revision(modelo, filing_year=filing_year, period="0A")
     return {c.id: c for c in rev.casillas}
 
 

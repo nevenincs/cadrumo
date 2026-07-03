@@ -13,7 +13,7 @@ legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-hac-3625-2003:
 source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 
 [[revisions."2004-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-309-2003-form"
+source_ref = "aeat-modelo-309-procedure"
 required_text = ["modelo 309"]
 
 [[revisions."2004-y-siguientes".bindings]]
@@ -25,6 +25,5 @@ legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:
 source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 
 [[revisions."2004-y-siguientes".bindings.source_citations]]
-source_ref = "boe-modelo-309-2003-form"
+source_ref = "aeat-modelo-309-procedure"
 required_text = ["modelo 309"]
-

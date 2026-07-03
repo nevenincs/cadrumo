@@ -41,13 +41,13 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period, ResultDisposition
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import IVARegime, ModeloIVAProfile, TaxpayerProfile
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, reconcile_modelo_303_iva_compensation
@@ -61,11 +61,11 @@ from .. import (
 )
 from .._action_errors import ModeloRefundAccountMissingError
 from .._result_disposition_resolution import resolve_modelo_result_disposition
-from ._file_flow_support import _seed_clean_cross_period_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TAX_ID = "X1234567L"
+_BUCKET_ID = "30300000-0000-4000-8000-000000000031"
 _YEAR = 2025
 _PERIOD = "2T"
 
@@ -86,7 +86,7 @@ _M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado", surfa
 
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         yield
 
 
@@ -94,14 +94,22 @@ def _store_operator_profile(*, created_at: datetime) -> None:
     # The export header composer requires the operator name facts (surnames +
     # name) before reaching the refund-account block, so seed them here — the
     # absent fact under test is the refund account, not the operator identity.
-    UserProfileLifecycleRepository(bucket_id="operator").save(
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
-            profile_id="operator",
+            profile_id=_BUCKET_ID,
             display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),
                 UserProfileFact(path="identity.surnames", value="Garcia Lopez"),
                 UserProfileFact(path="identity.name", value="Juan"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 4, 1)),
             ),
             created_at=created_at,
             updated_at=created_at,
@@ -123,6 +131,7 @@ def _redeme_profile_without_refund_account() -> TaxpayerProfile:
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        activity_start_date=date(_YEAR, 4, 1),
         iva=ModeloIVAProfile(redeme_enrolled=True, refund_account=None),
     )
 
@@ -157,7 +166,7 @@ def _calculate_verified_negative_period() -> str:
     assert report.decision.divergence == "first_period_zero"
 
     work_unit = create_work_unit(
-        bucket_id="operator",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _PERIOD),
@@ -181,13 +190,6 @@ def _calculate_verified_negative_period() -> str:
     # The engine produced a genuine negative result (anti-tautology anchor).
     assert revision.casilla_values[_M303_RESULTADO_CASILLA] < Decimal("0")
 
-    _seed_clean_cross_period_sources(
-        work_unit,
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        filing_repository=filing_repo,
-        bucket_event_repository=event_repo,
-    )
     verification = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator",

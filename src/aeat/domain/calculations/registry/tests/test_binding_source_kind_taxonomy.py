@@ -24,15 +24,14 @@ from .....core.aggregation import (
     INVOICE_BINDING_SOURCE_KINDS,
     LEDGER_BINDING_SOURCE_KINDS,
 )
-from .....core.resources import bundled_path
-from .. import load_registry_tree
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _declared_source_kinds() -> set[BindingSourceKind]:
     """Return every distinct ``source`` declared across all compiled revisions."""
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _ = _committed_registry_tree()
     declared: set[BindingSourceKind] = set()
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -62,14 +61,12 @@ def test_declared_registry_sources_are_a_subset_of_the_enum() -> None:
 # resolver routing) but are not yet declared by any compiled registry binding.
 # These are the source-kind analogue of ``NON_REGISTRY_MODELOS``: each is fenced
 # as out-of-scope-but-tracked by the binding-source-kind taxonomy design
-# (``payable_invoice`` declared by no registry binding; the
-# ``PurchaseInvoiceEvidenceSourceResolver`` data-shape blocker; the
+# (the ``PurchaseInvoiceEvidenceSourceResolver`` data-shape blocker and the
 # counterpart-shaped ``ledger_transaction`` source). A member dropping off this
 # set without gaining a registry declaration is a genuine orphan and fails the
 # gate below.
 _RESERVED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
-        BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
         BindingSourceKind.LEDGER_TRANSACTION,
     },
@@ -95,6 +92,27 @@ _MESH_ONLY_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 )
 
 
+# Enum members that are explicitly deferred on the application mesh
+# (``DEFERRED_SOURCE_KINDS``) AND carry no registry binding yet, by design. Unlike
+# the other deferred members (M184 / M232 / M720 / M360 — Sheets-pull sources that
+# ARE registry-declared and merely lack a live resolver), these are advisory-backed
+# feeds whose registry binding waits on a separately-deferred upstream. The
+# ``bienes_inversion_regularizacion`` capital-goods regularización source (LIVA
+# arts. 107-110) is deferred until the prorrata-definitiva source lands; it
+# surfaces an advisory rather than resolving silently to zero. A member here
+# that later gains a registry binding must be removed from this carve-out (the
+# disjointness assertion below fails otherwise).
+_DEFERRED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
+    {
+        BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
+        # LIVA arts. 104-105 annual prorrata-general regularización — deferred until
+        # the provisional-carry store is wired; surfaces an advisory rather than
+        # resolving silently to zero.
+        BindingSourceKind.PRORRATA_REGULARIZACION,
+    },
+)
+
+
 def test_enum_members_have_no_undeclared_orphans_beyond_reserved_sources() -> None:
     """No enum member sits unused beyond the design-fenced reserved carve-out.
 
@@ -109,10 +127,22 @@ def test_enum_members_have_no_undeclared_orphans_beyond_reserved_sources() -> No
     declared = _declared_source_kinds()
     enum_members = set(BindingSourceKind)
 
-    orphans = enum_members - declared - _RESERVED_UNDECLARED_SOURCE_KINDS - _MESH_ONLY_SOURCE_KINDS
+    orphans = (
+        enum_members
+        - declared
+        - _RESERVED_UNDECLARED_SOURCE_KINDS
+        - _MESH_ONLY_SOURCE_KINDS
+        - _DEFERRED_UNDECLARED_SOURCE_KINDS
+    )
     assert not orphans, (
         "BindingSourceKind member(s) declared by no registry binding and not in "
-        f"the reserved/mesh-only carve-outs (orphan or typo): {sorted(str(kind) for kind in orphans)}"
+        f"the reserved/mesh-only/deferred carve-outs (orphan or typo): {sorted(str(kind) for kind in orphans)}"
+    )
+
+    spuriously_declared_deferred = _DEFERRED_UNDECLARED_SOURCE_KINDS & declared
+    assert not spuriously_declared_deferred, (
+        "Deferred-undeclared source kind(s) now declared by the registry; remove "
+        f"from _DEFERRED_UNDECLARED_SOURCE_KINDS: {sorted(str(kind) for kind in spuriously_declared_deferred)}"
     )
 
     spuriously_reserved = _RESERVED_UNDECLARED_SOURCE_KINDS & declared
@@ -139,14 +169,15 @@ def test_invoice_frozenset_is_the_invoice_subset_of_the_enum() -> None:
     assert set(BindingSourceKind) >= INVOICE_BINDING_SOURCE_KINDS
 
 
-def test_ledger_frozenset_covers_all_five_ledger_members() -> None:
-    """``LEDGER_BINDING_SOURCE_KINDS`` is exactly the five ledger members.
+def test_ledger_frozenset_covers_all_six_ledger_members() -> None:
+    """``LEDGER_BINDING_SOURCE_KINDS`` is exactly the six ledger members.
 
     Guards against the historical regression where the set listed only two of
     the ledger kinds (OSS and renta-income were missing), which silently
     excluded those modelos from the ledger preflight. The fifth member is the
     M130 deductible-expense (gasto) aggregation source, the OUTGOING sibling of
-    the renta-income source.
+    the renta-income source; the sixth is the M151 impatriado (Ley Beckham)
+    Spanish-source base aggregation source.
     """
     assert {
         BindingSourceKind.LEDGER_OSS_AGGREGATION,
@@ -154,9 +185,10 @@ def test_ledger_frozenset_covers_all_five_ledger_members() -> None:
         BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
     } == LEDGER_BINDING_SOURCE_KINDS
     assert set(BindingSourceKind) >= LEDGER_BINDING_SOURCE_KINDS
-    assert len(LEDGER_BINDING_SOURCE_KINDS) == 5
+    assert len(LEDGER_BINDING_SOURCE_KINDS) == 6
 
 
 def test_counterpart_frozenset_is_a_subset_of_the_enum() -> None:

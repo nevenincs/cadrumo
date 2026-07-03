@@ -21,10 +21,14 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from ....domain.modelos import (
+    ModeloCode,
+    WorkUnit,
+    derive_work_unit_id,
+    upsert_work_unit,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import WorkUnitRevisionDivergenceError
 from .._work_addressing import (

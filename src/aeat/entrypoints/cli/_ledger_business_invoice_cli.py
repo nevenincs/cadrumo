@@ -2,9 +2,11 @@
 
 One ``aeat app ledger invoice`` noun-group gated by ``--kind issued|received``
 replaces the prior payable-invoice / collectible-invoice split. The operator's
-``--kind`` is routed through :func:`invoice_direction_to_source_kind` (the single
+``--kind`` is routed through
+:func:`invoice_direction_to_source_kind` (the single
 contractual direction->settlement mapping) to select the matching slim CRUD
-service over the encrypted :class:`BusinessOperationInvoice` catalogue.
+service over the encrypted
+:class:`BusinessOperationInvoice` catalogue.
 """
 
 from __future__ import annotations
@@ -24,10 +26,10 @@ from ...application.ledger import (
     BusinessOperationInvoiceInputError,
     BusinessOperationInvoicePatch,
     CollectibleInvoiceService,
-    IntracomOperationType,
     PayableInvoiceService,
     validate_eu_iva_id,
 )
+from ...core import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...domain.iva import InvoiceKind, IvaCategory
@@ -61,10 +63,11 @@ from ._ledger_payloads import (
 class InvoiceKindOption(StrEnum):
     """Operator-facing ``--kind`` axis for the unified invoice command.
 
-    Mirrors :class:`InvoiceKind`; declared as the Typer option type so click
-    renders ``Choice([issued, received])`` and instructs the operator on parse
-    failure. ``issued`` settles to ``collectible_invoice``; ``received`` settles
-    to ``payable_invoice`` via :func:`invoice_direction_to_source_kind`.
+    Mirrors :class:`InvoiceKind`; declared as the Typer option
+    type so click renders ``Choice([issued, received])`` and instructs the
+    operator on parse failure. ``issued`` settles to ``collectible_invoice``;
+    ``received`` settles to ``payable_invoice`` via
+    :func:`invoice_direction_to_source_kind`.
     """
 
     ISSUED = "issued"
@@ -112,12 +115,6 @@ def _parse_intracom_operation_type(raw: str | None, *, translation_key: str) -> 
         ) from None
 
 
-# M349 operation-type codes the calculation-feeding catalogue can represent
-# today: the resolver derives the intra-community clave (E/A/T) from the rich
-# invoice's ``iva_category``. Goods supplies (E), goods acquisitions (A), and
-# triangular operations (T) map onto a category; the service codes (S/I), the
-# rectification code (R), and the miscellany code (M) have no category the
-# resolver reads, so they are refused here rather than silently dropped.
 _OPERATION_TYPE_TO_IVA_CATEGORY: dict[IntracomOperationType, IvaCategory] = {
     IntracomOperationType.E: IvaCategory.INTRA_COMMUNITY_SUPPLY,
     IntracomOperationType.A: IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
@@ -128,30 +125,9 @@ _OPERATION_TYPE_TO_IVA_CATEGORY: dict[IntracomOperationType, IvaCategory] = {
 def _catalogue_iva_category_for_operation_type(
     operation_type: IntracomOperationType | None,
 ) -> IvaCategory | None:
-    """Map an M349 operation type onto the catalogue invoice's ``iva_category``.
-
-    Returns ``None`` when no operation type is supplied (a domestic invoice).
-    Refuses the service / rectification / miscellany codes the resolver cannot
-    yet represent, naming the supported set, so the operator is never misled
-    into believing an unrepresentable invoice will reach Modelo 349.
-    """
     if operation_type is None:
         return None
-    category = _OPERATION_TYPE_TO_IVA_CATEGORY.get(operation_type)
-    if category is None:
-        supported = ", ".join(t.value for t in _OPERATION_TYPE_TO_IVA_CATEGORY)
-        raise _bad(
-            tr(
-                "cli.app.ledger.invoice.catalogue.operation_type_unsupported",
-                default=(
-                    f"--operation-type {operation_type.value} cannot feed Modelo 349 "
-                    f"from the catalogue yet; supported: {supported}."
-                ),
-                value=operation_type.value,
-                supported=supported,
-            ),
-        )
-    return category
+    return _OPERATION_TYPE_TO_IVA_CATEGORY.get(operation_type)
 
 
 def _business_invoice_payload(record) -> dict[str, object]:
@@ -442,6 +418,7 @@ def _catalogue_invoice_payload(invoice) -> dict[str, object]:
         "payment_status": invoice.payment_status.value,
         "linked_transaction_ids": list(invoice.linked_transaction_ids),
         "notes": invoice.notes,
+        "operation_type": None if invoice.operation_type is None else invoice.operation_type.value,
     }
 
 
@@ -455,6 +432,7 @@ def _catalogue_invoice_lines(invoice) -> list[str]:
         f"issued_at\t{invoice.issued_at.isoformat()}",
         f"grand_total\t{format(invoice.grand_total, 'f')}",
         f"currency\t{invoice.currency}",
+        f"operation_type\t{'' if invoice.operation_type is None else invoice.operation_type.value}",
         f"linked_transaction_ids\t{','.join(invoice.linked_transaction_ids)}",
     ]
 
@@ -512,21 +490,23 @@ def catalogue_create(
     """Create a rich linkable invoice in the reconciliation catalogue.
 
     The slim ``invoice add`` record cannot be linked to a transaction; this
-    verb mints the rich :class:`Invoice` whose content-addressed ``invoice_id``
-    is the value ``aeat app ledger link --invoice-id`` resolves. Supplying an
-    intra-community ``--operation-type`` (E/A/T) stamps the invoice's
-    ``iva_category`` so the Modelo 349 recapitulative calculation can read it.
+    verb mints the rich :class:`Invoice` whose
+    content-addressed ``invoice_id`` is the value
+    ``aeat app ledger link --invoice-id`` resolves. Supplying an intra-community
+    ``--operation-type`` stamps the invoice so the Modelo 349 recapitulative
+    calculation can read it.
     """
     from pydantic import ValidationError
 
     from ...domain.invoices import InvoiceValidationError
 
     bucket_id = _business_invoice_bucket_id()
+    parsed_operation_type = _parse_intracom_operation_type(
+        operation_type,
+        translation_key="cli.app.ledger.invoice.operation_type_invalid",
+    )
     iva_category = _catalogue_iva_category_for_operation_type(
-        _parse_intracom_operation_type(
-            operation_type,
-            translation_key="cli.app.ledger.invoice.operation_type_invalid",
-        ),
+        parsed_operation_type,
     )
     try:
         result = create_catalogue_invoice(
@@ -542,6 +522,7 @@ def catalogue_create(
             currency=currency,
             notes=notes,
             iva_category=iva_category,
+            operation_type=parsed_operation_type,
         )
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc
@@ -576,16 +557,12 @@ def catalogue_list(
     ),
 ) -> None:
     """List the rich reconciliation catalogue invoices for the active bucket."""
-    from ...domain.invoices import InvoiceCatalogueRepository
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 
     bucket_id = _business_invoice_bucket_id()
     catalogue = InvoiceCatalogueRepository(bucket_id=bucket_id).load()
     wanted = None if kind is None else InvoiceKind(kind.value)
-    rows = tuple(
-        invoice
-        for invoice in catalogue.values()
-        if wanted is None or invoice.kind is wanted
-    )
+    rows = tuple(invoice for invoice in catalogue.values() if wanted is None or invoice.kind is wanted)
     payload = {
         "bucket_id": bucket_id,
         "rows": [_catalogue_invoice_payload(invoice) for invoice in rows],

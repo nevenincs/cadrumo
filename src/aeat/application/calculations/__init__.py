@@ -1,16 +1,71 @@
-"""Application-layer calculation utilities: observation repository and multi-year resolver for prior-year inputs.
+"""Application-layer calculation source stores, proof records, and prefill helpers.
 
-The runtime calc engine (`aeat.domain.calculations.registry._formula_runtime`)
-takes pre-resolved `relation_values` and `binding_values` mappings.
-This package provides the application-side helpers that produce
-those mappings from the operator's local filing history, so annual
-modelos (e.g. modelo 200, IS) and multi-year regimes (e.g. IVA
-prorrata four-year average, IVA regularización inversiones five-year
-straight-line, IS BIN unlimited carryforward) can resolve their
-inputs from authoritative prior filings instead of operator
-hand-entry.
+The registry runtime consumes already-resolved ``binding_values`` and
+``relation_values`` for
+:func:`domain.calculations.registry.calculate_registry_snapshot`. This
+package is the public application facade for the stores, source resolvers, and
+typed proof records that produce those inputs from local filing history, IVA
+wallet reconciliation, relation prefill, row-set detail captures, and
+cross-period clean-state evidence.
+
+This facade is not the formula runtime. It owns persisted observations,
+source-proof assembly, carry-forward policy, and source resolvers that feed the
+registry engine; the registry remains the authority for casilla definitions,
+binding declarations, relation closure, and formula execution.
+
+Direct prior-filing bindings and registry relations are deliberately separate
+source owners. :class:`PreviousFilingSourceResolver` resolves
+:attr:`core.BindingSourceKind.PREVIOUS_FILING` binding carries;
+:class:`RelationPrefillSourceResolver` resolves
+:attr:`core.BindingSourceKind.RELATION_PREFILL` relation fold-ins and
+their materialised target bindings; :class:`IvaWalletDecisionSourceResolver`
+resolves the Modelo 303
+:attr:`core.BindingSourceKind.IVA_WALLET_DECISION` compensation authority
+outside the ordinary previous-filing carry; and
+:class:`IvaCompensationAnnualPartitionSourceResolver` resolves Modelo 390
+:attr:`core.BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION` boxes 97
+and 662 from the same FIFO carry projection.
+
+The main public surfaces are:
+
+* :class:`CalculationObservationRepository` and
+  :class:`IvaWalletDecisionRepository`, encrypted stores for prior
+  :class:`domain.calculations.registry.RegistryModeloObservation` records,
+  plus :class:`IvaCompensationHistoryRepository` for secure Modelo 303
+  compensation history.
+* :class:`PreviousFilingSourceResolver`,
+  :class:`RelationPrefillSourceResolver`, and
+  :class:`IvaWalletDecisionSourceResolver`, source-mesh adapters that produce
+  :class:`application.aggregation.CalculationSourceResolution` envelopes.
+* :func:`resolve_bindings_from_local_store` and
+  :func:`resolve_relations_from_local_store`, prefill readers over the same
+  local observation substrate; :class:`BindingPrefillReport` and
+  :class:`PrefilledBinding` carry the direct previous-filing coverage.
+* :func:`cross_period_dependency_requirements` and
+  :func:`evaluate_cross_period_clean_state`, the filing-grade dependency proof
+  whose
+  :class:`CrossPeriodCleanStateVerdict` joins
+  :class:`CrossPeriodDependencyRequirement` rows to filing records, revisions,
+  verification reports, and justificante evidence.
+* Row-set assemblers such as :func:`assemble_withholding_observations`, which
+  turn pull-side Detalle cells into ``AssembledObservations`` payloads for
+  persistence.
+
+See Also:
+    :mod:`application.aggregation`
+        Defines the source-mesh contracts consumed by the calculation path.
+    :mod:`domain.calculations.registry`
+        Owns the pure registry snapshots, binding definitions, relation
+        requirements, and formula runtime.
+    :mod:`application.modelo`
+        Orchestrates these package-level services inside work calculation,
+        verification, filing, and export workflows.
 """
 
+from ._bienes_inversion_regularizacion import (
+    CASILLA_REGULARIZACION_BIENES_INVERSION,
+    build_bienes_inversion_regularizacion_advisory,
+)
 from ._binding_prefill import (
     BindingPrefillReport,
     LocalIvaCompensationRecurrence,
@@ -35,6 +90,10 @@ from ._cross_period_clean_state import (
     filing_external_evidence_blockers,
     partition_cross_period_requirements_by_activity_start,
 )
+from ._iva_compensation_annual_partition import (
+    IvaCompensationAnnualPartitionSourceResolver,
+    resolve_iva_compensation_annual_partition_binding_values,
+)
 from ._iva_compensation_history import (
     IvaCompensationAnnualCrossCheck,
     IvaCompensationAnnualSummary,
@@ -54,7 +113,11 @@ from ._iva_wallet_reconciliation import (
     reconcile_iva_compensation_wallet,
     reconcile_modelo_303_iva_compensation,
 )
-from ._maritime_exemption_service import resolve_maritime_exemption
+from ._m111_no_retenciones import (
+    M111_NO_RETENCIONES_PROFILE_PATH,
+    m111_no_retenciones_periods_for_bucket,
+)
+from ._maritime_exemption_service import MaritimeExemptionResult, resolve_maritime_exemption
 from ._multi_year import (
     EnrollmentEvidence,
     EnrollmentEvidenceError,
@@ -65,6 +128,7 @@ from ._multi_year import (
 )
 from ._observations_repository import (
     CalculationObservationRepository,
+    IvaWalletDecisionEnvelopePayload,
     IvaWalletDecisionRepository,
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
@@ -86,6 +150,8 @@ from ._row_set_assembly import (
 IvaCompensationReconciliationReport.model_rebuild()
 
 __all__ = [
+    "CASILLA_REGULARIZACION_BIENES_INVERSION",
+    "M111_NO_RETENCIONES_PROFILE_PATH",
     "AssembledObservations",
     "BindingPrefillReport",
     "CalculationObservationRepository",
@@ -102,12 +168,15 @@ __all__ = [
     "EnrollmentRecorder",
     "EnrollmentYearObservation",
     "IvaCompensationAnnualCrossCheck",
+    "IvaCompensationAnnualPartitionSourceResolver",
     "IvaCompensationAnnualSummary",
     "IvaCompensationHistoryRepository",
     "IvaCompensationReconciliationReport",
+    "IvaWalletDecisionEnvelopePayload",
     "IvaWalletDecisionRepository",
     "IvaWalletDecisionSourceResolver",
     "LocalIvaCompensationRecurrence",
+    "MaritimeExemptionResult",
     "NoPriorObligationProvenance",
     "NoPriorObligationProvenanceKind",
     "PrefilledBinding",
@@ -120,6 +189,7 @@ __all__ = [
     "assemble_related_party_observations",
     "assemble_withholding_observations",
     "assert_enrollment_matches_manifest",
+    "build_bienes_inversion_regularizacion_advisory",
     "correct_iva_compensation_period",
     "cross_check_iva_compensation_annual_summary",
     "cross_period_dependency_inventory",
@@ -133,12 +203,14 @@ __all__ = [
     "iva_compensation_state_from_registry_observation",
     "iva_wallet_decision_event_key",
     "iva_wallet_decision_key",
+    "m111_no_retenciones_periods_for_bucket",
     "observation_key",
     "partition_cross_period_requirements_by_activity_start",
     "query_iva_wallet_balance",
     "reconcile_iva_compensation_wallet",
     "reconcile_modelo_303_iva_compensation",
     "resolve_bindings_from_local_store",
+    "resolve_iva_compensation_annual_partition_binding_values",
     "resolve_maritime_exemption",
     "resolve_relations_from_local_store",
     "seed_iva_compensation_period",

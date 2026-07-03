@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#sal-sll-legal-entity-form'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - "[[2026-05-21-corporate-entity-calculation-adr]]"
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
@@ -11,7 +11,6 @@ related:
   - "[[2026-04-13-modelo-inventory-adr]]"
   - '[[2026-06-04-sal-sll-legal-entity-form-research]]'
 ---
-
 
 # `sal-sll-legal-entity-form` adr: SAL/SLL legal entity form + reserva especial Ley 44/2015 | (**status:** `accepted`)
 

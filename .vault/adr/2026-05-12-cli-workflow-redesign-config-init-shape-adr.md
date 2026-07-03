@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-config-init-shape-research]]"
@@ -13,7 +13,6 @@ related:
   - "[[2026-04-12-setup-wizard-adr]]"
   - '[[2026-06-03-profile-lifecycle-cli-cascade-supersession-adr]]'
 ---
-
 
 # `cli-workflow-redesign` adr: `Config init first-run shape` | (**status:** `superseded by [[2026-05-16-profile-lifecycle-cli-adr]]`)
 

@@ -1,20 +1,57 @@
-"""Filing domain package: records, protocols, validator, repositories.
+"""Public filing facade for modelo drafts, validation, and amendment records.
 
-The :mod:`aeat.domain.filing` subpackage owns the immutable records
-that describe a filing draft (and its amendment), the cross-package
-Protocols upstream subpackages plug into, the cross-cutting
-:class:`ModeloValidator`, the :class:`ModeloDraft` -- Justificante
-reconciliation engine, and the governed-persistence repositories
-(FINANCIAL drafts and AUDIT amendments).
+The :mod:`domain.filing` subpackage owns the immutable records and
+repository contracts that describe registry-backed local drafts:
+:class:`ModeloDraft`, :class:`ModeloValue`, :class:`ModeloBindingValue`,
+:class:`ModeloCasillaProvenance`, and :class:`ModeloValidationFinding`.
+Those records preserve the registry ``snapshot_ref``, casilla values, binding
+provenance, and casilla provenance that identify and ground a local draft.
 
-The orchestration entry points (:func:`aeat.application.filing.build_draft`,
-:func:`aeat.application.filing.validate_draft`,
-:func:`aeat.application.filing.approve_draft`,
-:func:`aeat.application.filing.build_complementaria`,
-:func:`aeat.application.filing.import_filing_from_justificante`)
-live at :mod:`aeat.application.filing`: domain records are stable
+The facade also exports :class:`ModeloValidator`, the protocol contracts
+consumed by :mod:`application.filing`, the LGT Art. 122 amendment records
+:class:`ModeloComplementaria` and :class:`ModeloSustitutiva`, their
+:class:`CasillaChange` deltas, and the governed repository contracts. Drafts
+persist through
+:class:`~aeat.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`
+(behind :class:`ModeloDraftRepositoryProtocol`) in FINANCIAL encrypted storage;
+amendments persist through
+:class:`~aeat.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`
+(behind :class:`ModeloAmendmentRepositoryProtocol`) in AUDIT encrypted storage.
+
+The orchestration entry points (:func:`application.filing.build_draft`,
+:func:`application.filing.validate_draft`,
+:func:`application.filing.approve_draft`,
+:func:`application.filing.build_complementaria`,
+:func:`application.filing.import_filing_from_justificante`)
+live at :mod:`application.filing`: domain records are stable
 boundary-crossing types; the use cases that compose them belong on
-the connector layer.
+the application layer. :class:`domain.justificante.Justificante` data is
+receipt metadata and import evidence, not a casilla-value authority; when the
+application import path needs an audit baseline, it composes these draft records
+with :class:`domain.submission.ModeloPresentado` rather than extending the
+draft schema with submission state.
+
+See Also:
+    :mod:`application.filing`
+        Application facade that builds, reviews, approves, exports, verifies,
+        imports, and amends these draft records.
+    :class:`ModeloDraft`
+        Registry-backed draft aggregate carrying values, binding provenance,
+        casilla provenance, and registry snapshot identity.
+    :class:`ModeloValidator`
+        Domain validator used by application review and approval flows.
+    :class:`ModeloAmendmentRepositoryProtocol`
+        Narrow domain-facing port for governed AUDIT persistence of
+        complementaria and sustitutiva records.
+    :mod:`domain.submission`
+        Local-only submission audit records paired with imported or historical
+        draft baselines without turning draft records into live submissions.
+    :mod:`domain.justificante`
+        Receipt metadata that filing imports may compose with drafts, without
+        treating receipt data as a casilla-value authority.
+    :mod:`domain.calculations.registry`
+        Registry snapshot and export-layout authority used to construct and
+        verify draft casilla payloads.
 """
 
 from __future__ import annotations
@@ -29,9 +66,6 @@ from ._amendment import (
     ModeloComplementaria,
     ModeloSustitutiva,
     make_amendment_id,
-)
-from ._complementaria_repository import (
-    ModeloAmendmentRepository,
 )
 from ._errors import (
     FilingExportError,
@@ -50,14 +84,12 @@ from ._protocols import (
     CasillaSchemaProvider,
     DeadlineChecker,
     DeadlineStatus,
-    ModeloIdentity,
+    ModeloAmendmentRepositoryProtocol,
+    ModeloDraftRepositoryProtocol,
     ModeloInputs,
     ModeloInputScalar,
     ModeloInputValue,
     ModeloProfile,
-)
-from ._repository import (
-    ModeloDraftRepository,
 )
 from ._schema import (
     APPROVAL_BASIS_VERSION,
@@ -65,6 +97,7 @@ from ._schema import (
     ModeloBindingValue,
     ModeloCasillaProvenance,
     ModeloDraft,
+    ModeloDraftStatus,
     ModeloScalar,
     ModeloValidationFinding,
     ModeloValue,
@@ -93,7 +126,7 @@ __all__ = [
     "FilingExportValidationError",
     "FilingValidationError",
     "ModeloAmendmentError",
-    "ModeloAmendmentRepository",
+    "ModeloAmendmentRepositoryProtocol",
     "ModeloAmendmentValidationError",
     "ModeloApprovalBasis",
     "ModeloBindingValue",
@@ -104,8 +137,8 @@ __all__ = [
     "ModeloComputationError",
     "ModeloDraft",
     "ModeloDraftError",
-    "ModeloDraftRepository",
-    "ModeloIdentity",
+    "ModeloDraftRepositoryProtocol",
+    "ModeloDraftStatus",
     "ModeloImportError",
     "ModeloInputScalar",
     "ModeloInputValue",

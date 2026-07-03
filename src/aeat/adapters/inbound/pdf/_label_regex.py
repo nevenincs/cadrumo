@@ -4,7 +4,9 @@ Every casilla-complete extractor under :mod:`aeat.adapters.inbound.declaracion`
 and :mod:`aeat.adapters.inbound.borrador` runs essentially the same primitive:
 for a mapping of ``casilla_id`` to compiled pattern, search the PDF's text
 stream and return the first match per casilla. This module is the single
-authoritative implementation.
+authoritative implementation; the caller still decides which casillas are in
+scope through registry extraction profiles or a caller-supplied borrador
+profile.
 
 The Spanish amount capture group :data:`SPANISH_AMOUNT_GROUP` is the canonical
 AEAT printed-amount format. Extractor modules import it and compose per-casilla
@@ -116,9 +118,11 @@ class LabelHit:
             with surrounding whitespace stripped.
         decimal_value: ``raw_value`` parsed via :func:`parse_spanish_decimal`,
             or ``None`` when the capture is non-numeric.
-        match_count: Number of times the pattern matched ``text``. A value
-            greater than ``1`` indicates an ambiguous label and downstream
-            consumers should downgrade confidence.
+        match_count: Number of times the pattern matched ``text``. ``1`` means
+            the label was unambiguous for this text stream; values greater than
+            ``1`` mean first-match-wins extraction succeeded but downstream
+            consumers should downgrade confidence or surface an ambiguity
+            warning.
     """
 
     casilla_id: CasillaId
@@ -135,7 +139,9 @@ def apply_label_regex(
 
     First match wins for the raw value; :attr:`LabelHit.match_count`
     reflects the total number of hits so callers can downgrade confidence
-    when the pattern is ambiguous.
+    when the pattern is ambiguous. Patterns that never match are omitted rather
+    than represented as empty hits, leaving coverage decisions to the calling
+    parser's registry/profile policy.
 
     Args:
         text: Concatenated text returned by a PDF parser backend.

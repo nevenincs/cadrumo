@@ -87,6 +87,7 @@ from ._declarations import (
 )
 from ._declarations_observations import observed_casillas_from_submitted_file
 from ._errors import (
+    BrowserAdapterTypeError,
     ExpedienteNotFoundError,
     JustificanteFetchError,
     SedeError,
@@ -94,12 +95,14 @@ from ._errors import (
     SedeNavigationError,
     SedeParseError,
 )
+from ._groi_check import GroiSedeDriver
 from ._iva_compensation_wallet import (
     IVA_COMPENSATION_WALLET_URL,
     PRE303_PRESENTATION_SERVICE_URL,
     fetch_iva_compensation_wallet,
     parse_iva_compensation_wallet_html,
 )
+from ._nif_iva_check import NifIvaCheckSedeDriver
 from ._notifications import (
     NotificationsSnapshot,
     RemoteNotification,
@@ -108,7 +111,11 @@ from ._notifications import (
     parse_notifications_query,
     parse_notifications_summary,
 )
-from ._observation_store import FiledDeclaracionObservationStore
+from ._observation_store import (
+    FiledDeclaracionObservationStore,
+    filed_declaracion_observation_object_key,
+    iva_compensation_wallet_observation_object_key,
+)
 from ._parse import parse_expediente_detail, parse_resumen_tree
 from ._renta_web_open import (
     RentaWebOpenSedeDriver,
@@ -136,6 +143,7 @@ __all__ = [
     "G313_LAUNCHER_URL",
     "IVA_COMPENSATION_WALLET_URL",
     "PRE303_PRESENTATION_SERVICE_URL",
+    "BrowserAdapterTypeError",
     "Declaracion",
     "DeclaracionesRegisterSession",
     "Expediente",
@@ -143,10 +151,12 @@ __all__ = [
     "FiledDeclaracionArtefact",
     "FiledDeclaracionObservation",
     "FiledDeclaracionObservationStore",
+    "GroiSedeDriver",
     "IvaCompensationWalletObservation",
     "IvaCompensationWalletRow",
     "JustificanteFetchError",
     "JustificanteRef",
+    "NifIvaCheckSedeDriver",
     "NotificationsSnapshot",
     "ObservedCasillaValue",
     "RemoteNotification",
@@ -168,7 +178,9 @@ __all__ = [
     "fetch_iva_compensation_wallet",
     "fetch_notifications_query",
     "fetch_notifications_summary",
+    "filed_declaracion_observation_object_key",
     "find_expediente",
+    "iva_compensation_wallet_observation_object_key",
     "observed_casillas_from_submitted_file",
     "open_declarations_register",
     "parse_expediente_detail",

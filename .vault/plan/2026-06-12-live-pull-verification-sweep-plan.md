@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#live-pull-verification-sweep'
 date: '2026-06-12'
-modified: '2026-06-13'
+modified: '2026-06-30'
 tier: L4
 related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-plan]]'
@@ -15,7 +15,6 @@ related:
   - '[[2026-04-27-live-submit-permanently-forbidden-research]]'
   - '[[2026-06-05-live-auth-decomposition-research]]'
 ---
-
 
 # `live-pull-verification-sweep` `authenticated pull-only live verification sweep` plan
 

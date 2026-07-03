@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
 
 import pytest
 
@@ -17,9 +16,9 @@ from .. import (
     RegistryCatalogues,
     RegistryValidator,
     build_snapshot,
-    load_registry_tree,
     validated_casilla_id,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
@@ -45,13 +44,49 @@ _M303_AUTOCONSUMO_PROMOTOR_BASE_CASILLA: CasillaId = _casilla_id("iva.autoconsum
 _M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA: CasillaId = _casilla_id("iva.autoconsumo.promotor.cuota")
 _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
 _M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = _casilla_id("iva.prorrata-porcentaje")
+_M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
+    "2009-y-siguientes": frozenset(
+        {
+            "ley-37-1992:art-84",
+            "ley-37-1992:art-88",
+            "ley-37-1992:art-90",
+            "ley-37-1992:art-91",
+            "ley-37-1992:art-92",
+            "ley-37-1992:art-94",
+            "ley-37-1992:art-95",
+            "orden-eha-3786-2008:art-1",
+            "rd-1624-1992:art-71",
+        }
+    ),
+    "2023-y-siguientes": frozenset(
+        {
+            "ley-37-1992:art-9",
+            "ley-37-1992:art-79",
+            "ley-37-1992:art-84",
+            "ley-37-1992:art-88",
+            "ley-37-1992:art-90",
+            "ley-37-1992:art-91",
+            "ley-37-1992:art-92",
+            "ley-37-1992:art-94",
+            "ley-37-1992:art-95",
+            "ley-37-1992:art-99",
+            "ley-37-1992:art-115",
+            "ley-37-1992:art-116",
+            "ley-37-1992:art-122",
+            "ley-37-1992:art-123",
+            "ley-37-1992:art-124",
+            "orden-eha-3786-2008:art-1",
+            "orden-hac-819-2024:art-1",
+            "rd-1624-1992:art-29",
+            "rd-1624-1992:art-30",
+            "rd-1624-1992:art-71",
+        }
+    ),
+}
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_303() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "303")
-    return modelo, catalogues
+    return _committed_modelo("303")
 
 
 def test_modelo_303_registry_validator_accepts_committed_definition() -> None:
@@ -63,7 +98,7 @@ def test_modelo_303_registry_validator_accepts_committed_definition() -> None:
 
 
 def test_modelo_303_metadata_matches_orden_eha_3786_2008() -> None:
-    modelo, _ = _load_modelo_303()
+    modelo, catalogues = _load_modelo_303()
 
     assert modelo.title == "IVA. Autoliquidación (trimestral)"
     assert modelo.tax_domain == "iva"
@@ -73,6 +108,8 @@ def test_modelo_303_metadata_matches_orden_eha_3786_2008() -> None:
     assert "orden-eha-3786-2008:art-7" in modelo.legal_refs
     assert "aeat-dr-303-2025" in modelo.source_refs
     assert "aeat-modelo-303-procedure" in modelo.source_refs
+    assert catalogues.sources["aeat-modelo-303-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-303-2008-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_303_revision_period_selectors_cover_2009_to_present() -> None:
@@ -131,6 +168,28 @@ def test_modelo_303_snapshot_carries_legal_authority_and_record_design() -> None
     assert "boe-modelo-303-2008-form" in snapshot.sources
 
 
+@pytest.mark.parametrize(
+    ("revision_id", "expected_refs"),
+    _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION.items(),
+)
+def test_modelo_303_extraction_profile_legal_refs_match_target_casillas(
+    revision_id: str,
+    expected_refs: frozenset[str],
+) -> None:
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions[revision_id]
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+
+    assert revision.extraction_profiles, revision_id
+    profile = next(item for item in revision.extraction_profiles if item.id == "modelo-303-declaracion-pdf")
+    target_refs = frozenset(
+        legal_ref for target in profile.target_casillas for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+    )
+
+    assert target_refs == expected_refs
+    assert set(profile.legal_refs) == expected_refs
+
+
 def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> None:
     """1T-3T close on day 20; 4T closes on day 30 of January following."""
     modelo, _ = _load_modelo_303()
@@ -151,6 +210,35 @@ def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> Non
     for window_id, (opens, closes) in expected.items():
         assert windows[window_id].opens_on == opens
         assert windows[window_id].closes_on == closes
+
+
+def test_modelo_303_sii_2026_monthly_deadlines_use_aeat_2026_calendar() -> None:
+    """Monthly IVA windows for 2026 periods 01-11 match the AEAT 2026 calendar."""
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions["2023-y-siguientes"]
+    windows = {w.id: w for w in revision.deadline_windows}
+    expected = {
+        "modelo-303-2026-01-mensual": (date(2026, 2, 1), date(2026, 3, 2), date(2026, 2, 25)),
+        "modelo-303-2026-02-mensual": (date(2026, 3, 1), date(2026, 3, 30), date(2026, 3, 25)),
+        "modelo-303-2026-03-mensual": (date(2026, 4, 1), date(2026, 4, 30), date(2026, 4, 27)),
+        "modelo-303-2026-04-mensual": (date(2026, 5, 1), date(2026, 6, 1), date(2026, 5, 27)),
+        "modelo-303-2026-05-mensual": (date(2026, 6, 1), date(2026, 6, 30), date(2026, 6, 25)),
+        "modelo-303-2026-06-mensual": (date(2026, 7, 1), date(2026, 7, 30), date(2026, 7, 27)),
+        "modelo-303-2026-07-mensual": (date(2026, 8, 1), date(2026, 8, 31), date(2026, 8, 26)),
+        "modelo-303-2026-08-mensual": (date(2026, 9, 1), date(2026, 9, 30), date(2026, 9, 25)),
+        "modelo-303-2026-09-mensual": (date(2026, 10, 1), date(2026, 10, 30), date(2026, 10, 27)),
+        "modelo-303-2026-10-mensual": (date(2026, 11, 1), date(2026, 11, 30), date(2026, 11, 25)),
+        "modelo-303-2026-11-mensual": (date(2026, 12, 1), date(2026, 12, 30), date(2026, 12, 24)),
+    }
+
+    for window_id, (opens_on, closes_on, payment_cutoff_on) in expected.items():
+        window = windows[window_id]
+        assert window.opens_on == opens_on
+        assert window.closes_on == closes_on
+        assert window.payment_cutoff_on == payment_cutoff_on
+        assert "aeat-calendario-contribuyente-2026-domiciliacion" in window.source_refs
+
+    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in windows["modelo-303-2026-01-mensual"].source_refs
 
 
 def test_modelo_303_live_cross_references_forbid_writes() -> None:
@@ -513,9 +601,11 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
     assert result.values[_M303_DISPONIBLE_CASILLA] == pendiente_posteriores
 
 
-def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
-    """contract regression: SII-enrolled taxpayers file M303 monthly (Art. 62.6
-    RD 1624/1992). The 2023-y-siguientes revision must accept periods 01-12
+def test_modelo_303_monthly_snapshot_resolves_for_each_period() -> None:
+    """The 2023+ revision must accept monthly IVA-liquidation periods 01-12.
+
+    REDEME and large-company taxpayers use monthly Modelo 303 schedules. The
+    revision selector still has to resolve those monthly periods directly
     via select_revision so ``bindings list --period 01`` resolves without a
     RegistrySnapshotError."""
     modelo, catalogues = _load_modelo_303()
@@ -530,40 +620,58 @@ def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
         )
         assert snapshot.revision.id == "2023-y-siguientes"
         schedule_ids = {s.id for s in snapshot.revision.filing_schedules}
-        assert "modelo-303-mensual-sii" in schedule_ids, f"monthly SII schedule absent for period {period}"
+        assert "modelo-303-mensual" in schedule_ids, f"monthly schedule absent for period {period}"
 
 
-def test_modelo_303_sii_monthly_filing_schedule_matches_sii_enrolled_profiles() -> None:
-    """The monthly schedule must fire for SII-enrolled profiles and be excluded
-    for standard quarterly profiles."""
-    from ....deadlines._models import IVARegime, ModeloIVAProfile, TaxpayerProfile
+def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles() -> None:
+    """The monthly schedule fires for monthly IVA-liquidation triggers only."""
+    from ....deadlines import (
+        IVARegime,
+        ModeloEnrollment,
+        ModeloIVAProfile,
+        TaxpayerProfile,
+    )
     from .. import applicable_filing_schedules
 
     modelo, _catalogues = _load_modelo_303()
     revision = modelo.revisions["2023-y-siguientes"]
 
-    sii_profile = TaxpayerProfile(
+    monthly_profiles = (
+        TaxpayerProfile(
+            tax_id="B12345678",
+            iva_regime=IVARegime.GENERAL,
+            iva=ModeloIVAProfile(redeme_enrolled=True),
+        ),
+        TaxpayerProfile(
+            tax_id="C12345678",
+            iva_regime=IVARegime.GENERAL,
+            enrollment=ModeloEnrollment(large_company=True),
+        ),
+    )
+    voluntary_sii_profile = TaxpayerProfile(
         tax_id="A12345678",
         iva_regime=IVARegime.GENERAL,
-        iva=ModeloIVAProfile(sii_enrolled=True),
+        iva=ModeloIVAProfile(sii_enrolled=True, redeme_enrolled=False),
+        enrollment=ModeloEnrollment(large_company=False),
     )
-    quarterly_profile = TaxpayerProfile(
-        tax_id="B98765432",
+    ordinary_quarterly_profile = TaxpayerProfile(
+        tax_id="D98765432",
         iva_regime=IVARegime.GENERAL,
-        iva=ModeloIVAProfile(sii_enrolled=False),
+        iva=ModeloIVAProfile(sii_enrolled=False, redeme_enrolled=False),
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
-    sii_schedules = applicable_filing_schedules(revision, sii_profile)
-    sii_ids = {s.id for s in sii_schedules}
-    assert "modelo-303-mensual-sii" in sii_ids, "monthly SII schedule must match SII-enrolled profile"
-    assert "modelo-303-trimestral" not in sii_ids, "quarterly schedule must NOT match SII-enrolled profile"
+    for profile in monthly_profiles:
+        monthly_schedules = applicable_filing_schedules(revision, profile)
+        monthly_ids = {s.id for s in monthly_schedules}
+        assert "modelo-303-mensual" in monthly_ids
+        assert "modelo-303-trimestral" not in monthly_ids
 
-    quarterly_schedules = applicable_filing_schedules(revision, quarterly_profile)
-    quarterly_ids = {s.id for s in quarterly_schedules}
-    assert "modelo-303-trimestral" in quarterly_ids, "quarterly schedule must match standard quarterly profile"
-    assert "modelo-303-mensual-sii" not in quarterly_ids, (
-        "monthly SII schedule must NOT match standard quarterly profile"
-    )
+    for profile in (voluntary_sii_profile, ordinary_quarterly_profile):
+        quarterly_schedules = applicable_filing_schedules(revision, profile)
+        quarterly_ids = {s.id for s in quarterly_schedules}
+        assert "modelo-303-trimestral" in quarterly_ids, "quarterly schedule must match non-monthly profile"
+        assert "modelo-303-mensual" not in quarterly_ids, "monthly schedule must NOT match non-monthly profile"
 
 
 def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuota() -> None:

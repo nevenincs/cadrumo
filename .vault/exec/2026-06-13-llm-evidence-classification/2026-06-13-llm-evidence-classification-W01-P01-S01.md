@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-evidence-classification'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-06-13-llm-evidence-classification-plan]]"
 ---
-
-
-
 
 # Thread provider Optional with lazy text-classifier resolution in suggest/saturate/split classification
 
@@ -27,4 +24,3 @@ related:
 - Image evidence now classifies on-host with no `--llm`; the text/cloud path still requires a provider. Committed `41c17af16`.
 
 ## Notes
-

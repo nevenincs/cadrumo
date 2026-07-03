@@ -3,15 +3,13 @@ tags:
   - '#plan'
   - '#rental-income-hardening'
 date: '2026-04-29'
-modified: '2026-04-29'
+modified: '2026-06-30'
 related:
   - "[[2026-04-29-rental-income-hardening-adr]]"
   - "[[2026-04-29-rental-income-hardening-research]]"
   - "[[2026-04-28-modelo-100-renta-full-calc-reference]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"
 ---
-
-
 
 # `rental-income-hardening` rollout plan
 

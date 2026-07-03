@@ -17,14 +17,14 @@ elements) but catch:
 from __future__ import annotations
 
 import ast
-from functools import lru_cache
+from functools import cache
 
 import pytest
 
 from .....core.paths import PROJECT_ROOT
-from .....core.resources import bundled_path
-from .. import CasillaId, load_registry_tree, validated_casilla_id
-from .._runtime_graph import expression_binding_refs, expression_parameter_refs
+from .. import CasillaId, validated_casilla_id
+from .._runtime_graph import expression_binding_refs, expression_parameter_refs, expression_relation_refs
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -62,8 +62,7 @@ _SUPPORTED_REVISIONS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024",
 
 
 def _modelo_100():
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return next(m for m in modelos if m.id == "100"), catalogues
+    return _committed_modelo("100")
 
 
 def test_top_level_cuota_chain_targets_present_in_every_supported_revision() -> None:
@@ -132,6 +131,7 @@ def test_no_orphan_formula_feeding_bindings_in_any_revision() -> None:
         for casilla in revision.casillas:
             if casilla.binding:
                 referenced.add(casilla.binding)
+            referenced.update(casilla.alternate_bindings)
         orphans = formula_feeding - referenced
         for orphan in sorted(orphans):
             offences.append(f"{revision_id}: orphan formula-feeding binding {orphan!r}")
@@ -302,6 +302,41 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         "renta-2025-minimo-discapacidad-gastos-asistencia-2025",
         "renta-2025-minimo-discapacidad-grado-33-2025",
         "renta-2025-minimo-discapacidad-grado-65-2025",
+        # Comunidad de Madrid mínimo por descendientes autonómico (#593,
+        # Decreto Legislativo 1/2010 art. 2). Consumed by the SAME
+        # out-of-formula pattern as the estatal mínimo-por-descendientes
+        # parameters above: the application-layer injector
+        # ``_minimo_descendientes_parameter`` / ``_resolved_minimo_descendientes_
+        # tranches`` (``src/aeat/application/modelo/_profile_binding.py``) reads
+        # these by manually iterating ``snapshot.revision.parameters`` rather
+        # than calling ``read_parameter(...)``, and lives under
+        # ``src/aeat/application/`` rather than ``src/aeat/domain/`` — outside
+        # both branches this gate's AST scan can see. Verified consumed by
+        # ``test_minimo_descendientes_engine.py``'s Madrid-tranche tests.
+        "renta-2020-minimo-descendientes-madrid-tercer-hijo-2020",
+        "renta-2020-minimo-descendientes-madrid-cuarto-y-siguientes-2020",
+        "renta-2021-minimo-descendientes-madrid-tercer-hijo-2021",
+        "renta-2021-minimo-descendientes-madrid-cuarto-y-siguientes-2021",
+        "renta-2022-minimo-descendientes-madrid-primer-hijo-2022",
+        "renta-2022-minimo-descendientes-madrid-segundo-hijo-2022",
+        "renta-2022-minimo-descendientes-madrid-tercer-hijo-2022",
+        "renta-2022-minimo-descendientes-madrid-cuarto-y-siguientes-2022",
+        "renta-2022-minimo-descendientes-madrid-menor-tres-anos-2022",
+        "renta-2023-minimo-descendientes-madrid-primer-hijo-2023",
+        "renta-2023-minimo-descendientes-madrid-segundo-hijo-2023",
+        "renta-2023-minimo-descendientes-madrid-tercer-hijo-2023",
+        "renta-2023-minimo-descendientes-madrid-cuarto-y-siguientes-2023",
+        "renta-2023-minimo-descendientes-madrid-menor-tres-anos-2023",
+        "renta-2024-minimo-descendientes-madrid-primer-hijo-2024",
+        "renta-2024-minimo-descendientes-madrid-segundo-hijo-2024",
+        "renta-2024-minimo-descendientes-madrid-tercer-hijo-2024",
+        "renta-2024-minimo-descendientes-madrid-cuarto-y-siguientes-2024",
+        "renta-2024-minimo-descendientes-madrid-menor-tres-anos-2024",
+        "renta-2025-minimo-descendientes-madrid-primer-hijo-2025",
+        "renta-2025-minimo-descendientes-madrid-segundo-hijo-2025",
+        "renta-2025-minimo-descendientes-madrid-tercer-hijo-2025",
+        "renta-2025-minimo-descendientes-madrid-cuarto-y-siguientes-2025",
+        "renta-2025-minimo-descendientes-madrid-menor-tres-anos-2025",
     },
 )
 
@@ -319,6 +354,32 @@ def test_every_relation_references_an_existing_target_binding() -> None:
                     f"{revision_id}: relation {relation.id!r} target_binding {target_binding!r} not declared",
                 )
     assert not offences, "relations with undeclared target_bindings:\n  " + "\n  ".join(offences)
+
+
+def test_relation_target_bindings_are_consumed_or_relation_is_formula_operand() -> None:
+    """Relation targets must either feed a casilla binding or be used directly by a formula."""
+    modelo, _ = _modelo_100()
+    offences: list[str] = []
+    for revision_id, revision in modelo.revisions.items():
+        formula_relation_refs: set[str] = set()
+        for formula in revision.formulas:
+            formula_relation_refs.update(expression_relation_refs(formula.expression))
+
+        consumed_bindings: set[str] = set()
+        for casilla in revision.casillas:
+            if casilla.binding:
+                consumed_bindings.add(casilla.binding)
+            consumed_bindings.update(casilla.alternate_bindings)
+
+        for relation in revision.relations:
+            target_binding = getattr(relation, "target_binding", None)
+            if not target_binding:
+                continue
+            if target_binding not in consumed_bindings and relation.id not in formula_relation_refs:
+                offences.append(
+                    f"{revision_id}: relation {relation.id!r} targets unused binding {target_binding!r}",
+                )
+    assert not offences, "relations with unused target_bindings:\n  " + "\n  ".join(offences)
 
 
 def test_every_formula_binding_reference_resolves_to_a_declared_binding() -> None:
@@ -351,7 +412,7 @@ def test_every_formula_parameter_reference_resolves_to_a_declared_parameter() ->
     assert not offences, "formulas referencing undeclared parameters:\n  " + "\n  ".join(offences)
 
 
-@lru_cache(maxsize=8)
+@cache
 def _read_parameter_refs_for_modelo(modelo_id: str) -> frozenset[str]:
     """Return every parameter id consumed via ``read_parameter`` for ``modelo_id``.
 

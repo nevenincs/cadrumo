@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S07'
 related:
   - "[[2026-06-15-service-capabilities-plan]]"
 ---
-
-
-
 
 # Probe Ollama before vision inference + refuse instructively
 
@@ -33,4 +30,3 @@ classify --read-evidence with Ollama down/model-missing now refuses instructivel
 ## Notes
 
 The ollama row on `ledger providers` and the Playwright BrowserError remediation hint are subsumed by `config check` and deferred as minor.
-

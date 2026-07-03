@@ -4,7 +4,7 @@ surface = "calculation"
 consumer = "aeat.domain.calculations.registry"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20-form-text"]
+source_refs = ["boe-modelo-123-2024-form-text"]
 
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-123-filing"
@@ -28,7 +28,7 @@ surface = "verification"
 consumer = "aeat.application.verification"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]
 
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-123-review"
@@ -36,7 +36,7 @@ surface = "review"
 consumer = "aeat.application.filing.review"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]
 
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-123-approval"
@@ -52,7 +52,7 @@ surface = "reconciliation"
 consumer = "aeat.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]
 
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-123-extractor"
@@ -93,4 +93,3 @@ consumer = "aeat.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure"]
-

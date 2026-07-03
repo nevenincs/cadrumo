@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#eoy-final-calculation'
 date: '2026-06-24'
-modified: '2026-06-24'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - "[[2026-06-22-eoy-final-calculation-plan]]"
 ---
-
-
-
 
 # Convert casilla DP200014B:00592 to a computed casilla deriving cuota liquida from 00562 minus the grounded deduction/bonificacion casillas (each defaulting to 0)
 

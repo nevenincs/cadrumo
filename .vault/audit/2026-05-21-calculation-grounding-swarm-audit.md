@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#codebase-health'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-06-29'
 related: []
 ---
-
-
 
 # calculation-grounding-swarm-audit
 
@@ -21,61 +19,70 @@ Files examined: `_formula_runtime.py`, `_constructs.py`, `_schema.py`, `_validat
 
 ---
 
+## Current State — 2026-06-29
+
+All four findings are closed on the current implementation path:
+
+- F1 is closed: typed observation projection now raises `CasillaProvenanceMissingError`
+  instead of emitting observations without `legal_refs` / `source_refs`.
+- F2 is closed: the IRPF escala estatal tests assert published breakpoint cuotas from
+  BOE/AEAT authority and use structural checks for open-bracket selection.
+- F3 is closed: the M369 importación total test now exercises real resolver aggregation
+  into the single bound casilla and asserts the cuota-total formula's `operand_refs`.
+- F4 is closed: M100 2025 and M200 2024-y-siguientes carry completeness manifests, and
+  manifestless calculation-bearing revisions fail validation.
+
 ## Findings
 
-### F1 — Silent grounding-drop path in `_casilla_observation_for` (logically unreachable but unguarded)
+### F1 — CLOSED: typed observations fail on missing provenance source
 
 **Pathway:** `application/modelo/_actions.py:1816–1836`
 
-**Detail:** `_casilla_observation_for` accepts `registry_casilla` as an untyped parameter (both the function and its caller carry `# type: ignore[no-untyped-def]`). The guard at line 1834–1835 silently falls back to empty `legal_refs = ()` / `source_refs = ()` when `registry_casilla is None`. The logic is that `engine_result.values` derives from `_initial_values` (which iterates `revision.casillas`) so every casilla_id in `values` must have a registry entry — the `None` branch is not reachable in the current implementation. However, the lack of static typing and the defensive `if registry_casilla is not None else ()` pattern means a future refactor that alters the provenance of `engine_result.values` (e.g. a new formula op that injects virtual casilla ids) could silently produce zero-grounded observations with no runtime error. The observation would persist to the encrypted SQL store with empty legal_refs, and the anti-tautology roundtrip test would not catch it because the test populates legal_refs explicitly in its fixture.
+**Original detail:** `_casilla_observation_for` accepted `registry_casilla` as an untyped parameter and silently fell back to empty `legal_refs = ()` / `source_refs = ()` when `registry_casilla is None`. The logic was that `engine_result.values` derived from `_initial_values` (which iterates `revision.casillas`) so every casilla_id in `values` must have a registry entry, making the `None` branch unreachable in normal operation. The defensive fallback still left a future provenance-erasure path.
 
-**Data lost / risk:** Empty `legal_refs` / `source_refs` on input or bound casilla observations if the unreachable branch is ever reached. No current regression — risk is latent.
+**Current closure:** `src/aeat/application/modelo/_calculation_helpers.py` now projects observations through typed helpers and raises `CasillaProvenanceMissingError` if a casilla in `engine_result.values` or amendment overrides is absent from the registry snapshot. Regression coverage: `src/aeat/application/modelo/tests/test_typed_observation_provenance.py`.
 
-**Remediation:** Add a typed signature to both `_build_typed_observations` and `_casilla_observation_for` (replace `# type: ignore[no-untyped-def]` with proper `RegistryCalculationResult` / `RegistryCalculationEntry | None` / `CasillaDefinition | None` annotations). Replace the silent `if registry_casilla is not None else ()` with an explicit `RegistrySnapshotError` raise: if `casilla_id` is in `engine_result.values` but absent from `snapshot.revision.casillas`, the snapshot is incoherent and calculation must fail loudly. This is a cross-campaign concern (the schema-hardening campaign introduced `_build_typed_observations`).
+**Verification:** `test_typed_observations_built_for_real_snapshot_carry_provenance`, `test_unknown_casilla_raises_instead_of_emitting_empty_provenance`, and `test_amendment_override_orphan_casilla_raises_instead_of_emitting_empty_provenance`.
 
 ---
 
-### F2 — Tautological bracket-resolution arithmetic in `test_renta_escala_estatal_bracket_resolution.py`
+### F2 — CLOSED: escala estatal tests use published breakpoint oracles
 
 **Pathway:** `domain/calculations/registry/test_renta_escala_estatal_bracket_resolution.py:59–89`
 
-**Detail:** Tests `test_escala_estatal_resolves_for_30k_base_general`, `test_escala_estatal_resolves_in_top_bracket_post_2021`, and `test_escala_estatal_2020_top_bracket_uses_pre_amendment_22_5_rate` assert the output of `_resolve_bracket` against Decimal values computed by the test author using the same `fixed_addition + marginal_rate * (base - lower_bound)` formula that the function executes. The docstring for `test_escala_estatal_resolves_for_30k_base_general` shows `cuota = 2112.75 + 0.15 * (30000 - 20200) = 3582.75` — the expected value is derived by the author from the same formula, not read from an AEAT publication. These tests would pass even if the registry bracket parameters were wrong against the AEAT-published tariff table (so long as the parameters and the formula are internally consistent). This violates the `no-tautological-calculation-tests.md` rule.
+**Original detail:** Tests `test_escala_estatal_resolves_for_30k_base_general`, `test_escala_estatal_resolves_in_top_bracket_post_2021`, and `test_escala_estatal_2020_top_bracket_uses_pre_amendment_22_5_rate` asserted `_resolve_bracket` against Decimal values computed by the test author using the same `fixed_addition + marginal_rate * (base - lower_bound)` formula that the function executes. These tests would pass even if the registry bracket parameters were wrong against the AEAT-published tariff table.
 
 The companion file `test_renta_escala_estatal_ahorro_bracket_resolution.py` correctly cites AEAT Manual práctico de Renta 2025 Parte 1 (page 953) and BOE-A-2006-20764 as the authority for its expected values and is clean.
 
-**Data lost / risk:** A wrong bracket parameter value (e.g. wrong `fixed_addition` or `lower_bound` transcribed from the tariff table) would not be caught by these three tests. The bug would only surface in the workbook-parity / oracle-replay layer — but that layer is optional and not exercised in CI without live oracle access.
+**Current closure:** `src/aeat/domain/calculations/registry/tests/test_renta_escala_estatal_bracket_resolution.py` now asserts at statutory breakpoints whose cuota íntegra values are transcribed from the BOE/AEAT table: 12.450 -> 1.182,75; 20.200 -> 2.112,75; 35.200 -> 4.362,75; 60.000 -> 8.950,75; and 300.000 -> 62.950,75 for post-2021 years. Open-bracket behavior is checked structurally rather than with manufactured mid-bracket arithmetic.
 
-**Remediation:** Replace the hand-computed expectations with values transcribed from the AEAT-published escala estatal table (same source the ahorro companion uses: AEAT Manual de Renta, section on gravamen de la base liquidable general). For example, the AEAT Manual for each ejercicio publishes the cuota íntegra at the 30.000 EUR threshold as a printed figure; use that published figure, not the author's arithmetic. Add a source citation in the docstring matching the pattern in `test_renta_escala_estatal_ahorro_bracket_resolution.py`.
+**Verification:** the updated test module documents the external oracle in its module docstring and no longer asserts the old 30.000 EUR hand-computed value.
 
 ---
 
-### F3 — M369 importación `cuota-total` test exercises a degenerate single-summand formula
+### F3 — CLOSED: M369 importación total test asserts formula wiring
 
 **Pathway:** `domain/calculations/registry/test_modelo_369_registry.py:663–677`
 
-**Detail:** `test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end` supplies one binding pair (`DE` / 21%) and asserts `result.values["iva.importacion.cuota-total"] == expected_cuota`. The registry formula is `add([iva.importacion.de.low-value-cuota])` — a single-element add. The assertion is therefore `identity_output == input` which holds for any value, including 0 or a wrong value produced by a formula bug. The test comment at line 670–674 attempts to justify this: "Asserting each against the binding fact (rather than against the other SUT output) means a broken cuota-total formula cannot hide by collapsing both casillas to the same wrong value." This reasoning holds for two-argument sums but not for single-argument identity. A mismatch in the formula's operand set (e.g. forgetting to sum an additional country slot) would be invisible.
+**Original detail:** `test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end` supplied one binding pair (`DE` / 21%) and asserted `result.values["iva.importacion.cuota-total"] == expected_cuota`. The registry formula is `add([iva.importacion.de.low-value-cuota])`, a single-element add, so the assertion was an identity check.
 
 The M369 union-scheme companion test (`test_modelo_369_union_scheme_cuota_total_resolves_end_to_end`, around line 570–605) is stronger: it supplies three country/rate slots and checks operand_refs, so the aggregation is exercised for real.
 
-**Data lost / risk:** Low direct risk to the current single-binding registry shape. Risk elevates if the M369 importación revision acquires additional binding slots (additional country × rate combinations) — the test would still pass with a formula that only sums DE/21% rather than all slots.
+**Current closure:** the importación test now feeds two real IOSS ledger observations into the resolver, proving aggregation into the single bound casilla, and mirrors the union-scheme structural assertion by checking the cuota-total formula entry's `op == "add"` and `operand_refs == {"iva.importacion.de.low-value-cuota"}`.
 
-**Remediation:** Extend the test fixture to supply at least two country/rate binding slots (e.g. DE/21% and FR/21%) and assert that `cuota-total` equals the algebraic sum of both, sourced from the resolver output. Alternatively add a structural assertion that `cuota-total_entry.operand_refs` contains all bound casilla ids (matching the pattern of the union companion test).
+**Verification:** `test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end`.
 
 ---
 
-### F4 — No `completeness_manifest` on M100 or M200 revisions (staged gate, not yet fail-closed)
+### F4 — CLOSED: M100/M200 manifests and fail-closed completeness gate
 
 **Pathway:** `_data/registry/aeat/modelos/100/revisions/2025/revision.toml` and `_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/revision.toml`
 
-**Detail:** Neither the M100 2025 revision nor the M200 2024-y-siguientes revision declares a `completeness_manifest`. The `_emit_completeness_gate_failures` validator (line 261 in `_validate.py`) explicitly skips revisions with `manifest is None`: "manifest authoring is a staged migration, and a casilla-bearing revision is allowed to load while its manifest is still being authored." So this is not a current CI failure.
+**Original detail:** Neither the M100 2025 revision nor the M200 2024-y-siguientes revision declared a `completeness_manifest`. The completeness validator skipped revisions with `manifest is None`, so the gate that enforces `legal_refs` + `source_refs` on every calculation-closure casilla was bypassed for those two calculation-bearing modelos.
 
-However, M100 is the most critical calculation-bearing modelo in the codebase (full IRPF cuota chain, 90 CCAA × ejercicio cells), and M200 is the focus of the schema-hardening campaign's page-14 cuota chain work. Without a completeness manifest, the gate that enforces `legal_refs` + `source_refs` on every calculation-closure casilla is bypassed for these two modelos. Casillas added during the hardening campaign that lack grounding would not be caught at validation time.
+**Current closure:** `src/aeat/_data/registry/aeat/modelos/100/revisions/2025/completeness-manifest.toml` and `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/completeness-manifest.toml` exist. `src/aeat/domain/calculations/registry/_validate_completeness.py` now fails validation when a calculation-bearing revision has no manifest, naming the closure casilla ids.
 
-Spot-check of the M200 pagos-fraccionados casillas (e.g. `liquidacion-00601-pago-fraccionado-1.toml`) confirms they carry `legal_refs` and `source_refs`. The M100 cluster `0592` also carries grounding. Manual spot-check is not a substitute for the automated gate.
-
-**Data lost / risk:** Medium. An ungrounded casilla in the cuota chain for M100 or M200 would not be caught at registry build time, only at the completeness-gate check (which is bypassed). The risk is that the schema-hardening campaign added casillas without grounding and the current test suite would not surface the gap.
-
-**Remediation (cross-campaign):** Author `completeness_manifest` entries for M100 2025 and M200 2024-y-siguientes. The manifest need only list casillas in the calculation closure (formula targets, formula operands, binding endpoints, relation endpoints). Once the manifest is declared, the existing `_emit_completeness_gate_failures` gate enforces grounding automatically at `RegistryValidator.validate_modelo` time.
+**Verification:** `test_calculation_bearing_revision_without_manifest_fails_closed`, `test_calculation_completeness_gate_is_live_for_every_calculation_bearing_modelo`, `test_calculation_completeness_manifests_match_their_calculation_surface`, and `test_calculation_completeness_manifest_legal_refs_match_calculation_closure`.
 
 ---
 
@@ -99,13 +106,11 @@ Spot-check of the M200 pagos-fraccionados casillas (e.g. `liquidacion-00601-pago
 
 ---
 
-## Recommendations
+## Closure Record
 
-1. **Type the `_build_typed_observations` / `_casilla_observation_for` private functions** (F1). Remove the `type: ignore[no-untyped-def]` suppression and replace the defensive `None` fallback with an explicit error. This is a low-effort, high-value safety improvement.
+1. **F1 closed:** observation projection hard-fails rather than emitting empty provenance.
+2. **F2 closed:** escala estatal tests use BOE/AEAT breakpoint oracles and structural open-bracket checks.
+3. **F3 closed:** M369 importación total checks real resolver aggregation and formula `operand_refs`.
+4. **F4 closed:** M100/M200 manifests exist and manifestless calculation-bearing revisions fail validation.
 
-2. **Rewrite three tautological bracket tests in `test_renta_escala_estatal_bracket_resolution.py`** (F2). The fix is straightforward: read the expected cuota from the same AEAT manual source the ahorro companion already cites.
-
-3. **Extend the M369 importación cuota-total test** (F3) to cover at least two country/rate slots and check operand_refs structurally.
-
-4. **Author completeness manifests for M100 2025 and M200 2024-y-siguientes** (F4). This should be coordinated with the schema-hardening campaign maintainer. The gate machinery is in place; only the TOML manifest declaration is missing.
-
+Current verification on 2026-06-29: typed-observation provenance tests, escala estatal bracket tests, M369 registry tests, referential-integrity tests, and record-design tests pass in the current tree or were exercised by the focused suites recorded in the R2 closure.

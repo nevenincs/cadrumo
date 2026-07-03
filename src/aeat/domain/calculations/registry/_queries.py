@@ -17,10 +17,12 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....core import Period
+from ....core import BindingSourceKind, Modelo, Period, TaxDomain
 from ._authority import ValidatedRegistryAuthority
+from ._binding_selector_utils import BooleanBindingEncodedValue, boolean_binding_encoded_values
 from ._errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, ParameterId, RelationId, SourceRefId
+from ._period_selector_match import registry_period_for_request, selector_token_for_request
 from ._runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -28,7 +30,8 @@ from ._runtime_graph import (
     expression_parameter_refs,
     expression_relation_refs,
 )
-from ._schema import InputKind, ModeloDefinition, ModeloRevision, filing_period_from_scope
+from ._schema import ModeloDefinition, ModeloRevision, filing_period_from_scope
+from ._schema_input_kind import InputKind
 
 #: Bare registry period tokens (``0A``, ``1T``-``4T``, ``01``-``12``,
 #: ``1P``-``4P``, ``EXT-1T``-``EXT-4T``, ``AD-HOC``, ``EVENT-N``) carry
@@ -240,6 +243,89 @@ class ModeloCasillasReport(BaseModel):
     rows: tuple[ModeloCasillaRow, ...]
 
 
+class ModeloCasillaDetailReport(BaseModel):
+    """Full semantic detail for one casilla on a resolved modelo revision.
+
+    Returned by :meth:`RegistryQueryService.casilla`. Unlike the ``casillas``
+    listing, this report addresses a single casilla by its id (or printed
+    number) and, when the casilla is computed, resolves and carries the
+    formula's structured expression. Every field is sourced from the
+    authoritative :class:`~aeat.domain.calculations.registry.CasillaDefinition`
+    on the selected revision, never recomputed.
+
+    Attributes:
+        code: Modelo identifier (e.g. ``"303"``).
+        revision: Registry revision identifier that was resolved.
+        filing_year: Filing year used for revision selection, or ``None``.
+        period: Filing-period code, or ``None``.
+        casilla_id: Canonical registry identifier for the casilla.
+        number: Short numeric or alphanumeric label printed on the form.
+        label: Official Spanish invariant label.
+        localized_labels: Optional locale-keyed label overrides.
+        localized_help: Optional locale-keyed help/hint texts.
+        section: Ordered breadcrumb path locating the casilla in the form.
+        data_type: Raw value type declared by the registry.
+        input_kind: Whether the casilla is manual, bound, or computed.
+        required: ``True`` when required for a valid filing.
+        legal_refs: Regulatory citations grounding this casilla.
+        source_refs: Internal source references for this casilla.
+        binding: Binding id that populates a bound casilla, or ``None``.
+        formula_id: Formula id that computes a computed casilla, or ``None``.
+        formula_expression: JSON-serialisable formula expression when the
+            casilla is computed, or ``None`` for manual and bound casillas.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    code: str
+    revision: str
+    filing_year: int | None
+    filing_period: Period | None = None
+    period: str | None
+    casilla_id: CasillaId
+    number: str
+    label: str
+    localized_labels: dict[str, str] = Field(default_factory=dict)
+    localized_help: dict[str, str] = Field(default_factory=dict)
+    section: tuple[str, ...]
+    data_type: str
+    input_kind: InputKind
+    required: bool
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
+    binding: BindingId | None
+    formula_id: FormulaId | None
+    formula_expression: Mapping[str, object] | None
+
+
+BindingSelectorQueryValue = str | int | bool | tuple[str, ...]
+
+
+class BindingSelectorQueryEntry(BaseModel):
+    """One normalized binding-selector entry on the public query surface."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    key: str = Field(min_length=1)
+    value: BindingSelectorQueryValue
+
+
+class BindingSelectorQueryProjection(BaseModel):
+    """Typed public projection of a binding selector.
+
+    The stored selector remains source-family specific. Query consumers get a
+    stable, ordered entry list tagged with the binding source instead of an
+    opaque mapping payload, so the public report surface can be schema-checked
+    without pretending this is the full stored selector union.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    source: str
+    keys: tuple[str, ...]
+    entries: tuple[BindingSelectorQueryEntry, ...]
+
+
 class ModeloBindingQueryRow(BaseModel):
     """One row in a binding listing for a resolved modelo revision.
 
@@ -263,8 +349,8 @@ class ModeloBindingQueryRow(BaseModel):
             yet still be a ``decimal`` channel binding (the Modelo 100
             estimación-directa modality binding is compared against a
             numeric literal).
-        selector: Structured selector mapping the binding applies against
-            the financial-data source to aggregate its input.
+        selector: Typed public selector projection carrying the source tag and
+            ordered selector entries the binding applies against that source.
         aggregation: Optional aggregation rule applied after selection, or
             ``None`` when the selector yields a scalar directly.
         legal_refs: Regulatory citations grounding this binding's
@@ -273,6 +359,16 @@ class ModeloBindingQueryRow(BaseModel):
             publications or working documents.
         borrador_capable: ``True`` when this binding is eligible for AEAT
             borrador (pre-filled return) data.
+        relation_inputs: Registry relation ids whose ``target_binding`` is
+            this binding -- i.e. the cross-modelo / cross-period
+            :class:`RelationDefinition` fold-ins that materialise this
+            binding's value. Non-empty only for ``source =
+            "relation_prefill"`` bindings; the operator supplies these
+            inputs through ``--relation RELATION_ID=VALUE`` rather than
+            ``--binding``. Derived from the resolved revision's
+            ``relations`` so the feeding relation is discoverable in the
+            listing surface before a calculation is attempted, for any
+            modelo, never a per-form hardcoded mapping.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -293,11 +389,26 @@ class ModeloBindingQueryRow(BaseModel):
     Modelo 100 estimación-directa modality binding is compared against
     a numeric literal).
     """
-    selector: Mapping[str, object]
+    selector: BindingSelectorQueryProjection
     aggregation: Mapping[str, object] | None
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
     borrador_capable: bool = False
+    relation_inputs: tuple[RelationId, ...] = ()
+    encoded_options: tuple[BooleanBindingEncodedValue, ...] = ()
+    """Accepted decimal encodings for a boolean-typed ``input_channel=decimal`` binding.
+
+    Non-empty only for a ``manual_input`` binding whose selector declares
+    ``data_type = "boolean"`` (the Modelo 100 estimación-directa modality flag),
+    which the registry formulas consume as a numeric ``1`` / ``0`` operand. Each
+    :class:`~aeat.domain.calculations.registry.BooleanBindingEncodedValue` pairs
+    the decimal the operator must type on ``--binding`` with the boolean sense
+    and the underlying casilla token it maps to, so the listing surface can teach
+    the decimal-to-meaning mapping before a calculation is attempted, derived
+    from the binding definition rather than a per-form hardcoded table.
+    """
+    operator_input_required: bool = True
+    """Whether a missing-input view should ask the operator to supply this binding."""
 
 
 class ModeloBindingsReport(BaseModel):
@@ -403,7 +514,12 @@ class RegistryQueryService:
     def __init__(self, authority: ValidatedRegistryAuthority) -> None:
         self._authority = authority
 
-    def list_modelos(self, *, year: int | None = None) -> ModeloListReport:
+    def list_modelos(
+        self,
+        *,
+        year: int | None = None,
+        domain: TaxDomain | None = None,
+    ) -> ModeloListReport:
         """Return a catalogue listing of all registered modelos.
 
         Each entry is a lightweight ``ModeloListRow`` carrying only summary
@@ -414,6 +530,11 @@ class RegistryQueryService:
             year: When supplied, restricts the listing to modelos that have
                 at least one revision whose ``period_selector`` covers the
                 given filing year. ``None`` returns all registered modelos.
+            domain: When supplied, restricts the listing to modelos whose
+                registry :class:`~aeat.core.TaxDomain` equals the requested
+                tax family (e.g. ``TaxDomain.IVA``). ``None`` returns every
+                family. The ``year`` and ``domain`` filters compose: passing
+                both narrows to modelos that satisfy each.
 
         Returns:
             A :class:`ModeloListReport` containing the matching rows.
@@ -427,7 +548,7 @@ class RegistryQueryService:
                 revision_count=len(modelo.revisions),
             )
             for modelo in self._authority.modelos
-            if year is None or _modelo_covers_year(modelo, year)
+            if (year is None or _modelo_covers_year(modelo, year)) and (domain is None or modelo.tax_domain == domain)
         ]
         return ModeloListReport(modelos=tuple(sorted(rows, key=lambda row: row.code)))
 
@@ -659,6 +780,57 @@ class RegistryQueryService:
             rows=tuple(rows),
         )
 
+    def casilla(
+        self,
+        modelo: str,
+        casilla: str,
+        *,
+        period: str | None = None,
+        as_of: date | None = None,
+    ) -> ModeloCasillaDetailReport:
+        """Return the full semantic detail for one casilla on a resolved revision.
+
+        Addresses a single casilla by its canonical id or its printed
+        ``number`` and surfaces the authoritative label, legal/source
+        grounding, input kind, and — when the casilla is computed — the
+        resolved formula expression. Revision selection follows the same
+        precedence as :meth:`describe_modelo`.
+
+        Args:
+            modelo: Short numeric identifier for the modelo (e.g. ``"303"``).
+            casilla: Casilla id or printed number to look up.
+            period: Optional period narrowing; see :meth:`describe_modelo`.
+            as_of: Optional calendar date for validity gating.
+
+        Returns:
+            A :class:`ModeloCasillaDetailReport` for the addressed casilla.
+
+        Raises:
+            ``RegistryValidationError``: When the modelo or period is not
+                registered, no revision covers the requested scope, or the
+                casilla id/number is not defined by the resolved revision.
+        """
+        definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
+        return _casilla_detail_report(definition, revision, casilla, filing_year, registry_period)
+
+    def casilla_for_scope(
+        self,
+        modelo: str,
+        casilla: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None = None,
+    ) -> ModeloCasillaDetailReport:
+        """Return a :class:`ModeloCasillaDetailReport` for an exact ``(filing_year, period)`` scope."""
+        definition, revision, registry_period = self._resolve_revision_for_scope(
+            modelo,
+            filing_year=filing_year,
+            period=period,
+            as_of=as_of,
+        )
+        return _casilla_detail_report(definition, revision, casilla, filing_year, registry_period)
+
     def bindings_for_scope(
         self,
         modelo: str,
@@ -690,7 +862,7 @@ class RegistryQueryService:
             filing_year=filing_year,
             filing_period=filing_period_from_scope(filing_year, period),
             period=period,
-            rows=_binding_rows(snapshot.revision),
+            rows=_binding_rows(snapshot.revision, modelo=str(definition.id), period=period),
         )
 
     def formulas_for_scope(
@@ -773,7 +945,7 @@ class RegistryQueryService:
             filing_year=filing_year,
             filing_period=None,
             period=None,
-            rows=_binding_rows(revision),
+            rows=_binding_rows(revision, modelo=str(definition.id)),
         )
 
     def bindings(
@@ -811,7 +983,7 @@ class RegistryQueryService:
             filing_year=filing_year,
             filing_period=_query_filing_period(filing_year, registry_period),
             period=registry_period,
-            rows=_binding_rows(revision),
+            rows=_binding_rows(revision, modelo=str(definition.id), period=registry_period),
         )
 
     def formulas(
@@ -881,30 +1053,34 @@ class RegistryQueryService:
         # A bare period token is one of: a registry time-code
         # (``0A``, ``1T``-``4T``, ``01``-``12``, ...) matched by
         # ``_BARE_PERIOD_RE``, or a non-date censo / event token
-        # (``alta``, ``modificacion``, ``baja``, ``AD-HOC``) declared
+        # (``alta``, ``modificacion``, ``baja``, ``AD-HOC``, ``EVENT-N``) declared
         # verbatim by a censo modelo's ``period_selector``. Both are
         # resolved by matching the token against each revision's
         # declared periods, so a censo token is accepted on the same
         # path as a quarterly time-code.
-        declared_by_revision = {
+        declared_by_revision = tuple(
             token for revision in definition.revisions.values() for token in revision.period_selector.periods
-        }
-        token_is_declared = any(token.upper() == bare_upper for token in declared_by_revision)
+        )
+        token_is_declared = selector_token_for_request(declared_by_revision, bare) is not None
         if _BARE_PERIOD_RE.fullmatch(bare_upper) or token_is_declared:
             candidates = [
                 revision
                 for revision in definition.revisions.values()
-                if bare_upper in {token.upper() for token in revision.period_selector.periods}
+                if selector_token_for_request(revision.period_selector.periods, bare) is not None
             ]
             if not candidates:
-                declared = sorted(declared_by_revision)
+                declared = sorted(set(declared_by_revision))
                 raise RegistryValidationError(
                     f"period {period!r} is not declared by any revision of modelo "
                     f"{definition.id}; declared periods: {', '.join(declared)}",
                 )
             revision = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
             # Return the registry's own casing for the period token.
-            registry_token = next(token for token in revision.period_selector.periods if token.upper() == bare_upper)
+            registry_token = selector_token_for_request(revision.period_selector.periods, bare)
+            if registry_token is None:
+                raise RegistryValidationError(
+                    f"period {period!r} is not declared by revision {revision.id} of modelo {definition.id}",
+                )
             return definition, revision, None, registry_token
         raise RegistryValidationError(
             f"period must be a bare registry token; pass the filing year separately; got {period!r}",
@@ -920,11 +1096,12 @@ class RegistryQueryService:
     ) -> tuple[ModeloDefinition, ModeloRevision, str]:
         definition = self._authority.validate_modelo(modelo.strip())
         requested_period = period.strip()
-        declared_by_revision = {
+        declared_by_revision = tuple(
             token for revision in definition.revisions.values() for token in revision.period_selector.periods
-        }
-        declared_by_upper = {token.upper(): token for token in declared_by_revision}
-        registry_period = declared_by_upper.get(requested_period.upper(), requested_period.upper())
+        )
+        registry_period = (
+            registry_period_for_request(declared_by_revision, requested_period) or requested_period.upper()
+        )
         snapshot = self._authority.snapshot(
             str(definition.id),
             filing_year=filing_year,
@@ -934,7 +1111,12 @@ class RegistryQueryService:
         return definition, snapshot.revision, registry_period
 
 
-def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingQueryRow, ...]:
+def _binding_rows(
+    revision: ModeloRevision,
+    *,
+    modelo: str | None = None,
+    period: str | None = None,
+) -> tuple[ModeloBindingQueryRow, ...]:
     """Build the typed binding rows for one revision.
 
     Shared by every ``bindings*`` query so the operator-facing
@@ -943,20 +1125,132 @@ def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingQueryRow, ...]
     as a string enum key, ``decimal`` for every other binding.
     """
     enum_consumed = enum_consumed_binding_ids(revision)
+    relation_inputs_by_target = _relation_inputs_by_target_binding(revision, period=period)
+    operator_required = _operator_input_required_by_binding(revision, modelo=modelo, period=period)
     return tuple(
         ModeloBindingQueryRow(
             binding_id=binding.id,
             source=binding.source,
             typed_enum=binding.typed_enum,
             input_channel="enum" if binding.id in enum_consumed else "decimal",
-            selector=_public_mapping(binding.selector),
+            selector=_public_selector(binding.source, binding.selector),
             aggregation={"op": binding.aggregation.op.value} if binding.aggregation is not None else None,
             legal_refs=tuple(binding.legal_refs),
             source_refs=tuple(binding.source_refs),
             borrador_capable=binding.aeat_prefilled is True,
+            relation_inputs=relation_inputs_by_target.get(binding.id, ()),
+            encoded_options=boolean_binding_encoded_values(binding),
+            operator_input_required=operator_required.get(binding.id, True),
         )
         for binding in revision.bindings
     )
+
+
+def _casilla_detail_report(
+    definition: ModeloDefinition,
+    revision: ModeloRevision,
+    casilla: str,
+    filing_year: int | None,
+    registry_period: str | None,
+) -> ModeloCasillaDetailReport:
+    """Build the single-casilla detail report, resolving the formula expression.
+
+    The casilla is matched by canonical id first, then by printed ``number``
+    (the same dual key the ``casillas --number`` filter accepts). An unknown
+    casilla raises an instructive :class:`RegistryValidationError` naming a
+    bounded sample of valid ids and the ``casillas`` verb that lists them all.
+    A computed casilla's ``formula`` id is resolved against the revision's
+    formulas so the structured expression rides the report.
+    """
+    needle = casilla.strip()
+    matched = next(
+        (item for item in revision.casillas if str(item.id) == needle or item.number == needle),
+        None,
+    )
+    if matched is None:
+        valid_ids = [str(item.id) for item in revision.casillas]
+        sample = ", ".join(valid_ids[:20])
+        overflow = "" if len(valid_ids) <= 20 else f" (+{len(valid_ids) - 20} more)"
+        raise RegistryValidationError(
+            f"casilla {casilla!r} is not defined by revision {revision.id} of modelo {definition.id}; "
+            f"valid casilla ids include: {sample}{overflow}. "
+            f"Run 'aeat app modelo casillas {definition.id}' to list every casilla id and number.",
+        )
+    formula_expression: Mapping[str, object] | None = None
+    if matched.formula is not None:
+        formula = next((item for item in revision.formulas if item.id == matched.formula), None)
+        if formula is not None:
+            formula_expression = _public_mapping(formula.expression.model_dump(mode="json"))
+    return ModeloCasillaDetailReport(
+        code=str(definition.id),
+        revision=str(revision.id),
+        filing_year=filing_year,
+        filing_period=_query_filing_period(filing_year, registry_period),
+        period=registry_period,
+        casilla_id=matched.id,
+        number=matched.number,
+        label=matched.label,
+        localized_labels=dict(matched.localized_labels),
+        localized_help=dict(matched.localized_help),
+        section=tuple(matched.section),
+        data_type=matched.data_type,
+        input_kind=matched.input_kind,
+        required=matched.required,
+        legal_refs=tuple(str(ref) for ref in matched.legal_refs),
+        source_refs=tuple(str(ref) for ref in matched.source_refs),
+        binding=matched.binding,
+        formula_id=matched.formula,
+        formula_expression=formula_expression,
+    )
+
+
+def _relation_inputs_by_target_binding(
+    revision: ModeloRevision,
+    *,
+    period: str | None = None,
+) -> dict[BindingId, tuple[RelationId, ...]]:
+    """Map each binding id to the relation ids whose ``target_binding`` is that binding.
+
+    A ``relation_prefill`` binding's value is materialised by one or more
+    registry :class:`RelationDefinition` fold-ins; each declares the
+    binding it feeds via ``target_binding``. Inverting that declaration
+    makes the feeding relation discoverable from the binding listing
+    surface for any modelo, grounded in the resolved revision rather than
+    a per-form hardcoded channel table. Relation ids preserve their
+    declaration order so the listing is deterministic.
+    """
+    by_target: dict[BindingId, list[RelationId]] = {}
+    for relation in revision.relations:
+        if period is not None and relation.target_periods and period not in relation.target_periods:
+            continue
+        by_target.setdefault(relation.target_binding, []).append(relation.id)
+    return {target: tuple(relation_ids) for target, relation_ids in by_target.items()}
+
+
+def _operator_input_required_by_binding(
+    revision: ModeloRevision,
+    *,
+    modelo: str | None,
+    period: str | None,
+) -> dict[BindingId, bool]:
+    """Return missing-input visibility for relation slots with period-scoped defaults."""
+    required = {binding.id: True for binding in revision.bindings}
+    if modelo != Modelo.M202.value or period is None:
+        return required
+    relations_by_target: dict[BindingId, list] = {}
+    for relation in revision.relations:
+        relations_by_target.setdefault(relation.target_binding, []).append(relation)
+    for binding in revision.bindings:
+        if binding.source is not BindingSourceKind.RELATION_PREFILL:
+            continue
+        relations = tuple(relations_by_target.get(binding.id, ()))
+        if not relations:
+            continue
+        if any(not relation.target_periods or period in relation.target_periods for relation in relations):
+            continue
+        if all(relation.kind == "previous_period" and str(relation.source_modelo) == modelo for relation in relations):
+            required[binding.id] = False
+    return required
 
 
 def _modelo_covers_year(modelo: ModeloDefinition, year: int) -> bool:
@@ -969,8 +1263,41 @@ def _query_filing_period(filing_year: int | None, period: str | None) -> Period 
     return filing_period_from_scope(filing_year, period)
 
 
+def _public_selector(source: str, selector: object) -> BindingSelectorQueryProjection:
+    if isinstance(selector, BaseModel):
+        selector = selector.model_dump(exclude={"source"}, exclude_none=True, exclude_unset=True)
+    if not isinstance(selector, Mapping):
+        raise RegistryValidationError(
+            f"binding selector projection requires a mapping or model, got {type(selector).__name__}",
+        )
+    entries = tuple(
+        BindingSelectorQueryEntry(key=str(key), value=_public_selector_value(value))
+        for key, value in sorted(selector.items(), key=lambda item: str(item[0]))
+    )
+    return BindingSelectorQueryProjection(
+        source=str(source),
+        keys=tuple(entry.key for entry in entries),
+        entries=entries,
+    )
+
+
 def _public_mapping(value: Mapping[str, object]) -> dict[str, object]:
     return {str(key): _public_value(item) for key, item in value.items()}
+
+
+def _public_selector_value(value: object) -> BindingSelectorQueryValue:
+    public_value = _public_value(value)
+    if isinstance(public_value, str | int | bool):
+        return public_value
+    if isinstance(public_value, tuple):
+        string_items: list[str] = []
+        for item in public_value:
+            if not isinstance(item, str):
+                break
+            string_items.append(item)
+        else:
+            return tuple(string_items)
+    raise RegistryValidationError(f"unsupported public binding selector value {public_value!r}")
 
 
 def _public_value(value: object) -> object:
@@ -986,8 +1313,11 @@ def _public_value(value: object) -> object:
 
 
 __all__ = [
+    "BindingSelectorQueryEntry",
+    "BindingSelectorQueryProjection",
     "ModeloBindingQueryRow",
     "ModeloBindingsReport",
+    "ModeloCasillaDetailReport",
     "ModeloCasillaRow",
     "ModeloCasillasReport",
     "ModeloDescribeReport",

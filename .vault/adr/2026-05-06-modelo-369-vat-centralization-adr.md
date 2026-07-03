@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-369-vat-centralization'
 date: '2026-05-06'
-modified: '2026-05-06'
+modified: '2026-06-30'
 related:
   - '[[2026-05-06-modelo-369-vat-centralization-audit]]'
   - '[[2026-05-06-modelo-369-vat-centralization-research]]'
@@ -12,14 +12,11 @@ related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
 ---
 
-
-
 # `modelo-369-vat-centralization` adr: `oss-ioss-regime-substrate-and-ledger-binding-shape` | (**status:** `proposed`)
 
 > **PARTIALLY-SUPERSEDED 2026-05-19**: The Value-Added Tax direction in this ADR is reversed: Spanish stems are authoritative for tax-domain identifiers and domain/vat migrates into domain/iva. The OSS/IOSS regime taxonomy, classifier-rule shape, ledger_oss_aggregation binding source, Modelo 369 single-modelo three-revisions shape, teardown sequencing, and LIVA grounding remain in force. Module-path mentions (aeat.domain.vat, domain/financial/vat) and the spelling of IvaRate, VatRateKind rename per the cluster ledger when the IVA migration lands.
 > See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
 > rename ledger and Spanish-stem terminology authority.
-
 
 ## Review State
 

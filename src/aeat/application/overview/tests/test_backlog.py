@@ -14,12 +14,12 @@ from typing import TypedDict
 
 import pytest
 
-from ....domain.deadlines import TaxpayerProfile
-from ....domain.deadlines._models import (
+from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
+    TaxpayerProfile,
 )
 from .._backlog import OverviewBacklog, build_overview_backlog
 

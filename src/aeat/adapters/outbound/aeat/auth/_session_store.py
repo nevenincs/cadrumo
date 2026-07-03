@@ -2,13 +2,17 @@
 
 This module is the concrete adapter behind
 :class:`aeat.application.auth._protocols.SessionStoreProtocol`. It stores
-:class:`PersistedBrowserSession` envelopes in
-:data:`AEAT_BROWSER_SESSION_NAMESPACE`, whose registry entry pins the records
-to bucket-local :class:`SensitivityClass` ``SESSION`` storage.
+:class:`PersistedBrowserSession` payloads in
+:data:`aeat.adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`,
+whose registry entry pins the records to bucket-local
+``SESSION`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+storage, schema version, process-local custody, and logical-path object-key
+grammar.
 
-:class:`SecureObjectRepository` encrypts payload bytes and digests the logical
-object key at the column boundary, so Playwright cookies, local storage, and
-provider metadata never appear as plaintext files.
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` encrypts
+payload bytes and digests the logical object key at the column boundary, so
+Playwright cookies, local storage, and provider metadata never appear as
+plaintext files.
 """
 
 from __future__ import annotations
@@ -18,22 +22,31 @@ from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, JsonValue, TypeAdapter
 
 from .....core import STRICT_FROZEN_CONFIG
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.time import now
-from ....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
-from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....persistence.storage.sql import SecureObjectRepository
+from ....persistence.storage import (
+    AEAT_BROWSER_SESSION_NAMESPACE,
+    SecureObjectRepository,
+    secure_object_repository_for_active_bucket,
+)
 
 _SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
+type JsonObject = Mapping[str, JsonValue]
+type PlaywrightStorageState = JsonObject
+type ProviderSessionMetadata = JsonObject
+
+_JSON_OBJECT_ADAPTER: TypeAdapter[JsonObject] = TypeAdapter(JsonObject)
 
 
 class PersistedBrowserSession(BaseModel):
     """Encrypted Playwright storage state plus provider-owned metadata.
 
+    This is the typed payload stored under
+    :data:`aeat.adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`.
     ``storage_state`` carries the payload returned by
     ``BrowserContext.storage_state()``. ``metadata`` remains a provider-owned
     mapping so certificate auth and Cl@ve Móvil can persist different validated
@@ -43,8 +56,8 @@ class PersistedBrowserSession(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     schema_version: int = Field(default=_SESSION_VERSION, ge=1)
-    storage_state: Mapping[str, object]
-    metadata: Mapping[str, object]
+    storage_state: PlaywrightStorageState
+    metadata: ProviderSessionMetadata
     written_at: datetime
 
     @property
@@ -64,10 +77,13 @@ def exists(path: Path) -> bool:
 
 
 def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[str, object]) -> None:
-    """Persist ``storage_state`` and ``metadata`` in :class:`SensitivityClass` ``SESSION`` storage.
+    """Persist ``storage_state`` and ``metadata`` in the browser-session namespace.
 
     The values are wrapped in a :class:`PersistedBrowserSession` envelope before
-    :class:`SecureObjectRepository` encrypts the serialized JSON payload.
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    encrypts the serialized JSON payload. The namespace definition supplies the
+    ``SESSION`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+    classification and schema version.
     """
     payload = PersistedBrowserSession(
         storage_state=storage_state,
@@ -88,8 +104,11 @@ def load(path: Path) -> PersistedBrowserSession | None:
     """Load the :class:`PersistedBrowserSession` for logical ``path``.
 
     Returns ``None`` when the logical key is absent. A present record is read
-    from :data:`AEAT_BROWSER_SESSION_NAMESPACE` with the expected
-    :class:`SensitivityClass` and current namespace schema version.
+    from
+    :data:`aeat.adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`
+    with the expected
+    :class:`~aeat.adapters.persistence.storage.SensitivityClass` and current
+    namespace schema version.
     """
     record = _repository().load(
         AEAT_BROWSER_SESSION_NAMESPACE.namespace,
@@ -120,8 +139,11 @@ def storage_state_sha256(storage_state: Mapping[str, object]) -> str:
 def logical_object_key(path: Path) -> str:
     """Return the natural secure-object key for a browser-session ``path``.
 
-    :class:`SecureObjectRepository` HMAC-digests this value before writing the
-    row, so callers can use the same logical key without exposing it on disk.
+    The key shape follows
+    :data:`aeat.adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`.
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    HMAC-digests this value before writing the row, so callers can use the same
+    logical key without exposing it on disk.
     """
     return _key(path)
 
@@ -135,5 +157,6 @@ def _repository() -> SecureObjectRepository:
 
 
 def _storage_state_sha256(storage_state: Mapping[str, object]) -> str:
-    payload = json.dumps(storage_state, sort_keys=True, separators=(",", ":"), default=str).encode(UTF_8_ENCODING)
+    validated = _JSON_OBJECT_ADAPTER.validate_python(storage_state)
+    payload = json.dumps(validated, sort_keys=True, separators=(",", ":")).encode(UTF_8_ENCODING)
     return sha256_hex(payload)

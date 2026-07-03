@@ -3,13 +3,11 @@
 Three private helpers gate the invoice import pipeline:
 
 - ``_decode_invoice_payload(raw)`` — dispatches between JSON
-  object, JSON array, and CSV based on the first non-whitespace
-  character. Raises ``ValueError`` on malformed JSON shapes.
-- ``_synthesise_single_line_if_needed(payload)`` — back-fills a
-  single ``lines`` entry from the legacy ``base_total`` /
-  ``iva_rate`` / ``iva_total`` flat shape. The IVA rate is mapped
-  through ``_IVA_RATE_ALIASES`` so the wire string ``"21"``
-  resolves to the substrate slot name ``RATE_21``.
+  object and JSON array based on the first non-whitespace character.
+  Raises ``InvoiceValidationError`` on malformed or non-JSON shapes.
+- ``_reject_top_level_iva_rate(payload)`` — refuses invoice-level
+  ``iva_rate`` values so imported invoices must carry IVA rates on
+  each line item.
 - ``_coerce_kind(kind)`` — accepts either an already-typed
   :class:`InvoiceKind` member or a string that uppercases to a
   valid member.
@@ -27,17 +25,14 @@ tautologies.
 
 from __future__ import annotations
 
-from typing import cast
-
 import pytest
 
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
 from .._importing import (
-    _IVA_RATE_ALIASES,
     _coerce_kind,
     _decode_invoice_payload,
-    _synthesise_single_line_if_needed,
+    _reject_top_level_iva_rate,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -107,129 +102,57 @@ def test_decode_invoice_payload_rejects_malformed_json_with_context() -> None:
     assert exc_info.value.context == {"line": "1", "column": "23"}
 
 
-def test_decode_invoice_payload_decodes_csv_when_no_json_anchor() -> None:
+def test_decode_invoice_payload_rejects_csv_when_no_json_anchor() -> None:
     raw = "invoice_id,base_total\ninv-1,100\ninv-2,200\n"
 
-    result = _decode_invoice_payload(raw)
+    with pytest.raises(InvoiceValidationError) as exc_info:
+        _decode_invoice_payload(raw)
 
-    assert len(result) == 2
-    assert result[0].get("invoice_id") == "inv-1"
-    assert result[1].get("base_total") == "200"
+    assert exc_info.value.translated_message == "application.invoices.importing.errors.invalid_json_shape"
+    assert exc_info.value.context == {"payload_type": "csv"}
 
 
-def test_decode_invoice_payload_csv_returns_empty_tuple_for_header_only() -> None:
-    """A CSV with only a header row produces no records."""
+def test_decode_invoice_payload_rejects_header_only_csv() -> None:
     raw = "invoice_id,base_total\n"
 
-    result = _decode_invoice_payload(raw)
+    with pytest.raises(InvoiceValidationError) as exc_info:
+        _decode_invoice_payload(raw)
 
-    assert result == ()
+    assert exc_info.value.translated_message == "application.invoices.importing.errors.invalid_json_shape"
+    assert exc_info.value.context == {"payload_type": "csv"}
 
 
 # ---------------------------------------------------------------------------
-# _synthesise_single_line_if_needed — back-fill contract
+# _reject_top_level_iva_rate — line-level import contract
 # ---------------------------------------------------------------------------
 
 
-def test_synthesise_single_line_returns_silently_when_lines_already_set() -> None:
-    """When the payload already carries ``lines`` the helper is a
-    no-op; pre-existing entries are not touched."""
+def test_reject_top_level_iva_rate_allows_line_level_payload() -> None:
     payload: dict[str, object] = {"lines": [{"description": "row"}]}
 
-    _synthesise_single_line_if_needed(payload)
+    _reject_top_level_iva_rate(payload)
 
     assert payload["lines"] == [{"description": "row"}]
 
 
-def test_synthesise_single_line_skips_when_base_total_missing() -> None:
-    payload: dict[str, object] = {"iva_rate": "21"}
-
-    _synthesise_single_line_if_needed(payload)
-
-    assert "lines" not in payload
-
-
-def test_synthesise_single_line_skips_when_iva_rate_missing() -> None:
-    payload: dict[str, object] = {"base_total": "100"}
-
-    _synthesise_single_line_if_needed(payload)
-
-    assert "lines" not in payload
-
-
-def test_synthesise_single_line_rejects_non_decimal_base_total_with_context() -> None:
-    payload: dict[str, object] = {"base_total": "not-a-decimal", "iva_rate": "21"}
-
-    with pytest.raises(InvoiceValidationError) as exc_info:
-        _synthesise_single_line_if_needed(payload)
-
-    assert exc_info.value.translated_message == "application.invoices.importing.errors.invalid_base_total"
-    assert exc_info.value.context == {"base_total": "not-a-decimal"}
-
-
-def test_synthesise_single_line_back_fills_with_substrate_slot_alias() -> None:
-    """Wire rate ``"21"`` maps through ``_IVA_RATE_ALIASES`` to the
-    substrate slot name ``"RATE_21"``."""
-    payload: dict[str, object] = {"base_total": "100", "iva_rate": "21", "iva_total": "21"}
-
-    _synthesise_single_line_if_needed(payload)
-
-    assert "lines" in payload
-    lines = payload["lines"]
-    assert isinstance(lines, list)
-    first_line = cast(dict[str, object], lines[0])
-    assert first_line["iva_rate"] == "RATE_21"
-    assert first_line["subtotal"] == "100"
-    assert first_line["iva_amount"] == "21"
-
-
-def test_synthesise_single_line_pops_top_level_iva_rate_after_projection() -> None:
-    """After back-filling the line, the top-level ``iva_rate`` is
-    removed so it does not double-flow into Invoice.model_validate."""
+def test_reject_top_level_iva_rate_refuses_flat_payload() -> None:
     payload: dict[str, object] = {"base_total": "100", "iva_rate": "21"}
 
-    _synthesise_single_line_if_needed(payload)
+    with pytest.raises(InvoiceValidationError) as exc_info:
+        _reject_top_level_iva_rate(payload)
 
-    assert "iva_rate" not in payload
-
-
-def test_synthesise_single_line_passes_through_unknown_rate_string_unchanged() -> None:
-    """A rate string outside the alias table passes through verbatim
-    (so substrate-slot names like ``"RATE_21"`` already in the
-    payload survive the projection without double-aliasing)."""
-    payload: dict[str, object] = {"base_total": "50", "iva_rate": "RATE_21"}
-
-    _synthesise_single_line_if_needed(payload)
-
-    lines = payload["lines"]
-    assert isinstance(lines, list)
-    first_line = cast(dict[str, object], lines[0])
-    assert first_line["iva_rate"] == "RATE_21"
+    assert exc_info.value.translated_message == "application.invoices.importing.errors.invalid_json_shape"
+    assert exc_info.value.context == {"payload_type": "top-level-iva-rate"}
 
 
-def test_synthesise_single_line_defaults_iva_amount_to_zero_when_absent() -> None:
-    """When iva_total is absent the back-fill defaults the line's
-    iva_amount to ``"0"`` rather than raising."""
-    payload: dict[str, object] = {"base_total": "100", "iva_rate": "0"}
+def test_reject_top_level_iva_rate_refuses_mixed_payload() -> None:
+    payload: dict[str, object] = {"lines": [{"description": "row"}], "iva_rate": "RATE_21"}
 
-    _synthesise_single_line_if_needed(payload)
+    with pytest.raises(InvoiceValidationError) as exc_info:
+        _reject_top_level_iva_rate(payload)
 
-    lines = payload["lines"]
-    assert isinstance(lines, list)
-    first_line = cast(dict[str, object], lines[0])
-    assert first_line["iva_amount"] == "0"
-
-
-def test_iva_rate_alias_table_covers_every_canonical_substrate_slot() -> None:
-    """The wire-to-substrate alias map mirrors the IvaRate substrate
-    slot set used by invoice lines: every percentage maps to its
-    canonical RATE_{n} slot."""
-    assert _IVA_RATE_ALIASES == {
-        "0": "RATE_0",
-        "4": "RATE_4",
-        "10": "RATE_10",
-        "21": "RATE_21",
-    }
+    assert exc_info.value.translated_message == "application.invoices.importing.errors.invalid_json_shape"
+    assert exc_info.value.context == {"payload_type": "top-level-iva-rate"}
 
 
 # ---------------------------------------------------------------------------

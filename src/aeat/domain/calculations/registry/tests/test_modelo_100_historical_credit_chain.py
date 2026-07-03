@@ -22,13 +22,11 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
 from .. import CasillaId, validated_casilla_id
-from .._loader import load_registry_tree
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _YEARS = ("2020", "2021", "2022", "2023")
 
 
@@ -65,8 +63,7 @@ _CREDIT_SUM_CASILLAS = (
 
 
 def _m100_revision(year: str):
-    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
-    m100 = next(m for m in modelos if m.id == "100")
+    m100, _catalogues = _committed_modelo("100")
     revision = m100.revisions.get(year)
     assert revision is not None, f"M100 revision {year!r} not found in the registry"
     return revision

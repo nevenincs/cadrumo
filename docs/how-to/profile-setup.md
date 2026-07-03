@@ -169,7 +169,7 @@ landlord, a salaried-only taxpayer, or a pensioner with no activity should not
 select it.
 
 For an activity, record how IRPF estimates its yield. Direct estimation is the
-default and files Modelo 130. Add `--uses-objective-estimation-irpf` for the
+default and files Modelo 130. Use `--irpf-estimation-regime objetiva` for the
 objective-estimation (módulos) regime, which files Modelo 131 instead.
 
 ### Identity
@@ -226,9 +226,10 @@ true:
   parties exceed the Modelo 347 threshold.
 - `--bienes-extranjero-above-threshold` - foreign assets exceed the legal
   threshold.
-- `--professional-income-withholding-ge-70pct` - at least 70 percent of
-  professional income already had IRPF withholding. This removes the Modelo 130
-  obligation for many freelancers, so record it when it's true.
+- `--art109-activity-income-withholding-ge-70pct` - the Art. 109 RIRPF
+  70 percent income-coverage exception applies for covered professional,
+  agricultural, livestock, or forestry activity income. For activity starts,
+  record the coverage fact for the current payment period.
 
 Leaving an obligation flag unset is not the same as marking it false. When a
 fact is undeclared, the readiness check reports the related form as *incomplete*
@@ -281,7 +282,7 @@ Use this mapping to sanity-check your profile, then confirm a specific form with
 | Is a company | Modelo 200 (annual IS, corporate income tax), Modelo 202 (payments on account) |
 | Runs an activity under direct estimation | Modelo 130 (quarterly IRPF) |
 | Runs an activity under objective estimation (módulos) | Modelo 131 |
-| At least 70% of professional income already had withholding | Removes the Modelo 130 obligation |
+| Art. 109 activity-income coverage exception applies | Removes the Modelo 130 obligation |
 | Charges VAT under the general regime | Modelo 303 (quarterly), Modelo 390 (annual) |
 | Pays employees or professionals with withholding | Modelo 111 (quarterly), Modelo 190 (annual) |
 | Pays business-premises rent with withholding | Modelo 115 (quarterly), Modelo 180 (annual) |

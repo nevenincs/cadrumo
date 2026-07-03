@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#resource-management-api'
 date: '2026-05-16'
-modified: '2026-05-16'
+modified: '2026-06-30'
 related:
   - "[[2026-05-16-resource-management-api-research]]"
   - "[[2026-05-15-corpus-registry-packaging-adr]]"
 ---
-
-
 
 # `resource-management-api` audit: exhaustive call-site inventory of the existing resource surface
 

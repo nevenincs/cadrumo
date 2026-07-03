@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-ledger-testimonials'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related:
   - '[[2026-05-19-profile-lifecycle-disaster-adr]]'
   - '[[2026-05-26-active-profile-storage-runtime-discovery-audit]]'
@@ -11,8 +11,6 @@ related:
   - '[[2026-06-03-cli-ledger-testimonials-plan]]'
   - '[[2026-06-04-cli-ledger-testimonials-research]]'
 ---
-
-
 
 # `cli-ledger-testimonials` adr: `Active-profile name-or-UUID resolution at the application boundary` | (**status:** `accepted`)
 

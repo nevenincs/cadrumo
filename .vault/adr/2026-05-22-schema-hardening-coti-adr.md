@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#schema-hardening-coti'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 related:
   - '[[2026-05-22-schema-hardening-coti-research]]'
 ---
-
-
 
 # `schema-hardening-coti` adr: `quoted-fund-coti-warning-policy` | (**status:** `accepted`)
 

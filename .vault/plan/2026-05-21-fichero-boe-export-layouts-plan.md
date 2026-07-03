@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#fichero-boe-export-layouts'
 date: '2026-05-21'
-modified: '2026-05-21'
+modified: '2026-07-03'
 tier: L2
 related:
   - '[[2026-04-22-aeat-fichero-boe-export-adr]]'
@@ -64,3 +64,9 @@ Confirm byte-identity round-trips for both modelos, a green 26-modelo registry s
 Audit the 17 modelos that still lack real export_layouts field specs as of 2026-05-31. For each: determine why it is blocked (PDF-only DR source, incomplete registry casillas, no DR corpus entry, or administrative form not requiring fichero-BOE). Document the prerequisite work required before each can be unblocked. This phase does not implement export layouts; it produces the evidence record that closes issue #563.
 
 - [x] `P05.S24` - Audit the 17 modelos that lack real export_layouts field specs; `categorize each by blocker type (PDF-only DR corpus, incomplete registry casillas, no DR corpus entry, administrative form); document prerequisite work; produce coverage ledger closing issue #563; `src/aeat/_data/registry/aeat/modelos/`.
+
+### Phase `P06` - Modelo 390 export layout (#508 slice)
+
+Author and validate the Modelo 390 (IVA resumen anual) fixed-width fichero-BOE export layout, closing the last remaining fichero-BOE-export-flagged modelo from issue #508.
+
+- [x] `P06.S25` - Author the M390 fixed-width export layout grounded in the bundled AEAT Diseno de Registros, wire export_refs on the manifest casillas and computed totals, add the export application_link, and cover with the completeness-parity, thin-draft anti-tautology, and export-parse roundtrip gates; `src/aeat/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/export_layouts/0001-export_layouts.toml`.

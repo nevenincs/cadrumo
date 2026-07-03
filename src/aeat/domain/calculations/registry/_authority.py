@@ -20,10 +20,12 @@ from ....core.access_gate import (
     load_authorization_manifest,
 )
 from ....core.resources import bundled_path as _bundled_path
+from ._convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._loader import _collect_registry_tree_fingerprints, load_registry_tree
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ._snapshot import _build_validated_snapshot
+from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._validate import RegistryValidator
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None]
@@ -49,10 +51,12 @@ class ValidatedRegistryAuthority:
     def load(cls, root: Path, *, source_root: Path) -> ValidatedRegistryAuthority:
         """Load registry TOML and construct a reusable :class:`ValidatedRegistryAuthority` instance."""
         resolved_root = root.expanduser().resolve()
+        resolved_source_root = source_root.expanduser().resolve()
         return _load_authority(
             resolved_root,
-            source_root.expanduser().resolve(),
-            _collect_registry_tree_fingerprints(resolved_root),
+            resolved_source_root,
+            _collect_registry_tree_fingerprints(resolved_root) + collect_convenio_fingerprints(resolved_root),
+            collect_source_evidence_fingerprints(resolved_source_root),
         )
 
     def modelo(self, modelo_id: str) -> ModeloDefinition:
@@ -229,9 +233,17 @@ def bundled_authority() -> ValidatedRegistryAuthority:
 def _load_authority(
     root: Path,
     source_root: Path,
-    _fingerprint: tuple[tuple[str, int, int], ...],
+    _registry_fingerprint: tuple[tuple[str, int, int], ...],
+    _source_evidence_fingerprint: tuple[tuple[str, int, int], ...],
 ) -> ValidatedRegistryAuthority:
     modelos, catalogues = load_registry_tree(root)
+    # Compile the cross-cutting Convenio doble imposición treaty tree and fold it
+    # onto the shared catalogues so every snapshot projects the same authority.
+    # Grounding gate: every treaty override must cite a treaty article defined in
+    # the shared legal/ catalogue (which resolves to bundled BOE corpus text).
+    convenio = load_convenio_authority(root / "treaties")
+    validate_convenio_legal_refs(convenio, frozenset(catalogues.legal))
+    catalogues = catalogues.model_copy(update={"convenio": convenio})
 
     authority = ValidatedRegistryAuthority(
         root=root,
@@ -239,11 +251,11 @@ def _load_authority(
         modelos=modelos,
         catalogues=catalogues,
         _modelos_by_id={modelo.id: modelo for modelo in modelos},
-        # Production authority skips required_text corpus checks so that
-        # a pending corpus annotation never aborts a user-facing workflow
-        # (bindings list, work calculate, etc.).  Strict corpus checks are
-        # performed by verify_registry_tree via a dedicated strict validator.
-        _validator=RegistryValidator(catalogues, source_root=source_root, catalogue_corpus_strict=False),
+        _validator=RegistryValidator(
+            catalogues,
+            source_root=source_root,
+            source_evidence_fingerprint=_source_evidence_fingerprint,
+        ),
         _registry_validated=False,
         _validated_modelos=set(),
         _snapshots={},

@@ -42,11 +42,10 @@ import pdfplumber
 import pytest
 
 from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 # bundled_path() resolves to src/aeat/_data; the fixture tree lives one level
 # up at src/aeat/tests/fixtures/justificantes — mirror the derivation in
 # RegistryValidator._justificante_corpus_root.
@@ -98,7 +97,7 @@ def _all_fixture_pdfs(modelo_id: str) -> list[Path]:
 def _verified_declaracion_pdf_profiles() -> list[tuple[str, str, str, str | None]]:
     """Return (modelo_id, revision_id, profile_id, verification_source) for
     every declaracion_pdf profile with corpus_round_trip_verified=true."""
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
+    modelos, _ = _committed_registry_tree()
     rows: list[tuple[str, str, str, str | None]] = []
     for modelo in modelos:
         for rev_id, rev in modelo.revisions.items():

@@ -23,89 +23,42 @@ Grounded authority:
 
 from __future__ import annotations
 
-from datetime import date
-from decimal import Decimal
-
 import pytest
 
-from .....core.resources import resources
-from .....domain.calculations.registry import (
+from ._verification_chain_support import (
+    _COMPUTED_CASILLAS_M303,
+    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+    _M303_STATE_ATTRIBUTION_RATIO_CASILLA,
     BindingId,
     CasillaId,
-    RegistryValidationError,
-    calculate_registry_snapshot,
-    validated_casilla_id,
+    Decimal,
+    _calculate_m303_engine_values_from_inputs,
+    _casilla_id,
+    _decimal_inputs_from_extracted_values,
+    _parse_extracted_declaracion_values,
 )
-from .....tests import FIXTURES_DIR
-from .. import DeclaracionParseError, parse_declaracion
 
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_inbound_adapter,
 ]
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test_m303_primitive_anti_tautology.casilla")
-    except ValueError as exc:
-        raise AssertionError(f"M303 primitive test casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-def _casilla_ids(*values: object) -> frozenset[CasillaId]:
-    return frozenset(_casilla_id(value) for value in values)
-
-
 _IVA_REPERCUTIDO_GENERAL_CASILLA: CasillaId = _casilla_id("iva.repercutido.general")
-_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_M303_STATE_ATTRIBUTION_RATIO_CASILLA: CasillaId = _casilla_id("65")
-
-_COMPUTED_CASILLAS_M303: frozenset[CasillaId] = _casilla_ids(
-    "iva.cuota-devengada-total",
-    "iva.cuota-deducible-total",
-    "iva.resultado-regimen-general",
-    "03",
-    "06",
-    "09",
-    "11",
-    "13",
-    "27",
-    "29",
-    "33",
-    "37",
-    "45",
-    "64",
-    "66",
-    "iva.compensacion-aplicada-periodo",
-    "iva.compensacion-pendiente-periodos-posteriores",
-    "iva.resultado",
-    "71",
-    "iva.compensacion-generada-periodo",
-    "iva.compensacion-disponible-fin-periodo",
-)
 
 
 def _run_engine(inputs: dict[CasillaId, Decimal], year: int, period: str) -> dict[CasillaId, Decimal]:
     """Calculate the registry snapshot with ``inputs`` and return engine values."""
-    _period_month = {"1T": 1, "2T": 4, "3T": 7, "4T": 10}[period]
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=year, period=period)
     binding_values: dict[BindingId, Decimal] = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=inputs,
-            date_context={"filing_period": date(year, _period_month, 1)},
-            binding_values=binding_values,
-        )
-    except RegistryValidationError as exc:  # pragma: no cover - diagnostic
-        pytest.fail(
-            "BINDING-GAP: calculate_registry_snapshot raised RegistryValidationError.\n"
-            f"  error: {exc}\n"
-            f"  inputs supplied: {sorted(inputs)}",
-        )
-    return dict(result.values)
+    return _calculate_m303_engine_values_from_inputs(
+        inputs=inputs,
+        year=year,
+        period=period,
+        binding_values=binding_values,
+        label="M303 anti-tautology",
+    )
 
 
 def test_m303_engine_sums_extracted_primitives_not_printed_total() -> None:
@@ -118,18 +71,7 @@ def test_m303_engine_sums_extracted_primitives_not_printed_total() -> None:
     that bypasses the primitives) will fail this test loudly with a
     devengada-total that did not move under the mutation.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "303" / "2023-1T.pdf"
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="303",
-            año_override=2023,
-            period_override="1T",
-        )
-    except DeclaracionParseError as exc:  # pragma: no cover - diagnostic
-        pytest.fail(f"PARSER-GAP: parse_declaracion raised — M303 extraction failed.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    extracted = _parse_extracted_declaracion_values(modelo="303", fixture_stem="2023-1T", year=2023, period="1T")
 
     # Confirm the primitive leaf was extracted; otherwise the mutation probe
     # is meaningless (we would be poking a key the engine never reads).
@@ -141,24 +83,18 @@ def test_m303_engine_sums_extracted_primitives_not_printed_total() -> None:
     )
 
     # Baseline inputs: every extracted non-computed Decimal leaf.
-    base_inputs: dict[CasillaId, Decimal] = {}
-    for casilla_id, value in extracted.items():
-        if casilla_id in _COMPUTED_CASILLAS_M303:
-            continue
-        if not isinstance(value, Decimal):
-            continue
-        base_inputs[casilla_id] = value
+    base_inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M303)
     base_inputs[_M303_STATE_ATTRIBUTION_RATIO_CASILLA] = Decimal("100")
 
     base_values = _run_engine(base_inputs, 2023, "1T")
-    base_devengada = base_values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA]
+    base_devengada = base_values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
 
     # Mutate the primitive by a known delta and re-run.
     delta = Decimal("100.00")
     mutated_inputs = dict(base_inputs)
     mutated_inputs[_IVA_REPERCUTIDO_GENERAL_CASILLA] = primitive + delta
     mutated_values = _run_engine(mutated_inputs, 2023, "1T")
-    mutated_devengada = mutated_values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA]
+    mutated_devengada = mutated_values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
 
     assert mutated_devengada - base_devengada == delta, (
         "ANTI-TAUTOLOGY-FAIL: mutating iva.repercutido.general by "

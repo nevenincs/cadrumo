@@ -1,0 +1,19 @@
+[[revisions."esquema-exterior".verification_expectations]]
+id = "modelo-369-exterior-iva-chain-verification"
+computed_casilla_ids = ["iva.exterior.cuota-total"]
+tolerance = "0.00"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = [
+    "ley-37-1992:art-163-octiesdecies",
+    "ley-37-1992:art-163-noniesdecies",
+    "ley-37-1992:art-163-vicies",
+    "orden-hac-610-2021:art-1",
+]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]

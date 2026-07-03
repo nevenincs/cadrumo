@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#docs-cli-buildtime'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `docs-cli-buildtime` research: build-time CLI reference extraction
 

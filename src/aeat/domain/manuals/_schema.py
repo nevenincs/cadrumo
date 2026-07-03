@@ -75,7 +75,19 @@ def _require_spanish(text: str, field_name: str) -> None:
 
 
 class _ManualStrictFrozen(BaseModel):
-    """Shared config: strict validation, immutable instances, no extras."""
+    """Shared config: strict validation, immutable instances, no extras.
+
+    Deliberately NOT the canonical :data:`~aeat.core.STRICT_FROZEN_CONFIG`. This
+    base adds an explicit ``str_strip_whitespace=False`` to guarantee that
+    authoritative Spanish manual text (rule bodies, paragraphs, section titles)
+    is preserved byte-for-byte, including leading and trailing whitespace that
+    can be legally significant in the source corpus. ``str_strip_whitespace``
+    defaults to ``False`` today, so the explicit declaration is behaviour-identical
+    to the canonical config now, but it pins the intent so a future change to the
+    canonical config (were it ever to enable stripping) cannot silently mutate
+    verbatim legal text. It is therefore kept as a divergent, non-substitutable
+    base rather than consuming the shared constant.
+    """
 
     model_config = ConfigDict(
         strict=True,
@@ -138,6 +150,11 @@ class Paragraph(_ManualStrictFrozen):
     paragraph_id: _StableId = Field(description="Stable identifier, unique within its section.")
     text: str = Field(min_length=1, description="Source prose (authoritative Spanish).")
     page: int = Field(ge=1, description="1-indexed page number in the PDF.")
+
+    @model_validator(mode="after")
+    def _check_authoritative_text(self) -> Paragraph:
+        _require_spanish(self.text, "Paragraph.text")
+        return self
 
 
 class Rule(_ManualStrictFrozen):
@@ -203,6 +220,8 @@ class Rule(_ManualStrictFrozen):
     @model_validator(mode="after")
     def _check_authoritative_statement(self) -> Rule:
         _require_spanish(self.statement, "Rule.statement")
+        if self.applies_when is not None:
+            _require_spanish(self.applies_when, "Rule.applies_when")
         return self
 
 

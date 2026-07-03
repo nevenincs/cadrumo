@@ -40,6 +40,7 @@ _FIXTURES_ROOT = FIXTURES_DIR / "site_health"
 _PROBE_URL = f"{Settings.external_constants().aeat.domains.sede}/"
 _RATE_LIMIT_DEFAULT = 300
 _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
+_OBSERVED_AT = datetime(2026, 5, 28, 14, 45, 0, tzinfo=UTC)
 
 
 def _load_case(path: Path, *, default_status: int) -> tuple[int, dict[str, str], str]:
@@ -426,7 +427,7 @@ class TestSiteHealthModels:
         status = SiteHealthStatus(
             state=SiteHealthState.OK,
             evidence=ev,
-            observed_at=datetime.now(tz=UTC),
+            observed_at=_OBSERVED_AT,
         )
         assert status.state is SiteHealthState.OK
 
@@ -437,6 +438,6 @@ class TestSiteHealthModels:
             SiteHealthStatus(
                 state=SiteHealthState.RATE_LIMITED,
                 evidence=ev,
-                observed_at=datetime.now(tz=UTC),
+                observed_at=_OBSERVED_AT,
                 retry_after_seconds=invalid_retry,
             )

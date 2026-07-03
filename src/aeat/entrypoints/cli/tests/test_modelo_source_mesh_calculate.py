@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -9,9 +10,16 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....core import Period
+from ....core.errors import ERROR_REGISTRY
+from ....domain.calculations.registry import RegistryModeloObservation
+from ....domain.categories import SpendingCategory
+from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import EUMemberState, IvaCategory
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -19,15 +27,19 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
+from ....domain.usage_ratios import UsageRatioProfile
+from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from .envelope_helpers import unwrap_envelope_notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_IVA_WALLET_DECIDED_AT = datetime(2026, 5, 28, 16, 10, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -47,7 +59,11 @@ def _create_profile() -> None:
             "--accept-defaults",
             "--tax-id",
             "12345678Z",
+            "--entity-type",
+            "natural_person",
             "--name",
+            "Operator",
+            "--surnames",
             "Operator",
             "--activity",
             "design",
@@ -56,7 +72,7 @@ def _create_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
-def _create_303_work_unit() -> dict[str, object]:
+def _create_work_unit(*, modelo: str, year: int, period: str, revision: str) -> dict[str, object]:
     result = invoke_cached_cli(
         [
             "--format",
@@ -66,17 +82,33 @@ def _create_303_work_unit() -> dict[str, object]:
             "work",
             "create",
             "--modelo",
-            "303",
+            modelo,
             "--year",
-            "2026",
+            str(year),
             "--period",
-            "1T",
+            period,
             "--revision",
-            "2023-y-siguientes",
+            revision,
         ],
     )
     assert result.exit_code == 0, result.output
     return _payload(result.output)
+
+
+def _create_303_work_unit() -> dict[str, object]:
+    return _create_work_unit(modelo="303", year=2026, period="1T", revision="2023-y-siguientes")
+
+
+def _create_115_work_unit() -> dict[str, object]:
+    return _create_work_unit(modelo="115", year=2026, period="1T", revision="2019-y-siguientes")
+
+
+def _create_111_work_unit() -> dict[str, object]:
+    return _create_work_unit(modelo="111", year=2025, period="2T", revision="2019-y-siguientes")
+
+
+def _create_180_work_unit() -> dict[str, object]:
+    return _create_work_unit(modelo="180", year=2026, period="0A", revision="2023-y-siguientes")
 
 
 def _raw_transaction(
@@ -86,7 +118,7 @@ def _raw_transaction(
     amount: Decimal,
 ) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=booked_date,
         value_date=booked_date,
         amount=amount,
@@ -119,6 +151,8 @@ def _transaction(
         "raw": _raw_transaction(provider_id, amount=amount),
         "direction": direction,
         "business_classification": BusinessClassification.BUSINESS,
+        "source_jurisdiction": "ES",
+        "group_label": None,
         "category_id": "test_iva_operation",
         "taxable_base": taxable_base,
         "iva_rate": Decimal("0.21"),
@@ -133,8 +167,478 @@ def _transaction(
     return Transaction.model_validate(fields)
 
 
+def _classified_rent_transaction() -> Transaction:
+    return Transaction.model_validate(
+        {
+            "raw": _raw_transaction(
+                "rent-net-withholding",
+                booked_date=date(2026, 3, 15),
+                amount=Decimal("2754.00"),
+            ),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
+            "category_id": "arrendamiento_local",
+            "taxable_base": Decimal("2700.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("567.00"),
+            "irpf_category": "arrendamiento_local",
+            "classified_at": datetime(2026, 3, 15, 12, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        },
+    )
+
+
+def _m100_activity_income_transaction() -> Transaction:
+    return Transaction.model_validate(
+        {
+            "raw": _raw_transaction(
+                "m100-activity-income",
+                booked_date=date(2024, 3, 15),
+                amount=Decimal("12000.00"),
+            ),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
+            "taxable_base": Decimal("12000.00"),
+            "iva_rate": Decimal("0"),
+            "iva_amount": Decimal("0"),
+            "classified_at": datetime(2024, 3, 15, 12, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        },
+    )
+
+
+def _m100_activity_expense_transaction(
+    transaction_id: str,
+    *,
+    value_date: date,
+    category: SpendingCategory,
+    taxable_base: Decimal,
+) -> Transaction:
+    iva_amount = (taxable_base * Decimal("0.21")).quantize(Decimal("0.01"))
+    gross_amount = taxable_base + iva_amount
+    return Transaction.model_validate(
+        {
+            "raw": _raw_transaction(
+                transaction_id,
+                booked_date=value_date,
+                amount=gross_amount,
+            ),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
+            "category_id": category.value,
+            "taxable_base": taxable_base,
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": iva_amount,
+            "classified_at": datetime(2024, 3, 15, 12, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        },
+    )
+
+
+def _seed_m100_profile_facts(bucket_id: str) -> None:
+    from ....application.user_profile import UserProfileLifecycleRepository
+
+    repository = UserProfileLifecycleRepository(bucket_id=bucket_id)
+    record = repository.load(bucket_id)
+    additions = (
+        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+        UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+        UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+        UserProfileFact(path="renta_taxpayer.sex", value="H"),
+        UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+        UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+        UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+        UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+        UserProfileFact(path="filing_export.declaration_type", value="1"),
+        UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+        UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
+        UserProfileFact(path="renta_family.descendientes_minimos_aggregate_2024", value=Decimal("0")),
+        UserProfileFact(path="renta_family.gastos_guarderia_reales_2024", value=Decimal("0")),
+        UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
+        UserProfileFact(path="renta_family.descendientes_menores_3_2024", value=Decimal("0")),
+        UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=Decimal("0")),
+    )
+    facts_by_path = {fact.path: fact for fact in record.facts}
+    facts_by_path.update({fact.path: fact for fact in additions})
+    repository.save(
+        record.model_copy(
+            update={
+                "facts": tuple(facts_by_path[path] for path in sorted(facts_by_path)),
+                "updated_at": record.created_at,
+            },
+        ),
+    )
+
+
+def _seed_prior_m100_zero_carry() -> None:
+    from ....application.calculations import CalculationObservationRepository
+
+    CalculationObservationRepository().save_observation(
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=2023,
+            period="0A",
+            observations=registry_grounded_observations(
+                modelo="100",
+                filing_year=2023,
+                period="0A",
+                casilla_values={
+                    "0224": Decimal("0"),
+                    "1388": Decimal("0"),
+                    "1391": Decimal("0"),
+                    "1479": Decimal("0"),
+                    "1553": Decimal("0"),
+                    "1577": Decimal("0"),
+                },
+            ),
+        ),
+        source_kind="app_filing",
+        captured_at=datetime(2024, 6, 30, 12, 0, tzinfo=UTC),
+    )
+
+
+def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() -> None:
+    """M115 CLI calculation consumes persisted URBAN_RENTAL retención evidence."""
+
+    _create_profile()
+    work_unit = _create_115_work_unit()
+    observation = json.dumps(
+        {
+            "source_kind": "ledger_transaction",
+            "source_object_id": "rent-ledger-row-001",
+            "perceptor_nif": "B12345678",
+            "perceptor_name": "Arrendador Ejemplo SL",
+            "scheme": "arrendamiento_urbano",
+            "taxable_base": "2700.00",
+            "retencion_amount": "513.00",
+            "accrued_on": "2026-03-15",
+        },
+    )
+
+    aggregated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "aggregate",
+            "--modelo",
+            "115",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+            "--retencion-observation",
+            observation,
+        ],
+    )
+    assert aggregated.exit_code == 0, aggregated.output
+    assert _payload(aggregated.output)["observation_count"] == 1
+
+    calculated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+            "--casilla",
+            "04=0",
+        ],
+    )
+    assert calculated.exit_code == 0, calculated.output
+    casilla_values = _payload(calculated.output)["casilla_values"]
+    assert Decimal(casilla_values["01"]) == Decimal("1")
+    assert Decimal(casilla_values["02"]) == Decimal("2700.00")
+    assert Decimal(casilla_values["03"]) == Decimal("513.00")
+    assert Decimal(casilla_values["05"]) == Decimal("513.00")
+
+
+def test_work_calculate_modelo_100_routes_marta_auto_ledger_expenses() -> None:
+    """Marta's public CLI M100 path carries ledger income through 0171/0180/0224."""
+    from ....application.user_profile import profile_storage_session
+    from ....core import resolve_active_bucket_id
+
+    _create_profile()
+    work_unit = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "100",
+            "--year",
+            "2024",
+            "--period",
+            "0A",
+            "--revision",
+            "2024",
+        ],
+    )
+    assert work_unit.exit_code == 0, work_unit.output
+    work_unit_payload = _payload(work_unit.output)
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None, "profile create must install an active-profile pointer"
+
+    expense_rows = (
+        _m100_activity_expense_transaction(
+            "m100-expense-office",
+            value_date=date(2024, 2, 20),
+            category=SpendingCategory.MATERIAL_OFICINA,
+            taxable_base=Decimal("500.00"),
+        ),
+        _m100_activity_expense_transaction(
+            "m100-expense-software",
+            value_date=date(2024, 5, 22),
+            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
+            taxable_base=Decimal("700.00"),
+        ),
+        _m100_activity_expense_transaction(
+            "m100-expense-phone",
+            value_date=date(2024, 8, 12),
+            category=SpendingCategory.TELEFONIA_MOVIL,
+            taxable_base=Decimal("300.00"),
+        ),
+        _m100_activity_expense_transaction(
+            "m100-expense-advisory",
+            value_date=date(2024, 11, 8),
+            category=SpendingCategory.ASESORIA_FISCAL,
+            taxable_base=Decimal("900.00"),
+        ),
+    )
+    with profile_storage_session(bucket_id):
+        _seed_m100_profile_facts(bucket_id)
+        _seed_prior_m100_zero_carry()
+        TransactionCatalogueRepository(bucket_id=bucket_id).save(
+            TransactionCatalogue.from_transactions((_m100_activity_income_transaction(), *expense_rows)),
+        )
+        InvoiceCatalogueRepository(bucket_id=bucket_id).save(InvoiceCatalogue())
+        save_usage_ratios(
+            UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("1")}),
+            bucket_id=bucket_id,
+        )
+
+    calculated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit_payload["work_unit_id"]),
+            "--binding",
+            "renta-2024-modelo-100-estimacion-directa-es-normal=1",
+        ],
+    )
+    assert calculated.exit_code == 0, calculated.output
+    casilla_values = _payload(calculated.output)["casilla_values"]
+
+    assert Decimal(casilla_values["0171"]) == Decimal("12000.00")
+    assert Decimal(casilla_values["0180"]) == Decimal("12000.00")
+    assert Decimal(casilla_values["0218"]) == Decimal("2400.00")
+    assert Decimal(casilla_values["0220"]) == Decimal("2400.00")
+    assert Decimal(casilla_values["0224"]) == Decimal("9600.00")
+
+
+def test_work_calculate_modelo_100_marta_visible_target_uses_registered_error_boundary() -> None:
+    """Marta's public M100 calculate shape must not degrade into an internal crash."""
+
+    _create_profile()
+    work_unit = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "100",
+            "--year",
+            "2024",
+            "--period",
+            "0A",
+            "--revision",
+            "2024",
+        ],
+    )
+    assert work_unit.exit_code == 0, work_unit.output
+
+    calculated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            "--modelo",
+            "100",
+            "--year",
+            "2024",
+            "--period",
+            "0A",
+            "--casilla",
+            "0003=30000.00",
+            "--casilla",
+            "0596=4500.00",
+            "--by",
+            "marta",
+        ],
+    )
+
+    assert "Traceback" not in calculated.output
+    assert "missing a declared ErrorCode registry entry" not in calculated.output
+    assert "Internal. El comando fall" not in calculated.output
+    envelope = json.loads(calculated.output)
+    if calculated.exit_code == 0:
+        payload = _payload(calculated.output)
+        assert payload["work_unit_id"] == _payload(work_unit.output)["work_unit_id"]
+        assert payload["calculation_revision_id"]
+        return
+
+    error = envelope["error"]
+    assert error["code"] in ERROR_REGISTRY
+    assert error["category"] == ERROR_REGISTRY[error["code"]].category.value
+
+
+def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestation_path() -> None:
+    """A no-observation M111 quarter is not filed blank; the CLI names the attestation path."""
+
+    _create_profile()
+    _create_111_work_unit()
+
+    calculated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            "--modelo",
+            "111",
+            "--year",
+            "2025",
+            "--period",
+            "2T",
+            "--by",
+            "Javier",
+        ],
+    )
+
+    assert calculated.exit_code != 0, calculated.output
+    envelope = json.loads(calculated.output)
+    assert envelope["error"]["code"] == "ERROR_FINANCIAL_AGGREGATION_VALIDATION"
+    assert envelope["error"]["context"]["modelo"] == "111"
+    assert envelope["error"]["context"]["period"] == "2T"
+    assert envelope["error"]["context"]["source_kind"] == "retenciones_aggregation"
+    suggestion = envelope["error"]["suggestion"]
+    assert "--retencion-observation" in suggestion
+    assert "do not file an all-blank Modelo 111" in suggestion
+    assert "--modelo-111-no-retenciones-periods 2025:2T" in suggestion
+
+    attested = invoke_cached_cli(
+        [
+            "config",
+            "profile",
+            "edit",
+            "operator",
+            "--quiet",
+            "--modelo-111-no-retenciones-periods",
+            "2025:2T,2025:3T,2025:4T",
+        ],
+    )
+    assert attested.exit_code == 0, attested.output
+    shown = invoke_cached_cli(("config", "profile", "show", "operator"))
+    assert shown.exit_code == 0, shown.output
+    assert "withholding.modelo_111_no_retenciones_periods\t2025:2T,2025:3T,2025:4T" in shown.output
+
+
+def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_evidence() -> None:
+    """A classified rent ledger row alone must hard-stop instead of producing zeros."""
+    from ....application.user_profile import profile_storage_session
+    from ....core import resolve_active_bucket_id
+
+    _create_profile()
+    work_unit = _create_115_work_unit()
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    with profile_storage_session(bucket_id):
+        TransactionCatalogueRepository(bucket_id=bucket_id).save(
+            TransactionCatalogue.from_transactions((_classified_rent_transaction(),)),
+        )
+
+    calculated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+            "--casilla",
+            "04=0",
+        ],
+    )
+
+    assert calculated.exit_code != 0, calculated.output
+    envelope = json.loads(calculated.output)
+    assert envelope["error"]["code"] == "ERROR_FINANCIAL_AGGREGATION_VALIDATION"
+    assert envelope["error"]["context"]["modelo"] == "115"
+    assert envelope["error"]["context"]["period"] == "1T"
+    assert envelope["error"]["context"]["source_kind"] == "retenciones_aggregation"
+    assert "--retencion-observation" in envelope["error"]["suggestion"]
+
+
+def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_guidance() -> None:
+    """M180 perceptor string fields are refused before the decimal casilla parser."""
+
+    _create_profile()
+    work_unit = _create_180_work_unit()
+
+    calculated = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+            "--casilla",
+            "perc.nif=B12345678",
+        ],
+    )
+
+    assert calculated.exit_code != 0, calculated.output
+    envelope = json.loads(calculated.output)
+    assert envelope["error"]["code"] == "REFUSED_MODELO_CALCULATE_CASILLA_INPUT"
+    assert envelope["error"]["context"]["key"] == "perc.nif"
+    assert "perceptor/property detail rows are not supported" in envelope["error"]["message"]
+    assert "--retencion-observation" in envelope["error"]["message"]
+
+
 def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
-    from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
     _create_profile()
@@ -172,12 +676,8 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     # A local_recurrence decision with selected_amount=0 satisfies the guard
     # while leaving the ledger mesh assertions meaningful.
     with profile_storage_session(bucket_id):
-        from datetime import UTC, datetime
-
-        from ....application.calculations._observations_repository import IvaWalletDecisionRepository
-        from ....domain.iva_compensation._reconciliation import (
-            IvaCompensationReconciliationDecision,
-        )
+        from ....application.calculations import IvaWalletDecisionRepository
+        from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
             TransactionCatalogue.from_transactions((sale, purchase)),
@@ -195,7 +695,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
             blocked=False,
             stale_wallet=False,
             reason="test: no prior IVA compensation",
-            decided_at=datetime.now(UTC),
+            decided_at=_IVA_WALLET_DECIDED_AT,
         )
         IvaWalletDecisionRepository().save_decision(decision)
 
@@ -233,6 +733,47 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     assert payload_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
     assert payload_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
 
+    observations_result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "observations",
+            revision_id,
+        ],
+    )
+    assert observations_result.exit_code == 0, observations_result.output
+    observations_payload = _payload(observations_result.output)
+    assert observations_payload["operation"] == "modelo.work.observations"
+    assert observations_payload["calculation_revision_id"] == revision_id
+    assert observations_payload["work_unit_id"] == work_unit["work_unit_id"]
+    assert observations_payload["observation_count"] == len(payload["observations"])
+    command_observations = {
+        observation["casilla_id"]: observation for observation in observations_payload["observations"]
+    }
+    assert command_observations["iva.repercutido.general"]["legal_refs"] == list(output_observation.legal_refs)
+    assert command_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
+    assert command_observations["iva.soportado.interiores"]["legal_refs"] == list(input_observation.legal_refs)
+    assert command_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
+
+    text_observations = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "observations",
+            revision_id,
+        ],
+    )
+    assert text_observations.exit_code == 0, text_observations.output
+    assert "operation\tmodelo.work.observations" in text_observations.output
+    assert f"calculation_revision_id\t{revision_id}" in text_observations.output
+    assert "iva.repercutido.general" in text_observations.output
+    assert output_observation.legal_refs[0] in text_observations.output
+    assert output_observation.source_refs[0] in text_observations.output
+
 
 def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
     """Persist a zero-amount local-recurrence IVA wallet decision for bucket.
@@ -243,9 +784,9 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
     with ``selected_amount=0`` satisfies the guard while leaving the source-mesh
     advisory assertions meaningful.
     """
-    from ....application.calculations._observations_repository import IvaWalletDecisionRepository
-    from ....application.user_profile._orchestration import profile_storage_session
-    from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
+    from ....application.calculations import IvaWalletDecisionRepository
+    from ....application.user_profile import profile_storage_session
+    from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 
     with profile_storage_session(bucket_id):
         decision = IvaCompensationReconciliationDecision(
@@ -261,7 +802,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
             blocked=False,
             stale_wallet=False,
             reason="test: no prior IVA compensation",
-            decided_at=datetime.now(UTC),
+            decided_at=_IVA_WALLET_DECIDED_AT,
         )
         IvaWalletDecisionRepository().save_decision(decision)
 
@@ -278,7 +819,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     that suppression on the operator-facing calculate surface across both the
     JSON ``notices`` channel and the human text output.
     """
-    from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
     _create_profile()
@@ -356,7 +897,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
     repercutido-general binding must leave ``source_advisories`` empty and emit
     no ADVISORY line.
     """
-    from ....application.user_profile._orchestration import profile_storage_session
+    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
     _create_profile()

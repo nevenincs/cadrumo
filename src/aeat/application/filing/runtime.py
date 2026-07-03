@@ -2,8 +2,8 @@
 
 Exposes concrete profile helpers used by the CLI and workflow surfaces.
 The production schema provider requires validated registry snapshots and
-projects them into the :class:`aeat.domain.filing.CasillaSchemaProvider`
-surface consumed by :func:`aeat.application.filing.build_draft`.
+projects them into the :class:`~aeat.domain.filing.CasillaSchemaProvider`
+surface consumed by :func:`~aeat.application.filing.build_draft`.
 
 The filing runtime must not depend on
 :mod:`aeat.application.filing.testing`; this module is the production
@@ -15,15 +15,18 @@ Key entry points:
 * :class:`ModeloOperatorProfile` — pydantic v2 record satisfying the
   filing-profile Protocol.
 * :func:`filing_profile_from_taxpayer` — projects taxpayer identity from a
-  domain :class:`aeat.domain.deadlines.TaxpayerProfile` into the runtime
+  domain :class:`~aeat.domain.deadlines.TaxpayerProfile` into the runtime
   profile shape without deriving legal filing obligations.
 * :func:`load_default_filing_profile` — loads the active profile bucket
   and returns a runtime profile.
 * :func:`build_runtime_schema_provider` — requires registry-backed snapshots.
 
-The schema provider consumes a :class:`RegistrySnapshot` built from a
-:class:`ModeloRevision` within a :class:`ModeloDefinition`, accessed through
-a :class:`ValidatedRegistryAuthority` loaded from the configured registry root.
+The schema provider consumes a
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot` built from a
+:class:`~aeat.domain.calculations.registry.ModeloRevision` within a
+:class:`~aeat.domain.calculations.registry.ModeloDefinition`, accessed through
+a :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` loaded
+from the configured registry root.
 
 See Also:
     :func:`aeat.application.wizard._status.load_active_taxpayer_profile`
@@ -41,7 +44,7 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
@@ -51,11 +54,13 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...core.identity import SubjectTaxId
 from ...core.resources import bundled_path
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
 from ...domain.calculations.registry import (
+    CalculationCompletenessManifest,
     CasillaDefinition,
     CasillaId,
     ExportLayoutDefinition,
@@ -66,6 +71,7 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     RegistrySnapshot,
     RegistrySnapshotError,
+    SourceReference,
     SourceRefId,
     ValidatedRegistryAuthority,
     expression_casilla_refs,
@@ -78,8 +84,8 @@ class TaxpayerProfileIdentity(Protocol):
     """Structural identity surface accepted by the filing profile projector."""
 
     @property
-    def tax_id(self) -> str:
-        """Tax identity copied into the filing runtime profile."""
+    def tax_id(self) -> SubjectTaxId:
+        """Validated tax identity copied into the filing runtime profile."""
         ...
 
 
@@ -90,13 +96,13 @@ class ModeloOperatorProfile(BaseModel):
     profile Protocol.
 
     Attributes:
-        tax_id: NIF / NIE of the filing operator.
+        tax_id: Validated NIF / NIE / CIF of the filing operator.
         display_name: Human-readable label for the profile.
     """
 
     model_config = _STRICT_FROZEN
 
-    tax_id: str = Field(min_length=1)
+    tax_id: SubjectTaxId = Field(min_length=1)
     display_name: str = Field(min_length=1)
 
 
@@ -105,7 +111,8 @@ class RegistryCasillaSchema(BaseModel):
 
     Strict, frozen pydantic v2 projection preserving typed IDs,
     ``Decimal`` bounds, and the regulatory grounding (``legal_refs``,
-    ``source_refs``) from the authoritative :class:`CasillaDefinition`.
+    ``source_refs``) from the authoritative
+    :class:`~aeat.domain.calculations.registry.CasillaDefinition`.
     """
 
     model_config = _STRICT_FROZEN
@@ -190,8 +197,8 @@ class RegistryModeloSubview:
     schema_version: str
     cadence: str
     period_selector_periods: tuple[str, ...]
-    legal_ref_ids: tuple[str, ...]
-    source_ref_ids: tuple[str, ...]
+    legal_ref_ids: tuple[LegalRefId, ...]
+    source_ref_ids: tuple[SourceRefId, ...]
     extraction_profile_ids: tuple[str, ...]
     verification_expectation_ids: tuple[str, ...]
     reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId]
@@ -199,6 +206,18 @@ class RegistryModeloSubview:
     export_layouts: tuple[ExportLayoutDefinition, ...]
     application_link_ids: tuple[str, ...]
     deadline_window_ids: tuple[str, ...]
+    completeness_manifest: CalculationCompletenessManifest | None
+
+    def has_completeness_manifest(self) -> bool:
+        """Return whether this revision carries a calculation-completeness manifest.
+
+        The manifest is the AEAT Diseño de Registros calculation-closure
+        projection (:class:`CalculationCompletenessManifest`) that grounds the
+        fichero-BOE export parity gate. A revision without one cannot have its
+        `.boe` export checked for casilla completeness, so the export path
+        surfaces a coverage advisory rather than asserting parity.
+        """
+        return self.completeness_manifest is not None
 
 
 @dataclass(frozen=True, slots=True)
@@ -207,18 +226,22 @@ class RegistrySchemaAccessor:
 
     The concrete registry-schema accessor (it provides casilla collections
     and modelo subviews from validated registry TOML); structurally
-    satisfies the :class:`CasillaSchemaProvider` protocol. Named an accessor
-    to stay distinct from the settled calculate-mesh resolver port.
+    satisfies the :class:`~aeat.domain.filing.CasillaSchemaProvider` protocol.
+    Named an accessor to stay distinct from the settled calculate-mesh resolver
+    port.
     """
 
     collections: dict[str, RegistryCasillaCollection]
     subviews: dict[str, RegistryModeloSubview]
+    source_root: Path | None = None
+    sources: Mapping[SourceRefId, SourceReference] = field(default_factory=dict)
 
     def get_collection(self, modelo: str) -> CasillaCollection:
         """Return the casilla collection for ``modelo``.
 
-        Returns a :class:`CasillaCollection` for the modelo.
-        Raises :exc:`ModeloBuilderError` when the modelo is absent.
+        Returns a :class:`~aeat.domain.filing.CasillaCollection` for the modelo.
+        Raises :exc:`~aeat.domain.filing.ModeloBuilderError` when the modelo is
+        absent.
         """
         try:
             return self.collections[modelo]
@@ -248,11 +271,12 @@ def filing_profile_from_taxpayer(
 ) -> ModeloOperatorProfile:
     """Project taxpayer identity into a :class:`ModeloOperatorProfile`.
 
-    The common caller passes :class:`aeat.domain.deadlines.TaxpayerProfile`, but
-    the accepted contract is the narrower :class:`TaxpayerProfileIdentity`
-    Protocol. This helper deliberately copies only taxpayer identity. Modelo
-    applicability is legal filing truth and must come from validated registry
-    data, not a filing-runtime tuple or the deadline engine.
+    The common caller passes
+    :class:`~aeat.domain.deadlines.TaxpayerProfile`, but the accepted contract is
+    the narrower :class:`TaxpayerProfileIdentity` Protocol. This helper
+    deliberately copies only taxpayer identity. Modelo applicability is legal
+    filing truth and must come from validated registry data, not a filing-runtime
+    tuple or the deadline engine.
 
     Args:
         profile: Source identity object exposing ``tax_id``.
@@ -290,8 +314,11 @@ def load_default_filing_profile(
         ModeloBuilderError: When no profile is active in the workflow
             state.
     """
-    from ..wizard._status import WizardStatusError, load_active_taxpayer_profile
-    from ..workflow._persistence import workflow_state_repository
+    from ..wizard import (
+        WizardStatusError,
+        load_active_taxpayer_profile,
+    )
+    from ..workflow import workflow_state_repository
 
     state = workflow_state_repository().load()
     try:
@@ -324,7 +351,7 @@ def build_runtime_schema_provider(
         registry_root: Optional registry root. Defaults to the bundled AEAT
             registry.
         source_root: Optional source-material root used by
-            :class:`ValidatedRegistryAuthority`.
+            :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`.
         filing_year: Optional filing year; must be paired with ``period``.
         period: Optional typed :class:`~aeat.core.Period`; must match
             ``filing_year``.
@@ -332,12 +359,12 @@ def build_runtime_schema_provider(
 
     Returns:
         A :class:`RegistrySchemaAccessor` implementing the filing
-        :class:`aeat.domain.filing.CasillaSchemaProvider` surface.
+        :class:`~aeat.domain.filing.CasillaSchemaProvider` surface.
 
     Raises:
-        ModeloBuilderError: When the registry is empty, a requested modelo is
-            missing, the period arguments are invalid, or no snapshot exists for
-            the requested filing context.
+        :class:`~aeat.domain.filing.ModeloBuilderError`: When the registry is
+            empty, a requested modelo is missing, the period arguments are
+            invalid, or no snapshot exists for the requested filing context.
     """
     validated_period = _validate_period_arguments(filing_year=filing_year, period=period)
     root = (registry_root or bundled_path("registry", "aeat")).resolve()
@@ -404,6 +431,8 @@ def _build_runtime_schema_provider_cached(
     return RegistrySchemaAccessor(
         collections={modelo_id: collection_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
         subviews={modelo_id: _subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
+        source_root=resolved_source_root,
+        sources=dict(authority.catalogues.sources),
     )
 
 
@@ -524,17 +553,19 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
     """Project a validated registry snapshot into a runtime casilla collection.
 
     Args:
-        snapshot: The :class:`RegistrySnapshot` whose
-            :class:`ModeloRevision` is projected into filing-runtime casilla
-            schemas.
+        snapshot: The
+            :class:`~aeat.domain.calculations.registry.RegistrySnapshot` whose
+            :class:`~aeat.domain.calculations.registry.ModeloRevision` is
+            projected into filing-runtime casilla schemas.
 
     Returns:
         A :class:`RegistryCasillaCollection` with the snapshot revision's
         casillas and ``registry:{modelo}:{revision}`` schema version.
 
     Raises:
-        :class:`ModeloBuilderError`: When the snapshot revision contains
-            ambiguous casilla references and cannot be projected safely.
+        :class:`~aeat.domain.filing.ModeloBuilderError`: When the snapshot
+            revision contains ambiguous casilla references and cannot be
+            projected safely.
     """
     modelo = snapshot.modelo
     revision = snapshot.revision
@@ -554,9 +585,15 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
                 "casilla_ids": "; ".join(identity_failures),
             },
         )
-    formulas = {formula.id: formula for formula in revision.formulas}
+    formulas_by_id = {formula.id: formula for formula in revision.formulas}
+    formulas_by_target: dict[CasillaId, FormulaDefinition] = {}
+    for formula in revision.formulas:
+        formulas_by_target.setdefault(formula.target_casilla_id, formula)
     casillas = tuple(
-        sorted((_casilla_schema(casilla, formulas) for casilla in revision.casillas), key=lambda c: c.casilla_id),
+        sorted(
+            (_casilla_schema(casilla, formulas_by_id, formulas_by_target) for casilla in revision.casillas),
+            key=lambda c: c.casilla_id,
+        ),
     )
     return RegistryCasillaCollection(
         casillas=casillas,
@@ -583,16 +620,20 @@ def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
         export_layouts=tuple(sorted(snapshot.revision.export_layouts, key=lambda layout: layout.id)),
         application_link_ids=tuple(sorted(snapshot.application_links)),
         deadline_window_ids=tuple(sorted(snapshot.deadline_windows)),
+        completeness_manifest=snapshot.revision.completeness_manifest,
     )
 
 
 def _casilla_schema(
     casilla: CasillaDefinition,
-    formulas: dict[str, FormulaDefinition],
+    formulas_by_id: Mapping[FormulaId, FormulaDefinition],
+    formulas_by_target: Mapping[CasillaId, FormulaDefinition],
 ) -> RegistryCasillaSchema:
     formula_input_casilla_ids: tuple[CasillaId, ...] = ()
-    if casilla.formula is not None:
-        formula = formulas[casilla.formula]
+    formula_id = casilla.formula
+    formula = formulas_by_id[formula_id] if formula_id is not None else formulas_by_target.get(casilla.id)
+    if formula is not None:
+        formula_id = formula.id
         formula_input_casilla_ids = tuple(dict.fromkeys(expression_casilla_refs(formula.expression)))
     min_value: Decimal | None = None
     max_value: Decimal | None = None
@@ -603,7 +644,7 @@ def _casilla_schema(
         casilla_id=casilla.id,
         value_type=registry_value_type(casilla.data_type),
         required=casilla.required,
-        formula=casilla.formula,
+        formula=formula_id,
         formula_input_casilla_ids=formula_input_casilla_ids,
         legal_refs=casilla.legal_refs,
         source_refs=casilla.source_refs,

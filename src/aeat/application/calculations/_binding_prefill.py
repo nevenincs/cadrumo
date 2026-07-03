@@ -1,23 +1,39 @@
-"""Binding prefill: resolve `previous_filing` bindings from prior filings.
+"""Binding prefill: resolve ``previous_filing`` bindings from prior filings.
 
-Used by: :mod:`~aeat.application.calculations._calculate` (model calculation orchestrator).
+Used by :class:`~._multi_year.PreviousFilingSourceResolver` for the source-mesh
+calculation path and by
+:func:`~application.calculations.extract_modelo_303_local_iva_compensation_recurrence`
+for the IVA wallet comparison path.
 
 One of three distinct prefill tiers, NOT to be merged: this is the
 PREVIOUS-FILING direct-carry tier. The other two are the relation tier
-(`_relation_prefill`) and the AEAT borrador pre-fill tier (the registry
-`aeat_prefilled` flag, an AEAT-live source). They share only the word
-"prefill"; each routes a different source through a different mechanism.
+(:mod:`~application.calculations._relation_prefill`) and the AEAT borrador
+pre-fill tier (the registry ``aeat_prefilled`` flag, an AEAT-live source). They
+share only the word "prefill"; each routes a different source through a
+different mechanism.
 
-Sister module to `_relation_prefill`. The runtime distinguishes
-`relation` leaves (cross-revision aggregations declared as
-`RelationDefinition` records) from `previous_filing` bindings
-(declared as `DataBindingDefinition` with `source = "previous_filing"`).
+Sister module to :mod:`~._relation_prefill`. The runtime distinguishes
+``relation`` leaves (cross-revision aggregations declared as
+:class:`~domain.calculations.registry.RelationDefinition` records) from
+``previous_filing`` bindings (declared as
+:class:`~domain.calculations.registry.DataBindingDefinition` with
+``source = "previous_filing"``).
 Modelo 390 uses bindings — modelo 200 uses relations — both express
 "sum a prior modelo's casilla across periods" but route through
 different schema entities.
 
 Prior-filing values are gathered as :class:`CasillaObservation` records and
-merged with casilla-level provenance before the binding is resolved.
+merged inside
+:class:`~domain.calculations.registry.RegistryModeloObservation` rows before
+the binding is resolved.
+
+The strict registry boundary remains
+:func:`~domain.calculations.registry.previous_filing_observation_requirements`
+and
+:func:`~domain.calculations.registry.resolve_previous_filing_binding_values`;
+this module is the application reader that supplies local observations from
+:class:`~._observations_repository.CalculationObservationRepository` and returns
+:class:`BindingPrefillReport` coverage.
 """
 
 from __future__ import annotations
@@ -34,6 +50,7 @@ from ...core import Modelo, Period
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
+    MODELO_303_IVA_COMPENSATION_BINDING_ID,
     BindingId,
     CasillaDefinition,
     CasillaId,
@@ -48,8 +65,7 @@ from ...domain.calculations.registry import (
     resolve_previous_filing_binding_values,
     validated_casilla_id,
 )
-from ...domain.iva_compensation._carry_forward import IvaCompensationPeriodState
-from ...domain.iva_compensation._errors import IvaCompensationCasillaReferenceError
+from ...domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
 from ._errors import BindingPrefillTypeError
 from ._iva_compensation_history import IvaCompensationHistoryRepository
 from ._observations_repository import CalculationObservationRepository, _ObservationEnvelopePayload
@@ -85,7 +101,6 @@ _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _PRE_ACTIVITY_NO_PRIOR_OBLIGATION_SOURCE_KIND: Final = "pre_activity_no_prior_obligation"
 _IVA_COMPENSATION_HISTORY_SOURCE_KIND: Final = "aeat_sede_iva_compensation_history"
 _MIXED_OBSERVATION_SOURCE_KIND: Final = "mixed_observation_sources"
-_MODELO_303_IVA_COMPENSATION_BINDING_ID: Final = "modelo-303-compensacion-pendiente-anteriores"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -95,8 +110,8 @@ def _casilla_id(value: object) -> CasillaId:
         raise RuntimeError(f"binding-prefill casilla constant {value!r} is not a CasillaId") from exc
 
 
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = (
-    _casilla_id("iva.compensacion-pendiente-periodos-anteriores")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores"
 )
 _M303_COMPENSACION_APLICADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-aplicada-periodo")
 _M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
@@ -106,14 +121,14 @@ _M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generad
 _M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 
-def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> tuple[bool, bool]:
-    """Return ``(diverges, advisory)`` for a payload's revision stamp.
+def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> bool:
+    """Return whether a payload's revision stamp must be refused.
 
     Thin adapter over the single shared
-    :func:`~aeat.application.calculations._revision_carry_gate.revision_carry_outcome`
+    :func:`~application.calculations._revision_carry_gate.revision_carry_outcome`
     gate (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2): it
     extracts the source context off the payload's observation and delegates the
-    ``(diverges, advisory)`` decision so the binding-prefill, cross-period
+    refusal decision so the binding-prefill, cross-period
     clean-state, and relation-prefill carry reads share one law-determined
     re-confirmation rather than three parallel copies.
     """
@@ -127,13 +142,12 @@ def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> tuple[bool,
 
 
 def _revision_prefill_divergence(payload: _ObservationEnvelopePayload) -> bool:
-    """Return True when the payload's stamped revision diverges from the law-determined revision.
+    """Return True when the payload's stamped revision cannot be re-confirmed.
 
-    See :func:`_revision_carry_outcome` — a divergent stamp means the prior was filed
-    under a revision that is no longer the law-determined revision for its source
-    context; the carry must be refused (the caller drops the observation).
+    See :func:`_revision_carry_outcome` — a divergent or unreconfirmable stamp
+    means the carry must be refused (the caller drops the observation).
     """
-    return _revision_carry_outcome(payload)[0]
+    return _revision_carry_outcome(payload)
 
 
 class _GatheredObservation(BaseModel):
@@ -144,21 +158,17 @@ class _GatheredObservation(BaseModel):
     observation: RegistryModeloObservation
     source_kind: str
     casilla_source_kinds: Mapping[CasillaId, str]
-    unstamped_revision_advisory: bool = False
-    """Non-blocking advisory: source observation has no revision stamp (legacy record)."""
 
 
 def _gathered_observation(
     observation: RegistryModeloObservation,
     *,
     source_kind: str,
-    unstamped_revision_advisory: bool = False,
 ) -> _GatheredObservation:
     return _GatheredObservation(
         observation=observation,
         source_kind=source_kind,
         casilla_source_kinds={item.casilla_id: source_kind for item in observation.observations},
-        unstamped_revision_advisory=unstamped_revision_advisory,
     )
 
 
@@ -196,7 +206,13 @@ def _merge_gathered_observations(
 
 
 class PrefilledBinding(BaseModel):
-    """One binding's resolved value with provenance for downstream stamping."""
+    """One resolved previous-filing binding with local-source provenance.
+
+    Emitted by :func:`resolve_bindings_from_local_store` and collected in
+    :class:`BindingPrefillReport`. The ``source_*`` fields point back to the
+    :class:`~domain.calculations.registry.RegistryModeloObservation` rows
+    that satisfied the registry previous-filing requirement.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -208,34 +224,30 @@ class PrefilledBinding(BaseModel):
     source_filing_year: int
     source_periods: tuple[str, ...]
     resolved_at: datetime
-    unstamped_revision_advisory: bool = False
-    """Non-blocking advisory: source observation has no revision stamp (legacy record).
-
-    True when the carry proceeded from a legacy observation without a revision
-    provenance stamp (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2).
-    Operators should re-file the source period to obtain a stamped record.
-    """
 
 
 class BindingPrefillReport(BaseModel):
-    """Outcome of one binding-prefill pass."""
+    """Outcome of one direct previous-filing binding-prefill pass.
+
+    ``binding_values`` is the mapping passed to
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`;
+    ``prefilled`` keeps the :class:`PrefilledBinding` provenance used by
+    :class:`~._multi_year.PreviousFilingSourceResolver` when stamping source-mesh
+    results.
+    """
 
     model_config = _STRICT_FROZEN
 
     prefilled: tuple[PrefilledBinding, ...]
     binding_values: Mapping[BindingId, Decimal]
 
-    @property
-    def has_unstamped_revision_advisory(self) -> bool:
-        """True when any prefilled binding carries a legacy unstamped-revision advisory."""
-        return any(item.unstamped_revision_advisory for item in self.prefilled)
-
 
 class LocalIvaCompensationRecurrence(BaseModel):
-    """Local Modelo 303 recurrence extracted for wallet reconciliation only.
+    """Local Modelo 303 recurrence evidence extracted for wallet reconciliation only.
 
     This is comparison evidence. It does not choose the effective casilla `110`
-    value; the wallet reconciliation decision remains the only selector.
+    value; the :class:`~._iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`
+    and wallet reconciliation decision remain the only selectors.
     """
 
     model_config = _STRICT_FROZEN
@@ -247,6 +259,7 @@ class LocalIvaCompensationRecurrence(BaseModel):
     source_filing_year: int
     source_periods: tuple[Period, ...]
     resolved_at: datetime
+    source_locator: str | None = None
 
 
 def _gather_grouped_member_observations(
@@ -269,34 +282,29 @@ def _gather_grouped_member_observations(
         obs = payload.observation
         if (obs.modelo, obs.filing_year, obs.period) != req_key:
             continue
-        # R2 carry gate: divergent stamp → skip; missing/indeterminate stamp → advisory.
-        diverges, advisory = _revision_carry_outcome(payload)
-        if diverges:
+        # R2 carry gate: divergent or unreconfirmable stamp -> skip.
+        if _revision_carry_outcome(payload):
             continue
         member_idx = seen_member.get(req_key, 0)
         seen_member[req_key] = member_idx + 1
         needed[(obs.modelo, obs.filing_year, obs.period, member_idx)] = _gathered_observation(
             obs,
             source_kind=payload.source_kind,
-            unstamped_revision_advisory=advisory,
         )
 
 
 def _gathered_from_payload(payload: _ObservationEnvelopePayload | None) -> _GatheredObservation | None:
     """Apply the R2 carry gate to a single-key payload.
 
-    Divergent stamp → refuse the carry (return ``None``); missing/indeterminate
-    stamp → carry with the non-blocking advisory set.
+    Divergent or unreconfirmable source revision stamps refuse the carry.
     """
     if payload is None:
         return None
-    diverges, advisory = _revision_carry_outcome(payload)
-    if diverges:
+    if _revision_carry_outcome(payload):
         return None
     return _gathered_observation(
         payload.observation,
         source_kind=payload.source_kind,
-        unstamped_revision_advisory=advisory,
     )
 
 
@@ -614,31 +622,6 @@ def _selector_value(selector: object, key: str, default: object) -> object:
     return getattr(selector, key, default)
 
 
-def _advisory_for_binding(
-    gathered: tuple[_GatheredObservation, ...],
-    *,
-    source_modelo: str,
-    source_filing_year: int,
-    source_periods: tuple[str, ...],
-) -> bool:
-    """Return True when any gathered observation matching this binding's source carries the unstamped advisory.
-
-    ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
-    propagates the legacy-record non-blocking advisory from the source observation
-    through to the :class:`PrefilledBinding` so callers can surface it to operators.
-    """
-    required_periods = set(source_periods)
-    for item in gathered:
-        if (
-            item.observation.modelo == source_modelo
-            and item.observation.filing_year == source_filing_year
-            and item.observation.period in required_periods
-            and item.unstamped_revision_advisory
-        ):
-            return True
-    return False
-
-
 def _source_kind_for_binding(
     gathered: tuple[_GatheredObservation, ...],
     *,
@@ -682,6 +665,13 @@ def resolve_bindings_from_local_store(
 ) -> BindingPrefillReport:
     """Resolve every ``previous_filing`` binding the revision declares against observations in the local store.
 
+    The caller provides a :class:`RegistrySnapshot`; this function asks the
+    registry for
+    :class:`~domain.calculations.registry.RegistryFoldRequirement` records,
+    loads matching :class:`RegistryModeloObservation` rows, then delegates the
+    final value calculation to
+    :func:`~domain.calculations.registry.resolve_previous_filing_binding_values`.
+
     Args:
         snapshot: The :class:`RegistrySnapshot` whose revision's ``previous_filing``
             bindings are resolved from the local calculation observation store.
@@ -708,6 +698,13 @@ def resolve_bindings_from_local_store(
     the engine emits blank cells the operator fills by hand. Strict
     enforcement (refusing the export when prior filings are missing)
     is the caller's choice via the prefill report's coverage.
+
+    See Also:
+        :class:`~._multi_year.PreviousFilingSourceResolver` adapts this report
+        to :class:`~application.aggregation.CalculationSourceResolution`;
+        :func:`~._relation_prefill.resolve_relations_from_local_store` resolves
+        the separate ``relation_prefill`` source family over the same
+        observation repository.
     """
     repo = repository if repository is not None else CalculationObservationRepository()
     # The Modelo 303 IVA-compensation-history merge is NO LONGER an implicit
@@ -754,15 +751,6 @@ def resolve_bindings_from_local_store(
             ),
         )
         source_casilla_ids = binding_source_casilla_ids(binding)
-        # Propagate the unstamped-revision advisory from the gathered source observation
-        # for this binding's (modelo, filing_year, periods) to the prefilled record
-        # (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2).
-        unstamped_advisory = _advisory_for_binding(
-            observations,
-            source_modelo=source_modelo,
-            source_filing_year=source_filing_year,
-            source_periods=source_periods,
-        )
         source_kind = (
             _PRE_ACTIVITY_NO_PRIOR_OBLIGATION_SOURCE_KIND
             if binding_id in pre_activity_zero_binding_ids
@@ -783,7 +771,6 @@ def resolve_bindings_from_local_store(
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,
                 resolved_at=when,
-                unstamped_revision_advisory=unstamped_advisory,
             ),
         )
     return BindingPrefillReport(
@@ -800,6 +787,12 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     captured_at: datetime | None = None,
 ) -> tuple[LocalIvaCompensationRecurrence | None, BindingPrefillReport]:
     """Extract the local Modelo 303 compensation recurrence for comparison.
+
+    This is the explicit wallet-feeding path over
+    :class:`IvaCompensationHistoryRepository`: it reconstructs the local
+    previous-filing amount so
+    :func:`~._iva_wallet_reconciliation.reconcile_modelo_303_iva_compensation`
+    can compare it with current AEAT wallet evidence.
 
     Args:
         snapshot: The :class:`RegistrySnapshot` identifying the Modelo 303 target revision.
@@ -822,7 +815,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     :class:`BindingPrefillReport`.
     """
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo.M303.value:
-        from ..modelo._actions import ModeloApplicabilityFilterError
+        from ..modelo import ModeloApplicabilityFilterError
 
         raise ModeloApplicabilityFilterError("local IVA compensation recurrence extraction only applies to Modelo 303")
     # This is the explicit wallet-feeding path: reconstruct the local Modelo 303
@@ -838,20 +831,20 @@ def extract_modelo_303_local_iva_compensation_recurrence(
         iva_history_repository=iva_repo,
         captured_at=captured_at,
     )
-    amount = report.binding_values.get(_MODELO_303_IVA_COMPENSATION_BINDING_ID)
+    amount = report.binding_values.get(MODELO_303_IVA_COMPENSATION_BINDING_ID)
     if amount is None:
         return None, report
     prefilled = next(
-        (item for item in report.prefilled if item.binding_id == _MODELO_303_IVA_COMPENSATION_BINDING_ID),
+        (item for item in report.prefilled if item.binding_id == MODELO_303_IVA_COMPENSATION_BINDING_ID),
         None,
     )
     if prefilled is None:
         source_modelo, source_year, source_periods = _requirements_by_binding(snapshot)[
-            _MODELO_303_IVA_COMPENSATION_BINDING_ID
+            MODELO_303_IVA_COMPENSATION_BINDING_ID
         ]
         resolved_at = captured_at if captured_at is not None else now()
         prefilled = PrefilledBinding(
-            binding_id=_MODELO_303_IVA_COMPENSATION_BINDING_ID,
+            binding_id=MODELO_303_IVA_COMPENSATION_BINDING_ID,
             value=Decimal(amount),
             source_modelo=source_modelo,
             source_filing_year=source_year,

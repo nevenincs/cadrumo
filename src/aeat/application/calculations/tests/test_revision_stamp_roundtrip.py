@@ -4,12 +4,12 @@ Tests for the period-revision-resolution decision, Ruling 3 / R2:
 
 - ``_ObservationEnvelopePayload.stamped_revision_id`` survives the
   encrypted-storage roundtrip with a non-default (non-None) value.
-- Anti-tautology proof: dropping ``stamped_revision_id`` from the on-disk
-  JSON envelope surfaces as strict inequality on reload.
-- R2 carry gate in ``resolve_bindings_from_local_store``: a divergent
-  stamped revision blocks the carry (binding absent from resolved map),
-  a missing stamp (pre-stamp record) carries and sets the advisory flag,
-  a matching stamp carries cleanly.
+- ``save_observation`` derives the law-determined stamp when callers omit it.
+- Anti-tautology proof: nulling ``stamped_revision_id`` in the on-disk JSON
+  envelope refuses on reload.
+- R2 carry gate in ``resolve_bindings_from_local_store``: a divergent or
+  unreconfirmable stamped revision blocks the carry (binding absent from
+  resolved map), and a matching stamp carries cleanly.
   Subject: Modelo 303/2025/2T whose single ``previous_filing`` binding
   ``modelo-303-compensacion-pendiente-anteriores`` reads from M303/2025/1T.
   M390's five M303-sourced bindings migrated to ``relation_prefill``
@@ -25,6 +25,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....core import Period
 from ....core.resources import resources
@@ -48,7 +49,7 @@ _YEAR = 2025
 _PERIOD = "1T"
 _SOURCE_KIND = "aeat_sede_justificante"
 _CLOCK = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_FAKE_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
+_DIVERGENT_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -76,8 +77,8 @@ def _minimal_observation(modelo: str = _MODELO, year: int = _YEAR, period: str =
             CasillaObservation(
                 casilla_id=_M303_RESULTADO_CASILLA,
                 value=Decimal("5000.00"),
-                legal_refs=("liva.art-94",),
-                source_refs=("aeat.iva.2025",),
+                legal_refs=("ley-37-1992:art-94",),
+                source_refs=("aeat-iva-2025",),
             ),
         ),
     )
@@ -115,20 +116,20 @@ def test_stamped_revision_id_survives_encrypted_storage_roundtrip(tmp_path: Path
         assert loaded.observation == _minimal_observation()
 
 
-def test_stamped_revision_id_none_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
-    """Legacy records (stamped_revision_id=None) also roundtrip correctly."""
+def test_save_observation_derives_stamped_revision_id(tmp_path: Path) -> None:
+    """Omitting stamped_revision_id on save persists the law-determined revision id."""
     with isolated_runtime_profile(tmp_path=tmp_path):
+        expected = _law_revision_id()
         repo = CalculationObservationRepository()
         repo.save_observation(
             _minimal_observation(),
             source_kind=_SOURCE_KIND,
             captured_at=_CLOCK,
-            stamped_revision_id=None,
         )
         loaded = repo.load_observation(_MODELO, _filing_period())
 
         assert loaded is not None
-        assert loaded.stamped_revision_id is None
+        assert loaded.stamped_revision_id == expected
         assert loaded.observation == _minimal_observation()
 
 
@@ -154,23 +155,23 @@ def test_stamped_revision_id_iter_modelo_propagates_stamp(tmp_path: Path) -> Non
 # ---------------------------------------------------------------------------
 
 
-def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path: Path) -> None:
-    """Anti-tautology: surgically removing stamped_revision_id from on-disk JSON must surface.
+def test_stamped_revision_id_anti_tautology_null_refuses_load(tmp_path: Path) -> None:
+    """Anti-tautology: nulling stamped_revision_id in on-disk JSON must refuse.
 
-    After stamping with a non-None revision id, reaching into the raw JSON
-    envelope and clearing the field to ``null`` must produce a loaded payload
-    whose ``stamped_revision_id`` is NOT equal to the original (it will be None).
-    This proves the boundary is not tautological: a saved value is not merely
-    re-defaulted on reload.
+    After stamping with a non-empty revision id, reaching into the raw JSON
+    envelope and clearing the field to ``null`` must fail strict payload
+    validation. This proves the boundary is not tautological: a saved value is
+    not re-derived on reload.
     """
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+    from ....adapters.persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ....adapters.persistence.storage.sql import SecureObjectRow
+    from ....adapters.persistence.storage.sql.engine import get_engine
     from ....adapters.persistence.storage.sql.session import session_scope
 
     namespace = CalculationObservationRepository.namespace
@@ -186,7 +187,7 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
         )
 
         object_key = observation_key(_MODELO, _filing_period())
-        with session_scope(profile.repository._engine) as session:
+        with session_scope(get_engine(profile.settings)) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == namespace,
                 SecureObjectRow.object_key == object_key,
@@ -199,19 +200,11 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
             assert envelope["payload"]["stamped_revision_id"] == revision_id, (
                 "fixture must serialize stamped_revision_id as a non-null value for this proof to be meaningful"
             )
-            # Surgically set to null — simulating a pre-stamp record.
             envelope["payload"]["stamped_revision_id"] = None
             row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=_h3_aad)
 
-        loaded = repo.load_observation(_MODELO, _filing_period())
-        assert loaded is not None
-        assert loaded.stamped_revision_id != revision_id, (
-            "anti-tautology proof failed: clearing stamped_revision_id from on-disk JSON "
-            "did NOT surface as a difference on reload. The S03 boundary is tautological."
-        )
-        assert loaded.stamped_revision_id is None, (
-            "after clearing to null, the loaded payload must carry None, not some re-defaulted value"
-        )
+        with pytest.raises(ValidationError):
+            repo.load_observation(_MODELO, _filing_period())
 
 
 # ---------------------------------------------------------------------------
@@ -226,12 +219,11 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
 # ``iva.compensacion-disponible-fin-periodo`` from M303/2025/1T
 # (source_period_offset_from_target = -1).
 #
-# NOTE: Modelo 390's five M303-sourced bindings (cuota-devengada-total,
-# cuota-deducible-total, resultado-regimen-general, compensacion-ultimo-periodo,
-# compensacion-generada-ejercicio-no-97) migrated from ``previous_filing`` to
-# ``relation_prefill`` via the relation path.  resolve_bindings_from_local_store
-# for M390/0A now returns an empty BindingPrefillReport; it can no longer be used
-# as the R2 gate subject.  These three tests were repurposed to the M303 self-carry
+# NOTE: Modelo 390's ordinary M303 annual-total bindings migrated from
+# ``previous_filing`` to ``relation_prefill``; its compensation boxes are now
+# resolved by ``iva_compensation_annual_partition``. resolve_bindings_from_local_store
+# for M390/0A returns an empty BindingPrefillReport; it can no longer be used as
+# the R2 gate subject. These three tests were repurposed to the M303 self-carry
 # (quarterly compensacion carry) instead, which retains a direct-selector
 # ``previous_filing`` binding.
 #
@@ -239,8 +231,7 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
 # - divergent stamp on 1T → 1T observation refused by the gate;
 #   _gather_observations returns () → early return with empty BindingPrefillReport.
 #   Proof: binding absent from report.binding_values.
-# - missing stamp (None) on 1T → carry proceeds with has_unstamped_revision_advisory.
-# - matching stamp on 1T → carry proceeds cleanly without advisory.
+# - matching stamp on 1T → carry proceeds cleanly.
 # ---------------------------------------------------------------------------
 
 _M303_CARRY_YEAR = 2025
@@ -288,7 +279,7 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
             _m303_carry_source_observation(),
             source_kind=_SOURCE_KIND,
             captured_at=_CLOCK,
-            stamped_revision_id=_FAKE_REVISION_ID,  # divergent: wrong revision
+            stamped_revision_id=_DIVERGENT_REVISION_ID,  # divergent: wrong revision
         )
 
         snapshot = resources().modelos.authority.snapshot(
@@ -310,45 +301,8 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
         )
 
 
-def test_carry_missing_stamp_advises_and_carries(tmp_path: Path) -> None:
-    """R2: a missing (None) stamped_revision_id on M303/1T carries with unstamped_revision_advisory=True.
-
-    Subject: M303/2025/2T prefill; the single ``previous_filing`` binding
-    ``modelo-303-compensacion-pendiente-anteriores`` reads M303/2025/1T.
-
-    Save 303/2025/1T with no stamp (legacy record).
-    resolve_bindings_from_local_store must include it in binding resolution
-    and the BindingPrefillReport must surface has_unstamped_revision_advisory.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save_observation(
-            _m303_carry_source_observation(),
-            source_kind=_SOURCE_KIND,
-            captured_at=_CLOCK,
-            stamped_revision_id=None,  # legacy: no stamp
-        )
-
-        snapshot = resources().modelos.authority.snapshot(
-            "303",
-            filing_year=_M303_CARRY_YEAR,
-            period=_M303_CARRY_TARGET_PERIOD,
-        )
-        report = resolve_bindings_from_local_store(snapshot, repository=repo)
-
-        assert isinstance(report, BindingPrefillReport)
-        # Carry must proceed (legacy unstamped observation is not refused).
-        assert report.prefilled, "missing-stamp observation must still carry; the prefill must not be empty."
-        assert _M303_CARRY_BINDING_ID in report.binding_values, (
-            f"binding {_M303_CARRY_BINDING_ID!r} must be resolved from the unstamped 1T observation."
-        )
-        assert report.has_unstamped_revision_advisory, (
-            "legacy unstamped observation must set has_unstamped_revision_advisory on the report."
-        )
-
-
 def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
-    """R2: a correctly stamped M303/1T observation carries without advisory and without blocking.
+    """R2: a correctly stamped M303/1T observation carries without blocking.
 
     Subject: M303/2025/2T prefill; the single ``previous_filing`` binding
     ``modelo-303-compensacion-pendiente-anteriores`` reads M303/2025/1T.
@@ -375,12 +329,9 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
         assert _M303_CARRY_BINDING_ID in report.binding_values, (
             f"binding {_M303_CARRY_BINDING_ID!r} must be resolved from the correctly stamped 1T observation."
         )
-        assert not report.has_unstamped_revision_advisory, (
-            "correctly stamped observation must not set the unstamped advisory."
-        )
 
 
 # The R2 carry-gate coverage for ``MultiYearResolver`` was removed with the
 # orphaned resolver itself; the live-path R2 gate (``_revision_prefill_divergence``)
 # stays comprehensively covered by ``test_carry_gate_parity.py`` across the
-# matching / divergent / missing / indeterminate outcomes.
+# matching / divergent / indeterminate outcomes.

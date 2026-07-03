@@ -18,9 +18,8 @@ This file iterates the fixtures and asserts:
   ``replacements_applied`` rows — confirming the rewrite landed
   the synthetic at the position the parser reads.
 
-When no fixtures have been committed yet, the test parametrise is
-empty and pytest collects zero items. The module ships the same
-sentinel-empty-list pattern as ``test_adversarial_absence.py``.
+When no fixtures have been committed yet, the loop has no fixture
+work to perform but the module still contributes one passing test.
 """
 
 from __future__ import annotations
@@ -30,9 +29,7 @@ from pathlib import Path
 
 import pytest
 
-from .....domain.justificante import Justificante
-from .....tests import FIXTURES_DIR
-from .....tests._justificante_parse_cache import parse_committed_justificante_fixture
+from .....tests import FIXTURES_DIR, parse_committed_justificante_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -52,72 +49,31 @@ def _committed_fixture_pairs() -> list[tuple[Path, Path]]:
 _FIXTURE_PAIRS = _committed_fixture_pairs()
 
 
-@pytest.fixture(scope="session")
-def _parsed_fixture_justificantes() -> dict[Path, Justificante]:
-    """Cache of ``parse_justificante`` results keyed by fixture PDF path.
+def test_committed_fixtures_parse_and_match_sidecars() -> None:
+    """Every committed fixture parses and exposes synthetic CSV/NIF values."""
+    for pdf_path, sidecar_path in _FIXTURE_PAIRS:
+        parsed = parse_committed_justificante_fixture(pdf_path)
+        assert parsed.modelo, f"modelo is empty for {pdf_path}"
+        assert parsed.period, f"period is empty for {pdf_path}"
+        assert parsed.csv, f"csv is empty for {pdf_path}"
+        assert parsed.tax_id, f"tax_id is empty for {pdf_path}"
+        assert parsed.presented_at, f"presented_at is empty for {pdf_path}"
 
-    Both round-trip tests below need the same parse for every fixture;
-    a session-scoped cache halves the parse cost on this directory.
-    """
-    return {pdf_path: parse_committed_justificante_fixture(pdf_path) for pdf_path, _ in _FIXTURE_PAIRS}
-
-
-@pytest.mark.parametrize(
-    ("pdf_path", "sidecar_path"),
-    _FIXTURE_PAIRS,
-    ids=[pair[0].name for pair in _FIXTURE_PAIRS],
-)
-def test_fixture_parses_through_justificante_parser(
-    pdf_path: Path,
-    sidecar_path: Path,
-    _parsed_fixture_justificantes: dict[Path, Justificante],
-) -> None:
-    """Every fixture round-trips through parse_justificante."""
-    parsed = _parsed_fixture_justificantes[pdf_path]
-    assert parsed.modelo, f"modelo is empty for {pdf_path}"
-    assert parsed.period, f"period is empty for {pdf_path}"
-    assert parsed.csv, f"csv is empty for {pdf_path}"
-    assert parsed.tax_id, f"tax_id is empty for {pdf_path}"
-    assert parsed.presented_at, f"presented_at is empty for {pdf_path}"
-
-
-@pytest.mark.parametrize(
-    ("pdf_path", "sidecar_path"),
-    _FIXTURE_PAIRS,
-    ids=[pair[0].name for pair in _FIXTURE_PAIRS],
-)
-def test_fixture_synthetic_csv_and_nif_match_sidecar(
-    pdf_path: Path,
-    sidecar_path: Path,
-    _parsed_fixture_justificantes: dict[Path, Justificante],
-) -> None:
-    """Synthetic CSV / NIF parse out of the fixture matching the sidecar audit."""
-    parsed = _parsed_fixture_justificantes[pdf_path]
-    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
-
-    synthetics_by_surface_label: dict[str, set[str]] = {}
-    for replacement in sidecar.get("replacements_applied", ()):
-        synthetic = replacement.get("synthetic")
-        if synthetic is None:
+        sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        synthetic_pool = {
+            synthetic
+            for replacement in sidecar.get("replacements_applied", ())
+            if (synthetic := replacement.get("synthetic")) is not None
+        }
+        if not synthetic_pool:
             continue
-        # The audit log records surface (e.g. "content_stream"), not
-        # category. Index synthetics by their value so we can do a
-        # presence check against parsed fields.
-        synthetics_by_surface_label.setdefault("any", set()).add(synthetic)
 
-    if not synthetics_by_surface_label:
-        return  # No replacements recorded — skip.
-
-    pool = synthetics_by_surface_label["any"]
-    # The NIF / CSV the parser extracts must be one of the synthetic
-    # values applied during sanitisation. Allows for the parser
-    # picking either the canonical synthetic or a related variant.
-    assert parsed.tax_id in pool, f"Parsed tax_id {parsed.tax_id!r} is not in the synthetic pool {pool} for {pdf_path}"
-    assert parsed.csv in pool, f"Parsed csv {parsed.csv!r} is not in the synthetic pool {pool} for {pdf_path}"
-
-
-def test_fixture_root_is_skip_clean_when_empty() -> None:
-    """Sentinel test asserting the empty-fixture-root state stays green in CI."""
-    if not _FIXTURE_PAIRS:
-        return
-    assert len(_FIXTURE_PAIRS) > 0
+        # The NIF / CSV the parser extracts must be one of the synthetic
+        # values applied during sanitisation. Allows for the parser
+        # picking either the canonical synthetic or a related variant.
+        assert parsed.tax_id in synthetic_pool, (
+            f"Parsed tax_id {parsed.tax_id!r} is not in the synthetic pool {synthetic_pool} for {pdf_path}"
+        )
+        assert parsed.csv in synthetic_pool, (
+            f"Parsed csv {parsed.csv!r} is not in the synthetic pool {synthetic_pool} for {pdf_path}"
+        )

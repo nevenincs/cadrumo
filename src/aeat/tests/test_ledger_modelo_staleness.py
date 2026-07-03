@@ -19,8 +19,11 @@ from pathlib import Path
 
 import pytest
 
+from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ..adapters.persistence.storage.sql import SecureObjectRepository
-from ..application.aggregation._ledger_filing_snapshot import (
+from ..application.aggregation import (
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
     stale_filed_revisions,
@@ -28,16 +31,16 @@ from ..application.aggregation._ledger_filing_snapshot import (
 from ..application.ledger import ManualLedgerTransactionPatch, update_manual_transaction_fields
 from ..core import Period
 from ..domain.calculations.registry import CasillaId, validated_casilla_id
-from ..domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ..domain.modelos._calculation_revision import (
+from ..domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
+    WorkUnitCatalogue,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ..domain.modelos._codes import ModeloCode
-from ..domain.modelos._repository import WorkUnitCatalogueRepository
-from ..domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ..domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -45,7 +48,6 @@ from ..domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
     TransactionValidationError,
@@ -57,6 +59,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 _FILING_PERIOD = Period.from_year_and_code(2025, "1T")
+_BUCKET_ID = "16161616-1616-4616-8616-161616161616"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -71,7 +74,7 @@ _REVISION_CASILLA: CasillaId = _casilla_id("01")
 
 def _txn(*, taxable_base: Decimal) -> Transaction:
     raw = RawTransaction(
-        transaction_id="provider-row-stale",
+        provider_transaction_id="provider-row-stale",
         booked_date=date(2025, 2, 10),
         value_date=date(2025, 2, 10),
         amount=Decimal("121.00"),
@@ -97,7 +100,9 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
             "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
             "taxable_base": taxable_base,
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
@@ -111,7 +116,7 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
 
 def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
     work_unit_id = derive_work_unit_id(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2025,
         period=_FILING_PERIOD,
@@ -197,14 +202,14 @@ def test_removing_contributing_row_surfaces_staleness() -> None:
 # --- behavior contract: a finalized modelo blocks destructive edits to its source rows -----
 @pytest.fixture
 def _profile(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
 
 def test_finalized_modelo_blocks_destructive_ledger_edit(_profile: SecureObjectRepository) -> None:
     objects = _profile
     tx = _txn(taxable_base=Decimal("100.00"))
-    TransactionCatalogueRepository(bucket_id="bucket-a", objects=objects).save(
+    TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         TransactionCatalogue.from_transactions((tx,)),
     )
     snapshot = compute_ledger_filing_snapshot(
@@ -215,7 +220,7 @@ def test_finalized_modelo_blocks_destructive_ledger_edit(_profile: SecureObjectR
     revision = _verified_revision(snapshot, tx.transaction_id)
     work_unit = WorkUnit(
         work_unit_id=revision.work_unit_id,
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2025,
         period=_FILING_PERIOD,
@@ -233,10 +238,10 @@ def test_finalized_modelo_blocks_destructive_ledger_edit(_profile: SecureObjectR
     # The row now feeds a VERIFICADO_COMPLETO revision: editing it is refused.
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         update_manual_transaction_fields(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             transaction_id=tx.transaction_id,
             patch=ManualLedgerTransactionPatch(notes="tweak"),
             actor="operator",
             source_command="aeat app ledger update",
-            transaction_repository=TransactionCatalogueRepository(bucket_id="bucket-a", objects=objects),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
         )

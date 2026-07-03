@@ -14,4 +14,6 @@ Submodules
    :maxdepth: 4
 
    aeat.application.registry._corpus
+   aeat.application.registry._corpus_manual_helpers
+   aeat.application.registry._diff
    aeat.application.registry._errors

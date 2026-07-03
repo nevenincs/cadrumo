@@ -17,6 +17,7 @@ Submodules
    aeat.domain.transactions._enums
    aeat.domain.transactions._errors
    aeat.domain.transactions._ids
+   aeat.domain.transactions._irpf_categories
    aeat.domain.transactions._llm
    aeat.domain.transactions._model_tier
    aeat.domain.transactions._models

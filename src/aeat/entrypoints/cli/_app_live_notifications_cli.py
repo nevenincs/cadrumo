@@ -1,4 +1,11 @@
-"""Typer registration for live notification commands."""
+"""Typer registration for live notification snapshot commands.
+
+The pull command delegates the live DEHú read to :func:`capture_notifications`;
+the list, view, and latest commands read bucket-local
+:class:`PersistedNotificationsSnapshot` records through
+:class:`NotificationsService`. Every command emits a typed app-live payload and
+does not acknowledge, mark, submit, or mutate notifications in AEAT.
+"""
 
 from __future__ import annotations
 
@@ -58,7 +65,12 @@ notifications_app = typer.Typer(
     ),
 )
 def notifications_pull(ctx: typer.Context) -> None:
-    """Drive the live DEHu fetch and persist flow."""
+    """Drive the live DEHu fetch and persist flow.
+
+    The live read is performed by :func:`capture_notifications`, persisted as a
+    :class:`PersistedNotificationsSnapshot`, and emitted through
+    :class:`NotificationsCaptureResult`.
+    """
     bucket_id = _bucket_id()
     run_auth_preflight(_auth_preflight, family="notifications")
     persisted = asyncio.run(capture_notifications(bucket_id=bucket_id))
@@ -88,7 +100,12 @@ def notifications_pull(ctx: typer.Context) -> None:
     ),
 )
 def notifications_list(ctx: typer.Context) -> None:
-    """List persisted DEHu notification snapshots without contacting AEAT."""
+    """List persisted DEHu notification snapshots without contacting AEAT.
+
+    The command reads :class:`NotificationsService` storage for the active
+    bucket and emits :class:`NotificationsListResult` summaries rather than
+    expanding notification rows.
+    """
     bucket_id = _bucket_id()
     rows = NotificationsService().list_snapshots(bucket_id=bucket_id)
     result = NotificationsListResult(
@@ -122,7 +139,12 @@ def notifications_show(
         ),
     ],
 ) -> None:
-    """Show one persisted DEHu notification snapshot by id prefix."""
+    """Show one persisted DEHu notification snapshot by id prefix.
+
+    The id is resolved through :class:`NotificationsService` ``show``, then
+    projected as :class:`NotificationsViewResult`. This local view does not
+    acknowledge, submit, or mark notifications remotely.
+    """
     bucket_id = _bucket_id()
     record = NotificationsService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
     result = NotificationsViewResult(
@@ -170,7 +192,12 @@ def notifications_show(
     ),
 )
 def notifications_latest(ctx: typer.Context) -> None:
-    """Show the most recent DEHu notification snapshot, or report none."""
+    """Show the most recent DEHu notification snapshot, or report none.
+
+    A missing snapshot from :class:`NotificationsService` still emits
+    :class:`NotificationsLatestResult` with ``snapshot_id=None`` so automation
+    can distinguish no local capture from a live-read failure.
+    """
     bucket_id = _bucket_id()
     record = NotificationsService().latest(bucket_id=bucket_id)
     if record is None:

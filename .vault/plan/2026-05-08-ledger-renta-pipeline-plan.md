@@ -3,15 +3,13 @@ tags:
   - '#plan'
   - '#ledger-renta-pipeline'
 date: '2026-05-08'
-modified: '2026-05-08'
+modified: '2026-06-30'
 related:
   - "[[2026-05-08-ledger-renta-pipeline-audit]]"
   - "[[2026-05-08-ledger-renta-pipeline-adr]]"
   - "[[2026-05-08-ledger-renta-pipeline-phase2-contract-decisions-adr]]"
   - "[[2026-05-08-ledger-renta-pipeline-research]]"
 ---
-
-
 
 # `ledger-renta-pipeline` `ledger-to-renta-rollout` plan
 
@@ -38,7 +36,6 @@ subsequent slices broaden the model inventory, legal grounding, and
 edge-case coverage.
 
 ## Tasks
-
 
 - Phase 0: Pipeline normalization
 

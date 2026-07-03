@@ -11,8 +11,11 @@ legal_refs = [
     "ley-37-1992:art-91",
     "ley-37-1992:art-92",
     "ley-37-1992:art-99",
+    "ley-37-1992:art-161",
     "ley-37-1992:art-115",
     "ley-37-1992:art-116",
+    "ley-37-1992:art-122",
+    "ley-37-1992:art-123",
     "rd-1624-1992:art-71",
     "rd-1624-1992:art-29",
     "rd-1624-1992:art-30",
@@ -29,9 +32,12 @@ casilla_ids = [
     "iva.anual.soportado.interiores",
     "iva.anual.soportado.importaciones",
     "iva.anual.autorepercutido.intracomunitaria",
+    "iva.anual.repercutido.recargo.general",
+    "iva.anual.repercutido.recargo.reducido",
     "iva.anual.reconciliacion.devengada-303",
     "iva.anual.reconciliacion.deducible-303",
     "iva.anual.reconciliacion.resultado-303",
+    "iva.anual.reconciliacion.devengada-simplificado-303",
     "iva.anual.compensacion-ultimo-periodo-97",
     "iva.anual.compensacion-generada-ejercicio-no-97",
     "iva.anual.cuota-devengada-total",
@@ -55,6 +61,7 @@ bindings = [
     "modelo-390-prev-303-cuota-devengada-total",
     "modelo-390-prev-303-cuota-deducible-total",
     "modelo-390-prev-303-resultado-regimen-general",
+    "modelo-390-prev-303-cuota-devengada-simplificado",
     "modelo-390-prev-303-compensacion-ultimo-periodo",
     "modelo-390-prev-303-compensacion-generada-ejercicio-no-97",
 ]
@@ -62,8 +69,7 @@ relations = [
     "modelo-390-rel-303-cuota-devengada-total",
     "modelo-390-rel-303-cuota-deducible-total",
     "modelo-390-rel-303-resultado-regimen-general",
-    "modelo-390-rel-303-compensacion-ultimo-periodo",
-    "modelo-390-rel-303-compensacion-generada-ejercicio-no-97",
+    "modelo-390-rel-303-cuota-devengada-simplificado",
 ]
 dependency_classifications = ["modelo-390-dep-303"]
 workbook_parity_refs = ["modelo-390-dr-2025"]

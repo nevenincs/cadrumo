@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-enum-hardening'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-10-modelo-enum-hardening-adr]]'
@@ -66,12 +66,6 @@ introduced; every Step is behaviour-preserving or registry-grounded and gated by
 tests.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

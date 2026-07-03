@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S10'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
 ---
-
-
-
 
 # teach the observation-coverage validator to treat an empty span as satisfied (not a missing required observation) so a first filer fires no blocker, extending previous_filing_observation_requirements anchor derivation
 

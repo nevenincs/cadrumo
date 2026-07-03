@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-envelope-notice-standardisation'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-10-cli-envelope-notice-standardisation-adr]]'
@@ -96,12 +96,6 @@ refreshes generated docs. This continues the completed
 `emit-envelope-schema-burndown` rollout using its one-Step-per-site discipline.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

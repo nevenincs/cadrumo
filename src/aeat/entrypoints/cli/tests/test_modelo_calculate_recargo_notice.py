@@ -38,9 +38,8 @@ import pytest
 
 from ....application.modelo import ModeloWorkPlazoSummary
 from ....core import Period
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import load_registry_tree
-from ....domain.deadlines._plazo import resolve_filing_closes_on
+from ....core.resources import resources
+from ....domain.deadlines import resolve_filing_closes_on
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._modelo_rendering import _work_unit_deadline_output_from_summary
@@ -78,6 +77,8 @@ def _create_natural_person_profile() -> None:
             "--accept-defaults",
             "--tax-id",
             "12345678Z",
+            "--entity-type",
+            "natural_person",
             "--name",
             "Operator",
             "--surnames",
@@ -207,7 +208,7 @@ def test_recargo_notice_fallback_legal_ref_resolves_to_bundled_catalogue() -> No
     assert context is not None
     assert context["legal_refs"] == _RECARGO_LEGAL_REF
 
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = resources().modelos.authority.catalogues
     legal_entry = catalogues.legal[_RECARGO_LEGAL_REF]
     assert legal_entry.corpus_ref
     assert legal_entry.required_text

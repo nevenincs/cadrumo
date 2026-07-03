@@ -27,10 +27,10 @@ from .._schema import CasillaDefinition, InputKind
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_DUMMY_LEGAL_ID = "ley-27-2014:art-26"
-_DUMMY_SOURCE_ID = "aeat-dr-200-2025"
-_DUMMY_EXPORT_FIELD_ID = "modelo-200-2024:DP200014:00552"
-_DUMMY_FORMULA_ID = "modelo-200-2024-bin-aplicada-maxima"
+_INTERNAL_ONLY_LEGAL_ID = "ley-27-2014:art-26"
+_INTERNAL_ONLY_SOURCE_ID = "aeat-dr-200-2025"
+_INTERNAL_ONLY_EXPORT_FIELD_ID = "modelo-200-2024:DP200014:00552"
+_INTERNAL_ONLY_FORMULA_ID = "modelo-200-2024-bin-aplicada-maxima"
 
 
 def test_internal_only_casilla_rejects_non_empty_export_refs() -> None:
@@ -49,11 +49,11 @@ def test_internal_only_casilla_rejects_non_empty_export_refs() -> None:
             label="Test internal ceiling",
             section=("liquidacion_iii", "base_imponible"),
             input_kind=InputKind.COMPUTED,
-            formula=_DUMMY_FORMULA_ID,
-            export_refs=(_DUMMY_EXPORT_FIELD_ID,),
+            formula=_INTERNAL_ONLY_FORMULA_ID,
+            export_refs=(_INTERNAL_ONLY_EXPORT_FIELD_ID,),
             internal_only=True,
-            legal_refs=(_DUMMY_LEGAL_ID,),
-            source_refs=(_DUMMY_SOURCE_ID,),
+            legal_refs=(_INTERNAL_ONLY_LEGAL_ID,),
+            source_refs=(_INTERNAL_ONLY_SOURCE_ID,),
         )
 
 
@@ -75,8 +75,8 @@ def test_internal_only_casilla_rejects_non_computed_input_kind() -> None:
             section=("liquidacion_iii", "base_imponible"),
             input_kind=InputKind.MANUAL,
             internal_only=True,
-            legal_refs=(_DUMMY_LEGAL_ID,),
-            source_refs=(_DUMMY_SOURCE_ID,),
+            legal_refs=(_INTERNAL_ONLY_LEGAL_ID,),
+            source_refs=(_INTERNAL_ONLY_SOURCE_ID,),
         )
 
 
@@ -95,10 +95,10 @@ def test_internal_only_casilla_accepted_when_computed_and_no_exports() -> None:
         label="Test internal ceiling",
         section=("liquidacion_iii", "base_imponible"),
         input_kind=InputKind.COMPUTED,
-        formula=_DUMMY_FORMULA_ID,
+        formula=_INTERNAL_ONLY_FORMULA_ID,
         internal_only=True,
-        legal_refs=(_DUMMY_LEGAL_ID,),
-        source_refs=(_DUMMY_SOURCE_ID,),
+        legal_refs=(_INTERNAL_ONLY_LEGAL_ID,),
+        source_refs=(_INTERNAL_ONLY_SOURCE_ID,),
     )
     assert casilla.internal_only is True
     assert casilla.export_refs == ()

@@ -8,6 +8,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.classification import SensitivityClass
+from ....core.resources import bundled_path, resources
+from ...calculations.registry import verify_legal_catalogue
 from .. import (
     ProfileFieldDefinition,
     ProfileFieldType,
@@ -25,13 +27,15 @@ def test_committed_user_profile_schema_loads_with_canonical_sections() -> None:
     schema = load_user_profile_schema()
 
     assert schema.id == "aeat.user_profile"
-    assert schema.version == 2
+    assert schema.version == 3
     assert schema.snapshot_policy is ProfileSnapshotPolicy.IMMUTABLE_SECURE_SNAPSHOT_HASH
     assert schema.remove_policy is ProfileRemovePolicy.LIVE_PROFILE_TOMBSTONE_RETAIN_SNAPSHOTS
     assert {
         "identity",
         "tax_residence",
         "censo",
+        "attribution_entity",
+        "attribution_entity_socios",
         "activities",
         "irpf",
         "withholding",
@@ -89,6 +93,14 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
     large_company = schema.field("censo.large_company")
     assert large_company.type is ProfileFieldType.BOOLEAN
     assert "enrollment.large_company" in large_company.schedule_predicates
+    assert set(large_company.legal_refs) == {"ley-37-1992:art-121", "rd-1624-1992:art-71"}
+    assert "6.010.121,04" in large_company.description
+
+    public_admin_budget = schema.field("censo.public_administration_budget_gt_6000000")
+    assert public_admin_budget.type is ProfileFieldType.BOOLEAN
+    assert "enrollment.public_administration_budget_gt_6000000" in public_admin_budget.schedule_predicates
+    assert set(public_admin_budget.legal_refs) == {"orden-eha-586-2011:art-1", "rd-439-2007:art-108"}
+    assert "6 million" in public_admin_budget.description
 
     autoconsumo_promotor_base = schema.field("iva.autoconsumo_promotor_base")
     assert autoconsumo_promotor_base.type is ProfileFieldType.MONEY
@@ -98,9 +110,30 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
     assert ccaa.type is ProfileFieldType.ENUM
     assert "cataluna" in ccaa.enum_values
 
+    marital_status = schema.field("renta_taxpayer.marital_status")
+    assert marital_status.type is ProfileFieldType.ENUM
+    assert marital_status.enum_values == ("1", "2", "3", "4", "5")
+
     situacion = schema.field("renta_family.situacion_familiar")
     assert situacion.type is ProfileFieldType.ENUM
     assert "soltero" in situacion.enum_values
+
+
+def test_committed_user_profile_schema_legal_refs_resolve_against_catalogue_and_corpus() -> None:
+    schema = load_user_profile_schema()
+    catalogues = resources().modelos.authority.catalogues
+    refs_by_field = {
+        f"{section.key}.{field.key}": field.legal_refs
+        for section in schema.sections
+        for field in section.fields
+        if field.legal_refs
+    }
+    refs = sorted({ref for field_refs in refs_by_field.values() for ref in field_refs})
+
+    assert refs_by_field, "committed user-profile schema carries no field legal_refs"
+    missing = sorted(ref for ref in refs if ref not in catalogues.legal)
+    assert not missing, f"user-profile schema legal_refs absent from registry legal catalogue: {missing}"
+    verify_legal_catalogue({ref: catalogues.legal[ref] for ref in refs}, source_root=bundled_path())
 
 
 def test_user_profile_schema_models_are_strict_frozen_and_forbid_extras() -> None:

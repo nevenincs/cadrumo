@@ -17,9 +17,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.setup_answers import SetupAnswers
-from ....domain.contribuyente._ccaa import CCAA
-from ....domain.contribuyente._renta_codes import SituacionFamiliar
-from ....domain.deadlines._models import IVARegime
+from ....domain.contribuyente import CCAA, SituacionFamiliar
+from ....domain.deadlines import IVARegime
 from .._verifier import (
     WizardCheckFinding,
     WizardCheckSeverity,
@@ -55,113 +54,118 @@ def _monoparental_finding(answers: SetupAnswers) -> WizardCheckFinding:
 # ---------------------------------------------------------------------------
 
 
-class TestMonoparentalRequiresHijosVerifier:
-    """Verifier emits WARNING when soltero/separado conjunta lacks hijos a cargo."""
+_MONOPARENTAL_CASES: tuple[
+    tuple[str, dict[str, object], WizardCheckSeverity, str],
+    ...,
+] = (
+    (
+        "individual-taxation",
+        {
+            "taxation_type": "1",
+            "situacion_familiar": SituacionFamiliar.SOLTERO,
+        },
+        WizardCheckSeverity.OK,
+        "wizard.setup.verifier.monoparental_requires_hijos_ok",
+    ),
+    (
+        "taxation-type-blank",
+        {
+            "taxation_type": "",
+            "situacion_familiar": SituacionFamiliar.SOLTERO,
+        },
+        WizardCheckSeverity.OK,
+        "wizard.setup.verifier.monoparental_requires_hijos_ok",
+    ),
+    (
+        "situacion-blank",
+        {
+            "taxation_type": "2",
+            "situacion_familiar": "",
+            "spouse_tax_id": "87654321B",
+        },
+        WizardCheckSeverity.OK,
+        "wizard.setup.verifier.monoparental_requires_hijos_ok",
+    ),
+    (
+        "casado-conjunta-no-hijos",
+        {
+            "taxation_type": "2",
+            "situacion_familiar": SituacionFamiliar.CASADO,
+            "spouse_tax_id": "87654321B",
+            "family_minor_children_in_unit": False,
+        },
+        WizardCheckSeverity.OK,
+        "wizard.setup.verifier.monoparental_requires_hijos_ok",
+    ),
+    (
+        "soltero-conjunta-with-hijos",
+        {
+            "taxation_type": "2",
+            "situacion_familiar": SituacionFamiliar.SOLTERO,
+            "spouse_tax_id": "87654321B",
+            "family_minor_children_in_unit": True,
+        },
+        WizardCheckSeverity.OK,
+        "wizard.setup.verifier.monoparental_requires_hijos_ok",
+    ),
+    (
+        "soltero-conjunta-without-hijos",
+        {
+            "taxation_type": "2",
+            "situacion_familiar": SituacionFamiliar.SOLTERO,
+            "spouse_tax_id": "87654321B",
+            "family_minor_children_in_unit": False,
+        },
+        WizardCheckSeverity.WARNING,
+        "wizard.setup.verifier.monoparental_requires_hijos_warning",
+    ),
+    (
+        "separado-divorciado-conjunta-without-hijos",
+        {
+            "taxation_type": "2",
+            "situacion_familiar": SituacionFamiliar.SEPARADO_DIVORCIADO,
+            "spouse_tax_id": "87654321B",
+            "family_minor_children_in_unit": False,
+        },
+        WizardCheckSeverity.WARNING,
+        "wizard.setup.verifier.monoparental_requires_hijos_warning",
+    ),
+    (
+        "separado-divorciado-conjunta-with-hijos",
+        {
+            "taxation_type": "2",
+            "situacion_familiar": SituacionFamiliar.SEPARADO_DIVORCIADO,
+            "spouse_tax_id": "87654321B",
+            "family_minor_children_in_unit": True,
+        },
+        WizardCheckSeverity.OK,
+        "wizard.setup.verifier.monoparental_requires_hijos_ok",
+    ),
+)
 
-    def test_ok_when_individual_taxation(self) -> None:
-        """Individual taxation never triggers this check."""
-        answers = _base_answers(
-            taxation_type="1",
-            situacion_familiar=SituacionFamiliar.SOLTERO,
-        )
+
+def test_monoparental_requires_hijos_cases() -> None:
+    for case_id, overrides, expected_severity, expected_message_key in _MONOPARENTAL_CASES:
+        answers = _base_answers(**overrides)
         finding = _monoparental_finding(answers)
-        assert finding.severity is WizardCheckSeverity.OK
-
-    def test_ok_when_taxation_type_blank(self) -> None:
-        """Blank taxation type passes — check is undeclared."""
-        answers = _base_answers(
-            taxation_type="",
-            situacion_familiar=SituacionFamiliar.SOLTERO,
-        )
-        finding = _monoparental_finding(answers)
-        assert finding.severity is WizardCheckSeverity.OK
-
-    def test_ok_when_situacion_familiar_blank(self) -> None:
-        """Blank situacion_familiar passes even for conjunta."""
-        answers = _base_answers(
-            taxation_type="2",
-            situacion_familiar="",
-            spouse_tax_id="87654321B",
-        )
-        finding = _monoparental_finding(answers)
-        assert finding.severity is WizardCheckSeverity.OK
-
-    def test_ok_when_casado_conjunta_no_hijos(self) -> None:
-        """Casado conjunta without hijos is tipo-1 — monoparental check does not apply."""
-        answers = _base_answers(
-            taxation_type="2",
-            situacion_familiar=SituacionFamiliar.CASADO,
-            spouse_tax_id="87654321B",
-            family_minor_children_in_unit=False,
-        )
-        finding = _monoparental_finding(answers)
-        assert finding.severity is WizardCheckSeverity.OK
-
-    def test_ok_when_soltero_conjunta_with_hijos(self) -> None:
-        """Soltero + conjunta + hijos is valid monoparental path — no warning."""
-        answers = _base_answers(
-            taxation_type="2",
-            situacion_familiar=SituacionFamiliar.SOLTERO,
-            spouse_tax_id="87654321B",
-            family_minor_children_in_unit=True,
-        )
-        finding = _monoparental_finding(answers)
-        assert finding.severity is WizardCheckSeverity.OK
-        assert finding.message_key == "wizard.setup.verifier.monoparental_requires_hijos_ok"
-
-    def test_warning_when_soltero_conjunta_without_hijos(self) -> None:
-        """Art. 82.1.2° LIRPF: soltero conjunta without hijos cannot form monoparental unit."""
-        answers = _base_answers(
-            taxation_type="2",
-            situacion_familiar=SituacionFamiliar.SOLTERO,
-            spouse_tax_id="87654321B",
-            family_minor_children_in_unit=False,
-        )
-        finding = _monoparental_finding(answers)
-        assert finding.severity is WizardCheckSeverity.WARNING
-        assert finding.message_key == "wizard.setup.verifier.monoparental_requires_hijos_warning"
-
-    def test_warning_when_separado_divorciado_conjunta_without_hijos(self) -> None:
-        """Separado/divorciado conjunta without hijos cannot form monoparental unit."""
-        answers = _base_answers(
-            taxation_type="2",
-            situacion_familiar=SituacionFamiliar.SEPARADO_DIVORCIADO,
-            spouse_tax_id="87654321B",
-            family_minor_children_in_unit=False,
-        )
-        finding = _monoparental_finding(answers)
-        assert finding.severity is WizardCheckSeverity.WARNING
-
-    def test_ok_when_separado_divorciado_conjunta_with_hijos(self) -> None:
-        """Separado/divorciado + conjunta + hijos is valid monoparental path."""
-        answers = _base_answers(
-            taxation_type="2",
-            situacion_familiar=SituacionFamiliar.SEPARADO_DIVORCIADO,
-            spouse_tax_id="87654321B",
-            family_minor_children_in_unit=True,
-        )
-        finding = _monoparental_finding(answers)
-        assert finding.severity is WizardCheckSeverity.OK
+        assert finding.severity is expected_severity, case_id
+        assert finding.message_key == expected_message_key, case_id
 
 
-class TestMonoparentalAntiTautology:
-    """Changing family_minor_children_in_unit must change verifier outcome."""
-
-    def test_with_vs_without_hijos_produces_different_severity(self) -> None:
-        """If the check were tautological, both outcomes would match."""
-        with_hijos = _base_answers(
-            taxation_type="2",
-            situacion_familiar=SituacionFamiliar.SOLTERO,
-            spouse_tax_id="87654321B",
-            family_minor_children_in_unit=True,
-        )
-        without_hijos = _base_answers(
-            taxation_type="2",
-            situacion_familiar=SituacionFamiliar.SOLTERO,
-            spouse_tax_id="87654321B",
-            family_minor_children_in_unit=False,
-        )
-        finding_with = _monoparental_finding(with_hijos)
-        finding_without = _monoparental_finding(without_hijos)
-        # The two outcomes must differ — proof the formula is evaluated.
-        assert finding_with.severity is not finding_without.severity
+def test_with_vs_without_hijos_produces_different_severity() -> None:
+    """If the check were tautological, both outcomes would match."""
+    with_hijos = _base_answers(
+        taxation_type="2",
+        situacion_familiar=SituacionFamiliar.SOLTERO,
+        spouse_tax_id="87654321B",
+        family_minor_children_in_unit=True,
+    )
+    without_hijos = _base_answers(
+        taxation_type="2",
+        situacion_familiar=SituacionFamiliar.SOLTERO,
+        spouse_tax_id="87654321B",
+        family_minor_children_in_unit=False,
+    )
+    finding_with = _monoparental_finding(with_hijos)
+    finding_without = _monoparental_finding(without_hijos)
+    assert finding_with.severity is not finding_without.severity

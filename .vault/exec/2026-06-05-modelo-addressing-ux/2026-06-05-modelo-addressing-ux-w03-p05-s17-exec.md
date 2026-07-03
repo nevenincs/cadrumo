@@ -1,7 +1,7 @@
 ---
 tags: ['#exec', '#modelo-addressing-ux']
 date: '2026-06-05'
-modified: '2026-06-05'
+modified: '2026-06-30'
 step_id: 'S17'
 related:
   - '[[2026-06-05-modelo-addressing-ux-plan]]'
@@ -27,4 +27,3 @@ The calculate command registration extraction is present and operational. This s
 
 - `uv run --no-sync ruff check src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/_modelo_cli_support.py src/aeat/entrypoints/cli/_modelo_work_calculate_cli.py src/aeat/entrypoints/cli/test_work_calculate_row_flag.py` passed.
 - `uv run --no-sync python -c "from aeat.entrypoints.cli._modelo import app; from aeat.entrypoints.cli._modelo_cli_support import work_calculate_input_bundle_from_cli, parse_row_spec; print(app.info.name, work_calculate_input_bundle_from_cli.__name__, parse_row_spec.__name__)"` printed `modelo work_calculate_input_bundle_from_cli parse_row_spec`.
-

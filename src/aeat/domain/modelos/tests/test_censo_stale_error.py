@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import AeatError
-from ....core.errors._registry import get_registered_error_code
+from ....core.errors import AeatError, get_registered_error_code
 from .._errors import CensoStaleRefusedError, ModeloError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

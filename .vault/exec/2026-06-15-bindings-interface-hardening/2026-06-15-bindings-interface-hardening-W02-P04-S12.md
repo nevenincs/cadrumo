@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#bindings-interface-hardening'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S12'
 related:
   - "[[2026-06-15-bindings-interface-hardening-plan]]"
 ---
-
-
-
 
 # add build-time rejection tests per family plus an anti-tautology proof asserting a malformed binding fails at build for each family, not only at resolve
 

@@ -31,7 +31,7 @@ class IvaCatalogueRepository(ResourceCacheRepository[object, int]):
 
     @override
     def _load(self, key: int) -> object:
-        from ....domain.iva._catalogue import load_iva_catalogues
+        from ....domain.iva import load_iva_catalogues
 
         catalogues = load_iva_catalogues(self._root) if self._root is not None else load_iva_catalogues()
         try:

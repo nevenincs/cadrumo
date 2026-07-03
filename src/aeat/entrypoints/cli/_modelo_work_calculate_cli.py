@@ -1,7 +1,20 @@
 """Typer registration for modelo work calculation commands.
 
-Renders the operator-facing confirmation for a persisted
-:class:`CalculationRevision` once a work unit's calculation is saved.
+This CLI module is a transport boundary around
+:func:`calculate_modelo_work_revision`. It resolves the
+operator target, builds a public
+:class:`WorkCalculateInputBundle`, calls the application
+service, and serializes the resulting
+:class:`ModeloWorkCalculationServiceResult` into a
+:class:`WorkCalculateResult` envelope.
+
+The emitted confirmation is centered on the persisted
+:class:`CalculationRevision` and parent
+:class:`WorkUnit`;
+advisory material such as backend authorization and non-blocking source
+diagnostics is carried on the uniform
+:class:`Notice` channel instead of bespoke payload
+fields.
 """
 
 from __future__ import annotations
@@ -20,6 +33,7 @@ from ...application.modelo import (
     WorkUnitNotFoundError,
     calculate_modelo_work_revision,
 )
+from ...core import RescateType
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice
@@ -40,8 +54,8 @@ if TYPE_CHECKING:
     # as lazy strings so the state-free CLI surface (test_lazy_command_tree) pays
     # no runtime registry-import cost, while pyright and the any-param ratchet see
     # the concrete result/record types instead of a bare ``Any``.
-    from ...application.modelo import ModeloWorkCalculationServiceResult, WorkUnit
-    from ...domain.modelos import CalculationRevision
+    from ...application.modelo import ModeloWorkCalculationServiceResult
+    from ...domain.modelos import CalculationRevision, WorkUnit
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,10 +123,13 @@ _RowOpt = Annotated[
             "cli.app.modelo.work.row_help",
             default=(
                 "Typed detail row for multi-record informational modelos. Format: TYPE FIELD=value "
-                "[FIELD=value ...]. TYPE is 'miembro' (M184 atribución member) or 'vinculada' "
-                "(M232 operación vinculada). Repeat to add multiple rows. M184 example: "
-                "--row 'miembro nif=12345678A porcentaje=40 importe=10000'. M232 example: "
-                "--row 'vinculada nif=A12345678 tipo_operacion=01 importe=50000'."
+                "[FIELD=value ...]. TYPE is 'miembro' (M184 attribution member), 'vinculada' "
+                "(M232 related-party operation), 'operador' (M349 intracom operator), or 'contraparte' "
+                "(M347 declared counterparty). Repeat to add multiple rows. Quote the whole row argument; "
+                "quote spaced legal names inside it. M184 example: --row "
+                "'miembro nif=12345678A porcentaje=40 importe=10000'. M349 example: --row "
+                '\'operador codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" '
+                "clave_operacion=E importe=50000'."
             ),
         ),
     ),
@@ -184,6 +201,48 @@ _RescateTotalesOpt = Annotated[
         ),
     ),
 ]
+_RescateTipoOpt = Annotated[
+    RescateType | None,
+    typer.Option(
+        "--rescate-type",
+        help=tr(
+            "cli.app.modelo.work.rescate_type_help",
+            default=(
+                "Tipo de rescate del plan de pensiones (DT 12a LIRPF): total (todo el capital de una "
+                "vez) o parcial (cobros escalonados). Es una senal de clasificacion y provenance, no "
+                "cambia el importe: la reduccion del 40% se aplica a la parte pre-2007 de lo percibido. "
+                "En parcial, cada cobro comparte la misma ventana del apartado 4."
+            ),
+        ),
+    ),
+]
+_ContingenciaYearOpt = Annotated[
+    int | None,
+    typer.Option(
+        "--contingencia-year",
+        help=tr(
+            "cli.app.modelo.work.rescate_contingencia_year_help",
+            default=(
+                "Ano en que acaecio la contingencia (jubilacion, incapacidad, fallecimiento) del plan "
+                "de pensiones. Determina la ventana temporal del apartado 4 DT 12a LIRPF (Ley 26/2014): "
+                "si la ventana esta cerrada para el ano de rescate, la reduccion del 40% se retiene."
+            ),
+        ),
+    ),
+]
+_RescateYearOpt = Annotated[
+    int | None,
+    typer.Option(
+        "--rescate-year",
+        help=tr(
+            "cli.app.modelo.work.rescate_year_help",
+            default=(
+                "Ano en que se percibe la prestacion del rescate (por defecto el ano de la declaracion). "
+                "Se compara con la ventana del apartado 4 DT 12a LIRPF medida desde --contingencia-year."
+            ),
+        ),
+    ),
+]
 _SalBeneficioOpt = Annotated[
     str | None,
     typer.Option(
@@ -243,7 +302,12 @@ def register_work_calculate_commands(
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
     missing_binding_guidance: Callable[[RegistryValidationError, str], str],
 ) -> None:
-    """Register work calculation commands on the modelo work app."""
+    """Register work calculation commands on the modelo work app.
+
+    The registered command owns CLI parsing and output formatting only; work-unit
+    resolution, input-bundle construction, calculation persistence, and registry
+    validation remain delegated to application services.
+    """
     deps = _CalculateDeps(
         activate_output_language=activate_output_language,
         require_active_profile=require_active_profile,
@@ -274,13 +338,16 @@ def register_work_calculate_commands(
         rescate_plan_pensiones_capital: _RescateCapitalOpt = None,
         rescate_plan_pensiones_aportaciones_pre_2007: _RescatePre2007Opt = None,
         rescate_plan_pensiones_aportaciones_totales: _RescateTotalesOpt = None,
+        rescate_type: _RescateTipoOpt = None,
+        contingencia_year: _ContingenciaYearOpt = None,
+        rescate_year: _RescateYearOpt = None,
         sal_beneficio_neto: _SalBeneficioOpt = None,
         sal_reserva_dotada: _SalReservaOpt = None,
         sal_capital_social: _SalCapitalOpt = None,
         autoconsumo_promotor_base: _AutoconsumoPromotorOpt = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
-        """Persist a new draft calculation revision for the work unit."""
+        """Persist a new draft :class:`CalculationRevision` for the resolved work unit."""
         _run_work_calculate(
             deps=deps,
             ctx=ctx,
@@ -301,6 +368,9 @@ def register_work_calculate_commands(
             rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
             rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
             rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
+            rescate_type=rescate_type,
+            contingencia_year=contingencia_year,
+            rescate_year=rescate_year,
             sal_beneficio_neto=sal_beneficio_neto,
             sal_reserva_dotada=sal_reserva_dotada,
             sal_capital_social=sal_capital_social,
@@ -330,6 +400,9 @@ def _run_work_calculate(
     rescate_plan_pensiones_capital: str | None,
     rescate_plan_pensiones_aportaciones_pre_2007: str | None,
     rescate_plan_pensiones_aportaciones_totales: str | None,
+    rescate_type: RescateType | None,
+    contingencia_year: int | None,
+    rescate_year: int | None,
     sal_beneficio_neto: str | None,
     sal_reserva_dotada: str | None,
     sal_capital_social: str | None,
@@ -359,6 +432,9 @@ def _run_work_calculate(
         rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
         rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
         rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
+        rescate_type=rescate_type,
+        contingencia_year=contingencia_year,
+        rescate_year=rescate_year,
         sal_beneficio_neto=sal_beneficio_neto,
         sal_reserva_dotada=sal_reserva_dotada,
         sal_capital_social=sal_capital_social,
@@ -462,8 +538,9 @@ def _work_calculate_authorization_output(
 
     ``authorization_state`` remains structured result data (the backend's
     authorization lifecycle state); the advisory prose moves onto the
-    uniform notices channel so it is no longer a bespoke
-    ``authorization_advisory`` payload field. The text lines are unchanged.
+    uniform :class:`Notice` channel so it is no longer a
+    bespoke ``authorization_advisory`` payload field. The text lines are
+    unchanged.
     """
     advisory = calculation_result.authorization_advisory
     if advisory is None:
@@ -498,12 +575,12 @@ def _work_calculate_source_advisory_output(
 
     Each diagnostic the source mesh raised while resolving the bucket ledger
     (notably the unconsumed-declarable-IVA advisory) becomes one
-    warning-severity :class:`Notice` on the envelope ``notices`` channel and
-    one human-facing ADVISORY line. The structured provenance (``reason`` /
-    ``source_kind`` / ``resolver_id``) rides on the notice ``context`` so no
-    machine-queryable field is lost relative to the former bespoke
-    ``source_advisories`` payload list. The calculation succeeded; these
-    advisories keep an unrouted declarable observation from being silently
+    warning-severity :class:`Notice` on the envelope
+    ``notices`` channel and one human-facing ADVISORY line. The structured
+    provenance (``reason`` / ``source_kind`` / ``resolver_id``) rides on the
+    notice ``context`` so no machine-queryable field is lost relative to the
+    former bespoke ``source_advisories`` payload list. The calculation succeeded;
+    these advisories keep an unrouted declarable observation from being silently
     under-declared (no-silent-under-declaration). The diagnostic ``message``
     already carries the observation's category / rate / flow provenance.
     """

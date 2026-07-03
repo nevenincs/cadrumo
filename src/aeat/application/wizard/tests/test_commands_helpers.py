@@ -19,7 +19,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel
 
 from ....core.i18n import Translatable as tr
 from .._commands import (
@@ -34,12 +33,9 @@ from .._commands import (
     _required_flag_questions,
 )
 from .._models import WizardCondition, WizardFlow, WizardQuestion, WizardSection, WizardWidget
+from ._support import EmptyAnswersBase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-class _EmptyAnswersBase(BaseModel):
-    """Minimal pydantic answers model required by WizardFlow."""
 
 
 def _question(
@@ -75,7 +71,7 @@ def _flow(*questions: WizardQuestion) -> WizardFlow:
                 questions=questions,
             ),
         ),
-        answers_model=_EmptyAnswersBase,
+        answers_model=EmptyAnswersBase,
     )
 
 
@@ -115,7 +111,7 @@ def test_tax_residence_ccaa_choices_match_the_ccaa_enum() -> None:
     rejects them via ``ForalRegimeError``. See ``_ccaa_choice_values``.
     """
 
-    from ....domain.contribuyente._ccaa import CCAA
+    from ....domain.contribuyente import CCAA
 
     expected = [member.value for member in CCAA] + ["pais_vasco", "navarra"]
     assert expected == _CCAA_CHOICE_VALUES

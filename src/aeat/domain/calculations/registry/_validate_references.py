@@ -117,8 +117,10 @@ def _check_casilla_refs(checker: _IdReferenceChecker, revision: ModeloRevision) 
         checker.chk_opt(f"{cp}.formula", casilla.formula, checker.formula_ids)
         if casilla.input_kind == InputKind.BOUND:
             _check_bound_casilla_binding_coverage(checker, cp, casilla.binding)
+            checker.chk_tuple(f"{cp}.alternate_bindings", casilla.alternate_bindings, checker.binding_ids)
         else:
             checker.chk_opt(f"{cp}.binding", casilla.binding, checker.binding_ids)
+            checker.chk_tuple(f"{cp}.alternate_bindings", casilla.alternate_bindings, checker.binding_ids)
         checker.chk_tuple(f"{cp}.export_refs", casilla.export_refs, checker.export_field_ids)
         checker.chk_legal_source_refs(cp, casilla.legal_refs, casilla.source_refs)
         if casilla.constraints is not None:
@@ -163,9 +165,6 @@ def _check_parameter_refs(checker: _IdReferenceChecker, revision: ModeloRevision
         checker.chk_legal_source_refs(pp, parameter.legal_refs, parameter.source_refs)
         for citation in parameter.source_citations:
             checker.chk(f"{pp}.source_citations.{citation.source_ref}", citation.source_ref, checker.source_ids)
-        for row in parameter.convenio_rates:
-            rp = f"{pp}.convenio_rate {row.country_code}/{row.tipo_renta}/{row.valid_from.isoformat()}"
-            checker.chk_tuple(f"{rp}.legal_refs", row.legal_refs, checker.legal_ids)
 
 
 def _check_binding_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
@@ -240,6 +239,16 @@ def _check_verification_expectation_refs(checker: _IdReferenceChecker, revision:
     for expectation in revision.verification_expectations:
         vep = f"verification_expectation {expectation.id}"
         checker.chk_tuple(f"{vep}.computed_casilla_ids", expectation.computed_casilla_ids, checker.casilla_ids)
+        checker.chk_tuple(
+            f"{vep}.reconcile_when_present_casilla_ids",
+            expectation.reconcile_when_present_casilla_ids,
+            checker.casilla_ids,
+        )
+        checker.chk_tuple(
+            f"{vep}.externally_grounded_casilla_ids",
+            expectation.externally_grounded_casilla_ids,
+            checker.casilla_ids,
+        )
         for total_kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
             checker.chk(f"{vep}.reconciliation_total_casilla_ids.{total_kind}", casilla_id, checker.casilla_ids)
         checker.chk_legal_source_refs(vep, expectation.legal_refs, expectation.source_refs)

@@ -1,11 +1,20 @@
-"""Strict Pydantic records for the backend-owned operator surface contract.
+"""Strict Pydantic records for the backend-owned operator-surface contract.
+
+The records describe accepted :class:`RootSurface` values, curated
+:class:`HelpDocument` / :class:`RootLandingReport` presentation documents,
+mounted :class:`MountedCommandFamily` declarations, parser-only
+:class:`~core.BindingSourceKind` aliases, backend :class:`ServiceOwner`
+inventory, stable :class:`OperatorSurfaceLogFields`, and the aggregate
+:class:`OperatorSurfaceContract` built by
+:func:`~application.operator_surface.build_operator_surface_contract`.
+They are data contracts only; builders and renderers live in sibling modules.
 
 S538 invariant-guard classification note
 -----------------------------------------
 All :class:`ValueError` raises in this module appear inside Pydantic v2
 ``@field_validator`` / ``@model_validator`` methods. Pydantic wraps these into
 :class:`pydantic.ValidationError` automatically; raising any other exception
-type (including :class:`aeat.core.errors.AeatError`) would bypass that wrapping
+type (including :class:`core.errors.AeatError`) would bypass that wrapping
 and surface as an uncaught internal exception. These guards are therefore
 **developer-surface-only invariants** and must remain :class:`ValueError`. They
 are NOT operator-facing errors and do not require ``translated_message``.
@@ -22,14 +31,14 @@ from ...core import BindingSourceKind
 
 
 class RootSurfaceName(StrEnum):
-    """Accepted root command surfaces."""
+    """Accepted root command surfaces enforced by :class:`OperatorSurfaceContract`."""
 
     CONFIG = "config"
     APP = "app"
 
 
 class ModeloLifecycleStep(StrEnum):
-    """Canonical modelo lifecycle steps exposed to operators."""
+    """Canonical modelo lifecycle steps carried by :class:`LifecycleContract`."""
 
     CALCULATE = "calculate"
     VERIFY = "verify"
@@ -37,21 +46,20 @@ class ModeloLifecycleStep(StrEnum):
 
 
 class FilingStatus(StrEnum):
-    """Canonical filing-status token taxonomy for operator-facing live reads."""
+    """Canonical live-read filing token used by mounted live command families."""
 
     FILED = "filed"
 
 
 class OperatorMutability(StrEnum):
-    """Side-effect class for an operator-facing command family."""
+    """Side-effect class declared on each :class:`MountedCommandFamily`."""
 
     READ_ONLY = "read_only"
     LOCAL_STATE_MUTATING = "local_state_mutating"
-    LIVE_READ = "live_read"
 
 
 class HelpSurface(StrEnum):
-    """Curated help surfaces with backend-owned command listings."""
+    """Curated help surfaces accepted by :func:`build_help_document`."""
 
     ROOT = "root"
     CONFIG = "config"
@@ -59,7 +67,7 @@ class HelpSurface(StrEnum):
 
 
 class MountedCommandDomain(StrEnum):
-    """Backend-owned command domains exposed under the accepted roots."""
+    """Backend-owned command domains used to classify mounted command families."""
 
     FIRST_RUN = "first_run"
     PROFILE = "profile"
@@ -67,16 +75,26 @@ class MountedCommandDomain(StrEnum):
     BUCKET = "bucket"
     AUTH = "auth"
     DIAGNOSTICS = "diagnostics"
+    GOOGLE = "google"
     OVERVIEW = "overview"
     LEDGER = "ledger"
     LIVE = "live"
     MODELO = "modelo"
     REVIEW = "review"
     REGISTRY = "registry"
+    CONTRACT = "contract"
+    AGENT = "agent"
+    QUICKFILE = "quickfile"
 
 
 class RootSurface(BaseModel):
-    """Backend ownership record for an accepted root surface."""
+    """Backend ownership record for an accepted root surface.
+
+    Instances are declared in :data:`~application.operator_surface.ACCEPTED_ROOTS`
+    and validated into the aggregate :class:`OperatorSurfaceContract`. The
+    ``required_children`` field names required command-family children, not an
+    exhaustive command tree.
+    """
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -95,7 +113,7 @@ class RootSurface(BaseModel):
 
 
 class HelpEntry(BaseModel):
-    """One command row in a curated help section."""
+    """One localized command row in a curated :class:`HelpSection`."""
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -104,7 +122,7 @@ class HelpEntry(BaseModel):
 
 
 class HelpSection(BaseModel):
-    """One workflow-ordered help section."""
+    """One workflow-ordered section in a curated :class:`HelpDocument`."""
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -113,7 +131,12 @@ class HelpSection(BaseModel):
 
 
 class HelpDocument(BaseModel):
-    """Curated help document rendered by the CLI boundary."""
+    """Curated help document built by :func:`build_help_document`.
+
+    The document owns contributor-facing command inventory and localized prose
+    shape for a :class:`HelpSurface`; renderers preserve the section and entry
+    ordering rather than rediscovering command rows.
+    """
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -125,7 +148,12 @@ class HelpDocument(BaseModel):
 
 
 class RootLandingReport(BaseModel):
-    """Bare ``aeat`` invocation result."""
+    """Bare-root landing report built from caller-projected profile state.
+
+    :func:`~application.operator_surface.build_root_landing_report` creates
+    this record from an already-resolved profile display label. The model carries
+    the message and next command only; it does not perform profile discovery.
+    """
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -135,7 +163,12 @@ class RootLandingReport(BaseModel):
 
 
 class LifecycleContract(BaseModel):
-    """Modelo lifecycle vocabulary and live-submission safety contract."""
+    """Modelo lifecycle vocabulary and live-submission safety contract.
+
+    The default ``internal_filed_term`` and disabled live-submission fields keep
+    operator copy aligned with the accepted workflow: calculate, verify, then
+    internally file/export without implying live AEAT submission.
+    """
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -165,7 +198,12 @@ class LifecycleContract(BaseModel):
 
 
 class SourceKindAlias(BaseModel):
-    """Input-only alias mapped to a canonical source kind."""
+    """Input-only parser alias mapped to canonical :class:`BindingSourceKind`.
+
+    Alias resolution is owned by
+    :func:`~application.operator_surface.resolve_source_kind_alias`; no
+    operator-only source-kind enum is introduced here.
+    """
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -174,7 +212,13 @@ class SourceKindAlias(BaseModel):
 
 
 class MountedCommandFamily(BaseModel):
-    """One mounted command family and its backend owner."""
+    """One accepted command-family declaration and its backend owner.
+
+    Families bind a root surface, child token, domain, backend service owner,
+    curated command tuple, and :class:`OperatorMutability`. The command tuple is
+    a contract summary used by help/conformance checks, not a replacement for
+    live command-tree traversal.
+    """
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -234,7 +278,14 @@ class OperatorSurfaceLogFields(BaseModel):
 
 
 class OperatorSurfaceContract(BaseModel):
-    """Complete backend-owned contract consumed by future CLI adapters."""
+    """Complete backend-owned contract consumed by CLI adapters.
+
+    Built by :func:`~application.operator_surface.build_operator_surface_contract`,
+    this record ties together accepted roots, modelo lifecycle vocabulary,
+    canonical :class:`BindingSourceKind` subset, parser aliases, mounted command
+    families, backend ownership inventory, log metadata, and registered error
+    codes.
+    """
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

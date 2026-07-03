@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#storage-backend-security-review'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S18'
 related:
   - "[[2026-06-14-storage-backend-security-review-plan]]"
 ---
-
-
-
 
 # Persist basename-only paths in the bucket exported and imported event payloads
 

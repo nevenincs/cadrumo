@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#mutation-harness-fix'
 date: '2026-04-29'
-modified: '2026-04-29'
+modified: '2026-06-13'
 related:
   - '[[2026-04-29-mutation-harness-fix-adr]]'
   - '[[2026-04-29-mutation-harness-fix-research]]'

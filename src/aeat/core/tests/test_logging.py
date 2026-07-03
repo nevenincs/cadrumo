@@ -19,10 +19,14 @@ from typing import cast
 
 import pytest
 
+from .. import logging as _logging_mod
+from ..config import override_settings
 from ..logging import (
     SecretScrubbingFilter,
+    _prepare_log_directory,
     _scrub_value,
     attach_run_sink,
+    configure_logging,
     default_log_file_path,
     detach_run_sink,
     get_logger,
@@ -34,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def _capture_logger_output() -> tuple[logging.Logger, logging.Logger, logging.Handler, io.StringIO]:
     """Attach a temporary stream handler to the root logger."""
 
-    logger = get_logger("aeat.test_logging")
+    logger = get_logger("aeat-test_logging")
     root_logger = logging.getLogger()
     stream = io.StringIO()
     handler = logging.StreamHandler(stream)
@@ -48,11 +52,40 @@ def _capture_logger_output() -> tuple[logging.Logger, logging.Logger, logging.Ha
     return logger, root_logger, handler, stream
 
 
+def _render_info(message: str, *args: object) -> str:
+    logger, root_logger, handler, stream = _capture_logger_output()
+    previous_root_level = root_logger.level
+    root_logger.setLevel(logging.INFO)
+    try:
+        logger.info(
+            message,
+            *args,
+            extra={
+                "cookie": "<redacted>",
+                "bearer_header": "<redacted>",
+                "region": "es",
+            },
+        )
+    finally:
+        root_logger.removeHandler(handler)
+        root_logger.setLevel(previous_root_level)
+    return stream.getvalue()
+
+
+def _force_configure_logging() -> None:
+    original_configured = _logging_mod._CONFIGURED
+    _logging_mod._CONFIGURED = False
+    try:
+        _logging_mod.configure_logging()
+    finally:
+        _logging_mod._CONFIGURED = original_configured or True
+
+
 def test_default_logging_routes_warnings_to_file_not_stderr(capsys: pytest.CaptureFixture[str]) -> None:
     """Warnings should be persisted for diagnostics without polluting CLI stderr."""
 
     marker = "warning-route-marker-7f6a3c"
-    logger = get_logger("aeat.test_logging.default_route")
+    logger = get_logger("aeat-test_logging.default_route")
 
     logger.warning(marker)
 
@@ -67,6 +100,85 @@ def _read_log_tail(path: Path, *, max_bytes: int = 64 * 1024) -> str:
         size = handle.tell()
         handle.seek(max(0, size - max_bytes))
         return handle.read().decode("utf-8", errors="replace")
+
+
+def test_prepare_log_directory_returns_none_for_creatable_path(tmp_path: Path) -> None:
+    """A writable target yields no failure reason and materialises the directory."""
+
+    log_file = tmp_path / "logs" / "aeat.log"
+
+    reason = _prepare_log_directory(log_file)
+
+    assert reason is None
+    assert log_file.parent.is_dir()
+
+
+def test_prepare_log_directory_reports_reason_when_path_uncreatable(tmp_path: Path) -> None:
+    """A log directory routed under a real file cannot be created and reports why.
+
+    Reproduces the class of failure the Windows PowerShell testimonial hit: an
+    ``AEAT_LOCAL_STORAGE_ROOT`` that resolves to an inaccessible / non-directory
+    path. The helper must return a diagnostic reason string instead of letting
+    the underlying ``OSError`` escape.
+    """
+
+    blocker = tmp_path / "not-a-directory"
+    blocker.write_text("x", encoding="utf-8")
+    log_file = blocker / "logs" / "aeat.log"
+
+    reason = _prepare_log_directory(log_file)
+
+    assert reason is not None
+    assert not log_file.parent.exists()
+    # The reason names the concrete OS error type so triage sees the cause.
+    assert "Error" in reason
+
+
+def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An uncreatable log directory must NOT crash startup with a raw traceback.
+
+    Real-behavior reproduction of Windows PowerShell issue #577: the log
+    directory derived from an inaccessible ``AEAT_LOCAL_STORAGE_ROOT`` cannot be
+    created, and ``configure_logging`` runs at import time — before any CLI
+    error boundary. The contract: no exception escapes, logging degrades to
+    stderr-only (no ``FileHandler`` for the dead path), and an instructive,
+    non-silent diagnostic names the remedy.
+    """
+
+    blocker = tmp_path / "storage-root-file"
+    blocker.write_text("x", encoding="utf-8")
+    dead_log_dir = blocker / "logs"
+
+    root_logger = logging.getLogger()
+    original_configured = _logging_mod._CONFIGURED
+    try:
+        _logging_mod._CONFIGURED = False
+        with override_settings(aeat_log_dir=dead_log_dir):
+            # Must not raise despite the uncreatable directory.
+            configure_logging()
+
+        file_handlers = [
+            handler
+            for handler in root_logger.handlers
+            if isinstance(handler, logging.FileHandler) and Path(handler.baseFilename).parent == dead_log_dir
+        ]
+        assert file_handlers == [], "no FileHandler may point at the uncreatable log directory"
+        assert any(isinstance(handler, logging.StreamHandler) for handler in root_logger.handlers), (
+            "stderr StreamHandler must remain so diagnostics still surface"
+        )
+
+        captured = capsys.readouterr()
+        assert "stderr-only" in captured.err
+        assert "AEAT_LOCAL_STORAGE_ROOT" in captured.err
+        assert not dead_log_dir.exists()
+    finally:
+        # Rebuild the normal configuration so sibling tests see a healthy logger.
+        _logging_mod._CONFIGURED = False
+        configure_logging()
+        _logging_mod._CONFIGURED = original_configured or True
 
 
 def test_secret_scrubbing_redacts_sensitive_fields_in_rendered_output() -> None:
@@ -130,109 +242,43 @@ def test_secret_scrubbing_redacts_inline_message_text_when_tuple_args_exist() ->
     assert "status=ok" in rendered
 
 
-def test_secret_scrubbing_maps_key_hints_to_the_correct_placeholder() -> None:
-    """Only the placeholder paired with the sensitive key should be scrubbed."""
+def test_secret_scrubbing_maps_key_hints_and_colon_assignments() -> None:
+    """Sensitive key hints and colon-delimited assignments scrub the paired placeholder."""
 
-    logger, root_logger, handler, stream = _capture_logger_output()
-    previous_root_level = root_logger.level
-    root_logger.setLevel(logging.INFO)
-    try:
-        logger.info(
+    for case_id, message, args, expected_visible, expected_redacted in (
+        (
+            "token-placeholder",
             "item %s has token: %s",
-            "safe-item",
-            "token-secret",
-            extra={
-                "cookie": "<redacted>",
-                "bearer_header": "<redacted>",
-                "region": "es",
-            },
-        )
-    finally:
-        root_logger.removeHandler(handler)
-        root_logger.setLevel(previous_root_level)
-
-    rendered = stream.getvalue()
-    assert "safe-item" in rendered
-    assert "token-secret" not in rendered
-    assert "token: <redacted>" in rendered
+            ("safe-item", "token-secret"),
+            ("safe-item",),
+            ("token-secret",),
+        ),
+        ("colon-assignment", "token: %s", ("colon-secret",), (), ("colon-secret",)),
+    ):
+        rendered = _render_info(message, *args)
+        for value in expected_visible:
+            assert value in rendered, case_id
+        for value in expected_redacted:
+            assert value not in rendered, case_id
+        assert "token: <redacted>" in rendered, case_id
 
 
-def test_secret_scrubbing_handles_colon_assignments() -> None:
-    """Colon-delimited sensitive placeholders should still be scrubbed."""
+def test_secret_scrubbing_redacts_multiword_passphrase_assignments() -> None:
+    """Quoted and unquoted passphrase assignments should not leak sensitive words."""
 
-    logger, root_logger, handler, stream = _capture_logger_output()
-    previous_root_level = root_logger.level
-    root_logger.setLevel(logging.INFO)
-    try:
-        logger.info(
-            "token: %s",
-            "colon-secret",
-            extra={
-                "cookie": "<redacted>",
-                "bearer_header": "<redacted>",
-                "region": "es",
-            },
-        )
-    finally:
-        root_logger.removeHandler(handler)
-        root_logger.setLevel(previous_root_level)
-
-    rendered = stream.getvalue()
-    assert "colon-secret" not in rendered
-    assert "token: <redacted>" in rendered
-
-
-def test_secret_scrubbing_redacts_unquoted_multiword_passphrase_assignment() -> None:
-    """Passphrase assignments should not leak words after the first space."""
-
-    logger, root_logger, handler, stream = _capture_logger_output()
-    previous_root_level = root_logger.level
-    root_logger.setLevel(logging.INFO)
-    try:
-        logger.info(
+    for case_id, message, forbidden_values in (
+        (
+            "unquoted",
             "passphrase=correct horse battery staple status=locked",
-            extra={
-                "cookie": "<redacted>",
-                "bearer_header": "<redacted>",
-                "region": "es",
-            },
-        )
-    finally:
-        root_logger.removeHandler(handler)
-        root_logger.setLevel(previous_root_level)
-
-    rendered = stream.getvalue()
-    assert "correct" not in rendered
-    assert "horse" not in rendered
-    assert "battery" not in rendered
-    assert "staple" not in rendered
-    assert "passphrase=<redacted>" in rendered
-    assert "status=locked" in rendered
-
-
-def test_secret_scrubbing_redacts_quoted_multiword_passphrase_assignment() -> None:
-    """Quoted passphrase assignments should be redacted as one sensitive value."""
-
-    logger, root_logger, handler, stream = _capture_logger_output()
-    previous_root_level = root_logger.level
-    root_logger.setLevel(logging.INFO)
-    try:
-        logger.info(
-            'passphrase="correct horse battery staple"; status=locked',
-            extra={
-                "cookie": "<redacted>",
-                "bearer_header": "<redacted>",
-                "region": "es",
-            },
-        )
-    finally:
-        root_logger.removeHandler(handler)
-        root_logger.setLevel(previous_root_level)
-
-    rendered = stream.getvalue()
-    assert "correct horse battery staple" not in rendered
-    assert "passphrase=<redacted>" in rendered
-    assert "status=locked" in rendered
+            ("correct", "horse", "battery", "staple"),
+        ),
+        ("quoted", 'passphrase="correct horse battery staple"; status=locked', ("correct horse battery staple",)),
+    ):
+        rendered = _render_info(message)
+        for value in forbidden_values:
+            assert value not in rendered, case_id
+        assert "passphrase=<redacted>" in rendered, case_id
+        assert "status=locked" in rendered, case_id
 
 
 def test_secret_scrubbing_applies_shared_shape_rules_to_plain_text_args() -> None:
@@ -277,7 +323,7 @@ def test_secret_scrubbing_preserves_exc_info_for_downstream_handlers() -> None:
         raise RuntimeError("oauth_refresh_token=refresh-123")
     except RuntimeError:
         record = logging.LogRecord(
-            name="aeat.test_logging",
+            name="aeat-test_logging",
             level=logging.ERROR,
             pathname=__file__,
             lineno=0,
@@ -298,7 +344,7 @@ def test_secret_scrubbing_uses_context_hints_for_list_args_too() -> None:
 
     filter_ = SecretScrubbingFilter()
     record = logging.LogRecord(
-        name="aeat.test_logging",
+        name="aeat-test_logging",
         level=logging.INFO,
         pathname=__file__,
         lineno=0,
@@ -315,89 +361,24 @@ def test_secret_scrubbing_uses_context_hints_for_list_args_too() -> None:
     assert record.args == ("safe-item", "<redacted>")
 
 
-def test_pdfminer_logger_level_governed_by_dictconfig() -> None:
-    """dictConfig must set the pdfminer logger to WARNING via the loggers block.
+def test_noisy_pdf_library_logger_levels_are_governed_by_dictconfig() -> None:
+    """dictConfig owns pdfminer and pikepdf silencing without per-module mutators."""
 
-    Verifies contract: configure_logging() centralises pdfminer silencing so
-    neither _pdfplumber.py nor _record_design.py need to mutate it locally.
-    """
-    import logging
+    _force_configure_logging()
 
-    from .. import logging as _logging_mod
+    expected_levels = {"pdfminer": logging.WARNING, "pikepdf._core": logging.WARNING}
+    for logger_name, expected_level in expected_levels.items():
+        logger = logging.getLogger(logger_name)
+        assert logger.level == expected_level, (
+            f"{logger_name} logger level should be WARNING ({expected_level}) "
+            f"after configure_logging(); got {logger.level}"
+        )
 
-    # Force a fresh dictConfig run by temporarily resetting the guard.
-    original_configured = _logging_mod._CONFIGURED
-    _logging_mod._CONFIGURED = False
-    try:
-        _logging_mod.configure_logging()
-    finally:
-        # Restore so other tests are not affected.
-        _logging_mod._CONFIGURED = original_configured or True
-
-    pdfminer_logger = logging.getLogger("pdfminer")
-    assert pdfminer_logger.level == logging.WARNING, (
-        f"pdfminer logger level should be WARNING ({logging.WARNING}) "
-        f"after configure_logging(); got {pdfminer_logger.level}"
-    )
-
-
-def test_pdfplumber_and_record_design_do_not_mutate_pdfminer_logger() -> None:
-    """Neither _pdfplumber nor _record_design should re-mutate the pdfminer logger.
-
-    Verifies contract: importing both modules and calling configure_logging()
-    leaves the pdfminer logger at WARNING — confirming the per-module
-    context-manager silencers have been removed and centralized config governs.
-    """
-    import logging
-
-    from .. import logging as _logging_mod
-
-    original_configured = _logging_mod._CONFIGURED
-    _logging_mod._CONFIGURED = False
-    try:
-        _logging_mod.configure_logging()
-    finally:
-        _logging_mod._CONFIGURED = original_configured or True
-
-    # Trigger module imports — side-effects would show up as level mutations.
-
-    pdfminer_logger = logging.getLogger("pdfminer")
-    assert pdfminer_logger.level == logging.WARNING, (
-        f"pdfminer logger level should remain WARNING after importing both pdf modules; got {pdfminer_logger.level}"
-    )
-
-    # Confirm the per-module silencer has been deleted from _pdfplumber's
-    # public surface.
     from ...adapters.inbound.pdf._pdfplumber import __all__ as pdfplumber_all
 
     assert "suppress_pdfminer_debug_logging" not in pdfplumber_all, (
         "suppress_pdfminer_debug_logging still exported from _pdfplumber; "
         "it should have been deleted (centralized in dictConfig)"
-    )
-
-
-def test_pikepdf_core_logger_level_governed_by_dictconfig() -> None:
-    """dictConfig must set pikepdf._core to WARNING via the loggers block.
-
-    Verifies contract: configure_logging() centralises pikepdf._core silencing so
-    src/aeat/__init__.py no longer needs a bootstrap-time setLevel mutation.
-    The level must survive a second configure_logging() call (the guard resets).
-    """
-    import logging
-
-    from .. import logging as _logging_mod
-
-    original_configured = _logging_mod._CONFIGURED
-    _logging_mod._CONFIGURED = False
-    try:
-        _logging_mod.configure_logging()
-    finally:
-        _logging_mod._CONFIGURED = original_configured or True
-
-    pikepdf_logger = logging.getLogger("pikepdf._core")
-    assert pikepdf_logger.level == logging.WARNING, (
-        f"pikepdf._core logger level should be WARNING ({logging.WARNING}) "
-        f"after configure_logging(); got {pikepdf_logger.level}"
     )
 
 
@@ -433,20 +414,18 @@ def test_non_sensitive_fields_pass_through_unchanged() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_scrub_value_str_overload_returns_str() -> None:
-    """str input must produce a str result (non-sensitive value passes through)."""
+def test_scrub_value_non_sensitive_overloads_preserve_shape() -> None:
+    """Non-sensitive scalar/container inputs preserve their public shape."""
 
-    result = _scrub_value("hello world")
-    assert isinstance(result, str)
-    assert result == "hello world"
-
-
-def test_scrub_value_str_overload_redacts_sensitive_key() -> None:
-    """str input with a sensitive key must return a redacted str."""
-
-    result = _scrub_value("super-secret", key="token")
-    assert isinstance(result, str)
-    assert result == "<redacted>"
+    for value, expected_type, expected in (
+        ("hello world", str, "hello world"),
+        (("safe-value", "also-safe"), tuple, ("safe-value", "also-safe")),
+        (["one", "two"], list, ["one", "two"]),
+        ({"alpha", "beta"}, set, {"alpha", "beta"}),
+    ):
+        result = _scrub_value(value)
+        assert isinstance(result, expected_type)
+        assert result == expected
 
 
 def test_scrub_value_mapping_overload_returns_dict() -> None:
@@ -458,30 +437,6 @@ def test_scrub_value_mapping_overload_returns_dict() -> None:
     assert result["secret"] == "<redacted>"
 
 
-def test_scrub_value_tuple_overload_returns_tuple() -> None:
-    """tuple input must produce a tuple result with items recursively scrubbed."""
-
-    result = _scrub_value(("safe-value", "also-safe"))
-    assert isinstance(result, tuple)
-    assert result == ("safe-value", "also-safe")
-
-
-def test_scrub_value_list_overload_returns_list() -> None:
-    """list input must produce a list result with items recursively scrubbed."""
-
-    result = _scrub_value(["one", "two"])
-    assert isinstance(result, list)
-    assert result == ["one", "two"]
-
-
-def test_scrub_value_set_overload_returns_set() -> None:
-    """set input must produce a set result with items recursively scrubbed."""
-
-    result = _scrub_value({"alpha", "beta"})
-    assert isinstance(result, set)
-    assert result == {"alpha", "beta"}
-
-
 def test_scrub_value_object_overload_passes_through_non_sensitive() -> None:
     """An arbitrary object with a non-sensitive key passes through unchanged."""
 
@@ -490,12 +445,13 @@ def test_scrub_value_object_overload_passes_through_non_sensitive() -> None:
     assert result is obj
 
 
-def test_scrub_value_object_overload_redacts_sensitive_key() -> None:
-    """An arbitrary object with a sensitive key is redacted to a str marker."""
+def test_scrub_value_sensitive_key_redacts_to_marker() -> None:
+    """Any input paired with a sensitive key is redacted to the public marker."""
 
-    result = _scrub_value(12345, key="token")
-    assert isinstance(result, str)
-    assert result == "<redacted>"
+    for value in ("super-secret", 12345):
+        result = _scrub_value(value, key="token")
+        assert isinstance(result, str)
+        assert result == "<redacted>"
 
 
 def test_scrub_value_nested_mapping_scrubs_recursively() -> None:
@@ -522,7 +478,7 @@ def test_attach_and_detach_run_sink_are_symmetric(tmp_path: Path) -> None:
     Real-behavior: wire a real JsonlRunSink, observe root-logger handler list and
     sink filter list before, during, and after the attach/detach cycle.
     """
-    from ..observability._sink import JsonlRunSink
+    from ..observability import JsonlRunSink
 
     run_id = "a1b2c3d4e5f60001"
     sink = JsonlRunSink(tmp_path / "events.jsonl", run_id=run_id)
@@ -559,7 +515,7 @@ def test_attach_and_detach_run_sink_are_symmetric(tmp_path: Path) -> None:
 
 def test_detach_run_sink_is_idempotent_on_filter_removal(tmp_path: Path) -> None:
     """detach_run_sink called twice must not raise and must leave the sink filter-clean."""
-    from ..observability._sink import JsonlRunSink
+    from ..observability import JsonlRunSink
 
     run_id = "b2c3d4e5f6070002"
     sink = JsonlRunSink(tmp_path / "events.jsonl", run_id=run_id)
@@ -577,7 +533,7 @@ def test_detach_run_sink_is_idempotent_on_filter_removal(tmp_path: Path) -> None
 
 def test_attach_run_sink_does_not_double_install_scrubbing_filter(tmp_path: Path) -> None:
     """Calling attach_run_sink twice must install SecretScrubbingFilter exactly once."""
-    from ..observability._sink import JsonlRunSink
+    from ..observability import JsonlRunSink
 
     root_logger = logging.getLogger()
     run_id = "c3d4e5f607080003"

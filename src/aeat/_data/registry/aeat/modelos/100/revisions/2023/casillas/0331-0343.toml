@@ -3,6 +3,6 @@ id = "0343"
 number = "0343"
 label = "Importe global de las transmisiones efectuadas en 2024"
 section = ["toma_datos_ampliada", "gp_derechos", "entidad_derecho"]
-semantic_role = "irpf_ganancia_transmisiones_importe_global_2024"
+semantic_role = "irpf_ganancia_derechos_valor_transmision_global"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

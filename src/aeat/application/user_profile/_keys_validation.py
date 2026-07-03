@@ -29,8 +29,8 @@ from ...domain.contribuyente import (
     ProfileKeyRequirement,
     optional_profile_keys,
 )
-from ...domain.contribuyente._keys import _profile_keys as _get_profile_keys
-from ._completeness import conditional_profile_required_paths
+from ...domain.contribuyente import profile_keys as _get_profile_keys
+from ._completeness import IVA_REGIME_PATH, conditional_profile_required_paths, iva_regime_required
 
 
 class ProfileValidationResult(BaseModel):
@@ -83,7 +83,8 @@ def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResul
     static_required_keys = tuple(
         entry.key
         for entry in entries
-        if entry.requirement is ProfileKeyRequirement.REQUIRED or _conditional_requirement_applies(values, entry)
+        if (entry.requirement is ProfileKeyRequirement.REQUIRED or _conditional_requirement_applies(values, entry))
+        and (entry.key != IVA_REGIME_PATH or iva_regime_required(values))
     )
     required_keys = tuple(dict.fromkeys((*static_required_keys, *conditional_profile_required_paths(values))))
     optional_keys = tuple(entry.key for entry in optional_profile_keys())

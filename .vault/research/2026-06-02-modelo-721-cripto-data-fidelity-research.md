@@ -3,14 +3,12 @@ tags:
   - '#research'
   - '#modelo-721-cripto-data-fidelity'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 related:
   - "[[2026-06-02-modelo-720-prior-year-baseline-adr]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
   - "[[2026-05-27-m721-informativa-criptomonedas-research]]"
 ---
-
-
 
 # `modelo-721-cripto-data-fidelity` research: `modelo 721 cripto-exterior data-fidelity twin of 720`
 

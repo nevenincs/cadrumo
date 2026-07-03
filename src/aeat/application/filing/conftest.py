@@ -18,10 +18,10 @@ rollback teardown, which is tracked separately. Until that lands,
 function-scope autouse is the correct shape.
 
 See Also:
-    :func:`aeat.tests.secure_sql.isolated_runtime_profile`
+    :func:`aeat-tests.secure_sql.isolated_runtime_profile`
         Shared helper that provisions the real active-profile bucket runtime
         used by this fixture.
-    :class:`aeat.tests.secure_sql.TestRuntimeProfile`
+    :class:`aeat-tests.secure_sql.TestRuntimeProfile`
         Frozen record yielded by the helper so tests can inspect the isolated
         storage root, bucket id, runtime, and repository.
     :mod:`aeat.adapters.persistence.storage.sql.conftest`

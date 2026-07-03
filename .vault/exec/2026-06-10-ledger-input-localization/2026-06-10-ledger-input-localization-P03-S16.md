@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#ledger-input-localization'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S16'
 related:
   - "[[2026-06-10-ledger-input-localization-plan]]"
 ---
-
-
-
 
 # Run the full test suite for the entrypoints/cli surface (uv run --no-sync pytest src/aeat/entrypoints/cli/ -x -q) and confirm all new tests pass with no skips or xfail
 

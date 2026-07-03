@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S13'
 related:
   - "[[2026-06-10-cli-operator-surface-plan]]"
 ---
-
-
-
 
 # add real-behavior tests proving --language no longer silently fails for help text, asserting the chosen outcome and leaving the profile-owned precedence and AEAT_OUTPUT_LANGUAGE override unchanged
 

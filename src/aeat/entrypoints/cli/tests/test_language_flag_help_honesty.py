@@ -12,7 +12,7 @@ that contract against the real installed ``aeat`` console.
 The help-text localisation only occurs through the real ``main()`` entry point
 (the pre-parse runs there, before the lazy command tree imports), so the
 subprocess tests invoke the installed console script rather than an in-process
-``CliRunner`` (which bypasses ``main()``). The pure-parser unit tests isolate the
+test runner (which bypasses ``main()``). The pure-parser unit tests isolate the
 argv-scan logic, which carries no external dependency.
 """
 
@@ -77,6 +77,14 @@ def _run_console(args: list[str], env: dict[str, str]) -> subprocess.CompletedPr
 # are the observable proof that help text rendered in the chosen language.
 _CREATE_HELP_EN = "Initialize a new active profile."
 _CREATE_HELP_ES = "Inicializa un nuevo perfil activo."
+_CALENDAR_HELP_HU = "A határidő-naptár megjelenítése az aktív profilhoz"
+_CALENDAR_FROM_HELP_HU = "A naptárablak kezdő dátuma"
+_CALENDAR_TO_HELP_HU = "A naptárablak záró dátuma"
+_CALENDAR_ALLOW_INCOMPLETE_HELP_HU = "A naptár megjelenítése akkor is"
+_CALENDAR_SHOW_SUPPRESSED_HELP_HU = "Elnyomott bejegyzések megjelenítése"
+_CALENDAR_ALL_PROFILES_HELP_HU = "Az összes regisztrált profil naptárát"
+_CALENDAR_FROM_HELP_EN = "Inclusive start date for the calendar window"
+_CALENDAR_ALL_PROFILES_HELP_EN = "Render the calendar for every registered active profile"
 
 
 def test_language_flag_renders_english_leaf_help(tmp_path: Path) -> None:
@@ -143,6 +151,27 @@ def test_env_var_still_controls_help_without_flag(tmp_path: Path) -> None:
     combined = f"{result.stdout}\n{result.stderr}"
     assert result.returncode == 0, combined
     assert _CREATE_HELP_EN in result.stdout, combined
+
+
+def test_hungarian_overview_calendar_help_localises_custom_options_together(tmp_path: Path) -> None:
+    """``overview calendar --help`` must not mix Hungarian and English custom option help."""
+    result = _run_console(
+        ["--language", "hu", "app", "overview", "calendar", "--help"],
+        _console_env(tmp_path, language=None),
+    )
+    combined = f"{result.stdout}\n{result.stderr}"
+    assert result.returncode == 0, combined
+    for expected in (
+        _CALENDAR_HELP_HU,
+        _CALENDAR_FROM_HELP_HU,
+        _CALENDAR_TO_HELP_HU,
+        _CALENDAR_ALLOW_INCOMPLETE_HELP_HU,
+        _CALENDAR_SHOW_SUPPRESSED_HELP_HU,
+        _CALENDAR_ALL_PROFILES_HELP_HU,
+    ):
+        assert expected in result.stdout, combined
+    assert _CALENDAR_FROM_HELP_EN not in result.stdout, combined
+    assert _CALENDAR_ALL_PROFILES_HELP_EN not in result.stdout, combined
 
 
 def test_invalid_language_value_is_refused_with_accepted_set(tmp_path: Path) -> None:

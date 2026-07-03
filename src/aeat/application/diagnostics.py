@@ -1,7 +1,44 @@
-"""Application-owned diagnostics and version reporting.
+"""Application-owned diagnostics, version reports, and repair probes.
 
-Registry diagnostics are produced by loading a :class:`ValidatedRegistryAuthority`
-from the configured registry root and inspecting the available modelos and revisions.
+:func:`build_cli_version_report` and :func:`render_cli_version_text` back the
+root ``aeat --version`` surface. They keep the fast path import-light unless the
+caller requests registry detail.
+
+:func:`build_config_repair_report` composes environment checks,
+:class:`~application.workflow.WorkflowState` loading,
+:class:`~application.workflow.ActiveProfileHealth` profile storage
+verdicts, :class:`~application.wizard.WizardStatusReport`
+readiness, registry summaries, and secure-object decryptability into a
+:class:`ConfigRepairReport` of :class:`DiagnosticCheck` rows. The full registry
+integrity probe is intentionally opt-in through :class:`RegistryIntegrityReport`;
+it loads the registry authority only for repair commands that ask for that
+validation.
+
+Every warn/fail :class:`DiagnosticCheck` is actionable by construction: it must
+carry either ``next_action`` or ``dead_end`` and the validator raises
+:class:`~application._errors.DiagnosticModelError` if a row is silent or
+ambiguous. Renderers and CLI payloads can therefore treat the repair report as a
+typed contract, not a best-effort text scan.
+
+Secure-object repair helpers return :class:`SecureObjectIntegrityReport`
+instances shared with :mod:`application.repair_integrity`. Dry-run preview
+and quarantine use the same decryptability probe so the committed mutation has
+the same namespace counts the operator saw before confirming it. Registry
+validation routes through
+:class:`~domain.calculations.registry.ValidatedRegistryAuthority` and the
+core :class:`~core.Modelo` identifier enum only on the explicit
+repair-integrity path.
+
+See Also:
+    :mod:`application.repair_integrity` owns metadata-only repair
+    decisions and active-bucket repair sessions.
+    :mod:`application.workflow._profile_health` supplies the redacted
+    active-profile health verdict when secure workflow state is readable or
+    degraded.
+    :mod:`application.wizard._status` supplies semantic profile/auth
+    readiness once the workflow state has loaded.
+    :mod:`entrypoints.cli._config._repair_cli` wires these reports into
+    ``aeat config repair`` commands.
 """
 
 from __future__ import annotations
@@ -35,10 +72,9 @@ from ._errors import DiagnosticModelError
 # version surface off the heavy graph (disaster ADR Ruling 4 fast-path).
 if TYPE_CHECKING:
     from ..adapters.outbound.aeat.browser import SiteHealthStatus
-    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectNamespaceIntegrity
-    from .wizard._status import WizardStatusReport
-    from .workflow._models import WorkflowState
-    from .workflow._profile_health import ActiveProfileHealth
+    from ..adapters.persistence.storage import SecureObjectNamespaceIntegrity
+    from .wizard import WizardStatusReport
+    from .workflow import ActiveProfileHealth, WorkflowState
 
 _log = get_logger(__name__)
 
@@ -50,7 +86,13 @@ DiagnosticStatus = Literal["ok", "warn", "fail"]
 
 
 class RegistryVersionSummary(BaseModel):
-    """Stable registry summary suitable for version and repair surfaces."""
+    """Stable registry summary suitable for version and repair surfaces.
+
+    Built from
+    :class:`~domain.calculations.registry.ValidatedRegistryAuthority` when
+    registry detail is requested, then embedded in both :class:`CliVersionReport`
+    and :class:`ConfigRepairReport`.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -65,7 +107,12 @@ class RegistryVersionSummary(BaseModel):
 
 
 class CliVersionReport(BaseModel):
-    """Version payload rendered by root CLI version surfaces."""
+    """Version payload rendered by root CLI version surfaces.
+
+    :func:`build_cli_version_report` fills the :class:`RegistryVersionSummary`
+    field, and :func:`render_cli_version_text` renders the text form used by the
+    root ``aeat --version`` command.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -94,7 +141,9 @@ class DiagnosticFinding(BaseModel):
     names one specific cause in operator language and, where an
     automated route exists, the exact ``aeat ...`` command that resolves
     it. The profile-keys check emits one finding per unset key; a
-    failing check emits one finding per concrete cause.
+    failing check emits one finding per concrete cause. Findings are
+    explanatory children, not a replacement for the parent row's required
+    ``next_action`` or ``dead_end`` recovery channel.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -112,12 +161,15 @@ class DiagnosticCheck(BaseModel):
     exact ``aeat ...`` command string the operator can run) or ``dead_end``
     (a short explanation of why no automated route exists). A row that
     supplies neither, or both, is a :class:`pydantic.ValidationError` at
-    construction time. ``ok`` rows MUST carry neither.
+    construction time by raising
+    :class:`~application._errors.DiagnosticModelError`. ``ok`` rows MUST
+    carry neither.
 
     ``findings`` carries the per-cause breakdown: the specific keys that
     are unset, the specific reasons a check failed. ``audience`` records
     whether the operator can act on the row or whether it reports an
-    internal application defect.
+    internal application defect. :func:`render_config_repair_text` and
+    :class:`ConfigRepairReport` preserve this distinction.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -157,6 +209,15 @@ class SecureObjectIntegrityReport(BaseModel):
     almost always means the keychain master-key entry was rotated or
     regenerated since the affected rows were written; the plaintexts are
     cryptographically unrecoverable from this process.
+
+    ``namespaces`` carries
+    :class:`~adapters.persistence.storage.SecureObjectNamespaceIntegrity`
+    rows produced by the encrypted
+    :class:`~adapters.persistence.storage.SecureObjectRepository`.
+    The same aggregate shape is shared by :class:`ConfigRepairReport`,
+    :class:`~application.repair_integrity.RepairIntegrityReport`,
+    :func:`preview_quarantine_unreadable_secure_objects`, and
+    :func:`quarantine_unreadable_secure_objects`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -167,7 +228,17 @@ class SecureObjectIntegrityReport(BaseModel):
 
 
 class ConfigRepairReport(BaseModel):
-    """Local environment and configuration diagnostics for ``aeat config repair``."""
+    """Composite report rendered by the bare ``aeat config repair`` command.
+
+    The report combines the public :class:`RegistryVersionSummary`, the
+    secure-object :class:`SecureObjectIntegrityReport`, and ordered
+    :class:`DiagnosticCheck` rows into one operator-facing health payload.
+    ``setup`` is a redacted
+    :class:`~application.wizard.WizardStatusReport` when
+    :class:`~application.workflow.WorkflowState` can be loaded.
+    :func:`build_config_repair_report` is the producer, and
+    :func:`render_config_repair_text` is the compact text renderer.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -201,10 +272,10 @@ def _ensure_models_rebuilt() -> None:
     global _models_rebuilt
     if _models_rebuilt:
         return
-    from ..adapters.persistence.storage.sql.secure_objects import (
+    from ..adapters.persistence.storage import (
         SecureObjectNamespaceIntegrity,  # noqa: F401  # model_rebuild local namespace
     )
-    from .wizard._status import WizardStatusReport  # noqa: F401  # model_rebuild local namespace
+    from .wizard import WizardStatusReport  # noqa: F401  # model_rebuild local namespace
 
     SecureObjectIntegrityReport.model_rebuild(_types_namespace=locals())
     ConfigRepairReport.model_rebuild(_types_namespace={**globals(), **locals()})
@@ -218,7 +289,9 @@ class RegistryIntegrityReport(BaseModel):
     cross-domain referential-integrity gate off the ``--version`` and
     bare-invocation surfaces into the explicit
     ``aeat config repair integrity registry`` verb. This typed
-    report is what that verb renders.
+    report is what that verb renders: a :class:`RegistryVersionSummary` plus
+    the aggregate :class:`DiagnosticCheck` from
+    :func:`_registry_cross_domain_integrity_check`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -242,7 +315,9 @@ def build_cli_version_report(
     ``--detail`` is on, the caller re-invokes with
     ``with_registry=True`` to populate the registry summary.
 
-    Returns a :class:`CliVersionReport`.
+    Returns a :class:`CliVersionReport` whose registry field is either the
+    fast-path empty :class:`RegistryVersionSummary` or the detailed summary from
+    :class:`~domain.calculations.registry.ValidatedRegistryAuthority`.
     """
     if with_registry:
         root = registry_root or bundled_path("registry", "aeat")
@@ -260,7 +335,18 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
     """Return local diagnostics for the ``aeat config repair`` surface.
 
     Returns a :class:`ConfigRepairReport` enumerating every diagnostic
-    check and any suggested repairs.
+    check and any suggested repairs. Expensive registry validation beyond the
+    rollup check remains in :func:`build_registry_integrity_report`, so the bare
+    repair command stays focused on actionable local health.
+
+    The secure-state branch reads
+    :class:`~application.workflow.WorkflowState`, derives
+    :class:`~application.workflow.ActiveProfileHealth`, and builds a
+    :class:`~application.wizard.WizardStatusReport`. If that load
+    fails, the report still emits profile and auth rows from the redacted health
+    verdict so repair remains usable on a cold or degraded storage root.
+    Each emitted warning/failure row is validated by :class:`DiagnosticCheck` so
+    the caller never receives a silent repair finding.
     """
     _ensure_models_rebuilt()
     root = registry_root or bundled_path("registry", "aeat")
@@ -306,9 +392,8 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
         try:
             from ..adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
             from ..core import resolve_active_bucket_id
-            from .wizard._status import build_wizard_status
-            from .workflow import workflow_state_repository
-            from .workflow._profile_health import assess_active_profile_health
+            from .wizard import build_wizard_status
+            from .workflow import assess_active_profile_health, workflow_state_repository
 
             if not has_active_bucket_session() and resolve_active_bucket_id() is not None:
                 provider_context = get_master_key_provider()
@@ -330,7 +415,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             checks.append(_profile_check(setup_report, profile_health=profile_health, state=state))
             checks.append(_auth_check(setup_report))
         except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
-            from .workflow._profile_health import assess_active_profile_health
+            from .workflow import assess_active_profile_health
 
             _log.debug("config repair secure state probe failed", exc_info=True)
             profile_health = assess_active_profile_health()
@@ -464,7 +549,12 @@ def _ok_site_health_status(url: str) -> SiteHealthStatus:
 
 
 def render_config_repair_text(report: ConfigRepairReport) -> str:
-    """Render a compact human-readable repair report."""
+    """Render a compact human-readable repair report.
+
+    Preserves :attr:`DiagnosticCheck.audience` and the mutually exclusive
+    ``next_action`` / ``dead_end`` contract so operator-actionable rows and
+    internal application defects are visibly different in text output.
+    """
     lines = [
         f"{tr('cli.diagnostics.repair.overall_label', default='Overall')}\t{report.overall}",
         (
@@ -505,7 +595,7 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
 
 
 def _repair_safe_wizard_status(report: WizardStatusReport) -> WizardStatusReport:
-    """Return a repair-surface copy that does not expose the bucket UUID."""
+    """Return a repair-surface :class:`WizardStatusReport` copy with no bucket UUID."""
     if report.active_profile is None:
         return report
     return report.model_copy(update={"active_profile": CLI_PROFILE_ID_PLACEHOLDER})
@@ -553,13 +643,13 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     be reached. Non-empty results expose per-namespace counts so the
     operator can locate which application surface holds rows from a
     rotated master-key generation.
+    The per-namespace rows come from
+    :meth:`~adapters.persistence.storage.SecureObjectRepository.probe_namespace_integrity`.
     """
     _ensure_models_rebuilt()
-    from ..adapters.persistence.storage.runtime_repository import (
-        secure_object_repository_for_active_bucket_or_default_route,
-    )
-    from ..adapters.persistence.storage.sql.secure_objects import (
+    from ..adapters.persistence.storage import (
         SecureObjectNamespaceIntegrity,
+        secure_object_repository_for_active_bucket_or_default_route,
     )
 
     try:
@@ -599,7 +689,11 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
 
 
 def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> DiagnosticCheck:
-    """Render the ``secure_objects.integrity`` repair row."""
+    """Render the ``secure_objects.integrity`` repair row.
+
+    A non-zero unreadable total becomes a warn :class:`DiagnosticCheck` whose
+    ``next_action`` is the guarded ``aeat config repair quarantine --yes`` path.
+    """
     if report.unreadable_total == 0:
         if report.readable_total == 0:
             return DiagnosticCheck(
@@ -638,9 +732,10 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
 def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticCheck:
     """Cross-domain integrity check by exercising the snapshot-build gate.
 
-    Loads the registry authority (which runs ``validate_registry``
-    at construction time) and attempts to build a representative
-    snapshot for modelo 100. The snapshot-build path wires
+    Loads :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
+    (which runs ``validate_registry`` at construction time) and attempts to
+    build a representative snapshot for :class:`~core.Modelo` member
+    ``M100``. The snapshot-build path wires
     :func:`_check_all_id_references` (typed-ID existence checks +
     renta first-slice routing target check + per-binding selector-
     shape gate); any divergence between code-side typed contracts
@@ -685,7 +780,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
 
 
 def build_registry_integrity_report(registry_root: Path | None = None) -> RegistryIntegrityReport:
-    """Run the full registry validation as a standalone, opt-in probe and return a :class:`RegistryIntegrityReport`.
+    """Run the full registry validation as a standalone :class:`RegistryIntegrityReport` probe.
 
     Backs the ``aeat config repair integrity registry`` verb. Bundles
     the registry version summary with the cross-domain
@@ -701,7 +796,7 @@ def build_registry_integrity_report(registry_root: Path | None = None) -> Regist
 
 
 def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticCheck:
-    """Render pointer/manifest/profile-record health before semantic readiness."""
+    """Render :class:`ActiveProfileHealth` storage status before semantic readiness."""
     active_profile = CLI_PROFILE_ID_PLACEHOLDER if health.active_profile is not None else "-"
     summary = tr(
         "cli.diagnostics.summary.profile_storage",
@@ -726,6 +821,7 @@ def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticChec
 
 
 def _profile_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
+    """Render a profile-readiness row when only :class:`ActiveProfileHealth` is available."""
     if health.status in {"dangling_pointer", "missing_profile_record", "profile_record_unreadable"}:
         return DiagnosticCheck(
             name="profile.readiness",
@@ -758,7 +854,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
     into an actionable list: the operator sees precisely which fields
     are unset and the one command that walks them through filling each.
     """
-    from .user_profile._keys_validation import list_profile_key_records
+    from .user_profile import list_profile_key_records
 
     if state is None:
         return ()
@@ -772,7 +868,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
     if record is None:
         return ()
 
-    from .user_profile._projections import record_to_path_values
+    from .user_profile import record_to_path_values
 
     values = record_to_path_values(record)
     findings: list[DiagnosticFinding] = []
@@ -800,6 +896,16 @@ def _profile_check(
     profile_health: ActiveProfileHealth | None = None,
     state: WorkflowState | None = None,
 ) -> DiagnosticCheck:
+    """Render semantic profile readiness from wizard status plus workflow state.
+
+    ``report`` supplies the
+    :class:`~application.wizard.WizardStatusReport` counters and
+    next action. ``profile_health`` can override the row when
+    :class:`~application.workflow.ActiveProfileHealth` says the active
+    profile bucket is unavailable. ``state`` lets the check expand missing
+    profile keys from :class:`~application.workflow.WorkflowState` into
+    per-key :class:`DiagnosticFinding` rows.
+    """
     if profile_health is not None and profile_health.status in {
         "dangling_pointer",
         "missing_profile_record",
@@ -858,6 +964,7 @@ def _profile_check(
 
 
 def _auth_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
+    """Render auth readiness when workflow state cannot expose wizard status."""
     return DiagnosticCheck(
         name="auth.readiness",
         status="warn",
@@ -867,6 +974,7 @@ def _auth_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
 
 
 def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
+    """Render auth readiness from :class:`WizardStatusReport`."""
     if not report.auth_provider:
         return DiagnosticCheck(
             name="auth.readiness",
@@ -991,7 +1099,8 @@ def secure_object_unreadable_total() -> int:
     consumers (notably ``aeat app overview status``) that want to surface
     a concise "N rows unreadable" pointer towards
     ``aeat config repair`` without rendering the per-namespace breakdown
-    themselves. The full breakdown remains the authority of repair.
+    themselves. The full breakdown remains the authority of
+    :class:`ConfigRepairReport`.
     """
     return _probe_secure_objects_integrity().unreadable_total
 
@@ -1007,7 +1116,7 @@ def preview_quarantine_unreadable_secure_objects() -> SecureObjectIntegrityRepor
     :class:`SecureObjectIntegrityReport` carries, per namespace, the
     ``unreadable`` count (= rows the non-dry-run verb would quarantine)
     and the ``readable`` count (= rows it would retain), so the
-    operator can confirm the blast radius before committing — the same
+    operator can confirm the blast radius before committing - the same
     preview shape ``reset-progress --dry-run`` already offers.
     """
     from .repair_integrity import active_bucket_repair_session
@@ -1019,11 +1128,12 @@ def preview_quarantine_unreadable_secure_objects() -> SecureObjectIntegrityRepor
 def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
     """Move every undecryptable secure-object row into the quarantine table.
 
-    Delegates to :meth:`SecureObjectRepository.quarantine_unreadable_rows`,
-    which creates the ``secure_objects_quarantine`` archive table on
-    first use, copies each undecryptable row's metadata and (still
-    encrypted) payload into the archive, then deletes the row from the
-    active ``secure_objects`` table. Decryptable rows are not touched.
+    Delegates to
+    :meth:`~adapters.persistence.storage.SecureObjectRepository.quarantine_unreadable_rows`,
+    which creates the ``secure_objects_quarantine`` archive table on first use,
+    copies each undecryptable row's metadata and (still encrypted) payload into
+    the archive, then deletes the row from the active ``secure_objects`` table.
+    Decryptable rows are not touched.
 
     The user's ciphertext is preserved in the archive; nothing is
     auto-deleted. If a missing master key is later recovered (e.g.
@@ -1037,7 +1147,7 @@ def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
         in ``secure_objects``).
     """
     _ensure_models_rebuilt()
-    from ..adapters.persistence.storage.runtime_repository import (
+    from ..adapters.persistence.storage import (
         secure_object_repository_for_active_bucket_or_default_route,
     )
     from .repair_integrity import active_bucket_repair_session

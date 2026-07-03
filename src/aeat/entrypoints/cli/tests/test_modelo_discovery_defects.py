@@ -22,6 +22,7 @@ fleet:
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -45,10 +46,30 @@ def _create_profile() -> None:
         [
             "config", "profile", "create", "operator",
             "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
             "--tax-id", "12345678Z",
             "--name", "Operator",
             "--surnames", "Operator",
             "--activity", "design",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+
+
+def _create_legal_entity_profile() -> None:
+    result = invoke_cached_cli(
+        [
+            "config", "profile", "create", "company",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "legal_entity",
+            "--legal-entity-form", "sl",
+            "--tax-id", "B12345674",
+            "--name", "Company",
+            "--surnames", "Company SL",
+            "--legal-name", "Company SL",
+            "--activity", "consulting",
+            "--incn-prior-12-months", "7500000.00",
+            "--no-new-entity-first-two-profit-periods",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -67,8 +88,40 @@ def _create_303_work_unit() -> str:
     return _payload(result.output)["work_unit_id"]
 
 
+def _seed_m111_retencion_observation() -> None:
+    """Seed one work-income retención percepción so a Modelo 111 work unit's
+    ``work calculate`` resolves the ``retenciones_aggregation`` source.
+
+    Modelo 111 calculation requires per-perceptor retención evidence: the
+    source resolver refuses an all-blank quarter rather than silently filing
+    a zero return. One real ``rendimientos_trabajo`` percepción is the
+    minimum that makes the 2025 1T quarter calculable.
+    """
+    observation = json.dumps(
+        {
+            "source_kind": "ledger_transaction",
+            "source_object_id": "m111-work-income-row-001",
+            "perceptor_nif": "A12345678",
+            "perceptor_name": "Empresa Pagadora SL",
+            "scheme": "rendimientos_trabajo",
+            "taxable_base": "1000.00",
+            "retencion_amount": "190.00",
+            "accrued_on": "2025-01-15",
+        },
+    )
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "aggregate",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--retencion-observation", observation,
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+
+
 def _create_111_work_unit() -> str:
-    """Create a Modelo 111 work unit — fully calculable without any binding."""
+    """Create a Modelo 111 work unit calculable from a seeded retención percepción."""
 
     result = invoke_cached_cli(
         [
@@ -79,6 +132,7 @@ def _create_111_work_unit() -> str:
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
+    _seed_m111_retencion_observation()
     return _payload(result.output)["work_unit_id"]
 
 
@@ -379,6 +433,110 @@ def test_modelo_readiness_refuses_period_without_registry_coverage() -> None:
     assert "aeat app modelo describe 210" in flat
 
 
+def test_describe_m210_accepts_numbered_event_token_with_year_scope() -> None:
+    """M210 describe accepts concrete EVENT-N period instances."""
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "describe",
+            "210",
+            "--year",
+            "2026",
+            "--period",
+            "EVENT-1",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "Invalid value" not in result.output
+    assert "Modelo\t210" in result.output
+    assert "Revision\t2025" in result.output
+    assert "Periods\tEVENT-N" in result.output
+    assert "evento" not in result.output
+
+
+def test_describe_m210_rejects_legacy_evento_token_with_year_scope() -> None:
+    """M210 describe refuses the retired ``evento`` token."""
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "describe",
+            "210",
+            "--year",
+            "2026",
+            "--period",
+            "evento",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    flat = result.output.replace("\n", " ")
+    assert "Traceback" not in flat
+    assert "EVENT-N" in flat
+    assert "Valid tokens: evento" not in flat
+
+
+def test_bindings_list_m210_legacy_event_token_reports_current_guidance() -> None:
+    """The retired M210 ``evento`` token must not be advertised as valid."""
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "210",
+            "--year",
+            "2025",
+            "--period",
+            "evento",
+            "--missing",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    flat = result.output.replace("\n", " ")
+    assert "EVENT-N" in flat
+    assert "Valid tokens: evento" not in flat
+    assert "Traceback" not in flat
+
+
+def test_modelo_readiness_m210_legacy_event_token_reports_current_guidance() -> None:
+    """Readiness must not route retired ``evento`` through the M210 work boundary."""
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "readiness",
+            "--modelo",
+            "210",
+            "--revision-id",
+            "2025",
+            "--year",
+            "2025",
+            "--period",
+            "evento",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    flat = result.output.replace("\n", " ")
+    assert "EVENT-N" in flat
+    assert "Valid tokens: evento" not in flat
+    assert "REFUSED_CLI_BOUNDARY" not in flat
+    assert "Traceback" not in flat
+
+
 def test_modelo_readiness_reports_missing_calculation_bindings() -> None:
     """Blank company facts must keep M200 readiness false before calculate."""
 
@@ -411,7 +569,38 @@ def test_modelo_readiness_reports_missing_calculation_bindings() -> None:
         "modelo-200-2024-profile-new-entity-flag",
         "modelo-200-2024-profile-incn-prior-12-months",
     } <= missing_binding_ids
-    assert {row["source"] for row in payload["missing_bindings"]} == {"profile"}
+    missing_sources = {row["source"] for row in payload["missing_bindings"]}
+    assert "profile" in missing_sources
+    assert "relation_prefill" in missing_sources
+
+
+def test_modelo_200_legal_entity_readiness_does_not_request_retired_objective_boolean() -> None:
+    """A legal-entity M200 profile must not ask for the retired IRPF objective flag."""
+
+    _create_legal_entity_profile()
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "readiness",
+            "--modelo",
+            "200",
+            "--revision-id",
+            "2024-y-siguientes",
+            "--year",
+            "2026",
+            "--period",
+            "0A",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert payload["profile_ready"] is True
+    assert "irpf.uses_objective_estimation" not in result.output
+    assert "uses_objective_estimation_irpf" not in result.output
 
 
 # ---------------------------------------------------------------------------
@@ -503,7 +692,7 @@ def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str)
     quarterly and annual modelos already do.
     """
 
-    _create_profile()
+    _create_legal_entity_profile()
     work_unit_id = _create_202_work_unit(period)
     result = invoke_cached_cli(
         [
@@ -540,7 +729,7 @@ def test_modelo_202_describe_create_calculate_agree_on_period_tokens() -> None:
     may advertise a period the others reject.
     """
 
-    _create_profile()
+    _create_legal_entity_profile()
     described = invoke_cached_cli(["app", "modelo", "describe", "202"])
     assert described.exit_code == 0, described.output
     periods_line = next(line for line in described.output.splitlines() if line.startswith("Periods\t"))

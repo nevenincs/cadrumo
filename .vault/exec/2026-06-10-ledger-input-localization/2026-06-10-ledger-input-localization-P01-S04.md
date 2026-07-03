@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#ledger-input-localization'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S04'
 related:
   - "[[2026-06-10-ledger-input-localization-plan]]"
 ---
-
-
-
 
 # Replace the local _parse_decimal/_parse_required_decimal with parse_decimal_amount from _common.py
 

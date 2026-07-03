@@ -18,16 +18,20 @@ RDL 4/2024 art. 3.1 (BOE-A-2024-12944) to the 7.302 € / 19.747,5 € schedule.
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 import pytest
 
-from .....core.resources import bundled_path
 from .. import CasillaId, validated_casilla_id
-from .._loader import load_registry_tree
 from .._temporal import select_revision
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
+_ALL_LIVE_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
+_DRIFT_CORRECTED_YEARS = (2021, 2022, 2023, 2024)
+_NETO_REDUCIDO_CHAIN_YEARS = (2021, 2022, 2023, 2024, 2025)
+
 _TRABAJO_REDUCCION_CASILLA = validated_casilla_id(
     "0023",
     surface="test_trabajo_reduccion_art20_grounded.trabajo_reduccion",
@@ -39,36 +43,37 @@ _TRABAJO_NETO_REDUCIDO_CASILLA = validated_casilla_id(
 
 
 def _m100_revision(filing_year: int):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelos_by_id = {m.id: m for m in modelos}
-    return select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    modelo, _ = _committed_modelo("100")
+    return select_revision(modelo, filing_year=filing_year, period="0A")
 
 
-@pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
-def test_casilla_0023_cites_art20_reduction(year: int) -> None:
+@lru_cache
+def _m100_casillas_by_id(filing_year: int):
+    rev = _m100_revision(filing_year)
+    return {casilla.id: casilla for casilla in rev.casillas}
+
+
+def test_casilla_0023_cites_art20_reduction() -> None:
     """Casilla 0023 (the art. 20 work-income reduction) must cite ley-35-2006:art-20."""
-    rev = _m100_revision(year)
-    casillas_by_id = {c.id: c for c in rev.casillas}
-    casilla = casillas_by_id.get(_TRABAJO_REDUCCION_CASILLA)
-    assert casilla is not None, f"M100 {year} must declare casilla 0023"
-    assert "ley-35-2006:art-20" in casilla.legal_refs, (
-        f"casilla 0023 ({year}) is the art. 20 reduction; its legal_refs must cite "
-        f"ley-35-2006:art-20, not {list(casilla.legal_refs)}"
-    )
+    for year in _ALL_LIVE_YEARS:
+        casilla = _m100_casillas_by_id(year).get(_TRABAJO_REDUCCION_CASILLA)
+        assert casilla is not None, f"M100 {year} must declare casilla 0023"
+        assert "ley-35-2006:art-20" in casilla.legal_refs, (
+            f"casilla 0023 ({year}) is the art. 20 reduction; its legal_refs must cite "
+            f"ley-35-2006:art-20, not {list(casilla.legal_refs)}"
+        )
 
 
-@pytest.mark.parametrize("year", [2021, 2022, 2023, 2024])
-def test_casilla_0023_does_not_misground_to_art17(year: int) -> None:
+def test_casilla_0023_does_not_misground_to_art17() -> None:
     """The corrected years must not retain the art-17 misgrounding (art. 17 is
     rendimientos íntegros, not the reduction the casilla holds)."""
-    rev = _m100_revision(year)
-    casillas_by_id = {c.id: c for c in rev.casillas}
-    casilla = casillas_by_id.get("0023")
-    assert casilla is not None
-    assert "ley-35-2006:art-17" not in casilla.legal_refs, (
-        f"casilla 0023 ({year}) must not cite art-17 (rendimientos íntegros) for the "
-        f"art. 20 reduction; found {list(casilla.legal_refs)}"
-    )
+    for year in _DRIFT_CORRECTED_YEARS:
+        casilla = _m100_casillas_by_id(year).get(_TRABAJO_REDUCCION_CASILLA)
+        assert casilla is not None, f"M100 {year} must declare casilla 0023"
+        assert "ley-35-2006:art-17" not in casilla.legal_refs, (
+            f"casilla 0023 ({year}) must not cite art-17 (rendimientos íntegros) for the "
+            f"art. 20 reduction; found {list(casilla.legal_refs)}"
+        )
 
 
 # Sibling gasto casillas of the same drift cluster: 0019 (otros gastos deducibles),
@@ -83,18 +88,17 @@ _GASTO_CASILLAS: tuple[CasillaId, ...] = (
 )
 
 
-@pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
-@pytest.mark.parametrize("casilla_id", _GASTO_CASILLAS)
-def test_gasto_casillas_cite_art19(year: int, casilla_id: CasillaId) -> None:
+def test_gasto_casillas_cite_art19() -> None:
     """The art. 19.2.f gasto casillas (0019/0020/0021) must cite ley-35-2006:art-19."""
-    rev = _m100_revision(year)
-    casillas_by_id = {c.id: c for c in rev.casillas}
-    casilla = casillas_by_id.get(casilla_id)
-    assert casilla is not None, f"M100 {year} must declare casilla {casilla_id}"
-    assert "ley-35-2006:art-19" in casilla.legal_refs, (
-        f"casilla {casilla_id} ({year}) is an art. 19.2.f gasto deducible; its legal_refs "
-        f"must cite ley-35-2006:art-19, not {list(casilla.legal_refs)}"
-    )
+    for year in _ALL_LIVE_YEARS:
+        casillas_by_id = _m100_casillas_by_id(year)
+        for casilla_id in _GASTO_CASILLAS:
+            casilla = casillas_by_id.get(casilla_id)
+            assert casilla is not None, f"M100 {year} must declare casilla {casilla_id}"
+            assert "ley-35-2006:art-19" in casilla.legal_refs, (
+                f"casilla {casilla_id} ({year}) is an art. 19.2.f gasto deducible; "
+                f"its legal_refs must cite ley-35-2006:art-19, not {list(casilla.legal_refs)}"
+            )
 
 
 # The wider trabajo-section grounding cluster, all formerly drifted to art-17 in
@@ -103,58 +107,35 @@ def test_gasto_casillas_cite_art19(year: int, casilla_id: CasillaId) -> None:
 # SS, art. 19.2.a), 0014/0015 (cuotas sindicato/colegio, art. 19.2.d), 0016 (defensa
 # jurídica, art. 19.2.e), 0017 (rendimiento neto previo) are art. 19.
 _TRABAJO_SECTION_GROUNDING: dict[CasillaId, str] = {
-    validated_casilla_id("0011", surface="test_trabajo_reduccion_art20_grounded.trabajo.0011"): (
-        "ley-35-2006:art-18"
-    ),
-    validated_casilla_id("0013", surface="test_trabajo_reduccion_art20_grounded.trabajo.0013"): (
-        "ley-35-2006:art-19"
-    ),
-    validated_casilla_id("0014", surface="test_trabajo_reduccion_art20_grounded.trabajo.0014"): (
-        "ley-35-2006:art-19"
-    ),
-    validated_casilla_id("0015", surface="test_trabajo_reduccion_art20_grounded.trabajo.0015"): (
-        "ley-35-2006:art-19"
-    ),
-    validated_casilla_id("0016", surface="test_trabajo_reduccion_art20_grounded.trabajo.0016"): (
-        "ley-35-2006:art-19"
-    ),
-    validated_casilla_id("0017", surface="test_trabajo_reduccion_art20_grounded.trabajo.0017"): (
-        "ley-35-2006:art-19"
-    ),
-    validated_casilla_id("0018", surface="test_trabajo_reduccion_art20_grounded.trabajo.0018"): (
-        "ley-35-2006:art-19"
-    ),
-    validated_casilla_id("0022", surface="test_trabajo_reduccion_art20_grounded.trabajo.0022"): (
-        "ley-35-2006:art-19"
-    ),
+    validated_casilla_id("0011", surface="test_trabajo_reduccion_art20_grounded.trabajo.0011"): ("ley-35-2006:art-18"),
+    validated_casilla_id("0013", surface="test_trabajo_reduccion_art20_grounded.trabajo.0013"): ("ley-35-2006:art-19"),
+    validated_casilla_id("0014", surface="test_trabajo_reduccion_art20_grounded.trabajo.0014"): ("ley-35-2006:art-19"),
+    validated_casilla_id("0015", surface="test_trabajo_reduccion_art20_grounded.trabajo.0015"): ("ley-35-2006:art-19"),
+    validated_casilla_id("0016", surface="test_trabajo_reduccion_art20_grounded.trabajo.0016"): ("ley-35-2006:art-19"),
+    validated_casilla_id("0017", surface="test_trabajo_reduccion_art20_grounded.trabajo.0017"): ("ley-35-2006:art-19"),
+    validated_casilla_id("0018", surface="test_trabajo_reduccion_art20_grounded.trabajo.0018"): ("ley-35-2006:art-19"),
+    validated_casilla_id("0022", surface="test_trabajo_reduccion_art20_grounded.trabajo.0022"): ("ley-35-2006:art-19"),
 }
 
 
-@pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
-@pytest.mark.parametrize(("casilla_id", "expected_ref"), sorted(_TRABAJO_SECTION_GROUNDING.items()))
-def test_trabajo_section_casillas_cite_binding_article(
-    year: int,
-    casilla_id: CasillaId,
-    expected_ref: str,
-) -> None:
+def test_trabajo_section_casillas_cite_binding_article() -> None:
     """Each trabajo-section casilla cites its binding article (art. 18 / art. 19),
     not the art. 17 rendimientos-íntegros chapter it had drifted to."""
-    rev = _m100_revision(year)
-    casillas_by_id = {c.id: c for c in rev.casillas}
-    casilla = casillas_by_id.get(casilla_id)
-    assert casilla is not None, f"M100 {year} must declare casilla {casilla_id}"
-    assert expected_ref in casilla.legal_refs, (
-        f"casilla {casilla_id} ({year}) must cite {expected_ref}; found {list(casilla.legal_refs)}"
-    )
+    for year in _ALL_LIVE_YEARS:
+        casillas_by_id = _m100_casillas_by_id(year)
+        for casilla_id, expected_ref in sorted(_TRABAJO_SECTION_GROUNDING.items()):
+            casilla = casillas_by_id.get(casilla_id)
+            assert casilla is not None, f"M100 {year} must declare casilla {casilla_id}"
+            assert expected_ref in casilla.legal_refs, (
+                f"casilla {casilla_id} ({year}) must cite {expected_ref}; found {list(casilla.legal_refs)}"
+            )
 
 
-@pytest.mark.parametrize("year", [2021, 2022, 2023, 2024, 2025])
-def test_casilla_0025_neto_reducido_cites_full_reduction_chain(year: int) -> None:
+def test_casilla_0025_neto_reducido_cites_full_reduction_chain() -> None:
     """Casilla 0025 (rendimiento neto reducido) is governed by the reduction chain
     arts. 18 (irregularidad), 19 (gastos) and 20 (reducción trabajo) — not art-17."""
-    rev = _m100_revision(year)
-    casillas_by_id = {c.id: c for c in rev.casillas}
-    casilla = casillas_by_id.get(_TRABAJO_NETO_REDUCIDO_CASILLA)
-    assert casilla is not None, f"M100 {year} must declare casilla 0025"
-    for ref in ("ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20"):
-        assert ref in casilla.legal_refs, f"casilla 0025 ({year}) must cite {ref}; found {list(casilla.legal_refs)}"
+    for year in _NETO_REDUCIDO_CHAIN_YEARS:
+        casilla = _m100_casillas_by_id(year).get(_TRABAJO_NETO_REDUCIDO_CASILLA)
+        assert casilla is not None, f"M100 {year} must declare casilla 0025"
+        for ref in ("ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20"):
+            assert ref in casilla.legal_refs, f"casilla 0025 ({year}) must cite {ref}; found {list(casilla.legal_refs)}"

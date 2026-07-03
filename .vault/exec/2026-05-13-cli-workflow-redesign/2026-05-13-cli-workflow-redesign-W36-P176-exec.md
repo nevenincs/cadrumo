@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 step_id: 'W36.P176'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
@@ -13,8 +13,6 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-domain-harvest-vat-classification-adr]]'
 ---
-
-
 
 # `cli-workflow-redesign` `W36.P176`
 

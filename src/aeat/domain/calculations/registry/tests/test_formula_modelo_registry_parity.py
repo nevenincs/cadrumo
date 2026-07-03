@@ -5,15 +5,14 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .. import RegistryValidator, load_registry_tree
+from .. import RegistryValidator
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-
 
 def test_formula_revisions_are_owned_by_constructs_with_snapshot_workflow_surfaces() -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelos, catalogues = _committed_registry_tree()
     validator = RegistryValidator(catalogues, source_root=bundled_path())
     required_surfaces = {"calculation", "verification", "review", "approval", "reconciliation", "workflow"}
 

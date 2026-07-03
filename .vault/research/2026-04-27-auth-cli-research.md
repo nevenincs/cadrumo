@@ -3,15 +3,13 @@ tags:
   - '#research'
   - '#auth-cli'
 date: '2026-04-27'
-modified: '2026-04-27'
+modified: '2026-06-30'
 related:
   - "[[2026-04-18-auth-protocol-research]]"
   - "[[2026-04-18-aeat-auth-providers-research]]"
   - "[[2026-04-21-clave-portal-reference]]"
   - "[[2026-04-21-auth-cli-adr]]"
 ---
-
-
 
 # `auth-cli` research: auth cli surface over pluggable auth providers
 

@@ -1,13 +1,13 @@
 """ECB euro reference-rate exchange-rate provider.
 
-Implements the :class:`aeat.domain.currency.ExchangeRateProvider` protocol over a
+Implements the :class:`domain.currency.ExchangeRateProvider` protocol over a
 bundled snapshot of the European Central Bank euro foreign-exchange reference
 rates (``eurofxref`` XML). The ECB rates are the official exchange rate of
 Spanish law (Ley 46/1998 art. 36) accepted for IRPF, IVA, and PGC conversion —
 see the ``ledger-fx-conversion`` ADR.
 
 The ECB publishes EUR-base quotes (``1 EUR = rate CCY``). The
-:class:`aeat.domain.currency.CurrencyNormalizationService` expects
+:class:`domain.currency.CurrencyNormalizationService` expects
 ``get_eur_rate`` to return CCY->EUR (so ``eur = amount * rate``), so this provider
 returns ``1 / ecb_rate``. The ECB publishes only on TARGET working days, so a
 lookup for a non-publication date falls back to the most-recent prior published

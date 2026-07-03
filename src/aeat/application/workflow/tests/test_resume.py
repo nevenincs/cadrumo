@@ -9,20 +9,20 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.errors import resolve_error_message
 from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
 from ....domain.deadlines import ModeloDeadline, ObligationStatus
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
 )
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import (
     ModeloCalculationRevisionSelector,
@@ -31,6 +31,7 @@ from ...modelo import (
     create_work_unit,
     workflow_period_for_work_unit,
 )
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     WorkflowAbortReason,
     WorkflowError,
@@ -53,14 +54,40 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+_T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
+_BUCKET_ID = "a38b7cd5-d38e-4d69-809f-5a244c74e08b"
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="00000000T"),
+    UserProfileFact(path="identity.name", value="Test Operator"),
+    UserProfileFact(path="identity.surnames", value="Resume"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="activities.description", value="economic activity"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="provenance.source", value="test_fixture"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
+
+
+def _seed_ready_profile_record(bucket_id: str) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name=bucket_id,
+            facts=_READY_PROFILE_FACTS,
+            created_at=_T,
+            updated_at=_T,
+        ),
+    )
+
+
 @pytest.fixture(autouse=True)
 def _patch_secure_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        _seed_ready_profile_record(_BUCKET_ID)
         yield
-
-
-_T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
-_BUCKET_ID = "test-runtime-profile"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -198,29 +225,24 @@ def test_resume_refuses_done_run(tmp_path: Path) -> None:
     assert raised.value.translated_message == "application.workflow.errors.resume_refused_not_aborted"
 
 
-@pytest.mark.parametrize(
-    "reason",
-    [
-        WorkflowAbortReason.NO_PENDING_OBLIGATION,
-        WorkflowAbortReason.ALREADY_FILED,
-        WorkflowAbortReason.USER_CANCELLED,
-    ],
-)
-def test_resume_refuses_non_resumable_reasons(
-    tmp_path: Path,
-    reason: WorkflowAbortReason,
-) -> None:
-    run_id = "c" * 16
-    save_run(
-        _aborted_result(
-            run_id=run_id,
-            reason=reason,
-            obligation=_obligation() if reason is not WorkflowAbortReason.NO_PENDING_OBLIGATION else None,
-        ),
+def test_resume_refuses_non_resumable_reasons() -> None:
+    cases = (
+        ("c" * 16, WorkflowAbortReason.NO_PENDING_OBLIGATION),
+        ("d" * 16, WorkflowAbortReason.ALREADY_FILED),
+        ("e" * 16, WorkflowAbortReason.USER_CANCELLED),
     )
-    with pytest.raises(WorkflowResumeRefusedError) as raised:
-        resume_modelo_workflow(run_id)
-    assert raised.value.translated_message == "application.workflow.errors.resume_refused_terminal_reason"
+
+    for run_id, reason in cases:
+        save_run(
+            _aborted_result(
+                run_id=run_id,
+                reason=reason,
+                obligation=_obligation() if reason is not WorkflowAbortReason.NO_PENDING_OBLIGATION else None,
+            ),
+        )
+        with pytest.raises(WorkflowResumeRefusedError) as raised:
+            resume_modelo_workflow(run_id)
+        assert raised.value.translated_message == "application.workflow.errors.resume_refused_terminal_reason"
 
 
 def test_resume_refuses_run_without_obligation(tmp_path: Path) -> None:
@@ -489,7 +511,7 @@ def test_visible_modelo_resume_target_refuses_ambiguous_workflow_runs(tmp_path: 
     assert [candidate.run_id for candidate in raised.value.candidates] == [later.run_id, earlier.run_id]
 
 
-def test_exact_modelo_work_target_preserves_latest_run_resume_compatibility(tmp_path: Path) -> None:
+def test_exact_modelo_work_target_resolves_latest_run_for_period(tmp_path: Path) -> None:
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
@@ -551,7 +573,7 @@ def test_unified_resume_target_resolves_visible_modelo_target_with_projection(tm
     assert resolved.period == workflow_period
 
 
-def test_unified_resume_target_preserves_legacy_work_unit_id_latest_run(tmp_path: Path) -> None:
+def test_unified_resume_target_resolves_work_unit_id_to_latest_run(tmp_path: Path) -> None:
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",

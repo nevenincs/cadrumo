@@ -11,6 +11,12 @@ end-to-end JSON round trip without drift.
 The :attr:`VerificationVerdict.period` field is typed as the canonical
 :class:`~aeat.core.Period` value object (``filing_year`` + ``code``),
 serialising to ``{"filing_year": YYYY, "code": "1T"}`` in JSON.
+
+See Also:
+    :class:`VerificationVerdict`,
+    :class:`ClassifiedDiscrepancy`,
+    :class:`DiscrepancyCause`, and
+    :class:`VerificationStatus`.
 """
 
 from __future__ import annotations
@@ -28,6 +34,10 @@ from ...domain.calculations.registry import CasillaId
 
 class DiscrepancyCause(StrEnum):
     """Cause classification for a printed-vs-computed value mismatch.
+
+    The categories mirror the local verification classifier in
+    :func:`aeat.application.verification.verify_declaracion`; they are not
+    remote AEAT status values.
 
     Attributes:
         EXTRACTION_UNRELIABLE: The extractor warned about this casilla
@@ -68,7 +78,7 @@ class ClassifiedDiscrepancy(BaseModel):
     """One discrepancy with its cause classification and operator-facing rationale.
 
     Attributes:
-        casilla_id: Identifier of the casilla that diverged.
+        casilla_id: :class:`CasillaId` of the casilla that diverged.
         expected: The value the formula engine derived.
         actual: The value extracted from the printed PDF.
         delta: ``actual - expected`` (signed).
@@ -94,13 +104,27 @@ class VerificationVerdict(BaseModel):
     Attributes:
         modelo: AEAT modelo identifier.
         period: The filing :class:`~aeat.core.Period` (year + registry code).
-        registry_snapshot_id: Identifier of the registry snapshot used for the audit,
-        verification_expectation_ids: Registry expectation ids that governed the verdict.
+        registry_snapshot_id: Identifier of the
+            :class:`~aeat.domain.calculations.registry.RegistrySnapshot`
+            used for the audit.
+        verification_expectation_ids: Registry expectation ids that
+            governed the verdict.
         status: The :class:`VerificationStatus` summarising the verdict.
         discrepancies: Every :class:`ClassifiedDiscrepancy` produced by
             the engine audit.
         coverage: Fraction of the registry casillas the extraction
             supplied, in the inclusive ``0.0..1.0`` range.
+        externally_grounded_casilla_ids: The reconciled casillas (from
+            ``computed_casilla_ids`` or ``reconcile_when_present_casilla_ids``)
+            whose reconciliation is backed by an AEAT-authoritative
+            independent oracle expected value, rather than only the app's
+            own engine. Registry-declared data; see
+            :attr:`~aeat.domain.calculations.registry.RegistryVerificationPolicy.externally_grounded_casilla_ids`.
+        independently_grounded_fraction: Fraction of the reconciled casilla
+            set that is externally grounded, in the inclusive ``0.0..1.0``
+            range. A grounding-depth signal, not a correctness score: a low
+            value means most reconciliation was engine-only, not that the
+            filing is wrong.
         narrative: Multilingual user-facing summary string.
         verified_at: UTC timestamp of when the verdict was produced.
     """
@@ -114,5 +138,7 @@ class VerificationVerdict(BaseModel):
     status: VerificationStatus
     discrepancies: tuple[ClassifiedDiscrepancy, ...]
     coverage: float = Field(ge=0.0, le=1.0)
+    externally_grounded_casilla_ids: tuple[CasillaId, ...] = ()
+    independently_grounded_fraction: float = Field(ge=0.0, le=1.0, default=0.0)
     narrative: str
     verified_at: datetime

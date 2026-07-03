@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#pm-integration-closeout'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 related:
   - '[[2026-06-10-ledger-amount-direction-plan]]'
   - '[[2026-06-11-period-grammar-standardisation-plan]]'
@@ -94,4 +94,3 @@ live and locale surfaces are reconciled or split into isolated worktrees.
 3. Locale/vault curation worker: reconcile modelo-locales closed-plan caveats,
    feature index absence, template-comment warnings, and dirty seeded TOMLs
    without hand-editing translations outside the modelo locale CLI workflow.
-

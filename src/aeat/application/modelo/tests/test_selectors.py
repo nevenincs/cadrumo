@@ -10,22 +10,26 @@ from typing import cast
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._calculation_repository import (
-    CalculationRevisionCatalogueRepository,
-    upsert_calculation_revision,
-)
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
+    WorkUnitState,
     derive_calculation_revision_id,
+    derive_work_unit_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
+from ...user_profile import UserProfileLifecycleRepository
 from .. import create_work_unit
 from .._selectors import (
     ModeloCalculationRevisionSelector,
@@ -56,6 +60,34 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 6, 4, 9, 0, 0, tzinfo=UTC)
 _P_2026_1T = Period.from_year_and_code(2026, "1T")
+_SELECTOR_PROFILE_ID = "13000000-0000-4000-8000-000000000130"
+_REVISION_SELECTOR_PROFILE_ID = "13000000-0000-4000-8000-000000000131"
+_EXPLICIT_PROFILE_ID = "13000000-0000-4000-8000-000000000132"
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="00000000T"),
+    UserProfileFact(path="identity.name", value="Test Operator"),
+    UserProfileFact(path="identity.surnames", value="Modelo Selector"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="activities.description", value="economic activity"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="provenance.source", value="test_fixture"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
+
+
+def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Modelo selector profile",
+            facts=_READY_PROFILE_FACTS,
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -71,7 +103,8 @@ _OUTPUT_CASILLA: CasillaId = _casilla_id("01")
 @pytest.fixture
 def work_repo(tmp_path: Path) -> Iterator[WorkUnitCatalogueRepository]:
     """Yield the real work-unit repository through isolated profile storage."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="modelo-selector-test") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SELECTOR_PROFILE_ID) as profile:
+        _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
         yield WorkUnitCatalogueRepository(bucket_id=profile.bucket_id)
 
 
@@ -80,8 +113,9 @@ def selector_repos(
     tmp_path: Path,
 ) -> Iterator[tuple[WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository]]:
     """Yield real work-unit and calculation-revision repositories."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="modelo-revision-selector-test") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_REVISION_SELECTOR_PROFILE_ID) as profile:
         objects = profile.repository
+        _seed_ready_profile(objects, bucket_id=profile.bucket_id)
         yield WorkUnitCatalogueRepository(objects=objects), CalculationRevisionCatalogueRepository(objects=objects)
 
 
@@ -97,7 +131,7 @@ def _request(**overrides: object) -> ModeloWorkSelectorRequest:
 
 def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:
     return create_work_unit(
-        bucket_id=wu_repo.bucket_id or "modelo-revision-selector-test",
+        bucket_id=wu_repo.bucket_id or _REVISION_SELECTOR_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=_P_2026_1T,
@@ -150,8 +184,8 @@ def test_selector_resolves_active_bucket_when_no_explicit_bucket(work_repo: Work
 
 
 def test_selector_honours_explicit_bucket_over_active_bucket(work_repo: WorkUnitCatalogueRepository) -> None:
-    request = _request(bucket_id="explicit-bucket")
-    assert resolve_modelo_work_bucket(request) == "explicit-bucket"
+    request = _request(bucket_id=_EXPLICIT_PROFILE_ID)
+    assert resolve_modelo_work_bucket(request) == _EXPLICIT_PROFILE_ID
 
 
 def test_visible_target_resolution_reports_absent_before_exact_creation(work_repo: WorkUnitCatalogueRepository) -> None:
@@ -167,7 +201,7 @@ def test_visible_target_resolution_reports_absent_before_exact_creation(work_rep
 
 def test_visible_target_resolution_ignores_discarded_work_units(work_repo: WorkUnitCatalogueRepository) -> None:
     unit = create_work_unit(
-        bucket_id=work_repo.bucket_id or "modelo-selector-test",
+        bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=_P_2026_1T,
@@ -193,7 +227,7 @@ def test_visible_target_resolution_ignores_discarded_work_units(work_repo: WorkU
 
 def test_visible_target_resolution_returns_single_active_work_unit(work_repo: WorkUnitCatalogueRepository) -> None:
     unit = create_work_unit(
-        bucket_id=work_repo.bucket_id or "modelo-selector-test",
+        bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=_P_2026_1T,
@@ -212,7 +246,7 @@ def test_visible_target_resolution_returns_single_active_work_unit(work_repo: Wo
 
 def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: WorkUnitCatalogueRepository) -> None:
     unit = create_work_unit(
-        bucket_id=work_repo.bucket_id or "modelo-selector-test",
+        bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=_P_2026_1T,
@@ -230,7 +264,7 @@ def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: W
 
 def test_revision_conflict_refuses_before_exact_target_creation(work_repo: WorkUnitCatalogueRepository) -> None:
     unit = create_work_unit(
-        bucket_id=work_repo.bucket_id or "modelo-selector-test",
+        bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
         filing_year=2026,
         period=_P_2026_1T,
@@ -251,7 +285,7 @@ def test_revision_conflict_refuses_before_exact_target_creation(work_repo: WorkU
 
 
 def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: WorkUnitCatalogueRepository) -> None:
-    bucket_id = work_repo.bucket_id or "modelo-selector-test"
+    bucket_id = work_repo.bucket_id or _SELECTOR_PROFILE_ID
     first = create_work_unit(
         bucket_id=bucket_id,
         modelo="130",
@@ -266,7 +300,7 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: Wor
         modelo="130",
         filing_year=2026,
         period=_P_2026_1T,
-        revision_id="legacy-manual-revision",
+        revision_id="manual-revision",
     )
     second = WorkUnit(
         work_unit_id=second_id,
@@ -274,8 +308,8 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: Wor
         modelo=cast(ModeloCode, "130"),
         filing_year=2026,
         period=_P_2026_1T,
-        revision_id="legacy-manual-revision",
-        name="legacy ambiguous unit",
+        revision_id="manual-revision",
+        name="manual ambiguous unit",
         created_at=_T0 + timedelta(minutes=1),
         updated_at=_T0 + timedelta(minutes=1),
     )
@@ -288,7 +322,7 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: Wor
     assert candidate_ids == {first.work_unit_id, second.work_unit_id}
     assert {candidate.revision_id for candidate in raised.value.candidates} == {
         "2019-y-siguientes",
-        "legacy-manual-revision",
+        "manual-revision",
     }
     assert all(candidate.short_work_unit_id == candidate.work_unit_id[-12:] for candidate in raised.value.candidates)
 

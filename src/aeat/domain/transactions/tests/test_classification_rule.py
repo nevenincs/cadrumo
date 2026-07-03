@@ -5,8 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core.errors import ERROR_REGISTRY, build_error_envelope
-from ....core.errors._registry import get_registered_error_code
+from ....core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
 from .._classification_rule import LedgerClassificationRule
 from .._enums import BusinessClassification
 from .._errors import ClassificationRuleError
@@ -14,12 +13,11 @@ from .._errors import ClassificationRuleError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_classification_rule_error_is_in_error_registry() -> None:
+def test_classification_rule_error_contract() -> None:
     code = get_registered_error_code(ClassificationRuleError)
+    assert code is not None
     assert code.code in ERROR_REGISTRY
-
-
-def test_classification_rule_error_round_trips_through_build_error_envelope() -> None:
+    assert issubclass(ClassificationRuleError, ValueError)
     exc = ClassificationRuleError("description_pattern is not a valid regex: unterminated")
     envelope = build_error_envelope(exc, trace_id=None)
     assert envelope.code == "ERROR_TRANSACTION_CLASSIFICATION_RULE"
@@ -53,7 +51,3 @@ def test_valid_regex_does_not_raise() -> None:
         actor="test-actor",
     )
     assert rule.description_pattern == r"AMAZON\s+\d+"
-
-
-def test_classification_rule_error_inherits_from_value_error() -> None:
-    assert issubclass(ClassificationRuleError, ValueError)

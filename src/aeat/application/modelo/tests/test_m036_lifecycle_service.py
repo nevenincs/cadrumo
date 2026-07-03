@@ -17,8 +17,9 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage import LIVE_M036_DECLARATION_NAMESPACE
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import CensoModeloEventKind
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m036_lifecycle import (
@@ -29,11 +30,12 @@ from .._m036_lifecycle import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_PROFILE_ID = "32323232-3232-4232-8232-323232323232"
 
 
 def _alta_command(*, justificante: str | None = None) -> M036DeclarationCommand:
     return M036DeclarationCommand(
-        profile_id="profile-m036-svc",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
         declared_on=date(2026, 6, 4),
         sede_justificante=justificante,
@@ -46,12 +48,12 @@ def test_record_alta_persists_result_with_bucket_scope(tmp_path: Path) -> None:
         result = record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
 
     assert isinstance(result, M036DeclarationResult)
-    assert result.bucket_id == "test-runtime-profile"
+    assert result.bucket_id == runtime.bucket_id
     assert result.event_kind is CensoModeloEventKind.ALTA
-    assert result.profile_id == "profile-m036-svc"
+    assert result.profile_id == _PROFILE_ID
     assert result.declared_on == date(2026, 6, 4)
     assert result.declaration_id == derive_m036_declaration_id(
-        profile_id="profile-m036-svc",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
         declared_on=date(2026, 6, 4),
         sede_justificante=None,
@@ -88,14 +90,14 @@ def test_record_alta_emits_bucket_event_of_matching_kind(tmp_path: Path) -> None
     assert len(matching) == 1
     event = matching[0]
     assert event.bucket_id == runtime.bucket_id
-    assert event.payload["profile_id"] == "profile-m036-svc"
+    assert event.payload["profile_id"] == _PROFILE_ID
     assert event.payload["declared_on"] == "2026-06-04"
 
 
 def test_record_modificacion_emits_modificacion_event(tmp_path: Path) -> None:
     """Each event_kind maps to its matching BucketEventType."""
     command = M036DeclarationCommand(
-        profile_id="profile-m036-svc",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.MODIFICACION,
         declared_on=date(2026, 6, 4),
     )
@@ -111,7 +113,7 @@ def test_record_modificacion_emits_modificacion_event(tmp_path: Path) -> None:
 def test_record_baja_emits_baja_event(tmp_path: Path) -> None:
     """BAJA event_kind maps to CENSO_DECLARATION_BAJA."""
     command = M036DeclarationCommand(
-        profile_id="profile-m036-svc",
+        profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.BAJA,
         declared_on=date(2026, 6, 4),
     )

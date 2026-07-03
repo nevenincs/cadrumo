@@ -4,6 +4,8 @@ number = "0383"
 label = "Si los rendimientos íntegros del trabajo de este empleador en el ejercicio son superiores a 60.000 ?, marque con una \"X\""
 section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
 data_type = "boolean"
-semantic_role = "irpf_red_prevision_social_rendimientos_trabajo_rango_flag"
+semantic_role = "irpf_red_prevision_social_rendimientos_trabajo_superior_60000_flag"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only prevision-social employer income threshold flag; official dictionary flips casilla 0383 from <=60,000 to >60,000."
 legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

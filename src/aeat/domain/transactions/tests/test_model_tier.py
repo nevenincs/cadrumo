@@ -22,6 +22,8 @@ from .._model_tier import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_SUPPORTED_PROVIDERS = ("claude", "antigravity", "codex")
+
 
 def test_model_tier_is_ordered() -> None:
     """ModelTier members compare by capability strength."""
@@ -33,19 +35,11 @@ def test_minimum_classification_tier_is_medium_or_above() -> None:
     assert MINIMUM_CLASSIFICATION_TIER >= ModelTier.MEDIUM
 
 
-def test_catalogue_covers_every_supported_provider() -> None:
-    """claude, antigravity, and codex each have at least one registered profile."""
+def test_catalogue_covers_supported_providers_with_minimum_tier_profiles() -> None:
+    """Each supported provider has a registered MEDIUM+ profile."""
     providers = {profile.provider for profile in catalogue()}
-    assert {"claude", "antigravity", "codex"} <= providers
-
-
-def test_each_provider_has_a_profile_meeting_the_minimum_tier() -> None:
-    """Every supported provider must offer at least one MEDIUM+ profile.
-
-    Otherwise the default classifier for that provider would always
-    fail tier enforcement, defeating the whole capability abstraction.
-    """
-    for provider in ("claude", "antigravity", "codex"):
+    assert set(_SUPPORTED_PROVIDERS) <= providers
+    for provider in _SUPPORTED_PROVIDERS:
         profiles = profiles_for_provider(provider)
         assert profiles, f"no profiles registered for provider {provider!r}"
         assert any(p.tier >= MINIMUM_CLASSIFICATION_TIER for p in profiles), (
@@ -96,15 +90,10 @@ def test_profile_is_frozen_dataclass() -> None:
         profile.__setattr__("model_id", "changed")
 
 
-def test_every_profile_has_a_non_empty_alias() -> None:
-    """Aliases are the human-facing surface — they must not be blank."""
+def test_every_profile_has_non_empty_alias_and_known_capability() -> None:
+    """Profile aliases and capabilities stay inside the operator-facing contract."""
+    valid_capabilities = {ModelCapability.THINKING, ModelCapability.NON_THINKING}
     for profile in catalogue():
         assert profile.alias, f"empty alias on profile {profile!r}"
         assert profile.alias == profile.alias.strip().lower()
-
-
-def test_every_profile_has_a_known_capability() -> None:
-    """Profiles must declare their thinking/non-thinking capability."""
-    valid = {ModelCapability.THINKING, ModelCapability.NON_THINKING}
-    for profile in catalogue():
-        assert profile.capability in valid
+        assert profile.capability in valid_capabilities

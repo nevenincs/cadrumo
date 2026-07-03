@@ -30,6 +30,33 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # opens the active-profile bucket database; with no profile every one
 # must produce the same clean translated refusal.
 _COLD_START_VERBS: tuple[tuple[str, ...], ...] = (
+    (
+        "app",
+        "modelo",
+        "readiness",
+        "--modelo",
+        "303",
+        "--revision-id",
+        "2023-y-siguientes",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+    ),
+    (
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--revision",
+        "2023-y-siguientes",
+    ),
     ("app", "modelo", "work", "list"),
     ("app", "modelo", "work", "revisions"),
     ("app", "ledger", "list"),

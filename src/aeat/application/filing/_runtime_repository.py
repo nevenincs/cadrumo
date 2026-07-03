@@ -1,7 +1,7 @@
 """Runtime-backed repository helpers for filing application persistence.
 
 Constructs a
-:class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository` scoped to
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` scoped to
 the active filing bucket on demand. The concrete adapter import is deferred so
 the application filing module graph does not acquire an adapters-layer edge at
 import time; only callers that actually need runtime storage cross that
@@ -11,11 +11,11 @@ See Also:
     :class:`aeat.application.filing.ModeloHistoryRepository`
         Application repository that consumes these helpers to persist
         filing-history payloads.
-    :func:`aeat.adapters.persistence.storage.runtime_repository.secure_object_repository_for_bucket`
+    :func:`aeat.adapters.persistence.storage.secure_object_repository_for_bucket`
         Storage-runtime factory used after the filing bucket id is resolved.
-    :mod:`aeat.domain.filing._runtime_repository`
-        Parallel domain helper used by governed draft and amendment
-        repositories.
+    :mod:`aeat.adapters.persistence.profile._filing_runtime`
+        Parallel persistence-adapter helper used by the governed draft and
+        amendment repositories.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from ...core import resolve_repository_bucket_id
 from .errors import ModeloApplicationError
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.sql import SecureObjectRepository
+    from ...adapters.persistence.storage import SecureObjectRepository
 
 
 def resolve_application_filing_bucket_id(bucket_id: str | None) -> str:
@@ -55,10 +55,10 @@ def secure_objects_for_application_filing_bucket(bucket_id: str) -> SecureObject
     the runtime dependency remains transparent.
 
     Returns:
-        A :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+        A :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
         scoped to ``bucket_id``.
     """
-    from ...adapters.persistence.storage.runtime_repository import (
+    from ...adapters.persistence.storage import (
         secure_object_repository_for_bucket,
     )
 

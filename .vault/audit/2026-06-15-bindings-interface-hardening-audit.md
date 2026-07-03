@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#bindings-interface-hardening'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - "[[2026-06-14-bindings-interface-hardening-adr]]"
   - "[[2026-06-15-bindings-interface-hardening-plan]]"
 ---
-
-
 
 # `bindings-interface-hardening` audit: `bindings interface hardening close audit and fresh-context honesty review`
 
@@ -121,7 +119,6 @@ was already fixed by a peer at HEAD; it is not attributable to this campaign.
   fresh honest review, and it ran before closure.
 
 ## Codification candidates
-
 
 This campaign's codification candidates were authored and synced in wave W06.P11
 (commit `codify the bindings-interface hardening disciplines`), so they are

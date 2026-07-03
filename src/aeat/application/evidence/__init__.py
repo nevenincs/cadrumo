@@ -7,6 +7,18 @@ filing for offline replay and audit handoff. Bundles are durable
 artifacts stored inside the active bucket; they are not the source of
 relational truth.
 
+Bundle manifests can reference :class:`domain.modelos.WorkUnit`,
+:class:`domain.modelos.CalculationRevision`, and
+:class:`domain.modelos.ModeloRecord` payloads by stable id, with each
+record typed by :class:`domain.buckets.BucketEventObjectType`. They are
+audit packaging records, not purchase-invoice evidence or official AEAT filing
+evidence claims.
+
+The persisted manifest is encrypted bucket-local state managed by
+:class:`EvidenceBundleRepository`. The ZIP produced by ``export`` is an
+operator-directed plaintext handoff artifact written only to the caller's
+requested path after verification.
+
 Verbs supported by the operator surface (`aeat app modelo audit ...`):
     show     - render the bundle's manifest and referenced records
     check    - re-verify the bundle's integrity (report-only)
@@ -23,9 +35,19 @@ refuses on failed verification unless ``--force-incomplete`` is
 explicitly passed at the operator boundary.
 
 See Also:
-    :class:`EvidenceBundleService`,
-    :class:`EvidenceBundleVerificationReport`, and
-    :class:`BundleVerificationState`.
+    :class:`EvidenceBundleService`
+        Build, verify, export, and replay service for audit bundles.
+    :class:`EvidenceBundleRepository`
+        Encrypted bucket-local repository for bundle manifests.
+    :class:`EvidenceBundleVerificationReport`
+        Integrity-check summary emitted by ``check``, ``export``, and
+        ``replay`` flows.
+    :class:`BundleVerificationState`
+        Closed verification state vocabulary for bundle manifests.
+    :class:`application.ledger.PurchaseInvoiceEvidence`
+        Source-document evidence for ledger rows.
+    :class:`domain.modelos.ExternalEvidence`
+        Official filing evidence stamped on current modelo filing records.
 """
 
 from __future__ import annotations
@@ -38,6 +60,7 @@ from ._models import (
     EvidenceBundleVerificationError,
     EvidenceRecordRef,
     VerificationCheck,
+    derive_bundle_id,
 )
 from ._service import (
     EvidenceBundleRepository,
@@ -56,4 +79,5 @@ __all__ = [
     "EvidenceBundleVerificationReport",
     "EvidenceRecordRef",
     "VerificationCheck",
+    "derive_bundle_id",
 ]

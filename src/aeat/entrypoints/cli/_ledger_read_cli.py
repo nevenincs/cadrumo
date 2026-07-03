@@ -3,16 +3,25 @@
 Read commands load transactions through :class:`TransactionCatalogueRepository`
 and read :class:`BucketEventHistoryRepository` events for history and
 review-derived filters.
+
+List and view commands delegate row projection to
+:func:`~aeat.entrypoints.cli._ledger_list.project_ledger_list` and emit typed
+payloads such as :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerViewResult`
+and :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import typer
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
     LedgerExportCommand,
@@ -27,20 +36,17 @@ from ...application.ledger import (
 )
 from ...application.review import FilterParseError
 from ...core import LedgerSortField, LedgerSortOrder, Period, resolve_active_bucket_id
+from ...core.decimal import coerce_decimal_strict
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepository,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ...core.parsing import parse_iso8601_date
+from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.categories import (
     CATEGORY_FAMILY_MEMBERS,
     SpendingCategory,
     SpendingCategoryFamily,
 )
-from ...domain.transactions import Transaction, TransactionCatalogueRepository
+from ...domain.transactions import Transaction, ledger_irpf_category_catalogue
 from ._common import _bad, _canonical_period, _emit_envelope, _optional_canonical_period, _state, _tx_repo
 from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,
@@ -68,11 +74,19 @@ _LEDGER_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
     BucketEventType.LEDGER_TRANSACTION_SPLIT,
     BucketEventType.LEDGER_TRANSACTION_MERGED,
 )
+_LEDGER_EVIDENCE_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
+    BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
+    BucketEventType.PURCHASE_INVOICE_EVIDENCE_REPLACED,
+    BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
+    BucketEventType.ATTACHMENT_LINKED,
+    BucketEventType.ATTACHMENT_REMOVED,
+)
 
 
 def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
     """Register ledger read/discovery/reporting commands."""
     _register_ledger_providers_command(app)
+    _register_ledger_llm_diagnostics_command(app)
     _register_ledger_categories_command(app)
     _register_ledger_check_command(app)
     _register_ledger_preflight_command(app)
@@ -138,7 +152,173 @@ def _register_ledger_providers_command(app: typer.Typer) -> None:
         _emit_envelope(ctx, command="ledger.providers", result=result, lines=lines)
 
 
+def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
+    @app.command(
+        "llm-diagnostics",
+        help=tr(
+            "cli.ledger.llm_diagnostics.help",
+            default="Report existing LLM usage, cost, and classification-confidence metrics.",
+        ),
+    )
+    def ledger_llm_diagnostics(
+        ctx: typer.Context,
+        since: str | None = typer.Option(
+            None,
+            "--since",
+            help=tr(
+                "cli.ledger.llm_diagnostics.since_help",
+                default="Inclusive lower ISO date (YYYY-MM-DD) bound on usage records.",
+            ),
+        ),
+        until: str | None = typer.Option(
+            None,
+            "--until",
+            help=tr(
+                "cli.ledger.llm_diagnostics.until_help",
+                default="Inclusive upper ISO date (YYYY-MM-DD) bound on usage records.",
+            ),
+        ),
+        low_confidence_below: float = typer.Option(
+            0.5,
+            "--low-confidence-below",
+            help=tr(
+                "cli.ledger.llm_diagnostics.threshold_help",
+                default="Confidence floor below which a classification counts as low-confidence.",
+            ),
+        ),
+    ) -> None:
+        """Report existing LLM usage, cost, and classification-confidence metrics."""
+        from ...application.ledger import build_llm_diagnostics_report
+        from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
+
+        since_date = _parse_iso_date(since, "--since")
+        until_date = _parse_iso_date(until, "--until")
+        threshold = coerce_decimal_strict(low_confidence_below)
+        if not Decimal("0") <= threshold <= Decimal("1"):
+            raise _bad(
+                tr(
+                    "cli.ledger.llm_diagnostics.threshold_range",
+                    default="--low-confidence-below must be within the inclusive 0..1 range.",
+                ),
+            )
+
+        report = build_llm_diagnostics_report(
+            since=since_date,
+            until=until_date,
+            low_confidence_threshold=threshold,
+        )
+        result = LedgerLlmDiagnosticsResult.model_validate(
+            {
+                "since": since_date.isoformat() if since_date is not None else None,
+                "until": until_date.isoformat() if until_date is not None else None,
+                "low_confidence_threshold": format(report.low_confidence_threshold, "f"),
+                "usage_providers": [
+                    {
+                        "provider": row.provider,
+                        "calls": row.calls,
+                        "cache_hits": row.cache_hits,
+                        "input_tokens": row.input_tokens,
+                        "output_tokens": row.output_tokens,
+                        "total_tokens": row.total_tokens,
+                        "cost_estimate_usd": format(row.cost_estimate_usd, "f"),
+                    }
+                    for row in report.usage_providers
+                ],
+                "total_calls": report.total_calls,
+                "total_cache_hits": report.total_cache_hits,
+                "total_input_tokens": report.total_input_tokens,
+                "total_output_tokens": report.total_output_tokens,
+                "total_cost_estimate_usd": format(report.total_cost_estimate_usd, "f"),
+                "confidence_providers": [
+                    {
+                        "provider": row.provider,
+                        "classified_count": row.classified_count,
+                        "low_confidence_count": row.low_confidence_count,
+                        "high_confidence_count": row.high_confidence_count,
+                        "medium_confidence_count": row.medium_confidence_count,
+                        "min_confidence": _optional_decimal_text(row.min_confidence),
+                        "max_confidence": _optional_decimal_text(row.max_confidence),
+                        "mean_confidence": _optional_decimal_text(row.mean_confidence),
+                    }
+                    for row in report.confidence_providers
+                ],
+                "total_classified": report.total_classified,
+                "total_low_confidence": report.total_low_confidence,
+                "has_data": report.has_data,
+            },
+        )
+        lines: list[str] = []
+        for row in report.usage_providers:
+            lines.append(
+                f"{row.provider}\tcalls={row.calls}\tcache_hits={row.cache_hits}"
+                f"\ttokens={row.total_tokens}\tcost_usd={format(row.cost_estimate_usd, 'f')}",
+            )
+        for row in report.confidence_providers:
+            mean_text = _optional_decimal_text(row.mean_confidence) or "-"
+            lines.append(
+                f"{row.provider}\tclassified={row.classified_count}"
+                f"\tlow_confidence={row.low_confidence_count}\tmean={mean_text}",
+            )
+        notices: list[Notice] = []
+        if not report.has_data:
+            notices.append(
+                Notice(
+                    severity=NoticeSeverity.INFO,
+                    code="ledger.llm_diagnostics.no_data",
+                    message=tr(
+                        "cli.ledger.llm_diagnostics.no_data_message",
+                        default=(
+                            "No LLM usage or classification-confidence metrics recorded yet. "
+                            "Run an LLM-assisted classification to populate them."
+                        ),
+                    ),
+                    suggestion="aeat app ledger classify <transaction-id> --llm <provider> --apply",
+                ),
+            )
+            lines.append(
+                tr(
+                    "cli.ledger.llm_diagnostics.no_data_message",
+                    default=(
+                        "No LLM usage or classification-confidence metrics recorded yet. "
+                        "Run an LLM-assisted classification to populate them."
+                    ),
+                ),
+            )
+        _emit_envelope(ctx, command="ledger.llm_diagnostics", result=result, lines=lines, notices=notices)
+
+
+def _parse_iso_date(value: str | None, option: str) -> date | None:
+    if value is None:
+        return None
+    try:
+        return parse_iso8601_date(value.strip())
+    except ValueError as exc:
+        raise _bad(
+            tr(
+                "cli.ledger.llm_diagnostics.bad_date",
+                option=option,
+                value=value,
+                default=f"{option} must be an ISO date (YYYY-MM-DD); got {value!r}.",
+            ),
+        ) from exc
+
+
+def _optional_decimal_text(value: Decimal | None) -> str | None:
+    if value is None:
+        return None
+    return format(value, "f")
+
+
 def _register_ledger_categories_command(app: typer.Typer) -> None:
+    def _irpf_purpose_label(purpose: str) -> str:
+        if purpose == "activity_income_withholding":
+            return tr("cli.ledger.categories.irpf_purpose_activity_income_withholding")
+        if purpose == "rent_expense_withholding":
+            return tr("cli.ledger.categories.irpf_purpose_rent_expense_withholding")
+        if purpose == "employment_income":
+            return tr("cli.ledger.categories.irpf_purpose_employment_income")
+        return purpose
+
     @app.command("categories", help=tr("cli.ledger.categories.help"))
     def ledger_categories(ctx: typer.Context) -> None:
         """List the recognised `--category-id` spending-category catalogue."""
@@ -161,6 +341,33 @@ def _register_ledger_categories_command(app: typer.Typer) -> None:
         if first_category_id is not None:
             lines.append(tr("cli.ledger.categories.usage_example", example=first_category_id))
         lines.append(tr("cli.ledger.categories.income_note"))
+        irpf_categories = [
+            {
+                "id": category.id,
+                "purpose": category.purpose,
+                "directions": [direction.value for direction in category.directions],
+                "net_paid_invoice": category.net_paid_invoice,
+                "related_category_ids": list(category.related_category_ids),
+            }
+            for category in ledger_irpf_category_catalogue()
+        ]
+        lines.extend(
+            [
+                "",
+                tr("cli.ledger.categories.irpf_header"),
+                f"{tr('cli.ledger.categories.irpf_id_column')}\t{tr('cli.ledger.categories.irpf_use_column')}",
+            ],
+        )
+        for category in irpf_categories:
+            lines.append(f"{category['id']}\t{_irpf_purpose_label(str(category['purpose']))}")
+        lines.append(
+            tr(
+                "cli.ledger.categories.irpf_usage_example",
+                rent_category="arrendamiento_local",
+                professional_category="asesoria_fiscal",
+                activity_category="actividad_economica",
+            ),
+        )
         from ._ledger_payloads import LedgerCategoriesResult
 
         _emit_envelope(
@@ -170,6 +377,11 @@ def _register_ledger_categories_command(app: typer.Typer) -> None:
                 {
                     "families": families,
                     "category_ids": [category.value for category in SpendingCategory],
+                    "irpf_categories": irpf_categories,
+                    "irpf_category_ids": [category["id"] for category in irpf_categories],
+                    "net_paid_withholding_irpf_category_ids": [
+                        category["id"] for category in irpf_categories if category["net_paid_invoice"]
+                    ],
                     "income_requires_category": False,
                 },
             ),
@@ -199,9 +411,16 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
                 default="Bucket id to probe (defaults to the active profile).",
             ),
         ),
+        period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.check.period_help")),
+        year: int | None = typer.Option(
+            None,
+            "--year",
+            help=tr("cli.ledger.check.year_help", default="Filing year for --period (e.g. 2024)."),
+        ),
     ) -> None:
         """Surface ledger anomalies for the addressed bucket without mutating state."""
         from ...application.ledger import LedgerPreflightIssue, preflight_transaction_catalogue
+        from ._ledger_payloads import LedgerCheckResult
 
         if bucket_id_option is not None:
             transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id_option)
@@ -209,6 +428,38 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
             transaction_repository = _tx_repo(_state())
         bucket_id = transaction_repository.bucket_id
         catalogue = transaction_repository.load()
+        canonical_period = _optional_canonical_period(period, year=year)
+        if canonical_period is not None:
+            report = preflight_transaction_catalogue(
+                bucket_id=bucket_id,
+                period=canonical_period,
+                transactions=catalogue,
+            )
+            period_label = f"{canonical_period.registry_token} {canonical_period.year}"
+            payload = {
+                "bucket_id": bucket_id,
+                "periods": [period_label],
+                "checked_transaction_count": report.checked_transaction_count,
+                "issues": [issue.model_dump(mode="json") for issue in report.issues],
+                "ready": report.ready,
+            }
+            lines = [
+                f"bucket\t{bucket_id}",
+                f"periods\t{period_label}",
+                f"checked\t{report.checked_transaction_count}",
+                f"issues\t{len(report.issues)}",
+                f"ready\t{str(report.ready).lower()}",
+            ]
+            for issue in report.issues:
+                lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
+            _emit_envelope(
+                ctx,
+                command="ledger.check",
+                result=LedgerCheckResult.model_validate(payload),
+                lines=lines,
+            )
+            return
+
         years = sorted(
             {
                 (tx.raw.value_date or tx.raw.booked_date).year
@@ -216,7 +467,6 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
                 if (tx.raw.value_date or tx.raw.booked_date) is not None
             },
         )
-        from ._ledger_payloads import LedgerCheckResult
 
         if not years:
             payload = {
@@ -328,6 +578,28 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
             f"issues\t{len(report.issues)}",
             f"ready\t{str(report.ready).lower()}",
         ]
+        notices: list[Notice] = []
+        if report.checked_transaction_count == 0 and not report.issues:
+            message = tr(
+                "cli.ledger.preflight.empty_ledger_advisory",
+                default=(
+                    "No active ledger transactions were checked for this period. If activity occurred, add or "
+                    "import ledger rows before calculating; if there was genuinely no activity, the empty ledger "
+                    "can support a zero-activity local filing."
+                ),
+            )
+            suggestion = "aeat app ledger add --help; aeat app ledger import --help"
+            notices.append(
+                Notice(
+                    severity=NoticeSeverity.WARNING,
+                    code="ledger.preflight.empty_period",
+                    message=message,
+                    suggestion=suggestion,
+                    context={"period": canonical.registry_token, "year": str(canonical.year)},
+                ),
+            )
+            lines.append(f"advisory\tempty_ledger\t{message}")
+            lines.append(f"next\t{suggestion}")
         for issue in report.issues:
             lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
         from ._ledger_payloads import LedgerPreflightResult
@@ -337,6 +609,7 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
             command="ledger.preflight",
             result=LedgerPreflightResult.model_validate(payload),
             lines=lines,
+            notices=notices,
         )
 
 
@@ -475,7 +748,7 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
             help=tr("cli.ledger.list.hide_llm_rejected_help"),
         ),
     ) -> None:
-        """List bucket-scoped ledger transactions through the backend read service."""
+        """List bucket-scoped ledger rows through :func:`~aeat.entrypoints.cli._ledger_list.project_ledger_list`."""
         transaction_repository = _tx_repo(_state())
         resolved_filters = list(filters)
         if period is not None:
@@ -528,7 +801,10 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
         ctx: typer.Context,
         transaction_id: str = typer.Argument(..., help=tr("cli.ledger.view.transaction_id_help")),
     ) -> None:
-        """Read one bucket-scoped ledger transaction through the backend read service."""
+        """Read one bucket-scoped ledger transaction.
+
+        Emits a :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerViewResult`.
+        """
         transaction_repository = _tx_repo(_state())
         resolved_id = resolve_transaction_id(transaction_repository, transaction_id)
         result = get_manual_transaction(
@@ -557,6 +833,8 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
             f"\t{_field(transaction_payload.business_classification)}",
             f"{tr('cli.ledger.labels.business_pct', default='Business %')}\t{_field(transaction_payload.business_pct)}",
             f"{tr('cli.ledger.labels.category_id', default='Category')}\t{_field(transaction_payload.category_id)}",
+            f"{tr('cli.ledger.labels.usage_ratio_id', default='Usage ratio id')}"
+            f"\t{_field(transaction_payload.usage_ratio_id)}",
             f"{tr('cli.ledger.labels.taxable_base', default='Taxable base')}"
             f"\t{_field(transaction_payload.taxable_base)}",
             f"{tr('cli.ledger.labels.iva_rate', default='IVA rate')}\t{_field(transaction_payload.iva_rate)}",
@@ -571,6 +849,11 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
             f"\t{_field(transaction_payload.purchase_invoice_evidence_id)}",
             f"{tr('cli.ledger.labels.attachment_ids')}\t{_field(', '.join(transaction_payload.attachment_ids))}",
             f"{tr('cli.ledger.labels.lifecycle_state')}\t{_field(transaction_payload.lifecycle_state)}",
+            f"{tr('cli.ledger.labels.classified_by')}\t{_field(transaction_payload.classified_by)}",
+            f"{tr('cli.ledger.labels.classified_at')}\t{_field(transaction_payload.classified_at)}",
+            f"{tr('cli.ledger.labels.classification_confidence')}"
+            f"\t{_field(transaction_payload.classification_confidence)}",
+            f"{tr('cli.ledger.labels.classification_reason')}\t{_field(transaction_payload.classification_reason)}",
             f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
         ]
         from ._ledger_payloads import LedgerViewResult
@@ -613,9 +896,9 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
         transactions = transaction_repository.load()
         lines = [
             f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
-            f"income_total\t{report.income_total}",
-            f"expense_total\t{report.expense_total}",
-            f"net_total\t{report.net_total}",
+            f"business_income_total\t{report.business_income_total}",
+            f"business_expense_total\t{report.business_expense_total}",
+            f"business_net_total\t{report.business_net_total}",
             f"{tr('cli.ledger.labels.rows')}\t{report.total_count}",
             f"{tr('cli.ledger.labels.active')}\t{report.active_count}",
             f"{tr('cli.ledger.labels.archived')}\t{report.archived_count}",
@@ -647,9 +930,9 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
                 lines.append(
                     _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail),
                 )
+        from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+        from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
         from ...application.aggregation import stale_filed_revisions
-        from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-        from ...domain.modelos._repository import WorkUnitCatalogueRepository
 
         revisions = CalculationRevisionCatalogueRepository().load().revisions
         work_units = WorkUnitCatalogueRepository().load()
@@ -687,7 +970,10 @@ def _register_ledger_track_command(app: typer.Typer, *, resolve_transaction_id: 
         ctx: typer.Context,
         transaction_id: str = typer.Argument(..., help=tr("cli.ledger.track.transaction_id_help")),
     ) -> None:
-        """Show audit lineage for one bucket-scoped ledger transaction."""
+        """Show audit lineage for one transaction.
+
+        Emits a :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
+        """
         transaction_repository = _tx_repo(_state())
         resolved_id = resolve_transaction_id(transaction_repository, transaction_id)
         result = get_manual_transaction(
@@ -724,6 +1010,9 @@ def _ledger_track_participated_in(
 ) -> list[dict[str, object]] | None:
     """Return the finalized-revision participations for ``transaction_id``, or ``None``.
 
+    Wraps :func:`~aeat.application.ledger.get_transaction_participation`, whose
+    :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex` is the
+    rebuildable inverse index from ledger rows to finalized revisions.
     Surfaces the inverse audit trail on the ``ledger track`` lineage output:
     every finalized modelo revision and filing that consumed this transaction.
     Returns ``None`` when the transaction appears in no finalized revision so the
@@ -790,8 +1079,9 @@ def _history_object_ids(
 
 
 def _collect_ledger_history_events(object_ids: list[str]) -> list[BucketEvent]:
-    """Return the chronological union of LEDGER-history events across ``object_ids``."""
+    """Return the chronological union of :class:`~aeat.domain.buckets.BucketEvent` rows across ``object_ids``."""
     event_catalogue = BucketEventHistoryRepository().load()
+    object_id_set = set(object_ids)
     matches: list[BucketEvent] = []
     for object_id in object_ids:
         matches.extend(
@@ -802,6 +1092,12 @@ def _collect_ledger_history_events(object_ids: list[str]) -> list[BucketEvent]:
             )
             if event.event_type in _LEDGER_HISTORY_EVENT_TYPES
         )
+    matches.extend(
+        event
+        for event in event_catalogue.values()
+        if event.event_type in _LEDGER_EVIDENCE_HISTORY_EVENT_TYPES
+        and event.payload.get("transaction_id") in object_id_set
+    )
     matches.sort(key=lambda event: event.occurred_at)
     return matches
 
@@ -813,6 +1109,8 @@ def _latest_llm_rejection_notice(
 ) -> Notice | None:
     """Return a notice when the row's most recent LLM decision was a rejection.
 
+    Returns a :class:`~aeat.core.json_contract.Notice` derived from
+    :data:`~aeat.entrypoints.cli._ledger_list.LLM_DECISION_EVENT_TYPES`.
     Reads the bucket-event history for the transaction (and its edit lineage) and
     finds the latest LLM-decision event. When that is a rejection — i.e. the
     operator declined an LLM suggestion and has not since accepted one — `view`

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#bindings-interface-hardening'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S09'
 related:
   - "[[2026-06-15-bindings-interface-hardening-plan]]"
 ---
-
-
-
 
 # lift the four detail-record family and previous_filing op/fact invariants to registry-build, routing each through selector_as_dict and preserving the underlying pydantic field error in the diagnostic
 

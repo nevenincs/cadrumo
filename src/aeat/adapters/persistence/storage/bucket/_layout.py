@@ -21,13 +21,14 @@ from pydantic import BaseModel
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.identity import BucketId
+from .....core.paths import is_windows_long_path_error
 from .._namespace_registry import (
     BUCKET_AUDIT_DIRNAME,
     BUCKET_BLOBS_DIRNAME,
     BUCKET_DB_DIRNAME,
     BUCKETS_DIRNAME,
 )
-from ._errors import BucketAlreadyPresentError, BucketValidationError
+from ._errors import BucketAlreadyPresentError, BucketPathTooLongError, BucketValidationError
 
 
 class BucketPaths(BaseModel):
@@ -95,6 +96,10 @@ def provision_bucket_directory(root: Path, bucket_id: str) -> BucketPaths:
         paths.audit_dir.mkdir(parents=False, exist_ok=False)
     except FileExistsError as exc:
         raise BucketAlreadyPresentError(bucket_id=bucket_id) from exc
+    except OSError as exc:
+        if is_windows_long_path_error(exc):
+            raise BucketPathTooLongError(bucket_id=bucket_id, path=str(paths.bucket_dir)) from exc
+        raise
     return paths
 
 

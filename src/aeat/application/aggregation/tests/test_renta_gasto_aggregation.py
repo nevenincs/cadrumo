@@ -22,6 +22,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
@@ -38,7 +39,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
 )
@@ -86,7 +86,7 @@ def _raw_transaction(
     currency: str = "EUR",
 ) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=booked_date,
         value_date=value_date,
         amount=amount,
@@ -127,6 +127,8 @@ def _gasto_transaction(
                 currency=currency,
             ),
             "direction": direction,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "business_classification": business_classification,
             "business_pct": business_pct,
             "purchase_invoice_evidence_id": None,
@@ -374,7 +376,7 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     is the sum of the deductible bases, derived from the inputs — never copied
     from engine output.
     """
-    modelo_def = next(item for item in resources().modelos.all() if item.id == "130")
+    modelo_def = resources().modelos.get("130")
     revision = modelo_def.revisions["2019-y-siguientes"]
 
     casilla_02 = next(c for c in revision.casillas if c.id == _M130_GASTOS_CASILLA)

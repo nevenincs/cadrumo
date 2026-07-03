@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
-from .. import CasillaId, ModeloDefinition, load_registry_tree, validated_casilla_id
+from .. import CasillaId, ModeloDefinition, validated_casilla_id
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -15,13 +15,15 @@ _REQUIRED_CUOTA_CHAIN_ARTICLES: frozenset[str] = frozenset(
         "ley-35-2006:art-49",  # Integración y compensación de rentas en la base imponible del ahorro
         "ley-35-2006:art-50",  # Base liquidable general y del ahorro
         "ley-35-2006:art-56",  # Mínimo personal y familiar
+        "ley-35-2006:art-62",  # Cuota íntegra estatal
         "ley-35-2006:art-63",  # Escala general del Impuesto
         "ley-35-2006:art-66",  # Tipos de gravamen del ahorro
         "ley-35-2006:art-67",  # Cuota líquida estatal
         "ley-35-2006:art-68",  # Deducciones de la cuota íntegra estatal
-        "ley-35-2006:art-73",  # Base liquidable autonómica sometida a gravamen
+        "ley-35-2006:art-73",  # Cuota íntegra autonómica
         "ley-35-2006:art-74",  # Escala autonómica del Impuesto
-        "ley-35-2006:art-75",  # Cuota íntegra autonómica
+        "ley-35-2006:art-75",  # Especialidades por anualidades por alimentos a hijos
+        "ley-35-2006:art-76",  # Tipo de gravamen del ahorro autonómico
         "ley-35-2006:art-77",  # Cuota líquida autonómica
     },
 )
@@ -88,8 +90,7 @@ _FULL_CUOTA_CHAIN_TARGETS = (
 
 
 def _modelo_100():
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return next(m for m in modelos if m.id == "100"), _catalogues
+    return _committed_modelo("100")
 
 
 def _formula_target_casillas_for_revision(modelo: ModeloDefinition, revision_id: str) -> frozenset[CasillaId]:

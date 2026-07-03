@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#bindings-interface-hardening'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S18'
 related:
   - "[[2026-06-15-bindings-interface-hardening-plan]]"
 ---
-
-
-
 
 # emit a diagnostic for an unresolved non-formula relation that today produces neither value nor warning at calculate time
 

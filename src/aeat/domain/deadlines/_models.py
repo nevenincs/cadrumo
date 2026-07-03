@@ -19,8 +19,14 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_v
 
 from ...core import IBAN_SHAPE_RE, Modelo, Period, iban_mod_97
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.external_constants import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
-from ..contribuyente._renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
+from ...core.external_constants import (
+    MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR,
+    WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR,
+)
+from ..contribuyente import (
+    UE_EEA_COUNTRY_CODES,
+    FiscalResidency,
+)
 from ._errors import DeadlineValidationError
 
 
@@ -37,6 +43,8 @@ class IVARegime(StrEnum):
         RECARGO_EQUIVALENCIA: Recargo de equivalencia for retail traders.
         REAGP: Régimen especial de la agricultura, ganadería y pesca.
         EXENTO: IVA-exempt activity.
+        NO_APLICA: Internal projection sentinel for profiles that are
+            not enrolled in IVA.
     """
 
     GENERAL = "GENERAL"
@@ -44,6 +52,7 @@ class IVARegime(StrEnum):
     RECARGO_EQUIVALENCIA = "RECARGO_EQUIVALENCIA"
     REAGP = "REAGP"
     EXENTO = "EXENTO"
+    NO_APLICA = "NO_APLICA"
 
 
 class EntityType(StrEnum):
@@ -299,12 +308,21 @@ class ModeloIVAProfile(BaseModel):
         roi_enrolled: Registered on the Registro de Operadores
             Intracomunitarios (ROI / VIES).
         oss_enrolled: Enrolled in the OSS / IOSS one-stop-shop regime.
+        group_member_enrolled: Enrolled as a member entity in the IVA
+            group-of-entities special regime; this is the Modelo 322
+            role.
+        group_dominant_entity_enrolled: Enrolled as the dominant
+            entity of an IVA group-of-entities regime; this is the
+            Modelo 353 role.
         intracommunity_operations_exceed_50000_eur: Modelo 349 cadence
             threshold.
         sii_enrolled: Enrolled in the SII (Suministro Inmediato de
             Información) — the near-real-time IVA ledger-submission
             system created by RD 596/2016. Mandatory for the monthly
-            IVA collective; voluntary for everyone else.
+            IVA collective; voluntary for everyone else. This records
+            SII membership only; Modelo 303 monthly cadence is driven by
+            monthly-liquidation facts such as REDEME or large-company
+            status, not by voluntary SII alone.
         redeme_enrolled: Registered in REDEME (Registro de Devolución
             Mensual del IVA) — one of the mandatory-SII triggers.
         refund_account: The encrypted cuenta-devolución refund account
@@ -318,6 +336,8 @@ class ModeloIVAProfile(BaseModel):
 
     roi_enrolled: bool = False
     oss_enrolled: bool = False
+    group_member_enrolled: bool = False
+    group_dominant_entity_enrolled: bool = False
     intracommunity_operations_exceed_50000_eur: bool = False
     sii_enrolled: bool = False
     redeme_enrolled: bool = False
@@ -408,16 +428,25 @@ class TaxpayerProfile(BaseModel):
         professional_income_withholding_ge_70pct: Whether at least 70%
             of the taxpayer's prior-year professional income was
             already subject to withholding.
+        art109_activity_income_withholding_ge_70pct: Whether the Art. 109
+            RIRPF 70% income-coverage exception is met for covered
+            professional, agricultural, livestock, or forestry activity
+            income. For activity-start cases this is the current payment
+            period coverage fact rather than a prior-year fact.
         pays_rent_with_retencion: Whether the taxpayer pays alquiler de
             local with retención.
         pays_capital_income_with_retencion: Whether the taxpayer pays
             capital-income rents subject to withholding.
-        uses_objective_estimation_irpf: Whether the taxpayer computes
-            IRPF economic-activity income under estimación objetiva.
-            Kept in lockstep with ``irpf_estimation_regime``: when the
-            regime is ``OBJETIVA`` this flag is forced ``True``. The
-            registry ``schedule_predicates`` / ``model_selectors`` that
-            test ``uses_objective_estimation_irpf`` still resolve.
+        member_of_large_multinational_group: Whether the entity is the
+            reporting parent of a multinational group above the
+            country-by-country reporting threshold (Modelo 231).
+        eu_business_seeking_spanish_vat_refund: Whether the taxpayer is
+            an EU-established business, not established in Spanish VAT
+            territory, requesting a refund of Spanish input VAT (Modelo
+            361).
+        reports_client_securities_insurance_annuities: Whether the entity
+            is a financial or insurance intermediary that must report
+            client securities, insurance and annuities (Modelo 189).
         does_intracomunitario: Whether the taxpayer conducts
             operaciones intracomunitarias.
         third_party_transactions_above_347_threshold: Whether the
@@ -425,6 +454,9 @@ class TaxpayerProfile(BaseModel):
             threshold during the prior year.
         bienes_extranjero_above_threshold: Whether the taxpayer holds
             bienes en el extranjero above the legal threshold.
+        monedas_virtuales_extranjero_above_threshold: Whether the
+            taxpayer holds virtual currencies abroad above the Modelo
+            721 threshold.
         iva: IVA-specific filing facts that can change filing cadence.
         cross_period_group_member_rosters: Expected group-member rosters
             keyed by upstream modelo, filing year, and period. These
@@ -450,9 +482,20 @@ class TaxpayerProfile(BaseModel):
             activate IRNR obligations (Modelos 210/216/247) when
             their registry entries are wired.
         country_of_fiscal_residence: ISO 3166-1 alpha-2 code of the
-            country of fiscal residence. Required when
-            ``fiscal_residency`` is ``NON_RESIDENT_IRNR``; ``None`` is
-            valid only for IRPF residents.
+        country of fiscal residence. Required when
+        ``fiscal_residency`` is ``NON_RESIDENT_IRNR``; ``None`` is
+        valid only for IRPF residents.
+        ley_49_2002_special_regime_option_declared: Whether the entity
+            has declared the Modelo 036 option for the Title II Ley
+            49/2002 special fiscal regime. ``None`` means undeclared.
+        ley_49_2002_special_regime_option_date: Date declared for that
+            option on Modelo 036. ``None`` means undeclared.
+        ley_49_2002_special_regime_renunciation_declared: Whether the
+            entity has declared renunciation of the Title II Ley
+            49/2002 special regime. ``None`` means undeclared.
+        ley_49_2002_special_regime_renunciation_date: Date declared
+            for that renunciation on Modelo 036. ``None`` means
+            undeclared.
     """
 
     model_config = _STRICT_FROZEN
@@ -466,15 +509,17 @@ class TaxpayerProfile(BaseModel):
     has_employees: bool = False
     pays_professionals_with_retencion: bool = False
     professional_income_withholding_ge_70pct: bool = False
+    art109_activity_income_withholding_ge_70pct: bool = False
     pays_rent_with_retencion: bool = False
     pays_capital_income_with_retencion: bool = False
-    uses_objective_estimation_irpf: bool = False
     objective_estimation_prior_year_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_invoice_gross_income_eur: Decimal | None = None
+    objective_estimation_prior_year_agri_livestock_forest_gross_eur: Decimal | None = None
     objective_estimation_prior_year_purchases_eur: Decimal | None = None
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
+    monedas_virtuales_extranjero_above_threshold: bool = False
     iva: ModeloIVAProfile = Field(default_factory=ModeloIVAProfile)
     cross_period_group_member_rosters: tuple[CrossPeriodGroupMemberRoster, ...] = Field(default_factory=tuple)
     enrollment: ModeloEnrollment = Field(default_factory=ModeloEnrollment)
@@ -484,6 +529,10 @@ class TaxpayerProfile(BaseModel):
     activity_end_date: date | None = None
     incn_prior_12_months: Decimal | None = None
     new_entity_first_two_profit_periods: bool | None = None
+    ley_49_2002_special_regime_option_declared: bool | None = None
+    ley_49_2002_special_regime_option_date: date | None = None
+    ley_49_2002_special_regime_renunciation_declared: bool | None = None
+    ley_49_2002_special_regime_renunciation_date: date | None = None
     tributacion_estado_porcentaje: Decimal | None = None
     establecimiento_type: str = ""
     elected_withholding_pct: str = ""
@@ -519,9 +568,19 @@ class TaxpayerProfile(BaseModel):
     irpf_pagadores_secondary_income: Decimal | None = None
     """Sum of income received from the 2nd and subsequent pagadores.
 
-    Art. 96.3 LIRPF: declaración obligatoria when this value exceeds
-    €1,500. Only meaningful when ``irpf_pagadores_count >= 2``; ``None``
-    when not declared.
+    Art. 96.3 LIRPF: when ``irpf_pagadores_count >= 2`` and this value
+    exceeds €1,500, the work-income filing-exemption limit drops from the
+    general €22,000 to the per-year reduced limit. Only meaningful when
+    ``irpf_pagadores_count >= 2``; ``None`` when not declared.
+    """
+    irpf_pagadores_total_work_income: Decimal | None = None
+    """Total rendimientos íntegros del trabajo for the year (all pagadores).
+
+    Art. 96.2.a)/96.3 LIRPF: a Modelo 100 filing obligation arises when this
+    total exceeds the applicable exemption limit — the general €22,000, or the
+    per-year reduced limit (€15,876 for 2024 onward) when the multiple-pagadores
+    condition is met. ``None`` when not declared, in which case a triggered
+    multiple-pagadores condition surfaces a conservative advisory.
     """
     days_in_spain: dict[int, int] = Field(default_factory=dict)
     """Days of physical presence in Spain per calendar year.
@@ -587,6 +646,7 @@ class TaxpayerProfile(BaseModel):
     @field_validator(
         "objective_estimation_prior_year_gross_income_eur",
         "objective_estimation_prior_year_invoice_gross_income_eur",
+        "objective_estimation_prior_year_agri_livestock_forest_gross_eur",
         "objective_estimation_prior_year_purchases_eur",
         mode="before",
     )
@@ -602,39 +662,8 @@ class TaxpayerProfile(BaseModel):
             try:
                 return Decimal(stripped)
             except InvalidOperation as exc:
-                raise DeadlineValidationError(
-                    "objective-estimation declared volume must be a decimal"
-                ) from exc
+                raise DeadlineValidationError("objective-estimation declared volume must be a decimal") from exc
         return value
-
-    @model_validator(mode="after")
-    def _check_objective_estimation_consistency(self) -> Self:
-        """Reject a regime that contradicts ``uses_objective_estimation_irpf``.
-
-        ``irpf_estimation_regime`` is the structured tax-regime axis;
-        ``uses_objective_estimation_irpf`` is the legacy boolean that
-        the registry ``schedule_predicates`` and ``model_selectors``
-        still test. The two must not contradict: a non-objective
-        regime declared together with a ``True`` boolean is rejected,
-        and an ``OBJETIVA`` regime declared with a ``False`` boolean is
-        rejected. The boolean is *derived* from the regime by the
-        ``mode="before"`` validator below, so this check only fires
-        when a caller bypasses that derivation. When the regime is
-        undeclared the boolean is left untouched so existing profiles
-        keep working until the engine is rewired.
-        """
-        regime = self.irpf_estimation_regime
-        if regime is None:
-            return self
-        wants_objective = regime is IrpfEstimationRegime.OBJETIVA
-        if wants_objective != self.uses_objective_estimation_irpf:
-            raise DeadlineValidationError(
-                f"irpf_estimation_regime {regime.value!r} contradicts "
-                f"uses_objective_estimation_irpf={self.uses_objective_estimation_irpf}; "
-                "the objective-estimation boolean must be True only for the "
-                "OBJETIVA regime",
-            )
-        return self
 
     @model_validator(mode="after")
     def _check_impatriado_requires_start_date(self) -> Self:
@@ -678,9 +707,8 @@ class TaxpayerProfile(BaseModel):
         representative in Spain. Both NIF and name are required together;
         partial declaration is rejected.
         """
-        if (
-            self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
-            and irnr_representante_fiscal_required(self.country_of_fiscal_residence)
+        if self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR and irnr_representante_fiscal_required(
+            self.country_of_fiscal_residence
         ):
             nif_missing = self.representante_fiscal_nif is None
             nombre_missing = self.representante_fiscal_nombre is None
@@ -695,29 +723,6 @@ class TaxpayerProfile(BaseModel):
                     "(Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004)",
                 )
         return self
-
-    @model_validator(mode="before")
-    @classmethod
-    def _derive_objective_estimation_flag(cls, data: object) -> object:
-        """Derive ``uses_objective_estimation_irpf`` from the regime axis.
-
-        When the structured ``irpf_estimation_regime`` is supplied
-        without an explicit ``uses_objective_estimation_irpf``, the
-        boolean is set from the regime (``OBJETIVA`` ⇒ ``True``) so the
-        registry conditions that still test the boolean keep resolving
-        correctly. An explicit boolean is left in place for the
-        consistency check above to adjudicate.
-        """
-        if not isinstance(data, dict):
-            return data
-        data_map: dict[object, object] = {k: v for k, v in data.items()}
-        regime = data_map.get("irpf_estimation_regime")
-        if regime is None or "uses_objective_estimation_irpf" in data:
-            return data
-        parsed = regime if isinstance(regime, IrpfEstimationRegime) else IrpfEstimationRegime(regime)
-        derived = dict(data)
-        derived["uses_objective_estimation_irpf"] = parsed is IrpfEstimationRegime.OBJETIVA
-        return derived
 
     def beckham_window_active(self, today: date) -> bool:
         """Return True if the Beckham window (Art. 93 LIRPF) is active on *today*.
@@ -793,32 +798,74 @@ class TaxpayerProfile(BaseModel):
 _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD = MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
 
 
+def resolve_multiple_pagadores_reduced_limit(filing_year: int | None) -> Decimal:
+    """Return the Art. 96.3 LIRPF reduced work-income exemption limit for *filing_year*.
+
+    The reduced limit is dated (14.000 € up to 2022, 15.000 € for 2023,
+    15.876 € for 2024 onward); the authoritative per-year schedule lives in
+    :data:`~aeat.core.external_constants.WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR`.
+    A year before the earliest tabulated entry resolves to the earliest known
+    amount; a year after the latest entry resolves to the latest known amount
+    (forward-compatible until a new law revalues it); ``None`` resolves to the
+    latest known amount so a year-agnostic operator surface uses the current
+    figure.
+
+    Args:
+        filing_year: The year the work income was obtained, or ``None``.
+
+    Returns:
+        The reduced exemption limit in euros as a :class:`~decimal.Decimal`.
+    """
+    table = WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
+    if filing_year is None or filing_year >= max(table):
+        return table[max(table)]
+    if filing_year <= min(table):
+        return table[min(table)]
+    return table[filing_year]
+
+
 def evaluate_multiple_pagadores_obligation(
     pagadores_count: int | None,
     secondary_income: Decimal | None,
+    total_work_income: Decimal | None = None,
+    filing_year: int | None = None,
 ) -> bool:
     """Return True when Art. 96.3 LIRPF mandates Modelo 100 filing.
 
-    Art. 96.3 LIRPF (Ley 35/2006) establishes that a natural person whose
-    rendimientos del trabajo come from more than one pagador is obliged to
-    file if the aggregate income received from the 2nd and subsequent
-    pagadores exceeds €1,500. The rule applies independently of the general
-    income thresholds in Art. 96.2.
+    Art. 96.2.a) LIRPF (Ley 35/2006) exempts a natural person from filing when
+    their rendimientos íntegros del trabajo do not exceed the general 22.000 €
+    limit. Art. 96.3 LIRPF LOWERS that limit to a reduced, dated amount
+    (15.876 € for 2024 onward) when the work income comes from more than one
+    pagador AND the aggregate from the 2nd-and-subsequent pagadores strictly
+    exceeds 1.500 €. The multiple-pagadores situation never obliges a filing by
+    itself — it only drops the exemption limit — so the obligation arises only
+    when total work income exceeds the applicable reduced limit.
 
     Args:
         pagadores_count: Number of pagadores the taxpayer received work
             income from during the year. ``None`` means undeclared.
         secondary_income: Sum of income from the 2nd and subsequent
             pagadores. ``None`` means undeclared.
+        total_work_income: Total rendimientos íntegros del trabajo for the
+            year. ``None`` means undeclared; the obligation then cannot be
+            ruled out, so the rule surfaces conservatively rather than
+            granting a false clear (``no-silent-under-declaration``).
+        filing_year: The year the income was obtained, selecting the dated
+            reduced limit. ``None`` uses the latest known reduced limit.
 
     Returns:
-        ``True`` when both conditions are confirmed (count >= 2 AND
-        secondary_income > 1,500); ``False`` in every other case,
-        including when either value is undeclared.
+        ``True`` when the reduced-limit regime is active (count >= 2 AND
+        secondary_income > 1,500) and either total work income is undeclared
+        or it strictly exceeds the per-year reduced limit; ``False`` in every
+        other case, including when count or secondary income is undeclared.
     """
     if pagadores_count is None or secondary_income is None:
         return False
-    return pagadores_count >= 2 and secondary_income > _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD
+    if not (pagadores_count >= 2 and secondary_income > _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD):
+        return False
+    if total_work_income is None:
+        return True
+    return total_work_income > resolve_multiple_pagadores_reduced_limit(filing_year)
 
 
 # Static lookup: ISO 3166-1 alpha-2 → BOE reference for double-taxation treaties
@@ -973,7 +1020,7 @@ class ModeloDeadline(BaseModel):
 
 
 class Schedule(BaseModel):
-    """The full filing schedule for an autónomo for a given year.
+    """The full filing schedule for a taxpayer profile for a given year.
 
     Attributes:
         profile: The :class:`TaxpayerProfile` the schedule was computed

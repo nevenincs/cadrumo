@@ -1,21 +1,36 @@
 """Typed ``--json`` payload schemas for review CLI commands.
 
-Each class declared here is a strict :class:`OutputSchema` subclass
-and is decorated with :func:`register_schema` so the JSON-contract
-test suite can enumerate every review-command surface. Without these
-typed payloads, ``review queue`` and ``review view`` emit
-``model_dump(mode="json")`` of free-form pydantic records, which
-gives downstream tooling no stability contract for the emitted JSON.
+Each class declared here is a strict
+:class:`OutputSchema` subclass decorated with
+:func:`register_schema` so the JSON-contract
+test suite can enumerate every review-command surface. The typed result enters
+the shared :class:`SchemaEnvelope` through
+:func:`_emit_envelope`.
+
+The application review facade remains authoritative for
+:class:`ReviewQueueRow`,
+:class:`ReviewQueueReport`,
+:class:`ReviewState`, and
+:class:`ReviewSeverity`. These payloads only pin the
+CLI transport shape for ``review queue`` and ``review view`` so downstream JSON
+tooling does not depend on free-form ``model_dump(mode="json")`` output.
 """
 
 from __future__ import annotations
 
 from ...core.identity import BucketId
+from ...domain.calculations.registry import LegalRefId
 from ._schemas import OutputSchema, register_schema
 
 
 class ReviewQueueRowPayload(OutputSchema):
-    """One row in the review queue, mirroring application.review.ReviewQueueRow."""
+    """One row in the review queue.
+
+    Mirrors :class:`ReviewQueueRow`: ``bucket_id`` keeps
+    the active :class:`BucketId`, ``severity`` and ``state``
+    carry the application enum values, and ``legal_refs`` stays present in JSON
+    even when text output requires ``--explain`` to render those references.
+    """
 
     item_id: str
     kind: str
@@ -32,12 +47,17 @@ class ReviewQueueRowPayload(OutputSchema):
     canonical_next_command: str
     since: str  # ISO-8601 datetime
     summary: str
-    legal_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = ()
 
 
 @register_schema("review.queue")
 class ReviewQueueResult(OutputSchema):
-    """JSON envelope for ``aeat review queue``."""
+    """JSON envelope for ``aeat review queue``.
+
+    Wraps :class:`ReviewQueueReport` rows after the CLI
+    applies kind, source-kind, state, and modelo filters through
+    :func:`project_review_queue`.
+    """
 
     operation: str = "review.queue"
     rows: tuple[ReviewQueueRowPayload, ...]
@@ -45,7 +65,14 @@ class ReviewQueueResult(OutputSchema):
 
 @register_schema("review.view")
 class ReviewViewResult(OutputSchema):
-    """JSON envelope for ``aeat review view <item_id>``."""
+    """JSON envelope for ``aeat review view <item_id>``.
+
+    Carries the single
+    :class:`ReviewQueueRowPayload`
+    returned by
+    :func:`project_review_item`; not-found items are
+    refused before this envelope is emitted.
+    """
 
     operation: str = "review.view"
     row: ReviewQueueRowPayload

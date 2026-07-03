@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import tempfile
 from datetime import date
 from decimal import Decimal
@@ -21,6 +22,7 @@ from .. import (
     validated_casilla_id,
 )
 from .._loader import _collect_registry_tree_fingerprints, clear_fingerprint_cache
+from ._loader_directory_mode_support import write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -37,9 +39,13 @@ _M130_CARRY_FORWARD_CASILLA: CasillaId = validated_casilla_id("15", surface="_M1
 _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_CASILLA")
 
 
-def test_authority_returns_cached_validated_snapshot_for_repeated_filing_context() -> None:
-    authority = resources().modelos.authority
+@pytest.fixture(scope="module")
+def _packaged_authority():
+    return resources().modelos.authority
 
+
+def test_authority_returns_cached_validated_snapshot_for_repeated_filing_context(_packaged_authority) -> None:
+    authority = _packaged_authority
     first = authority.snapshot("130", filing_year=2026, period="1T")
     second = authority.snapshot("130", filing_year=2026, period="1T")
 
@@ -48,8 +54,8 @@ def test_authority_returns_cached_validated_snapshot_for_repeated_filing_context
     assert "1T" in first.revision.period_selector.periods
 
 
-def test_authority_snapshot_runs_real_modelo_calculation() -> None:
-    authority = resources().modelos.authority
+def test_authority_snapshot_runs_real_modelo_calculation(_packaged_authority) -> None:
+    authority = _packaged_authority
     snapshot = authority.snapshot("130", filing_year=2026, period="1T")
 
     result = calculate_registry_snapshot(
@@ -64,11 +70,9 @@ def test_authority_snapshot_runs_real_modelo_calculation() -> None:
             _M130_PRIOR_RETURN_CASILLA: Decimal("100.00"),
         },
         # 1T cannot have a same-ejercicio prior-quarter saldo seed;
-        # the M130 carry-forward selector returns no anchor for 1T
-        # and the bound casilla materialises Decimal("0") with the
-        # absent_by_design provenance marker. binding_values omits
-        # the carry-forward binding to exercise the absent-by-design
-        # path through the runtime, NOT a fictional non-zero seed.
+        # the M130 carry-forward selector returns no anchor for 1T.
+        # C15 is computed from that zero carry-forward binding and the
+        # positive C14 cap, not supplied as a fictional non-zero seed.
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("9500.00"),
         },
@@ -79,7 +83,8 @@ def test_authority_snapshot_runs_real_modelo_calculation() -> None:
     assert {entry.target_casilla_id for entry in result.entries} >= {_M130_RESULTADO_CASILLA}
     casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
     assert casilla_15.value == Decimal("0")
-    assert casilla_15.absent_by_design is True
+    assert casilla_15.formula_id == "modelo-130-resultados-negativos-anteriores-cap"
+    assert casilla_15.absent_by_design is False
 
 
 def test_authority_snapshot_is_authority_owned_revision_projection() -> None:
@@ -94,15 +99,15 @@ def test_authority_snapshot_is_authority_owned_revision_projection() -> None:
     assert "130" in authority._validated_modelos
 
 
-def test_authority_rejects_unknown_modelo() -> None:
-    authority = resources().modelos.authority
+def test_authority_rejects_unknown_modelo(_packaged_authority) -> None:
+    authority = _packaged_authority
 
     with pytest.raises(RegistrySnapshotError, match="999"):
         authority.snapshot("999", filing_year=2026, period="1T")
 
 
-def test_authority_deadline_windows_are_validated_and_sorted() -> None:
-    authority = resources().modelos.authority
+def test_authority_deadline_windows_are_validated_and_sorted(_packaged_authority) -> None:
+    authority = _packaged_authority
 
     windows = authority.deadline_windows(2026, modelos=("130",))
 
@@ -126,6 +131,9 @@ article = "1"
 permalink = "https://example.com/test"
 effective_from = 2025-01-01
 review_status = "reviewed"
+reviewed_at = 2025-01-01
+reviewed_by = "registry-test"
+required_text = ["test provision text"]
 
 [sources."test-source-001"]
 evidence_tier = "layout_authority"
@@ -136,6 +144,17 @@ sha256 = "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f"
 bytes = 1000
 retrieved_at = 2025-01-01
 source_url = "https://example.com/test-source"
+review_status = "reviewed"
+
+[sources."test-source-002"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/test/test-source-002.pdf"
+sha256 = "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f"
+bytes = 1000
+retrieved_at = 2025-01-01
+source_url = "https://example.com/test-source-002"
 review_status = "reviewed"
 """
 
@@ -158,6 +177,7 @@ valid_from = 2025-01-01
 period_selector = {{ year_from = 2025, periods = ["0A"] }}
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
+orden_aplicabilidad = ["test-ley-001:art-1"]
 
 [[revisions."2025".application_links]]
 id = "test-filing-link"
@@ -165,7 +185,7 @@ surface = "filing"
 consumer = "cli.app"
 requires_snapshot = true
 legal_refs = ["test-ley-001:art-1"]
-source_refs = ["test-source-001"]
+source_refs = ["test-source-002"]
 
 [[revisions."2025".casillas]]
 id = "01"
@@ -199,15 +219,16 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(tmp_path: 
     corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
 
-    revision_path = revision_dir / "revision.toml"
-    revision_path.write_text(_MINIMAL_REVISION_TOML_TEMPLATE.format(label="before"), encoding="utf-8")
+    write_fragmented_revision(revision_dir, _MINIMAL_REVISION_TOML_TEMPLATE.format(label="before"))
 
     first = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
-    revision_path.write_text(_MINIMAL_REVISION_TOML_TEMPLATE.format(label="after cache invalidation"), encoding="utf-8")
+    write_fragmented_revision(revision_dir, _MINIMAL_REVISION_TOML_TEMPLATE.format(label="after cache invalidation"))
 
     from .._loader import clear_fingerprint_cache
 
@@ -229,12 +250,13 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates(tmp_pat
     corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
 
-    revision_path = revision_dir / "revision.toml"
-    revision_path.write_text(_MINIMAL_REVISION_TOML_TEMPLATE.format(label="before"), encoding="utf-8")
+    write_fragmented_revision(revision_dir, _MINIMAL_REVISION_TOML_TEMPLATE.format(label="before"))
 
     clear_fingerprint_cache()
 
@@ -247,7 +269,7 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates(tmp_pat
     assert auth2 is auth1
 
     # Modify file to invalidate cache
-    revision_path.write_text(_MINIMAL_REVISION_TOML_TEMPLATE.format(label="after"), encoding="utf-8")
+    write_fragmented_revision(revision_dir, _MINIMAL_REVISION_TOML_TEMPLATE.format(label="after"))
     clear_fingerprint_cache()
 
     # Load 3: changed fingerprint must build and validate a fresh authority.
@@ -255,6 +277,34 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates(tmp_pat
     assert auth3._registry_validated is True
     assert auth3 is not auth1
     assert auth3.modelo("999").revisions["2025"].label == "after"
+
+
+def test_authority_cache_invalidates_when_source_evidence_changes(tmp_path: Path) -> None:
+    """Authority validation must rerun when corpus evidence changes under the same source root."""
+    registry_root = tmp_path / "registry" / "aeat"
+    legal_dir = registry_root / "legal"
+    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
+    revision_dir.mkdir(parents=True)
+    legal_dir.mkdir(parents=True)
+    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
+    corpus_file.parent.mkdir(parents=True)
+    corpus_file.write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
+
+    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
+    (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
+    write_fragmented_revision(revision_dir, _MINIMAL_REVISION_TOML_TEMPLATE.format(label="before"))
+
+    clear_fingerprint_cache()
+    first = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    assert ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path) is first
+
+    corpus_file.write_bytes(b"y" * 1000)
+    os.utime(corpus_file, (1812542400, 1812542400))
+
+    with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
+        ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
 
 
 def test_authority_ignores_legacy_validated_marker_and_revalidates_ambiguity(tmp_path: Path) -> None:
@@ -268,6 +318,8 @@ def test_authority_ignores_legacy_validated_marker_and_revalidates_ambiguity(tmp
     corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
@@ -289,7 +341,7 @@ data_type = "integer"
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
 """
-    (revision_dir / "revision.toml").write_text(ambiguous_revision, encoding="utf-8")
+    write_fragmented_revision(revision_dir, ambiguous_revision)
 
     clear_fingerprint_cache()
     fingerprints = _collect_registry_tree_fingerprints(registry_root)
@@ -322,11 +374,15 @@ def test_authority_load_rejects_reused_number_with_bare_casilla_owner(tmp_path: 
     corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
+    (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
 
-    ambiguous_revision = _MINIMAL_REVISION_TOML_TEMPLATE.format(label="ambiguous") + """\
+    ambiguous_revision = (
+        _MINIMAL_REVISION_TOML_TEMPLATE.format(label="ambiguous")
+        + """\
 
 [[revisions."2025".casillas]]
 id = "DPX:01"
@@ -338,7 +394,8 @@ data_type = "integer"
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
 """
-    (revision_dir / "revision.toml").write_text(ambiguous_revision, encoding="utf-8")
+    )
+    write_fragmented_revision(revision_dir, ambiguous_revision)
 
     clear_fingerprint_cache()
 

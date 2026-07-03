@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#docs-educational-surface'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-02-docs-educational-surface-audit]]"
   - "[[2026-06-01-docs-educational-surface-adr]]"
 ---
-
-
 
 # `docs-educational-surface` audit: `Modelo 303 calculate verified working; user-doc 130 flow execution-verified`
 
@@ -107,5 +105,3 @@ because in-flight refactors make such caveats go stale - is already covered by
 the existing "ground every command against the live CLI" principle in the
 documentation rules and the calculation-grounding rule. No new project-shared
 rule is warranted.
-
-

@@ -1,10 +1,10 @@
 ---
 step_id: "ad-hoc-2026-05-26"
 tags:
-  - "#exec"
-  - "#modelo-303-extraction-profile"
+  - '#exec'
+  - '#modelo-303-390'
 date: 2026-05-26
-modified: '2026-05-26'
+modified: '2026-07-01'
 related:
   - "[[2026-04-12-modelo-303-390-phase1-task1-exec]]"
 ---

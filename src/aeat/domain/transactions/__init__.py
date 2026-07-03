@@ -1,11 +1,68 @@
-"""Immutable transaction catalogue surface for the financial pipeline.
+"""Public facade for immutable ledger transactions.
 
-The central type is :class:`TransactionCatalogue`, which holds an immutable
-mapping of ledger transactions keyed by stable transaction identifiers.
-Persistence is handled by :class:`TransactionCatalogueRepository`.
-Callers must import transaction models, errors, and service functions
-exclusively from ``aeat.domain.transactions`` and must not reach into
-the private underscore modules inside this package.
+This package re-exports the transaction domain boundary used by
+:mod:`application.ledger`: :class:`Transaction` wraps an upstream
+:class:`RawTransaction` and its :class:`RawProvenance`, while
+:class:`TransactionCatalogue` keeps the immutable mapping keyed by the
+content-derived transaction id. Import helpers such as
+:func:`derive_transaction_id`, :func:`derive_import_fingerprint`, and
+:func:`normalise_movement_reference` are the public identity helpers.
+
+The row model separates amount magnitude from
+:class:`TransactionDirection`; downstream tax calculations route by direction
+rather than by signed amounts. It carries classification, tax substrate,
+evidence, split, edit, lifecycle, FX, jurisdiction, and timestamp provenance
+through typed records such as :class:`ClassificationHistoryEntry`,
+:class:`TransactionEvidenceProvenanceEntry`,
+:class:`TransactionEditLineageEntry`, and
+:class:`TransactionLifecycleLineageEntry`. Classification helpers
+:func:`set_classification`, :func:`snapshot_classification_state`, and
+:func:`link_invoice` return fresh catalogues instead of mutating callers'
+instances.
+
+Persistence is served by the read-side
+:class:`TransactionCatalogueRepositoryProtocol` port; the concrete encrypted
+implementation lives in the persistence adapter
+:class:`adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+It stores each transaction under the bucket-scoped transaction namespace as
+``FINANCIAL`` :class:`core.classification.SensitivityClass` rows wrapped in
+:class:`adapters.persistence.storage.Envelope` through
+:class:`adapters.persistence.storage.SecureObjectRepository`; callers should
+not write plaintext catalogues or reach into private modules. The pure port
+surface (:class:`ImportSummary`, the key-derivation helpers, and the namespace
+constant) remains exposed lazily here.
+
+LLM-facing :class:`LLMClassifier`, :class:`LLMSplitProposer`,
+:class:`PromptSpec`, :class:`LedgerClassificationRule`, and
+:func:`ledger_irpf_category_catalogue` also live behind this facade. They
+constrain model choices to typed :class:`BusinessClassification`,
+:class:`CategoryChoice`, and :class:`IvaCategoryChoice` allow-lists; regulated
+tax numbers are derived by application services, not originated by this
+package.
+
+Downstream modelo calculation records keep only forward transaction ids on
+:class:`domain.modelos.CalculationRevision`. Aggregation services consume
+this catalogue to produce registry binding values and ledger filing snapshots,
+while :class:`domain.modelos.TransactionRevisionParticipationIndex`
+provides the rebuildable inverse audit lookup from one ledger transaction to
+finalized revisions and filing records.
+
+See Also:
+    :mod:`application.ledger`
+        Operator-facing lifecycle that creates, edits, classifies, splits,
+        attaches evidence, and preflights bucket-scoped transactions.
+    :mod:`application.aggregation`
+        Source resolvers that turn transaction catalogues into
+        :class:`application.aggregation.CalculationSourceResolution`
+        payloads for modelo calculation.
+    :func:`application.aggregation._ledger_filing_snapshot.compute_ledger_filing_snapshot`
+        Captures tax-relevant transaction fields for finalized calculation
+        revisions.
+    :mod:`domain.invoices`
+        Invoice catalogue and reconciliation records referenced by
+        ``invoice_id`` and ``purchase_invoice_evidence_id``.
+    :mod:`domain.usage_ratios`
+        Proportionality profiles referenced by ledger rows before aggregation.
 """
 
 from __future__ import annotations
@@ -31,6 +88,15 @@ from ._errors import (
     TransactionNotFoundError,
     TransactionPersistenceError,
     TransactionValidationError,
+)
+from ._irpf_categories import (
+    IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
+    IRPF_CATEGORY_TRABAJO,
+    PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING,
+    RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING,
+    RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING,
+    LedgerIrpfCategoryDescriptor,
+    ledger_irpf_category_catalogue,
 )
 from ._llm import (
     MINIMUM_CLASSIFICATION_TIER,
@@ -68,6 +134,7 @@ from ._model_tier import ModelCapability, catalogue, profiles_for_provider, reso
 from ._models import (
     BucketTransactionRef,
     ClassificationHistoryEntry,
+    DecisionProvenance,
     SplitLineage,
     Transaction,
     TransactionCatalogue,
@@ -95,7 +162,7 @@ if TYPE_CHECKING:
     from ._repository import (
         TX_BUCKET_NAMESPACE,
         ImportSummary,
-        TransactionCatalogueRepository,
+        transaction_index_object_key,
         transaction_object_key,
     )
 
@@ -104,17 +171,20 @@ _LAZY_REPOSITORY_NAMES = frozenset(
     {
         "ImportSummary",
         "TX_BUCKET_NAMESPACE",
-        "TransactionCatalogueRepository",
+        "transaction_index_object_key",
         "transaction_object_key",
     },
 )
 
 
 def __getattr__(name: str):
-    """Lazy-import the persistence repository to avoid eagerly loading SQLAlchemy and Alembic.
+    """Lazy-import the pure persistence surface to defer the ``_repository`` module load.
 
-    The plugin setup of those packages logs to stderr, which breaks JSON-pipe-safety
-    contracts in CLI test scope.
+    The concrete :class:`TransactionCatalogueRepository` now lives in the
+    persistence adapter
+    :class:`~aeat.adapters.persistence.profile.transactions.TransactionCatalogueRepository`;
+    only the pure port surface (``ImportSummary``, the key-derivation helpers,
+    and the namespace constant) is resolved here.
     """
     if name in _LAZY_REPOSITORY_NAMES:
         from . import _repository
@@ -125,14 +195,20 @@ def __getattr__(name: str):
 
 __all__ = [
     "CLASSIFIED_STATES",
+    "IRPF_CATEGORY_ACTIVIDAD_ECONOMICA",
+    "IRPF_CATEGORY_TRABAJO",
     "MINIMUM_CLASSIFICATION_TIER",
     "PIPELINE_ONLY_CLASSIFICATIONS",
+    "PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING",
+    "RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING",
+    "RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING",
     "TX_BUCKET_NAMESPACE",
     "BucketTransactionRef",
     "BusinessClassification",
     "CategoryChoice",
     "ClassificationChoice",
     "ClassificationHistoryEntry",
+    "DecisionProvenance",
     "ImportSummary",
     "IvaCategoryChoice",
     "LLMClassificationResponse",
@@ -142,6 +218,7 @@ __all__ = [
     "LLMSplitProposer",
     "LLMSplitResponse",
     "LedgerClassificationRule",
+    "LedgerIrpfCategoryDescriptor",
     "LedgerNoActiveBucketError",
     "LedgerStorageError",
     "ModelCapability",
@@ -158,7 +235,6 @@ __all__ = [
     "Transaction",
     "TransactionCatalogue",
     "TransactionCatalogueError",
-    "TransactionCatalogueRepository",
     "TransactionCatalogueRepositoryProtocol",
     "TransactionDirection",
     "TransactionEditLineageEntry",
@@ -184,6 +260,7 @@ __all__ = [
     "derive_transaction_id",
     "find_transaction",
     "is_classified",
+    "ledger_irpf_category_catalogue",
     "link_invoice",
     "normalise_movement_reference",
     "parse_response",
@@ -197,6 +274,7 @@ __all__ = [
     "resolve_split_proposer",
     "set_classification",
     "snapshot_classification_state",
+    "transaction_index_object_key",
     "transaction_object_key",
     "unregister_classifier",
 ]

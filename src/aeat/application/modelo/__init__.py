@@ -1,54 +1,64 @@
-"""Application services for modelo work-unit lifecycle.
+"""Public application facade for modelo work-unit services.
 
-The modelo work-unit verbs (``create``, ``list``, ``status``,
-``rename``) call into this package. The CLI layer at
-``aeat.entrypoints.cli._modelo`` is a thin Typer transport over
-the services exposed here.
+This package is the canonical application-layer import boundary for modelo
+CLI transports and cross-package application services. Callers import from
+``aeat.application.modelo`` instead of private ``_...`` modules so work
+selection, registry revision checks, calculation, verification, filing,
+export, reconciliation, and storage orchestration stay behind one facade.
 
-Bucket scoping is honoured at the API boundary: every action
-accepts an explicit ``bucket_id`` rather than implicitly reading
-the active profile. The CLI layer derives ``bucket_id`` from the
-active profile when the caller did not pass one explicitly; this
-keeps the application service unit-testable without a workflow-
-state fixture.
+Bucket scoping is explicit at the API boundary. Services accept a caller
+provided ``bucket_id`` or a resolved work target; CLI modules may derive that
+value from the active profile, but the application surface itself does not read
+implicit workflow state.
 
-This module re-exports :class:`CalculationRevision`, :class:`ModeloRecord`,
-and other core types for convenient access by callers.
+The facade carries :class:`domain.modelos.CalculationRevision` and
+:class:`domain.modelos.WorkUnit` through
+the operator lifecycle: work-unit creation and addressing, calculation-revision
+creation, verification, filing, export, history, reconciliation, registry
+discovery, M036 declaration records, IVA-wallet decisions, projections, and
+advisory helpers. It also re-exports the status and finding vocabulary used by
+those services, including :class:`CalculationRevisionState`,
+:class:`ModeloRecordStatus`, :class:`ModeloVerificationFindingKind`, and
+:class:`VerificationCompletenessStatus`. ``CalculationRevision``, ``WorkUnit``,
+``CalculationRevisionAmendmentKind``, and ``ExternalEvidenceKind`` are
+NOT re-exported here; :mod:`domain.modelos` is their sole canonical source
+(import-centralization ADR ruling 5).
 
-Verification boundary
----------------------
-``verify_modelo_revision`` enforces a four-layer gate before the
-``VERIFICADO_COMPLETO`` state transition is granted:
+Verification, filing, and export remain owned by their focused service modules.
+:func:`verify_modelo_revision` persists a verification
+report for one
+:class:`domain.modelos.CalculationRevision`; filing and export then consume the
+same persisted revision rather than rebuilding parallel workflow state.
 
-1. **State machine** -- the target revision must be in ``BORRADOR``
-   state; any other state raises :exc:`CalculationRevisionStateError`.
+Local filing and external evidence are deliberately separate.
+:func:`file_modelo_revision` creates an internal
+current :class:`domain.modelos.ModeloRecord` without
+:class:`domain.modelos.ExternalEvidence`;
+:func:`import_external_filing_evidence` creates the
+AEAT-attested evidence baseline, and
+:func:`amend_modelo_revision` requires that baseline
+before recording a :class:`domain.modelos.CalculationRevisionAmendmentKind`.
 
-2. **Per-casilla required-input gate (Layer 1)** -- every casilla
-   declared ``required = true`` and ``input_kind = "manual"`` in the
-   registry must be present in the revision's ``input_values_by_casilla_id``.
-   Absent casillas produce :attr:`ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA`
-   findings and set ``completeness_status`` to ``INCOMPLETE``.
-
-3. **Cross-casilla predicate gate (Layer 2)** -- each
-   :class:`~aeat.domain.calculations.registry.VerificationPredicateDefinition`
-   attached to the revision's registry snapshot is evaluated against the
-   stored ``casilla_values``.  A failing predicate produces a
-   :attr:`ModeloVerificationFindingKind.BLOCKING_RULE` finding.
-
-4. **Provenance re-validation** -- :func:`_assert_revision_content_integrity`
-   re-derives the SHA-256 content address from the stored payload and
-   raises :exc:`StoredCalculationDriftError` if it does not match the
-   persisted ``calculation_revision_id``.  This defends against raw-storage
-   tampering or schema-migration bugs that mutate the payload without
-   updating the content-addressed id.
-
-Only when layers 1-3 produce zero blocking findings AND layer 4 passes
-does ``verify_modelo_revision`` grant ``VERIFICADO_COMPLETO`` and
-persist the :class:`~aeat.domain.modelos._verification_report.ModeloVerificationReport`.
-
-The facade carries :class:`CalculationRevision` through calculation,
-verification, filing, and export so callers address one persisted revision
-instead of duplicating workflow state.
+See Also:
+    :mod:`application.modelo._work_lifecycle`:
+        Work-unit creation, listing, rename, discard, and lookup services.
+    :mod:`application.modelo._work_addressing`:
+        Visible modelo/year/period addressing and exact-id resolution.
+    :mod:`application.modelo._calculation_actions`:
+        Calculation revision creation, lookup, and completion services.
+    :mod:`application.modelo._verification_actions`:
+        Verification findings and report persistence for draft revisions.
+    :mod:`application.modelo._filing_actions`:
+        Local filing-record transitions and verification-report reads.
+    :mod:`application.modelo._external_import_actions`:
+        External-evidence import path that stamps official AEAT evidence on
+        current filing records.
+    :mod:`application.modelo._amendment_actions`:
+        Amendment path for current externally evidenced filing records.
+    :mod:`application.modelo._workflow_gate`:
+        Workflow preflight adapter used by verification and filing services.
+    :mod:`application.modelo._export`:
+        Local official-file export for verified or filed revisions.
 """
 
 from __future__ import annotations
@@ -58,19 +68,22 @@ from ...domain.modelos import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
+    Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
+    Modelo349RectificacionRow,
     ModeloDetailRow,
+    ModeloError,
     ModeloRecordStatus,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
+    validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
-from ...domain.modelos._filing_record import ExternalEvidenceKind
-from ...domain.modelos._work_unit import WorkUnit
 from ._action_errors import (
+    AmendmentComplementariaLiabilityDecreaseError,
     AmendmentEvidenceMissingError,
+    AmendmentKindNotPermittedError,
     AmendmentOverrideCasillaError,
     AmendmentTargetStateError,
     AmendmentVerificationRefusedError,
@@ -80,10 +93,13 @@ from ._action_errors import (
     CasillaProvenanceMissingError,
     ExternalModeloImportError,
     ModeloAggregationBindingError,
+    ModeloApplicabilityFilterError,
     ModeloCrossPeriodCleanStateError,
+    ModeloLocalObservationError,
     ModeloProfileReadinessError,
     ModeloRecordNotFoundError,
     ModeloRefundElectionNotEligibleError,
+    ModeloRequiredBindingsMissingError,
     ModeloWorkflowGateError,
     StoredCalculationDriftError,
     VerificationReportNotFoundError,
@@ -109,6 +125,7 @@ from ._calculate_input import (
     authorization_advisory_for_modelo,
     build_work_calculate_input_bundle,
     calculate_modelo_work_revision,
+    is_detail_casilla_override_key,
     modelo_202_modality_for_work_unit,
 )
 from ._calculation_actions import (
@@ -121,12 +138,22 @@ from ._calculation_actions import (
     list_calculation_revisions,
     mark_revision_verificado_completo,
 )
+from ._calculation_source_policy import (
+    BUCKET_AGGREGATION_LOCK_SOURCES,
+    CALLER_OVERRIDABLE_CARRY_SOURCES,
+)
+from ._data_inventory import (
+    DataInventoryCasilla,
+    DataInventoryChecklist,
+    data_inventory_checklist,
+)
 from ._export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
     ModeloExportOutputPathError,
     ModeloExportResult,
+    ModeloExportUnsupportedError,
     export_modelo_revision,
 )
 from ._external_import_actions import import_external_filing_evidence
@@ -149,6 +176,7 @@ from ._history import (
 from ._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
     ModeloIvaWalletReconciliationBlockedError,
+    apply_iva_compensation_decision_binding,
     require_persisted_iva_compensation_decision_matches_revision,
 )
 from ._iva_wallet_seed import (
@@ -163,10 +191,18 @@ from ._iva_wallet_seed import (
     record_iva_compensation_override_for_bucket,
     seed_iva_compensation_period_for_bucket,
 )
+from ._local_observation_actions import (
+    OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
+    ModeloLocalObservationResult,
+    record_operator_local_observation,
+)
+from ._local_observation_spreadsheet import parse_casilla_value_spreadsheet
 from ._m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
+    derive_m036_declaration_id,
     list_m036_declarations,
+    m036_declaration_object_key,
     read_m036_declaration,
     record_m036_declaration,
 )
@@ -184,6 +220,12 @@ from ._profile_binding import (
     resolve_profile_sourced_bindings,
 )
 from ._profile_readiness_gate import (
+    modelo_applicability_refusal,
+    modelo_work_profile_baseline_missing_paths,
+    modelo_work_profile_baseline_validation_issues,
+    modelo_work_profile_preflight_report,
+    pre_activity_period_refusal,
+    require_existing_profile_baseline_ready_for_modelo_work,
     require_profile_ready_for_modelo_work,
     require_profile_ready_for_work_unit,
 )
@@ -206,10 +248,21 @@ from ._projection import (
     compare_modelo_years,
     project_modelo_100_from_m130,
 )
+from ._quickfile import (
+    QUICKFILE_STAGE_ORDER,
+    QuickfileCommand,
+    QuickfileResult,
+    QuickfileStage,
+    QuickfileStageOutcome,
+    QuickfileStageStatus,
+    run_modelo_quickfile,
+)
 from ._reconcile import (
+    ModeloReconciliationAdvisory,
     ModeloReconciliationBytesCommand,
     ModeloReconciliationCommand,
     ModeloReconciliationDiff,
+    ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationHistoryEntry,
     ModeloReconciliationReport,
@@ -221,16 +274,26 @@ from ._reconcile import (
     modelo_reconcile,
     modelo_reconcile_bytes,
 )
+from ._reconcile_casilla import (
+    CasillaDivergence,
+    CasillaDivergenceKind,
+    detect_casilla_divergences,
+)
 from ._registry_discovery import (
     declared_modelo_period_tokens,
     registry_bindings,
     registry_bindings_for_scope,
     registry_bindings_for_year,
+    registry_casilla,
+    registry_casilla_for_registry_scope,
     registry_casillas,
+    registry_casillas_for_registry_scope,
     registry_casillas_for_scope,
     registry_describe_modelo,
+    registry_describe_modelo_for_registry_scope,
     registry_describe_modelo_for_scope,
     registry_formulas,
+    registry_formulas_for_registry_scope,
     registry_formulas_for_scope,
     registry_list_modelos,
     registry_modelo_codes,
@@ -239,6 +302,17 @@ from ._result_summary import (
     CalculationResultSummary,
     ResultSummaryRow,
     calculation_result_summary,
+)
+from ._review_package import (
+    ReviewPackageBuildResult,
+    ReviewPackageError,
+    ReviewPackageIntegrityError,
+    ReviewPackageManifest,
+    ReviewPackageRevisionStateError,
+    ReviewPackageVerification,
+    assert_review_package_verifies,
+    build_review_package,
+    verify_review_package,
 )
 from ._selectors import (
     ModeloCalculationRevisionCandidate,
@@ -269,6 +343,7 @@ from ._selectors import (
     select_modelo_calculation_revision,
     visible_target_work_units,
 )
+from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 from ._taxation_comparison import (
     TaxationComparisonError,
     TaxationComparisonResult,
@@ -313,9 +388,12 @@ from ._work_addressing import (
     work_address_for_modelo_target,
 )
 from ._work_create_policy import (
+    CEDED_AUTONOMIC_MODELO_LOCALE_KEYS,
+    CEDED_AUTONOMIC_MODELOS,
     STUB_MODELO_LOCALE_KEYS,
     STUB_ONLY_MODELOS,
     ModeloWorkCreateApplicabilityRefusal,
+    ceded_autonomic_modelo_locale_key,
     guard_active_profile_foral_ccaa,
     modelo_work_create_applicability_refusal,
     modelo_work_create_refusal_locale_key,
@@ -336,22 +414,31 @@ from ._workflow_gate import workflow_period_for_work_unit
 
 __all__ = [
     "APP_FILING_SOURCE_KIND",
+    "BUCKET_AGGREGATION_LOCK_SOURCES",
+    "CALLER_OVERRIDABLE_CARRY_SOURCES",
+    "CEDED_AUTONOMIC_MODELOS",
+    "CEDED_AUTONOMIC_MODELO_LOCALE_KEYS",
+    "OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND",
+    "QUICKFILE_STAGE_ORDER",
     "STUB_MODELO_LOCALE_KEYS",
     "STUB_ONLY_MODELOS",
+    "AmendmentComplementariaLiabilityDecreaseError",
     "AmendmentEvidenceMissingError",
+    "AmendmentKindNotPermittedError",
     "AmendmentOverrideCasillaError",
     "AmendmentTargetStateError",
     "AmendmentVerificationRefusedError",
     "BucketAggregationCalculationResult",
     "CalculationRegistryUnavailableError",
     "CalculationResultSummary",
-    "CalculationRevision",
-    "CalculationRevisionAmendmentKind",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionState",
     "CalculationRevisionStateError",
+    "CasillaDivergence",
+    "CasillaDivergenceKind",
     "CasillaProvenanceMissingError",
-    "ExternalEvidenceKind",
+    "DataInventoryCasilla",
+    "DataInventoryChecklist",
     "ExternalModeloImportError",
     "M036DeclarationCommand",
     "M036DeclarationResult",
@@ -362,8 +449,11 @@ __all__ = [
     "Modelo202ModalitySummary",
     "Modelo232VinculadaRow",
     "Modelo347ContraparteRow",
+    "Modelo349CountryPrefixContextError",
     "Modelo349OperadorRow",
+    "Modelo349RectificacionRow",
     "ModeloAggregationBindingError",
+    "ModeloApplicabilityFilterError",
     "ModeloAuthorizationAdvisorySummary",
     "ModeloCalculationRevisionCandidate",
     "ModeloCalculationRevisionDefault",
@@ -382,12 +472,14 @@ __all__ = [
     "ModeloCompareServiceResult",
     "ModeloCrossPeriodCleanStateError",
     "ModeloDetailRow",
+    "ModeloError",
     "ModeloExactWorkUnitTarget",
     "ModeloExportCommand",
     "ModeloExportCrossBucketRefusedError",
     "ModeloExportNoActiveBucketError",
     "ModeloExportOutputPathError",
     "ModeloExportResult",
+    "ModeloExportUnsupportedError",
     "ModeloIvaWalletCorrectionNoRecordError",
     "ModeloIvaWalletCorrectionSealedError",
     "ModeloIvaWalletOverrideFreshWalletError",
@@ -397,6 +489,8 @@ __all__ = [
     "ModeloIvaWalletSeedError",
     "ModeloIvaWalletSeedNegativeAmountError",
     "ModeloIvaWalletSeedNoTaxpayerError",
+    "ModeloLocalObservationError",
+    "ModeloLocalObservationResult",
     "ModeloMaritimeExemptionPreview",
     "ModeloProfileReadinessError",
     "ModeloProjectInvalidDecimalOverrideError",
@@ -407,9 +501,11 @@ __all__ = [
     "ModeloProjectServiceResult",
     "ModeloProjectionCasillaObservation",
     "ModeloProjectionError",
+    "ModeloReconciliationAdvisory",
     "ModeloReconciliationBytesCommand",
     "ModeloReconciliationCommand",
     "ModeloReconciliationDiff",
+    "ModeloReconciliationDiffKind",
     "ModeloReconciliationEvidenceKind",
     "ModeloReconciliationHistoryEntry",
     "ModeloReconciliationReport",
@@ -417,6 +513,7 @@ __all__ = [
     "ModeloRecordNotFoundError",
     "ModeloRecordStatus",
     "ModeloRefundElectionNotEligibleError",
+    "ModeloRequiredBindingsMissingError",
     "ModeloResolvedRevisionProjection",
     "ModeloResolvedWorkProjection",
     "ModeloRevisionPick",
@@ -447,10 +544,21 @@ __all__ = [
     "ModeloWorkflowGateError",
     "ParticipationRebuildStats",
     "ProfileBindingResolutionError",
+    "QuickfileCommand",
+    "QuickfileResult",
+    "QuickfileStage",
+    "QuickfileStageOutcome",
+    "QuickfileStageStatus",
     "ReconciliationCrossBucketRefusedError",
     "ReconciliationDeclaracionSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",
     "ResultSummaryRow",
+    "ReviewPackageBuildResult",
+    "ReviewPackageError",
+    "ReviewPackageIntegrityError",
+    "ReviewPackageManifest",
+    "ReviewPackageRevisionStateError",
+    "ReviewPackageVerification",
     "StoredCalculationDriftError",
     "TaxationComparisonError",
     "TaxationComparisonResult",
@@ -458,7 +566,6 @@ __all__ = [
     "VerificationCompletenessStatus",
     "VerificationReportNotFoundError",
     "WorkCalculateInputBundle",
-    "WorkUnit",
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitHistory",
     "WorkUnitHistoryEvent",
@@ -467,23 +574,31 @@ __all__ = [
     "WorkUnitRevisionDivergenceError",
     "amend_modelo_revision",
     "apply_calculation_shortcut_inputs",
+    "apply_iva_compensation_decision_binding",
     "assemble_work_unit_history",
     "assert_no_novel_source_kinds",
+    "assert_review_package_verifies",
     "authorization_advisory_for_modelo",
+    "build_review_package",
     "build_work_calculate_input_bundle",
     "calculate_modelo_revision",
     "calculate_modelo_revision_from_bucket_aggregation",
     "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
     "calculate_modelo_work_revision",
     "calculation_result_summary",
+    "casilla_id_for_unique_revision_semantic_role",
+    "ceded_autonomic_modelo_locale_key",
     "compare_modelo_years",
     "compare_taxation_for_work_address",
     "compare_taxation_for_work_unit",
     "compare_taxation_modes",
     "correct_iva_compensation_period_for_bucket",
     "create_work_unit",
+    "data_inventory_checklist",
     "declared_modelo_period_tokens",
+    "derive_m036_declaration_id",
     "derive_taxpayer_files_economic_activity",
+    "detect_casilla_divergences",
     "discard_work_unit",
     "ensure_modelo_work_unit_for_visible_target",
     "export_modelo_revision",
@@ -494,22 +609,30 @@ __all__ = [
     "get_work_unit",
     "guard_active_profile_foral_ccaa",
     "import_external_filing_evidence",
+    "is_detail_casilla_override_key",
     "list_calculation_revisions",
     "list_filing_records",
     "list_m036_declarations",
     "list_modelo_reconciliations",
     "list_verification_reports",
     "list_work_units",
+    "m036_declaration_object_key",
     "maritime_facts_from_active_profile",
     "mark_revision_verificado_completo",
     "modelo_202_modality_for_work_unit",
+    "modelo_applicability_refusal",
     "modelo_reconcile",
     "modelo_reconcile_bytes",
     "modelo_work_address_from_operator_target",
     "modelo_work_create_applicability_refusal",
     "modelo_work_create_refusal_locale_key",
     "modelo_work_plazo_summary",
+    "modelo_work_profile_baseline_missing_paths",
+    "modelo_work_profile_baseline_validation_issues",
+    "modelo_work_profile_preflight_report",
+    "parse_casilla_value_spreadsheet",
     "persist_filed_revision_observation",
+    "pre_activity_period_refusal",
     "preview_maritime_exemption_for_active_profile",
     "profile_resolvable_binding_ids",
     "project_modelo_100_from_m130",
@@ -519,18 +642,25 @@ __all__ = [
     "rebuild_participation_index",
     "record_iva_compensation_override_for_bucket",
     "record_m036_declaration",
+    "record_operator_local_observation",
     "registry_bindings",
     "registry_bindings_for_scope",
     "registry_bindings_for_year",
+    "registry_casilla",
+    "registry_casilla_for_registry_scope",
     "registry_casillas",
+    "registry_casillas_for_registry_scope",
     "registry_casillas_for_scope",
     "registry_describe_modelo",
+    "registry_describe_modelo_for_registry_scope",
     "registry_describe_modelo_for_scope",
     "registry_formulas",
+    "registry_formulas_for_registry_scope",
     "registry_formulas_for_scope",
     "registry_list_modelos",
     "registry_modelo_codes",
     "rename_work_unit",
+    "require_existing_profile_baseline_ready_for_modelo_work",
     "require_persisted_iva_compensation_decision_matches_revision",
     "require_profile_ready_for_modelo_work",
     "require_profile_ready_for_work_unit",
@@ -552,13 +682,16 @@ __all__ = [
     "resolve_profile_sourced_bindings",
     "resolve_registry_revision_for_work_target",
     "resolve_verifiable_modelo_calculation_revision_address",
+    "run_modelo_quickfile",
     "seed_iva_compensation_period_for_bucket",
     "select_current_draft_revision",
     "select_current_verified_revision",
     "select_exportable_revision",
     "select_modelo_calculation_revision",
+    "validate_m349_country_prefix_context",
     "validate_m349_nif_format",
     "verify_modelo_revision",
+    "verify_review_package",
     "visible_target_work_units",
     "work_address_for_modelo_target",
     "workflow_period_for_work_unit",

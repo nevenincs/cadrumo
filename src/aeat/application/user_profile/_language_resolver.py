@@ -22,19 +22,52 @@ def resolve_active_profile_output_language() -> str | None:
     Performs a pure read of workflow state — no mutation, no bucket
     events — and returns ``None`` when there is no active profile or no
     language fact, so the caller falls back to the settings default.
+    When the bucket session is closed or cannot open, reads the
+    bucket-local non-secret language hint instead of the encrypted
+    profile envelope.
     """
-    from ...adapters.persistence.storage import has_active_bucket_session
+    from ...adapters.persistence.storage.master_key import has_active_bucket_session
 
     if not has_active_bucket_session():
-        return None
+        return resolve_active_profile_output_language_hint()
 
-    from ..workflow._persistence import workflow_state_repository
+    from ..workflow import workflow_state_repository
     from ._orchestration import fact_value
 
     record = workflow_state_repository().load().active_profile_record()
     if record is None:
         return None
     return fact_value(record, "preferences.output_language")
+
+
+def resolve_active_profile_output_language_hint() -> str | None:
+    """Return the active bucket's last-known output-language hint, if present."""
+    try:
+        from ...core import resolve_active_bucket_id
+
+        bucket_id = resolve_active_bucket_id()
+        if bucket_id is None:
+            return None
+        return resolve_profile_output_language_hint(bucket_id)
+    except Exception:
+        return None
+
+
+def resolve_profile_output_language_hint(bucket_id: str) -> str | None:
+    """Return a named bucket's last-known output-language hint, if present."""
+    try:
+        from ...adapters.persistence.storage.bucket import read_bucket_output_language_hint
+        from ...core.config import load_settings
+
+        trimmed = bucket_id.strip()
+        if not trimmed:
+            return None
+        return read_bucket_output_language_hint(
+            storage_root=load_settings().aeat_local_storage_root,
+            bucket_id=trimmed,
+        )
+    except Exception:
+        return None
 
 
 def register_language_resolver() -> None:

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
-
-
-
 
 # Pin box 37 deducible source by label-exact match to iva.autorepercutido.intracomunitaria.deducible (AIC leg), documenting the registry self-label collision with iva.autorepercutido.interior.deducible and deferring box 37 to manual only if genuinely ambiguous after confirmation
 

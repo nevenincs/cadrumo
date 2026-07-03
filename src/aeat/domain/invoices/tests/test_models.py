@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ...iva import InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
+from ...iva import EUMemberState, InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
 from .._enums import IvaRate, PaymentStatus, iva_rate_percentage, numeric_iva_rate_percentages
 from .._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 
@@ -119,48 +119,22 @@ def test_invoice_line_rejects_larger_rounding_drift() -> None:
         )
 
 
-def test_invoice_counterparty_eu_member_state_returns_typed_enum_for_eu_country() -> None:
-    """Promote the str counterparty_country into the substrate-typed
-    EUMemberState through the typed accessor — downstream consumers
-    (OSS / IOSS / intra-community routing) work against the closed enum
-    rather than a raw 2-letter string."""
-    from ...iva import EUMemberState
-
-    invoice = _valid_invoice(
-        counterparty_country="DE",
-        counterparty_tax_id="DE123456789",
+def test_invoice_counterparty_eu_member_state_accessor() -> None:
+    """Counterparty country is normalized and exposed as a typed EU member when applicable."""
+    cases = (
+        ("DE", "DE123456789", "DE", EUMemberState.DE, True),
+        ("US", "US123456789", "US", None, False),
+        ("fr", "FR12345678901", "FR", EUMemberState.FR, True),
     )
-    assert invoice.counterparty_country == "DE"
-    assert invoice.counterparty_eu_member_state is EUMemberState.DE
-    assert invoice.counterparty_is_eu_member is True
+    for raw_country, tax_id, stored_country, expected_state, expected_is_member in cases:
+        invoice = _valid_invoice(
+            counterparty_country=raw_country,
+            counterparty_tax_id=tax_id,
+        )
 
-
-def test_invoice_counterparty_eu_member_state_returns_none_for_non_eu_country() -> None:
-    """Non-EU counterparties resolve to None — Modelo 369 OSS bindings
-    and intra-community classifiers gate on
-    counterparty_is_eu_member to skip non-EU lines."""
-    invoice = _valid_invoice(
-        counterparty_country="US",
-        counterparty_tax_id="US123456789",
-    )
-    assert invoice.counterparty_country == "US"
-    assert invoice.counterparty_eu_member_state is None
-    assert invoice.counterparty_is_eu_member is False
-
-
-def test_invoice_counterparty_eu_member_state_handles_lowercase_input_via_uppercase_storage() -> None:
-    """counterparty_country normalises to uppercase at validation time
-    (validate_country_code). The eu_member_state accessor lowercases
-    again for substrate enum lookup. Round-trip works regardless of
-    input case."""
-    from ...iva import EUMemberState
-
-    invoice = _valid_invoice(
-        counterparty_country="fr",  # input lowercase
-        counterparty_tax_id="FR12345678901",
-    )
-    assert invoice.counterparty_country == "FR"  # stored uppercase
-    assert invoice.counterparty_eu_member_state is EUMemberState.FR
+        assert invoice.counterparty_country == stored_country
+        assert invoice.counterparty_eu_member_state is expected_state
+        assert invoice.counterparty_is_eu_member is expected_is_member
 
 
 def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
@@ -172,29 +146,16 @@ def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
     from ...iva import IvaCategory
 
     invoice = _valid_invoice()
-    # Default value is None
     assert invoice.iva_category is None
 
-    # String input coerces to IvaCategory
     invoice = Invoice.model_validate(
         {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_number": "INV-001",
-            "issued_at": date(2026, 4, 1),
-            "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100"),
-            "iva_total": Decimal("21"),
-            "grand_total": Decimal("121"),
-            "currency": "EUR",
-            "lines": (_valid_line(),),
-            "payment_status": PaymentStatus.PAID,
-            "iva_category": "domestic_general_21",  # string input
+            **invoice.model_dump(mode="python"),
+            "iva_category": "domestic_general_21",
         },
     )
     assert invoice.iva_category is IvaCategory.DOMESTIC_GENERAL_21
-    # JSON round-trip preserves the enum value as its string form
+
     json_dump = invoice.model_dump(mode="json")
     assert json_dump["iva_category"] == "domestic_general_21"
 
@@ -202,21 +163,12 @@ def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
 def test_invoice_iva_category_rejects_unknown_string() -> None:
     """An unknown iva_category string must fail validation now that the
     field is typed against the closed IvaCategory enum."""
+    invoice = _valid_invoice()
+
     with pytest.raises(ValidationError, match=r"iva_category must be an IvaCategory"):
         Invoice.model_validate(
             {
-                "kind": InvoiceKind.ISSUED,
-                "invoice_number": "INV-001",
-                "issued_at": date(2026, 4, 1),
-                "counterparty_name": "Cliente SL",
-                "counterparty_tax_id": "B12345674",
-                "counterparty_country": "ES",
-                "base_total": Decimal("100"),
-                "iva_total": Decimal("21"),
-                "grand_total": Decimal("121"),
-                "currency": "EUR",
-                "lines": (_valid_line(),),
-                "payment_status": PaymentStatus.PAID,
+                **invoice.model_dump(mode="python"),
                 "iva_category": "bogus-category",
             },
         )
@@ -293,46 +245,31 @@ def test_invoice_rejects_oss_line_rate_without_invoice_oss_axes() -> None:
         )
 
 
-def test_invoice_rejects_invalid_issued_at_without_typeerror_escape() -> None:
-    """Invalid date input must stay inside the pydantic validation boundary."""
-    with pytest.raises(ValidationError, match=r"not-a-date.*not a valid ISO-8601 date"):
-        Invoice.model_validate(
-            {
-                "kind": InvoiceKind.ISSUED,
-                "invoice_number": "INV-001",
-                "issued_at": "not-a-date",
-                "counterparty_name": "Cliente SL",
-                "counterparty_tax_id": "B12345674",
-                "counterparty_country": "ES",
-                "base_total": Decimal("100"),
-                "iva_total": Decimal("21"),
-                "grand_total": Decimal("121"),
-                "currency": "EUR",
-                "lines": (_valid_line(),),
-                "payment_status": PaymentStatus.PAID,
-            },
-        )
+def test_invoice_rejects_invalid_core_fields() -> None:
+    """Invalid core field input must stay inside the pydantic validation boundary."""
+    cases = (
+        ("issued_at", "not-a-date", r"not-a-date.*not a valid ISO-8601 date"),
+        ("kind", "bogus-kind", r"kind must be an InvoiceKind"),
+    )
+    for field, value, match in cases:
+        payload = {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": "INV-001",
+            "issued_at": date(2026, 4, 1),
+            "counterparty_name": "Cliente SL",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "base_total": Decimal("100"),
+            "iva_total": Decimal("21"),
+            "grand_total": Decimal("121"),
+            "currency": "EUR",
+            "lines": (_valid_line(),),
+            "payment_status": PaymentStatus.PAID,
+        }
+        payload[field] = value
 
-
-def test_invoice_rejects_unknown_kind_with_domain_validation_message() -> None:
-    """Unknown invoice kind strings must fail as invoice-domain validation."""
-    with pytest.raises(ValidationError, match=r"kind must be an InvoiceKind"):
-        Invoice.model_validate(
-            {
-                "kind": "bogus-kind",
-                "invoice_number": "INV-001",
-                "issued_at": date(2026, 4, 1),
-                "counterparty_name": "Cliente SL",
-                "counterparty_tax_id": "B12345674",
-                "counterparty_country": "ES",
-                "base_total": Decimal("100"),
-                "iva_total": Decimal("21"),
-                "grand_total": Decimal("121"),
-                "currency": "EUR",
-                "lines": (_valid_line(),),
-                "payment_status": PaymentStatus.PAID,
-            },
-        )
+        with pytest.raises(ValidationError, match=match):
+            Invoice.model_validate(payload)
 
 
 def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> None:
@@ -469,11 +406,20 @@ def test_invoice_validates_spanish_tax_id_for_es_country() -> None:
 
 
 def test_invoice_validates_iva_prefix_for_non_es_country() -> None:
-    """Non-ES counterparties must carry a IVA number with the country prefix."""
+    """Non-ES counterparties must carry a NIF-IVA matching their country format."""
     invoice = _valid_invoice(counterparty_country="DE", counterparty_tax_id="DE123456789")
     assert invoice.counterparty_tax_id == "DE123456789"
-    with pytest.raises(ValidationError, match=r"IVA number must start with the counterparty country ISO-2 prefix"):
-        _valid_invoice(counterparty_country="DE", counterparty_tax_id="123456789")
+
+
+def test_invoice_rejects_invalid_non_es_iva_prefix() -> None:
+    """Non-ES counterparties reject NIF-IVA values that do not match their country."""
+    cases = (
+        ("DE", "123456789", r"is not a valid Germany NIF-IVA"),
+        ("US", "123456789", r"IVA number must start with the counterparty country ISO-2 prefix"),
+    )
+    for country, tax_id, match in cases:
+        with pytest.raises(ValidationError, match=match):
+            _valid_invoice(counterparty_country=country, counterparty_tax_id=tax_id)
 
 
 def test_invoice_linked_transaction_ids_are_deduplicated_and_hex_validated() -> None:
@@ -552,34 +498,16 @@ def test_catalogue_iteration_yields_invoices() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_numeric_iva_rate_percentages_value() -> None:
-    """The helper returns exactly the four canonical integer percentages.
-
-    This literal set is the external anchor — ``{0, 4, 10, 21}`` as
-    ``Decimal`` — grounded in the LIVA art. 90/91 slot taxonomy.
-    """
-    assert numeric_iva_rate_percentages() == frozenset({Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")})
-
-
-def test_numeric_iva_rate_percentages_cardinality_tracks_rate_members() -> None:
-    """The set cardinality equals the count of ``RATE_*`` enum members.
+def test_numeric_iva_rate_percentages_tracks_rate_members_only() -> None:
+    """The helper returns canonical percentages for ``RATE_*`` enum members only.
 
     Derivation test: if a new ``RATE_<n>`` slot is added to
     :class:`IvaRate` the helper must pick it up without code changes.
     """
-    rate_members = [m for m in IvaRate if m.value.startswith("RATE_")]
-    assert len(numeric_iva_rate_percentages()) == len(rate_members)
-
-
-def test_numeric_iva_rate_percentages_excludes_exempt_and_not_subject() -> None:
-    """EXEMPT and NOT_SUBJECT must not contribute a percentage to the set."""
     result = numeric_iva_rate_percentages()
-    # These two members carry no numeric percentage; they must not appear.
-    assert IvaRate.EXEMPT not in {str(p) for p in result}
-    assert IvaRate.NOT_SUBJECT not in {str(p) for p in result}
-    # Structural check: the non-RATE_ members must not widen the set.
-    non_rate_count = sum(1 for m in IvaRate if not m.value.startswith("RATE_"))
-    rate_count = sum(1 for m in IvaRate if m.value.startswith("RATE_"))
-    assert len(result) == rate_count
+    rate_members = [m for m in IvaRate if m.value.startswith("RATE_")]
+
+    assert result == frozenset({Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")})
+    assert len(result) == len(rate_members)
     assert len(result) < len(IvaRate)
-    assert non_rate_count > 0  # guards against the guard itself becoming vacuous
+    assert [m for m in IvaRate if not m.value.startswith("RATE_")] == [IvaRate.EXEMPT, IvaRate.NOT_SUBJECT]

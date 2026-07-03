@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#repo-health-triage'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-30'
 step_id: 'W03.P09.S31'
 related:
   - '[[2026-06-04-repo-health-triage-plan]]'
 ---
-
-
-
 
 # W03.P09.S31 - Extract formula initial-value materialization
 

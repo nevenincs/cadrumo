@@ -2,7 +2,7 @@
 
 The LIRPF art. 85 imputación-de-rentas-inmobiliarias rates and the
 catastral-revision lookback window are no longer Python literals on
-:mod:`aeat.domain.fincas._aggregates`. They live in
+:mod:`domain.fincas._aggregates`. They live in
 ``registry/aeat/legal/irpf.toml`` under ``[parameters."lirpf-art-85:*"]``
 entries with explicit BOE citations and review metadata, and the
 rental aggregator imports them from this module.
@@ -10,7 +10,7 @@ rental aggregator imports them from this module.
 The loader is deliberately small: it reads the TOML file once at
 import time, validates the three expected parameter ids, and exposes
 their values as a frozen pydantic record. The full registry parameter
-loader at :mod:`aeat.domain.calculations.registry._loader` is scoped
+loader at :mod:`domain.calculations.registry._loader` is scoped
 to modelo revisions; LIRPF art. 85 imputación is a cross-cutting
 LIRPF authority consumed by the rental package directly, so a
 narrow loader here keeps the substrate boundary clean without
@@ -64,7 +64,7 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
 
     Routes through ``aeat.domain.calculations.registry.load_registry_tree``
     so parameters land in the validated :class:`RegistryCatalogues.parameters`
-    surface (single config-resolution path). The legacy direct
+    surface (single config-resolution path). The retired direct
     ``tomllib.load`` of ``registry/aeat/legal/irpf.toml`` is replaced —
     bypassing the loader was the same architectural drift pattern as
     direct ``os.environ`` reads.
@@ -77,7 +77,7 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
     # load_registry_tree path pulls in registry._bindings which imports
     # from aeat.domain.iva (which itself imports rental upstream), so a
     # parameter-only loader is needed here to avoid import-time cycles.
-    from ..calculations.registry._loader import load_legal_parameters_only
+    from ..calculations.registry import load_legal_parameters_only
 
     parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
     return _parameters_from_catalogue(parameters)
@@ -121,7 +121,7 @@ def load_imputacion_parameters() -> LirpfArt85ImputacionParameters:
     parameter catalogue and returns the typed
     :class:`LirpfArt85ImputacionParameters` record. Callers that
     want the raw parameter mapping should use
-    :func:`aeat.domain.calculations.registry.load_legal_parameters_only`
+    :func:`domain.calculations.registry.load_legal_parameters_only`
     or the ``resources().legal_parameters`` Repository instead.
     """
     return _load_parameters()

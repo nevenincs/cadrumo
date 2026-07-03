@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-29'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S120]]'
@@ -37,7 +37,7 @@ Status: closed.
 
 The first broader export-format run did not provide usable closure evidence. It stopped on registry validation before the Modelo 130 and Modelo 303 golden tests could exercise the export surface, and the later focused run exposed a stale Modelo 303 BOE golden hash. Treating that as an external blocker would have hidden a real validation gap.
 
-Resolution: the run was pursued to completion. Modelo 151 now validates in `test_modelo_151_registry.py`. Modelo 714 Phase-A data no longer contains invalid placeholder formula rows; the registry test asserts that the current key patrimonio casillas remain manual rather than accepting fake business logic. The Modelo 303 golden hash was refreshed only after checking the official DP30303 workbook rows for casillas 110, 78, and 87 and adding byte-offset assertions for those fields. The broader export-format batch now passes with 114 tests.
+Resolution: the run was pursued to completion. Modelo 151 now validates in `test_modelo_151_registry.py`. At the time of S120, Modelo 714 Phase-A data no longer contained invalid placeholder formula rows; that historical registry test asserted the then-current manual patrimonio baseline rather than accepting fake business logic. Currentization on 2026-06-29: Modelo 714 now computes the art. 30 cuota íntegra scale (casilla 29) and the art. 31 80%-floor reference (casilla 39) from BOE-grounded registry formulas. The Modelo 303 golden hash was refreshed only after checking the official DP30303 workbook rows for casillas 110, 78, and 87 and adding byte-offset assertions for those fields. The broader export-format batch then passed with 114 tests.
 
 Status: closed.
 
@@ -59,7 +59,7 @@ Status: closed.
 
 During the broader export validation, fresh registry loading rejected Modelo 714 because the Phase-A formula table contained invalid placeholder entries rather than real registry formulas. Keeping those rows would have made the new registry coverage a shape test around fake data.
 
-Resolution: the placeholder formula entries were removed, the construct scope was aligned to existing legal/source/application references, and `test_modelo_714_registry.py` now proves the current manual casilla baseline through the real registry loader. The focused Modelo 714 registry test passed with 4 tests, and the touched registry/test files pass Ruff.
+Resolution: the placeholder formula entries were removed, the construct scope was aligned to existing legal/source/application references, and `test_modelo_714_registry.py` then proved the manual casilla baseline through the real registry loader. Currentization on 2026-06-29: the same registry surface now carries real formulas for casilla 29 (`patrimonio-cuota-integra-escala-estatal`) and casilla 39 (`patrimonio-reduccion-limite-80-suelo`), so the S120 manual-baseline statement is historical rather than current. The focused Modelo 714 registry test passed with 4 tests, and the touched registry/test files passed Ruff.
 
 Status: closed.
 

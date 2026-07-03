@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import warnings
 from datetime import date
-from functools import lru_cache
 
 import pytest
 
@@ -13,16 +12,17 @@ from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
     CasillaId,
+    LegalRefId,
     ModeloDefinition,
     OssIossLedgerObservation,
     RegistryCatalogues,
     RegistryValidator,
     build_snapshot,
     extract_record_design,
-    load_registry_tree,
     resolve_ledger_oss_aggregation_binding_values,
     validated_casilla_id,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
@@ -48,6 +48,28 @@ _M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA: CasillaId = _casilla_id(
     "iva.importacion.de.low-value-cuota",
 )
 _M369_IMPORTACION_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.importacion.cuota-total")
+_M369_EXTERIOR_SCHEME_LEGAL_REFS: tuple[LegalRefId, ...] = (
+    "ley-37-1992:art-163-octiesdecies",
+    "ley-37-1992:art-163-noniesdecies",
+    "ley-37-1992:art-163-vicies",
+)
+_M369_UNION_SCHEME_LEGAL_REFS: tuple[LegalRefId, ...] = (
+    "ley-37-1992:art-163-unvicies",
+    "ley-37-1992:art-163-duovicies",
+    "ley-37-1992:art-163-tervicies",
+    "ley-37-1992:art-163-quatervicies",
+)
+_M369_IMPORTACION_SCHEME_LEGAL_REFS: tuple[LegalRefId, ...] = (
+    "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
+)
+_M369_SCHEME_LEGAL_REFS_BY_REVISION = {
+    "esquema-exterior": _M369_EXTERIOR_SCHEME_LEGAL_REFS,
+    "esquema-union": _M369_UNION_SCHEME_LEGAL_REFS,
+    "esquema-importacion": _M369_IMPORTACION_SCHEME_LEGAL_REFS,
+}
 
 
 _FORBIDDEN_REMOTE_ACTIONS = frozenset(
@@ -64,11 +86,8 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
 )
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_369() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "369")
-    return modelo, catalogues
+    return _committed_modelo("369")
 
 
 def test_modelo_369_validator_accepts_committed_definition() -> None:
@@ -88,6 +107,8 @@ def test_modelo_369_metadata_matches_hac_610_2021() -> None:
     assert "orden-hac-610-2021:art-1" in modelo.legal_refs
     assert "orden-hac-610-2021:art-2" in modelo.legal_refs
     assert "orden-hac-610-2021:art-3" in modelo.legal_refs
+    for scheme_refs in _M369_SCHEME_LEGAL_REFS_BY_REVISION.values():
+        assert set(scheme_refs).issubset(modelo.legal_refs)
     assert "aeat-dr-369-2021" in modelo.source_refs
     assert "aeat-modelo-369-procedure" in modelo.source_refs
 
@@ -148,14 +169,18 @@ def test_modelo_369_snapshot_selects_scheme_by_period(period: str, expected_revi
 
 
 @pytest.mark.parametrize(
-    ("period", "revision_id", "legal_ref"),
+    ("period", "revision_id", "expected_legal_refs"),
     [
-        ("EXT-1T", "esquema-exterior", "ley-37-1992:art-163-octiesdecies"),
-        ("1T", "esquema-union", "ley-37-1992:art-163-unvicies"),
-        ("01", "esquema-importacion", "ley-37-1992:art-163-quinvicies"),
+        ("EXT-1T", "esquema-exterior", _M369_EXTERIOR_SCHEME_LEGAL_REFS),
+        ("1T", "esquema-union", _M369_UNION_SCHEME_LEGAL_REFS),
+        ("01", "esquema-importacion", _M369_IMPORTACION_SCHEME_LEGAL_REFS),
     ],
 )
-def test_modelo_369_snapshots_carry_scheme_authority(period: str, revision_id: str, legal_ref: str) -> None:
+def test_modelo_369_snapshots_carry_scheme_authority(
+    period: str,
+    revision_id: str,
+    expected_legal_refs: tuple[LegalRefId, ...],
+) -> None:
     modelo, catalogues = _load_modelo_369()
 
     snapshot = build_snapshot(
@@ -170,10 +195,13 @@ def test_modelo_369_snapshots_carry_scheme_authority(period: str, revision_id: s
     assert "orden-hac-610-2021:art-1" in snapshot.legal
     assert "orden-hac-610-2021:art-2" in snapshot.legal
     assert "orden-hac-610-2021:art-3" in snapshot.legal
-    assert legal_ref in snapshot.legal
+    for legal_ref in expected_legal_refs:
+        assert legal_ref in snapshot.legal
     assert "aeat-dr-369-2021" in snapshot.sources
     assert "aeat-modelo-369-procedure" in snapshot.sources
     assert "boe-modelo-369-2021-form" in snapshot.sources
+    assert catalogues.sources["aeat-modelo-369-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-369-2021-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_369_filing_schedules_match_scheme_period_selectors() -> None:
@@ -197,6 +225,57 @@ def test_modelo_369_filing_schedules_match_scheme_period_selectors() -> None:
         assert schedule.periods == revision.period_selector.periods
         assert "orden-hac-610-2021:art-2" in schedule.legal_refs
         assert "orden-hac-610-2021:art-3" in schedule.legal_refs
+
+
+@pytest.mark.parametrize(
+    ("period", "revision_id"),
+    [
+        ("EXT-1T", "esquema-exterior"),
+        ("1T", "esquema-union"),
+        ("01", "esquema-importacion"),
+    ],
+)
+def test_modelo_369_filing_schedule_explains_b2c_scope_not_b2b(
+    period: str,
+    revision_id: str,
+) -> None:
+    """Every Esquema's filing-schedule condition must disambiguate that the OSS/IOSS
+    ventanilla unica covers B2C operations to final consumers (destinatarios que no
+    tengan la condicion de sujetos pasivos), never B2B operations between taxable
+    persons — so an operator does not misuse Modelo 369 for reverse-charge B2B flows.
+
+    Grounded against the modelo official_name ("...que presten servicios a personas que
+    no tengan la condicion de sujetos pasivos...") and the OSS regime (LIVA arts.
+    163 octiesdecies-octovicies; HAC/610/2021). The note is asserted on the built
+    snapshot projection, the surface an operator-facing consumer reads.
+    """
+    modelo, catalogues = _load_modelo_369()
+
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period=period,
+        revision_id=revision_id,
+    )
+
+    schedules = tuple(snapshot.filing_schedules.values())
+    assert len(schedules) == 1
+    conditions = schedules[0].profile_conditions
+    assert conditions, f"{revision_id} filing schedule must declare a profile condition"
+    explanation = conditions[0].explanation.lower()
+
+    assert "b2c" in explanation
+    assert "b2b" in explanation
+    # The B2C scope is grounded in the "no sujetos pasivos" / final-consumer wording.
+    assert "no tengan la condicion de sujetos pasivos" in explanation
+    assert "consumidores finales" in explanation
+    # The Union scheme additionally routes B2B intra-community flows to 303/349.
+    if revision_id == "esquema-union":
+        assert "inversion del sujeto pasivo" in explanation
+        assert "303" in explanation
+        assert "349" in explanation
 
 
 @pytest.mark.parametrize(
@@ -342,6 +421,28 @@ def test_modelo_369_constructs_close_over_revision_members() -> None:
         assert construct.application_links == tuple(link.id for link in revision.application_links)
         assert construct.deadline_windows == tuple(w.id for w in revision.deadline_windows)
         assert construct.filing_schedules == tuple(s.id for s in revision.filing_schedules)
+
+
+def test_modelo_369_revision_envelopes_carry_full_liva_scheme_ranges() -> None:
+    modelo, _ = _load_modelo_369()
+
+    for revision_id, expected_refs in _M369_SCHEME_LEGAL_REFS_BY_REVISION.items():
+        revision = modelo.revisions[revision_id]
+        expected = set(expected_refs)
+        construct = revision.constructs[0]
+        manifest = revision.completeness_manifest
+        formula = revision.formulas[0]
+        total_casilla = next(casilla for casilla in revision.casillas if casilla.id == formula.target_casilla_id)
+        calculation_link = next(link for link in revision.application_links if link.surface == "calculation")
+
+        assert expected.issubset(revision.legal_refs)
+        assert expected.issubset(revision.verification_expectations[0].legal_refs)
+        assert expected.issubset(construct.legal_refs)
+        assert manifest is not None
+        assert expected.issubset(manifest.legal_refs)
+        assert expected.issubset(total_casilla.legal_refs)
+        assert expected.issubset(formula.legal_refs)
+        assert expected.issubset(calculation_link.legal_refs)
 
 
 def test_modelo_369_each_revision_declares_at_least_one_oss_aggregation_binding() -> None:
@@ -618,12 +719,8 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
     # Identity threading: each bound casilla equals its binding fact value.
     # The cuota-total formula is verified structurally (operands present);
     # the arithmetic itself stays bound to workbook-parity / oracle replays.
-    assert result.values[_M369_UNION_DE_SERVICES_CUOTA_CASILLA] == binding_values[
-        "modelo-369-union-de-services-21pct"
-    ]
-    assert result.values[_M369_UNION_FR_SERVICES_CUOTA_CASILLA] == binding_values[
-        "modelo-369-union-fr-services-21pct"
-    ]
+    assert result.values[_M369_UNION_DE_SERVICES_CUOTA_CASILLA] == binding_values["modelo-369-union-de-services-21pct"]
+    assert result.values[_M369_UNION_FR_SERVICES_CUOTA_CASILLA] == binding_values["modelo-369-union-fr-services-21pct"]
     assert (
         result.values[_M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA]
         == binding_values["modelo-369-union-de-goods-distance-21pct"]

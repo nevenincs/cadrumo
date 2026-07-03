@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._ids import CasillaId
+from ._ids import CasillaId, LegalRefId, SourceRefId
 
 if TYPE_CHECKING:
     from ._snapshot import RegistrySnapshot
@@ -40,6 +40,7 @@ class IdReferenceChecker:
         "failures",
         "filing_schedule_ids",
         "formula_ids",
+        "legal_evidence_tiers",
         "legal_ids",
         "parameter_ids",
         "prefix",
@@ -77,22 +78,38 @@ class IdReferenceChecker:
         self.construct_ids = {c.id for c in revision.constructs}
         self.dependency_classification_ids = {dc.id for dc in revision.dependency_classifications}
         self.legal_ids = set(snapshot.legal)
+        self.legal_evidence_tiers = {ref_id: ref.evidence_tier for ref_id, ref in snapshot.legal.items()}
         self.source_ids = set(snapshot.sources)
 
     def chk(self, field_path: str, value: str, id_set: set[str]) -> None:
         if value not in id_set:
             self.failures.append(f"{self.prefix}: {field_path} references unknown id {value!r}")
+        elif id_set is self.legal_ids:
+            self._chk_legal_authority(field_path, value)
 
     def chk_opt(self, field_path: str, value: str | None, id_set: set[str]) -> None:
         if value is not None and value not in id_set:
             self.failures.append(f"{self.prefix}: {field_path} references unknown id {value!r}")
+        elif value is not None and id_set is self.legal_ids:
+            self._chk_legal_authority(field_path, value)
 
     def chk_tuple(self, field_path: str, values: tuple[str, ...], id_set: set[str]) -> None:
         for value in values:
             if value not in id_set:
                 self.failures.append(f"{self.prefix}: {field_path} references unknown id {value!r}")
+            elif id_set is self.legal_ids:
+                self._chk_legal_authority(field_path, value)
 
-    def chk_legal_source_refs(self, owner: str, legal_refs: tuple[str, ...], source_refs: tuple[str, ...]) -> None:
+    def chk_legal_source_refs(
+        self,
+        owner: str,
+        legal_refs: tuple[LegalRefId, ...],
+        source_refs: tuple[SourceRefId, ...],
+    ) -> None:
         """Single-call helper for the (legal_refs, source_refs) pair every record carries."""
         self.chk_tuple(f"{owner}.legal_refs", legal_refs, self.legal_ids)
         self.chk_tuple(f"{owner}.source_refs", source_refs, self.source_ids)
+
+    def _chk_legal_authority(self, field_path: str, value: str) -> None:
+        if self.legal_evidence_tiers.get(value) != "legal_authority":
+            self.failures.append(f"{self.prefix}: {field_path} legal ref {value!r} is not legal authority")

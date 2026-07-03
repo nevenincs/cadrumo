@@ -14,17 +14,23 @@ Submodules
    :maxdepth: 4
 
    aeat.application.modelo._action_errors
-   aeat.application.modelo._actions
    aeat.application.modelo._amendment_actions
+   aeat.application.modelo._amendment_kind_resolution
+   aeat.application.modelo._art109_activity_income
    aeat.application.modelo._art20_advisory
+   aeat.application.modelo._bienes_inversion_advisory
    aeat.application.modelo._binding_readiness
    aeat.application.modelo._binding_resolution
    aeat.application.modelo._borrador_binding
    aeat.application.modelo._calculate_input
    aeat.application.modelo._calculation_actions
+   aeat.application.modelo._calculation_aggregation_context
    aeat.application.modelo._calculation_diagnostics
    aeat.application.modelo._calculation_helpers
+   aeat.application.modelo._calculation_preparation
    aeat.application.modelo._calculation_resolution
+   aeat.application.modelo._calculation_source_policy
+   aeat.application.modelo._data_inventory
    aeat.application.modelo._decimal_parsing
    aeat.application.modelo._dt12_advisory
    aeat.application.modelo._export
@@ -34,9 +40,15 @@ Submodules
    aeat.application.modelo._history
    aeat.application.modelo._iva_wallet_gate
    aeat.application.modelo._iva_wallet_seed
+   aeat.application.modelo._ledger_evidence_gate
+   aeat.application.modelo._local_observation_actions
+   aeat.application.modelo._local_observation_spreadsheet
    aeat.application.modelo._m036_lifecycle
    aeat.application.modelo._m210_rate
+   aeat.application.modelo._m303_m349_reconcile
+   aeat.application.modelo._m349_ledger_guard
    aeat.application.modelo._maritime_preview
+   aeat.application.modelo._minimo_descendientes_advisory
    aeat.application.modelo._objective_estimation_advisory
    aeat.application.modelo._official_box_advisory
    aeat.application.modelo._participation_index_rebuild
@@ -44,12 +56,16 @@ Submodules
    aeat.application.modelo._profile_binding
    aeat.application.modelo._profile_readiness_gate
    aeat.application.modelo._projection
+   aeat.application.modelo._quickfile
    aeat.application.modelo._reconcile
+   aeat.application.modelo._reconcile_casilla
    aeat.application.modelo._registry_discovery
    aeat.application.modelo._registry_helpers
    aeat.application.modelo._registry_resources
+   aeat.application.modelo._required_binding_gate
    aeat.application.modelo._result_disposition_resolution
    aeat.application.modelo._result_summary
+   aeat.application.modelo._review_package
    aeat.application.modelo._revision_persistence
    aeat.application.modelo._revision_replay_inputs
    aeat.application.modelo._selectors
@@ -57,6 +73,7 @@ Submodules
    aeat.application.modelo._settlement_grade_advisory
    aeat.application.modelo._taxation_comparison
    aeat.application.modelo._verification_actions
+   aeat.application.modelo._verification_cross_period
    aeat.application.modelo._work_addressing
    aeat.application.modelo._work_create_policy
    aeat.application.modelo._work_lifecycle

@@ -4,7 +4,7 @@ Defines the boundary records that flow through the transaction
 pipeline:
 
 - :class:`Transaction` -- the immutable wrapper that preserves the
-  upstream :class:`aeat.domain.transactions._raw_transaction.RawTransaction`
+  upstream :class:`domain.transactions._raw_transaction.RawTransaction`
   verbatim and adds classification metadata.
 - :class:`ClassificationHistoryEntry` -- one frozen record in the
   per-transaction classification chain.
@@ -35,14 +35,30 @@ from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL,
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId
 from ...core.money import round_to_cents
-from ...core.time import now, parse_iso_datetime
-from ...core.time._utc import validate_utc_aware
+from ...core.time import now, parse_iso_datetime, validate_utc_aware
 from .._identifiers import canonical_decimal_string
-from ..iva._schema import EUMemberState, IvaCategory
+from ..iva import (
+    EUMemberState,
+    IvaCategory,
+    IvaExemptionArticle,
+)
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._ids import TransactionId
+from ._irpf_categories import (
+    IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
+    PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING,
+    RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING,
+    format_irpf_category_ids,
+    has_activity_irpf_category,
+    has_non_work_irpf_category,
+    has_rent_irpf_category,
+)
 from ._raw_transaction import RawTransaction
+
+# LIRPF art. 101.5 / RIRPF art. 95: supported professional activity
+# withholding rates are 15% or lower reduced rates, not the 21% IVA delta.
+_MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE = Decimal("0.15")
 
 
 def derive_transaction_id(raw: RawTransaction) -> str:
@@ -56,7 +72,7 @@ def derive_transaction_id(raw: RawTransaction) -> str:
     *lineage* convenience that lets an old, written-down handle still
     resolve to the current row through ``ledger history`` / ``view`` /
     ``track`` (see
-    :func:`aeat.application.ledger.resolve_lineage_transaction_id`) is a
+    :func:`application.ledger.resolve_lineage_transaction_id`) is a
     **read-side lookup layer over this authoritative id**; it never
     freezes or re-mints the id, so the content-addressing invariant import
     dedup relies on is untouched.
@@ -73,7 +89,7 @@ def derive_transaction_id(raw: RawTransaction) -> str:
         {
             "amount": canonical_decimal_string(raw.amount),
             "narrative": raw.description,
-            "provider_id": raw.transaction_id,
+            "provider_id": raw.provider_transaction_id,
             "value_date": effective_value_date.isoformat(),
         }
     )
@@ -102,25 +118,36 @@ def normalise_movement_reference(value: str) -> str:
     return _REFERENCE_NOISE.sub("", stripped.lower())
 
 
-def derive_import_fingerprint(raw: RawTransaction) -> str:
+def derive_import_fingerprint(raw: RawTransaction, *, direction: TransactionDirection | str | None = None) -> str:
     """Return the stable cross-format import-dedup fingerprint for a raw row.
 
     Unlike :func:`derive_transaction_id` — which keys on the provider
     identifier and the verbatim narrative and therefore changes when a
     transaction is edited or re-exported in a different file format —
     this fingerprint keys only on the *movement identity* an operator
-    would recognise: the effective date, the amount magnitude, and the
-    normalised narrative (see :func:`normalise_movement_reference`).
+    would recognise: the effective date, amount magnitude, currency,
+    direction, and the normalised narrative (see
+    :func:`normalise_movement_reference`).
 
     The fingerprint is stamped onto :class:`Transaction` at import time
     and carried verbatim through every later edit, so re-importing the
     same statement (or the same movements exported as a different file
-    format) recognises the row as already present.
+    format) recognises the row as already present. Import callers that
+    have parsed flow direction must pass it; callers without a parse-boundary
+    direction receive an explicit ``UNSPECIFIED`` discriminator.
     """
     effective_value_date = raw.value_date or raw.booked_date
+    if isinstance(direction, TransactionDirection):
+        direction_value = direction.value
+    elif direction is None:
+        direction_value = "UNSPECIFIED"
+    else:
+        direction_value = direction
     return content_hash_hex(
         {
             "amount": canonical_decimal_string(raw.amount),
+            "currency": raw.currency,
+            "direction": direction_value,
             "reference": normalise_movement_reference(raw.description),
             "value_date": effective_value_date.isoformat(),
         }
@@ -241,6 +268,23 @@ def _normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
     return normalized
 
 
+def _trim_lineage_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    trimmed = value.strip()
+    if not trimmed:
+        raise TransactionValidationError("lineage text fields must not be blank")
+    return trimmed
+
+
+def _parse_required_aware_datetime(value: object, *, field_name: str) -> datetime:
+    if isinstance(value, str):
+        value = _parse_datetime(value)
+    if not isinstance(value, datetime):
+        raise TransactionValidationError(f"{field_name} must be a datetime")
+    return _require_aware_datetime(value)
+
+
 _NON_NEGATIVE_DECIMAL_HINTS = {
     "taxable_base": (
         "taxable_base must be non-negative; it is the IVA-exclusive base amount, "
@@ -267,11 +311,24 @@ def _validate_non_negative_decimal(value: Decimal | None, *, field_name: str) ->
 
 
 def _coerce_raw_transaction(raw: object) -> RawTransaction:
-    """Accept a RawTransaction or a mapping/JSON-like and produce the typed record."""
+    """Accept a RawTransaction or a mapping/JSON-like and produce the typed record.
+
+    ``strict=False`` is passed explicitly because :class:`RawTransaction`'s own
+    ``model_config`` is ``strict=True`` (see ``STRICT_FROZEN_CONFIG``): under
+    strict mode, ``model_validate`` on a plain dict rejects a string-typed
+    ``datetime``/``date``/enum value outright (it demands the exact Python
+    type), which is exactly the shape every JSON-decoded storage row carries
+    -- so a strict attempt here would fail on *every* load-from-storage call,
+    permanently falling through to the ``json.dumps`` + ``model_validate_json``
+    round-trip below. Overriding to lax mode accepts both a JSON-decoded dict
+    (string dates/enums) and a genuine Python-native dict (manual construction
+    with real ``Decimal``/``date`` objects) in one pass, so the expensive
+    JSON re-encode fallback is reserved for payloads that are not a mapping.
+    """
     if isinstance(raw, RawTransaction):
         return raw
     try:
-        return RawTransaction.model_validate(raw)
+        return RawTransaction.model_validate(raw, strict=False)
     except ValidationError:
         return RawTransaction.model_validate_json(json.dumps(raw, default=_json_default, ensure_ascii=True))
 
@@ -300,6 +357,7 @@ def _coerce_transaction_enum_fields(payload: dict[str, object]) -> None:
         ("business_classification", BusinessClassification),
         ("lifecycle_state", TransactionLifecycleState),
         ("iva_category", IvaCategory),
+        ("exemption_article", IvaExemptionArticle),
         ("counterparty_eu_member_state", EUMemberState),
     )
     for key, enum_cls in enum_coercers:
@@ -348,13 +406,85 @@ def _coerce_transaction_collection_fields(payload: dict[str, object]) -> None:
             payload[key] = _coerce_history(payload[key])
 
 
+class DecisionProvenance(BaseModel):
+    """Typed provenance for one classification decision.
+
+    Carries the classifier that decided (:attr:`decided_by`, in the same
+    ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>`` /
+    ``derived:<basis>`` shape as
+    :attr:`ClassificationHistoryEntry.classified_by`), when it decided
+    (:attr:`decided_at`), the free-text justification, an optional
+    confidence in ``[0, 1]``, and whether the decision was a manual
+    override of an automated classification. This is the typed
+    replacement for the formerly ``dict``-widened reserved
+    :attr:`ClassificationHistoryEntry.provenance` payload; a persisted
+    record must carry a typed provenance, never a bare
+    ``dict[str, object]``.
+
+    Attributes:
+        decided_by: Classifier source string in the approved
+            ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>`` /
+            ``derived:<basis>`` shape.
+        decided_at: Timezone-aware UTC timestamp of the decision.
+        reason: Free-text justification (may be empty).
+        confidence: Optional decision confidence in ``[0, 1]``.
+        manual_override: ``True`` when the decision manually overrode an
+            earlier automated classification.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    decided_by: str = Field(min_length=1, max_length=128)
+    decided_at: datetime
+    reason: str = ""
+    confidence: Decimal | None = None
+    manual_override: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_inbound(cls, data: object) -> object:
+        """Parse JSON-mode confidence strings back into ``Decimal`` on load."""
+        if isinstance(data, cls):
+            return data
+        if not isinstance(data, Mapping):
+            return data
+        payload = dict(data)
+        if isinstance(payload.get("confidence"), str):
+            payload["confidence"] = Decimal(payload["confidence"])
+        return payload
+
+    @field_validator("decided_by")
+    @classmethod
+    def _validate_decided_by(cls, value: str) -> str:
+        """Restrict ``decided_by`` to the approved classifier shapes."""
+        return _validate_classified_by_shape(value)
+
+    @field_validator("decided_at", mode="before")
+    @classmethod
+    def _parse_decided_at(cls, value: object) -> datetime:
+        """Reject naive or blank decision timestamps."""
+        return _parse_required_aware_datetime(value, field_name="decided_at")
+
+    @field_validator("reason")
+    @classmethod
+    def _normalize_reason(cls, value: str) -> str:
+        """Trim the free-text reason while allowing the empty string."""
+        return value.strip()
+
+    @field_validator("confidence")
+    @classmethod
+    def _validate_confidence(cls, value: Decimal | None) -> Decimal | None:
+        """Restrict confidence to the inclusive 0..1 range when not None."""
+        return _validate_confidence_range(value)
+
+
 class ClassificationHistoryEntry(BaseModel):
     """One frozen record in a transaction's classification chain.
 
-    The :attr:`confidence` and :attr:`provenance` fields are reserved
-    extension points; today both default to ``None`` and future writers
-    populate them without a schema bump because the field list is
-    stable.
+    The :attr:`confidence` and :attr:`provenance` fields default to
+    ``None`` and are populated by writers without a schema bump because
+    the field list is stable; :attr:`provenance` is the typed
+    :class:`DecisionProvenance` record (never a bare ``dict``).
 
     Attributes:
         business_classification: The :class:`BusinessClassification`
@@ -368,7 +498,7 @@ class ClassificationHistoryEntry(BaseModel):
             ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>`` /
             ``derived:<basis>`` shape.
         reason: Free-text justification (may be empty).
-        category_id: Optional :class:`aeat.domain.categories.SpendingCategory`
+        category_id: Optional :class:`domain.categories.SpendingCategory`
             foreign key.
         notes: Free-text notes (may be empty).
         confidence: Optional decision confidence in ``[0, 1]``.
@@ -388,7 +518,7 @@ class ClassificationHistoryEntry(BaseModel):
     category_id: str | None = None
     notes: str = ""
     confidence: Decimal | None = None
-    provenance: dict[str, object] | None = None
+    provenance: DecisionProvenance | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -473,21 +603,12 @@ class TransactionEvidenceProvenanceEntry(BaseModel):
     @field_validator("evidence_id", "actor", "source_command", "bucket_event_id")
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        if not trimmed:
-            raise TransactionValidationError("lineage text fields must not be blank")
-        return trimmed
+        return _trim_lineage_text(value)
 
     @field_validator("linked_at", mode="before")
     @classmethod
     def _parse_linked_at(cls, value: object) -> datetime:
-        if isinstance(value, str):
-            value = _parse_datetime(value)
-        if not isinstance(value, datetime):
-            raise TransactionValidationError("linked_at must be a datetime")
-        return _require_aware_datetime(value)
+        return _parse_required_aware_datetime(value, field_name="linked_at")
 
 
 class TransactionEditLineageEntry(BaseModel):
@@ -504,21 +625,12 @@ class TransactionEditLineageEntry(BaseModel):
     @field_validator("previous_transaction_id", "actor", "source_command", "bucket_event_id")
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        if not trimmed:
-            raise TransactionValidationError("lineage text fields must not be blank")
-        return trimmed
+        return _trim_lineage_text(value)
 
     @field_validator("edited_at", mode="before")
     @classmethod
     def _parse_edited_at(cls, value: object) -> datetime:
-        if isinstance(value, str):
-            value = _parse_datetime(value)
-        if not isinstance(value, datetime):
-            raise TransactionValidationError("edited_at must be a datetime")
-        return _require_aware_datetime(value)
+        return _parse_required_aware_datetime(value, field_name="edited_at")
 
 
 class TransactionLifecycleLineageEntry(BaseModel):
@@ -548,12 +660,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
     @field_validator("actor", "source_command", "bucket_event_id")
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        if not trimmed:
-            raise TransactionValidationError("lineage text fields must not be blank")
-        return trimmed
+        return _trim_lineage_text(value)
 
     @field_validator("reason")
     @classmethod
@@ -563,11 +670,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
     @field_validator("changed_at", mode="before")
     @classmethod
     def _parse_changed_at(cls, value: object) -> datetime:
-        if isinstance(value, str):
-            value = _parse_datetime(value)
-        if not isinstance(value, datetime):
-            raise TransactionValidationError("changed_at must be a datetime")
-        return _require_aware_datetime(value)
+        return _parse_required_aware_datetime(value, field_name="changed_at")
 
     @model_validator(mode="after")
     def _reject_noop_transition(self) -> Self:
@@ -702,7 +805,7 @@ class Transaction(BaseModel):
             from the wrapped raw record by :func:`derive_transaction_id`.
             Re-validated on every parse to detect tampering.
         raw: The verbatim
-            :class:`aeat.domain.transactions._raw_transaction.RawTransaction`.
+            :class:`domain.transactions._raw_transaction.RawTransaction`.
         direction: Closed :class:`TransactionDirection`.
         business_classification: Current :class:`BusinessClassification`
             decision; defaults to
@@ -710,7 +813,7 @@ class Transaction(BaseModel):
         business_pct: Required when ``business_classification`` is
             :attr:`BusinessClassification.MIXED`; ``None`` otherwise.
         invoice_id: Optional invoice foreign key.
-        category_id: Optional :class:`aeat.domain.categories.SpendingCategory`
+        category_id: Optional :class:`domain.categories.SpendingCategory`
             foreign key.
         taxable_base: Optional IVA-exclusive base amount.
         iva_rate: Optional IVA rate expressed as a decimal fraction.
@@ -753,6 +856,10 @@ class Transaction(BaseModel):
             expressed without a synthetic rate.  ``None`` for
             transactions where the standard domestic rate derivation
             is sufficient.
+        exemption_article: Optional Ley 37/1992 Art. 20 sub-article
+            discriminator. Valid only when ``iva_category`` is
+            :attr:`IvaCategory.DOMESTIC_EXEMPT`; ``None`` preserves
+            the broad exempt category with no sub-article distinction.
         counterparty_eu_member_state: ISO 3166-1 alpha-2 EU member
             state of the counterparty.  Required by the aggregation
             gate when ``iva_category`` is
@@ -779,8 +886,8 @@ class Transaction(BaseModel):
             foreign-source). Drives the IRNR scope filter (non-resident
             profiles only emit Spanish-source rows into AEAT bases) and
             the Art. 93 LIRPF Beckham filter (impatriado IRPF base
-            excludes foreign-source rows). ``None`` grandfathers rows
-            authored before the axis was introduced.
+            excludes foreign-source rows). ``None`` records an explicitly
+            unknown jurisdiction.
         created_at: UTC-aware timestamp stamped once at construction and
             carried verbatim through every later edit.
         modified_at: UTC-aware timestamp re-stamped on every mutating edit.
@@ -820,24 +927,25 @@ class Transaction(BaseModel):
     classification_confidence: Decimal | None = None
     classification_history: tuple[ClassificationHistoryEntry, ...] = ()
     iva_category: IvaCategory | None = None
+    exemption_article: IvaExemptionArticle | None = None
     counterparty_eu_member_state: EUMemberState | None = None
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
     # FX provenance (ledger-fx-conversion ADR): the rate source label (e.g.
     # "ecb_reference") and the effective rate date as an ISO-8601 string.
-    # Optional/backward-compatible; populated at import when a normalizer supplied
-    # them. Cannot exist without an fx_rate (a rate provenance with no rate is
+    # Optional; populated at import when a normalizer supplied them. Cannot
+    # exist without an fx_rate (a rate provenance with no rate is
     # meaningless). Stored as a string (not date) to roundtrip cleanly through the
     # strict-frozen JSON persistence boundary.
     rate_source: str | None = None
     rate_date: str | None = None
-    source_jurisdiction: str | None = None
+    source_jurisdiction: str | None
     # Operator-assigned free-text grouping label (e.g. "Proyecto Acme",
     # "Q1 viajes"). Orthogonal to category_id (the regulatory spending
     # category): it is a personal organisational axis for working at scale
     # over thousands of rows. ``None`` means ungrouped. Length-bounded so a
     # grouped display stays legible.
-    group_label: str | None = Field(default=None, max_length=64)
+    group_label: str | None = Field(..., max_length=64)
     # Persistence-record lifecycle timestamps (ledger-interface-contract D6).
     # ``created_at`` is stamped once and carried verbatim through every later
     # edit; ``modified_at`` is re-stamped on every mutating edit
@@ -945,8 +1053,8 @@ class Transaction(BaseModel):
 
         Carries the regulatory-source axis (Spanish-source vs foreign-source)
         through every ledger boundary. Required for IRNR scope enforcement and
-        for the Art. 93 LIRPF impatriado base filter; ``None`` grandfathers
-        rows that pre-date the axis.
+        for the Art. 93 LIRPF impatriado base filter; ``None`` means the
+        current record explicitly declares the jurisdiction unknown.
         """
         if value is None:
             return None
@@ -961,6 +1069,16 @@ class Transaction(BaseModel):
     def _enforce_business_pct(self) -> Self:
         """Enforce the classification/business percentage coupling."""
         _validate_business_pct_coupling(self.business_classification, self.business_pct)
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_exemption_article_category(self) -> Self:
+        """Keep the Art. 20 discriminator coupled to domestic exempt IVA rows."""
+        if self.exemption_article is not None and self.iva_category is not IvaCategory.DOMESTIC_EXEMPT:
+            actual = self.iva_category.value if self.iva_category is not None else None
+            raise TransactionValidationError(
+                f"exemption_article is only valid when iva_category is DOMESTIC_EXEMPT; got iva_category {actual!r}",
+            )
         return self
 
     @model_validator(mode="after")
@@ -999,6 +1117,21 @@ class Transaction(BaseModel):
         the paid cash gross matches the taxable base; the IVA amount is
         self-assessed but not paid in the transaction itself.
 
+        For professional activity invoices paid or received net of IRPF
+        withholding, the bank cash can be lower than the invoice gross while
+        the declared base and IVA still need to preserve the invoice substrate.
+        That relaxation is accepted only for INCOMING activity rows, or for
+        OUTGOING professional-service expense rows, with an explicit
+        actividad-economica ``irpf_category`` and only when
+        ``taxable_base + iva_amount`` is above the cash movement;
+        under-declared invoice gross remains refused.
+
+        For rent expenses paid net of withholding, the same substrate
+        preservation is accepted only for OUTGOING rows in the scoped rent
+        categories with an explicit non-work ``irpf_category``. The supplier
+        invoice base and IVA still reconstitute the invoice gross, while the
+        bank movement reflects cash after withholding.
+
         The check fires **only when both** :attr:`taxable_base` and
         :attr:`iva_amount` are present. A row with either field unset (the
         common case — most transactions never carry the tax substrate)
@@ -1022,10 +1155,82 @@ class Transaction(BaseModel):
             return self
         expected = round_to_cents(abs(self.raw.amount))
         reconstituted = round_to_cents(self.taxable_base + self.iva_amount)
+        if reconstituted == expected:
+            return self
+        if (
+            self.direction == TransactionDirection.INCOMING
+            and has_non_work_irpf_category(self.irpf_category)
+            and reconstituted > expected
+        ):
+            inferred_withholding = round_to_cents(reconstituted - expected)
+            if has_activity_irpf_category(self.irpf_category):
+                maximum_supported_withholding = round_to_cents(
+                    self.taxable_base * _MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE,
+                )
+                if inferred_withholding > maximum_supported_withholding:
+                    raise TransactionValidationError(
+                        "inferred IRPF withholding exceeds supported activity rate; "
+                        "cash amount may be invoice base without IVA",
+                    )
+            return self
+        if (
+            self.direction == TransactionDirection.OUTGOING
+            and self.category_id in PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING
+            and has_activity_irpf_category(self.irpf_category)
+            and reconstituted > expected
+        ):
+            inferred_withholding = round_to_cents(reconstituted - expected)
+            maximum_supported_withholding = round_to_cents(
+                self.taxable_base * _MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE,
+            )
+            if inferred_withholding > maximum_supported_withholding:
+                raise TransactionValidationError(
+                    "inferred IRPF withholding exceeds supported activity rate; "
+                    "cash amount may be invoice base without IVA",
+                )
+            return self
+        if (
+            self.direction == TransactionDirection.OUTGOING
+            and self.category_id in RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
+            and has_rent_irpf_category(self.irpf_category)
+            and reconstituted > expected
+        ):
+            return self
+        detail = ""
+        if reconstituted > expected and self.direction == TransactionDirection.INCOMING:
+            detail = (
+                " If this is an income receipt paid net of IRPF withholding, "
+                f"set irpf_category={IRPF_CATEGORY_ACTIVIDAD_ECONOMICA} for professional invoices "
+                "so the invoice base and IVA can be kept. Run `aeat app ledger categories` "
+                "to list public IRPF category ids."
+            )
+        if (
+            reconstituted > expected
+            and self.direction == TransactionDirection.OUTGOING
+            and self.category_id in PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING
+        ):
+            detail = (
+                " If this is a professional service invoice paid net of withholding, "
+                f"set irpf_category={IRPF_CATEGORY_ACTIVIDAD_ECONOMICA} so the invoice "
+                "base and IVA can be kept. Run `aeat app ledger categories` to list "
+                "public IRPF category ids."
+            )
+        if (
+            reconstituted > expected
+            and self.direction == TransactionDirection.OUTGOING
+            and self.category_id in RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
+        ):
+            rent_irpf_ids = format_irpf_category_ids(RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING)
+            detail = (
+                " If this is rent paid net of withholding, set irpf_category "
+                f"to the matching rental withholding category ({rent_irpf_ids}) so the invoice "
+                "base and IVA can be kept. Run `aeat app ledger categories` to list public "
+                "IRPF category ids."
+            )
         if reconstituted != expected:
             raise TransactionValidationError(
                 "taxable_base + iva_amount must equal the gross to the cent: "
-                f"{self.taxable_base} + {self.iva_amount} = {reconstituted} != {expected}",
+                f"{self.taxable_base} + {self.iva_amount} = {reconstituted} != {expected}.{detail}",
             )
         return self
 
@@ -1116,7 +1321,7 @@ class TransactionCatalogue(BaseModel):
         return cls.model_validate(tuple(transactions))
 
     @override
-    def __iter__(self) -> Iterator[Transaction]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[Transaction]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
         """Iterate over catalogue transactions."""
         return iter(self.transactions.values())
 

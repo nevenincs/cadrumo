@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .. import load_modelo_directory, load_registry_tree
+from .. import LegalRefId, load_modelo_directory
 from .._errors import RegistryValidationError
 from .._schema import (
     CasillaDefinition,
@@ -36,6 +36,7 @@ from .._validate_cross_revision import (
     validate_cross_revision_casilla_consistency,
 )
 from .._validate_registry_scope import validate_registry_scope
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,7 +48,7 @@ def _casilla(
     section: tuple[str, ...] = ("test",),
     data_type: str = "money",
     semantic_role: str | None = None,
-    legal_refs: tuple[str, ...] = ("ley-58-2003:art-29",),
+    legal_refs: tuple[LegalRefId, ...] = ("ley-58-2003:art-29",),
     continuidad_id: str | None = None,
 ) -> CasillaDefinition:
     payload = {
@@ -153,7 +154,7 @@ def _evolutions(*payloads: dict[str, object]) -> dict[str, tuple[dict[str, objec
 
 @pytest.fixture(scope="module")
 def committed_registry() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    return load_registry_tree(bundled_path("registry", "aeat"))
+    return _committed_registry_tree()
 
 
 @pytest.fixture(scope="module")

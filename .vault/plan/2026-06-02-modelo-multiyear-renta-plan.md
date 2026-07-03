@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-multiyear-renta'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 tier: L4
 related:
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
@@ -13,7 +13,6 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-research]]'
   - '[[2026-06-02-modelo-multiyear-renta-income-research]]'
 ---
-
 
 # `modelo-multiyear-renta` `multi-year-renta modelo authorization campaign` plan
 

@@ -15,7 +15,8 @@ import time.
 Adding a new enum value without updating the matching registration here
 will cause scaffold to omit the required locale entries, which the
 registration coverage test will surface immediately. The expanded key set
-is exposed through :func:`get_registered_keys` for :class:`LocaleManager`
+is exposed through :func:`get_registered_keys` for
+:class:`locales.manager.LocaleManager`
 scaffold and parity checks.
 """
 
@@ -46,12 +47,19 @@ def _hyphen(v: str) -> str:
 
 
 # The service-capability CONFIRM question ids (hyphenated, matching the catalogue
-# question ids in :mod:`aeat.application.wizard._catalogue`). Their prompt and
+# question ids in :mod:`application.wizard._catalogue`). Their prompt and
 # CLI-flag-help keys are f-string-built, so they are enumerated here for scaffold.
 _CAPABILITY_QUESTION_IDS: tuple[str, ...] = (
     "cloud-evidence-upload",
     "llm-vision",
     "google-export",
+)
+
+_LEY_49_2002_QUESTION_IDS: tuple[str, ...] = (
+    "ley-49-2002-option-declared",
+    "ley-49-2002-option-date",
+    "ley-49-2002-renunciation-declared",
+    "ley-49-2002-renunciation-date",
 )
 
 
@@ -64,8 +72,8 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """
     from ..application.wizard import WIZARD_FLOWS
     from ..core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-    from ..domain.contribuyente._ccaa import CCAA
-    from ..domain.deadlines._models import (
+    from ..domain.contribuyente import CCAA
+    from ..domain.deadlines import (
         EntityType,
         FiscalResidency,
         IrpfEstimationRegime,
@@ -129,6 +137,21 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="wizard.setup.flags.*.help (service-capability CLI flags)",
             key_factory=lambda v: f"wizard.setup.flags.{v}.help",
             values=_CAPABILITY_QUESTION_IDS,
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type Ley 49/2002 question prompts",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.{v}.prompt",
+            values=_LEY_49_2002_QUESTION_IDS,
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type Ley 49/2002 question help",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.{v}.help",
+            values=_LEY_49_2002_QUESTION_IDS,
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.flags Ley 49/2002 CLI flags",
+            key_factory=lambda v: f"wizard.setup.flags.{v}.help",
+            values=_LEY_49_2002_QUESTION_IDS,
         ),
     )
 

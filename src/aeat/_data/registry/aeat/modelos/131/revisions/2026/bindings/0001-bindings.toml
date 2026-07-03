@@ -2,581 +2,581 @@
 id = "modelo-131.page1.109-109.discapacidad-33"
 source = "manual_input"
 selector = { record = "page_1", field = "discapacidad-33", offset = 109, length = 1, data_type = "boolean" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.110-113.actividad-1-epigrafe"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-1-epigrafe", offset = 110, length = 4, data_type = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.114-130.actividad-1-rendimiento-neto"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-1-rendimiento-neto", offset = 114, length = 17, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.131-135.actividad-1-porcentaje"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-1-porcentaje", offset = 131, length = 5, data_type = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.136-152.actividad-1-resultado"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-1-resultado", offset = 136, length = 17, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.153-156.actividad-2-epigrafe"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-2-epigrafe", offset = 153, length = 4, data_type = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.157-173.actividad-2-rendimiento-neto"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-2-rendimiento-neto", offset = 157, length = 17, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.174-178.actividad-2-porcentaje"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-2-porcentaje", offset = 174, length = 5, data_type = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.179-195.actividad-2-resultado"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-2-resultado", offset = 179, length = 17, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.196-199.actividad-3-epigrafe"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-3-epigrafe", offset = 196, length = 4, data_type = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.200-216.actividad-3-rendimiento-neto"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-3-rendimiento-neto", offset = 200, length = 17, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.217-221.actividad-3-porcentaje"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-3-porcentaje", offset = 217, length = 5, data_type = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.222-238.actividad-3-resultado"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-3-resultado", offset = 222, length = 17, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.239-242.actividad-4-epigrafe"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-4-epigrafe", offset = 239, length = 4, data_type = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.243-259.actividad-4-rendimiento-neto"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-4-rendimiento-neto", offset = 243, length = 17, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.260-264.actividad-4-porcentaje"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-4-porcentaje", offset = 260, length = 5, data_type = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.265-281.actividad-4-resultado"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-4-resultado", offset = 265, length = 17, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.282-285.actividad-5-epigrafe"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-5-epigrafe", offset = 282, length = 4, data_type = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.286-302.actividad-5-rendimiento-neto"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-5-rendimiento-neto", offset = 286, length = 17, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.303-307.actividad-5-porcentaje"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-5-porcentaje", offset = 303, length = 5, data_type = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.308-324.actividad-5-resultado"
 source = "manual_input"
 selector = { record = "page_1", field = "actividad-5-resultado", offset = 308, length = 17, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.359-359.sin-datos-base-ceuta-melilla"
 source = "manual_input"
 selector = { record = "page_1", field = "sin-datos-base-ceuta-melilla", offset = 359, length = 1, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.360-369.sin-datos-base-volumen"
 source = "manual_input"
 selector = { record = "page_1", field = "sin-datos-base-volumen", offset = 360, length = 10, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.370-373.sin-datos-base-porcentaje"
 source = "manual_input"
 selector = { record = "page_1", field = "sin-datos-base-porcentaje", offset = 370, length = 4, data_type = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.374-383.sin-datos-base-vivienda-base"
 source = "manual_input"
 selector = { record = "page_1", field = "sin-datos-base-vivienda-base", offset = 374, length = 10, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.384-386.sin-datos-base-vivienda-porcentaje"
 source = "manual_input"
 selector = { record = "page_1", field = "sin-datos-base-vivienda-porcentaje", offset = 384, length = 3, data_type = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.387-389.sin-datos-base-vivienda-limite"
 source = "manual_input"
 selector = { record = "page_1", field = "sin-datos-base-vivienda-limite", offset = 387, length = 3, data_type = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.424-433.agraria-ingresos-ordinarias-generales"
 source = "manual_input"
 selector = { record = "page_1", field = "agraria-ingresos-ordinarias-generales", offset = 424, length = 10, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.434-443.agraria-ingresos-prioritarias-generales"
 source = "manual_input"
 selector = { record = "page_1", field = "agraria-ingresos-prioritarias-generales", offset = 434, length = 10, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.444-447.agraria-ingresos-generales-porcentaje"
 source = "manual_input"
 selector = { record = "page_1", field = "agraria-ingresos-generales-porcentaje", offset = 444, length = 4, data_type = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.448-457.agraria-ingresos-ordinarias-ceuta-melilla"
 source = "manual_input"
 selector = { record = "page_1", field = "agraria-ingresos-ordinarias-ceuta-melilla", offset = 448, length = 10, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.458-467.agraria-ingresos-prioritarias-ceuta-melilla"
 source = "manual_input"
 selector = { record = "page_1", field = "agraria-ingresos-prioritarias-ceuta-melilla", offset = 458, length = 10, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.468-471.agraria-ingresos-territoriales-porcentaje"
 source = "manual_input"
 selector = { record = "page_1", field = "agraria-ingresos-territoriales-porcentaje", offset = 468, length = 4, data_type = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.472-481.agraria-vivienda-base"
 source = "manual_input"
 selector = { record = "page_1", field = "agraria-vivienda-base", offset = 472, length = 10, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.482-484.agraria-vivienda-porcentaje"
 source = "manual_input"
 selector = { record = "page_1", field = "agraria-vivienda-porcentaje", offset = 482, length = 3, data_type = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.485-487.agraria-vivienda-limite"
 source = "manual_input"
 selector = { record = "page_1", field = "agraria-vivienda-limite", offset = 485, length = 3, data_type = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.556-556.deduccion-art-110-tramo"
 source = "manual_input"
 selector = { record = "page_1", field = "deduccion-art-110-tramo", offset = 556, length = 1, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.557-561.deduccion-art-110-cuantia"
 source = "manual_input"
 selector = { record = "page_1", field = "deduccion-art-110-cuantia", offset = 557, length = 5, data_type = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.613-613.vivienda-derecho-deduccion"
 source = "manual_input"
 selector = { record = "page_1", field = "vivienda-derecho-deduccion", offset = 613, length = 1, data_type = "boolean" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.614-623.vivienda-deduccion-aplicada"
 source = "manual_input"
 selector = { record = "page_1", field = "vivienda-deduccion-aplicada", offset = 614, length = 10, data_type = "money" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.692-692.declaracion-complementaria"
 source = "manual_input"
 selector = { record = "page_1", field = "declaracion-complementaria", offset = 692, length = 1, data_type = "boolean" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.693-705.justificante-anterior"
 source = "manual_input"
 selector = { record = "page_1", field = "justificante-anterior", offset = 693, length = 13, data_type = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.013-016.epigrafe-iae"
 source = "manual_input"
 selector = { record = "DPA", field = "epigrafe-iae", offset = 13, length = 4, data_type = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.017-017.indicador-auxiliar-actividad-iae"
 source = "manual_input"
 selector = { record = "DPA", field = "indicador-auxiliar-actividad-iae", offset = 17, length = 1, data_type = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.018-021.participacion-comunidad"
 source = "manual_input"
 selector = { record = "DPA", field = "participacion-comunidad", offset = 18, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.022-024.dias-actividad-temporada"
 source = "manual_input"
 selector = { record = "DPA", field = "dias-actividad-temporada", offset = 22, length = 3, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.025-028.ano-inicio-actividad"
 source = "manual_input"
 selector = { record = "DPA", field = "ano-inicio-actividad", offset = 25, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.029-029.deduccion-ceuta-melilla"
 source = "manual_input"
 selector = { record = "DPA", field = "deduccion-ceuta-melilla", offset = 29, length = 1, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.030-030.local-unico"
 source = "manual_input"
 selector = { record = "DPA", field = "local-unico", offset = 30, length = 1, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.031-032.vehiculos-afectos"
 source = "manual_input"
 selector = { record = "DPA", field = "vehiculos-afectos", offset = 31, length = 2, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.033-033.tractocamion-sin-semirremolque"
 source = "manual_input"
 selector = { record = "DPA", field = "tractocamion-sin-semirremolque", offset = 33, length = 1, data_type = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.034-034.tractocamion-unico-sin-semirremolque"
 source = "manual_input"
 selector = { record = "DPA", field = "tractocamion-unico-sin-semirremolque", offset = 34, length = 1, data_type = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.035-035.carga-superior-1000kg"
 source = "manual_input"
 selector = { record = "DPA", field = "carga-superior-1000kg", offset = 35, length = 1, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.036-036.municipio-actividad"
 source = "manual_input"
 selector = { record = "DPA", field = "municipio-actividad", offset = 36, length = 1, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.043-046.porcentaje-superior"
 source = "manual_input"
 selector = { record = "DPA", field = "porcentaje-superior", offset = 43, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.047-053.personal-asalariado-mayor-19"
 source = "manual_input"
 selector = { record = "DPA", field = "personal-asalariado-mayor-19", offset = 47, length = 7, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.054-060.personal-asalariado-menor-19"
 source = "manual_input"
 selector = { record = "DPA", field = "personal-asalariado-menor-19", offset = 54, length = 7, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.061-067.personal-asalariado-discapacidad"
 source = "manual_input"
 selector = { record = "DPA", field = "personal-asalariado-discapacidad", offset = 61, length = 7, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.068-071.personal-asalariado-horas-convenio"
 source = "manual_input"
 selector = { record = "DPA", field = "personal-asalariado-horas-convenio", offset = 68, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.072-078.resto-personal-asalariado-mayor-19"
 source = "manual_input"
 selector = { record = "DPA", field = "resto-personal-asalariado-mayor-19", offset = 72, length = 7, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.079-085.resto-personal-asalariado-menor-19"
 source = "manual_input"
 selector = { record = "DPA", field = "resto-personal-asalariado-menor-19", offset = 79, length = 7, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.086-092.resto-personal-asalariado-discapacidad"
 source = "manual_input"
 selector = { record = "DPA", field = "resto-personal-asalariado-discapacidad", offset = 86, length = 7, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.093-096.resto-personal-asalariado-horas-convenio"
 source = "manual_input"
 selector = { record = "DPA", field = "resto-personal-asalariado-horas-convenio", offset = 93, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.097-100.personal-no-asalariado-titular"
 source = "manual_input"
 selector = { record = "DPA", field = "personal-no-asalariado-titular", offset = 97, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.101-104.personal-no-asalariado-conyuge"
 source = "manual_input"
 selector = { record = "DPA", field = "personal-no-asalariado-conyuge", offset = 101, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.105-111.personal-no-asalariado-hijos"
 source = "manual_input"
 selector = { record = "DPA", field = "personal-no-asalariado-hijos", offset = 105, length = 7, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.112-113.mesas-1-capacidad"
 source = "manual_input"
 selector = { record = "DPA", field = "mesas-1-capacidad", offset = 112, length = 2, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.114-117.mesas-1-unidades"
 source = "manual_input"
 selector = { record = "DPA", field = "mesas-1-unidades", offset = 114, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.118-119.mesas-2-capacidad"
 source = "manual_input"
 selector = { record = "DPA", field = "mesas-2-capacidad", offset = 118, length = 2, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.120-123.mesas-2-unidades"
 source = "manual_input"
 selector = { record = "DPA", field = "mesas-2-unidades", offset = 120, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.124-125.mesas-3-capacidad"
 source = "manual_input"
 selector = { record = "DPA", field = "mesas-3-capacidad", offset = 124, length = 2, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.126-129.mesas-3-unidades"
 source = "manual_input"
 selector = { record = "DPA", field = "mesas-3-unidades", offset = 126, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.130-131.mesas-4-capacidad"
 source = "manual_input"
 selector = { record = "DPA", field = "mesas-4-capacidad", offset = 130, length = 2, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.132-135.mesas-4-unidades"
 source = "manual_input"
 selector = { record = "DPA", field = "mesas-4-unidades", offset = 132, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.136-145.modulo-1-unidades"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-1-unidades", offset = 136, length = 10, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.146-162.modulo-1-rendimiento-neto"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-1-rendimiento-neto", offset = 146, length = 17, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.163-172.modulo-2-unidades"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-2-unidades", offset = 163, length = 10, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.173-189.modulo-2-rendimiento-neto"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-2-rendimiento-neto", offset = 173, length = 17, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.190-199.modulo-3-unidades"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-3-unidades", offset = 190, length = 10, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.200-216.modulo-3-rendimiento-neto"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-3-rendimiento-neto", offset = 200, length = 17, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.217-226.modulo-4-unidades"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-4-unidades", offset = 217, length = 10, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.227-243.modulo-4-rendimiento-neto"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-4-rendimiento-neto", offset = 227, length = 17, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.244-253.modulo-5-unidades"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-5-unidades", offset = 244, length = 10, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.254-270.modulo-5-rendimiento-neto"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-5-rendimiento-neto", offset = 254, length = 17, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.271-280.modulo-6-unidades"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-6-unidades", offset = 271, length = 10, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.281-297.modulo-6-rendimiento-neto"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-6-rendimiento-neto", offset = 281, length = 17, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.298-307.modulo-7-unidades"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-7-unidades", offset = 298, length = 10, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.308-324.modulo-7-rendimiento-neto"
 source = "manual_input"
 selector = { record = "DPA", field = "modulo-7-rendimiento-neto", offset = 308, length = 17, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.325-334.incentivos-empleo"
 source = "manual_input"
 selector = { record = "DPA", field = "incentivos-empleo", offset = 325, length = 10, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.335-344.incentivos-inversion"
 source = "manual_input"
 selector = { record = "DPA", field = "incentivos-inversion", offset = 335, length = 10, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.345-348.indice-corrector-especial"
 source = "manual_input"
 selector = { record = "DPA", field = "indice-corrector-especial", offset = 345, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.349-352.indice-corrector-pequena-dimension"
 source = "manual_input"
 selector = { record = "DPA", field = "indice-corrector-pequena-dimension", offset = 349, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.353-356.indice-corrector-temporada"
 source = "manual_input"
 selector = { record = "DPA", field = "indice-corrector-temporada", offset = 353, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.357-360.indice-corrector-exceso"
 source = "manual_input"
 selector = { record = "DPA", field = "indice-corrector-exceso", offset = 357, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.361-364.indice-corrector-nueva-actividad"
 source = "manual_input"
 selector = { record = "DPA", field = "indice-corrector-nueva-actividad", offset = 361, length = 4, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.dpa.385-386.dias-ejercicio-trimestre"
 source = "manual_input"
 selector = { record = "DPA", field = "dias-ejercicio-trimestre", offset = 385, length = 2, data_type = "integer" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".bindings]]
 id = "modelo-131.did.012-045.iban"
 source = "manual_input"
 selector = { record = "DID", field = "iban", offset = 12, length = 34, data_type = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]

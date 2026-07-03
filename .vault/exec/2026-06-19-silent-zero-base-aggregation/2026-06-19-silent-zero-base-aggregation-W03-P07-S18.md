@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#silent-zero-base-aggregation'
 date: '2026-06-19'
-modified: '2026-06-19'
+modified: '2026-06-30'
 step_id: 'S18'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-plan]]"
 ---
-
-
-
 
 # add LIRPF art. 27/28/30 to M130 casillas 01/02/03, the income and gasto bindings, and the construct, verified by registry load and legal-grounding gates
 

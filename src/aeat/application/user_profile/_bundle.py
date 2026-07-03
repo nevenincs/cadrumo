@@ -1,42 +1,50 @@
-"""Bundled-export serialiser and deserialiser for :class:`UserProfilePortableExport`.
+"""Portable profile-bundle serialisation for bucket export/import.
 
-The serialiser reads all four financial-history categories from the
-active bucket's repositories and populates the v2 bundle fields.
-The :class:`TransactionCatalogue` is loaded via
-:class:`TransactionCatalogueRepository` and is one of the four payload
-categories included in each export bundle.
+This module composes
+:class:`~aeat.domain.user_profile.UserProfilePortableExport` payloads at
+the application boundary. A v3 bundle contains the profile record plus
+the four bucket-local history categories that must move with it: work
+units, ledger transactions, calculation revisions, and filing records.
+The v3 shape additionally carries the generic secure-object custody
+schema and coverage manifest, default-empty until the transport-aware
+phases populate them.
+The ledger category is loaded as a
+:class:`~aeat.domain.transactions.TransactionCatalogue` through
+:class:`~aeat.domain.transactions.TransactionCatalogueRepository`.
 
-S106 — deserialiser: validates ``bundle_schema_version`` against
-``SUPPORTED_BUNDLE_SCHEMA_VERSIONS`` before parsing; imports work units,
-ledger transactions, calculation revisions, and filing records via their
-respective repository save paths.
+Bundles carry typed domain-model payloads, not encrypted blobs, key
+material, or raw secure-storage rows. Export reads domain records from
+their owning repositories; import saves those records through the target
+bucket's repository save paths so the target bucket re-encrypts them
+under its own data-encryption key.
 
-ADR decisions honoured here:
-
-  D2 — no encrypted-material blobs; decrypted domain-model payloads only.
-  D3 — ``model_dump(mode="json")`` / ``model_validate()`` throughout; no
-  ``dict[str, Any]`` intermediate; ``exclude_none=True`` forbidden.
-  D4 — version constant validated at import boundary; unsupported versions
-  raise ``CliRefusedBoundaryError``.
-  D5 — bundle ``profile_id`` is preserved; two-tier collision guard runs
-  before any write.
+Only the current v3 shape is accepted in this pre-beta codebase. Older
+bundle shapes are not bridged. Callers must provision and
+collision-check the target bucket and hold the appropriate bucket
+session before deserialising; this module performs schema-version
+validation and typed repository writes.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
 from ...core.errors import AeatError
 
 if TYPE_CHECKING:
-    from ...domain.user_profile._portable_export import UserProfilePortableExport
+    from ...domain.user_profile import (
+        CarriedSecureObject,
+        CoverageManifest,
+        UserProfilePortableExport,
+    )
 
 
 #: Versions the import path will accept.  This is a pre-beta project with no
-#: released bundles (no-legacy-compatibility): only the current shape (v2) is
-#: accepted; the earlier facts-only v1 shape is deleted, not bridged.  Add a new
+#: released bundles (no-legacy-compatibility): only the current shape (v3) is
+#: accepted; earlier shapes are deleted, not bridged.  Add a new
 #: integer here when a new schema version is introduced.
-SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset({2})
+SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset({3})
 
 
 # ---------------------------------------------------------------------------
@@ -44,23 +52,34 @@ SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset({2})
 # ---------------------------------------------------------------------------
 
 
-def serialize_profile_bundle(*, bucket_id: str) -> UserProfilePortableExport:
-    """Build a v2 portable export bundle for ``bucket_id``.
+def serialize_profile_bundle(
+    *,
+    bucket_id: str,
+    custody_profile: StorageCustodyProfile | str = StorageCustodyProfile.STRUCTURED,
+) -> UserProfilePortableExport:
+    """Build a v3 :class:`~aeat.domain.user_profile.UserProfilePortableExport`.
 
     Reads the profile record and all four financial-history categories
-    from the bucket's encrypted repositories and assembles them into a
-    :class:`UserProfilePortableExport`.  The caller is responsible for
-    ensuring a live :class:`BucketSession` is active for ``bucket_id``.
+    from ``bucket_id``'s encrypted repositories and assembles them into
+    one portable payload. The caller is responsible for ensuring a live
+    bucket session is active for ``bucket_id``.
+
+    Args:
+        bucket_id: Profile bucket whose domain repositories are exported.
+        custody_profile: Secure-object custody scope to apply, as a
+            :class:`~aeat.adapters.persistence.storage.StorageCustodyProfile`
+            or one of its string values.
 
     The bundle carries only decrypted pydantic domain-model payloads
-    (ADR D2).  The recipient re-encrypts each object under their own
-    bucket DEK via the standard repository save path on import.
+    (no encrypted envelopes or key material). The recipient re-encrypts
+    each object under its own bucket data-encryption key through the
+    standard repository save paths on import.
     """
-    from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-    from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-    from ...domain.modelos._repository import WorkUnitCatalogueRepository
-    from ...domain.transactions._repository import TransactionCatalogueRepository
-    from ...domain.user_profile._portable_export import UserProfilePortableExport
+    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ...domain.user_profile import UserProfilePortableExport
     from ._orchestration import build_lifecycle_service
 
     record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)
@@ -77,13 +96,116 @@ def serialize_profile_bundle(*, bucket_id: str) -> UserProfilePortableExport:
     filing_catalogue = ModeloRecordCatalogueRepository(bucket_id=bucket_id).load()
     filing_records = tuple(filing_catalogue)
 
+    carried_objects, coverage_manifest = _build_secure_object_custody_payload(
+        bucket_id=bucket_id,
+        custody_profile=_normalize_custody_profile(custody_profile),
+    )
+
     return UserProfilePortableExport(
-        bundle_schema_version=2,
         profile=record,
         work_units=work_units,
         ledger_transactions=ledger_transactions,
         calculation_revisions=calculation_revisions,
         filing_records=filing_records,
+        carried_objects=carried_objects,
+        coverage_manifest=coverage_manifest,
+    )
+
+
+def _normalize_custody_profile(custody_profile: StorageCustodyProfile | str) -> StorageCustodyProfile:
+    if isinstance(custody_profile, StorageCustodyProfile):
+        return custody_profile
+    try:
+        return StorageCustodyProfile(custody_profile)
+    except ValueError as exc:
+        from ...domain.user_profile import ProfileExportError
+
+        raise ProfileExportError(
+            f"unsupported custody_profile {custody_profile!r}; expected one of "
+            f"{tuple(profile.value for profile in StorageCustodyProfile)}",
+            context={"custody_profile": custody_profile},
+        ) from exc
+
+
+#: Namespaces carried by the typed bundle fields; they count as covered for the
+#: full-custody coverage assertion even though the generic carry skips them.
+_TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(
+    {
+        "aeat.application.user_profile.value",
+        "aeat.domain.transactions.bucket",
+        "aeat.domain.modelos.work_units",
+        "aeat.domain.modelos.calculation_revisions",
+        "aeat.domain.modelos.filing_records",
+    },
+)
+
+
+def _build_secure_object_custody_payload(
+    *,
+    bucket_id: str,
+    custody_profile: StorageCustodyProfile,
+) -> tuple[tuple[CarriedSecureObject, ...], CoverageManifest]:
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    from ...domain.user_profile import CoverageManifest
+    from ._custody_carry import carried_namespace_definitions, serialize_carried_objects
+
+    repository = secure_object_repository_for_bucket(bucket_id)
+    populated_namespaces = tuple(repository.list_namespaces())
+    row_counts_by_namespace = {namespace: len(repository.list_keys(namespace)) for namespace in populated_namespaces}
+
+    carried_namespace_set = frozenset(
+        definition.namespace for definition in carried_namespace_definitions(custody_profile)
+    )
+    carried_or_typed = carried_namespace_set | _TYPED_CATEGORY_NAMESPACES
+    # ``excluded_namespaces`` (for the manifest) is every populated namespace not
+    # carried by this profile — the deliberately-excluded host-local / derived /
+    # full-only stores plus the typed-category-covered ones are reported honestly.
+    excluded_namespaces = tuple(
+        namespace for namespace in populated_namespaces if namespace not in carried_namespace_set
+    )
+
+    if custody_profile is StorageCustodyProfile.FULL:
+        # Every registered namespace declares a custody disposition (carried,
+        # typed-category, or deliberately excluded such as PROCESS_LOCAL credentials
+        # or the DERIVED participation index), so it is accounted for. The gate fails
+        # closed only on a populated namespace that is NOT in the registry at all — an
+        # unclassified durable store that would otherwise be silently dropped.
+        registered_namespaces = frozenset(definition.namespace for definition in STORAGE_NAMESPACE_REGISTRY.namespaces)
+        _assert_full_custody_coverage(
+            populated_namespaces=populated_namespaces,
+            covered_namespaces=carried_or_typed | registered_namespaces,
+        )
+
+    carried_objects = serialize_carried_objects(bucket_id=bucket_id, profile=custody_profile)
+    carried_namespaces = tuple(
+        namespace
+        for namespace in (definition.namespace for definition in carried_namespace_definitions(custody_profile))
+        if row_counts_by_namespace.get(namespace, 0) > 0
+    )
+
+    coverage_manifest = CoverageManifest(
+        custody_profile=custody_profile.value,
+        carried_namespaces=carried_namespaces,
+        excluded_namespaces=excluded_namespaces,
+        row_counts_by_namespace=row_counts_by_namespace,
+    )
+    return carried_objects, coverage_manifest
+
+
+def _assert_full_custody_coverage(
+    *,
+    populated_namespaces: tuple[str, ...],
+    covered_namespaces: frozenset[str],
+) -> None:
+    missing = tuple(namespace for namespace in populated_namespaces if namespace not in covered_namespaces)
+    if not missing:
+        return
+    from ...domain.user_profile import ProfileExportError
+
+    raise ProfileExportError(
+        "full custody profile found a populated secure-object namespace with no registry "
+        "classification; register a custody disposition for it before it can be backed up",
+        context={"unclassified_namespaces": missing, "custody_profile": StorageCustodyProfile.FULL.value},
     )
 
 
@@ -96,19 +218,20 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
     """Import financial-history objects from ``bundle`` into ``target_bucket_id``.
 
     Validates ``bundle.bundle_schema_version`` against
-    ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS`` before any writes (ADR D4); only the
-    current v2 shape is accepted.
+    ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS`` before any writes; only the
+    current v3 shape is accepted.
 
-    Saves work units, ledger transactions, calculation
-    revisions, and filing records into the target bucket via the standard
-    repository save paths.  Each domain object is re-encrypted under the
-    target bucket's own DEK (ADR D2).  No ``dict[str, Any]`` intermediate
-    is used; pydantic models flow directly into typed catalogue saves (ADR D3).
+    Saves work units, ledger transactions, calculation revisions, and
+    filing records into the target bucket via the standard repository
+    save paths. Each domain object is re-encrypted under the target
+    bucket's own data-encryption key. No ``dict[str, Any]`` intermediate
+    is used; pydantic models flow directly into typed catalogue saves.
 
     The caller is responsible for:
+
       - Provisioning the target bucket before calling this function.
-      - Ensuring a live :class:`BucketSession` is active for ``target_bucket_id``.
-      - Running the two-tier collision guard (ADR D5) before provisioning.
+      - Ensuring a live bucket session is active for ``target_bucket_id``.
+      - Running the two-tier collision guard before provisioning.
 
     Args:
         bundle: The validated export bundle.
@@ -125,15 +248,38 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
             f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
         )
 
-    # v2: import all four financial-history categories.
+    # The five typed financial-history categories restore through their typed
+    # catalogue save paths; every other durable secure-object store restores
+    # generically through the raw substrate, re-keyed and re-encrypted under the
+    # recipient bucket DEK.
     _import_work_units(bundle, target_bucket_id=target_bucket_id)
     _import_ledger_transactions(bundle, target_bucket_id=target_bucket_id)
     _import_calculation_revisions(bundle, target_bucket_id=target_bucket_id)
     _import_filing_records(bundle, target_bucket_id=target_bucket_id)
 
+    from ._custody_carry import restore_carried_objects
+
+    restore_carried_objects(bundle.carried_objects, target_bucket_id=target_bucket_id)
+    _rebuild_participation_index(target_bucket_id=target_bucket_id)
+
+
+def _rebuild_participation_index(*, target_bucket_id: str) -> None:
+    """Rebuild the derived transaction-revision participation index after import.
+
+    The index is a derived, rebuildable read-cache (excluded from the carry per
+    ``ledger-participation-index-is-derived-rebuildable``); it is regenerated from
+    the restored revision, work-unit, and filing catalogues.
+    """
+    from ..modelo import rebuild_participation_index
+
+    rebuild_participation_index(bucket_id=target_bucket_id)
+
 
 def _import_work_units(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...domain.modelos import (
+        upsert_work_unit,
+    )
 
     if not bundle.work_units:
         return
@@ -145,8 +291,8 @@ def _import_work_units(bundle: UserProfilePortableExport, *, target_bucket_id: s
 
 
 def _import_ledger_transactions(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.transactions._models import Transaction, TransactionCatalogue
-    from ...domain.transactions._repository import TransactionCatalogueRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ...domain.transactions import Transaction, TransactionCatalogue
 
     if not bundle.ledger_transactions:
         return
@@ -159,10 +305,8 @@ def _import_ledger_transactions(bundle: UserProfilePortableExport, *, target_buc
 
 
 def _import_calculation_revisions(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.modelos._calculation_repository import (
-        CalculationRevisionCatalogueRepository,
-        upsert_calculation_revision,
-    )
+    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from ...domain.modelos import upsert_calculation_revision
 
     if not bundle.calculation_revisions:
         return
@@ -174,7 +318,10 @@ def _import_calculation_revisions(bundle: UserProfilePortableExport, *, target_b
 
 
 def _import_filing_records(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository, upsert_filing_record
+    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+    from ...domain.modelos import (
+        upsert_filing_record,
+    )
 
     if not bundle.filing_records:
         return

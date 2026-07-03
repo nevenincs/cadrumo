@@ -9,8 +9,8 @@ auto-resolves proportionally — the contract that would have caught the
 regression hidden by the primitive-encoding commit (`6e5a316a6`) had it
 existed before that commit landed.
 
-The in-period verification chain (`test_verification_chain.py`, 47 tests
-green) is necessary but not sufficient: it does not exercise the
+The in-period verification chain (`test_verification_chain_part*.py`) is
+necessary but not sufficient: it does not exercise the
 cross-period saldo carry. The 47/47 in-period greens stayed green while
 the cross-period saldo magnitude collapsed silently between periods.
 This anti-regression contract closes that hole permanently. Any future

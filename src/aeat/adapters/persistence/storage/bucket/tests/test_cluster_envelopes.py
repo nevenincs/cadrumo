@@ -12,8 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
-from ......core.errors._registry import ErrorEnvelope
+from ......core.errors import ERROR_REGISTRY, ErrorEnvelope, build_error_envelope, get_registered_error_code
 from .._errors import (
     BucketAlreadyPresentError,
     BucketBusyError,
@@ -64,14 +63,15 @@ def test_every_cluster_class_has_a_distinct_code_in_error_registry() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("error", _CLUSTER_INSTANCES, ids=[type(e).__name__ for e in _CLUSTER_INSTANCES])
-def test_build_error_envelope_produces_valid_envelope(error: BucketError) -> None:
-    envelope = build_error_envelope(error)
-    assert isinstance(envelope, ErrorEnvelope)
-    assert envelope.code in ERROR_REGISTRY
-    assert envelope.category != ""
-    assert envelope.message != ""
-    assert envelope.retryable is not None
+def test_build_error_envelope_produces_valid_envelope() -> None:
+    for error in _CLUSTER_INSTANCES:
+        error_name = type(error).__name__
+        envelope = build_error_envelope(error)
+        assert isinstance(envelope, ErrorEnvelope), error_name
+        assert envelope.code in ERROR_REGISTRY, error_name
+        assert envelope.category != "", error_name
+        assert envelope.message != "", error_name
+        assert envelope.retryable is not None, error_name
 
 
 # ---------------------------------------------------------------------------
@@ -79,12 +79,12 @@ def test_build_error_envelope_produces_valid_envelope(error: BucketError) -> Non
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("error", _CLUSTER_INSTANCES, ids=[type(e).__name__ for e in _CLUSTER_INSTANCES])
-def test_error_envelope_round_trips_json(error: BucketError) -> None:
-    envelope = build_error_envelope(error)
-    json_text = envelope.model_dump_json()
-    revived = ErrorEnvelope.model_validate_json(json_text)
-    assert revived == envelope
+def test_error_envelope_round_trips_json() -> None:
+    for error in _CLUSTER_INSTANCES:
+        envelope = build_error_envelope(error)
+        json_text = envelope.model_dump_json()
+        revived = ErrorEnvelope.model_validate_json(json_text)
+        assert revived == envelope, type(error).__name__
 
 
 # ---------------------------------------------------------------------------

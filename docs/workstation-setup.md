@@ -9,6 +9,11 @@ cloud LLM upload are opt-in. The core filing workflow runs with none of them.
 
 ## Install the environment
 
+Choose one of two paths: install directly on your machine, or open the
+project in a ready-made container.
+
+### Option A: install on your machine
+
 Install the project and its tools in one step:
 
 ```bash
@@ -17,6 +22,36 @@ just bootstrap
 
 This installs the Python environment, syncs every dependency group, and runs the
 readiness check at the end.
+
+### Option B: open in a devcontainer
+
+The repository ships a `Dockerfile` and a `.devcontainer/devcontainer.json`
+with Python 3.13, `uv`, and headless-Chromium already installed, so you skip
+the manual `uv sync` / `playwright install` steps entirely.
+
+With VS Code and the Dev Containers extension, open the project folder and
+choose "Reopen in Container". The first build installs every dependency group
+and pre-bakes the Playwright browser; later reopens reuse the cached image.
+
+Without VS Code, build and run the image directly:
+
+```bash
+just devcontainer-build
+docker run --rm -it -v "$(pwd)":/workspace aeat-devcontainer bash
+```
+
+Verify the image installs cleanly and its toolchain works end to end:
+
+```bash
+just devcontainer-test
+```
+
+The container has no interactive display, so live AEAT browser reads run
+headless (`AEAT_BROWSER_HEADLESS=true` is set for you). Your digital
+certificate is personal, per-machine data — it is never baked into the
+image. Mount it or set `AEAT_CERTIFICATE_PATH` after the container starts if
+you need `aeat app live ...` inside the container; see
+[Authenticate with AEAT](how-to/authenticate-with-aeat.md).
 
 ## Check what is ready
 
@@ -45,10 +80,10 @@ Anthropic-API provider are optional package extras. Install only the ones you
 need:
 
 ```bash
-pip install "aeat[google]"
-pip install "aeat[browser]"
-pip install "aeat[anthropic]"
-pip install "aeat[all]"
+pip install "aeat-cli[google]"
+pip install "aeat-cli[browser]"
+pip install "aeat-cli[anthropic]"
+pip install "aeat-cli[all]"
 ```
 
 `aeat config check` lists each extra and prints the exact install command for any

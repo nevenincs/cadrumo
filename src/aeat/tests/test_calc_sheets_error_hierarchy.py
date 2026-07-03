@@ -12,79 +12,55 @@ from __future__ import annotations
 
 import pytest
 
-from ..adapters.outbound.google._errors import (
+from ..adapters.outbound.google import (
     GoogleAuthError,
     GoogleAuthValidationError,
 )
-from ..adapters.persistence.storage.bucket._errors import (
+from ..adapters.persistence.storage.bucket import (
     BucketError,
     BucketValidationError,
 )
-from ..application.storage.calc_sheets._errors import (
+from ..application.storage.calc_sheets import (
     CalcSheetsEngineError,
     CalcSheetsParityError,
     CalcSheetsRecordError,
 )
-from ..core.errors import AeatError, build_error_envelope
-from ..core.errors._registry import ErrorEnvelope
+from ..core.errors import AeatError, ErrorEnvelope, build_error_envelope, get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-# ---------------------------------------------------------------------------
-# calc_sheets error class hierarchy
-# ---------------------------------------------------------------------------
-
-
-def test_calc_sheets_engine_error_is_aeat_error() -> None:
-    assert issubclass(CalcSheetsEngineError, AeatError)
-
-
-def test_calc_sheets_record_error_is_aeat_error() -> None:
-    assert issubclass(CalcSheetsRecordError, AeatError)
-
-
-def test_calc_sheets_parity_error_is_aeat_error() -> None:
-    assert issubclass(CalcSheetsParityError, AeatError)
-
-
-# ---------------------------------------------------------------------------
-# calc_sheets error code registration and envelope roundtrip
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "error_cls,expected_code",
-    [
-        (CalcSheetsEngineError, "ERROR_CALC_SHEETS_ENGINE"),
-        (CalcSheetsRecordError, "ERROR_CALC_SHEETS_RECORD"),
-        (CalcSheetsParityError, "ERROR_CALC_SHEETS_PARITY"),
-    ],
-)
-def test_calc_sheets_error_code_registered(error_cls: type[AeatError], expected_code: str) -> None:
-    """Each calc_sheets error must be bound to its declared ErrorCode."""
-    from ..core.errors import get_registered_error_code
-
-    ec = get_registered_error_code(error_cls)
-    assert ec is not None, f"{error_cls.__name__} has no registered ErrorCode"
-    assert ec.code == expected_code
-
-
-@pytest.mark.parametrize(
-    "instance",
-    [
+_CALC_SHEETS_ERROR_CASES: tuple[tuple[type[AeatError], str, AeatError], ...] = (
+    (
+        CalcSheetsEngineError,
+        "ERROR_CALC_SHEETS_ENGINE",
         CalcSheetsEngineError("unsupported rounding code 'bad'"),
+    ),
+    (
+        CalcSheetsRecordError,
+        "ERROR_CALC_SHEETS_RECORD",
         CalcSheetsRecordError("column index must be 1-based"),
+    ),
+    (
+        CalcSheetsParityError,
+        "ERROR_CALC_SHEETS_PARITY",
         CalcSheetsParityError("unknown casilla ids [999]"),
-    ],
+    ),
 )
-def test_calc_sheets_error_envelope_roundtrip(instance: AeatError) -> None:
-    """Envelope construction and JSON roundtrip must not raise."""
-    envelope = build_error_envelope(instance)
-    assert isinstance(envelope, ErrorEnvelope)
-    json_bytes = envelope.model_dump_json()
-    reloaded = ErrorEnvelope.model_validate_json(json_bytes)
-    assert reloaded == envelope
+
+
+def test_calc_sheets_error_contracts_are_registered_and_serializable() -> None:
+    """Each calc_sheets error keeps its hierarchy, registry, and envelope contract."""
+    for error_cls, expected_code, instance in _CALC_SHEETS_ERROR_CASES:
+        assert issubclass(error_cls, AeatError), error_cls.__name__
+        ec = get_registered_error_code(error_cls)
+        assert ec is not None, f"{error_cls.__name__} has no registered ErrorCode"
+        assert ec.code == expected_code
+        envelope = build_error_envelope(instance)
+        assert isinstance(envelope, ErrorEnvelope)
+        json_text = envelope.model_dump_json()
+        reloaded = ErrorEnvelope.model_validate_json(json_text)
+        assert reloaded == envelope
 
 
 # ---------------------------------------------------------------------------
@@ -92,15 +68,13 @@ def test_calc_sheets_error_envelope_roundtrip(instance: AeatError) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_bucket_validation_error_mro_does_not_include_value_error() -> None:
-    """BucketValidationError must not inherit ValueError."""
-    assert not issubclass(BucketValidationError, ValueError)
-    assert issubclass(BucketValidationError, BucketError)
-    assert issubclass(BucketValidationError, AeatError)
+def test_validation_error_mro_does_not_include_value_error() -> None:
+    cases: tuple[tuple[type[AeatError], type[AeatError]], ...] = (
+        (BucketValidationError, BucketError),
+        (GoogleAuthValidationError, GoogleAuthError),
+    )
 
-
-def test_google_auth_validation_error_mro_does_not_include_value_error() -> None:
-    """GoogleAuthValidationError must not inherit ValueError."""
-    assert not issubclass(GoogleAuthValidationError, ValueError)
-    assert issubclass(GoogleAuthValidationError, GoogleAuthError)
-    assert issubclass(GoogleAuthValidationError, AeatError)
+    for error_cls, base_cls in cases:
+        assert not issubclass(error_cls, ValueError), error_cls
+        assert issubclass(error_cls, base_cls), error_cls
+        assert issubclass(error_cls, AeatError), error_cls

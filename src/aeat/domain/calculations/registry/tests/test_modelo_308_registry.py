@@ -3,21 +3,18 @@
 from __future__ import annotations
 
 from datetime import date
-from functools import lru_cache
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_308() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "308")
-    return modelo, catalogues
+    return _committed_modelo("308")
 
 
 def test_modelo_308_validator_accepts_committed_definition() -> None:
@@ -29,13 +26,15 @@ def test_modelo_308_validator_accepts_committed_definition() -> None:
 
 
 def test_modelo_308_metadata_matches_orden_eha_3786_2008_art_2() -> None:
-    modelo, _ = _load_modelo_308()
+    modelo, catalogues = _load_modelo_308()
     assert modelo.tax_domain == "iva"
     assert modelo.cadence == "ad_hoc"
     assert modelo.jurisdiction == "ES-AEAT"
     assert "orden-eha-3786-2008:art-2" in modelo.legal_refs
     assert "orden-eha-3786-2008:art-11" in modelo.legal_refs
     assert "aeat-dr-308-2019" in modelo.source_refs
+    assert catalogues.sources["aeat-modelo-308-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-308-2008-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_308_revision_starts_at_2009() -> None:
@@ -44,6 +43,7 @@ def test_modelo_308_revision_starts_at_2009() -> None:
     assert revision.valid_from == date(2009, 1, 1)
     assert revision.period_selector.year_from == 2009
     assert revision.period_selector.periods == ("AD-HOC",)
+    assert revision.orden_aplicabilidad == ("orden-eha-3786-2008:art-2",)
 
 
 def test_modelo_308_snapshot_builds_for_recent_filing_years() -> None:
@@ -64,9 +64,11 @@ def test_modelo_308_snapshot_carries_legal_authority() -> None:
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="AD-HOC")
     assert "orden-eha-3786-2008:art-2" in snapshot.legal
     assert "orden-eha-3786-2008:art-11" in snapshot.legal
+    assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3786-2008:art-2",)
     assert snapshot.legal["orden-eha-3786-2008:art-11"].article == "11"
     assert "aeat-dr-308-2019" in snapshot.sources
     assert "aeat-modelo-308-procedure" in snapshot.sources
+    assert "boe-modelo-308-2008-form" in snapshot.sources
 
 
 def test_modelo_308_filing_schedule_is_ad_hoc() -> None:

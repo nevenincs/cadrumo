@@ -18,4 +18,3 @@ Submodules
    aeat.domain.submission._models
    aeat.domain.submission._preflight
    aeat.domain.submission._protocols
-   aeat.domain.submission._repository

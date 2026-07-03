@@ -36,7 +36,7 @@ from ....domain.deadlines import (
 )
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...workflow._models import WorkflowState
+from ...workflow import WorkflowState
 from .._orchestration import (
     profile_create_storage_span,
     read_active_profile,
@@ -91,7 +91,7 @@ def _required_facts(schema: ProfileSchemaDefinition) -> list[UserProfileFact]:
 #   so the canonical-string projection is exercised on a real set
 # - irpf.estimation_regime: a non-default regime
 # - iva.regime: REAGP (the non-default member, not GENERAL)
-# - iva.sii_enrolled / iva.redeme_enrolled: both True (default False)
+# - IVA group role, SII, and REDEME flags: True (default False)
 _TAXPAYER_AXIS_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
     UserProfileFact(path="taxpayer_type.legal_entity_form", value="cooperativa"),
@@ -100,6 +100,8 @@ _TAXPAYER_AXIS_FACTS: tuple[UserProfileFact, ...] = (
         value="trabajo,capital_inmobiliario,pension",
     ),
     UserProfileFact(path="irpf.estimation_regime", value="directa_simplificada"),
+    UserProfileFact(path="iva.group_member_enrolled", value=True),
+    UserProfileFact(path="iva.group_dominant_entity_enrolled", value=True),
     UserProfileFact(path="iva.sii_enrolled", value=True),
     UserProfileFact(path="iva.redeme_enrolled", value=True),
 )
@@ -133,10 +135,10 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
     # REAGP token so the regime axis is exercised non-default.
     facts = tuple(UserProfileFact(path="iva.regime", value="REAGP") if f.path == "iva.regime" else f for f in facts)
 
-    with profile_create_storage_span("taxpayer-axes-roundtrip") as routing_profile_id:
+    with profile_create_storage_span("dddddddd-dddd-4ddd-8ddd-dddddddddddd") as routing_profile_id:
         state = register_active_profile(
             WorkflowState(),
-            profile_id="taxpayer-axes-roundtrip",
+            profile_id="dddddddd-dddd-4ddd-8ddd-dddddddddddd",
             display_name="Taxpayer axes operator",
             facts=facts,
             schema=schema,
@@ -145,7 +147,7 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
 
         record = read_active_profile(state, schema=schema)
     assert record is not None
-    assert record.profile_id == "taxpayer-axes-roundtrip"
+    assert record.profile_id == "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
 
     # Every taxpayer-axis fact survives the encrypted boundary with its
     # exact persisted value — boolean facts included.
@@ -154,6 +156,8 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
     assert _fact_value(record, "taxpayer_type.irpf_income_categories") == "trabajo,capital_inmobiliario,pension"
     assert _fact_value(record, "irpf.estimation_regime") == "directa_simplificada"
     assert _fact_value(record, "iva.regime") == "REAGP"
+    assert _fact_value(record, "iva.group_member_enrolled") is True
+    assert _fact_value(record, "iva.group_dominant_entity_enrolled") is True
     assert _fact_value(record, "iva.sii_enrolled") is True
     assert _fact_value(record, "iva.redeme_enrolled") is True
 
@@ -170,6 +174,8 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
     )
     assert profile.irpf_estimation_regime is IrpfEstimationRegime.DIRECTA_SIMPLIFICADA
     assert profile.iva_regime is IVARegime.REAGP
+    assert profile.iva.group_member_enrolled is True
+    assert profile.iva.group_dominant_entity_enrolled is True
     assert profile.iva.sii_enrolled is True
     assert profile.iva.redeme_enrolled is True
 
@@ -198,10 +204,10 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
         for f in _required_facts(schema)
     )
 
-    with profile_create_storage_span("v1-shaped-record") as routing_profile_id:
+    with profile_create_storage_span("eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee") as routing_profile_id:
         state = register_active_profile(
             WorkflowState(),
-            profile_id="v1-shaped-record",
+            profile_id="eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
             display_name="Pre-existing operator",
             facts=v1_shaped_facts,
             schema=schema,
@@ -210,13 +216,15 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
 
         record = read_active_profile(state, schema=schema)
     assert record is not None
-    assert record.profile_id == "v1-shaped-record"
+    assert record.profile_id == "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
     # No taxpayer-axis facts crossed the boundary.
     taxpayer_axis_paths = {
         "taxpayer_type.entity_type",
         "taxpayer_type.legal_entity_form",
         "taxpayer_type.irpf_income_categories",
         "irpf.estimation_regime",
+        "iva.group_member_enrolled",
+        "iva.group_dominant_entity_enrolled",
         "iva.sii_enrolled",
         "iva.redeme_enrolled",
     }
@@ -229,6 +237,8 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
     assert profile.legal_entity_form is None
     assert profile.irpf_income_categories == frozenset()
     assert profile.irpf_estimation_regime is None
+    assert profile.iva.group_member_enrolled is False
+    assert profile.iva.group_dominant_entity_enrolled is False
     assert profile.iva.sii_enrolled is False
     assert profile.iva.redeme_enrolled is False
     # The optional censo alta date is also undeclared for a v1 record.
@@ -258,10 +268,10 @@ def test_activity_start_date_fact_survives_encrypted_sql_roundtrip(
         UserProfileFact(path="censo.activity_start_date", value=alta.isoformat()),
     )
 
-    with profile_create_storage_span("activity-start-date-roundtrip") as routing_profile_id:
+    with profile_create_storage_span("ffffffff-ffff-4fff-8fff-ffffffffffff") as routing_profile_id:
         state = register_active_profile(
             WorkflowState(),
-            profile_id="activity-start-date-roundtrip",
+            profile_id="ffffffff-ffff-4fff-8fff-ffffffffffff",
             display_name="2026 registrant",
             facts=facts,
             schema=schema,
@@ -270,7 +280,7 @@ def test_activity_start_date_fact_survives_encrypted_sql_roundtrip(
 
         record = read_active_profile(state, schema=schema)
     assert record is not None
-    assert record.profile_id == "activity-start-date-roundtrip"
+    assert record.profile_id == "ffffffff-ffff-4fff-8fff-ffffffffffff"
     # The fact survives the encrypted boundary with its exact value;
     # the schema declares the field ``type = "date"``, so the persisted
     # fact reloads as a typed ``date``, not a string.

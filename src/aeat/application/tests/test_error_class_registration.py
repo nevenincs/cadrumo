@@ -83,13 +83,14 @@ def test_profile_registration_error_raised_on_double_register() -> None:
 
 
 def test_session_deserialization_error_is_registered_and_roundtrips() -> None:
-    from ..auth._sessions import SessionDeserializationError
+    from ..auth import SessionDeserializationError
 
     _assert_registered_and_roundtrip(SessionDeserializationError)
 
 
 def test_session_deserialization_error_raised_on_bad_type() -> None:
-    from ..auth._sessions import SessionDeserializationError, _session_metadata_datetime
+    from ..auth import SessionDeserializationError
+    from ..auth._sessions import _session_metadata_datetime
 
     with pytest.raises(SessionDeserializationError):
         _session_metadata_datetime(12345, field="started_at")
@@ -101,35 +102,34 @@ def test_session_deserialization_error_raised_on_bad_type() -> None:
 
 
 def test_iva_compensation_year_range_error_is_registered_and_roundtrips() -> None:
-    from ...domain.iva_compensation._errors import IvaCompensationYearRangeError
+    from ...domain.iva_compensation import IvaCompensationYearRangeError
 
     _assert_registered_and_roundtrip(IvaCompensationYearRangeError)
 
 
 def test_iva_compensation_decimal_parse_error_is_registered_and_roundtrips() -> None:
-    from ...domain.iva_compensation._errors import IvaCompensationDecimalParseError
+    from ...domain.iva_compensation import IvaCompensationDecimalParseError
 
     _assert_registered_and_roundtrip(IvaCompensationDecimalParseError)
 
 
 def test_iva_compensation_casilla_reference_error_is_registered_and_roundtrips() -> None:
-    from ...domain.iva_compensation._errors import IvaCompensationCasillaReferenceError
+    from ...domain.iva_compensation import IvaCompensationCasillaReferenceError
 
     _assert_registered_and_roundtrip(IvaCompensationCasillaReferenceError)
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year() -> None:
     from ...core import Period
-    from ...domain.iva_compensation._errors import IvaCompensationYearRangeError
-    from ..calculations._iva_compensation_history import iva_compensation_period_key
+    from ...domain.iva_compensation import IvaCompensationYearRangeError
+    from ..calculations import iva_compensation_period_key
 
     with pytest.raises(IvaCompensationYearRangeError):
         iva_compensation_period_key(Period.from_year_and_code(1999, "1T"))
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year() -> None:
-    from ...domain.iva_compensation._carry_forward import build_iva_compensation_carry_forward_report
-    from ...domain.iva_compensation._errors import IvaCompensationYearRangeError
+    from ...domain.iva_compensation import IvaCompensationYearRangeError, build_iva_compensation_carry_forward_report
 
     with pytest.raises(IvaCompensationYearRangeError):
         build_iva_compensation_carry_forward_report((), as_of_year=2100)
@@ -141,7 +141,7 @@ def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year() -
 
 
 def test_modelo_applicability_filter_error_is_registered_and_roundtrips() -> None:
-    from ..modelo._actions import ModeloApplicabilityFilterError
+    from ..modelo import ModeloApplicabilityFilterError
 
     _assert_registered_and_roundtrip(ModeloApplicabilityFilterError)
 
@@ -152,7 +152,7 @@ def test_modelo_applicability_filter_error_is_registered_and_roundtrips() -> Non
 
 
 def test_auth_diagnostic_payload_error_is_registered_and_roundtrips() -> None:
-    from ..auth._errors import AuthDiagnosticPayloadError
+    from ..auth import AuthDiagnosticPayloadError
 
     _assert_registered_and_roundtrip(AuthDiagnosticPayloadError)
 
@@ -160,8 +160,8 @@ def test_auth_diagnostic_payload_error_is_registered_and_roundtrips() -> None:
 def test_auth_diagnostic_payload_error_raised_on_non_object_json() -> None:
     import json
 
+    from ..auth import AuthDiagnosticPayloadError
     from ..auth._diagnostics import _payload
-    from ..auth._errors import AuthDiagnosticPayloadError
 
     raw = json.dumps([1, 2, 3]).encode()
     with pytest.raises(AuthDiagnosticPayloadError):
@@ -174,7 +174,7 @@ def test_auth_diagnostic_payload_error_raised_on_non_object_json() -> None:
 
 
 def test_workflow_input_mismatch_error_is_registered_and_roundtrips() -> None:
-    from ..workflow._errors import WorkflowInputMismatchError
+    from ..workflow import WorkflowInputMismatchError
 
     _assert_registered_and_roundtrip(WorkflowInputMismatchError)
 
@@ -185,7 +185,7 @@ def test_workflow_input_mismatch_error_is_registered_and_roundtrips() -> None:
 
 
 def test_source_mesh_error_is_registered_and_roundtrips() -> None:
-    from ..aggregation._source_mesh import SourceMeshError
+    from ..aggregation import SourceMeshError
 
     _assert_registered_and_roundtrip(SourceMeshError)
 
@@ -193,7 +193,7 @@ def test_source_mesh_error_is_registered_and_roundtrips() -> None:
 def test_source_mesh_error_raised_on_blank_owned_source() -> None:
     from pydantic import ValidationError
 
-    from ..aggregation._source_mesh import CalculationSourceResolution, SourceMeshError
+    from ..aggregation import CalculationSourceResolution, SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
         CalculationSourceResolution(
@@ -205,7 +205,7 @@ def test_source_mesh_error_raised_on_blank_owned_source() -> None:
 def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
     from pydantic import ValidationError
 
-    from ..aggregation._source_mesh import CalculationSourceResolution, SourceMeshError
+    from ..aggregation import CalculationSourceResolution, SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
         CalculationSourceResolution(
@@ -219,15 +219,17 @@ def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_try_load_certificate_metadata_does_not_swallow_unrelated_exceptions() -> None:
-    """_try_load_certificate_metadata propagates RuntimeError (not in the narrow catch)."""
-    # We only verify that the function is importable and the except clause is narrow.
-    # The real certificate load path requires a PKCS#12 file; we exercise the guard via
-    # the password=None early-exit path (returns None without exception).
-    from ..auth._operator_probes import _try_load_certificate_metadata
+def test_probe_certificate_bundle_does_not_swallow_unrelated_exceptions() -> None:
+    """_probe_certificate_bundle propagates a non-CertificateError, non-OSError failure.
 
-    result = _try_load_certificate_metadata.__doc__
-    assert result is not None  # function exists and has a docstring
+    The narrowed ``except CertificateError`` clause around the PKCS#12
+    health evaluation must not widen back to a bare ``except Exception``
+    that would mask a genuine programmer error as a merely-corrupt
+    certificate.
+    """
+    from ..auth._operator_probes import _probe_certificate_bundle
+
+    assert _probe_certificate_bundle.__doc__ is not None  # function exists and has a docstring
 
 
 def test_live_auth_identity_state_does_not_swallow_unrelated_exceptions() -> None:

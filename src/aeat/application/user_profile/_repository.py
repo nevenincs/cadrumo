@@ -1,24 +1,29 @@
 """Secure-DB persistence for user-profile lifecycle records and filing snapshots.
 
-Two namespaces are owned by this module:
+Two registry-owned storage contracts govern this module:
 
-- ``aeat.application.user_profile.value`` — live profile aggregate keyed
-  by the immutable ``profile_id`` (a UUIDv4). There is exactly one live
-  profile-value record per profile bucket.
-- ``aeat.application.user_profile.snapshot`` — immutable filing-time
-  snapshots keyed by ``(profile_id, snapshot_id)``: a profile owns many
-  filing snapshots.
+- :data:`aeat.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE` —
+  live profile aggregate keyed by the immutable ``profile_id`` (a UUIDv4).
+  There is exactly one live profile-value record per profile bucket.
+- :data:`aeat.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE` —
+  immutable filing-time snapshots keyed by ``(profile_id, snapshot_id)``:
+  a profile owns many filing snapshots.
 
-Both namespaces ride the active-bucket plumbing: every read and write
-resolves through a profile bucket so two operators never share profile
-storage. ``snapshot_id`` is deterministic in shape but globally
-unique within a bucket per ``new_profile_snapshot_id``. Records are
-stored as :class:`Envelope` objects encrypted at rest.
+Both namespace definitions provide the ``IDENTITY``
+:class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema version,
+bucket-local scope, and object-key grammar. They ride the active-bucket
+plumbing: every read and write resolves through a profile bucket so two
+operators never share profile storage. ``snapshot_id`` is deterministic in
+shape but globally unique within a bucket per ``new_profile_snapshot_id``.
+Records are stored as :class:`~aeat.adapters.persistence.storage.Envelope`
+objects encrypted at rest by
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import date
 
 from pydantic import ValidationError
 
@@ -29,11 +34,12 @@ from ...adapters.persistence.storage import (
     USER_PROFILE_VALUE_NAMESPACE as USER_PROFILE_VALUE_STORAGE_NAMESPACE,
 )
 from ...adapters.persistence.storage import (
+    ClassificationError,
     Envelope,
+    EnvelopeVersionError,
+    SecureObjectRepository,
 )
 from ...adapters.persistence.storage.bucket import BucketValidationError
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.user_profile import (
@@ -56,11 +62,13 @@ _PROFILE_RECORD_VERSION_MESSAGE = "profile record schema version is not supporte
 _PROFILE_SNAPSHOT_MISSING_MESSAGE = "profile snapshot not found in secure storage"
 _PROFILE_SNAPSHOT_CLASSIFICATION_MESSAGE = "profile snapshot classification is incompatible with this repository"
 _PROFILE_SNAPSHOT_VERSION_MESSAGE = "profile snapshot schema version is not supported"
+_OUTPUT_LANGUAGE_FACT_PATH = "preferences.output_language"
+_SENTINEL_DATE = date.min
 _log = get_logger(__name__)
 
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
-    """Return a :class:`SecureObjectRepository` bound to ``bucket_id``'s database.
+    """Return a public secure-object repository bound to ``bucket_id``'s database.
 
     The storage runtime owns readiness and physical route attachment.
     User-profile repositories only name the logical bucket they need;
@@ -82,18 +90,61 @@ def _clear_output_language_cache() -> None:
     module.
     """
     try:
-        from ...core.i18n._render import clear_output_language_cache
+        from ...core.i18n import clear_output_language_cache
     except ImportError:  # pragma: no cover - cache invalidation must never block persistence
         _log.debug("user-profile output-language cache invalidation import failed", exc_info=True)
         return
     clear_output_language_cache()
 
 
+def _record_output_language(record: UserProfileRecord) -> str | None:
+    matches = [fact for fact in record.facts if fact.path == _OUTPUT_LANGUAGE_FACT_PATH and fact.value is not None]
+    if not matches:
+        return None
+    matches.sort(key=lambda fact: fact.valid_from or _SENTINEL_DATE)
+    return str(matches[-1].value)
+
+
+def _refresh_output_language_hint(*, bucket_id: str, record: UserProfileRecord) -> None:
+    from ...adapters.persistence.storage.bucket import (
+        clear_bucket_output_language_hint,
+        write_bucket_output_language_hint,
+    )
+    from ...core.config import load_settings
+
+    language = _record_output_language(record)
+    try:
+        if language is None:
+            clear_bucket_output_language_hint(
+                storage_root=load_settings().aeat_local_storage_root,
+                bucket_id=bucket_id,
+            )
+            return
+        written = write_bucket_output_language_hint(
+            storage_root=load_settings().aeat_local_storage_root,
+            bucket_id=bucket_id,
+            language=language,
+        )
+        if not written:
+            clear_bucket_output_language_hint(
+                storage_root=load_settings().aeat_local_storage_root,
+                bucket_id=bucket_id,
+            )
+    except OSError:
+        _log.warning(
+            "user-profile output-language hint refresh failed bucket_id=%s",
+            bucket_id,
+            exc_info=True,
+        )
+
+
 def user_profile_value_object_key(profile_id: str) -> str:
     """Return the secure-object key for a profile's live aggregate.
 
-    A profile bucket holds exactly one live profile-value record, so
-    the key is single-segment: the immutable ``profile_id`` (UUIDv4).
+    The key shape is the object-key grammar declared by
+    :data:`aeat.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE`.
+    A profile bucket holds exactly one live profile-value record, so the
+    key is single-segment: the immutable ``profile_id`` (UUIDv4).
     """
     trimmed_profile = profile_id.strip()
     if not trimmed_profile:
@@ -104,9 +155,11 @@ def user_profile_value_object_key(profile_id: str) -> str:
 def user_profile_snapshot_object_key(profile_id: str, snapshot_id: str) -> str:
     """Return the secure-object key for one of a profile's filing snapshots.
 
-    A profile owns many immutable filing snapshots, so the key retains
-    the ``snapshot_id`` discriminator; the first segment is the
-    immutable ``profile_id`` (UUIDv4).
+    The key shape is the object-key grammar declared by
+    :data:`aeat.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE`.
+    A profile owns many immutable filing snapshots, so the key retains the
+    ``snapshot_id`` discriminator; the first segment is the immutable
+    ``profile_id`` (UUIDv4).
     """
     trimmed_profile = profile_id.strip()
     trimmed_snapshot = snapshot_id.strip()
@@ -123,7 +176,9 @@ class _BucketBoundRepository:
     Both :class:`UserProfileLifecycleRepository` and
     :class:`UserProfileSnapshotRepository` bind to one bucket's own
     database (no cross-bucket reads/writes by default) and either accept
-    an injected :class:`SecureObjectRepository` or build one for the
+    an injected
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    or build one for the
     named bucket. The constructor is identical across both classes so it
     lives here as a single source of truth.
     """
@@ -140,7 +195,14 @@ class _BucketBoundRepository:
 
 
 class UserProfileLifecycleRepository(_BucketBoundRepository):
-    """Read and write live user-profile aggregates in the secure DB."""
+    """Read and write live user-profile aggregates in the secure DB.
+
+    Rows use
+    :data:`aeat.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE`,
+    wrap each :class:`UserProfileRecord` in an
+    :class:`~aeat.adapters.persistence.storage.Envelope`, and persist through
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+    """
 
     @property
     def bucket_id(self) -> str:
@@ -198,10 +260,11 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
                 in this bucket.
             StoredProfileDriftError: The stored payload no longer validates
                 against the current ``UserProfileRecord`` schema.
-            ClassificationError: The envelope's classification differs from
-                the level expected for profile data.
-            EnvelopeVersionError: The stored schema version is newer than
-                this code can read.
+            :class:`~aeat.adapters.persistence.storage.ClassificationError`:
+                The envelope's classification differs from the level expected
+                for profile data.
+            :class:`~aeat.adapters.persistence.storage.EnvelopeVersionError`:
+                The stored schema version is newer than this code can read.
         """
         record = self._objects.load(
             USER_PROFILE_VALUE_NAMESPACE,
@@ -271,6 +334,7 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
+        _refresh_output_language_hint(bucket_id=self._bucket_id, record=record)
         _clear_output_language_cache()
 
     def iter_records(self) -> Iterable[UserProfileRecord]:
@@ -321,7 +385,14 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
 
 
 class UserProfileSnapshotRepository(_BucketBoundRepository):
-    """Read and write immutable filing-time profile snapshots in the secure DB."""
+    """Read and write immutable filing-time profile snapshots in the secure DB.
+
+    Rows use
+    :data:`aeat.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE`,
+    wrap each :class:`UserProfileSnapshot` in an
+    :class:`~aeat.adapters.persistence.storage.Envelope`, and persist through
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+    """
 
     @property
     def bucket_id(self) -> str:
@@ -381,10 +452,11 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
         Raises:
             ProfileSnapshotNotFoundError: No snapshot is stored under
                 ``snapshot_id`` in this bucket.
-            ClassificationError: The envelope's classification differs from
-                the level expected for snapshot data.
-            EnvelopeVersionError: The stored schema version is newer than
-                this code can read.
+            :class:`~aeat.adapters.persistence.storage.ClassificationError`:
+                The envelope's classification differs from the level expected
+                for snapshot data.
+            :class:`~aeat.adapters.persistence.storage.EnvelopeVersionError`:
+                The stored schema version is newer than this code can read.
         """
         record = self._objects.load(
             USER_PROFILE_SNAPSHOT_NAMESPACE,

@@ -1,7 +1,7 @@
 ---
 tags: ['#exec', '#modelo-addressing-ux']
 date: '2026-06-05'
-modified: '2026-06-05'
+modified: '2026-06-30'
 step_id: 'S20'
 related:
   - '[[2026-06-05-modelo-addressing-ux-plan]]'
@@ -33,4 +33,3 @@ The transport parsing move did not transfer calculation policy into the CLI. `_c
 ## Notes
 
 - No `_calculate_input.py` code change was required for this step; the step is closed on preservation and verification evidence.
-

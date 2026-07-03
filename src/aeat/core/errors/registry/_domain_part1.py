@@ -96,6 +96,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.retention._errors.RetentionError",
+        ErrorCode(
+            code="ERROR_DOMAIN_RETENTION",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_retention",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.retention._errors.RetentionFloorError",
+        ErrorCode(
+            code="REFUSED_DOMAIN_RETENTION_FLOOR",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_retention_floor",
+            default_suggestion="aeat config profile erase --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.buckets._event_repository.BucketEventHistoryPersistenceError",
         ErrorCode(
             code="FAIL_DOMAIN_BUCKET_EVENT_HISTORY_PERSISTENCE",
@@ -838,39 +860,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_MANUALS_RULE_EXTRACTION",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_manuals_rule_extraction",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.normatives._errors.NormativeError",
-        ErrorCode(
-            code="ERROR_NORMATIVES_NORMATIVE",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_normatives_normative",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.normatives._errors.NormativeNotFoundError",
-        ErrorCode(
-            code="ERROR_NORMATIVES_NORMATIVE_NOT_FOUND",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_normatives_normative_not_found",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.normatives._errors.NormativeParseError",
-        ErrorCode(
-            code="FAIL_NORMATIVES_NORMATIVE_PARSE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_normatives_normative_parse",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

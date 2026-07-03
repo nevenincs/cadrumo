@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#verification-fixture-roles'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-01-verification-fixture-roles-adr]]'
@@ -14,8 +14,6 @@ related:
 ### Phase `P01` - sidecar provenance schema and stamp
 
 Add explicit provenance (real_corpus|synthetic_generated) and role (parser_anchor|formula_verification) to the fixture sidecar, stamped automatically by the synthetic generator and the real sanitiser manifest writer.
-
-
 
 - [x] `P01.S01` - Stamp provenance=synthetic_generated and role=formula_verification into the synthetic fixture sidecar writer _write_sidecar; `src/aeat/tests/fixtures/justificantes/_generate.py`.
 - [x] `P01.S02` - Real-fixture provenance is set at fixture-authoring time (the P02 backfill stamps committed real sidecars; `future real specimens are stamped when added) — the production PDF sanitiser is intentionally NOT modified, since a test-fixture role on a production frozen model violates the architecture-boundaries rule; the convention is captured by the codified rule; `src/aeat/adapters/inbound/sanitizer/_records.py`.
@@ -41,7 +39,6 @@ Prove the M390 mixed pool passes allowlist-free with both the verification-sourc
 
 ## Description
 
-
 Implements the accepted ADR's Option A: fixtures declare their provenance
 (`real_corpus` | `synthetic_generated`) and role (`parser_anchor` |
 `formula_verification`) in their `.json` sidecar, so the verification-source
@@ -56,14 +53,7 @@ follow-up (it encodes layout, not provenance).
 
 ## Steps
 
-
-
-
-
-
-
 ## Parallelization
-
 
 P01.S01 and P01.S02 are independent (synthetic generator vs real sanitiser) and
 parallelisable. P02 (backfill) depends on P01 (the stamp fields must exist), and
@@ -72,7 +62,6 @@ reads them). P04 verification gates the whole chain; P04.S05 (codify) runs only
 after P04.S04 is green.
 
 ## Verification
-
 
 Success criteria, each a verifiable check:
 

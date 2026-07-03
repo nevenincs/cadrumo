@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#legal-grounding-centralization'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - "[[2026-06-14-legal-grounding-centralization-plan]]"
 ---
-
-
-
 
 # F5: promote DT12 40% rescate reducción and Ley 44/2015 SAL 10% dotación + 2x cap factor to registry/external_constants with legal_refs->corpus_ref
 

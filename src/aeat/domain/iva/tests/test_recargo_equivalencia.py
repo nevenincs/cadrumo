@@ -25,31 +25,20 @@ def _load_recargo_toml() -> dict[str, dict[str, dict[str, str]]]:
         return tomllib.load(handle)
 
 
-def test_recargo_rates_match_registry_toml_values() -> None:
+def test_recargo_rate_parameters_match_registry_boe_values_and_liva_ref() -> None:
     raw = _load_recargo_toml()["parameters"]
-    assert load_recargo_rates().general_rate == Decimal(raw["liva-art-161:recargo-rate-general"]["value"])
-    assert load_recargo_rates().reducido_rate == Decimal(raw["liva-art-161:recargo-rate-reducido"]["value"])
-    assert load_recargo_rates().super_reducido_rate == Decimal(raw["liva-art-161:recargo-rate-super-reducido"]["value"])
-    assert load_recargo_rates().tabaco_rate == Decimal(raw["liva-art-161:recargo-rate-tabaco"]["value"])
+    rates = load_recargo_rates()
+    cases = (
+        ("general_rate", "liva-art-161:recargo-rate-general", Decimal("0.052")),
+        ("reducido_rate", "liva-art-161:recargo-rate-reducido", Decimal("0.014")),
+        ("super_reducido_rate", "liva-art-161:recargo-rate-super-reducido", Decimal("0.005")),
+        ("tabaco_rate", "liva-art-161:recargo-rate-tabaco", Decimal("0.0175")),
+    )
 
-
-def test_recargo_rates_match_liva_art_161_boe_text() -> None:
-    """Sanity check: the loaded values match the BOE-cited percentages."""
-    assert load_recargo_rates().general_rate == Decimal("0.052")  # 5.2 %
-    assert load_recargo_rates().reducido_rate == Decimal("0.014")  # 1.4 %
-    assert load_recargo_rates().super_reducido_rate == Decimal("0.005")  # 0.5 %
-    assert load_recargo_rates().tabaco_rate == Decimal("0.0175")  # 1.75 %
-
-
-def test_recargo_parameters_each_cite_liva_art_161() -> None:
-    raw = _load_recargo_toml()["parameters"]
-    for parameter_id in (
-        "liva-art-161:recargo-rate-general",
-        "liva-art-161:recargo-rate-reducido",
-        "liva-art-161:recargo-rate-super-reducido",
-        "liva-art-161:recargo-rate-tabaco",
-    ):
-        legal_refs = raw[parameter_id].get("legal_refs") or []
+    for field_name, parameter_id, expected_boe_value in cases:
+        parameter = raw[parameter_id]
+        assert getattr(rates, field_name) == Decimal(parameter["value"]) == expected_boe_value
+        legal_refs = parameter.get("legal_refs") or []
         assert "ley-37-1992:art-161" in legal_refs, f"{parameter_id} must cite ley-37-1992:art-161"
 
 
@@ -78,26 +67,17 @@ def test_recargo_record_is_frozen() -> None:
         load_recargo_rates().general_rate = Decimal("0.999")
 
 
-def test_recargo_rate_for_general_returns_5_2_percent() -> None:
-    assert recargo_rate_for(IvaRateKind.GENERAL) == Decimal("0.052")
+def test_recargo_rate_for() -> None:
+    cases: tuple[tuple[IvaRateKind, Decimal | None], ...] = (
+        (IvaRateKind.GENERAL, Decimal("0.052")),
+        (IvaRateKind.REDUCED, Decimal("0.014")),
+        (IvaRateKind.SUPER_REDUCED, Decimal("0.005")),
+        (IvaRateKind.ZERO, None),
+        (IvaRateKind.EXEMPT, None),
+    )
 
-
-def test_recargo_rate_for_reduced_returns_1_4_percent() -> None:
-    assert recargo_rate_for(IvaRateKind.REDUCED) == Decimal("0.014")
-
-
-def test_recargo_rate_for_super_reduced_returns_0_5_percent() -> None:
-    assert recargo_rate_for(IvaRateKind.SUPER_REDUCED) == Decimal("0.005")
-
-
-def test_recargo_rate_for_zero_returns_none() -> None:
-    """Recargo de equivalencia does not apply to zero-rated operations."""
-    assert recargo_rate_for(IvaRateKind.ZERO) is None
-
-
-def test_recargo_rate_for_exempt_returns_none() -> None:
-    """Recargo de equivalencia does not apply to exempt operations."""
-    assert recargo_rate_for(IvaRateKind.EXEMPT) is None
+    for iva_rate_kind, expected in cases:
+        assert recargo_rate_for(iva_rate_kind) == expected, iva_rate_kind
 
 
 def test_recargo_record_validates_inputs_in_strict_mode() -> None:

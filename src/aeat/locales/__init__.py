@@ -1,24 +1,31 @@
-"""Locale-catalogue maintenance: the ``aeat.locales`` manager and CLI.
+"""Locale-catalogue maintenance facade for YAML and modelo translations.
 
-Keeps the four locale catalogues (``en``, ``es``, ``ca``, ``hu``) in sync
-with the codebase's translation keys and enforces inter-locale parity. The
-CLI (``python -m aeat.locales``) exposes ``set`` and ``remove`` for
-individual string leaves, ``scaffold`` (align the catalogues with the
-concrete ``tr`` keys), ``scaffold --check`` (the drift gate), and ``audit``
-(a codebase-to-locale health report). The catalogue YAML is maintained
-through the CLI, never hand-edited.
+The package keeps the four runtime catalogues (``en``, ``es``, ``ca``, ``hu``)
+in sync with codebase translation keys and enforces inter-locale parity. The
+developer CLI (``python -m aeat.locales``) owns edits through ``set``,
+``remove``, ``scaffold``, ``scaffold --check``, and ``audit`` commands; the
+catalogue YAML is CLI-maintained, not hand-edited.
+
+Modelo schema-local translations are handled by the same facade through
+``modelo`` subcommands and the :class:`ModeloLocaleManager` record set. Those
+TOML-backed translations stay separate from the runtime YAML catalogues while
+sharing the same drift-reporting discipline.
 
 Major declarations:
 
-* :class:`LocaleManager` — loads, scaffolds, checks, and audits the locale
+* :class:`LocaleManager` loads, scaffolds, checks, and audits the runtime locale
   catalogues.
-* :class:`StrictUniqueKeyLoader` — the YAML loader that rejects duplicate
-  keys at parse time.
-* :class:`LocaleError` — raised on locale-catalogue maintenance failures.
+* :class:`ModeloLocaleManager` manages schema-local modelo
+  translation files and coverage reports.
+* :class:`StrictUniqueKeyLoader` rejects duplicate YAML keys at parse time.
+* :class:`LocaleError` and :class:`ModeloLocaleError` report maintenance
+  failures.
 """
 
 from __future__ import annotations
 
+from ._ast_scanner import scan_namespace_markers, scan_source_tree
+from ._fstring_registry import get_registered_keys
 from ._modelo_manager import (
     ModeloLocaleCoverageRecord,
     ModeloLocaleDriftKind,
@@ -47,4 +54,7 @@ __all__ = [
     "ModeloLocaleScope",
     "ModeloLocaleTranslationFile",
     "StrictUniqueKeyLoader",
+    "get_registered_keys",
+    "scan_namespace_markers",
+    "scan_source_tree",
 ]

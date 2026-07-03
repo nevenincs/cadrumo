@@ -83,66 +83,65 @@ def test_remote_mirror_manifest_persists_ciphertext_hashes_and_revision_watermar
         assert reloaded.latest_revision_written_at == latest_entry.revision_written_at
 
 
-@pytest.mark.parametrize(
-    ("namespace_key", "plaintext"),
-    (
+def test_remote_mirror_inspections_accept_opaque_encrypted_payload_round_trip(tmp_path: Path) -> None:
+    cases = (
         ("google_oauth_client", b"oauth client secret that must never reach the remote mirror"),
         ("google_oauth_token", b"oauth refresh token that must never reach the remote mirror"),
         ("google_oauth_metadata", b"operator metadata that must never reach the remote mirror"),
-    ),
-)
-def test_remote_mirror_inspections_accept_opaque_encrypted_payload_round_trip(
-    tmp_path: Path,
-    namespace_key: str,
-    plaintext: bytes,
-) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=f"remote-mirror-opaque-{namespace_key}") as profile:
-        repo = profile.repository
-        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(namespace_key)
-        namespace = namespace_definition.namespace
-        plaintext_text = plaintext.decode()
-        repo.save(
-            namespace=namespace,
-            object_key="opaque-object",
-            classification=namespace_definition.sensitivity,
-            schema_version=1,
-            written_at=datetime(2026, 6, 2, 8, 0, tzinfo=UTC),
-            payload=plaintext,
-        )
-        raw_row = next(repo.iter_all_records_raw())
-        manifest = build_remote_mirror_namespace_manifest(namespace, (raw_row,))
-        entry = manifest.objects[0]
-        mirror_provider = LocalFileSystemProvider(tmp_path / "mirror")
+    )
 
-        mirror_provider.put(
-            entry.namespace,
-            entry.object_key_hmac,
-            raw_row.payload,
-            content_hash=f"sha256-{hashlib.sha256(raw_row.payload).hexdigest()}",
-            label="opaque-object",
-        )
-        manifest_metadata = put_remote_mirror_namespace_manifest(mirror_provider, manifest)
-        mirrored_payload, mirrored_metadata = mirror_provider.get(entry.namespace, entry.object_key_hmac)
-        manifest_payload, _ = mirror_provider.get(
-            REMOTE_MIRROR_MANIFEST_NAMESPACE,
-            manifest_metadata.object_key_hmac,
-        )
+    for namespace_key, plaintext in cases:
+        case_root = tmp_path / namespace_key
+        with isolated_runtime_profile(
+            tmp_path=case_root,
+            bucket_id=f"remote-mirror-opaque-{namespace_key}",
+        ) as profile:
+            repo = profile.repository
+            namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(namespace_key)
+            namespace = namespace_definition.namespace
+            plaintext_text = plaintext.decode()
+            repo.save(
+                namespace=namespace,
+                object_key="opaque-object",
+                classification=namespace_definition.sensitivity,
+                schema_version=1,
+                written_at=datetime(2026, 6, 2, 8, 0, tzinfo=UTC),
+                payload=plaintext,
+            )
+            raw_row = next(repo.iter_all_records_raw())
+            manifest = build_remote_mirror_namespace_manifest(namespace, (raw_row,))
+            entry = manifest.objects[0]
+            mirror_provider = LocalFileSystemProvider(case_root / "mirror")
 
-        assert raw_row.payload != plaintext
-        assert namespace_definition.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA
-        assert namespace_definition.remote_mirror_requires_revision is True
-        assert namespace_definition.remote_mirror_requires_integrity_manifest is True
-        assert plaintext not in raw_row.payload
-        assert mirrored_payload == raw_row.payload
-        assert plaintext not in mirrored_payload
-        assert plaintext not in manifest_payload
-        for artifact in mirror_provider.root.rglob("*"):
-            assert plaintext_text not in artifact.relative_to(mirror_provider.root).as_posix()
-            if artifact.is_file():
-                assert plaintext not in artifact.read_bytes()
-        assert mirrored_metadata.content_hash == f"sha256-{entry.ciphertext_hash}"
-        assert inspect_remote_mirror_upload(mirror_provider, manifest).ok is True
-        assert inspect_remote_mirror_download(mirror_provider, manifest).ok is True
+            mirror_provider.put(
+                entry.namespace,
+                entry.object_key_hmac,
+                raw_row.payload,
+                content_hash=f"sha256-{hashlib.sha256(raw_row.payload).hexdigest()}",
+                label="opaque-object",
+            )
+            manifest_metadata = put_remote_mirror_namespace_manifest(mirror_provider, manifest)
+            mirrored_payload, mirrored_metadata = mirror_provider.get(entry.namespace, entry.object_key_hmac)
+            manifest_payload, _ = mirror_provider.get(
+                REMOTE_MIRROR_MANIFEST_NAMESPACE,
+                manifest_metadata.object_key_hmac,
+            )
+
+            assert raw_row.payload != plaintext, namespace_key
+            assert namespace_definition.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA
+            assert namespace_definition.remote_mirror_requires_revision is True
+            assert namespace_definition.remote_mirror_requires_integrity_manifest is True
+            assert plaintext not in raw_row.payload
+            assert mirrored_payload == raw_row.payload
+            assert plaintext not in mirrored_payload
+            assert plaintext not in manifest_payload
+            for artifact in mirror_provider.root.rglob("*"):
+                assert plaintext_text not in artifact.relative_to(mirror_provider.root).as_posix()
+                if artifact.is_file():
+                    assert plaintext not in artifact.read_bytes()
+            assert mirrored_metadata.content_hash == f"sha256-{entry.ciphertext_hash}"
+            assert inspect_remote_mirror_upload(mirror_provider, manifest).ok is True
+            assert inspect_remote_mirror_download(mirror_provider, manifest).ok is True
 
 
 def test_remote_mirror_upload_inspection_detects_missing_ciphertext_object(tmp_path: Path) -> None:

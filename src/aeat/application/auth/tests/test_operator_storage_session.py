@@ -7,15 +7,20 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import has_active_bucket_session
-from ....application.user_profile._orchestration import profile_create_storage_span, profile_storage_session
-from ....application.user_profile._testing import register_minimal_profile
 from ....application.wizard import WIZARD_FLOWS
-from ....application.workflow._persistence import workflow_state_repository
-from ....domain.contribuyente._keys import required_profile_keys
+from ....domain.contribuyente import required_profile_keys
 from ....tests.secure_sql import isolated_profile_storage_root
+from ...user_profile import (
+    profile_create_storage_span,
+    profile_storage_session,
+    register_minimal_profile,
+)
+from ...workflow import workflow_state_repository
 from .._operator import clear_operator_auth, configure_operator_auth
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 
 def test_clear_operator_auth_reopens_profile_storage_session_when_pointer_is_active(
@@ -32,8 +37,8 @@ def test_clear_operator_auth_reopens_profile_storage_session_when_pointer_is_act
     with isolated_profile_storage_root(tmp_path=tmp_path):
         assert WIZARD_FLOWS
         assert required_profile_keys()
-        with profile_create_storage_span("operator"):
-            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+        with profile_create_storage_span(_PROFILE_ID):
+            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID))
             configure_operator_auth("certificate")
 
         assert has_active_bucket_session() is False
@@ -42,6 +47,6 @@ def test_clear_operator_auth_reopens_profile_storage_session_when_pointer_is_act
 
         assert result.cleared_workflow_state is True
         assert has_active_bucket_session() is False
-        with profile_storage_session("operator"):
+        with profile_storage_session(_PROFILE_ID):
             state = workflow_state_repository().load()
         assert state.auth.provider is None

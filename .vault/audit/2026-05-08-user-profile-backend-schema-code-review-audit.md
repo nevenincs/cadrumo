@@ -1,14 +1,12 @@
 ---
 tags: ["#audit", "#user-profile-backend-schema"]
 date: 2026-05-08
-modified: '2026-05-08'
+modified: '2026-06-30'
 related:
   - "[[2026-05-07-user-profile-backend-schema-plan]]"
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-05-08-user-profile-backend-schema-w3-p1-registry-contract-exec]]"
 ---
-
-
 
 # `user-profile-backend-schema` Code Review
 

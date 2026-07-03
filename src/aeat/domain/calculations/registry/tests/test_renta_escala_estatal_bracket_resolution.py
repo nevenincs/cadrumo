@@ -37,82 +37,78 @@ from functools import cache
 
 import pytest
 
-from .....core.resources import bundled_path
 from .._errors import RegistryValidationError
 from .._formula_runtime import _resolve_bracket
-from .._loader import load_registry_tree
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _BACKPORTED_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 _POST_AMENDMENT_YEARS = (2021, 2022, 2023, 2024, 2025)
 
 
 @cache
 def _bracket_table(year: int):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(m for m in modelos if m.id == "100")
+    modelo, _ = _committed_modelo("100")
     revision = modelo.revisions[str(year)]
     return next(p for p in revision.parameters if p.id == f"renta-{year}-escala-estatal-base-general")
 
 
-@pytest.mark.parametrize("year", _BACKPORTED_YEARS)
-def test_escala_estatal_resolves_at_first_bracket_lower_bound(year: int) -> None:
-    table = _bracket_table(year)
-    cuota = _resolve_bracket(table, Decimal("0"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("0")
+def test_escala_estatal_resolves_at_first_bracket_lower_bound() -> None:
+    for year in _BACKPORTED_YEARS:
+        table = _bracket_table(year)
+        cuota = _resolve_bracket(table, Decimal("0"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("0"), year
 
 
-@pytest.mark.parametrize("year", _BACKPORTED_YEARS)
-def test_escala_estatal_resolves_at_12450_break_point(year: int) -> None:
+def test_escala_estatal_resolves_at_12450_break_point() -> None:
     """At exactly 12,450 the cuota equals the fixed_addition of the SECOND bracket: 1182.75."""
-    table = _bracket_table(year)
-    cuota = _resolve_bracket(table, Decimal("12450"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("1182.75")
+    for year in _BACKPORTED_YEARS:
+        table = _bracket_table(year)
+        cuota = _resolve_bracket(table, Decimal("12450"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("1182.75"), year
 
 
-@pytest.mark.parametrize("year", _BACKPORTED_YEARS)
-def test_escala_estatal_at_20200_break_point_matches_published_cuota_integra(year: int) -> None:
+def test_escala_estatal_at_20200_break_point_matches_published_cuota_integra() -> None:
     """At 20.200 EUR the cuota equals the published cuota íntegra of the
     third bracket: 2.112,75 EUR (BOE-A-2006-20764 art.63.1.1.º estatal
     escala general table)."""
-    table = _bracket_table(year)
-    cuota = _resolve_bracket(table, Decimal("20200"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("2112.75")
+    for year in _BACKPORTED_YEARS:
+        table = _bracket_table(year)
+        cuota = _resolve_bracket(table, Decimal("20200"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("2112.75"), year
 
 
-@pytest.mark.parametrize("year", _BACKPORTED_YEARS)
-def test_escala_estatal_at_35200_break_point_matches_published_cuota_integra(year: int) -> None:
+def test_escala_estatal_at_35200_break_point_matches_published_cuota_integra() -> None:
     """At 35.200 EUR the cuota equals the published cuota íntegra of the
     fourth bracket: 4.362,75 EUR (BOE-A-2006-20764 art.63.1.1.º estatal
     escala general table)."""
-    table = _bracket_table(year)
-    cuota = _resolve_bracket(table, Decimal("35200"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("4362.75")
+    for year in _BACKPORTED_YEARS:
+        table = _bracket_table(year)
+        cuota = _resolve_bracket(table, Decimal("35200"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("4362.75"), year
 
 
-@pytest.mark.parametrize("year", _BACKPORTED_YEARS)
-def test_escala_estatal_at_60000_break_point_matches_published_cuota_integra(year: int) -> None:
+def test_escala_estatal_at_60000_break_point_matches_published_cuota_integra() -> None:
     """At 60.000 EUR the cuota equals the published cuota íntegra of the
     bracket starting at 60.000: 8.950,75 EUR. This breakpoint is stable
     across every ejercicio (BOE-A-2006-20764 art.63.1.1.º)."""
-    table = _bracket_table(year)
-    cuota = _resolve_bracket(table, Decimal("60000"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("8950.75")
+    for year in _BACKPORTED_YEARS:
+        table = _bracket_table(year)
+        cuota = _resolve_bracket(table, Decimal("60000"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("8950.75"), year
 
 
-@pytest.mark.parametrize("year", _POST_AMENDMENT_YEARS)
-def test_escala_estatal_at_300000_break_point_matches_published_cuota_integra(year: int) -> None:
+def test_escala_estatal_at_300000_break_point_matches_published_cuota_integra() -> None:
     """At 300.000 EUR the cuota equals the published cuota íntegra of the
     top bracket added by Ley 11/2020 (effective 2021): 62.950,75 EUR."""
-    table = _bracket_table(year)
-    cuota = _resolve_bracket(table, Decimal("300000"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("62950.75")
+    for year in _POST_AMENDMENT_YEARS:
+        table = _bracket_table(year)
+        cuota = _resolve_bracket(table, Decimal("300000"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("62950.75"), year
 
 
-@pytest.mark.parametrize("year", _POST_AMENDMENT_YEARS)
-def test_escala_estatal_selects_top_bracket_for_high_income_post_2021(year: int) -> None:
+def test_escala_estatal_selects_top_bracket_for_high_income_post_2021() -> None:
     """Structural: a base above 300.000 must SELECT the open top bracket.
 
     No mid-bracket Decimal is manufactured; the test asserts that the
@@ -122,13 +118,14 @@ def test_escala_estatal_selects_top_bracket_for_high_income_post_2021(year: int)
     cuota for 500.000 must exceed the published 300.000 cuota íntegra
     and stay finite, proving the open top bracket was chosen.
     """
-    table = _bracket_table(year)
-    top = max(table.brackets, key=lambda b: b.lower_bound)
-    assert top.lower_bound == Decimal("300000")
-    assert top.upper_bound is None
-    cuota = _resolve_bracket(table, Decimal("500000"), {"filing_period": date(year, 12, 31)})
-    floor = _resolve_bracket(table, Decimal("300000"), {"filing_period": date(year, 12, 31)})
-    assert cuota > floor
+    for year in _POST_AMENDMENT_YEARS:
+        table = _bracket_table(year)
+        top = max(table.brackets, key=lambda b: b.lower_bound)
+        assert top.lower_bound == Decimal("300000"), year
+        assert top.upper_bound is None
+        cuota = _resolve_bracket(table, Decimal("500000"), {"filing_period": date(year, 12, 31)})
+        floor = _resolve_bracket(table, Decimal("300000"), {"filing_period": date(year, 12, 31)})
+        assert cuota > floor, year
 
 
 def test_escala_estatal_2020_top_bracket_is_open_above_60000() -> None:
@@ -148,9 +145,9 @@ def test_escala_estatal_2020_top_bracket_is_open_above_60000() -> None:
     assert cuota > floor
 
 
-@pytest.mark.parametrize("year", _BACKPORTED_YEARS)
-def test_escala_estatal_rejects_date_outside_year_window(year: int) -> None:
-    table = _bracket_table(year)
-    other_year = year - 5
-    with pytest.raises(RegistryValidationError, match="no bracket valid"):
-        _resolve_bracket(table, Decimal("30000"), {"filing_period": date(other_year, 6, 1)})
+def test_escala_estatal_rejects_date_outside_year_window() -> None:
+    for year in _BACKPORTED_YEARS:
+        table = _bracket_table(year)
+        other_year = year - 5
+        with pytest.raises(RegistryValidationError, match="no bracket valid"):
+            _resolve_bracket(table, Decimal("30000"), {"filing_period": date(other_year, 6, 1)})

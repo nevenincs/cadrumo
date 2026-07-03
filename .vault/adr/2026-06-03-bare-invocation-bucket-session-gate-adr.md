@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#bare-invocation-bucket-session-gate'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-03-wizard-catalogue-startup-ordering-adr]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - '[[2026-06-04-bare-invocation-bucket-session-gate-research]]'
 ---
-
 
 # `bare-invocation-bucket-session-gate` adr: bare CLI invocation does not require an active bucket session | (**status:** `accepted`)
 

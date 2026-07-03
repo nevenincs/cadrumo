@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S07'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
 ---
-
-
-
 
 # confirm casilla 07 formula (07 = 04 - 05 - 06) is unchanged and now reads a populated bound casilla 05, then verify casilla 05 no longer over-states the resultado on a cumulative 2T, 3T, and 4T calculate via a registry-load behaviour assertion
 

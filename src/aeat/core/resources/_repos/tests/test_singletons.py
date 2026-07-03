@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_apoderamientos_singleton_loads_real_catalogue() -> None:
-    from .....domain.auth.apoderamientos._catalogue import ApoderamientosCatalogue
+    from .....domain.auth.apoderamientos import ApoderamientosCatalogue
 
     repo = ApoderamientosRepository()
 
@@ -25,6 +25,7 @@ def test_apoderamientos_singleton_loads_real_catalogue() -> None:
 
     assert isinstance(result, ApoderamientosCatalogue), f"Expected ApoderamientosCatalogue, got {type(result).__name__}"
     assert repo.singleton is result  # cached identity
+    assert repo.get(None) is result
     assert len(result.scopes) > 0, "Apoderamientos catalogue must declare at least one scope"
     scope_codes = {s.code for s in result.scopes}
     assert "GENERALNT" in scope_codes, f"Expected canonical 'GENERALNT' scope in catalogue; got codes: {scope_codes}"
@@ -34,7 +35,7 @@ def test_apoderamientos_singleton_loads_real_catalogue() -> None:
 
 
 def test_user_profile_singleton_loads_real_schema() -> None:
-    from .....domain.user_profile._schema import ProfileSchemaDefinition
+    from .....domain.user_profile import ProfileSchemaDefinition
 
     repo = UserProfileSchemaRepository()
 
@@ -60,6 +61,13 @@ def test_topics_singleton_loads_real_catalogue() -> None:
     assert len(result.topics) > 0, "Topic catalogue must contain at least one topic"
     assert repo.singleton is result  # cached identity
 
+    repo.clear_cache()
+    reloaded = repo.singleton
+
+    # Same content, but cache was cleared between calls so the repository invoked
+    # _load twice. Equality holds because the bundled data is immutable.
+    assert reloaded == result
+
 
 def test_recargo_bands_singleton_loads_real_tuple() -> None:
     repo = RecargoBandsRepository()
@@ -82,7 +90,7 @@ def test_iva_rate_table_singleton_loads_real_mapping() -> None:
 
 
 def test_legal_parameters_singleton_loads_real_mapping() -> None:
-    from .....domain.calculations.registry._schema import LegalParameter
+    from .....domain.calculations.registry import LegalParameter
 
     repo = LegalParameterRepository()
 
@@ -95,22 +103,3 @@ def test_legal_parameters_singleton_loads_real_mapping() -> None:
         f"Mapping values must be LegalParameter, got {type(first_value).__name__}"
     )
     assert repo.singleton is result  # cached identity
-
-
-def test_singleton_clear_cache_forces_reload() -> None:
-    repo = TopicCatalogueRepository()
-
-    first = repo.singleton
-    repo.clear_cache()
-    second = repo.singleton
-
-    # Same content, but cache was cleared between calls so the
-    # repository invoked _load twice. Equality holds because the
-    # bundled data is immutable.
-    assert first == second
-
-
-def test_get_with_explicit_none_matches_singleton_property() -> None:
-    repo = ApoderamientosRepository()
-
-    assert repo.get(None) is repo.singleton

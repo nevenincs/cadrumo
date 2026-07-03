@@ -4,8 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.deadlines._models import IVARegime
+from ....domain.deadlines import (
+    IrpfEstimationRegime,
+    IVARegime,
+)
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ...wizard import _catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
 from .. import (
     facts_to_values,
     projection_for_taxpayer,
@@ -26,7 +30,7 @@ def test_facts_to_values_translates_paths_through_schema_selectors() -> None:
 
 def test_record_to_values_uses_schema_model_selectors() -> None:
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
@@ -35,7 +39,7 @@ def test_record_to_values_uses_schema_model_selectors() -> None:
 
 def test_projection_for_taxpayer_round_trips_iva_regime_through_descriptor() -> None:
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Operator",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -47,6 +51,41 @@ def test_projection_for_taxpayer_round_trips_iva_regime_through_descriptor() -> 
     assert profile.iva_regime is IVARegime.GENERAL
 
 
+def test_projection_for_taxpayer_uses_no_aplica_for_natural_person_without_activity_or_iva_fact() -> None:
+    record = UserProfileRecord(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        display_name="Landlord",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
+        ),
+    )
+
+    profile = projection_for_taxpayer(record)
+
+    assert profile.tax_id == "12345678Z"
+    assert profile.iva_regime is IVARegime.NO_APLICA
+
+
+def test_projection_for_taxpayer_preserves_explicit_iva_regime_for_natural_person_without_activity() -> None:
+    record = UserProfileRecord(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        display_name="Landlord",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
+            UserProfileFact(path="iva.regime", value="EXENTO"),
+        ),
+    )
+
+    profile = projection_for_taxpayer(record)
+
+    assert profile.tax_id == "12345678Z"
+    assert profile.iva_regime is IVARegime.EXENTO
+
+
 def test_projection_for_taxpayer_accepts_a_flat_mapping_directly() -> None:
     profile = projection_for_taxpayer({"tax.id": "X9876543A", "iva.regime": "GENERAL"})
     assert profile.tax_id == "X9876543A"
@@ -54,7 +93,7 @@ def test_projection_for_taxpayer_accepts_a_flat_mapping_directly() -> None:
 
 
 def test_projection_for_taxpayer_uses_defaults_when_record_is_blank() -> None:
-    record = UserProfileRecord(profile_id="operator", display_name="Operator", facts=())
+    record = UserProfileRecord(profile_id="11111111-1111-4111-8111-111111111111", display_name="Operator", facts=())
     profile = projection_for_taxpayer(record, tax_id_default="Z0000000Z")
     assert profile.tax_id == "Z0000000Z"
     assert profile.iva_regime is IVARegime.GENERAL
@@ -66,8 +105,8 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
     TaxpayerProfile.
 
     These fields' schema model_selectors drop the section prefix
-    (``irpf.professional_income_withholding_ge_70pct`` ->
-    ``professional_income_withholding_ge_70pct``). The selector-aliased
+    (``irpf.art109_activity_income_withholding_ge_70pct`` ->
+    ``art109_activity_income_withholding_ge_70pct``). The selector-aliased
     projection then loses the value because the bare key has no wizard
     catalogue entry. ``projection_for_taxpayer`` must read the
     canonical schema paths so an edited fact reaches the deadline
@@ -76,22 +115,22 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
     """
 
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Operator",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(
-                path="irpf.professional_income_withholding_ge_70pct",
+                path="irpf.art109_activity_income_withholding_ge_70pct",
                 value=True,
             ),
-            UserProfileFact(path="irpf.uses_objective_estimation", value=True),
+            UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
             UserProfileFact(path="withholding.has_employees", value=True),
         ),
     )
     profile = projection_for_taxpayer(record)
-    assert profile.professional_income_withholding_ge_70pct is True
-    assert profile.uses_objective_estimation_irpf is True
+    assert profile.art109_activity_income_withholding_ge_70pct is True
+    assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
     assert profile.has_employees is True
 
 
@@ -106,7 +145,7 @@ def test_record_to_values_emits_bare_key_for_third_party_threshold() -> None:
     emit a false warning even when the operator had declared the value.
     """
     record = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Operator",
         facts=(
             UserProfileFact(
@@ -121,3 +160,26 @@ def test_record_to_values_emits_bare_key_for_third_party_threshold() -> None:
     assert values["third_party_transactions_above_347_threshold"] == "true"
     # The prefixed key must NOT appear (no dual-key emission).
     assert "obligations.third_party_transactions_above_347_threshold" not in values
+
+
+def test_crypto_abroad_threshold_projects_to_taxpayer_profile() -> None:
+    """Modelo 721's threshold is distinct from Modelo 720's foreign-assets fact."""
+
+    record = UserProfileRecord(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        display_name="Operator",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="obligations.bienes_extranjero_above_threshold", value=False),
+            UserProfileFact(path="obligations.monedas_virtuales_extranjero_above_threshold", value=True),
+        ),
+    )
+
+    values = record_to_values(record)
+    profile = projection_for_taxpayer(record)
+
+    assert values["monedas_virtuales_extranjero_above_threshold"] == "true"
+    assert "obligations.monedas_virtuales_extranjero_above_threshold" not in values
+    assert profile.bienes_extranjero_above_threshold is False
+    assert profile.monedas_virtuales_extranjero_above_threshold is True

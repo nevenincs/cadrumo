@@ -182,7 +182,7 @@ def test_budget_splitter_keeps_parts_under_cap() -> None:
 
 def test_unsupported_extension_is_refused(tmp_path: Path) -> None:
     """A non-PDF handed to the PDF extractor fails loudly, never silently."""
-    fake = tmp_path / "not-a-pdf.txt"
-    fake.write_text("x", encoding="utf-8")
+    non_pdf_path = tmp_path / "not-a-pdf.txt"
+    non_pdf_path.write_text("x", encoding="utf-8")
     with pytest.raises(PreprocessSidecarError):
-        build_outputs(fake, repo_root=tmp_path)
+        build_outputs(non_pdf_path, repo_root=tmp_path)

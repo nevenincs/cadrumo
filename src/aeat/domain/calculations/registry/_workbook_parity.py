@@ -38,7 +38,7 @@ from ....core.logging import get_logger
 from ._casilla_membership import declared_casilla_ids
 from ._errors import RegistryValidationError
 from ._formula_runtime import calculate_registry_snapshot
-from ._ids import BindingId, CasillaId, RelationId, WorkbookOutputId, is_registry_id
+from ._ids import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId, WorkbookOutputId, is_registry_id
 from ._schema import EvidenceTier, RegistrySnapshot
 from ._workbook_parity_models import (
     SyntheticInputSet,
@@ -671,13 +671,22 @@ def run_registry_workbook_parity(
         output_id: registry_result.values[casilla_id] for output_id, casilla_id in registry_outputs.items()
     }
     formulas_by_target = {formula.target_casilla_id: formula for formula in snapshot.revision.formulas}
-    legal_refs: dict[WorkbookOutputId, tuple[str, ...]] = {}
-    source_refs: dict[WorkbookOutputId, tuple[str, ...]] = {}
+    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    legal_refs: dict[WorkbookOutputId, tuple[LegalRefId, ...]] = {}
+    source_refs: dict[WorkbookOutputId, tuple[SourceRefId, ...]] = {}
     for output_id, casilla_id in registry_outputs.items():
         formula = formulas_by_target.get(casilla_id)
         if formula is not None:
             legal_refs[output_id] = tuple(formula.legal_refs)
             source_refs[output_id] = tuple(formula.source_refs)
+            continue
+        casilla = casillas_by_id.get(casilla_id)
+        if casilla is None:
+            raise RegistryValidationError(
+                f"registry parity output {output_id!r} references unknown casilla {casilla_id!r}",
+            )
+        legal_refs[output_id] = tuple(casilla.legal_refs)
+        source_refs[output_id] = tuple(casilla.source_refs)
     runner = _execution_runner_availability(executable)
     return compare_registry_to_workbook(
         synthetic_input=synthetic_input,
@@ -799,8 +808,8 @@ def compare_registry_to_workbook(
     actual_registry_values: Mapping[WorkbookOutputId, Decimal | int | str | bool | None],
     output_cells: Mapping[WorkbookOutputId, WorkbookCellRef],
     registry_snapshot_id: str | None = None,
-    legal_refs: Mapping[WorkbookOutputId, tuple[str, ...]] | None = None,
-    source_refs: Mapping[WorkbookOutputId, tuple[str, ...]] | None = None,
+    legal_refs: Mapping[WorkbookOutputId, tuple[LegalRefId, ...]] | None = None,
+    source_refs: Mapping[WorkbookOutputId, tuple[SourceRefId, ...]] | None = None,
     tolerance: Decimal = Decimal("0"),
 ) -> WorkbookParityRunReport:
     """Build a deterministic parity comparison report from already-computed values.
@@ -820,6 +829,18 @@ def compare_registry_to_workbook(
     cell_ids = _workbook_output_id_set("workbook output cells", output_cells)
     if cell_ids != expected_ids:
         _raise_output_id_mismatch("workbook output cells", cell_ids, "compared output values", expected_ids)
+    legal_ref_map = legal_refs or {}
+    source_ref_map = source_refs or {}
+    missing_legal_refs = _missing_or_empty_output_refs(expected_ids, legal_ref_map)
+    missing_source_refs = _missing_or_empty_output_refs(expected_ids, source_ref_map)
+    if missing_legal_refs:
+        raise RegistryValidationError(
+            f"workbook parity comparison missing legal_refs for outputs: {missing_legal_refs!r}",
+        )
+    if missing_source_refs:
+        raise RegistryValidationError(
+            f"workbook parity comparison missing source_refs for outputs: {missing_source_refs!r}",
+        )
     comparisons: list[WorkbookParityComparison] = []
     for output_id in sorted(expected_ids):
         expected = expected_workbook_values[output_id]
@@ -836,8 +857,8 @@ def compare_registry_to_workbook(
                 actual_registry_value=actual,
                 status=status,
                 tolerance=tolerance,
-                legal_refs=(legal_refs or {}).get(output_id, ()),
-                source_refs=(source_refs or {}).get(output_id, ()),
+                legal_refs=legal_ref_map[output_id],
+                source_refs=source_ref_map[output_id],
                 detail=None if status == "match" else "registry output differs from workbook output",
             ),
         )
@@ -852,14 +873,19 @@ def compare_registry_to_workbook(
     )
 
 
+def _missing_or_empty_output_refs(
+    expected_ids: frozenset[WorkbookOutputId],
+    refs: Mapping[WorkbookOutputId, tuple[str, ...]],
+) -> tuple[WorkbookOutputId, ...]:
+    return tuple(sorted(output_id for output_id in expected_ids if not refs.get(output_id)))
+
+
 def _workbook_output_id_set(
     surface: str,
     values: Mapping[WorkbookOutputId, object],
 ) -> frozenset[WorkbookOutputId]:
     invalid = sorted(
-        repr(output_id)
-        for output_id in values
-        if not isinstance(output_id, str) or not is_registry_id(output_id)
+        repr(output_id) for output_id in values if not isinstance(output_id, str) or not is_registry_id(output_id)
     )
     if invalid:
         raise RegistryValidationError(f"{surface} contains invalid workbook output ids: {invalid!r}")
@@ -1029,10 +1055,10 @@ def _is_record_design_path(lowered_relative_path: str) -> bool:
 def _evidence_for_workbook_kind(kind: WorkbookKind) -> tuple[EvidenceTier | None, tuple[EvidenceTier, ...]]:
     if kind == WorkbookKind.FORMULA_FORM:
         return "executable_parity_evidence", ("legal_authority", "layout_authority")
-    if kind in {WorkbookKind.RECORD_DESIGN_LAYOUT, WorkbookKind.UNSUPPORTED_BINARY_XLS}:
+    if kind in {WorkbookKind.RECORD_DESIGN_LAYOUT, WorkbookKind.UNSUPPORTED_BINARY_XLS, WorkbookKind.STATIC_LAYOUT}:
         return "layout_authority", ("legal_authority", "executable_parity_evidence")
-    if kind in {WorkbookKind.VALIDATION_HINTS, WorkbookKind.STATIC_LAYOUT}:
-        return "official_source_guidance", ("legal_authority", "executable_parity_evidence")
+    if kind == WorkbookKind.VALIDATION_HINTS:
+        return "official_source_guidance", ("legal_authority", "executable_parity_evidence", "layout_authority")
     return None, (
         "legal_authority",
         "official_source_guidance",

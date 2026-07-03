@@ -22,7 +22,8 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import Period
-from ....filing._schema import (
+from .....core.identity import SubjectTaxId
+from ....filing import (
     ModeloBindingValue,
     ModeloDraft,
     ModeloDraftStatus,
@@ -30,7 +31,7 @@ from ....filing._schema import (
     ModeloValue,
     ModeloValueKind,
 )
-from ....modelos._calculation_revision import (
+from ....modelos import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
@@ -46,7 +47,6 @@ from .._schema import LiveCrossReferenceDecision
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-
 def _casilla_id(value: object) -> CasillaId:
     try:
         return validated_casilla_id(value, surface="test casilla id")
@@ -58,13 +58,17 @@ _IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.devengado")
 _IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
 _IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
 _IVA_RESULTADO_OPERANDS: tuple[CasillaId, CasillaId] = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
+_DRAFT_TIMESTAMP = datetime(2026, 5, 28, 10, 0, 0, tzinfo=UTC)
+_WORKFLOW_STEP_STARTED_AT = datetime(2026, 5, 28, 10, 5, 0, tzinfo=UTC)
+_CALCULATION_REVISION_TIMESTAMP = datetime(2026, 5, 28, 10, 10, 0, tzinfo=UTC)
 
 
 class _ModeloDraftCommonKwargs(TypedDict):
     draft_id: str
     modelo: str
     period: Period
-    profile_tax_id: str
+    profile_tax_id: SubjectTaxId
+    snapshot_ref: object
     status: ModeloDraftStatus
     values: tuple[ModeloValue, ...]
     binding_values: tuple[ModeloBindingValue, ...]
@@ -254,12 +258,21 @@ def test_filing_draft_full_roundtrip() -> None:
     starts losing fields during the migration, this test will fail.
     """
 
-    now = datetime.now(UTC).replace(microsecond=0)
+    from .._schema import RegistrySnapshotRef
+
+    snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="2025-y-siguientes",
+        modelo_year=2025,
+        period="1T",
+    )
     original = ModeloDraft(
         draft_id="f" * 64,
         modelo="303",
         period=Period.from_year_and_code(2025, "1T"),
         profile_tax_id="12345678Z",
+        subject_tax_id="12345678Z",
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.BORRADOR,
         values=(
             ModeloValue(
@@ -284,8 +297,8 @@ def test_filing_draft_full_roundtrip() -> None:
         ),
         binding_values=(),
         findings=(),
-        created_at=now,
-        updated_at=now,
+        created_at=_DRAFT_TIMESTAMP,
+        updated_at=_DRAFT_TIMESTAMP,
         schema_version="schema-2025-1",
         notes="",
     )
@@ -310,18 +323,26 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
 
     import pytest as _pytest
 
-    now = datetime.now(UTC).replace(microsecond=0)
+    from .._schema import RegistrySnapshotRef
+
+    snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="2025-y-siguientes",
+        modelo_year=2025,
+        period="1T",
+    )
     common_kwargs: _ModeloDraftCommonKwargs = {
         "draft_id": "f" * 64,
         "modelo": "303",
         "period": Period.from_year_and_code(2025, "1T"),
         "profile_tax_id": "12345678Z",
+        "snapshot_ref": snapshot_ref,
         "status": ModeloDraftStatus.BORRADOR,
         "values": (),
         "binding_values": (),
         "findings": (),
-        "created_at": now,
-        "updated_at": now,
+        "created_at": _DRAFT_TIMESTAMP,
+        "updated_at": _DRAFT_TIMESTAMP,
         "schema_version": "schema-2025-1",
     }
 
@@ -334,12 +355,52 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
         ModeloDraft(subject_tax_id="12345678A", **common_kwargs)
 
 
+def test_filing_draft_profile_tax_id_validates_at_boundary() -> None:
+    """``ModeloDraft.profile_tax_id`` is also a validated subject tax id.
+
+    Export layouts still read ``profile_tax_id`` as a draft attribute for
+    declarante NIF fields, so it must not remain a bare string while
+    ``subject_tax_id`` is validated.
+    """
+
+    from .._schema import RegistrySnapshotRef
+
+    snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="2025-y-siguientes",
+        modelo_year=2025,
+        period="1T",
+    )
+    common_kwargs: _ModeloDraftCommonKwargs = {
+        "draft_id": "f" * 64,
+        "modelo": "303",
+        "period": Period.from_year_and_code(2025, "1T"),
+        "profile_tax_id": "12345678Z",
+        "snapshot_ref": snapshot_ref,
+        "status": ModeloDraftStatus.BORRADOR,
+        "values": (),
+        "binding_values": (),
+        "findings": (),
+        "created_at": _DRAFT_TIMESTAMP,
+        "updated_at": _DRAFT_TIMESTAMP,
+        "schema_version": "schema-2025-1",
+    }
+
+    valid = ModeloDraft(subject_tax_id="12345678Z", **common_kwargs)
+    assert valid.profile_tax_id == "12345678Z"
+
+    with pytest.raises(ValidationError):
+        ModeloDraft(
+            subject_tax_id="12345678Z",
+            **(common_kwargs | {"profile_tax_id": "12345678A"}),
+        )
+
+
 def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
     """A populated ``RegistrySnapshotRef`` survives strict JSON round-trip on ModeloDraft."""
 
     from .._schema import RegistrySnapshotRef
 
-    now = datetime.now(UTC).replace(microsecond=0)
     ref = RegistrySnapshotRef(
         modelo="303",
         revision_id="2025-y-siguientes",
@@ -357,8 +418,8 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
         values=(),
         binding_values=(),
         findings=(),
-        created_at=now,
-        updated_at=now,
+        created_at=_DRAFT_TIMESTAMP,
+        updated_at=_DRAFT_TIMESTAMP,
         schema_version="schema-2025-1",
     )
 
@@ -384,7 +445,7 @@ def test_workbook_parity_reference_output_cells_roundtrip() -> None:
 
     original = WorkbookParityReference(
         id="m130-1t-parity",
-        workbook_source="boe.modelo.130.workbook",
+        workbook_source="boe-modelo-130-workbook",
         fixture_id="m130-1t-2025-fixture",
         formula_coverage="formula_form",
         runner_required=True,
@@ -394,8 +455,8 @@ def test_workbook_parity_reference_output_cells_roundtrip() -> None:
             "07": "'Modelo 130'!F22",
         },
         tolerance=Decimal("0.01"),
-        legal_refs=("lirpf.art-99",),
-        source_refs=("boe.modelo.130.workbook",),
+        legal_refs=("ley-35-2006:art-99",),
+        source_refs=("boe-modelo-130-workbook",),
     )
 
     roundtripped = WorkbookParityReference.model_validate_json(
@@ -421,14 +482,14 @@ def test_workbook_parity_reference_rejects_malformed_output_identifier() -> None
     with pytest.raises(ValidationError):
         WorkbookParityReference(
             id="m130-1t-parity",
-            workbook_source="boe.modelo.130.workbook",
+            workbook_source="boe-modelo-130-workbook",
             fixture_id="m130-1t-2025-fixture",
             formula_coverage="formula_form",
             runner_required=True,
             output_cells={"bad output": "Modelo!A1"},
             tolerance=Decimal("0.01"),
-            legal_refs=("lirpf.art-99",),
-            source_refs=("boe.modelo.130.workbook",),
+            legal_refs=("ley-35-2006:art-99",),
+            source_refs=("boe-modelo-130-workbook",),
         )
 
 
@@ -454,7 +515,7 @@ def test_oracle_filing_observation_distinct_from_local_roundtrip() -> None:
         filing_year=2025,
         period="1T",
         observations=(obs,),
-        oracle_id="aeat-oracle.iva.q1",
+        oracle_id="aeat-oracle-iva-q1",
     )
 
     roundtripped = OracleModeloObservation.model_validate_json(
@@ -462,7 +523,7 @@ def test_oracle_filing_observation_distinct_from_local_roundtrip() -> None:
     )
 
     assert roundtripped == original
-    assert roundtripped.oracle_id == "aeat-oracle.iva.q1"
+    assert roundtripped.oracle_id == "aeat-oracle-iva-q1"
     assert roundtripped.observations == (obs,)
     # OracleModeloObservation IS a RegistryModeloObservation; the
     # type distinction must be preserved structurally even though
@@ -484,17 +545,16 @@ def test_workflow_step_details_typed_envelope_roundtrip() -> None:
 
     from datetime import timedelta
 
-    from .....application.workflow._models import (
+    from .....application.workflow import (
         WorkflowStage,
         WorkflowStep,
         WorkflowStepDetails,
     )
 
-    now = datetime.now(UTC).replace(microsecond=0)
     original = WorkflowStep(
         stage=WorkflowStage.RUNNING_PREFLIGHT,
-        started_at=now,
-        ended_at=now + timedelta(seconds=2),
+        started_at=_WORKFLOW_STEP_STARTED_AT,
+        ended_at=_WORKFLOW_STEP_STARTED_AT + timedelta(seconds=2),
         success=True,
         summary="health check passed",
         details={"draft_id": "f" * 64, "casilla_count": "42"},
@@ -523,7 +583,6 @@ def test_calculation_revision_carries_typed_observations() -> None:
     serialization without value loss.
     """
 
-    now = datetime.now(UTC).replace(microsecond=0)
     observation = CasillaObservation(
         casilla_id=_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA,
         value=Decimal("12345.67"),
@@ -547,8 +606,8 @@ def test_calculation_revision_carries_typed_observations() -> None:
         state=CalculationRevisionState.BORRADOR,
         casilla_values=casilla_values,
         observations=(observation,),
-        created_at=now,
-        updated_at=now,
+        created_at=_CALCULATION_REVISION_TIMESTAMP,
+        updated_at=_CALCULATION_REVISION_TIMESTAMP,
     )
 
     roundtripped = CalculationRevision.model_validate_json(revision.model_dump_json())

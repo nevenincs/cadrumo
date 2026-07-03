@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#workflow-cli-surface-swarm'
 date: '2026-05-16'
-modified: '2026-05-16'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `workflow-cli-surface-swarm` audit: `Workflow and CLI surface data-loss audit`
 
@@ -26,7 +24,7 @@ Audited the AEAT workflow engine (`src/aeat/application/workflow/`) and CLI emis
 
 ### 1. WorkflowState Accepts `dict[str, object]` in Review Record Fields — Data Loss on Serialization
 
-**File**: `src/aeat/application/workflow/_models.py` lines 152–153  
+**File**: `src/aeat/application/workflow/_models.py` lines 152–153
 **Issue**: The `WorkflowState` model declares `invoice_reviews` and `ledger_reviews` with union types that explicitly allow raw dicts:
 
 ```python
@@ -48,7 +46,7 @@ ledger_reviews: dict[str, LedgerReviewRecord | dict[str, object]] = Field(defaul
 
 ### 2. WorkflowStep `details` Dict Keys Not Documented in WorkflowStepDetails Schema
 
-**File**: `src/aeat/application/workflow/_engine.py` lines 525, 818, 855, 910–942  
+**File**: `src/aeat/application/workflow/_engine.py` lines 525, 818, 855, 910–942
 **Issue**: WorkflowStep is constructed with details dicts containing keys that are not enumerated in the `WorkflowStepDetails` docstring:
 
 - Line 525: `{"modelo", "period", "closes_on"}` when deadline check fails
@@ -64,7 +62,7 @@ ledger_reviews: dict[str, LedgerReviewRecord | dict[str, object]] = Field(defaul
 
 ### 3. CLI Review Commands Emit Raw model_dump(mode="json") Without Registered Schema
 
-**File**: `src/aeat/entrypoints/cli/_review.py` lines 33–36 and 51–63  
+**File**: `src/aeat/entrypoints/cli/_review.py` lines 33–36 and 51–63
 **Issue**: Both `review_queue` and `review_show` commands emit their payloads via:
 
 ```python
@@ -89,7 +87,7 @@ The `ReviewQueueReport` and `ReviewQueueRow` models are returned from applicatio
 
 ### 4. Plain Dict Emitted in _config/profile unset Command — No Type Validation
 
-**File**: `src/aeat/entrypoints/cli/_config/__init__.py` line 392  
+**File**: `src/aeat/entrypoints/cli/_config/__init__.py` line 392
 **Issue**: The `config profile unset` command emits a plain dict:
 
 ```python
@@ -104,7 +102,7 @@ This dict is not typed or registered. If the operator's parsing code expects a d
 
 ### 5. WorkflowResult Serialization Does Not Round-Trip Tuples Through JSON Without Pydantic Re-Parse
 
-**File**: `src/aeat/core/output_rendering.py` lines 73–88  
+**File**: `src/aeat/core/output_rendering.py` lines 73–88
 **Issue**: The `jsonable_output_payload` function converts tuples to lists (line 80):
 
 ```python
@@ -127,7 +125,7 @@ When a CLI command calls `render_command_output` with JSON format, tuples are lo
 
 ### 6. WorkflowStep.details Union Type Accepts dict[str, str] But Stores Non-String Values
 
-**File**: `src/aeat/application/workflow/_models.py` line 348–351  
+**File**: `src/aeat/application/workflow/_models.py` line 348–351
 **Issue**: The WorkflowStep.details field is declared as:
 
 ```python

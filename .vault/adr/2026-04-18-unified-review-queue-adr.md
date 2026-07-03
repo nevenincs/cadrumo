@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#unified-review-queue"
 date: 2026-04-18
-modified: '2026-04-18'
+modified: '2026-06-13'
 related:
   - "[[2026-04-18-unified-review-queue-research]]"
   - "[[2026-04-17-export-first-adr]]"
@@ -16,7 +16,7 @@ related:
 
 ## status
 
-Proposed — 2026-04-18. Sub-EPIC of [#202](https://github.com/wgergely/aeat/issues/202) (review umbrella) and direct fulfilment of [#232](https://github.com/wgergely/aeat/issues/232).
+accepted — `aeat review queue` CLI and `ReviewItem` subtypes verified in `src/aeat/application/review/` at HEAD; bumped via issue #367. Sub-EPIC of [#202](https://github.com/wgergely/aeat/issues/202) (review umbrella) and direct fulfilment of [#232](https://github.com/wgergely/aeat/issues/232).
 
 ## context
 

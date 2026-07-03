@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#secure-object-backlog-drain'
 date: '2026-05-22'
-modified: '2026-05-22'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-05-22-secure-object-backlog-drain-r2-plan]]'
@@ -12,7 +12,6 @@ related:
   - '[[2026-06-04-secure-object-backlog-drain-adr]]'
   - '[[2026-06-04-secure-object-backlog-drain-research]]'
 ---
-
 
 # `secure-object-backlog-drain` R3 plan: secure-storage roundtrip hygiene slice
 

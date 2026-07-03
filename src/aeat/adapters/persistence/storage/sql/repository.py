@@ -1,11 +1,11 @@
 """Typed repositories for the public storage records.
 
 Each repository exposes a small, explicit CRUD surface against its pydantic
-record type from :mod:`aeat.adapters.persistence.storage.sql.records`. The
+record type from :mod:`adapters.persistence.storage.sql.records`. The
 repositories translate between the public records and the internal
-SQLAlchemy mapper classes from :mod:`aeat.adapters.persistence.storage.sql._orm`
+SQLAlchemy mapper classes from :mod:`adapters.persistence.storage.sql._orm`
 on every boundary crossing, raising
-:exc:`aeat.adapters.persistence.storage.errors.RepositoryError` on integrity
+:exc:`~adapters.persistence.storage.RepositoryError` on integrity
 violations or missing-row lookups.
 """
 
@@ -98,7 +98,7 @@ class SqlRecordRepository[RecordT](ABC):
             record_id: Primary-key value to delete.
 
         Raises:
-            :exc:`aeat.adapters.persistence.storage.errors.RepositoryError`:
+            :exc:`~adapters.persistence.storage.RepositoryError`:
                 If no row with ``record_id`` exists.
         """
 

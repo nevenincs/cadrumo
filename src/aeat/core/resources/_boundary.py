@@ -13,6 +13,15 @@ process-lifetime :class:`~pathlib.Path` is required, and :func:`as_path` for a
 scoped materialised path. The ``PROJECT_ROOT`` walk is reserved for ``var/``
 operator outputs in :mod:`aeat.core.config` and is not a valid resolution path
 for read-only bundled data.
+
+The corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``) are excluded
+from the slim ``aeat`` runtime wheel and shipped in an optional ``aeat_data``
+companion distribution whose layout mirrors ``aeat/_data``. :func:`resolve_corpus_binary`
+is the single ``importlib.resources`` seam that resolves such a binary from the
+``aeat`` tree first and then the companion, so a full checkout and a split
+install read a corpus binary uniformly; :func:`resolve_companion_binary`
+resolves the companion side alone. A missing companion is a not-present signal
+(``None``), never an exception leak.
 """
 
 from __future__ import annotations
@@ -27,6 +36,8 @@ from pathlib import Path
 _PACKAGE_DATA: Traversable = files("aeat").joinpath("_data")
 _RESOURCE_STACK: ExitStack = ExitStack()
 atexit.register(_RESOURCE_STACK.close)
+
+_COMPANION_PACKAGE = "aeat_data"
 
 
 def packaged_data(*parts: str) -> Traversable:
@@ -90,3 +101,71 @@ def as_path(node: Traversable) -> Iterator[Path]:
     """
     with as_file(node) as path:
         yield path
+
+
+def _traversable_is_file(node: Traversable) -> bool:
+    """Return whether ``node`` resolves to a readable file, swallowing loader errors."""
+    try:
+        return node.is_file()
+    except (OSError, ValueError):
+        return False
+
+
+def _companion_root() -> Traversable | None:
+    """Return the ``aeat_data`` companion package root, or ``None`` when it is absent.
+
+    The companion is an optional distribution; when it is not installed
+    ``importlib.resources.files`` raises an import-family error, which this
+    helper maps to ``None``. A missing companion is a not-present signal, never
+    an exception the caller must handle.
+    """
+    try:
+        return files(_COMPANION_PACKAGE)
+    except (ImportError, TypeError):
+        return None
+
+
+def resolve_companion_binary(*parts: str) -> Path | None:
+    """Resolve a corpus binary from the optional ``aeat_data`` companion alone.
+
+    Args:
+        *parts: Segments under the companion's mirrored ``_data`` root
+            (e.g. ``"corpus", "manuals", "renta", "2024", "source.pdf"``).
+
+    Returns:
+        A read-only :class:`pathlib.Path` valid for the process lifetime when
+        the companion is installed and carries the binary, else ``None``. The
+        companion mirrors ``aeat/_data``, so the segments are identical to the
+        ones :func:`packaged_data` takes.
+    """
+    root = _companion_root()
+    if root is None:
+        return None
+    node: Traversable = root.joinpath("_data")
+    for part in parts:
+        node = node.joinpath(part)
+    if not _traversable_is_file(node):
+        return None
+    return _RESOURCE_STACK.enter_context(as_file(node))
+
+
+def resolve_corpus_binary(*parts: str) -> Path | None:
+    """Resolve a bundled corpus binary, the ``aeat`` tree first then the ``aeat_data`` companion.
+
+    ``parts`` are the segments under ``_data`` (e.g. ``"corpus",
+    "aeat_official", "disenos_registro", "modelo_100", "files", "dr.xlsx"``).
+    The slim ``aeat`` wheel excludes ``_data/corpus/**/*.{pdf,xls,xlsx}``; the
+    optional ``aeat_data`` companion carries exactly those binaries under
+    mirrored paths. This is the single ``importlib.resources`` seam that unifies
+    the full-checkout read (binary in the ``aeat`` tree) and the split-install
+    read (binary in the companion).
+
+    Returns:
+        A read-only :class:`pathlib.Path` valid for the process lifetime when
+        the binary is present under either root, else ``None`` when it resolves
+        under neither.
+    """
+    primary = packaged_data(*parts)
+    if _traversable_is_file(primary):
+        return _RESOURCE_STACK.enter_context(as_file(primary))
+    return resolve_companion_binary(*parts)

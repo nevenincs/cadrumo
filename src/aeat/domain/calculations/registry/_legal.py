@@ -13,6 +13,7 @@ from ._text import normalise_corpus_text
 _SOURCE_BY_KIND: dict[str, CitationSource] = {
     "ley": "ley",
     "real_decreto": "reglamento",
+    "real_decreto_legislativo": "real_decreto_legislativo",
     "real_decreto_ley": "reglamento",
     "orden": "orden",
     "reglamento": "reglamento",
@@ -25,7 +26,6 @@ def verify_legal_reference(
     reference: LegalReference,
     *,
     source_root: Path | None = None,
-    corpus_strict: bool = True,
 ) -> None:
     """Verify one already parsed legal reference is filing-grade.
 
@@ -46,13 +46,6 @@ def verify_legal_reference(
     This function therefore only checks runtime invariants that the
     type system cannot express: known-bad citation patterns and
     required-text presence against the local corpus.
-
-    When ``corpus_strict=False`` the ``required_text`` check is skipped.
-    Production code paths (``bindings list``, ``work calculate``, etc.)
-    pass ``corpus_strict=False`` so a pending corpus annotation never
-    blocks a user-facing workflow; the strict check is reserved for
-    explicit registry audit calls (``verify_registry_tree``,
-    ``test_catalogue_verification``).
     """
     if reference.kind == "manual":
         path_text = reference.corpus_ref.split("#", 1)[0]
@@ -68,6 +61,13 @@ def verify_legal_reference(
                         f"legal reference {reference.id!r} manual section JSON validation failed: {exc}",
                     ) from exc
 
+    if reference.required_text and source_root is not None:
+        corpus_text = _legal_corpus_text(source_root, reference)
+        for required in reference.required_text:
+            if normalise_corpus_text(required) not in corpus_text:
+                raise RegistryValidationError(
+                    f"legal reference {reference.id!r} corpus text missing required text {required!r}",
+                )
     if reference.article is None:
         return
     source = _SOURCE_BY_KIND.get(reference.kind)
@@ -78,40 +78,27 @@ def verify_legal_reference(
         raise RegistryValidationError(
             f"legal reference {reference.id!r} matches known-bad citation: {known_bad.reason}",
         )
-    if corpus_strict and reference.required_text and source_root is not None:
-        corpus_text = _legal_corpus_text(source_root, reference)
-        for required in reference.required_text:
-            if normalise_corpus_text(required) not in corpus_text:
-                raise RegistryValidationError(
-                    f"legal reference {reference.id!r} corpus text missing required text {required!r}",
-                )
 
 
 def verify_legal_catalogue(
     legal: Mapping[str, LegalReference],
     *,
     source_root: Path | None = None,
-    corpus_strict: bool = True,
 ) -> None:
-    """Verify every legal reference in a shared legal catalogue.
-
-    When ``corpus_strict=False`` the ``required_text`` corpus check is
-    skipped for all references; key/id alignment and known-bad citation
-    checks still run.
-    """
+    """Verify every legal reference in a shared legal catalogue."""
     failures: list[str] = []
     for ref_id, reference in legal.items():
         if ref_id != reference.id:
             failures.append(f"legal catalogue key {ref_id!r} does not match reference id {reference.id!r}")
         try:
-            verify_legal_reference(reference, source_root=source_root, corpus_strict=corpus_strict)
+            verify_legal_reference(reference, source_root=source_root)
         except RegistryValidationError as exc:
             failures.append(str(exc))
     if failures:
         raise RegistryValidationError("legal catalogue validation failed:\n" + "\n".join(f" - {f}" for f in failures))
 
 
-_LEGAL_CORPUS_CACHE: dict[tuple[str, int], str] = {}
+_LEGAL_CORPUS_CACHE: dict[tuple[str, int, int], str] = {}
 
 
 def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
@@ -123,7 +110,7 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     if not path.is_file():
         raise RegistryValidationError(f"legal reference {reference.id!r} missing corpus file {path_text!r}")
     stat = path.stat()
-    cache_key = (path.name, stat.st_size)
+    cache_key = (str(path), stat.st_size, stat.st_mtime_ns)
     if cache_key in _LEGAL_CORPUS_CACHE:
         return _LEGAL_CORPUS_CACHE[cache_key]
 

@@ -1,17 +1,22 @@
 """Application services for manual review annotations.
 
 :func:`update_ledger_review` and :func:`update_invoice_review` return updated
-:class:`WorkflowState` instances by appending :class:`WorkflowEvent` history to
-the relevant :class:`LedgerReviewRecord` or :class:`InvoiceReviewRecord`.
+:class:`~aeat.application.workflow.WorkflowState` instances by appending
+:class:`~aeat.application.workflow.WorkflowEvent` history to the relevant
+:class:`LedgerReviewRecord` or :class:`InvoiceReviewRecord`.
 """
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ...domain.contribuyente import normalise_key
-from ..workflow._models import WorkflowEvent, WorkflowState
-from ..workflow._utils import utc_now
+from .._workflow_review_models import WorkflowEvent, utc_now
 from ._errors import ReviewError
 from ._models import InvoiceReviewRecord, LedgerReviewRecord
+
+if TYPE_CHECKING:
+    from ..workflow import WorkflowState
 
 
 def update_ledger_review(

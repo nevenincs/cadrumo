@@ -12,18 +12,20 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
-from ....application.user_profile._orchestration import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.workflow import workflow_state_repository
 from ....core import Period
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from ....domain.modelos import (
+    ModeloCode,
+    WorkUnit,
+    derive_work_unit_id,
+    upsert_work_unit,
+)
 from ....tests import FIXTURES_DIR
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -36,18 +38,19 @@ MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 # resolve to ``matches`` (instead of a tax_id mismatch against the auto-derived
 # per-profile NIF ``register_minimal_profile`` would otherwise assign).
 _FIXTURE_PROFILE_TAX_ID = "00000000T"
+_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 15, 40, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("operator"),
+        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
-                profile_id="operator",
+                profile_id="11111111-1111-4111-8111-111111111111",
                 overrides={"identity.tax_id": _FIXTURE_PROFILE_TAX_ID},
             )
         )
@@ -75,21 +78,20 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
         period=filing_period,
         revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{period}",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=_WORK_UNIT_TIMESTAMP,
+        updated_at=_WORK_UNIT_TIMESTAMP,
     )
     repo = WorkUnitCatalogueRepository()
     repo.save(upsert_work_unit(repo.load(), work_unit))
     return work_unit_id
 
 
-def test_reconcile_file_happy_path(cli_runner: CliRunner) -> None:
+def test_reconcile_file_happy_path() -> None:
     """`reconcile file --file` matches when the work unit and the committed
     modelo_130 fixture align on modelo and ejercicio."""
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
 
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "modelo", "reconcile", "file", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
     )
     assert result.exit_code == 0, result.output
@@ -99,12 +101,11 @@ def test_reconcile_file_happy_path(cli_runner: CliRunner) -> None:
     assert "diffs\t0" in result.output
 
 
-def test_reconcile_file_mismatch_renders_diff_rows(cli_runner: CliRunner) -> None:
+def test_reconcile_file_mismatch_renders_diff_rows() -> None:
     """A modelo=303 work unit against the modelo_130 fixture mismatches with a modelo diff."""
     work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
 
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "modelo", "reconcile", "file", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
     )
     assert result.exit_code == 0, result.output
@@ -112,29 +113,28 @@ def test_reconcile_file_mismatch_renders_diff_rows(cli_runner: CliRunner) -> Non
     assert "diff\tmodelo\twork_unit=303\tevidence=130" in result.output
 
 
-def test_reconcile_file_requires_the_file_option(cli_runner: CliRunner) -> None:
+def test_reconcile_file_requires_the_file_option() -> None:
     """`reconcile file` without `--file` is a usage error, not a silent default."""
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    result = cli_runner.invoke(app, ["app", "modelo", "reconcile", "file", work_unit_id])
+    result = invoke_cached_cli(["app", "modelo", "reconcile", "file", work_unit_id])
     assert result.exit_code != 0, result.output
 
 
-def test_reconcile_file_refuses_unknown_work_unit(cli_runner: CliRunner) -> None:
+def test_reconcile_file_refuses_unknown_work_unit() -> None:
     """A work unit id absent from the active bucket catalogue refuses at the exit code."""
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "modelo", "reconcile", "file", "0" * 64, "--file", str(MODELO_130_FIXTURE)],
     )
     assert result.exit_code != 0, result.output
 
 
-def test_reconcile_file_by_flag_lands_in_modelo_reconciled_event(cli_runner: CliRunner) -> None:
+def test_reconcile_file_by_flag_lands_in_modelo_reconciled_event() -> None:
     """The --by override attaches to the MODELO_RECONCILED event's actor field."""
-    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ....domain.buckets import BucketEventType
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "modelo",
@@ -158,23 +158,22 @@ def test_reconcile_file_by_flag_lands_in_modelo_reconciled_event(cli_runner: Cli
     assert matching[-1].actor == "auditor@team"
 
 
-def test_reconcile_history_empty_is_instructive(cli_runner: CliRunner) -> None:
+def test_reconcile_history_empty_is_instructive() -> None:
     """With no reconciliations recorded, `reconcile history` lists a clean empty."""
-    result = cli_runner.invoke(app, ["app", "modelo", "reconcile", "history"])
+    result = invoke_cached_cli(["app", "modelo", "reconcile", "history"])
     assert result.exit_code == 0, result.output
     assert "reconciliation_count\t0" in result.output
     assert "No reconciliations recorded yet" in result.output
 
 
-def test_reconcile_history_lists_recorded_reconciliation(cli_runner: CliRunner) -> None:
+def test_reconcile_history_lists_recorded_reconciliation() -> None:
     """After a reconcile, `reconcile history` lists the recorded verdict row."""
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    reconcile = cli_runner.invoke(
-        app,
+    reconcile = invoke_cached_cli(
         ["app", "modelo", "reconcile", "file", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
     )
     assert reconcile.exit_code == 0, reconcile.output
 
-    result = cli_runner.invoke(app, ["app", "modelo", "reconcile", "history"])
+    result = invoke_cached_cli(["app", "modelo", "reconcile", "history"])
     assert result.exit_code == 0, result.output
     assert "reconciliation_count\t1" in result.output

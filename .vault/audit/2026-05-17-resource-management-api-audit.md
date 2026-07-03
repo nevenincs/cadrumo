@@ -3,15 +3,13 @@ tags:
   - '#audit'
   - '#resource-management-api'
 date: '2026-05-17'
-modified: '2026-05-17'
+modified: '2026-06-30'
 related:
   - "[[2026-05-16-resource-management-api-plan]]"
   - "[[2026-05-16-resource-management-api-adr]]"
   - "[[2026-05-16-resource-management-api-research]]"
   - "[[2026-05-16-resource-management-api-audit]]"
 ---
-
-
 
 # `resource-management-api` audit: post-execution code review
 

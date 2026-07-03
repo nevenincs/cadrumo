@@ -1,0 +1,25 @@
+Impuesto sobre la Renta de las Personas Fisicas
+Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes
+(establecimientos permanentes)
+
+Retenciones e ingresos a cuenta
+Rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalizacion
+y de contratos de seguro de vida o invalidez.
+
+Modelo 128
+
+Liquidacion
+
+Retenciones e ingresos a cuenta:
+
+Numero de perceptores: 01
+Base de retenciones e ingresos a cuenta: 02
+Retenciones e ingresos a cuenta: 03
+
+Numero de perceptores: 04
+Base de retenciones e ingresos a cuenta: 05
+
+A deducir:
+Resultados a ingresar de anteriores declaraciones por el mismo concepto, ejercicio y periodo: 06
+
+Resultado a ingresar ([03] - [06]): 07

@@ -1,9 +1,17 @@
 """Central settings facade for AEAT automation.
 
-This module uses :class:`StorageRouteClassification` for SQL database route
-classification and ``SettingsConfigDict`` for Pydantic configuration.
-The primary export is the :class:`Settings` class, which is built on
-:class:`pydantic_settings.BaseSettings` with custom validation rules.
+The :class:`Settings` model is the environment authority for AEAT-prefixed
+configuration: operators and tests override fields here, and downstream code
+obtains the effective model through :func:`load_settings` or
+:func:`override_settings`. Runtime-tunable settings stay in this schema, while
+AEAT/Sede route and selector defaults come from
+:mod:`core.external_constants` through the default factories below.
+
+The storage boundary exposed here is also deliberate. Database URL derivation,
+active-profile bucket routing, and route classification are surfaced through
+:class:`StorageRouteClassification`, :func:`classify_storage_route`, and
+:func:`settings_for_active_profile_bucket` so write guards do not re-parse SQL
+URLs or active-profile pointers independently.
 """
 
 from __future__ import annotations
@@ -19,6 +27,9 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import SettingsConfigDict
 
+from . import _config_live_tests as _live_test_config
+from ._config_runtime_fields import AeatRuntimeSettings
+from ._config_state_root import default_storage_root
 from ._config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
 from ._config_support import (
     AuthProviderKindSetting,
@@ -37,7 +48,6 @@ from ._config_support import default_clave_sede_access_url_template as _default_
 from ._config_support import default_sede_expedientes_path as _default_sede_expedientes_path
 from ._config_support import default_status_detail_url_template as _default_status_detail_url_template
 from ._config_support import default_status_notificaciones_path as _default_status_notificaciones_path
-from ._config_timeouts import AeatTimeoutSettings
 from .errors import ActiveProfilePointerError, CoreValidationError
 from .external_constants import DEFAULT_CURRENCY, DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
@@ -57,20 +67,11 @@ DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"
 """Shared development/test password for database-backed secure-storage tests."""
 DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "AEAT_DEV_TEST_DATABASE_PASSWORD"
 """Environment variable backing :attr:`Settings.aeat_dev_test_database_password`."""
-LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD = "aeat_live_tests_enabled"
-"""Settings field backing the pytest-only live-read opt-in."""
-LIVE_READ_TEST_OPT_IN_ENV_VAR = "AEAT_LIVE_TESTS_ENABLED"
-"""Environment variable backing :attr:`Settings.aeat_live_tests_enabled`."""
-LIVE_READ_TEST_OPT_IN_VALUE = "1"
-"""The only literal value that opts in to live tests.
-
-Strict by design: ``"true"``/``"yes"``/``"on"`` are rejected so the opt-in
-surface cannot widen through bool coercion. This is the single canonical
-constant the :class:`Settings` predicates compare against."""
-LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = "aeat_live_tests_google"
-"""Settings field backing the pytest-only Google live-test opt-in."""
-LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = "AEAT_LIVE_TESTS_GOOGLE"
-"""Environment variable backing :attr:`Settings.aeat_live_tests_google`."""
+LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD
+LIVE_READ_TEST_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_OPT_IN_ENV_VAR
+LIVE_READ_TEST_OPT_IN_VALUE = _live_test_config.LIVE_READ_TEST_OPT_IN_VALUE
+LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD
+LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR
 
 _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     "aeat_secret_store_dir": "secrets",
@@ -79,11 +80,20 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
 }
 
 
-class Settings(AeatTimeoutSettings):
+class Settings(AeatRuntimeSettings):
     """Application settings populated from environment variables and ``.env``.
 
     Field names map directly to env var names (uppercased). For example,
-    ``aeat_base_url`` reads ``AEAT_BASE_URL``.
+    ``aeat_base_url`` reads ``AEAT_BASE_URL``. The model is declarative: it
+    carries operator choices, timeouts, storage roots, live-read opt-ins, and
+    provider selectors, but does not open secret stores, build outbound
+    providers, or execute AEAT browser flows.
+
+    Validators keep derived paths coherent with ``aeat_local_storage_root`` and
+    derive ``aeat_database_url`` from either an explicit field, the active
+    profile, or the cold root fallback. Tests and CLI scopes should prefer
+    :func:`override_settings` over process-wide environment mutation whenever
+    they are not explicitly testing environment parsing.
     """
 
     model_config = SettingsConfigDict(
@@ -114,132 +124,6 @@ class Settings(AeatTimeoutSettings):
     aeat_log_level: str = Field(
         default="",
         description="Optional default CLI log level override: quiet, default, verbose, or debug",
-    )
-    # ── LLM provider endpoints ────────────────────────────────────────────
-    aeat_llm_openai_chat_completions_url: str = Field(
-        default="https://api.openai.com/v1/chat/completions",
-        description="OpenAI Chat Completions endpoint; override for OpenAI-compatible proxies",
-    )
-    aeat_llm_gemini_generate_content_template: str = Field(
-        default="https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-        description="Google Gemini generateContent endpoint template (``{model}`` is substituted)",
-    )
-    aeat_llm_ollama_chat_url: str = Field(
-        default="http://127.0.0.1:11434/api/chat",
-        description="Local Ollama /api/chat endpoint; override for non-localhost Ollama deployments",
-    )
-    aeat_llm_ollama_num_ctx: int = Field(
-        default=8192,
-        gt=0,
-        description=(
-            "Ollama context window (num_ctx) for local requests. The vision read sends "
-            "the full registry allow-list prompt plus the encoded invoice image, which "
-            "exceeds Ollama's 4096 default; 8192 fits the prompt + image + output with "
-            "headroom and still runs on consumer hardware"
-        ),
-    )
-    aeat_llm_vision_read_timeout_s: int = Field(
-        default=300,
-        gt=0,
-        description=(
-            "Per-request timeout for the on-host local vision read; larger than the "
-            "general LLM timeout because a local vision model on consumer hardware "
-            "(CPU or a modest GPU) can take one to several minutes to read an invoice"
-        ),
-    )
-    aeat_llm_ollama_vision_model: str = Field(
-        default="qwen2.5vl:3b",
-        description=(
-            "Local Ollama vision model used to read scanned/image evidence on-host "
-            "(the default, gestor-allowed posture); must be a multimodal model pulled "
-            "into the local Ollama runtime. Default qwen2.5vl:3b (~3 GB) is "
-            "document/OCR-grade and runs on normal consumer hardware (modest GPU or "
-            "CPU); override to qwen2.5vl:7b for an 8 GB+ GPU or moondream for "
-            "CPU-only/low-memory (see the consumer-hardware vision-model ADR)"
-        ),
-    )
-    aeat_llm_default_max_tokens: int = Field(
-        default=1024,
-        gt=0,
-        description="Default maximum output tokens when an LLM request omits ``max_tokens``",
-    )
-    aeat_llm_default_temperature: float = Field(
-        default=0.0,
-        ge=0.0,
-        le=2.0,
-        description="Default sampling temperature when an LLM request omits ``temperature``",
-    )
-    # ── Browser context defaults ───────────────────────────────────────────
-    aeat_browser_locale: str = Field(
-        default="es-ES",
-        min_length=2,
-        description="Default browser locale passed to Playwright context (BCP-47 tag)",
-    )
-    aeat_browser_timezone: str = Field(
-        default="Europe/Madrid",
-        min_length=1,
-        description="Default IANA timezone string passed to Playwright context",
-    )
-    aeat_browser_viewport_width: int = Field(
-        default=1366,
-        gt=0,
-        description="Default Playwright viewport width (px) for AEAT sede sessions",
-    )
-    aeat_browser_viewport_height: int = Field(
-        default=900,
-        gt=0,
-        description="Default Playwright viewport height (px) for AEAT sede sessions",
-    )
-    # ── File-lock acquisition ─────────────────────────────────────────────
-    aeat_file_lock_timeout_s: float = Field(
-        default=30.0,
-        gt=0,
-        description="Default exclusive file-lock acquisition timeout (seconds)",
-    )
-    aeat_file_lock_retry_backoff_s: float = Field(
-        default=0.05,
-        gt=0,
-        description="Sleep interval (seconds) between non-blocking file-lock acquire attempts",
-    )
-    aeat_bucket_lock_poll_interval_s: float = Field(
-        default=0.1,
-        gt=0,
-        description="Polling interval (seconds) for bucket lockfile acquisition retries",
-    )
-    aeat_bucket_default_idle_lock_minutes: int = Field(
-        default=15,
-        gt=0,
-        description="Fallback idle-lock window (minutes) when a bucket manifest omits the value",
-    )
-    # ── Auth provider acquisition locks ──────────────────────────────────
-    aeat_auth_clave_movil_lock_buffer_s: int = Field(
-        default=90,
-        gt=0,
-        description="Headroom (seconds) added to ``aeat_clave_movil_timeout_ms`` for the acquisition lock TTL",
-    )
-    aeat_auth_certificate_lock_ttl_s: int = Field(
-        default=180,
-        gt=0,
-        description="Acquisition lock TTL (seconds) for certificate-backed AEAT auth flows",
-    )
-    # ── Logging ───────────────────────────────────────────────────────────
-    aeat_log_stderr_level: str = Field(
-        default="ERROR",
-        description="Log level for the stderr handler installed by ``aeat.core.logging``",
-    )
-    aeat_log_file_level: str = Field(
-        default="DEBUG",
-        description="Log level for the file handler installed by ``aeat.core.logging``",
-    )
-    aeat_log_root_level: str = Field(
-        default="DEBUG",
-        description="Root logger level installed by ``aeat.core.logging``",
-    )
-    # ── External downloads ──────────────────────────────────────────────
-    aeat_manuals_http_timeout_s: float = Field(
-        default=60.0,
-        gt=0,
-        description="HTTP timeout (seconds) for AEAT manual PDF downloads",
     )
     # ── Google integration ───────────────────────────────────────────────
     aeat_google_drive_vault_folder_name: str = Field(
@@ -411,11 +295,17 @@ class Settings(AeatTimeoutSettings):
         ),
     )
     aeat_local_storage_root: Path = Field(
-        default=PROJECT_ROOT / "var" / "storage",
+        default_factory=default_storage_root,
         description=(
             "Root directory for the LocalFileSystemProvider backend. Each namespace "
             "becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` file "
-            "paired with a `.meta.json` sidecar."
+            "paired with a `.meta.json` sidecar. The default is installed-run aware: a "
+            "source checkout resolves to `PROJECT_ROOT/var/storage`, while an installed "
+            "distribution roots at the platform user-data directory "
+            "(`%LOCALAPPDATA%/aeat/storage`, `$XDG_DATA_HOME/aeat/storage` or "
+            "`~/Library/Application Support/aeat/storage`) so the encrypted store never "
+            "lands inside a virtualenv or uv cache. An explicit `AEAT_LOCAL_STORAGE_ROOT` "
+            "override wins over the derived default."
         ),
     )
     aeat_google_drive_root_folder_id: str | None = Field(
@@ -429,10 +319,7 @@ class Settings(AeatTimeoutSettings):
     )
 
     # ── Live tests ──────────────────────────────────────────────────────────
-    # Typed as ``str`` (not ``bool``) so the strict-match safety property is
-    # preserved for pytest live-test opt-in: only the literal "1" enables
-    # live tests. Pydantic's bool coercion would accept "true"/"yes"/"on" —
-    # a wider opt-in surface than the test-gate intent allows.
+    # Typed as ``str`` to preserve the strict literal-"1" opt-in predicate.
     aeat_live_tests_enabled: str = Field(
         default="",
         description="Opt-in flag (set to '1') to run @pytest.mark.aeat_live tests against real external services",
@@ -447,20 +334,22 @@ class Settings(AeatTimeoutSettings):
 
     @property
     def live_tests_enabled(self) -> bool:
-        """Whether the pytest live-read opt-in is enabled (strict literal ``"1"``).
+        """Whether the pytest live-read opt-in is enabled.
 
-        Single source of truth for the live-test gate: both the test-side
-        ``aeat.tests.live_gate`` helpers and the production
-        ``AeatAccessGate`` read this property, so the strict-match safety
-        rule (only ``"1"`` opts in; ``"true"`` / ``"yes"`` / ``"on"`` are
-        rejected) lives in exactly one place.
+        This is a strict ``"1"`` predicate for test selection only; production
+        live-read access gates consume their own policy and capability checks.
         """
-        return self.aeat_live_tests_enabled == LIVE_READ_TEST_OPT_IN_VALUE
+        return _live_test_config.strict_live_test_opt_in(self.aeat_live_tests_enabled)
 
     @property
     def live_tests_google_enabled(self) -> bool:
-        """Whether the Google (OAuth / Drive) live-test opt-in is enabled (strict ``"1"``)."""
-        return self.aeat_live_tests_google == LIVE_READ_TEST_OPT_IN_VALUE
+        """Whether the Google live-test opt-in is enabled.
+
+        Google OAuth / Drive tests use the same strict ``"1"`` predicate as the
+        general live-read opt-in and remain separate from production provider
+        construction.
+        """
+        return _live_test_config.strict_live_test_opt_in(self.aeat_live_tests_google)
 
     # ── Replay IPC ──────────────────────────────────────────────────────────
     # Set by ``aeat.core.observability._replay.replay_run`` on the parent
@@ -560,11 +449,9 @@ class Settings(AeatTimeoutSettings):
             "missing definition-review metadata; when False the rejection is downgraded to a warning"
         ),
     )
-
-    # ── Normatives corpus (aeat.domain.normatives) ─────────────────────────────────
     aeat_normatives_root: Path = Field(
         default_factory=lambda: bundled_path("corpus", "normatives"),
-        description="Root directory for the Spanish tax normatives JSON catalogue",
+        description="Root directory for the bundled legal normatives corpus",
     )
 
     # ── IVA catalogue (aeat.domain.iva) ──────────────────────────────────
@@ -791,6 +678,10 @@ class Settings(AeatTimeoutSettings):
         default=PROJECT_ROOT / "var" / "llm-usage",
         description="Directory for append-only LLM usage JSONL logs",
     )
+    aeat_llm_run_telemetry_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "llm-run-telemetry",
+        description="Directory for append-only local LLM run-timing telemetry logs",
+    )
     aeat_llm_default_timeout_s: int = Field(
         default=60,
         description="Default timeout for LLM provider calls in seconds",
@@ -878,7 +769,7 @@ class Settings(AeatTimeoutSettings):
         description=(
             "Gate the M210 IRNR Phase 1 engine. When False (default) `aeat app modelo "
             "work create --modelo 210` emits the Path-B refusal stub. When True "
-            "the stub guard is skipped and the engine path runs (m210_resolve_rate "
+            "the stub guard is skipped and the engine path runs (irnr_resolve_tipo_gravamen "
             "dispatch + representante-fiscal predicate + cuota composition). "
             "Flipped to True only after persona-replay acceptance gates pass per "
             "the m210-irnr-full-engine ADR section D5."
@@ -1086,6 +977,13 @@ class Settings(AeatTimeoutSettings):
 
     @model_validator(mode="after")
     def _resolve_storage_substrate_dirs_under_storage_root(self) -> Settings:
+        """Root storage substrate directories under ``aeat_local_storage_root``.
+
+        Secret, blob, and audit stores share the same state-root derivation as
+        token and log directories unless the operator explicitly supplies the
+        individual field. The validator only computes paths; provider factories
+        and custody loaders decide how those directories are opened.
+        """
         for field_name, dirname in _STATE_ROOT_DERIVED_DIRS.items():
             if field_name in self.model_fields_set:
                 continue
@@ -1180,7 +1078,7 @@ class Settings(AeatTimeoutSettings):
     def external_constants() -> ExternalConstants:
         """Return the parsed external-constants registry.
 
-        Bridges :mod:`aeat.core.external_constants` to the settings facade
+        Bridges :mod:`core.external_constants` to the settings facade
         so callers reach third-party hostnames, AEAT service paths, OAuth
         scopes, and LLM endpoints through a single accessor.
 
@@ -1212,6 +1110,7 @@ class Settings(AeatTimeoutSettings):
         "aeat_certificate_path",
         "aeat_llm_cache_dir",
         "aeat_llm_usage_dir",
+        "aeat_llm_run_telemetry_dir",
         "aeat_submissions_dir",
         "aeat_submission_browser_trace_dir",
         "aeat_inbox_dir",
@@ -1239,17 +1138,38 @@ _settings_override: contextvars.ContextVar[Settings | None] = contextvars.Contex
 
 
 def classify_storage_route(settings: Settings | None = None) -> StorageRouteClassification:
-    """Classify the effective primary SQL route and return a :class:`StorageRouteClassification`."""
+    """Classify the effective primary SQL route.
+
+    The returned :class:`StorageRouteClassification` distinguishes explicit
+    database URLs, active-profile bucket databases, and cold root-fallback
+    SQLite routes. Application write guards consume this facade instead of
+    re-parsing ``aeat_database_url`` or duplicating active-profile pointer
+    rules.
+    """
     return classify_storage_route_for_settings(settings or load_settings())
 
 
 def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None = None) -> Settings:
-    """Return a :class:`Settings` instance routed to ``bucket_id``'s active-profile database."""
+    """Return settings routed to ``bucket_id``'s active-profile database.
+
+    Non-route fields are preserved from ``source`` (or :func:`load_settings`),
+    while ``aeat_database_url`` is re-derived through the same validators used
+    by normal settings construction. Explicit database URLs are refused by the
+    lower-level route helper because they already define the storage authority.
+
+    Returns:
+        A :class:`Settings` instance whose database route targets ``bucket_id``.
+    """
     return settings_for_bucket_route(bucket_id, source or load_settings())
 
 
 def load_settings() -> Settings:
-    """Return the effective :class:`Settings` instance."""
+    """Return the effective :class:`Settings` instance.
+
+    Context-local overrides installed by :func:`override_settings` win inside
+    their block; otherwise this constructs a fresh model from the configured
+    environment sources.
+    """
     override = _settings_override.get()
     if override is not None:
         return override
@@ -1258,7 +1178,13 @@ def load_settings() -> Settings:
 
 @contextmanager
 def override_settings(**overrides: object) -> Iterator[Settings]:
-    """Override one or more :class:`Settings` fields for the with-block."""
+    """Override one or more :class:`Settings` fields for the with-block.
+
+    Overrides are validated through normal model construction so derived route,
+    token, log, and storage-substrate paths stay coherent. The helper preserves
+    ``model_fields_set`` to keep the distinction between explicit operator
+    settings and computed defaults visible to route classification.
+    """
     current = load_settings()
     # ``model_copy(update=)`` skips validators in Pydantic v2; route the
     # merged dict through ``model_validate`` so a malformed override
@@ -1288,7 +1214,7 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     # GC'd block's Settings address can be reused by the next block, so the
     # cache must be invalidated at both boundaries or a stale language leaks
     # across blocks. Lazy import: ``i18n._render`` imports this module.
-    from .i18n._render import clear_output_language_cache
+    from .i18n import clear_output_language_cache
 
     token = _settings_override.set(new_settings)
     clear_output_language_cache()

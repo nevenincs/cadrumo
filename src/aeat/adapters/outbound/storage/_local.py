@@ -1,4 +1,4 @@
-"""Local-filesystem :class:`aeat.adapters.outbound.storage.StorageProvider` implementation.
+"""Local-filesystem :class:`adapters.outbound.storage.StorageProvider` implementation.
 
 Stores objects under a configurable root directory. Each namespace is
 a subdirectory; each object is a single file named
@@ -9,7 +9,7 @@ re-hashing the payload.
 
 Bytes-in / bytes-out: encryption + classification stay above this
 layer. The provider treats every payload as opaque bytes and uses
-:func:`aeat.adapters.outbound.storage._integrity.verify_content_hash` to
+:func:`adapters.outbound.storage._integrity.verify_content_hash` to
 enforce the stored digest on read.
 """
 
@@ -25,11 +25,13 @@ from pathlib import Path
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
+from ....core.paths import is_windows_long_path_error
 from ....core.time import now
 from ._errors import (
     OutboundStorageConflictError,
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,
+    OutboundStoragePathTooLongError,
     OutboundStoragePermissionError,
     OutboundStorageValidationError,
     StorageCorruptionError,
@@ -123,6 +125,14 @@ class LocalFileSystemProvider:
                 context={"namespace": namespace, "path": str(target)},
                 translated_message="adapters.outbound.storage.local.errors.namespace_create_permission",
             ) from None
+        except OSError as exc:
+            if is_windows_long_path_error(exc):
+                raise OutboundStoragePathTooLongError(
+                    f"cannot create namespace directory {target}: path exceeds the Windows MAX_PATH ceiling ({exc})",
+                    context={"namespace": namespace, "path": str(target)},
+                    translated_message="adapters.outbound.storage.local.errors.namespace_create_path_too_long",
+                ) from None
+            raise
         return target
 
     def _resolve_object_path(self, namespace: str, object_key_hmac: str) -> Path | None:
@@ -214,6 +224,12 @@ class LocalFileSystemProvider:
             ) from None
         except OSError as exc:
             tmp_path.unlink(missing_ok=True)
+            if is_windows_long_path_error(exc):
+                raise OutboundStoragePathTooLongError(
+                    f"cannot write object payload to {target_path}: path exceeds the Windows MAX_PATH ceiling ({exc})",
+                    context={"path": str(target_path)},
+                    translated_message="adapters.outbound.storage.local.errors.payload_write_path_too_long",
+                ) from None
             raise OutboundStorageConflictError(
                 f"failed to commit object payload to {target_path}: {exc}",
                 context={"path": str(target_path)},
@@ -233,6 +249,12 @@ class LocalFileSystemProvider:
             sidecar_path.write_text(json.dumps(sidecar_payload, sort_keys=True), encoding=UTF_8_ENCODING)
         except OSError as exc:
             target_path.unlink(missing_ok=True)
+            if is_windows_long_path_error(exc):
+                raise OutboundStoragePathTooLongError(
+                    f"cannot write sidecar {sidecar_path}: path exceeds the Windows MAX_PATH ceiling ({exc})",
+                    context={"path": str(sidecar_path)},
+                    translated_message="adapters.outbound.storage.local.errors.sidecar_write_path_too_long",
+                ) from None
             raise OutboundStoragePermissionError(
                 f"failed to write sidecar {sidecar_path}: {exc}",
                 context={"path": str(sidecar_path)},
@@ -253,7 +275,7 @@ class LocalFileSystemProvider:
 
         Locates the ``.bin`` file by HMAC prefix, loads the sibling
         ``.meta.json`` sidecar, reads the raw bytes, and compares the
-        :func:`aeat.core.hashing.sha256_hex` digest against the sidecar's
+        :func:`core.hashing.sha256_hex` digest against the sidecar's
         ``content_hash`` field through :func:`verify_content_hash`. Both
         ``sha256-<hex>``-prefixed strings and bare hex digests are accepted.
 
@@ -263,7 +285,8 @@ class LocalFileSystemProvider:
             object_key_hmac: Full HMAC string identifying the object.
 
         Returns:
-            A two-tuple of ``(payload_bytes, :class:`ProviderObjectMetadata`)``.
+            A two-tuple containing payload bytes and
+            :class:`ProviderObjectMetadata`.
 
         Raises:
             :class:`OutboundStorageNotFoundError`: When the object file is

@@ -64,6 +64,7 @@ from ....domain.calculations.registry import (
     RelationId,
     RevisionId,
     calculate_registry_snapshot,
+    relation_source_requirements,
     undeclared_casilla_ids,
 )
 from ._engine import build_export_plan
@@ -170,9 +171,61 @@ def _reject_unknown_scenario_casilla_ids(
         )
 
 
-def _build_relation_values(scenario: OperatorInputScenario) -> RelationValues:
+def _build_relation_values(snapshot: RegistrySnapshot, scenario: OperatorInputScenario) -> RelationValues:
+    relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
+    requirements_by_relation = {
+        relation_id: requirement
+        for requirement in relation_source_requirements(
+            snapshot.revision,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+        )
+        for relation_id in requirement.relation_ids
+    }
+    unknown_relation_ids = sorted(set(scenario.relation_values).difference(relations_by_id))
+    if unknown_relation_ids:
+        raise CalcSheetsParityError(
+            "scenario references unknown relation ids",
+            context={"unknown_count": len(unknown_relation_ids), "modelo": snapshot.modelo.id},
+        )
     return RelationValues(
-        values=tuple(RelationValue(relation=key, value=value) for key, value in scenario.relation_values.items()),
+        values=tuple(
+            RelationValue(
+                relation=relation_id,
+                value=value,
+                source_modelo=(
+                    requirements_by_relation[relation_id].source_modelo
+                    if relation_id in requirements_by_relation
+                    else relations_by_id[relation_id].source_modelo
+                ),
+                source_filing_year=(
+                    requirements_by_relation[relation_id].filing_year
+                    if relation_id in requirements_by_relation
+                    else None
+                ),
+                source_periods=(
+                    requirements_by_relation[relation_id].periods
+                    if relation_id in requirements_by_relation
+                    else relations_by_id[relation_id].source_periods
+                ),
+                source_casilla_ids=(
+                    requirements_by_relation[relation_id].source_casilla_ids
+                    if relation_id in requirements_by_relation
+                    else (relations_by_id[relation_id].source_casilla_id,)
+                ),
+                legal_refs=(
+                    requirements_by_relation[relation_id].legal_refs
+                    if relation_id in requirements_by_relation
+                    else relations_by_id[relation_id].legal_refs
+                ),
+                source_refs=(
+                    requirements_by_relation[relation_id].source_refs
+                    if relation_id in requirements_by_relation
+                    else relations_by_id[relation_id].source_refs
+                ),
+            )
+            for relation_id, value in scenario.relation_values.items()
+        ),
     )
 
 
@@ -286,9 +339,7 @@ def _read_sheets_computed(
             continue
         row_to_value[row_number] = coerced
     return {
-        cell.casilla_id: row_to_value[cell.address.row]
-        for cell in sorted_cells
-        if cell.address.row in row_to_value
+        cell.casilla_id: row_to_value[cell.address.row] for cell in sorted_cells if cell.address.row in row_to_value
     }
 
 
@@ -355,10 +406,10 @@ def verify_modelo_parity(
     snapshot's process-local cache. The local Decimal runtime is
     invoked once and consulted only for comparison.
     """
-    from ....adapters.outbound.google._calc_sheets_apply import apply_export_plan
+    from ....adapters.outbound.google import apply_export_plan
 
     operator_inputs, inputs_by_id = _build_operator_inputs(snapshot, scenario)
-    relation_values = _build_relation_values(scenario)
+    relation_values = _build_relation_values(snapshot, scenario)
 
     plan = build_export_plan(
         snapshot,

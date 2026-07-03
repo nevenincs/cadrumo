@@ -1,16 +1,24 @@
-"""Typer registration for modelo filing-record and verification-report commands."""
+"""Typer registration for modelo filing-record and verification-report commands.
+
+The filing-record commands render stored :class:`ModeloRecord` rows, import
+AEAT-attested external evidence through
+:func:`import_external_filing_evidence`, and record
+operator-supplied local observations for calculation prefill. Verification-report
+commands expose persisted :class:`VerificationReport` rows.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from decimal import Decimal
+from pathlib import Path
 from typing import Annotated
 
 import typer
 
 from ...application.modelo import (
-    ExternalEvidenceKind,
     ExternalModeloImportError,
+    ModeloLocalObservationError,
     ModeloRecordNotFoundError,
     VerificationReportNotFoundError,
     WorkUnitMutationRefusedError,
@@ -20,20 +28,24 @@ from ...application.modelo import (
     import_external_filing_evidence,
     list_filing_records,
     list_verification_reports,
+    parse_casilla_value_spreadsheet,
+    record_operator_local_observation,
 )
+from ...core import Period, PeriodError
 from ...core.i18n import tr
-from ...domain.calculations.registry import CasillaId
-from ...domain.modelos import ModeloCode
-from ...domain.modelos._errors import ModeloValidationError
+from ...domain.calculations.registry import CasillaId, validated_casilla_id
+from ...domain.modelos import ExternalEvidenceKind, ModeloCode, ModeloValidationError
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_payloads import (
     FilingRecordImportResult,
+    FilingRecordLocalObservationResult,
     ModeloRecordListResult,
     ModeloRecordShowResult,
     VerificationReportListResult,
     VerificationReportShowResult,
 )
 from ._modelo_rendering import (
+    advisory_notice,
     filing_record_lines,
     filing_record_payload,
     verification_report_lines,
@@ -54,7 +66,7 @@ def register_record_commands(
     resolve_default_actor: Callable[[], str],
     bad_parameter_from_error: Callable[[Exception], typer.BadParameter],
 ) -> None:
-    """Mount filing-record and verification-report commands on the modelo app."""
+    """Mount filing-record and verification-report command groups."""
     global _validate_work_unit_id
     global _parse_amendment_casilla
     global _resolve_default_actor
@@ -69,24 +81,28 @@ def register_record_commands(
 
 
 def _work_unit_id(raw: str) -> str:
+    """Validate a filing-record command work-unit id."""
     if _validate_work_unit_id is None:
         raise RuntimeError("modelo record commands were not registered")
     return _validate_work_unit_id(raw)
 
 
 def _casilla_value(spec: str) -> tuple[CasillaId, Decimal]:
+    """Parse one ``--set`` casilla value through the modelo CLI parser."""
     if _parse_amendment_casilla is None:
         raise RuntimeError("modelo record commands were not registered")
     return _parse_amendment_casilla(spec)
 
 
 def _actor() -> str:
+    """Return the active-profile default actor for record commands."""
     if _resolve_default_actor is None:
         raise RuntimeError("modelo record commands were not registered")
     return _resolve_default_actor()
 
 
 def _bad_from_error(exc: Exception) -> typer.BadParameter:
+    """Adapt application exceptions into Typer parameter errors."""
     if _bad_parameter_from_error is None:
         raise RuntimeError("modelo record commands were not registered")
     return _bad_parameter_from_error(exc)
@@ -95,9 +111,20 @@ def _bad_from_error(exc: Exception) -> typer.BadParameter:
 def _modelo_filter(raw: str | None) -> ModeloCode | None:
     if raw is None:
         return None
+    return _modelo_code(raw)
+
+
+def _modelo_code(raw: str) -> ModeloCode:
     try:
         return ModeloCode(raw)
     except ModeloValidationError as exc:
+        raise _bad_from_error(exc) from exc
+
+
+def _filing_period(year: int, token: str) -> Period:
+    try:
+        return Period.from_year_and_code(year, token)
+    except PeriodError as exc:
         raise _bad_from_error(exc) from exc
 
 
@@ -223,7 +250,15 @@ def filing_record_import(
         ),
     ] = None,
 ) -> None:
-    """Persist an externally-filed return as a baseline filing record."""
+    """Import AEAT external evidence as a current :class:`ModeloRecord`.
+
+    The CLI validates :class:`ExternalEvidenceKind`, parses each ``--set`` value
+    into a :class:`CasillaId` decimal, resolves the active profile tax id, and
+    delegates to :func:`import_external_filing_evidence`.
+    The result is emitted as :class:`FilingRecordImportResult`; it is an
+    AEAT-attested baseline for the amendment path, not a live submission from
+    this application.
+    """
     validated_work_unit_id = _work_unit_id(work_unit_id)
     try:
         kind = ExternalEvidenceKind(evidence_kind)
@@ -280,6 +315,150 @@ def filing_record_import(
     _emit_envelope(ctx, command="modelo.filing_record.import", result=result, lines=lines)
 
 
+@filing_record_app.command(
+    "observe-local",
+    help="Record an operator-supplied local observation for calculation prefill.",
+)
+def filing_record_observe_local(
+    ctx: typer.Context,
+    modelo: Annotated[
+        str,
+        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
+    ],
+    year: Annotated[
+        int,
+        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
+    ],
+    period: Annotated[
+        str,
+        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
+    ],
+    actor: Annotated[
+        str | None,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ] = None,
+    set_overrides: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--set",
+            help="Canonical casilla.id and Decimal value to record, e.g. --set 1391=0.",
+        ),
+    ] = None,
+    file: Annotated[
+        Path | None,
+        typer.Option(
+            "--file",
+            help=(
+                "Path to a local CSV or XLSX spreadsheet of casilla_code,value rows "
+                "(a cert-free reconstruction of a past filing). Combines with --set; "
+                "a --set value for the same casilla overrides the spreadsheet row."
+            ),
+        ),
+    ] = None,
+) -> None:
+    """Record non-official local observations for later calculation prefill.
+
+    The command parses canonical :class:`CasillaId` decimal values from
+    ``--set`` flags and/or a ``--file`` spreadsheet (CSV or XLSX,
+    ``casilla_code,value`` columns), delegates to
+    :func:`record_operator_local_observation`, and emits
+    :class:`FilingRecordLocalObservationResult` plus an advisory
+    :class:`Notice`. It deliberately creates no
+    :class:`ModeloRecord` and supplies no official AEAT
+    evidence for filing-grade clean-state checks — the local reconstruction
+    stays non-official regardless of transport (``--set`` or ``--file``).
+    """
+    modelo_code = _modelo_code(modelo)
+    filing_period = _filing_period(year, period)
+    casilla_values: dict[CasillaId, Decimal] = {}
+    if file is not None:
+        try:
+            spreadsheet_values = parse_casilla_value_spreadsheet(file)
+        except ModeloLocalObservationError as exc:
+            raise _bad_from_error(exc) from exc
+        for raw_code, value in spreadsheet_values.items():
+            try:
+                casilla_id = validated_casilla_id(raw_code, surface="--file casilla_code column")
+            except ValueError as exc:
+                raise typer.BadParameter(
+                    f"--file row casilla_code {raw_code!r} is not a valid CasillaId",
+                ) from exc
+            casilla_values[casilla_id] = value
+    for spec in set_overrides or ():
+        key, value = _casilla_value(spec)
+        casilla_values[key] = value
+    if not casilla_values:
+        raise typer.BadParameter(
+            "observe-local requires at least one --set CASILLA=DECIMAL value or a --file spreadsheet",
+        )
+
+    try:
+        local_observation = record_operator_local_observation(
+            modelo=str(modelo_code),
+            filing_year=year,
+            period=filing_period,
+            casilla_values=casilla_values,
+            actor=actor or _actor(),
+        )
+    except ModeloLocalObservationError as exc:
+        raise _bad_from_error(exc) from exc
+
+    result = FilingRecordLocalObservationResult(
+        modelo=local_observation.modelo,
+        filing_year=local_observation.filing_year,
+        period=local_observation.period,
+        revision_id=local_observation.revision_id,
+        observation_key=local_observation.observation_key,
+        source_kind=local_observation.source_kind,
+        casilla_values={
+            casilla_id: str(value) for casilla_id, value in sorted(local_observation.casilla_values.items())
+        },
+        casilla_count=len(local_observation.casilla_values),
+        captured_at=local_observation.captured_at.isoformat(),
+        captured_by=local_observation.captured_by,
+        official_evidence=local_observation.official_evidence,
+        filing_record_created=local_observation.filing_record_created,
+        aeat_accepted=local_observation.aeat_accepted,
+    )
+    notice_message = (
+        "Operator-supplied local observation recorded for calculation prefill only; "
+        "it is not AEAT evidence and no filing record was created."
+    )
+    notice = advisory_notice(
+        "modelo.filing_record.observe_local.non_official",
+        notice_message,
+        context={
+            "source_kind": local_observation.source_kind,
+            "official_evidence": "false",
+            "filing_record_created": "false",
+        },
+    )
+    lines = [
+        "operation\tmodelo.filing_record.observe_local",
+        f"modelo\t{local_observation.modelo}",
+        f"filing_year\t{local_observation.filing_year}",
+        f"period\t{local_observation.period.registry_token}",
+        f"revision_id\t{local_observation.revision_id}",
+        f"observation_key\t{local_observation.observation_key}",
+        f"source_kind\t{local_observation.source_kind}",
+        "official_evidence\tFalse",
+        "filing_record_created\tFalse",
+        "aeat_accepted\tFalse",
+        f"captured_at\t{local_observation.captured_at.isoformat()}",
+        f"captured_by\t{local_observation.captured_by}",
+        "casilla_id\tvalue",
+    ]
+    lines.extend(f"{casilla_id}\t{value}" for casilla_id, value in sorted(local_observation.casilla_values.items()))
+    lines.append(f"WARNING\t{notice_message}")
+    _emit_envelope(
+        ctx,
+        command="modelo.filing_record.observe_local",
+        result=result,
+        lines=lines,
+        notices=[notice],
+    )
+
+
 @verification_report_app.command("list", help=tr("cli.app.modelo.verification_report.list_help"))
 def verification_report_list(
     ctx: typer.Context,
@@ -291,7 +470,13 @@ def verification_report_list(
         ),
     ] = None,
 ) -> None:
-    """List verification reports, optionally filtered to one revision."""
+    """List persisted verification reports, optionally scoped to one revision.
+
+    Each row is a persisted :class:`VerificationReport` projected through
+    :class:`VerificationReportListResult` and nested
+    :class:`VerificationReportPayload`,
+    preserving the same findings surface as ``aeat app modelo work verify``.
+    """
     reports = list_verification_reports(calculation_revision_id=calculation_revision_id)
     result = VerificationReportListResult(
         calculation_revision_id_filter=calculation_revision_id,
@@ -328,7 +513,16 @@ def verification_report_show(
         typer.Argument(help=tr("cli.app.modelo.verification_report.verification_report_id_help")),
     ],
 ) -> None:
-    """View one verification report by id."""
+    """View one persisted verification report by id.
+
+    The command validates the shared
+    :class:`VerificationReportPayload`
+    into
+    :class:`VerificationReportShowResult`,
+    so saved report views retain the legal/source-reference
+    :class:`FindingPayload` detail emitted
+    by ``aeat app modelo work verify``.
+    """
     try:
         report = get_verification_report(verification_report_id)
     except VerificationReportNotFoundError as exc:

@@ -12,8 +12,18 @@ one :func:`relation_aggregation_op` accessor returning the typed
 default in one place.
 
 The relation op axis is deliberately separate from the binding op axis
-(:func:`binding_aggregation_op`): relations carry only ``copy`` / ``sum``, never
-the binding-only ``rows`` / ``count_distinct`` / ``prior_pagos_fraccionados``.
+(:func:`aeat.domain.calculations.registry.binding_aggregation_op`): relations
+carry only ``copy`` / ``sum``, never the binding-only ``rows`` /
+``count_distinct`` / ``prior_pagos_fraccionados``.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._relations`
+        Requirement and resolve paths that call this accessor.
+    :mod:`aeat.domain.calculations.registry._observation_fold`
+        Shared ``copy`` / ``sum`` arithmetic applied after this accessor selects
+        the relation op.
+    :mod:`aeat.core.aggregation`
+        Core enum/model definitions for relation and binding aggregation axes.
 """
 
 from __future__ import annotations
@@ -25,9 +35,12 @@ from ._schema import RelationDefinition
 def relation_aggregation_op(relation: RelationDefinition) -> RelationAggregationOp:
     """Return the typed :class:`~aeat.core.aggregation.RelationAggregationOp` a relation declares.
 
-    Reads the relation's typed :class:`~aeat.core.aggregation.RelationAggregation`
-    ``op``. Defaults to :attr:`~aeat.core.aggregation.RelationAggregationOp.COPY`
-    when ``aggregation`` is absent — the conformant single-period carry default.
+    Reads the
+    :class:`~aeat.domain.calculations.registry.RelationDefinition` aggregation
+    field. Defaults to
+    :attr:`~aeat.core.aggregation.RelationAggregationOp.COPY` when
+    ``aggregation`` is absent, preserving the conformant single-period carry
+    default used by relation source requirements.
     """
     if relation.aggregation is None:
         return RelationAggregationOp.COPY

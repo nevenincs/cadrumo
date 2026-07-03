@@ -18,7 +18,6 @@ source_refs = [
     "boe-modelo-721-2023-layout",
     "boe-modelo-721-2024-layout",
     "aeat-modelo-721-procedure",
-    "boe-modelo-721-2023-form",
 ]
 orden_aplicabilidad = [
     "orden-hfp-886-2023:art-1",

@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#security-supply-chain-2026-05-30'
 date: '2026-05-30'
-modified: '2026-05-30'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `security-supply-chain-2026-05-30` audit: dependency and supply-chain posture
 

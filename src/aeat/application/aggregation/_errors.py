@@ -1,7 +1,10 @@
-"""Errors raised while handling financial transaction aggregation boundaries.
+"""Errors raised while handling aggregation and source-mesh boundaries.
 
-Raised by: :mod:`~._iva_ledger`, :mod:`~._renta_ledger`, :mod:`~._retenciones`,
-:mod:`~._counterpart`, :mod:`~._foreign_assets` when aggregation constraints are violated.
+Raised by pure rollup modules such as :mod:`~._iva_ledger`,
+:mod:`~._renta_ledger`, :mod:`~._retenciones`, :mod:`~._counterpart`, and
+:mod:`~._foreign_assets`, and by source-mesh resolvers such as
+:mod:`~._modelo_bindings` and :mod:`~._oss_ioss`, when aggregation constraints
+or resolver ownership contracts are violated.
 """
 
 from __future__ import annotations
@@ -76,13 +79,13 @@ class AggregationValidationError(AggregationError, CoreValidationError):
 
 
 def t(message: str) -> tr:
-    """Build a multilingual :class:`aeat.core.i18n.tr` message payload.
+    """Build a multilingual :class:`core.i18n.Translatable` message payload.
 
     Args:
         message: The translation key.
 
     Returns:
-        A :class:`aeat.core.i18n.tr` marker for the key.
+        A :class:`core.i18n.Translatable` marker for the key.
     """
     return tr(message)
 

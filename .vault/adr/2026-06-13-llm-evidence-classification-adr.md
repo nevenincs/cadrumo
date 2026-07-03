@@ -3,13 +3,11 @@ tags:
   - '#adr'
   - '#llm-evidence-classification'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 related:
   - "[[2026-06-13-llm-evidence-classification-research]]"
   - "[[2026-06-10-llm-evidence-classification-adr]]"
 ---
-
-
 
 # `llm-evidence-classification` adr: `Default local vision model bound to consumer-grade hardware` | (**status:** `accepted`)
 
@@ -75,5 +73,3 @@ is a regulatory-neutral runtime knob (it never produces a persisted tax number),
 so changing the default carries no calculation-grounding risk.
 
 ## Codification candidates
-
-

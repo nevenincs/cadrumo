@@ -20,16 +20,15 @@ def _invoke(args: Sequence[str]) -> Result:
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    from ....application.user_profile._orchestration import profile_create_storage_span
-    from ....application.user_profile._testing import register_minimal_profile
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+    from ....application.workflow import workflow_state_repository
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("operator"),
+        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
     ):
         workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="operator"),
+            lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"),
         )
         yield
 
@@ -63,6 +62,16 @@ def test_link_help_advertises_local_only() -> None:
     )
 
 
+def test_link_help_names_catalogue_create_for_invoice_id() -> None:
+    """``--invoice-id`` help must name the command that mints linkable ids."""
+
+    result = invoke_cached_cli(["app", "ledger", "link", "--help"], env={"COLUMNS": "240"})
+
+    assert result.exit_code == 0, result.output
+    assert "aeat app ledger invoice catalogue create" in result.output
+    assert "aeat app ledger invoice add" in result.output
+
+
 def test_check_empty_catalogue_is_ready() -> None:
     """An active bucket with no transactions reports ready=true via the
     no-period audit branch and emits zero issues."""
@@ -74,6 +83,57 @@ def test_check_empty_catalogue_is_ready() -> None:
     assert "ready\ttrue" in result.output
 
 
+def _add_business_expense(*, booked_date: str, idempotency_key: str) -> None:
+    result = _invoke(
+        [
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            booked_date,
+            "--amount",
+            "121.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            f"business expense {booked_date}",
+            "--classification",
+            "BUSINESS",
+            "--idempotency-key",
+            idempotency_key,
+        ],
+    )
+    assert result.exit_code == 0, result.output
+
+
+def test_check_accepts_period_year_filter_like_status() -> None:
+    """`ledger check --period --year` scopes readiness checks to that period."""
+
+    _add_business_expense(booked_date="2026-02-10", idempotency_key="check-q1")
+    _add_business_expense(booked_date="2026-05-10", idempotency_key="check-q2")
+
+    filtered = _invoke(["app", "ledger", "check", "--period", "1T", "--year", "2026"])
+
+    assert filtered.exit_code == 0, filtered.output
+    assert "periods\t1T 2026" in filtered.output
+    assert "checked\t1" in filtered.output
+    assert "ready\tfalse" in filtered.output
+
+    unfiltered = _invoke(["app", "ledger", "check"])
+    assert unfiltered.exit_code == 0, unfiltered.output
+    assert "periods\t2026" in unfiltered.output
+    assert "checked\t2" in unfiltered.output
+
+
+def test_check_period_without_year_refuses_like_status() -> None:
+    """`ledger check --period 1T` refuses with the same --year guidance."""
+
+    result = _invoke(["app", "ledger", "check", "--period", "1T"])
+
+    assert result.exit_code != 0, result.output
+    assert "--year" in result.output
+
+
 def test_check_help_advertises_local_only() -> None:
     """Help text must signal `local-only`."""
 
@@ -82,6 +142,9 @@ def test_check_help_advertises_local_only() -> None:
     assert any(token in result.output.lower() for token in ("local-only", "local;", "nunca", "csak helyi")), (
         result.output
     )
+    assert "--period" in result.output
+    assert "--year" in result.output
+    assert "1T" in result.output
 
 
 def test_check_refuses_foreign_bucket_id_without_unlocked_session() -> None:
@@ -155,5 +218,6 @@ def test_link_refuses_operator_invoice_add_id_instructively() -> None:
     # The shipped message is localized, so match the language-stable command
     # token plus the shared evidence/`evidencia` stem rather than English prose.
     assert "invoice add" in lowered, linked.output
+    assert "invoice catalogue create" in lowered, linked.output
     assert "evidenc" in lowered, linked.output
     assert "traceback" not in lowered, linked.output

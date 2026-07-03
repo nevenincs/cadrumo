@@ -6,3 +6,11 @@ aeat.entrypoints package
    :show-inheritance:
    :ignore-module-all:
 
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aeat.entrypoints.mcp

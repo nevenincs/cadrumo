@@ -41,11 +41,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _SOURCE_ROOT = bundled_path()
 _REDUCCION_ART_84_CASILLA: CasillaId = validated_casilla_id("0461", surface="_REDUCCION_ART_84_CASILLA")
+_ART_84_LEGAL_REFS = ("ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84")
+_ART_84_SOURCE_REFS_2024 = (
+    "aeat-dr-100-2024-dictionary",
+    "boe-modelo-100-2024-form",
+    "aeat-renta-2024-manual-parte1",
+)
+_ART_84_SOURCE_REFS_2025 = (
+    "aeat-dr-100-2025-dictionary",
+    "boe-modelo-100-2025-form",
+    "aeat-renta-2025-manual-parte1",
+)
 
 _REL_2024 = {
     "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-115-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
     "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
@@ -55,7 +65,6 @@ _REL_2024 = {
 _REL_2025 = {
     "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
     "renta-2025-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2025-rel-115-retenciones-trimestrales": Decimal("0"),
     "renta-2025-rel-123-retenciones-trimestrales": Decimal("0"),
     "renta-2025-rel-193-retenciones-anuales": Decimal("0"),
     "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
@@ -65,7 +74,6 @@ _REL_2025 = {
 _BASE_BINDINGS_2024 = {
     "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
     "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
     "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
     # Art. 81 bis LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
@@ -91,6 +99,27 @@ _BASE_BINDINGS_2025 = {
     # BIN-pendiente fresh-filer baseline (2025 binding).
     "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
 }
+
+
+def test_0461_casilla_grounding_uses_art84_not_base_liquidable_art50() -> None:
+    """Casilla 0461 itself is the Art. 84 joint-taxation reduction amount."""
+    from ._registry_schema_support import _committed_modelo
+
+    modelo, catalogues = _committed_modelo("100")
+    art_84 = catalogues.legal["ley-35-2006:art-84"]
+    assert any("3.400 euros" in text for text in art_84.required_text)
+    assert any("2.150 euros" in text for text in art_84.required_text)
+
+    for revision_id in ("2024", "2025"):
+        revision = modelo.revisions[revision_id]
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == _REDUCCION_ART_84_CASILLA)
+        formula = next(
+            formula for formula in revision.formulas if formula.target_casilla_id == _REDUCCION_ART_84_CASILLA
+        )
+
+        assert "ley-35-2006:art-84" in casilla.legal_refs
+        assert "ley-35-2006:art-50" not in casilla.legal_refs
+        assert "ley-35-2006:art-84" in formula.legal_refs
 
 
 def _scenario_2024(
@@ -119,7 +148,8 @@ def _scenario_2024(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=_REDUCCION_ART_84_CASILLA,
                 value=expected_0461,
-                legal_refs=("ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84"),
+                legal_refs=_ART_84_LEGAL_REFS,
+                source_refs=_ART_84_SOURCE_REFS_2024,
             ),
         ),
     )
@@ -151,7 +181,8 @@ def _scenario_2025(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=_REDUCCION_ART_84_CASILLA,
                 value=expected_0461,
-                legal_refs=("ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84"),
+                legal_refs=_ART_84_LEGAL_REFS,
+                source_refs=_ART_84_SOURCE_REFS_2025,
             ),
         ),
     )

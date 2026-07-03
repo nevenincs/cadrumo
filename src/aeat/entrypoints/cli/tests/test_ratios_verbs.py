@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
-from ....application.user_profile._orchestration import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.workflow import workflow_state_repository
 from ....core import resolve_active_bucket_id
 from ....core.config import Settings
 from ....core.i18n import tr
@@ -20,6 +20,7 @@ from ....tests.secure_sql import isolated_profile_storage_root
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _AEAT = Settings.external_constants().aeat
 _G313_URL = f"{_AEAT.domains.sede}{_AEAT.sede_paths.censo_g313_launcher}"
+_CENSO_CAPTURED_AT = datetime(2026, 5, 28, 13, 45, 0, tzinfo=UTC)
 
 
 def _invoke_ratios(args: Sequence[str]) -> Result:
@@ -30,9 +31,11 @@ def _invoke_ratios(args: Sequence[str]) -> Result:
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("default"),
+        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
     ):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
+        )
         yield
 
 
@@ -110,7 +113,8 @@ def test_ratios_set_emits_ledger_ratios_set_event() -> None:
     """`ratios set` records a typed LEDGER_RATIOS_SET event in the bucket
     history so downstream auditors can replay the override sequence."""
 
-    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ....domain.buckets import BucketEventType
 
     set_result = _invoke_ratios(["set", "vehiculo_combustible", "0.5"])
     assert set_result.exit_code == 0, set_result.output
@@ -131,7 +135,8 @@ def test_ratios_unset_emits_ledger_ratios_unset_event() -> None:
     prior ratio value so the operator-visible mutation cannot be replayed
     only from the secure-object snapshot."""
 
-    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ....domain.buckets import BucketEventType
 
     _invoke_ratios(["set", "vehiculo_combustible", "0.5"])
     unset_result = _invoke_ratios(["unset", "vehiculo_combustible"])
@@ -156,15 +161,13 @@ def _capture_censo_with_vivienda_office(office_m2: str, total_m2: str) -> None:
     against.
     """
 
-    from datetime import UTC, datetime
-
-    from ....application.live._censo import CensoSnapshotService
+    from ....application.live import CensoSnapshotService
 
     bucket_id = resolve_active_bucket_id() or ""
     service = CensoSnapshotService(bucket_id=bucket_id)
     service.capture(
         profile_id=bucket_id,
-        captured_at=datetime.now(UTC),
+        captured_at=_CENSO_CAPTURED_AT,
         source_url=_G313_URL,
         censo_facts={
             "vivienda_office.total_m2": total_m2,
@@ -179,7 +182,8 @@ def test_ratios_set_emits_censo_override_warning_when_suministros_diverges() -> 
     event. The set itself still lands — the operator may legitimately
     model a planned change — but the divergence is recorded."""
 
-    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ....domain.buckets import BucketEventType
 
     _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
 
@@ -208,7 +212,8 @@ def test_ratios_set_silent_when_suministros_override_matches_30pct_of_raw() -> N
     no warning fires. Witnesses that the warning isn't spuriously
     emitted on every HOME_OFFICE set."""
 
-    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ....domain.buckets import BucketEventType
 
     _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
 
@@ -247,7 +252,8 @@ def test_ratios_set_silent_for_non_home_office_category() -> None:
     """The override-warning event is HOME_OFFICE-scoped:
     other categories don't carry the censo-binding contract."""
 
-    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ....domain.buckets import BucketEventType
 
     _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#bindings-interface-hardening'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - "[[2026-06-15-bindings-interface-hardening-plan]]"
 ---
-
-
-
 
 # replace the ~10 ad-hoc op re-parses with one typed accessor and one declared per-family default, removing the divergent sum-vs-rows silent defaults
 

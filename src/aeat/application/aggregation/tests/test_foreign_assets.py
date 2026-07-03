@@ -6,16 +6,21 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
+from ....core.resources import resources
+from ....domain.calculations.registry import resolve_foreign_asset_binding_row_values
 from .._foreign_assets import (
     ForeignAssetClass,
     ForeignAssetClassRollup,
     ForeignAssetIngestObservation,
     ForeignAssetsAggregation,
+    ForeignAssetsAggregationSourceResolver,
+    _registry_observations_from_foreign_assets_aggregation,
     aggregate_foreign_assets_720,
     declarable_class,
 )
+from .._source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -28,7 +33,7 @@ def _obs(
     valuation: str,
     asset_external_id: str = "ASSET-001",
     country: str = "AD",
-    source_kind: str = "ledger_transaction",
+    source_kind: BindingSourceKind | str = BindingSourceKind.LEDGER_TRANSACTION,
     source_id: str = "tx-001",
     held: bool = True,
     acquisition: str = "2023-01-15",
@@ -46,11 +51,36 @@ def _obs(
 
 
 class TestObservationContract:
+    def test_observation_accepts_canonical_source_kinds(self) -> None:
+        expected = {
+            BindingSourceKind.LEDGER_TRANSACTION,
+            BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+            BindingSourceKind.PAYABLE_INVOICE,
+            BindingSourceKind.COLLECTIBLE_INVOICE,
+        }
+        observed: set[BindingSourceKind] = set()
+        for kind in expected:
+            obs = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="0", source_kind=kind)
+            observed.add(obs.source_kind)
+            from_string = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="0", source_kind=kind.value)
+            assert from_string.source_kind is kind
+        assert observed == expected
+
     def test_bare_invoice_source_kind_rejected(self) -> None:
         from pydantic import ValidationError
 
-        with pytest.raises(ValidationError, match="unsupported source_kind"):
+        with pytest.raises(ValidationError, match="not a BindingSourceKind"):
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", source_kind="invoice")
+
+    def test_registry_foreign_asset_binding_source_rejected_as_ingest_provenance(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="unsupported source_kind"):
+            _obs(
+                asset_class=ForeignAssetClass.ACCOUNT,
+                valuation="1000",
+                source_kind=BindingSourceKind.FOREIGN_ASSET,
+            )
 
     def test_lowercase_country_rejected(self) -> None:
         from pydantic import ValidationError
@@ -72,6 +102,7 @@ class TestAggregateBasic:
         result = aggregate_foreign_assets_720((obs,), period=_P_2025_ANNUAL)
         assert len(result.rollups) == 1
         row = result.rollups[0]
+        assert row.source_kind is BindingSourceKind.LEDGER_TRANSACTION
         assert row.asset_class is ForeignAssetClass.ACCOUNT
         assert row.assets_count == 1
         assert row.held_at_year_end_count == 1
@@ -147,6 +178,99 @@ class TestThreshold720:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="49999.99", asset_external_id="A1"),)
         result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is False
+
+
+class TestForeignAssetSourceResolver:
+    def test_resolver_validates_declarable_m720_rows_against_live_registry(self) -> None:
+        period = Period.from_year_and_code(2025, "0A")
+        observations = (
+            _obs(
+                asset_class=ForeignAssetClass.ACCOUNT,
+                valuation="40000.00",
+                asset_external_id="AD-ACCOUNT-001",
+                country="AD",
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                source_id="tx-account-ad",
+                acquisition="2020-01-15",
+            ),
+            _obs(
+                asset_class=ForeignAssetClass.ACCOUNT,
+                valuation="15000.00",
+                asset_external_id="CH-ACCOUNT-002",
+                country="CH",
+                source_kind=BindingSourceKind.PAYABLE_INVOICE,
+                source_id="payable-account-ch",
+                acquisition="2021-02-20",
+            ),
+            _obs(
+                asset_class=ForeignAssetClass.SECURITY,
+                valuation="1000.00",
+                asset_external_id="LI-SECURITY-001",
+                country="LI",
+                source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+                source_id="small-security",
+            ),
+        )
+        snapshot = resources().modelos.authority.snapshot("720", filing_year=2025, period="0A")
+
+        resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="720",
+                filing_year=2025,
+                period=period,
+                revision=snapshot.revision,
+            ),
+        )
+
+        assert resolution.owned_sources == (BindingSourceKind.FOREIGN_ASSET,)
+        assert resolution.binding_values == {}
+        assert resolution.source_transaction_ids == ("tx-account-ad",)
+        assert {item.source_ref for item in resolution.provenance} == {
+            "ledger_transaction:tx-account-ad",
+            "payable_invoice:payable-account-ch",
+        }
+
+        aggregation = aggregate_foreign_assets_720(observations, period=period)
+        row_observations = _registry_observations_from_foreign_assets_aggregation(aggregation, observations)
+        row_values = resolve_foreign_asset_binding_row_values(snapshot.revision, row_observations)
+
+        assert len(row_observations) == 2
+        assert row_values[("modelo-720-asset-row-class", 1)] == "C"
+        assert row_values[("modelo-720-asset-row-country", 1)] == "AD"
+        assert row_values[("modelo-720-asset-row-identifier", 1)] == "AD-ACCOUNT-001"
+        assert row_values[("modelo-720-asset-row-acquisition-date", 1)] == "2020-01-15"
+        assert row_values[("modelo-720-asset-row-valuation", 1)] == Decimal("40000.00")
+        assert row_values[("modelo-720-asset-row-class", 2)] == "C"
+        assert row_values[("modelo-720-asset-row-country", 2)] == "CH"
+        assert row_values[("modelo-720-asset-row-identifier", 2)] == "CH-ACCOUNT-002"
+        assert row_values[("modelo-720-asset-row-acquisition-date", 2)] == "2021-02-20"
+        assert row_values[("modelo-720-asset-row-valuation", 2)] == Decimal("15000.00")
+
+    def test_resolver_silent_when_revision_declares_no_foreign_asset_source(self) -> None:
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
+
+        resolution = ForeignAssetsAggregationSourceResolver(
+            observations=(
+                _obs(
+                    asset_class=ForeignAssetClass.ACCOUNT,
+                    valuation="60000.00",
+                    source_id="tx-account",
+                ),
+            ),
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="303",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "1T"),
+                revision=snapshot.revision,
+            ),
+        )
+
+        assert resolution.binding_values == {}
+        assert resolution.diagnostics == ()
+        assert resolution.provenance == ()
 
 
 class TestInvariants:

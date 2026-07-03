@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#live-cert-auth"
 date: 2026-04-21
-modified: '2026-04-21'
+modified: '2026-06-13'
 related:
   - "[[2026-04-18-auth-protocol-adr]]"
   - "[[2026-04-18-auth-provider-abstraction-adr]]"
@@ -119,3 +119,24 @@ the lower-level handshake path.
   of `AeatAuthenticator.authenticate` already perform the same verification.
 - **Neutral:** The `feature/117-live-cert` worktree and branch become
   abandoned; history remains available via the closed PR.
+
+## Reconciliation (issue #353, 2026-07-01)
+
+The certificate-provider extraction described above and in
+`2026-04-18-cert-provider-migration-adr` did not land as a standalone
+`CertificateAuthProvider` symbol. The review audit
+`2026-04-18-cert-provider-migration-review-audit` (findings AUTH-001 and
+AUTH-002) recorded the extracted provider as a hollow shell whose
+`authenticate()` and `verify()` raised `NotImplementedError`, and
+`AeatAuthenticator` was never decoupled from the certificate path. That shell
+was subsequently removed. At HEAD there are zero source references to
+`CertificateAuthProvider`.
+
+The live certificate `AuthProvider` implementation is `AeatAuthenticator`
+(`src/aeat/adapters/outbound/aeat/auth/_authenticator.py`, with
+`kind = AuthProviderKind.CERTIFICATE`). Read every `CertificateAuthProvider`
+mention above against the real surface: `CertificateAuthProvider.authenticate`
+is `AeatAuthenticator.authenticate`, and `CertificateAuthProvider.verify` is
+`AeatAuthenticator.verify` / `AeatAuthenticator.verify_login` /
+`AeatAuthenticator.verify_handshake`. The decisions this ADR records — close
+PR #148, close issue #141 — are unaffected by the naming reconciliation.

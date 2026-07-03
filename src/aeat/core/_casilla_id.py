@@ -2,9 +2,23 @@
 
 The :data:`CasillaId` alias is the shared key for registry casillas,
 CLI ``--casilla`` inputs, parser observations, and calculation payloads.
+It is re-exported by :mod:`domain.calculations.registry` and anchors
+:class:`~domain.calculations.registry.CasillaDefinition`,
+:class:`~domain.calculations.registry.CalculationCompletenessCasilla`,
+and filing snapshot facts such as
+:class:`~domain.modelos._ledger_filing_snapshot.ManualFactBasisEntry`.
+
 Use :func:`validated_casilla_id` or :func:`validated_casilla_id_map`
-at boundaries so display numbers and labels do not masquerade as
-canonical registry identifiers.
+at boundaries so display numbers, labels, and export metadata do not
+masquerade as canonical registry identifiers. Registry membership helpers
+such as :func:`~domain.calculations.registry.casillas_by_id` and
+:func:`~domain.calculations.registry.declared_casilla_ids` then compare
+only declared ``casilla.id`` values.
+
+The alias is a structural token, not a registry lookup. It can prove that a
+string is shaped like a canonical ``casilla.id``; only a selected
+:class:`~domain.calculations.registry.ModeloRevision` can prove that the id
+is declared for a filing context.
 """
 
 from __future__ import annotations
@@ -22,7 +36,21 @@ _CASILLA_ID_ADAPTER: TypeAdapter[CasillaId] = TypeAdapter(CasillaId)
 
 
 def validated_casilla_id(value: object, *, surface: str = "casilla.id") -> CasillaId:
-    """Return ``value`` as a canonical :class:`CasillaId`, failing at the declaring surface."""
+    """Return ``value`` as a canonical :data:`CasillaId`, failing at the declaring surface.
+
+    This validates the token shape only. Callers that need revision membership
+    must also compare against
+    :func:`~domain.calculations.registry.declared_casilla_ids` or
+    :func:`~domain.calculations.registry.undeclared_casilla_ids`.
+
+    Args:
+        value: Candidate boundary value.
+        surface: Human-readable source used in the failure message.
+
+    Raises:
+        ValueError: When ``value`` is not a string or fails the canonical
+            ``casilla.id`` shape.
+    """
     if not isinstance(value, str):
         raise ValueError(f"{surface} {value!r} is not a canonical casilla.id")
     try:
@@ -36,8 +64,12 @@ def validated_casilla_id_map[T](
     *,
     surface: str = "casilla.id map",
 ) -> dict[CasillaId, T]:
-    """Return ``values`` keyed by validated :class:`CasillaId` declarations."""
-    return {
-        validated_casilla_id(key, surface=f"{surface} key"): value
-        for key, value in values.items()
-    }
+    """Return ``values`` keyed by validated :data:`CasillaId` declarations.
+
+    Mapping validators feed registry and filing surfaces that accept
+    ``dict[CasillaId, T]`` inputs, including calculation-revision snapshots and
+    registry filing test helpers. Like :func:`validated_casilla_id`, this checks
+    key shape only; the caller remains responsible for validating membership
+    against the selected :class:`~domain.calculations.registry.ModeloRevision`.
+    """
+    return {validated_casilla_id(key, surface=f"{surface} key"): value for key, value in values.items()}

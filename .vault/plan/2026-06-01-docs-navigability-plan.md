@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#docs-navigability'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-05-30-docs-architecture-plan]]'
@@ -13,19 +13,11 @@ related:
   - '[[2026-06-04-docs-navigability-research]]'
 ---
 
-
-
-
-
-
-
-
 # `docs-navigability` `documentation navigability cross-link campaign` plan
 
 ## Wave `W01` - core-struct spine gate
 
 Enforce that modules importing a canonical core struct cross-link it, so the API docs steer readers to the spine. Delivered as a docs-lane hard-cut gate driven to zero across two anchor tiers.
-
 
 ### Phase `W01.P01` - spine anchors and enforcement
 
@@ -61,17 +53,8 @@ Extend to parameter annotations, remediate via swarm, verify green.
 
 ## Description
 
-
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 
-
 ## Verification
-

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S04'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Implement the Disenos de Registro workbook extractor (openpyxl) over the 74 xlsx plus 28 xls official AEAT files, materialising the casilla-number to field-position tables as schema-conformant text - the highest-value grounding surface (ADR D6)
 
@@ -26,7 +23,6 @@ established earlier in this phase; the worked-example HTML stub stays a
 worked example only.
 
 ## Description
-
 
 - Ground the reader question via RAG + `rg`: confirm `openpyxl` 3.1.5 and
   `xlrd` 2.0.2 are both locked dependencies and both import; confirm `xlrd`

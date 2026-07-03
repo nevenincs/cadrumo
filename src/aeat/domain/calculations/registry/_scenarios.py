@@ -15,11 +15,12 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, Period
+from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
-from ._ids import BindingId, CasillaId, RelationId
+from ._ids import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId
+from ._runtime_graph import expression_binding_refs
 
 ScenarioStatus = Literal["match", "mismatch"]
 
@@ -37,8 +38,8 @@ class RegistryScenarioExpectedOutput(RegistryScenarioModel):
     value: Decimal
     operand_refs: tuple[str, ...] = ()
     operand_casilla_refs: tuple[CasillaId, ...] = ()
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
     def _operand_casilla_refs_are_traced(self) -> RegistryScenarioExpectedOutput:
@@ -111,10 +112,10 @@ class RegistryScenarioComparison(RegistryScenarioModel):
     actual_operand_refs: tuple[str, ...] = ()
     expected_operand_casilla_refs: tuple[CasillaId, ...] = ()
     actual_operand_casilla_refs: tuple[CasillaId, ...] = ()
-    expected_legal_refs: tuple[str, ...] = ()
-    actual_legal_refs: tuple[str, ...] = ()
-    expected_source_refs: tuple[str, ...] = ()
-    actual_source_refs: tuple[str, ...] = ()
+    expected_legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    actual_legal_refs: tuple[LegalRefId, ...] = ()
+    expected_source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    actual_source_refs: tuple[SourceRefId, ...] = ()
     detail: str | None = None
 
 
@@ -150,6 +151,25 @@ def run_registry_calculation_scenario(
         period=scenario.period,
         revision_id=scenario.revision,
     )
+    # A profile-source binding a formula references but the scenario does not
+    # supply defaults to a neutral zero, mirroring the live calculate path where
+    # the profile-derived-fact injector seeds an absent profile binding to 0
+    # (e.g. a single filer's marriage-month integers, or the Madrid
+    # nacimiento/adopción count for a scenario that exercises an unrelated
+    # casilla). Without this the engine hard-fails on the unsupplied binding,
+    # forcing every full-tree scenario to enumerate every profile binding.
+    supplied_binding_ids = (
+        set(scenario.binding_values) | set(scenario.enum_binding_values) | set(scenario.date_binding_values)
+    )
+    profile_binding_ids = {
+        binding.id for binding in snapshot.revision.bindings if binding.source == BindingSourceKind.PROFILE
+    }
+    formula_referenced_binding_ids: set[BindingId] = set()
+    for formula in snapshot.revision.formulas:
+        formula_referenced_binding_ids.update(expression_binding_refs(formula.expression))
+    unresolved_profile_binding_ids = tuple(
+        sorted((formula_referenced_binding_ids & profile_binding_ids) - supplied_binding_ids)
+    )
     calculation = calculate_registry_snapshot(
         snapshot,
         inputs=scenario.inputs,
@@ -158,6 +178,7 @@ def run_registry_calculation_scenario(
         enum_binding_values=scenario.enum_binding_values,
         relation_values=scenario.relation_values,
         date_binding_values=scenario.date_binding_values or None,
+        unresolved_binding_ids=unresolved_profile_binding_ids,
     )
     entries_by_target = {entry.target_casilla_id: entry for entry in calculation.entries}
     comparisons = tuple(
@@ -212,8 +233,7 @@ def _compare_expected_output(
         )
     if expected.operand_casilla_refs and actual_operand_casilla_refs != expected.operand_casilla_refs:
         mismatches.append(
-            f"expected operand casillas {expected.operand_casilla_refs!r} "
-            f"but got {actual_operand_casilla_refs!r}",
+            f"expected operand casillas {expected.operand_casilla_refs!r} but got {actual_operand_casilla_refs!r}",
         )
     if expected.legal_refs and actual_legal_refs != expected.legal_refs:
         mismatches.append(f"expected legal refs {expected.legal_refs!r} but got {actual_legal_refs!r}")

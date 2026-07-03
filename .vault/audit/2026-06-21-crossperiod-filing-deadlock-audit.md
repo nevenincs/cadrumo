@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-21'
-modified: '2026-06-21'
+modified: '2026-06-30'
 related:
   - "[[2026-06-19-crossperiod-filing-deadlock-adr]]"
   - "[[2026-06-21-crossperiod-filing-deadlock-plan]]"
 ---
-
-
 
 # `crossperiod-filing-deadlock` audit: `Cross-period filing deadlock remediation - code review`
 

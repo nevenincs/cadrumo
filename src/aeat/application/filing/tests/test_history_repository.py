@@ -13,14 +13,17 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage import Envelope, SensitivityClass
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
-from ....domain._identifiers import ModeloIdentifier
+from ....domain import ModeloIdentifier
 from .._history_models import ModeloHistory, ModeloHistoryEntry
 from .._history_repository import ModeloHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 17, 30, 0, tzinfo=UTC)
 
 
 def _make_history(*, modelo: str = "130", n_entries: int = 2) -> ModeloHistory:
@@ -37,6 +40,19 @@ def _make_history(*, modelo: str = "130", n_entries: int = 2) -> ModeloHistory:
     return ModeloHistory(modelo=ModeloIdentifier(modelo), entries=entries)
 
 
+def _save_two_histories(repo: ModeloHistoryRepository) -> tuple[ModeloHistory, ModeloHistory]:
+    h130 = _make_history(modelo="130")
+    h303 = _make_history(modelo="303")
+    repo.save(h130)
+    repo.save(h303)
+    return h130, h303
+
+
+@pytest.fixture
+def repo() -> ModeloHistoryRepository:
+    return ModeloHistoryRepository()
+
+
 def _database_bytes(tmp_path: Path) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
@@ -50,18 +66,15 @@ def _database_payloads(tmp_path: Path) -> tuple[bytes, ...]:
 
 
 class TestEmptyState:
-    def test_load_returns_none_when_absent(self) -> None:
-        repo = ModeloHistoryRepository()
+    def test_load_returns_none_when_absent(self, repo: ModeloHistoryRepository) -> None:
         assert repo.load("130") is None
 
-    def test_object_marker_identifies_secure_backend(self) -> None:
-        repo = ModeloHistoryRepository()
+    def test_object_marker_identifies_secure_backend(self, repo: ModeloHistoryRepository) -> None:
         assert repo.envelope_path_for("130").as_posix().endswith("aeat.application.filing.history/130")
 
 
 class TestSaveLoad:
-    def test_round_trip(self) -> None:
-        repo = ModeloHistoryRepository()
+    def test_round_trip(self, repo: ModeloHistoryRepository) -> None:
         history = _make_history(modelo="130")
         repo.save(history)
         loaded = ModeloHistoryRepository().load("130")
@@ -69,8 +82,7 @@ class TestSaveLoad:
         assert loaded is not None
         assert loaded.entries[0].period == Period.from_year_and_code(2026, "1T")
 
-    def test_save_idempotent(self) -> None:
-        repo = ModeloHistoryRepository()
+    def test_save_idempotent(self, repo: ModeloHistoryRepository) -> None:
         history = _make_history(modelo="130")
         repo.save(history)
         repo.save(history)
@@ -78,37 +90,28 @@ class TestSaveLoad:
 
 
 class TestListIter:
-    def test_list_modelos_sorted(self) -> None:
-        repo = ModeloHistoryRepository()
-        repo.save(_make_history(modelo="303"))
-        repo.save(_make_history(modelo="130"))
+    def test_list_modelos_sorted(self, repo: ModeloHistoryRepository) -> None:
+        _save_two_histories(repo)
         assert repo.list_modelos() == ("130", "303")
 
-    def test_iter_histories_yields_tuples(self) -> None:
-        repo = ModeloHistoryRepository()
-        h130 = _make_history(modelo="130")
-        h303 = _make_history(modelo="303")
-        repo.save(h130)
-        repo.save(h303)
+    def test_iter_histories_yields_tuples(self, repo: ModeloHistoryRepository) -> None:
+        h130, h303 = _save_two_histories(repo)
         loaded = dict(repo.iter_histories())
         assert loaded == {"130": h130, "303": h303}
 
 
 class TestDelete:
-    def test_delete_removes(self) -> None:
-        repo = ModeloHistoryRepository()
+    def test_delete_removes(self, repo: ModeloHistoryRepository) -> None:
         repo.save(_make_history(modelo="130"))
         assert repo.delete("130") is True
         assert repo.load("130") is None
 
-    def test_delete_missing_returns_false(self) -> None:
-        repo = ModeloHistoryRepository()
+    def test_delete_missing_returns_false(self, repo: ModeloHistoryRepository) -> None:
         assert repo.delete("nonexistent") is False
 
 
 class TestClassificationGate:
-    def test_database_payload_is_encrypted_audit_data(self, tmp_path: Path) -> None:
-        repo = ModeloHistoryRepository()
+    def test_database_payload_is_encrypted_audit_data(self, repo: ModeloHistoryRepository, tmp_path: Path) -> None:
         repo.save(_make_history(modelo="130"))
         raw = _database_bytes(tmp_path)
         assert b"secure_objects" in raw
@@ -126,13 +129,11 @@ class TestClassificationGate:
         assert dumped["entries"][0]["period"] == {"filing_year": 2026, "code": "1T"}
         assert "2026Q1" not in history.model_dump_json()
 
-    def test_foreign_class_object_refused(self) -> None:
-        from ....adapters.persistence.storage import Envelope, SensitivityClass
-
+    def test_foreign_class_object_refused(self, repo: ModeloHistoryRepository) -> None:
         history = _make_history(modelo="130")
         bad = Envelope[ModeloHistory](
             schema_version=1,
-            written_at=datetime.now(UTC),
+            written_at=_FOREIGN_CLASS_WRITTEN_AT,
             classification=SensitivityClass.OPERATIONAL,
             payload=history,
         )
@@ -150,19 +151,14 @@ class TestClassificationGate:
 
 
 class TestUnsafeModelo:
-    @pytest.mark.parametrize(
-        "bad",
-        ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
-    )
-    def test_unsafe_modelo_rejected(self, bad: str) -> None:
-        repo = ModeloHistoryRepository()
-        with pytest.raises(ValueError):
-            repo.envelope_path_for(bad)
+    def test_unsafe_modelo_rejected(self, repo: ModeloHistoryRepository) -> None:
+        for bad in ("", "..", ".", ".hidden", "../escape", "a/b", "a\\b"):
+            with pytest.raises(ValueError):
+                repo.envelope_path_for(bad)
 
 
 class TestPerModeloLockIsolation:
-    def test_lock_target_per_modelo(self) -> None:
-        repo = ModeloHistoryRepository()
+    def test_lock_target_per_modelo(self, repo: ModeloHistoryRepository) -> None:
         a = repo.lock_target_for("130")
         b = repo.lock_target_for("303")
         assert a != b

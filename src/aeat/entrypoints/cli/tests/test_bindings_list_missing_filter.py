@@ -27,21 +27,26 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile._orchestration import profile_create_storage_span, set_active_fields
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.user_profile import (
+    profile_create_storage_span,
+    register_minimal_profile,
+    set_active_fields,
+)
+from ....application.workflow import workflow_state_repository
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# Modelo 100 (IRPF) 2025 declares 33 ``source = "profile"`` bindings, 10 of
-# them formula-consumed. The partial profile below satisfies exactly four:
-# tax-residence CCAA, declaration type, taxpayer birth date, and the
-# minor-children-in-unit count. The remaining profile bindings (spouse,
-# descendants, marriage deltas, ...) and every non-profile binding (ledger
-# aggregations, prior-filing pulls) stay unresolved, i.e. still "missing".
+# Modelo 100 (IRPF) 2025 declares formula-consumed ``source = "profile"``
+# bindings. The partial profile below satisfies the explicit facts for
+# tax-residence CCAA, declaration type, taxpayer birth date, and
+# minor-children-in-unit count. The real profile resolver also derives neutral
+# defaults for the anualidades eligibility and Madrid nacimiento/adopción
+# operands. The remaining profile bindings (spouse, descendants, marriage
+# deltas, ...) and every non-profile binding (ledger aggregations,
+# prior-filing pulls) stay unresolved, i.e. still "missing".
 _MODELO = "100"
 _YEAR = 2025
 _PERIOD = "0A"
@@ -51,6 +56,9 @@ _RESOLVED_BINDING_IDS = frozenset(
         "renta-2025-profile-declaration-type",
         "renta-2025-profile-taxpayer-birth-date",
         "renta-2025-profile-family-minor-children-in-unit",
+        "renta-2025-profile-anualidades-sin-minimo-descendientes",
+        "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
+        "renta-2025-profile-unidad-familiar-otros-miembros-base",
     },
 )
 
@@ -60,11 +68,11 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("operator"),
+        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
     ):
         try:
             workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="operator"),
+                lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"),
             )
             yield
         finally:
@@ -108,11 +116,11 @@ def _binding_ids_in_listing(output: str) -> set[str]:
 def test_bindings_list_missing_returns_strict_subset_of_unfiltered() -> None:
     """``--missing`` removes EXACTLY the profile-resolved bindings.
 
-    With an active profile that satisfies four of Modelo 100's
+    With an active profile that satisfies a proper subset of Modelo 100's
     ``source = "profile"`` bindings, the ``--missing`` listing must be a
     strict subset of the unfiltered listing whose removed rows are exactly
-    those four resolved binding ids — proving the filter actually narrows
-    the set rather than echoing the flag while returning everything.
+    those resolved binding ids — proving the filter actually narrows the
+    set rather than echoing the flag while returning everything.
     """
     _seed_partial_modelo_100_profile()
     scope = ["app", "modelo", "bindings", "list", "--modelo", _MODELO, "--year", str(_YEAR), "--period", _PERIOD]

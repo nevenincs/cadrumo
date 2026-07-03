@@ -9,14 +9,15 @@ from pathlib import Path
 import pytest
 
 from ....domain.transactions import (
+    RawProvenance,
     RawTransaction,
+    SourceFormat,
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
     TransactionEditLineageEntry,
     TransactionIdPrefixError,
 )
-from ....domain.transactions._raw_transaction import RawProvenance, SourceFormat
 from .._id_resolution import (
     MINIMUM_DISPLAY_ID_WIDTH,
     compute_display_id_width,
@@ -98,7 +99,7 @@ def test_resolve_prefix_is_case_insensitive_on_input() -> None:
 # --- lineage-aware resolution -------------------------------------------------
 def _raw(*, provider_id: str, amount: str, description: str) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 5, 1),
         value_date=date(2026, 5, 1),
         amount=Decimal(amount),
@@ -128,6 +129,8 @@ def _transaction(
         {
             "raw": _raw(provider_id=provider_id, amount=amount, description=description),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "edit_lineage": edit_lineage,
         },
     )

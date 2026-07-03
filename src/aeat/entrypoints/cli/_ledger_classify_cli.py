@@ -12,11 +12,12 @@ from typing import Protocol
 
 import typer
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import bulk_classify_from_csv as _bulk_classify
 from ...core import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.transactions import BusinessClassification, TransactionCatalogueRepository
+from ...domain.transactions import BusinessClassification
 from ._common import _bad, _emit_envelope
 
 

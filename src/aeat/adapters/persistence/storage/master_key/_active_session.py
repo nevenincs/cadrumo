@@ -37,7 +37,7 @@ from typing import override
 from .....core.errors import resolve_error_message
 from .....core.logging import get_logger
 from .....core.time import now
-from ..bucket._errors import BucketLockedError
+from ..bucket import BucketLockedError
 from ..errors import SecretStoreError
 from ._bucket_session import BucketSession
 
@@ -127,6 +127,20 @@ def has_active_bucket_session() -> bool:
     return _active_session.get() is not None
 
 
+def current_active_bucket_session() -> BucketSession | None:
+    """Return the currently-bound :class:`BucketSession`, or ``None``.
+
+    Read-only observation of the active-session :class:`~contextvars.ContextVar`
+    for callers (storage runtime readiness, per-request secure-object session
+    gating) that need the live session's attributes (``bucket_id``, ``sealed``,
+    idle deadline) rather than only its DEK (:func:`get_active_master_key`) or
+    its presence (:func:`has_active_bucket_session`). Never mutates the
+    context; only :func:`activate_session` and :func:`suspend_active_session`
+    may bind or clear it.
+    """
+    return _active_session.get()
+
+
 @contextmanager
 def suspend_active_session() -> Iterator[None]:
     """Temporarily clear the active :class:`BucketSession` for the current context."""
@@ -164,6 +178,7 @@ _atexit.register(_close_active_session_at_exit)
 __all__ = [
     "NoActiveBucketSessionError",
     "activate_session",
+    "current_active_bucket_session",
     "get_active_master_key",
     "has_active_bucket_session",
     "suspend_active_session",

@@ -1,14 +1,17 @@
-"""Retenciones aggregator for Modelo 111 (withholding on labor + economic activities).
+"""Pure aggregation primitives for the retenciones modelo family.
 
-Used by: :mod:`~._service` (per-modelo aggregation service) for retenciones modelos.
+This module groups typed :class:`RetencionObservation` rows into stable
+per-perceptor rollups and totals for Modelos 111, 115, 123, 180, 190, and 193.
+Observations must carry canonical source kinds from
+:class:`~core.BindingSourceKind`; bare ``invoice`` provenance
+is rejected in favour of ``payable_invoice`` or ``collectible_invoice``.
 
-Implements the slim aggregation contract for the retenciones family.
-The aggregator consumes typed observations carrying the canonical
-source kind (``ledger_transaction``) and produces per-perceptor
-rollups plus a totals payload suitable for Modelo 111 binding
-consumption.
-
-Modelos: 111, 115, 123, 180, 190, 193.
+The live calculation mesh uses these primitives through
+:class:`~._modelo_bindings.RetencionesAggregationSourceResolver` for the RET-1
+Modelo 180/193 distinct-NIF perceptor count. Modelo 190's distinct
+perceptor/clave/subclave percepciones count is intentionally handled by
+:class:`~._withholding_source.WithholdingSourceResolver`, not by this rollup
+family.
 """
 
 from __future__ import annotations
@@ -31,6 +34,22 @@ _CANONICAL_SOURCE_KINDS: tuple[BindingSourceKind, ...] = (
 )
 
 
+def _retenciones_source_kind(value: object) -> BindingSourceKind:
+    if isinstance(value, BindingSourceKind):
+        source_kind = value
+    elif isinstance(value, str):
+        try:
+            source_kind = BindingSourceKind(value)
+        except ValueError as exc:
+            raise ValueError(f"retenciones source_kind {value!r} is not a BindingSourceKind") from exc
+    else:
+        raise ValueError("retenciones source_kind must be a BindingSourceKind or source-kind string")
+    if source_kind not in _CANONICAL_SOURCE_KINDS:
+        allowed = ", ".join(_CANONICAL_SOURCE_KINDS)
+        raise ValueError(f"retenciones source_kind {source_kind.value!r} is unsupported; use one of {allowed}")
+    return source_kind
+
+
 class RetencionObservation(BaseModel):
     """One typed observation feeding a retenciones aggregator.
 
@@ -43,7 +62,7 @@ class RetencionObservation(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_kind: str = Field(min_length=1)
+    source_kind: BindingSourceKind
     source_object_id: str = Field(min_length=1)
     perceptor_nif: str = Field(min_length=1, max_length=16)
     perceptor_name: str = Field(default="", max_length=200)
@@ -52,13 +71,10 @@ class RetencionObservation(BaseModel):
     retencion_amount: Decimal = Field(ge=Decimal("0"))
     accrued_on: str = Field(min_length=10, max_length=10)  # ISO YYYY-MM-DD
 
-    @field_validator("source_kind")
+    @field_validator("source_kind", mode="before")
     @classmethod
-    def _reject_bare_invoice_source(cls, value: str) -> str:
-        if value not in _CANONICAL_SOURCE_KINDS:
-            allowed = ", ".join(_CANONICAL_SOURCE_KINDS)
-            raise ValueError(f"retenciones source_kind {value!r} is unsupported; use one of {allowed}")
-        return value
+    def _source_kind_is_canonical(cls, value: object) -> BindingSourceKind:
+        return _retenciones_source_kind(value)
 
 
 class RetencionPerceptorRollup(BaseModel):
@@ -66,13 +82,18 @@ class RetencionPerceptorRollup(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_kind: str = Field(min_length=1)
+    source_kind: BindingSourceKind
     perceptor_nif: str = Field(min_length=1, max_length=16)
     perceptor_name: str = Field(default="", max_length=200)
     scheme: RetencionScheme
     observations_count: int = Field(ge=0)
     total_taxable_base: Decimal = Field(ge=Decimal("0"))
     total_retencion: Decimal = Field(ge=Decimal("0"))
+
+    @field_validator("source_kind", mode="before")
+    @classmethod
+    def _source_kind_is_canonical(cls, value: object) -> BindingSourceKind:
+        return _retenciones_source_kind(value)
 
 
 class RetencionesAggregation(BaseModel):
@@ -116,6 +137,7 @@ class RetencionesAggregation(BaseModel):
 _MODELO_111_SCHEMES: frozenset[RetencionScheme] = frozenset(
     {
         RetencionScheme.WORK_INCOME,
+        RetencionScheme.WORK_INCOME_DIRECTOR,
         RetencionScheme.ECONOMIC_ACTIVITY,
         RetencionScheme.PROFESSIONAL,
         RetencionScheme.PRIZE,

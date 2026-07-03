@@ -63,7 +63,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GZ09.s
 review_status = "reviewed"
 
 [sources."boe-modelo-360-2010-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-789-2010.html"
@@ -140,7 +140,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G404.s
 review_status = "reviewed"
 
 [sources."boe-modelo-309-2003-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-3625-2003.html"
@@ -217,7 +217,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G408.s
 review_status = "reviewed"
 
 [sources."boe-modelo-353-2007-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3434-2007.html"
@@ -274,7 +274,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G407.s
 review_status = "reviewed"
 
 [sources."boe-modelo-322-2007-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3434-2007.html"
@@ -391,7 +391,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G403.s
 review_status = "reviewed"
 
 [sources."boe-modelo-308-2008-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3786-2008.html"
@@ -468,7 +468,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G412.s
 review_status = "reviewed"
 
 [sources."boe-modelo-390-2009-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3111-2009.html"
@@ -517,7 +517,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G414.s
 review_status = "reviewed"
 
 [sources."boe-modelo-303-2008-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3786-2008.html"
@@ -624,7 +624,7 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_re
 review_status = "reviewed"
 
 [sources."boe-modelo-349-form-2010"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-769-2010.html"
@@ -646,6 +646,18 @@ bytes = 46458
 retrieved_at = 2026-05-05
 applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI28.shtml"
+review_status = "reviewed"
+
+[sources."aeat-modelo-349-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.txt"
+sha256 = "735dc0b1be1bed8997bd77a97fb0cb54e54d77a083082f5b72cf6aa236717adf"
+bytes = 69284
+retrieved_at = 2026-05-26
+applies_from = 2021-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GI28/instr_mod_349.pdf"
 review_status = "reviewed"
 
 [sources."aeat-vies-gestiones-procedure"]
@@ -752,6 +764,28 @@ required_text = [
     "régimen especial previsto en esta sección",
 ]
 
+[legal."ley-37-1992:art-163-noniesdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163noniesdecies"
+document_id = "BOE-A-1992-28740"
+article = "163 noniesdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163noniesdecies"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "wgergely"
+notes = "Ley 37/1992, articulo 163 noniesdecies: obligaciones formales del regimen exterior OSS cuando Espana es Estado miembro de identificacion."
+required_text = [
+    "Artículo 163 noniesdecies. Obligaciones formales.",
+    "En caso de que el Reino de España sea el Estado miembro de identificación elegido",
+    "Presentar por vía electrónica una declaración-liquidación",
+    "por cada trimestre natural",
+    "Mantener un registro de las operaciones incluidas en este régimen especial",
+]
+
 [legal."ley-37-1992:art-163-unvicies"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -818,7 +852,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G420.s
 review_status = "reviewed"
 
 [sources."boe-modelo-369-2021-form"]
-evidence_tier = "official_source_guidance"
+evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-610-2021.html"
@@ -967,6 +1001,26 @@ required_text = [
     "La prorrata de deducción resultante de la aplicación de los criterios anteriores se redondeará en la unidad superior.",
     "Tres. Para la determinación del porcentaje de deducción no se computarán en ninguno de los términos de la relación:",
     "En todo caso se reputará actividad empresarial o profesional habitual del sujeto pasivo la de arrendamiento.",
+]
+
+[legal."ley-37-1992:art-105"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a105"
+document_id = "BOE-A-1992-28740"
+article = "105"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a105"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a105 arts. 105.Uno/.Cuatro procedimiento de la prorrata general; operator to re-stamp)"
+notes = "Articulo 105 LIVA: procedimiento de la prorrata general. Apartado Uno: el porcentaje de deduccion provisionalmente aplicable cada ano natural sera el fijado como definitivo para el ano precedente. Apartado Cuatro: en la ultima declaracion-liquidacion de cada ano natural el sujeto pasivo calcula la prorrata definitiva en funcion de las operaciones del ano y practica la consiguiente regularizacion de las deducciones provisionales - la cuota de esa regularizacion se consigna en la casilla 44 del Modelo 303 y en el campo de regularizacion anual del Modelo 390. Base legal de la regularizacion prorrata por porcentaje definitivo."
+required_text = [
+    "el porcentaje de deducción provisionalmente aplicable cada año natural será el fijado como definitivo para el año precedente",
+    "En la última declaración-liquidación del impuesto correspondiente a cada año natural el sujeto pasivo calculará la prorrata de deducción definitiva",
+    "practicará la consiguiente regularización de las deducciones provisionales",
 ]
 
 [legal."ley-37-1992:art-107"]
@@ -1141,6 +1195,27 @@ required_text = [
     "Uno. Los empresarios o profesionales que se acojan a este régimen especial no podrán deducir en la declaración-liquidación a que s",
     "No obstante lo anterior, los empresarios o profesionales que se acojan a este régimen especial tendrán derecho a la devolución de ",
     "Dos. En caso de que el Reino de España sea el Estado miembro de consumo, sin perjuicio de lo dispuesto en el artículo 119.Dos.2.º ",
+]
+
+[legal."ley-37-1992:art-163-quatervicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163quatervicies"
+document_id = "BOE-A-1992-28740"
+article = "163 quatervicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163quatervicies"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "wgergely"
+notes = "Ley 37/1992, articulo 163 quatervicies: exclusion del regimen de la Union para prestaciones realizadas en el territorio de aplicacion del impuesto por establecidos en el mismo."
+required_text = [
+    "Artículo 163 quatervicies. Prestaciones de servicios realizadas en el territorio de aplicación del impuesto por empresarios o profesionales establecidos en el mismo.",
+    "El régimen especial previsto en esta sección no resultará aplicable",
+    "prestaciones de servicios realizadas en el territorio de aplicación del impuesto",
+    "régimen general del impuesto",
 ]
 
 [legal."ley-37-1992:art-163-septiesdecies"]
@@ -1348,11 +1423,165 @@ published_at = 2023-12-06
 effective_from = 2023-12-07
 consolidated_as_of = 2025-12-03
 review_status = "reviewed"
-reviewed_at = 2026-06-28
+reviewed_at = 2026-06-29
 reviewed_by = "codex"
-notes = "Real Decreto 1007/2023: aprueba el reglamento de requisitos de los sistemas informaticos de facturacion y define los Sistemas de emision de facturas verificables o Sistemas VERI*FACTU."
+notes = "Real Decreto 1007/2023: aprueba el reglamento de requisitos de los sistemas informaticos de facturacion y define los Sistemas de emision de facturas verificables o Sistemas VERI*FACTU; las fechas de adaptacion estan en la disposicion final cuarta consolidada tras el Real Decreto-ley 15/2025."
 required_text = [
     "requisitos que deben adoptar los sistemas y programas informáticos o electrónicos que soporten los procesos de facturación",
     "garantizar la integridad, conservación, accesibilidad, legibilidad, trazabilidad e inalterabilidad",
     "Sistemas de emisión de facturas verificables",
 ]
+
+[legal."rd-1007-2023:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1007-2023.html#a3"
+document_id = "BOE-A-2023-24840"
+article = "3"
+section = "Ámbito subjetivo"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840#a3"
+published_at = 2023-12-06
+effective_from = 2023-12-07
+consolidated_as_of = 2025-12-03
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex"
+notes = "RD 1007/2023 Art. 3 delimita los obligados tributarios que usan sistemas informaticos de facturacion: IS, IRPF con actividades economicas, IRNR con establecimiento permanente y entidades en atribucion de rentas con actividades economicas; excluye a quienes llevan libros registro por RIVA Art. 62.6 y aplica tambien a productores/comercializadores en su actividad."
+required_text = [
+    "El presente Reglamento se aplicará a los obligados tributarios que se indican a continuación, que utilicen sistemas informáticos de facturación",
+    "Los contribuyentes del Impuesto sobre Sociedades",
+    "Los contribuyentes del Impuesto sobre la Renta de las Personas Físicas que desarrollen actividades económicas",
+    "Los contribuyentes del Impuesto sobre la Renta de no Residentes que obtengan rentas mediante establecimiento permanente",
+    "Las entidades en régimen de atribución de rentas que desarrollen actividades económicas",
+    "productores y comercializadores de los sistemas informáticos",
+    "no se aplicará a los contribuyentes que lleven los libros registros en los términos establecidos en el apartado 6",
+]
+
+[legal."rd-1007-2023:df-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1007-2023.html#df-4"
+document_id = "BOE-A-2023-24840"
+article = "disposicion final cuarta"
+section = "Entrada en vigor y efectos"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840#df-4"
+published_at = 2023-12-06
+effective_from = 2025-12-04
+consolidated_as_of = 2025-12-03
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "codex"
+notes = "La disposicion final cuarta, modificada por el Real Decreto-ley 15/2025, fija los hitos actuales de adaptacion: antes del 1 de enero de 2027 para los obligados del art. 3.1.a y antes del 1 de julio de 2027 para el resto de obligados del art. 3.1."
+required_text = [
+    "antes del 1 de enero de 2027",
+    "antes del 1 de julio de 2027",
+    "Los obligados tributarios del artículo 3.2",
+    "Se modifica por la disposición final 1 del Real Decreto-ley 15/2025",
+]
+
+# Modelo 303 regimen simplificado de IVA: modulos-based cuota devengada
+# engine (2026-07-01-modelo-303-regimen-simplificado-adr, Phase 2). The
+# Orden HAC/1347/2024 Anexo I "Instrucciones para la aplicacion de los
+# indices y modulos en el Impuesto sobre el Valor Anadido" fixes the LIVA
+# art. 123 mechanism: cuota devengada por operaciones corrientes = suma de
+# unidades de cada modulo x cuota devengada anual por unidad; cuota derivada
+# del regimen simplificado = mayor de (cuota devengada - cuotas soportadas
+# - 1% de dificil justificacion; cuota minima = porcentaje de la actividad x
+# cuota devengada). Cross-checked byte-identical against the bundled Orden
+# HTML (corpus/normatives/html/orden-hac-1347-2024.html) for the first-slice
+# activities (721.2, 722, 972.1).
+[legal."orden-hac-1347-2024:anexo-i-iva-instrucciones"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-i-instrucciones-iva"
+document_id = "BOE-A-2024-24949"
+section = "Anexo I. Instrucciones para la aplicación de los índices y módulos en el Impuesto sobre el Valor Añadido"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-02
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+notes = "Mecanismo del regimen simplificado de IVA para 2025 (LIVA art. 123): cuota devengada por operaciones corrientes = suma de las cuantias de los modulos (cantidad asignada x numero de unidades); cuota derivada del regimen simplificado = la mayor de (cuota devengada - cuotas soportadas por operaciones corrientes - 1% de dificil justificacion) o la cuota minima (Anexo II, aplicada sobre la cuota devengada). Cuotas trimestrales 1T-3T: ingreso a cuenta = porcentaje de la actividad (Anexo II) x cuota devengada del trimestre."
+required_text = [
+    "La cuota devengada por operaciones corrientes será la suma de las cuantías correspondientes a los módulos previstos para la actividad",
+    "La cuota derivada del régimen simplificado será la mayor de las dos cantidades siguientes",
+    "será deducible el 1 por ciento del importe de la cuota devengada por operaciones corrientes, en concepto de cuotas soportadas de difícil justificación",
+]
+
+[legal."orden-hac-1347-2024:anexo-i-iva-autotaxis-721-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-i-iva-721-2"
+document_id = "BOE-A-2024-24949"
+article = "721.2"
+section = "Anexo I. Transporte por autotaxis (IVA)"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-02
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+notes = "Cuota devengada anual por unidad de modulo (IVA) para epigrafe 721.2 Transporte por autotaxis: modulo 1 personal empleado 903,46 euros/persona; modulo 2 distancia recorrida 8,78 euros/1.000 km. Cuota minima por operaciones corrientes: 10 por ciento de la cuota devengada. Ingreso a cuenta trimestral (1T-3T): 5 por ciento de la cuota devengada del trimestre."
+required_text = [
+    "Cuota mínima por operaciones corrientes: 10 % de la cuota devengada por operaciones corrientes.",
+]
+
+[legal."orden-hac-1347-2024:anexo-i-iva-mercancias-722"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-i-iva-722"
+document_id = "BOE-A-2024-24949"
+article = "722"
+section = "Anexo I. Transporte de mercancías por carretera, excepto residuos (IVA)"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-02
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+notes = "Cuota devengada anual por unidad de modulo (IVA) para epigrafe 722 Transporte de mercancias por carretera, excepto residuos: modulo 1 personal empleado 4.149,99 euros/persona; modulo 2 carga vehiculos 388,55 euros/tonelada. Cuota minima por operaciones corrientes: 10 por ciento de la cuota devengada. Ingreso a cuenta trimestral (1T-3T): 5 por ciento de la cuota devengada del trimestre."
+required_text = [
+    "Cuota mínima por operaciones corrientes: 10 % de la cuota devengada por operaciones corrientes.",
+]
+
+[legal."orden-hac-1347-2024:anexo-i-iva-peluqueria-972-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-i-iva-972-1"
+document_id = "BOE-A-2024-24949"
+article = "972.1"
+section = "Anexo I. Servicios de peluquería de señora y caballero (IVA)"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-02
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+notes = "Cuota devengada anual por unidad de modulo (IVA) para epigrafe 972.1 Servicios de peluqueria de senora y caballero: modulo 1 personal empleado 2.562,75 euros/persona; modulo 2 superficie del local 41,33 euros/m2; modulo 3 consumo de energia electrica 17,48 euros/100 kWh. Cuota minima por operaciones corrientes: 13 por ciento de la cuota devengada. Ingreso a cuenta trimestral (1T-3T): 5 por ciento de la cuota devengada del trimestre."
+required_text = [
+    "Cuota mínima por operaciones corrientes: 13 % de la cuota devengada por operaciones corrientes.",
+]
+
+[sources."boe-orden-hac-1347-2024-iva-authority"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/orden-hac-1347-2024.html"
+sha256 = "9c8bfa02d05288e78311ceacf58832ec707f645a60bc752b88c6d0f97f70eeb4"
+bytes = 483374
+retrieved_at = 2026-07-02
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+review_status = "reviewed"

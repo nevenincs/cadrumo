@@ -12,17 +12,25 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
-from ...domain.deadlines._models import TaxpayerProfile
-from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
-from ..user_profile._projections import projection_for_taxpayer, record_to_path_values
-from ..workflow._models import WorkflowState
+from ...domain.deadlines import TaxpayerProfile
+from ..user_profile import (
+    iva_regime_required,
+    list_profile_key_records,
+    projection_for_taxpayer,
+    record_to_path_values,
+    validate_profile_values,
+)
+from ..workflow import WorkflowState
 from . import _compiler as _compiler  # side-effect: registers PROFILE_KEYS before _keys_validation
 from ._errors import WizardError
 
 _ENROLMENT_KEY = "iva.regime"
-"""Profile key whose presence flips the operator profile from ``identity-only``
-into ``ready-to-file``. Without an IVA regime declared, the deadline engine
-cannot compute IVA obligations, so ``profile_ready`` must NOT report ``true``."""
+"""Profile key whose presence flips an IVA-liable operator profile into
+``ready-to-file``.
+
+Natural-person profiles without economic-activity income do not need this
+fact to be ready: they are not silently enrolled into a Modelo 303 path.
+"""
 
 
 class WizardStatusReport(BaseModel):
@@ -57,11 +65,11 @@ class WizardStatusError(WizardError):
 def build_wizard_status(state: WorkflowState) -> WizardStatusReport:
     """Return the :class:`WizardStatusReport` readiness for the current workflow state.
 
-    ``profile_ready`` is true only when both the registry-required keys
-    (identity) AND the deadline-engine enrolment key (IVA regime) are
-    present. A profile carrying just the identity keys is recognised
-    as identity-ready but never as profile-ready, because the deadline
-    engine cannot compute IVA obligations without a regime declaration.
+    ``profile_ready`` is true only when the registry-required keys
+    (identity) are present and, when the taxpayer shape requires IVA
+    enrolment, the IVA regime is also present. A natural-person
+    non-activity profile must not be blocked on a regime declaration it
+    does not need.
     """
     record = state.active_profile_record()
     identity_ready = False
@@ -77,9 +85,10 @@ def build_wizard_status(state: WorkflowState) -> WizardStatusReport:
         missing_required = validation.missing_required
         profile_present_keys = validation.present_keys
         profile_total_keys = validation.total_keys
+        enrolment_required = iva_regime_required(values)
         enrolment_value = (values.get(_ENROLMENT_KEY) or "").strip()
-        enrolment_ready = bool(enrolment_value)
-        if not enrolment_ready:
+        enrolment_ready = not enrolment_required or bool(enrolment_value)
+        if enrolment_required and not enrolment_ready:
             missing_enrolment = (_ENROLMENT_KEY,)
 
     profile_ready = identity_ready and enrolment_ready

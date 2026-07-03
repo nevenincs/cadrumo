@@ -75,7 +75,7 @@ def _load_rates() -> LivaArt161RecargoRates:
 
     Routes through ``aeat.domain.calculations.registry.load_registry_tree``
     so parameters land in the validated :class:`RegistryCatalogues.parameters`
-    surface (single config-resolution path). The legacy direct
+    surface (single config-resolution path). The retired direct
     ``tomllib.load`` of ``registry/aeat/legal/iva-recargo-equivalencia.toml``
     is replaced — bypassing the loader was the same architectural drift
     pattern as direct ``os.environ`` reads.
@@ -91,8 +91,7 @@ def _load_rates() -> LivaArt161RecargoRates:
     # load_registry_tree path pulls in registry._bindings which imports
     # from aeat.domain.iva, triggering a circular import at this very
     # module's import time.
-    from ..calculations.registry import RegistryError
-    from ..calculations.registry._loader import load_legal_parameters_only
+    from ..calculations.registry import RegistryError, load_legal_parameters_only
 
     try:
         parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))

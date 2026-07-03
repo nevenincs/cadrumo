@@ -5,42 +5,35 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
+from ....tests.fixtures.identity_holder import single_field_model
 from .. import ProfileId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-
-class _Holder(BaseModel):
-    profile_id: ProfileId
+_Holder = single_field_model("profile_id", ProfileId)
 
 
-def test_accepts_canonical_uuid_minted_value() -> None:
+def test_profile_id_constraint_accepts_valid_values_and_rejects_invalid_values() -> None:
     minted = str(uuid4())
-    assert _Holder(profile_id=minted).profile_id == minted
+    valid_cases = (
+        (minted, minted),
+        (f"  {minted}  ", minted),
+    )
 
+    for profile_id, expected in valid_cases:
+        assert _Holder(profile_id=profile_id).profile_id == expected
 
-def test_accepts_legacy_short_label() -> None:
-    assert _Holder(profile_id="operator").profile_id == "operator"
+    invalid_cases = (
+        "operator",
+        str(uuid4()).upper(),
+        "",
+        f"{uuid4()}-extra",
+        "bad/id",
+        " leading-space-after-strip-still-bad?",
+    )
 
-
-def test_strips_surrounding_whitespace() -> None:
-    assert _Holder(profile_id="  op-1  ").profile_id == "op-1"
-
-
-def test_rejects_empty_value() -> None:
-    with pytest.raises(ValidationError):
-        _Holder(profile_id="")
-
-
-def test_rejects_value_over_max_length() -> None:
-    with pytest.raises(ValidationError):
-        _Holder(profile_id="x" * 97)
-
-
-def test_rejects_value_with_disallowed_characters() -> None:
-    with pytest.raises(ValidationError):
-        _Holder(profile_id="bad/id")
-    with pytest.raises(ValidationError):
-        _Holder(profile_id=" leading-space-after-strip-still-bad?")
+    for profile_id in invalid_cases:
+        with pytest.raises(ValidationError):
+            _Holder(profile_id=profile_id)

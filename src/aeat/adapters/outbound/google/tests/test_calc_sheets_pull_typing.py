@@ -11,6 +11,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.resources import resources
 from .....domain.calculations.registry import BindingId, RelationId
 from .._calc_sheets_pull import (
     ValueRange,
@@ -66,13 +67,9 @@ def test_batch_get_values_returns_empty_list_for_empty_ranges() -> None:
     returned and its type is correct (empty list of dicts).
     """
 
-    # A sentinel object with no .spreadsheets() attribute so any call
-    # beyond the empty-list guard would raise AttributeError.
-    class _NeverCalledSheets:
-        def spreadsheets(self) -> object:
-            raise AssertionError("spreadsheets() must not be called for empty ranges")
-
-    result = _batch_get_values(_NeverCalledSheets(), "some-id", [])
+    # A plain object has no .spreadsheets() attribute, so any call beyond
+    # the empty-list guard would raise AttributeError.
+    result = _batch_get_values(object(), "some-id", [])
     assert result == []
     assert isinstance(result, list)
 
@@ -92,12 +89,9 @@ def test_decode_operator_edits_returns_empty_for_no_ids() -> None:
 def test_decode_operator_edits_reads_decimal_from_value_range() -> None:
     """Use a real casilla pulled from the live registry to exercise the helper."""
 
-    from .....core.resources import bundled_path
-    from .....domain.calculations.registry import ValidatedRegistryAuthority
-    from .....domain.calculations.registry._schema import InputKind
+    from .....domain.calculations.registry import InputKind
 
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
-    snapshot = authority.snapshot("130", filing_year=2024, period="2T")
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=2024, period="2T")
     manual_casillas = [c for c in snapshot.revision.casillas if c.input_kind == InputKind.MANUAL]
     assert manual_casillas, "bundled 130/2T-2024 snapshot must contain at least one MANUAL casilla"
 

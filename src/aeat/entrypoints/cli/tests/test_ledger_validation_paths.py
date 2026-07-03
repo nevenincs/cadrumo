@@ -15,29 +15,29 @@ flags and therefore have no ValidationError path to exercise here.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile._orchestration import profile_create_storage_span, set_active_fields
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
-from ....core.config import override_settings
-from ....domain.user_profile import UserProfileFact
-from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ._ledger_validation_support import (
+    _add_eligible_mixed_expense,
+    _assert_pipeline_managed_state_refusal,
+    _create_profile_and_import,
+    _flatten_box,
+    _invoke,
+    open_bucket_session,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-#: Profile id every test in this module creates via the CLI inside the span.
-_PROFILE_ID = "tester"
 
-
-def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Result:
-    return invoke_cached_cli(args, env=env)
+def _assert_negative_amount_refusal(result: Result) -> None:
+    assert result.exit_code != 0, result.output
+    combined = result.output or ""
+    assert "non-negative magnitude" in combined, combined
+    assert "--direction" in combined, combined
 
 
 @pytest.fixture(autouse=True)
@@ -50,41 +50,8 @@ def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
     record under the same id as the held storage span rather than creating a
     UUID-backed profile via a separate in-process CLI invoke.
     """
-    dispose_engine()
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_PROFILE_ID),
-    ):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID))
-        try:
-            yield
-        finally:
-            dispose_engine()
-
-
-# ---------------------------------------------------------------------------
-# Shared helpers
-# ---------------------------------------------------------------------------
-
-
-def _create_profile_and_import(tmp_path: Path) -> str:
-    """Provision a profile with one imported transaction; return transaction_id."""
-    statement = tmp_path / "statement.csv"
-    statement.write_text(
-        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
-        "2026-04-15,Client SL,Invoice 1,-50.00,EUR,n26-001\n",
-        encoding="utf-8",
-    )
-    imported = _invoke(["app", "ledger", "import", str(statement), "--provider", "csv"])
-    assert imported.exit_code == 0, imported.output
-
-    listed = _invoke(["--format", "json", "app", "ledger", "list"])
-    assert listed.exit_code == 0, listed.output
-    payload = json.loads(listed.output)
-    rows = payload.get("result", payload).get("rows", [])
-    assert rows, listed.output
-    return rows[0]["transaction_id"]
+    with open_bucket_session(tmp_path):
+        yield
 
 
 # ---------------------------------------------------------------------------
@@ -151,11 +118,8 @@ def test_ledger_add_rejects_negative_amount_with_instructive_error(tmp_path: Pat
             "office supplies",
         ],
     )
-    assert result.exit_code != 0, result.output
-    combined = result.output or ""
     # Instructive: names the accepted non-negative form and the --direction axis.
-    assert "non-negative magnitude" in combined, combined
-    assert "--direction" in combined, combined
+    _assert_negative_amount_refusal(result)
 
 
 def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
@@ -207,6 +171,311 @@ def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
     assert "RawTransaction(" not in combined, combined
     assert "RawProvenance(" not in combined, combined
     assert "mappingproxy(" not in combined, combined
+
+
+def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
+    tmp_path: Path,
+) -> None:
+    """A net bank receipt can still carry the invoice base and IVA facts.
+
+    Persona repro: professional invoice 2000 + 420 IVA, 300 IRPF withheld,
+    bank receipt 2120. The operator first records the bank movement and then
+    classifies it with the invoice substrate. The production CLI path must
+    persist those facts so Modelo 303 and Renta aggregation can read them.
+    """
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-07-15",
+            "--amount",
+            "2120.00",
+            "--direction",
+            "INCOMING",
+            "--description",
+            "Factura profesional neta de retencion",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+
+    classified = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "2000.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "420.00",
+            "--irpf-category",
+            "actividad_economica",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert classified.exit_code == 0, classified.output
+
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", transaction_id])
+    assert viewed.exit_code == 0, viewed.output
+    transaction = json.loads(viewed.output)["result"]["transaction"]
+
+    assert transaction["amount"] == "2120"
+    assert transaction["taxable_base"] == "2000"
+    assert transaction["iva_amount"] == "420"
+    assert transaction["iva_rate"] == "0.21"
+    assert transaction["irpf_category"] == "actividad_economica"
+
+
+def test_ledger_classify_refuses_activity_income_when_base_cash_would_be_iva_sized_withholding(
+    tmp_path: Path,
+) -> None:
+    """A base-only professional cash receipt must not persist as IVA-sized retencion."""
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-07-15",
+            "--amount",
+            "2000.00",
+            "--direction",
+            "INCOMING",
+            "--description",
+            "Factura profesional introducida por base",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+
+    classified = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "2000.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "420.00",
+            "--irpf-category",
+            "actividad_economica",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "120"},
+    )
+
+    assert classified.exit_code != 0
+    assert "inferred IRPF withholding exceeds" in classified.output
+
+
+def test_ledger_classify_persists_professional_service_paid_net_of_irpf_withholding(
+    tmp_path: Path,
+) -> None:
+    """A professional-service bank payment can keep supplier invoice facts.
+
+    Javier repro: 1000.00 + 210.00 IVA - 150.00 IRPF withholding = 1060.00
+    paid. The CLI path must not rewrite cash to 1210.00 and must persist the
+    category axes that explain the net payment.
+    """
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-07-15",
+            "--amount",
+            "1060.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "Factura asesoria fiscal neta de retencion",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+
+    classified = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "asesoria_fiscal",
+            "--taxable-base",
+            "1000.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "210.00",
+            "--iva-category",
+            "domestic_general_21",
+            "--irpf-category",
+            "actividad_economica",
+            "--actor",
+            "Javier",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert classified.exit_code == 0, classified.output
+
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", transaction_id])
+    assert viewed.exit_code == 0, viewed.output
+    transaction = json.loads(viewed.output)["result"]["transaction"]
+
+    assert transaction["amount"] == "1060"
+    assert transaction["direction"] == "OUTGOING"
+    assert transaction["category_id"] == "asesoria_fiscal"
+    assert transaction["taxable_base"] == "1000"
+    assert transaction["iva_amount"] == "210"
+    assert transaction["iva_rate"] == "0.21"
+    assert transaction["iva_category"] == "domestic_general_21"
+    assert transaction["irpf_category"] == "actividad_economica"
+
+
+def test_ledger_classify_persists_rent_paid_net_of_withholding(
+    tmp_path: Path,
+) -> None:
+    """A rent bank payment net of withholding can keep full invoice IVA facts.
+
+    Persona repro: commercial rent 2700 + 567 IVA - 513 withholding = 2754 paid.
+    The CLI path must persist the full rent invoice substrate so Modelo 303 can
+    aggregate the 567 IVA soportado instead of rejecting the row at classify time.
+    """
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-04-05",
+            "--amount",
+            "2754.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "Alquiler local neto de retencion",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+
+    classified = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "arrendamiento_local",
+            "--taxable-base",
+            "2700.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "567.00",
+            "--iva-category",
+            "domestic_general_21",
+            "--irpf-category",
+            "arrendamiento_local",
+            "--actor",
+            "Javier",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert classified.exit_code == 0, classified.output
+
+    viewed = _invoke(["--format", "json", "app", "ledger", "view", transaction_id])
+    assert viewed.exit_code == 0, viewed.output
+    transaction = json.loads(viewed.output)["result"]["transaction"]
+
+    assert transaction["amount"] == "2754"
+    assert transaction["direction"] == "OUTGOING"
+    assert transaction["category_id"] == "arrendamiento_local"
+    assert transaction["taxable_base"] == "2700"
+    assert transaction["iva_amount"] == "567"
+    assert transaction["iva_rate"] == "0.21"
+    assert transaction["iva_category"] == "domestic_general_21"
+    assert transaction["irpf_category"] == "arrendamiento_local"
+
+
+def test_ledger_classify_rent_net_withholding_refusal_names_accepted_irpf_ids(
+    tmp_path: Path,
+) -> None:
+    """A guessed rent withholding id is refused with discoverable accepted ids."""
+    added = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2025-04-05",
+            "--amount",
+            "2754.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "Alquiler local neto de retencion",
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    transaction_id = json.loads(added.output)["result"]["transaction_id"]
+
+    classified = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "arrendamiento_local",
+            "--taxable-base",
+            "2700.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "567.00",
+            "--iva-category",
+            "domestic_general_21",
+            "--irpf-category",
+            "rental_withholding",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "160"},
+    )
+
+    assert classified.exit_code != 0
+    flat = " ".join(classified.output.split())
+    assert "arrendamiento_local" in flat
+    assert "arrendamiento_vivienda_afecto" in flat
+    assert "aeat app ledger categories" in flat
 
 
 def test_ledger_add_accepts_nonnegative_amount_with_direction(tmp_path: Path) -> None:
@@ -274,10 +543,7 @@ def test_ledger_update_rejects_negative_amount_with_instructive_error(tmp_path: 
         ],
     )
 
-    assert result.exit_code != 0, result.output
-    combined = result.output or ""
-    assert "non-negative magnitude" in combined, combined
-    assert "--direction" in combined, combined
+    _assert_negative_amount_refusal(result)
 
 
 # ---------------------------------------------------------------------------
@@ -391,189 +657,6 @@ def test_ledger_classify_rejects_business_pct_without_mixed_classification(
 
 
 # ---------------------------------------------------------------------------
-# contract  ledger add — profile-conditional source_jurisdiction (#258)
-#
-# Truth table per the regulatory branching:
-#   - LIRPF Art. 8 (universal-base presumption): resident IRPF GENERAL
-#     profiles silently default omitted --source-jurisdiction to ES.
-#   - LIRPF Art. 93 (Beckham): impatriado profiles must declare the
-#     jurisdiction explicitly; silent ES would mask foreign-source
-#     income that the regime treats separately from Spanish-source.
-#   - TRLIRNR Art. 2 / Art. 10: non-residents file IRNR and must
-#     declare jurisdiction explicitly so the IRNR scope filter has
-#     authoritative provenance per transaction.
-# ---------------------------------------------------------------------------
-
-
-def _set_profile_axis(key: str, value: str) -> None:
-    """Set one profile axis through the canonical profile orchestration service."""
-    workflow_state_repository().update(
-        lambda state: set_active_fields(state, (UserProfileFact(path=key, value=value),)),
-    )
-
-
-def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
-    tmp_path: Path,
-) -> None:
-    """RESIDENT_IRPF / GENERAL: omitted --source-jurisdiction silently defaults to ES.
-
-    LIRPF Art. 8 universal-base presumption: residents are taxed on
-    worldwide income with a Spanish-source default. The default-ES path
-    must not require operator action."""
-
-    # Default profile is already RESIDENT_IRPF / GENERAL, so no fact mutation is needed.
-
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "add",
-            "--date",
-            "2026-04-15",
-            "--amount",
-            "50.00",
-            "--direction",
-            "OUTGOING",
-            "--description",
-            "office supplies",
-            # NO --source-jurisdiction
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)["result"]
-    assert payload["transaction"]["source_jurisdiction"] == "ES", payload
-
-
-def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_impatriado(
-    tmp_path: Path,
-) -> None:
-    """RESIDENT_IRPF / IMPATRIADO: omitted --source-jurisdiction refused (Art. 93 LIRPF).
-
-    The Beckham regime taxes Spanish-source income at the flat IRNR rate
-    while excluding foreign-source from the base. A silent ES default
-    would quietly include foreign-source amounts in the IRPF base —
-    Art. 93.5 LIRPF segregation. Force operator to declare.
-
-    The test mutates the profile through the canonical profile orchestration
-    service so the ledger command sees the same stored facts it would read
-    after the operator wizard updates the active profile."""
-
-    _set_profile_axis("irpf.special_regime", "impatriado")
-    _set_profile_axis("irpf.special_regime_start_date", "2023-01-01")
-
-    result = _invoke(
-        [
-            "app",
-            "ledger",
-            "add",
-            "--date",
-            "2026-04-15",
-            "--amount",
-            "50.00",
-            "--direction",
-            "OUTGOING",
-            "--description",
-            "consulting",
-            # NO --source-jurisdiction
-        ],
-    )
-    assert result.exit_code != 0, result.output
-    combined = result.output or ""
-    # The refusal key carries Beckham / Art. 93 anchoring.
-    assert (
-        "source-jurisdiction" in combined
-        or "source_jurisdiction" in combined
-        or "Beckham" in combined
-        or "Art" in combined
-        or "93" in combined
-    ), combined
-
-
-def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
-    tmp_path: Path,
-) -> None:
-    """NON_RESIDENT_IRNR: omitted --source-jurisdiction refused (TRLIRNR Art. 2/10).
-
-    Non-residents file IRNR under RDLeg 5/2004; per-row jurisdiction is
-    the authoritative provenance for the IRNR scope filter. Operator
-    must declare it on every ledger entry — no silent default is safe
-    because the IRNR base only admits Spanish-source income.
-
-    The test mutates the profile through the canonical profile orchestration
-    service so the ledger command sees the same stored facts it would read
-    after the operator wizard updates the active profile."""
-
-    # UE/EEE country chosen so ue_eee_status is True and the
-    # TaxpayerProfile _check_representante_fiscal_required validator does
-    # not fire; this lets the source-jurisdiction refusal surface cleanly
-    # without provisioning the full TRLIRNR Art. 10 representante tuple.
-    # The non-EU/EEA path (Argentina, Morocco) is tracked under the schema-
-    # fix follow-up that resolves the representante_fiscal_nombre catalogue gap.
-    _set_profile_axis("taxpayer_type.country_of_fiscal_residence", "FR")
-    _set_profile_axis("taxpayer_type.fiscal_residency", "non_resident_irnr")
-
-    result = _invoke(
-        [
-            "app",
-            "ledger",
-            "add",
-            "--date",
-            "2026-04-15",
-            "--amount",
-            "50.00",
-            "--direction",
-            "OUTGOING",
-            "--description",
-            "non-resident expense",
-            # NO --source-jurisdiction
-        ],
-    )
-    assert result.exit_code != 0, result.output
-    combined = result.output or ""
-    assert (
-        "source-jurisdiction" in combined
-        or "source_jurisdiction" in combined
-        or "IRNR" in combined
-        or "TRLIRNR" in combined
-    ), combined
-
-
-def test_ledger_add_honours_operator_source_jurisdiction_override_for_resident(
-    tmp_path: Path,
-) -> None:
-    """Operator-supplied --source-jurisdiction is preserved verbatim regardless of profile.
-
-    Resident IRPF / GENERAL operator may legitimately add a foreign-source
-    row (e.g. dividendos de fuente extranjera). The default-ES rule must
-    not override an explicit operator value."""
-
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "add",
-            "--date",
-            "2026-04-15",
-            "--amount",
-            "100.00",
-            "--direction",
-            "INCOMING",
-            "--description",
-            "foreign dividend",
-            "--source-jurisdiction",
-            "FR",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)["result"]
-    assert payload["transaction"]["source_jurisdiction"] == "FR", payload
-
-
-# ---------------------------------------------------------------------------
 # contract  documented mixed-use flow reaches preflight-ready
 #
 # A MIXED row needs a proportionality reference (``usage_ratio_id``) to pass
@@ -587,40 +670,41 @@ def test_ledger_add_honours_operator_source_jurisdiction_override_for_resident(
 # ---------------------------------------------------------------------------
 
 
-def _add_eligible_mixed_expense() -> str:
-    """Add one deductible-expense row in a usage-ratio-eligible category.
+def test_usage_ratio_help_points_to_configured_ratio_commands(tmp_path: Path) -> None:
+    """`--usage-ratio-id` help names the configured-ratio discovery path."""
 
-    ``telefonia_movil`` is a ``USAGE_RATIO_PERSONAL`` category — eligible for a
-    saved usage ratio — so the documented mixed-use flow applies to it. The row
-    carries consistent IVA facts so the only outstanding preflight finding is
-    the proportionality reference.
-    """
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "add",
-            "--date",
-            "2026-02-10",
-            "--amount",
-            "60.50",
-            "--direction",
-            "OUTGOING",
-            "--description",
-            "phone bill",
-            "--taxable-base",
-            "50.00",
-            "--iva-rate",
-            "0.21",
-            "--iva-amount",
-            "10.50",
-        ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
-    )
-    assert result.exit_code == 0, result.output
-    return json.loads(result.output)["result"]["transaction_id"]
+    for args in (
+        ["app", "ledger", "add", "--help"],
+        ["app", "ledger", "allocate", "--help"],
+    ):
+        result = _invoke(args, env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "260"})
+
+        assert result.exit_code == 0, result.output
+        flat = _flatten_box(result.output or "")
+        assert "--usage-ratio-id" in flat, result.output
+        assert "aeat app ledger ratios list" in flat, result.output
+        assert "aeat app ledger ratios eligible" in flat, result.output
+        assert "aeat app ledger ratios set" in flat, result.output
+        assert "category-id" in flat, result.output
+        assert "Not arbitrary prose" in flat, result.output
+
+
+def test_business_pct_help_is_mixed_only_across_public_verbs(tmp_path: Path) -> None:
+    """`--business-pct` help tells operators to omit it for fully BUSINESS rows."""
+
+    for args in (
+        ["app", "ledger", "add", "--help"],
+        ["app", "ledger", "classify", "--help"],
+        ["app", "ledger", "allocate", "--help"],
+    ):
+        result = _invoke(args, env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "260"})
+
+        assert result.exit_code == 0, result.output
+        flat = _flatten_box(result.output or "")
+        assert "--business-pct" in flat, result.output
+        assert "MIXED" in flat, result.output
+        assert "BUSINESS" in flat, result.output
+        assert "fully BUSINESS" in flat, result.output
 
 
 def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path) -> None:
@@ -656,6 +740,10 @@ def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path
     assert preflight.exit_code == 0, preflight.output
     assert "ready\tfalse" in preflight.output, preflight.output
     assert "missing_proportionality_reference" in preflight.output, preflight.output
+    assert "aeat app ledger ratios list" in preflight.output, preflight.output
+    assert "aeat app ledger ratios eligible" in preflight.output, preflight.output
+    assert "aeat app ledger ratios set" in preflight.output, preflight.output
+    assert "--usage-ratio-id <category-id>" in preflight.output, preflight.output
 
 
 def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> None:
@@ -709,21 +797,6 @@ def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> No
 # assignable by hand through ``add`` or ``classify``. The doc states this
 # contract ("others are set automatically by the application"); these tests pin it.
 # ---------------------------------------------------------------------------
-
-
-def _flatten_box(text: str) -> str:
-    """Collapse a Rich error box into a single line so a wrapped phrase matches.
-
-    Rich word-wraps the message across box rows and inserts ``│`` borders, so a
-    multi-word fragment is split. Strip the borders and collapse whitespace.
-    """
-    return " ".join(text.replace("│", " ").split())
-
-
-def _assert_pipeline_managed_state_refusal(flat: str, output: str) -> None:
-    assert "set automatically" in flat, output
-    assert "cannot be assigned by hand" in flat, output
-    assert "BUSINESS, PERSONAL, MIXED" in flat, output
 
 
 @pytest.mark.parametrize("system_state", ["SKIPPED_BY_RULE", "FAILED_VALIDATION", "PROCESSED_UNCLASSIFIED"])

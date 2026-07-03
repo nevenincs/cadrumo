@@ -11,17 +11,14 @@ from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
 from .._corpus_catalogue import verify_source_file
 from .._legal import verify_legal_catalogue
-from .._loader import load_registry_tree
 from .._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-
 
 def _modelo_721() -> tuple[ModeloDefinition, ModeloRevision, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(modelo for modelo in modelos if modelo.id == "721")
+    modelo, catalogues = _committed_modelo("721")
     return modelo, modelo.revisions["2023-y-siguientes"], catalogues
 
 
@@ -82,11 +79,13 @@ def test_modelo_721_revision_uses_boe_layout_sources_and_applicability_chain() -
         "boe-modelo-721-2023-layout",
         "boe-modelo-721-2024-layout",
         "aeat-modelo-721-procedure",
-        "boe-modelo-721-2023-form",
     } <= set(revision.source_refs)
 
     all_modelo_strings = set(_strings(modelo.model_dump(mode="json")))
     assert "aeat-dr-721" not in all_modelo_strings
+    assert "boe-modelo-721-2023-form" not in all_modelo_strings
+    assert "boe-modelo-721-2023-form" not in catalogues.sources
+    assert catalogues.sources["aeat-modelo-721-procedure"].evidence_tier == "official_source_guidance"
 
     workbook_refs = {reference.id: reference for reference in revision.workbook_parity_refs}
     assert workbook_refs["modelo-721-dr-2023"].workbook_source == "boe-modelo-721-2023-layout"

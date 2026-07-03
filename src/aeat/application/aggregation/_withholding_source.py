@@ -1,6 +1,6 @@
 """Calc-mesh source resolver for the per-perceptor-clave withholding store (#28 P03).
 
-Reads the dedicated :class:`WithholdingObservationRepository` for the modelo's
+Reads the dedicated :class:`PercepcionObservationRepository` for the modelo's
 annual window and materialises the Modelo 190 "número total de percepciones" box
 with the DISTINCT (perceptor, clave, subclave) count (the ``percepcion_count``
 withholding fact) — replacing the wrong sum-of-quarterly-M111-perceptor-counts
@@ -21,7 +21,7 @@ requires its fact (``no-silent-under-declaration``: the zero is loud, not silent
 
 from __future__ import annotations
 
-from ...adapters.persistence.storage.errors import (
+from ...adapters.persistence.storage import (
     ClassificationError,
     DecryptionError,
     EnvelopeVersionError,
@@ -32,6 +32,7 @@ from ...domain.calculations.registry import (
     WithholdingObservation,
     resolve_withholding_binding_values,
 )
+from ._percepciones_observations_repository import PercepcionObservationRepository
 from ._source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -39,7 +40,6 @@ from ._source_mesh import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
-from ._withholding_observations_repository import WithholdingObservationRepository
 
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
@@ -75,13 +75,13 @@ class WithholdingSourceResolver:
     resolver_id = _WITHHOLDING_SOURCE.value
     owned_sources = (_WITHHOLDING_SOURCE,)
 
-    def __init__(self, *, withholding_repository: WithholdingObservationRepository | None = None) -> None:
+    def __init__(self, *, withholding_repository: PercepcionObservationRepository | None = None) -> None:
         self._withholding_repository = withholding_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if not _revision_declares_withholding_scalar(context.revision):
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
-        repository = self._withholding_repository or WithholdingObservationRepository()
+        repository = self._withholding_repository or PercepcionObservationRepository()
         try:
             observations = repository.load_observations(str(context.modelo), context.period)
         except _STORAGE_DEGRADATION_ERRORS as exc:

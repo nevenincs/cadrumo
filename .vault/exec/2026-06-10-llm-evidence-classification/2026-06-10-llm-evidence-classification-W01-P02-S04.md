@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S04'
 related:
   - "[[2026-06-10-llm-evidence-classification-plan]]"
 ---
-
-
-
 
 # Add the cloud-upload consent-gate posture to central Settings (default-off, re-affirmed per invocation, gestor-barred)
 

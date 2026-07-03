@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-05-12'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-domain-harvest-vat-classification-research]]"
@@ -11,14 +11,11 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr]]"
 ---
 
-
-
 # `cli-workflow-redesign` adr: `domain harvest VAT classification` | (**status:** `accepted`)
 
 > **PARTIALLY-SUPERSEDED 2026-05-19**: The Value-Added Tax direction in this ADR is reversed: Spanish stems are authoritative for tax-domain identifiers, VATClassification and VATClassificationCriteria consolidate into IvaInvoiceClassification, and domain/vat/_classification.py migrates into domain/iva/_classification.py. The CLI verb app-ledger-classify, the application wrapper aeat.application.ledger.classify_ledger_transaction, the JSON output contract, the persistence boundary, and the rejected-shapes list remain in force; only the classification symbol names and module path rename per the canonical rename ledger.
 > See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
 > rename ledger and Spanish-stem terminology authority.
-
 
 ## CLI Backend Boundary
 

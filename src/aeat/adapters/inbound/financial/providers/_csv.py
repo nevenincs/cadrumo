@@ -1,11 +1,16 @@
 """CSV financial provider with bank-layout-aware parsing.
 
 Provides :class:`CsvProvider`, an implementation of
-:class:`aeat.adapters.inbound.financial.providers._base.FinancialProvider`
+:class:`~aeat.adapters.inbound.financial.providers.FinancialProvider`
 that ingests bank CSV exports for the BBVA, Santander, CaixaBank and
 Revolut layouts. Each layout is described by a frozen
 :class:`CsvBankLayout` carrying the header aliases, date-format
 hint, and decimal-separator hint the parser needs.
+
+Successful rows become :class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow`
+objects: the stored :class:`~aeat.domain.transactions.RawTransaction` carries
+an absolute amount and provenance, while
+:class:`~aeat.domain.transactions.TransactionDirection` records the source flow.
 """
 
 from __future__ import annotations
@@ -23,6 +28,7 @@ from pydantic import BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import load_settings
+from .....core.errors import resolve_error_message
 from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .....core.logging import get_logger
 from .....domain.transactions import SourceFormat, TransactionDirection
@@ -170,12 +176,27 @@ CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
 )
 """Ordered tuple of bank layouts the CSV provider will try to match."""
 
+_AEAT_LEDGER_EXPORT_HEADERS = frozenset(
+    {
+        "bucket_id",
+        "transaction_id",
+        "lifecycle_state",
+        "booked_date",
+        "effective_date",
+        "amount",
+        "currency",
+        "direction",
+        "business_classification",
+    },
+)
+_AEAT_LEDGER_EXPORT_REFUSAL = "AEAT ledger CSV exports cannot be imported through the raw bank CSV provider"
+
 
 @dataclass(frozen=True, slots=True)
 class ParsedTabularTransactionRow:
     """Typed projection shared by CSV and spreadsheet bank-layout rows."""
 
-    transaction_id: str
+    provider_transaction_id: str
     booked_date: date
     value_date: date | None
     amount: Decimal
@@ -194,6 +215,10 @@ class CsvProvider(FinancialProvider):
     decoder honours :attr:`aeat.core.config.Settings.financial_default_csv_encoding`
     as the preferred encoding before falling back to a fixed
     UTF-8 / CP-1252 / ISO-8859-1 sequence.
+
+    CSV layouts can provide either a source-signed amount or an explicit
+    ``direction`` column. The adapter resolves that flow once at the parse
+    boundary and emits magnitude-only raw transactions.
     """
 
     name = "CSV provider"
@@ -225,6 +250,13 @@ class CsvProvider(FinancialProvider):
                 detected_encoding=encoding,
                 detected_dialect=describe_dialect(dialect),
             )
+        if _has_aeat_ledger_export_header(rows):
+            return ProviderValidation(
+                is_valid=False,
+                warnings=(_AEAT_LEDGER_EXPORT_REFUSAL,),
+                detected_encoding=encoding,
+                detected_dialect=describe_dialect(dialect),
+            )
         header_index, layout, _, _ = self._locate_header(rows)
         if layout is None:
             return ProviderValidation(
@@ -241,9 +273,11 @@ class CsvProvider(FinancialProvider):
                 detected_dialect=describe_dialect(dialect),
             )
         warnings: list[str] = []
-        if not _find_column(_header_lookup(rows[header_index]), layout.columns.currency):
+        lookup = _header_lookup(rows[header_index])
+        if not _find_column(lookup, layout.columns.currency):
             warnings.append(
-                f"{layout.bank_name} CSV has no currency column; falling back to {default_currency()}",
+                f"{_currency_warning_subject(layout, lookup)} has no currency column; "
+                f"falling back to {default_currency()}",
             )
         return ProviderValidation(
             is_valid=True,
@@ -257,6 +291,8 @@ class CsvProvider(FinancialProvider):
         """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the CSV source."""
         _logger.debug("csv_provider ingest: loading %s", path.name)
         rows, source_sha256, _, _ = self._load_rows(path)
+        if _has_aeat_ledger_export_header(rows):
+            raise InvalidFinancialSourceError(_AEAT_LEDGER_EXPORT_REFUSAL)
         header_index, layout, headers, lookup = self._locate_header(rows)
         if layout is None or headers is None or lookup is None:
             raise InvalidFinancialSourceError("CSV headers do not match any supported bank layout")
@@ -285,14 +321,14 @@ class CsvProvider(FinancialProvider):
                     exc_info=True,
                 )
                 raise InvalidFinancialSourceError(
-                    f"CSV row {source_row_index} could not be parsed: {exc}",
+                    f"CSV row {source_row_index} could not be parsed: {resolve_error_message(exc)}",
                 ) from exc
             built = build_raw_transaction(
                 provider=self,
                 path=path,
                 source_sha256=source_sha256,
                 source_row_index=source_row_index,
-                transaction_id=parsed.transaction_id,
+                provider_transaction_id=parsed.provider_transaction_id,
                 booked_date=parsed.booked_date,
                 value_date=parsed.value_date,
                 amount=parsed.amount,
@@ -402,6 +438,11 @@ def _layout_score(lookup: Mapping[str, str], layout: CsvBankLayout) -> int:
     return score
 
 
+def _has_aeat_ledger_export_header(rows: list[list[str]]) -> bool:
+    """Return whether the CSV contains the canonical ledger export header."""
+    return any(set(_header_lookup(row)) >= _AEAT_LEDGER_EXPORT_HEADERS for row in rows[:10] if any(row))
+
+
 def _find_column(lookup: Mapping[str, str], aliases: tuple[str, ...]) -> str | None:
     """Resolve the first matching original header for ``aliases``."""
     for alias in aliases:
@@ -409,6 +450,37 @@ def _find_column(lookup: Mapping[str, str], aliases: tuple[str, ...]) -> str | N
         if header is not None:
             return header
     return None
+
+
+_GENERIC_CSV_WARNING_ALIASES = frozenset({"date", "description", "amount", "direction"})
+
+
+def _currency_warning_subject(layout: CsvBankLayout, lookup: Mapping[str, str]) -> str:
+    """Return the provider label for a missing-currency warning.
+
+    A generic CSV with headers like ``Date,Description,Amount`` scores against
+    the N26 layout because those are valid N26 aliases, but it does not carry
+    any bank-specific signal. Keep that warning provider-neutral while preserving
+    provider-specific wording for real N26 and other bank exports.
+    """
+    matched_aliases: set[str] = set()
+    alias_groups = (
+        layout.columns.booked_date,
+        layout.columns.value_date,
+        layout.columns.amount,
+        layout.columns.direction,
+        layout.columns.description,
+        layout.columns.counterparty,
+        layout.columns.external_id,
+    )
+    for aliases in alias_groups:
+        for alias in aliases:
+            normalized = normalize_header(alias)
+            if normalized in lookup:
+                matched_aliases.add(normalized)
+    if matched_aliases and matched_aliases <= _GENERIC_CSV_WARNING_ALIASES:
+        return "CSV"
+    return f"{layout.bank_name} CSV"
 
 
 def _row_to_mapping(headers: list[str], row: list[str]) -> dict[str, str]:
@@ -441,22 +513,38 @@ def _parse_tabular_transaction_row(
             source_sha256=source_sha256,
             source_row_index=source_row_index,
         )
-    booked_date = parse_date_value(
-        _required_typed_value(typed_fields, lookup, layout.columns.booked_date, "booked_date", required_field_context),
-        day_first=layout.day_first_dates,
+    booked_date_header, booked_date_raw = _required_typed_value_and_header(
+        typed_fields,
+        lookup,
+        layout.columns.booked_date,
+        "booked_date",
+        required_field_context,
     )
-    value_raw = _typed_value_from_aliases(typed_fields, lookup, layout.columns.value_date)
-    value_date = parse_date_value(value_raw, day_first=layout.day_first_dates) if value_raw is not None else None
+    booked_date = parse_date_value(
+        booked_date_raw,
+        day_first=layout.day_first_dates,
+        label=booked_date_header,
+    )
+    value_date_resolved = _typed_value_and_header_from_aliases(typed_fields, lookup, layout.columns.value_date)
+    value_date: date | None = None
+    if value_date_resolved is not None:
+        value_date_header, value_raw = value_date_resolved
+        value_date = parse_date_value(value_raw, day_first=layout.day_first_dates, label=value_date_header)
     amount = parse_amount_value(
         _required_typed_value(typed_fields, lookup, layout.columns.amount, "amount", required_field_context),
         decimal_separator=layout.decimal_separator,
     )
     direction = _direction_from_aliases(raw_fields, lookup, layout.columns.direction)
-    currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
+    currency = _currency_from_aliases(
+        raw_fields,
+        lookup,
+        layout.columns.currency,
+        required_field_context,
+    )
     description = _required_value(raw_fields, lookup, layout.columns.description, "description")
     counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
     return ParsedTabularTransactionRow(
-        transaction_id=transaction_id,
+        provider_transaction_id=transaction_id,
         booked_date=booked_date,
         value_date=value_date,
         amount=amount,
@@ -481,6 +569,27 @@ def _value_from_aliases(
     return normalized or None
 
 
+def _currency_from_aliases(
+    raw_fields: Mapping[str, str],
+    lookup: Mapping[str, str],
+    aliases: tuple[str, ...],
+    context: str,
+) -> str:
+    """Resolve, default, and validate the optional currency column."""
+    header = _find_column(lookup, aliases)
+    if header is None:
+        return default_currency()
+    raw = coerce_cell_text(raw_fields.get(header, ""))
+    if not raw:
+        return default_currency()
+    normalized = raw.upper()
+    if len(normalized) != 3 or not normalized.isalpha():
+        raise FinancialValidationError(
+            f"{context} currency column {header!r} must be a three-letter ISO 4217 code; got {raw!r}",
+        )
+    return normalized
+
+
 def _typed_value_from_aliases(
     raw_fields: Mapping[str, object],
     lookup: Mapping[str, str],
@@ -494,11 +603,25 @@ def _typed_value_from_aliases(
     return value if coerce_cell_text(value) else None
 
 
+def _typed_value_and_header_from_aliases(
+    raw_fields: Mapping[str, object],
+    lookup: Mapping[str, str],
+    aliases: tuple[str, ...],
+) -> tuple[str, object] | None:
+    """Resolve and read the first non-empty typed value with its source header."""
+    header = _find_column(lookup, aliases)
+    if header is None:
+        return None
+    value = raw_fields.get(header, "")
+    return (header, value) if coerce_cell_text(value) else None
+
+
 def _direction_from_aliases(
     raw_fields: Mapping[str, str],
     lookup: Mapping[str, str],
     aliases: tuple[str, ...],
 ) -> TransactionDirection | None:
+    """Resolve an optional explicit transaction direction column."""
     header = _find_column(lookup, aliases)
     if header is None:
         return None
@@ -538,3 +661,17 @@ def _required_typed_value(
     if value is None:
         raise InvalidFinancialSourceError(f"{context} is missing required field {field_name!r}")
     return value
+
+
+def _required_typed_value_and_header(
+    raw_fields: Mapping[str, object],
+    lookup: Mapping[str, str],
+    aliases: tuple[str, ...],
+    field_name: str,
+    context: str,
+) -> tuple[str, object]:
+    """Resolve a required logical column and retain the source header label."""
+    resolved = _typed_value_and_header_from_aliases(raw_fields, lookup, aliases)
+    if resolved is None:
+        raise InvalidFinancialSourceError(f"{context} is missing required field {field_name!r}")
+    return resolved

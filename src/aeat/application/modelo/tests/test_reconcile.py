@@ -9,16 +9,20 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.justificante import parse_justificante
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from ....domain.buckets import BucketEventType
+from ....domain.modelos import (
+    ModeloCode,
+    WorkUnit,
+    derive_work_unit_id,
+    upsert_work_unit,
+)
 from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile._orchestration import profile_create_storage_span
-from ...user_profile._testing import register_minimal_profile
-from ...workflow._persistence import workflow_state_repository
+from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ...workflow import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
     ModeloReconciliationEvidenceKind,
@@ -35,18 +39,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
+_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 13, 25, 0, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("operator"),
+        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
-                profile_id="operator",
+                profile_id="11111111-1111-4111-8111-111111111111",
                 overrides={"identity.tax_id": "00000000T"},
             ),
         )
@@ -74,8 +79,8 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
         period=typed_period,
         revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=_WORK_UNIT_TIMESTAMP,
+        updated_at=_WORK_UNIT_TIMESTAMP,
     )
     repo = WorkUnitCatalogueRepository()
     repo.save(upsert_work_unit(repo.load(), work_unit))
@@ -186,12 +191,15 @@ def test_modelo_reconcile_emits_modelo_reconciled_event() -> None:
     assert matching[-1].payload["source_kind"] == "justificante"
 
 
-def test_modelo_reconcile_refuses_declaration_source_until_parser_lands() -> None:
-    """The declaration-PDF parser has not shipped; the service refuses
-    cleanly per the app-modelo-shape contract's two-source requirement so
-    operators get a typed error rather than a silent-degraded path."""
+def test_modelo_reconcile_refuses_declaration_source_for_unenrolled_modelo() -> None:
+    """Casilla-level declaración reconcile is enrolled one modelo at a time.
 
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    A modelo outside :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS` (200 here —
+    Modelo 200 declares no ``declaracion_pdf`` extraction profile at all) refuses
+    cleanly with a typed error rather than silently degrading to a header-only
+    compare."""
+
+    work_unit_id = _seed_work_unit(modelo="200", filing_year=2026, period="0A")
 
     with pytest.raises(ReconciliationDeclaracionSourceUnsupportedError) as excinfo:
         modelo_reconcile(
@@ -243,8 +251,8 @@ def test_modelo_reconcile_refuses_cross_bucket_work_unit(tmp_path: Path) -> None
         period=foreign_period,
         revision_id=revision_id,
         name="foreign-130",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=_WORK_UNIT_TIMESTAMP,
+        updated_at=_WORK_UNIT_TIMESTAMP,
     )
     repo = WorkUnitCatalogueRepository()
     repo.save(upsert_work_unit(repo.load(), foreign_unit))
@@ -290,10 +298,7 @@ def test_modelo_reconcile_malformed_evidence_refusal_is_clean_and_instructive(
     Regression for audit reconcile m11 / docs-hardening m16: before the fix the
     refusal echoed the raw parser message verbatim.
     """
-    from ....core.errors._registry import (
-        get_error_suggestion,
-        resolve_error_message,
-    )
+    from ....core.errors import get_error_suggestion, resolve_error_message
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     not_a_justificante = tmp_path / "garbage.pdf"

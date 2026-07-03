@@ -16,14 +16,15 @@ from ...application.aggregation import (
     RetencionObservation,
     WithholdingObservation,
     aggregate_per_modelo,
+    persist_percepcion_observations,
     persist_retencion_observations,
-    persist_withholding_observations,
 )
 from ...core import Modelo, Period
 from ...core.external_constants import RETENCIONES_MODELOS
 from ...core.i18n import tr
+from ...domain.calculations.registry import aggregate_withholding_by_clave
 from ._common import _emit_envelope
-from ._modelo_payloads import ModeloAggregateResult
+from ._modelo_payloads import ModeloAggregateResult, WithholdingClaveBreakdownPayload
 
 ResolveYearPeriod = Callable[..., Period]
 
@@ -102,7 +103,7 @@ def register_aggregate_commands(app: typer.Typer, *, resolve_year_period: Resolv
         )
         if command.modelo == Modelo.M190.value:
             # The CLI entrypoint owns the durable write; aggregate_per_modelo stays pure.
-            persist_withholding_observations(
+            persist_percepcion_observations(
                 modelo=command.modelo,
                 filing_year=command.period.filing_year,
                 period=command.period,
@@ -119,6 +120,16 @@ def register_aggregate_commands(app: typer.Typer, *, resolve_year_period: Resolv
         result = aggregate_per_modelo(command)
 
         source_kinds = ", ".join(source_kind.value for source_kind in result.source_kinds) or "-"
+        # Modelo 190 reconciliation aid: project the already-ingested
+        # per-perceptor-clave withholding detail into a per-clave retención
+        # breakdown. This is a pure projection of the same store the
+        # percepciones-count resolver reads (one-aggregation-path), not a
+        # recomputation of the calculation engine.
+        clave_breakdown = (
+            tuple(aggregate_withholding_by_clave(command.withholding_observations))
+            if command.modelo == Modelo.M190.value
+            else ()
+        )
         aggregate_result = ModeloAggregateResult(
             modelo=result.modelo,
             period=result.period,
@@ -126,6 +137,15 @@ def register_aggregate_commands(app: typer.Typer, *, resolve_year_period: Resolv
             observation_count=result.log_fields.observation_count,
             source_kinds=[sk.value for sk in result.source_kinds],
             result_row_count=result.log_fields.result_row_count,
+            clave_breakdown=[
+                WithholdingClaveBreakdownPayload(
+                    clave=row.clave,
+                    percepcion_count=row.percepcion_count,
+                    percibido_total=str(row.percibido_total),
+                    retencion_total=str(row.retencion_total),
+                )
+                for row in clave_breakdown
+            ],
         )
         lines = [
             "operation\tmodelo.aggregate",
@@ -136,6 +156,12 @@ def register_aggregate_commands(app: typer.Typer, *, resolve_year_period: Resolv
             f"source_kinds\t{source_kinds}",
             f"result_row_count\t{result.log_fields.result_row_count}",
         ]
+        if clave_breakdown:
+            lines.append("clave\tpercepcion_count\tpercibido_total\tretencion_total")
+            lines.extend(
+                f"clave_breakdown\t{row.clave.value}\t{row.percepcion_count}\t{row.percibido_total}\t{row.retencion_total}"
+                for row in clave_breakdown
+            )
         _emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines)
 
 

@@ -6,12 +6,13 @@ classes (no mocks, no patches). Each Protocol declares only the
 surface the engine actually consumes, decoupling submission from the
 richer surfaces of its sibling subpackages.
 
-- ``AuthProviderProbe`` — narrow auth-provider surface for the preflight gate.
-- ``DeadlineWindowChecker`` — narrow surface over
+- :class:`AuthProviderProbe` — narrow auth-provider surface for the preflight gate.
+- :class:`DeadlineWindowChecker` — narrow surface over
   :mod:`aeat.domain.deadlines` used by preflight.
-- ``ModeloFinding`` / ``ModeloDraftLike`` / ``ModeloDraftLoader`` — narrow
-  filing draft surfaces; :class:`aeat.application.filing.ModeloDraft`
-  structurally conforms to ``ModeloDraftLike``.
+- :class:`ModeloFinding` / :class:`ModeloDraftLike` /
+  :class:`ModeloDraftLoader` — narrow filing draft surfaces;
+  :class:`aeat.application.filing.ModeloDraft` structurally conforms to
+  :class:`ModeloDraftLike`.
 
 Every record is either a strict+frozen pydantic v2 model or a
 ``runtime_checkable`` ``Protocol``; no dataclasses; no bare dicts.
@@ -206,14 +207,13 @@ class ModeloDraftLoader(Protocol):
 class SubmissionRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for the submission engine.
 
-    The concrete ``SubmissionRepository`` inherits from the adapter-layer
-    ``SecureBoundRepository``. This Protocol captures only the surface the
-    engine consumes so callers can depend inward on this port without
-    importing the concrete class.
-
-    Note: ``SubmissionRepository`` itself retains adapter-level imports
-    because its base class (``SecureBoundRepository``) lives in the adapter
-    layer. Moving the concrete class to adapters is deferred to a later wave.
+    The concrete
+    :class:`~aeat.adapters.persistence.profile.submission.SubmissionRepository`
+    lives in the persistence adapter and inherits from the adapter-layer
+    :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`. This
+    Protocol captures only the surface the engine consumes so the domain
+    depends inward on this port, and the application layer constructs the
+    concrete repository and injects it into :class:`SubmissionEngine`.
     """
 
     def load(self, record_id: str) -> ModeloPresentado | None:

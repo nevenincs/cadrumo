@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S14'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
 ---
-
-
-
 
 # add the coverage-validator-treats-empty-span-as-satisfied case: assert previous_filing_observation_requirements emits no required observation for an empty span and the cross-period gate returns clean for a genuine first filer
 

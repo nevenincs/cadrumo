@@ -8,7 +8,10 @@ from logging import Logger
 from sqlalchemy import Engine, bindparam, text
 
 from .....core.external_constants import UTF_8_ENCODING
-from ..crypto._encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
+from ..crypto import (
+    decrypt_secure_object_payload,
+    secure_object_payload_aad,
+)
 from ..errors import DecryptionError
 from . import _orm
 from ._secure_object_records import SecureObjectDecryptabilityRow, SecureObjectNamespaceIntegrity

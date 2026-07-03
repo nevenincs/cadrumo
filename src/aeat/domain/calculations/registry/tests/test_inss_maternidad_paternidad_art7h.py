@@ -34,40 +34,48 @@ from pathlib import Path
 import pytest
 
 from .....core.config import SecretStoreBackend
-from .....core.resources import bundled_path
 from .....tests.secure_sql import dev_test_database_password
-from .._loader import load_registry_tree
 from .._temporal import select_revision
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-
 
 def _m100_revision(filing_year: int):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelos_by_id = {m.id: m for m in modelos}
-    return select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    modelo, _ = _committed_modelo("100")
+    return select_revision(modelo, filing_year=filing_year, period="0A")
+
+
+def _negated_casillas(formula) -> set[str]:
+    expr = formula.expression.model_dump(exclude_none=True)
+    assert expr.get("op") == "sum", "top-level op must be sum"
+    args = expr.get("args", [])
+    return {
+        arg["args"][0]["casilla_id"]
+        for arg in args
+        if arg.get("op") == "negate"
+        and arg.get("args")
+        and isinstance(arg["args"], (list, tuple))
+        and arg["args"][0].get("casilla_id")
+    }
 
 
 class TestInssExentaCasillaRegistered:
     """The INSS exempt casilla is declared in the registry with correct provenance."""
 
-    def test_casilla_0058_registered_in_2024_revision(self) -> None:
-        """M100 2024 must declare casilla 0058 with the Art. 7.h exempt-INSS semantic role."""
-        rev = _m100_revision(2024)
+    @pytest.mark.parametrize(
+        ("filing_year", "casilla_id"),
+        (
+            pytest.param(2024, "0058", id="2024"),
+            pytest.param(2025, "0059", id="2025"),
+        ),
+    )
+    def test_casilla_registered_in_revision(self, filing_year: int, casilla_id: str) -> None:
+        """M100 revisions must declare the Art. 7.h exempt-INSS semantic role."""
+        rev = _m100_revision(filing_year)
         casillas_by_id = {c.id: c for c in rev.casillas}
-        casilla = casillas_by_id.get("0058")
-        assert casilla is not None, "casilla 0058 must be declared in M100 2024 revision"
-        assert casilla.semantic_role == "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
-        assert "ley-35-2006:art-7-h" in casilla.legal_refs
-
-    def test_casilla_0059_registered_in_2025_revision(self) -> None:
-        """M100 2025 must declare casilla 0059 with the Art. 7.h exempt-INSS semantic role."""
-        rev = _m100_revision(2025)
-        casillas_by_id = {c.id: c for c in rev.casillas}
-        casilla = casillas_by_id.get("0059")
-        assert casilla is not None, "casilla 0059 must be declared in M100 2025 revision"
+        casilla = casillas_by_id.get(casilla_id)
+        assert casilla is not None, f"casilla {casilla_id} must be declared in M100 {filing_year} revision"
         assert casilla.semantic_role == "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
         assert "ley-35-2006:art-7-h" in casilla.legal_refs
 
@@ -81,82 +89,42 @@ class TestFormulaStructure:
         formula_id = f"renta-{filing_year}-trabajo-total-ingresos-integros-computables"
         return formulas_by_id.get(formula_id)
 
-    def test_2024_formula_negates_casilla_0058(self) -> None:
-        """Formula renta-2024-trabajo-total-ingresos-integros-computables must negate casilla 0058."""
-        formula = self._get_total_ingresos_formula(2024)
-        assert formula is not None, "renta-2024-trabajo-total-ingresos-integros-computables must be declared"
-        expr = formula.expression.model_dump(exclude_none=True)
-        assert expr.get("op") == "sum", "top-level op must be sum"
-        args = expr.get("args", [])
-        # Find negate(0058) in the args
-        negated_casillas = {
-            arg["args"][0]["casilla_id"]
-            for arg in args
-            if arg.get("op") == "negate"
-            and arg.get("args")
-            and isinstance(arg["args"], (list, tuple))
-            and arg["args"][0].get("casilla_id")
-        }
-        assert "0058" in negated_casillas, (
-            f"renta-2024-trabajo-total-ingresos-integros-computables must negate casilla 0058; "
-            f"negated casillas found: {negated_casillas}"
+    @pytest.mark.parametrize(
+        ("filing_year", "casilla_id"),
+        (
+            pytest.param(2024, "0058", id="2024"),
+            pytest.param(2025, "0059", id="2025"),
+        ),
+    )
+    def test_formula_negates_exempt_inss_casilla(self, filing_year: int, casilla_id: str) -> None:
+        formula = self._get_total_ingresos_formula(filing_year)
+        formula_id = f"renta-{filing_year}-trabajo-total-ingresos-integros-computables"
+        assert formula is not None, f"{formula_id} must be declared"
+        negated_casillas = _negated_casillas(formula)
+        assert casilla_id in negated_casillas, (
+            f"{formula_id} must negate casilla {casilla_id}; negated casillas found: {negated_casillas}"
         )
 
-    def test_2025_formula_negates_casilla_0059(self) -> None:
-        """Formula renta-2025-trabajo-total-ingresos-integros-computables must negate casilla 0059."""
-        formula = self._get_total_ingresos_formula(2025)
-        assert formula is not None, "renta-2025-trabajo-total-ingresos-integros-computables must be declared"
-        expr = formula.expression.model_dump(exclude_none=True)
-        assert expr.get("op") == "sum", "top-level op must be sum"
-        args = expr.get("args", [])
-        negated_casillas = {
-            arg["args"][0]["casilla_id"]
-            for arg in args
-            if arg.get("op") == "negate"
-            and arg.get("args")
-            and isinstance(arg["args"], (list, tuple))
-            and arg["args"][0].get("casilla_id")
-        }
-        assert "0059" in negated_casillas, (
-            f"renta-2025-trabajo-total-ingresos-integros-computables must negate casilla 0059; "
-            f"negated casillas found: {negated_casillas}"
-        )
-
-    def test_2024_formula_still_includes_casilla_0003(self) -> None:
+    @pytest.mark.parametrize("filing_year", (2024, 2025))
+    def test_formula_still_includes_casilla_0003(self, filing_year: int) -> None:
         """Adding the INSS exempt casilla must not disturb the 0003 input slot."""
-        formula = self._get_total_ingresos_formula(2024)
+        formula = self._get_total_ingresos_formula(filing_year)
         assert formula is not None
         expr = formula.expression.model_dump(exclude_none=True)
         args = expr.get("args", [])
         direct_casillas = {arg.get("casilla_id") for arg in args if arg.get("casilla_id")}
-        assert "0003" in direct_casillas, "0003 (Retribuciones dinerarias) must remain in the formula"
-
-    def test_2025_formula_still_includes_casilla_0003(self) -> None:
-        """Adding the INSS exempt casilla must not disturb the 0003 input slot (2025)."""
-        formula = self._get_total_ingresos_formula(2025)
-        assert formula is not None
-        expr = formula.expression.model_dump(exclude_none=True)
-        args = expr.get("args", [])
-        direct_casillas = {arg.get("casilla_id") for arg in args if arg.get("casilla_id")}
-        assert "0003" in direct_casillas, "0003 must remain in the 2025 formula"
+        assert "0003" in direct_casillas, f"0003 must remain in the {filing_year} formula"
 
 
 class TestLegalRefs:
     """Art. 7.h is registered in the legal catalogue and in the 0012 formula legal_refs."""
 
-    def test_art_7h_legal_ref_in_2024_formula(self) -> None:
-        """renta-2024-trabajo-total-ingresos-integros-computables must carry Art. 7.h legal ref."""
-        rev = _m100_revision(2024)
+    @pytest.mark.parametrize("filing_year", (2024, 2025))
+    def test_art_7h_legal_ref_in_formula(self, filing_year: int) -> None:
+        """The total-ingresos formula must carry the Art. 7.h legal ref."""
+        rev = _m100_revision(filing_year)
         formulas_by_id = {f.id: f for f in rev.formulas}
-        formula = formulas_by_id.get("renta-2024-trabajo-total-ingresos-integros-computables")
-        assert formula is not None
-        assert "ley-35-2006:art-7-h" in formula.legal_refs
-
-    def test_art_7h_legal_ref_in_2025_formula(self) -> None:
-        """renta-2025-trabajo-total-ingresos-integros-computables must carry Art. 7.h legal ref."""
-        rev = _m100_revision(2025)
-        formulas_by_id = {f.id: f for f in rev.formulas}
-        formula = formulas_by_id.get("renta-2025-trabajo-total-ingresos-integros-computables")
+        formula = formulas_by_id.get(f"renta-{filing_year}-trabajo-total-ingresos-integros-computables")
         assert formula is not None
         assert "ley-35-2006:art-7-h" in formula.legal_refs
 

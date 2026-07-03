@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#codebase-solidification'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S802'
 related:
   - "[[2026-05-28-codebase-solidification-plan]]"
 ---
-
-
-
 
 # Introduce OutputLanguage StrEnum with members ES, EN, CA, HU at canonical home `src/aeat/core/external_constants.py`. Rebase SUPPORTED_OUTPUT_LANGUAGES to frozenset of OutputLanguage
 
@@ -23,8 +20,6 @@ related:
 
 ## Description
 
-
 ## Outcome
 
 ## Notes
-

@@ -1,21 +1,24 @@
-"""Generic SQL-backed :class:`Envelope` repository built on :class:`SecureObjectRepository`.
+"""Generic SQL-backed envelope repository for secure objects.
 
-The 8 domain repositories that wrap :class:`SecureObjectRepository`
-(filing drafts, submissions, filing history, complementaria,
-justificantes, observations, assets, inventory) all share the same
-boilerplate: namespace + sensitivity + schema-version + Pydantic payload
-type + a function that extracts the natural id from the payload.
+Concrete domain and application repositories that wrap
+:class:`adapters.persistence.storage.SecureObjectRepository`
+all share the same boilerplate:
+:class:`adapters.persistence.storage.Envelope` wrapping, namespace,
+sensitivity, schema-version, Pydantic payload type, and a function that
+extracts the natural id from the payload.
 
-This module introduces :class:`SecureBoundRepository`, a generic base
-class that captures that shared shape exactly once. Concrete subclasses
-override the four class-level descriptors (`namespace`, `payload_type`,
-`sensitivity`, `schema_version`) and implement `extract_identifier`;
-they inherit `envelope_path_for`, `lock_target_for`, `load`, `save`,
-`delete`, `iter_ids`, and `iter_records` for free.
+This module provides
+:class:`adapters.persistence.storage.SecureBoundRepository`, a
+generic base class that captures that shared shape exactly once. Concrete
+subclasses override the four class-level descriptors (``namespace``,
+``payload_type``, ``sensitivity``, ``schema_version``) and implement
+``extract_identifier``; they inherit ``envelope_path_for``,
+``lock_target_for``, ``load``, ``save``, ``delete``, ``iter_ids``, and
+``iter_records`` for free.
 
-The base class does NOT replace :class:`SecureObjectRepository`; it
-composes one. The 8 concrete repositories are migrated to this base
-under separate steps.
+The base class does NOT replace
+:class:`adapters.persistence.storage.SecureObjectRepository`; it
+composes one.
 """
 
 from __future__ import annotations
@@ -47,7 +50,7 @@ def _active_bucket_objects_or_default(settings: Settings | None = None) -> Secur
 
     When an active profile bucket is available the repository is backed by
     the bucket's own encrypted database, resolved through
-    :func:`~aeat.adapters.persistence.storage.runtime_repository.secure_object_repository_for_active_bucket_or_default_route`
+    :func:`adapters.persistence.storage.secure_object_repository_for_active_bucket_or_default_route`
     so the URL is derived from the live bucket path rather than the
     settings-override snapshot captured at test-fixture construction time.
     A missing active bucket uses the process-default route for explicit
@@ -62,16 +65,19 @@ class SecureBoundRepository[T: BaseModel]:
 
     Subclasses MUST set class attributes:
 
-    - :attr:`namespace`: the :class:`SecureObjectRepository` namespace
-      string for this payload family (e.g. ``"aeat.domain.filing.drafts"``).
+    - :attr:`namespace`: the
+      :class:`adapters.persistence.storage.SecureObjectRepository`
+      namespace string for this payload family
+      (e.g. ``"aeat.domain.filing.drafts"``).
     - :attr:`payload_type`: the typed Pydantic model class wrapped by the
       envelope.
-    - :attr:`sensitivity`: the :class:`SensitivityClass` that every row
-      in this namespace MUST carry; mismatches raise
-      :class:`ClassificationError`.
-    - :attr:`schema_version`: the highest envelope schema version this
-      consumer supports; rows whose version exceeds it raise
-      :class:`EnvelopeVersionError`.
+    - :attr:`sensitivity`: the
+      :class:`adapters.persistence.storage.SensitivityClass` that every
+      row in this namespace MUST carry; mismatches raise
+      :class:`adapters.persistence.storage.ClassificationError`.
+    - :attr:`schema_version`: the current envelope schema version this
+      consumer expects; rows whose version differs from it raise
+      :class:`adapters.persistence.storage.EnvelopeVersionError`.
 
     Subclasses MUST implement :meth:`extract_identifier` so that
     :meth:`save` and :meth:`iter_ids` can recover the natural id from
@@ -156,7 +162,13 @@ class SecureBoundRepository[T: BaseModel]:
 
     @property
     def secure_object_repository(self) -> SecureObjectRepository:
-        """Return the concrete :class:`SecureObjectRepository` backing this logical repository."""
+        """Return the concrete secure-object backend.
+
+        Returns:
+            The
+            :class:`adapters.persistence.storage.SecureObjectRepository`
+            backing this logical repository.
+        """
         return self._objects
 
     # ------------------------------------------------------------------
@@ -180,10 +192,10 @@ class SecureBoundRepository[T: BaseModel]:
                 f"{self.namespace}/{identifier} has classification "
                 f"{envelope.classification}; consumer expected {self.sensitivity}",
             )
-        if envelope.schema_version > self.schema_version:
+        if envelope.schema_version != self.schema_version:
             raise EnvelopeVersionError(
                 f"{self.namespace}/{identifier} is at version "
-                f"{envelope.schema_version}; consumer supports up to "
+                f"{envelope.schema_version}; consumer expects "
                 f"{self.schema_version}",
             )
         # Safe: _envelope_cls() returns Envelope[self.payload_model()] which equals
@@ -244,7 +256,9 @@ class SecureBoundRepository[T: BaseModel]:
         order sorts the result itself. Streams one identifier at a time
         rather than buffering and sorting the whole namespace in memory.
 
-        Fail-closed: :meth:`SecureObjectRepository.list_records` scans the
+        Fail-closed:
+        :meth:`adapters.persistence.storage.SecureObjectRepository.list_records`
+        scans the
         whole namespace and raises ``SecureObjectUnreadableError`` if any row
         is unreadable, so a full consumption (``tuple(...)``) never yields a
         readable subset past a corrupt row.
@@ -256,6 +270,16 @@ class SecureBoundRepository[T: BaseModel]:
             max_supported_version=self.schema_version,
         ):
             envelope = envelope_cls.model_validate_json(record.payload.decode("utf-8"))
+            if envelope.classification is not self.sensitivity:
+                raise ClassificationError(
+                    f"{self.namespace} iterator row has classification "
+                    f"{envelope.classification}; consumer expected {self.sensitivity}",
+                )
+            if envelope.schema_version != self.schema_version:
+                raise EnvelopeVersionError(
+                    f"{self.namespace} iterator row is at version "
+                    f"{envelope.schema_version}; consumer expects {self.schema_version}",
+                )
             # Safe: same rationale as the load() path — envelope was validated by
             # model_validate_json against Envelope[self.payload_type] == Envelope[T].
             # Future improvement: eliminate via generic ClassVar alias
@@ -266,7 +290,7 @@ class SecureBoundRepository[T: BaseModel]:
         """Yield every persisted payload in storage order.
 
         Streams each payload straight from
-        :meth:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository.list_records`
+        :meth:`adapters.persistence.storage.SecureObjectRepository.list_records`
         without buffering the whole namespace or sorting it in memory. Order
         is storage-defined (the ``object_key`` digest order), not the
         natural-id order; a caller that needs a specific order sorts the
@@ -292,6 +316,16 @@ class SecureBoundRepository[T: BaseModel]:
             max_supported_version=self.schema_version,
         ):
             envelope = envelope_cls.model_validate_json(record.payload.decode("utf-8"))
+            if envelope.classification is not self.sensitivity:
+                raise ClassificationError(
+                    f"{self.namespace} iterator row has classification "
+                    f"{envelope.classification}; consumer expected {self.sensitivity}",
+                )
+            if envelope.schema_version != self.schema_version:
+                raise EnvelopeVersionError(
+                    f"{self.namespace} iterator row is at version "
+                    f"{envelope.schema_version}; consumer expects {self.schema_version}",
+                )
             yield cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
 
     # ------------------------------------------------------------------

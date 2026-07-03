@@ -3,12 +3,10 @@ tags:
   - '#exec'
   - '#ledger-renta-pipeline'
 date: '2026-05-08'
-modified: '2026-05-08'
+modified: '2026-06-30'
 related:
   - "[[2026-05-08-ledger-renta-pipeline-plan]]"
 ---
-
-
 
 # `ledger-renta-pipeline` `phase-0` `step-1-pipeline-normalization`
 

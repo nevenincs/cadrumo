@@ -3,14 +3,12 @@ tags:
   - '#adr'
   - '#first-filer-attestation'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 related:
   - "[[2026-06-12-first-filer-attestation-research]]"
   - "[[2026-06-12-first-filer-attestation-adr]]"
   - "[[2026-06-05-cross-period-filing-clean-state-adr]]"
 ---
-
-
 
 # `first-filer-attestation` adr: `operator-declared activity-start scoping, censo-corroborated (supersedes G313 grounding)` | (**status:** `accepted`)
 
@@ -25,7 +23,6 @@ read is non-functional and mis-wired). The decision below is operator-declared
 now, censo-corroborated when the live surface is fixed.
 
 ## Problem Statement
-
 
 A business whose first-ever filing is the period in which its economic activity
 begins cannot file that period locally. The cross-period clean-state gate
@@ -101,14 +98,16 @@ revision.
 
 ## Considerations
 
-
 The legal reality is unchanged and remains the foundation. Spanish tax law does
 not require a first-period filer to have filed anything for periods before
 activity began. The Modelo 130 obligation arises from carrying on economic
-activity (RD 439/2007 art. 110, cumulative-from-start-of-activity computation);
-the resultados-negativos-anteriores carry is a same-ejercicio prior-quarter carry
-only (RD 439/2007 art. 110.5; `max_year_delta = 0`), so a quarter before activity
-began has no prior saldo - the carry is null, not unevidenced. The Modelo 100
+activity (RD 439/2007 art. 110, cumulative-from-start-of-activity payment
+framework); the resultados-negativos-anteriores carry is a same-ejercicio
+prior-quarter carry only (`max_year_delta = 0`), so a quarter before activity
+began has no prior saldo - the carry is null, not unevidenced. Current
+verification on 2026-06-29 rejects the old `RD 439/2007 art. 110.5` premise: the
+current BOE consolidated art. 110 has no vigente apartado 5, and the casilla 15
+mechanics are grounded in AEAT Modelo 130 instructions. The Modelo 100
 prior-year-negative carry cites Ley 35/2006 art. 48; a first-year filer has no
 prior ejercicio that could have generated the saldo.
 
@@ -130,7 +129,6 @@ engine already demonstrates exactly this scoping against the same
 operator-declared field.
 
 ## Constraints
-
 
 This decision amends an accepted gate and must thread two sibling ADRs without
 weakening them:
@@ -163,7 +161,6 @@ This is a proposed decision. It is NOT to be implemented until the operator
 ratifies it and the open questions below are settled.
 
 ## Implementation
-
 
 Adopt activity-start scoping of the cross-period requirement graph, with the
 registry's existing absent-by-design value path materialising the resulting zero.
@@ -239,7 +236,6 @@ Which refusal points this unblocks:
 
 ## Rationale
 
-
 The censo-grounding concept the superseded ADR chose was correct in substance -
 the activity-start date is real AEAT authority and is the right axis to scope the
 dependency graph. It failed on two practical grounds this ADR repairs.
@@ -280,7 +276,6 @@ absent-by-design value path materialises the zero once the activity-start filter
 has scoped which periods are pre-activity.
 
 ## Consequences
-
 
 The first-period filer gains a legitimate offline path that is actually reachable
 today: verify completes on the merits of the current period, export and file open
@@ -433,7 +428,6 @@ recommended default for each open question. The resolved defaults:
   divergence handling lands when the live censo read is fixed and works.
 
 ## Codification candidates
-
 
 - Rule slug: `cross-period-scoping-by-declared-activity-start`. Rule: A
   cross-period dependency may be scoped out as no-prior-obligation only when a

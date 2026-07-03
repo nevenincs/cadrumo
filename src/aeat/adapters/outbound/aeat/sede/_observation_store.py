@@ -1,10 +1,22 @@
 """Persistence helpers for read-only filed-declaration observations.
 
-Persists each filed-declaration observation as an :class:`Envelope` record
-through :class:`SecureObjectRepository`, keyed by declaration identity so a
-prior filing can be retrieved without re-fetching it from the sede. Each
-envelope is classified at :class:`SensitivityClass` FINANCIAL and encrypted
-via the active :class:`MasterKeyProvider`.
+Persists each filed-declaration observation as an
+:class:`~aeat.adapters.persistence.storage.Envelope` record through
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`, keyed
+by declaration identity so a prior filing can be retrieved without re-fetching
+it from the sede. Each envelope is classified at
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` and
+encrypted via the active
+:class:`~aeat.adapters.persistence.storage.MasterKeyProvider`.
+
+Artefact bytes are stored under
+:data:`aeat.adapters.persistence.storage.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`;
+filed-declaration observation envelopes are stored under
+:data:`aeat.adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`;
+IVA wallet observation envelopes are stored under
+:data:`aeat.adapters.persistence.storage.AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE`.
+Those namespace definitions provide the schema version, key grammar, profile
+scope, and full-custody disposition for each row family.
 """
 
 from __future__ import annotations
@@ -23,13 +35,14 @@ from ....persistence.storage import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
+    ClassificationError,
     Envelope,
+    EnvelopeVersionError,
     MasterKeyProvider,
+    SecureObjectRepository,
     SensitivityClass,
+    secure_object_repository_for_active_bucket,
 )
-from ....persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....persistence.storage.sql import SecureObjectRepository
 from ._errors import ExpedienteNotFoundError, SedeValidationError
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
 
@@ -44,7 +57,16 @@ _STORAGE_REF_PREFIX = "secure-object:financial:"
 
 
 class FiledDeclaracionObservationStore:
-    """Persist captured AEAT filed data through the encrypted SQL backend."""
+    """Persist captured AEAT filed data through encrypted SQL namespaces.
+
+    The store writes raw captured artefact bytes to
+    :data:`aeat.adapters.persistence.storage.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`.
+    It wraps :class:`FiledDeclaracionObservation` and
+    :class:`IvaCompensationWalletObservation` payloads in
+    :class:`~aeat.adapters.persistence.storage.Envelope` records before writing
+    them to their dedicated FINANCIAL namespaces through
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+    """
 
     def __init__(
         self,
@@ -69,7 +91,12 @@ class FiledDeclaracionObservationStore:
         artefact: FiledDeclaracionArtefact,
         body: bytes,
     ) -> FiledDeclaracionArtefact:
-        """Persist one captured artefact and return a :class:`FiledDeclaracionArtefact` with its storage reference."""
+        """Persist one captured artefact and return its :class:`FiledDeclaracionArtefact` storage reference.
+
+        Artefact bytes are stored under
+        :data:`aeat.adapters.persistence.storage.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`
+        using the body SHA-256 as the natural object key.
+        """
         if not artefact.storage_ref and not body:
             raise SedeValidationError("cannot persist an empty filed-declaration artefact")
         if body and len(body) != artefact.byte_count:
@@ -91,7 +118,11 @@ class FiledDeclaracionObservationStore:
         return artefact.model_copy(update={"storage_ref": _format_storage_ref(digest)})
 
     def load_artefact(self, storage_ref: str) -> bytes:
-        """Return plaintext artefact bytes from an encrypted storage reference."""
+        """Return plaintext artefact bytes from an encrypted storage reference.
+
+        The reference resolves into
+        :data:`aeat.adapters.persistence.storage.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`.
+        """
         digest = _parse_storage_ref(storage_ref)
         with self._crypto_scope():
             record = self._repository.load(
@@ -105,7 +136,11 @@ class FiledDeclaracionObservationStore:
         return record.payload
 
     def persist_observation(self, observation: FiledDeclaracionObservation) -> Path:
-        """Persist a normalized observation manifest and return its logical object path."""
+        """Persist a normalized observation manifest and return its logical object path.
+
+        The envelope row is stored under
+        :data:`aeat.adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`.
+        """
         _validate_observation_casilla_ids(observation)
         object_key = self._observation_key(
             observation.modelo,
@@ -131,7 +166,11 @@ class FiledDeclaracionObservationStore:
         return _logical_path(_OBSERVATION_NAMESPACE, object_key)
 
     def load_observation(self, path: Path) -> FiledDeclaracionObservation:
-        """Load and decrypt a :class:`FiledDeclaracionObservation` from the encrypted store."""
+        """Load and decrypt a :class:`FiledDeclaracionObservation` from the encrypted store.
+
+        The encrypted row is read from
+        :data:`aeat.adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`.
+        """
         object_key = Path(path).name
         with self._crypto_scope():
             record = self._repository.load(
@@ -156,7 +195,11 @@ class FiledDeclaracionObservationStore:
         return envelope.payload
 
     def list_observations(self) -> tuple[FiledDeclaracionObservation, ...]:
-        """Return :class:`FiledDeclaracionObservation` records from the active encrypted backend."""
+        """Return :class:`FiledDeclaracionObservation` records from the active encrypted backend.
+
+        Rows are scanned from
+        :data:`aeat.adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`.
+        """
         observations: list[FiledDeclaracionObservation] = []
         with self._crypto_scope():
             records = self._repository.list_records(
@@ -191,7 +234,11 @@ class FiledDeclaracionObservationStore:
         )
 
     def persist_iva_wallet_observation(self, observation: IvaCompensationWalletObservation) -> Path:
-        """Persist a read-only IVA wallet observation and return its logical path."""
+        """Persist a read-only IVA wallet observation and return its logical path.
+
+        The envelope row is stored under
+        :data:`aeat.adapters.persistence.storage.AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE`.
+        """
         object_key = self._iva_wallet_observation_key(
             observation.taxpayer_nif,
             observation.target_year,
@@ -216,7 +263,11 @@ class FiledDeclaracionObservationStore:
         return _logical_path(_IVA_WALLET_OBSERVATION_NAMESPACE, object_key)
 
     def load_iva_wallet_observation(self, path: Path) -> IvaCompensationWalletObservation:
-        """Load and decrypt an :class:`IvaCompensationWalletObservation` from ``path``."""
+        """Load and decrypt an :class:`IvaCompensationWalletObservation` from ``path``.
+
+        The encrypted row is read from
+        :data:`aeat.adapters.persistence.storage.AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE`.
+        """
         object_key = Path(path).name
         with self._crypto_scope():
             record = self._repository.load(
@@ -243,7 +294,11 @@ class FiledDeclaracionObservationStore:
         return envelope.payload
 
     def list_iva_wallet_observations(self) -> tuple[IvaCompensationWalletObservation, ...]:
-        """Return :class:`IvaCompensationWalletObservation` records from the active encrypted backend."""
+        """Return :class:`IvaCompensationWalletObservation` records from the active encrypted backend.
+
+        Rows are scanned from
+        :data:`aeat.adapters.persistence.storage.AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE`.
+        """
         observations: list[IvaCompensationWalletObservation] = []
         with self._crypto_scope():
             records = self._repository.list_records(
@@ -280,15 +335,7 @@ class FiledDeclaracionObservationStore:
         period: Period,
         expediente_id: str,
     ) -> str:
-        key = "\x1f".join(
-            (
-                _safe_segment(modelo),
-                str(ejercicio),
-                _safe_segment(period.registry_token),
-                _safe_segment(expediente_id),
-            ),
-        )
-        return sha256_hex(key.encode(_UTF_8_ENCODING))
+        return filed_declaracion_observation_object_key(modelo, ejercicio, period, expediente_id)
 
     def _crypto_scope(self):
         return nullcontext()
@@ -300,15 +347,56 @@ class FiledDeclaracionObservationStore:
         target_period: Period,
         captured_at: str,
     ) -> str:
-        key = "\x1f".join(
-            (
-                _safe_segment(taxpayer_nif),
-                str(target_year),
-                _safe_segment(target_period.registry_token),
-                captured_at,
-            ),
+        return iva_compensation_wallet_observation_object_key(
+            taxpayer_nif,
+            target_year,
+            target_period,
+            captured_at,
         )
-        return sha256_hex(key.encode(_UTF_8_ENCODING))
+
+
+def filed_declaracion_observation_object_key(
+    modelo: str,
+    ejercicio: int,
+    period: Period,
+    expediente_id: str,
+) -> str:
+    """Return the secure-object natural key for a filed-declaration observation.
+
+    The key is the hash grammar declared by
+    :data:`aeat.adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`.
+    """
+    key = "\x1f".join(
+        (
+            _safe_segment(modelo),
+            str(ejercicio),
+            _safe_segment(period.registry_token),
+            _safe_segment(expediente_id),
+        ),
+    )
+    return sha256_hex(key.encode(_UTF_8_ENCODING))
+
+
+def iva_compensation_wallet_observation_object_key(
+    taxpayer_nif: str,
+    target_year: int,
+    target_period: Period,
+    captured_at: str,
+) -> str:
+    """Return the secure-object natural key for an IVA-wallet observation.
+
+    The key is the hash grammar declared by
+    :data:`aeat.adapters.persistence.storage.AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE`.
+    """
+    key = "\x1f".join(
+        (
+            _safe_segment(taxpayer_nif),
+            str(target_year),
+            _safe_segment(target_period.registry_token),
+            captured_at,
+        ),
+    )
+    return sha256_hex(key.encode(_UTF_8_ENCODING))
 
 
 def _safe_segment(value: str) -> str:

@@ -2,15 +2,19 @@
 id = "renta-2023-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"
 data_type = "ratio"
 unit = "percent"
-legal_refs = ["rd-439-2007:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:da-56", "rd-439-2007:art-30"]
+source_refs = ["aeat-renta-2023-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["período impositivo 2023", "7 por 100", "gastos de difícil justificación"]
 
 [[revisions."2023".parameters.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["estimación directa", "actividades económicas"]
 
 [[revisions."2023".parameters.values]]
-value = "5"
+value = "7"
 date_axis = "filing_period"
 valid_from = 2023-01-01
 valid_to = 2023-12-31

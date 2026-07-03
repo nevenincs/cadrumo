@@ -63,7 +63,12 @@ from .....core import resolve_active_bucket_id
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
-from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
+from ..crypto import (
+    KEY_SIZE,
+    EncryptedBlob,
+    decrypt_record,
+    encrypt_record,
+)
 from ..errors import (
     DecryptionError,
     EncryptionError,
@@ -790,7 +795,7 @@ def _refuse_unsecured_active_bucket_with_real_profile(session: BucketSession) ->
     """Refuse unsecured activation when the active bucket carries a real profile."""
     from .....core.config import load_settings
     from .._namespace_registry import BUCKET_DB_DIRNAME, BUCKETS_DIRNAME, USER_PROFILE_VALUE_NAMESPACE
-    from ..crypto._encrypted_columns import decrypt_encrypted_bytes_column
+    from ..crypto import decrypt_encrypted_bytes_column
 
     if session.bucket_id == "unsecured":
         return
@@ -867,7 +872,7 @@ def _provider_enter(
     matching ``_provider_exit`` can tear them down.
     """
     from .....core.config import load_settings
-    from ..bucket._errors import NoActiveBucketError
+    from ..bucket import NoActiveBucketError
     from ._active_session import activate_session
     from ._bucket_session import BucketSession
 

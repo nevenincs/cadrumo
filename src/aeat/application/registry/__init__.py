@@ -1,11 +1,45 @@
 """Application services for read-only registry workflows.
 
 Registry query and corpus validation services consume a
-:class:`ValidatedRegistryAuthority` as the single entry point for
-:class:`ModeloDefinition` instances, :class:`RegistrySnapshot` values, and
+:class:`domain.calculations.registry.ValidatedRegistryAuthority` as
+the single entry point for
+:class:`domain.calculations.registry.ModeloDefinition` instances,
+:class:`domain.calculations.registry.RegistrySnapshot` values, and
 deadline windows.
+
+The package exposes three local read surfaces: registry-tree inspection
+and verification over the bundled ``registry/aeat`` tree, corpus/manual
+projection over :class:`RegistryTopicProjection` and related report
+records, and filed-state comparison that loads captured AEAT observations
+before recomputing a registry snapshot locally.
+
 The observation-persistence path reads captured filed state through the
 active-bucket encrypted observation store.
+
+See Also:
+    :class:`domain.calculations.registry.ValidatedRegistryAuthority`
+        Domain authority used to load, validate, and snapshot modelo registry
+        definitions.
+    :class:`RegistryTreeReport`
+        Application report returned by registry-tree inspection and verification.
+    :class:`RegistryCitationsListReport`
+        Citation projection over reviewed registry legal references and topics.
+    :class:`RegistryManualVerificationReport`
+        Manual/casilla verification report for bundled manual corpus checks.
+    :mod:`domain.manuals`
+        Strict manual schema and loader surface that owns extracted manual
+        records and :class:`domain.manuals.ManualCasillaReference` values.
+    :mod:`core.resources`
+        Bundled-data boundary used to locate packaged registry and corpus
+        material without repository-relative path reads.
+    :class:`FiledStateVerificationReport`
+        Filed-state comparison report built from encrypted captured AEAT
+        observations and local registry recalculation.
+    :class:`adapters.outbound.aeat.sede.FiledDeclaracionObservationStore`
+        Active-bucket observation store that persists captured filed state for
+        local registry comparison.
+    :mod:`application.modelo._registry_discovery`
+        Modelo work-unit discovery facade for CLI-facing registry queries.
 """
 
 from __future__ import annotations
@@ -22,21 +56,25 @@ from ...adapters.outbound.aeat.sede import (
 from ...adapters.outbound.aeat.sede import (
     registry_observation_from_filed_declaration as _registry_observation_from_filed_declaration,
 )
+from ...core import BindingSourceKind as _BindingSourceKind
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.resources import bundled_path as _bundled_path
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
 from ...domain import renta as _renta_snapshot_checks  # noqa: F401 - snapshot-check registration side effect
+from ...domain.calculations.registry import CORPUS_SOURCES_INSTALL_HINT as CORPUS_SOURCES_INSTALL_HINT
 from ...domain.calculations.registry import AeatNifIvaCheckerOracle as _AeatNifIvaCheckerOracle
 from ...domain.calculations.registry import CasillaId as _CasillaId
 from ...domain.calculations.registry import (
     CrossReferenceApplicabilityDeclaracion as _CrossReferenceApplicabilityDeclaracion,
 )
+from ...domain.calculations.registry import ExportLayoutId as _ExportLayoutId
 from ...domain.calculations.registry import GroiOracle as _GroiOracle
 from ...domain.calculations.registry import (
     InputKind as _InputKind,
 )
+from ...domain.calculations.registry import LegalRefId as _LegalRefId
 from ...domain.calculations.registry import (
     LiveParityCatalogue as _LiveParityCatalogue,
 )
@@ -49,12 +87,14 @@ from ...domain.calculations.registry import (
 )
 from ...domain.calculations.registry import RegistrySnapshot as _RegistrySnapshot
 from ...domain.calculations.registry import RelationId as _RelationId
+from ...domain.calculations.registry import SourceRefId as _SourceRefId
 from ...domain.calculations.registry import (
     ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
 )
 from ...domain.calculations.registry import (
     WorkbookBackendVerificationReport as _WorkbookBackendVerificationReport,
 )
+from ...domain.calculations.registry import WorkbookParityRefId as _WorkbookParityRefId
 from ...domain.calculations.registry import (
     audit_registry_oracle_bindings as _audit_registry_oracle_bindings,
 )
@@ -97,6 +137,7 @@ from ...domain.calculations.registry import (
 from ...domain.calculations.registry import undeclared_casilla_ids as _undeclared_casilla_ids
 from ...domain.calculations.registry import validated_casilla_id as _validated_casilla_id
 from ...domain.calculations.registry import verify_legal_catalogue as _verify_legal_catalogue
+from ...domain.calculations.registry import verify_source_catalogue as _verify_source_catalogue
 from ...domain.calculations.registry import (
     verify_workbook_backend as _verify_workbook_backend,
 )
@@ -131,6 +172,15 @@ from ._corpus import (
     show_registry_manual,
     verify_registry_citations,
     verify_registry_manual,
+)
+from ._diff import (
+    BindingDiff,
+    CasillaDiff,
+    FormulaDiff,
+    ParameterDiff,
+    RegistryRevisionDiffReport,
+    RenumberedCasilla,
+    diff_registry_revisions,
 )
 from ._errors import RegistryApplicationError, RegistryApplicationInputError
 
@@ -205,8 +255,8 @@ class RegistryWorkbookParityDetailReport(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    id: str
-    workbook_source: str
+    id: _WorkbookParityRefId
+    workbook_source: _SourceRefId
     formula_coverage: str
     runner_required: bool
     output_cell_count: int
@@ -219,9 +269,9 @@ class RegistryRevisionDetailReport(BaseModel):
 
     modelo: str
     revision: str
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
-    export_layout_ids: tuple[str, ...]
+    legal_refs: tuple[_LegalRefId, ...]
+    source_refs: tuple[_SourceRefId, ...]
+    export_layout_ids: tuple[_ExportLayoutId, ...]
     export_layout_count: int
     export_record_count: int
     export_field_count: int
@@ -308,14 +358,12 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
 
     Returns a :class:`RegistryTreeReport`.
 
-    Runs a full strict audit including ``required_text`` corpus checks on
-    every legal reference — the checks that the production authority skips
-    so that pending corpus annotations never abort user-facing workflows.
+    Runs a full audit including ``required_text`` corpus checks on every
+    legal reference.
     """
     authority = _ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
     authority.validate_registry()
-    # Run the strict corpus-text check that the production authority omits.
-    _verify_legal_catalogue(authority.catalogues.legal, source_root=source_root, corpus_strict=True)
+    _verify_legal_catalogue(authority.catalogues.legal, source_root=source_root)
     modelos = authority.modelos
     catalogues = authority.catalogues
     inventory = _revision_inventory(modelos)
@@ -341,6 +389,22 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
         revision_details=_revision_details(modelos),
         verified=True,
     )
+
+
+def absent_corpus_companion_binaries(registry_root: Path, *, source_root: Path) -> tuple[str, ...]:
+    """Return the loud advisory for corpus source binaries absent from tree and companion.
+
+    Loads the shared source catalogue for ``registry_root`` and resolves every
+    cited corpus binary against ``source_root`` and the optional ``aeat_data``
+    companion. An empty tuple means every declared binary is present and
+    byte-integrity verifiable; a non-empty tuple is the loud advisory the
+    split-install path surfaces, naming the missing set and the
+    ``aeat[corpus-sources]`` install hint. The ``aeat app registry``
+    verification verbs consult this to refuse instructively when the companion
+    is required and absent.
+    """
+    authority = _ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    return _verify_source_catalogue(source_root, authority.catalogues.sources)
 
 
 def _typed_oracle_environment(environment: str) -> _OracleEnvironment:
@@ -443,7 +507,7 @@ def verify_filed_state(
             casilla.input_kind == _InputKind.BOUND
             and casilla.binding is not None
             and (binding_def := bindings_by_id.get(casilla.binding)) is not None
-            and binding_def.source == "previous_filing"
+            and binding_def.source == _BindingSourceKind.PREVIOUS_FILING
             and binding_def.id not in binding_values
         ):
             continue
@@ -576,8 +640,8 @@ def _revision_details(modelos: tuple[_ModeloDefinition, ...]) -> tuple[RegistryR
             export_fields = tuple(field for record in export_records for field in record.fields)
             workbook_parity = tuple(
                 RegistryWorkbookParityDetailReport(
-                    id=str(reference.id),
-                    workbook_source=str(reference.workbook_source),
+                    id=reference.id,
+                    workbook_source=reference.workbook_source,
                     formula_coverage=reference.formula_coverage,
                     runner_required=reference.runner_required,
                     output_cell_count=len(reference.output_cells),
@@ -588,9 +652,9 @@ def _revision_details(modelos: tuple[_ModeloDefinition, ...]) -> tuple[RegistryR
                 RegistryRevisionDetailReport(
                     modelo=str(modelo.id),
                     revision=str(revision_id),
-                    legal_refs=tuple(str(ref) for ref in revision.legal_refs),
-                    source_refs=tuple(str(ref) for ref in revision.source_refs),
-                    export_layout_ids=tuple(str(layout.id) for layout in revision.export_layouts),
+                    legal_refs=tuple(revision.legal_refs),
+                    source_refs=tuple(revision.source_refs),
+                    export_layout_ids=tuple(layout.id for layout in revision.export_layouts),
                     export_layout_count=len(revision.export_layouts),
                     export_record_count=len(export_records),
                     export_field_count=len(export_fields),
@@ -620,7 +684,12 @@ def _load_filed_observation(path: Path):
 
 
 __all__ = [
+    "CORPUS_SOURCES_INSTALL_HINT",
+    "BindingDiff",
+    "CasillaDiff",
     "FiledStateVerificationReport",
+    "FormulaDiff",
+    "ParameterDiff",
     "RegistryApplicationError",
     "RegistryApplicationInputError",
     "RegistryCitationArticleProjection",
@@ -644,9 +713,13 @@ __all__ = [
     "RegistryManualsListCommand",
     "RegistryManualsListReport",
     "RegistryOracleAuditReport",
+    "RegistryRevisionDiffReport",
     "RegistryTopicProjection",
     "RegistryTreeReport",
+    "RenumberedCasilla",
+    "absent_corpus_companion_binaries",
     "audit_registry_oracles",
+    "diff_registry_revisions",
     "inspect_registry_tree",
     "list_registry_citations",
     "list_registry_manual_rules",

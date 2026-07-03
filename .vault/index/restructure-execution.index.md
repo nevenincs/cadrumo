@@ -3,13 +3,15 @@ generated: true
 tags:
   - '#index'
   - '#restructure-execution'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-01'
+modified: '2026-07-01'
 related:
   - '[[2025-05-22-restructure-execution-P01-S01]]'
   - '[[2025-05-22-restructure-execution-W02-P11-S46]]'
   - '[[2026-05-22-restructure-execution-P01-S01]]'
   - '[[2026-05-22-restructure-execution-W02-P11-S46]]'
+  - '[[2026-05-27-eu-locale-restructure-2025-S212]]'
+  - '[[2026-05-27-eu-locale-restructure-2026-S212]]'
   - '[[2026-05-28-commit-bot-wip-sweep-analysis-audit]]'
   - '[[2026-06-04-restructure-execution-adr]]'
   - '[[2026-06-04-restructure-execution-research]]'
@@ -35,6 +37,8 @@ Auto-generated index of all documents tagged with `#restructure-execution`.
 - `2026-05-22-restructure-execution-P01-S01` - Audit and Fix locales/es.yml
 - `2025-05-22-restructure-execution-W02-P11-S46` - restructure-execution W02.P11.S46 — calendar/explain consistency regression test
 - `2026-05-22-restructure-execution-W02-P11-S46` - restructure-execution W02.P11.S46 — calendar/explain consistency regression test
+- `2026-05-27-eu-locale-restructure-2025-S212` - Task #212 — Euskera (eu) locale implementation
+- `2026-05-27-eu-locale-restructure-2026-S212` - Task #212 — Euskera (eu) locale implementation
 
 ### research
 

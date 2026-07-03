@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S13'
 related:
   - "[[2026-06-15-service-capabilities-plan]]"
 ---
-
-
-
 
 # Investigate the torch placement (vaultspec-rag managed-torch-direct-dependency) and restructure pyproject: capability-mapped extras + relocate torch correctly
 

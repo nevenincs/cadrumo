@@ -31,42 +31,36 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _ON_DATE = date(2025, 6, 1)
 
 
-@pytest.mark.parametrize(
-    ("category", "expected_rate", "expected_kind"),
-    [
+def test_domestic_positive_rate_resolves_to_registry_fraction() -> None:
+    """Domestic general/reduced/super-reduced resolve to the grounded fraction."""
+    cases: tuple[tuple[IvaCategory, Decimal, IvaRateKind], ...] = (
         (IvaCategory.DOMESTIC_GENERAL_21, Decimal("0.21"), IvaRateKind.GENERAL),
         (IvaCategory.DOMESTIC_REDUCED_10, Decimal("0.10"), IvaRateKind.REDUCED),
         (IvaCategory.DOMESTIC_SUPER_REDUCED_4, Decimal("0.04"), IvaRateKind.SUPER_REDUCED),
-    ],
-)
-def test_domestic_positive_rate_resolves_to_registry_fraction(
-    category: IvaCategory,
-    expected_rate: Decimal,
-    expected_kind: IvaRateKind,
-) -> None:
-    """Domestic general/reduced/super-reduced resolve to the grounded fraction."""
-    resolution = resolve_category_rate(category, on_date=_ON_DATE)
-    assert resolution.derivable is True
-    assert resolution.reason == ""
-    assert resolution.rate_kind is expected_kind
-    assert resolution.rate is not None
-    assert resolution.rate == expected_rate
+    )
+
+    for category, expected_rate, expected_kind in cases:
+        resolution = resolve_category_rate(category, on_date=_ON_DATE)
+        assert resolution.derivable is True, category
+        assert resolution.reason == "", category
+        assert resolution.rate_kind is expected_kind, category
+        assert resolution.rate is not None, category
+        assert resolution.rate == expected_rate, category
 
 
-@pytest.mark.parametrize(
-    ("category", "expected_kind"),
-    [
+def test_zero_and_exempt_derive_zero_rate() -> None:
+    """Zero-rated and exempt categories derive a derivable zero fraction."""
+    cases: tuple[tuple[IvaCategory, IvaRateKind], ...] = (
         (IvaCategory.DOMESTIC_ZERO, IvaRateKind.ZERO),
         (IvaCategory.DOMESTIC_EXEMPT, IvaRateKind.EXEMPT),
-    ],
-)
-def test_zero_and_exempt_derive_zero_rate(category: IvaCategory, expected_kind: IvaRateKind) -> None:
-    """Zero-rated and exempt categories derive a derivable zero fraction."""
-    resolution = resolve_category_rate(category, on_date=_ON_DATE)
-    assert resolution.derivable is True
-    assert resolution.rate == Decimal("0")
-    assert resolution.rate_kind is expected_kind
-    assert resolution.reason == ""
+    )
+
+    for category, expected_kind in cases:
+        resolution = resolve_category_rate(category, on_date=_ON_DATE)
+        assert resolution.derivable is True, category
+        assert resolution.rate == Decimal("0"), category
+        assert resolution.rate_kind is expected_kind, category
+        assert resolution.reason == "", category
 
 
 _NON_DERIVABLE_CATEGORIES = [
@@ -76,6 +70,7 @@ _NON_DERIVABLE_CATEGORIES = [
     IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
     IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
     IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+    IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
     IvaCategory.IMPORT_THIRD_COUNTRY,
     IvaCategory.RECARGO_EQUIVALENCIA,
     IvaCategory.REGIMEN_SIMPLIFICADO,
@@ -85,14 +80,65 @@ _NON_DERIVABLE_CATEGORIES = [
 ]
 
 
-@pytest.mark.parametrize("category", _NON_DERIVABLE_CATEGORIES)
-def test_non_domestic_categories_surface_not_derivable(category: IvaCategory) -> None:
+def test_non_domestic_categories_surface_not_derivable() -> None:
     """Every non-derivable category returns derivable=False with a reason, no rate."""
-    resolution = resolve_category_rate(category, on_date=_ON_DATE)
-    assert resolution.derivable is False
-    assert resolution.rate is None
-    assert resolution.rate_kind is None
-    assert resolution.reason != ""
+    for category in _NON_DERIVABLE_CATEGORIES:
+        resolution = resolve_category_rate(category, on_date=_ON_DATE)
+        assert resolution.derivable is False, category
+        assert resolution.rate is None, category
+        assert resolution.rate_kind is None, category
+        assert resolution.reason != "", category
+
+
+def test_eu_vat_non_derivable_reasons_are_advisory_not_filing_certainty() -> None:
+    """EU VAT / reverse-charge reasons must not read like legal filing certainty."""
+    cases: tuple[tuple[IvaCategory, tuple[str, ...]], ...] = (
+        (
+            IvaCategory.DOMESTIC_REVERSE_CHARGE,
+            ("potential domestic reverse charge", "verify the operation evidence", "supply the self-assessed"),
+        ),
+        (
+            IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            ("potential intra-community supply", "verify the customer VAT ID", "reporting evidence"),
+        ),
+        (
+            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            ("potential intra-community acquisition", "verify the acquisition evidence", "self-assessed base"),
+        ),
+        (
+            IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
+            ("potential intra-community triangulation", "verify the triangulation conditions"),
+        ),
+    )
+
+    for category, required_fragments in cases:
+        resolution = resolve_category_rate(category, on_date=_ON_DATE)
+
+        assert resolution.derivable is False, category
+        assert all(fragment in resolution.reason for fragment in required_fragments), category
+        assert "exempt with right to deduct" not in resolution.reason, category
+        assert "operator confirms" not in resolution.reason, category
+
+
+def test_export_non_derivable_reasons_remain_advisory_and_evidence_oriented() -> None:
+    cases: tuple[tuple[IvaCategory, tuple[str, ...]], ...] = (
+        (
+            IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+            ("potential export", "verify the export evidence", "before treating it as zero-rated"),
+        ),
+        (
+            IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+            ("potential operation assimilated to an export", "verify the qualifying", "before treating it as exempt"),
+        ),
+    )
+
+    for category, required_fragments in cases:
+        resolution = resolve_category_rate(category, on_date=_ON_DATE)
+
+        assert resolution.derivable is False, category
+        assert all(fragment in resolution.reason for fragment in required_fragments), category
+        assert "operator confirms" not in resolution.reason, category
+        assert "filing certainty" not in resolution.reason, category
 
 
 def test_every_iva_category_is_resolvable_without_raising() -> None:

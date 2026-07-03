@@ -5,15 +5,17 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import resolve_ledger_iva_aggregation_binding_values
-from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
+from ....domain.calculations.registry import ModeloRevision, resolve_ledger_iva_aggregation_binding_values
+from ....domain.iva import IvaCategory, IvaExemptionArticle, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -21,7 +23,6 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
 )
@@ -45,13 +46,20 @@ def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
 
+@cache
+def _modelo_revision(modelo_id: str, revision_id: str) -> ModeloRevision:
+    return resources().modelos.get(modelo_id).revisions[revision_id]
+
+
 _Q2_2023 = _period(2023, "2T")
 _Q2_2026 = _period(2026, "2T")
+_BUCKET_ID = "14141414-1414-4414-8414-141414141414"
+_OTHER_BUCKET_ID = "15151515-1515-4515-8515-151515151515"
 
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
 
@@ -64,7 +72,7 @@ def _raw_transaction(
     currency: str = "EUR",
 ) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=booked_date,
         value_date=value_date,
         amount=amount,
@@ -98,6 +106,10 @@ def _transaction(
     iva_amount: Decimal | None = Decimal("21.00"),
     prorrata_reference: str | None = None,
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
+    fx_rate: Decimal | None = None,
+    value_in_eur: Decimal | None = None,
+    iva_category: IvaCategory | None = None,
+    exemption_article: IvaExemptionArticle | None = None,
 ) -> Transaction:
     # Keep the gross consistent with base + iva (the Transaction
     # gross == taxable_base + iva_amount invariant). When the caller does not
@@ -115,13 +127,19 @@ def _transaction(
                 currency=currency,
             ),
             "direction": direction,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "business_classification": business_classification,
             "business_pct": business_pct,
             "taxable_base": taxable_base,
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
+            "iva_category": iva_category,
+            "exemption_article": exemption_article,
             "prorrata_reference": prorrata_reference,
             "lifecycle_state": lifecycle_state,
+            "fx_rate": fx_rate,
+            "value_in_eur": value_in_eur,
             "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
@@ -172,6 +190,31 @@ def test_archived_and_stashed_transactions_do_not_feed_iva_projection() -> None:
     assert [observation.ledger_id for observation in result.observations] == [active.transaction_id]
     assert result.observations[0].base_amount == active.taxable_base
     assert result.observations[0].iva_amount == active.iva_amount
+
+
+def test_reviewed_excluded_transaction_omitted_from_iva_projection_without_issue() -> None:
+    """A reviewed-excluded row is silently omitted: no observation and no gate issue.
+
+    The operator reviewed the row and deliberately excluded it from filing (a
+    final disposition). It must not feed the aggregation, and — unlike an
+    unclassified row — it must not surface an ``UNCLASSIFIED_BUSINESS_STATE``
+    "classify me" advisory, since the exclusion is an explicit recorded decision.
+    """
+    active = _transaction("row-active")
+    excluded = _transaction(
+        "row-reviewed-excluded",
+        taxable_base=Decimal("900.00"),
+        iva_amount=Decimal("189.00"),
+        business_classification=BusinessClassification.REVIEWED_EXCLUDED,
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((active, excluded)),
+        period=_Q2_2026,
+    )
+
+    assert result.issues == ()
+    assert [observation.ledger_id for observation in result.observations] == [active.transaction_id]
 
 
 def test_incoming_business_transaction_projects_to_repercutido_iva_observation() -> None:
@@ -348,6 +391,34 @@ def test_out_of_period_and_foreign_currency_rows_do_not_project() -> None:
     ]
 
 
+def test_converted_foreign_currency_tax_substrate_does_not_project_as_eur() -> None:
+    converted_gbp = _transaction(
+        "row-gbp-converted",
+        currency="GBP",
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+        value_in_eur=Decimal("142.35"),
+        fx_rate=Decimal("1.176"),
+    )
+    eur_row = _transaction("row-eur", taxable_base=Decimal("50.00"), iva_amount=Decimal("10.50"))
+    unconverted_usd = _transaction("row-usd-unconverted", currency="USD")
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((converted_gbp, eur_row, unconverted_usd)),
+        period=_Q2_2026,
+    )
+
+    assert [observation.ledger_id for observation in result.observations] == [eur_row.transaction_id]
+    assert result.observations[0].base_amount == Decimal("50.00")
+    assert result.observations[0].iva_amount == Decimal("10.50")
+    assert [(issue.transaction_id, issue.reason) for issue in result.issues] == [
+        (converted_gbp.transaction_id, IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE),
+        (unconverted_usd.transaction_id, IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY),
+    ]
+    assert "value_in_eur" in result.issues[0].detail
+    assert "native-currency facts" in result.issues[0].detail
+
+
 def test_iva_aggregation_buckets_on_value_date_caja_basis_only() -> None:
     """Document the confirmed CAJA-only aggregation basis (no devengo selector).
 
@@ -432,10 +503,10 @@ def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
 ) -> None:
     with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
         aggregate_iva_ledger_observations_from_repositories(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             period=_Q2_2026,
             transaction_repository=TransactionCatalogueRepository(
-                bucket_id="bucket-b",
+                bucket_id=_OTHER_BUCKET_ID,
                 objects=secure_objects,
             ),
         )
@@ -444,16 +515,16 @@ def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
 def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_objects: SecureObjectRepository) -> None:
     transaction = _transaction("row-repository")
     repository = TransactionCatalogueRepository(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         objects=secure_objects,
     )
     repository.save(TransactionCatalogue.from_transactions((transaction,)))
 
     result = aggregate_iva_ledger_observations_from_repositories(
-        bucket_id="bucket-a",
+        bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transaction_repository=TransactionCatalogueRepository(
-            bucket_id="bucket-a",
+            bucket_id=_BUCKET_ID,
             objects=secure_objects,
         ),
     )
@@ -534,6 +605,51 @@ def test_zero_and_super_reduced_rates_project_to_canonical_iva_categories() -> N
     ]
 
 
+def test_transaction_exemption_article_projects_to_iva_observation() -> None:
+    transaction = _transaction(
+        "row-art-20-26",
+        amount=Decimal("400.00"),
+        direction=TransactionDirection.INCOMING,
+        taxable_base=Decimal("400.00"),
+        iva_rate=Decimal("0"),
+        iva_amount=Decimal("0"),
+        iva_category=IvaCategory.DOMESTIC_EXEMPT,
+        exemption_article=IvaExemptionArticle.ART_20_UNO_26,
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.issues == ()
+    assert len(result.observations) == 1
+    observation = result.observations[0]
+    assert observation.category is IvaCategory.DOMESTIC_EXEMPT
+    assert observation.ledger_id == transaction.transaction_id
+    assert observation.exemption_article is IvaExemptionArticle.ART_20_UNO_26
+
+
+def test_preclassified_candidate_preserves_exemption_article_on_observation_projection() -> None:
+    candidate = IvaLedgerCandidate(
+        ledger_id="art-20-26-candidate",
+        transaction_date=date(2026, 4, 10),
+        category=IvaCategory.DOMESTIC_EXEMPT,
+        exemption_article=IvaExemptionArticle.ART_20_UNO_26,
+        rate_kind=IvaRateKind.EXEMPT,
+        flow_direction=IvaFlowDirection.REPERCUTIDO,
+        base_amount=Decimal("400.00"),
+        iva_amount=Decimal("0.00"),
+    )
+
+    observation = validate_iva_ledger_observation(candidate)
+    aggregation = aggregate_iva_ledger_candidates((candidate,), period=_Q2_2026)
+
+    assert observation.exemption_article is IvaExemptionArticle.ART_20_UNO_26
+    assert aggregation.issues == ()
+    assert aggregation.observations == (observation,)
+
+
 def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustments() -> None:
     candidates = (
         IvaLedgerCandidate(
@@ -588,7 +704,7 @@ def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustme
 
 
 def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bindings() -> None:
-    revision = next(item for item in resources().modelos.all() if item.id == "309").revisions["2004-y-siguientes"]
+    revision = _modelo_revision("309", "2004-y-siguientes")
     candidates = (
         IvaLedgerCandidate(
             ledger_id="eu-acquisition",
@@ -617,7 +733,7 @@ def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bin
 
 
 def test_preclassified_candidate_blocks_unsupported_modelo_390_regime() -> None:
-    revision = next(item for item in resources().modelos.all() if item.id == "390").revisions["2010-y-siguientes"]
+    revision = _modelo_revision("390", "2010-y-siguientes")
     candidate = IvaLedgerCandidate(
         ledger_id="retail-recargo",
         transaction_date=date(2026, 4, 12),
@@ -653,7 +769,7 @@ def test_preclassified_candidate_rejects_non_declarable_sentinel_category() -> N
 
 
 def test_preclassified_candidate_outside_period_blocks_binding_resolution() -> None:
-    revision = next(item for item in resources().modelos.all() if item.id == "309").revisions["2004-y-siguientes"]
+    revision = _modelo_revision("309", "2004-y-siguientes")
     candidate = IvaLedgerCandidate(
         ledger_id="late-row",
         transaction_date=date(2026, 7, 1),
@@ -687,8 +803,7 @@ def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
         TransactionCatalogue.from_transactions((incoming, outgoing)),
         period=_Q2_2026,
     )
-    modelos = resources().modelos.all()
-    revision = next(item for item in modelos if item.id == "303").revisions["2009-y-siguientes"]
+    revision = _modelo_revision("303", "2009-y-siguientes")
 
     binding_values = resolve_ledger_iva_aggregation_binding_values(revision, projection.observations)
 

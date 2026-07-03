@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S10'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
-
-
-
 
 # Flip box 33 (importaciones bienes corrientes deducible cuota) to computed with formula modelo-303-dr303-33-projection copying iva.soportado.importaciones (oficial casilla 33), carrying box 33 legal_refs
 

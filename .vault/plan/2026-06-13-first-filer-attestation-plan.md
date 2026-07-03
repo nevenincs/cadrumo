@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#first-filer-attestation'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-13-first-filer-attestation-adr]]'
@@ -12,20 +12,11 @@ related:
   - '[[2026-06-05-cross-period-calculation-guards-adr]]'
 ---
 
-
-
-
-
-
-
-
 # `first-filer-attestation` `operator-declared activity-start scoping of cross-period requirements` plan
 
 ### Phase `P01` - Typed no-prior-obligation provenance vocabulary
 
 Introduce the typed no-prior-obligation evidence facet on CrossPeriodDependencyEvidence carrying the activity-start date that scoped a requirement out, the provenance kind (operator-declared vs censo-corroborated), and an optional censo snapshot id, plus the application-layer scoping predicate over a declared activity-start date. The registry stays pure; the facet is the auditable, non-silent record the accepted ADR requires.
-
-
 
 - [x] `P01.S01` - Add the NO_PRIOR_OBLIGATION_PRE_ACTIVITY provenance facet kind enum to the cross-period clean-state vocabulary while gate-proving it never enters _OFFICIAL_SOURCE_KINDS; `src/aeat/application/calculations/_cross_period_clean_state.py`.
 - [x] `P01.S02` - Add the typed NoPriorObligationProvenance model carrying activity_start_date, provenance kind (operator-declared vs censo-corroborated), and optional censo snapshot id; `src/aeat/application/calculations/_cross_period_clean_state.py`.
@@ -102,12 +93,6 @@ local filing still persists under the non-official `app_filing` source kind, so 
 later dependent period still demands real AEAT evidence of that filing.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

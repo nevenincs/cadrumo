@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#linkage-design-audit'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-30'
 related:
   - "[[2026-05-15-linkage-design-audit-research]]"
   - "[[2026-05-15-linkage-design-audit-reference]]"
@@ -575,5 +575,3 @@ deferral. Strategy R violates the WIP-non-stomp discipline.
 ADR follows in the same `2026-05-26-linkage-design-audit-adr`
 extension — fourth decision under the boundary-typed-contracts
 theme.
-
-

@@ -4,38 +4,46 @@ The participation index is a derived, read-side cache co-written atomically with
 revision persistence; the calculation-revision catalogue is the authoritative
 source of truth. This module regenerates the index from scratch by iterating the
 full finalized-revision catalogue, so a stale or corrupt index can be replaced
-without data loss (per the ``ledger-participation-index-is-derived-rebuildable``
-ADR codification candidate).
+without data loss, in line with the
+``ledger-participation-index-is-derived-rebuildable`` project rule.
 
 The rebuild reads the :class:`CalculationRevisionCatalogue` (the finalized
 revisions and their ``source_transaction_ids``), the work-unit catalogue (for the
 ``modelo`` / ``filing_year`` / ``period`` axis per revision), and the
-:class:`ModeloRecordCatalogue` / :class:`ModeloRecord` rows (to attach the ``filing_record_id`` and any
-justificante reference to filed participations). Borrador and discarded revisions
-are excluded — the index records only the finalized audit surface.
+:class:`ModeloRecordCatalogue` / :class:`ModeloRecord` rows (to attach the
+``filing_record_id`` and any justificante reference to filed participations).
+Borrador and discarded revisions are excluded — the index records only the
+finalized audit surface.
+
+See Also:
+    :class:`TransactionRevisionParticipationIndex`:
+        Per-transaction secure object rebuilt by this module.
+    :func:`aeat.application.modelo._verification_actions._build_participation_writes`:
+        Write-time co-emission path that keeps the index current during
+        verification persistence.
 """
 
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._calculation_revision import CalculationRevisionState
-from ...domain.modelos._filing_record import ExternalEvidence, ModeloRecord, ModeloRecordCatalogue
-from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ...domain.modelos._participation_index import (
-    TransactionParticipationIndexRepository,
+from ...domain.modelos import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionState,
+    ExternalEvidence,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordCatalogueRepositoryProtocol,
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
+    WorkUnitCatalogueRepositoryProtocol,
     upsert_transaction_participation,
 )
-from ...domain.modelos._protocols import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloRecordCatalogueRepositoryProtocol,
-    WorkUnitCatalogueRepositoryProtocol,
-)
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
 
 _FINALIZED_REVISION_STATES = frozenset(
     {

@@ -18,7 +18,7 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from .. import ModeloDefinition, RegistryCatalogues, build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, build_snapshot
 from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .._errors import RegistrySnapshotError, RegistryValidationError
 from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
@@ -35,6 +35,7 @@ from .._remote_state_guard import (
 )
 from .._renta_web_open_oracle import RentaWebOpenOracle
 from .._schema import LiveCrossReferenceDecision
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -113,23 +114,20 @@ def test_remote_state_guard_blocks_stateful_tokens_in_browser_actions() -> None:
     assert "presentar" in result.reason
 
 
-@pytest.mark.parametrize(
-    ("action", "token"),
-    (
+def test_remote_state_guard_blocks_non_read_only_browser_action_matrix() -> None:
+    policy = _open_policy().model_copy(
+        update={"allowed_browser_action_patterns": ("representation-gate-own-name-continue",)},
+    )
+
+    for action, token in (
         ("representation-gate-represented-taxpayer-continue", "explicit read-only allow-list"),
         ("Presentar declaracion", "presentar"),
         ("Firmar declaracion", "firmar"),
         ("Pagar liquidacion", "pagar"),
         ("Confirmar", "confirmar"),
-    ),
-)
-def test_remote_state_guard_blocks_non_read_only_browser_action_matrix(action: str, token: str) -> None:
-    policy = _open_policy().model_copy(
-        update={"allowed_browser_action_patterns": ("representation-gate-own-name-continue",)},
-    )
-
-    with pytest.raises(RegistryValidationError, match=token):
-        assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action=action))
+    ):
+        with pytest.raises(RegistryValidationError, match=token):
+            assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action=action))
 
 
 def test_remote_state_guard_blocks_unclassified_browser_action_when_allow_list_declared() -> None:
@@ -294,64 +292,56 @@ def test_guard_rejects_aeat_hosted_policy_with_synthetic_data_allowed() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    "aeat_host",
-    [
+def test_schema_rejects_each_aeat_suffix_form_with_synthetic_data() -> None:
+    """Every AEAT-suffix form (apex and subdomain, both apex domains) is rejected."""
+
+    for host in (
         _AEAT_APEX_HOST,
         _SEDE_HOST,
         _WWW2_HOST,
         AEAT_LEGACY_APEX_CANARY,
         AEAT_LEGACY_SEDE_CANARY,
-    ],
-)
-def test_schema_rejects_each_aeat_suffix_form_with_synthetic_data(aeat_host: str) -> None:
-    """Every AEAT-suffix form (apex and subdomain, both apex domains) is rejected."""
-    with pytest.raises(ValidationError, match="synthetic data is prohibited on AEAT-hosted"):
-        LiveCrossReferenceDecision(
-            id="test-aeat-suffix-form-reject",
-            evidence_tier="executable_parity_evidence",
-            surface="open_simulator",
-            guard_policy_id="test-aeat-suffix-form-policy",
-            allowed_hosts=(aeat_host,),
-            allowed_methods=("GET",),
-            forbidden_actions=(
-                "server-side-save",
-                "signing",
-                "presentation",
-                "payment",
-                "amendment",
-                "cancellation",
-                "document-submission",
-                "declaration-submission",
-            ),
-            synthetic_data_allowed=True,
-            requires_authentication=False,
-            requires_aeat_authorization=False,
-            legal_refs=("ley-58-2003:art-93",),
-            source_refs=("test-source",),
-        )
+    ):
+        with pytest.raises(ValidationError, match="synthetic data is prohibited on AEAT-hosted"):
+            LiveCrossReferenceDecision(
+                id="test-aeat-suffix-form-reject",
+                evidence_tier="executable_parity_evidence",
+                surface="open_simulator",
+                guard_policy_id="test-aeat-suffix-form-policy",
+                allowed_hosts=(host,),
+                allowed_methods=("GET",),
+                forbidden_actions=(
+                    "server-side-save",
+                    "signing",
+                    "presentation",
+                    "payment",
+                    "amendment",
+                    "cancellation",
+                    "document-submission",
+                    "declaration-submission",
+                ),
+                synthetic_data_allowed=True,
+                requires_authentication=False,
+                requires_aeat_authorization=False,
+                legal_refs=("ley-58-2003:art-93",),
+                source_refs=("test-source",),
+            )
 
 
-@pytest.mark.parametrize(
-    "aeat_host",
-    [
-        _AEAT_APEX_HOST,
-        AEAT_LEGACY_APEX_CANARY,
-        AEAT_LEGACY_SEDE_CANARY,
-    ],
-)
-def test_guard_rejects_each_aeat_suffix_form_with_synthetic_data(aeat_host: str) -> None:
+def test_guard_rejects_each_aeat_suffix_form_with_synthetic_data() -> None:
     """Guard layer mirrors the schema rejection for every AEAT-suffix form."""
-    with pytest.raises(ValidationError, match="synthetic data is prohibited on AEAT-hosted"):
-        RemoteStateGuardPolicy(
-            id="test-guard-suffix-form-reject",
-            evidence_tier="executable_parity_evidence",
-            classification="open_simulator",
-            allowed_hosts=(aeat_host,),
-            synthetic_data_allowed=True,
-            requires_authentication=False,
-            requires_aeat_authorization=False,
-        )
+
+    for host in (_AEAT_APEX_HOST, AEAT_LEGACY_APEX_CANARY, AEAT_LEGACY_SEDE_CANARY):
+        with pytest.raises(ValidationError, match="synthetic data is prohibited on AEAT-hosted"):
+            RemoteStateGuardPolicy(
+                id="test-guard-suffix-form-reject",
+                evidence_tier="executable_parity_evidence",
+                classification="open_simulator",
+                allowed_hosts=(host,),
+                synthetic_data_allowed=True,
+                requires_authentication=False,
+                requires_aeat_authorization=False,
+            )
 
 
 def test_public_read_surface_synthetic_data_message_is_classification_specific() -> None:
@@ -600,7 +590,7 @@ def test_remote_state_guard_allows_public_read_surface_get() -> None:
 
 
 def test_committed_static_cross_references_reject_remote_state_operations() -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
 
     policies = [
         remote_state_policy_from_cross_reference(cross_reference)
@@ -632,7 +622,7 @@ def test_committed_static_cross_references_reject_remote_state_operations() -> N
 
 
 def test_committed_oracle_planned_operations_conform_to_bound_guard_policies() -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     oracle_catalogue = _production_oracle_catalogue()
     covered_oracle_ids: set[str] = set()
 

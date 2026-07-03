@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#bindings-interface-hardening'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S15'
 related:
   - "[[2026-06-15-bindings-interface-hardening-plan]]"
 ---
-
-
-
 
 # wire the per-family unrouted-observation advisory diagnostics on the live calculate path so a resolver surfaces an advisory instead of a silent Decimal(0)
 

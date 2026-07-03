@@ -2,32 +2,68 @@
 
 This package builds, reviews, approves, exports, verifies, imports, and
 summarises local filing artefacts. All draft creation and validation consume
-a :class:`aeat.domain.calculations.registry.RegistrySnapshot` to resolve the
-active modelo revision, its casilla schema, relation inputs, and formula graph.
+a :class:`RegistrySnapshot` to resolve the
+active :class:`ModeloRevision`, its casilla
+schema, relation inputs, and formula graph.
 
 Major entry points:
 
 * :func:`build_draft` constructs a validated
-  :class:`aeat.domain.filing.ModeloDraft` from registry-backed inputs.
+  :class:`ModeloDraft` from registry-backed inputs.
 * :func:`approve_draft`, :func:`unapprove_draft`, and
   :func:`refresh_review_status` manage local review state and approval basis.
 * :func:`export_draft` writes a local fichero-BOE artefact, and
   :func:`verify_export` re-reads that file through the registry export parser.
+* :func:`import_filing_from_justificante` reconstructs a draft-level local
+  receipt baseline and companion
+  :class:`ModeloPresentado` audit record from a
+  justificante PDF without treating the receipt as a casilla-value authority.
+* :func:`build_complementaria`, :func:`list_amendments`, and
+  :func:`load_amendment` build and read governed
+  :class:`ModeloComplementaria` and
+  :class:`ModeloSustitutiva` amendment records.
+* :class:`ModeloHistoryRepository` persists encrypted lightweight
+  :class:`ModeloHistory` summaries for local
+  filing-history views.
 * :func:`build_runtime_schema_provider` supplies the runtime registry view used
   by draft construction, review, export, and verification.
 
 The facade deliberately separates local filing state from live submission.
 Remote AEAT submission is not exposed here; attempted live writes are refused
-by :class:`aeat.core.access_gate.LiveSubmitForbiddenError`.
+by :class:`LiveSubmitForbiddenError`.
+
+Imports from external PDFs stay evidence-scoped. A justificante import creates a
+local draft plus submission-audit baseline, while casilla-complete declaration
+and borrador parsing enter through the inbound adapter surfaces before
+application services decide how that evidence participates in a work-unit
+workflow.
+
+Work-unit filing records for calculation revisions live in
+:mod:`modelo` and :mod:`domain.modelos`. This package owns
+draft-level construction, review, export, verification, justificante import,
+local amendment construction, and lightweight local history; it does not create
+:class:`ModeloRecord` entries or stamp :class:`ExternalEvidence`.
 
 See Also:
-    :mod:`aeat.application.modelo`
+    :mod:`modelo`
         Operator-facing modelo facade that carries calculation revisions into
         this filing surface.
-    :mod:`aeat.domain.filing`
+    :func:`file_modelo_revision`
+        Work-unit action that records a verified calculation revision as a
+        current local :class:`ModeloRecord`.
+    :func:`import_external_filing_evidence`
+        External-evidence import path that creates an evidenced
+        :class:`ModeloRecord` baseline for amendments.
+    :mod:`domain.justificante`
+        Receipt-metadata domain used by justificante PDF imports and
+        receipt-bound external evidence.
+    :mod:`domain.filing`
         Canonical draft records, values, provenance, validation findings, and
         review helpers.
-    :mod:`aeat.domain.calculations.registry`
+    :mod:`domain.submission`
+        Local-only submission audit records populated by justificante import;
+        this is not an AEAT live-submit path.
+    :mod:`domain.calculations.registry`
         Registry authority, snapshots, export layouts, and formula execution
         used by this application facade.
 """
@@ -74,6 +110,9 @@ from ...domain.calculations.registry import (
 )
 from ...domain.calculations.registry import (
     SourceRefId as _SourceRefId,
+)
+from ...domain.calculations.registry import (
+    bound_casilla_binding_ids as _registry_bound_casilla_binding_ids,
 )
 from ...domain.calculations.registry import (
     calculate_registry_snapshot as _calculate_registry_snapshot,
@@ -126,6 +165,7 @@ from ._export import (
     DeclaracionVerifyResult,
     DeclaracionVerifyVerdict,
     export_draft,
+    export_layout_renderability_reason,
     render_layout,
     verify_export,
 )
@@ -165,20 +205,24 @@ def build_draft(
 
     Args:
         modelo: Stable modelo string ID.
-        period: Typed filing period built from a filing year and bare registry
-            token.
-        profile: Taxpayer profile the draft would be built for.
-        inputs: Raw filing inputs.
-        schema_provider: Registry-backed casilla schema provider.
-        deadline_checker: Optional deadline checker.
+        period: Typed :class:`Period` built from a filing year and
+            bare registry token.
+        profile: :class:`ModeloProfile` the draft would be
+            built for.
+        inputs: Raw :class:`ModeloInputs`.
+        schema_provider: Registry-backed
+            :class:`CasillaSchemaProvider`.
+        deadline_checker: Optional
+            :class:`DeadlineChecker`.
         fail_on_warning: Raise when validation produces any warning or error.
 
     Returns:
-        A fully constructed and validated :class:`ModeloDraft`.
+        A fully constructed and validated
+        :class:`ModeloDraft`.
 
     Raises:
-        ModeloBuilderError: If the registry has no matching snapshot,
-            inputs are malformed, or strict validation fails.
+        :class:`ModeloBuilderError`: If the registry has no
+            matching snapshot, inputs are malformed, or strict validation fails.
     """
     snapshot = _load_registry_snapshot(modelo=modelo, period=period)
     filing_year, registry_period = _registry_period(period)
@@ -195,6 +239,7 @@ def build_draft(
             f"{snapshot.revision.id!r}",
         )
     casilla_ids = set(_declared_casilla_ids(snapshot.revision))
+    text_casilla_ids = _text_casilla_ids(snapshot)
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     calculation_binding_ids = _formula_binding_ids(snapshot) | _bound_casilla_binding_ids(snapshot)
     enum_binding_ids = _enum_consumed_binding_ids(snapshot.revision)
@@ -208,7 +253,8 @@ def build_draft(
         accepted_ids=casilla_ids | set(bindings) | relation_ids,
         snapshot=snapshot,
     )
-    casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids)
+    casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids - text_casilla_ids)
+    text_casilla_inputs = _text_inputs_for_ids(inputs, text_casilla_ids)
     binding_inputs = _decimal_inputs_for_ids(inputs, decimal_binding_ids)
     enum_binding_inputs = _string_inputs_for_ids(inputs, enum_binding_ids)
     # Date bindings (e.g. taxpayer birth_date for age_at_year_end) and period
@@ -233,6 +279,7 @@ def build_draft(
             enum_binding_values=enum_binding_inputs or None,
             relation_values=relation_inputs or None,
             date_binding_values=date_binding_inputs or None,
+            text_inputs=text_casilla_inputs or None,
         )
     except _RegistryValidationError as exc:
         raise ModeloBuilderError(f"registry calculation failed: {exc}") from exc
@@ -253,7 +300,7 @@ def build_draft(
     }
     values: list[ModeloValue] = []
     for casilla in snapshot.revision.casillas:
-        if casilla.input_kind == _InputKind.COMPUTED:
+        if casilla.id in entries:
             entry = entries[casilla.id]
             trace = formula_input_casilla_ids_by_casilla.get(casilla.id)
             if trace is None:
@@ -290,6 +337,16 @@ def build_draft(
                 ),
             )
             continue
+        if casilla.id in text_casilla_inputs:
+            values.append(
+                ModeloValue(
+                    casilla_id=casilla.id,
+                    value=text_casilla_inputs[casilla.id],
+                    kind=ModeloValueKind.LITERAL,
+                    source="registry input",
+                ),
+            )
+            continue
         values.append(
             ModeloValue(
                 casilla_id=casilla.id,
@@ -320,7 +377,7 @@ def build_draft(
             modelo=modelo,
             period=period,
             profile_tax_id=profile.tax_id,
-            schema_version=collection.schema_version,
+            snapshot_ref=snapshot_ref,
             values=value_tuple,
             binding_values=binding_value_tuple,
         ),
@@ -386,9 +443,10 @@ def _formula_binding_ids(snapshot: _RegistrySnapshot) -> set[_BindingId]:
 
 def _bound_casilla_binding_ids(snapshot: _RegistrySnapshot) -> set[_BindingId]:
     return {
-        casilla.binding
+        binding_id
         for casilla in snapshot.revision.casillas
-        if casilla.input_kind == _InputKind.BOUND and casilla.binding is not None
+        if casilla.input_kind == _InputKind.BOUND
+        for binding_id in _registry_bound_casilla_binding_ids(casilla)
     }
 
 
@@ -415,6 +473,11 @@ def _relation_ids(snapshot: _RegistrySnapshot) -> set[_RelationId]:
     are simply absent from the resolved relation map.
     """
     return {relation.id for relation in snapshot.revision.relations}
+
+
+def _text_casilla_ids(snapshot: _RegistrySnapshot) -> set[_CasillaId]:
+    """Collect declared casillas that travel on the registry text-input channel."""
+    return {casilla.id for casilla in snapshot.revision.casillas if casilla.data_type == "text"}
 
 
 def _validate_filing_input_keys(
@@ -510,6 +573,21 @@ def _decimal_inputs_for_ids[InputId: str](
     return decimal_inputs
 
 
+def _text_inputs_for_ids(inputs: ModeloInputs, input_ids: set[_CasillaId]) -> dict[_CasillaId, str]:
+    text_inputs: dict[_CasillaId, str] = {}
+    for input_id in input_ids:
+        value = inputs.get(input_id)
+        if value is None:
+            continue
+        if not isinstance(value, str):
+            raise ModeloBuilderError(f"text casilla input {input_id!r} must be a string")
+        stripped = value.strip()
+        if not stripped:
+            raise ModeloBuilderError(f"text casilla input {input_id!r} must be a non-empty string")
+        text_inputs[input_id] = stripped
+    return text_inputs
+
+
 def _string_inputs_for_ids(inputs: ModeloInputs, input_ids: frozenset[_BindingId]) -> dict[_BindingId, str]:
     # Enum-channel bindings carry string values; skip None and non-string entries.
     string_inputs: dict[_BindingId, str] = {}
@@ -530,11 +608,11 @@ def _binding_provenance(
 
     The ``binding`` is the registry ``DataBindingDefinition`` already held by
     the filing builder; its ``source`` is a typed
-    :class:`~aeat.core.BindingSourceKind` and its ``legal_refs`` / ``source_refs``
+    :class:`BindingSourceKind` and its ``legal_refs`` / ``source_refs``
     carry the binding's regulatory grounding. Carrying them onto every
-    :class:`ModeloBindingValue` brings bound values to provenance parity with
-    casillas (the casilla half already populates
-    :class:`~aeat.domain.filing.ModeloCasillaProvenance`).
+    :class:`ModeloBindingValue` brings bound values to
+    provenance parity with casillas (the casilla half already populates
+    :class:`ModeloCasillaProvenance`).
     """
     source = getattr(binding, "source", None)
     if not isinstance(source, _BindingSourceKind):
@@ -544,6 +622,10 @@ def _binding_provenance(
         )
     legal_refs = tuple(getattr(binding, "legal_refs", ()) or ())
     source_refs = tuple(getattr(binding, "source_refs", ()) or ())
+    if not legal_refs or not source_refs:
+        raise ModeloBuilderError(
+            f"registry binding {getattr(binding, 'id', binding)!r} requires legal_refs/source_refs provenance",
+        )
     return source, legal_refs, source_refs
 
 
@@ -701,16 +783,17 @@ def validate_draft(
     excludes findings, status, ``updated_at`` and ``notes``.
 
     Args:
-        draft: The draft to re-validate.
+        draft: The :class:`ModeloDraft` to re-validate.
         bucket_id: Stable bucket identifier; forwarded to
             :func:`refresh_review_status` after validation.
-        schema_provider: Resolves the casilla collection for the
-            draft's modelo.
-        deadline_checker: Optional deadline check Protocol implementation.
+        schema_provider: :class:`CasillaSchemaProvider`
+            resolving the casilla collection for the draft's modelo.
+        deadline_checker: Optional :class:`DeadlineChecker`
+            Protocol implementation.
 
     Returns:
-        A new :class:`ModeloDraft` with refreshed findings, status
-        and ``updated_at``.
+        A new :class:`ModeloDraft` with refreshed findings,
+        status and ``updated_at``.
     """
     validator = ModeloValidator(
         schema_provider=schema_provider,
@@ -743,14 +826,15 @@ def iter_findings(
     """Yield findings filtered by minimum severity.
 
     Args:
-        draft: The :class:`ModeloDraft` to scan for validation findings.
+        draft: The :class:`ModeloDraft` to scan for
+            validation findings.
         severity_at_least: Minimum severity to yield, one of
             ``"INFO"``, ``"WARNING"``, ``"ERROR"``. Defaults to
             ``"WARNING"``.
 
     Yields:
-        Each :class:`ModeloValidationFinding` whose severity meets
-        or exceeds the threshold, in declaration order.
+        Each :class:`ModeloValidationFinding` whose severity
+        meets or exceeds the threshold, in declaration order.
 
     Raises:
         ModeloCalculateError: When ``severity_at_least`` is not a known
@@ -798,6 +882,7 @@ __all__ = [
     "derive_validation_status",
     "describe_stale_reason",
     "export_draft",
+    "export_layout_renderability_reason",
     "filing_profile_from_taxpayer",
     "import_filing_from_justificante",
     "iter_findings",

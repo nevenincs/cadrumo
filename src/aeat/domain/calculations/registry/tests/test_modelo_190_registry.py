@@ -16,17 +16,16 @@ from .. import (
     WithholdingObservation,
     build_snapshot,
     calculate_registry_snapshot,
-    load_registry_tree,
     relation_source_requirements,
     resolve_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
     resolve_withholding_binding_values,
     validated_casilla_id,
 )
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _WWW6_HOST = aeat_host("www6")
 _DECL_TOTAL_PERCEPCIONES_CASILLA: CasillaId = validated_casilla_id(
     "decl.total-percepciones",
@@ -55,12 +54,6 @@ _RETIRED_M111_PERCEPCIONES_SOURCE_CASILLAS: frozenset[CasillaId] = frozenset(
 _M190_PERCEPCIONES_BINDING = "modelo-190-percepciones-anual"
 
 
-def _load_modelo(modelo_id: str):
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == modelo_id)
-    return modelo, catalogues
-
-
 def _withholding_observation(source_id: str, nif: str, clave: str) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=source_id,
@@ -72,8 +65,29 @@ def _withholding_observation(source_id: str, nif: str, clave: str) -> Withholdin
     )
 
 
+def test_modelo_190_guidance_and_layout_sources_are_separated() -> None:
+    modelo, catalogues = _committed_modelo("190")
+    instructions = catalogues.sources["aeat-modelo-190-instructions-2025"]
+
+    assert "aeat-modelo-190-instructions-2025" in modelo.source_refs
+    assert instructions.evidence_tier == "official_source_guidance"
+    assert instructions.authority == "aeat"
+    assert instructions.kind == "manual_pdf"
+    assert (bundled_path() / instructions.corpus_path).is_file()
+    assert catalogues.sources["aeat-dr-190-2025"].evidence_tier == "layout_authority"
+    assert catalogues.sources["boe-modelo-190-2025-form"].evidence_tier == "layout_authority"
+    assert catalogues.sources["boe-modelo-190-2025-amendment"].evidence_tier == "layout_authority"
+    revision = modelo.revisions["2024-y-siguientes"]
+    for formula in revision.formulas:
+        for citation in formula.source_citations:
+            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+    for binding in revision.bindings:
+        for citation in binding.source_citations:
+            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+
+
 def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> None:
-    modelo, catalogues = _load_modelo("190")
+    modelo, catalogues = _committed_modelo("190")
 
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
@@ -84,6 +98,10 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
         period="0A",
     )
 
+    assert snapshot.revision.orden_aplicabilidad == (
+        "orden-eha-3127-2009:art-1",
+        "orden-hac-1431-2025:art-2",
+    )
     construct = snapshot.revision.constructs[0]
     linked_surfaces = {
         link.surface for link in snapshot.revision.application_links if link.id in construct.application_links
@@ -91,6 +109,7 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
     assert {
         "calculation",
         "filing",
+        "deadline",
         "review",
         "verification",
         "approval",
@@ -101,8 +120,56 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
     } <= linked_surfaces
 
 
+def test_modelo_190_annual_deadline_is_grounded_to_current_revision() -> None:
+    modelo, catalogues = _committed_modelo("190")
+
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2026,
+        period="0A",
+    )
+    revision = snapshot.revision
+    construct = revision.constructs[0]
+    windows = {window.id: window for window in revision.deadline_windows}
+    schedule = next(item for item in revision.filing_schedules if item.id == "modelo-190-anual")
+    deadline_link = next(item for item in revision.application_links if item.id == "modelo-190-deadline")
+
+    assert deadline_link.surface == "deadline"
+    assert deadline_link.consumer == "aeat.domain.deadlines"
+    assert deadline_link.requires_snapshot is True
+    assert catalogues.legal["rd-439-2007:art-108"].evidence_tier == "legal_authority"
+    assert catalogues.legal["orden-eha-3127-2009:art-1"].evidence_tier == "legal_authority"
+    assert catalogues.sources["aeat-modelo-190-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-190-2025-form"].evidence_tier == "layout_authority"
+
+    assert construct.deadline_windows == ("modelo-190-2024-0a", "modelo-190-2025-0a")
+    assert construct.filing_schedules == ("modelo-190-anual",)
+    assert schedule.period_kind == "annual"
+    assert schedule.periods == ("0A",)
+    assert schedule.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
+    assert schedule.source_refs == ("aeat-modelo-190-procedure", "boe-modelo-190-2025-form")
+
+    expected_windows = {
+        "modelo-190-2024-0a": (2025, "2024 0A", date(2025, 1, 1), date(2025, 1, 31)),
+        "modelo-190-2025-0a": (2026, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
+    }
+    assert set(windows) == set(expected_windows)
+    for window_id, (filing_year, period, opens_on, closes_on) in expected_windows.items():
+        window = windows[window_id]
+        assert window.filing_year == filing_year
+        assert str(window.period) == period
+        assert window.period_kind == "annual"
+        assert window.opens_on == opens_on
+        assert window.closes_on == closes_on
+        assert window.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
+        assert window.source_refs == ("aeat-modelo-190-procedure", "boe-modelo-190-2025-form")
+
+
 def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:
-    modelo, _ = _load_modelo("190")
+    modelo, _ = _committed_modelo("190")
     revision = modelo.revisions["2024-y-siguientes"]
     filed_read = next(ref for ref in revision.live_cross_references if ref.id == "modelo-190-filed-declarations-read")
 
@@ -115,7 +182,7 @@ def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:
 
 
 def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
-    modelo, catalogues = _load_modelo("190")
+    modelo, catalogues = _committed_modelo("190")
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -123,7 +190,7 @@ def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
         filing_year=2025,
         period="0A",
     )
-    modelo_111, _ = _load_modelo("111")
+    modelo_111, _ = _committed_modelo("111")
     snapshot_111 = build_snapshot(
         modelo_111,
         catalogues,
@@ -142,7 +209,7 @@ def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
 
 
 def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -> None:
-    modelo, catalogues = _load_modelo("190")
+    modelo, catalogues = _committed_modelo("190")
     snapshot = build_snapshot(
         modelo,
         catalogues,

@@ -1,15 +1,23 @@
-"""Repository-backed Renta expense aggregation from ledger catalogues.
+"""Repository-backed Modelo 100 Renta expense aggregation.
 
-Used by: :mod:`~._service` (per-modelo aggregation service) for Modelo 100 expense aggregation.
+This is the annual first-slice expense projection behind the
+``ledger_renta_expense_aggregation`` source. It loads both a
+:class:`~domain.transactions.TransactionCatalogue` and a
+:class:`~domain.invoices.InvoiceCatalogue` from the active bucket through
+:class:`~domain.transactions.TransactionCatalogueRepository` and
+:class:`~domain.invoices.InvoiceCatalogueRepository`, uses
+purchase-invoice evidence to validate deductible-expense facts, and returns
+binding-ready :class:`~domain.renta.RentaDeductibleExpenseObservation`
+records.
 
-The main entry point :func:`aggregate_renta_ledger_expenses_from_repositories`
-loads both a :class:`~aeat.domain.transactions.TransactionCatalogue`
-via :class:`~aeat.domain.transactions.TransactionCatalogueRepository` and an
-:class:`~aeat.domain.invoices.InvoiceCatalogue` via
-:class:`~aeat.domain.invoices.InvoiceCatalogueRepository` from the
-active bucket and feeds them to :func:`aggregate_renta_ledger_expenses`.
+The source-mesh resolver in :mod:`~._modelo_bindings` applies the target
+:class:`~domain.calculations.registry.ModeloRevision`, resolves registry
+bindings, and reports source issues or unrouted expenses on its
+:class:`~._source_mesh.CalculationSourceResolution`. The M130 quarterly gasto
+projection is intentionally separate in :mod:`~._renta_gasto_ledger`.
 
-Related: :mod:`~._iva_ledger`, :mod:`~._renta_income_ledger` for similar pipelines.
+Related: :mod:`~._iva_ledger` and :mod:`~._renta_income_ledger` for sibling
+ledger projections.
 """
 
 from __future__ import annotations
@@ -22,16 +30,14 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, PeriodKind
 from ...core.resources import resources
 from ...domain.calculations.registry import CasillaId
 from ...domain.categories import CategoryProfile, SpendingCategory
-from ...domain.invoices import (
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    InvoiceCatalogueRepositoryProtocol,
-)
+from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
 from ...domain.renta import (
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
@@ -48,7 +54,6 @@ from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,
@@ -62,13 +67,23 @@ from ._models import CasillaAggregation, CasillaProvenance
 _LEDGER_CATALOGUE_ID = "ledger"
 
 
+def _first_slice_supported_mappings() -> str:
+    grouped: dict[CasillaId, list[str]] = {}
+    for category, casilla_id in sorted(
+        RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.items(),
+        key=lambda item: (str(item[1]), item[0].value),
+    ):
+        grouped.setdefault(casilla_id, []).append(category.value)
+    return "; ".join(f"{casilla_id}={', '.join(categories)}" for casilla_id, categories in grouped.items())
+
+
 class RentaLedgerAggregationIssueReason(StrEnum):
     """Machine-readable reasons why a ledger row did not produce an observation.
 
     The five upstream filter rejections (``UNSUPPORTED_DIRECTION``,
     ``UNSUPPORTED_CURRENCY``, ``UNCLASSIFIED_BUSINESS_STATE``,
     ``PERSONAL_TRANSACTION``, ``OUTSIDE_PERIOD``) are shared with
-    :class:`aeat.application.aggregation._iva_ledger.IvaLedgerAggregationIssueReason`
+    :class:`~application.aggregation._iva_ledger.IvaLedgerAggregationIssueReason`
     through :mod:`._shared_issue_reasons`. ``UNSUPPORTED_PERIOD`` is a
     Renta-only refusal raised against quarter-level requests; the
     remaining values describe Renta-specific deductibility checks.
@@ -255,6 +270,11 @@ def aggregate_renta_ledger_expenses(
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
+        if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+            # Operator reviewed and deliberately excluded this row from filing
+            # (a final disposition): omit it silently, no observation and no
+            # advisory-bearing issue.
+            continue
         outcome = _classify_renta_transaction(
             transaction,
             invoices=invoices,
@@ -329,12 +349,8 @@ def _classify_renta_transaction(
     # their value_in_eur is None and effective_eur_amount falls back to
     # raw.amount.
     eur_amount = effective_eur_amount(transaction)
-    business_amount = _business_amount(
-        eur_amount,
-        transaction.business_classification,
-        transaction.business_pct,
-    )
-    if business_amount is None:
+    proportion = business_proportion(transaction.business_classification, transaction.business_pct)
+    if proportion is None:
         reason = (
             RentaLedgerAggregationIssueReason.PERSONAL_TRANSACTION
             if transaction.business_classification is BusinessClassification.PERSONAL
@@ -349,6 +365,7 @@ def _classify_renta_transaction(
                 f"business classification {transaction.business_classification.value!r} cannot feed Renta expenses"
             ),
         )
+    business_amount = _business_fact_amount(eur_amount, proportion)
     if category_id is None:
         return RentaLedgerAggregationIssue(
             transaction_id=transaction_id,
@@ -373,7 +390,10 @@ def _classify_renta_transaction(
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
             category_id=category_id,
             reason=RentaLedgerAggregationIssueReason.CATEGORY_OUTSIDE_FIRST_SLICE,
-            detail=f"category {category.value!r} has no first-slice Modelo 100 casilla mapping",
+            detail=(
+                f"category {category.value!r} has no first-slice Modelo 100 casilla mapping; "
+                f"current supported mappings: {_first_slice_supported_mappings()}"
+            ),
         )
     profile = profiles.get(category)
     if profile is None:
@@ -394,6 +414,8 @@ def _classify_renta_transaction(
     )
     if isinstance(evidence_payload, RentaLedgerAggregationIssue):
         return evidence_payload
+    taxable_base = _business_fact_amount(_taxable_base_for(transaction, evidence_payload), proportion)
+    iva_amount = _business_fact_amount(_iva_amount_for(transaction, evidence_payload), proportion)
     try:
         fact = RentaDeductibleExpenseFact(
             transaction_id=transaction_id,
@@ -403,8 +425,8 @@ def _classify_renta_transaction(
             invoice_issue_date=evidence_payload.invoice_issue_date,
             posting_date=transaction.raw.booked_date,
             gross_amount=business_amount,
-            taxable_base=_taxable_base_for(transaction, evidence_payload),
-            iva_amount=_iva_amount_for(transaction, evidence_payload),
+            taxable_base=taxable_base,
+            iva_amount=iva_amount,
             direction=direction,
             category=category,
             activity_key=activity_key,
@@ -471,16 +493,11 @@ def _renta_direction_for(
     return None
 
 
-def _business_amount(
-    amount: Decimal,
-    classification: BusinessClassification,
-    business_pct: Decimal | None,
-) -> Decimal | None:
+def _business_fact_amount(amount: Decimal | None, proportion: Decimal) -> Decimal | None:
+    if amount is None:
+        return None
     if amount < Decimal("0"):
         raise ValueError("ledger amount must be a non-negative magnitude")
-    proportion = business_proportion(classification, business_pct)
-    if proportion is None:
-        return None
     return amount * proportion
 
 

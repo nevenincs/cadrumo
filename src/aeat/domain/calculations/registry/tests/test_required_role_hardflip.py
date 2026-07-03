@@ -11,11 +11,11 @@ consumers.
 
 from __future__ import annotations
 
-from typing import Any
+from datetime import date
 
 import pytest
 
-from .._schema import CasillaDefinition
+from .._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from .._validate_semantic_roles import (
     _REQUIRED_ROLE_LABEL_PATTERNS,
     _validate_required_role_declarations,
@@ -46,18 +46,30 @@ def _casilla(
     )
 
 
-def _modelo(modelo_id: str, revision_id: str, casillas: list[CasillaDefinition]) -> Any:
-    class _Rev:
-        def __init__(self) -> None:
-            self.id = revision_id
-            self.casillas = tuple(casillas)
-
-    class _Mod:
-        def __init__(self) -> None:
-            self.id = modelo_id
-            self.revisions = {revision_id: _Rev()}
-
-    return _Mod()
+def _registry_modelo(modelo_id: str, revision_id: str, casillas: list[CasillaDefinition]) -> ModeloDefinition:
+    revision = ModeloRevision.model_validate(
+        {
+            "id": revision_id,
+            "valid_from": date(2025, 1, 1),
+            "period_selector": PeriodSelector(years=(2025,), periods=("0A",)),
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-manual",),
+            "casillas": tuple(casillas),
+        },
+    )
+    return ModeloDefinition.model_validate(
+        {
+            "id": modelo_id,
+            "title": f"Modelo {modelo_id}",
+            "official_name": f"Modelo {modelo_id}",
+            "tax_domain": "iva",
+            "cadence": "annual",
+            "jurisdiction": "ES-AEAT",
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-manual",),
+            "revisions": {revision_id: revision},
+        },
+    )
 
 
 class TestRequiredRoleLabelPatterns:
@@ -72,7 +84,7 @@ class TestRequiredRoleHardflip:
             data_type="year",
             semantic_role="filing_year",
         )
-        m = _modelo("180", "2023", [c])
+        m = _registry_modelo("180", "2023", [c])
         assert _validate_required_role_declarations([m]) == ()
 
     @pytest.mark.parametrize(
@@ -87,7 +99,7 @@ class TestRequiredRoleHardflip:
     )
     def test_base_imponible_labels_require_split_roles(self, label: str, semantic_role: str) -> None:
         c = _casilla(label=label, data_type="decimal", semantic_role=semantic_role)
-        m = _modelo("100", "2025", [c])
+        m = _registry_modelo("100", "2025", [c])
         assert _validate_required_role_declarations([m]) == ()
 
     def test_label_match_without_role_fails(self) -> None:
@@ -96,7 +108,7 @@ class TestRequiredRoleHardflip:
             data_type="year",
             semantic_role=None,
         )
-        m = _modelo("180", "2023", [c])
+        m = _registry_modelo("180", "2023", [c])
         failures = _validate_required_role_declarations([m])
         assert len(failures) == 1
         assert "filing_year" in failures[0]
@@ -108,7 +120,7 @@ class TestRequiredRoleHardflip:
             data_type="year",
             semantic_role="devengo_year",  # close-but-wrong
         )
-        m = _modelo("180", "2023", [c])
+        m = _registry_modelo("180", "2023", [c])
         failures = _validate_required_role_declarations([m])
         assert len(failures) == 1
         assert "devengo_year" in failures[0]
@@ -116,7 +128,7 @@ class TestRequiredRoleHardflip:
 
     def test_unmatched_label_ignored(self) -> None:
         c = _casilla(label="Some other label")
-        m = _modelo("180", "2023", [c])
+        m = _registry_modelo("180", "2023", [c])
         assert _validate_required_role_declarations([m]) == ()
 
 
@@ -125,8 +137,8 @@ class TestCrossReferenceAccessor:
         a = _casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
         b = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
         c = _casilla(cid="c", semantic_role="filing_year", data_type="year")
-        m1 = _modelo("180", "2023", [a, c])
-        m2 = _modelo("184", "2023", [b])
+        m1 = _registry_modelo("180", "2023", [a, c])
+        m2 = _registry_modelo("184", "2023", [b])
         grouped = collect_casillas_by_semantic_role([m1, m2])
         assert set(grouped.keys()) == {"taxpayer_nif", "filing_year"}
         assert grouped["taxpayer_nif"] == (
@@ -137,7 +149,7 @@ class TestCrossReferenceAccessor:
 
     def test_unroled_casillas_excluded(self) -> None:
         c = _casilla(cid="c", semantic_role=None)
-        m = _modelo("180", "2023", [c])
+        m = _registry_modelo("180", "2023", [c])
         assert collect_casillas_by_semantic_role([m]) == {}
 
     def test_empty_input_returns_empty(self) -> None:

@@ -1,5 +1,5 @@
 [project]
-name = "aeat"
+name = "aeat-cli"
 version = "0.1.0"
 description = "A utility that turns your financial records into Spanish tax-form (modelo) data, ready to submit to the AEAT"
 readme = "README.md"
@@ -46,8 +46,9 @@ dependencies = [
   # libsecret). Pure-Python, gracefully degrades when no usable backend
   # is detected; the substrate's file fallback covers headless / CI.
   "keyring>=25.6.0,<26",
-  # Financial ingest.
-  "ofxparse>=0.21,<1",
+  # Financial ingest. ofxtools is the maintained, strict OFX-spec parser
+  # (ships py.typed) that replaces the prior unmaintained OFX library.
+  "ofxtools>=1.1,<2",
   "openpyxl>=3.1.5,<4",
   # PDF parsing for justificantes.
   "pdfplumber>=0.11.9,<1",
@@ -84,11 +85,15 @@ dependencies = [
 
 [project.scripts]
 aeat = "aeat.entrypoints.cli:main"
+# Operator MCP server (the `aeat-cli[agent]` capability). Refuses with an install
+# hint when the agent extra is absent, so a bare-core install carries the script
+# without the runtime.
+aeat-mcp = "aeat.entrypoints.mcp:main"
 
 [project.urls]
-Homepage = "https://github.com/wgergely/aeat"
-Issues = "https://github.com/wgergely/aeat/issues"
-Repository = "https://github.com/wgergely/aeat"
+Homepage = "https://github.com/nevenincs/aeat"
+Issues = "https://github.com/nevenincs/aeat/issues"
+Repository = "https://github.com/nevenincs/aeat"
 
 [project.optional-dependencies]
 workbook-windows = [
@@ -122,11 +127,58 @@ browser = [
 anthropic = [
   "anthropic>=0.74.1,<1",
 ]
-# Convenience aggregate: every optional integration at once.
+# Operator agent-harness runtime. The harness operating layer (rules, personas,
+# skills) ships as reviewed product data in the CORE wheel under
+# `src/aeat/_data/agent/` and is read with no extra dependency. This extra gates
+# the optional MCP server runtime reached by the `aeat-mcp` console script. No
+# model weights or credentials are ever bundled (per the product-packaging and
+# secure-storage ADRs).
+agent = [
+  "mcp>=1.12,<2",
+  # The stdio MCP server (`aeat.entrypoints.mcp._server`) imports anyio directly
+  # to run the transport; declare it here rather than relying on it transitively
+  # through `mcp`, so the import has a direct owner in the extra that gates the
+  # server runtime.
+  "anyio>=4.5,<5",
+]
+# On-host grounding search stack (the corpus-search hybrid retrieval surface).
+# The lexical index (stdlib sqlite3 FTS5) and the structured citation lookup run
+# with no extra dependency, so a bare-core install keeps the degraded,
+# lexical-only mode. This extra gates only the SEMANTIC half: model2vec supplies
+# the potion-multilingual-128M static query embedder (MIT code and weights, no
+# torch/onnxruntime), snowballstemmer the Spanish stemmed FTS column, and numpy
+# the precomputed-vector cosine search. Neither the ~0.5 GB model weights NOR
+# the derived corpus-vector matrix (.npy) are ever bundled in the wheel (the
+# shipped-search-licence-clean gate forbids both): the corpus vectors are BUILT
+# behind this extra on first use by `ensure_corpus_embeddings` into an
+# app-controlled cache, and a bare-core install keeps the degraded lexical-only
+# mode.
+search = [
+  "model2vec>=0.8,<1",
+  "snowballstemmer>=2.2,<4",
+  "numpy>=1.26,<3",
+]
+# Corpus source binaries (official AEAT PDF/XLS/XLSX) as the `aeat-data`
+# companion distribution, exact-version-locked to this package. The slim core
+# wheel excludes these binaries (the wheel excludes below); without the
+# companion the registry integrity gate surfaces a loud advisory and the
+# `aeat app registry` verification verbs refuse with this extra's install
+# hint. With it installed, source verification is byte-identical to a full
+# checkout. Reviewed data ships as an artifact — never fetched at install or
+# run time (product-packaging ADR).
+corpus-sources = [
+  "aeat-data==0.1.0",
+]
+# Convenience aggregate: every optional integration at once. `corpus-sources`
+# is deliberately excluded until the aeat-data distribution is published on
+# PyPI (its file-size grant rides the first release; see RELEASING.md) —
+# including it now would make `aeat-cli[all]` unresolvable.
 all = [
-  "aeat[google]",
-  "aeat[browser]",
-  "aeat[anthropic]",
+  "aeat-cli[google]",
+  "aeat-cli[browser]",
+  "aeat-cli[anthropic]",
+  "aeat-cli[agent]",
+  "aeat-cli[search]",
 ]
 
 [build-system]
@@ -135,17 +187,43 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aeat"]
+# Test modules and fixtures serve no installed consumer: the suites run from
+# the repo tree, and nothing in the wheel imports `aeat.tests` at module load
+# (the one production-space reference, `envelope/_repository_test_suite.py`,
+# imports the harness function-locally and is exercised only by excluded test
+# modules). The data-budget ADR sheds this payload from the distribution.
+exclude = [
+  "src/aeat/tests",
+  "src/aeat/tests/**",
+  "src/aeat/**/tests",
+  "src/aeat/**/tests/**",
+  # Corpus source binaries (the AEAT/BOE manuals and workbooks) are 94% of the
+  # wheel's compressed weight and serve only the always-on registry integrity
+  # hash chain and the opt-in `aeat app registry` verification verbs at runtime.
+  # They ship in the separate `aeat-data` companion distribution (installed via
+  # the `aeat-cli[corpus-sources]` extra) under a mirrored `aeat_data/_data/corpus`
+  # tree; the corpus locator resolves either root. Every derived surface the
+  # grounding search and legal gates read at runtime — extracted text
+  # (`*.extracted.md`/`.json`), normative html, registry, terminology — stays in
+  # this wheel. Excluding only the source binaries keeps the slim `aeat` wheel
+  # under PyPI's 100 MB cap with no file-size grant on the critical path.
+  "src/aeat/_data/corpus/**/*.pdf",
+  "src/aeat/_data/corpus/**/*.xls",
+  "src/aeat/_data/corpus/**/*.xlsx",
+]
 # The recovery-key BIP-39 wordlist is shipped as package data so
 # `importlib.resources.files()` can locate it at runtime in installed
-# wheels.
+# wheels; `py.typed` marks the package PEP 561 typed so consumers read the
+# inline types; `external_constants.toml` carries the curated leaf constants.
 include = [
+  "src/aeat/py.typed",
   "src/aeat/adapters/persistence/storage/master_key/_bip39_wordlist.txt",
   "src/aeat/core/external_constants.toml",
 ]
 
 # ── uv ───────────────────────────────────────────────────────────────────────
 [tool.uv]
-# vaultspec-rag 0.2.14 requires tree-sitter-language-pack below 1.6.2, and shared
+# vaultspec-rag requires tree-sitter-language-pack below 1.6.2, and shared
 # Windows worktrees can keep the native parser DLL locked indefinitely. Keep the
 # resolver bound aligned with vaultspec-rag so additive installs and lock checks
 # do not select the incompatible 1.6.2 parser package.
@@ -162,6 +240,11 @@ explicit = true
 torch = [
     {index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
 ]
+# aeat-data is not on PyPI until its file-size grant lands (RELEASING.md), so
+# the dev resolver builds the companion from its in-repo project. uv sources
+# never reach the published wheel metadata: an installed `aeat-cli[corpus-sources]`
+# still resolves the bare `aeat-data==0.1.0` pin from the index.
+aeat-data = { path = "packaging/aeat_data" }
 
 [tool.vaultspec-rag]
 managed-torch-direct-dependency = true
@@ -215,9 +298,11 @@ dev = [
   # Wall-clock control for deadline/expedientes tests; banned in live files.
   "time-machine>=2.16.0",
   "ty>=0.0.1a1",
-  # Vault tooling — contributor-only; not imported by src/aeat/.
+  # Vault tooling — contributor-only; not imported by src/aeat/. vaultspec-rag
+  # carries the [mcp] extra here (demoted from the base dependency set): it is
+  # developer search tooling, so a published product wheel must not ship it.
   "vaultspec-core>=0.1.25",
-  "vaultspec-rag>=0.2.14",
+  "vaultspec-rag[mcp]>=0.2.28",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/aeat/.
   "sphinx>=8.1,<9",  # <9: sphinx-hoverxref 1.4.2 (latest) crashes on Sphinx 9's _Opt config repr at config-inited
@@ -283,6 +368,10 @@ extend-exclude = [
   "test_attachment_fix.py",
   "test_m714.py",
   "scripts/classify_m200.py",
+  # Operator-safeguarded root scratch debris (commit cbb293ca4): one-off
+  # docs-migration probe scripts, not package code.
+  "add_frontmatter.py",
+  "test_docs.py",
 ]
 
 [tool.ruff.lint]
@@ -357,6 +446,7 @@ convention = "google"
 # Developer quality/docs/audit runners invoke fixed tool argv or explicit
 # wrapper argv; Ruff's subprocess heuristic cannot infer those local contracts.
 "dev/audit/complexity.py" = ["S603"]
+"dev/audit/report.py" = ["S603"]
 "dev/audit/semantic.py" = ["S603"]
 "dev/docs/build.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]
@@ -444,6 +534,9 @@ convention = "google"
 # Bundled `git ls-files` invocation reads from PATH; the explicit command list
 # is reviewed and audited rather than a partial path risk.
 "src/aeat/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
+# Same rationale: the content-boundary gate builds the project's own wheel with
+# the trusted `uv` build driver (partial path resolved from PATH by design).
+"src/aeat/tests/test_wheel_content_boundary.py" = ["S603", "S607"]
 # Setup-answers subprocess test shells out to `sys.executable -c <script>` to
 # observe the project_answers registration error path; the script is a vetted
 # literal in this file.
@@ -488,9 +581,19 @@ convention = "google"
 # literal argv (no user/untrusted input), in an isolated subprocess so the
 # build's package imports and global state do not leak into the test process.
 "dev/docs/tests/test_docs_build.py" = ["S603"]
+# The aeat-data distribution gate builds the companion wheel with the trusted
+# `uv` build driver and enumerates corpus binaries via `git ls-files` (partial
+# paths resolved from PATH by design), mirroring the src/aeat wheel-build gates.
+"dev/packaging/tests/test_aeat_data_distribution.py" = ["S603", "S607"]
 "src/aeat/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
 "src/aeat/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]
+# The Kent-wall regression gate runs the trusted `sys.executable -m pytest`
+# driver against explicit, catalogue-derived node ids (never untrusted input);
+# ruff's S603 heuristic cannot prove the catalogue-sourced argv is fixed
+# because it is built from a parametrized/loop-derived node id, not a static
+# literal list.
+"src/aeat/tests/test_kent_wall_catalogue.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/master_key/_master_key.py" = ["S105"]
 "src/aeat/adapters/outbound/aeat/browser/tests/test_live_evasion.py" = ["S603"]
 # `ATTRIBUTION_PASS_THROUGH` is a tax-routing verdict / enum value, not a
@@ -546,6 +649,7 @@ convention = "google"
 # with literal short / weak / sentinel passphrases as assertion inputs.
 "src/aeat/adapters/persistence/storage/master_key/tests/test_master_key.py" = ["S105", "S106"]
 "src/aeat/adapters/persistence/storage/master_key/tests/test_master_key_failclosed.py" = ["S105", "S106"]
+"src/aeat/adapters/persistence/storage/master_key/tests/test_master_key_file_fallback.py" = ["S105", "S106"]
 "src/aeat/adapters/persistence/storage/tests/test_path_safety.py" = ["S105", "S106"]
 "src/aeat/core/tests/test_logging.py" = ["S105", "S106"]
 # Subprocess invocations from tests and from the CLI's own doc-reference
@@ -613,7 +717,7 @@ namespace_packages = true
 # Only packages that still lack py.typed and have no community stubs.
 # playwright, typer, rich, bs4 all ship py.typed; google-api-python-client
 # is covered by google-api-python-client-stubs (installed as a dev dep).
-module = ["i18n.*", "ofxparse.*"]
+module = ["i18n.*"]
 ignore_missing_imports = true
 
 # ── pyrefly ──────────────────────────────────────────────────────────────────
@@ -629,7 +733,7 @@ search_path = ["src", "stubs"]
 testpaths = ["src/aeat"]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
-addopts = "-v --tb=short -m 'unit' --strict-markers --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity"
+addopts = "--tb=short -m 'unit' --strict-markers --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity"
 asyncio_mode = "strict"
 markers = [
   "unit: deterministic tests with no external I/O",
@@ -782,8 +886,11 @@ ignore_decorators = [
 "PyYAML" = ["yaml"]
 "pyyaml" = ["yaml"]
 [tool.deptry.per_rule_ignores]
-# `aeat`: the `all` convenience extra self-references the capability extras
-# (`aeat[google]` etc.); deptry reads the self-reference as an unused dependency.
-DEP002 = ["aeat", "formulas", "python-dotenv", "rich", "tzdata"]
+# `aeat-cli`: the `all` convenience extra self-references the capability extras
+# (`aeat-cli[google]` etc.); deptry reads the self-reference as an unused dependency.
+# `aeat-data`: a data-only companion distribution with no importable code the
+# scanner can see; the corpus locator reaches its `aeat_data` package
+# dynamically through `importlib.resources` (the corpus-binary resolution seam).
+DEP002 = ["aeat-cli", "aeat-data", "formulas", "python-dotenv", "rich", "tzdata"]
 DEP003 = ["click", "pydantic_core"]
 DEP004 = ["pytest", "reportlab"]

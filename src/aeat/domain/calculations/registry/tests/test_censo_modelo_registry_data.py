@@ -6,19 +6,21 @@ import pytest
 
 from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
-from .. import build_snapshot, discover_modelo_sources, load_registry_tree
+from .. import build_snapshot, discover_modelo_sources
+from .._binding_selector_utils import selector_as_dict
 from .._corpus_catalogue import verify_source_file
 from .._coverage import build_model_law_coverage_ledger
 from .._errors import RegistrySnapshotError
 from .._loader import load_modelo_directory
 from .._schema import InputKind, ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from .._temporal import select_revision
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _modelos_by_id() -> tuple[dict[str, ModeloDefinition], RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = _committed_registry_tree()
     return {modelo.id: modelo for modelo in modelos}, catalogues
 
 
@@ -51,7 +53,7 @@ def test_committed_modelo_036_binds_censo_status_from_profile() -> None:
 
     assert binding.id == "modelo-036-profile-censo-status"
     assert binding.source == "profile"
-    assert binding.selector == {"profile_key": "censo.status"}
+    assert selector_as_dict(binding) == {"profile_key": "censo.status"}
     assert binding.typed_enum == "censo_event_kind"
     assert casilla.input_kind == InputKind.BOUND
     assert casilla.binding == binding.id
@@ -89,7 +91,10 @@ def test_modelo_037_is_historical_catalogue_metadata_not_active_registry_model()
     assert "037" not in modelos
     assert "boe-modelo-037-historical-suppression" in catalogues.sources
     assert "orden-hac-1526-2024:art-1" in catalogues.legal
-    verify_source_file(PROJECT_ROOT, catalogues.sources["boe-modelo-037-historical-suppression"])
+    source = catalogues.sources["boe-modelo-037-historical-suppression"]
+    assert source.kind == "suppression_notice"
+    assert source.evidence_tier == "official_source_guidance"
+    verify_source_file(PROJECT_ROOT, source)
 
 
 def test_modelo_036_rejects_unknown_censo_event_period() -> None:

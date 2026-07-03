@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#audits-resolution'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-13'
 related:
   - "[[2026-05-13-eliminate-shims-audit]]"
   - "[[2026-05-13-schema-driven-wizard-ux-audit]]"
@@ -356,7 +356,7 @@ plan and commit messages only; they never appear in source code.
 - C7 — Add a progress indicator to the interactive wizard
   - Files owned: `src/aeat/application/wizard/_runner.py`
   - Before each section's first question, emit a translated header:
-    "Sección %{section_n}/%{section_total}: %{title}". For each
+    "Sección %{section_n}/%{section_total}: %{section-title}". For each
     question within the section, the prompter prepends
     "(pregunta %{q_n}/%{q_total}) " to the prompt text. The
     descriptor knows the counts; the runner threads them

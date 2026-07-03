@@ -31,7 +31,7 @@ from enum import StrEnum
 from json import JSONDecodeError, loads
 from typing import TYPE_CHECKING, Literal, Protocol, runtime_checkable
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.logging import get_logger
@@ -49,6 +49,7 @@ if TYPE_CHECKING:
     from ._schema import LiveCrossReferenceDecision, ModeloDefinition
 
 _log = get_logger(__name__)
+_ORACLE_ID_ADAPTER: TypeAdapter[OracleId] = TypeAdapter(OracleId)
 
 __all__ = [
     "BaseCheckerOracle",
@@ -179,7 +180,7 @@ class LiveParityOracle(Protocol):
     """
 
     @property
-    def oracle_id(self) -> str:
+    def oracle_id(self) -> OracleId:
         """Stable identifier this oracle registers under in the catalogue.
 
         A modelo (an AEAT tax form) binds one of its live cross-references to
@@ -188,7 +189,7 @@ class LiveParityOracle(Protocol):
         value must be non-empty and unique across the process-wide catalogue.
 
         Returns:
-            The oracle's catalogue key as a plain ``str``.
+            The oracle's typed catalogue key.
         """
         ...
 
@@ -280,8 +281,8 @@ class LiveParityCatalogue:
     """
 
     def __init__(self) -> None:
-        self._oracles: dict[str, LiveParityOracle] = {}
-        self._environments: dict[str, OracleEnvironment] = {}
+        self._oracles: dict[OracleId, LiveParityOracle] = {}
+        self._environments: dict[OracleId, OracleEnvironment] = {}
 
     def register(
         self,
@@ -290,9 +291,7 @@ class LiveParityCatalogue:
         environment: OracleEnvironment,
     ) -> None:
         """Register an oracle under an explicit environment classification."""
-        oracle_id = oracle.oracle_id
-        if not oracle_id:
-            raise RegistryValidationError("oracle_id must be non-empty")
+        oracle_id = _validate_oracle_id(oracle.oracle_id)
         if oracle_id in self._oracles:
             raise RegistryValidationError(f"oracle_id {oracle_id!r} already registered")
         self._oracles[oracle_id] = oracle
@@ -300,7 +299,7 @@ class LiveParityCatalogue:
 
     def lookup(
         self,
-        oracle_id: str,
+        oracle_id: OracleId,
         *,
         environment: OracleEnvironment = OracleEnvironment.PRODUCTION,
     ) -> LiveParityOracle:
@@ -314,6 +313,7 @@ class LiveParityCatalogue:
         Returns:
             The :class:`LiveParityOracle` registered under ``oracle_id``.
         """
+        oracle_id = _validate_oracle_id(oracle_id)
         try:
             oracle = self._oracles[oracle_id]
         except KeyError as exc:
@@ -333,18 +333,19 @@ class LiveParityCatalogue:
             )
         return oracle
 
-    def environment_of(self, oracle_id: str) -> OracleEnvironment:
+    def environment_of(self, oracle_id: OracleId) -> OracleEnvironment:
         """Return the declared environment of a registered oracle.
 
         Returns:
             The :class:`OracleEnvironment` declared for ``oracle_id``.
         """
+        oracle_id = _validate_oracle_id(oracle_id)
         try:
             return self._environments[oracle_id]
         except KeyError as exc:
             raise RegistryValidationError(f"unknown oracle_id {oracle_id!r}") from exc
 
-    def is_registered(self, oracle_id: str) -> bool:
+    def is_registered(self, oracle_id: OracleId) -> bool:
         """Report whether an oracle is registered under ``oracle_id``.
 
         A membership check that ignores environment classification: it returns
@@ -358,9 +359,10 @@ class LiveParityCatalogue:
         Returns:
             ``True`` if an oracle is registered under ``oracle_id``.
         """
+        oracle_id = _validate_oracle_id(oracle_id)
         return oracle_id in self._oracles
 
-    def ids(self, *, environment: OracleEnvironment | None = None) -> tuple[str, ...]:
+    def ids(self, *, environment: OracleEnvironment | None = None) -> tuple[OracleId, ...]:
         """Return oracle ids, optionally filtered to those visible under ``environment``."""
         if environment is None:
             return tuple(sorted(self._oracles))
@@ -369,6 +371,14 @@ class LiveParityCatalogue:
                 [oracle_id for oracle_id, declared in self._environments.items() if declared in {"both", environment}],
             ),
         )
+
+
+def _validate_oracle_id(value: str) -> OracleId:
+    """Validate a catalogue key against the registry ``OracleId`` contract."""
+    try:
+        return _ORACLE_ID_ADAPTER.validate_python(value)
+    except ValidationError as exc:
+        raise RegistryValidationError(f"oracle_id {value!r} is not a valid OracleId: {exc}") from exc
 
 
 def build_planned_operations(
@@ -463,8 +473,7 @@ class CrossReferenceApplicability(_ParityModel):
 
     The model is the typed signal callers consume to decide whether to
     invoke a cross-reference at all. ``applicable=True`` with no
-    predicates declared is the default backwards-compatible case (every
-    binding declared before the applicability gate landed).
+    predicates declared is the explicit unconditionally-applicable case.
     """
 
     cross_reference_id: CrossReferenceId
@@ -485,7 +494,7 @@ def evaluate_cross_reference_applicability(
     performs no network or catalogue lookup.
 
     A decision with no applicability_predicates is unconditionally
-    applicable (backwards-compat). When predicates are declared, mode
+    applicable. When predicates are declared, mode
     governs combination: ``all`` requires every predicate to match;
     ``any`` requires at least one match.
     """
@@ -512,8 +521,8 @@ def evaluate_cross_reference_applicability(
 
 def resolve_cross_reference_oracle(
     *,
-    cross_reference_id: str,
-    oracle_id: str | None,
+    cross_reference_id: CrossReferenceId,
+    oracle_id: OracleId | None,
     catalogue: LiveParityCatalogue,
     environment: OracleEnvironment = OracleEnvironment.PRODUCTION,
     decision: LiveCrossReferenceDecision | None = None,
@@ -536,8 +545,8 @@ def resolve_cross_reference_oracle(
     runs first and the resolver raises a typed
     :class:`RegistryValidationError` naming the unmet predicate fields if
     the binding is not applicable to the profile. Callers that don't
-    thread profile facts (legacy adapters, the audit) keep the old
-    catalogue-only resolution path by omitting both arguments.
+    thread profile facts (for example, audit code) use catalogue-only
+    resolution by omitting both arguments.
 
     Returns:
         The :class:`LiveParityOracle` bound to the cross-reference.
@@ -664,7 +673,7 @@ def collect_applicability_declarations(
 def collect_orphan_oracle_ids(
     modelos: Iterable[ModeloDefinition],
     catalogue: LiveParityCatalogue,
-) -> tuple[str, ...]:
+) -> tuple[OracleId, ...]:
     """Return catalogue oracle ids that no cross-reference binds.
 
     A registered-but-unused oracle indicates one of:
@@ -683,7 +692,7 @@ def collect_orphan_oracle_ids(
             cross-reference bindings determine which oracle ids are in use.
         catalogue: The live parity catalogue to check for orphaned entries.
     """
-    bound: set[str] = set()
+    bound: set[OracleId] = set()
     modelo_tuple = tuple(modelos)
     for modelo in modelo_tuple:
         for revision in modelo.revisions.values():
@@ -697,7 +706,7 @@ class ReplayPayload(_ParityModel):
     """Typed envelope for a decoded replay JSON payload.
 
     Every replay driver shares the same top-level JSON contract: an
-    ``observed`` mapping of legacy surface strings to string values (kept
+    ``observed`` mapping of captured surface strings to string values (kept
     only as audit evidence, not as a comparison key surface) and an optional
     ``raw_evidence_locator`` that links back to the raw HTTP response
     artifact for audit trails.
@@ -709,7 +718,7 @@ class ReplayPayload(_ParityModel):
       operator scenario the payload was captured against;
     * ``profile_overrides`` — per-fixture profile overrides used to
       drive the registry comparison;
-    * ``expected`` — legacy human-readable labels paired with their
+    * ``expected`` — captured human-readable labels paired with their
       expected values, retained only for audit readability;
     * ``expected_by_casilla_id`` — registry-casilla-id-keyed expected
       values, used by the oracle's matcher;
@@ -791,7 +800,7 @@ class BaseCheckerOracle[CheckerObservation]:
 
     @property
     @abstractmethod
-    def oracle_id(self) -> str:
+    def oracle_id(self) -> OracleId:
         """Stable catalogue identifier for this checker oracle.
 
         Abstract: each concrete per-key checker (NIF-IVA, GROI, and analogous
@@ -799,7 +808,7 @@ class BaseCheckerOracle[CheckerObservation]:
         registry TOML. Must be non-empty and unique within the catalogue.
 
         Returns:
-            The oracle's catalogue key as a plain ``str``.
+            The oracle's typed catalogue key.
         """
         ...
 

@@ -15,8 +15,10 @@ Subpackages
 
    aeat.application.aggregation
    aeat.application.auth
+   aeat.application.bienes_inversion
    aeat.application.bucket_maintenance
    aeat.application.calculations
+   aeat.application.corpus_search
    aeat.application.evidence
    aeat.application.export
    aeat.application.filing
@@ -45,9 +47,11 @@ Submodules
    :maxdepth: 4
 
    aeat.application._errors
-   aeat.application._storage_paths
+   aeat.application._workflow_review_models
    aeat.application.config_reset
    aeat.application.diagnostics
+   aeat.application.diagnostics_run_health
+   aeat.application.preflight
    aeat.application.provisioning
    aeat.application.repair_integrity
    aeat.application.state_projection

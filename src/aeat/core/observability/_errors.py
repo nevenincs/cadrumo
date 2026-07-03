@@ -93,9 +93,47 @@ class AeatCorpusDriftError(AeatObservabilityError):
         self.entrypoint: str = entrypoint
 
 
+class GoldenCaptureError(AeatObservabilityError):
+    """Raised when a captured envelope document cannot be typed / re-validated.
+
+    Surfaces an emitted-envelope document whose ``command`` is not in the
+    JSON-contract schema registry, or whose payload fails strict
+    validation against the registered schema. The deterministic-output
+    substrate refuses to compare an untyped document, keeping the
+    captured payload from degrading to a ``dict[str, Any]`` bag.
+    """
+
+
+class GoldenReplayMismatchError(AeatObservabilityError):
+    """Raised when a replayed envelope diverges from its captured expectation.
+
+    Carries the differing JSON paths (after the declared narrow mask is
+    applied) so the caller can render an actionable diff. The
+    :func:`aeat.core.observability.replay_run` envelope-assertion tier and
+    the operator golden gate both raise this through the shared compare
+    primitive.
+
+    Attributes:
+        differing_paths: Sorted tuple of dotted JSON paths that differ
+            after masking.
+    """
+
+    def __init__(self, *, differing_paths: tuple[str, ...], detail: str) -> None:
+        """Build the mismatch error and its diagnostic message.
+
+        Args:
+            differing_paths: Dotted JSON paths that differ after masking.
+            detail: Rendered human-readable diff summary.
+        """
+        super().__init__(detail)
+        self.differing_paths: tuple[str, ...] = differing_paths
+
+
 __all__ = [
     "AeatCorpusDriftError",
     "AeatObservabilityError",
+    "GoldenCaptureError",
+    "GoldenReplayMismatchError",
     "RunContextMissingError",
     "RunTracePersistenceError",
     "RunTraceValidationError",

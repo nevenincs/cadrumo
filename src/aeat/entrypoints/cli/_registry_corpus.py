@@ -1,12 +1,14 @@
-"""Read-only ``aeat app registry`` exposure of normatives + manuals."""
+"""Read-only ``aeat app registry`` exposure of legal citations and manuals."""
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated
 
 import typer
 
 from ...application.registry import (
+    CORPUS_SOURCES_INSTALL_HINT,
     RegistryCitationReferenceProjection,
     RegistryCitationShowCommand,
     RegistryCitationShowReport,
@@ -22,6 +24,7 @@ from ...application.registry import (
     RegistryManualsListReport,
     RegistryManualVerificationReport,
     RegistryManualVerifyCommand,
+    absent_corpus_companion_binaries,
     list_registry_citations,
     list_registry_manual_rules,
     list_registry_manuals,
@@ -31,8 +34,10 @@ from ...application.registry import (
     verify_registry_manual,
 )
 from ...core.i18n import tr
+from ...core.resources import bundled_path
 from ...domain.manuals import ManualPart
 from ._common import _emit_envelope
+from ._errors import CliRefusedBoundaryError
 from ._registry_corpus_payloads import (
     CitationListResult,
     CitationShowResult,
@@ -59,6 +64,25 @@ manuals_app = typer.Typer(
 )
 
 
+def guard_corpus_companion(*, capability: str, registry_root: Path, source_root: Path) -> None:
+    """Refuse instructively when a verification verb needs absent companion binaries.
+
+    The ``aeat app registry`` verification verbs read the bundled corpus source
+    binaries. In a split install without the ``aeat_data`` companion those
+    binaries are absent; rather than degrade silently or fail with a low-level
+    error, the verb refuses with a message naming the capability (a
+    pre-translated noun phrase supplied by the call site) and the exact install
+    command, per the CLI-gate-is-instructive rule. When the binaries are present
+    (full checkout or companion installed) the guard is a no-op.
+    """
+    if not absent_corpus_companion_binaries(registry_root, source_root=source_root):
+        return
+    raise CliRefusedBoundaryError(
+        translated_message="cli.registry.errors.corpus_companion_absent",
+        context={"capability": capability, "install": CORPUS_SOURCES_INSTALL_HINT},
+    )
+
+
 @citations_app.command("list", help=tr("cli.registry.citations.list_help"))
 def list_citations_cmd(
     ctx: typer.Context,
@@ -67,7 +91,7 @@ def list_citations_cmd(
         typer.Option("--tag", help=tr("cli.registry.citations.tag_help")),
     ] = None,
 ) -> None:
-    """List the normatives codified in the project's legal corpus."""
+    """List the legal authorities codified in the project's legal corpus."""
     report = list_registry_citations(RegistryCitationsListCommand(tag=tag))
     typed = CitationListResult.model_validate(report.model_dump(mode="json"))
     _emit_envelope(ctx, command="registry.citations.list", result=typed, lines=_citation_list_lines(report))
@@ -76,17 +100,17 @@ def list_citations_cmd(
 @citations_app.command("view", help=tr("cli.registry.citations.view_help"))
 def show_citation_cmd(
     ctx: typer.Context,
-    normative_id: Annotated[
+    legal_id: Annotated[
         str,
-        typer.Argument(help=tr("cli.registry.citations.normative_id_help")),
+        typer.Argument(help=tr("cli.registry.citations.legal_id_help")),
     ],
     articulo: Annotated[
         str | None,
         typer.Option("--articulo", help=tr("cli.registry.citations.articulo_help")),
     ] = None,
 ) -> None:
-    """View one normative and, optionally, one cited article."""
-    report = show_registry_citation(RegistryCitationShowCommand(normative_id=normative_id, articulo=articulo))
+    """View one legal authority and, optionally, one cited article."""
+    report = show_registry_citation(RegistryCitationShowCommand(legal_id=legal_id, articulo=articulo))
     typed = CitationShowResult.model_validate(report.model_dump(mode="json"))
     _emit_envelope(ctx, command="registry.citations.view", result=typed, lines=_citation_show_lines(report))
 
@@ -188,6 +212,11 @@ def verify_manual_cmd(
     ] = ManualPart.SINGLE,
 ) -> None:
     """Verify one manual part against its schema and cross-reference contracts."""
+    guard_corpus_companion(
+        capability=tr("cli.registry.errors.capability.manuals_verify"),
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+    )
     report = verify_registry_manual(RegistryManualVerifyCommand(manual=manual, year=year, part=part))
     typed = ManualVerifyResult.model_validate(report.model_dump(mode="json"))
     _emit_envelope(ctx, command="registry.manuals.verify", result=typed, lines=_manual_verification_lines(report))
@@ -321,4 +350,4 @@ def _manual_verification_lines(report: RegistryManualVerificationReport) -> list
     return lines
 
 
-__all__ = ["citations_app", "manuals_app"]
+__all__ = ["citations_app", "guard_corpus_companion", "manuals_app"]

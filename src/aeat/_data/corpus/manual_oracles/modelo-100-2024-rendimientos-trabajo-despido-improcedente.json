@@ -1,0 +1,14 @@
+{
+  "modelo": "100",
+  "filing_year": 2024,
+  "source_kind": "aeat_manual_worked_example",
+  "scenario_id": "m100-2024-despido-improcedente-discapacidad",
+  "raw_evidence_locator": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L11040-L11131",
+  "notes": "AEAT Manual practico de Renta 2024, Parte 1, Capitulo 3 (Rendimientos del trabajo), caso practico 'Determinar el rendimiento neto reducido del trabajo' for a trabajador con discapacidad del 33 por 100 despedido improcedentemente. The manual states four subtotals verbatim in its own solution: 'Total ingresos computables (20.300 -3.060) = 17.240' (L11123), 'Rendimiento neto previo (17.240 - 3.600 ) (1) = 13.640' (L11125), 'Rendimiento neto: (13.640 - 2.000 - 3.500) = 8.140' (L11129), and 'Rendimiento neto reducido: (8.140 - 7.302) = 838' (L11131). Each figure is independently re-derivable from the raw ingreso/gasto/reduccion line items quoted in the manual via the registry's own 0012/0017/0018/0019/0022/0025 formula chain (see test_m100_2024_rendimientos_trabajo_despido_manual_worked_example.py).",
+  "expected_by_casilla_id": {
+    "0012": "17240.00",
+    "0017": "13640.00",
+    "0022": "8140.00",
+    "0025": "838.00"
+  }
+}

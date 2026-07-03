@@ -14,15 +14,17 @@ Operator verbs:
     :class:`ApoderadoLiveCheckUnavailableError`; use ``status`` for the
     offline configuration read.
 
-Configuration is persisted per-bucket as an encrypted envelope row in
-the :class:`SecureObjectRepository` under the
-``aeat.auth.apoderado`` namespace. The ``represented_nif`` is an
+Configuration is persisted per-bucket as an encrypted
+:class:`adapters.persistence.storage.Envelope` row in the
+:class:`adapters.persistence.storage.SecureObjectRepository` under
+:data:`adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`.
+The ``represented_nif`` is an
 identity-bearing tax identifier, so the record carries
-:class:`SensitivityClass` ``IDENTITY`` and is encrypted at rest; the
-service never writes plaintext to disk. Live mutation of AEAT-side
-apoderamiento state (registrar, ampliar, revocar, confirmar,
-renunciar, presentar-en-representacion) is permanently refused at
-this boundary; the service has no verb that would write to AEAT.
+:class:`adapters.persistence.storage.SensitivityClass` ``IDENTITY`` and
+is encrypted at rest; the service never writes plaintext to disk. Live mutation
+of AEAT-side apoderamiento state (registrar, ampliar, revocar, confirmar,
+renunciar, presentar-en-representacion) is permanently refused at this boundary;
+the service has no verb that would write to AEAT.
 """
 
 from __future__ import annotations
@@ -34,10 +36,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.storage import (
     AUTH_APODERADO_CONFIGURATION_NAMESPACE,
+    SecureBoundRepository,
     SensitivityClass,
     safe_repository_id,
 )
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.identity import BucketId
@@ -86,10 +88,15 @@ class ApoderadoStatus(BaseModel):
 class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
     """Encrypted per-bucket apoderado configuration store.
 
-    Records carry :attr:`SensitivityClass.IDENTITY`: the
-    ``represented_nif`` is an identity-bearing tax identifier. The
-    natural key is the ``bucket_id``, so each bucket holds at most one
-    apoderado configuration.
+    Records carry :class:`adapters.persistence.storage.SensitivityClass`
+    ``IDENTITY`` as declared by
+    :data:`adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`:
+    the ``represented_nif`` is an identity-bearing tax identifier. The
+    :class:`adapters.persistence.storage.SecureBoundRepository`
+    base serialises each
+    :class:`ApoderadoConfiguration` through an
+    :class:`adapters.persistence.storage.Envelope`. The natural key is
+    the ``bucket_id``, so each bucket holds at most one apoderado configuration.
     """
 
     namespace: ClassVar[str] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.namespace

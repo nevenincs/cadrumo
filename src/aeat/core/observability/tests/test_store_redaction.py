@@ -46,74 +46,53 @@ _BEARER_CANARY = (
     "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJ"
 )
 _URL_CANARY = aeat_url("aeat_gob", REDACTION_INTERNAL_PATH_CANARY)
+_STARTED_AT = datetime(2026, 4, 14, tzinfo=UTC)
+_FINISHED_AT = datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC)
 
 
-def test_save_trace_redacts_nif_canary_in_arguments(
-    tmp_path: Path,
-) -> None:
-    """A NIF in arguments must be SHA-256-prefixed on disk, never plaintext."""
+def _trace_with_argument(*, run_id: str, argument_name: str, argument_value: str) -> RunTrace:
+    return RunTrace(
+        run_id=run_id,
+        started_at=_STARTED_AT,
+        finished_at=_FINISHED_AT,
+        entrypoint="aeat hello",
+        arguments=(ArgumentRecord(name=argument_name, value=argument_value, source=ArgumentSource.FLAG),),
+        corpus_sha256="b" * 64,
+        db_sha256="c" * 64,
+        cert_fingerprint="",
+        outcome=RunOutcome.OK,
+    )
+
+
+def test_save_trace_redacts_sensitive_arguments(tmp_path: Path) -> None:
+    """Trace arguments redact NIFs, bearer tokens, and sensitive URL paths before disk."""
+    cases = (
+        (
+            _trace_with_argument(run_id="0123456789abcdef", argument_name="taxpayer", argument_value=_NIF_CANARY),
+            (_NIF_CANARY,),
+            ("sha256:",),
+        ),
+        (
+            _trace_with_argument(run_id="fedcba9876543210", argument_name="auth", argument_value=_BEARER_CANARY),
+            (_BEARER_CANARY,),
+            ("token:sha256:",),
+        ),
+        (
+            _trace_with_argument(run_id="abcdef0123456789", argument_name="endpoint", argument_value=_URL_CANARY),
+            ("/internal/path", "token=12345"),
+            (AEAT_HOST_SUFFIX_EXPECTED,),
+        ),
+    )
+
     with override_settings(aeat_runs_dir=str(tmp_path)):
-        trace = RunTrace(
-            run_id="0123456789abcdef",
-            started_at=datetime(2026, 4, 14, tzinfo=UTC),
-            finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
-            entrypoint="aeat hello",
-            arguments=(ArgumentRecord(name="taxpayer", value=_NIF_CANARY, source=ArgumentSource.FLAG),),
-            corpus_sha256="b" * 64,
-            db_sha256="c" * 64,
-            cert_fingerprint="",
-            outcome=RunOutcome.OK,
-        )
-        save_trace(trace)
-        on_disk = (runs_dir() / trace.run_id / _TRACE_FILENAME).read_text(encoding="utf-8")
-        assert _NIF_CANARY not in on_disk
-        assert "sha256:" in on_disk
+        for trace, forbidden_fragments, required_fragments in cases:
+            save_trace(trace)
+            on_disk = (runs_dir() / trace.run_id / _TRACE_FILENAME).read_text(encoding="utf-8")
 
-
-def test_save_trace_redacts_bearer_token_canary(
-    tmp_path: Path,
-) -> None:
-    """A bearer-token-shaped string must be fingerprinted on disk."""
-    with override_settings(aeat_runs_dir=str(tmp_path)):
-        trace = RunTrace(
-            run_id="fedcba9876543210",
-            started_at=datetime(2026, 4, 14, tzinfo=UTC),
-            finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
-            entrypoint="aeat hello",
-            arguments=(ArgumentRecord(name="auth", value=_BEARER_CANARY, source=ArgumentSource.FLAG),),
-            corpus_sha256="b" * 64,
-            db_sha256="c" * 64,
-            cert_fingerprint="",
-            outcome=RunOutcome.OK,
-        )
-        save_trace(trace)
-        on_disk = (runs_dir() / trace.run_id / _TRACE_FILENAME).read_text(encoding="utf-8")
-        assert _BEARER_CANARY not in on_disk
-        assert "token:sha256:" in on_disk
-
-
-def test_save_trace_redacts_url_path_to_host_only(
-    tmp_path: Path,
-) -> None:
-    """A URL with sensitive path/query must collapse to host-only on disk."""
-    with override_settings(aeat_runs_dir=str(tmp_path)):
-        trace = RunTrace(
-            run_id="abcdef0123456789",
-            started_at=datetime(2026, 4, 14, tzinfo=UTC),
-            finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
-            entrypoint="aeat hello",
-            arguments=(ArgumentRecord(name="endpoint", value=_URL_CANARY, source=ArgumentSource.FLAG),),
-            corpus_sha256="b" * 64,
-            db_sha256="c" * 64,
-            cert_fingerprint="",
-            outcome=RunOutcome.OK,
-        )
-        save_trace(trace)
-        on_disk = (runs_dir() / trace.run_id / _TRACE_FILENAME).read_text(encoding="utf-8")
-        assert "/internal/path" not in on_disk
-        assert "token=12345" not in on_disk
-        # Host stays.
-        assert AEAT_HOST_SUFFIX_EXPECTED in on_disk
+            for forbidden in forbidden_fragments:
+                assert forbidden not in on_disk
+            for required in required_fragments:
+                assert required in on_disk
 
 
 def test_save_events_append_redacts_url_path(
@@ -126,7 +105,7 @@ def test_save_events_append_redacts_url_path(
             step_id="step-0",
             kind=RunEventKind.NAVIGATION,
             payload=RunEventPayload(navigation=NavigationPayload(url=_URL_CANARY)),
-            timestamp=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
+            timestamp=_FINISHED_AT,
             module="aeat.core.observability.test_store_redaction",
         )
         save_events_append(event.run_id, event)

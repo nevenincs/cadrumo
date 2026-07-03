@@ -39,8 +39,11 @@ def _fully_populated_answers() -> SetupAnswers:
         irpf_income_categories="trabajo,capital_inmobiliario,pension",
         irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
         iva_regime=IVARegime.REAGP,
+        iva_group_member_enrolled=True,
+        iva_group_dominant_entity_enrolled=True,
         iva_sii_enrolled=True,
         iva_redeme_enrolled=True,
+        art109_activity_income_withholding_ge_70pct=True,
     )
 
 
@@ -85,14 +88,20 @@ class TestWizardPersistenceRoundTrip:
         assert rebuilt.irpf_income_categories == original.irpf_income_categories
         assert rebuilt.irpf_estimation_regime == original.irpf_estimation_regime
         assert rebuilt.iva_regime == original.iva_regime
+        assert rebuilt.iva_group_member_enrolled == original.iva_group_member_enrolled
+        assert rebuilt.iva_group_dominant_entity_enrolled == original.iva_group_dominant_entity_enrolled
         assert rebuilt.iva_sii_enrolled == original.iva_sii_enrolled
         assert rebuilt.iva_redeme_enrolled == original.iva_redeme_enrolled
+        assert rebuilt.art109_activity_income_withholding_ge_70pct is True
 
     def test_canonical_dict_carries_taxpayer_axis_profile_keys(self) -> None:
         canonical = serialise_answers(SETUP_FLOW, _fully_populated_answers())
         assert canonical["taxpayer_type.entity_type"] == "natural_person"
         assert canonical["taxpayer_type.irpf_income_categories"] == ("trabajo,capital_inmobiliario,pension")
         assert canonical["irpf.estimation_regime"] == "directa_simplificada"
+        assert canonical["irpf.art109_activity_income_withholding_ge_70pct"] == "true"
+        assert canonical["iva.group_member_enrolled"] == "true"
+        assert canonical["iva.group_dominant_entity_enrolled"] == "true"
         assert canonical["iva.sii_enrolled"] == "true"
         assert canonical["iva.redeme_enrolled"] == "true"
 
@@ -124,7 +133,10 @@ class TestTaxpayerProfileProjection:
                 "taxpayer_type.entity_type": "natural_person",
                 "taxpayer_type.irpf_income_categories": "capital_inmobiliario,pension",
                 "irpf.estimation_regime": "objetiva",
+                "irpf.art109_activity_income_withholding_ge_70pct": "true",
                 "iva.regime": "REAGP",
+                "iva.group_member_enrolled": "true",
+                "iva.group_dominant_entity_enrolled": "true",
                 "iva.sii_enrolled": "true",
                 "iva.redeme_enrolled": "true",
             },
@@ -135,7 +147,10 @@ class TestTaxpayerProfileProjection:
             {IrpfIncomeCategory.CAPITAL_INMOBILIARIO, IrpfIncomeCategory.PENSION},
         )
         assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
+        assert profile.art109_activity_income_withholding_ge_70pct is True
         assert profile.iva_regime is IVARegime.REAGP
+        assert profile.iva.group_member_enrolled is True
+        assert profile.iva.group_dominant_entity_enrolled is True
         assert profile.iva.sii_enrolled is True
         assert profile.iva.redeme_enrolled is True
 
@@ -156,12 +171,8 @@ class TestTaxpayerProfileProjection:
         assert profile.cross_period_group_member_rosters[0].member_nifs == ("C00000002", "D00000003")
         assert profile.cross_period_group_member_rosters[1].member_nifs == ("A00000000", "B00000001")
 
-    def test_objetiva_regime_derives_objective_estimation_boolean(self) -> None:
-        """The projection keeps uses_objective_estimation_irpf consistent.
-
-        An OBJETIVA estimation regime from the wizard must derive the
-        legacy boolean the registry schedule predicates still test.
-        """
+    def test_objetiva_regime_projects_structured_axis(self) -> None:
+        """The wizard projects objective estimation through the enum axis."""
 
         profile = taxpayer_profile_from_mapping(
             {
@@ -172,7 +183,6 @@ class TestTaxpayerProfileProjection:
             tax_id_default="00000000T",
         )
         assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
-        assert profile.uses_objective_estimation_irpf is True
 
     def test_undeclared_axes_project_to_safe_empty_defaults(self) -> None:
         """A profile with no taxpayer-axis facts projects to undeclared.
@@ -344,3 +354,83 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
             tax_id_default="00000000T",
         )
         assert profile.new_entity_first_two_profit_periods is None
+
+
+class TestLey49SpecialRegimeRoundTrip:
+    """The Ley 49/2002 Title II option axis survives wizard persistence."""
+
+    def _answers(
+        self,
+        *,
+        option_declared: bool | str = "",
+        option_date: str = "",
+        renunciation_declared: bool | str = "",
+        renunciation_date: str = "",
+    ) -> SetupAnswers:
+        return SetupAnswers(
+            tax_id="G66012345",
+            activity="Foundation activity",
+            entity_type=EntityType.LEGAL_ENTITY,
+            legal_entity_form=LegalEntityForm.SIN_FINES_LUCRATIVOS,
+            ley_49_2002_option_declared=option_declared,
+            ley_49_2002_option_date=option_date,
+            ley_49_2002_renunciation_declared=renunciation_declared,
+            ley_49_2002_renunciation_date=renunciation_date,
+        )
+
+    def test_declared_option_and_renunciation_round_trip_through_canonical_dict(self) -> None:
+        answers = self._answers(
+            option_declared=True,
+            option_date="2024-02-03",
+            renunciation_declared=False,
+            renunciation_date="2026-05-11",
+        )
+        canonical = serialise_answers(SETUP_FLOW, answers)
+
+        assert canonical["taxpayer_type.ley_49_2002_special_regime_option_declared"] == "true"
+        assert canonical["taxpayer_type.ley_49_2002_special_regime_option_date"] == "2024-02-03"
+        assert canonical["taxpayer_type.ley_49_2002_special_regime_renunciation_declared"] == "false"
+        assert canonical["taxpayer_type.ley_49_2002_special_regime_renunciation_date"] == "2026-05-11"
+
+        rebuilt = project_answers(SETUP_FLOW, canonical)
+        assert isinstance(rebuilt, SetupAnswers)
+        assert rebuilt.ley_49_2002_option_declared is True
+        assert rebuilt.ley_49_2002_option_date == "2024-02-03"
+        assert rebuilt.ley_49_2002_renunciation_declared is False
+        assert rebuilt.ley_49_2002_renunciation_date == "2026-05-11"
+
+    def test_undeclared_ley_49_option_state_drops_from_canonical_dict(self) -> None:
+        answers = self._answers()
+        canonical = serialise_answers(SETUP_FLOW, answers)
+
+        assert canonical.get("taxpayer_type.ley_49_2002_special_regime_option_declared") == ""
+        assert canonical.get("taxpayer_type.ley_49_2002_special_regime_option_date") == ""
+        assert canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_declared") == ""
+        assert canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_date") == ""
+
+        persisted = {key: value for key, value in canonical.items() if value}
+        profile = taxpayer_profile_from_mapping(persisted, tax_id_default="00000000T")
+        assert profile.ley_49_2002_special_regime_option_declared is None
+        assert profile.ley_49_2002_special_regime_option_date is None
+        assert profile.ley_49_2002_special_regime_renunciation_declared is None
+        assert profile.ley_49_2002_special_regime_renunciation_date is None
+
+    def test_taxpayer_profile_projects_declared_ley_49_option_facts(self) -> None:
+        profile = taxpayer_profile_from_mapping(
+            {
+                "identity.tax_id": "G66012345",
+                "activities.description": "Foundation activity",
+                "taxpayer_type.entity_type": "legal_entity",
+                "taxpayer_type.legal_entity_form": "sin_fines_lucrativos",
+                "taxpayer_type.ley_49_2002_special_regime_option_declared": "true",
+                "taxpayer_type.ley_49_2002_special_regime_option_date": "2024-02-03",
+                "taxpayer_type.ley_49_2002_special_regime_renunciation_declared": "false",
+                "taxpayer_type.ley_49_2002_special_regime_renunciation_date": "2026-05-11",
+            },
+            tax_id_default="00000000T",
+        )
+
+        assert profile.ley_49_2002_special_regime_option_declared is True
+        assert str(profile.ley_49_2002_special_regime_option_date) == "2024-02-03"
+        assert profile.ley_49_2002_special_regime_renunciation_declared is False
+        assert str(profile.ley_49_2002_special_regime_renunciation_date) == "2026-05-11"

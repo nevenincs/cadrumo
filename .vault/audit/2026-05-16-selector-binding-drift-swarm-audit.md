@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#selector-binding-drift-swarm'
 date: '2026-05-16'
-modified: '2026-05-16'
+modified: '2026-06-29'
 related: []
 ---
 
@@ -190,8 +190,12 @@ docstring misleads readers into believing the typed-selector project is incomple
 when it is not. Similarly, the module docstring at line 12 states "ten typed sources" but the registry
 currently has 16.
 
-**Fix:** Update the test docstring to name `ledger`, `rental`, `vat`, and `category` as the intentionally
-free-form sources. Update the module docstring to reflect the current count (16 typed sources).
+**Current-state note (2026-06-29):** the free-form construction carve-out is closed for bundled registry
+bindings. `_BINDING_SELECTOR_REGISTRY` covers all 1,060 bundled registry-declared bindings, including
+`withholding` and `retenciones_aggregation`; the mesh-only `borrador` and `iva_wallet_decision` enum members
+are refused as `DataBindingDefinition.source` values rather than treated as free-form binding sources. The
+stored `DataBindingDefinition.selector` field now carries the hydrated per-source selector model; raw selector
+maps are confined to authoring input and serialization projection.
 
 ---
 
@@ -242,9 +246,9 @@ handling.
   with a delegation to `_ManualInputSelector`'s typed model, so layout detection remains in sync with the
   selector schema without manual upkeep.
 
-- **P6 (no risk, documentation):** Fix F6 by updating the stale test docstring and module-level count
-  in `test_selector_shape.py` to reflect the current registry (16 typed sources, free-form remainder is
-  `ledger`/`rental`/`vat`/`category`).
+- **P6 (closed/currentized 2026-06-29):** The stale free-form selector-source documentation is no longer live:
+  bundled registry binding sources are all registered in the selector registry, and mesh-only source kinds are
+  refused as `DataBindingDefinition.source` values.
 
 - **P7 (requires design decision):** Fix F7 by deciding whether `party_legal_name` is a required or optional
   row field and encoding that decision either in the `_InvoiceRowField` Literal (remove it if always optional

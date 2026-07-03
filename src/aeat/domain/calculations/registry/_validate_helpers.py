@@ -14,4 +14,11 @@ def _missing_refs(
     catalogue: Mapping[str, LegalReference] | Mapping[str, SourceReference],
     ref_kind: str,
 ) -> list[str]:
-    return [f"{scope}: {owner} references unknown {ref_kind} id {ref!r}" for ref in refs if ref not in catalogue]
+    failures: list[str] = []
+    for ref in refs:
+        entry = catalogue.get(ref)
+        if entry is None:
+            failures.append(f"{scope}: {owner} references unknown {ref_kind} id {ref!r}")
+        elif ref_kind == "legal" and entry.evidence_tier != "legal_authority":
+            failures.append(f"{scope}: {owner} legal ref {ref!r} is not legal authority")
+    return failures

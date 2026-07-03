@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#test-topology-refactor'
 date: '2026-06-05'
-modified: '2026-06-05'
+modified: '2026-06-30'
 related:
   - '[[2026-06-05-test-topology-refactor-adr]]'
   - '[[2026-04-12-base-module-structure-adr]]'
@@ -12,7 +12,6 @@ related:
   - '[[2026-06-01-metastate-zero-tolerance-research]]'
   - '[[2026-06-04-module-test-coverage-research]]'
 ---
-
 
 # `test-topology-refactor` `execution` plan
 

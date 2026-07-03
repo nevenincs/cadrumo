@@ -2,13 +2,29 @@
 
 This module converts CLI override tokens into a
 :class:`WorkCalculateInputBundle`, resolves the active work unit's
-:class:`ModeloRevision`, and validates canonical casilla ids, binding channels,
-relation ids, and shortcut-derived semantic-role casillas before the calculate
-service persists a :class:`CalculationRevision`.
+:class:`~aeat.domain.calculations.registry.ModeloRevision`, and validates
+canonical :class:`~aeat.domain.calculations.registry.CasillaId` values,
+binding channels, relation ids, and shortcut-derived semantic-role casillas
+before the calculate service persists a
+:class:`~aeat.domain.modelos.CalculationRevision`.
 
 The application result pairs that persisted revision with its parent
-:class:`~aeat.domain.modelos._work_unit.WorkUnit` and any non-blocking
-:class:`CalculationSourceDiagnostic` rows surfaced by bucket aggregation.
+:class:`~aeat.domain.modelos.WorkUnit` and any non-blocking
+:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` rows
+surfaced by bucket aggregation or post-calculation advisory collectors.
+
+See Also:
+    :func:`aeat.entrypoints.cli._modelo_work_calculate_cli.register_work_calculate_commands`:
+        Parses the operator-facing ``modelo work calculate`` command and calls
+        this module to build the input bundle.
+    :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+        Consumes the validated bundle and persists the draft calculation
+        revision.
+    :mod:`aeat.application.modelo._calculation_resolution`:
+        Merges caller, backend, profile, relation, and borrador channels before
+        registry-engine execution.
+    :func:`aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_semantic_role`:
+        Resolves shortcut inputs onto the unique casilla declared by a revision.
 """
 
 from __future__ import annotations
@@ -18,36 +34,41 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
-from ...core import Modelo
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...core import Modelo, RescateType
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
+    DataBindingDefinition,
     ModeloRevision,
     RelationId,
+    boolean_binding_encoded_values,
     casilla_noncanonical_reference_targets,
+    casillas_by_id,
     declared_casilla_ids,
     enum_consumed_binding_ids,
     revision_date_binding_ids,
 )
-from ...domain.contribuyente._deduccion_maternidad import compute_deduccion_maternidad_0611
-from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._dt12_reduccion import compute_dt12_reduccion_plan_pensiones
-from ...domain.modelos._errors import ModeloError
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
-from ...domain.modelos._row_models import (
+from ...domain.contribuyente import compute_deduccion_maternidad_0611
+from ...domain.modelos import (
+    CalculationRevision,
+    Dt12WindowEligibility,
     Modelo184MemberRow,
     Modelo184ShareSumError,
     Modelo347ContraparteRow,
     Modelo347ThresholdError,
     ModeloDetailRow,
+    ModeloError,
+    WorkUnit,
+    compute_dt12_reduccion_plan_pensiones,
+    compute_sal_reserva_especial_dotacion,
+    dt12_regime_window_eligibility,
     validate_m184_member_share_sum,
     validate_m347_threshold,
 )
-from ...domain.modelos._sal_reserva_especial import compute_sal_reserva_especial_dotacion
-from ...domain.modelos._work_unit import WorkUnit
 from ..aggregation import CalculationSourceDiagnostic
 from ._registry_helpers import validate_casilla_input_ids
 from ._semantic_role_resolution import (
@@ -60,6 +81,7 @@ _INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternida
 _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE = "irpf_deduccion_maternidad"
 _REDUCCION_TRABAJO_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_reduccion"
 _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
+_DETAIL_CASILLA_OVERRIDE_PREFIXES = ("perc.", "perceptor.", "inmueble.")
 
 
 class ModeloCalculateInputError(ModeloError, ValueError):
@@ -72,6 +94,10 @@ class ModeloCalculateDetailRowsError(ModeloCalculateInputError):
 
 class ModeloCalculateDecimalInputError(ModeloCalculateInputError):
     """Raised when a calculation override value is not decimal-shaped."""
+
+
+class ModeloCalculateTextInputError(ModeloCalculateInputError):
+    """Raised when a ``--casilla`` override targets a text casilla with an empty value."""
 
 
 class ModeloCalculateCasillaInputError(ModeloCalculateInputError):
@@ -96,14 +122,40 @@ class ModeloCalculateSemanticRoleError(ModeloCalculateInputError):
 
 @dataclass(frozen=True, slots=True)
 class WorkCalculateInputBundle:
-    """Application-facing inputs for one `modelo work calculate` run."""
+    """Application-facing input channels for one ``modelo work calculate`` run.
+
+    The bundle is the handoff from CLI parsing to application calculation. It
+    separates manual casilla inputs, text casilla inputs, decimal binding
+    overrides, enum binding overrides, relation values, typed detail rows, and
+    the optional borrador snapshot id so each downstream channel keeps its
+    registry-declared type. ``text_casilla_inputs`` carries operator-supplied
+    ``data_type = "text"`` casilla values (e.g. Modelo 210's ``tipo_renta``) on
+    a channel parallel to ``casilla_inputs``: the registry engine's
+    ``calculate_registry_snapshot(text_inputs=...)`` reads it for categorical
+    formula dispatch, and it rides into the persisted
+    :class:`~aeat.domain.modelos.CalculationRevision`
+    ``input_values_by_casilla_id`` field so the verification layer's
+    required-casilla and
+    ``casilla_equals_implies_nonzero`` predicate checks can see it. It is never
+    folded into the Decimal ``casilla_values`` projection.
+    """
 
     casilla_inputs: Mapping[CasillaId, Decimal]
+    text_casilla_inputs: Mapping[CasillaId, str]
     binding_values: Mapping[BindingId, Decimal]
     enum_binding_values: Mapping[BindingId, str]
     relation_values: Mapping[RelationId, Decimal]
     detail_rows: tuple[ModeloDetailRow, ...]
     borrador_snapshot_id: str | None
+    shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+    """Non-blocking advisories raised while resolving shortcut inputs.
+
+    Carries the DT 12ª apartado-4 window diagnostics
+    (:func:`apply_calculation_shortcut_inputs`) so the calculate service can fold
+    them into its ``source_diagnostics`` / ``source_advisories`` channel. The
+    shortcut path is the only site with the contingencia/rescate year facts, so
+    the advisory originates here and rides the bundle to the operator surface.
+    """
 
     @classmethod
     def build(
@@ -115,6 +167,8 @@ class WorkCalculateInputBundle:
         relation_values: Mapping[RelationId, Decimal],
         detail_rows: tuple[ModeloDetailRow, ...],
         borrador_snapshot_id: str | None,
+        text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+        shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = (),
     ) -> WorkCalculateInputBundle:
         """Freeze CLI-assembled mappings before crossing into calculation services.
 
@@ -123,15 +177,17 @@ class WorkCalculateInputBundle:
         """
         return cls(
             casilla_inputs=dict(casilla_inputs),
+            text_casilla_inputs=dict(text_casilla_inputs or {}),
             binding_values=dict(binding_values),
             enum_binding_values=dict(enum_binding_values),
             relation_values=dict(relation_values),
             detail_rows=detail_rows,
             borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
+            shortcut_diagnostics=shortcut_diagnostics,
         )
 
     def optional_binding_values(self) -> Mapping[BindingId, Decimal] | None:
-        """Return binding values using the calculation-service optional contract."""
+        """Return decimal binding values using the calculation-service optional contract."""
         return self.binding_values or None
 
     def optional_enum_binding_values(self) -> Mapping[BindingId, str] | None:
@@ -142,10 +198,19 @@ class WorkCalculateInputBundle:
         """Return relation values using the calculation-service optional contract."""
         return self.relation_values or None
 
+    def optional_text_casilla_inputs(self) -> Mapping[CasillaId, str] | None:
+        """Return text casilla inputs using the calculation-service optional contract."""
+        return self.text_casilla_inputs or None
+
 
 @dataclass(frozen=True, slots=True)
 class Modelo202ModalitySummary:
-    """Application summary of the Modelo 202 Art. 40.2 / 40.3 modality."""
+    """Application summary of the Modelo 202 Art. 40.2 / 40.3 modality.
+
+    The calculate CLI includes this advisory when the work unit is a Modelo 202
+    calculation so the operator can see which registry modality the profile
+    selected and why.
+    """
 
     modality: str
     reason: str
@@ -153,7 +218,12 @@ class Modelo202ModalitySummary:
 
 @dataclass(frozen=True, slots=True)
 class ModeloAuthorizationAdvisorySummary:
-    """Application summary for an unauthorized-but-computable modelo."""
+    """Application summary for an unauthorized-but-computable modelo.
+
+    A modelo can have a local registry engine while still being marked as not
+    authorised for filing. The calculate command keeps the computation path
+    available and carries this advisory for the rendering layer.
+    """
 
     state: str
 
@@ -162,14 +232,22 @@ class ModeloAuthorizationAdvisorySummary:
 class ModeloWorkCalculationServiceResult:
     """Application-owned result for one `modelo work calculate` command.
 
+    ``revision`` is the persisted
+    :class:`~aeat.domain.modelos.CalculationRevision`; ``work_unit`` is the
+    parent :class:`~aeat.domain.modelos.WorkUnit` loaded after persistence so
+    renderers do not have to repeat the lookup. The optional advisory summaries
+    are presentation data derived from registry applicability and authorization
+    metadata.
+
     ``source_diagnostics`` carries the NON-blocking
-    :class:`CalculationSourceDiagnostic` rows the source mesh raised while
-    resolving the bucket ledger — notably the unconsumed-declarable-IVA
-    advisories (a declarable IVA observation no ``ledger_iva_aggregation``
-    binding selects). The calculate verb succeeded regardless; surfacing them
-    keeps an unrouted observation from being silently under-declared
+    :class:`~aeat.application.aggregation.CalculationSourceDiagnostic` rows the
+    source mesh and post-calculation advisory collectors raised. They include
+    unresolved or deferred binding sources, unrouted ledger observations, and
+    calculate-grade official-box / prior-payment / settlement advisories. The
+    calculate verb succeeded and persisted the revision regardless; surfacing
+    these rows keeps omitted or degraded source evidence operator-visible
     (no-silent-under-declaration). Each diagnostic's ``message`` carries the
-    observation's category / rate / flow provenance.
+    evidence needed by the CLI renderer.
     """
 
     revision: CalculationRevision
@@ -185,7 +263,20 @@ def calculate_modelo_work_revision(
     actor: str,
     inputs: WorkCalculateInputBundle,
 ) -> ModeloWorkCalculationServiceResult:
-    """Persist a draft revision and return a :class:`ModeloWorkCalculationServiceResult`."""
+    """Persist a draft calculation revision as a :class:`ModeloWorkCalculationServiceResult`.
+
+    The function forwards the already validated :class:`WorkCalculateInputBundle`
+    into the bucket-aggregation calculation path, reloads the parent
+    :class:`~aeat.domain.modelos.WorkUnit`, and attaches any Modelo 202
+    modality, authorization, or non-blocking source diagnostics needed by the
+    CLI payload.
+
+    See Also:
+        :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+            Runs source aggregation and persists the calculation revision.
+        :func:`aeat.entrypoints.cli._modelo_work_calculate_cli._run_work_calculate`:
+            Calls this service and serialises the result for the operator.
+    """
     from ._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
     from ._work_lifecycle import get_work_unit
 
@@ -193,6 +284,7 @@ def calculate_modelo_work_revision(
         work_unit_id,
         actor=actor,
         casilla_inputs=inputs.casilla_inputs,
+        text_casilla_inputs=inputs.optional_text_casilla_inputs(),
         binding_values=inputs.optional_binding_values(),
         enum_binding_values=inputs.optional_enum_binding_values(),
         borrador_snapshot_id=inputs.borrador_snapshot_id,
@@ -206,14 +298,14 @@ def calculate_modelo_work_revision(
         work_unit=work_unit,
         modality=modelo_202_modality_for_work_unit(work_unit),
         authorization_advisory=authorization_advisory_for_modelo(str(work_unit.modelo)),
-        source_diagnostics=calculation.source_diagnostics,
+        source_diagnostics=(*inputs.shortcut_diagnostics, *calculation.source_diagnostics),
     )
 
 
 def build_work_calculate_input_bundle(
     *,
     work_unit_id: str,
-    casilla_overrides: Mapping[CasillaId, str],
+    casilla_overrides: Mapping[str, str],
     binding_overrides: Mapping[BindingId, str],
     relation_overrides: Mapping[RelationId, str],
     detail_rows: tuple[ModeloDetailRow, ...],
@@ -223,24 +315,54 @@ def build_work_calculate_input_bundle(
     rescate_plan_pensiones_capital: Decimal | None = None,
     rescate_plan_pensiones_aportaciones_pre_2007: Decimal | None = None,
     rescate_plan_pensiones_aportaciones_totales: Decimal | None = None,
+    rescate_plan_pensiones_tipo: RescateType | None = None,
+    rescate_plan_pensiones_contingencia_year: int | None = None,
+    rescate_plan_pensiones_rescate_year: int | None = None,
     sal_beneficio_neto: Decimal | None = None,
     sal_reserva_dotada: Decimal | None = None,
     sal_capital_social: Decimal | None = None,
     autoconsumo_promotor_base: Decimal | None = None,
 ) -> WorkCalculateInputBundle:
-    """Build a :class:`WorkCalculateInputBundle` from operator-supplied override tokens."""
+    """Build a :class:`WorkCalculateInputBundle` from operator-supplied tokens.
+
+    The active work unit determines the
+    :class:`~aeat.domain.calculations.registry.ModeloRevision` used for every
+    validation step. ``--casilla`` values must be canonical casilla ids; printed
+    numbers and ambiguous noncanonical references are refused. A ``--casilla``
+    key whose registry :class:`~aeat.domain.calculations.registry.CasillaDefinition`
+    declares ``data_type = "text"`` (e.g. Modelo 210's ``tipo_renta``) is routed
+    onto the parallel text-casilla channel as a raw, non-empty string instead of
+    being forced through the decimal parser; every other ``--casilla`` key keeps
+    the existing decimal-only contract. ``--binding`` is routed by the
+    registry-declared channel, so enum bindings stay as strings, decimal
+    bindings are parsed as :class:`~decimal.Decimal`, and date-valued profile
+    bindings are rejected with profile guidance. ``--relation`` values must
+    match declared relation ids.
+
+    Detail rows are checked before engine dispatch, and shortcut flags are
+    translated into semantic-role casilla values or backend-owned bindings by
+    :func:`aeat.application.modelo.apply_calculation_shortcut_inputs`.
+    """
     _validate_detail_rows(detail_rows)
     revision = _revision_for_work_unit(work_unit_id)
+    revision_casillas_by_id = casillas_by_id(revision)
     casilla_inputs: dict[CasillaId, Decimal] = {}
+    text_casilla_inputs: dict[CasillaId, str] = {}
     for raw_key, raw_value in casilla_overrides.items():
+        _refuse_detail_casilla_override(raw_key)
         key = _validated_canonical_casilla_id(raw_key, revision)
-        casilla_inputs[key] = _decimal(raw_value, flag="--casilla", key=key)
+        casilla_def = revision_casillas_by_id.get(key)
+        if casilla_def is not None and casilla_def.data_type == "text":
+            text_casilla_inputs[key] = _text_value(raw_value, key=key)
+        else:
+            casilla_inputs[key] = _decimal(raw_value, flag="--casilla", key=key)
     casilla_inputs = validate_casilla_input_ids(revision, casilla_inputs)
 
     binding_values: dict[BindingId, Decimal] = {}
     enum_binding_values: dict[BindingId, str] = {}
     if binding_overrides:
-        known_binding_ids = {binding.id for binding in revision.bindings}
+        bindings_by_id = {binding.id: binding for binding in revision.bindings}
+        known_binding_ids = set(bindings_by_id)
         enum_channel_ids = enum_consumed_binding_ids(revision)
         date_channel_ids = revision_date_binding_ids(revision)
         for raw_key, raw_value in binding_overrides.items():
@@ -258,9 +380,9 @@ def build_work_calculate_input_bundle(
             if channel == "enum":
                 enum_binding_values[key] = raw_value
             else:
-                binding_values[key] = _decimal(raw_value, flag="--binding", key=key)
+                binding_values[key] = _decimal_binding_value(raw_value, bindings_by_id[key])
 
-    casilla_inputs, binding_values = apply_calculation_shortcut_inputs(
+    casilla_inputs, binding_values, shortcut_diagnostics = apply_calculation_shortcut_inputs(
         work_unit_id=work_unit_id,
         casilla_inputs=casilla_inputs,
         binding_values=binding_values,
@@ -269,6 +391,9 @@ def build_work_calculate_input_bundle(
         rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
         rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
         rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
+        rescate_plan_pensiones_tipo=rescate_plan_pensiones_tipo,
+        rescate_plan_pensiones_contingencia_year=rescate_plan_pensiones_contingencia_year,
+        rescate_plan_pensiones_rescate_year=rescate_plan_pensiones_rescate_year,
         sal_beneficio_neto=sal_beneficio_neto,
         sal_reserva_dotada=sal_reserva_dotada,
         sal_capital_social=sal_capital_social,
@@ -282,11 +407,13 @@ def build_work_calculate_input_bundle(
         relation_values[key] = _decimal(raw_value, flag="--relation", key=key)
     return WorkCalculateInputBundle.build(
         casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         relation_values=relation_values,
         detail_rows=detail_rows,
         borrador_snapshot_id=borrador_snapshot_id,
+        shortcut_diagnostics=shortcut_diagnostics,
     )
 
 
@@ -322,6 +449,85 @@ def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
             context={"flag": flag, "key": key, "value": raw_value},
             translated_message="application.modelo.errors.calculate_decimal_input_invalid",
         ) from exc
+
+
+def _decimal_binding_value(raw_value: str, binding: DataBindingDefinition) -> Decimal:
+    """Parse a ``--binding`` decimal value, teaching the accepted encoding on failure.
+
+    For a boolean-typed decimal-channel binding (the Modelo 100 estimación-directa
+    modality flag), a non-numeric value such as ``false`` otherwise produces the
+    opaque "is not a decimal" error. This raises an instructive refusal that names
+    the accepted ``0`` / ``1`` encoding and what each value means, derived from the
+    binding's boolean selector rather than a per-form hardcoded table.
+    """
+    encoded_options = boolean_binding_encoded_values(binding)
+    try:
+        return Decimal(raw_value)
+    except (InvalidOperation, ValueError) as exc:
+        if encoded_options:
+            mapping = ", ".join(
+                f"{option.encoded_value} ({'true' if option.boolean_meaning else 'false'} = "
+                f"registry value {option.registry_value!r})"
+                for option in encoded_options
+            )
+            accepted = ", ".join(option.encoded_value for option in encoded_options)
+            raise ModeloCalculateDecimalInputError(
+                f"--binding value for {binding.id!r} is a decimal-encoded boolean flag and must "
+                f"be one of: {accepted}. Received {raw_value!r}. Accepted encoding: {mapping}. "
+                "Run `aeat app modelo bindings list <MODELO>` to see each binding's encoding.",
+                context={
+                    "flag": "--binding",
+                    "key": binding.id,
+                    "value": raw_value,
+                    "accepted": accepted,
+                    "mapping": mapping,
+                },
+                translated_message="application.modelo.errors.calculate_boolean_binding_encoding_invalid",
+            ) from exc
+        raise ModeloCalculateDecimalInputError(
+            f"--binding value for {binding.id!r} is not a decimal: {raw_value!r}",
+            context={"flag": "--binding", "key": binding.id, "value": raw_value},
+            translated_message="application.modelo.errors.calculate_decimal_input_invalid",
+        ) from exc
+
+
+def _text_value(raw_value: str, *, key: str) -> str:
+    """Validate a ``--casilla`` value routed to a ``data_type = "text"`` casilla.
+
+    Mirrors the registry engine's own
+    :func:`aeat.domain.calculations.registry.validated_text_input_casilla_ids`
+    non-empty-string contract at the CLI boundary, so an empty text value
+    refuses loudly here instead of surfacing a generic registry error deeper in
+    the calculation pipeline.
+    """
+    value = raw_value.strip()
+    if not value:
+        raise ModeloCalculateTextInputError(
+            f"--casilla value for {key!r} is a text casilla and must be a non-empty string; got {raw_value!r}",
+            context={"key": key, "value": raw_value},
+            translated_message="application.modelo.errors.calculate_text_input_empty",
+        )
+    return value
+
+
+def _refuse_detail_casilla_override(key: str) -> None:
+    """Reject detail-row aliases before the decimal-only casilla path parses values."""
+    if not is_detail_casilla_override_key(key):
+        return
+    raise ModeloCalculateCasillaInputError(
+        f"--casilla {key!r} names a Modelo 180 perceptor/property detail field, not a scalar decimal "
+        "casilla input. The local work --casilla channel only accepts scalar decimal casillas; "
+        "Modelo 180 perceptor/property detail rows are not supported on the public --row surface yet. "
+        "Use `aeat app modelo aggregate --modelo 180 --retencion-observation ...` for the supported "
+        "annual perceptor count/base/retenciones source, and do not supply string fields through --casilla.",
+        context={"key": key},
+        translated_message="application.modelo.errors.calculate_detail_casilla_unsupported",
+    )
+
+
+def is_detail_casilla_override_key(key: str) -> bool:
+    """Return whether *key* names a reserved detail-row alias, not a scalar casilla."""
+    return key.strip().lower().startswith(_DETAIL_CASILLA_OVERRIDE_PREFIXES)
 
 
 def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
@@ -386,8 +592,7 @@ def _validated_relation_id(key: str, known_relation_ids: set[RelationId]) -> Rel
         return key
     accepted = ", ".join(sorted(known_relation_ids))
     raise ModeloCalculateRelationInputError(
-        f"--relation {key!r} does not match any relation id in this revision. "
-        f"Accepted relation ids: {accepted}.",
+        f"--relation {key!r} does not match any relation id in this revision. Accepted relation ids: {accepted}.",
         context={"key": key, "accepted": accepted},
         translated_message="application.modelo.errors.calculate_relation_unknown",
     )
@@ -430,13 +635,18 @@ def _validated_canonical_casilla_id(key: str, revision: ModeloRevision) -> Casil
 
 
 def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalitySummary | None:
-    """Return a :class:`Modelo202ModalitySummary` for a work unit, or ``None`` when not applicable."""
+    """Return a :class:`Modelo202ModalitySummary` for ``work_unit`` when applicable.
+
+    Non-Modelo-202 work units return ``None``. For Modelo 202, the active
+    profile projection is passed to the registry applicability helper so the
+    calculate payload can disclose whether Art. 40.2 or Art. 40.3 was selected.
+    """
     if str(work_unit.modelo) != Modelo.M202:
         return None
 
-    from ...application.user_profile import projection_for_taxpayer
-    from ...application.workflow import workflow_state_repository
-    from ...domain.calculations.registry.applicability import derive_modelo_202_modality
+    from ...domain.calculations.registry import derive_modelo_202_modality
+    from ..user_profile import projection_for_taxpayer
+    from ..workflow import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
@@ -446,7 +656,12 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
 
 
 def authorization_advisory_for_modelo(modelo: str) -> ModeloAuthorizationAdvisorySummary | None:
-    """Return a :class:`ModeloAuthorizationAdvisorySummary` for an unauthorized-but-computable modelo."""
+    """Return a :class:`ModeloAuthorizationAdvisorySummary` for an unauthorized-but-computable modelo.
+
+    Authorized modelos and modelos without a local calculation engine return
+    ``None``. Unauthorized modelos with an engine return the registry
+    authorization state for non-blocking CLI disclosure.
+    """
     from ...core.access_gate import AuthorizationState
 
     try:
@@ -470,19 +685,48 @@ def apply_calculation_shortcut_inputs(
     rescate_plan_pensiones_capital: Decimal | None = None,
     rescate_plan_pensiones_aportaciones_pre_2007: Decimal | None = None,
     rescate_plan_pensiones_aportaciones_totales: Decimal | None = None,
+    rescate_plan_pensiones_tipo: RescateType | None = None,
+    rescate_plan_pensiones_contingencia_year: int | None = None,
+    rescate_plan_pensiones_rescate_year: int | None = None,
     sal_beneficio_neto: Decimal | None = None,
     sal_reserva_dotada: Decimal | None = None,
     sal_capital_social: Decimal | None = None,
     autoconsumo_promotor_base: Decimal | None = None,
-) -> tuple[dict[CasillaId, Decimal], dict[BindingId, Decimal]]:
+) -> tuple[dict[CasillaId, Decimal], dict[BindingId, Decimal], tuple[CalculationSourceDiagnostic, ...]]:
     """Apply backend-owned tax shortcut inputs for a calculation command.
 
     The CLI may parse option strings into typed values, but legal-rule
     computations, semantic casilla routing, and special binding injection
-    belong to the application layer.
+    belong to the application layer. INSS maternity/paternity, maternity
+    deduction, DT 12 pension-rescue reduction, and SAL reserve inputs resolve to
+    unique semantic-role casillas. The Modelo 303 autoconsumo-promotor shortcut
+    writes the backend-owned binding consumed by the registry engine.
+
+    The DT 12ª pension-rescate shortcut is fact-gated by the apartado-4 time
+    window (LIRPF DT 12ª.4, added by Ley 26/2014). When the operator declares the
+    contingencia year and the window predicate
+    (:func:`~aeat.domain.modelos.dt12_regime_window_eligibility`) proves the
+    window CLOSED, the 40% reducción injection is WITHHELD — the legally correct
+    no-régimen result, since applying an out-of-window reducción would be a silent
+    over-reduction (under-declaration of tax per ``no-silent-under-declaration``).
+    When the window is open the reducción injects as usual; when the contingencia
+    year is absent the reducción injects with an unverified-window advisory. Every
+    branch surfaces a non-blocking
+    :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`; calculate
+    never aborts on the window verdict.
+
+    Returns:
+        A triple: resolved casilla inputs, resolved decimal binding values, and
+        the non-blocking DT 12ª window advisory diagnostics (empty when no
+        pension rescate was supplied).
+
+    See Also:
+        :func:`aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_semantic_role`:
+            Selects the unique semantic-role casilla for shortcut values.
     """
     resolved_casilla_values = dict(casilla_inputs)
     resolved_bindings = dict(binding_values)
+    advisories: list[CalculationSourceDiagnostic] = []
 
     if prestacion_inss_exenta is not None:
         resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _INSS_EXENTA_SEMANTIC_ROLE)] = (
@@ -491,8 +735,8 @@ def apply_calculation_shortcut_inputs(
 
     if meses_trabajo_con_hijo_menor_3:
         deduccion = compute_deduccion_maternidad_0611(list(meses_trabajo_con_hijo_menor_3))
-        resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE)] = (
-            Decimal(deduccion)
+        resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE)] = Decimal(
+            deduccion
         )
 
     pension_values = (
@@ -510,13 +754,28 @@ def apply_calculation_shortcut_inputs(
         assert rescate_plan_pensiones_capital is not None
         assert rescate_plan_pensiones_aportaciones_pre_2007 is not None
         assert rescate_plan_pensiones_aportaciones_totales is not None
-        resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _REDUCCION_TRABAJO_SEMANTIC_ROLE)] = (
-            compute_dt12_reduccion_plan_pensiones(
-                gross_rescate=rescate_plan_pensiones_capital,
-                aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
-                aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
-            )
+        reduccion = compute_dt12_reduccion_plan_pensiones(
+            gross_rescate=rescate_plan_pensiones_capital,
+            aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
+            aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
         )
+        reduccion_casilla_id = _semantic_role_casilla_id(work_unit_id, _REDUCCION_TRABAJO_SEMANTIC_ROLE)
+        eligibility = _dt12_window_verdict(
+            work_unit_id=work_unit_id,
+            contingencia_year=rescate_plan_pensiones_contingencia_year,
+            rescate_year=rescate_plan_pensiones_rescate_year,
+        )
+        inject, window_advisory = _dt12_window_decision(
+            reduccion=reduccion,
+            eligibility=eligibility,
+            reduccion_casilla_id=reduccion_casilla_id,
+        )
+        if inject:
+            resolved_casilla_values[reduccion_casilla_id] = reduccion
+        if window_advisory is not None:
+            advisories.append(window_advisory)
+        if rescate_plan_pensiones_tipo is RescateType.PARCIAL:
+            advisories.append(_dt12_parcial_guidance_advisory(reduccion_casilla_id))
 
     sal_values = (sal_beneficio_neto, sal_reserva_dotada, sal_capital_social)
     if any(value is not None for value in sal_values):
@@ -539,7 +798,98 @@ def apply_calculation_shortcut_inputs(
     if autoconsumo_promotor_base is not None:
         resolved_bindings[_AUTOCONSUMO_PROMOTOR_BINDING] = autoconsumo_promotor_base
 
-    return resolved_casilla_values, resolved_bindings
+    return resolved_casilla_values, resolved_bindings, tuple(advisories)
+
+
+def _dt12_window_verdict(
+    *,
+    work_unit_id: str,
+    contingencia_year: int | None,
+    rescate_year: int | None,
+) -> Dt12WindowEligibility | None:
+    """Evaluate the DT 12ª apartado-4 window when the contingencia year is declared.
+
+    The contingencia year is the load-bearing fact: without it the window cannot
+    be evaluated and the caller emits the unverified-window advisory. The rescate
+    (percepción) year defaults to the work unit's filing year, the common case
+    (the prestación is percibida in the year being filed).
+    """
+    if contingencia_year is None:
+        return None
+    resolved_rescate_year = rescate_year if rescate_year is not None else _work_unit_filing_year(work_unit_id)
+    return dt12_regime_window_eligibility(
+        contingencia_year=contingencia_year,
+        rescate_year=resolved_rescate_year,
+    )
+
+
+def _dt12_window_decision(
+    *,
+    reduccion: Decimal,
+    eligibility: Dt12WindowEligibility | None,
+    reduccion_casilla_id: CasillaId,
+) -> tuple[bool, CalculationSourceDiagnostic | None]:
+    """Decide whether to inject the DT 12ª reducción and which advisory to raise.
+
+    Returns ``(inject, advisory)``. A proven-closed window WITHHOLDS the injection
+    (``inject = False``) and raises a ``dt12_regime_window_closed`` advisory naming
+    the closed window and eligible range; an open window injects with no advisory;
+    an absent contingencia year injects with a ``dt12_regime_window_unverified``
+    advisory.
+    """
+    if eligibility is None:
+        return True, CalculationSourceDiagnostic(
+            reason="dt12_regime_window_unverified",
+            source_kind="dt12_regime_window",
+            message=(
+                "DT 12ª: the 40% pension-rescate reducción was applied, but the apartado-4 time "
+                "window (LIRPF DT 12ª.4, Ley 26/2014) was not verified because no contingencia year "
+                "was declared. The régimen applies only to prestaciones percibidas within the window "
+                "measured from the contingencia year (the contingencia year plus the two following, "
+                "or through 2018 for contingencias in 2010 or earlier, or the eighth following "
+                "ejercicio for 2011–2014). Re-run with --contingencia-year to confirm the window."
+            ),
+            casilla_id=reduccion_casilla_id,
+        )
+    if eligibility.eligible:
+        return True, None
+    return False, CalculationSourceDiagnostic(
+        reason="dt12_regime_window_closed",
+        source_kind="dt12_regime_window",
+        message=(
+            "DT 12ª: the 40% pension-rescate reducción was WITHHELD. The apartado-4 time window "
+            "(LIRPF DT 12ª.4, Ley 26/2014) is CLOSED for this rescate: a contingencia in "
+            f"{eligibility.contingencia_year} was eligible only for prestaciones percibidas through "
+            f"{eligibility.eligible_through_year}, but the rescate is declared in "
+            f"{eligibility.rescate_year}. Applying the reducción would over-reduce the return "
+            "(under-declaration of tax); it is withheld as the legally correct result."
+        ),
+        casilla_id=reduccion_casilla_id,
+    )
+
+
+def _dt12_parcial_guidance_advisory(reduccion_casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+    """Return the parcial-rescate guidance advisory (guidance signal, not a gate)."""
+    return CalculationSourceDiagnostic(
+        reason="dt12_parcial_rescate_guidance",
+        source_kind="dt12_regime_window",
+        message=(
+            "DT 12ª parcial rescate: every partial cobro of the same contingency shares ONE "
+            "apartado-4 time window, measured once from the contingencia year (it does not restart "
+            "per withdrawal). Confirm each cobro falls inside that window, and note that a mixed "
+            "capital/renta rescate may forfeit the transitional régimen (DGT criteria: the "
+            "prestación must be received en forma de capital)."
+        ),
+        casilla_id=reduccion_casilla_id,
+    )
+
+
+def _work_unit_filing_year(work_unit_id: str) -> int:
+    catalogue = WorkUnitCatalogueRepository().load()
+    work_unit = catalogue.get(work_unit_id)
+    if work_unit is None:
+        raise LookupError(f"work unit {work_unit_id!r} not found")
+    return work_unit.filing_year
 
 
 def _semantic_role_casilla_id(work_unit_id: str, semantic_role: str) -> CasillaId:
@@ -583,11 +933,13 @@ __all__ = [
     "ModeloCalculateRelationInputError",
     "ModeloCalculateSemanticRoleError",
     "ModeloCalculateShortcutInputError",
+    "ModeloCalculateTextInputError",
     "ModeloWorkCalculationServiceResult",
     "WorkCalculateInputBundle",
     "apply_calculation_shortcut_inputs",
     "authorization_advisory_for_modelo",
     "build_work_calculate_input_bundle",
     "calculate_modelo_work_revision",
+    "is_detail_casilla_override_key",
     "modelo_202_modality_for_work_unit",
 ]

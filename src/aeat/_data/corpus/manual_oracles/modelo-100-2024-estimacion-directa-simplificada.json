@@ -1,0 +1,11 @@
+{
+  "modelo": "100",
+  "filing_year": 2024,
+  "source_kind": "aeat_manual_worked_example",
+  "scenario_id": "m100-2024-medico-radiologo-simplificada",
+  "raw_evidence_locator": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L19807-L19965",
+  "notes": "AEAT Manual practico de Renta 2024, Parte 1, Capitulo 7 (Rendimientos de actividades economicas. Metodo de estimacion directa), caso practico de determinacion del rendimiento neto derivado de actividad profesional en estimacion directa, modalidad simplificada. Table rows 'Rendimiento neto' (58.300 registrado / 58.100 fiscal, L19912), 'Rendimiento neto reducido' (58.100, L19913) and 'Rendimiento neto reducido total' (58.100, L19914) all agree on 58.100; the value is independently re-derivable bottom-up from every raw ingreso/gasto line item quoted in the manual via the registry's own 0180/0218/0221/0222/0223/0224 formula chain (see test_m100_2024_estimacion_directa_manual_worked_example.py).",
+  "expected_by_casilla_id": {
+    "0226": "58100.00"
+  }
+}

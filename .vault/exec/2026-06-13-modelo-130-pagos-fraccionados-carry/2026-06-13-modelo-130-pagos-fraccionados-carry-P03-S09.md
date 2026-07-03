@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S09'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
 ---
-
-
-
 
 # materialise casilla 05 as a clean Decimal zero with the absent-by-design provenance marker when the span is empty (true 1T, first-filer first quarter, or alta quarter), null-not-error, mirroring the casilla-15 1T path
 

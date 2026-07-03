@@ -36,9 +36,8 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile._orchestration import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
 from ....tests.cli_runner import invoke_cached_cli
@@ -68,10 +67,12 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("default"),
+        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
     ):
         try:
-            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
+            workflow_state_repository().update(
+                lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
+            )
             yield
         finally:
             dispose_engine()

@@ -1,10 +1,11 @@
-"""Application services for bucket-scoped manual ledger transactions.
+"""Shared ledger action helpers for repositories, events, and guards.
 
-Services operate over a :class:`TransactionCatalogueRepository` for ledger
-state, a :class:`BucketEventHistoryRepository` for durable audit events, and
-an optional :class:`InvoiceCatalogueRepository` for purchase-invoice evidence
-cascade on removal. The inner functions accept a :class:`TransactionCatalogue`
-or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
+This module normalizes concrete :class:`TransactionCatalogueRepository`,
+:class:`InvoiceCatalogueRepository`, and :class:`BucketEventHistoryRepository`
+instances; builds :class:`~aeat.domain.buckets.BucketEvent` audit entries;
+mutates :class:`TransactionCatalogue` and :class:`InvoiceCatalogue` snapshots
+atomically; and verifies evidence, attachment, usage-ratio, and
+finalized-modelo blockers for the public ledger action services.
 """
 
 from __future__ import annotations
@@ -20,42 +21,42 @@ from ...core.time import now
 if TYPE_CHECKING:
     pass
 
-from ...core.time._utc import coerce_utc_aware
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
+from ...core.time import coerce_utc_aware
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
-from ...domain.attachments._protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
+from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
     BucketEvent,
-    BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
-from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
+from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
-from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._calculation_revision import CalculationRevisionState
-from ...domain.modelos._protocols import (
+from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionState,
     WorkUnitCatalogueRepositoryProtocol,
 )
-from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.transactions import (
     TX_BUCKET_NAMESPACE,
     BucketTransactionRef,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
+    TransactionCatalogueRepositoryProtocol,
     TransactionNotFoundError,
     TransactionValidationError,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios import (
     UsageRatioProfile,
     UsageRatioValidationError,
-    load_usage_ratios,
     validate_usage_ratio_reference,
 )
 from ._models import (
@@ -128,7 +129,7 @@ def _bucket_event_repository(
     if repository is not None:
         assert isinstance(repository, BucketEventHistoryRepository)
         return repository
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
 
     return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
 
@@ -171,7 +172,7 @@ def _required_patched[T](
     """Return ``patch.<field>`` when in patch_fields and non-null; otherwise the fallback.
 
     Raises ``TransactionValidationError`` when the field is set on the
-    patch but explicitly nulled â€” the patch contract forbids resetting a
+    patch but explicitly nulled - the patch contract forbids resetting a
     required value to None. Generic in ``T`` so the caller's field type
     flows through to the assignment site (type checkers see the concrete
     type at the use point, not ``object``).
@@ -400,7 +401,7 @@ def _purchase_invoice_evidence_record_exists(bucket_id: str, evidence_id: str) -
     distinct from the rich :class:`InvoiceCatalogue` written by invoice-import flows.
     Local imports mirror this module's existing deferred-import style.
     """
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
     from ...core.config import load_settings
     from ._evidence import PurchaseInvoiceEvidenceRepository
 
@@ -480,7 +481,7 @@ def _verify_attachment_references(
 ) -> None:
     """Verify every declared attachment manifest exists, lives in the bucket, and is link-compatible."""
     if attachment_store is None:
-        from ...adapters.persistence.storage.attachment import AttachmentStore
+        from ...adapters.persistence.storage import AttachmentStore
 
         store: _AttachmentStoreProtocol = AttachmentStore()
     else:
@@ -653,6 +654,8 @@ def _command_matches_current(command: ManualLedgerTransactionCommand, current: T
         and command.iva_rate == current.iva_rate
         and command.iva_amount == current.iva_amount
         and command.iva_category == current.iva_category
+        and command.recargo_amount == current.recargo_amount
+        and command.source_jurisdiction == current.source_jurisdiction
         and command.counterparty_eu_member_state == current.counterparty_eu_member_state
         and command.irpf_category == current.irpf_category
         and command.usage_ratio_id == current.usage_ratio_id

@@ -206,9 +206,8 @@ def test_reverse_merge_correction_events_match_taxonomy_contract() -> None:
     assert BucketEventType.LEDGER_RENTAL_EXPENSE_CORRECTION_APPLIED.value == "ledger.rental_expense.correction.applied"
 
 
-@pytest.mark.parametrize(
-    "legacy_value",
-    (
+def test_ledger_event_catalogue_rejects_legacy_underscore_transaction_events() -> None:
+    legacy_values = (
         "ledger_transaction.created",
         "ledger_transaction.imported",
         "ledger_transaction.updated",
@@ -218,11 +217,11 @@ def test_reverse_merge_correction_events_match_taxonomy_contract() -> None:
         "ledger_transaction.archived",
         "ledger_transaction.stashed",
         "ledger_transaction.exported",
-    ),
-)
-def test_ledger_event_catalogue_rejects_legacy_underscore_transaction_events(legacy_value: str) -> None:
-    with pytest.raises(ValueError, match=legacy_value.replace(".", r"\.")):
-        BucketEventType(legacy_value)
+    )
+
+    for legacy_value in legacy_values:
+        with pytest.raises(ValueError, match=legacy_value.replace(".", r"\.")):
+            BucketEventType(legacy_value)
 
 
 def test_ledger_event_object_types_cover_mutation_targets() -> None:
@@ -338,16 +337,14 @@ def test_catalogue_is_frozen_and_extra_forbid() -> None:
 def test_bucket_event_type_includes_workspace_bootstrap_kinds() -> None:
     """Workspace bootstrap and operator-auth lifecycle have dedicated
     canonical event-type slots so emitters at the application layer
-    can route through the bucket-event-history catalogue rather than
-    the legacy ``WorkflowState.bucket_events`` tuple. Pinning these
-    enum members keeps the bootstrap surface from regressing back
-    into free-string actions."""
+    can route through the bucket-event-history catalogue. Pinning these
+    enum members keeps the bootstrap surface from regressing into
+    free-string actions."""
 
     from .._event import BucketEventType
 
     assert BucketEventType.AUTH_PROVIDER_CONFIGURED.value == "auth.provider.configured"
     assert BucketEventType.CONFIG_ENV_UPDATED.value == "config.env.updated"
-    assert BucketEventType.SETUP_STATE_MIGRATED.value == "setup.state.migrated"
 
 
 def test_bucket_event_type_includes_profile_lifecycle_extensions() -> None:

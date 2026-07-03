@@ -17,7 +17,6 @@ from time import sleep
 from typing import cast
 
 import pytest
-from typer.testing import CliRunner
 
 from ....application.auth import LiveAuthPreflightReport
 from ....application.live import (
@@ -29,16 +28,16 @@ from ....application.live import (
     LiveIvaReadStatus,
     LiveIvaReadSurface,
     LiveIvaSurfaceTimeoutError,
+    VerifyService,
+    VerifySurface,
 )
-from ....application.live._verify import VerifyService, VerifySurface
-from ....application.user_profile._orchestration import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app as root_app
 from .._app_live import (
     _iva_remote_state_capture_lines,
     _live_iva_evidence_pull_command_timeout_ms,
@@ -48,13 +47,77 @@ from .._app_live import (
     _reap_new_playwright_profile_processes,
     _run_live_iva_evidence_pull_command,
     borrador_100_app,
+    borrador_app,
     expedientes_app,
+    filed_app,
     iva_wallet_app,
+    justificante_app,
+    notifications_app,
+    portals_app,
     verify_app,
+)
+from .._app_live import (
+    app as live_app,
 )
 from .._app_live_auth_preflight import _live_auth_preflight_lines
 
+# INTENTIONAL: integration because it exercises the live-read CLI subgroup wiring and
+# error surfaces locally without contacting AEAT.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_ACTIVE_TEST_BUCKET_ID = "00000000-0000-4000-8000-000000000000"
+
+_FORBIDDEN_LIVE_MUTATION_VERBS = frozenset(
+    {
+        "submit",
+        "send",
+        "present",
+        "sign",
+        "pay",
+        "push",
+        "modify",
+        "rectify",
+        "amend",
+        "delete",
+        "cancel",
+        "acknowledge",
+        "accept",
+        "reject",
+        "file",
+        "upload",
+    }
+)
+
+
+def _registered_cli_name(value: object) -> str:
+    """Normalize Typer registration names, including enum-backed subgroup names."""
+    return str(getattr(value, "value", value))
+
+
+def _live_registered_paths(typer_app, prefix: tuple[str, ...] = ("live",)) -> tuple[tuple[str, ...], ...]:
+    paths: list[tuple[str, ...]] = []
+    for group in typer_app.registered_groups:
+        group_path = (*prefix, _registered_cli_name(group.name))
+        paths.append(group_path)
+        paths.extend(_live_registered_paths(group.typer_instance, group_path))
+    for command in typer_app.registered_commands:
+        paths.append((*prefix, _registered_cli_name(command.name)))
+    return tuple(paths)
+
+
+def _live_registered_group_paths(typer_app, prefix: tuple[str, ...] = ("live",)) -> tuple[tuple[str, ...], ...]:
+    paths: list[tuple[str, ...]] = []
+    for group in typer_app.registered_groups:
+        group_path = (*prefix, _registered_cli_name(group.name))
+        paths.append(group_path)
+        paths.extend(_live_registered_group_paths(group.typer_instance, group_path))
+    return tuple(paths)
+
+
+def _forbidden_mutation_verbs(name: str) -> frozenset[str]:
+    normalized = name.lower().replace("_", "-")
+    tokens = {normalized, *normalized.split("-")}
+    return frozenset(tokens & _FORBIDDEN_LIVE_MUTATION_VERBS)
 
 
 @pytest.fixture(autouse=True)
@@ -62,12 +125,24 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(aeat_audit_dir=tmp_path / "audit"),
-        profile_create_storage_span("default"),
+        profile_create_storage_span(_ACTIVE_TEST_BUCKET_ID),
     ):
         workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="default"),
+            lambda state: register_minimal_profile(state, profile_id=_ACTIVE_TEST_BUCKET_ID),
         )
         yield
+
+
+def _invoke_expedientes(*args: str):
+    return invoke_cached_cli(["app", "live", "expedientes", *args])
+
+
+def _invoke_verify(*args: str):
+    return invoke_cached_cli(["app", "live", "verify", *args])
+
+
+def _invoke_borrador_100(*args: str):
+    return invoke_cached_cli(["app", "live", "borrador", "100", *args])
 
 
 def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
@@ -90,43 +165,43 @@ def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
 
 
 class TestExpedientesSubgroup:
-    def test_expedientes_list_is_empty_on_fresh_bucket(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(expedientes_app, ["list"])
+    def test_expedientes_list_is_empty_on_fresh_bucket(self) -> None:
+        result = _invoke_expedientes("list")
         assert result.exit_code == 0, result.output
         assert "count\t0" in result.output
 
-    def test_expedientes_show_refuses_unknown_snapshot(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(expedientes_app, ["view", "no-such-id"])
+    def test_expedientes_show_refuses_unknown_snapshot(self) -> None:
+        result = _invoke_expedientes("view", "no-such-id")
         assert result.exit_code != 0
 
-    def test_expedientes_latest_is_dash_on_fresh_bucket(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(expedientes_app, ["latest"])
+    def test_expedientes_latest_is_dash_on_fresh_bucket(self) -> None:
+        result = _invoke_expedientes("latest")
         assert result.exit_code == 0, result.output
         assert "snapshot_id\t-" in result.output
 
 
 class TestVerifySubgroup:
-    def test_verify_list_is_empty_on_fresh_bucket(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(verify_app, ["list"])
+    def test_verify_list_is_empty_on_fresh_bucket(self) -> None:
+        result = _invoke_verify("list")
         assert result.exit_code == 0, result.output
         assert "count\t0" in result.output
 
-    def test_verify_list_refuses_unknown_surface(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(verify_app, ["list", "--surface", "not-a-surface"])
+    def test_verify_list_refuses_unknown_surface(self) -> None:
+        result = _invoke_verify("list", "--surface", "not-a-surface")
         assert result.exit_code != 0
 
-    def test_verify_list_accepts_known_surface(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(verify_app, ["list", "--surface", "nif_iva"])
+    def test_verify_list_accepts_known_surface(self) -> None:
+        result = _invoke_verify("list", "--surface", "nif_iva")
         assert result.exit_code == 0, result.output
 
-    def test_verify_show_refuses_unknown_observation(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(verify_app, ["view", "no-such-observation"])
+    def test_verify_show_refuses_unknown_observation(self) -> None:
+        result = _invoke_verify("view", "no-such-observation")
         assert result.exit_code != 0
 
-    def test_verify_latest_renders_persisted_observation(self, cli_runner: CliRunner) -> None:
+    def test_verify_latest_renders_persisted_observation(self) -> None:
         # Seed an observation via the service surface so the CLI has
         # something to render.
-        bucket_id = "default"
+        bucket_id = _ACTIVE_TEST_BUCKET_ID
         VerifyService().record(
             bucket_id=bucket_id,
             surface=VerifySurface.NIF_IVA,
@@ -134,43 +209,34 @@ class TestVerifySubgroup:
             verdict="valid",
             checked_at=datetime(2025, 3, 15, tzinfo=UTC),
         )
-        result = cli_runner.invoke(
-            verify_app,
-            ["latest", "--surface", "nif_iva", "--nif", "ESB12345678"],
-        )
+        result = _invoke_verify("latest", "--surface", "nif_iva", "--nif", "ESB12345678")
         assert result.exit_code == 0, result.output
         assert "nif\tESB12345678" in result.output
         assert "verdict\tvalid" in result.output
 
-    def test_verify_latest_renders_dash_when_no_observation(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(
-            verify_app,
-            ["latest", "--surface", "tgvi", "--nif", "B99999999"],
-        )
+    def test_verify_latest_renders_dash_when_no_observation(self) -> None:
+        result = _invoke_verify("latest", "--surface", "tgvi", "--nif", "B99999999")
         assert result.exit_code == 0, result.output
         assert "observation_id\t-" in result.output
 
 
 class TestBorrador100Subgroup:
-    def test_borrador_100_list_is_empty_on_fresh_bucket(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(borrador_100_app, ["list"])
+    def test_borrador_100_list_is_empty_on_fresh_bucket(self) -> None:
+        result = _invoke_borrador_100("list")
         assert result.exit_code == 0, result.output
         assert "count\t0" in result.output
 
-    def test_borrador_100_latest_is_dash_when_no_snapshot(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(borrador_100_app, ["latest", "--filing-year", "2024"])
+    def test_borrador_100_latest_is_dash_when_no_snapshot(self) -> None:
+        result = _invoke_borrador_100("latest", "--filing-year", "2024")
         assert result.exit_code == 0, result.output
         assert "snapshot_id\t-" in result.output
 
-    def test_borrador_100_show_refuses_unknown_snapshot(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(borrador_100_app, ["view", "no-such-id"])
+    def test_borrador_100_show_refuses_unknown_snapshot(self) -> None:
+        result = _invoke_borrador_100("view", "no-such-id")
         assert result.exit_code != 0
 
-    def test_borrador_100_full_lifecycle_via_service_seed(
-        self,
-        cli_runner: CliRunner,
-    ) -> None:
-        bucket_id = "default"
+    def test_borrador_100_full_lifecycle_via_service_seed(self) -> None:
+        bucket_id = _ACTIVE_TEST_BUCKET_ID
         Borrador100SnapshotService(bucket_id=bucket_id).capture(
             filing_year=2024,
             period=Period.from_year_and_code(2024, "0A"),
@@ -179,12 +245,12 @@ class TestBorrador100Subgroup:
             binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("1000.00")},
         )
 
-        listed = cli_runner.invoke(borrador_100_app, ["list"])
+        listed = _invoke_borrador_100("list")
         assert listed.exit_code == 0, listed.output
         assert "count\t1" in listed.output
         assert "active" in listed.output
 
-        latest = cli_runner.invoke(borrador_100_app, ["latest", "--filing-year", "2024"])
+        latest = _invoke_borrador_100("latest", "--filing-year", "2024")
         assert latest.exit_code == 0, latest.output
         assert "filing_year\t2024" in latest.output
 
@@ -192,15 +258,12 @@ class TestBorrador100Subgroup:
         snapshot_id = next(
             line.split("\t", 1)[1] for line in latest.output.splitlines() if line.startswith("snapshot_id\t")
         )
-        shown = cli_runner.invoke(borrador_100_app, ["view", snapshot_id])
+        shown = _invoke_borrador_100("view", snapshot_id)
         assert shown.exit_code == 0, shown.output
         assert "binding_count\t1" in shown.output
         assert "state\tactive" in shown.output
 
-        shown_json = cli_runner.invoke(
-            root_app,
-            ["--format", "json", "app", "live", "borrador", "100", "view", snapshot_id],
-        )
+        shown_json = invoke_cached_cli(["--format", "json", "app", "live", "borrador", "100", "view", snapshot_id])
         assert shown_json.exit_code == 0, shown_json.output
         payload = json.loads(shown_json.output)
         assert payload["command"] == "app.live.borrador.100.view"
@@ -208,8 +271,8 @@ class TestBorrador100Subgroup:
             "renta-2025-modelo-111-retenciones-periodicas": "1000.00",
         }
 
-    def test_borrador_100_list_rejects_unknown_state(self, cli_runner: CliRunner) -> None:
-        result = cli_runner.invoke(borrador_100_app, ["list", "--state", "old"])
+    def test_borrador_100_list_rejects_unknown_state(self) -> None:
+        result = _invoke_borrador_100("list", "--state", "old")
         assert result.exit_code != 0
 
 
@@ -217,13 +280,49 @@ class TestReadOnlyStructuralInvariants:
     """Reject accidental introduction of any write/submit-style verb on the
     new live subgroups. The live-AEAT charter forbids mutation here."""
 
-    @pytest.mark.parametrize("subgroup_app", [expedientes_app, verify_app, borrador_100_app])
-    def test_no_submit_send_or_present_verb_exists(self, subgroup_app) -> None:
-        registered = {info.name for info in subgroup_app.registered_commands}
-        forbidden = {"submit", "send", "present", "sign", "pay", "push", "modify"}
-        assert registered.isdisjoint(forbidden), (
-            f"forbidden write verb on {subgroup_app.info.name}: {registered & forbidden}"
-        )
+    def test_guard_reaches_every_live_read_subgroup(self) -> None:
+        subgroup_paths = set(_live_registered_group_paths(live_app))
+
+        assert subgroup_paths == {
+            ("live", "filed"),
+            ("live", "iva-wallet"),
+            ("live", "notifications"),
+            ("live", "portals"),
+            ("live", "expedientes"),
+            ("live", "justificante"),
+            ("live", "verify"),
+            ("live", "borrador"),
+            ("live", "borrador", "100"),
+        }
+
+    def test_no_forbidden_mutation_verb_exists_anywhere_in_live_tree(self) -> None:
+        offenders: list[str] = []
+        for path in _live_registered_paths(live_app):
+            for component in path[1:]:
+                matched = _forbidden_mutation_verbs(component)
+                if matched:
+                    offenders.append(f"{'.'.join(path)}:{component}=>{','.join(sorted(matched))}")
+
+        assert offenders == []
+
+    @pytest.mark.parametrize(
+        "subgroup_app",
+        [
+            filed_app,
+            iva_wallet_app,
+            notifications_app,
+            portals_app,
+            expedientes_app,
+            justificante_app,
+            verify_app,
+            borrador_app,
+            borrador_100_app,
+        ],
+    )
+    def test_no_forbidden_mutation_verb_exists_on_live_subgroup_commands(self, subgroup_app) -> None:
+        registered = {_registered_cli_name(info.name) for info in subgroup_app.registered_commands}
+        offenders = {name: _forbidden_mutation_verbs(name) for name in registered if _forbidden_mutation_verbs(name)}
+        assert offenders == {}, f"forbidden write verb on {subgroup_app.info.name}: {offenders}"
 
 
 class TestIvaRemoteStateCliSurface:

@@ -1,12 +1,11 @@
 """Provider registry and file-format auto-detection.
 
-Exposes :func:`detect_provider`, the entry point the financial-ingest
-application layer calls to pick a concrete
-:class:`aeat.adapters.inbound.financial.providers._base.FinancialProvider`
-for an arbitrary path. The detection strategy combines extension
-hinting with magic-byte sniffing so a misnamed file (a PDF saved as
-``.csv``, an XLSX inside a ``.txt``, etc.) still routes to the right
-parser.
+Exposes ``detect_provider``, the entry point the financial-ingest application
+layer calls to pick a concrete
+:class:`~aeat.adapters.inbound.financial.providers.FinancialProvider` for an
+arbitrary path. The detection strategy combines extension hinting with
+magic-byte sniffing so a misnamed file (a PDF saved as ``.csv``, an XLSX inside
+a ``.txt``, etc.) still routes to the right parser.
 """
 
 from __future__ import annotations
@@ -51,9 +50,8 @@ def detect_provider(path: Path) -> FinancialProvider | None:
     """Return the first provider that validates the source successfully.
 
     Walks an extension- and content-prioritised candidate list and
-    returns the first provider whose
-    :meth:`~aeat.adapters.inbound.financial.providers._base.FinancialProvider.validate_source`
-    returns an ``is_valid`` :class:`ProviderValidation`.
+    returns the first provider whose ``validate_source`` result is an
+    ``is_valid`` :class:`~aeat.adapters.inbound.financial.providers.ProviderValidation`.
 
     Args:
         path: Source document to classify.

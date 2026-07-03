@@ -41,6 +41,8 @@ from .._live_parity import (
 )
 from .._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
+# INTENTIONAL: unit because it drives the live-parity oracle backend with a canned-response
+# oracle and never contacts a real AEAT surface.
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _WWW6_HOST = aeat_host("www6")
@@ -131,26 +133,24 @@ def _post(url: str) -> RemoteOperation:
     return RemoteOperation(kind="http", method="POST", url=AnyUrl(url))
 
 
-@pytest.mark.parametrize(
-    "url",
-    [aeat_url("www6", path) for path in LIVE_PARITY_STATE_CREATING_PATH_CANARIES],
-)
-def test_pre_flight_blocks_oracle_targeting_state_creating_aeat_surface(url: str) -> None:
-    oracle = _CannedOracle(
-        oracle_id="state-creator",
-        surface_kind="file_validator",
-        operations=(_read_only_get(url),),
-        verdict=ParityResult(
-            oracle_id="state-creator",
-            cross_reference_id="test-policy",
-            verdict="match",
-            narrative="x",
-        ),
-    )
+def test_pre_flight_blocks_oracle_targeting_state_creating_aeat_surface() -> None:
     policy = _read_only_policy()
 
-    with pytest.raises(RegistryValidationError, match="forbidden"):
-        pre_flight_oracle_operations(oracle, policy, payload=b"", expected={})
+    for url in (aeat_url("www6", path) for path in LIVE_PARITY_STATE_CREATING_PATH_CANARIES):
+        oracle = _CannedOracle(
+            oracle_id="state-creator",
+            surface_kind="file_validator",
+            operations=(_read_only_get(url),),
+            verdict=ParityResult(
+                oracle_id="state-creator",
+                cross_reference_id="test-policy",
+                verdict="match",
+                narrative="x",
+            ),
+        )
+
+        with pytest.raises(RegistryValidationError, match="forbidden"):
+            pre_flight_oracle_operations(oracle, policy, payload=b"", expected={})
 
 
 def test_parity_field_comparison_rejects_duplicate_field_names() -> None:
@@ -201,6 +201,27 @@ def test_catalogue_rejects_duplicate_oracle_id() -> None:
 
     with pytest.raises(RegistryValidationError, match="already registered"):
         catalogue.register(oracle, environment=OracleEnvironment.PRODUCTION)
+
+
+def test_catalogue_rejects_malformed_oracle_id() -> None:
+    for bad_id in ("Aeat-Nif-Iva", "snake_case_id", "with space", "trailing-hyphen-"):
+        catalogue = LiveParityCatalogue()
+        oracle = _CannedOracle(
+            oracle_id=bad_id,
+            surface_kind="file_validator",
+            operations=(),
+            verdict=ParityResult(
+                oracle_id="valid-verdict-id",
+                cross_reference_id="c",
+                verdict="match",
+                narrative="x",
+            ),
+        )
+
+        with pytest.raises(RegistryValidationError, match="not a valid OracleId"):
+            catalogue.register(oracle, environment=OracleEnvironment.PRODUCTION)
+
+        assert catalogue.ids() == (), bad_id
 
 
 def test_catalogue_lookup_unknown_id_raises() -> None:
@@ -308,18 +329,16 @@ def test_oracle_environment_members_are_str_subclass() -> None:
         assert isinstance(member, str), f"{member!r} is not a str instance"
 
 
-@pytest.mark.parametrize(
-    ("member", "expected_value"),
-    [
+def test_oracle_environment_member_values() -> None:
+    """Each member's string value must match the canonical AEAT environment name."""
+
+    for member, expected_value in (
         (OracleEnvironment.PRODUCTION, "production"),
         (OracleEnvironment.TEST_ENVIRONMENT, "test_environment"),
         (OracleEnvironment.BOTH, "both"),
-    ],
-)
-def test_oracle_environment_member_values(member: OracleEnvironment, expected_value: str) -> None:
-    """Each member's string value must match the canonical AEAT environment name."""
-    assert member == expected_value
-    assert str(member) == expected_value
+    ):
+        assert member == expected_value
+        assert str(member) == expected_value
 
 
 def test_oracle_environment_default_round_trips_through_catalogue_register() -> None:

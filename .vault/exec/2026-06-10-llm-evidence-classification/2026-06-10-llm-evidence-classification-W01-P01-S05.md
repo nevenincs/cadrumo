@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S05'
 related:
   - "[[2026-06-10-llm-evidence-classification-plan]]"
 ---
-
-
-
 
 # Make PurchaseInvoiceEvidence reference an Attachment whose bytes live in the encrypted AttachmentStore, replacing source_path as the byte source with an in-store read
 

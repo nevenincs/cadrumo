@@ -24,8 +24,8 @@ Legal sources (Ley 37/1992 del IVA, BOE-A-1992-28740):
   (LIVA-art.-20 exempt supplies and similar). Subvenciones not linked to
   operations, autoconsumos, and the disposal of bienes de inversión are
   excluded from both numerator and denominator per art. 104 LIVA; the
-  exclusion is the caller's responsibility — this module operates on the
-  amounts the application aggregator already filtered.
+  exclusion is the caller's responsibility; this module only accepts
+  already-filtered operation totals.
 
 * **Art. 102.Dos** — the resulting percentage is rounded **up** to the
   next whole integer (``ROUND_CEILING`` against ``Decimal("1")``).
@@ -50,9 +50,9 @@ typically the prior year's definitiva. The definitiva percentage is
 computed at year-end with the year's actual operations and produces a
 regularisation entry in Q4 303 (casilla 44) and Modelo 390.
 
-Live submission is not the concern of this module: the substrate emits
-calculation results consumed by Modelo 303 and 390 binding providers in
-the application aggregation layer.
+Live submission is not the concern of this module. Current filing
+surfaces either use registry-defined formula/manual prorrata casillas or
+carry validated prorrata references on IVA ledger observations.
 """
 
 from __future__ import annotations
@@ -457,6 +457,167 @@ def is_especial_mandatory(
 
 
 # ---------------------------------------------------------------------------
+# Annual prorrata-general regularisation (LIVA arts. 104-105)
+# ---------------------------------------------------------------------------
+
+
+class RegularizacionProrrataDireccion(StrEnum):
+    """Direction of the annual prorrata-general regularisation (LIVA art. 105.Cuatro).
+
+    * ``DEDUCCION`` — the year's definitive percentage exceeds the provisional
+      one applied across the quarters, so a *deducción complementaria* is due:
+      the taxpayer may deduct more input IVA and the Modelo 303 casilla-44 value
+      is positive (it increases the total deductible cuota).
+    * ``INGRESO`` — the definitive percentage is lower than the provisional one,
+      so the provisional deductions were excessive and an *ingreso* is due: the
+      casilla-44 value is negative (it reduces the total deductible cuota).
+    * ``NINGUNA`` — the two percentages coincide; no regularisation is practised.
+    """
+
+    DEDUCCION = "deduccion"
+    INGRESO = "ingreso"
+    NINGUNA = "ninguna"
+
+
+class RegularizacionProrrataResult(_ProrrataStrictFrozen):
+    """Outcome of the annual prorrata-general regularisation (LIVA art. 105.Cuatro).
+
+    Attributes:
+        cuotas_soportadas_deducibles: The year's total deductible input IVA the
+            percentages apply to (art. 105.Seis: the sum of the year's cuotas
+            soportadas, excluding the arts. 95/96 non-deductibles).
+        prorrata_provisional_pct: The provisional percentage applied during the
+            year (art. 105.Uno: normally the prior year's definitive percentage).
+        prorrata_definitiva_pct: The definitive percentage computed at year-end
+            from the year's actual operations (art. 104).
+        deduccion_provisional: ``cuotas × provisional% / 100`` — the deduction
+            already practised across the year's provisional liquidations.
+        deduccion_definitiva: ``cuotas × definitiva% / 100`` — the deduction that
+            definitively applies.
+        importe: ``deduccion_definitiva − deduccion_provisional``, rounded to
+            cents. The signed value proposed for Modelo 303 casilla 44 / the
+            Modelo 390 annual regularisation field. Positive = additional
+            deduction; negative = repayment.
+        direccion: :class:`RegularizacionProrrataDireccion` describing the sign.
+    """
+
+    cuotas_soportadas_deducibles: Decimal = Field(..., ge=Decimal("0"))
+    prorrata_provisional_pct: Decimal = Field(..., ge=Decimal("0"), le=Decimal("100"))
+    prorrata_definitiva_pct: Decimal = Field(..., ge=Decimal("0"), le=Decimal("100"))
+    deduccion_provisional: Decimal
+    deduccion_definitiva: Decimal
+    importe: Decimal
+    direccion: RegularizacionProrrataDireccion
+
+
+def compute_prorrata_definitiva_anual(
+    inputs: ProrrataInputs,
+    *,
+    year: int,
+    sector_id: SectorId | None = None,
+) -> ProrrataResult:
+    """Compute the year-end DEFINITIVA general prorrata percentage (LIVA arts. 104-105).
+
+    Thin, named wrapper over :func:`compute_prorrata_general` fixing
+    ``kind = DEFINITIVA`` and ``period = "annual"``: the caller supplies the
+    full-year operation volumes (con-derecho / sin-derecho) with the art-104
+    exclusions already applied, and receives the definitive percentage that
+    art. 105.Cuatro regularises the provisional deductions against. This is the
+    definitive-percentage source the capital-goods regularización (LIVA arts.
+    107-110) and the annual prorrata regularización both consume; deriving it from
+    a single quarter's volume is a correctness defect (a single period computes
+    neither the provisional nor the annual-regularised percentage), so the
+    definitive percentage MUST come from the full-year rollup.
+
+    Returns:
+        The definitive :class:`ProrrataResult` for the year.
+    """
+    return compute_prorrata_general(
+        inputs,
+        year=year,
+        kind=ProrrataKind.DEFINITIVA,
+        period="annual",
+        sector_id=sector_id,
+    )
+
+
+def compute_regularizacion_prorrata_anual(
+    *,
+    cuotas_soportadas_deducibles: Decimal,
+    prorrata_provisional_pct: Decimal,
+    prorrata_definitiva_pct: Decimal,
+) -> RegularizacionProrrataResult:
+    """Compute the annual prorrata-general regularisation cuota (LIVA art. 105.Cuatro).
+
+    Implements the art-105 procedure. A taxpayer under prorrata general applies a
+    PROVISIONAL deduction percentage across the year's liquidations (art. 105.Uno:
+    "el porcentaje de deducción provisionalmente aplicable cada año natural será
+    el fijado como definitivo para el año precedente"); then, in the last
+    liquidation of the year, computes the DEFINITIVA percentage from the year's
+    actual operations (art. 104) and "practicará la consiguiente regularización de
+    las deducciones provisionales" (art. 105.Cuatro). The regularisation cuota is
+    the difference between the deduction that definitively applies and the
+    deduction already practised provisionally::
+
+        deduccion_definitiva  = cuotas × definitiva% / 100
+        deduccion_provisional = cuotas × provisional% / 100
+        importe               = deduccion_definitiva − deduccion_provisional
+
+    Unlike the capital-goods regularisation (arts. 107-110), the prorrata-general
+    regularisation carries **no >10-point gate**: art. 105.Cuatro practises it in
+    every year the two percentages differ. Both percentages are supplied as
+    inputs; deriving the definitive percentage from the annual volumes is
+    :func:`compute_prorrata_definitiva_anual`, and carrying the prior-year
+    definitive as this year's provisional (art. 105.Uno) is the profile-scoped
+    carry the application layer owns.
+
+    Args:
+        cuotas_soportadas_deducibles: The year's total deductible input IVA
+            (art. 105.Seis), non-negative.
+        prorrata_provisional_pct: Provisional deduction percentage applied during
+            the year (0-100).
+        prorrata_definitiva_pct: Definitive deduction percentage for the year
+            (0-100).
+
+    Returns:
+        A :class:`RegularizacionProrrataResult` carrying the signed casilla-44
+        importe and its :class:`RegularizacionProrrataDireccion`.
+
+    Raises:
+        ProrrataInputError: on a negative cuota or an out-of-range percentage.
+    """
+    if cuotas_soportadas_deducibles < 0:
+        raise ProrrataInputError(
+            f"cuotas_soportadas_deducibles must be non-negative, got {cuotas_soportadas_deducibles}",
+        )
+    for label, pct in (
+        ("prorrata_provisional_pct", prorrata_provisional_pct),
+        ("prorrata_definitiva_pct", prorrata_definitiva_pct),
+    ):
+        if pct < Decimal("0") or pct > Decimal("100"):
+            raise ProrrataInputError(f"{label} out of range 0..100, got {pct}")
+
+    deduccion_provisional = _round_to_cents(cuotas_soportadas_deducibles * prorrata_provisional_pct / Decimal("100"))
+    deduccion_definitiva = _round_to_cents(cuotas_soportadas_deducibles * prorrata_definitiva_pct / Decimal("100"))
+    importe = deduccion_definitiva - deduccion_provisional
+    if importe > Decimal("0"):
+        direccion = RegularizacionProrrataDireccion.DEDUCCION
+    elif importe < Decimal("0"):
+        direccion = RegularizacionProrrataDireccion.INGRESO
+    else:
+        direccion = RegularizacionProrrataDireccion.NINGUNA
+    return RegularizacionProrrataResult(
+        cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
+        prorrata_provisional_pct=prorrata_provisional_pct,
+        prorrata_definitiva_pct=prorrata_definitiva_pct,
+        deduccion_provisional=deduccion_provisional,
+        deduccion_definitiva=deduccion_definitiva,
+        importe=importe,
+        direccion=direccion,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Sectoral separation (art. 9.1.c LIVA)
 # ---------------------------------------------------------------------------
 
@@ -526,7 +687,7 @@ def compute_sectoral_prorrata(
 
 
 # ---------------------------------------------------------------------------
-# Helpers for the application layer
+# Helpers for caller-side rollups
 # ---------------------------------------------------------------------------
 
 
@@ -535,10 +696,9 @@ def sum_deductible_amounts(
 ) -> Decimal:
     """Sum the ``deductible_amount`` field across a collection of inputs.
 
-    The application aggregation layer uses this to roll up per-input
-    deductions into the casilla 28 (Modelo 303) or casilla 33 (Modelo
-    390) totals after running :func:`classify_input_deduction` for each
-    purchase invoice evidence row.
+    Callers use this to roll up per-input deductions after running
+    :func:`classify_input_deduction` for each purchase invoice evidence
+    row. Modelo casilla routing remains registry-owned.
     """
     return sum((entry.deductible_amount for entry in deductions), Decimal("0"))
 
@@ -552,8 +712,12 @@ __all__ = (
     "ProrrataRegime",
     "ProrrataResult",
     "ProrrataSector",
+    "RegularizacionProrrataDireccion",
+    "RegularizacionProrrataResult",
     "classify_input_deduction",
+    "compute_prorrata_definitiva_anual",
     "compute_prorrata_general",
+    "compute_regularizacion_prorrata_anual",
     "compute_sectoral_prorrata",
     "is_especial_mandatory",
     "requires_sectoral_separation",

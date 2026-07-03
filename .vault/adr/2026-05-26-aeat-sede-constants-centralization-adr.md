@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#aeat-sede-constants-centralization'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-30'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-research]]'
@@ -11,8 +11,6 @@ related:
   - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]'
   - '[[2026-06-04-aeat-sede-constants-centralization-research]]'
 ---
-
-
 
 # `aeat-sede-constants-centralization` adr: `AEAT and Sede constants are schema-owned architecture data` | (**status:** `accepted`)
 

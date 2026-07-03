@@ -1,7 +1,7 @@
 """Google Sheets calculation sync commands for ``aeat config google``.
 
 Google calc commands resolve a
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot` before exporting
+:class:`RegistrySnapshot` before exporting
 or pulling sheet rows against the live calculation schema.
 """
 
@@ -14,16 +14,16 @@ from typing import TYPE_CHECKING, Annotated
 import typer
 from pydantic import TypeAdapter, ValidationError
 
-from ....adapters.outbound.google import GoogleAuthError
-from ....adapters.outbound.google._active_profile import resolve_active_profile
-from ....adapters.outbound.google._calc_sheets_apply import (
+from ....adapters.outbound.google import (
     CalcSheetsApplyResult,
+    GoogleAuthError,
     apply_export_plan,
+    resolve_active_profile,
 )
-from ....adapters.outbound.storage import OutboundStorageError
-from ....adapters.outbound.storage._factory import (
-    _build_google_credentials,
-    _resolve_drive_root_folder_id,
+from ....adapters.outbound.storage import (
+    OutboundStorageError,
+    build_google_credentials,
+    resolve_drive_root_folder_id,
 )
 from ....application.storage.calc_sheets import (
     OperatorInputs,
@@ -56,7 +56,10 @@ from ._google_payloads import (
 )
 
 if TYPE_CHECKING:
-    from ....adapters.outbound.google._calc_sheets_pull import PullResult, RowSetEdit
+    from ....adapters.outbound.google import (
+        PullResult,
+        RowSetEdit,
+    )
     from ....domain.calculations.registry import RegistrySnapshot
 
 
@@ -77,8 +80,8 @@ _YearArg = Annotated[
 def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
     """Hydrate refreshable Google credentials + the configured Drive root."""
     settings = load_settings()
-    credentials = _build_google_credentials(profile=profile)
-    root_folder_id = _resolve_drive_root_folder_id(profile=profile, settings=settings)
+    credentials = build_google_credentials(profile=profile)
+    root_folder_id = resolve_drive_root_folder_id(profile=profile, settings=settings)
     if not root_folder_id:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.google.sync.calc.export.root_folder_required",
@@ -234,7 +237,7 @@ def google_sync_calc_verify(
     """Run a three-way parity check across AEAT oracle, local Decimal runtime, and Sheets."""
     from decimal import Decimal
 
-    from ....application.storage.calc_sheets._parity_harness import (
+    from ....application.storage.calc_sheets import (
         OperatorInputScenario,
         verify_modelo_parity,
     )
@@ -376,7 +379,7 @@ def google_sync_calc_pull(
     ),
 ) -> None:
     """Read operator-edited cells back from a workbook into typed records."""
-    from ....adapters.outbound.google._calc_sheets_pull import pull_operator_edits
+    from ....adapters.outbound.google import pull_operator_edits
 
     try:
         active = resolve_active_profile()
@@ -518,7 +521,7 @@ def google_sync_calc_compute(
     ),
 ) -> None:
     """Compute casilla values from a workbook's operator edits; persist nothing."""
-    from ....adapters.outbound.google._calc_sheets_pull import (
+    from ....adapters.outbound.google import (
         compute_from_pull,
         pull_operator_edits,
     )

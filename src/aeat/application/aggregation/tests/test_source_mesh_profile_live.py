@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -17,19 +18,36 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....core import Period
 from ....core.resources import resources
+from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet
-from ...modelo._profile_binding import resolve_profile_sourced_bindings
+from ...modelo import resolve_profile_sourced_bindings
 from ...user_profile import UserProfileLifecycleRepository
 from .. import CalculationSourceContext, ProfileSourceResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
-_BUCKET_ID = "operator"
+_PROFILE_ID = "10010010-0100-4100-8100-100100100100"
+_BUCKET_ID = _PROFILE_ID
 _CCAA_BINDING = "renta-2025-profile-tax-residence-ccaa"
-_PROFILE_FINGERPRINT = "sha256:df8074c27d781e6413d624ab561a331d6d8d453660636d69a63a2300ad39e35f"
+_PROFILE_FINGERPRINT = "sha256:e43c88edad4d98897cc610aad74834a0ef1711f53a635269846e54069237b207"
+# Derived-fact profile bindings that unconditionally resolve a grounded value
+# (zero/false for a childless, non-Madrid, non-anualidades profile) alongside
+# the CCAA binding: minimo por descendientes estatal + autonomico (Art. 58/61
+# LIRPF, #593 wires the autonomico half's CCAA-conditional Madrid override),
+# Madrid nacimiento/adopcion (casilla 1039, DL 1/2010), and the anualidades sin
+# minimo separate-escala eligibility flag (Art. 64/75 LIRPF).
+_DERIVED_FACT_PROFILE_BINDINGS = frozenset(
+    {
+        "renta-2025-profile-minimo-descendientes-estatal",
+        "renta-2025-profile-minimo-descendientes-autonomico",
+        "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
+        "renta-2025-profile-unidad-familiar-otros-miembros-base",
+        "renta-2025-profile-anualidades-sin-minimo-descendientes",
+    },
+)
 
 
 @pytest.fixture
@@ -38,13 +56,14 @@ def secure_profile_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _modelo_100_snapshot():
+@cache
+def _modelo_100_snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
     return UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Renta perfil Ñandú",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Ñ"),
@@ -78,11 +97,11 @@ def _wallet(amount: Decimal) -> IvaCompensationWalletObservation:
     )
 
 
-def test_profile_source_resolver_matches_existing_profile_binding_resolution() -> None:
+def test_profile_source_resolver_matches_direct_profile_binding_resolution() -> None:
     snapshot = _modelo_100_snapshot()
     profile_record = _profile_with_ccaa("madrid")
 
-    legacy = resolve_profile_sourced_bindings(
+    direct_resolution = resolve_profile_sourced_bindings(
         snapshot,
         bucket_id=_BUCKET_ID,
         profile_record=profile_record,
@@ -100,12 +119,13 @@ def test_profile_source_resolver_matches_existing_profile_binding_resolution() -
         ),
     )
 
-    assert resolution.binding_values == legacy.binding_values
-    assert resolution.enum_binding_values == legacy.enum_binding_values
+    assert resolution.binding_values == direct_resolution.binding_values
+    assert resolution.enum_binding_values == direct_resolution.enum_binding_values
     assert resolution.source_transaction_ids == ()
     assert resolution.provenance
     assert {item.source_ref for item in resolution.provenance if item.source_kind == "profile"} == {
-        f"profile:{_BUCKET_ID}:binding:{_CCAA_BINDING}",
+        f"profile:{_BUCKET_ID}:binding:{binding_id}"
+        for binding_id in ({_CCAA_BINDING} | _DERIVED_FACT_PROFILE_BINDINGS)
     }
     assert {item.fingerprint for item in resolution.provenance if item.source_kind == "profile"} == {
         _PROFILE_FINGERPRINT,
@@ -154,7 +174,12 @@ def test_profile_source_resolver_respects_caller_owned_precedence() -> None:
 
     assert _CCAA_BINDING not in resolution.binding_values
     assert _CCAA_BINDING not in resolution.enum_binding_values
-    assert resolution.provenance == ()
+    # Only the CCAA binding is caller-owned here; the unconditional derived-fact
+    # profile bindings (minimo por descendientes, Madrid nacimiento/adopcion,
+    # anualidades sin minimo) still resolve their grounded zero/false values.
+    assert {item.source_ref for item in resolution.provenance if item.source_kind == "profile"} == {
+        f"profile:{_BUCKET_ID}:binding:{binding_id}" for binding_id in _DERIVED_FACT_PROFILE_BINDINGS
+    }
 
 
 def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> None:

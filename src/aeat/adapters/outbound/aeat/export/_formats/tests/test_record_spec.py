@@ -34,6 +34,57 @@ _SEGMENT_QUALIFIED_BASE_CASILLA: CasillaId = validated_casilla_id(
 )
 _DUPLICATE_FIELD_CASILLA: CasillaId = validated_casilla_id("01", surface="_DUPLICATE_FIELD_CASILLA")
 
+_FIELD_KIND_DEFAULT_CASES = (
+    (FieldKind.NUMERIC, Justification.RIGHT, "0"),
+    (FieldKind.CURRENCY, Justification.RIGHT, "0"),
+)
+
+_CURRENCY_ENCODING_CASES = (
+    (Decimal("1234.56"), 13, False, False, b"0000000123456"),
+    (Decimal("0.00"), 13, False, False, b"0000000000000"),
+    (Decimal("-100.00"), 10, True, False, b"0000010000"),
+)
+
+_CURRENCY_ROUNDING_CASES = (
+    ("rounds-half-up-positive", Decimal("2.005"), b"000201"),
+    ("rounds-half-up-carry", Decimal("1.995"), b"000200"),
+    ("rounds-away-from-zero-half-cent", Decimal("1.885"), b"000189"),
+)
+
+_CURRENCY_LENGTH_CASES = (
+    ("typical-length", Decimal("1234.56"), 13),
+    ("short-zero-length", Decimal("0.00"), 5),
+)
+
+_INLINE_SIGN_CASES = (
+    (Decimal("1234.56"), False, b" 0000000000123456"),
+    (Decimal("-1234.56"), False, b"N0000000000123456"),
+    (Decimal("0.00"), False, b" 0000000000000000"),
+    (Decimal("-5.00"), True, b"N000000500"),
+)
+
+_TEXT_ENCODING_CASES = (
+    ("ACME", {"length": 10, "encoding": "cp1252"}, b"ACME      "),
+    (
+        "42",
+        {"length": 6, "justification": Justification.RIGHT, "pad_char": "0", "encoding": "cp1252"},
+        b"000042",
+    ),
+    ("LONGVALUE", {"length": 4, "truncate": True, "encoding": "cp1252"}, b"LONG"),
+    ("ÑOÑO", {"length": 4, "encoding": "cp1252"}, b"\xd1O\xd1O"),
+)
+
+_TEXT_LENGTH_CASES = (
+    ("ascii-space-padded", "ACME", 10),
+    ("cp1252-accents", "ÑOÑO", 4),
+)
+
+_DATE_ENCODING_CASES = (
+    (DateFmt.YYYYMMDD, b"20250422"),
+    (DateFmt.DDMMYYYY, b"22042025"),
+)
+_DATE_ENCODING_IDS = ("yyyymmdd", "ddmmyyyy")
+
 
 class TestRecordFieldSpec:
     """Spec is strict/frozen/extra=forbid and rejects invalid inputs."""
@@ -51,15 +102,11 @@ class TestRecordFieldSpec:
         assert spec.justification is Justification.LEFT  # ALPHANUMERIC default
         assert spec.pad_char == " "
 
-    def test_numeric_defaults_to_right_zero(self) -> None:
-        spec = record_field(offset=1, length=8, field_id="FIELD_NUMBER", kind=FieldKind.NUMERIC)
-        assert spec.justification is Justification.RIGHT
-        assert spec.pad_char == "0"
-
-    def test_currency_defaults_to_right_zero(self) -> None:
-        spec = record_field(offset=1, length=13, field_id="FIELD_AMOUNT", kind=FieldKind.CURRENCY)
-        assert spec.justification is Justification.RIGHT
-        assert spec.pad_char == "0"
+    def test_kind_defaults(self) -> None:
+        for kind, justification, pad_char in _FIELD_KIND_DEFAULT_CASES:
+            spec = record_field(offset=1, length=13, field_id=f"FIELD_{kind.name}", kind=kind)
+            assert spec.justification is justification, kind.name
+            assert spec.pad_char == pad_char, kind.name
 
     def test_frozen_rejects_mutation(self) -> None:
         spec = record_field(offset=1, length=9, field_id="FIELD_TEXT", kind=FieldKind.ALPHANUMERIC)
@@ -104,20 +151,17 @@ class TestRecordFieldSpec:
 class TestEncodeCurrency:
     """Currency → right-justified zero-padded cents."""
 
-    def test_typical_value(self) -> None:
-        assert encode_currency(Decimal("1234.56"), length=13, encoding="cp1252") == b"0000000123456"
-
-    def test_zero(self) -> None:
-        assert encode_currency(Decimal("0.00"), length=13, encoding="cp1252") == b"0000000000000"
+    def test_encoding_cases(self) -> None:
+        for value, length, signed, inline_sign, expected in _CURRENCY_ENCODING_CASES:
+            assert (
+                encode_currency(value, length=length, signed=signed, inline_sign=inline_sign, encoding="cp1252")
+                == expected
+            ), repr(value)
 
     def test_negative_without_signed_raises(self) -> None:
         """negative must be explicit via signed=True."""
         with pytest.raises(ValueError, match="without signed=True"):
             encode_currency(Decimal("-100.00"), length=10, encoding="cp1252")
-
-    def test_negative_with_signed_emits_absolute(self) -> None:
-        """signed=True acknowledges separate SIGNO field handling."""
-        assert encode_currency(Decimal("-100.00"), length=10, signed=True, encoding="cp1252") == b"0000010000"
 
     def test_overflow_raises(self) -> None:
         with pytest.raises(ValueError, match="overflows"):
@@ -129,37 +173,30 @@ class TestEncodeCurrency:
         Decimal("2.005") → cents 201 under HALF_UP; 200 under HALF_EVEN.
         Pinning the correct behaviour catches future rounding drift.
         """
-        assert encode_currency(Decimal("2.005"), length=6, encoding="cp1252") == b"000201"
-        assert encode_currency(Decimal("1.995"), length=6, encoding="cp1252") == b"000200"
-        # 0.5 cent at half boundary rounds away from zero.
-        assert encode_currency(Decimal("1.885"), length=6, encoding="cp1252") == b"000189"
+        for case_id, value, expected in _CURRENCY_ROUNDING_CASES:
+            assert encode_currency(value, length=6, encoding="cp1252") == expected, case_id
 
     def test_length_invariant(self) -> None:
         """C F6: output byte-length must equal declared length."""
-        assert len(encode_currency(Decimal("1234.56"), length=13, encoding="cp1252")) == 13
-        assert len(encode_currency(Decimal("0.00"), length=5, encoding="cp1252")) == 5
+        for case_id, value, length in _CURRENCY_LENGTH_CASES:
+            assert len(encode_currency(value, length=length, encoding="cp1252")) == length, case_id
 
 
 class TestEncodeCurrencyInlineSign:
     """Inline-sign convention: 'N' prefix for negatives."""
 
-    def test_positive_emits_space_prefix(self) -> None:
-        """A positive value in inline_sign mode emits a leading space."""
-        result = encode_currency(Decimal("1234.56"), length=17, inline_sign=True, encoding="cp1252")
-        # 1 sign byte + 16 magnitude bytes = 17.
-        assert len(result) == 17
-        assert result == b" 0000000000123456"
-
-    def test_negative_emits_n_prefix(self) -> None:
-        """A negative value in inline_sign mode emits a leading 'N'."""
-        result = encode_currency(Decimal("-1234.56"), length=17, inline_sign=True, encoding="cp1252")
-        assert len(result) == 17
-        assert result == b"N0000000000123456"
-
-    def test_zero_emits_space_prefix(self) -> None:
-        """Zero is non-negative; leading space."""
-        result = encode_currency(Decimal("0.00"), length=17, inline_sign=True, encoding="cp1252")
-        assert result == b" 0000000000000000"
+    def test_encoding_cases(self) -> None:
+        """Inline-sign output emits one sign byte plus zero-padded magnitude."""
+        for value, signed, expected in _INLINE_SIGN_CASES:
+            result = encode_currency(
+                value,
+                length=len(expected),
+                inline_sign=True,
+                signed=signed,
+                encoding="cp1252",
+            )
+            assert len(result) == len(expected), repr(value)
+            assert result == expected, repr(value)
 
     def test_negative_without_inline_sign_or_signed_raises(self) -> None:
         with pytest.raises(ValueError, match="inline_sign=True"):
@@ -176,43 +213,18 @@ class TestEncodeCurrencyInlineSign:
             # length=5 means magnitude_width=4; can't fit 12 digits.
             encode_currency(Decimal("99999.99"), length=5, inline_sign=True, encoding="cp1252")
 
-    def test_inline_sign_signed_true_still_works(self) -> None:
-        """signed=True + inline_sign=True is consistent; no contradiction."""
-        result = encode_currency(Decimal("-5.00"), length=10, inline_sign=True, signed=True, encoding="cp1252")
-        assert result == b"N000000500"
-
 
 class TestEncodeText:
     """Text → ISO-8859-15 ljust/rjust with custom pad."""
 
-    def test_left_justified_space(self) -> None:
-        assert encode_text("ACME", length=10, encoding="cp1252") == b"ACME      "
-
-    def test_right_justified_zero(self) -> None:
-        encoded = encode_text(
-            "42",
-            length=6,
-            justification=Justification.RIGHT,
-            pad_char="0",
-            encoding="cp1252",
-        )
-        assert encoded == b"000042"
+    def test_encoding_cases(self) -> None:
+        for value, options, expected in _TEXT_ENCODING_CASES:
+            assert encode_text(value, **options) == expected, value
 
     def test_overflow_without_truncate_raises(self) -> None:
         """silent truncation would corrupt official field content."""
         with pytest.raises(ValueError, match="overflows"):
             encode_text("LONGVALUE", length=4, encoding="cp1252")
-
-    def test_overflow_with_truncate_clips(self) -> None:
-        """Explicit truncate=True acknowledges clipping."""
-        assert encode_text("LONGVALUE", length=4, truncate=True, encoding="cp1252") == b"LONG"
-
-    def test_preserves_cp1252_accents(self) -> None:
-        """Spanish text with accents must round-trip.
-
-        ñ = 0xF1 in CP1252 / ISO-8859-1 / ISO-8859-15 (all agree here).
-        """
-        assert encode_text("ÑOÑO", length=4, encoding="cp1252") == b"\xd1O\xd1O"
 
     def test_euro_symbol_requires_iso_8859_15(self) -> None:
         """Euro symbol: 0x80 in CP1252; 0xA4 in ISO-8859-15; absent from ISO-8859-1."""
@@ -230,22 +242,20 @@ class TestEncodeText:
             encode_text("TEXT 🎉", length=10, encoding="cp1252")
 
     def test_length_invariant(self) -> None:
-        assert len(encode_text("ACME", length=10, encoding="cp1252")) == 10
-        assert len(encode_text("ÑOÑO", length=4, encoding="cp1252")) == 4
+        for case_id, value, length in _TEXT_LENGTH_CASES:
+            assert len(encode_text(value, length=length, encoding="cp1252")) == length, case_id
 
 
 class TestEncodeDate:
     """BOE date shapes."""
 
-    def test_yyyymmdd(self) -> None:
-        assert encode_date(date(2025, 4, 22), DateFmt.YYYYMMDD, encoding="cp1252") == b"20250422"
-
-    def test_ddmmyyyy(self) -> None:
-        assert encode_date(date(2025, 4, 22), DateFmt.DDMMYYYY, encoding="cp1252") == b"22042025"
+    def test_encoding_cases(self) -> None:
+        for case_id, (date_fmt, expected) in zip(_DATE_ENCODING_IDS, _DATE_ENCODING_CASES, strict=True):
+            assert encode_date(date(2025, 4, 22), date_fmt, encoding="cp1252") == expected, case_id
 
     def test_length_invariants(self) -> None:
-        assert len(encode_date(date(2025, 4, 22), DateFmt.YYYYMMDD, encoding="cp1252")) == 8
-        assert len(encode_date(date(2025, 4, 22), DateFmt.DDMMYYYY, encoding="cp1252")) == 8
+        for case_id, (date_fmt, expected) in zip(_DATE_ENCODING_IDS, _DATE_ENCODING_CASES, strict=True):
+            assert len(encode_date(date(2025, 4, 22), date_fmt, encoding="cp1252")) == len(expected), case_id
 
 
 class TestReservedInvariant:

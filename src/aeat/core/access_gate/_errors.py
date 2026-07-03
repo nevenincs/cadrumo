@@ -1,6 +1,6 @@
 """Policy errors for the AEAT live-access gate.
 
-All errors inherit from :class:`aeat.core.errors.AeatError` so callers
+All errors inherit from :class:`core.errors.AeatError` so callers
 have a single root they can catch at integration boundaries.
 
 ``LiveSubmitForbiddenError`` lives here (rather than in the
@@ -10,6 +10,14 @@ have a single root they can catch at integration boundaries.
    ``core/`` must remain independent from adapter implementations.
 2. The policy "live AEAT submission is permanently forbidden" is
    a foundational invariant, not an adapter implementation detail.
+
+See Also:
+    :class:`core.access_gate.AeatAccessGate`
+        Gate that raises these errors from live-read and live-write checks.
+    :class:`LiveSubmitForbiddenError`
+        Permanent refusal raised by every attempted live AEAT write.
+    :mod:`adapters.outbound.aeat.export._submitters`
+        Empty adapter namespace kept free of remote submitter implementations.
 """
 
 from __future__ import annotations
@@ -21,7 +29,7 @@ class AccessGateSubmissionError(AeatError):
     """Base class for live-write access-gate submission policy failures.
 
     Attributes:
-        translated_message: Optional :class:`aeat.core.i18n.Translatable`
+        translated_message: Optional :class:`core.i18n.Translatable`
             payload carrying a user-facing version of the message.
     """
 
@@ -64,7 +72,7 @@ class LiveSubmitForbiddenError(AccessGateSubmissionPreflightError):
 class AeatLiveReadNotEnabledError(AeatError):
     """Raised when pytest live-read access is required but the test gate is shut.
 
-    Emitted by :meth:`AeatAccessGate.require_live_read` during pytest
+    Emitted by :meth:`core.access_gate.AeatAccessGate.require_live_read` during pytest
     execution when ``AEAT_LIVE_TESTS_ENABLED`` is not set to ``"1"``.
     Operator-facing live reads are controlled by auth/profile/read-only
     guards rather than this test opt-in variable.
@@ -74,11 +82,11 @@ class AeatLiveReadNotEnabledError(AeatError):
 class AuthorizationManifestError(AeatError):
     """Raised when the multi-year-renta authorization manifest is malformed.
 
-    Emitted by the authorization-manifest loader when
-    ``authorization.toml`` exists but cannot be parsed or declares an
-    entry that violates the manifest invariants (a single-year enrollment
-    claim, a duplicate modelo, an unknown field). An *absent* manifest is
-    not an error: default-deny-by-absence yields an empty manifest that
+    Emitted by the authorization-manifest loader when an
+    ``authorization.d/<modelo>.toml`` fragment cannot be parsed or declares
+    an entry that violates the manifest invariants (a single-year enrollment
+    claim, a duplicate modelo, an unknown field). An absent fragment directory
+    is not an error: default-deny-by-absence yields an empty manifest that
     authorizes zero modelos.
     """
 

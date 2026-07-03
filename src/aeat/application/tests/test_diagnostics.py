@@ -16,7 +16,7 @@ from ...adapters.persistence.storage import (
     has_active_bucket_session,
     suspend_active_session,
 )
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ...adapters.persistence.storage.master_key import BucketSession
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -41,6 +41,9 @@ from ..diagnostics import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_ACTIVE_BUCKET_ID = "44444444-4444-4444-8444-444444444444"
+_OTHER_BUCKET_ID = "55555555-5555-4555-8555-555555555555"
+
 
 @pytest.fixture(autouse=True)
 def isolated_default_secure_sql(tmp_path: Path) -> Iterator[None]:
@@ -63,6 +66,13 @@ def _explicit_database(db_path: Path) -> Generator[None]:
             yield
         finally:
             dispose_engine(settings)
+
+
+@pytest.fixture(scope="module")
+def config_repair_report(tmp_path_factory: pytest.TempPathFactory) -> ConfigRepairReport:
+    tmp_path = tmp_path_factory.mktemp("diagnostics-config-repair")
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        return build_config_repair_report()
 
 
 def _save_probe_row(namespace: str, object_key: str, payload: bytes) -> None:
@@ -121,16 +131,12 @@ _DIAGNOSTIC_CHECK_INVALID_CASES: tuple[tuple[str, dict[str, object], str], ...] 
 )
 
 
-@pytest.mark.parametrize(
-    "fields",
-    [fields for _, fields, _ in _DIAGNOSTIC_CHECK_INVALID_CASES],
-    ids=[case_id for case_id, _, _ in _DIAGNOSTIC_CHECK_INVALID_CASES],
-)
-def test_diagnostic_check_invalid_recovery_fields_raise_validation_error(fields: dict[str, object]) -> None:
+def test_diagnostic_check_invalid_recovery_fields_raise_validation_error() -> None:
     """Invalid recovery-field combinations are rejected by the real Pydantic model."""
 
-    with pytest.raises(ValidationError):
-        DiagnosticCheck.model_validate(fields)
+    for _case_id, fields, _message_fragment in _DIAGNOSTIC_CHECK_INVALID_CASES:
+        with pytest.raises(ValidationError):
+            DiagnosticCheck.model_validate(fields)
 
 
 def test_diagnostic_check_ok_row_with_both_recovery_fields_none_constructs() -> None:
@@ -165,12 +171,8 @@ def test_diagnostic_check_model_dump_surfaces_both_recovery_fields() -> None:
     assert dumped["dead_end"] is None
 
 
-def test_config_repair_report_contains_registry_and_setup_checks(
-    tmp_path: Path,
-) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        report = build_config_repair_report()
-
+def test_config_repair_report_contains_registry_and_setup_checks(config_repair_report: ConfigRepairReport) -> None:
+    report = config_repair_report
     assert report.package_name == "aeat"
     assert report.registry.available is True
     assert report.registry.modelo_count > 0
@@ -186,12 +188,8 @@ def test_config_repair_report_contains_registry_and_setup_checks(
     assert report.overall == expected_overall
 
 
-def test_render_config_repair_text_is_operator_readable(
-    tmp_path: Path,
-) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        rendered = render_config_repair_text(build_config_repair_report())
-
+def test_render_config_repair_text_is_operator_readable(config_repair_report: ConfigRepairReport) -> None:
+    rendered = render_config_repair_text(config_repair_report)
     from ...core.i18n import tr
 
     assert f"{tr('cli.diagnostics.repair.overall_label')}\t" in rendered
@@ -209,7 +207,7 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
     After fix: each key resolves to a real translated label.
     """
 
-    from ...adapters.outbound.aeat.browser._site_health import (
+    from ...adapters.outbound.aeat.browser import (
         SiteHealthEvidence,
         SiteHealthState,
         SiteHealthStatus,
@@ -251,7 +249,7 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
 
     key_old = EphemeralMasterKeyProvider()
     key_new = EphemeralMasterKeyProvider()
-    namespace = "aeat.test.repair.rotation"
+    namespace = "aeat-test.repair.rotation"
 
     # Seed three rows under the OLD master key.
     with key_old, _explicit_database(db_path):
@@ -311,9 +309,9 @@ def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
 
     with key_old, _explicit_database(db_path):
         for namespace, key, payload in (
-            ("aeat.test.agg.alpha", "alpha-1", b"alpha-1"),
-            ("aeat.test.agg.alpha", "alpha-2", b"alpha-2"),
-            ("aeat.test.agg.beta", "beta-1", b"beta-1"),
+            ("aeat-test.agg.alpha", "alpha-1", b"alpha-1"),
+            ("aeat-test.agg.alpha", "alpha-2", b"alpha-2"),
+            ("aeat-test.agg.beta", "beta-1", b"beta-1"),
         ):
             _save_probe_row(namespace, key, payload)
 
@@ -339,7 +337,7 @@ def test_secure_object_unreadable_total_logs_missing_active_bucket_session(
 
     caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
 
-    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a") as settings:
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_ACTIVE_BUCKET_ID) as settings:
         dispose_engine(settings)
         try:
             assert secure_object_unreadable_total() == 0
@@ -360,8 +358,8 @@ def test_secure_object_unreadable_total_logs_route_session_mismatch(
     caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
 
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a") as settings,
-        activate_session(_bucket_session("bucket-b")),
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_ACTIVE_BUCKET_ID) as settings,
+        activate_session(_bucket_session(_OTHER_BUCKET_ID)),
     ):
         dispose_engine(settings)
         try:
@@ -384,17 +382,16 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     authenticated) and asserting the report shape across each.
     """
     from ..auth import update_auth
-    from ..user_profile._orchestration import profile_create_storage_span
-    from ..user_profile._testing import register_minimal_profile
+    from ..user_profile import profile_create_storage_span, register_minimal_profile
     from ..workflow import WorkflowState
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("operator"),
+        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
     ):
         base = register_minimal_profile(
             WorkflowState(),
-            profile_id="operator",
+            profile_id="11111111-1111-4111-8111-111111111111",
             overrides={
                 "identity.tax_id": "00000000T",
                 "activities.description": "design",
@@ -406,7 +403,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
         provider_only = update_auth(no_provider, provider="clave_movil")
         fully_authenticated = update_auth(provider_only, authenticated=True, subject="00000000T")
 
-        from ..wizard._status import build_wizard_status
+        from ..wizard import build_wizard_status
 
         for state in (no_provider, provider_only, fully_authenticated):
             setup_report = build_wizard_status(state)
@@ -449,13 +446,13 @@ def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
 
     with key_old, _explicit_database(db_path):
         for namespace, key, payload in (
-            ("aeat.test.quar.alpha", "row-old-1", b"old-1"),
-            ("aeat.test.quar.beta", "row-old-2", b"old-2"),
+            ("aeat-test.quar.alpha", "row-old-1", b"old-1"),
+            ("aeat-test.quar.beta", "row-old-2", b"old-2"),
         ):
             _save_probe_row(namespace, key, payload)
 
     with key_new, _explicit_database(db_path):
-        _save_probe_row("aeat.test.quar.alpha", "row-new-1", b"new-1")
+        _save_probe_row("aeat-test.quar.alpha", "row-new-1", b"new-1")
 
         report = quarantine_unreadable_secure_objects()
         assert report.unreadable_total == 2
@@ -491,13 +488,13 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
 
     with key_old, _explicit_database(db_path):
         for namespace, key, payload in (
-            ("aeat.test.preview.alpha", "row-old-1", b"old-1"),
-            ("aeat.test.preview.beta", "row-old-2", b"old-2"),
+            ("aeat-test.preview.alpha", "row-old-1", b"old-1"),
+            ("aeat-test.preview.beta", "row-old-2", b"old-2"),
         ):
             _save_probe_row(namespace, key, payload)
 
     with key_new, _explicit_database(db_path):
-        _save_probe_row("aeat.test.preview.alpha", "row-new-1", b"new-1")
+        _save_probe_row("aeat-test.preview.alpha", "row-new-1", b"new-1")
 
         preview = preview_quarantine_unreadable_secure_objects()
         assert preview.unreadable_total == 2
@@ -681,7 +678,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     with the exact ``aeat config profile edit NAME`` command.
     """
 
-    from ..wizard._status import WizardStatusReport
+    from ..wizard import WizardStatusReport
 
     report = WizardStatusReport(
         active_profile="demo",
@@ -713,7 +710,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
 def test_render_config_repair_text_lists_specific_findings() -> None:
     """The renderer prints each finding line, not just the check summary."""
 
-    from ..wizard._status import WizardStatusReport
+    from ..wizard import WizardStatusReport
 
     ensure_models_rebuilt()
 
@@ -839,24 +836,17 @@ def _assert_validation_error_caused_by_diagnostic_model_error(
     assert matching, f"Expected a DiagnosticModelError cause matching {match!r}; got causes: {causes!r}"
 
 
-@pytest.mark.parametrize(
-    ("fields", "message_fragment"),
-    [(fields, message_fragment) for _, fields, message_fragment in _DIAGNOSTIC_CHECK_INVALID_CASES],
-    ids=[case_id for case_id, _, _ in _DIAGNOSTIC_CHECK_INVALID_CASES],
-)
-def test_diagnostic_check_invariant_errors_raise_diagnostic_model_error(
-    fields: dict[str, object],
-    message_fragment: str,
-) -> None:
+def test_diagnostic_check_invariant_errors_raise_diagnostic_model_error() -> None:
     """Invalid recovery fields raise ValidationError caused by DiagnosticModelError."""
 
-    with pytest.raises(ValidationError) as exc_info:
-        DiagnosticCheck.model_validate(fields)
-    _assert_validation_error_caused_by_diagnostic_model_error(exc_info, message_fragment)
+    for _case_id, fields, message_fragment in _DIAGNOSTIC_CHECK_INVALID_CASES:
+        with pytest.raises(ValidationError) as exc_info:
+            DiagnosticCheck.model_validate(fields)
+        _assert_validation_error_caused_by_diagnostic_model_error(exc_info, message_fragment)
 
 
-def test_diagnostic_model_error_is_subclass_of_value_error() -> None:
-    """DiagnosticModelError is a ValueError subclass for legacy catch compatibility."""
+def test_diagnostic_model_error_is_pydantic_validator_value_error() -> None:
+    """DiagnosticModelError is a ValueError subclass for Pydantic validator wrapping."""
 
     from .._errors import DiagnosticModelError
 

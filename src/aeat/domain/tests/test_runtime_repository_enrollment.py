@@ -8,11 +8,12 @@ from pathlib import Path
 
 import pytest
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...tests.secure_sql import isolated_runtime_profile
 from ..invoices import (
     Invoice,
     InvoiceCatalogue,
-    InvoiceCatalogueRepository,
     InvoiceLine,
     IvaRate,
     PaymentStatus,
@@ -24,7 +25,6 @@ from ..transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
 
@@ -35,7 +35,7 @@ _NOW = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
 
 def _transaction(source_path: Path) -> Transaction:
     raw = RawTransaction(
-        transaction_id="runtime-row-1",
+        provider_transaction_id="runtime-row-1",
         booked_date=date(2026, 4, 5),
         value_date=date(2026, 4, 5),
         amount=Decimal("121.00"),
@@ -52,7 +52,9 @@ def _transaction(source_path: Path) -> Transaction:
         ),
         raw_fields={"Concepto": "runtime storage enrollment transaction"},
     )
-    return Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    return Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
+    )
 
 
 def _invoice(bucket_id: str) -> Invoice:

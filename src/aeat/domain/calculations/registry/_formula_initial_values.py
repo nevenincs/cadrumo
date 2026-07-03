@@ -1,8 +1,22 @@
 """Initial-value assembly for registry formula evaluation.
 
-The :class:`ModeloRevision` declares the casilla and binding slots that seed
-calculation; materialisation emits :class:`CasillaObservation` rows carrying
+The :class:`~aeat.domain.calculations.registry.ModeloRevision` declares the
+casilla and binding slots that seed
+:func:`aeat.domain.calculations.registry._formula_runtime.calculate_registry_snapshot`;
+materialisation emits
+:class:`~aeat.domain.calculations.registry.CasillaObservation` rows carrying
 registry provenance.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._formula_runtime`
+        Runtime caller that consumes the initial values and materialised
+        observations produced here.
+    :mod:`aeat.domain.calculations.registry._bindings`
+        Binding helpers that resolve bound casilla values and equivalent binding
+        groups before provenance materialisation.
+    :mod:`aeat.domain.calculations.registry._bindings_previous_filing`
+        Previous-filing selector model used to decide whether a missing bound
+        slot is absent by design for the target period.
 """
 
 from __future__ import annotations
@@ -10,8 +24,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ....core import BindingSourceKind
 from ._binding_selector_utils import selector_as_dict as _binding_selector_as_dict
-from ._bindings import CasillaObservation
+from ._bindings import CasillaObservation, bound_casilla_binding_ids, resolve_bound_casilla_binding_value
 from ._bindings_previous_filing import _PreviousModeloSelector
 from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
@@ -30,8 +45,11 @@ def materialise_observations(
 ) -> tuple[CasillaObservation, ...]:
     """Project per-casilla runtime state into the canonical observation tuple.
 
-    Each returned :class:`CasillaObservation` is either preserved from computed
-    provenance or rebuilt from the registry casilla's legal/source references.
+    Each returned
+    :class:`~aeat.domain.calculations.registry.CasillaObservation` is either
+    preserved from computed provenance or rebuilt from a
+    :class:`~aeat.domain.calculations.registry.CasillaDefinition` legal/source
+    reference set.
     """
     materialised: list[CasillaObservation] = []
     for casilla_id in sorted(values):
@@ -73,8 +91,10 @@ def initial_values(
 ) -> tuple[dict[CasillaId, Decimal], frozenset[CasillaId]]:
     """Build initial numeric casilla values and absent-by-design markers.
 
-    The :class:`ModeloRevision` supplies casilla membership, formula targets,
-    and bound slot declarations before formula evaluation starts.
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    :class:`~aeat.domain.calculations.registry.CasillaId` membership, formula
+    targets, and :class:`~aeat.domain.calculations.registry.BindingId` slots
+    before formula evaluation starts.
     """
     casillas = casillas_by_id(revision)
     _reject_unknown_inputs(inputs, casillas)
@@ -103,10 +123,44 @@ def initial_values(
     )
 
 
+def binding_values_with_absent_by_design_defaults(
+    revision: ModeloRevision,
+    binding_values: Mapping[BindingId, Decimal],
+    *,
+    target_period: str,
+) -> dict[BindingId, Decimal]:
+    """Add structural zeroes for absent-by-design binding slots.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` binding
+    declarations are inspected through
+    :class:`~aeat.domain.calculations.registry.DataBindingDefinition` so
+    previous-filing and relation-prefill slots can default only when the
+    selected target period has no required source period.
+    """
+    resolved = dict(binding_values)
+    equivalent_groups_by_binding: dict[BindingId, tuple[BindingId, ...]] = {
+        binding_id: group
+        for casilla in revision.casillas
+        if casilla.input_kind == InputKind.BOUND
+        for group in (bound_casilla_binding_ids(casilla),)
+        for binding_id in group
+    }
+    for binding in revision.bindings:
+        if binding.id in resolved:
+            continue
+        equivalent_group = equivalent_groups_by_binding.get(binding.id, (binding.id,))
+        if any(equivalent_id in resolved for equivalent_id in equivalent_group if equivalent_id != binding.id):
+            continue
+        if _binding_is_absent_by_design(binding, target_period=target_period):
+            resolved[binding.id] = _ZERO
+    return resolved
+
+
 def _reject_unknown_inputs(
     inputs: Mapping[CasillaId, Decimal],
     casillas: Mapping[CasillaId, CasillaDefinition],
 ) -> None:
+    """Reject supplied :class:`~aeat.domain.calculations.registry.CasillaId` keys."""
     unknown = sorted(set(inputs).difference(casillas))
     if unknown:
         raise RegistryValidationError(
@@ -121,6 +175,7 @@ def _reject_computed_inputs(
     casillas: Mapping[CasillaId, CasillaDefinition],
     formula_targets: set[CasillaId],
 ) -> None:
+    """Reject caller-supplied values for computed registry casillas."""
     computed = sorted(
         casilla_id
         for casilla_id in inputs
@@ -143,16 +198,19 @@ def _reject_computed_inputs(
 _OBSERVATION_BACKED_SLOT_SOURCES: frozenset[str] = frozenset({"previous_filing", "relation_prefill"})
 
 
-def _previous_filing_binding_for_bound_casilla(
+def _observation_backed_bindings_for_bound_casilla(
     casilla: CasillaDefinition,
     bindings_by_id: Mapping[BindingId, DataBindingDefinition],
-) -> DataBindingDefinition | None:
-    if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
-        return None
-    binding = bindings_by_id.get(casilla.binding)
-    if binding is None or str(binding.source) not in _OBSERVATION_BACKED_SLOT_SOURCES:
-        return None
-    return binding
+) -> tuple[DataBindingDefinition, ...]:
+    """Return bound :class:`~aeat.domain.calculations.registry.DataBindingDefinition` slots."""
+    if casilla.input_kind != InputKind.BOUND:
+        return ()
+    return tuple(
+        binding
+        for binding_id in bound_casilla_binding_ids(casilla)
+        if (binding := bindings_by_id.get(binding_id)) is not None
+        and str(binding.source) in _OBSERVATION_BACKED_SLOT_SOURCES
+    )
 
 
 def _reject_smuggled_previous_filing_inputs(
@@ -162,16 +220,17 @@ def _reject_smuggled_previous_filing_inputs(
     bindings_by_id: Mapping[BindingId, DataBindingDefinition],
     binding_values: Mapping[BindingId, Decimal],
 ) -> None:
+    """Require observation-backed bound casillas to enter through bindings."""
     smuggled_previous_filing_bound = sorted(
         casilla_id
         for casilla_id in inputs
-        if (binding := _previous_filing_binding_for_bound_casilla(casillas[casilla_id], bindings_by_id)) is not None
-        and binding.id not in binding_values
+        if _observation_backed_bindings_for_bound_casilla(casillas[casilla_id], bindings_by_id)
+        and not any(binding_id in binding_values for binding_id in bound_casilla_binding_ids(casillas[casilla_id]))
     )
     if smuggled_previous_filing_bound:
         raise RegistryValidationError(
-            "previous-filing bound registry casillas cannot be supplied via inputs "
-            "without the matching binding_values entry; the projection from "
+            "observation-backed bound registry casillas cannot be supplied via inputs "
+            "without a matching binding_values entry; the projection from "
             "resolve_bound_inputs_by_casilla_id must include the binding value as the "
             f"source of truth: {smuggled_previous_filing_bound!r}",
             translated_message="errors.calc.bound_input_smuggled_without_binding_value",
@@ -186,12 +245,13 @@ def _reject_inconsistent_previous_filing_projections(
     bindings_by_id: Mapping[BindingId, DataBindingDefinition],
     binding_values: Mapping[BindingId, Decimal],
 ) -> None:
+    """Reject mismatches between input projections and binding source values."""
     inconsistent: list[tuple[str, str]] = []
     for casilla_id, input_value in inputs.items():
-        binding = _previous_filing_binding_for_bound_casilla(casillas[casilla_id], bindings_by_id)
-        if binding is None:
+        casilla = casillas[casilla_id]
+        if not _observation_backed_bindings_for_bound_casilla(casilla, bindings_by_id):
             continue
-        binding_value = binding_values.get(binding.id)
+        binding_value, present_binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
         if binding_value is None:
             continue
         if input_value != binding_value:
@@ -199,12 +259,12 @@ def _reject_inconsistent_previous_filing_projections(
                 (
                     casilla_id,
                     f"casilla {casilla_id!r}: inputs={input_value!r} vs "
-                    f"binding_values[{binding.id!r}]={binding_value!r}",
+                    f"binding_values[{present_binding_ids!r}]={binding_value!r}",
                 ),
             )
     if inconsistent:
         raise RegistryValidationError(
-            "previous-filing bound casilla projection is inconsistent between "
+            "observation-backed bound casilla projection is inconsistent between "
             "inputs and binding_values; the binding_values entry is the source "
             "of truth and the inputs projection must match it: " + "; ".join(message for _, message in inconsistent),
             translated_message="errors.calc.bound_projection_inconsistent",
@@ -220,6 +280,7 @@ def _initial_values_for_casillas(
     binding_values: Mapping[BindingId, Decimal],
     target_period: str,
 ) -> tuple[dict[CasillaId, Decimal], frozenset[CasillaId]]:
+    """Build initial values for non-computed registry casilla definitions."""
     values: dict[CasillaId, Decimal] = {}
     absent_by_design: set[CasillaId] = set()
     for casilla in casillas:
@@ -246,29 +307,33 @@ def _initial_value_for_casilla(
     binding_values: Mapping[BindingId, Decimal],
     target_period: str,
 ) -> tuple[Decimal, bool]:
-    binding = _previous_filing_binding_for_bound_casilla(casilla, bindings_by_id)
-    if binding is None:
+    """Resolve one manual or observation-backed initial casilla value."""
+    bindings = _observation_backed_bindings_for_bound_casilla(casilla, bindings_by_id)
+    if not bindings:
         return inputs.get(casilla.id, _ZERO), False
-    if binding.id in binding_values:
-        return binding_values[binding.id], False
-    if _binding_is_absent_by_design(binding, target_period=target_period):
+    value, _present_binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
+    if value is not None:
+        return value, False
+    if any(_binding_is_absent_by_design(binding, target_period=target_period) for binding in bindings):
         return _ZERO, True
+    binding_ids = bound_casilla_binding_ids(casilla)
     raise RegistryValidationError(
-        f"bound casilla {casilla.id!r} requires resolved binding {binding.id!r} value",
+        f"bound casilla {casilla.id!r} requires resolved value for one of {binding_ids!r}",
         translated_message="errors.calc.bound_casilla_binding_value_missing",
-        context={"casilla_id": casilla.id, "binding_id": binding.id},
+        context={"casilla_id": casilla.id, "binding_id": ",".join(binding_ids)},
     )
 
 
 def _binding_is_absent_by_design(binding: DataBindingDefinition, *, target_period: str) -> bool:
+    """Decide whether a missing bound slot is structural for ``target_period``."""
     # A relation_prefill slot legitimately blanks when no prior filing exists to
     # fold in (the relation resolver returns no value and the operator fills it
     # by hand). Treat an unresolved relation_prefill slot as absent-by-design
     # rather than raising — the same operator-manual fallback the relation
     # resolver documents.
-    if str(binding.source) == "relation_prefill":
+    if binding.source == BindingSourceKind.RELATION_PREFILL:
         return True
-    if binding.source != "previous_filing":
+    if binding.source != BindingSourceKind.PREVIOUS_FILING:
         return False
     try:
         selector = _PreviousModeloSelector.model_validate(_binding_selector_as_dict(binding))
@@ -280,6 +345,7 @@ def _binding_is_absent_by_design(binding: DataBindingDefinition, *, target_perio
 
 
 def _previous_filing_selector_has_period_anchor(selector: _PreviousModeloSelector) -> bool:
+    """Check whether a previous-filing selector is anchored to target periods."""
     return (
         selector.period is not None
         or bool(selector.source_periods)

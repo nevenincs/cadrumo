@@ -3,7 +3,8 @@
 A capability is the operator's opt-in/opt-out of an external service (cloud
 evidence upload, on-host LLM vision, Google export), stored as a boolean fact on
 the active profile and resolved against the global safety posture by
-:func:`resolve_active_capability` (``service-capabilities`` ADR). ``show`` reports
+:func:`resolve_active_capability`
+(``service-capabilities`` ADR). ``show`` reports
 the resolved posture + source of every capability; ``set`` writes one capability
 fact through the single-writer profile path.
 """
@@ -69,7 +70,7 @@ def _register_set(capabilities_app: typer.Typer) -> None:
     ) -> None:
         """Opt the active profile in or out of one service capability."""
         from ....application.user_profile import set_active_fields
-        from ....application.workflow._persistence import workflow_state_repository
+        from ....application.workflow import workflow_state_repository
         from ....domain.user_profile import UserProfileFact
 
         profile_id = resolve_active_bucket_id()

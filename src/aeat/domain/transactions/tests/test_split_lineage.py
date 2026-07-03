@@ -58,46 +58,25 @@ def test_derive_split_group_id_is_amount_order_independent() -> None:
     assert first == second
 
 
-def test_derive_split_group_id_differs_on_parent_change() -> None:
-    first = derive_split_group_id(
+def test_derive_split_group_id_differs_on_input_change() -> None:
+    baseline = derive_split_group_id(
         parent_transaction_id=_PARENT,
         child_amounts=(Decimal("10.00"),),
         child_narratives=("rent",),
     )
-    second = derive_split_group_id(
-        parent_transaction_id=_CHILD_A,
-        child_amounts=(Decimal("10.00"),),
-        child_narratives=("rent",),
+    cases: tuple[tuple[str, str, tuple[Decimal, ...], tuple[str, ...]], ...] = (
+        ("parent", _CHILD_A, (Decimal("10.00"),), ("rent",)),
+        ("amount", _PARENT, (Decimal("10.01"),), ("rent",)),
+        ("narrative", _PARENT, (Decimal("10.00"),), ("utilities",)),
     )
-    assert first != second
 
-
-def test_derive_split_group_id_differs_on_amount_change() -> None:
-    first = derive_split_group_id(
-        parent_transaction_id=_PARENT,
-        child_amounts=(Decimal("10.00"),),
-        child_narratives=("rent",),
-    )
-    second = derive_split_group_id(
-        parent_transaction_id=_PARENT,
-        child_amounts=(Decimal("10.01"),),
-        child_narratives=("rent",),
-    )
-    assert first != second
-
-
-def test_derive_split_group_id_differs_on_narrative_change() -> None:
-    first = derive_split_group_id(
-        parent_transaction_id=_PARENT,
-        child_amounts=(Decimal("10.00"),),
-        child_narratives=("rent",),
-    )
-    second = derive_split_group_id(
-        parent_transaction_id=_PARENT,
-        child_amounts=(Decimal("10.00"),),
-        child_narratives=("utilities",),
-    )
-    assert first != second
+    for label, parent_transaction_id, child_amounts, child_narratives in cases:
+        changed = derive_split_group_id(
+            parent_transaction_id=parent_transaction_id,
+            child_amounts=child_amounts,
+            child_narratives=child_narratives,
+        )
+        assert baseline != changed, label
 
 
 def test_split_lineage_constructs_parent_role() -> None:
@@ -116,52 +95,22 @@ def test_split_lineage_constructs_parent_role() -> None:
     assert lineage.sibling_transaction_ids == (_CHILD_A, _CHILD_B)  # sorted
 
 
-def test_split_lineage_rejects_non_hex_group_id() -> None:
-    with pytest.raises(ValidationError, match="lowercase hex"):
-        SplitLineage(
-            split_group_id="g" * 64,
-            role=SplitRole.PARENT,
-            sibling_transaction_ids=(_CHILD_A,),
-        )
+def test_split_lineage_rejects_invalid_payloads() -> None:
+    cases: tuple[tuple[str, str, SplitRole, tuple[str, ...], str], ...] = (
+        ("non-hex-group-id", "g" * 64, SplitRole.PARENT, (_CHILD_A,), "lowercase hex"),
+        ("uppercase-group-id", "A" * 64, SplitRole.PARENT, (_CHILD_A,), "lowercase"),
+        ("empty-siblings", "0" * 64, SplitRole.PARENT, (), "at least one sibling"),
+        ("duplicate-siblings", "0" * 64, SplitRole.CHILD, (_CHILD_A, _CHILD_A), "unique"),
+        ("short-sibling-id", "0" * 64, SplitRole.CHILD, ("abc",), "64-character"),
+    )
 
-
-def test_split_lineage_rejects_uppercase_group_id() -> None:
-    with pytest.raises(ValidationError, match="lowercase"):
-        SplitLineage(
-            split_group_id="A" * 64,
-            role=SplitRole.PARENT,
-            sibling_transaction_ids=(_CHILD_A,),
-        )
-
-
-def test_split_lineage_rejects_empty_siblings() -> None:
-    digest = "0" * 64
-    with pytest.raises(ValidationError, match="at least one sibling"):
-        SplitLineage(
-            split_group_id=digest,
-            role=SplitRole.PARENT,
-            sibling_transaction_ids=(),
-        )
-
-
-def test_split_lineage_rejects_duplicate_siblings() -> None:
-    digest = "0" * 64
-    with pytest.raises(ValidationError, match="unique"):
-        SplitLineage(
-            split_group_id=digest,
-            role=SplitRole.CHILD,
-            sibling_transaction_ids=(_CHILD_A, _CHILD_A),
-        )
-
-
-def test_split_lineage_rejects_short_sibling_id() -> None:
-    digest = "0" * 64
-    with pytest.raises(ValidationError, match="64-character"):
-        SplitLineage(
-            split_group_id=digest,
-            role=SplitRole.CHILD,
-            sibling_transaction_ids=("abc",),
-        )
+    for _label, split_group_id, role, sibling_transaction_ids, expected_match in cases:
+        with pytest.raises(ValidationError, match=expected_match):
+            SplitLineage(
+                split_group_id=split_group_id,
+                role=role,
+                sibling_transaction_ids=sibling_transaction_ids,
+            )
 
 
 def test_split_lineage_sorts_sibling_ids() -> None:

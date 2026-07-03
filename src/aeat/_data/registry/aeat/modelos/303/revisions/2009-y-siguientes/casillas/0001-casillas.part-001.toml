@@ -259,7 +259,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-compensacion-pendiente-anteriores"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 export_refs = ["modelo-303-page-03-casilla-110"]
 
 [revisions.2009-y-siguientes.casillas.constraints]
@@ -278,7 +278,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-303-compensacion-aplicada-periodo"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 export_refs = ["modelo-303-page-03-casilla-78"]
 
 [revisions.2009-y-siguientes.casillas.constraints]
@@ -298,7 +298,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-303-compensacion-pendiente-periodos-posteriores"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 export_refs = ["modelo-303-page-03-casilla-87"]
 
 [revisions.2009-y-siguientes.casillas.constraints]
@@ -317,7 +317,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-303-iva-resultado"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 export_refs = ["modelo-303-page-03-casilla-69"]
 
 [[revisions.2009-y-siguientes.casillas]]
@@ -331,7 +331,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-303-compensacion-disponible-fin-periodo"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [revisions.2009-y-siguientes.casillas.constraints]
 sign = "non_negative"
@@ -349,7 +349,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-303-compensacion-generada-periodo"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [revisions.2009-y-siguientes.casillas.constraints]
 sign = "non_negative"
@@ -366,7 +366,7 @@ semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["boe-modelo-303-2008-form"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2009-y-siguientes.casillas]]
 id = "decl.periodo"
@@ -378,7 +378,7 @@ semantic_role = "filing_period"
 required = true
 input_kind = "informational"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["boe-modelo-303-2008-form"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2009-y-siguientes.casillas]]
 id = "150"

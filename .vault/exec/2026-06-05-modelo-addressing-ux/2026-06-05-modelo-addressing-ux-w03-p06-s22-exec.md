@@ -1,7 +1,7 @@
 ---
 tags: ['#exec', '#modelo-addressing-ux']
 date: '2026-06-05'
-modified: '2026-06-05'
+modified: '2026-06-30'
 step_id: 'S22'
 related:
   - '[[2026-06-05-modelo-addressing-ux-plan]]'
@@ -27,4 +27,3 @@ Row flag parsing and calculate persistence behavior continue to pass after the p
 
 - `uv run --no-sync pytest src/aeat/entrypoints/cli/test_work_calculate_row_flag.py src/aeat/entrypoints/cli/test_modelo.py -k "parse_casilla_override or parse_binding_override or ParseRowSpec" -q` passed with 36 selected tests.
 - `uv run --no-sync pytest src/aeat/entrypoints/cli/test_work_calculate_borrador.py src/aeat/entrypoints/cli/test_modelo_source_mesh_calculate.py -q` passed with 4 tests.
-

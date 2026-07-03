@@ -10,6 +10,7 @@ and representative of the registry's legal-grounding requirements.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 from typing import Protocol
@@ -18,14 +19,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period, TaxDomain
-from ....core.resources import bundled_path, resources
+from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
     FormulaId,
     ModeloDefinition,
     ModeloRevision,
     RegistrySnapshot,
-    ValidatedRegistryAuthority,
     revision_reference_identity_failures,
     validated_casilla_id,
 )
@@ -73,41 +73,48 @@ def _source_casilla_source_refs() -> dict[CasillaId, tuple[str, ...]]:
     return {casilla.id: casilla.source_refs for casilla in snapshot.revision.casillas}
 
 
-def test_legal_refs_survive_projection() -> None:
-    """RegistryCasillaSchema must carry the same legal_refs as the source CasillaDefinition."""
-    source = _source_casilla_refs()
+@pytest.mark.parametrize(
+    ("source_factory", "attribute"),
+    [
+        (_source_casilla_refs, "legal_refs"),
+        (_source_casilla_source_refs, "source_refs"),
+    ],
+    ids=("legal-refs", "source-refs"),
+)
+def test_refs_survive_projection(
+    source_factory: Callable[[], dict[CasillaId, tuple[str, ...]]],
+    attribute: str,
+) -> None:
+    """RegistryCasillaSchema must carry the same refs as the source CasillaDefinition."""
+    source = source_factory()
     provider = build_runtime_schema_provider(modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=_TEST_PERIOD)
     collection = provider.get_collection(_TEST_MODELO)
     schemas = collection.all()
 
     casillas_with_refs = [s for s in schemas if source.get(s.casilla_id)]
-    assert casillas_with_refs, f"No casillas with legal_refs found in modelo {_TEST_MODELO} — test would be vacuous"
+    assert casillas_with_refs, f"No casillas with {attribute} found in modelo {_TEST_MODELO} — test would be vacuous"
 
     for schema in schemas:
         assert isinstance(schema, RegistryCasillaSchema)
         expected = source.get(schema.casilla_id, ())
-        assert schema.legal_refs == expected, (
-            f"legal_refs mismatch for casilla {schema.casilla_id}: projected={schema.legal_refs!r}, source={expected!r}"
+        projected = getattr(schema, attribute)
+        assert projected == expected, (
+            f"{attribute} mismatch for casilla {schema.casilla_id}: projected={projected!r}, source={expected!r}"
         )
 
 
-def test_source_refs_survive_projection() -> None:
-    """RegistryCasillaSchema must carry the same source_refs as the source CasillaDefinition."""
-    source = _source_casilla_source_refs()
+def test_subview_catalogue_ref_ids_survive_projection() -> None:
+    """RegistryModeloSubview must carry the same catalogue refs as the source snapshot."""
+    snapshot = resources().modelos.authority.snapshot(
+        _TEST_MODELO,
+        filing_year=_TEST_YEAR,
+        period=_TEST_PERIOD.registry_token,
+    )
     provider = build_runtime_schema_provider(modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=_TEST_PERIOD)
-    collection = provider.get_collection(_TEST_MODELO)
-    schemas = collection.all()
+    subview = provider.get_subview(_TEST_MODELO)
 
-    casillas_with_refs = [s for s in schemas if source.get(s.casilla_id)]
-    assert casillas_with_refs, f"No casillas with source_refs found in modelo {_TEST_MODELO} — test would be vacuous"
-
-    for schema in schemas:
-        assert isinstance(schema, RegistryCasillaSchema)
-        expected = source.get(schema.casilla_id, ())
-        assert schema.source_refs == expected, (
-            f"source_refs mismatch for casilla {schema.casilla_id}: "
-            f"projected={schema.source_refs!r}, source={expected!r}"
-        )
+    assert subview.legal_ref_ids == tuple(sorted(snapshot.legal))
+    assert subview.source_ref_ids == tuple(sorted(snapshot.sources))
 
 
 def test_provider_absent_modelo_error_is_localized() -> None:
@@ -399,7 +406,7 @@ def _revision_validation_years(revision: ModeloRevision) -> tuple[int, ...]:
 
 
 def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_schema_coordinate() -> None:
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    authority = resources().modelos.authority
     expected: list[str] = []
     projected: list[str] = []
     offences: list[str] = []

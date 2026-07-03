@@ -713,3 +713,7 @@ number = "1606"
 [[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "1607"
 number = "1607"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "1039"
+number = "1039"

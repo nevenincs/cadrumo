@@ -21,6 +21,8 @@ from typing import override
 
 import pytest
 
+from .cli_runner import invoke_uncached_typer_app
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
@@ -64,20 +66,37 @@ def test_blocker_actually_blocks() -> None:
 
 def test_cli_builds_with_every_optional_extra_blocked() -> None:
     """A fresh-install operator with no extras can still build and run the core CLI."""
-    from typer.testing import CliRunner
 
     with _block_imports("anthropic", "playwright", "playwright_stealth", "googleapiclient", "google_auth_oauthlib"):
         from ..entrypoints.cli import app
 
-        result = CliRunner().invoke(app, ["--help"])
+        result = invoke_uncached_typer_app(app, ["--help"])
     assert result.exit_code == 0, result.output
+
+
+def test_playwright_error_aliases_import_as_plain_fallbacks_without_the_extra() -> None:
+    """Blocked Playwright imports keep the adapter aliases import-safe and outside the AEAT registry."""
+    from ..core.errors import AeatError
+
+    module_name = "aeat.adapters.outbound.aeat._playwright"
+    saved_module = sys.modules.pop(module_name, None)
+    try:
+        with _block_imports("playwright"):
+            module = importlib.import_module(module_name)
+    finally:
+        sys.modules.pop(module_name, None)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+
+    assert issubclass(module.PlaywrightError, Exception)
+    assert issubclass(module.PlaywrightTimeoutError, module.PlaywrightError)
+    assert not issubclass(module.PlaywrightError, AeatError)
+    assert not issubclass(module.PlaywrightTimeoutError, AeatError)
 
 
 def test_anthropic_boundary_refuses_instructively_without_the_extra() -> None:
     """Building the Anthropic adapter without the extra raises LLMConfigError, not ModuleNotFoundError."""
-    from ..adapters.outbound.llm._client import LLMClient
-    from ..adapters.outbound.llm._errors import LLMConfigError
-    from ..adapters.outbound.llm._models import LLMProvider
+    from ..adapters.outbound.llm import LLMClient, LLMConfigError, LLMProvider
     from ..core.config import load_settings
 
     client = LLMClient(settings=load_settings())
@@ -89,7 +108,7 @@ def test_anthropic_boundary_refuses_instructively_without_the_extra() -> None:
 @pytest.mark.asyncio
 async def test_browser_boundary_refuses_instructively_without_the_extra() -> None:
     """Starting the Playwright runtime without the extra raises BrowserError with the install hint."""
-    from ..adapters.outbound.aeat.browser._errors import BrowserError
+    from ..adapters.outbound.aeat.browser import BrowserError
 
     with _block_imports("playwright", "playwright_stealth"):
         from ..adapters.outbound.aeat.browser import _factory

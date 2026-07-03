@@ -65,7 +65,7 @@ def test_injector_is_idempotent_when_ratio_already_present() -> None:
 def _common_profile() -> UserProfileRecord:
     """A común-territory profile with NO jurisdiction_scope fact (the real-world case)."""
     return UserProfileRecord(
-        profile_id="state-attribution-test",
+        profile_id="27272727-2727-4272-8272-272727272727",
         display_name="State attribution test taxpayer",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),

@@ -14,8 +14,10 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
+from ......adapters.persistence.profile.submission import SubmissionRepository
 from ......application.auth import AuthProviderDescription, AuthProviderKind
 from ......core import Period
+from ......core.access_gate import AeatAccessGate, LiveSubmitForbiddenError
 from ......core.config import Settings
 from ......domain.submission import (
     ModeloDraftStatus,
@@ -24,13 +26,14 @@ from ......domain.submission import (
     SubmissionAttempt,
     SubmissionEngine,
     SubmissionError,
-    SubmissionRepository,
     SubmissionStatus,
     make_submission_id,
 )
 from ......tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+_SUBMITTED_AT = datetime(2026, 5, 28, 12, 55, 0, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -42,7 +45,7 @@ def _secure_database(tmp_path: Path) -> Iterator[None]:
 
 
 class _Draft(BaseModel):
-    """Frozen Protocol-conforming test double for ``ModeloDraftLike``.
+    """Frozen Protocol-conforming harness record for ``ModeloDraftLike``.
 
     Structural conformance only — ``ModeloDraftLike`` declares read-only
     properties, so a frozen pydantic model satisfies it without
@@ -61,7 +64,7 @@ class _Draft(BaseModel):
 
 
 class _OpenDeadlines:
-    """Deadline checker test double that always reports the filing window as open."""
+    """Deadline checker harness that always reports the filing window as open."""
 
     def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
         """Return ``True`` for every (modelo, period, today) tuple."""
@@ -69,7 +72,7 @@ class _OpenDeadlines:
 
 
 class _OkAuthProvider:
-    """Auth provider test double that reports a healthy CERTIFICATE provider."""
+    """Auth provider harness that reports a healthy CERTIFICATE provider."""
 
     kind = AuthProviderKind.CERTIFICATE
 
@@ -92,6 +95,7 @@ def _build_engine(tmp_path: Path) -> SubmissionEngine:
     return SubmissionEngine(
         auth_provider=_OkAuthProvider(),
         deadline_checker=_OpenDeadlines(),
+        repository=SubmissionRepository(),
         settings=Settings(
             aeat_submissions_dir=tmp_path / "submissions",
             aeat_submission_browser_trace_dir=tmp_path / "traces",
@@ -101,7 +105,6 @@ def _build_engine(tmp_path: Path) -> SubmissionEngine:
 
 def _historical_filing(submission_id: str = "sub-1", modelo: str = "130") -> ModeloPresentado:
     """Build a synthetic :class:`ModeloPresentado` for historical-records tests."""
-    now = datetime.now(UTC)
     return ModeloPresentado(
         submission_id=submission_id,
         draft_id="draft-1",
@@ -109,12 +112,12 @@ def _historical_filing(submission_id: str = "sub-1", modelo: str = "130") -> Mod
         period=Period.from_year_and_code(2026, "1T"),
         profile_tax_id="X1234567L",
         status=SubmissionStatus.PENDIENTE_DE_PRESENTAR,
-        submitted_at=now,
+        submitted_at=_SUBMITTED_AT,
         attempts=(
             SubmissionAttempt(
                 attempt_id="attempt-1",
-                started_at=now,
-                ended_at=now,
+                started_at=_SUBMITTED_AT,
+                ended_at=_SUBMITTED_AT,
                 status=SubmissionStatus.PENDIENTE_DE_PRESENTAR,
             ),
         ),
@@ -141,6 +144,54 @@ class TestTransportRefusal:
         assert not hasattr(engine, "submit_draft")
         assert not hasattr(engine, "submit_amendment")
         assert not (tmp_path / "submissions").exists()
+
+    def test_engine_public_surface_carries_no_transport_shaped_name(self, tmp_path: Path) -> None:
+        """No public attribute on the engine is named like a write/transport verb.
+
+        Closes the deferred #590 "parity" item honestly: the historical
+        ``_submit_with_transport`` method this item was written against no
+        longer exists anywhere in the codebase (excised by the live-write
+        removal that predates this engine's current read-only shape — see
+        :mod:`aeat.adapters.outbound.aeat.export._submitters`), so there is no
+        transport code path left to compare against
+        :meth:`AeatAccessGate.require_live_write`. The durable, re-checkable
+        assertion is structural: the engine's entire public surface is free of
+        any write-shaped name, for every current and future public attribute,
+        not just the two named methods above.
+        """
+        engine = _build_engine(tmp_path)
+        transport_shaped_tokens = ("submit", "present", "sign", "pay", "transport", "write")
+        public_attrs = [name for name in dir(engine) if not name.startswith("_")]
+        assert public_attrs, "engine must expose some public surface to make this assertion meaningful"
+        offending = [name for name in public_attrs if any(token in name.lower() for token in transport_shaped_tokens)]
+        assert offending == []
+
+    def test_engine_has_no_write_path_that_could_disagree_with_the_access_gate(self, tmp_path: Path) -> None:
+        """Cross-module agreement: no engine call can ever reach AEAT once past the gate.
+
+        The engine has no transport method for :meth:`AeatAccessGate.require_live_write`
+        to disagree with; this proves the two surfaces cannot diverge by
+        proving there is nothing on the engine's public surface a caller could
+        invoke to attempt a live AEAT write, while also confirming (in the same
+        test) that the gate itself refuses unconditionally. Together they
+        establish the invariant the original parity test intended: whichever
+        path an operator takes, a live AEAT write is unreachable.
+        """
+        engine = _build_engine(tmp_path)
+        write_shaped_methods = [
+            name
+            for name in dir(engine)
+            if not name.startswith("_") and callable(getattr(engine, name, None)) and name not in {"preflight"}
+        ]
+        # preflight() is a read-only gate check, not a write; every other
+        # callable public method is a pure historical-record reader.
+        for name in write_shaped_methods:
+            assert name in {"load_submission", "list_submissions"}, (
+                f"unexpected callable public method {name!r} on SubmissionEngine; "
+                "confirm it cannot reach AEAT before widening this allowlist"
+            )
+        with pytest.raises(LiveSubmitForbiddenError, match="permanently forbidden"):
+            AeatAccessGate(Settings()).require_live_write()
 
 
 class TestHistoricalRecords:

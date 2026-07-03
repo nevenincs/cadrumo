@@ -8,9 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos._errors import ModeloValidationError
-from ....domain.modelos._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot, ManualFactBasisEntry
+from ....domain.calculations.registry import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
+from ....domain.modelos import (
+    LedgerFilingEvidence,
+    LedgerFilingSnapshot,
+    ManualFactBasisEntry,
+    ModeloValidationError,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -45,6 +49,8 @@ def _casilla_id(value: object) -> CasillaId:
 _MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00501")
 _SKIPPED_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00502")
 _EMPTY_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00503")
+_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-37-1992:art-99",)
+_SOURCE_REFS: tuple[SourceRefId, ...] = ("boe-modelo-303-2025-form",)
 
 
 def _tx(
@@ -54,11 +60,13 @@ def _tx(
     taxable_base: Decimal | None = Decimal("100.00"),
     iva_amount: Decimal | None = Decimal("21.00"),
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
+    category_id: str = "material_oficina",
+    irpf_category: str | None = None,
     purchase_invoice_evidence_id: str | None = None,
     attachment_ids: tuple[str, ...] = (),
 ) -> Transaction:
     raw = RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 4, 5),
         value_date=date(2026, 4, 5),
         amount=amount,
@@ -79,11 +87,14 @@ def _tx(
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "business_classification": business_classification,
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
-            "category_id": "material_oficina",
+            "category_id": category_id,
+            "irpf_category": irpf_category,
             "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
             "attachment_ids": attachment_ids,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
@@ -140,6 +151,8 @@ def test_evidence_capture_projects_tax_facts_and_manual_basis() -> None:
         casilla_id=_MANUAL_FACT_CASILLA,
         value="140000.00",
         note="resultado contable",
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
     )
 
     evidence = compute_ledger_filing_evidence(
@@ -147,6 +160,8 @@ def test_evidence_capture_projects_tax_facts_and_manual_basis() -> None:
         catalogue=catalogue,
         snapshot_fingerprint=snapshot.snapshot_fingerprint,
         captured_at=_CAPTURED,
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
         manual_entries=(manual_entry,),
     )
 
@@ -169,6 +184,47 @@ def test_evidence_capture_projects_tax_facts_and_manual_basis() -> None:
     assert row.attachment_ids == ("attachment-1",)
 
 
+def test_evidence_capture_preserves_rent_paid_net_of_withholding_substrate() -> None:
+    """Filing evidence keeps bank cash and invoice IVA substrate distinct.
+
+    Commercial rent paid as 1020.00 after withholding still contributes the
+    supplier invoice substrate 1000.00 + 210.00 IVA. Evidence must preserve both
+    facts rather than reconstituting or normalising one into the other.
+    """
+    tx = _tx(
+        "row-rent-net",
+        amount=Decimal("1020.00"),
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+        category_id="arrendamiento_local",
+        irpf_category="arrendamiento_local",
+    )
+    catalogue = _catalogue(tx)
+    snapshot = compute_ledger_filing_snapshot(
+        source_transaction_ids=[tx.transaction_id],
+        catalogue=catalogue,
+        captured_at=_CAPTURED,
+    )
+
+    evidence = compute_ledger_filing_evidence(
+        source_transaction_ids=[tx.transaction_id],
+        catalogue=catalogue,
+        snapshot_fingerprint=snapshot.snapshot_fingerprint,
+        captured_at=_CAPTURED,
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
+    )
+
+    row = evidence.rows[0]
+    assert row.amount == Decimal("1020.00")
+    assert row.taxable_base == Decimal("1000.00")
+    assert row.iva_amount == Decimal("210.00")
+    assert row.taxable_base + row.iva_amount == Decimal("1210.00")
+    assert row.amount != row.taxable_base + row.iva_amount
+    assert row.category_id == "arrendamiento_local"
+    assert row.irpf_category == "arrendamiento_local"
+
+
 def test_manual_fact_basis_projection_skips_blank_inputs() -> None:
     entries = project_manual_fact_basis_entries(
         {
@@ -176,9 +232,52 @@ def test_manual_fact_basis_projection_skips_blank_inputs() -> None:
             _SKIPPED_MANUAL_FACT_CASILLA: " ",
             _EMPTY_MANUAL_FACT_CASILLA: "",
         },
+        legal_refs_by_casilla_id={_MANUAL_FACT_CASILLA: _LEGAL_REFS},
+        source_refs_by_casilla_id={_MANUAL_FACT_CASILLA: _SOURCE_REFS},
     )
 
-    assert entries == (ManualFactBasisEntry(casilla_id=_MANUAL_FACT_CASILLA, value="140000.00"),)
+    assert entries == (
+        ManualFactBasisEntry(
+            casilla_id=_MANUAL_FACT_CASILLA,
+            value="140000.00",
+            legal_refs=_LEGAL_REFS,
+            source_refs=_SOURCE_REFS,
+        ),
+    )
+
+
+def test_manual_fact_basis_projection_rejects_missing_grounding() -> None:
+    with pytest.raises(ModeloValidationError, match="legal_refs"):
+        project_manual_fact_basis_entries(
+            {_MANUAL_FACT_CASILLA: "140000.00"},
+            legal_refs_by_casilla_id={},
+            source_refs_by_casilla_id={_MANUAL_FACT_CASILLA: _SOURCE_REFS},
+        )
+
+
+def test_evidence_capture_rejects_blank_or_malformed_grounding_refs() -> None:
+    tx = _tx("row-invalid-grounding")
+    catalogue = _catalogue(tx)
+    snapshot = compute_ledger_filing_snapshot(
+        source_transaction_ids=[tx.transaction_id],
+        catalogue=catalogue,
+        captured_at=_CAPTURED,
+    )
+
+    for legal_refs, source_refs, match in (
+        (("ley-37-1992:art-99", ""), _SOURCE_REFS, "non-empty legal_refs"),
+        (("LEY 37/1992",), _SOURCE_REFS, "invalid legal_refs"),
+        (_LEGAL_REFS, ("boe modelo 303",), "invalid source_refs"),
+    ):
+        with pytest.raises(ModeloValidationError, match=match):
+            compute_ledger_filing_evidence(
+                source_transaction_ids=[tx.transaction_id],
+                catalogue=catalogue,
+                snapshot_fingerprint=snapshot.snapshot_fingerprint,
+                captured_at=_CAPTURED,
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+            )
 
 
 def test_evidence_coverage_guard_refuses_missing_contributor() -> None:
@@ -204,6 +303,8 @@ def test_evidence_coverage_guard_refuses_missing_contributor() -> None:
         catalogue=catalogue,
         snapshot_fingerprint=snapshot.snapshot_fingerprint,
         captured_at=_CAPTURED,
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
     )
     assert_evidence_covers_snapshot(snapshot, complete)
 

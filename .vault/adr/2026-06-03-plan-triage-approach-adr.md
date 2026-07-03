@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#plan-triage-approach'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-03-executable-parity-evidence-tier-contract-adr]]"
   - "[[2026-06-02-m390-annual-autoconsumo-promotor-source-adr]]"
   - '[[2026-06-04-plan-triage-approach-research]]'
 ---
-
 
 # `plan-triage-approach` adr: phased triage by feature-state-honesty + bulk-archive for landed-feature plans | (**status:** `accepted`)
 

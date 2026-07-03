@@ -5,8 +5,9 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 
-from .....core.resources import bundled_path
+from .....core.resources import resources
 from ....deadlines import (
     EntityType,
     FiscalResidency,
@@ -17,14 +18,27 @@ from ....deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
-from .. import ValidatedRegistryAuthority
 from ..applicability import (
     ApplicabilityVerdict,
+    Modelo202Modality,
+    Modelo202ModalityVerdict,
+    ModeloApplicability,
+    ModeloApplicabilityRule,
     derive_modelo_applicability,
     iter_modelo_applicability_rules,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_PERIODIC_IVA_MODELOS = ("303", "390")
+_NON_PERIODIC_IVA_REGIMES = (IVARegime.EXENTO, IVARegime.RECARGO_EQUIVALENCIA)
+_FACT_GATED_MODELO_CASES = (
+    ("115", {"pays_rent_with_retencion": True}),
+    ("180", {"pays_rent_with_retencion": True}),
+    ("349", {"does_intracomunitario": True}),
+    ("347", {"third_party_transactions_above_347_threshold": True}),
+)
+_NON_IMPATRIADO_SPECIAL_REGIMES = (None, IrpfSpecialRegime.GENERAL)
 
 
 def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
@@ -36,16 +50,26 @@ def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
         "100",
         "111",
         "115",
+        "117",
+        "123",
+        "126",
+        "128",
         "130",
         "131",
         "180",
         "184",
+        "187",
+        "188",
         "190",
+        "193",
+        "194",
         "200",
         "202",
         "303",
+        "322",
         "347",
         "349",
+        "353",
         "390",
         "720",
         "721",
@@ -55,8 +79,7 @@ def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
 def test_seed_modelo_applicability_legal_refs_resolve_in_registry() -> None:
     """Every seed applicability rule carries real scoped legal refs."""
 
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
-    registered_legal_ids = set(authority.catalogues.legal)
+    registered_legal_ids = set(resources().modelos.authority.catalogues.legal)
     assert registered_legal_ids
 
     for rule in iter_modelo_applicability_rules():
@@ -65,6 +88,59 @@ def test_seed_modelo_applicability_legal_refs_resolve_in_registry() -> None:
         assert not unresolved, f"{rule.modelo} unresolved legal_refs: {unresolved}"
         for ref in rule.legal_refs:
             assert ":" in ref, f"{rule.modelo} legal_ref is not scoped: {ref!r}"
+
+
+def test_applicability_models_reject_blank_reasons_and_legal_refs() -> None:
+    """Applicability explanations are grounded operator output, not free text."""
+    with pytest.raises(ValidationError, match="reason"):
+        ModeloApplicability(
+            modelo="130",
+            verdict=ApplicabilityVerdict.APPLICABLE,
+            reason=" ",
+            legal_refs=("ley-35-2006:art-99",),
+        )
+    with pytest.raises(ValidationError, match="legal_refs"):
+        ModeloApplicability(
+            modelo="130",
+            verdict=ApplicabilityVerdict.APPLICABLE,
+            reason="Modelo 130 aplica.",
+            legal_refs=(" ",),
+        )
+    for field_name in ("applicable_reason", "not_applicable_reason"):
+        payload = {
+            "modelo": "130",
+            "applicable_entity_types": frozenset({EntityType.NATURAL_PERSON}),
+            "applicable_reason": "Modelo 130 aplica.",
+            "not_applicable_reason": "Modelo 130 no aplica.",
+            "legal_refs": ("ley-35-2006:art-99",),
+        }
+        payload[field_name] = " "
+        with pytest.raises(ValidationError, match=field_name):
+            ModeloApplicabilityRule.model_validate(payload)
+    with pytest.raises(ValidationError, match="legal_refs"):
+        ModeloApplicabilityRule(
+            modelo="130",
+            applicable_entity_types=frozenset({EntityType.NATURAL_PERSON}),
+            applicable_reason="Modelo 130 aplica.",
+            not_applicable_reason="Modelo 130 no aplica.",
+            legal_refs=(" ",),
+        )
+
+
+def test_modelo_202_modality_verdict_rejects_blank_reason_and_legal_refs() -> None:
+    """The M202 modality gate carries the same grounding contract."""
+    with pytest.raises(ValidationError, match="reason"):
+        Modelo202ModalityVerdict(
+            modality=Modelo202Modality.ART_40_3_MANDATORY,
+            reason=" ",
+            legal_refs=("ley-27-2014:art-40",),
+        )
+    with pytest.raises(ValidationError, match="legal_refs"):
+        Modelo202ModalityVerdict(
+            modality=Modelo202Modality.ART_40_3_MANDATORY,
+            reason="Modelo 202 modalidad obligatoria.",
+            legal_refs=(" ",),
+        )
 
 
 def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
@@ -92,6 +168,89 @@ def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
     assert derive_modelo_applicability(sociedad_limitada, "100").verdict is (ApplicabilityVerdict.NOT_APPLICABLE)
 
 
+def _attribution_entity_profile(
+    *,
+    iva_regime: IVARegime = IVARegime.GENERAL,
+    has_employees: bool = False,
+    pays_professionals_with_retencion: bool = False,
+    pays_rent_with_retencion: bool = False,
+    does_intracomunitario: bool = False,
+    third_party_transactions_above_347_threshold: bool = False,
+) -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id="E12345678",
+        entity_type=EntityType.ATTRIBUTION_ENTITY,
+        iva_regime=iva_regime,
+        has_employees=has_employees,
+        pays_professionals_with_retencion=pays_professionals_with_retencion,
+        pays_rent_with_retencion=pays_rent_with_retencion,
+        does_intracomunitario=does_intracomunitario,
+        third_party_transactions_above_347_threshold=third_party_transactions_above_347_threshold,
+    )
+
+
+def test_attribution_entity_with_general_iva_is_applicable_for_iva_modelos() -> None:
+    """An attribution entity can be IVA-taxable even though income passes through."""
+
+    for modelo in _PERIODIC_IVA_MODELOS:
+        result = derive_modelo_applicability(_attribution_entity_profile(), modelo)
+
+        assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
+        assert result.applicable is True, modelo
+
+
+def test_attribution_entity_without_periodic_iva_regime_owes_no_m303_or_m390() -> None:
+    """A non-periodic IVA regime must not make M303/M390 applicable."""
+
+    for iva_regime in _NON_PERIODIC_IVA_REGIMES:
+        profile = _attribution_entity_profile(iva_regime=iva_regime)
+
+        for modelo in _PERIODIC_IVA_MODELOS:
+            result = derive_modelo_applicability(profile, modelo)
+            assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, (iva_regime, modelo)
+            assert result.applicable is False, (iva_regime, modelo)
+
+
+def test_attribution_entity_with_employees_is_applicable_for_modelo_111_and_190() -> None:
+    """An attribution entity with withheld salary payments owes M111 and its summary."""
+
+    profile = _attribution_entity_profile(has_employees=True)
+
+    for modelo in ("111", "190"):
+        result = derive_modelo_applicability(profile, modelo)
+        assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
+        assert result.applicable is True, modelo
+
+
+def test_attribution_entity_without_withheld_income_fact_is_incomplete_for_modelo_111() -> None:
+    """Without an employee/professional payer fact, M111 is undecided, not applicable."""
+
+    result = derive_modelo_applicability(_attribution_entity_profile(), "111")
+
+    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert result.applicable is False
+
+
+def test_attribution_entity_with_required_fact_is_applicable_for_fact_gated_modelos() -> None:
+    """Attribution entities can owe non-cuota payer/informative modelos."""
+
+    for modelo, payer_fact_update in _FACT_GATED_MODELO_CASES:
+        result = derive_modelo_applicability(_attribution_entity_profile(**payer_fact_update), modelo)
+
+        assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
+        assert result.applicable is True, modelo
+
+
+def test_attribution_entity_without_required_fact_is_incomplete_for_fact_gated_modelos() -> None:
+    """Missing payer/trade facts stay undecided instead of entity-excluded."""
+
+    for modelo, _payer_fact_update in _FACT_GATED_MODELO_CASES:
+        result = derive_modelo_applicability(_attribution_entity_profile(), modelo)
+
+        assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
+        assert result.applicable is False, modelo
+
+
 def test_actividad_economica_without_declared_regime_defaults_to_directa_m130() -> None:
     """An actividad-económica autónomo with no declared estimation regime owes M130.
 
@@ -100,8 +259,7 @@ def test_actividad_economica_without_declared_regime_defaults_to_directa_m130() 
     ``--irpf-estimation-regime`` leaves ``irpf_estimation_regime`` ``None``.
     Estimación directa is the default IRPF method (LIRPF art. 16; RIRPF
     art. 32 makes módulos opt-in), so the undeclared regime resolves to
-    directa via the ``uses_objective_estimation_irpf`` boolean (default
-    ``False``): Modelo 130 is APPLICABLE and Modelo 131 is NOT_APPLICABLE.
+    directa: Modelo 130 is APPLICABLE and Modelo 131 is NOT_APPLICABLE.
     The two stay mutually exclusive — the profile is never told it owes
     both, and the actividad-económica filer is never silently dropped
     from the M130 family.
@@ -116,7 +274,6 @@ def test_actividad_economica_without_declared_regime_defaults_to_directa_m130() 
     # The undeclared regime defaults to directa (the LIRPF default method).
     assert autonomo_no_regime.irpf_estimation_regime is None
     assert autonomo_no_regime.fiscal_residency is None
-    assert autonomo_no_regime.uses_objective_estimation_irpf is False
     assert derive_modelo_applicability(autonomo_no_regime, "130").verdict is ApplicabilityVerdict.APPLICABLE
     assert derive_modelo_applicability(autonomo_no_regime, "131").verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
@@ -142,24 +299,68 @@ def test_non_resident_irnr_natural_person_does_not_owe_modelo_130() -> None:
     assert "trlirnr-rdleg-5-2004:art-2" in result.legal_refs
 
 
-def test_objective_estimation_boolean_without_declared_regime_routes_to_m131() -> None:
-    """An autónomo who flags módulos but leaves the regime undeclared owes M131, not M130.
+def test_non_resident_irnr_natural_person_does_not_owe_modelo_100() -> None:
+    """Declared IRNR non-residency positively excludes the resident-IRPF M100."""
 
-    The ``uses_objective_estimation_irpf=True`` boolean is the definite
-    objetiva signal: with no structured regime declared it routes the
-    undeclared-regime resolution to estimación objetiva, so Modelo 131 is
-    APPLICABLE and Modelo 130 is NOT_APPLICABLE. The directa default is
-    not applied when the operator has positively indicated módulos.
-    """
+    non_resident_autonomo = TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
+        iva_regime=IVARegime.GENERAL,
+        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        country_of_fiscal_residence="FR",
+    )
+
+    result = derive_modelo_applicability(non_resident_autonomo, "100")
+
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert result.applicable is False
+    assert "NON_RESIDENT_IRNR" in result.reason
+    assert "trlirnr-rdleg-5-2004:art-2" in result.legal_refs
+
+
+def test_non_resident_irnr_legal_entity_without_pe_does_not_owe_modelo_200() -> None:
+    """Declared IRNR non-residency must not be treated as resident-company M200."""
+
+    resident_company = TaxpayerProfile(
+        tax_id="B66012345",
+        entity_type=EntityType.LEGAL_ENTITY,
+        legal_entity_form=LegalEntityForm.SL,
+        iva_regime=IVARegime.GENERAL,
+    )
+    non_resident_company = TaxpayerProfile(
+        tax_id="B66012345",
+        entity_type=EntityType.LEGAL_ENTITY,
+        legal_entity_form=LegalEntityForm.SL,
+        iva_regime=IVARegime.GENERAL,
+        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        country_of_fiscal_residence="DE",
+    )
+
+    assert derive_modelo_applicability(resident_company, "200").verdict is ApplicabilityVerdict.APPLICABLE
+
+    result = derive_modelo_applicability(non_resident_company, "200")
+
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert result.applicable is False
+    assert "NON_RESIDENT_IRNR" in result.reason
+    assert "establecimiento permanente" in result.reason
+    assert "trlirnr-rdleg-5-2004:art-2" in result.legal_refs
+    assert "trlirnr-rdleg-5-2004:art-24" in result.legal_refs
+
+
+def test_objective_estimation_regime_routes_to_m131() -> None:
+    """An autónomo who explicitly elects módulos owes M131, not M130."""
 
     autonomo_modulos = TaxpayerProfile(
         tax_id="A4567890B",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         iva_regime=IVARegime.GENERAL,
-        uses_objective_estimation_irpf=True,
+        irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
     )
-    assert autonomo_modulos.irpf_estimation_regime is None
+    assert autonomo_modulos.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
     assert derive_modelo_applicability(autonomo_modulos, "131").verdict is ApplicabilityVerdict.APPLICABLE
     assert derive_modelo_applicability(autonomo_modulos, "130").verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
@@ -184,6 +385,22 @@ def test_pure_landlord_without_actividad_economica_owes_no_m130() -> None:
     assert derive_modelo_applicability(landlord, "131").verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
 
+def _beckham_profile(
+    *,
+    start_date: date = date(2023, 1, 1),
+    bienes_extranjero_above_threshold: bool = False,
+) -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
+        iva_regime=IVARegime.GENERAL,
+        irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
+        special_regime_start_date=start_date,
+        bienes_extranjero_above_threshold=bienes_extranjero_above_threshold,
+    )
+
+
 def test_impatriado_art93_exempts_modelo_720_even_with_bienes_declared() -> None:
     """LIRPF Art. 93 impatriado profile: M720 must be NOT_APPLICABLE.
 
@@ -194,16 +411,7 @@ def test_impatriado_art93_exempts_modelo_720_even_with_bienes_declared() -> None
     payer-fact gate is never reached.
     """
 
-    beckham_profile = TaxpayerProfile(
-        tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
-        iva_regime=IVARegime.GENERAL,
-        irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
-        special_regime_start_date=date(2023, 1, 1),
-        # bienes declared above threshold — exemption must still fire
-        bienes_extranjero_above_threshold=True,
-    )
+    beckham_profile = _beckham_profile(bienes_extranjero_above_threshold=True)
     # Pass today within the 6-year window (2023-2028) so the exemption fires.
     result = derive_modelo_applicability(beckham_profile, "720", today=date(2026, 5, 27))
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
@@ -232,24 +440,90 @@ def test_general_regime_profile_with_bienes_declared_modelo_720_applicable() -> 
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
 
 
-def test_impatriado_exemption_does_not_affect_other_modelos() -> None:
-    """The impatriado pre-check is scoped strictly to M720.
+def test_modelo_721_uses_crypto_abroad_threshold_not_modelo_720_bienes_fact() -> None:
+    """M721 cannot inherit M720's bienes-en-el-extranjero threshold fact.
 
-    An impatriado with trabajo income is still APPLICABLE for M100;
-    the Art. 93 exemption must not bleed into unrelated modelos.
+    The two obligations have separate subject matter. A taxpayer can
+    have no Modelo 720 bienes/derechos above threshold while still
+    holding Modelo 721 virtual currencies abroad above threshold.
     """
 
-    beckham_profile = TaxpayerProfile(
+    base_profile = TaxpayerProfile(
         tax_id="X1234567L",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
         iva_regime=IVARegime.GENERAL,
-        irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
-        special_regime_start_date=date(2023, 1, 1),
+        bienes_extranjero_above_threshold=False,
+        monedas_virtuales_extranjero_above_threshold=False,
     )
-    # Modelo 100 applies regardless of the special regime: the impatriado
-    # files Modelo 151, but Modelo 100 applicability is not gated here.
+
+    assert derive_modelo_applicability(base_profile, "720").verdict is ApplicabilityVerdict.INCOMPLETE
+    base_721 = derive_modelo_applicability(base_profile, "721")
+    assert base_721.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert "monedas virtuales" in base_721.reason
+    assert "alquileres sujetos a retención" not in base_721.reason
+    assert "ley-58-2003:da-18" in base_721.legal_refs
+    assert "orden-hfp-886-2023:art-2" in base_721.legal_refs
+
+    crypto_profile = base_profile.model_copy(update={"monedas_virtuales_extranjero_above_threshold": True})
+
+    assert derive_modelo_applicability(crypto_profile, "720").verdict is ApplicabilityVerdict.INCOMPLETE
+    assert derive_modelo_applicability(crypto_profile, "721").verdict is ApplicabilityVerdict.APPLICABLE
+
+
+def test_impatriado_in_window_routes_annual_irpf_to_modelo_151() -> None:
+    """Within the Art. 93 window, M151 applies and M100 is suppressed."""
+
+    beckham_profile = _beckham_profile()
+
+    m100 = derive_modelo_applicability(beckham_profile, "100", today=date(2026, 5, 27))
+    m151 = derive_modelo_applicability(beckham_profile, "151", today=date(2026, 5, 27))
+
+    assert m100.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert m100.applicable is False
+    assert "Art. 93" in m100.reason
+    assert "Modelo 151" in m100.reason
+    assert "ley-35-2006:art-93" in m100.legal_refs
+    assert "orden-eha-2887-2008:modelo-151" in m100.legal_refs
+
+    assert m151.verdict is ApplicabilityVerdict.APPLICABLE
+    assert m151.applicable is True
+    assert "Modelo 151" in m151.reason
+    assert set(m151.legal_refs).issubset(resources().modelos.authority.catalogues.legal)
+
+
+def test_impatriado_year_seven_restores_m100_m720_and_suppresses_m151() -> None:
+    """After the six-year window, the profile returns to ordinary IRPF routing."""
+
+    expired_profile = _beckham_profile(bienes_extranjero_above_threshold=True)
+    year_seven = date(2029, 1, 1)
+
     assert (
-        derive_modelo_applicability(beckham_profile, "100", today=date(2026, 5, 27)).verdict
-        is ApplicabilityVerdict.APPLICABLE
+        derive_modelo_applicability(expired_profile, "100", today=year_seven).verdict is ApplicabilityVerdict.APPLICABLE
     )
+    assert (
+        derive_modelo_applicability(expired_profile, "151", today=year_seven).verdict
+        is ApplicabilityVerdict.NOT_APPLICABLE
+    )
+    assert (
+        derive_modelo_applicability(expired_profile, "720", today=year_seven).verdict is ApplicabilityVerdict.APPLICABLE
+    )
+
+
+def test_non_impatriado_profile_does_not_route_to_modelo_151() -> None:
+    """A general-regime natural person stays outside the M151 route."""
+
+    for special_regime in _NON_IMPATRIADO_SPECIAL_REGIMES:
+        general_profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            entity_type=EntityType.NATURAL_PERSON,
+            irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
+            iva_regime=IVARegime.GENERAL,
+            irpf_special_regime=special_regime,
+        )
+
+        result = derive_modelo_applicability(general_profile, "151", today=date(2026, 5, 27))
+
+        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, special_regime
+        assert result.applicable is False, special_regime
+        assert "Art. 93" in result.reason

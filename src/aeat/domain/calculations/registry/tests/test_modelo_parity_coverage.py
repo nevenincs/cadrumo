@@ -6,17 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources import bundled_path
-from .. import load_registry_tree
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _TEST_ROOT = Path(__file__).parent
 
 
 def test_formula_bearing_modelos_have_constructs_and_model_specific_tests() -> None:
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
+    modelos, _ = _committed_registry_tree()
 
     violations: list[str] = []
     for modelo in sorted(modelos, key=lambda item: item.id):

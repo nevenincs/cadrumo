@@ -5,5 +5,16 @@ fixture_id = "modelo-202-2025-record-design-layout"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.01"
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-202-2025"]
+legal_refs = [
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-29",
+    "ley-27-2014:art-30",
+    "ley-27-2014:art-105",
+    "orden-hfp-227-2017:art-1",
+    "orden-hac-262-2025:art-unico-1-anexo-i",
+]
+source_refs = [
+    "aeat-dr-202-2025",
+    "boe-modelo-202-base-order",
+    "boe-modelo-202-2025-amendment",
+]

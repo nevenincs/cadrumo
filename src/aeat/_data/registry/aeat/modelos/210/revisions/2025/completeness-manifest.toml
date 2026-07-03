@@ -47,6 +47,10 @@ casilla_id = "dias_imputacion"
 number = "dias_imputacion"
 
 [[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "gastos_deducibles"
+number = "gastos_deducibles"
+
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "rendimientos_integros"
 number = "rendimientos_integros"
 

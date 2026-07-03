@@ -1,7 +1,21 @@
 """Export layout, record, and field validation helpers.
 
 Validates export layouts, records, and fields declared on a
-:class:`ModeloRevision` for casilla and binding reference closure.
+:class:`~aeat.domain.calculations.registry.ModeloRevision` for casilla and
+binding reference closure.
+
+Export layouts are layout-authority surfaces: every
+:class:`~aeat.domain.calculations.registry.ExportFieldDefinition` must point at
+declared :class:`~aeat.domain.calculations.registry.CasillaId` or
+:class:`~aeat.domain.calculations.registry.BindingId` values and carry
+layout-authority evidence.
+
+See Also:
+    :func:`aeat.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
+        Per-revision dispatcher that invokes this export validator.
+    :func:`aeat.domain.calculations.registry.derive_export_layouts_from_bindings`
+        Export-layout derivation path whose generated records must satisfy these
+        reference checks.
 """
 
 from __future__ import annotations
@@ -10,10 +24,17 @@ from collections.abc import Mapping
 
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
+from ._binding_selector_utils import (
+    BindingExportSelector,
+    BindingFixedExportSelector,
+    binding_export_selector,
+)
+from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId
 from ._schema import (
     CasillaDefinition,
     CasillaFieldKind,
+    DataBindingDefinition,
     ExportFieldDefinition,
     ExportRecordDefinition,
     LegalReference,
@@ -36,6 +57,15 @@ def validate_export_layout_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> None:
+    """Append export layout, record, and field failures.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    export layouts. Each layout must carry layout-authority evidence, and each
+    nested record/field is validated against declared
+    :class:`~aeat.domain.calculations.registry.CasillaDefinition` and
+    :class:`~aeat.domain.calculations.registry.DataBindingDefinition` ids from
+    the revision validation context.
+    """
     for layout in revision.export_layouts:
         owner = f"export {layout.id}"
         failures.extend(_missing_refs(prefix, owner, layout.legal_refs, legal_refs, "legal"))
@@ -52,6 +82,7 @@ def validate_export_layout_section(
                 casilla_by_id=casilla_by_id,
                 legal_refs=legal_refs,
                 source_refs=source_refs,
+                evidence=evidence,
             )
 
 
@@ -66,7 +97,18 @@ def _validate_export_record(
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
+    """Append failures for one export record declaration.
+
+    The
+    :class:`~aeat.domain.calculations.registry._schema.ExportRecordDefinition`
+    is checked against the selected
+    :class:`~aeat.domain.calculations.registry.ModeloRevision`, including
+    binding-record derivation, positive-casilla gates, row-field casilla ids, and
+    nested :class:`~aeat.domain.calculations.registry.ExportFieldDefinition`
+    rows.
+    """
     if record.binding_record is not None:
         _validate_export_record_binding_link(failures, prefix=prefix, revision=revision, record=record)
     if (
@@ -97,6 +139,7 @@ def _validate_export_record(
             casilla_by_id=casilla_by_id,
             legal_refs=legal_refs,
             source_refs=source_refs,
+            evidence=evidence,
         )
 
 
@@ -107,23 +150,33 @@ def _validate_export_record_binding_link(
     revision: ModeloRevision,
     record: ExportRecordDefinition,
 ) -> None:
-    """Verify a binding-derived export record resolves to bindings with selector closure."""
-    matching_bindings = [
-        binding for binding in revision.bindings if binding.selector.get("record") == record.binding_record
-    ]
+    """Verify a binding-derived export record resolves to selector-closed bindings.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    :class:`~aeat.domain.calculations.registry.DataBindingDefinition` rows whose
+    export selectors may materialise fields for the record's ``binding_record``.
+    """
+    matching_bindings: list[tuple[DataBindingDefinition, BindingExportSelector]] = []
+    for binding in revision.bindings:
+        try:
+            selector = binding_export_selector(binding)
+        except RegistryValidationError as exc:
+            failures.append(f"{prefix}: {exc}")
+            continue
+        if selector is not None and selector.record == record.binding_record:
+            matching_bindings.append((binding, selector))
     if not matching_bindings:
         failures.append(
             f"{prefix}: export record {record.id!r} derives fields from unknown binding record "
             f"{record.binding_record!r}",
         )
-    for binding in matching_bindings:
+    for binding, selector in matching_bindings:
         if binding_aggregation_op(binding) == BindingAggregationOp.ROWS:
             continue
-        missing_selector_keys = sorted(key for key in ("offset", "length", "data_type") if key not in binding.selector)
-        if missing_selector_keys:
+        if not isinstance(selector, BindingFixedExportSelector):
             failures.append(
-                f"{prefix}: export record {record.id!r} binding {binding.id!r} lacks selector keys "
-                f"{missing_selector_keys!r}",
+                f"{prefix}: export record {record.id!r} binding {binding.id!r} must declare "
+                "a fixed export selector (offset, length, data_type)",
             )
 
 
@@ -138,16 +191,27 @@ def _validate_export_field(
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
+    """Append failures for one export field declaration.
+
+    The :class:`~aeat.domain.calculations.registry.ExportFieldDefinition` must
+    cite layout-authority refs, target a declared
+    :class:`~aeat.domain.calculations.registry.CasillaId` or
+    :class:`~aeat.domain.calculations.registry.BindingId`, and respect literal
+    byte-length constraints for its parent export record encoding.
+    """
     owner = f"export field {field.id}"
     failures.extend(_missing_refs(prefix, owner, field.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, owner, field.source_refs, source_refs, "source"))
+    failures.extend(evidence.require_source_tier(prefix, owner, field.source_refs, "layout_authority"))
     if field.casilla_id is not None and field.casilla_id not in casillas:
         failures.append(f"{prefix}: export field {field.id!r} references unknown casilla {field.casilla_id!r}")
     if (
         field.casilla_id is not None
         and field.casilla_id in casilla_by_id
         and field.id not in casilla_by_id[field.casilla_id].export_refs
+        and not _is_binding_record_template_field(record, field)
     ):
         failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla_id!r}")
     if field.binding is not None and field.binding not in bindings:
@@ -159,3 +223,11 @@ def _validate_export_field(
                 f"{prefix}: export field {field.id!r} literal length {literal_length} exceeds "
                 f"declared length {field.length}",
             )
+
+
+def _is_binding_record_template_field(record: ExportRecordDefinition, field: ExportFieldDefinition) -> bool:
+    return (
+        record.binding_record is not None
+        and field.kind == CasillaFieldKind.CASILLA
+        and field.casilla_id in set(record.row_field_casilla_ids.values())
+    )

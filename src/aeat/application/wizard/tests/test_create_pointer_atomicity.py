@@ -23,13 +23,17 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage import (
+    BUCKETS_DIRNAME,
+    KEYSTORE_DIRNAME,
+)
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core import read_pointer
 from ....core.config import load_settings
 from ....domain.user_profile import new_profile_id
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...user_profile import ProfileAlreadyRegisteredError, fact_value, profile_storage_session
-from ...workflow._persistence import workflow_state_repository
+from ...workflow import workflow_state_repository
 from .._catalogue import SETUP_FLOW
 from .._commands import _run_full_flow
 from .._errors import WizardMissingFlagError
@@ -52,6 +56,15 @@ _QUIET_CREATE_FLAGS = {
     "surnames": "Operator",
     "activity": "Servicios",
 }
+
+
+def _bucket_directories_without_manifest(storage_root: Path) -> tuple[Path, ...]:
+    buckets_root = storage_root / BUCKETS_DIRNAME
+    if not buckets_root.is_dir():
+        return ()
+    return tuple(
+        entry for entry in buckets_root.iterdir() if entry.is_dir() and not (entry / "manifest.toml").is_file()
+    )
 
 
 def _quiet_create(profile_name: str) -> None:
@@ -84,7 +97,7 @@ def test_first_run_create_succeeds_and_points_at_the_new_profile(_backend: Path)
     first_id = pointer.bucket_id
 
     # The pointer resolves to a real, registered profile bucket.
-    from ...workflow._profile_bucket_scan import read_profile_bucket_by_id
+    from ...workflow import read_profile_bucket_by_id
 
     assert read_profile_bucket_by_id(first_id) is not None
 
@@ -113,10 +126,12 @@ def test_failed_create_restores_the_prior_active_profile_pointer(_backend: Path)
     after = read_pointer(root)
     assert after is not None, "the failed create cleared the prior active-profile pointer"
     assert after.bucket_id == surviving_id, "the failed create stranded the pointer at the never-persisted profile"
+    assert _bucket_directories_without_manifest(_backend) == ()
+    assert sorted(entry.name for entry in (_backend / KEYSTORE_DIRNAME).iterdir()) == [surviving_id]
 
     # The surviving pointer still resolves to a registered, readable
     # profile — no `missing_profile_record` torn state.
-    from ...workflow._profile_bucket_scan import read_profile_bucket_by_id
+    from ...workflow import read_profile_bucket_by_id
 
     assert read_profile_bucket_by_id(surviving_id) is not None
 

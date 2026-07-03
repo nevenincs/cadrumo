@@ -37,6 +37,7 @@ from ._checker_oracle_flow import (
     replay_parse_operation,
 )
 from ._errors import RegistryValidationError
+from ._ids import OracleId
 from ._live_parity import (
     BaseCheckerOracle,
     LiveParityCatalogue,
@@ -46,7 +47,7 @@ from ._live_parity import (
 )
 from ._remote_state_guard import RemoteOperation
 
-ORACLE_ID = "aeat-nif-iva-checker"
+ORACLE_ID: OracleId = "aeat-nif-iva-checker"
 
 
 class AeatNifIvaObservation(_CheckerBaseModel):
@@ -222,7 +223,7 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
 
     @property
     @override
-    def oracle_id(self) -> str:
+    def oracle_id(self) -> OracleId:
         """Return the stable catalogue identifier for this oracle.
 
         Returns:

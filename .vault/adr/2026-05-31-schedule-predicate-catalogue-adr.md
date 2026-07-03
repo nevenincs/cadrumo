@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#schedule-predicate-catalogue'
 date: '2026-05-31'
-modified: '2026-05-31'
+modified: '2026-06-30'
 related:
   - '[[2026-05-31-schedule-predicate-catalogue-research]]'
 ---

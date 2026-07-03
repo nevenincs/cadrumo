@@ -1,11 +1,33 @@
-"""Persistence helpers for modelo calculation revisions and filing transitions.
+"""Repository mutation helpers for modelo calculation and filing transitions.
 
 The calculate path stores draft :class:`CalculationRevision` rows with their
-provenance-bearing :class:`CasillaObservation` entries and emits
-``modelo.calculation.created`` through the bucket-event catalogue. The filing
-path promotes a verified revision into a current :class:`ModeloRecord`,
-supersedes any prior current filing for the work target, and co-emits
-participation-index and cross-period observation projections.
+provenance-bearing :class:`CasillaObservation` entries, advances the parent
+:class:`WorkUnit` pointer, and emits ``modelo.calculation.created`` through the
+:class:`BucketEventHistoryRepository` catalogue. The event is a lightweight join
+record; full legal/source provenance remains on the persisted calculation
+revision's observations, with ``has_provenance`` signalling that the join is
+grounded.
+
+The filing path runs here only after its caller has passed readiness, workflow,
+and clean-state gates. It records the local/internal filing transition: create a
+current :class:`ModeloRecord`, supersede any prior current filing for the work
+target, move calculation revisions into ``PRESENTADO`` states, and co-emit
+the :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex` writes
+plus cross-period observation projections. It never submits to AEAT and never
+turns the non-official ``app_filing`` carry projection into filing-grade external
+evidence.
+
+See Also:
+    :func:`aeat.application.modelo.file_modelo_revision`:
+        Orchestrates preconditions and result-disposition resolution before
+        delegating successful mutations here.
+    :func:`aeat.application.modelo.import_external_filing_evidence`:
+        Separate import boundary that creates current records with
+        :class:`~aeat.domain.modelos.ExternalEvidence`; this persistence helper
+        deliberately creates local records without that payload.
+    :func:`aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+        Projects filed casilla observations into non-official cross-period
+        carry evidence.
 """
 
 from __future__ import annotations
@@ -15,37 +37,42 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
     BucketEvent,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry import BindingId, CasillaId, CasillaObservation, RelationId
-from ...domain.modelos._calculation_repository import upsert_calculation_revision
-from ...domain.modelos._calculation_revision import (
+from ...domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+    CasillaObservation,
+    RegistryCalculationUnresolvedOutcome,
+    RelationId,
+)
+from ...domain.modelos import (
     CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from ...domain.modelos._filing_record import ModeloRecord, ModeloRecordStatus, derive_filing_record_id
-from ...domain.modelos._filing_repository import upsert_filing_record
-from ...domain.modelos._participation_index import (
-    TransactionParticipationIndexRepository,
-    TransactionRevisionParticipation,
-    upsert_transaction_participation,
-)
-from ...domain.modelos._protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionState,
+    ModeloDetailRow,
+    ModeloRecord,
     ModeloRecordCatalogueRepositoryProtocol,
+    ModeloRecordStatus,
+    TransactionRevisionParticipation,
+    WorkUnit,
+    WorkUnitCatalogue,
     WorkUnitCatalogueRepositoryProtocol,
+    derive_calculation_revision_id,
+    derive_filing_record_id,
+    upsert_calculation_revision,
+    upsert_filing_record,
+    upsert_transaction_participation,
+    upsert_work_unit,
 )
-from ...domain.modelos._repository import upsert_work_unit
-from ...domain.modelos._row_models import ModeloDetailRow
-from ...domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue
 from ..calculations import CalculationObservationRepository
 from ._filed_revision_observation import persist_filed_revision_observation
 
@@ -67,7 +94,13 @@ def emit_bucket_event(
     object_id: str,
     payload: Mapping[str, str],
 ) -> BucketEvent:
-    """Append one event to the bucket-event-history catalogue and return the persisted :class:`BucketEvent`."""
+    """Append one :class:`BucketEvent` to the bucket-event-history catalogue.
+
+    The returned event is the durable bucket-scoped audit pointer for the domain
+    mutation. Payloads stay compact and reference the owning calculation
+    revision, filing record, or work unit instead of duplicating their full
+    catalogued state.
+    """
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,
         event_type=event_type,
@@ -106,6 +139,7 @@ def persist_calculation_revision(
     borrador_snapshot_id: str | None,
     bindings_sourced_from_borrador: tuple[BindingId, ...],
     observations: tuple[CasillaObservation, ...],
+    unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = (),
     detail_rows: tuple[ModeloDetailRow, ...],
     formula_count: int,
     actor: str,
@@ -117,8 +151,17 @@ def persist_calculation_revision(
     """Persist a freshly calculated draft revision and return the :class:`CalculationRevision`.
 
     Returns the existing duplicate when an identical revision is already persisted.
-    The supplied :class:`CasillaObservation` rows carry the legal and source
-    provenance persisted with a new calculation revision.
+    The content-addressed revision id includes manual casilla inputs,
+    binding/relation overrides, ledger source transactions, borrador provenance,
+    detail rows, and calculated casilla values. The supplied
+    :class:`CasillaObservation` rows carry the legal and source provenance
+    persisted with a new calculation revision.
+
+    The emitted :class:`BucketEvent` uses the revision id as ``object_id`` and
+    includes a ``has_provenance`` payload flag. Audit readers can therefore use
+    the event as a compact pointer back to the persisted
+    :class:`CalculationRevision` instead of treating bucket history as the
+    standalone provenance store.
     """
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -163,6 +206,7 @@ def persist_calculation_revision(
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         casilla_values=casilla_values,
         observations=observations,
+        unresolved_outcomes=unresolved_outcomes,
         detail_rows=detail_rows,
         created_at=now,
         updated_at=now,
@@ -219,10 +263,12 @@ def _build_filed_participation_writes(
     """Build the per-transaction participation writes for a filed revision.
 
     For each ``source_transaction_id`` of the filed revision, load that
-    transaction's participation index, upsert the ``PRESENTADO`` participation
-    carrying the ``filing_record_id`` (replacing the prior verified entry for the
-    same revision in place), and return the resulting ``SecureObjectWrite`` so
-    the caller co-emits them in the same atomic unit of work as the filing save.
+    transaction's
+    :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex`, upsert
+    the ``PRESENTADO`` participation carrying the ``filing_record_id``
+    (replacing the prior verified entry for the same revision in place), and
+    return the resulting ``SecureObjectWrite`` so the caller co-emits them in
+    the same atomic unit of work as the filing save.
     """
     writes: list[SecureObjectWrite] = []
     for transaction_id in filed_target.source_transaction_ids:
@@ -239,6 +285,14 @@ def _build_filed_participation_writes(
         updated = upsert_transaction_participation(index, participation)
         writes.append(participation_index_repository.to_secure_object_write(updated))
     return tuple(writes)
+
+
+def _participation_index_repository(
+    repository: TransactionParticipationIndexRepository | None,
+    *,
+    bucket_id: str,
+) -> TransactionParticipationIndexRepository:
+    return repository or TransactionParticipationIndexRepository(bucket_id=bucket_id)
 
 
 def persist_filed_revision(
@@ -258,34 +312,34 @@ def persist_filed_revision(
     refunded: bool = False,
     taxpayer_nif: str | None = None,
 ) -> ModeloRecord:
-    """Persist the filing transition for a verified-complete calculation revision and return a :class:`ModeloRecord`.
+    """Persist a verified-complete calculation revision and return a :class:`ModeloRecord`.
 
-    The ``target`` :class:`CalculationRevision` is the verified-complete source
+    The caller has already run verification/workflow/readiness gates. The
+    ``target`` :class:`CalculationRevision` is the verified-complete source
     revision that becomes ``PRESENTADO`` when this transition succeeds.
+    The parent :class:`WorkUnit` is advanced to the new current filing record
+    after the calculation and filing catalogues are saved.
 
-    When ``calculation_observation_repository`` is supplied the filed revision's
-    casilla observations are additionally persisted into the cross-period
-    observation store (via :func:`persist_filed_revision_observation`,
-    co-emitted with the ``MODELO_FILED`` event) so a later period's
-    ``calculate`` can carry the filed values forward automatically through the
-    ``previous_filing`` resolver. The record is stamped with the NON-official
-    ``app_filing`` source_kind and therefore never satisfies the cross-period
-    clean-state filing gate. This is a second projection of the single-writer
-    filing transition, not a parallel write path.
+    When ``calculation_observation_repository`` is supplied, the filed revision's
+    observations are co-emitted with ``MODELO_FILED`` through
+    :func:`~aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`,
+    so later calculations can carry them through the ``previous_filing`` resolver.
+    The record is stamped with NON-official ``app_filing`` and never satisfies the
+    cross-period clean-state filing gate; use
+    :func:`aeat.application.modelo.import_external_filing_evidence` when the
+    current record must carry
+    :class:`~aeat.domain.modelos.ExternalEvidence`.
 
-    ``refunded`` is the disposition-determined fact (resolved once at the
-    calculate/file boundary by ``resolve_modelo_result_disposition``): when the
-    Modelo 303 period is filed as a refund (devolución, Tipo de declaración
-    ``D``) the credit is returned by AEAT, so the persisted cross-period carry
-    generates ZERO compensación. It is forwarded verbatim to
-    :func:`persist_filed_revision_observation`; the default ``False`` preserves
-    the standard compensación carry (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
+    ``refunded`` is resolved once at the calculate/file boundary by
+    ``resolve_modelo_result_disposition``. For refunded Modelo 303 filings
+    (devolución, Tipo de declaración ``D``), it tells
+    :func:`persist_filed_revision_observation` to persist ZERO compensación carry;
+    the default ``False`` preserves standard carry (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
     """
     calculation_revision_id = target.calculation_revision_id
     new_filing_id = derive_filing_record_id(
         work_unit_id=target.work_unit_id,
         calculation_revision_id=calculation_revision_id,
-        filed_at=now,
         filed_by=actor.strip(),
     )
 
@@ -347,9 +401,7 @@ def persist_filed_revision(
     )
     revisions = upsert_calculation_revision(revisions, filed_target)
 
-    participation_repo = participation_index_repository or TransactionParticipationIndexRepository(
-        bucket_id=work_unit.bucket_id,
-    )
+    participation_repo = _participation_index_repository(participation_index_repository, bucket_id=work_unit.bucket_id)
     participation_writes = _build_filed_participation_writes(
         filed_target=filed_target,
         work_unit=work_unit,

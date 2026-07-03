@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#aeat-verify'
 date: '2026-04-26'
-modified: '2026-04-26'
+modified: '2026-06-30'
 related:
   - "[[2026-04-25-aeat-verify-plan]]"
   - "[[2026-04-25-aeat-verify-adr]]"
@@ -13,8 +13,6 @@ related:
   - "[[2026-04-25-pdf-sanitizer-research]]"
   - "[[2026-04-24-aeat-verify-reference]]"
 ---
-
-
 
 # `aeat-verify` audit: `modelo-100-w1-pipeline-status`
 

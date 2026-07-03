@@ -1,7 +1,7 @@
 ---
 tags: ['#exec', '#live-iva-compensation-wallet']
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S56'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
@@ -45,4 +45,3 @@ third-party, or tax-return submission action. The only new browser action is
 `wallet-discovered-entrypoint-open`, and it is constrained to audited AEAT
 wallet hosts and the centralized cartera path. Query strings and input values
 are excluded from diagnostics.
-

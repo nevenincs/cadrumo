@@ -1,15 +1,24 @@
 """SQLAlchemy engine factory for the storage subpackage.
 
-Provides a lazy, URL-keyed singleton engine used by the rest of
-:mod:`aeat.adapters.persistence.storage`. The factory normalises SQLite
-URLs against :data:`aeat.core.paths.PROJECT_ROOT`, ensures the parent
-directory exists, and attaches a ``connect`` listener that configures each
-SQLite connection: ``foreign_keys=ON`` (cascade enforcement) and a
+Provides a lazy singleton engine cache used by the rest of
+:mod:`adapters.persistence.storage`. Bucket-routed engines are cached
+under their bucket identity (resolved storage root plus bucket id) so that
+engine lifetime can follow the bucket-session lifecycle; the database URL
+is an implementation detail of engine construction. Explicit database URLs
+and the root-fallback database keep their URL-keyed direct path. The
+factory normalises SQLite URLs against
+:data:`core.paths.PROJECT_ROOT`, ensures the parent directory exists,
+and attaches a ``connect`` listener that configures each SQLite
+connection: ``foreign_keys=ON`` (cascade enforcement) and a
 ``busy_timeout`` (so concurrent invocations on one bucket no longer fail
 immediately with "database is locked").
 
-Tests can dispose the cached engines between runs via
-:func:`dispose_engine`.
+Disposal is an internal seam of the engine lifecycle owner: the bucket
+session (``BucketSession.close``) disposes via :func:`dispose_engine_handle`
+and :func:`dispose_engines_for_bucket`, the bucket-destruction path uses
+:func:`dispose_engines_for_bucket` to release file handles before removing
+a bucket directory, and test-harness teardown uses :func:`dispose_engine`.
+Production code outside those owners must not dispose engines directly.
 """
 
 from __future__ import annotations
@@ -23,14 +32,18 @@ from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.pool import ConnectionPoolEntry
 
-from .....core.config import Settings, load_settings
+from .....core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.paths import resolve_project_path
 from ..errors import StorageError
 
 _log = get_logger(__name__)
-_engines: dict[str, Engine] = {}
+# Cache key axes: ("bucket", <resolved storage root>, <bucket id>) for
+# active-bucket routes, ("url", "", <database url>) for explicit-URL and
+# root-fallback routes.
+_EngineCacheKey = tuple[str, str, str]
+_engines: dict[_EngineCacheKey, Engine] = {}
 _lock = Lock()
 
 # A writer that finds the bucket DB locked by a concurrent connection waits up to
@@ -54,7 +67,7 @@ def _normalize_sqlite_url(url: str) -> str:
     Returns:
         The original ``url`` for non-SQLite or in-memory targets, otherwise an
         equivalent URL whose database path has been resolved through
-        :func:`aeat.core.paths.resolve_project_path`.
+        :func:`core.paths.resolve_project_path`.
     """
     parsed = make_url(url)
     if not parsed.drivername.startswith("sqlite"):
@@ -137,7 +150,7 @@ def create_engine_from_settings(settings: Settings) -> Engine:
     are enforced at runtime.
 
     Args:
-        settings: Application :class:`~aeat.core.config.Settings` carrying
+        settings: Application :class:`~core.config.Settings` carrying
             ``aeat_database_url``.
 
     Returns:
@@ -167,42 +180,64 @@ def create_engine_from_settings(settings: Settings) -> Engine:
     return engine
 
 
-def get_engine(settings: Settings | None = None) -> Engine:
-    """Return a process-wide singleton engine, keyed by database URL.
+def _engine_cache_key(settings: Settings) -> _EngineCacheKey:
+    """Return the cache key for ``settings``: bucket identity when bucket-routed.
 
+    Active-bucket routes key on the resolved storage root plus bucket id so
+    the same bucket resolves the same engine regardless of how the URL was
+    spelled; explicit database URLs and the root-fallback database keep the
+    URL itself as the key (the settings-driven direct path).
+    """
+    route = classify_storage_route(settings)
+    if route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE and route.bucket_id:
+        root = str(settings.aeat_local_storage_root.expanduser().resolve())
+        return ("bucket", root, route.bucket_id)
+    return ("url", "", settings.aeat_database_url)
+
+
+def get_engine(settings: Settings | None = None) -> Engine:
+    """Return a process-wide singleton engine, keyed by bucket identity.
+
+    Bucket-routed settings cache the engine under (storage root, bucket id);
+    explicit-URL and root-fallback settings cache under the database URL.
     On first access, materialises every ORM table declared on
-    :class:`~aeat.adapters.persistence.storage.sql._orm.Base.metadata`
+    :class:`~adapters.persistence.storage.sql._orm.Base.metadata`
     against the new engine. The codebase is forward-only: there is no
     migration history; the schema is whatever the current ORM defines.
 
     Args:
-        settings: Optional :class:`~aeat.core.config.Settings` override.
-            When ``None``, a fresh :func:`aeat.core.config.load_settings`
+        settings: Optional :class:`~core.config.Settings` override.
+            When ``None``, a fresh :func:`core.config.load_settings`
             call is used.
 
     Returns:
-        The cached :class:`~sqlalchemy.engine.Engine` for the resolved URL,
-        creating it on first access.
+        The cached :class:`~sqlalchemy.engine.Engine` for the resolved
+        route, creating it on first access.
     """
     resolved = settings or load_settings()
-    url = resolved.aeat_database_url
+    key = _engine_cache_key(resolved)
     with _lock:
-        cached = _engines.get(url)
+        cached = _engines.get(key)
         if cached is not None:
             return cached
         engine = create_engine_from_settings(resolved)
         from ._orm import Base
 
         Base.metadata.create_all(engine)
-        _engines[url] = engine
+        _engines[key] = engine
         return engine
 
 
 def dispose_engine(settings: Settings | None = None) -> None:
     """Dispose and forget the cached engine for the given settings.
 
+    Internal lifecycle seam: invoked by the session owner
+    (``BucketSession.close`` via the handle/bucket-scoped variants below)
+    and by test-harness teardown. Production code must not call it —
+    engine disposal is owned by the bucket-session lifecycle.
+
     Args:
-        settings: Optional :class:`~aeat.core.config.Settings` override.
+        settings: Optional :class:`~core.config.Settings` override.
             When ``None``, every cached engine is disposed.
     """
     with _lock:
@@ -211,7 +246,37 @@ def dispose_engine(settings: Settings | None = None) -> None:
                 engine.dispose()
             _engines.clear()
             return
-        url = settings.aeat_database_url
-        engine = _engines.pop(url, None)
+        engine = _engines.pop(_engine_cache_key(settings), None)
         if engine is not None:
             engine.dispose()
+
+
+def dispose_engines_for_bucket(bucket_id: str) -> None:
+    """Dispose and forget every cached engine bound to ``bucket_id``.
+
+    The bucket-scoped disposal seam: the session owner
+    (``BucketSession.close``) sweeps its bucket's engines on close/switch,
+    and the bucket-destruction path releases the bucket's SQLite file
+    handles before removing the bucket directory (an open handle blocks
+    the rename on Windows). Engines cached for other buckets and for
+    explicit database URLs are untouched.
+    """
+    with _lock:
+        keys = tuple(key for key in _engines if key[0] == "bucket" and key[2] == bucket_id)
+        for key in keys:
+            _engines.pop(key).dispose()
+
+
+def dispose_engine_handle(engine: Engine) -> None:
+    """Dispose ``engine`` and evict it from the cache by identity.
+
+    Session-owner seam for engine handles registered on a
+    ``BucketSession`` at first storage access: disposal targets exactly
+    the registered engine, regardless of which route key cached it.
+    """
+    with _lock:
+        for key, cached in _engines.items():
+            if cached is engine:
+                del _engines[key]
+                break
+    engine.dispose()

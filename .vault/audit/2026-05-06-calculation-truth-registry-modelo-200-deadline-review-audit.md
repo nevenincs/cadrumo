@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#calculation-truth-registry'
 date: '2026-05-06'
-modified: '2026-05-06'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-06-calculation-truth-registry-modelo-200-deadline-exec]]'
 ---
-
-
 
 # `calculation-truth-registry` Code Review
 

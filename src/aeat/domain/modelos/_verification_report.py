@@ -2,16 +2,19 @@
 
 A :class:`VerificationReport` is the decision artifact the verify
 command persists for every run. It captures whether the target
-calculation revision meets the ``verificado_completo`` contract,
+calculation :class:`CalculationRevision` meets the
+``verificado_completo`` contract,
 which blocking findings prevent that transition, which inputs are
-missing, which casilla ids are unresolved, which waivers were
-accepted, and what the operator should do next.
+missing, which :class:`CasillaId` identifiers are unresolved, which
+waivers were accepted, and what the operator should do next.
 
-The report is bucket-scoped and content-addressed by the parent
-calculation revision plus the run timestamp. Failed verification
-attempts produce a persisted report (so the audit trail explains
-why a transition was refused) without mutating the target
-revision.
+The report is bucket-scoped and content-addressed by the
+verification outcome (parent calculation revision, completeness
+status, findings, and actor); the run timestamp is a non-identity
+last-seen body field. Failed verification attempts produce a
+persisted report (so the audit trail explains why a transition was
+refused) without mutating the target revision, and an identical-outcome
+retry collapses onto the same report rather than accumulating.
 """
 
 from __future__ import annotations
@@ -25,7 +28,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
-from ..calculations.registry import CasillaId, VerificationExpectationId
+from ..calculations.registry import CasillaId, LegalRefId, SourceRefId, VerificationExpectationId
 from ._errors import ModeloValidationError
 from ._ids import VerificationReportId
 
@@ -50,6 +53,7 @@ _FindingMessage = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
 ]
+
 
 class VerificationCompletenessStatus(StrEnum):
     """Top-level verdict from one verification run.
@@ -100,6 +104,11 @@ class ModeloVerificationFinding(BaseModel):
     Findings of ``BLOCKING`` severity force ``BLOCKED`` completeness
     status. ``WARNING`` severity findings surface in the report but
     do not block ``COMPLETE`` status on their own.
+
+    A finding may point at the affected :class:`CasillaId`, the registry
+    :class:`VerificationExpectationId` that raised it, and the
+    :class:`LegalRefId` / :class:`SourceRefId` provenance that grounds the
+    operator-facing message.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -110,32 +119,45 @@ class ModeloVerificationFinding(BaseModel):
     expectation_id: VerificationExpectationId | None = None
     message: _FindingMessage
     next_action: _FindingMessage | None = None
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = ()
 
 
 def derive_verification_report_id(
     *,
     calculation_revision_id: str,
-    run_at: datetime,
+    completeness_status: VerificationCompletenessStatus,
+    findings: tuple[ModeloVerificationFinding, ...],
     verified_by: str,
 ) -> str:
-    """Deterministic 64-char SHA-256 id for a verification report."""
+    """Deterministic 64-char SHA-256 id for a verification report.
+
+    Content-addressed by the verification *outcome* - the parent
+    :class:`CalculationRevision` id, the ``completeness_status``, the ordered
+    ``findings`` tuple, and the ``verified_by`` actor. ``run_at`` is
+    deliberately excluded from the identity so two retries of an
+    identical-outcome verify collapse to one report on upsert (the id is
+    clock-free); a re-verify whose findings change produces a new distinct
+    report, the audit-meaningful granularity.
+    """
     payload = {
         "calculation_revision_id": calculation_revision_id.strip(),
-        "run_at": run_at.isoformat(),
+        "completeness_status": completeness_status.value,
+        "findings": [finding.model_dump(mode="json") for finding in findings],
         "verified_by": verified_by.strip(),
     }
     return content_hash_hex(payload)
 
 
 class VerificationReport(BaseModel):
-    """Decision record of one verification run against a calculation revision.
+    """Decision record of one verification run against a :class:`CalculationRevision`.
 
-    The id is content-addressed by ``calculation_revision_id``,
-    ``run_at``, and ``verified_by`` via :func:`derive_verification_report_id`.
-    A ``model_validator`` enforces the derivation on construction so
-    no :class:`VerificationReport` can carry an inconsistent id.
+    The id is content-addressed by the verification outcome
+    (``calculation_revision_id``, ``completeness_status``, ``findings``,
+    and ``verified_by``) via :func:`derive_verification_report_id`;
+    ``run_at`` is a non-identity last-seen timestamp. A ``model_validator``
+    enforces the derivation on construction so no
+    :class:`VerificationReport` can carry an inconsistent id.
 
     ``granted_verificado_completo`` is ``True`` if and only if
     ``completeness_status`` is ``COMPLETE`` and no blocking findings exist.
@@ -158,7 +180,8 @@ class VerificationReport(BaseModel):
     def _enforce_invariants(self) -> VerificationReport:
         derived = derive_verification_report_id(
             calculation_revision_id=self.calculation_revision_id,
-            run_at=self.run_at,
+            completeness_status=self.completeness_status,
+            findings=self.findings,
             verified_by=self.verified_by,
         )
         if derived != self.verification_report_id:
@@ -223,7 +246,7 @@ class VerificationReportCatalogue(BaseModel):
         return self.reports.values()
 
     @override
-    def __iter__(self) -> Iterator[VerificationReport]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[VerificationReport]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
         """Iterate over :class:`VerificationReport` values (not ``(key, value)`` pairs)."""
         return iter(self.reports.values())
 

@@ -1,25 +1,47 @@
 """Workflow-resumption preconditions and context assembly.
 
-Loads a prior :class:`WorkflowResult` by ``run_id`` and decides whether
-the operator may start a fresh attempt against the same
-``(modelo, period)`` axis. Returns a :class:`WorkflowResumeContext` the
-caller hands to :meth:`WorkflowEngine.run_for_period` to drive the
-new attempt.
+Loads a prior :class:`application.workflow.WorkflowResult` by ``run_id``
+and decides whether the operator may start a fresh attempt against the same
+``(modelo, period)`` axis. Returns a
+:class:`application.workflow.WorkflowResumeContext` the caller hands to
+:meth:`application.workflow.WorkflowEngine.run_for_period` to drive the new
+attempt.
 
 The action is pure-local: no AEAT contact, no live read or write, no
 mutation of the prior run record. Resuming a workflow is the operator
 asking the local orchestrator to retry; whether that retry then
 contacts AEAT depends on the engine, not on this action.
 
-This module uses :class:`WorkflowResult`, :class:`WorkflowEngine`,
-and :class:`ModeloDeadline` for workflow resumption logic.
+This module uses :class:`application.workflow.WorkflowResult`,
+:class:`application.workflow.WorkflowEngine`, and
+:class:`domain.deadlines.ModeloDeadline` for workflow resumption logic.
+
+See Also:
+    :class:`application.workflow.WorkflowResult`
+        Persisted terminal run record inspected before any resume context is
+        returned.
+    :class:`application.workflow.WorkflowRunRepository`
+        Secure run-history repository behind
+        :func:`application.workflow.load_run` and
+        :func:`application.workflow.list_runs`.
+    :class:`application.workflow.WorkflowEngine`
+        Fresh attempt executor that consumes
+        :class:`application.workflow.WorkflowResumeContext` through
+        ``run_for_period(resumed_from=...)``.
+    :mod:`application.modelo`
+        Owns visible modelo work addressing, revision selection, and conversion
+        from registry filing periods to workflow periods.
+    :mod:`entrypoints.cli._modelo_work_runs_cli`
+        CLI surface that resolves operator resume selectors and emits
+        :class:`application.workflow.WorkflowResumeTargetResolution`
+        metadata.
 
 Resumability rules:
 
   * the prior result MUST carry ``final_stage = ABORTED`` — DONE
     results are already filed and cannot be retried; in-progress
-    results are not surfaced through :func:`load_run` and so cannot
-    reach this path.
+    results are not surfaced through
+    :func:`application.workflow.load_run` and so cannot reach this path.
   * the prior result's ``aborted_reason`` MUST NOT be terminal-by-
     design (``NO_PENDING_OBLIGATION``, ``ALREADY_FILED``,
     ``USER_CANCELLED``). Those abort reasons describe states where
@@ -43,11 +65,12 @@ from ._models import WorkflowAbortReason, WorkflowResult, WorkflowStage
 from ._persistence import list_runs, load_run
 
 if TYPE_CHECKING:
-    from ..modelo import ModeloResolvedRevisionProjection, ModeloWorkTarget, WorkUnit
+    from ...domain.modelos import WorkUnit
+    from ..modelo import ModeloResolvedRevisionProjection, ModeloWorkTarget
 
 
 class WorkflowResumeRefusedError(WorkflowError):
-    """Raised when a prior :class:`WorkflowResult` cannot be resumed."""
+    """Raised when a prior :class:`application.workflow.WorkflowResult` cannot be resumed."""
 
 
 class WorkflowResumeRunAmbiguousError(WorkflowError):
@@ -101,7 +124,15 @@ class WorkflowResumeRunCandidate(BaseModel):
 
 
 class WorkflowResumeTargetResolution(BaseModel):
-    """Resolved workflow-run target plus visible modelo work metadata."""
+    """Resolved workflow-run target plus visible modelo work metadata.
+
+    Carries the ``WorkflowResult.run_id`` value selected by direct run id,
+    work-unit id, calculation-revision id, or visible modelo filing selector.
+    Visible and exact modelo targets are resolved through
+    :class:`application.modelo.ModeloVisibleFilingTarget` and
+    :class:`application.modelo.ModeloExactWorkUnitTarget` before workflow
+    run lookup.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -117,7 +148,13 @@ class WorkflowResumeTargetResolution(BaseModel):
 
 
 class WorkflowResumeContext(BaseModel):
-    """Inputs the engine needs to start a fresh attempt over a prior run."""
+    """Inputs the engine needs to start a fresh attempt over a prior run.
+
+    Produced from a resumable :class:`application.workflow.WorkflowResult`
+    and passed to
+    :meth:`application.workflow.WorkflowEngine.run_for_period` by callers
+    that launch the retry.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -132,17 +169,17 @@ def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
     """Validate that ``run_id`` may be resumed and return a fresh-attempt context.
 
     The caller is expected to drive
-    :meth:`WorkflowEngine.run_for_period` with
+    :meth:`application.workflow.WorkflowEngine.run_for_period` with
     ``modelo=context.modelo`` and ``period=context.period`` to produce
-    a fresh :class:`WorkflowResult`.
+    a fresh :class:`application.workflow.WorkflowResult`.
 
     Args:
         run_id: The 16-character hex run id of the prior aborted workflow
             run to resume.
 
     Returns:
-        A :class:`WorkflowResumeContext` carrying the modelo, period,
-        obligation, and aborted reason for the prior run.
+        A :class:`application.workflow.WorkflowResumeContext` carrying the
+        modelo, period, obligation, and aborted reason for the prior run.
 
     Raises:
         WorkflowResumeRefusedError: When the prior run is not in
@@ -194,13 +231,16 @@ def resolve_modelo_workflow_resume_target(
     bucket_id: str | None = None,
     selector: object | None = None,
 ) -> WorkflowResumeTargetResolution:
-    """Resolve the operator's resume address and return a :class:`WorkflowResumeTargetResolution`.
+    """Resolve the operator's resume address and return a target resolution.
 
-    Exact run ids remain the legacy direct path. Work-unit ids,
-    calculation-revision ids, and visible modelo/year/period selectors
-    resolve through the public modelo addressing facade before workflow
-    run lookup, so this service does not duplicate modelo selector
-    policy.
+    Exact run ids remain the direct path. Work-unit ids, calculation-revision
+    ids, and visible modelo/year/period selectors resolve through the public
+    modelo addressing facade before workflow run lookup, so this service does
+    not duplicate modelo selector policy.
+
+    Returns:
+        A :class:`application.workflow.WorkflowResumeTargetResolution`
+        carrying the selected run id and any resolved modelo work metadata.
     """
     clean_target = target.strip() if target is not None and target.strip() else None
     clean_run_id = workflow_run_id.strip() if workflow_run_id is not None and workflow_run_id.strip() else None
@@ -368,8 +408,8 @@ def find_latest_run_for_period(*, modelo: str, period: Period) -> WorkflowResult
     obligation matches the supplied ``(modelo, period)``.
 
     The returned run is *not* gated for resumability — pass its
-    ``run_id`` to :func:`resume_modelo_workflow`, which applies the
-    resumability rules and produces a precise refusal if the latest
+    ``run_id`` to :func:`application.workflow.resume_modelo_workflow`, which
+    applies the resumability rules and produces a precise refusal if the latest
     run cannot be retried.
 
     Args:
@@ -377,7 +417,7 @@ def find_latest_run_for_period(*, modelo: str, period: Period) -> WorkflowResult
         period: Target typed workflow period.
 
     Returns:
-        The newest matching :class:`WorkflowResult`.
+        The newest matching :class:`application.workflow.WorkflowResult`.
 
     Raises:
         WorkflowError: When no persisted run targets ``(modelo, period)``.
@@ -398,11 +438,14 @@ def find_unique_run_for_period(
     work_unit_id: str | None = None,
     short_work_unit_id: str | None = None,
 ) -> WorkflowResult:
-    """Return a :class:`WorkflowResult` for ``(modelo, period)`` or refuse ambiguity.
+    """Return a workflow run for ``(modelo, period)`` or refuse ambiguity.
 
     Natural-key resume is an operator-facing lookup. If more than one
     persisted run exists for the same workflow period, the caller must
     choose an exact run id instead of guessing which attempt to resume.
+
+    Returns:
+        The unique matching :class:`application.workflow.WorkflowResult`.
     """
     matches = _runs_for_period(modelo=modelo, period=period)
     if not matches:
@@ -431,14 +474,17 @@ def resolve_modelo_workflow_run_for_resume(
     *,
     source: str = "modelo_work_target",
 ) -> WorkflowResumeTargetResolution:
-    """Resolve a modelo work target to a :class:`WorkflowResumeTargetResolution` for resume.
+    """Resolve a modelo work target to a resume target resolution.
 
     The modelo application facade remains the owner of visible filing
     target lookup and registry-period to workflow-period conversion.
     Natural-key targets require exactly one persisted workflow run for
-    that period; exact work-unit targets preserve the legacy
-    compatibility path by selecting the newest run for the resolved
-    workflow period.
+    that period; exact work-unit targets select the newest run for the
+    resolved workflow period.
+
+    Returns:
+        A :class:`application.workflow.WorkflowResumeTargetResolution`
+        suitable for passing to :func:`application.workflow.resume_modelo_workflow`.
     """
     from ..modelo import ModeloExactWorkUnitTarget, ModeloWorkAddress, resolve_modelo_work_target
 
@@ -462,7 +508,15 @@ def resolve_modelo_visible_workflow_run_for_resume(
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkflowResumeTargetResolution:
-    """Resolve natural modelo filing selectors to a :class:`WorkflowResumeTargetResolution` for resume."""
+    """Resolve natural modelo filing selectors to a resume target resolution.
+
+    The selector is represented as a
+    :class:`application.modelo.ModeloVisibleFilingTarget` before delegation
+    to the shared modelo addressing facade.
+
+    Returns:
+        A :class:`WorkflowResumeTargetResolution` for the visible filing target.
+    """
     from ..modelo import ModeloVisibleFilingTarget
 
     return resolve_modelo_workflow_run_for_resume(
@@ -481,7 +535,15 @@ def resolve_modelo_exact_workflow_run_for_resume(
     work_unit_id: str,
     bucket_id: str | None = None,
 ) -> WorkflowResumeTargetResolution:
-    """Resolve a legacy exact work-unit id to a :class:`WorkflowResumeTargetResolution` for resume."""
+    """Resolve an exact work-unit id to a resume target resolution.
+
+    Exact work-unit ids are represented as
+    :class:`application.modelo.ModeloExactWorkUnitTarget` values before
+    workflow run lookup.
+
+    Returns:
+        A :class:`WorkflowResumeTargetResolution` for the exact work-unit id.
+    """
     from ..modelo import ModeloExactWorkUnitTarget
 
     return resolve_modelo_workflow_run_for_resume(
@@ -523,7 +585,12 @@ def _resolve_resume_from_work_unit(
 
 
 def workflow_resume_candidate_lines(candidates: tuple[WorkflowResumeRunCandidate, ...]) -> str:
-    """Return tabular candidate guidance for ambiguous natural-key resume."""
+    """Return tabular candidate guidance for ambiguous natural-key resume.
+
+    Args:
+        candidates: :class:`WorkflowResumeRunCandidate` rows collected from the
+            ambiguous workflow-period lookup.
+    """
     rows = [
         "candidates:",
         "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tshort_work_unit_id\twork_unit_id",

@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#just-tooling-bootstrap'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-30'
 tier: L1
 related:
   - '[[2026-06-04-just-tooling-bootstrap-research]]'
   - '[[2026-06-04-just-tooling-bootstrap-adr]]'
 ---
-
 
 # `just-tooling-bootstrap` `implementation` plan
 

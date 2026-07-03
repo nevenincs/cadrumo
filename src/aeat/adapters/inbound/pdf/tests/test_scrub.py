@@ -24,6 +24,8 @@ from .._scrub import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
+_SCRUBBED_AT = datetime(2026, 5, 28, 13, 15, 0, tzinfo=UTC)
+
 
 class TestNifRedaction:
     """Individual and entity NIFs are redacted to the synthetic placeholder."""
@@ -228,7 +230,7 @@ class TestScrubSidecar:
                 original_sha256="not-a-hash",
                 scrubbed_sha256="a" * 64,
                 scrub_version=SCRUB_VERSION,
-                scrubbed_at=datetime.now(tz=UTC),
+                scrubbed_at=_SCRUBBED_AT,
                 fields_touched=(),
                 original_filename="f.pdf",
             )

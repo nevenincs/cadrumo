@@ -3,15 +3,23 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from functools import cache
 from pathlib import Path
 from typing import Literal
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.outbound.aeat.sede._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
+from ....adapters.outbound.aeat.sede import (
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
+)
 from ....core import Period
+from ....core.resources import resources
+from ....domain.calculations.registry import CasillaId, RegistryModeloObservation, validated_casilla_id
 from ....domain.deadlines import (
+    DeadlineEngine,
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
@@ -21,19 +29,59 @@ from ....domain.deadlines import (
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
     ExternalEvidence,
+    ExternalEvidenceKind,
     ModeloCode,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
 )
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
+from ....tests.registry_observations import registry_grounded_observations
+from ...calculations import CalculationObservationRepository
+from .. import (
+    OverviewCalendar,
+    OverviewCalendarEvent,
+    OverviewCalendarFilingEvidence,
+    OverviewCalendarRange,
+    build_overview_calendar,
+)
 
 SOURCE_URL = aeat_url("sede", "/")
 WORK_UNIT_ID = "a" * 64
 CALCULATION_REVISION_ID = "b" * 64
-BUCKET_ID = "c" * 32
+BUCKET_ID = "7390a6bb-5577-4e08-8518-16e6292f690f"
 PERIOD_2025_1T = Period.from_year_and_code(2025, "1T")
 FILED_JUSTIFICANTE_STORAGE_REF = "secure-object:financial:" + "d" * 64
+OBSERVED_CASILLA: CasillaId = validated_casilla_id("01", surface="overview calendar observed casilla")
+OBSERVED_REVISION_ID = str(
+    resources().modelos.authority.snapshot("303", filing_year=2025, period=PERIOD_2025_1T.registry_token).revision.id,
+)
+
+
+@cache
+def calendar_engine() -> DeadlineEngine:
+    return DeadlineEngine()
+
+
+@cache
+def april_2025_range() -> OverviewCalendarRange:
+    return OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30))
+
+
+def calendar_with_evidence(
+    *,
+    events: tuple[OverviewCalendarEvent, ...],
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
+    calendar_range: OverviewCalendarRange | None = None,
+) -> OverviewCalendar:
+    return build_overview_calendar(
+        profile(),
+        calendar_range or april_2025_range(),
+        today=date(2025, 4, 10),
+        events=events,
+        filing_evidence=filing_evidence,
+        engine=calendar_engine(),
+    )
 
 
 def modelo_record(
@@ -49,7 +97,6 @@ def modelo_record(
     filing_record_id = derive_filing_record_id(
         work_unit_id=WORK_UNIT_ID,
         calculation_revision_id=CALCULATION_REVISION_ID,
-        filed_at=filed_at,
         filed_by=filed_by,
     )
     return ModeloRecord(
@@ -128,6 +175,56 @@ def justificante_metadata(
     )
 
 
+def external_evidence(
+    kind: ExternalEvidenceKind,
+    reference_id: str,
+    *,
+    imported_at: datetime | None = None,
+) -> ExternalEvidence:
+    return ExternalEvidence(
+        kind=kind,
+        reference_id=reference_id,
+        imported_at=imported_at or datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+    )
+
+
+def observed_casilla_observations(value: Decimal):
+    return registry_grounded_observations(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        casilla_values={OBSERVED_CASILLA: value},
+    )
+
+
+def calculation_observation_payload(
+    *,
+    source_kind: str,
+    source_metadata: dict[str, str] | None = None,
+    value: Decimal = Decimal("123.45"),
+) -> object:
+    observation = RegistryModeloObservation(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        observations=observed_casilla_observations(value),
+    )
+    if source_metadata is None:
+        return CalculationObservationRepository.payload_type(
+            observation=observation,
+            captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+            source_kind=source_kind,
+            stamped_revision_id=OBSERVED_REVISION_ID,
+        )
+    return CalculationObservationRepository.payload_type(
+        observation=observation,
+        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+        source_kind=source_kind,
+        stamped_revision_id=OBSERVED_REVISION_ID,
+        source_metadata=source_metadata,
+    )
+
+
 def profile() -> TaxpayerProfile:
     """A declared autónomo en estimación directa."""
 
@@ -140,6 +237,7 @@ def profile() -> TaxpayerProfile:
         has_employees=False,
         pays_professionals_with_retencion=False,
         professional_income_withholding_ge_70pct=False,
+        art109_activity_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,

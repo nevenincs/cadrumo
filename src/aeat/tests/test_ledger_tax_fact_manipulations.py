@@ -24,9 +24,11 @@ from pathlib import Path
 
 import pytest
 
-from ..application.aggregation import aggregate_renta_ledger_expenses
-from ..application.aggregation._iva_ledger import aggregate_iva_ledger_observations
-from ..application.aggregation._renta_income_ledger import aggregate_renta_income_ledger
+from ..application.aggregation import (
+    aggregate_iva_ledger_observations,
+    aggregate_renta_income_ledger,
+    aggregate_renta_ledger_expenses,
+)
 from ..core import Period
 from ..domain.categories import SpendingCategory
 from ..domain.invoices import InvoiceCatalogue
@@ -62,7 +64,7 @@ def _q(value: Decimal) -> Decimal:
 
 def _raw(provider_id: str, *, amount: Decimal, description: str, when: date = date(2025, 2, 10)) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=when,
         value_date=when,
         amount=amount,
@@ -102,7 +104,9 @@ def test_base_iva_rederivation_at_21_10_4_routes_to_m303_soportado() -> None:
                 {
                     "raw": _raw(f"row-rate-{idx}", amount=gross, description=f"Compra al {rate}"),
                     "direction": TransactionDirection.OUTGOING,
+                    "group_label": None,
                     "business_classification": BusinessClassification.BUSINESS,
+                    "source_jurisdiction": "ES",
                     "taxable_base": base,
                     "iva_rate": rate,
                     "iva_amount": iva,
@@ -132,6 +136,8 @@ def _deductible_total(*, classification: BusinessClassification, business_pct: D
         "raw": _raw("row-mixed", amount=Decimal("121.00"), description="Alquiler local comercial"),
         "direction": TransactionDirection.OUTGOING,
         "business_classification": classification,
+        "source_jurisdiction": "ES",
+        "group_label": None,
         "category_id": _DEDUCTIBLE_CATEGORY.value,
         "taxable_base": Decimal("100.00"),
         "iva_rate": Decimal("0.21"),
@@ -160,7 +166,7 @@ def test_business_pct_change_scales_deductible_base_proportionally() -> None:
 
 
 def test_business_proportion_primitive_drives_deductible_scaling() -> None:
-    from ..application.aggregation._business_proportion import business_proportion
+    from ..application.aggregation import business_proportion
 
     # The proportionality primitive the aggregation applies per row.
     assert business_proportion(BusinessClassification.BUSINESS, None) == Decimal("1")
@@ -175,7 +181,9 @@ def _income_observation_count(irpf_category: str) -> int:
         {
             "raw": _raw("row-income", amount=Decimal("1000.00"), description="Cobro cliente"),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
             "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
             "irpf_category": irpf_category,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,

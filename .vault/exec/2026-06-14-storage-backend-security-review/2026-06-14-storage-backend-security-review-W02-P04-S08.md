@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#storage-backend-security-review'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S08'
 related:
   - "[[2026-06-14-storage-backend-security-review-plan]]"
 ---
-
-
-
 
 # Verify the stored payload hash and recomputed revision id on every secure-object read and fail closed on mismatch
 
@@ -19,7 +16,6 @@ related:
 - `src/aeat/adapters/persistence/storage/sql/secure_objects.py`
 
 ## Description
-
 
 - Empirically probe the precondition: a fidelity test recomputing `revision_id`
   from round-tripped columns **failed**, proving `written_at` round-trips lossy
@@ -74,7 +70,6 @@ here. The secure-object `revision_id` (storage lineage content-address) is disti
 from the registry `stamped_revision_id`; this change does not touch the latter.
 
 ## Notes
-
 
 The "data access is an absolute key" caution that motivated the earlier deferral
 was honoured by proving round-trip fidelity *first* (failing probe → root-cause fix

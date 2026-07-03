@@ -43,31 +43,18 @@ def test_single_ratio_round_trips() -> None:
     assert reloaded.ratios[SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ] == Decimal("0.21")
 
 
-def test_negative_ratio_rejected() -> None:
-    with pytest.raises(ValidationError, match=r"must be in \[0, 1\]"):
-        UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("-0.1")})
+def test_invalid_ratio_values_rejected() -> None:
+    cases: tuple[tuple[Decimal, str], ...] = (
+        (Decimal("-0.1"), r"must be in \[0, 1\]"),
+        (Decimal("1.5"), r"must be in \[0, 1\]"),
+        (Decimal("NaN"), r"finite number"),
+        (Decimal("Infinity"), r"finite number"),
+        (Decimal("-Infinity"), r"finite number"),
+    )
 
-
-def test_above_one_rejected() -> None:
-    with pytest.raises(ValidationError, match=r"must be in \[0, 1\]"):
-        UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("1.5")})
-
-
-def test_nan_rejected() -> None:
-    # NaN is rejected by pydantic's strict-Decimal finite-number gate
-    # BEFORE the [0, 1] bound check runs — a distinct dispatch path.
-    with pytest.raises(ValidationError, match=r"finite number"):
-        UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("NaN")})
-
-
-def test_positive_infinity_rejected() -> None:
-    with pytest.raises(ValidationError, match=r"finite number"):
-        UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("Infinity")})
-
-
-def test_negative_infinity_rejected() -> None:
-    with pytest.raises(ValidationError, match=r"finite number"):
-        UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("-Infinity")})
+    for ratio, message in cases:
+        with pytest.raises(ValidationError, match=message):
+            UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: ratio})
 
 
 def test_unknown_category_key_rejected_from_json() -> None:

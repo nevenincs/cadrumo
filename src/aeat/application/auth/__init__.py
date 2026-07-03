@@ -1,26 +1,83 @@
-"""Application-level provider contracts and selection for AEAT auth.
+"""Application auth facade for operator configuration and AEAT sessions.
 
-Owns the auth abstraction the rest of the application depends on: the
-provider protocol, the selection contract, the operator-facing configure /
-status / test / clear actions, and the persisted-session lifecycle. The
-concrete providers live in the outbound adapter layer and are imported
-lazily to avoid an application/adapter import cycle.
+This package owns the application-layer authentication contract used by
+operator configuration, live-read preflight, and AEAT session acquisition.
+:class:`AuthProvider` and
+:class:`AuthProviderKind` define the provider protocol
+and closed provider catalogue; :func:`select_provider`
+delegates lazily to concrete outbound providers under
+:mod:`adapters.outbound.aeat.auth` so application consumers keep one
+stable facade without importing adapter mechanics at module load.
 
-This module uses :class:`Settings` for auth provider configuration.
+Operator-facing auth configuration stays in this layer.
+:func:`configure_operator_auth`,
+:func:`inspect_operator_auth`,
+:func:`test_operator_auth`,
+:func:`login_operator_auth`, and
+:func:`clear_operator_auth` return typed result records
+such as :class:`AuthStatusResult`,
+:class:`AuthLoginResult`, and
+:class:`LiveAuthPreflightReport`. The persisted local
+configuration is :class:`AuthState`, while provider
+metadata is reported through
+:class:`AuthProviderDescription` and
+:class:`AuthProvidersReport`. Configuration writes are
+gated by :class:`application.workflow.ActiveProfileHealth`: a missing,
+dangling, or unreadable active bucket is refused before workflow state changes.
+Successful provider configuration persists the updated
+:class:`application.workflow.WorkflowState` and the typed
+``AUTH_PROVIDER_CONFIGURED`` bucket event in one secure-object transaction;
+the event payload may include a certificate path but never private keys,
+passwords, session tokens, or QR payloads.
 
-Major declarations:
+The session lifecycle is encrypted and profile-scoped.
+:func:`ensure_authenticated_aeat_session` and
+:func:`require_verified_aeat_session` coordinate
+:class:`PersistedAuthSession` reuse,
+:class:`AuthAcquisitionLockRecord` locking, and the provider's
+:class:`adapters.outbound.aeat.auth.AeatSession` /
+:class:`adapters.outbound.aeat.auth.AeatLoginAssertion` pair. Live-read call
+sites combine this facade with :class:`core.access_gate.AeatAccessGate`;
+this package does not expose AEAT-side write verbs. Session object keys are
+derived from the active bucket through
+:func:`storage_state_paths`, and operator verbs open an
+active-profile storage span when the process has a selected pointer but no
+ambient master-key session. Cl@ve Móvil session acquisition additionally fails
+closed with :class:`AuthProfileIdentityMismatchError`
+when the configured identity, active profile tax id, or verified session
+identity disagree.
 
-* :class:`AuthProvider` and :class:`AuthProviderKind` — the provider
-  protocol and the closed set of supported kinds, dispatched by
-  :func:`~aeat.application.auth.select_provider`.
-* :class:`AuthProviderDescription` — the safe, log-friendly provider state.
-* :func:`configure_operator_auth`, :func:`inspect_operator_auth`,
-  :func:`test_operator_auth`, and :func:`clear_operator_auth` — the
-  operator actions behind ``aeat config auth``.
-* :func:`ensure_authenticated_aeat_session` and
-  :func:`require_verified_aeat_session` with :class:`PersistedAuthSession`
-  — the persisted-session lifecycle.
-* :class:`AuthState` — the persisted auth configuration record.
+Additional package-level surfaces cover local auth diagnostics and
+apoderado configuration. :class:`AuthDiagnosticSummary`,
+:class:`AuthDiagnosticDetail`, and
+:func:`record_auth_diagnostic_phone_state` operate on redacted encrypted
+diagnostic records. :class:`ApoderadoService`
+persists identity-sensitive represented-party configuration through encrypted
+storage and permanently refuses live AEAT-side apoderamiento mutation.
+
+See Also:
+    :mod:`adapters.outbound.aeat.auth`
+        Concrete certificate and Cl@ve Movil providers selected through this
+        application facade.
+    :class:`core.access_gate.AeatAccessGate`
+        Mandatory live-read precondition and permanent live-write refusal used
+        before authenticated AEAT access proceeds.
+    :mod:`application.state_projection`
+        Canonical operator-state projection consumed by auth status, auth test,
+        and live-auth preflight surfaces.
+    :mod:`application.workflow`
+        Public workflow facade that owns
+        :class:`application.workflow.WorkflowState` and
+        :class:`application.workflow.ActiveProfileHealth`.
+    :class:`domain.buckets.BucketEventHistoryRepository`
+        Durable bucket event catalogue that receives auth configuration,
+        session, lock, and clear events without secret payload material.
+    :mod:`application.live`
+        Read-only AEAT capture workflows that obtain verified sessions through
+        this package.
+    :mod:`domain.auth.apoderamientos`
+        Domain-owned scope catalogue consumed by
+        :class:`ApoderadoService`.
 """
 
 from __future__ import annotations
@@ -97,7 +154,7 @@ class AuthProviderDescription(BaseModel):
 class AuthProvider(Protocol):
     """Protocol every concrete AEAT auth provider satisfies.
 
-    Implementations live under :mod:`aeat.adapters.outbound.aeat.auth`
+    Implementations live under :mod:`adapters.outbound.aeat.auth`
     and are dispatched by :func:`select_provider`.
     """
 
@@ -188,6 +245,19 @@ from ._apoderado import (
     ApoderadoService,
     ApoderadoStatus,
 )
+from ._certificate_sources import (
+    CertificateSourceNoActiveBucketError,
+)
+from ._certificate_sources import (
+    CertificateSourceNotFoundError as StateCertificateSourceNotFoundError,
+)
+from ._certificate_sources_operator import (
+    check_operator_certificate_sources,
+    list_operator_certificate_sources,
+    register_operator_certificate_source,
+    remove_operator_certificate_source,
+    select_operator_certificate_source,
+)
 from ._diagnostics import (
     AUTH_DIAGNOSTIC_PHONE_STATES,
     AuthDiagnosticDetail,
@@ -198,7 +268,8 @@ from ._diagnostics import (
     load_auth_diagnostic,
     record_auth_diagnostic_phone_state,
 )
-from ._models import AuthState
+from ._errors import AuthDiagnosticPayloadError
+from ._models import AuthState, CertificateSourceRecord
 from ._operator import (
     build_live_auth_preflight_report,
     clear_operator_auth,
@@ -207,6 +278,11 @@ from ._operator import (
     list_operator_auth_providers,
     login_operator_auth,
     test_operator_auth,
+)
+from ._operator_probes import (
+    ProviderConfigurationProbe,
+    ProviderProbeResult,
+    probe_provider_configuration,
 )
 from ._operator_results import (
     AuthClearResult,
@@ -220,6 +296,12 @@ from ._operator_results import (
     AuthProvidersReport,
     AuthStatusResult,
     AuthTestResult,
+    CertificateSourceCheckEntry,
+    CertificateSourceCheckReport,
+    CertificateSourceListResult,
+    CertificateSourceMutationResult,
+    CertificateSourceNotFoundError,
+    CertificateSourcePayload,
     LiveAuthPreflightReport,
 )
 from ._sessions import (
@@ -228,6 +310,7 @@ from ._sessions import (
     AuthSessionUnavailableError,
     CorruptAuthSessionError,
     PersistedAuthSession,
+    SessionDeserializationError,
     StorageStatePaths,
     configure_session_store,
     delete_persisted_session,
@@ -255,6 +338,7 @@ __all__ = [
     "AuthConfigureResult",
     "AuthDiagnosticDetail",
     "AuthDiagnosticListReport",
+    "AuthDiagnosticPayloadError",
     "AuthDiagnosticReportResult",
     "AuthDiagnosticSummary",
     "AuthLoginNotEnabledError",
@@ -272,14 +356,27 @@ __all__ = [
     "AuthStatusResult",
     "AuthTestResult",
     "AuthenticatedAeatSessionResult",
+    "CertificateSourceCheckEntry",
+    "CertificateSourceCheckReport",
+    "CertificateSourceListResult",
+    "CertificateSourceMutationResult",
+    "CertificateSourceNoActiveBucketError",
+    "CertificateSourceNotFoundError",
+    "CertificateSourcePayload",
+    "CertificateSourceRecord",
     "CorruptAuthSessionError",
     "LiveAuthPreflightReport",
     "PersistedAuthSession",
+    "ProviderConfigurationProbe",
+    "ProviderProbeResult",
+    "SessionDeserializationError",
+    "StateCertificateSourceNotFoundError",
     "StorageStatePaths",
     "acquire_auth_acquisition_lock",
     "auth_acquisition_lock_path",
     "auth_lock_ttl_seconds",
     "build_live_auth_preflight_report",
+    "check_operator_certificate_sources",
     "clear_auth_acquisition_lock",
     "clear_operator_auth",
     "configure_operator_auth",
@@ -295,11 +392,16 @@ __all__ = [
     "list_auth_diagnostics",
     "list_auth_providers",
     "list_operator_auth_providers",
+    "list_operator_certificate_sources",
     "load_auth_diagnostic",
     "load_persisted_session",
     "login_operator_auth",
+    "probe_provider_configuration",
     "record_auth_diagnostic_phone_state",
+    "register_operator_certificate_source",
+    "remove_operator_certificate_source",
     "require_verified_aeat_session",
+    "select_operator_certificate_source",
     "select_provider",
     "storage_state_paths",
     "test_operator_auth",

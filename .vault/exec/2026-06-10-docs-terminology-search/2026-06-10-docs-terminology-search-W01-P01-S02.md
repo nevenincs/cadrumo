@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - "[[2026-06-10-docs-terminology-search-plan]]"
 ---
-
-
-
 
 # Adjudicate and document the interim path while the upstream hook is pending: a committed extraction-sidecar tree mirroring the existing corpus/manuals source-extraction convention, consumed by the existing walker, with the explicit retirement trigger being the upstream hook landing (ADR D6)
 
@@ -26,7 +23,6 @@ defined here. No extractor is implemented here beyond one minimal worked
 example proving the contract shape end to end.
 
 ## Description
-
 
 - Ground the walker pickup against the installed `vaultspec_rag` 0.2.17:
   confirm `SUPPORTED_EXTENSIONS` is derived from `LANGUAGE_MAP` and that the

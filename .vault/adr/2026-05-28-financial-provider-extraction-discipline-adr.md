@@ -3,13 +3,11 @@ tags:
   - '#adr'
   - '#financial-provider-extraction-discipline'
 date: '2026-05-28'
-modified: '2026-05-28'
+modified: '2026-06-30'
 related:
   - "[[2026-05-21-declaracion-extraction-architecture-adr]]"
   - '[[2026-06-04-financial-provider-extraction-discipline-research]]'
 ---
-
-
 
 # `financial-provider-extraction-discipline` adr: `bank-pdf-provider-corpus-discipline-n26-first-extensible` | (**status:** `accepted`)
 

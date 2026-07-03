@@ -1,4 +1,18 @@
-"""Typed overview calendar models."""
+"""Typed DTOs for the overview calendar read model.
+
+The models separate legal obligation rows
+(:class:`OverviewCalendarEntry`), observed local events
+(:class:`OverviewCalendarEvent`), and filing evidence
+(:class:`OverviewCalendarFilingEvidence`). Filing evidence keeps
+:class:`OverviewLocalFilingState` distinct from
+:class:`OverviewAeatSubmissionState` so local readiness, AEAT submission,
+and justificante verification remain auditable independent axes.
+
+These DTOs are consumed by :func:`application.overview.build_overview_calendar`
+and serialized by the overview CLI payload layer. Period-bearing models hydrate
+serialized :class:`~core.Period` values back into typed periods so merge
+keys stay aligned with the registry-token authority.
+"""
 
 from __future__ import annotations
 
@@ -10,21 +24,23 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period as _Period
+from ...core import PostFilingEventKind as _PostFilingEventKind
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
 from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
 from ...domain.deadlines import ObligationStatus as _ObligationStatus
 from ...domain.deadlines import Recovery as _Recovery
+from ._coverage import ObligationCoverageReport
 
 
 def _period_from_serialized(value: object) -> object:
-    """Hydrate the display string emitted by overview JSON serializers."""
+    """Hydrate overview JSON period strings into :class:`~core.Period`."""
     if isinstance(value, str):
         return _Period.from_string(value)
     return value
 
 
 class OverviewPeriodState(StrEnum):
-    """Closed 4-state user-facing period state for the calendar view."""
+    """Closed user-facing state derived from deadline obligation status."""
 
     DUE = "due"
     LATE = "late"
@@ -33,7 +49,7 @@ class OverviewPeriodState(StrEnum):
 
 
 class OverviewCensoEnrolmentState(StrEnum):
-    """Live censo provenance state for one calendar obligation."""
+    """Live Modelo 036 / censo provenance state for one calendar obligation."""
 
     NOT_CHECKED = "not_checked"
     NOT_REQUIRED = "not_required"
@@ -41,8 +57,20 @@ class OverviewCensoEnrolmentState(StrEnum):
     VERIFIED = "verified"
 
 
+class OverviewCalendarEntrySource(StrEnum):
+    """Origin of one overview calendar row."""
+
+    REGISTRY_DEADLINE = "registry_deadline"
+    LOCAL_WORK_UNIT = "local_work_unit"
+
+
 class OverviewLocalFilingState(StrEnum):
-    """Local application-side filing readiness for a calendar obligation."""
+    """Local application-side filing axis for one calendar obligation.
+
+    These values describe the application's internal filing lifecycle only.
+    They are intentionally separate from :class:`OverviewAeatSubmissionState`
+    so a ready or imported local record cannot imply official AEAT submission.
+    """
 
     NOT_READY_TO_FILE = "not_ready_to_file"
     READY_TO_FILE = "ready_to_file"
@@ -50,7 +78,13 @@ class OverviewLocalFilingState(StrEnum):
 
 
 class OverviewAeatSubmissionState(StrEnum):
-    """Observed AEAT-side submission evidence for a calendar obligation."""
+    """Observed AEAT-side submission evidence for one calendar obligation.
+
+    :attr:`OverviewAeatSubmissionState.NOT_OBSERVED` is the default until
+    already-loaded official evidence proves a submitted, accepted, or
+    justificante-verified state. Overview calendar commands never create this
+    evidence by contacting AEAT.
+    """
 
     NOT_OBSERVED = "not_observed"
     SUBMITTED_OBSERVED = "submitted_observed"
@@ -71,12 +105,17 @@ _USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[_ObligationStatus, OverviewP
 
 
 def user_state_for(obligation_status: _ObligationStatus) -> OverviewPeriodState:
-    """Return the :class:`OverviewPeriodState` for an engine status."""
+    """Return the :class:`OverviewPeriodState` for a deadline engine status."""
     return _USER_STATE_FOR_OBLIGATION_STATUS[obligation_status]
 
 
 class OverviewCalendarRange(BaseModel):
-    """Inclusive date window for the ``overview calendar`` query."""
+    """Inclusive date window for the ``overview calendar`` query.
+
+    :func:`application.overview.build_overview_calendar` expands the
+    window to the covered filing years and filters legal obligation rows back to
+    this inclusive range.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -98,7 +137,15 @@ class OverviewCalendarRange(BaseModel):
 
 
 class OverviewCalendarFilingEvidence(BaseModel):
-    """Filing evidence attached to one legal calendar obligation."""
+    """Filing evidence attached to one legal calendar obligation.
+
+    The local fields describe the application's filing-record axis; the
+    AEAT fields describe observed submission evidence from persisted official
+    sources. Validators require ``justificante_verified`` and
+    ``verified_justificante_csv`` to agree exactly with
+    :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED`, preventing a
+    malformed event from claiming receipt verification without CSV evidence.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -151,7 +198,13 @@ class OverviewCalendarFilingEvidence(BaseModel):
 
 
 class OverviewCalendarEntry(BaseModel):
-    """One ``(modelo, period)`` row in the calendar view."""
+    """One legal ``(modelo, period)`` row in the calendar view.
+
+    The deadline fields mirror :class:`~domain.deadlines.ModeloDeadline`.
+    The optional :class:`OverviewCalendarFilingEvidence` row attaches local and
+    AEAT evidence without changing the legal deadline status from the deadline
+    engine.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -170,6 +223,10 @@ class OverviewCalendarEntry(BaseModel):
     filing_year: int | None = Field(default=None, ge=2000, le=2099)
     censo_enrolment_state: OverviewCensoEnrolmentState = OverviewCensoEnrolmentState.NOT_CHECKED
     filing_evidence: OverviewCalendarFilingEvidence = Field(default_factory=lambda: OverviewCalendarFilingEvidence())
+    source: OverviewCalendarEntrySource = OverviewCalendarEntrySource.REGISTRY_DEADLINE
+    local_work_unit_id: str | None = Field(default=None, min_length=64, max_length=64)
+    local_work_unit_name: str | None = Field(default=None, min_length=1, max_length=200)
+    local_work_unit_revision_id: str | None = Field(default=None, min_length=1, max_length=128)
 
     @field_serializer("period", mode="plain")
     def _serialize_period(self, value: _Period) -> str:
@@ -209,18 +266,32 @@ class OverviewCalendarEntry(BaseModel):
 
 
 class OverviewCalendarEventType(StrEnum):
-    """Observed local event types shown alongside legal filing windows."""
+    """Observed event categories shown alongside legal filing windows."""
 
     FILING = "filing"
     MESSAGE = "message"
 
 
 class OverviewCalendarEvent(BaseModel):
-    """One observed local event attached to an overview calendar range."""
+    """One observed local event attached to an overview calendar range.
+
+    Filing events may carry :class:`OverviewAeatSubmissionState` when a
+    persisted snapshot already observed it. Messages and unverified filings
+    remain event-only observations and do not imply
+    :class:`OverviewCalendarFilingEvidence` or receipt verification.
+
+    ``post_filing_kind`` carries the fine-grained
+    :class:`~core.PostFilingEventKind` procedural category (requerimiento,
+    propuesta de liquidación, diligencia de embargo, …) classified from the
+    pulled notification / expediente, so the coarse ``event_type`` axis does not
+    collapse a demand for documents and an informational comunicación onto the
+    same ``message`` row.
+    """
 
     model_config = _STRICT_FROZEN
 
     event_type: OverviewCalendarEventType
+    post_filing_kind: _PostFilingEventKind | None = None
     event_date: date
     source: str = Field(min_length=1, max_length=64)
     summary: str = Field(min_length=1, max_length=256)
@@ -286,7 +357,7 @@ class CalendarWarning(BaseModel):
 
 
 class CalendarCompleteness(BaseModel):
-    """Breakdown of which modelos are computed under explicit values vs defaults."""
+    """Breakdown of explicit profile values versus deadline-engine defaults."""
 
     model_config = _STRICT_FROZEN
 
@@ -297,7 +368,7 @@ class CalendarCompleteness(BaseModel):
 
 
 class SuppressedCalendarEntry(BaseModel):
-    """One filtered obligation when ``--show-suppressed`` is set."""
+    """One non-applicable obligation retained by ``--show-suppressed``."""
 
     model_config = _STRICT_FROZEN
 
@@ -317,7 +388,16 @@ class SuppressedCalendarEntry(BaseModel):
 
 
 class OverviewCalendar(BaseModel):
-    """Result of an ``aeat app overview calendar`` query."""
+    """Result of an ``aeat app overview calendar`` query.
+
+    ``entries`` contains legal filing windows, ``events`` contains additive
+    local observations, and ``suppressed_entries`` preserves filtered
+    applicability rows only when the caller explicitly requests them.
+    ``coverage`` is the always-populated reconciliation of the full registry
+    modelo set against ``entries``: its ``advised`` bucket names every filing
+    obligation the surface would otherwise have silently dropped, so a machine
+    consumer never has to infer coverage from the presence or absence of a row.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -330,10 +410,15 @@ class OverviewCalendar(BaseModel):
     incomplete_reason: str | None = None
     suppressed_entries: tuple[SuppressedCalendarEntry, ...] = Field(default=())
     events: tuple[OverviewCalendarEvent, ...] = Field(default=())
+    coverage: ObligationCoverageReport = Field(default_factory=ObligationCoverageReport)
 
 
 class OverviewStatusReport(BaseModel):
-    """Current active-profile readiness counters for ``overview status``."""
+    """Current active-profile readiness counters for ``overview status``.
+
+    Produced from :class:`~application.state_projection.OperatorStateProjection`
+    by :func:`application.overview.overview_status_report_from_projection`.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -356,6 +441,7 @@ __all__ = [
     "OverviewAeatSubmissionState",
     "OverviewCalendar",
     "OverviewCalendarEntry",
+    "OverviewCalendarEntrySource",
     "OverviewCalendarEvent",
     "OverviewCalendarEventType",
     "OverviewCalendarFilingEvidence",

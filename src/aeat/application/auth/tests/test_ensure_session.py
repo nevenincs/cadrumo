@@ -19,9 +19,8 @@ from ....adapters.outbound.aeat.auth import (
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import SecretStoreBackend, Settings, override_settings
 from ....tests.secure_sql import dev_test_database_password
-from ...user_profile._orchestration import profile_create_storage_span
-from ...user_profile._testing import register_minimal_profile
-from ...workflow._persistence import workflow_state_repository
+from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ...workflow import workflow_state_repository
 from .. import AuthProvider, AuthProviderDescription, AuthProviderKind
 from .._acquisition_lock import inspect_auth_acquisition_lock
 from .._sessions import AuthSessionUnavailableError, ensure_authenticated_aeat_session
@@ -121,11 +120,11 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
         aeat_secret_passphrase=SecretStr(dev_test_database_password()),
     ):
         dispose_engine()
-        with profile_create_storage_span("operator"):
+        with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
             workflow_state_repository().update(
                 lambda state: register_minimal_profile(
                     state,
-                    profile_id="operator",
+                    profile_id="11111111-1111-4111-8111-111111111111",
                     overrides={"identity.tax_id": "12345678Z"},
                 ),
             )

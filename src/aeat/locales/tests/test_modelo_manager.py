@@ -234,8 +234,8 @@ official_name = "MODELO 777"
 tax_domain = "irpf"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
-legal_refs = ["law"]
-source_refs = ["source"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-source-test"]
 """,
         encoding="utf-8",
     )
@@ -247,17 +247,23 @@ source_refs = ["source"]
 [revisions.{revision_id}]
 valid_from = {valid_from}
 period_selector = {{ year_from = {revision_id}, periods = ["0A"] }}
-legal_refs = ["law"]
-source_refs = ["source"]
-
-[[revisions.{revision_id}.casillas]]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-source-test"]
+""",
+            encoding="utf-8",
+        )
+        casillas_dir = revision_dir / "casillas"
+        casillas_dir.mkdir()
+        casillas_dir.joinpath("0001-casillas.toml").write_text(
+            f"""
+[[revisions."{revision_id}".casillas]]
 id = "01"
 number = "01"
 label = "Etiqueta 01"
 section = ["section"]
 input_kind = "manual"
-legal_refs = ["law"]
-source_refs = ["source"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-source-test"]
 """,
             encoding="utf-8",
         )

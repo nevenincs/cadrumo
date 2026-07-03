@@ -4,9 +4,10 @@ Modelo 210 (IRNR autoliquidación no residentes sin establecimiento permanente
 — RDLeg 5/2004 TRLIRNR) is filed ad-hoc by non-resident landlords and other
 IRNR-obligated filers. Its primary engine (m210-irnr-full-engine contract §D2.2)
 resolves: rendimientos_integros → base_imponible (op=copy, TRLIRNR art. 24.1)
-→ tipo_gravamen (m210_resolve_rate op, TRLIRNR arts. 25.1.a / 25.1.f /
-Convenio override) → cuota_integra (base × tipo) → cuota_diferencial (cuota
-minus retenciones).
+→ base_imponible (TRLIRNR art. 24.1 gross path or art. 24.6 UE/EEE expense
+deduction path) → tipo_gravamen (irnr_resolve_tipo_gravamen op, TRLIRNR arts. 25.1.a /
+25.1.b / 25.1.f / Convenio override) → cuota_integra (base × tipo) →
+cuota_diferencial (cuota minus retenciones).
 
 The cross-renta continuity under test: a non-resident UK landlord (Gran
 Bretaña, GB) with a Convenio row files the same property-rental declaration
@@ -19,7 +20,7 @@ rate times the declared base in both years — treaty-rate determinism across
 annual groupings.
 
 GB is chosen because it has an explicit Convenio row in the primary seed
-(the only initial country with a non-sentinel entry for tipo_renta=general),
+(the only initial country with a concrete rate entry for tipo_renta=general),
 making the override path exercisable without authoring new registry data.
 
 This module is the multi-year-renta authorization enrollment for Modelo 210.
@@ -58,6 +59,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
     CasillaId,
+    RegistryCalculationResult,
     RegistryValidationError,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
@@ -76,7 +78,7 @@ _YEAR_N_PLUS_1 = 2026
 # row carries rate=0.24, coinciding with the TRLIRNR Art 25.1.a baseline.
 # The Convenio override path is exercised (country_of_fiscal_residence is
 # non-None); the resolved rate equals the statutory baseline. This is the
-# only primary Convenio row with a real (non-sentinel) entry for a
+# only primary Convenio row with a real concrete-rate entry for a
 # resolvable tipo_renta, making it the canonical baseline enrollment scenario.
 _COUNTRY_GB = "GB"
 _TIPO_RENTA = "general"
@@ -129,17 +131,36 @@ def _calculate_210(
     country_code: str = _COUNTRY_GB,
     extra_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
 ) -> tuple[Mapping[CasillaId, object], int]:
+    result = _calculate_210_result(
+        filing_year=filing_year,
+        base=base,
+        tipo_renta=tipo_renta,
+        country_code=country_code,
+        extra_casilla_inputs=extra_casilla_inputs,
+    )
+    return result.values, len(result.values)
+
+
+def _calculate_210_result(
+    *,
+    filing_year: int,
+    base: Decimal,
+    tipo_renta: str = _TIPO_RENTA,
+    country_code: str = _COUNTRY_GB,
+    extra_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
+) -> RegistryCalculationResult:
     """Run the REAL M210 primary engine for a GB non-resident landlord.
 
     Supplies:
     - rendimientos_integros (manual money casilla) = base
     - tipo_renta (manual text casilla) defaults to "general"
     - m210-2025-profile-country-of-fiscal-residence (enum binding) defaults to "GB"
-    - gastos_deducibles / retencion_practicada = 0 (primary deductions deferred)
+    - gastos_deducibles / retencion_practicada = 0 unless supplied by the scenario
 
-    Returns the casilla_values dict and the produced-value count.
+    Returns the real registry calculation result so tests can inspect value and
+    provenance behavior without rebuilding formula logic.
     """
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period="evento")
+    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period="EVENT-1")
     # Text casillas (tipo_renta) and enum bindings (country_of_fiscal_residence)
     # are supplied through text_inputs and enum_binding_values respectively.
     # Numeric manual casillas go through casilla_inputs.
@@ -157,7 +178,7 @@ def _calculate_210(
     # M210 primary has no previous_filing bindings, so this is a no-op here.
     bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     inputs = {**bound, **casilla_inputs}
-    result = calculate_registry_snapshot(
+    return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
         binding_values=binding_values,
@@ -165,7 +186,6 @@ def _calculate_210(
         text_inputs=text_inputs,
         date_context={"filing_period": date(filing_year, 12, 31)},
     )
-    return result.values, len(result.values)
 
 
 def test_inmobiliaria_cadastral_recent_revision_computes_art_85_base(tmp_path: Path) -> None:
@@ -211,9 +231,12 @@ def test_inmobiliaria_without_cadastral_value_uses_half_of_greater_value(tmp_pat
 
 def test_inmobiliaria_cadastral_branch_rejects_unregistered_coefficient(tmp_path: Path) -> None:
     """The imputation coefficient must match a registry-authored Art. 85 rate."""
-    with isolated_runtime_profile(tmp_path=tmp_path), pytest.raises(
-        RegistryValidationError,
-        match="coefficient must be one of",
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path),
+        pytest.raises(
+            RegistryValidationError,
+            match="coefficient must be one of",
+        ),
     ):
         _calculate_210(
             filing_year=_YEAR_N,
@@ -231,16 +254,63 @@ def test_inmobiliaria_cadastral_branch_rejects_unregistered_coefficient(tmp_path
 def test_pension_first_band_computes_art_25_1_b_tariff(tmp_path: Path) -> None:
     """M210 pension applies the TRLIRNR Art. 25.1.b 8% first bracket."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        values, _ = _calculate_210(
+        result = _calculate_210_result(
             filing_year=_YEAR_N,
             base=Decimal("10000.00"),
             tipo_renta="pension",
             country_code="",
         )
 
+    values = result.values
     assert values[_BASE_IMPONIBLE_CASILLA] == Decimal("10000.00")
     assert values[_TIPO_GRAVAMEN_CASILLA] == Decimal("0.08")
     assert values[_CUOTA_INTEGRA_CASILLA] == Decimal("800.00")
+
+    observations = {obs.casilla_id: obs for obs in result.observations}
+    tipo_observation = observations[_TIPO_GRAVAMEN_CASILLA]
+    cuota_observation = observations[_CUOTA_INTEGRA_CASILLA]
+    assert "trlirnr-rdleg-5-2004:art-25.1.b" in tipo_observation.legal_refs
+    assert "m210-pension-tarifa-2025" in tipo_observation.operand_refs
+    assert "trlirnr-rdleg-5-2004:art-25.1.b" in cuota_observation.legal_refs
+
+
+def test_ue_resident_deductible_expenses_reduce_art_24_6_base(tmp_path: Path) -> None:
+    """M210 Art. 24.6 expenses reduce the UE/EEE non-imputed taxable base."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        result = _calculate_210_result(
+            filing_year=_YEAR_N,
+            base=Decimal("1000.00"),
+            tipo_renta="ue_residente",
+            country_code="",
+            extra_casilla_inputs={_GASTOS_DEDUCIBLES_CASILLA: Decimal("250.00")},
+        )
+
+    values = result.values
+    assert values[_BASE_IMPONIBLE_CASILLA] == Decimal("750.00")
+    assert values[_TIPO_GRAVAMEN_CASILLA] == Decimal("0.19")
+    assert values[_CUOTA_INTEGRA_CASILLA] == Decimal("142.50")
+
+    base_observation = next(obs for obs in result.observations if obs.casilla_id == _BASE_IMPONIBLE_CASILLA)
+    assert "trlirnr-rdleg-5-2004:art-24" in base_observation.legal_refs
+    assert _GASTOS_DEDUCIBLES_CASILLA in base_observation.operand_casilla_refs
+
+
+def test_non_ue_resident_deductible_expenses_are_refused(tmp_path: Path) -> None:
+    """M210 refuses nonzero gastos_deducibles outside the Art. 24.6 UE/EEE path."""
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path),
+        pytest.raises(
+            RegistryValidationError,
+            match="Art\\. 24\\.6",
+        ),
+    ):
+        _calculate_210(
+            filing_year=_YEAR_N,
+            base=Decimal("1000.00"),
+            tipo_renta="general",
+            country_code="GB",
+            extra_casilla_inputs={_GASTOS_DEDUCIBLES_CASILLA: Decimal("100.00")},
+        )
 
 
 def test_ar_pension_second_band_uses_domestic_tariff_allocation(tmp_path: Path) -> None:
@@ -300,9 +370,7 @@ def test_year_n_plus_1_gb_general_tipo_gravamen_is_24pct(tmp_path: Path) -> None
 
     assert values[_TIPO_GRAVAMEN_CASILLA] == _TIPO_GRAVAMEN_CONVENIO
     assert values[_BASE_IMPONIBLE_CASILLA] == _BASE_YEAR_N_PLUS_1
-    assert values[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(
-        Decimal("0.01")
-    )
+    assert values[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
 
 
 def test_cuota_integra_differs_between_years_due_to_distinct_bases(tmp_path: Path) -> None:
@@ -361,9 +429,7 @@ def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> N
     assert values_n1[_TIPO_GRAVAMEN_CASILLA] == _TIPO_GRAVAMEN_CONVENIO
 
     # Cuota correctness from Convenio registry parameter (not hand-computed formula).
-    assert values_n[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N * _TIPO_GRAVAMEN_CONVENIO).quantize(
-        Decimal("0.01")
-    )
+    assert values_n[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
     assert values_n1[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(
         Decimal("0.01")
     )

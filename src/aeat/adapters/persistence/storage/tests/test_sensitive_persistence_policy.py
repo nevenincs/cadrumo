@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
 from typing import override
 
 import pytest
 
-from .....tests._inventory import (
+from .....tests import (
     SRC_AEAT,
     ast_for_path,
+    leaf_name,
     non_test_package_python_files,
     non_test_python_files_under,
     repo_relative,
@@ -26,8 +26,6 @@ _SENSITIVE_SURFACES = (
     SRC_AEAT / "application" / "auth",
     SRC_AEAT / "application" / "setup",
     SRC_AEAT / "application" / "filing" / "_history_repository.py",
-    SRC_AEAT / "domain" / "filing" / "_repository.py",
-    SRC_AEAT / "domain" / "filing" / "_complementaria_repository.py",
     SRC_AEAT / "domain" / "attachments" / "_repository.py",
     SRC_AEAT / "domain" / "invoices",
     SRC_AEAT / "domain" / "justificante" / "_repository.py",
@@ -58,6 +56,26 @@ _FORBIDDEN_TEXT = (
 )
 _SENSITIVE_DIRECT_WRITE_EXCEPTIONS: dict[tuple[str, str, str], str] = {}
 _REVIEWED_PRODUCTION_FILE_WRITES = {
+    (
+        "src/aeat/adapters/persistence/storage/bucket/_output_language_hint.py",
+        "_atomic_write_text",
+        "open",
+    ): "output-language UI preference hint; writes a normalized language-code string, no user financial data",
+    (
+        "src/aeat/entrypoints/mcp/_telemetry.py",
+        "record",
+        "self.path.open",
+    ): "payload-free local session telemetry; appends per-call trajectory metadata JSON lines, no sensitive/user data",
+    (
+        "src/aeat/application/corpus_search/_embed_build.py",
+        "embed_corpus",
+        "chunk_ids_path.write_text",
+    ): "corpus-search embedding index build; writes public corpus chunk-id metadata, no user data",
+    (
+        "src/aeat/agent/eval/_flywheel.py",
+        "write_promoted_scenario",
+        "path.write_text",
+    ): "agent-harness eval flywheel; writes promoted eval scenario definitions, no sensitive/user data",
     (
         "src/aeat/adapters/persistence/storage/_rotation.py",
         "_atomic_write",
@@ -279,10 +297,25 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "out.write_text",
     ): "explicit operator-directed profile export to a caller-chosen path",
     (
+        "src/aeat/entrypoints/cli/_config/_profile_bundle.py",
+        "config_profile_subject_access_request",
+        "out.write_text",
+    ): "explicit operator-directed GDPR right-of-access export to a caller-chosen path",
+    (
         "src/aeat/application/ledger/_actions_export.py",
         "export_ledger_transactions",
         "command.output_path.write_bytes",
     ): "explicit operator-directed ledger transaction export to a caller-chosen path",
+    (
+        "src/aeat/core/observability/_store.py",
+        "save_envelope",
+        "target.write_text",
+    ): "determinism-replay golden-capture surface persists already-CLI-redacted envelope documents only",
+    (
+        "src/aeat/agent/_workspace.py",
+        "_write",
+        "write_text",
+    ): "agent-harness workspace materialiser writes shipped static rules/personas/skills markdown only, no user data",
 }
 
 
@@ -294,15 +327,6 @@ def _iter_production_python_files() -> list[Path]:
     return list(non_test_package_python_files(include_data=True))
 
 
-def _call_name(node: ast.Call) -> str | None:
-    target = node.func
-    if isinstance(target, ast.Attribute):
-        return target.attr
-    if isinstance(target, ast.Name):
-        return target.id
-    return None
-
-
 def _dotted_call_name(node: ast.Call) -> str | None:
     target = node.func
     parts: list[str] = []
@@ -312,7 +336,7 @@ def _dotted_call_name(node: ast.Call) -> str | None:
     if isinstance(target, ast.Name):
         parts.append(target.id)
     if not parts:
-        return _call_name(node)
+        return leaf_name(node.func) or None
     return ".".join(reversed(parts))
 
 
@@ -325,7 +349,7 @@ def _is_write_mode_arg(node: ast.AST | None) -> bool:
 
 
 def _calls_file_open_for_write(node: ast.Call) -> bool:
-    name = _call_name(node)
+    name = leaf_name(node.func)
     if name not in {"open"}:
         return False
     mode_arg: ast.AST | None = None
@@ -361,7 +385,7 @@ class _FileWriteVisitor(ast.NodeVisitor):
     @override
     def visit_Call(self, node: ast.Call) -> None:
         dotted = _dotted_call_name(node)
-        name = _call_name(node)
+        name = leaf_name(node.func)
         if (
             name in {"write_text", "write_bytes", "NamedTemporaryFile", "mkstemp"}
             or _calls_file_open_for_write(node)
@@ -400,24 +424,22 @@ def _function_for_line(path: Path, line_number: int) -> str:
     return best_name
 
 
-def test_sensitive_financial_surfaces_do_not_bypass_secure_object_backend(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_sensitive_financial_surfaces_do_not_bypass_secure_object_backend() -> None:
     """Financial/tax state must not write plaintext or file-envelope payloads directly."""
 
     violations: list[str] = []
     for surface in _SENSITIVE_SURFACES:
         for path in _iter_python_files(surface):
-            violations.extend(_sensitive_surface_violations(path, source_tree_ast))
+            violations.extend(_sensitive_surface_violations(path))
     assert violations == []
 
 
-def _sensitive_surface_violations(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> list[str]:
+def _sensitive_surface_violations(path: Path) -> list[str]:
     """Return every forbidden-text + forbidden-call offence in one source file."""
     text = path.read_text(encoding="utf-8")
     relative = repo_relative(path)
     violations = [f"{relative}: contains {token!r}" for token in _FORBIDDEN_TEXT if token in text]
-    tree = ast_for_path(path, source_tree_ast)
+    tree = ast_for_path(path)
     assert tree is not None, f"{relative} must be parseable"
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
@@ -427,7 +449,7 @@ def _sensitive_surface_violations(path: Path, source_tree_ast: Mapping[Path, ast
 
 def _sensitive_call_violations(node: ast.Call, *, path: Path, relative: str) -> list[str]:
     """Return forbidden-call offences for one AST Call node, honouring the allowlist."""
-    name = _call_name(node)
+    name = leaf_name(node.func)
     key = (relative, _function_for_line(path, node.lineno), _dotted_call_name(node) or name or "<unknown>")
     if key in _SENSITIVE_DIRECT_WRITE_EXCEPTIONS:
         return []
@@ -439,12 +461,12 @@ def _sensitive_call_violations(node: ast.Call, *, path: Path, relative: str) -> 
     return offences
 
 
-def test_production_file_write_inventory_is_reviewed(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_production_file_write_inventory_is_reviewed() -> None:
     """Any new production file writer must be classified before merge."""
 
     observed: set[tuple[str, str, str]] = set()
     for path in _iter_production_python_files():
-        tree = ast_for_path(path, source_tree_ast)
+        tree = ast_for_path(path)
         assert tree is not None, f"{repo_relative(path)} must be parseable"
         visitor = _FileWriteVisitor(path)
         visitor.visit(tree)

@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#legal-grounding-centralization'
 date: '2026-06-14'
-modified: '2026-06-14'
+modified: '2026-06-29'
 related:
   - '[[2026-06-14-legal-grounding-centralization-adr]]'
 ---

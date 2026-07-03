@@ -4,6 +4,13 @@ Supports quarterly (``1T``..``4T``), pago-fraccionado (``1P``..``3P``), and
 zero-padded monthly (``01``..``12``) period codes.  Offsets wrap across
 calendar-year boundaries and return the derived period plus the relative year
 delta.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._bindings_previous_filing`
+        Previous-filing selectors that derive target-relative source period
+        anchors.
+    :mod:`aeat.domain.calculations.registry._relations`
+        Relation source requirements that use the same offset arithmetic.
 """
 
 from __future__ import annotations
@@ -23,10 +30,14 @@ def apply_period_offset(offset: int, *, target_period: str) -> tuple[int, str]:
 
     Returns ``(year_delta, derived_period)`` where ``year_delta`` is the
     number of calendar years by which the derived period precedes or follows
-    the target year (negative = prior year, positive = following year).
+    the target year (negative = prior year, positive = following year). The
+    tuple is consumed by previous-filing and
+    :class:`~aeat.domain.calculations.registry.RelationDefinition`
+    ``source_period_offset_from_target`` resolution.
 
-    Raises :exc:`RegistryValidationError` when ``target_period`` is not a
-    recognised period-code format.
+    Raises:
+        :exc:`~aeat.domain.calculations.registry.RegistryValidationError`: When
+        ``target_period`` is not a recognised period-code format.
     """
     if target_period in _QUARTERLY_PERIOD_ORDINAL:
         year_delta, zero_based = divmod(_QUARTERLY_PERIOD_ORDINAL[target_period] - 1 + offset, 4)

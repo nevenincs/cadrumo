@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-06-30'
 related:
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
   - "[[2026-06-26-bindings-architecture-unification-research]]"
@@ -204,5 +204,3 @@ fork (phase 2.4); the `MultiYearResolver` orphan deletion (a phase-2.3/code-remo
   new source enrolls in the single mesh or is recorded in the one disposition registry
   as a documented, test-gated exception — never a parallel result shape or a second
   pipeline — and a parity gate keeps the registry equal to the enrolled set.
-
-

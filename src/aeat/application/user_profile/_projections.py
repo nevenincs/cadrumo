@@ -14,8 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...domain.deadlines import TaxpayerProfile, taxpayer_profile_from_mapping
-from ...domain.deadlines._models import IVARegime
+from ...domain.deadlines import IVARegime, TaxpayerProfile, taxpayer_profile_from_mapping
 from ...domain.user_profile import (
     ProfileSchemaDefinition,
     UserProfileFact,
@@ -66,7 +65,7 @@ def facts_to_values(
 ) -> dict[str, str]:
     """Project a tuple of profile facts into the flat ``selector -> str(value)`` map.
 
-    The flat shape is the legacy mapping shape consumed by
+    The flat shape is the selector-keyed mapping consumed by
     :func:`taxpayer_profile_from_mapping` and similar coercers. Each
     schema field's ``model_selectors`` are honored: a fact at
     ``identity.tax_id`` whose schema declares
@@ -91,7 +90,7 @@ def record_to_values(
     *,
     schema: ProfileSchemaDefinition | None = None,
 ) -> dict[str, str]:
-    """Project a live profile record into the legacy flat values mapping.
+    """Project a live profile record into the selector-keyed flat values mapping.
 
     Args:
         record: The :class:`UserProfileRecord` to project.
@@ -105,7 +104,7 @@ def snapshot_to_values(
     *,
     schema: ProfileSchemaDefinition | None = None,
 ) -> dict[str, str]:
-    """Project an immutable filing snapshot into the legacy flat values mapping."""
+    """Project an immutable filing snapshot into the selector-keyed flat values mapping."""
     return facts_to_values(snapshot.facts, schema=schema)
 
 
@@ -141,6 +140,12 @@ def projection_for_taxpayer(
     The single coercion path goes through :func:`taxpayer_profile_from_mapping`
     so canonical-token semantics stay in lockstep with the wizard descriptor.
     """
+    # The deadline-domain projection reads core registration slots populated by
+    # the application wizard layer. Import the concrete modules here so service
+    # callers outside the CLI startup path get the same canonical projection.
+    from ..wizard import _catalogue as _wizard_catalogue  # noqa: F401
+    from ..wizard import _persistence as _wizard_persistence  # noqa: F401
+
     if isinstance(facts, UserProfileRecord | UserProfileSnapshot):
         mapping = record_to_path_values(facts)
     else:

@@ -7,15 +7,16 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Modelo
-from ....core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingAggregationOp
+from ....core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingAggregationOp, BindingSourceKind
 from ...iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
     InvoiceKind,
     IvaCategory,
+    IvaExemptionArticle,
     IvaFlowDirection,
     IvaRateKind,
     OssIossRegime,
@@ -28,31 +29,37 @@ from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, validated_casilla_id
 from ._schema import DataBindingDefinition, ModeloRevision
 
-# Ledger-aggregation binding source kinds (all four). Re-exported from
+# Ledger-aggregation binding source kinds (all six). Re-exported from
 # :data:`aeat.core.aggregation.LEDGER_BINDING_SOURCE_KINDS`, which derives the
 # set from :class:`~aeat.core.BindingSourceKind` (the single source-kind
 # taxonomy). Every binding whose ``source`` is a member reads its values from
-# the bucket-scoped ledger (transaction-classified IVA / OSS aggregation or
-# Renta first-slice income/expense aggregation). Cross-domain consumers route
-# through this name so the registry stays the single source of truth for ledger
-# readiness.
+# the bucket-scoped ledger (transaction-classified IVA / OSS aggregation, Renta
+# first-slice income/expense aggregation, the M130 gasto cumulative aggregation,
+# or the M151 impatriado Spanish-source base aggregation). Cross-domain consumers
+# route through this name so the registry stays the single source of truth for
+# ledger readiness.
 __all__ = [
     "LEDGER_BINDING_SOURCE_KINDS",
+    "ImpatriadoIncomeObservationProtocol",
     "IvaLedgerObservation",
     "OssIossLedgerObservation",
     "RentaExpenseObservationProtocol",
     "RentaGastoObservationProtocol",
     "RentaIncomeObservationProtocol",
+    "resolve_ledger_impatriado_income_aggregation_binding_values",
     "resolve_ledger_iva_aggregation_binding_values",
     "resolve_ledger_oss_aggregation_binding_values",
     "resolve_ledger_renta_expense_aggregation_binding_values",
     "resolve_ledger_renta_gasto_aggregation_binding_values",
     "resolve_ledger_renta_income_aggregation_binding_values",
+    "unsupported_ledger_impatriado_income_observations",
     "unsupported_ledger_iva_observations",
     "unsupported_ledger_oss_observations",
     "unsupported_ledger_renta_expense_observations",
     "unsupported_ledger_renta_gasto_observations",
     "unsupported_ledger_renta_income_observations",
+    "validate_ledger_impatriado_income_aggregation_binding",
+    "validate_ledger_impatriado_income_aggregation_binding_definition",
     "validate_ledger_iva_aggregation_binding",
     "validate_ledger_iva_aggregation_binding_definition",
     "validate_ledger_oss_aggregation_binding",
@@ -68,6 +75,7 @@ __all__ = [
 
 def _casilla_id_set(surface: str, *values: object) -> frozenset[CasillaId]:
     return frozenset(validated_casilla_id(value, surface=surface) for value in values)
+
 
 # Ledger OSS / IOSS aggregation source bindings.
 #
@@ -171,7 +179,7 @@ def validate_ledger_oss_aggregation_binding_definition(
             transaction kind), or if the aggregation operator is
             inconsistent with the declared fact.
     """
-    if binding.source != "ledger_oss_aggregation":
+    if binding.source != BindingSourceKind.LEDGER_OSS_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_oss_aggregation source")
     selector = _ledger_oss_selector(binding)
 
@@ -212,7 +220,7 @@ def resolve_ledger_oss_aggregation_binding_values(
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != "ledger_oss_aggregation":
+        if binding.source != BindingSourceKind.LEDGER_OSS_AGGREGATION:
             continue
         selector = _ledger_oss_selector(binding)
         kinds = set(selector.transaction_kinds)
@@ -260,7 +268,9 @@ def unsupported_ledger_oss_observations(
         ``ledger_oss_aggregation`` binding.
     """
     selectors = tuple(
-        _ledger_oss_selector(binding) for binding in revision.bindings if binding.source == "ledger_oss_aggregation"
+        _ledger_oss_selector(binding)
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_OSS_AGGREGATION
     )
     unsupported: list[OssIossLedgerObservation] = []
     for observation in observations:
@@ -322,6 +332,7 @@ class IvaLedgerObservation(BaseModel):
     ledger_id: str = Field(min_length=1, max_length=128)
     transaction_date: date
     category: IvaCategory
+    exemption_article: IvaExemptionArticle | None = None
     rate_kind: IvaRateKind
     flow_direction: IvaFlowDirection
     base_amount: Decimal
@@ -340,6 +351,15 @@ class IvaLedgerObservation(BaseModel):
     a manual join against the parallel ``prorrata_references`` tuple.
     """
 
+    @model_validator(mode="after")
+    def _enforce_exemption_article_category(self) -> IvaLedgerObservation:
+        if self.exemption_article is not None and self.category is not IvaCategory.DOMESTIC_EXEMPT:
+            raise RegistryValidationError(
+                "exemption_article is only valid when category is DOMESTIC_EXEMPT; "
+                f"got category {self.category.value!r}",
+            )
+        return self
+
 
 class _IvaLedgerSelector(BaseModel):
     """Validated form of a ledger_iva_aggregation binding selector."""
@@ -347,6 +367,7 @@ class _IvaLedgerSelector(BaseModel):
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
     categories: tuple[IvaCategory, ...] = Field(min_length=1)
+    exemption_articles: tuple[IvaExemptionArticle, ...] | None = Field(default=None, min_length=1)
     rate_kinds: tuple[IvaRateKind, ...] = Field(min_length=1)
     flow_direction: IvaFlowDirection
     fact: Literal["iva_amount_sum", "base_amount_sum", "recargo_amount_sum"] = "iva_amount_sum"
@@ -364,6 +385,24 @@ class _IvaLedgerSelector(BaseModel):
         if len(set(value)) != len(value):
             raise RegistryValidationError("rate_kinds entries must be unique")
         return value
+
+    @field_validator("exemption_articles", mode="after")
+    @classmethod
+    def _exemption_articles_unique(
+        cls,
+        value: tuple[IvaExemptionArticle, ...] | None,
+    ) -> tuple[IvaExemptionArticle, ...] | None:
+        if value is not None and len(set(value)) != len(value):
+            raise RegistryValidationError("exemption_articles entries must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _exemption_article_filter_requires_domestic_exempt(self) -> _IvaLedgerSelector:
+        if self.exemption_articles is not None and IvaCategory.DOMESTIC_EXEMPT not in self.categories:
+            raise RegistryValidationError(
+                "exemption_articles selector requires DOMESTIC_EXEMPT in categories",
+            )
+        return self
 
 
 def _iva_ledger_selector(binding: DataBindingDefinition) -> _IvaLedgerSelector:
@@ -389,7 +428,7 @@ def validate_ledger_iva_aggregation_binding_definition(
             tuple), if the aggregation operator is not "sum", or if
             the binding source is not "ledger_iva_aggregation".
     """
-    if binding.source != "ledger_iva_aggregation":
+    if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_iva_aggregation source")
     selector = _iva_ledger_selector(binding)
 
@@ -405,6 +444,24 @@ def validate_ledger_iva_aggregation_binding_definition(
             f"binding {binding.id!r} ledger_iva_aggregation supports only "
             f"facts {{iva_amount_sum, base_amount_sum, recargo_amount_sum}}, got {selector.fact!r}",
         )
+
+
+def _iva_ledger_observation_matches_selector(
+    observation: IvaLedgerObservation,
+    selector: _IvaLedgerSelector,
+    *,
+    categories: set[IvaCategory],
+    rate_kinds: set[IvaRateKind],
+) -> bool:
+    if observation.category not in categories:
+        return False
+    if observation.rate_kind not in rate_kinds:
+        return False
+    if observation.flow_direction is not selector.flow_direction:
+        return False
+    if selector.exemption_articles is None:
+        return True
+    return observation.exemption_article in set(selector.exemption_articles)
 
 
 def resolve_ledger_iva_aggregation_binding_values(
@@ -429,7 +486,7 @@ def resolve_ledger_iva_aggregation_binding_values(
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != "ledger_iva_aggregation":
+        if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
             continue
         selector = _iva_ledger_selector(binding)
         cat_set = set(selector.categories)
@@ -437,9 +494,12 @@ def resolve_ledger_iva_aggregation_binding_values(
         matched = [
             observation
             for observation in available
-            if observation.category in cat_set
-            and observation.rate_kind in kind_set
-            and observation.flow_direction is selector.flow_direction
+            if _iva_ledger_observation_matches_selector(
+                observation,
+                selector,
+                categories=cat_set,
+                rate_kinds=kind_set,
+            )
         ]
         if selector.fact == "iva_amount_sum":
             total = sum((observation.iva_amount for observation in matched), Decimal("0"))
@@ -485,16 +545,21 @@ def unsupported_ledger_iva_observations(
     binding selects.
     """
     selectors = tuple(
-        _iva_ledger_selector(binding) for binding in revision.bindings if binding.source == "ledger_iva_aggregation"
+        _iva_ledger_selector(binding)
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
     )
     unsupported: list[IvaLedgerObservation] = []
     for observation in observations:
         if observation.category in CUOTA_LESS_M303_IVA_CATEGORIES:
             continue
         if not any(
-            observation.category in selector.categories
-            and observation.rate_kind in selector.rate_kinds
-            and observation.flow_direction is selector.flow_direction
+            _iva_ledger_observation_matches_selector(
+                observation,
+                selector,
+                categories=set(selector.categories),
+                rate_kinds=set(selector.rate_kinds),
+            )
             for selector in selectors
         ):
             unsupported.append(observation)
@@ -516,14 +581,28 @@ def unsupported_ledger_iva_observations(
 # ---------------------------------------------------------------------------
 
 # Casilla IDs covered by the first Renta expense slice (Modelo 100, period 0A).
-# These must stay in sync with the binding selectors in the TOML; they are
-# validated at registry load time so mismatches surface before any calculation.
+# These must stay in sync with the binding selectors in the TOML and with
+# aeat.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS (the
+# domain-owned SpendingCategory -> casilla routing table this registry-layer
+# module cannot import directly without reversing the hexagonal dependency
+# direction); they are validated at registry load time so mismatches surface
+# before any calculation. See issue #589 (29-of-40 SpendingCategory coverage gap).
 _RENTA_100_FIRST_SLICE_CASILLAS: frozenset[CasillaId] = _casilla_id_set(
     "_RENTA_100_FIRST_SLICE_CASILLAS",
+    "0183",
     "0186",
+    "0191",
     "0192",
+    "0193",
+    "0194",
+    "0195",
     "0199",
+    "0200",
+    "0202",
     "0203",
+    "0206",
+    "0208",
+    "0217",
 )
 
 
@@ -575,7 +654,7 @@ def _renta_ledger_expense_selector(binding: DataBindingDefinition) -> _RentaLedg
 
 def validate_ledger_renta_expense_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
     """Validate a ``ledger_renta_expense_aggregation`` binding definition."""
-    if binding.source != "ledger_renta_expense_aggregation":
+    if binding.source != BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_expense_aggregation source")
     selector = _renta_ledger_expense_selector(binding)
     if selector.target_casilla_id not in _RENTA_100_FIRST_SLICE_CASILLAS:
@@ -610,7 +689,7 @@ def resolve_ledger_renta_expense_aggregation_binding_values(
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != "ledger_renta_expense_aggregation":
+        if binding.source != BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION:
             continue
         selector = _renta_ledger_expense_selector(binding)
         matched = [
@@ -654,7 +733,7 @@ def unsupported_ledger_renta_expense_observations(
     selectors = tuple(
         _renta_ledger_expense_selector(binding)
         for binding in revision.bindings
-        if binding.source == "ledger_renta_expense_aggregation"
+        if binding.source == BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION
     )
     unsupported: list[RentaExpenseObservationProtocol] = []
     for observation in observations:
@@ -668,6 +747,38 @@ def unsupported_ledger_renta_expense_observations(
         ):
             unsupported.append(observation)
     return tuple(unsupported)
+
+
+def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> frozenset[CasillaId]:
+    """Return the ``target_casilla_id`` set this revision's own bindings route to.
+
+    Unlike :data:`aeat.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS`
+    (the universal BOE-prescribed routing table spanning every filing year the
+    application supports), this returns only the casillas a
+    ``ledger_renta_expense_aggregation`` binding on THIS revision actually
+    targets. Older Modelo 100 revisions (2020-2023) declare no such bindings
+    at all -- the first-slice ledger-aggregation mechanism did not yet exist
+    for them -- so their required set is legitimately empty even though the
+    universal routing table's codomain is wider. The snapshot-time
+    referential-integrity gate
+    (:mod:`aeat.domain.renta._first_slice_routing_integrity`) uses this
+    per-revision set rather than the universal table so it only fails when a
+    binding THIS revision actually declares points at a casilla absent from
+    that same revision -- the real defect class the gate exists to catch,
+    not "does every filing year's estimación directa casilla exist on every
+    other filing year's revision" (it does not, by BOE design: casillas are
+    added, split, and renumbered across years).
+
+    Args:
+        revision: The :class:`ModeloRevision` whose own
+            ``ledger_renta_expense_aggregation`` binding selectors are
+            inspected.
+    """
+    return frozenset(
+        _renta_ledger_expense_selector(binding).target_casilla_id
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION
+    )
 
 
 class _RentaLedgerIncomeSelector(BaseModel):
@@ -694,13 +805,17 @@ class _RentaLedgerIncomeSelector(BaseModel):
     - ``"taxable_base_sum"`` sums ``RentaIncomeObservation.taxable_base_amount``
       (the IVA-exclusive base imponible).  Observations whose
       ``taxable_base_amount`` is ``None`` contribute zero to this sum.
+    - ``"withheld_amount_sum"`` sums the IRPF amount withheld at source from
+      net-paid professional receipts.
     """
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
     modelo: Literal[Modelo.M130, Modelo.M100] = Modelo.M130
     target_casilla_id: CasillaId
-    fact: Literal["ingresos_integros_sum", "gross_income_sum", "taxable_base_sum"] = "gross_income_sum"
+    fact: Literal["ingresos_integros_sum", "gross_income_sum", "taxable_base_sum", "withheld_amount_sum"] = (
+        "gross_income_sum"
+    )
 
 
 # Per-modelo income casillas this aggregation may feed. M130 (pago fraccionado)
@@ -725,13 +840,13 @@ def _renta_ledger_income_selector(binding: DataBindingDefinition) -> _RentaLedge
 
 
 _RENTA_130_INCOME_SUPPORTED_FACTS: frozenset[str] = frozenset(
-    {"ingresos_integros_sum", "gross_income_sum", "taxable_base_sum"},
+    {"ingresos_integros_sum", "gross_income_sum", "taxable_base_sum", "withheld_amount_sum"},
 )
 
 
 def validate_ledger_renta_income_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
     """Validate a ``ledger_renta_income_aggregation`` binding definition."""
-    if binding.source != "ledger_renta_income_aggregation":
+    if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_income_aggregation source")
     selector = _renta_ledger_income_selector(binding)
     allowed = _RENTA_INCOME_CASILLAS_BY_MODELO.get(selector.modelo, frozenset())
@@ -771,6 +886,9 @@ class RentaIncomeObservationProtocol(Protocol):
     @property
     def taxable_base_amount(self) -> Decimal | None: ...
 
+    @property
+    def withheld_amount(self) -> Decimal: ...
+
 
 def resolve_ledger_renta_income_aggregation_binding_values(
     revision: ModeloRevision,
@@ -783,7 +901,7 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     when declared, else ``observation.gross_amount`` (per-observation
     fallback); ``"gross_income_sum"`` → ``observation.gross_amount``;
     ``"taxable_base_sum"`` → ``observation.taxable_base_amount`` (zero when
-    ``None``).
+    ``None``); ``"withheld_amount_sum"`` → ``observation.withheld_amount``.
 
     Args:
         revision: The :class:`ModeloRevision` whose bindings are resolved.
@@ -792,7 +910,7 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != "ledger_renta_income_aggregation":
+        if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
             continue
         selector = _renta_ledger_income_selector(binding)
         matched = [
@@ -813,6 +931,8 @@ def resolve_ledger_renta_income_aggregation_binding_values(
                 (observation.taxable_base_amount or Decimal("0") for observation in matched),
                 Decimal("0"),
             )
+        elif selector.fact == "withheld_amount_sum":
+            resolved[binding.id] = sum((observation.withheld_amount for observation in matched), Decimal("0"))
         else:
             resolved[binding.id] = sum((observation.gross_amount for observation in matched), Decimal("0"))
     return resolved
@@ -848,9 +968,207 @@ def unsupported_ledger_renta_income_observations(
     supported_casillas = frozenset(
         _renta_ledger_income_selector(binding).target_casilla_id
         for binding in revision.bindings
-        if binding.source == "ledger_renta_income_aggregation"
+        if binding.source == BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
     )
     unsupported: list[RentaIncomeObservationProtocol] = []
+    for observation in observations:
+        declarable = observation.gross_amount
+        if observation.taxable_base_amount is not None:
+            declarable = max(declarable, observation.taxable_base_amount)
+        if declarable == Decimal("0"):
+            continue
+        if observation.target_casilla_id not in supported_casillas:
+            unsupported.append(observation)
+    return tuple(unsupported)
+
+
+# ---------------------------------------------------------------------------
+# Ledger Modelo 151 impatriado (Ley Beckham, art. 93 LIRPF) Spanish-source
+# base aggregation source bindings.
+#
+# The impatriado income aggregation (source
+# ``ledger_impatriado_income_aggregation``) folds ONLY Spanish-source
+# (``source_jurisdiction == "ES"``) income into
+# ``impatriado.base-liquidable-general``; a foreign-source or
+# jurisdiction-unresolved row is segregated by the application-layer classifier
+# (:mod:`aeat.application.aggregation._impatriado_income_ledger`) as a typed
+# BECKHAM_FOREIGN_SOURCE_SEGREGATED issue, never silently admitted. This
+# registry family only needs the ES-scoped observation totals; the source-scope
+# gate is owned by the classifier, so the resolver here simply sums the matched
+# observations per the one-aggregation-path discipline.
+# ---------------------------------------------------------------------------
+
+
+class _ImpatriadoLedgerIncomeSelector(BaseModel):
+    """Validated form of a ``ledger_impatriado_income_aggregation`` binding selector.
+
+    ``modelo`` is Modelo 151 (the only modelo whose base is legally
+    source-scoped to Spanish income by art. 93.2 LIRPF). ``target_casilla_id``
+    is the base casilla that receives the annual Spanish-source total.
+
+    ``fact`` controls which aggregation path is applied:
+
+    - ``"ingresos_integros_sum"`` (default) sums the fiscally computable ingreso
+      per observation: ``taxable_base_amount`` (the IVA-exclusive base imponible)
+      when the transaction carries an explicit IVA tagging, falling back to
+      ``gross_amount`` when no base is declared — the canonical base path.
+    - ``"gross_income_sum"`` sums ``gross_amount`` across the window, ignoring
+      any declared taxable base.
+    """
+
+    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+
+    modelo: Literal[Modelo.M151] = Modelo.M151
+    target_casilla_id: CasillaId
+    fact: Literal["ingresos_integros_sum", "gross_income_sum"] = "ingresos_integros_sum"
+
+
+# The single Modelo 151 base casilla this aggregation may feed. Validated at
+# registry load so a binding targeting any other casilla surfaces before any
+# calculation.
+_IMPATRIADO_BASE_CASILLAS: frozenset[CasillaId] = _casilla_id_set(
+    "_IMPATRIADO_BASE_CASILLAS",
+    "impatriado.base-liquidable-general",
+)
+_IMPATRIADO_SUPPORTED_FACTS: frozenset[str] = frozenset({"ingresos_integros_sum", "gross_income_sum"})
+
+
+def _impatriado_ledger_income_selector(binding: DataBindingDefinition) -> _ImpatriadoLedgerIncomeSelector:
+    try:
+        return _ImpatriadoLedgerIncomeSelector.model_validate(_selector_as_dict(binding))
+    except (ValueError, TypeError) as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed ledger_impatriado_income_aggregation selector: {exc}",
+        ) from exc
+
+
+def validate_ledger_impatriado_income_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
+    """Validate a ``ledger_impatriado_income_aggregation`` binding definition."""
+    if binding.source != BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION:
+        raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_impatriado_income_aggregation source")
+    selector = _impatriado_ledger_income_selector(binding)
+    if selector.target_casilla_id not in _IMPATRIADO_BASE_CASILLAS:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} target_casilla_id {selector.target_casilla_id!r} "
+            f"is outside the supported Modelo 151 base casillas {sorted(_IMPATRIADO_BASE_CASILLAS)!r}",
+        )
+    op = binding_aggregation_op(binding)
+    if op != BindingAggregationOp.SUM:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} ledger_impatriado_income_aggregation supports only "
+            f"aggregation op 'sum', got {op.value!r}",
+        )
+    if selector.fact not in _IMPATRIADO_SUPPORTED_FACTS:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} ledger_impatriado_income_aggregation supports only "
+            f"facts {sorted(_IMPATRIADO_SUPPORTED_FACTS)!r}, got {selector.fact!r}",
+        )
+
+
+def validate_ledger_impatriado_income_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``ledger_impatriado_income_aggregation`` binding at registry-build time.
+
+    Accumulating ``list[str]`` validator over :class:`_ImpatriadoLedgerIncomeSelector`;
+    lifts the casilla / fact / aggregation-op invariant via the raise-style
+    :func:`validate_ledger_impatriado_income_aggregation_binding_definition`.
+    """
+    failures = selector_against_model(binding, _ImpatriadoLedgerIncomeSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(
+        binding,
+        "ledger_impatriado_income_aggregation",
+        validate_ledger_impatriado_income_aggregation_binding_definition,
+    )
+
+
+class ImpatriadoIncomeObservationProtocol(Protocol):
+    """Structural protocol for Modelo 151 impatriado Spanish-source income observations.
+
+    The registry only needs these attributes to resolve
+    ``ledger_impatriado_income_aggregation`` bindings; the full
+    :class:`~aeat.application.aggregation._impatriado_income_ledger.ImpatriadoIncomeObservation`
+    satisfies this protocol without any explicit declaration.
+    """
+
+    @property
+    def target_casilla_id(self) -> CasillaId: ...
+
+    @property
+    def gross_amount(self) -> Decimal: ...
+
+    @property
+    def taxable_base_amount(self) -> Decimal | None: ...
+
+
+def resolve_ledger_impatriado_income_aggregation_binding_values(
+    revision: ModeloRevision,
+    observations: Iterable[ImpatriadoIncomeObservationProtocol],
+) -> dict[BindingId, Decimal]:
+    """Resolve every ``ledger_impatriado_income_aggregation`` binding on ``revision``.
+
+    The ``fact`` declared in the binding selector controls which field is
+    summed: ``"ingresos_integros_sum"`` → ``observation.taxable_base_amount``
+    when declared, else ``observation.gross_amount``; ``"gross_income_sum"`` →
+    ``observation.gross_amount``. Only ES-scoped observations reach this resolver;
+    the source-scope segregation is owned by the application classifier.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose bindings are resolved.
+        observations: ES-scoped impatriado income ledger lines to aggregate over.
+    """
+    available = tuple(observations)
+    resolved: dict[BindingId, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source != BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION:
+            continue
+        selector = _impatriado_ledger_income_selector(binding)
+        matched = [
+            observation for observation in available if observation.target_casilla_id == selector.target_casilla_id
+        ]
+        if selector.fact == "ingresos_integros_sum":
+            resolved[binding.id] = sum(
+                (
+                    observation.taxable_base_amount
+                    if observation.taxable_base_amount is not None
+                    else observation.gross_amount
+                    for observation in matched
+                ),
+                Decimal("0"),
+            )
+        else:
+            resolved[binding.id] = sum((observation.gross_amount for observation in matched), Decimal("0"))
+    return resolved
+
+
+def unsupported_ledger_impatriado_income_observations(
+    revision: ModeloRevision,
+    observations: Iterable[ImpatriadoIncomeObservationProtocol],
+) -> tuple[ImpatriadoIncomeObservationProtocol, ...]:
+    """Return ES-scoped impatriado observations no binding on ``revision`` can consume.
+
+    The :class:`ModeloRevision` supplies the
+    ``ledger_impatriado_income_aggregation`` binding selectors that define which
+    impatriado base casillas are supported.
+
+    Fail-closed counterpart to
+    :func:`resolve_ledger_impatriado_income_aggregation_binding_values`. An
+    ES-source observation whose ``target_casilla_id`` matches no
+    ``ledger_impatriado_income_aggregation`` binding would otherwise have its
+    income silently dropped from the impatriado base — a modelling gap, not a
+    legitimate zero. A zero-income observation contributes nothing and is
+    excluded.
+
+    Returns:
+        The unsupported :class:`ImpatriadoIncomeObservationProtocol` rows, in
+        input order.
+    """
+    supported_casillas = frozenset(
+        _impatriado_ledger_income_selector(binding).target_casilla_id
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION
+    )
+    unsupported: list[ImpatriadoIncomeObservationProtocol] = []
     for observation in observations:
         declarable = observation.gross_amount
         if observation.taxable_base_amount is not None:
@@ -926,7 +1244,7 @@ def _renta_ledger_gasto_selector(binding: DataBindingDefinition) -> _RentaLedger
 
 def validate_ledger_renta_gasto_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
     """Validate a ``ledger_renta_gasto_aggregation`` binding definition."""
-    if binding.source != "ledger_renta_gasto_aggregation":
+    if binding.source != BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_gasto_aggregation source")
     selector = _renta_ledger_gasto_selector(binding)
     if selector.target_casilla_id not in _RENTA_130_GASTO_CASILLAS:
@@ -963,7 +1281,7 @@ def resolve_ledger_renta_gasto_aggregation_binding_values(
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != "ledger_renta_gasto_aggregation":
+        if binding.source != BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION:
             continue
         selector = _renta_ledger_gasto_selector(binding)
         matched = [
@@ -996,7 +1314,7 @@ def unsupported_ledger_renta_gasto_observations(
     supported_casillas = frozenset(
         _renta_ledger_gasto_selector(binding).target_casilla_id
         for binding in revision.bindings
-        if binding.source == "ledger_renta_gasto_aggregation"
+        if binding.source == BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION
     )
     unsupported: list[RentaGastoObservationProtocol] = []
     for observation in observations:

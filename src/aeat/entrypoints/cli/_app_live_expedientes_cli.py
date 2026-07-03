@@ -1,4 +1,11 @@
-"""Typer registration for live expedientes snapshot commands."""
+"""Typer registration for read-only live expedientes snapshot commands.
+
+The pull/list/view/latest verbs route AEAT declaration-register captures through
+:func:`capture_expedientes`, :func:`capture_expedientes_bulk`, and
+:class:`ExpedientesService`, then emit :class:`ExpedientesCaptureResult`,
+:class:`ExpedientesListResult`, :class:`ExpedientesViewResult`, or
+:class:`ExpedientesLatestResult` through :func:`_emit_envelope`.
+"""
 
 from __future__ import annotations
 
@@ -117,7 +124,14 @@ def expedientes_pull(
         typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
     ] = None,
 ) -> None:
-    """Live-walk the AEAT declaration register and persist a bucket-scoped expedientes snapshot."""
+    """Live-walk the AEAT declaration register and persist snapshots.
+
+    A single-modelo pull delegates to :func:`capture_expedientes`; bulk
+    year-range pulls delegate to :func:`capture_expedientes_bulk`. Successful
+    captures become :class:`PersistedExpedientesSnapshot` records rendered as
+    :class:`ExpedientesCaptureResult`, while failed rows are rendered as
+    :class:`ExpedientesCaptureFailurePayload`.
+    """
     from ...application.live import capture_expedientes
     from ._app_live_payloads import ExpedientesCaptureFailurePayload, ExpedientesCaptureResult
 
@@ -202,7 +216,12 @@ def expedientes_pull(
     ),
 )
 def expedientes_list(ctx: typer.Context) -> None:
-    """List persisted expedientes snapshots for the active bucket."""
+    """List persisted expedientes snapshots for the active bucket.
+
+    The command reads :class:`ExpedientesService` storage and emits
+    :class:`ExpedientesListResult` summary rows; per-declaration fields remain
+    on :class:`ExpedientesViewResult`.
+    """
     from ...application.live import ExpedientesService
     from ._app_live_payloads import ExpedientesListResult, ExpedienteSnapshotSummaryPayload
 
@@ -238,7 +257,13 @@ def expedientes_show(
         ),
     ],
 ) -> None:
-    """Show one expedientes snapshot with all its declaration rows."""
+    """Show one expedientes snapshot with all its declaration rows.
+
+    The id is resolved by :class:`ExpedientesService` as a
+    :class:`PersistedExpedientesSnapshot` and projected as
+    :class:`ExpedientesViewResult` with :class:`ExpedienteDeclarationPayload`
+    rows, preserving the read-only live-observation boundary.
+    """
     from ...application.live import ExpedientesService
     from ._app_live_payloads import ExpedienteDeclarationPayload, ExpedientesViewResult
 
@@ -294,7 +319,12 @@ def expedientes_show(
     ),
 )
 def expedientes_latest(ctx: typer.Context) -> None:
-    """Show the most recent expedientes snapshot for the active bucket, or report none."""
+    """Show the most recent expedientes snapshot, or report none.
+
+    A bucket with no captured expedientes from :class:`ExpedientesService`
+    emits :class:`ExpedientesLatestResult` with ``snapshot_id=None`` rather than
+    attempting a live pull.
+    """
     from ...application.live import ExpedientesService
     from ._app_live_payloads import ExpedientesLatestResult
 

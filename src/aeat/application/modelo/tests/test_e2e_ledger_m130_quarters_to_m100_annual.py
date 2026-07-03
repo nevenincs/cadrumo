@@ -52,6 +52,13 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
@@ -61,11 +68,10 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.categories import SpendingCategory
+from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.invoices import InvoiceCatalogue
+from ....domain.modelos import CalculationRevision, ExternalEvidenceKind
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -73,25 +79,31 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
+    ModeloAggregationBindingError,
+    ModeloExportCommand,
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
+    export_modelo_revision,
+    import_external_filing_evidence,
     persist_filed_revision_observation,
     verify_modelo_revision,
 )
+from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-e2e-ledger-130-100"
+_BUCKET_ID = "13010000-0000-4000-8000-000000000100"
+_TAX_ID = "12345678Z"
 _YEAR = 2024
 _T0 = datetime(2024, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(2024, 4, 6, 12, 0, tzinfo=UTC)
@@ -99,6 +111,8 @@ _FILE_AT = datetime(2024, 4, 6, 12, 0, tzinfo=UTC)
 _M130_REVISION = "2019-y-siguientes"
 _M100_ANNUAL_PERIOD = "0A"
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+_M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-2024-modelo-100-estimacion-directa-es-normal"
+_M100_SALARY_CERT_RETENCIONES_BINDING: BindingId = "renta-2024-certificado-trabajo-retenciones"
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -116,12 +130,18 @@ _M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
 _M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("19")
 _M100_PAGOS_CASILLA: CasillaId = _casilla_id("0604")
+_M100_RETENCIONES_TRABAJO_CASILLA: CasillaId = _casilla_id("0596")
+_M100_TOTAL_PAGOS_CASILLA: CasillaId = _casilla_id("0609")
+_M100_CUOTA_DIFERENCIAL_CASILLA: CasillaId = _casilla_id("0610")
+_M100_ACTIVITY_INCOME_CASILLA: CasillaId = _casilla_id("0171")
+_M100_ACTIVITY_EXPENSES_SUMMARY_CASILLA: CasillaId = _casilla_id("0199")
+_M100_EXPENSES_PREVIOUS_SUM_CASILLA: CasillaId = _casilla_id("0218")
+_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA: CasillaId = _casilla_id("0220")
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
 _M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
 _M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
 _M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
 _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = _casilla_id("1391")
-_M131_SOURCE_CASILLA_ID: CasillaId = _casilla_id("15")
 
 # Prior-year (2023) actividad-económica net income. M130's casilla-13 minoración
 # reads ``irpf.previous_year_economic_activity_net_income`` — a previous_filing
@@ -137,27 +157,44 @@ _PRIOR_YEAR_NET_INCOME = Decimal("50000")
 
 # One coherent year of business income, booked one distinct transaction per
 # quarter. Cumulative-YTD (RD 439/2007 art. 110.2) windows then make each
-# quarter's casilla 01 the running sum: 1T=5000, 2T=8000, 3T=10000, 4T=14000.
+# quarter's casilla 01 the running sum: 1T=4000, 2T=7500, 3T=9500, 4T=12000.
 _QUARTER_INCOME: dict[str, tuple[date, Decimal]] = {
-    "1T": (date(_YEAR, 2, 15), Decimal("5000.00")),
-    "2T": (date(_YEAR, 5, 20), Decimal("3000.00")),
+    "1T": (date(_YEAR, 2, 15), Decimal("4000.00")),
+    "2T": (date(_YEAR, 5, 20), Decimal("3500.00")),
     "3T": (date(_YEAR, 8, 10), Decimal("2000.00")),
-    "4T": (date(_YEAR, 11, 5), Decimal("4000.00")),
+    "4T": (date(_YEAR, 11, 5), Decimal("2500.00")),
 }
 _QUARTER_ORDER = ("1T", "2T", "3T", "4T")
 _EXPECTED_CUMULATIVE_C01: dict[str, Decimal] = {
-    "1T": Decimal("5000.00"),
-    "2T": Decimal("8000.00"),
-    "3T": Decimal("10000.00"),
-    "4T": Decimal("14000.00"),
+    "1T": Decimal("4000.00"),
+    "2T": Decimal("7500.00"),
+    "3T": Decimal("9500.00"),
+    "4T": Decimal("12000.00"),
 }
+
+_EXPECTED_M100_ACTIVITY_INCOME = Decimal("12000.00")
+_EXPECTED_M100_ACTIVITY_EXPENSES = Decimal("2400.00")
+_EXPECTED_M100_ACTIVITY_NET = Decimal("9600.00")
+_MARTA_M130_C19_BY_PERIOD: dict[str, Decimal] = {
+    "1T": Decimal("300.00"),
+    "2T": Decimal("360.00"),
+    "3T": Decimal("400.00"),
+    "4T": Decimal("460.00"),
+}
+_MARTA_SALARY_GROSS = Decimal("30000.00")
+_MARTA_SALARY_WITHHOLDING = Decimal("4500.00")
+_EXPENSE_ROWS: tuple[tuple[str, date, SpendingCategory, Decimal], ...] = (
+    ("expense-office", date(_YEAR, 2, 20), SpendingCategory.MATERIAL_OFICINA, Decimal("500.00")),
+    ("expense-software", date(_YEAR, 5, 22), SpendingCategory.SOFTWARE_SUSCRIPCION, Decimal("700.00")),
+    ("expense-phone", date(_YEAR, 8, 12), SpendingCategory.TELEFONIA_MOVIL, Decimal("300.00")),
+    ("expense-advisory", date(_YEAR, 11, 8), SpendingCategory.ASESORIA_FISCAL, Decimal("900.00")),
+)
 
 # M130 manual casillas (retenciones / agrarian / vivienda / prior
 # autoliquidaciones). All zero for this pure-estimación-directa, no-retención
-# persona so casilla 03 == casilla 01 and casilla 19 == casilla 12. Casilla 02
-# (Gastos) is a source-owned bound casilla (ledger renta gasto aggregation) and is
-# NOT supplied here: with no expense transactions seeded its resolver returns 0,
-# so casilla 03 == casilla 01 as before.
+# persona. Casilla 02 (Gastos) is a source-owned bound casilla
+# (ledger renta gasto aggregation) and is NOT supplied here: the persisted
+# expense rows drive it through the live source resolver.
 _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
     _M130_RETENCIONES_CASILLA: Decimal("0"),
     _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
@@ -167,8 +204,9 @@ _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 }
 
 # The M100 0604 formula sums BOTH the M130 and M131 pagos relations; this persona
-# files no estimación-objetiva, so its four M131 c15 quarters are a true zero and
-# fold as 0, leaving 0604 == the M130 sum.
+# files no estimacion objetiva, so the M131 leg resolves as not-applicable zero
+# without any synthetic M131 filings.
+
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
@@ -182,7 +220,7 @@ def _income_transaction(period: str) -> Transaction:
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
-                transaction_id=f"income-{period}",
+                provider_transaction_id=f"income-{period}",
                 booked_date=value_date,
                 value_date=value_date,
                 amount=amount,
@@ -200,17 +238,17 @@ def _income_transaction(period: str) -> Transaction:
                 raw_fields={"Concepto": f"factura {period}"},
             ),
             "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "business_pct": None,
             "purchase_invoice_evidence_id": None,
             "category_id": None,
-            # IVA-exempt income receipt: taxable_base == gross, zero IVA. Carrying
-            # the fiscal facts satisfies the ledger preflight that the M100 expense
-            # aggregation binding now triggers, while leaving casilla 01 (gross ==
-            # taxable_base under ingresos_integros_sum) unchanged.
+            # Marta's activity receipts are IRPF-ready taxable-base rows. They
+            # deliberately carry no IVA amount/rate facts: M130 already consumes
+            # this base-only substrate and M100 must not demand IVA-only facts
+            # unless its revision owns IVA ledger bindings.
             "taxable_base": amount,
-            "iva_rate": Decimal("0"),
-            "iva_amount": Decimal("0"),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _T0,
             "classified_by": "manual",
@@ -218,11 +256,64 @@ def _income_transaction(period: str) -> Transaction:
     )
 
 
-def _persist_year_of_income(secure_objects: SecureObjectRepository) -> None:
-    """Persist the four quarterly business-income transactions into the bucket."""
+def _expense_transaction(
+    transaction_id: str,
+    *,
+    value_date: date,
+    category: SpendingCategory,
+    taxable_base: Decimal,
+) -> Transaction:
+    return Transaction.model_validate(
+        {
+            "raw": RawTransaction(
+                provider_transaction_id=transaction_id,
+                booked_date=value_date,
+                value_date=value_date,
+                amount=taxable_base,
+                currency="EUR",
+                counterparty="Proveedor",
+                description=f"gasto {category.value}",
+                provenance=RawProvenance(
+                    source_path=Path(__file__),
+                    source_sha256="b" * 64,
+                    source_row_index=1,
+                    source_format=SourceFormat.CSV,
+                    ingested_at=_T0,
+                    provider_name="CSV provider",
+                ),
+                raw_fields={"Concepto": f"gasto {category.value}"},
+            ),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.BUSINESS,
+            "business_pct": None,
+            "purchase_invoice_evidence_id": None,
+            "attachment_ids": (f"receipt-{transaction_id}",),
+            "category_id": category.value,
+            "taxable_base": taxable_base,
+            "lifecycle_state": TransactionLifecycleState.ACTIVE,
+            "classified_at": _T0,
+            "classified_by": "manual",
+        },
+    )
+
+
+def _persist_marta_style_ledger(secure_objects: SecureObjectRepository) -> None:
+    """Persist Marta-shaped annual activity income plus deductible expenses."""
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    transactions = tuple(_income_transaction(period) for period in _QUARTER_ORDER) + tuple(
+        _expense_transaction(transaction_id, value_date=value_date, category=category, taxable_base=taxable_base)
+        for transaction_id, value_date, category, taxable_base in _EXPENSE_ROWS
+    )
     tx_repo.save(
-        TransactionCatalogue.from_transactions(tuple(_income_transaction(period) for period in _QUARTER_ORDER)),
+        TransactionCatalogue.from_transactions(transactions),
+    )
+    InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
+    save_usage_ratios(
+        UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("1")}),
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
     )
 
 
@@ -271,25 +362,73 @@ def _calculate_and_file_m130_quarter(
     return revision
 
 
-def _seed_m131_zero_quarters(secure_objects: SecureObjectRepository) -> None:
-    """File the four M131/2024 c15 quarters as a true zero (no módulos activity)."""
-    obs_repo = CalculationObservationRepository(objects=secure_objects)
-    for period in _QUARTER_ORDER:
-        obs_repo.save_observation(
-            RegistryModeloObservation(
-                modelo="131",
+def _import_official_m130_result_observation(
+    secure_objects: SecureObjectRepository,
+    *,
+    period: str,
+    c19_value: Decimal,
+) -> None:
+    """Persist Marta's filed M130 result as AEAT-attested local evidence."""
+    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
+    bucket_events = BucketEventHistoryRepository(objects=secure_objects)
+    observation_repo = CalculationObservationRepository(objects=secure_objects)
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=_YEAR, period=period)
+    work_unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="130",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period),
+        revision_id=snapshot.revision.id,
+        repository=wu_repo,
+        clock=_FILE_AT,
+    )
+    casilla_values = {_M130_RESULTADO_FINAL_CASILLA: c19_value}
+    evidence_reference_id = f"JUST-130-{_YEAR}-{period}-MARTA-C19"
+    persist_justificante_metadata(
+        evidence_reference_id,
+        modelo="130",
+        filing_year=_YEAR,
+        period=period,
+        captured_at=_FILE_AT,
+        tax_id=_TAX_ID,
+    )
+    import_external_filing_evidence(
+        work_unit_id=work_unit.work_unit_id,
+        casilla_values=casilla_values,
+        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        evidence_reference_id=evidence_reference_id,
+        actor="aeat-import-test",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=filing_repo,
+        bucket_event_repository=bucket_events,
+        expected_tax_id=_TAX_ID,
+        clock=_FILE_AT,
+    )
+    observation_repo.save_observation(
+        RegistryModeloObservation(
+            modelo="130",
+            filing_year=_YEAR,
+            period=period,
+            observations=registry_grounded_observations(
+                modelo="130",
                 filing_year=_YEAR,
                 period=period,
-                observations=registry_grounded_observations(
-                    modelo="131",
-                    filing_year=_YEAR,
-                    period=period,
-                    casilla_values={_M131_SOURCE_CASILLA_ID: Decimal("0")},
-                ),
+                casilla_values=casilla_values,
             ),
-            source_kind="app_filing",
-            captured_at=_FILE_AT,
-        )
+        ),
+        source_kind="aeat_sede_justificante",
+        captured_at=_FILE_AT,
+        stamped_revision_id=snapshot.revision.id,
+        source_metadata={
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": f"EXP-130-{_YEAR}-{period}",
+            "aeat_justificante_csv": evidence_reference_id,
+            "authenticated_identity": _TAX_ID,
+        },
+    )
 
 
 def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
@@ -334,11 +473,20 @@ def _seed_taxpayer_profile() -> None:
         profile_id=_BUCKET_ID,
         display_name="Test runtime profile",
         facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+            UserProfileFact(path="identity.name", value="Annual"),
+            UserProfileFact(path="identity.surnames", value="Renta Tester"),
+            UserProfileFact(path="activities.description", value="design services"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="varon"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
+            UserProfileFact(path="renta_taxpayer.sex", value="H"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
@@ -357,12 +505,31 @@ def _seed_taxpayer_profile() -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
 
 
+def _marta_workflow_profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id=_TAX_ID,
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_professionals_with_retencion=False,
+        pays_rent_with_retencion=False,
+        pays_capital_income_with_retencion=False,
+        does_intracomunitario=False,
+        third_party_transactions_above_347_threshold=False,
+        bienes_extranjero_above_threshold=False,
+        monedas_virtuales_extranjero_above_threshold=False,
+    )
+
+
 def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default every M100/2024 binding that is neither profile- nor relation-sourced."""
     snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
-    return {
+    values = {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
+        if binding.id != _M100_SALARY_CERT_RETENCIONES_BINDING
         if binding.source
         not in (
             "profile",
@@ -375,9 +542,16 @@ def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
             "payable_invoice",
         )
     }
+    values[_M100_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
+    return values
 
 
-def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> CalculationRevision:
+def _calculate_m100_annual(
+    secure_objects: SecureObjectRepository,
+    *,
+    casilla_inputs: dict[CasillaId, Decimal] | None = None,
+    binding_values: dict[BindingId, Decimal] | None = None,
+) -> CalculationRevision:
     """Run the live M100/2024/0A annual calc, leaving the pagos relations to fold."""
     _seed_taxpayer_profile()
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
@@ -396,7 +570,8 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> Calculatio
     )
     return calculate_modelo_revision_from_bucket_aggregation(
         work_unit.work_unit_id,
-        binding_values=_m100_non_relation_zero_bindings(),
+        casilla_inputs=casilla_inputs,
+        binding_values={**_m100_non_relation_zero_bindings(), **(binding_values or {})},
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         transaction_repository=tx_repo,
@@ -409,9 +584,9 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """The full yearly cadence: persisted ledger → 4×M130 → M100 0604 fold-in."""
-    _persist_year_of_income(secure_objects)
+    _seed_taxpayer_profile()
+    _persist_marta_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
-    _seed_m131_zero_quarters(secure_objects)
 
     computed_c19: dict[str, Decimal] = {}
     for period in _QUARTER_ORDER:
@@ -434,14 +609,162 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
 
     annual = _calculate_m100_annual(secure_objects)
 
+    assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == _EXPECTED_M100_ACTIVITY_INCOME
+    assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == _EXPECTED_M100_ACTIVITY_EXPENSES
+    assert Decimal(annual.casilla_values[_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == _EXPECTED_M100_ACTIVITY_EXPENSES
+    assert Decimal(annual.casilla_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == _EXPECTED_M100_ACTIVITY_NET
+
     # Transport invariant #2: the annual M100 0604 folds in the SUM of the four
-    # engine-computed M130 casilla-19 values (M131 c15 folds as zero). This wires
+    # engine-computed M130 casilla-19 values (M131 folds as not-applicable zero). This wires
     # the quarterly calculations the ledger produced through to the annual renta.
     expected_total = sum(computed_c19.values(), Decimal("0"))
     casilla_0604 = Decimal(annual.casilla_values[_M100_PAGOS_CASILLA])
     assert casilla_0604 == expected_total, (
         f"M100 0604 must fold in the four computed M130 c19 (sum {expected_total}); got {casilla_0604}"
     )
+
+
+def test_verify_accepts_marta_m100_with_official_m130_observations(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Marta's internally consistent M100/2024 draft passes verify replay.
+
+    The annual activity values are produced from real persisted ledger rows,
+    and 0604 is folded from four imported AEAT-attested M130 observations.
+    Verify then rebuilds the filing draft from the stored calculation revision
+    and must accept the computed 0224/0529/0531 formula traces instead of
+    treating them as manual casillas.
+    """
+    _seed_taxpayer_profile()
+    _persist_marta_style_ledger(secure_objects)
+    _seed_prior_year_m100(secure_objects)
+
+    for period, c19_value in _MARTA_M130_C19_BY_PERIOD.items():
+        _import_official_m130_result_observation(secure_objects, period=period, c19_value=c19_value)
+
+    annual = _calculate_m100_annual(secure_objects)
+
+    assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")
+    assert Decimal(annual.casilla_values[_M100_ACTIVITY_EXPENSES_SUMMARY_CASILLA]) == Decimal("2400.00")
+    assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == Decimal("2400.00")
+    assert Decimal(annual.casilla_values[_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == Decimal("2400.00")
+    assert Decimal(annual.casilla_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == Decimal("9600.00")
+    assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
+    assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == sum(
+        _MARTA_M130_C19_BY_PERIOD.values(),
+        Decimal("0"),
+    )
+
+    report = verify_modelo_revision(
+        annual.calculation_revision_id,
+        actor="marta-cli-rerun",
+        workflow_profile=_marta_workflow_profile(),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+    )
+
+    assert report.calculation_revision_id == annual.calculation_revision_id
+    assert report.granted_verificado_completo is True, report.findings
+    assert not [
+        finding
+        for finding in report.findings
+        if finding.severity.value == "blocking" or "formula-divergence" in finding.message
+    ]
+
+
+def test_marta_m100_salary_certificate_retenciones_export_replays_verified_total_pagos(
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+) -> None:
+    """Marta's verified salary withholding replays through verify and XML export."""
+    _seed_taxpayer_profile()
+    _persist_marta_style_ledger(secure_objects)
+    _seed_prior_year_m100(secure_objects)
+
+    for period, c19_value in _MARTA_M130_C19_BY_PERIOD.items():
+        _import_official_m130_result_observation(secure_objects, period=period, c19_value=c19_value)
+
+    annual = _calculate_m100_annual(
+        secure_objects,
+        casilla_inputs={_casilla_id("0003"): _MARTA_SALARY_GROSS},
+        binding_values={_M100_SALARY_CERT_RETENCIONES_BINDING: _MARTA_SALARY_WITHHOLDING},
+    )
+
+    assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")
+    assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == Decimal("2400.00")
+    assert Decimal(annual.casilla_values[_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == Decimal("2400.00")
+    assert Decimal(annual.casilla_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == Decimal("9600.00")
+    assert Decimal(annual.casilla_values[_M100_RETENCIONES_TRABAJO_CASILLA]) == _MARTA_SALARY_WITHHOLDING
+    assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
+    assert Decimal(annual.casilla_values[_M100_TOTAL_PAGOS_CASILLA]) == Decimal("6020.00")
+
+    report = verify_modelo_revision(
+        annual.calculation_revision_id,
+        actor="marta-cli-rerun",
+        workflow_profile=_marta_workflow_profile(),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+    )
+
+    assert report.calculation_revision_id == annual.calculation_revision_id
+    assert report.granted_verificado_completo is True, report.findings
+    assert not [
+        finding
+        for finding in report.findings
+        if finding.severity.value == "blocking" or "formula-divergence" in finding.message
+    ]
+
+    output = tmp_path / "m100-2024-export.xml"
+    receipt = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=annual.calculation_revision_id,
+            output_path=output,
+            actor="marta-cli-rerun",
+        ),
+        workflow_profile=_marta_workflow_profile(),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects),
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+    )
+
+    xml = output.read_text(encoding="utf-8")
+    assert receipt.output_path == output
+    assert "<RET1>4500.00</RET1>" in xml
+    assert "<RET9>1520.00</RET9>" in xml
+    assert "<PAGOS>6020.00</PAGOS>" in xml
+
+
+def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """M100 does not demand IVA-only facts, but still blocks missing Renta base facts."""
+    _seed_taxpayer_profile()
+    _seed_prior_year_m100(secure_objects)
+    transactions = (
+        *(_income_transaction(period) for period in _QUARTER_ORDER),
+        _expense_transaction(
+            "expense-missing-base",
+            value_date=date(_YEAR, 2, 20),
+            category=SpendingCategory.MATERIAL_OFICINA,
+            taxable_base=Decimal("500.00"),
+        ).model_copy(update={"taxable_base": None}),
+    )
+    TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        TransactionCatalogue.from_transactions(transactions),
+    )
+    InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
+
+    with pytest.raises(ModeloAggregationBindingError) as exc_info:
+        _calculate_m100_annual(secure_objects)
+
+    assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    assert exc_info.value.context["reason"] == "missing_taxable_base"
 
 
 def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
@@ -463,9 +786,9 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
     proves the chain reaches the verify gate and the safety guard engages on a
     real ledger-derived multi-period chain.
     """
-    _persist_year_of_income(secure_objects)
+    _seed_taxpayer_profile()
+    _persist_marta_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
-    _seed_m131_zero_quarters(secure_objects)
     for period in _QUARTER_ORDER:
         _calculate_and_file_m130_quarter(secure_objects, period=period)
     annual = _calculate_m100_annual(secure_objects)
@@ -493,7 +816,7 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
         f"verify gate must raise a BLOCKING cross_period_dependency_unclean finding "
         f"for the non-official prior-year carry; got {report.findings}"
     )
-    # The blocking finding names the non-official prior-year M100/2023 carry.
-    assert any("100" in finding.message and "2023" in finding.message for finding in unclean), (
-        f"the unclean finding must name the non-official prior-year filing; got {unclean}"
-    )
+    assert any(
+        "modelo=130 year=2024 period=1T" in finding.message and "missing_current_filing_record" in finding.message
+        for finding in unclean
+    ), f"the unclean finding must name the missing official M130 quarterly filing record; got {unclean}"

@@ -8,25 +8,24 @@ from .. import ModeloWorkPeriodTokenError, modelo_work_address_from_operator_tar
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize(
-    "period",
-    (
+def test_operator_target_accepts_typed_core_period() -> None:
+    periods = (
         Period.from_year_and_code(2026, "1T"),
         Period.from_year_and_code(2026, "0A"),
         Period.from_year_and_code(2026, "03"),
-    ),
-)
-def test_operator_target_accepts_typed_core_period(period: Period) -> None:
-    address = modelo_work_address_from_operator_target(
-        work_unit_id=None,
-        modelo="303",
-        year=2026,
-        period=period,
-        registry_revision_id=None,
     )
 
-    assert address.period == period
-    assert address.filing_year == 2026
+    for period in periods:
+        address = modelo_work_address_from_operator_target(
+            work_unit_id=None,
+            modelo="303",
+            year=2026,
+            period=period,
+            registry_revision_id=None,
+        )
+
+        assert address.period == period
+        assert address.filing_year == 2026
 
 
 def test_operator_target_rejects_period_year_mismatch() -> None:

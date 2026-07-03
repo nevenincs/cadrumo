@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S02'
 related:
   - "[[2026-06-10-llm-evidence-classification-plan]]"
 ---
-
-
-
 
 # Resolve a transaction's purchase_invoice_evidence_id and attachment_ids to evidence bytes read from secure storage into memory only, never a temp file
 

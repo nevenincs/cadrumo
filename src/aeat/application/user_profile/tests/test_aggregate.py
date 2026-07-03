@@ -15,7 +15,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage.bucket._manifest import (
+from ....adapters.persistence.storage.bucket import (
     BucketLifecycleStatus,
     ManifestKdfParams,
 )
@@ -316,17 +316,17 @@ def _aggregate(**overrides: object) -> ProfileAggregate:
     return ProfileAggregate.model_validate(defaults)
 
 
-def test_aggregate_rejects_naive_created_at() -> None:
-    """A naive created_at must be rejected at the aggregate boundary."""
+@pytest.mark.parametrize(
+    "created_at",
+    (
+        pytest.param(datetime(2026, 1, 4, 9, 0, 0), id="naive"),
+        pytest.param(datetime(2026, 1, 4, 9, 0, 0, tzinfo=timezone(timedelta(hours=1))), id="non-utc"),
+    ),
+)
+def test_aggregate_rejects_non_utc_created_at(created_at: datetime) -> None:
+    """created_at must be UTC-aware at the aggregate boundary."""
     with pytest.raises(ValidationError):
-        _aggregate(created_at=datetime(2026, 1, 4, 9, 0, 0))
-
-
-def test_aggregate_rejects_non_utc_created_at() -> None:
-    """A timezone-aware but non-UTC created_at must be rejected."""
-    plus_one = timezone(timedelta(hours=1))
-    with pytest.raises(ValidationError):
-        _aggregate(created_at=datetime(2026, 1, 4, 9, 0, 0, tzinfo=plus_one))
+        _aggregate(created_at=created_at)
 
 
 def test_aggregate_accepts_utc_created_at() -> None:

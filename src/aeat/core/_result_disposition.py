@@ -11,6 +11,14 @@ Each modelo declares its own closed code set in its AEAT Diseño de Registros
 result→code derivation per modelo, so feature code (the export header composer)
 emits a grounded, codified member instead of a hardcoded literal.
 
+This module stops at the base sign-to-code mapping. The application resolver
+:func:`application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`
+validates the full revision in its work-unit and registry context, then layers
+:class:`~core.RefundElection` and
+:func:`~domain.iva.refund_disposition_available` for Modelo 303. Export
+and cross-period carry read that single resolved fact through
+:func:`result_disposition_is_refund`.
+
 Grounded verbatim from the bundled official diseños
 (``_data/corpus/aeat_official/disenos_registro/modelo_*``):
 
@@ -46,6 +54,14 @@ class ResultDisposition(StrEnum):
     The member *value* is the single-character code the fichero expects. Not every
     modelo admits every code — the per-modelo derivation only selects codes that
     modelo's diseño declares.
+
+    See Also:
+        :class:`~core.RefundElection`
+            Operator input that can request a Modelo 303 ``C`` credit be filed
+            as ``D`` after the application resolver applies the refund gate.
+        :func:`result_disposition_is_refund`
+            Classifier for the refund dispositions that suppress
+            compensación carry-forward.
     """
 
     COMPENSACION = "C"
@@ -99,7 +115,7 @@ _M111_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("30", surface="_M1
 _M115_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("05", surface="_M115_RESULT_CASILLA")
 _M123_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("14", surface="_M123_RESULT_CASILLA")
 _M123_2019_2023_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(
-    "08-legacy",
+    "08",
     surface="_M123_2019_2023_RESULT_CASILLA",
 )
 _M200_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(
@@ -168,8 +184,8 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
 
 
 #: The fichero "Tipo de declaración" codes that mean the negative result is
-#: REFUNDED (devolución) — the credit is returned by AEAT rather than carried
-#: forward. A refunded period generates ZERO compensación carry-forward (RD
+#: requested as devolución and therefore excluded from compensación carry. A
+#: refunded period generates ZERO compensación carry-forward (RD
 #: 1624/1992 art. 30 / Ley 37/1992 art. 116). ``D`` is the ordinary refund
 #: request; ``V`` (cuenta corriente devolución) and ``X`` (devolución por
 #: transferencia al extranjero) are the same disposition through a different
@@ -186,23 +202,34 @@ _REFUND_DISPOSITIONS: frozenset[ResultDisposition] = frozenset(
 def result_disposition_is_refund(disposition: ResultDisposition) -> bool:
     """Return whether ``disposition`` files the result as a refund (devolución).
 
-    A refund disposition (``D`` / ``V`` / ``X``) returns the credit rather than
-    carrying it forward, so a refunded Modelo 303 period must generate zero
-    compensación carry-forward. The carried disposition (``C``, compensación) and
-    every ingreso/negativa code return ``False``. This is the single determined
-    fact the export "Tipo de declaración" and the carry-forward derivation both
-    read, so the fichero ``D`` and the cross-period carry cannot disagree.
+    A refund disposition (``D`` / ``V`` / ``X``) requests devolución rather than
+    carry-forward, so a refunded Modelo 303 period must generate zero compensación
+    carry-forward. The carried disposition (``C``, compensación) and every
+    ingreso/negativa code return ``False``. This is the single determined fact the
+    export "Tipo de declaración" and the carry-forward derivation both read, so
+    the fichero ``D`` and the cross-period carry cannot disagree.
     """
     return disposition in _REFUND_DISPOSITIONS
 
 
 def modelo_has_codified_disposition(modelo: str) -> bool:
-    """Return whether ``modelo`` has a codified, diseño-grounded disposition spec."""
+    """Return whether ``modelo`` has a codified, diseño-grounded disposition spec.
+
+    This is the capability probe for callers that need to decide whether
+    :func:`derive_result_disposition` can produce a :class:`ResultDisposition`
+    without falling back to their own documented export default.
+    """
     return modelo in _DISPOSITION_SPEC
 
 
 def result_disposition_casilla_ids(modelo: str) -> tuple[CasillaId, ...] | None:
-    """Return the canonical result ``casilla.id`` values for ``modelo``."""
+    """Return the canonical result ``casilla.id`` values for ``modelo``.
+
+    These are the only keys :func:`derive_result_disposition` accepts in its
+    ``casilla_values`` mapping. A caller holding a full calculation revision must
+    validate and filter the revision to this tuple first; passing unrelated
+    result metadata raises :class:`~core.errors.CoreValidationError`.
+    """
     spec = _DISPOSITION_SPEC.get(modelo)
     if spec is None:
         return None

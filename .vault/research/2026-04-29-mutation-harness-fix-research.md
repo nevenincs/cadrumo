@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#mutation-harness-fix'
 date: '2026-04-29'
-modified: '2026-04-29'
+modified: '2026-06-29'
 related:
   - '[[2026-04-25-mutation-harness-extension-research]]'
   - '[[2026-04-25-mutation-harness-extension-adr]]'
@@ -77,7 +77,9 @@ For `modelo_100.<año>` (any year), those walkers find:
   one rate that is 0 in the AST yields 17 `MulFormula(Literal(rate),
   portion)` nodes); 2 in Anexo B1 (`mul_op(lit("1.75"), …)` and
   `mul_op(lit("1.14"), …)` for the LIRPF art. 20 piecewise reducción);
-  1 in Anexo D simplificada (the 5 % cap `mul_op(lit("0.05"), …)`).
+  1 in Anexo D simplificada (the gastos de difícil justificación
+  revision-rate multiplication, now parameter-backed so DA 56's 2023
+  7% exception is not flattened into a shared literal).
 
 The corresponding per-class harness imports:
 

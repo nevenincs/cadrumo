@@ -118,9 +118,7 @@ def build_surfaces() -> _BuildSurfaces:
 
     casilla_records, _stats = project_casilla_search_records(authority)
     unified_casillas = tuple(to_search_record(record) for record in casilla_records)
-    casilla_modelos = {
-        unified.metadata.modelo for unified in unified_casillas if unified.metadata.modelo is not None
-    }
+    casilla_modelos = {unified.metadata.modelo for unified in unified_casillas if unified.metadata.modelo is not None}
     casilla_targets_by_record_id = {unified.id: unified.target for unified in unified_casillas}
     # Legal permalinks: every legal-catalogue permalink.
     permalinks = {
@@ -234,8 +232,7 @@ def test_casilla_targets_use_current_canonical_record_ids(
                 continue
             if target.target != expected_target:
                 stale.append(
-                    f"{mapping.query!r} -> {target.record_id} target {target.target!r}, "
-                    f"expected {expected_target!r}",
+                    f"{mapping.query!r} -> {target.record_id} target {target.target!r}, expected {expected_target!r}",
                 )
     assert not parseable, "casilla relevance record ids must be opaque, not parseable references:\n" + "\n".join(
         f"  - {row}" for row in parseable[:40]
@@ -305,8 +302,7 @@ def test_prorrata_maps_to_grounding_targets(relevance: SweepResult) -> None:
     query resolves to a BOE legal article and/or the prorrata concept card.
     """
     prorrata = [m for m in relevance.mappings if m.concept_id == "prorrata" and m.targets]
-    if not prorrata:
-        pytest.skip("no prorrata targets in this sweep (service was busy at sweep time)")
+    assert prorrata, "prorrata relevance data must ship at least one grounding target; re-run the sweep"
     all_targets = [t.target for m in prorrata for t in m.targets]
     assert any("_generated/glossary.html#term-prorrata" in t for t in all_targets) or any(
         "boe.es" in t for t in all_targets

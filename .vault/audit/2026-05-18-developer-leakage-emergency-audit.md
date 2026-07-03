@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#developer-leakage-emergency'
 date: '2026-05-18'
-modified: '2026-05-18'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # developer-leakage-emergency audit: codebase-wide dev/process leakage into operator-facing surface
 

@@ -1,39 +1,44 @@
-"""AEAT Sede authentication public facade.
+"""Public outbound AEAT auth facade.
 
-This package is the public import point for outbound authentication. It
-re-exports the application-layer :class:`AuthProvider` protocol, the
-supported :class:`AuthProviderKind` values, concrete providers, session and
-assertion records, provider detail payloads, certificate helpers, and the
-live-read gate types used around AEAT Sede electrónica access.
+This package mirrors the application auth contract from
+:mod:`application.auth` by re-exporting
+:class:`application.auth.AuthProvider` and
+:class:`application.auth.AuthProviderKind` alongside the concrete
+certificate and Cl@ve Móvil providers. Use
+:func:`select_provider` to resolve
+``CERTIFICATE`` to :class:`AeatAuthenticator`
+and ``CLAVE_MOVIL`` to
+:class:`ClaveMovilAuthProvider`;
+unsupported kinds raise
+:exc:`AuthConfigurationError`.
 
-Major declarations:
+Authentication results are strict, frozen, secret-free records:
+:class:`AeatSession` and
+:class:`AeatLoginAssertion` carry
+provider-specific payloads through the discriminated ``AuthSessionDetail`` and
+``AuthLoginAssertionDetail`` unions.
+Selected certificate public API is available through
+:mod:`adapters.outbound.aeat.auth.certificate`, including
+:func:`adapters.outbound.aeat.auth.certificate.load_certificate`,
+:func:`adapters.outbound.aeat.auth.certificate.verify_handshake`, and
+:func:`adapters.outbound.aeat.auth.certificate.health`.
 
-* :func:`~aeat.adapters.outbound.aeat.auth.select_provider` — map a
-  :class:`AuthProviderKind` to the concrete outbound provider
-  (:class:`AeatAuthenticator` for client certificates,
-  :class:`ClaveMovilAuthProvider` for Cl@ve Móvil).
-* :class:`AeatSession` and :class:`AeatLoginAssertion` — the authenticated
-  session record and the re-probe assertion the providers return.
-* :class:`CertificateBundle` and :class:`LoadedCertificate` from
-  :mod:`aeat.adapters.outbound.aeat.auth.certificate` — the PKCS#12
-  certificate-loading and health-evaluation surface.
-* :class:`AuthError` and its subclasses
-  (:class:`AeatSessionExpiredError`, :class:`AuthConfigurationError`, and
-  the certificate and Cl@ve-Móvil error families) — the failure taxonomy.
+Live-read policy is owned by
+:class:`core.access_gate.AeatAccessGate`: pytest live reads require
+the live-test opt-in enabled, while operator-context reads continue
+through auth, profile, and read-only guards. The associated
+:class:`core.access_gate.AeatGateEnvSnapshot` records only the
+live-test opt-in flag and the current pytest test id. Live AEAT writes and
+live AEAT submissions are permanently refused by
+:exc:`core.access_gate.LiveSubmitForbiddenError`; auth exposes no
+AEAT-side write verb.
 
-Live reads pass through :class:`AeatAccessGate`; no path performs a remote
-write to the AEAT.
-
-See Also:
-    :mod:`aeat.application.auth`
-        Application-owned provider protocol, operator actions, and lazy
-        selection wrapper that delegates to this facade.
-    :class:`AeatAuthenticator`
-        Certificate-backed provider returned for
-        ``AuthProviderKind.CERTIFICATE``.
-    :class:`ClaveMovilAuthProvider`
-        Human-in-the-loop Cl@ve Móvil provider returned for
-        ``AuthProviderKind.CLAVE_MOVIL``.
+Errors remain typed at the facade boundary, including
+:exc:`AuthError`,
+:exc:`AuthConfigurationError`,
+:exc:`AeatLoginAssertionError`,
+:exc:`AeatSessionExpiredError`, certificate
+errors, and Cl@ve Móvil errors.
 """
 
 from __future__ import annotations
@@ -59,7 +64,9 @@ from ._authenticator import (
     BrowserResponseLike,
     BrowserSessionFactory,
     BrowserSessionLike,
+    BrowserSessionProfileLike,
 )
+from ._authenticator_types import CertificateHealthCheck
 from ._certificate_backends._playwright_context import (
     build_client_certificates_kwarg,
 )
@@ -70,6 +77,7 @@ from ._clave_movil import (
     ClaveMovilConfigurationError,
     ClaveMovilFailureMode,
 )
+from ._clave_movil_support import classify_identity
 from ._errors import (
     AeatLoginAssertionError,
     AeatSessionExpiredError,
@@ -137,12 +145,14 @@ __all__ = [
     "BrowserResponseLike",
     "BrowserSessionFactory",
     "BrowserSessionLike",
+    "BrowserSessionProfileLike",
     "CertificateBundle",
     "CertificateContextProvisioner",
     "CertificateError",
     "CertificateExpiredError",
     "CertificateHandshakeError",
     "CertificateHealth",
+    "CertificateHealthCheck",
     "CertificateHealthSeverity",
     "CertificateLoadError",
     "CertificateLoginAssertionDetail",
@@ -159,6 +169,7 @@ __all__ = [
     "HandshakeResult",
     "LoadedCertificate",
     "build_client_certificates_kwarg",
+    "classify_identity",
     "describe_certificate_provider",
     "evaluate_loaded_certificate_health",
     "extract_nif_from_subject",

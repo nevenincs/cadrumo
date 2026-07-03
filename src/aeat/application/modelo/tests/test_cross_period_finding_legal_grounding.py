@@ -18,10 +18,11 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....core.resources import bundled_path
+from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     CasillaId,
-    load_registry_tree,
+    LegalRefId,
+    SourceRefId,
     validated_casilla_id,
     verify_legal_catalogue,
 )
@@ -46,9 +47,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _APPLICATION_ROOT = Path(__file__).resolve().parents[2]
 _LEGAL_REF_CONSTANT_RE = re.compile(r"LEGAL_REFS?$")
 _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")
+_DEFAULT_DEPENDENCY_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-58-2003:art-119",)
+_DEFAULT_DEPENDENCY_SOURCE_REFS: tuple[SourceRefId, ...] = ("aeat-modelo-303-procedure",)
 
 
-def _unclean_evidence(*, origin_ids: tuple[str, ...]) -> CrossPeriodDependencyEvidence:
+def _unclean_evidence(
+    *,
+    origin_ids: tuple[str, ...],
+    legal_refs: tuple[LegalRefId, ...] = _DEFAULT_DEPENDENCY_LEGAL_REFS,
+    source_refs: tuple[SourceRefId, ...] = _DEFAULT_DEPENDENCY_SOURCE_REFS,
+) -> CrossPeriodDependencyEvidence:
     return CrossPeriodDependencyEvidence(
         requirement=CrossPeriodDependencyRequirement(
             source_modelo="303",
@@ -57,6 +65,8 @@ def _unclean_evidence(*, origin_ids: tuple[str, ...]) -> CrossPeriodDependencyEv
             source_casilla_ids=(_M303_SOURCE_CASILLA_01,),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=origin_ids,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
         ),
         blockers=(CrossPeriodCleanStateBlocker.MISSING_OBSERVATION,),
     )
@@ -113,7 +123,7 @@ def _application_literal_legal_refs() -> frozenset[str]:
 
 def test_application_legal_refs_resolve_to_bundled_corpus() -> None:
     """Application-level literal legal refs must stay registry and corpus backed."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    catalogues = resources().modelos.authority.catalogues
     ref_ids = _application_literal_legal_refs()
 
     missing = sorted(ref_ids - set(catalogues.legal))
@@ -143,6 +153,25 @@ def test_iva_compensacion_dependency_finding_cites_liva_and_lgt() -> None:
     )
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(blocking.legal_refs)
     assert _IVA_COMPENSATION_CARRY_LEGAL_REF in blocking.legal_refs
+    assert tuple(blocking.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS
+
+
+def test_dependency_finding_carries_registry_requirement_refs() -> None:
+    """Registry-origin legal/source refs survive into the blocking finding."""
+    verdict = _verdict(
+        _unclean_evidence(
+            origin_ids=("modelo-130-pagos-fraccionados-anteriores",),
+            legal_refs=("rd-439-2007:art-110",),
+            source_refs=("aeat-modelo-130-instructions",),
+        ),
+    )
+
+    findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
+
+    blocking = next(f for f in findings if "not clean" in f.message)
+    assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(blocking.legal_refs)
+    assert "rd-439-2007:art-110" in blocking.legal_refs
+    assert tuple(blocking.source_refs) == ("aeat-modelo-130-instructions",)
 
 
 def test_non_compensacion_dependency_finding_cites_lgt_only() -> None:
@@ -154,6 +183,7 @@ def test_non_compensacion_dependency_finding_cites_lgt_only() -> None:
     blocking = next(f for f in findings if "not clean" in f.message)
     assert tuple(blocking.legal_refs) == _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
     assert _IVA_COMPENSATION_CARRY_LEGAL_REF not in blocking.legal_refs
+    assert tuple(blocking.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS
 
 
 def test_missing_activity_start_finding_cites_censo_alta() -> None:
@@ -186,6 +216,8 @@ def test_not_applicable_suppression_summary_carries_dependency_legal_refs() -> N
             source_casilla_ids=(_M303_SOURCE_CASILLA_01,),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=("modelo-303-compensacion-pendiente-anteriores",),
+            legal_refs=_DEFAULT_DEPENDENCY_LEGAL_REFS,
+            source_refs=_DEFAULT_DEPENDENCY_SOURCE_REFS,
         ),
         modelo_not_applicable_advisory=True,
     )
@@ -193,9 +225,14 @@ def test_not_applicable_suppression_summary_carries_dependency_legal_refs() -> N
 
     findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
 
-    summary = next(f for f in findings if "not-applicable" in f.message)
+    summary = next(f for f in findings if f.kind is ModeloVerificationFindingKind.ADVISORY)
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(summary.legal_refs)
     assert _IVA_COMPENSATION_CARRY_LEGAL_REF in summary.legal_refs
+    assert tuple(summary.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS
+    assert "--binding CLAVE=VALOR" in summary.message
+    assert "unico signo igual" in summary.message
+    assert "--binding CLAVE=VALOR" in summary.next_action
+    assert "corresponding casilla" not in summary.message
 
 
 def test_non_official_local_chain_advisory_carries_dependency_legal_refs() -> None:
@@ -208,6 +245,8 @@ def test_non_official_local_chain_advisory_carries_dependency_legal_refs() -> No
             source_casilla_ids=(_M303_SOURCE_CASILLA_01,),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=("modelo-303-compensacion-pendiente-anteriores",),
+            legal_refs=_DEFAULT_DEPENDENCY_LEGAL_REFS,
+            source_refs=_DEFAULT_DEPENDENCY_SOURCE_REFS,
         ),
         non_official_local_chain_advisory=True,
     )
@@ -220,3 +259,4 @@ def test_non_official_local_chain_advisory_carries_dependency_legal_refs() -> No
     assert advisory.kind is ModeloVerificationFindingKind.ADVISORY
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(advisory.legal_refs)
     assert _IVA_COMPENSATION_CARRY_LEGAL_REF in advisory.legal_refs
+    assert tuple(advisory.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS

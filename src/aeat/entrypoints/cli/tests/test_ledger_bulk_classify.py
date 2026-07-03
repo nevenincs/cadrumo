@@ -9,9 +9,8 @@ from typing import Any
 
 import pytest
 
-from ....application.user_profile._orchestration import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
+from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -24,9 +23,11 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("default"),
+        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
     ):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
+        )
         yield
 
 
@@ -60,12 +61,38 @@ def _list_transactions() -> list[dict[str, Any]]:
 
 
 def _stored_transaction(transaction_id: str) -> Any:
+    from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ....core import resolve_active_bucket_id
-    from ....domain.transactions import TransactionCatalogueRepository
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     return TransactionCatalogueRepository(bucket_id=bucket_id).load().transactions[transaction_id]
+
+
+def _classify_with_tax_facts(transaction_id: str) -> None:
+    result = invoke_cached_cli(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "software_suscripcion",
+            "--taxable-base",
+            "82.64",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "17.36",
+            "--iva-category",
+            "domestic_general_21",
+            "--irpf-category",
+            "actividades_economicas_directa_simplificada",
+        ],
+    )
+    assert result.exit_code == 0, result.output
 
 
 def _import_many_transactions(tmp_path: Path, *, count: int) -> list[str]:
@@ -508,6 +535,59 @@ def test_classify_from_csv_persists_iva_facts(tmp_path: Path) -> None:
     assert by_id[tx2]["iva_amount"] is None
 
 
+def test_classify_from_csv_preserves_existing_tax_facts_when_columns_omitted(tmp_path: Path) -> None:
+    """Partial classification CSV rows must not clear facts they do not mention."""
+    tx1, _tx2 = _import_two_transactions(tmp_path)
+    _classify_with_tax_facts(tx1)
+
+    csv_file = tmp_path / "classification_only.csv"
+    csv_file.write_text(
+        f"transaction_id,classification,category_id\n{tx1},BUSINESS,material_oficina\n",
+        encoding="utf-8",
+    )
+
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+
+    assert result.exit_code == 0, result.output
+    row = {r["transaction_id"]: r for r in _list_transactions()}[tx1]
+    assert row["business_classification"] == "BUSINESS"
+    assert row["category_id"] == "material_oficina"
+    assert row["taxable_base"] == "82.64"
+    assert row["iva_rate"] == "0.21"
+    assert row["iva_amount"] == "17.36"
+    assert row["iva_category"] == "domestic_general_21"
+    assert row["irpf_category"] == "actividades_economicas_directa_simplificada"
+
+
+def test_classify_from_csv_blank_optional_tax_cells_preserve_existing_values(tmp_path: Path) -> None:
+    """Blank optional CSV cells behave as omitted cells, not destructive clears."""
+    tx1, _tx2 = _import_two_transactions(tmp_path)
+    _classify_with_tax_facts(tx1)
+
+    csv_file = tmp_path / "blank_tax_cells.csv"
+    csv_file.write_text(
+        "transaction_id,classification,category_id,taxable_base,iva_rate,iva_amount,iva_category,irpf_category\n"
+        f"{tx1},BUSINESS,material_oficina,,,,,\n",
+        encoding="utf-8",
+    )
+
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+
+    assert result.exit_code == 0, result.output
+    row = {r["transaction_id"]: r for r in _list_transactions()}[tx1]
+    assert row["business_classification"] == "BUSINESS"
+    assert row["category_id"] == "material_oficina"
+    assert row["taxable_base"] == "82.64"
+    assert row["iva_rate"] == "0.21"
+    assert row["iva_amount"] == "17.36"
+    assert row["iva_category"] == "domestic_general_21"
+    assert row["irpf_category"] == "actividades_economicas_directa_simplificada"
+
+
 def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> None:
     """Bulk and single-id mode persist the supplied IVA facts via the same write path.
 
@@ -583,6 +663,32 @@ def test_classify_from_csv_rejects_malformed_iva_fact(tmp_path: Path) -> None:
     assert payload["applied"] == 1, payload
     by_id = {r["transaction_id"]: r for r in _list_transactions()}
     assert by_id[tx2]["taxable_base"] == "165.29"
+
+
+def test_classify_from_csv_surplus_cells_are_row_failure(tmp_path: Path) -> None:
+    """A row with more cells than headers fails that row without aborting the batch."""
+    tx1, tx2 = _import_two_transactions(tmp_path)
+    csv_file = tmp_path / "surplus_cells.csv"
+    csv_file.write_text(
+        f"transaction_id,classification\n{tx1},BUSINESS,unexpected-extra-cell\n{tx2},BUSINESS\n",
+        encoding="utf-8",
+    )
+
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "AttributeError" not in result.output
+    assert "strip" not in result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["applied"] == 1, payload
+    assert len(payload["failures"]) == 1, payload
+    assert payload["failures"][0]["transaction_id"] == tx1, payload
+    assert "more cells than header columns" in payload["failures"][0]["reason"], payload
+    by_id = {row["transaction_id"]: row for row in _list_transactions()}
+    assert by_id[tx1]["business_classification"] == "NOT_YET_PROCESSED"
+    assert by_id[tx2]["business_classification"] == "BUSINESS"
 
 
 def test_classify_from_csv_accepts_business_pct_for_mixed(tmp_path: Path) -> None:

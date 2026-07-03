@@ -29,12 +29,13 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
-from .. import CasillaId, RegistryCatalogues, RegistryValidator, load_registry_tree, validated_casilla_id
+from .. import CasillaId, RegistryCatalogues, RegistryValidator, validated_casilla_id
 from .._bindings import _BINDING_VALIDATOR_REGISTRY, validate_binding_selector_shape
 from .._errors import RegistryValidationError
 from .._schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -49,8 +50,7 @@ _M130_RESULTADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("07", surface="
 
 def _committed_modelo_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
     """Load the committed Modelo 130 modelo plus catalogues for the build path."""
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return next(modelo for modelo in modelos if modelo.id == "130"), catalogues
+    return _committed_modelo("130")
 
 
 def _inject_binding(modelo: ModeloDefinition, replacement: DataBindingDefinition) -> ModeloDefinition:
@@ -186,6 +186,14 @@ _FAMILY_CASES: tuple[
         BindingAggregationOp.ROWS,
     ),
     (
+        "donativo_donor",
+        "donativo_donor",
+        {"fact": "row_field", "row_field": "amount_donated"},
+        BindingAggregationOp.ROWS,
+        {"fact": "row_field"},
+        BindingAggregationOp.ROWS,
+    ),
+    (
         "withholding",
         "withholding",
         {"fact": "retencion_sum", "claves": ("A",)},
@@ -278,6 +286,7 @@ def test_renta_gasto_binding_rejects_legacy_target_casilla_key() -> None:
 
 def test_dispatch_table_covers_every_validated_family() -> None:
     """Every family case names a source the dispatch table validates (no silent gap)."""
+    assert all(isinstance(key, BindingSourceKind) for key in _BINDING_VALIDATOR_REGISTRY)
     covered = {str(key) for key in _BINDING_VALIDATOR_REGISTRY}
     for case in _FAMILY_CASES:
         source = case[1]

@@ -27,27 +27,27 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import resources
+from ....core import ConvenioOverrideKind, TipoRentaIrnr
+from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
-    M210_CONVENIO_MISSING_SENTINEL,
-    M210_DEFERRED_TIPO_SENTINEL,
-    M210_NOT_YET_AUTHORED_SENTINEL,
-    CasillaId,
-    CasillaObservation,
+    ConvenioAuthority,
+    RegistryCalculationUnresolvedOutcome,
     RegistrySnapshot,
+    RegistryUnresolvedOutcomeReason,
+    VerificationPredicateDefinition,
+    build_snapshot,
+    load_convenio_authority,
+    load_registry_tree,
 )
-from ....domain.calculations.registry._schema import VerificationPredicateDefinition
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
-from ....domain.modelos._verification_report import (
-    ModeloVerificationFindingKind,
-)
-from .._actions import (
-    ModeloApplicabilityFilterError,
+from ....domain.modelos import ModeloVerificationFindingKind
+from .. import ModeloApplicabilityFilterError
+from .._m210_rate import resolve_m210_rate as _resolve_m210_rate
+from .._verification_actions import (
     _evaluate_applicability_filter,
     _evaluate_predicate_expression,
     _evaluate_verification_predicates,
-    _resolve_m210_rate,
-    _rewrite_m210_sentinels,
+    _m210_unresolved_outcome_findings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -57,7 +57,7 @@ def _irnr_profile(country_code: str) -> TaxpayerProfile:
     """Build a NON_RESIDENT_IRNR profile for a non-EU/EEA country.
 
     GB / MA / AR / ZW are all outside the EU/EEA, so each profile
-    needs a fiscal representative per Art. 47 LGT + Art. 10 TRLIRNR.
+    needs a fiscal representative per TRLIRNR Art. 10.
     """
 
     return TaxpayerProfile(
@@ -90,56 +90,62 @@ def _snapshot_with_mutated_convenio_row(
     tipo_renta: str,
     new_rate: str,
 ) -> RegistrySnapshot:
-    """Return a copy of ``base`` with the (country, tipo_renta) row's rate replaced.
+    """Return a copy of ``base`` with the (country, tipo_renta) treaty override rate replaced.
 
-    Anti-tautology proof aid: prove the helper reads the registry
-    parameter rather than a constant by mutating an existing row's
-    rate field. Frozen pydantic models are duplicated via
-    ``model_copy`` at row, parameter, revision, and snapshot levels.
+    Anti-tautology proof aid: prove the resolver reads the treaty
+    authority rather than a constant by mutating an existing override
+    row's rate field. Frozen pydantic models are duplicated via
+    ``model_copy`` at row, treaty, authority, and snapshot levels.
     """
 
-    convenio_param = next(p for p in base.revision.parameters if p.id == "m210-convenio-rates")
-    new_rows = tuple(
-        row.model_copy(update={"rate": new_rate})
-        if row.country_code == country_code and row.tipo_renta == tipo_renta
-        else row
-        for row in convenio_param.convenio_rates
+    tipo_enum = TipoRentaIrnr(tipo_renta)
+    treaty = base.convenio.treaties[country_code]
+    new_overrides = tuple(
+        row.model_copy(update={"rate": new_rate}) if row.tipo_renta is tipo_enum else row for row in treaty.overrides
     )
-    new_param = convenio_param.model_copy(update={"convenio_rates": new_rows})
-    new_parameters = tuple(new_param if p.id == "m210-convenio-rates" else p for p in base.revision.parameters)
-    new_revision = base.revision.model_copy(update={"parameters": new_parameters})
-    return base.model_copy(update={"revision": new_revision})
+    new_treaty = treaty.model_copy(update={"overrides": new_overrides})
+    new_convenio = ConvenioAuthority(treaties={**base.convenio.treaties, country_code: new_treaty})
+    return base.model_copy(update={"convenio": new_convenio})
 
 
 @pytest.fixture(scope="module")
 def m210_snapshot() -> RegistrySnapshot:
-    """Authority-resolved M210 / 2025 / evento snapshot."""
+    """M210 / 2025 / EVENT-1 snapshot carrying the cross-cutting ConvenioAuthority.
 
-    return resources().modelos.authority.snapshot("210", filing_year=2025, period="evento")
+    Built via a compile-only registry load plus M210-scoped validation so the
+    resolution regressions are independent of unrelated peer modelo churn while
+    still projecting the real treaty tree onto the snapshot.
+    """
+
+    root = bundled_path("registry", "aeat")
+    modelos, catalogues = load_registry_tree(root)
+    catalogues = catalogues.model_copy(update={"convenio": load_convenio_authority(root / "treaties")})
+    modelo = next(modelo for modelo in modelos if modelo.id == "210")
+    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="EVENT-1")
 
 
 def test_committed_convenio_rows_resolve_corrected_legal_anchors(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """Committed concrete convenio rows cite the treaty article and, where needed, domestic rate law."""
+    """Committed treaty overrides cite the treaty article and, where needed, domestic rate law."""
 
-    convenio_param = next(p for p in m210_snapshot.revision.parameters if p.id == "m210-convenio-rates")
-    rows = {(row.country_code, row.tipo_renta): row for row in convenio_param.convenio_rates}
+    convenio = m210_snapshot.convenio
 
-    gb_general = rows[("GB", "general")]
-    assert gb_general.legal_ref_anchor == "convenio-es-gb-2013:art-6"
+    gb_general = convenio.resolve("GB", TipoRentaIrnr.GENERAL, 2025)
+    assert gb_general is not None
     assert gb_general.legal_refs == (
         "convenio-es-gb-2013:art-6",
         "trlirnr-rdleg-5-2004:art-25.1.a",
     )
 
-    ma_interest = rows[("MA", "interest")]
-    assert ma_interest.legal_ref_anchor == "convenio-es-ma-1978:art-11"
+    ma_interest = convenio.resolve("MA", TipoRentaIrnr.INTEREST, 2025)
+    assert ma_interest is not None
     assert ma_interest.legal_refs == ("convenio-es-ma-1978:art-11",)
 
-    ar_pension = rows[("AR", "pension")]
-    assert ar_pension.rate == "DOMESTIC_TARIFF"
-    assert ar_pension.legal_ref_anchor == "convenio-es-ar-1992:art-19"
+    ar_pension = convenio.resolve("AR", TipoRentaIrnr.PENSION, 2025)
+    assert ar_pension is not None
+    assert ar_pension.kind is ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF
+    assert ar_pension.rate is None
     assert ar_pension.legal_refs == (
         "convenio-es-ar-1992:art-19",
         "trlirnr-rdleg-5-2004:art-25.1.b",
@@ -233,9 +239,7 @@ def test_non_convenio_country_zw_general_emits_missing_finding(
 
     Zimbabwe is not in the Convenio seed; the lookup misses on
     ``(ZW, general)`` and the helper emits a BLOCKING finding with the
-    ``m210-convenio-rate-missing`` predicate id. This branch is distinct
-    from the ``NOT_YET_AUTHORED`` branch and must surface a different
-    predicate id.
+    ``m210-convenio-rate-missing`` predicate id.
     """
 
     profile = _irnr_profile("ZW")
@@ -269,137 +273,112 @@ def test_resident_pension_uses_live_domestic_tariff_without_scalar_rate(
     assert findings == []
 
 
-def _observation(casilla_id: CasillaId, value: Decimal) -> CasillaObservation:
-    """Build a minimal CasillaObservation carrying just a casilla_id + value."""
+def _unresolved_rate_outcome(
+    reason: RegistryUnresolvedOutcomeReason,
+    *,
+    tipo_renta: str = "general",
+    country: str = "ZW",
+) -> RegistryCalculationUnresolvedOutcome:
+    """Build the typed M210 unresolved-rate outcome emitted by the formula runtime."""
 
-    return CasillaObservation(
-        casilla_id=casilla_id,
-        value=value,
+    return RegistryCalculationUnresolvedOutcome(
+        casilla_id="tipo_gravamen",
+        reason=reason,
+        formula_id="m210-tipo-gravamen-2025-resolve",
+        op="irnr_resolve_tipo_gravamen",
+        operand_refs=(
+            "tipo_renta",
+            "m210-tipo-gravamen-2025",
+            "m210-2025-profile-country-of-fiscal-residence",
+        ),
+        operand_casilla_refs=("tipo_renta",),
         legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
         source_refs=("aeat-modelo-210-procedure",),
+        context={
+            "tipo_renta": tipo_renta,
+            "country": country,
+            "filing_year": "2025",
+            "baseline_parameter": "m210-tipo-gravamen-2025",
+            "country_binding": "m210-2025-profile-country-of-fiscal-residence",
+        },
     )
 
 
-def test_rewrite_m210_sentinels_passes_through_non_sentinel_observations(
+def test_m210_unresolved_outcome_findings_passes_through_empty_outcomes(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """Observations carrying real rates / zero values pass through unchanged."""
+    """No typed unresolved outcomes means no M210 verification finding."""
 
-    observations = (
-        _observation("base_imponible", Decimal("12000")),
-        _observation("tipo_gravamen", Decimal("0.24")),
-        _observation("cuota_integra", Decimal("2880.00")),
-    )
-    rewritten, findings = _rewrite_m210_sentinels(
-        observations,
+    findings = _m210_unresolved_outcome_findings(
+        (),
         profile=_irnr_profile("GB"),
         snapshot=m210_snapshot,
         year=2025,
         tipo_renta="general",
     )
 
-    assert rewritten == observations
     assert findings == []
 
 
-def test_rewrite_m210_sentinels_replaces_not_yet_authored_with_zero_and_emits_finding(
+def test_m210_unresolved_outcome_findings_emits_convenio_missing_finding(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """A NOT_YET_AUTHORED sentinel observation gets rewritten and emits a finding.
+    """A typed convenio-missing outcome emits the missing-row finding."""
 
-    The committed AR/pension row is now authored as DOMESTIC_TARIFF, so this
-    uses a mutated snapshot to preserve the safety contract for any future
-    NOT_YET_AUTHORED convenio row.
-    """
-    snapshot = _snapshot_with_mutated_convenio_row(
-        m210_snapshot,
-        country_code="AR",
-        tipo_renta="pension",
-        new_rate="NOT_YET_AUTHORED",
-    )
-
-    observations = (
-        _observation("base_imponible", Decimal("15000")),
-        _observation("tipo_gravamen", M210_NOT_YET_AUTHORED_SENTINEL),
-        _observation("cuota_integra", Decimal("-45000.00")),
-    )
-    rewritten, findings = _rewrite_m210_sentinels(
-        observations,
-        profile=_irnr_profile("AR"),
-        snapshot=snapshot,
-        year=2025,
-        tipo_renta="pension",
-    )
-
-    rewritten_by_id = {obs.casilla_id: obs for obs in rewritten}
-    assert rewritten_by_id["tipo_gravamen"].value == Decimal("0")
-    # Non-sentinel observations preserved as-is.
-    assert rewritten_by_id["base_imponible"].value == Decimal("15000")
-    assert rewritten_by_id["cuota_integra"].value == Decimal("-45000.00")
-    assert len(findings) == 1
-    assert "m210-convenio-rate-not-yet-authored" in findings[0].message
-
-
-def test_rewrite_m210_sentinels_replaces_convenio_missing_sentinel(
-    m210_snapshot: RegistrySnapshot,
-) -> None:
-    """A CONVENIO_MISSING sentinel is rewritten and the missing-row finding is emitted."""
-
-    observations = (_observation("tipo_gravamen", M210_CONVENIO_MISSING_SENTINEL),)
-    rewritten, findings = _rewrite_m210_sentinels(
-        observations,
+    findings = _m210_unresolved_outcome_findings(
+        (_unresolved_rate_outcome(RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING),),
         profile=_irnr_profile("ZW"),
         snapshot=m210_snapshot,
         year=2025,
         tipo_renta="general",
     )
 
-    assert rewritten[0].value == Decimal("0")
     assert len(findings) == 1
     assert "m210-convenio-rate-missing" in findings[0].message
 
 
-def test_rewrite_m210_sentinels_replaces_unknown_tipo_sentinel(
+def test_m210_unresolved_outcome_findings_emits_unknown_tipo_finding(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """A DEFERRED_TIPO sentinel + unknown no-treaty type rewrites to zero and emits a finding."""
+    """A typed baseline-deferred outcome + unknown type emits a finding."""
 
-    observations = (_observation("tipo_gravamen", M210_DEFERRED_TIPO_SENTINEL),)
-    rewritten, findings = _rewrite_m210_sentinels(
-        observations,
+    findings = _m210_unresolved_outcome_findings(
+        (
+            _unresolved_rate_outcome(
+                RegistryUnresolvedOutcomeReason.M210_BASELINE_TIPO_DEFERRED,
+                tipo_renta="royalty",
+                country="",
+            ),
+        ),
         profile=_resident_profile(),
         snapshot=m210_snapshot,
         year=2025,
         tipo_renta="royalty",
     )
 
-    assert rewritten[0].value == Decimal("0")
     assert len(findings) == 1
     assert "m210-baseline-tipo-deferred" in findings[0].message
 
 
-def test_rewrite_m210_sentinels_resolves_known_rate_in_place(
+def test_m210_unresolved_outcome_findings_omits_finding_when_rate_resolves(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """A sentinel observation paired with a resolvable Convenio row rewrites to the real rate.
+    """A typed outcome paired with a resolvable Convenio row emits no finding."""
 
-    Khadija (MA / interest) has a real 0.10 Convenio row. If the
-    engine emitted a sentinel for any reason (e.g. text_inputs were
-    not yet threaded into the application calculation path), the
-    verification sweep would re-resolve and rewrite the observation
-    to the canonical rate without emitting a BLOCKING finding.
-    """
-
-    observations = (_observation("tipo_gravamen", M210_CONVENIO_MISSING_SENTINEL),)
-    rewritten, findings = _rewrite_m210_sentinels(
-        observations,
+    findings = _m210_unresolved_outcome_findings(
+        (
+            _unresolved_rate_outcome(
+                RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
+                tipo_renta="interest",
+                country="MA",
+            ),
+        ),
         profile=_irnr_profile("MA"),
         snapshot=m210_snapshot,
         year=2025,
         tipo_renta="interest",
     )
 
-    assert rewritten[0].value == Decimal("0.10")
     assert findings == []
 
 

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#aeat-cli-userdocs-hardening'
 date: '2026-06-04'
-modified: '2026-06-04'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-01-docs-educational-surface-adr]]'
@@ -14,7 +14,6 @@ related:
   - '[[2026-06-04-aeat-cli-userdocs-hardening-adr]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-research]]'
 ---
-
 
 # `aeat-cli-userdocs-hardening` `AEAT CLI user documentation handbook hardening` plan
 

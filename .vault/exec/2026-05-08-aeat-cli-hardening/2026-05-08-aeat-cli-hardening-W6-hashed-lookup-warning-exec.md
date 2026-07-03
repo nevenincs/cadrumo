@@ -3,12 +3,10 @@ tags:
   - '#exec'
   - '#aeat-cli-hardening'
 date: '2026-05-08'
-modified: '2026-05-08'
+modified: '2026-06-30'
 related:
   - '[[2026-05-08-aeat-cli-hardening-plan]]'
 ---
-
-
 
 # `aeat-cli-hardening` `W6 Logging` `Hashed Lookup Warning`
 

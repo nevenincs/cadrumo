@@ -2,14 +2,17 @@
 
 Review rows are filtered from a loaded :class:`TransactionCatalogue`;
 :class:`BucketEventHistoryRepository` supplies event-derived review context.
+The public projection returns
+:class:`~aeat.application.ledger.LedgerReviewQueryResult` for a
+:class:`~aeat.application.ledger.LedgerReviewQuery`.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
 
-from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -27,7 +30,7 @@ def project_ledger_review_query(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
     transaction_payload_builder: Callable[[Transaction], LedgerTransactionPayload],
 ) -> LedgerReviewQueryResult:
-    """Return a :class:`LedgerReviewQueryResult` for the already loaded transaction catalogue.
+    """Return a :class:`~aeat.application.ledger.LedgerReviewQueryResult`.
 
     The supplied :class:`TransactionCatalogue` provides the row set and lookup
     context for period, status, and classification filters.
@@ -60,9 +63,11 @@ def project_ledger_review_query(
 
 
 def ledger_transaction_review_status(transaction: Transaction) -> LedgerReviewStatus:
-    """Return the :class:`LedgerReviewStatus` for one bucket-local transaction fact."""
+    """Return the :class:`~aeat.application.review.LedgerReviewStatus` for one bucket-local transaction fact."""
     if transaction.business_classification is BusinessClassification.SKIPPED_BY_RULE:
         return LedgerReviewStatus.SKIPPED
+    if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+        return LedgerReviewStatus.EXCLUDED
     if transaction.business_classification in {
         BusinessClassification.BUSINESS,
         BusinessClassification.PERSONAL,
@@ -191,6 +196,6 @@ def _bucket_event_repository(
 ) -> BucketEventHistoryRepositoryProtocol:
     if repository is not None:
         return repository
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
 
     return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))

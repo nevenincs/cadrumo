@@ -17,14 +17,12 @@ legal_refs = ["rd-439-2007:art-110"]
 # modelled in the registry).
 #
 # Legal attribution:
-# - RD 439/2007 art. 110.1.b establishes the datos-base determination
-#   obligation: "el 4 por ciento de los rendimientos netos resultantes de la
-#   aplicación de dicho método en función de los datos-base del primer día del
-#   año". This is the reglamentary basis for C02 being determined from C01.
+# - RD 439/2007 art. 110.1.b establishes both the datos-base determination
+#   rule and the objective-estimation 4 / 3 / 2 por ciento scale keyed on
+#   personal asalariado at the datos-base reference date.
 # - The official M131 instructions (aeat-modelo-131-instructions, Casilla 02)
-#   establish the C02 percentage scale for estimación objetiva datos-base
-#   activities: 4 / 3 / 2 por 100 keyed on personal asalariado at the
-#   datos-base reference date. The 2 por 100 is the scale minimum.
+#   mirror that statutory scale for the filing surface. The 2 por 100 is the
+#   scale minimum.
 # - RD 439/2007 art. 110.4 grants the right to apply higher percentages;
 #   the instructions confirm "no se permiten porcentajes inferiores" to the
 #   scale minimums.

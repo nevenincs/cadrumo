@@ -20,20 +20,24 @@ from ...core.external_constants import (
     DEFAULT_CURRENCY,
 )
 from ...core.identity import BucketId, TransactionId
-from ...domain.iva._schema import EUMemberState, IvaCategory
-from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
+from ...domain.iva import (
+    EUMemberState,
+    IvaCategory,
+)
+from ...domain.modelos import (
+    CalculationRevisionId,
+    WorkUnitId,
+)
 from ...domain.transactions import (
     BucketTransactionRef,
     BusinessClassification,
     ImportSummary,
     Transaction,
     TransactionDirection,
-    TransactionValidationError,
-)
-from ...domain.transactions._models import (
     TransactionEditLineageEntry,
     TransactionEvidenceProvenanceEntry,
     TransactionLifecycleLineageEntry,
+    TransactionValidationError,
 )
 from ..export import ExportSerializationFormat
 from ..review import LedgerReviewStatus
@@ -324,6 +328,12 @@ class LedgerTransactionPayload(BaseModel):
     notes: str = ""
     lifecycle_state: str = Field(min_length=1)
     classified_by: str = Field(min_length=1)
+    # Decision-provenance fields (#231): the "why" behind the active
+    # classification decision, surfaced alongside `classified_by` so an
+    # operator can answer "why was this classified as X" from one read.
+    classified_at: str | None = None
+    classification_reason: str = ""
+    classification_confidence: str | None = None
     source_jurisdiction: str | None = None
     # FX provenance for foreign-currency rows (ledger-fx-conversion ADR): the
     # EUR-equivalent and the applied CCY->EUR rate, so list/review/export surface
@@ -608,10 +618,10 @@ class LedgerStatusReport(BaseModel):
     bucket_id: BucketId
     # Money roll-up over active business/mixed rows (period-scoped when --period
     # is given): the readiness/year-end money picture (gross EUR, not a registry
-    # calculation). Default "0.00" for legacy reports.
-    income_total: str = "0.00"
-    expense_total: str = "0.00"
-    net_total: str = "0.00"
+    # calculation).
+    business_income_total: str = "0.00"
+    business_expense_total: str = "0.00"
+    business_net_total: str = "0.00"
     total_count: int = Field(ge=0)
     active_count: int = Field(ge=0)
     archived_count: int = Field(ge=0)
@@ -826,6 +836,8 @@ class LedgerExportRow(BaseModel):
     taxable_base: str = ""
     iva_rate: str = ""
     iva_amount: str = ""
+    iva_category: str = ""
+    counterparty_eu_member_state: str = ""
     irpf_category: str = ""
     usage_ratio_id: str = ""
     prorrata_reference: str = ""

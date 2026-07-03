@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#codebase-performance-optimization'
 date: '2026-06-09'
-modified: '2026-06-09'
+modified: '2026-06-30'
 step_id: 'S05'
 related:
   - "[[2026-06-09-codebase-performance-optimization-plan]]"
 ---
-
-
-
 
 # Add lru_cache to expression ref collectors for FormulaExpression
 
@@ -27,4 +24,3 @@ related:
 - Done. The AST reference collectors are cached, drastically reducing graph traversal overhead for complex formulas.
 
 ## Notes
-

@@ -6,13 +6,32 @@ expression = { op = "add", args = [
     { casilla_id = "iva.anual.repercutido.reducido" },
     { casilla_id = "iva.anual.repercutido.super-reducido" },
     { casilla_id = "iva.anual.autorepercutido.intracomunitaria" },
+    { casilla_id = "iva.anual.repercutido.recargo.general" },
+    { casilla_id = "iva.anual.repercutido.recargo.reducido" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+# The recargo de equivalencia cuota tiers (LIVA art. 161) were omitted from
+# this aggregate, mirroring the M303 casilla-27 defect (see the comment on
+# modelo-303-iva-cuota-devengada-total in the M303 2023-y-siguientes
+# revision.toml): a supplier that charges recargo to a recargo-de-equivalencia
+# customer had its recargo cuota silently excluded from the annual "Total
+# cuota devengada", and therefore from iva.anual.resultado-regimen-general and
+# from the modelo-390-cuota-devengada-total-equals-reconciliacion-303
+# BLOCKING_RULE (which compares this total against the sum of the four filed
+# Modelo 303 quarters' casilla 27, which DOES include recargo per the M303
+# fix — a mismatch would have blocked every recargo-de-equivalencia filer's
+# resumen anual). Grounded and cross-validated against the AEAT Manual
+# practico IVA 2024 Cap. 9 "La declaracion-resumen anual. Modelo 390" worked
+# example (pag. 293-302), summing its own four printed quarterly "TOTAL CUOTA
+# DEVENGADA" solucion lines (1T: 23.088, 2T: 21.624, 3T: 22.290, 4T: 21.414 =
+# 88.416 anual), each of which itself sums its own printed "Recargo de
+# equivalencia" line (1T: 1.248, 2T: 624, 3T: 1.248, 4T: 624 = 3.744 anual) —
+# see test_m390_2024_annual_manual_worked_example.py.
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".formulas.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".formulas]]
@@ -25,10 +44,10 @@ expression = { op = "add", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".formulas.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".formulas]]
@@ -40,9 +59,9 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".formulas.source_citations]]
-source_ref = "boe-modelo-390-2009-form"
+source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 

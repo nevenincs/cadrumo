@@ -212,6 +212,9 @@ adapters:
           content_hash_mismatch: Local storage content hash mismatch; payload integrity
             check failed.
           namespace_blank: Local storage namespace must not be blank.
+          namespace_create_path_too_long: 'Local storage could not create namespace
+            {namespace}: the path exceeds the Windows path-length limit. Move AEAT_LOCAL_STORAGE_ROOT
+            to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
           namespace_create_permission: Local storage could not create namespace {namespace}.
           namespace_forbidden_characters: Local storage namespace {namespace} contains
             forbidden path characters.
@@ -224,12 +227,18 @@ adapters:
             namespace {namespace}.
           payload_commit_failed: Local storage could not commit object payload atomically.
           payload_read_permission: Local storage could not read object payload.
+          payload_write_path_too_long: 'Local storage could not write the object payload:
+            the path exceeds the Windows path-length limit. Move AEAT_LOCAL_STORAGE_ROOT
+            to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
           payload_write_permission: Local storage could not write object payload.
           sidecar_malformed: Local storage sidecar {sidecar_path} is unreadable or
             malformed.
           sidecar_missing: Local storage object sidecar is missing.
           sidecar_not_object: Local storage sidecar {sidecar_path} is not a JSON object.
           sidecar_write_failed: Local storage could not write the object sidecar.
+          sidecar_write_path_too_long: 'Local storage could not write the object sidecar:
+            the path exceeds the Windows path-length limit. Move AEAT_LOCAL_STORAGE_ROOT
+            to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
   persistence:
     profile:
       assets:
@@ -238,6 +247,12 @@ adapters:
           load_amortizacion_ledger_failed: Unable to load the encrypted amortization
             ledger.
           load_asset_ledger_failed: Unable to load the encrypted asset ledger.
+      bienes_inversion:
+        errors:
+          load_register_failed: Unable to load the encrypted capital-goods IVA regularisation
+            register.
+          record_already_exists: That capital good already exists in the encrypted
+            regularisation register.
       inventory:
         errors:
           inventory_ledger_already_exists: That inventory ledger already exists.
@@ -287,6 +302,10 @@ aggregation:
         aggregation bucket.
       candidate_outside_period: 'Internal error: IVA candidate falls outside the aggregation
         period.'
+      domestic_counterparty_on_intra_community_transaction: Spanish counterparties
+        are not valid for intra-community transactions.
+      eu_member_state_on_export_transaction: Export or export-assimilated operations
+        must not carry an EU member state; got %{member_state}.
       unsupported_iva_category: 'Internal error: unsupported IVA category for aggregation.'
   modelo_bindings:
     errors:
@@ -294,13 +313,6 @@ aggregation:
   per_modelo:
     errors:
       unsupported_modelo: Unsupported modelo for per-modelo aggregation
-  prorrata:
-    errors:
-      current_year_not_after_prior: current_year must be strictly greater than prior_year.
-      invalid_provisional_period: Provisional period must be a quarterly (Qn) or monthly
-        (Mnn) token.
-      year_out_of_range: Prorrata aggregation year is outside the supported range
-        2000-2100.
   renta_ledger:
     errors:
       annual_period_required: Annual period is required for Renta ledger aggregation.
@@ -338,6 +350,8 @@ aggregation:
   source_mesh:
     errors:
       ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
+      binding_source_mismatch: source_kind and binding_source refer to different binding-source
+        families.
       duplicate_binding_owner: 'Internal error: duplicate binding owner in source
         mesh.'
       duplicate_bound_casilla_owner: 'Internal error: duplicate bound-casilla owner
@@ -347,6 +361,8 @@ aggregation:
       owned_sources_blank: Source mesh owned sources must not contain blank source
         kinds.
       owned_sources_duplicate: Source mesh owned sources must be unique.
+      relation_provenance_incomplete: Relation provenance must include source modelo,
+        filing year, periods, casillas, legal refs, and source refs.
       source_transaction_ids_blank: Source mesh transaction ids must not contain blanks.
       source_transaction_ids_duplicate: Source mesh transaction ids must be unique.
       unresolved_binding_ids_blank: aggregation.source_mesh.errors.unresolved_binding_ids_blank
@@ -417,6 +433,10 @@ application:
         certificate_file_unresolved: The certificate path '%{certificate_path}' does
           not resolve to an existing file. Run `aeat config auth configure --provider
           certificate --file PATH` with a path to your PKCS#12 (.p12/.pfx) bundle.
+        certificate_source_not_found: Certificate source '%{name}' is not registered.
+          Run `aeat config auth certificate list` to see registered sources, or `aeat
+          config auth certificate register --name %{name} --file PATH` to register
+          it.
         dangling_active_profile: Active profile pointer '%{active_profile}' does not
           resolve to a registered profile bucket. Run aeat config profile list to
           inspect registered profiles, then aeat config switch NAME or aeat config
@@ -499,6 +519,9 @@ application:
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
+      import_missing_filing_baseline: 'The bucket archive profile is missing filing
+        identity fields: %{missing_flags}. Repair the source profile and export it
+        again.'
       import_payload_invalid: application.bucket_maintenance.errors.import_payload_invalid
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
@@ -569,7 +592,6 @@ application:
     importing:
       errors:
         import_file_read_failed: 'The invoice import file could not be read: %{path_name}.'
-        invalid_base_total: 'The invoice base_total value is not a decimal: %{base_total}.'
         invalid_json: The invoice JSON payload is not valid JSON at line %{line},
           column %{column}.
         invalid_json_shape: The invoice JSON payload must be an object or a list of
@@ -593,6 +615,9 @@ application:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
         evidence or attachment ids.
+      idempotency_key_conflict: The idempotency key already identifies a stored transaction
+        with different details. Use a new idempotency key for a different movement,
+        or omit the key to append a deliberate duplicate.
       purchase_evidence_already_set: Ledger transaction already has a purchase_invoice_evidence_id;
         remove or replace through the attachments workflow.
   live:
@@ -651,6 +676,14 @@ application:
         unsupported_modelo: Borrador binding is not supported for modelo %{modelo};
           the registry manifest must declare the borrador capability.
     errors:
+      amendment_complementaria_liability_decrease: A complementaria for modelo {modelo}
+        filing year {filing_year} period {period} would lower the declared result
+        from {baseline_result} to {corrected_result}. Before the autoliquidación rectificativa
+        unification, a self-filed complementaria cannot lawfully decrease liability;
+        use the solicitud de rectificación procedure instead.
+      amendment_kind_not_permitted: 'The requested amendment kind {requested_kind}
+        is not legally available for modelo {modelo} filing year {filing_year} period
+        {period}. Accepted kinds for this period: {accepted_kinds}.'
       amendment_registry_root_missing: Registry root %{registry_root} is missing;
         amendment overrides cannot be validated.
       amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -670,6 +703,10 @@ application:
       calculate_binding_unknown: '--binding %{key} does not match any binding id in
         this revision. Accepted binding ids: %{accepted}. Use `aeat app modelo bindings
         list <MODELO>` to list valid binding ids.'
+      calculate_boolean_binding_encoding_invalid: 'Binding value for %{key} is a decimal-encoded
+        boolean flag and must be one of: %{accepted}. Received %{value}. Accepted
+        encoding: %{mapping}. Run ''aeat app modelo bindings list <MODELO>'' to see
+        each binding''s decimal encoding.'
       calculate_casilla_noncanonical_refused: '--casilla %{key} is not a canonical
         casilla.id or is ambiguous. Use the exact canonical casilla.id: %{accepted}.'
       calculate_casilla_unknown: --casilla %{key} is not a canonical casilla.id in
@@ -677,6 +714,12 @@ application:
         values.
       calculate_decimal_input_invalid: '%{flag} value for %{key} is not a decimal:
         %{value}'
+      calculate_detail_casilla_unsupported: Casilla %{key} names a Modelo 180 perceptor/property
+        detail field, not a scalar decimal casilla input. The local work --casilla
+        channel only accepts scalar decimal casillas; Modelo 180 perceptor/property
+        detail rows are not supported on the public --row surface yet. Use aeat app
+        modelo aggregate --modelo 180 --retencion-observation for the supported annual
+        perceptor count/base/retenciones source.
       calculate_m184_share_sum_invalid: Modelo 184 member-row share percentages must
         sum to exactly 100%; got %{total} across %{count} rows.
       calculate_m347_threshold_not_met: Modelo 347 counterparty %{nif} total %{total}
@@ -693,6 +736,8 @@ application:
         casilla.id safely.
       calculate_semantic_role_missing: The modelo revision has no casilla with semantic
         role %{semantic_role}.
+      calculate_text_input_empty: The --casilla value targets a text casilla and must
+        be a non-empty string.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
         modelo calculation cannot continue.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -704,6 +749,8 @@ application:
         and cannot be overridden by external binding. Affected casillas: %{computed}.'
       cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete
         for modelo {modelo} {filing_year} {period}; {finding_count} finding(s) remain.
+      deductible_vat_evidence_missing: Deductible IVA ledger rows require linked purchase
+        invoice evidence before this action.
       export_cross_bucket_refused: The addressed revision belongs to a bucket other
         than the active profile bucket. Switch profile before exporting.
       export_draft_approval_failed: Could not approve the draft for calculation revision
@@ -725,6 +772,10 @@ application:
         which cannot be mapped to a registry filing period.
       export_revision_state_refused: Calculation revision %{calculation_revision_id}
         is not verified-complete or filed and cannot be exported.
+      export_unsupported: Modelo %{modelo} cannot be exported to fichero-BOE because
+        %{reason}. Calculation, verification, and local filing records may still exist,
+        but this command cannot produce an AEAT upload file for this modelo and does
+        not certify BOE/export correctness.
       external_filing_evidence_reference_blank: External-filing import requires a
         non-empty evidence_reference_id.
       external_filing_no_casilla_values: External-filing import requires at least
@@ -782,15 +833,20 @@ application:
         %{period}; complete these profile facts first: %{missing}.'
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
-      reconcile_declaration_unsupported: Declaration-PDF reconcile source is not yet
-        implemented; reconcile a downloaded justificante via aeat app modelo reconcile
-        file until the declaration parser lands.
+      reconcile_declaration_unsupported: Declaration-PDF casilla-level reconcile is
+        not yet enrolled for this modelo; reconcile a downloaded justificante via
+        aeat app modelo reconcile file, or wait for this modelo to be enrolled.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a work unit.
       refund_election_not_eligible: Refund (devolver) was elected for Modelo %{modelo}
         %{filing_year} %{period}, but a refund is only available in the year's last
         filing period. Carry the credit forward (compensar), or make the election
         in the last period.
+      review_package_generic: An error occurred while building the review package.
+      review_package_integrity: 'Review package %{package_path} failed checksum verification:
+        %{detail}.'
+      review_package_revision_state: 'Calculation revision %{calculation_revision_id}
+        is in state %{state} and cannot be packaged for review; eligible states: %{eligible_states}.'
       revision_pick_explicit_id_required: Explicit revision picks require calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id is only
         valid with the explicit revision selector.
@@ -813,6 +869,12 @@ application:
         registry revision %{work_unit_revision}, but the law-determined revision for
         modelo %{modelo} %{filing_year} %{period} is now %{law_revision}. Re-create
         the work unit to bind it to the current revision.
+      workflow_gate_no_pending_obligation: 'No pending filing obligation for this
+        profile at the current date (the AEAT filing-obligation window is not open).
+        Filing-to-fichero does not require this step: export the verified-complete
+        revision with ''aeat app modelo export''; that is the local finish line. ''work
+        file'' is the optional internal mark-as-filed step for when the obligation
+        window is open.'
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
     findings:
@@ -829,15 +891,30 @@ application:
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
+      cross_period_modelo_not_applicable:
+        message: 'Cross-period dependencies on source modelos the taxpayer does not
+          file were scoped out as not applicable: {modelos}. For suffered retenciones,
+          enter the income-certificate amount with --binding KEY=VALUE, not --casilla.
+          KEY=VALUE means the binding id on the left of one equals sign and the value
+          on the right. For mutually exclusive pagos fraccionados, confirm the activity-estimation
+          regime on the profile.'
+        next_action: 'Use `aeat app modelo bindings list --missing` to identify the
+          retenciones binding. Supply the certificate amount with --binding KEY=VALUE
+          where applicable: put the binding id on the left of one equals sign and
+          the amount on the right. Confirm the profile''s IRPF estimation regime if
+          a mutually exclusive pago-fraccionado modelo was scoped out.'
       cross_period_non_official_local_chain:
         message: 'cross-period carry used a same-year locally-filed prior period with
           no external AEAT evidence: modelo=%{source_modelo} year=%{filing_year} period=%{period}
           origin=%{origin}. The within-year chain is admitted for local export, but
           the carried value is locally evidenced (app_filing), not AEAT-evidenced;
           file every period with AEAT externally.'
-        next_action: Export and file each period with AEAT externally, then import
-          the official justificante/CSV/live evidence to upgrade the local chain when
-          available.
+        next_action: Export and file each period with AEAT externally, then upgrade
+          the local chain with official evidence; use `aeat app live justificante
+          pull` when live access is available, or `aeat app modelo filing-record import
+          WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id CSV --set
+          CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
+          for evidence you already hold.
       dt12a_reduccion_next_action: Supply --rescate-plan-pensiones-capital IMPORTE
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
         IMPORTE to aeat app modelo work calculate to auto-inject the DT 12a reduccion
@@ -857,11 +934,6 @@ application:
         next_action: Author Convenio España-{cc} rate row in m210-convenio-rates for
           tipo_renta={tipo_renta}, or unset profile.convenio_doble_imposicion_country
           to fall back to the TRLIRNR Art 25 baseline.
-      m210_convenio_rate_not_yet_authored:
-        next_action: The Convenio España-{cc} rate row for tipo_renta={tipo_renta}
-          carries the NOT_YET_AUTHORED placeholder per ADR D2.4. Author the verified
-          BOE corpus rate before this filing can complete; file a corpus-blocked follow-up
-          task referencing the Convenio article number.
       missing_required_casilla: Required casilla %{casilla_id} is not present in the
         calculation revision inputs.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: The
@@ -874,9 +946,11 @@ application:
         (C595) is zero; confirm this is a legitimate zero (base at or below the personal
         and family minimum, or fully offset by deductions) rather than an unmodelled
         gap.
-      modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt from
-        filing M130 this quarter because accumulated withholdings and payments on
-        account for the year represent 70% or more of gross income.'
+      modelo_123_2024_base_total_implica_retenciones_total: Base total is positive
+        but total retenciones is zero; review the withholding determination.
+      modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: exempt from filing
+        M130 this quarter because accumulated withholdings and payments on account
+        for the year represent 70% or more of gross income.'
       modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: Net
         income from datos-base activities (C01) is positive but the fractional payment
         for datos-base (C02) is zero; check casilla 02 using the applicable Orden
@@ -893,6 +967,8 @@ application:
         income from datos-base activities (C01) is positive but the fractional payment
         for datos-base (C02) is zero; check casilla 02 using the applicable Orden
         de módulos rate (minimum 2 per cent).
+      modelo_151_base_liquidable_implica_cuota_integra: Base liquidable general is
+        positive but cuota íntegra general is zero; review the cuota íntegra determination.
       modelo_200_base_imponible_determinada_cuando_resultado_positivo: The accounting
         result is positive but the taxable base (C552) is zero; review the taxable
         base determination.
@@ -900,6 +976,15 @@ application:
         does not reconcile to the roll-forward (opening C670 minus applied C547 plus
         the BIN generated this period); review the carryforward so future-year compensation
         is not mis-stated.
+      modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: Resultado
+        contable is positive but the base imponible previa is zero; review the base
+        imponible determination.
+      modelo_210_2025_inmobiliaria_implica_base_imponible: Tipo de renta is inmobiliaria
+        but the base imponible is zero; review the imputed-rent base imponible determination
+        (valor catastral, coeficiente, días de imputación).
+      modelo_210_2025_rendimientos_integros_implica_base_imponible: Gross income (rendimientos
+        íntegros) is positive but the base imponible is zero; review the base imponible
+        determination.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: Total
         IVA deducible (cuota-deducible-total) is positive, but every official numbered
         box on the Diseño de Registros (29 interiores corrientes, 33 importaciones,
@@ -912,6 +997,8 @@ application:
         13 inversion del sujeto pasivo) is still zero. The calculate path does not
         auto-populate the official numbered boxes; transcribe the cuota into the applicable
         boxes before filing.
+      modelo_714_cuota_integra_implica_total_cuota_integra: Cuota íntegra is positive
+        but total cuota íntegra is zero; review the total cuota íntegra transcription.
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
       representante_fiscal_required:
@@ -952,6 +1039,7 @@ application:
         live portals list' to see available portals.
   registry:
     errors:
+      citation_not_found: No registry citation matched the requested legal reference.
       invalid_manual_id: Registry manual must be one of {allowed_manual_ids}; got
         {manual_id}.
       invalid_manual_rule_kind: Registry manual rule kind must be one of {allowed_rule_kinds};
@@ -964,6 +1052,8 @@ application:
         {year} {part}.
       manual_section_requires_structure: Manual section requires extracted structure
         for {manual_key}.
+      no_revision_for_diff_year: 'No registry revision of {modelo} covers filing year
+        {filing_year}. Declared revisions: {available_revisions}.'
   repair_integrity:
     errors:
       conflicting_list_filters: 'Repair list filters are mutually exclusive: {filters}.
@@ -1106,8 +1196,18 @@ application:
       registry_policy_invalid: Registry verification policy could not be loaded.
       registry_snapshot_invalid: The registry snapshot could not be loaded for declaration
         verification.
+      registry_snapshot_ref_mismatch: 'Registry snapshot for modelo %{modelo} %{period}
+        does not match the stamped declaration reference: observed %{observed_ref},
+        resolved %{resolved_ref}.'
   wizard:
     errors:
+      command_input_invalid: 'The profile details are invalid: %{details}'
+      command_input_invalid_fallback: one or more profile fields failed validation
+      create_missing_filing_baseline: 'Profile creation is missing filing identity
+        details. Add these flags and run the command again: %{missing_flags}.'
+      edit_missing_filing_baseline: 'This profile edit would leave filing identity
+        details incomplete. Add these flags to the same command and run it again:
+        %{missing_flags}.'
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
         requires supplied_question_ids — edit is a patch, not a full rewrite.
       persist_patch_unknown_question_id: Wizard patch references an unknown question
@@ -1117,13 +1217,12 @@ application:
       quiet_missing_flags: 'This --quiet run is missing required details. Add these
         flags and run the command again: %{missing_flags}. Or run it without --quiet
         from an interactive terminal to use the guided setup.'
-      create_missing_filing_baseline: 'Profile creation is missing filing identity
-        details. Add these flags and run the command again: %{missing_flags}.'
-      edit_missing_filing_baseline: 'This profile edit would leave filing identity
-        details incomplete. Add these flags to the same command and run it again:
-        %{missing_flags}.'
     next_hint:
       modelo_work_create: aeat app modelo work create
+    notices:
+      ccaa_defaulted: No comunidad autónoma was chosen, so %{ccaa} was assumed for
+        this profile. Autonomic deductions and the autonomic part of the tax scale
+        are calculated for %{ccaa}. Set --tax-residence-ccaa to use a different comunidad.
     output_labels:
       active_profile: Active profile
       next: Next
@@ -1195,8 +1294,41 @@ categories:
   test_profile:
     display_label_851219: Display label 851219
 cli:
+  agent:
+    app_help: Materialise the operator agent harness (rules, personas, skills) as
+      a Claude-native .claude workspace for an agent runtime.
+    materialise:
+      layout_help: 'Materialisation layout: ''workspace'' for a Claude-native .claude
+        project mirror, or ''plugin'' for a one-click Claude plugin.'
+      output_help: Directory to write the Claude-native operator workspace (.claude/
+        plus a CLAUDE.md) into.
+      plugin_summary: 'Wrote Claude plugin to {path}: {skills} skills, {agents} agents
+        ({name} v{version}).'
+      summary: 'Wrote operator workspace to {path}: {rules} rules, {personas} personas,
+        {skills} skills.'
   app:
     ledger:
+      bienes_inversion:
+        acquisition_year_help: Year the good was acquired.
+        art108_help: Whether the good qualifies as a bien de inversión under LIVA
+          art. 108.
+        asset_ref_help: Optional cross-reference to an AssetRecord identifier.
+        cuota_soportada_help: Total input IVA borne on acquisition (positive).
+        declare_help: Declare one capital good tracked for IVA regularización.
+        description_help: Human description of the good.
+        disposal_regime_help: Disposal regime (sujeta_no_exenta or exenta_o_no_sujeta);
+          required with --disposal-year.
+        disposal_requires_both: --disposal-year and --disposal-regime must be supplied
+          together.
+        disposal_year_help: Optional art-110 disposal year.
+        group_help: Capital-goods IVA deduction regularización register (LIVA arts.
+          107-110).
+        identifier_help: Stable register identifier.
+        kind_help: 'Regularisation window: mueble (4yr) or inmueble (9yr).'
+        list_help: List every tracked capital good on the active profile register.
+        prorrata_inicial_help: Definitive deduction percentage of the acquisition
+          year (0-100).
+        unknown_disposal_regime: 'Unknown disposal regime {regime!r}; accepted: {accepted}'
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
         evidence_id_help: Evidence id (exact match)
@@ -1244,8 +1376,6 @@ cli:
           group_help: Reconciliation catalogue invoices that link to transactions.
           invoice_id_help: Catalogue invoice id (or unambiguous prefix).
           list_help: List reconciliation catalogue invoices.
-          operation_type_unsupported: '--operation-type {value} cannot feed Modelo
-            349 from the catalogue yet; supported: {supported}.'
           remove_help: Delete one reconciliation catalogue invoice.
           view_help: Show one reconciliation catalogue invoice by id or unambiguous
             prefix.
@@ -1421,9 +1551,13 @@ cli:
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: 'Aggregation period token: 0A annual, 1T-4T quarters, 01-12 months.'
-        retencion_observation_help: JSON RetencionObservation object. The source_kind
+        retencion_observation_help: 'JSON RetencionObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
-          or collectible_invoice. Repeat for multiple observations.
+          or collectible_invoice. For Modelo 111 trabajo, scheme rendimientos_trabajo
+          is the empleado progressive rate (LIRPF art. 101.1) and rendimientos_trabajo_administrador
+          is the fixed administrador/consejero rate (LIRPF art. 101.2: 35 percent,
+          or 19 percent when the entity''s net turnover is below 100,000 EUR). Repeat
+          for multiple observations.'
         withholding_observation_help: Per-perceptor-clave withholding observation
           (JSON) for the Modelo 190 percepciones count; repeatable.
       aggregate_help: Run the backend per-modelo aggregation service from explicit
@@ -1455,13 +1589,25 @@ cli:
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
         period_help: 'Period token: 0A annual, 1T-4T quarters, 01-12 months; for censo
           modelos (036) use alta, modificacion, or baja.'
+        relation_input_channel: "%{binding_id}\tfed by relation %{relation_id}\tuse\
+          \ --relation %{relation_id}=VALUE"
+        relation_input_guidance: Some bindings below are fed by registry relations
+          (cross-modelo or cross-period fold-ins), not direct --binding values. Supply
+          each with --relation RELATION_ID=VALUE before calculating.
         resolve_help: Resolve bindings and show their values with optional temporary
           overrides, without mutating state
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
           ({period}): {suggestion}.'
+        unscoped_revision_suggestion: Before copying ids into work calculate, rerun
+          with --modelo MODELO --year YEAR --period PERIOD for the target work unit.
+        unscoped_revision_warning: The binding list is not scoped by %{missing_filters};
+          it may include binding ids from a revision that does not match the work
+          unit used by work calculate.
         year_help: Tax year of the modelo (e.g. 2026)
-        m200_m202_relation_guidance: 'Modelo 200 M202 pagos fraccionados feed DP200014B:00611 through --relation values, not --binding target binding ids. The M202 40.3 casilla 34 and 40.2 casilla 03 channels are mutually exclusive per filing; when entering manual relation values, put the annual sum on the elected modality and 0 on the unused modality.'
-        m200_m202_relation_channel: "%{relation_id}\tM202 %{modality} casilla %{casilla}\tuse --relation %{relation_id}=VALUE\tpaired target binding %{binding_id}"
+      casilla:
+        casilla_help: Casilla id or printed casilla number to describe (e.g. 0596).
+        help: Show the label, legal grounding, input kind, and formula for one casilla
+          on the resolved registry snapshot.
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         explain_help: Include localized help text in the text output.
@@ -1469,6 +1615,8 @@ cli:
         help: List all casillas (fields/boxes) defined for a specific modelo revision.
         input_kind_help: Filter casillas by input kind (manual, bound, computed, informational)
         modelo_help: Tax form code (e.g. 303, 130, 100)
+        number_help: Filter casillas by printed casilla number or canonical id (e.g.
+          0596).
         period_help: 'Period token used to resolve the modelo revision: 0A annual,
           1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion,
           or baja.'
@@ -1514,7 +1662,9 @@ cli:
         errors:
           output_required: Supply --output PATH for the fichero-BOE artefact.
         help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
-          fichero-BOE file. Local-only; never contacts AEAT.
+          fichero-BOE file. Local-only; never contacts AEAT, and the generated file
+          is not official AEAT filing evidence. Use AEAT justificante, declaration
+          consultation, or CSV cotejo evidence after filing.
         output_help: Path to write the fichero-BOE artefact to.
         revision_help: Calculation revision id to export; defaults to the work unit's
           most recent verified-complete or filed revision.
@@ -1557,7 +1707,8 @@ cli:
       iva_wallet:
         as_of_year_help: Reference year for carry-forward age and expiry calculations.
         balance_help: Show aggregated IVA compensation carry-forward balance computed
-          from local Modelo 303 history. Reports total_balance, lot_count, and next_expiry_year.
+          from local Modelo 303 history. Reports total_balance, active_balance, expired_balance,
+          lot_count, and next_expiry_year.
         correct_amount_help: Corrected carry-forward balance amount in EUR (decimal,
           e.g. 1200.50).
         correct_confirm_help: Required confirmation flag. Acknowledge that this overwrites
@@ -1625,6 +1776,8 @@ cli:
         seed_invalid_amount: The seed amount must be a valid, non-negative decimal.
         seed_period_help: 'Period of the Modelo 303 filing: 1T-4T quarters (e.g. 4T).'
       list:
+        domain_help: Filter the modelo catalogue to a single tax family (e.g. iva,
+          irpf, is)
         help: List all official tax forms (modelos) registered in the system.
         year_help: Filter the modelo catalogue to a single fiscal year
       m036:
@@ -1687,6 +1840,41 @@ cli:
         pull_help: Pull the justificante for a work unit from AEAT and reconcile against
           it. Contacts AEAT (read-only).
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
+      requires:
+        help: 'Show the data-inventory checklist for one modelo and period: which
+          casillas must be hand-entered, which are optional, which are populated automatically
+          from the ledger, and which come from the active profile.'
+        missing_profile_coefficient: 'The active profile has not set the following
+          coefficient(s) needed for this modelo: %{missing}.'
+        modelo_help: Tax form code (e.g. 303, 130, 100).
+        no_active_profile: No active profile is set, so profile-dependent coefficients
+          (e.g. home-office usage ratio) could not be checked for gaps.
+        period_help: 'Period token used to resolve the modelo revision: 0A annual,
+          1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion,
+          or baja.'
+        section_ledger: ledger_derivable
+        section_optional: optional_manual
+        section_profile: profile_derivable
+        section_required: required_manual
+      review_package:
+        actor_help: Operator label recorded into the package descriptor and the underlying
+          export event.
+        build_help: Assemble a shareable, checksum-verifiable review package (fichero-BOE
+          draft, revision provenance, and bundled ledger evidence) for accountant
+          handoff. Local-only; never contacts AEAT.
+        errors:
+          output_required: Supply --output PATH for the review package ZIP.
+          package_not_found: Review package not found at {package_path}.
+        group_help: Build a shareable review package and verify its integrity.
+        notes_help: Free-text note embedded in the package descriptor (e.g. why it
+          was shared).
+        output_help: Path to write the review package ZIP to.
+        package_path_help: Path to the review package ZIP to verify.
+        revision_help: Calculation revision id to package; defaults to the work unit's
+          most recent verified-complete or filed revision.
+        verify_help: Verify a review package's checksum manifest (integrity only;
+          does not assert who built it). Local-only; never contacts AEAT.
+        work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
@@ -1703,6 +1891,30 @@ cli:
         amend_missing_options: 'An amendment requires every one of these options:
           %{missing}.'
         amend_set_required: --set is required at least once for an amendment.
+        amend_wizard_export_next_action: Amendment filed as a draft internal record.
+          Export the AEAT-importable fichero-BOE with `aeat app modelo export %{work_unit_id}
+          --output PATH`.
+        amend_wizard_help: 'Walk an already-filed return''s amendment in plain language:
+          which casillas changed, the corrected values, and the amendment kind, then
+          file it'
+        amend_wizard_kind_help: complementaria adds to the prior tax due; sustitutiva
+          fully replaces the prior filing; rectificativa is the unified correction
+          mechanism for modelos whose orden implements it (e.g. Modelo 303 from 2023-y-siguientes).
+        amend_wizard_kind_prompt: Amendment kind (%{choices})
+        amend_wizard_no_corrections: No casilla was corrected; the amendment wizard
+          needs at least one changed value.
+        amend_wizard_no_current_filing: Work unit %{work_unit_id} has no current filing
+          record to amend. Import the AEAT-attested baseline first with `aeat app
+          modelo filing-record import`, or file it locally.
+        amend_wizard_reason_prompt: Reason for this amendment (kept in the audit trail)
+        amend_wizard_reason_required: A reason is required for the amendment audit
+          trail.
+        amend_wizard_select_prompt: Filed %{modelo} %{year} %{period} -- current values:\n%{summary}\nWhich
+          casilla numbers changed? (comma/space separated, blank for none)
+        amend_wizard_unknown_casilla: Casilla %{token} is not part of the filed %{modelo}
+          %{year} %{period} return; choose from the listed casilla numbers.
+        amend_wizard_value_prompt: Corrected value for casilla %{number} (%{label}),
+          currently %{previous_value}
         amendment_kind_help: Legal kind of the amendment (complementaria or sustitutiva)
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
@@ -1757,6 +1969,8 @@ cli:
         create_not_applicable_refused: 'Modelo %{modelo} does not apply to the active
           profile''s taxpayer type: %{reason} If you have a reason to create the work
           unit anyway, re-run the command with --allow-not-applicable.'
+        create_quiet_help: Skip human-readable confirmation output; the --format json
+          envelope, notices, and exit code are unaffected.
         create_reused: Existing work unit returned (idempotent on modelo/year/period/revision);
           nothing new was created. Rename it with `aeat app modelo work rename`.
         create_reused_name_match: Existing work unit returned (idempotent on modelo/year/period/revision);
@@ -1792,7 +2006,7 @@ cli:
           Orden HAC/1023/2021. File the return at AEAT Sede.'
         create_stub_modelo_refused: 'Modelo %{modelo} (informative declaration of
           virtual currencies held abroad) is not supported for work-unit creation
-          in this CLI. Legal authority: Orden HFP/887/2023 and RD 1065/2007 Art. 42
+          in this CLI. Legal authority: Orden HFP/886/2023 and RD 1065/2007 Art. 42
           quater; the reporting threshold is 50,000 EUR at 31 December. File through
           AEAT Sede when legally required.'
         dependencies_help: Show cross-period filing-history dependencies and current
@@ -1807,6 +2021,8 @@ cli:
         dt12_computation_error: 'DT12 computation error: %{message}'
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
+        file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
+          is already filed; returned the existing filing record without changes.'
         from_filing_record_help: Stable id of the baseline filing record to amend.
           Must carry imported external evidence (justificante / CSV register / live
           capture)
@@ -1833,7 +2049,9 @@ cli:
         invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
           (SHA-256 digest)
         kv_empty_key_error: '{flag} key must not be empty; got {spec}.'
-        kv_format_error: '{flag} must be {key_label}={value_label}; got {spec}.'
+        kv_format_error: '{flag} must be written as {key_label}={value_label}. This
+          is a key-value entry: put the field name on the left of one equals sign
+          and the value on the right. Received {spec}.'
         list_help: List registered work units, optionally filtered by profile
         meses_trabajo_con_hijo_menor_3_help: 'Months worked while the child under
           3 was in the family unit (Art. 81 LIRPF maternity deduction). Format: HIJO_ID=MESES.
@@ -1853,10 +2071,25 @@ cli:
           bucket ledger and cannot be supplied with --binding. Add or classify the
           relevant ledger rows, run `aeat app ledger preflight`, then rerun calculate.
           Run `%{discover}` to list every binding the calculation still needs.'
+        missing_date_binding_guidance: '%{base} Set %{binding_id} on the active profile,
+          then rerun calculate. Date-valued profile facts cannot be supplied with
+          --binding. Run `%{discover}` to list every binding the calculation still
+          needs.'
+        missing_relation_guidance: '%{base} Supply the value with --relation KEY=VALUE
+          on this command; KEY is a registry relation id, not a binding id. Run %{discover}
+          to list relation guidance and the remaining bindings the calculation still
+          needs.'
+        missing_relation_guidance_m200_m202: '%{base} Supply Modelo 200 pagos fraccionados
+          from Modelo 202 with --relation RELATION_ID=VALUE, not --binding. DP200014B:00611
+          subtracts two mutually exclusive M202 payment relation channels: modelo-200-2024-rel-202-pagos-fraccionados
+          for 40.3 casilla 34 and modelo-200-2024-rel-202-pagos-fraccionados-40-2
+          for 40.2 casilla 03. When entering manual values, set the unused modality
+          to 0. Run %{discover} to list the relation guidance and remaining bindings.'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
         name_required: Supply --name.
         notes_help: Optional notes attached to the filing record
+        observations_help: Show typed per-casilla calculation observations and provenance.
         output_language_help: Output language for rendered messages.
         override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
           app modelo bindings list --missing` to see the bindings the calculation
@@ -1901,8 +2134,17 @@ cli:
           Spanish territory in the tax year. Required alongside --annual-salary when
           Art. 7.p) applies.
         reason_help: Optional free-text reason for the discard (up to 500 chars)
-        relation_help: 'Registry relation value as KEY=VALUE (repeatable). KEY is a registry relation id, not a binding id; use this for cross-period or cross-modelo relation inputs. Run aeat app modelo bindings list --missing for scoped relation guidance. For Modelo 200 M202 pagos fraccionados, use the mutually exclusive 40.3 casilla 34 and 40.2 casilla 03 relation channels, setting the unused modality to 0 when entering manual values.'
+        relation_help: Registry relation value as KEY=VALUE (repeatable). KEY is a
+          registry relation id, not a binding id; use this for cross-period or cross-modelo
+          relation inputs. Run aeat app modelo bindings list --missing for scoped
+          relation guidance. For Modelo 200 M202 pagos fraccionados, use the mutually
+          exclusive 40.3 casilla 34 and 40.2 casilla 03 relation channels, setting
+          the unused modality to 0 when entering manual values.
         rename_help: Update the display name of a work unit
+        rescate_contingencia_year_help: 'Year the pension-plan contingency (retirement,
+          disability, death) occurred. Determines the LIRPF DT 12a apartado-4 time
+          window (Ley 26/2014): if the window is closed for the rescate year, the
+          40% reduction is withheld.'
         rescate_plan_pensiones_aportaciones_pre_2007_help: Contributions made to the
           pension plan up to 31 Dec 2006 (LIRPF transitional provision 12 proration
           base). Required with --rescate-plan-pensiones-capital and --rescate-plan-pensiones-aportaciones-totales.
@@ -1915,11 +2157,19 @@ cli:
           the 40% reduction and injects it into casilla 0011.
         rescate_plan_pensiones_not_decimal: --rescate-plan-pensiones-* values must
           be decimal amounts.
+        rescate_type_help: 'Pension-plan capital rescate type (LIRPF DT 12a): total
+          (whole capital at once) or parcial (staged withdrawals). A classification
+          and provenance signal, not an amount change: the 40% reduction applies to
+          the pre-2007 share of whatever is received. For parcial, each withdrawal
+          shares the same apartado-4 window.'
+        rescate_year_help: Year the rescate benefit is received (defaults to the filing
+          year). Compared against the LIRPF DT 12a apartado-4 window measured from
+          --contingencia-year.
         result_summary_header: result summary  Modelo %{modelo} %{year} %{period}
         resume_help: Validate whether you can retry an interrupted workflow run without
           contacting AEAT. Use --modelo --year --period for the normal path; exact
           ids remain advanced escape hatches.
-        resume_target_help: Optional legacy 16-character workflow run id or 64-character
+        resume_target_help: Optional 16-character workflow run id or 64-character
           work-unit id. Prefer --modelo --year --period.
         revision_help: Stable id of the targeted registry modelo revision; run `aeat
           app modelo describe MODELO` to see the available revision ids.
@@ -1928,6 +2178,8 @@ cli:
         revision_selector_help: Revision selector.
         revision_show_help: Show one stored calculation revision's persisted casilla
           values (without recomputing)
+        revision_verbose_help: Expose the full per-casilla formula trace (op, formula_id,
+          operand refs and values).
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
         row_empty_key: Empty field key in --row {token}; each field must be in KEY=VALUE
@@ -1937,10 +2189,13 @@ cli:
           TYPE FIELD=value [FIELD=value ...]. TYPE is ''miembro'' (M184 attribution
           member), ''vinculada'' (M232 related-party operation), ''operador'' (M349
           intracom operator), or ''contraparte'' (M347 declared counterparty). Repeat
-          to add multiple rows. M184 example: --row ''miembro nif=12345678A porcentaje=40
-          importe=10000''. M349 example: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
-          clave_operacion=E importe=50000''.'
-        row_kv_format_error: --row field {token} must be in KEY=VALUE format.
+          to add multiple rows. Quote the whole row argument; quote spaced legal names
+          inside it. M184 example: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
+          M349 example: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
+          razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
+        row_kv_format_error: '--row field {token} must be written as KEY=VALUE. This
+          is a key-value entry: put the row field name on the left of one equals sign
+          and its value on the right.'
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} does not match
           the expected NIF-IVA format for country {pais} (Council Directive 2006/112/EC
           Annex XI)'
@@ -1952,16 +2207,17 @@ cli:
           AEAT.
         sal_beneficio_neto_help: Net profit for the fiscal year of the worker-owned
           company (SAL/SLL, Law 44/2015 Art. 14). The assistant applies 10% to calculate
-          the mandatory special reserve allocation, capped by the 50% share-capital
-          threshold. Use it with --sal-reserva-dotada and --sal-capital-social.
+          the mandatory special reserve allocation, capped at the first euro cent
+          above twice share capital. Use it with --sal-reserva-dotada and --sal-capital-social.
         sal_capital_social_help: 'Share capital of the worker-owned company (Law 44/2015
-          Art. 14). Denominator for the 50% test: the allocation is zero once accumulated
-          reserve reaches 50% of share capital. Required with --sal-beneficio-neto
-          and --sal-reserva-dotada.'
+          Art. 14). Basis for the strict threshold: the allocation is zero once accumulated
+          reserve reaches the first euro cent above twice share capital. Required
+          with --sal-beneficio-neto and --sal-reserva-dotada.'
         sal_computation_error: 'SAL computation error: %{message}'
         sal_reserva_dotada_help: Special reserve accumulated in previous fiscal years
-          (Law 44/2015 Art. 14). Used to check whether the reserve has already reached
-          50% of share capital. Required with --sal-beneficio-neto and --sal-capital-social.
+          (Law 44/2015 Art. 14). Used to check whether the reserve has reached the
+          first euro cent above twice share capital. Required with --sal-beneficio-neto
+          and --sal-capital-social.
         sal_reserva_not_decimal: --sal-* values must be decimal amounts.
         selector_ambiguous: More than one active work unit matches this modelo/year/period.
           Choose a registry revision or pass an explicit work-unit id. {candidates}
@@ -1973,16 +2229,31 @@ cli:
         set_not_decimal: The --set value must be a decimal; got {value}.
         set_override_help: Corrected casilla value with CASILLA_ID=DECIMAL syntax
           (repeatable; at least one required)
+        state_label_borrador: draft
+        state_label_descartado: discarded
+        state_label_presentado: filed
+        state_label_presentado_supersedido: superseded filing
+        state_label_verificado_completo: verified complete
         status_help: Show the metadata of one work unit
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         verify_selector_help: Draft revision selector (current, latest-draft, or explicit).
+        wizard_help: Walk the work unit's outstanding manual inputs one at a time,
+          in plain language, then calculate
+        wizard_prompt: Casilla %{number} (%{label})
+        wizard_relation_help: Fed by registry relation %{binding_id}; supply the cross-period
+          or cross-modelo value this relation carries.
+        wizard_retry_exhausted: The wizard could not resolve every calculation input
+          after %{limit} follow-up prompts. Run `aeat app modelo work calculate` directly
+          and supply the remaining --binding / --relation values by hand.
+        wizard_saved: 'Saved as draft calculation revision %{revision_id} (state:
+          %{state}). It is persisted and can be resumed later; list revisions with
+          `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
+          %{period}` and re-inspect this one with `aeat app modelo work revision %{revision_id}`.'
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
-        missing_relation_guidance: '%{base} Supply the value with --relation KEY=VALUE on this command; KEY is a registry relation id, not a binding id. Run %{discover} to list relation guidance and the remaining bindings the calculation still needs.'
-        missing_relation_guidance_m200_m202: '%{base} Supply Modelo 200 pagos fraccionados from Modelo 202 with --relation RELATION_ID=VALUE, not --binding. DP200014B:00611 subtracts two mutually exclusive M202 payment relation channels: modelo-200-2024-rel-202-pagos-fraccionados for 40.3 casilla 34 and modelo-200-2024-rel-202-pagos-fraccionados-40-2 for 40.2 casilla 03. When entering manual values, set the unused modality to 0. Run %{discover} to list the relation guidance and remaining bindings.'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
@@ -2024,6 +2295,21 @@ cli:
           help: Manage apoderado scope vocabulary
           list_help: List accepted apoderado scopes
         status_help: Show active apoderado configuration
+      certificate:
+        check_help: cli.config.auth.certificate.check_help
+        help: cli.config.auth.certificate.help
+        list_help: cli.config.auth.certificate.list_help
+        register:
+          file_help: cli.config.auth.certificate.register.file_help
+          friendly_name_help: cli.config.auth.certificate.register.friendly_name_help
+          name_help: cli.config.auth.certificate.register.name_help
+        register_help: cli.config.auth.certificate.register_help
+        remove:
+          name_help: cli.config.auth.certificate.remove.name_help
+        remove_help: cli.config.auth.certificate.remove_help
+        select:
+          name_help: cli.config.auth.certificate.select.name_help
+        select_help: cli.config.auth.certificate.select_help
       clear_all_help: Clear all configured auth providers
       clear_help: Clear local authentication metadata
       clear_locks_help: Clear auth acquisition locks
@@ -2221,6 +2507,32 @@ cli:
       help: Lock the current profile by clearing the active profile pointer.
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
+      archive:
+        export_full_backup_info: 'This archive is a FULL backup: it is AEAD-encrypted
+          at rest and carries attachment evidence bytes, the audit trail, and the
+          cross-period calculation inputs, in addition to the profile, ledger, calculation,
+          and filing history. Store it somewhere safe; restore with ''aeat config
+          profile archive import''.'
+        export_help: Write a sealed, encrypted full-backup archive to PATH.
+        export_name_help: Profile to back up; defaults to active.
+        export_out_help: Destination path for the archive.
+        export_recovery_wrap_help: Optional passphrase to seal the archive under,
+          instead of the active bucket key; required if the archive will leave this
+          host.
+        help: Back up and restore a profile as a sealed, AEAD-encrypted archive (the
+          full-custody recovery transport).
+        import_active_switch_info: The restored profile is now the ACTIVE profile;
+          subsequent commands operate on it. Run 'aeat config switch <name>' to change
+          the active profile.
+        import_force_help: Overwrite an existing profile that shares the archive's
+          bucket id.
+        import_help: Restore a profile from a sealed, encrypted archive at PATH.
+        import_path_help: Path to the sealed archive.
+        import_recovery_wrap_help: Passphrase to unseal the archive; required if it
+          was exported with one.
+        inspect_help: Show a sealed archive's header without decrypting or restoring
+          it.
+        inspect_path_help: Path to the sealed archive.
       capabilities:
         capability_help: Service capability to opt in or out of.
         capability_label: capability
@@ -2254,6 +2566,17 @@ cli:
       delete_requires_yes: Deletion is destructive. Re-run 'aeat config profile delete
         %{name} --yes' to confirm.
       delete_yes_help: Explicitly confirm the delete operation
+      descendiente:
+        add_flag_help: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+          Repeatable.
+        add_help: Add one or more descendants to the active profile.
+        help: Declare descendants for the Art. 58/61 LIRPF minimo por descendientes.
+        index_out_of_range: Index %{index} is out of range; the profile has %{total}
+          descendant(s).
+        invalid_flag: 'The --descendiente flag %{flag} is invalid: %{detail}'
+        list_help: List descendants declared on the active profile.
+        remove_help: Remove one descendant by 0-based index from the active profile.
+        remove_index_help: 0-based index of the descendant to remove.
       duplicate_display_name_help: Display name for the new profile (defaults to the
         target id)
       duplicate_help: Copy a profile under a new id and display name
@@ -2293,16 +2616,16 @@ cli:
         the profile bundle schema.'
       import_invalid_tax_id: 'The profile bundle''s tax identifier is invalid: %{error}.
         Fix the identifier and re-export, or import a valid bundle.'
+      import_label_help: Display name for the imported profile; defaults to the name
+        stored in the bundle. Use it when the stored label is already in use.
+      import_label_taken: A profile named %{name} already exists. Re-run with `--label
+        NEW_NAME` to import it under a different name.
+      import_label_taken_different_id: The profile label %{name} is already in use.
+        Pass --label NEW_NAME to import under a distinct label.
+      import_missing_bundle: Profile bundle not found at %{path}
       import_missing_filing_baseline: 'The profile bundle is missing filing identity
         details. Fix the bundle or re-export a complete profile with these fields:
         %{missing_flags}.'
-      import_label_help: Display name for the imported profile; defaults to the name
-        stored in the bundle. Use it to import a second copy under a fresh label.
-      import_label_taken: A profile named %{name} already exists. Re-run with `--label
-        NEW_NAME` to import it under a different name.
-      import_label_taken_different_id: The specified label belongs to a profile with
-        a different identifier. Pass --label NEW_NAME to import under a distinct name.
-      import_missing_bundle: Profile bundle not found at %{path}
       import_path_help: Path to the profile bundle JSON file
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       logout_help: Sign out of the active profile by clearing the local pointer
@@ -2340,6 +2663,50 @@ cli:
       rename_help: Rename a profile in place; the active-profile pointer follows automatically
       rename_source_help: Existing profile name
       rename_target_help: New profile name
+      sandbox:
+        already_exists: A sandbox named %{label} already exists. Pick a different
+          name or discard the existing one first.
+        create_active_info: The sandbox is now the ACTIVE profile; every command runs
+          against it until you switch away or discard it.
+        create_from_profile_help: Seed the sandbox with an existing profile's facts
+          (read-only source).
+        create_help: Fork a new isolated sandbox bucket and activate it.
+        create_name_help: Sandbox name.
+        discard_active_profile: Sandbox %{name} is the active profile; switch to another
+          profile before discarding it.
+        discard_dry_run_help: Preview what the discard would remove without removing
+          anything.
+        discard_help: Permanently erase a sandbox bucket.
+        discard_name_help: Sandbox name (without the prefix).
+        discard_not_a_sandbox: '%{name} is not a sandbox; the sandbox surface refuses
+          to discard a real profile.'
+        discard_requires_yes: Discarding a sandbox is destructive. Re-run 'aeat config
+          profile sandbox discard %{name} --yes' to confirm.
+        discard_yes_help: Confirm the destructive erase.
+        help: Run experiments in an isolated, discardable bucket that never touches
+          main profile state.
+        list_help: List every sandbox bucket.
+        prune_dry_run_help: Preview which sandboxes would be discarded without discarding
+          them.
+        prune_help: Discard every sandbox bucket at once.
+        prune_requires_yes: Pruning every sandbox is destructive. Re-run 'aeat config
+          profile sandbox prune --yes' to confirm.
+        prune_skipped_active_info: Skipped the active sandbox %{names}; switch to
+          another profile and re-run 'aeat config profile sandbox prune --yes' to
+          discard it.
+        prune_yes_help: Confirm discarding every sandbox.
+        source_not_found: No live profile named %{name} to seed the sandbox from.
+        unknown_sandbox: 'Unknown sandbox: %{name}. Run ''aeat config profile sandbox
+          list'' to see registered sandboxes.'
+        use_help: Switch the active profile to an existing sandbox.
+        use_name_help: Sandbox name (without the prefix).
+      sar_catalogue_info: 'This archive holds every personal-data category kept for
+        the profile: identity and profile facts, modelo work units, ledger transactions,
+        calculation revisions, and filing records. Attachment evidence bytes and AEAT
+        captures stay in encrypted storage; use the encrypted recovery archive to
+        include them.'
+      sar_help: Export all personal data held for a profile as a GDPR right-of-access
+        archive (the portable profile bundle).
       show_help: Show the live values of a profile (defaults to the active profile)
       show_name_help: Profile id to show (defaults to the active profile)
       unknown_profile: 'Unknown profile: %{name}. Run ''aeat config profile list''
@@ -2384,10 +2751,6 @@ cli:
         pointer; '%{profile}' is not active.
       profile_help: Inspect and repair the active-profile pointer.
       profile_name_help: Inspect a specific registered profile.
-      profile_one_action: Choose either --clear-active or --repair-manifest-status,
-        not both.
-      profile_repair_manifest_status_help: Backfill a legacy active bucket manifest
-        status from the encrypted profile record.
       profile_requires_yes: Pass --yes to apply the active-profile repair.
       quarantine_dry_run_help: Preview the rows that would be quarantined without
         moving anything
@@ -2453,7 +2816,20 @@ cli:
     verify_recovery:
       help: Verify that a recovery key opens the persisted recovery wrapper.
     workflow_help: Show config workflow help
+  contract:
+    app_help: 'Emit the operator capability manifest: roots, command families, lifecycle,
+      and result schemas.'
+    schema_module_load_failed: 'Capability surface degraded: the result-schema module
+      ''{module}'' failed to load ({error}); the commands it registers are absent
+      from this manifest. This is usually an unrelated in-flight code change, not
+      a data problem.'
+    summary_commands: 'Registered commands: {count}'
+    summary_families: 'Command families: {count}'
+    summary_heading: Operator surface manifest
+    summary_lifecycle: 'Modelo lifecycle: {steps}'
+    summary_roots: 'Roots: {roots}'
   diagnostics:
+    app_help: Local-only operator run-health and session diagnostics.
     browser:
       http_status_label: HTTP status
       markers_label: Markers
@@ -2468,6 +2844,30 @@ cli:
         and cannot be repaired manually.'
       registry_integrity_internal: Internal application problem; not a fault in your
         profile and not something you can fix yourself.
+    errors:
+      header: 'LLM run errors:'
+      help: Break down recent failed local LLM runs by provider and error kind.
+      no_failures: No failed LLM runs recorded in this range.
+      provider_help: Restrict the breakdown to this provider label (e.g. claude, antigravity,
+        codex).
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
+    latency:
+      header: 'LLM run latency:'
+      help: Report P50/P95/P99 duration percentiles over recent local LLM runs.
+      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
+        to populate it.
+      provider_help: Restrict the report to this provider label (e.g. claude, antigravity,
+        codex).
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
+    llm_usage:
+      header: 'LLM run usage:'
+      help: 'Report LLM run-usage totals (counts, durations, success rate) by provider and model.'
+      no_run_data: 'No LLM run telemetry recorded yet. Run an LLM-assisted classification to populate it.'
+      provider_help: 'Restrict the summary to this provider label (e.g. claude, antigravity, codex).'
+      since_help: 'Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.'
+      until_help: 'Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.'
     next_action:
       inspect_registry_toml: Inspect the registry TOML sources to identify the problem.
     repair:
@@ -2485,6 +2885,30 @@ cli:
       profile_label: Profile
       python_label: Python
       version_label: Version
+    run_health:
+      auth_header: 'Auth session:'
+      bad_date: '%{option} must be an ISO date (YYYY-MM-DD); got %{value}.'
+      header: 'LLM run health:'
+      help: Report recent local LLM run timing and persisted AEAT session staleness.
+      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
+        to populate it.
+      no_session_message: No persisted AEAT session found on disk.
+      provider_help: Restrict the LLM run-timing section to this provider label (e.g.
+        claude, antigravity, codex).
+      session_stale_message: The persisted AEAT session has passed its idle deadline;
+        a live read will re-authenticate.
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
+    runs:
+      header: 'Recent LLM runs:'
+      help: List recent local LLM run-timing records, most-recent-first.
+      limit_help: Cap the listing to this many most-recent runs.
+      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
+        to populate it.
+      provider_help: Restrict the listing to this provider label (e.g. claude, antigravity,
+        codex).
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
     summary:
       auth_no_session: Authentication provider %{provider} has no ready session
       auth_none: Authentication is not configured
@@ -2519,8 +2943,8 @@ cli:
       actor_help: Operator name recorded on the bucket event
       amount_help: Transaction amount in the transaction currency (decimal, e.g. 1200.50).
       attachment_help: Supplementary attachment id (repeatable)
-      business_pct_help: Business-use share from 0 to 1 (only when classification
-        is MIXED)
+      business_pct_help: Business-use share from 0 to 1; only for MIXED rows. Omit
+        for fully BUSINESS rows.
       category_help: Deductible-expense category id (expense transactions only; income
         needs no category)
       classification_help: Business classification (BUSINESS / PERSONAL / MIXED /
@@ -2531,7 +2955,11 @@ cli:
       description_help: Non-blank narrative
       direction_help: Transaction direction (INCOMING / OUTGOING / INTERNAL_TRANSFER)
       help: Add one manual ledger transaction in the active profile
-      idempotency_key_help: Caller-supplied idempotency key recorded with the row
+      idempotency_key_help: 'Stable key for this logical add: passing the same key
+        again is a safe no-op, so retries do not duplicate the row. Omit it to append
+        a deliberate duplicate.'
+      idempotent_noop: 'Idempotent no-op: a transaction with this idempotency key
+        already exists (%{transaction_id}); nothing was added.'
       irpf_category_help: IRPF-specific category key
       iva_amount_help: Optional IVA amount on the row
       iva_rate_help: Optional IVA rate as a decimal fraction
@@ -2556,17 +2984,24 @@ cli:
         by the application and cannot be assigned by hand. Choose one of: BUSINESS,
         PERSONAL, MIXED, or omit --classification to leave the row unclassified.'
       taxable_base_help: IVA-exclusive base amount
-      usage_ratio_help: Usage-ratio id for proportional business use
+      usage_ratio_help: Existing configured usage-ratio id for proportional business
+        use. Use a category id shown by 'aeat app ledger ratios list' or 'aeat app
+        ledger ratios eligible'; create one with 'aeat app ledger ratios set <category-id>
+        <ratio>'. Not arbitrary prose.
       value_date_help: Value date (YYYY-MM-DD)
     allocate:
       actor_help: Operator name recorded on the bucket event
-      business_pct_help: Business-use share from 0 to 1
+      business_pct_help: Business-use share from 0 to 1 for MIXED/proportional rows;
+        do not use ledger allocate for a fully BUSINESS row.
       category_help: Deductible-expense category id (expense transactions only; income
         needs no category)
       help: Record business/private proportionality for a ledger transaction
       id_help: Ledger transaction id to allocate
       prorrata_reference_help: IVA prorrata reference for IVA workflows
-      usage_ratio_help: Usage-ratio id for proportional business use
+      usage_ratio_help: Existing configured usage-ratio id for proportional business
+        use. Use a category id shown by 'aeat app ledger ratios list' or 'aeat app
+        ledger ratios eligible'; create one with 'aeat app ledger ratios set <category-id>
+        <ratio>'. Not arbitrary prose.
     app_help: Management of accounting ledgers and IVA records
     archive:
       actor_help: Operator name recorded on the bucket event
@@ -2578,18 +3013,29 @@ cli:
       actor_help: Operator name recorded on the bucket event
       attachment_help: Secure attachment id to link to the transaction; repeat for
         multiple attachments
-      help: Attach secure evidence objects to one ledger transaction
+      help: Attach secure evidence objects to one ledger transaction. Create a purchase
+        invoice evidence id first with 'aeat app ledger evidence add PATH'.
       id_help: Ledger transaction id to attach evidence to
       purchase_invoice_evidence_help: Purchase invoice evidence id supporting the
-        transaction
+        transaction; create one with 'aeat app ledger evidence add PATH'
     categories:
       family_column: family
       header: RECOGNISED LEDGER SPENDING CATEGORIES
-      help: List the spending-category ids accepted by --category-id, grouped by family
+      help: List the category ids accepted by --category-id and --irpf-category
       id_column: category-id (pass this exact value)
       income_note: Deductible expenses only. Income (INCOMING) transactions are classified
         by direction and need no --category-id; `ledger check` and `ledger preflight`
         do not flag income as missing_category.
+      irpf_header: IRPF CATEGORIES FOR --irpf-category
+      irpf_id_column: irpf-category (pass this exact value)
+      irpf_purpose_activity_income_withholding: professional activity withholding
+        (received or paid net)
+      irpf_purpose_employment_income: employment income (not for net-paid invoices)
+      irpf_purpose_rent_expense_withholding: net-paid rent expense withholding
+      irpf_usage_example: 'Net-paid rent example: --category-id {rent_category} --irpf-category
+        {rent_category}. Net-paid professional service: --category-id {professional_category}
+        --irpf-category {activity_category}.'
+      irpf_use_column: use
       usage_example: Pass the bare id, e.g. --category-id {example} (not a family-prefixed
         or compound key).
     check:
@@ -2597,6 +3043,9 @@ cli:
       help: Probe ledger transactions in the addressed profile (defaults to the active
         profile) and report anomaly rows aggregated across every period a transaction
         touches. Local-only; never contacts AEAT.
+      period_help: 'Optional filing period as an AEAT token: 1T-4T (quarters), 0A
+        (annual), 01-12 (months). Combine with --year to match ledger status.'
+      year_help: Filing year for --period (e.g. 2024).
     classify:
       actor_help: Operator name recorded on the bucket event
       apply_help: 'Persist the LLM suggestion with llm: provenance instead of only
@@ -2608,12 +3057,13 @@ cli:
         decision is read from the invoice.'
       auto_split_single_line: 'single-line invoice: no split warranted; --apply classifies
         it in place'
-      bulk_summary: 'bulk classify: %{total} rows, %{applied} applied, %{skipped}
-        skipped, %{fail} failed'
       bulk_all_failed: 'bulk classify failed: every row failed; no ledger rows were
         updated'
+      bulk_summary: 'bulk classify: %{total} rows, %{applied} applied, %{skipped}
+        skipped, %{fail} failed'
       business_pct_help: Business-use share from 0 to 1; required with --classification
-        MIXED and rejected for any other classification
+        MIXED, rejected for any other classification, and omitted for fully BUSINESS
+        rows
       business_pct_requires_mixed: Refused. --business-pct only applies to a MIXED
         classification. A BUSINESS or PERSONAL row is wholly business or wholly private;
         drop --business-pct, or pass --classification MIXED.
@@ -2622,9 +3072,10 @@ cli:
       classification_help: Business classification state for the transaction
       classification_required: --classification is required when --from-csv is not
         provided.
-      counterparty_eu_member_state_help: EU member state of the counterparty (ISO
-        3166-1 alpha-2 lowercase, e.g. de); required with --iva-category intra_community_supply,
-        prohibited with export_third_country_zero_rated
+      counterparty_eu_member_state_help: EU member state or Northern Ireland IVA prefix
+        of the counterparty (ISO 3166-1 alpha-2 lowercase, e.g. de or xi); required
+        with --iva-category intra_community_supply, prohibited with export_third_country_zero_rated
+        or export_assimilated_zero_rated
       evidence_acknowledged_help: Acknowledge that reading evidence with a cloud provider
         uploads it off your machine (required by the consent gate).
       from_csv_exclusive: --from-csv cannot be combined with a transaction id or --classification.
@@ -2635,10 +3086,15 @@ cli:
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
       id_required: A transaction id is required when --from-csv is not provided.
-      irpf_category_help: IRPF category for modelo calculations
+      irpf_category_help: 'IRPF category id. Use aeat app ledger categories. Net-paid
+        professional invoices use actividad_economica; net-paid rent uses arrendamiento_local/arrendamiento_vivienda_afecto.
+        Royalties/SGAE: Art. 25.4 can be capital mobiliario when the taxpayer is not
+        the author; use actividad_economica only for own-account activity under LIRPF
+        Art. 27.'
       iva_amount_help: IVA amount
       iva_category_help: Explicit IVA category override for this transaction (e.g.
-        intra_community_supply, export_third_country_zero_rated, domestic_not_subject)
+        intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
+        domestic_not_subject)
       iva_rate_help: IVA rate as a decimal, for example 0.21
       llm_classified_by_label: classified-by
       llm_confidence_label: confidence
@@ -2664,7 +3120,11 @@ cli:
         it to the classifier.
       reaffirm_help: Reaffirm the classification of an already-classified transaction.
       reaffirmed: Classification reaffirmed.
-      reason_help: Free-text reason recorded with a --reject decision.
+      reason_empty: Refused. --reason must record why you are classifying this transaction.
+        Pass a non-empty rationale, or omit --reason.
+      reason_help: Free-text reason recorded as the transaction notes and as the classification
+        decision's provenance reason (visible on ledger view), or with a --reject
+        decision.
       reject_apply_exclusive: '--reject cannot be combined with --apply: reject records
         a declined suggestion, apply records an accepted one.'
       reject_help: Record an explicit rejection of the LLM suggestion as an audit
@@ -2703,9 +3163,6 @@ cli:
       command_input_invalid_fallback: one or more fields failed validation
       confirm_required: Pass --yes to confirm this destructive ledger operation.
       filter_parse_error: 'Failed to parse ledger filter near %{token}: %{reason}.'
-      period_year_pairing: Ledger period filters require period and year together.
-        For a full year use --period 0A --year %{year}, or --filter period=0A
-        --filter year=%{year}.
       id_prefix_collision: 'Transaction id prefix %{prefix!r} matches more than one
         transaction: %{candidates}. Lengthen the prefix to disambiguate.'
       id_prefix_empty: Transaction id prefix is empty; pass at least one hex character.
@@ -2722,11 +3179,20 @@ cli:
       negative_amount: The --amount %{raw} must be a non-negative magnitude. Pass
         the amount without a sign and set the flow with --direction (OUTGOING for
         money out, INCOMING for money in, INTERNAL_TRANSFER between your own accounts).
+      period_year_pairing: Ledger period filters require period and year together.
+        For a full year use --period 0A --year %{year}, or --filter period=0A --filter
+        year=%{year}.
       unknown_category: Unrecognised --category-id {category!r}. Pass a bare category
         id such as {example!r} - not a family-prefixed or compound key. Run `aeat
         app ledger categories` to list every recognised id.
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
+    exclude:
+      actor_help: Operator label.
+      help: Mark one reviewed ledger transaction as deliberately excluded from filing.
+      id_help: Ledger transaction id.
+      reason_help: Optional note recording why the row is excluded.
+      yes_help: Confirm the reviewed-excluded decision.
     export:
       actor_help: Operator name recorded on the bucket event
       format_help: Export serialization format
@@ -2776,6 +3242,10 @@ cli:
       checked: Checked transactions
       child_id: Child transaction id
       children: Children
+      classification_confidence: Classification confidence
+      classification_reason: Classification reason
+      classified_at: Classified at
+      classified_by: Classified by
       counterparty: Counterparty
       counterparty_eu_member_state: EU counterparty
       created_event_id: Created bucket event
@@ -2817,6 +3287,7 @@ cli:
       split_group_id: Split group id
       stashed: Stashed
       taxable_base: Taxable base
+      usage_ratio_id: Usage ratio id
       valid: Valid
       value_date: Value date
       warning: Warning
@@ -2830,9 +3301,11 @@ cli:
         invoice_not_found: This id was not found in the reconciliation invoice catalogue,
           which is populated by the invoice import and reconciliation flows. Ids minted
           by 'aeat app ledger invoice add' are operator invoice records and cannot
-          be linked here. To attach purchase-invoice evidence, run 'aeat app ledger
-          link <tx> --evidence-id <id>' (or 'aeat app ledger attach') with an id from
-          'aeat app ledger evidence add'.
+          be linked here. To create a linkable catalogue invoice manually, run 'aeat
+          app ledger invoice catalogue create' and pass that invoice_id to --invoice-id.
+          To attach purchase-invoice evidence, run 'aeat app ledger link <tx> --evidence-id
+          <id>' (or 'aeat app ledger attach') with an id from 'aeat app ledger evidence
+          add'.
         missing_target: Supply at least one of --invoice-id or --evidence-id.
       evidence_id_help: Purchase-invoice evidence id minted by 'aeat app ledger evidence
         add', attached to the transaction.
@@ -2841,8 +3314,8 @@ cli:
         never contacts AEAT.
       id_help: Ledger transaction id (SHA-256 or unambiguous prefix).
       invoice_id_help: Rich invoice-catalogue id from an imported or reconciled invoice,
-        bound bidirectionally to the transaction. This is NOT an 'aeat app ledger
-        invoice add' id.
+        or from 'aeat app ledger invoice catalogue create', bound bidirectionally
+        to the transaction. This is NOT an 'aeat app ledger invoice add' id.
     list:
       by_group_help: Section the listing by group label.
       column_header: "id\tfull_id\tdate\tamount\tdescription\treview_status"
@@ -2863,6 +3336,15 @@ cli:
         created_at, modified_at, ...).
       sort_order_help: 'Sort order: asc (ascending) or desc (descending).'
       ungrouped_label: (ungrouped)
+    llm_diagnostics:
+      bad_date: '%{option} must be an ISO date (YYYY-MM-DD); got %{value}.'
+      help: Report existing LLM usage, cost, and classification-confidence metrics.
+      no_data_message: No LLM usage or classification-confidence metrics recorded
+        yet. Run an LLM-assisted classification to populate them.
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on usage records.
+      threshold_help: Confidence floor below which a classification counts as low-confidence.
+      threshold_range: --low-confidence-below must be within the inclusive 0..1 range.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on usage records.
     merge:
       actor_help: Operator name recorded on the LEDGER_TRANSACTION_MERGED event
       child_id_help: One child id (or unambiguous prefix) to merge. Repeat for every
@@ -2874,6 +3356,10 @@ cli:
       yes_help: Confirm the merge (archives every child and the parent, persists a
         fresh content-addressed merged transaction)
     preflight:
+      empty_ledger_advisory: No active ledger transactions were checked for this period.
+        If activity occurred, add or import ledger rows before calculating; if there
+        was genuinely no activity, the empty ledger can support a zero-activity local
+        filing.
       help: Report missing ledger facts (category, taxable base, IVA amount/rate,
         currency, proportionality reference) for the active profile's transactions
         in a given period. Local-only; never contacts AEAT.
@@ -2882,6 +3368,31 @@ cli:
       year_help: Filing year (e.g. 2024).
     providers:
       help: List which subprocess LLM providers have a usable CLI on PATH.
+    pull_folder:
+      errors:
+        folder_id_unrecognised: Google Drive folder reference %{reference} does not
+          contain a recognisable folder id. Pass a Drive folder URL or its bare folder
+          id.
+        folder_refused: 'Cannot list the Drive folder %{folder_id}%{scope_hint}: the
+          folder must be reachable under the drive.file scope (created by the app
+          or explicitly picked by the operator), or grant the required Google scope
+          and retry.'
+      folder_help: Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images
+        from.
+      help: Bulk-fetch every PDF/image invoice in a Drive folder and store each as
+        encrypted evidence (unlinked to any transaction; link with 'aeat app ledger
+        attach' or 'link').
+      labels:
+        fetched: fetched_count
+        folder_id: folder_id
+        refused: refused_count
+        skipped: skipped_non_document_count
+        total: total_documents
+      note_help: Optional note recorded on every fetched attachment.
+      notices:
+        files_refused: '%{refused_count} file(s) in this folder could not be fetched
+          under the drive.file scope; download them manually and attach with ''aeat
+          app ledger attach --attachment-id ...''.'
     remove:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction
@@ -3066,6 +3577,9 @@ cli:
         footer: Run aeat --help for the full overview.
         heading: aeat config - profile, auth, diagnostics
         paragraph_durable_state: Config commands manage local durable state.
+        paragraph_storage_isolation: For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT,
+          AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and AEAT_SECRET_PASSPHRASE;
+          logs default under that storage root.
         profile_censo: Sync AEAT censo facts for the active profile.
         profile_delete: Delete a profile after explicit confirmation.
         profile_duplicate: Copy a profile to a new id.
@@ -3105,6 +3619,9 @@ cli:
         modelo_bindings_list: List registry binding coverage.
         modelo_list: List supported modelos.
         modelo_work: Create and operate modelo work units.
+        paragraph_storage_isolation: For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT,
+          AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and AEAT_SECRET_PASSPHRASE;
+          logs default under that storage root.
         paragraph_two_roots: 'The CLI has exactly two roots: config and app.'
         paragraph_type_help: Use config for local state and app for tax work.
         section_daily_ledger: Daily ledger work
@@ -3146,11 +3663,18 @@ cli:
       help: Render the deadline calendar for the active profile across the supplied
         date window. Applies festivos and business-day shifts. Local-only; never contacts
         AEAT.
+      shift:
+        business_day: Business day
+        calendar_unavailable: Calendar unavailable
+        domingo: Sunday
+        modelo_exception: Modelo exception
+        sabado: Saturday
       show_suppressed_help: Include filtered (non-applicable) obligations in the output
         with their applicability verdict and reason.
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
     calendar_local_filing_evidence_unavailable: Overview calendar local filing evidence
-      is unavailable; refusing to render without persisted AEAT filing state.
+      could not be loaded; the calendar is derived from the deadline schedule and
+      may over-report an obligation as still due.
     calendar_local_live_events_unavailable: Local live-event evidence is unavailable
       for this calendar row.
     calendar_local_modelo_events_unavailable: Local modelo event evidence is unavailable
@@ -3158,6 +3682,10 @@ cli:
     calendar_refused_incomplete: 'Calendar has unresolved profile checks: %{keys}.
       Run the warning fix command or pass --allow-incomplete to inspect the provisional
       calendar.'
+    coverage:
+      investigate: '%{count} filing obligation(s) could not be positively scoped for
+        this profile and may be under-reported: %{modelos}. Investigate each with
+        ''aeat app overview explain <modelo>''.'
     drafts: Drafts
     explain:
       help: Decompose a modelo's applicability against the active profile. Surfaces
@@ -3166,16 +3694,53 @@ cli:
       modelo_help: AEAT modelo identifier (e.g. 303, 130, 100).
       year_help: Fiscal year for the applicability evaluation; defaults to the current
         year.
+    labels:
+      period: Period
+    local_work_units_unavailable: Local Modelo work-unit state could not be loaded;
+      this overview is derived from the deadline schedule and may over-report an in-progress
+      draft as still due or omit older in-progress drafts.
     period: Period
     period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12
       (months). Combine with --year to choose the year.'
+    pipeline:
+      help: 'Show cross-domain pipeline health for one filing period in one table:
+        ledger classification/review state, modelo readiness (calculated / verified
+        / filed / blocked) for every work unit in the period, and outstanding verification
+        findings. Read-only; safe to run repeatedly; never contacts AEAT.'
+      labels:
+        findings_section: 'Findings:'
+        ledger_section: 'Ledger:'
+        modelos_section: 'Modelos:'
+        ready: ready
+      no_work_units: No modelo work units for this period yet.
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
+        01-12 (months). Combine with --year to choose the year.'
+      year_help: Filing year (e.g. 2026).
+    post_filing:
+      pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review
+        them with ''aeat app live notifications list''.'
+    prepare:
+      help: 'Walk through the data-preparation steps for one modelo/period in order:
+        import transactions, classify them, attach purchase-invoice evidence, register
+        business invoices, resolve ledger readiness gaps, then start or resume the
+        modelo work unit. Shows each step''s current progress and the exact next command
+        to run. Read-only; safe to run repeatedly; never contacts AEAT.'
+      modelo_help: AEAT modelo identifier to prepare data for (e.g. 130, 303, 100).
+      modelo_period_error: '{message}'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
+        01-12 (months). Combine with --year to choose the year.'
+      year_help: Filing year (e.g. 2026).
     status:
       drafts_empty: No saved declaration drafts were found.
-      drafts_empty_with_work_units: No legacy declaration drafts are saved - this
-        is normal and does not affect your modelo work units below.
+      drafts_empty_with_work_units: No declaration drafts are saved - this is normal
+        and does not affect your modelo work units below.
       drafts_present: '%{count} saved declaration draft(s) exist in this local storage.
         A fresh empty workspace normally has 0, so this profile/database already contains
         local draft state.'
+      filing_obligation_multiple_pagadores: Work income from more than one pagador,
+        with over EUR 1,500 from the secondary pagadores, lowers your IRPF filing-exemption
+        limit to the reduced Art. 96.3 LIRPF threshold; you may be obliged to file
+        Modelo 100 if your total work income exceeds it.
       integrity_next: Run `aeat config repair` for detail. Do not quarantine rows
         unless you intentionally want to archive unreadable old local data.
       invoices_empty: No sales or purchase invoices are stored in the invoice register.
@@ -3188,7 +3753,9 @@ cli:
       next_import_command: '  aeat app ledger import <bank-statement.csv> --provider
         csv - import bank transactions.'
       next_landing_command: '  aeat --help - return to the command guide.'
-      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - Modelo 210 is visible for IRNR discovery, but local work-unit creation is not supported yet; file through AEAT Sede G320.'
+      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - Modelo
+        210 is visible for IRNR discovery, but local work-unit creation is not supported
+        yet; file through AEAT Sede G320.'
       next_modelo_work_command: '  aeat app modelo work create - start a modelo declaration
         from your ledger data.'
       next_review_command: '  aeat app ledger review - review imported rows.'
@@ -3228,11 +3795,25 @@ cli:
     citations:
       app_help: Inspect the legal-norm corpus (Ley 37/1992, Ley 35/2006, ...)
       articulo_help: Specific article to show (e.g. 91.Uno.2.1º)
-      list_help: List the normatives codified in the legal corpus
-      normative_id_help: Stable normative id (e.g. ley-37-1992)
+      legal_id_help: Stable legal authority id (e.g. ley-37-1992)
+      list_help: List the legal authorities codified in the legal corpus
       tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
       verify_help: Verify the legal-norm corpus integrity
-      view_help: Show one normative and, optionally, one of its articles
+      view_help: Show one legal authority and, optionally, one of its articles
+    diff_revisions_from_year_help: Earlier filing year whose covering revision is
+      the diff baseline
+    diff_revisions_help: Diff the registry revisions of one modelo across two filing
+      years
+    diff_revisions_modelo_help: Modelo identifier to diff
+    diff_revisions_to_year_help: Later filing year whose covering revision is compared
+      against the baseline
+    errors:
+      capability:
+        manuals_verify: cli.registry.errors.capability.manuals_verify
+        parity: cli.registry.errors.capability.parity
+        registry_verify: cli.registry.errors.capability.registry_verify
+        workbooks_verify: cli.registry.errors.capability.workbooks_verify
+      corpus_companion_absent: cli.registry.errors.corpus_companion_absent
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
     manuals:
@@ -3328,6 +3909,8 @@ cli:
     app_help: 'Operator review queue: triage ledger transactions, purchase evidence,
       and modelo findings'
     errors:
+      invalid_confidence: Confidence threshold %{value} is out of range; supply a
+        value between 0 and 1.
       invalid_state: 'Invalid review state: %{state}'
     labels:
       affected_object_id: Object
@@ -3339,6 +3922,9 @@ cli:
       severity: Severity
       source_kind: Source kind
     queue:
+      confidence_below_help: Restrict the queue to classified transactions whose classification
+        confidence is strictly below this threshold (a value between 0 and 1). Lowest-confidence
+        rows surface first so they can be triaged.
       empty: No items pending review.
       explain_help: Include the legal_refs that ground each finding in the text output.
         The JSON payload always carries them.
@@ -3648,10 +4234,34 @@ errors:
     lookup_dispatch_arg_count: Formula op {op} expects {expected} arguments.
     lookup_dispatch_arg_kind: Formula op {op} requires {position} to be a {expected_kind}
       leaf.
-    m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
-    m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
-    m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
-    m210_imputation_no_filing_year: errors.calc.m210_imputation_no_filing_year
+    m100_art85_boolean_invalid: Modelo 100 Art. 85 boolean box must be 0 or 1.
+    m100_art85_catastral_value_negative: Modelo 100 Art. 85 cadastral value must be
+      non-negative.
+    m100_art85_disposal_percentage_invalid: Modelo 100 Art. 85 mixed-use percentage
+      must be greater than 0 and at most 100.
+    m100_art85_imputation_days_invalid: Modelo 100 Art. 85 imputation days must be
+      an integer between 1 and 365.
+    m100_art85_input_negative: Modelo 100 Art. 85 numeric inputs must be non-negative.
+    m100_art85_mixed_use_inputs_without_flag: Modelo 100 Art. 85 mixed-use days or
+      percentage require the mixed-use box to be checked.
+    m100_art85_no_catastral_base_missing: Modelo 100 Art. 85 imputation without a
+      cadastral value requires substitute-base boxes that are not present.
+    m100_art85_revision_flag_invalid: Modelo 100 Art. 85 revised cadastral value flag
+      must be the official X checkbox value.
+    m210_gastos_deducibles_negative: M210 gastos_deducibles %{casilla_id} must be
+      non-negative; got %{value}.
+    m210_gastos_deducibles_not_allowed: M210 gastos_deducibles %{casilla_id} is only
+      allowed for the EU/EEA Art. 24.6 path; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.
+    m210_imputation_coefficient_invalid: M210 imputed real-estate coefficient %{casilla_id}
+      must be one of the registry-authored Art. 85 rates (%{allowed_values}); got
+      %{value}.
+    m210_imputation_days_invalid: M210 imputation days %{casilla_id} must be an integer
+      from 1 to %{max_days}; got %{value}.
+    m210_imputation_no_catastral_value_missing: M210 imputed real-estate without cadastral
+      value requires a positive acquisition value or administrative checked value
+      (%{acquisition_casilla_id}, %{administrative_casilla_id}).
+    m210_imputation_no_filing_year: M210 imputed real-estate calculation requires
+      a non-zero filing year.
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
     text_input_non_text_casillas: 'Text input supplied for non-text fields: %{casilla_ids}.'
@@ -3700,6 +4310,7 @@ errors:
     error_categories: An error occurred in the expense categories.
     error_categories_validation: A category record failed validation.
     error_config_boundary: The config command encountered an unexpected internal error.
+    error_corpus_search: The on-host corpus search could not be completed.
     error_deadlines_deadline: An error occurred in the deadline calculation.
     error_deadlines_missing_windows: Deadline windows are missing.
     error_deadlines_profile: The self-employed profile could not be loaded or validated
@@ -3795,13 +4406,11 @@ errors:
     error_modelo_work_unit_not_found: The requested work unit was not found.
     error_modelos: A tax-modelo error occurred.
     error_modelos_validation: A modelo code violates its shape invariants.
-    error_normatives_normative: A normative-related error occurred.
-    error_normatives_normative_not_found: The requested normative or article was not
-      found.
-    error_normatives_validation: A normative field value is not valid.
     error_observation_key: An observation key component failed its repository contract.
     error_outbound_storage_not_found: The requested storage object or namespace does
       not exist.
+    error_outbound_storage_path_too_long: The resolved storage path exceeds the Windows
+      MAX_PATH limit.
     error_pdf_import_pdf_modelo_import: Importing the filing from the PDF failed.
     error_pdf_import_scrub: A safe version of the PDF could not be produced.
     error_period: A period-related error occurred.
@@ -3812,6 +4421,8 @@ errors:
     error_profile_amortization_ledger: A profile amortization ledger operation is
       not valid.
     error_profile_asset_record: A profile asset record is structurally invalid.
+    error_profile_bienes_inversion_record: A capital-goods IVA regularisation record
+      is structurally invalid.
     error_profile_cross_store_drift: A profile's physical stores disagree on its identity.
       The profile is not usable.
     error_profile_inventory_ledger: A profile inventory ledger operation is not valid.
@@ -3834,6 +4445,7 @@ errors:
     error_resources_load: A bundled application resource could not be loaded.
     error_resources_not_found: The requested bundled resource was not found.
     error_resources_validation: A bundled application file failed strict validation.
+    error_retention: Could not evaluate the tax-record retention policy.
     error_review: A review error occurred.
     error_sanitization: An error occurred while sanitizing the document.
     error_sede: An error occurred in the AEAT electronic Sede.
@@ -3842,6 +4454,9 @@ errors:
     error_sede_expediente_not_found: No expediente matched the requested filter.
     error_sede_navigation: A navigation step in the AEAT Sede failed.
     error_storage_bucket: An error occurred in the storage bucket lifecycle.
+    error_storage_bucket_path_too_long: The bucket directory path exceeds the Windows
+      MAX_PATH limit. Move AEAT_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled
+      (see `aeat config check`).
     error_submission_validation: A submission model failed validation.
     error_transaction_catalogue: The transaction catalogue is invalid or inconsistent.
     error_transaction_classification_rule: A ledger classification rule is invalid.
@@ -3920,7 +4535,6 @@ errors:
       could not be saved or loaded.
     fail_modelo_work_unit_persistence: The work-unit catalogue could not be saved
       or read
-    fail_normatives_normative_parse: A normative record failed schema validation.
     fail_observability_run_trace_persistence: The run trace store could not complete
       a filesystem operation.
     fail_outbound_storage: A storage-provider error occurred.
@@ -3985,6 +4599,7 @@ errors:
     source_file_not_found: 'Source file does not exist: {path}'
     source_file_too_large: 'Source file is too large: {path} ({size_bytes} bytes;
       maximum {max_bytes} bytes)'
+    unsupported_date_format: 'Invalid date format for {label}: {raw}. Expected {expected_format}.'
   identity:
     cif_check_char_mismatch_mixed: 'CIF check character is incorrect (kind {kind}):
       expected {expected} or {alt}, got {got}.'
@@ -4043,6 +4658,9 @@ errors:
       validation.
     integrity_storage_classification: A record's declared sensitivity class is incompatible
       with its repository.
+    integrity_storage_corpus_bundle: The corpus bundle could not be parsed or verified.
+    integrity_storage_corpus_bundle_verification: The corpus bundle failed checksum
+      verification against its embedded manifest.
     integrity_storage_corpus_manifest: The corpus manifest could not be parsed or
       validated.
     integrity_storage_corpus_manifest_drift: 'The on-disk corpus diverges from its
@@ -4083,7 +4701,7 @@ errors:
       check. Do not import archives from an untrusted source.
   internal:
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
-      error.
+      error, not a stored-data problem. Inspect the diagnostic logs to see what failed.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
     internal_master_key_type: 'Internal error: master-key operation received a value
@@ -4150,6 +4768,9 @@ errors:
       100%.
     modelo_347_threshold: Modelo 347 operations above the reporting threshold require
       explicit declaration coverage.
+    modelo_349_country_prefix_context: 'Modelo 349 rejects country prefix {country_code}
+      for operation key {clave_operacion} in {filing_year}/{period}: {reason}. Authority:
+      AEAT Brexit IVA NIF-IVA / Modelo 349 instructions.'
     modelo_ambiguous_semantic_role_casilla: More than one casilla uses semantic role
       %{semantic_role}; use the exact canonical casilla.id.
     modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
@@ -4160,6 +4781,7 @@ errors:
     modelo_calculate_relation_input: errors.refused.modelo_calculate_relation_input
     modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
     modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
+    modelo_calculate_text_input: errors.refused.modelo_calculate_text_input
     modelo_calculation_revision_selector_ambiguous: The calculation revision selector
       matched more than one revision; refine the selector.
     modelo_calculation_revision_selector_state: The selected calculation revision
@@ -4214,6 +4836,8 @@ errors:
       with the input provided.
     refused_application_registry_input: The modelo registry request cannot be executed
       with the input provided.
+    refused_auth_certificate_source_not_found: The named certificate source is not
+      registered.
     refused_auth_configure_dangling_active_profile: The active-profile pointer does
       not resolve to a registered bucket.
     refused_auth_diagnostic_payload: 'Refused: authentication diagnostic payload is
@@ -4235,6 +4859,9 @@ errors:
       command's arguments or run `aeat --help`.
     refused_config_reset_unconfirmed: The configuration reset was not confirmed. Re-run
       the command confirming the operation.
+    refused_corpus_search_dependency: This corpus-search operation needs the optional
+      semantic-search components; install them and retry.
+    refused_corpus_search_input: The corpus search request could not be satisfied.
     refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
       violated; check that exactly one of next_action or dead_end is set for fail/warn
       rows, and neither is set for ok rows.
@@ -4310,6 +4937,13 @@ errors:
     refused_llm_validation: A language-model object failed validation.
     refused_modelo_100_borrador_binding: The Modelo 100 borrador values cannot be
       consumed for the calculation.
+    refused_modelo_amendment_complementaria_liability_decrease: A complementaria cannot
+      lawfully decrease the taxpayer's declared liability before the autoliquidación
+      rectificativa unification. Use the solicitud de rectificación procedure for
+      a liability-decreasing correction instead.
+    refused_modelo_amendment_kind_not_permitted: The requested amendment kind is not
+      legally available for the resolved filing period. The accepted kind set is listed
+      in the error context.
     refused_modelo_amendment_override_casilla: An amendment override targets a casilla
       the registry does not declare for that modelo, year and period.
     refused_modelo_amendment_verification: The corrected casilla map of the amendment
@@ -4323,8 +4957,6 @@ errors:
     refused_modelo_refund_election_not_eligible: A refund was requested for a period
       where it is not available; only the year's last filing period permits a non-REDEME
       refund.
-    refused_modelo_workflow_gate: The workflow gate refused the filing transition.
-      The declaration cannot be considered legally filed.
     refused_no_active_profile: This operation requires an active profile. Create or
       select a profile and try again.
     refused_operator_surface_contract: The requested surface is outside the accepted
@@ -4341,6 +4973,8 @@ errors:
     refused_profile_asset_validation: A profile asset record failed validation.
     refused_profile_basis_cap_exceeded: The cumulative amortization would exceed the
       asset's cost basis.
+    refused_profile_bienes_inversion_validation: A capital-goods IVA regularisation
+      record failed validation.
     refused_profile_binding_resolution: A profile fact required for the calculation
       could not be resolved into the correct binding channel.
     refused_profile_foral_regime: The foral regime selected is not modelled by this
@@ -4358,6 +4992,10 @@ errors:
     refused_profile_schema_validation: The profile data violates the schema contract.
       Correct the values shown.
     refused_renta_maritime_exemption_inactive: errors.refused.refused_renta_maritime_exemption_inactive
+    refused_retention_floor: 'Erase refused: %{retained_record_count} filed tax record(s)
+      are still within the legal retention period (Ley 58/2003, LGT art. 66 and 70).
+      The earliest safe erase date is %{earliest_safe_erase_date}. Wait until then,
+      or re-run with --i-acknowledge-legal-retention-obligations and --reason to override.'
     refused_review_edit_parse: '`--set KEY=VALUE` could not be parsed. Check the syntax
       of the value provided.'
     refused_review_filter_parse: '`--filter KEY=VALUE` could not be parsed. Check
@@ -4510,6 +5148,41 @@ locales:
     scaffold_updated: locale scaffold updated
     set:
       updated: updated %{locale_file}:%{key}
+mcp:
+  elicitation:
+    confirm:
+      consequence_handoff: This produces the filing-grade artefact the taxpayer will
+        file with AEAT themselves. Nothing is submitted anywhere by confirming.
+      consequence_local: This changes local data for the active taxpayer profile.
+      declined: '''{command}'' was not confirmed by the user ({outcome}); nothing
+        was run.'
+      field_description: Run '{command}' now?
+      message: Confirm running '{command}'. {consequence} Answer yes to proceed or
+        no to stop.
+    refusal:
+      blocked: '''{command}'' is permanently blocked: live submission to AEAT is forbidden
+        by design. Export locally; the taxpayer files themselves.'
+      no_channel: '''{command}'' needs a human confirmation, and this client does
+        not support elicitation. Run it from a client that can ask you questions,
+        or run the equivalent aeat CLI command directly in a terminal.'
+  faithfulness:
+    advisory: 'FAITHFULNESS ADVISORY: the call''s arguments cite amount(s) [{values}]
+      that no tool result in this session produced. Verify the figure against a calculate/revision
+      read before relying on it.'
+  harness:
+    off_host_consent: 'Privacy notice — read before continuing. This console is operated
+      by an AI assistant running on your chosen LLM provider. Your words, and the
+      figures the assistant works with (amounts, casilla values, obligations), are
+      sent to that provider to operate the console. Your SOURCE DOCUMENTS — invoices,
+      bank statements, and any evidence bytes — NEVER leave your machine: they stay
+      in encrypted local storage and are never transmitted. If you are acting for
+      a third party (a gestor or professional), confirm this is acceptable before
+      you proceed.'
+  persona:
+    handoff_denied: '''{command}'' is the irreversible filing-handoff boundary, owned
+      by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied
+      it. Hand the verified work unit to the verifier session to produce the export
+      or record marker.'
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for
@@ -4532,6 +5205,8 @@ profile:
     description: Profile configuration keys and their descriptions
     tax:
       id: Tax identifier (NIF/CIF/DNI/NIE)
+  validation:
+    required_field_missing: Required profile field missing.
 review:
   adapters:
     errors:
@@ -4565,6 +5240,7 @@ sheets:
     headers:
       acquisition_date: Acquisition date
       amount: Amount
+      amount_donated: Amount donated
       asset_class_code: Asset class code
       asset_identifier: Asset identifier
       base_imponible: Tax base
@@ -4574,7 +5250,11 @@ sheets:
       counterparty_tax_id: Counterparty tax id
       country_code: Country code
       currency_code: Currency code
+      deduction_percentage: Deduction percentage
+      donor_legal_name: Donor legal name
+      donor_tax_id: Donor tax id
       ingreso_a_cuenta: In-kind tax credit
+      is_recurrent: Recurrent donation
       member_legal_name: Member legal name
       member_state_code: Member state
       member_tax_id: Member tax id
@@ -4656,11 +5336,16 @@ topic:
     body: Set of tax regimes applicable to an autonomo. The two main axes are IVA
       (general, simplified, recargo de equivalencia, exempt) and IRPF (direct, objective).
     title: Tax regimes
-  sii-verifactu:
-    body: Electronic invoice transmission systems to AEAT. SII (Suministro Inmediato
-      de Información) is mandatory for large companies; Verifactu (RD 1007/2023) is
-      a phased requirement for billing systems.
-    title: SII and Verifactu
+  sii:
+    body: IVA Suministro Inmediato de Información. It requires taxpayers on monthly
+      IVA settlement, including large companies, IVA groups, and REDEME taxpayers,
+      to keep VAT record books through AEAT Sede.
+    title: SII
+  verifactu:
+    body: RD 1007/2023 requirements for invoicing software systems. The current milestone
+      is 1 January 2027 for Corporate Income Tax taxpayers under art. 3.1.a and 1
+      July 2027 for the other obligated taxpayers under art. 3.1.
+    title: VERI*FACTU
 transactions:
   import:
     message_053465: Duplicate transaction detected within imported file.
@@ -4707,8 +5392,11 @@ wizard:
       \ run does not have one.\nNothing has been saved yet.\n\nYou can finish creating\
       \ this profile in one of two ways:\n\n1. Run the command again from an interactive\
       \ terminal to use the guided setup:\n     aeat config profile create NAME\n\n\
-      2. Or create it in one step by supplying the required details as flags:\n  \
-      \   aeat config profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE"
+      2. Or create a resident IRPF natural-person profile in one step by supplying\
+      \ the required details as flags:\n     aeat config profile create NAME --quiet\
+      \ --tax-id NIF/CIF/DNI/NIE --entity-type natural_person --irpf-income-categories\
+      \ actividad_economica --tax-residence-ccaa madrid --name GIVEN_NAME --surnames\
+      \ FAMILY_NAMES"
     unsupported_console_edit: "The guided setup could not open an interactive prompt\
       \ in this run.\nNothing has been saved yet.\n\nEdit this profile non-interactively\
       \ by naming the field to change:\n  aeat config profile edit %{profile_name}\
@@ -4775,6 +5463,10 @@ wizard:
           when set, obligations for periods before this date are not shown.
       address-postcode:
         help: Tax address postcode
+      art109-activity-income-withholding-ge-70pct:
+        help: Art. 109 coverage - at least 70% of covered professional, agricultural,
+          livestock, or forestry activity income subject to withholding or payment
+          on account
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
       cloud-evidence-upload:
@@ -4820,6 +5512,10 @@ wizard:
         help: Date the worker elected the inpatriate regime (YYYY-MM-DD). Only when
           irpf-special-regime is "impatriado". RIRPF Art. 116. The regime expires
           at the end of the 6th calendar year.
+      iva-group-dominant-entity-enrolled:
+        help: Enrolled as the dominant entity of an IVA group
+      iva-group-member-enrolled:
+        help: Enrolled as a member entity of an IVA group
       iva-intracommunity-operations-exceed-50000-eur:
         help: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:
@@ -4836,8 +5532,25 @@ wizard:
         help: Recognised legal form when the entity type is a legal entity
       legal-name:
         help: Legal or company name for legal-entity export headers
+      ley-49-2002-option-date:
+        help: Record the Modelo 036 casilla 653 date for the Ley 49/2002 Title II
+          option.
+      ley-49-2002-option-declared:
+        help: Record whether Modelo 036 casilla 651 declares the Ley 49/2002 Title
+          II option.
+      ley-49-2002-renunciation-date:
+        help: Record the Modelo 036 casilla 654 date for the Ley 49/2002 Title II
+          renunciation.
+      ley-49-2002-renunciation-declared:
+        help: Record whether Modelo 036 casilla 652 declares renunciation of the Ley
+          49/2002 Title II regime.
       llm-vision:
         help: Enable on-host LLM vision for reading invoices.
+      modelo-111-no-retenciones-periods:
+        help: Comma-separated Modelo 111 no-obligation periods, format YYYY:PERIOD
+          (for example 2025:2T,2025:3T). Use only when no subject payments were made.
+      monedas-virtuales-extranjero-above-threshold:
+        help: Virtual currencies held abroad above Modelo 721 threshold
       name:
         help: Display name shown in local reviews
       new-entity-first-two-profit-periods:
@@ -4917,7 +5630,7 @@ wizard:
           = judicial incapacity, 4 = third-party assistance or reduced mobility.'
       taxpayer-marital-status:
         help: 'First taxpayer marital status: 1 = single, 2 = married, 3 = widowed,
-          4 = separated or divorced.'
+          4 = separated or divorced, 5 = registered civil partnership.'
       taxpayer-marriage-date:
         help: Start date of the current marriage (YYYY-MM-DD). Only when marital status
           = 2 (married). Derives casillas 0245/0246/0247 (matrimonio sobrevenido,
@@ -4926,8 +5639,6 @@ wizard:
         help: 'First taxpayer sex: H = male, M = female.'
       third-party-transactions-above-347-threshold:
         help: Third-party transactions exceed Modelo 347 threshold
-      uses-objective-estimation-irpf:
-        help: Files IRPF under objective estimation
     intro: 'Guided tax profile setup
 
       This prepares the local profile the app uses for ledger work and tax-form checks.
@@ -4937,6 +5648,10 @@ wizard:
       residence, and family details if they apply. After saving, check progress with
       `aeat config profile status`.'
     iva:
+      iva-group-dominant-entity-enrolled:
+        prompt: Enrolled as an IVA group dominant entity
+      iva-group-member-enrolled:
+        prompt: Enrolled as an IVA group member entity
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:
@@ -4955,6 +5670,8 @@ wizard:
         prompt: Notes for your own records (optional)
       title: Notes for your own records
     obligations:
+      art109-activity-income-withholding-ge-70pct:
+        prompt: Art. 109 70% activity-income coverage exception applies
       bienes-extranjero-above-threshold:
         prompt: Foreign-held assets above legal threshold
       does-intracomunitario:
@@ -4985,6 +5702,12 @@ wizard:
         help: Date the worker opted into the inpatriate regime (RIRPF Art. 116). The
           regime expires at the end of the 6th calendar year.
         prompt: Special regime election date (YYYY-MM-DD)
+      modelo-111-no-retenciones-periods:
+        help: Comma-separated YYYY:PERIOD periods where no rentas subject to retención
+          or ingreso a cuenta were paid, so no all-blank Modelo 111 is filed.
+        prompt: Modelo 111 no-retenciones periods
+      monedas-virtuales-extranjero-above-threshold:
+        prompt: Virtual currencies held abroad above Modelo 721 threshold
       pays-capital-income-with-retencion:
         prompt: Pays capital income with retención
       pays-professionals-with-retencion:
@@ -4996,8 +5719,6 @@ wizard:
       third-party-transactions-above-347-threshold:
         prompt: Third-party transactions exceed Modelo 347 threshold
       title: Modelo obligations
-      uses-objective-estimation-irpf:
-        prompt: Files IRPF under objective estimation
     profile:
       activity:
         prompt: Business activity (plain text is fine; use the IAE heading if you
@@ -5021,12 +5742,12 @@ wizard:
             label: Equivalence surcharge
           simplificado:
             label: Simplified regime
-      name:
-        prompt: Display name shown in local reviews
       legal-name:
         help: For legal entities this is the filing name used in entity-style export
           headers. It is separate from the local display name.
         prompt: Legal or company name for export headers
+      name:
+        prompt: Display name shown in local reviews
       output-language:
         choices:
           ca:
@@ -5155,6 +5876,8 @@ wizard:
         choices:
           casado:
             label: 2 - married
+          pareja-hecho:
+            label: 5 - registered civil partnership
           separado-divorciado:
             label: 4 - separated or divorced
           soltero:
@@ -5219,6 +5942,21 @@ wizard:
           sociedad-civil-mercantil:
             label: Civil partnership with commercial object
         prompt: Legal form
+      ley-49-2002-option-date:
+        help: Use the ISO date corresponding to Modelo 036 casilla 653.
+        prompt: Date declared for the Ley 49/2002 special-regime option
+      ley-49-2002-option-declared:
+        help: Use the declaration fact from Modelo 036 casilla 651; legal application
+          still depends on the statutory requirements and no renunciation.
+        prompt: Has the entity filed the Modelo 036 option for the Title II Ley 49/2002
+          special fiscal regime?
+      ley-49-2002-renunciation-date:
+        help: Use the ISO date corresponding to Modelo 036 casilla 654.
+        prompt: Date declared for the Ley 49/2002 special-regime renunciation
+      ley-49-2002-renunciation-declared:
+        help: Use the declaration fact from Modelo 036 casilla 652.
+        prompt: Has the entity filed a Modelo 036 renunciation of the Title II Ley
+          49/2002 special fiscal regime?
       new-entity-first-two-profit-periods:
         help: Applies only to legal entities. When set, the entity is taxed at the
           15 percent reduced rate during those two periods.

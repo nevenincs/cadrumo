@@ -7,7 +7,10 @@ amounts from the parent gross and the tax substrate from the registry.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -17,6 +20,12 @@ from .. import (
     LLMClassifierError,
     LLMSplitChild,
     LLMSplitResponse,
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
+    Transaction,
+    TransactionDirection,
+    build_split_prompt,
     parse_split_response,
     prompt_spec_with_saturation_fields,
 )
@@ -36,46 +45,51 @@ def _child(proportion: str) -> LLMSplitChild:
     return LLMSplitChild(proportion=Decimal(proportion), iva_category=IvaCategory.DOMESTIC_GENERAL_21)
 
 
-def test_valid_two_way_split_builds() -> None:
-    response = LLMSplitResponse(
-        children=(_child("0.6"), _child("0.4")),
-        reason="invoice has a business line and a personal line",
+def _assert_validation_error(case_id: str, build: Callable[[], object]) -> None:
+    try:
+        build()
+    except ValidationError:
+        return
+    pytest.fail(f"{case_id} unexpectedly validated")
+
+
+def test_split_response_verdicts_build() -> None:
+    verdicts = (
+        ("two-way-split", (_child("0.6"), _child("0.4")), True),
+        ("single-child-no-split", (_child("1.0"),), False),
     )
-    assert len(response.children) == 2
-    assert sum(c.proportion for c in response.children) == Decimal("1.0")
-    assert response.recommends_split is True
+    for case_id, children, expected_recommends_split in verdicts:
+        response = LLMSplitResponse(children=children, reason=case_id)
+        assert len(response.children) == len(children), case_id
+        assert sum(c.proportion for c in response.children) == Decimal("1.0"), case_id
+        assert response.recommends_split is expected_recommends_split, case_id
 
 
-def test_single_child_is_the_no_split_verdict() -> None:
-    # A single child at proportion 1.0 is the "no split warranted" verdict — the
-    # model read the invoice and judged it a single line. It validates, and
-    # recommends_split is False so the auto-split router classifies in place.
-    response = LLMSplitResponse(children=(_child("1.0"),), reason="single line at one rate")
-    assert len(response.children) == 1
-    assert response.recommends_split is False
-
-
-def test_split_requires_at_least_one_child() -> None:
-    with pytest.raises(ValidationError):
-        LLMSplitResponse(children=(), reason="no children")
-
-
-def test_proportions_must_sum_to_one() -> None:
-    with pytest.raises(ValidationError):
-        LLMSplitResponse(children=(_child("0.6"), _child("0.6")), reason="oversum")
-
-
-def test_child_proportion_out_of_range_rejected() -> None:
-    with pytest.raises(ValidationError):
-        LLMSplitChild(proportion=Decimal("0"))
-    with pytest.raises(ValidationError):
-        LLMSplitChild(proportion=Decimal("1.5"))
-
-
-@pytest.mark.parametrize("numeric_field", ["amount", "iva_amount", "taxable_base", "iva_rate"])
-def test_split_child_structurally_refuses_numeric_fields(numeric_field: str) -> None:
-    with pytest.raises(ValidationError):
-        LLMSplitChild.model_validate({"proportion": "0.5", numeric_field: "100.00"})
+def test_invalid_split_schema_payloads_are_rejected() -> None:
+    invalid_builders: tuple[tuple[str, Callable[[], object]], ...] = (
+        ("empty-children", lambda: LLMSplitResponse(children=(), reason="no children")),
+        ("oversum", lambda: LLMSplitResponse(children=(_child("0.6"), _child("0.6")), reason="oversum")),
+        ("zero-proportion", lambda: LLMSplitChild(proportion=Decimal("0"))),
+        ("above-one-proportion", lambda: LLMSplitChild(proportion=Decimal("1.5"))),
+        (
+            "numeric-amount",
+            lambda: LLMSplitChild.model_validate({"proportion": "0.5", "amount": "100.00"}),
+        ),
+        (
+            "numeric-iva-amount",
+            lambda: LLMSplitChild.model_validate({"proportion": "0.5", "iva_amount": "100.00"}),
+        ),
+        (
+            "numeric-taxable-base",
+            lambda: LLMSplitChild.model_validate({"proportion": "0.5", "taxable_base": "100.00"}),
+        ),
+        (
+            "numeric-iva-rate",
+            lambda: LLMSplitChild.model_validate({"proportion": "0.5", "iva_rate": "100.00"}),
+        ),
+    )
+    for case_id, build in invalid_builders:
+        _assert_validation_error(case_id, build)
 
 
 def test_parse_split_extracts_nested_json_amid_prose() -> None:
@@ -85,24 +99,22 @@ def test_parse_split_extracts_nested_json_amid_prose() -> None:
     assert response.children[0].iva_category is IvaCategory.DOMESTIC_GENERAL_21
 
 
-def test_parse_split_rejects_disallowed_iva_category() -> None:
-    # default_prompt_spec has no iva allow-list, so any iva_category is rejected.
-    with pytest.raises(LLMClassifierError):
-        parse_split_response(_VALID_SPLIT_JSON)
-
-
-def test_parse_split_no_json_raises() -> None:
-    with pytest.raises(LLMClassifierError):
-        parse_split_response("no json here", spec=prompt_spec_with_saturation_fields())
+def test_parse_split_rejects_invalid_outputs() -> None:
+    rejection_cases = (
+        ("disallowed-iva-category", lambda: parse_split_response(_VALID_SPLIT_JSON)),
+        ("no-json", lambda: parse_split_response("no json here", spec=prompt_spec_with_saturation_fields())),
+    )
+    for case_id, parse in rejection_cases:
+        try:
+            parse()
+        except LLMClassifierError:
+            continue
+        pytest.fail(f"{case_id} split output was accepted")
 
 
 def test_build_split_prompt_includes_evidence_and_no_numbers_guard() -> None:
-    from datetime import date
-
-    from .. import RawProvenance, RawTransaction, SourceFormat, Transaction, TransactionDirection, build_split_prompt
-
     raw = RawTransaction(
-        transaction_id="row-split",
+        provider_transaction_id="row-split",
         booked_date=date(2025, 3, 1),
         value_date=date(2025, 3, 1),
         amount=Decimal("121.00"),
@@ -110,16 +122,18 @@ def test_build_split_prompt_includes_evidence_and_no_numbers_guard() -> None:
         counterparty="Acme SL",
         description="mixed invoice",
         provenance=RawProvenance(
-            source_path=__import__("pathlib").Path(__file__),
+            source_path=Path(__file__),
             source_sha256="f" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=__import__("datetime").datetime(2026, 4, 6, 12, 0, tzinfo=__import__("datetime").UTC),
+            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="manual",
         ),
         raw_fields={"Concepto": "mixed invoice"},
     )
-    txn = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    txn = Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
+    )
     prompt = build_split_prompt(txn, spec=prompt_spec_with_saturation_fields(), evidence_text="line 1 ... line 2 ...")
     assert "begin evidence" in prompt
     assert "EXACTLY ONE child with proportion 1.0" in prompt

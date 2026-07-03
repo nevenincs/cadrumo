@@ -1,4 +1,19 @@
-"""Text-input validation for registry formula evaluation."""
+"""Text-input validation for registry formula evaluation.
+
+Text casilla inputs are canonicalised into
+:class:`~aeat.domain.calculations.registry.CasillaId` keys before
+:func:`aeat.domain.calculations.registry._formula_runtime.calculate_registry_snapshot`
+checks that they target text-capable
+:class:`~aeat.domain.calculations.registry.CasillaDefinition` rows.
+
+See Also:
+    :mod:`aeat.domain.calculations.registry._formula_runtime`
+        Runtime caller that consumes the validated text input mapping.
+    :mod:`aeat.domain.calculations.registry._formula_runtime_ops`
+        Numeric input companion that validates decimal casilla inputs.
+    :mod:`aeat.domain.calculations.registry._schema`
+        Registry schema layer declaring casilla identifiers and data types.
+"""
 
 from __future__ import annotations
 
@@ -14,6 +29,13 @@ __all__ = ["validate_text_input_targets", "validated_text_input_casilla_ids"]
 def validated_text_input_casilla_ids[InputKey, InputValue](
     text_inputs: Mapping[InputKey, InputValue],
 ) -> dict[CasillaId, str]:
+    """Canonicalise raw text input keys and strip operator-supplied strings.
+
+    Raw mapping keys become validated
+    :class:`~aeat.domain.calculations.registry.CasillaId` values; values must be
+    non-empty strings after whitespace trimming so text leaves enter the formula
+    runtime in canonical form.
+    """
     invalid = tuple(repr(key) for key in text_inputs if not isinstance(key, str))
     if invalid:
         raise RegistryValidationError(
@@ -36,9 +58,12 @@ def validated_text_input_casilla_ids[InputKey, InputValue](
         )
     resolved_text_inputs: dict[CasillaId, str] = {}
     for key, value in canonical_text_inputs.items():
-        if not isinstance(value, str) or not value:
+        if not isinstance(value, str):
             raise RegistryValidationError(f"text_input {key!r} must be a non-empty string")
-        resolved_text_inputs[key] = value
+        stripped = value.strip()
+        if not stripped:
+            raise RegistryValidationError(f"text_input {key!r} must be a non-empty string")
+        resolved_text_inputs[key] = stripped
     return resolved_text_inputs
 
 
@@ -47,6 +72,12 @@ def validate_text_input_targets(
     *,
     casillas_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> None:
+    """Ensure text inputs reference declared text casillas.
+
+    The runtime passes the revision's
+    :class:`~aeat.domain.calculations.registry.CasillaDefinition` map so callers
+    cannot supply unknown casillas or route text into numeric registry targets.
+    """
     text_casilla_ids = {casilla_id for casilla_id, casilla in casillas_by_id.items() if casilla.data_type == "text"}
     unknown_text_inputs = sorted(set(text_inputs).difference(casillas_by_id))
     if unknown_text_inputs:

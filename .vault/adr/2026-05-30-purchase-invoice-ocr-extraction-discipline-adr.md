@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#purchase-invoice-ocr-extraction-discipline'
 date: '2026-05-30'
-modified: '2026-05-30'
+modified: '2026-06-30'
 related:
   - "[[2026-05-30-declaracion-extraction-architecture-research]]"
   - "[[2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-05-21-declaracion-extraction-architecture-adr]]"
   - '[[2026-06-04-purchase-invoice-ocr-extraction-discipline-research]]'
 ---
-
-
 
 # `purchase-invoice-ocr-extraction-discipline` adr: `ocr-evidence-extraction-discipline-for-operator-uploaded-supplier-invoices` | (**status:** `accepted`)
 

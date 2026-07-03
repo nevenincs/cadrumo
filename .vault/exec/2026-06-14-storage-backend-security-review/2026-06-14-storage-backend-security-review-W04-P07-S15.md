@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#storage-backend-security-review'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S15'
 related:
   - "[[2026-06-14-storage-backend-security-review-plan]]"
 ---
-
-
-
 
 # Replace the resolved absolute source_path provenance with a relative filename or sha-only reference in the raw transaction model
 

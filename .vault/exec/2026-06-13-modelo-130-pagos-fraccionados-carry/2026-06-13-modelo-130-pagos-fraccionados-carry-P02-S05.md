@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S05'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
 ---
-
-
-
 
 # author the casilla 05 registry formula computing sum of per-quarter max(0, prior 07_q) minus sum of prior 16_q (positive-part per quarter before summing, minoracion subtracted), preserving the carried prior-filing values unmodified (shape 2a)
 

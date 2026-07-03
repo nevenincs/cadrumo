@@ -1,4 +1,24 @@
-"""Static CLI architecture guards for modelo command decomposition."""
+"""Static CLI architecture guards for modelo command decomposition.
+
+The two cross-package private-import checks this module carried
+(``test_extracted_modelo_cli_modules_do_not_import_private_application_modules``
+and ``test_extracted_modelo_cli_modules_do_not_add_untracked_private_domain_imports``,
+the latter's ``_PRIVATE_DOMAIN_IMPORT_EXCEPTIONS`` allowlist covering
+``_modelo_iva_wallet_cli.py`` -> ``domain.iva_compensation._errors`` and
+``_modelo_maritime_cli.py`` -> ``domain.renta._errors``) are superseded by the
+project-wide ratcheting import-hygiene gate,
+``src/aeat/tests/test_import_hygiene_gate.py`` (backed by
+``dev/import_hygiene_scan.py`` and ``dev/import_hygiene_baseline.json``), per
+the ``import-centralization`` decision record's Ruling 8. Both former allowlist entries are
+empty in practice at supersession time: neither modelo CLI module still
+imports its domain package's private submodule (both now import the public
+facade), and the general gate enforces the boundary for every production file
+under ``src/aeat``, not just the modelo CLI surface. The remaining checks
+below (legacy-root growth budgets, raw-id-regex placement, legacy-selector
+reintroduction, centralized-addressing bypass) are modelo-CLI-decomposition-
+specific structural rules, not import-hygiene duplicates, and remain this
+module's own authority.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +28,7 @@ from pathlib import Path
 import pytest
 
 from ....core.paths import PROJECT_ROOT
+from ....tests import leaf_name
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -39,11 +60,6 @@ _CENTRALIZED_ADDRESSING_FORBIDDEN_NAMES = {
     "resolve_modelo_calculation_revision_address",
     "resolve_modelo_work_address_unit",
     "resolve_verifiable_modelo_calculation_revision_address",
-}
-
-_PRIVATE_DOMAIN_IMPORT_EXCEPTIONS = {
-    ("_modelo_iva_wallet_cli.py", "domain.iva_compensation._errors"),
-    ("_modelo_maritime_cli.py", "domain.renta._errors"),
 }
 
 
@@ -88,14 +104,6 @@ def _registry_query_service_call_count(path: Path) -> int:
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "RegistryQueryService":
             count += 1
     return count
-
-
-def _call_name(node: ast.Call) -> str | None:
-    if isinstance(node.func, ast.Name):
-        return node.func.id
-    if isinstance(node.func, ast.Attribute):
-        return node.func.attr
-    return None
 
 
 def _raw_id_regex_lines(path: Path) -> tuple[int, ...]:
@@ -151,35 +159,6 @@ def test_legacy_modelo_root_does_not_add_registry_authority_reads() -> None:
     assert service_calls <= _LEGACY_ROOT_REGISTRY_QUERY_SERVICE_CALL_BUDGET
 
 
-def test_extracted_modelo_cli_modules_do_not_import_private_application_modules() -> None:
-    """CLI modules consume application package facades, not private service files."""
-    offenders: list[str] = []
-    for path in _production_modelo_cli_modules():
-        for line_number, level, module in _import_from_modules(path):
-            if level >= 3 and module.startswith("application.") and "._" in module:
-                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{line_number}: {module}")
-            if module.startswith("aeat.application.") and "._" in module:
-                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{line_number}: {module}")
-
-    assert offenders == [], "modelo CLI modules bypass application facades:\n  " + "\n  ".join(offenders)
-
-
-def test_extracted_modelo_cli_modules_do_not_add_untracked_private_domain_imports() -> None:
-    """Private domain imports in extracted CLI modules must be explicit debt rows."""
-    offenders: list[str] = []
-    for path in _production_modelo_cli_modules():
-        for line_number, level, module in _import_from_modules(path):
-            is_relative_private_domain = level >= 3 and module.startswith("domain.") and "._" in module
-            is_absolute_private_domain = module.startswith("aeat.domain.") and "._" in module
-            if not (is_relative_private_domain or is_absolute_private_domain):
-                continue
-            normalized = module.removeprefix("aeat.")
-            if (path.name, normalized) not in _PRIVATE_DOMAIN_IMPORT_EXCEPTIONS:
-                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{line_number}: {module}")
-
-    assert offenders == [], "untracked private domain imports in modelo CLI modules:\n  " + "\n  ".join(offenders)
-
-
 def test_extracted_modelo_cli_modules_do_not_define_raw_id_regexes_outside_support() -> None:
     """Raw exact-id shape checks belong in the shared CLI support helper."""
     offenders: list[str] = []
@@ -203,7 +182,7 @@ def test_extracted_modelo_cli_modules_do_not_reintroduce_legacy_selector_calls()
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
-                name = _call_name(node)
+                name = leaf_name(node.func)
                 if name in _LEGACY_SELECTOR_CALL_NAMES:
                     offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{node.lineno}: {name}")
 
@@ -225,7 +204,7 @@ def test_modelo_cli_uses_centralized_operator_addressing_facades() -> None:
                             f"{path.relative_to(PROJECT_ROOT).as_posix()}:{node.lineno}: import {alias.name}",
                         )
             if isinstance(node, ast.Call):
-                name = _call_name(node)
+                name = leaf_name(node.func)
                 if name in _CENTRALIZED_ADDRESSING_FORBIDDEN_NAMES:
                     offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{node.lineno}: {name}")
 

@@ -1,11 +1,11 @@
 """Evidence-presence advisory gate: fires on significant evidence-less rows only.
 
-The advisory pairs a transaction's economic role with its evidence presence
+The diagnostics pair a transaction's IVA settlement side with its evidence presence
 (``no-silent-under-declaration``). These gates assert:
 
 * it fires exactly one ``missing_transaction_evidence`` diagnostic on a positive
-  OUTGOING BUSINESS expense with a deductible IVA category and no evidence, and
-  on a positive INCOMING cuota-bearing row with no evidence;
+  OUTGOING BUSINESS expense with deductible IVA and no evidence, and on a
+  positive INCOMING output-IVA row with no evidence;
 * it does NOT fire when the row carries an attachment or a purchase invoice
   (the evidence-present counter-case);
 * it does NOT fire on the false-positive set: a cuota-less (exempt) IVA
@@ -35,7 +35,8 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from .._evidence_advisory import (
-    MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND,
+    MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
+    MISSING_OUTPUT_VAT_EVIDENCE_SOURCE_KIND,
     missing_evidence_advisory_observations,
 )
 
@@ -44,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _raw(provider_id: str, *, amount: Decimal) -> RawTransaction:
     return RawTransaction(
-        transaction_id=provider_id,
+        provider_transaction_id=provider_id,
         booked_date=date(2026, 4, 15),
         value_date=date(2026, 4, 15),
         amount=amount,
@@ -74,14 +75,22 @@ def _tx(
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
     attachment_ids: tuple[str, ...] = (),
     purchase_invoice_evidence_id: str | None = None,
+    taxable_base: Decimal | None = Decimal("100.00"),
+    iva_rate: Decimal | None = Decimal("0.21"),
+    iva_amount: Decimal | None = Decimal("21.00"),
 ) -> Transaction:
     payload: dict[str, object] = {
         "raw": _raw(provider_id, amount=amount),
         "direction": direction,
         "business_classification": business_classification,
+        "source_jurisdiction": "ES",
+        "group_label": None,
         "iva_category": iva_category,
         "lifecycle_state": lifecycle_state,
         "attachment_ids": attachment_ids,
+        "taxable_base": taxable_base,
+        "iva_rate": iva_rate,
+        "iva_amount": iva_amount,
     }
     if business_pct is not None:
         payload["business_pct"] = business_pct
@@ -97,7 +106,7 @@ def test_advisory_fires_on_outgoing_business_expense_without_evidence() -> None:
     assert len(diagnostics) == 1
     diagnostic = diagnostics[0]
     assert diagnostic.reason == "missing_transaction_evidence"
-    assert diagnostic.source_kind == MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND
+    assert diagnostic.source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
     assert diagnostic.binding_id == tx.transaction_id
 
 
@@ -110,6 +119,7 @@ def test_advisory_fires_on_incoming_cuota_bearing_income_without_evidence() -> N
     diagnostics = missing_evidence_advisory_observations([tx])
     assert len(diagnostics) == 1
     assert diagnostics[0].binding_id == tx.transaction_id
+    assert diagnostics[0].source_kind == MISSING_OUTPUT_VAT_EVIDENCE_SOURCE_KIND
 
 
 def test_advisory_silent_when_attachment_present() -> None:
@@ -137,7 +147,12 @@ def test_advisory_silent_on_personal_non_business_row() -> None:
 
 def test_advisory_silent_on_zero_amount_row() -> None:
     """A zero-amount row with no evidence does not fire."""
-    tx = _tx("zero-amount", amount=Decimal("0.00"))
+    tx = _tx(
+        "zero-amount",
+        amount=Decimal("0.00"),
+        taxable_base=Decimal("0.00"),
+        iva_amount=Decimal("0.00"),
+    )
     assert missing_evidence_advisory_observations([tx]) == ()
 
 
@@ -147,9 +162,23 @@ def test_advisory_silent_on_non_active_row() -> None:
     assert missing_evidence_advisory_observations([tx]) == ()
 
 
-def test_advisory_silent_on_outgoing_with_no_iva_category() -> None:
-    """A business expense with no IVA classification yet does not fire."""
+def test_advisory_fires_on_outgoing_with_positive_iva_and_no_explicit_category() -> None:
+    """A domestic-rate row with no explicit IVA category still feeds M303."""
     tx = _tx("unclassified-expense", iva_category=None)
+    diagnostics = missing_evidence_advisory_observations([tx])
+    assert len(diagnostics) == 1
+    assert diagnostics[0].source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
+
+
+def test_advisory_silent_without_positive_iva_quota() -> None:
+    """A row with no stored IVA quota does not fire even if gross is positive."""
+    tx = _tx(
+        "no-iva-quota",
+        amount=Decimal("121.00"),
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
+    )
     assert missing_evidence_advisory_observations([tx]) == ()
 
 

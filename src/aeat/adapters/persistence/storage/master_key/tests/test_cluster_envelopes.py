@@ -41,29 +41,20 @@ def _envelope_round_trip(err: AeatError) -> None:
     assert envelope.message, f"{type(err).__name__} produced empty envelope.message"
 
 
-@pytest.mark.parametrize(
-    "error_instance",
-    [
+def test_cluster_error_envelope_round_trips() -> None:
+    """Every master_key cluster error round-trips through the error envelope."""
+
+    error_instances = (
         MasterKeyReentrantError("SomeProvider"),
         MasterKeyTypeError("wrong type"),
         KeyDerivationError("unsupported KDF algorithm 'bcrypt'"),
         EncryptionError("kek must be exactly 32 bytes"),
         StorageValidationError("bucket_id must be non-empty"),
         SecretStoreError("generic secret store failure"),
-    ],
-    ids=[
-        "MasterKeyReentrantError",
-        "MasterKeyTypeError",
-        "KeyDerivationError",
-        "EncryptionError",
-        "StorageValidationError",
-        "SecretStoreError",
-    ],
-)
-def test_cluster_error_envelope_round_trips(error_instance: AeatError) -> None:
-    """Every master_key cluster error round-trips through the error envelope."""
+    )
 
-    _envelope_round_trip(error_instance)
+    for error_instance in error_instances:
+        _envelope_round_trip(error_instance)
 
 
 def test_master_key_reentrant_error_is_secret_store_error_subtype() -> None:

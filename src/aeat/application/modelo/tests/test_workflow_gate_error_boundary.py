@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from ....core.config import override_settings
 from ....core.errors import render_error_json, render_error_text
 from ...workflow import (
     WorkflowAbortReason,
@@ -28,12 +29,16 @@ from ...workflow import (
     WorkflowStage,
     WorkflowStep,
 )
-from .._actions import ModeloWorkflowGateError
+from .. import ModeloWorkflowGateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _aborted_result(*, summary: str = "No pending filing obligation for this profile") -> WorkflowResult:
+def _aborted_result(
+    *,
+    summary: str = "No pending filing obligation for this profile",
+    reason: WorkflowAbortReason = WorkflowAbortReason.NO_PENDING_OBLIGATION,
+) -> WorkflowResult:
     """Build a realistic ABORTED workflow result with nested steps."""
 
     started = datetime(2026, 5, 21, 6, 49, 48, 69357, tzinfo=UTC)
@@ -43,7 +48,7 @@ def _aborted_result(*, summary: str = "No pending filing obligation for this pro
         started_at=started,
         ended_at=ended,
         final_stage=WorkflowStage.ABORTED,
-        aborted_reason=WorkflowAbortReason.NO_PENDING_OBLIGATION,
+        aborted_reason=reason,
         obligation=None,
         draft_id=None,
         submission_id=None,
@@ -76,8 +81,9 @@ def test_gate_error_text_carries_no_raw_python_repr() -> None:
     at the operator.
     """
 
-    error = ModeloWorkflowGateError(_aborted_result())
-    rendered = render_error_text(error)
+    with override_settings(aeat_output_language="en"):
+        error = ModeloWorkflowGateError(_aborted_result())
+        rendered = render_error_text(error)
 
     # The clean operator refusal and next-step hint survive. For a
     # NO_PENDING_OBLIGATION abort the next-step hint signposts the local
@@ -109,6 +115,46 @@ def test_gate_error_context_exposes_stable_primitive_machine_codes() -> None:
     rendered = render_error_text(error)
 
     assert "abort_code: NO_PENDING_OBLIGATION" in rendered
+    assert "stage: ABORTED" in rendered
+
+
+@pytest.mark.parametrize(
+    ("language", "expected"),
+    (
+        ("es", "No hay ninguna obligación de presentación pendiente"),
+        ("ca", "No hi ha cap obligació de presentació pendent"),
+        ("hu", "Nincs függőben lévő benyújtási kötelezettség"),
+    ),
+)
+def test_no_pending_obligation_gate_message_uses_output_language(language: str, expected: str) -> None:
+    """The operator refusal localises while machine codes stay raw."""
+
+    with override_settings(aeat_output_language=language):
+        rendered = render_error_text(ModeloWorkflowGateError(_aborted_result()))
+
+    assert expected in rendered
+    assert "No pending filing obligation for this profile" not in rendered
+    assert "abort_code: NO_PENDING_OBLIGATION" in rendered
+    assert "stage: ABORTED" in rendered
+
+
+def test_other_gate_abort_reasons_keep_their_workflow_summary() -> None:
+    """Only the no-pending-obligation refusal switches to the locale catalogue."""
+
+    summary = "The filing deadline passed for Modelo 130 2025 1T"
+    with override_settings(aeat_output_language="ca"):
+        rendered = render_error_text(
+            ModeloWorkflowGateError(
+                _aborted_result(
+                    summary=summary,
+                    reason=WorkflowAbortReason.DEADLINE_PASSED,
+                ),
+            ),
+        )
+
+    assert summary in rendered
+    assert "No hi ha cap obligació de presentació pendent" not in rendered
+    assert "abort_code: DEADLINE_PASSED" in rendered
     assert "stage: ABORTED" in rendered
 
 

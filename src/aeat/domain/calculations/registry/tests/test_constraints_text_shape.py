@@ -65,13 +65,15 @@ class TestConstraintsShapeRejects:
         with pytest.raises(ValidationError, match="min_length"):
             _make(min_length=10, max_length=3)
 
-    def test_negative_min_length_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            _make(min_length=-1)
+    def test_negative_length_bound_rejected(self) -> None:
+        cases: tuple[_ConstraintFields, ...] = (
+            {"min_length": -1},
+            {"max_length": -1},
+        )
 
-    def test_negative_max_length_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            _make(max_length=-1)
+        for fields in cases:
+            with pytest.raises(ValidationError):
+                _make(**fields)
 
     def test_empty_enum_rejected(self) -> None:
         with pytest.raises(ValidationError, match="at least one"):
@@ -104,13 +106,15 @@ class TestViolatesText:
         c = _make(min_length=2, max_length=5)
         assert c.violates_text("abc") is None
 
-    def test_value_below_min_length_rejected(self) -> None:
-        c = _make(min_length=3)
-        assert "min_length" in _reason(c, "ab")
+    def test_value_outside_length_bounds_rejected(self) -> None:
+        cases: tuple[tuple[_ConstraintFields, str, str], ...] = (
+            ({"min_length": 3}, "ab", "min_length"),
+            ({"max_length": 3}, "abcde", "max_length"),
+        )
 
-    def test_value_above_max_length_rejected(self) -> None:
-        c = _make(max_length=3)
-        assert "max_length" in _reason(c, "abcde")
+        for fields, value, reason in cases:
+            c = _make(**fields)
+            assert reason in _reason(c, value)
 
     def test_value_not_matching_pattern_rejected(self) -> None:
         c = _make(pattern=r"^[A-Z]{2}$")

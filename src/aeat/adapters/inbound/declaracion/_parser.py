@@ -1,10 +1,16 @@
-"""Public ``parse_declaracion`` entry point for declaración PDFs.
+"""Public ``parse_declaracion`` entry points for declaration-copy PDFs.
 
-Parsing is registry-grounded: casilla geometry and validation are resolved
-against a :class:`RegistrySnapshot`, which the parser loads on demand through
-:class:`ValidatedRegistryAuthority` when a caller does not supply one.
-The snapshot's :class:`ModeloRevision` owns the extraction profiles and
-canonical casilla declarations used during parsing.
+Parsing is registry-profile-driven: template detection resolves the
+modelo/year/revision coordinate, then a :class:`RegistrySnapshot` supplies the
+single ``declaracion_pdf`` :class:`ExtractionProfileDefinition` used to extract
+casillas. There is deliberately no per-modelo extractor class registry here.
+
+When callers do not supply a snapshot, the parser loads one through
+:class:`ValidatedRegistryAuthority`. The snapshot's :class:`ModeloRevision`
+owns the canonical casilla declarations and the returned
+:class:`InboundDeclaracionObservation` stamps the exact :class:`RegistrySnapshotRef`.
+The bytes entry point keeps decrypted live-read PDF content in memory rather
+than materialising a plaintext temporary file.
 """
 
 from __future__ import annotations
@@ -33,13 +39,18 @@ from ....domain.calculations.registry import (
     ValidatedRegistryAuthority,
     casillas_by_id,
 )
-from ..pdf import ExtractedCasilla
-from ..pdf._label_regex import SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
-from ..pdf._utils import sha256_file, source_pdf_reference_path
+from ..pdf import (
+    SPANISH_AMOUNT_GROUP,
+    TEXT_VALUE_GROUP,
+    ExtractedCasilla,
+    parse_spanish_decimal,
+    sha256_file,
+    source_pdf_reference_path,
+)
 from ._detect import detect_template_revision, detect_template_revision_from_pages
 from ._errors import DeclaracionParseError, TemplateNotDetectedError
 from ._parsers import extract_pages_text, extract_pages_text_from_bytes
-from ._schema import DeclaracionObservation, TemplateRevision
+from ._schema import InboundDeclaracionObservation, TemplateRevision
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-PDFWORD: pdfplumber's Page.extract_words()
 # returns dicts whose full key-set varies by version and page content.  A
@@ -85,8 +96,13 @@ def parse_declaracion(
     registry_snapshot: RegistrySnapshot | None = None,
     registry_root: Path | None = None,
     source_root: Path | None = None,
-) -> DeclaracionObservation:
-    """Parse an AEAT declaración PDF into a :class:`DeclaracionObservation`.
+) -> InboundDeclaracionObservation:
+    """Parse an AEAT declaración PDF into a :class:`InboundDeclaracionObservation`.
+
+    Use this filesystem entry point when the declaration copy is already on
+    disk. The observation carries a digest-backed PDF source reference and a
+    :class:`RegistrySnapshotRef` so downstream filing checks can identify the
+    registry coordinate that interpreted the printed values.
 
     Args:
         pdf_path: Path to the declaración PDF.
@@ -107,8 +123,12 @@ def parse_declaracion(
             checks while building a snapshot.
 
     Returns:
-        A strict :class:`DeclaracionObservation` populated with the extracted
+        A strict :class:`InboundDeclaracionObservation` populated with the extracted
         casillas, warnings, and provenance metadata.
+
+    Raises:
+        DeclaracionParseError: When text extraction, template/period detection,
+            registry snapshot loading, or registry-profile extraction fails.
 
     """
     path = Path(pdf_path)
@@ -142,8 +162,12 @@ def parse_declaracion_bytes(
     registry_snapshot: RegistrySnapshot | None = None,
     registry_root: Path | None = None,
     source_root: Path | None = None,
-) -> DeclaracionObservation:
+) -> InboundDeclaracionObservation:
     """Parse declaración PDF bytes without writing them to a plaintext temp file.
+
+    This is the live-read path for already-decrypted artefacts. Page text and
+    bbox word extraction operate on the supplied bytes, and the observation uses
+    a digest-derived source reference instead of a real filesystem path.
 
     Args:
         pdf_bytes: Raw PDF bytes to parse.
@@ -165,8 +189,12 @@ def parse_declaracion_bytes(
             checks while building a snapshot.
 
     Returns:
-        A :class:`DeclaracionObservation` populated with the extracted casillas,
+        A :class:`InboundDeclaracionObservation` populated with the extracted casillas,
         warnings, and provenance metadata.
+
+    Raises:
+        DeclaracionParseError: When text extraction, template/period detection,
+            registry snapshot loading, or registry-profile extraction fails.
     """
     pages = extract_pages_text_from_bytes(pdf_bytes, source_label=source_label)
     digest = sha256(pdf_bytes).hexdigest()
@@ -203,7 +231,15 @@ def _parse_declaracion_pages(
     registry_root: Path | None,
     source_root: Path | None,
     pdf_bytes: bytes | None = None,
-) -> DeclaracionObservation:
+) -> InboundDeclaracionObservation:
+    """Assemble the shared registry-grounded parse result.
+
+    Both public entry points converge here after obtaining per-page text. The
+    routine resolves the :class:`TemplateRevision`, filing period,
+    :class:`RegistrySnapshot`, selected ``declaracion_pdf`` profile, tax ID, and
+    extracted :class:`ExtractedCasilla` tuple before stamping the
+    :class:`RegistrySnapshotRef` on the observation.
+    """
     text = "\n".join(pages)
 
     template = _resolve_template(
@@ -245,7 +281,7 @@ def _parse_declaracion_pages(
         modelo_year=snapshot.filing_year,
         period=snapshot.period,
     )
-    return DeclaracionObservation(
+    return InboundDeclaracionObservation(
         modelo=template.modelo,
         period=_filing_period_for_observation(template.año, period),
         ejercicio=str(template.año),
@@ -413,6 +449,13 @@ def _select_extraction_profile(
     *,
     extraction_profile_id: str | None,
 ) -> ExtractionProfileDefinition:
+    """Select the registry-owned ``declaracion_pdf`` extraction profile.
+
+    A supplied ``extraction_profile_id`` must match a declaration-PDF profile in
+    the snapshot. Otherwise the snapshot must expose exactly one matching
+    profile, preserving the ADR-approved generic parser shape: registry data
+    selects per-modelo extraction behavior, not Python extractor classes.
+    """
     profiles = tuple(
         profile
         for profile in snapshot.extraction_profiles.values()
@@ -533,6 +576,14 @@ def _extract_profile_values(
     source_pdf_path: Path | None = None,
     pdf_bytes: bytes | None = None,
 ) -> tuple[ExtractedCasilla, ...]:
+    """Extract profile targets into observed casilla values.
+
+    The :class:`ExtractionProfileDefinition` contributes the target list,
+    allowed match strategies, and minimum coverage threshold. Bbox extraction
+    prefers in-memory ``pdf_bytes`` for privacy, falls back to a real source file
+    when only a path is available, and reports malformed or ambiguous targets as
+    hard parse failures.
+    """
     # Load word-position data lazily only when bbox_anchored targets exist.
     # Prefer in-memory bytes so decrypted declaration PDFs never touch disk;
     # fall back to a real source file only when bytes are not supplied.

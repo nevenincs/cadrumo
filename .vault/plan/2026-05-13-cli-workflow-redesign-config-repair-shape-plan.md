@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 tier: L2
 related:
   - "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]"
@@ -12,8 +12,6 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-config-doctor-shape-research]]"
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
 ---
-
-
 
 # `cli-workflow-redesign` `config repair shape` plan
 

@@ -3,15 +3,13 @@ tags:
   - '#research'
   - '#source-jurisdiction-axis'
 date: '2026-05-28'
-modified: '2026-05-28'
+modified: '2026-06-30'
 related:
   - "[[2026-05-27-source-jurisdiction-axis-adr]]"
   - "[[2026-05-27-m210-irnr-full-engine-adr]]"
   - "[[2026-05-27-dsl-conditional-predicate-adr]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
-
-
 
 # `source-jurisdiction-axis` research: `aggregation classifier vs predicate`
 

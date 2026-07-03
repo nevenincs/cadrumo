@@ -1,10 +1,10 @@
-"""Exception hierarchy for :mod:`aeat.application.workflow`.
+"""Exception hierarchy for :mod:`application.workflow`.
 
-All workflow errors inherit from :class:`aeat.core.errors.AeatError` per
+All workflow errors inherit from :class:`core.errors.AeatError` per
 the project-wide error-hierarchy rule. The engine's default path never
 raises :class:`WorkflowAbortedError`: aborts are first-class outcomes
 encoded in the returned
-:class:`aeat.application.workflow.WorkflowResult`. Callers who want
+:class:`application.workflow.WorkflowResult`. Callers who want
 exception-on-abort behaviour opt in by inspecting the result themselves.
 """
 
@@ -15,7 +15,7 @@ from ._models import WorkflowAbortReason
 
 
 class WorkflowError(AeatError):
-    """Base exception for all :mod:`aeat.application.workflow` failures."""
+    """Base exception for all :mod:`application.workflow` failures."""
 
 
 class WorkflowComponentError(WorkflowError):
@@ -23,9 +23,9 @@ class WorkflowComponentError(WorkflowError):
 
     The engine catches every exception raised by an injected Protocol
     component, wraps it in a :class:`WorkflowComponentError`, records the
-    context on the surrounding :class:`aeat.application.workflow.WorkflowStep`, and
+    context on the surrounding :class:`application.workflow.WorkflowStep`, and
     lets the workflow abort with
-    :attr:`aeat.application.workflow.WorkflowAbortReason.UNHANDLED_EXCEPTION`.
+    :attr:`application.workflow.WorkflowAbortReason.UNHANDLED_EXCEPTION`.
     """
 
 
@@ -33,7 +33,7 @@ class WorkflowAbortedError(WorkflowError):
     """Raised only when a caller explicitly opts in to exception-on-abort.
 
     The default driver path returns a populated
-    :class:`aeat.application.workflow.WorkflowResult` whose ``aborted_reason`` is set.
+    :class:`application.workflow.WorkflowResult` whose ``aborted_reason`` is set.
     This exception is reserved for callers that prefer raising over
     inspecting (e.g. a future cron runner that wants a non-zero exit).
     """
@@ -98,7 +98,7 @@ class WorkflowInputMismatchError(CoreValidationError):
 
     Used both by the engine's ``run_for_period`` gate (malformed
     ``resumed_from`` run id shape) and by
-    :class:`aeat.application.modelo._actions._RevisionInputsProvider`
+    :class:`application.modelo._workflow_gate._RevisionInputsProvider`
     (modelo code or period mismatch against the baked revision).  Any
     deviation signals a programming error or a stale work-unit reference
     and must be rejected before inputs reach the engine.
@@ -111,9 +111,9 @@ class WorkflowAbortSignalError(WorkflowError):  # internal control-flow signal, 
     Named ``WorkflowAbortSignalError`` because it subclasses ``WorkflowError``
     and the project-wide naming convention requires the ``Error`` suffix on all
     exception classes. The engine treats it as an internal control-flow vehicle
-    — it never propagates outside :class:`aeat.application.workflow.WorkflowEngine`.
+    — it never propagates outside :class:`application.workflow.WorkflowEngine`.
     ``WorkflowEngine._drive`` always catches it and materialises the
-    :class:`aeat.application.workflow.WorkflowResult`. Subclasses
+    :class:`application.workflow.WorkflowResult`. Subclasses
     :class:`WorkflowError` so the project-wide error-hierarchy rule
     still holds and the registry can bind a stable
     ``INTERNAL_WORKFLOW_ABORT_SIGNAL`` code for telemetry.

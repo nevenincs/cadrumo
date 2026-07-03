@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#schema-hardening'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 tier: L1
 related:
   - '[[2026-05-18-schema-hardening-adr]]'
   - '[[2026-05-18-schema-hardening-research]]'
   - '[[2026-05-18-schema-hardening-plan]]'
 ---
-
 
 # `schema-hardening` Plan B: `CasillaConstraints` expansion plan
 

@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.hashing import sha256_hex
-from ..calculations.registry import CasillaId
+from ..calculations.registry import CasillaId, LegalRefId, SourceRefId
 
 
 class LedgerRowFingerprint(BaseModel):
@@ -171,8 +171,8 @@ class LedgerEvidenceRow(BaseModel):
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: tuple[str, ...] = ()
     document_link_ids: tuple[str, ...] = ()
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
     @field_validator("amount", "value_in_eur")
     @classmethod
@@ -203,6 +203,8 @@ class ManualFactBasisEntry(BaseModel):
     value: str = Field(min_length=1)
     kind: str = Field(default="casilla_input", min_length=1)
     note: str = ""
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
 class LedgerFilingEvidence(BaseModel):

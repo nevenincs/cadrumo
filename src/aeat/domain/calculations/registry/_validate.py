@@ -1,31 +1,43 @@
 """Fail-fast validation for registry definitions.
 
-Validates :class:`ModeloDefinition` instances and their constituent
-:class:`ModeloRevision` records against the legal and source catalogues.
+Validates :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+instances and their constituent
+:class:`~aeat.domain.calculations.registry.ModeloRevision` records against the
+legal and source catalogues.
+
+The validator owns catalogue checks,
+:class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`
+source-tier checks, per-revision dispatch through
+:func:`aeat.domain.calculations.registry._validate_revision_sections.validate_revision_definition`,
+and cross-model scope validation.
+
+See Also:
+    :class:`aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+        Production authority that loads registry material before validation.
+    :func:`aeat.domain.calculations.registry._validate_registry_scope.validate_registry_scope`
+        Cross-model relation and registry-scope validation invoked here.
+    :mod:`aeat.domain.calculations.registry._validate_cache`
+        Identity-keyed failure caches used by this validator.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ._corpus_catalogue import verify_source_catalogue
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
-from ._schema import (
-    LegalReference,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    SourceReference,
-)
+from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ._source_evidence_fingerprint import SourceEvidenceFingerprint, collect_source_evidence_fingerprints
 from ._validate_cache import (
     CATALOGUE_FAILURE_CACHE,
     MODELO_VALIDATION_CACHE,
     REGISTRY_VALIDATION_CACHE,
 )
 from ._validate_evidence import EvidenceValidator
+from ._validate_helpers import _missing_refs
 from ._validate_registry_scope import validate_registry_scope
 from ._validate_revision_rules import (
     validate_informative_class_invariant,
@@ -34,17 +46,19 @@ from ._validate_revision_rules import (
 from ._validate_revision_sections import validate_revision_definition
 
 if TYPE_CHECKING:
-    from ...user_profile._schema import ProfileSchemaDefinition
+    from ...user_profile import ProfileSchemaDefinition
+
+_MODELO_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 
 
 class RegistryValidator:
-    """Validate legal/source closure and calculability for modelos.
+    """Validate legal/source closure and calculability for registry modelos.
 
-    ``catalogue_corpus_strict=True`` (the default) enforces
-    ``required_text`` corpus checks on every legal reference.  Set it to
-    ``False`` for the production authority so that a pending corpus
-    annotation never aborts a user-facing workflow; strict checks are
-    reserved for explicit registry audit calls.
+    The validator accepts
+    :class:`~aeat.domain.calculations.registry.RegistryCatalogues`, checks each
+    :class:`~aeat.domain.calculations.registry.ModeloDefinition`, and delegates
+    each :class:`~aeat.domain.calculations.registry.ModeloRevision` to the
+    section-level dispatcher.
     """
 
     def __init__(
@@ -54,12 +68,11 @@ class RegistryValidator:
         source_root: Path | None = None,
         justificante_corpus_root: Path | None = None,
         user_profile_schema: ProfileSchemaDefinition | None = None,
-        catalogue_corpus_strict: bool = True,
+        source_evidence_fingerprint: SourceEvidenceFingerprint | None = None,
     ) -> None:
         self._legal = catalogues.legal
         self._sources = catalogues.sources
         self._source_root = source_root
-        self._catalogue_corpus_strict = catalogue_corpus_strict
         self._user_profile_schema = user_profile_schema
         self._evidence = EvidenceValidator(
             legal_refs=self._legal,
@@ -80,8 +93,24 @@ class RegistryValidator:
             self._justificante_corpus_root = candidate if candidate.is_dir() else None
         else:
             self._justificante_corpus_root = None
+        self._source_evidence_fingerprint = (
+            source_evidence_fingerprint
+            if source_evidence_fingerprint is not None
+            else collect_source_evidence_fingerprints(
+                self._source_root,
+                justificante_corpus_root=self._justificante_corpus_root,
+            )
+        )
 
     def validate_modelo(self, modelo: ModeloDefinition) -> None:
+        """Validate one modelo definition and raise on accumulated failures.
+
+        Args:
+            modelo: The
+                :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+                whose catalogue refs, revisions, user-profile contract, and
+                revision windows are validated.
+        """
         failures = self._cached_modelo_failures(modelo)
         if failures:
             raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
@@ -100,6 +129,9 @@ class RegistryValidator:
             else None
         )
 
+    def _source_evidence_key(self) -> SourceEvidenceFingerprint:
+        return self._source_evidence_fingerprint
+
     def _cached_modelo_failures(self, modelo: ModeloDefinition) -> tuple[str, ...]:
         cache_key = (
             id(modelo),
@@ -107,7 +139,7 @@ class RegistryValidator:
             id(self._sources),
             self._source_root_key(),
             self._corpus_root_key(),
-            self._catalogue_corpus_strict,
+            self._source_evidence_key(),
         )
         cached = MODELO_VALIDATION_CACHE.get(cache_key)
         if cached is not None and cached[0] is modelo and cached[1] is self._legal and cached[2] is self._sources:
@@ -120,7 +152,7 @@ class RegistryValidator:
         if self._catalogue_failures is not None:
             return self._catalogue_failures
         source_root_key = self._source_root_key()
-        cache_key = (id(self._legal), id(self._sources), source_root_key, self._catalogue_corpus_strict)
+        cache_key = (id(self._legal), id(self._sources), source_root_key, self._source_evidence_key())
         cached = CATALOGUE_FAILURE_CACHE.get(cache_key)
         if cached is not None and cached[0] is self._legal and cached[1] is self._sources:
             self._catalogue_failures = cached[2]
@@ -131,7 +163,6 @@ class RegistryValidator:
             verify_legal_catalogue(
                 self._legal,
                 source_root=self._source_root,
-                corpus_strict=self._catalogue_corpus_strict,
             )
         except RegistryValidationError as exc:
             failures.append(str(exc))
@@ -148,8 +179,11 @@ class RegistryValidator:
         failures: list[str] = []
         if validate_catalogues:
             failures.extend(self._validate_catalogues())
-        failures.extend(self._missing_refs("modelo", modelo.id, modelo.legal_refs, self._legal, "legal"))
-        failures.extend(self._missing_refs("modelo", modelo.id, modelo.source_refs, self._sources, "source"))
+        failures.extend(_missing_refs("modelo", modelo.id, modelo.legal_refs, self._legal, "legal"))
+        failures.extend(_missing_refs("modelo", modelo.id, modelo.source_refs, self._sources, "source"))
+        failures.extend(
+            self._evidence.require_any_source_tier("modelo", modelo.id, modelo.source_refs, _MODELO_SOURCE_TIERS)
+        )
         for revision in modelo.revisions.values():
             failures.extend(self._validate_revision(modelo, revision))
         failures.extend(self._validate_user_profile_contract((modelo,)))
@@ -161,7 +195,11 @@ class RegistryValidator:
         """Validate every modelo and the cross-model relation graph.
 
         Args:
-            modelos: Iterable of :class:`ModeloDefinition` instances to validate.
+            modelos: Iterable of
+                :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+                instances to validate together before
+                :func:`aeat.domain.calculations.registry._validate_registry_scope.validate_registry_scope`
+                checks cross-model closure.
         """
         modelo_tuple = tuple(modelos)
         cache_key = (
@@ -170,7 +208,7 @@ class RegistryValidator:
             id(self._sources),
             self._source_root_key(),
             self._corpus_root_key(),
-            self._catalogue_corpus_strict,
+            self._source_evidence_key(),
         )
         cached = REGISTRY_VALIDATION_CACHE.get(cache_key)
         if cached is not None and cached[0] == modelo_tuple and cached[1] is self._legal and cached[2] is self._sources:
@@ -190,8 +228,7 @@ class RegistryValidator:
         REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, ())
 
     def _validate_user_profile_contract(self, modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
-        from ...user_profile._loader import load_user_profile_schema
-        from ...user_profile._registry_contract import validate_user_profile_registry_contract
+        from ...user_profile import load_user_profile_schema, validate_user_profile_registry_contract
 
         schema = self._user_profile_schema or load_user_profile_schema()
         report = validate_user_profile_registry_contract(modelos, schema)
@@ -210,13 +247,3 @@ class RegistryValidator:
             evidence=self._evidence,
             justificante_corpus_root=self._justificante_corpus_root,
         )
-
-    @staticmethod
-    def _missing_refs(
-        scope: str,
-        owner: str,
-        refs: Iterable[str],
-        catalogue: Mapping[str, LegalReference] | Mapping[str, SourceReference],
-        ref_kind: str,
-    ) -> list[str]:
-        return [f"{scope}: {owner} references unknown {ref_kind} id {ref!r}" for ref in refs if ref not in catalogue]

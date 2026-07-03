@@ -15,6 +15,13 @@ from .. import ServiceCapability
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+def _capabilities_section():
+    schema = load_user_profile_schema()
+    section = next((s for s in schema.sections if s.key == "capabilities"), None)
+    assert section is not None, "the profile schema must carry a capabilities section"
+    return section
+
+
 def test_capability_schema_paths_are_dotted_under_capabilities() -> None:
     for capability in ServiceCapability:
         assert capability.schema_path == f"capabilities.{capability.value}"
@@ -23,15 +30,16 @@ def test_capability_schema_paths_are_dotted_under_capabilities() -> None:
 def test_default_posture_is_conservative_for_cloud_only() -> None:
     # Cloud evidence upload (the regulated, sensitive path) defaults OFF; the
     # on-host / offline-capable capabilities default ON.
-    assert ServiceCapability.CLOUD_EVIDENCE_UPLOAD.default_enabled is False
-    assert ServiceCapability.LLM_VISION.default_enabled is True
-    assert ServiceCapability.GOOGLE_EXPORT.default_enabled is True
+    for capability, expected in (
+        (ServiceCapability.CLOUD_EVIDENCE_UPLOAD, False),
+        (ServiceCapability.LLM_VISION, True),
+        (ServiceCapability.GOOGLE_EXPORT, True),
+    ):
+        assert capability.default_enabled is expected
 
 
 def test_every_capability_has_a_boolean_schema_field() -> None:
-    schema = load_user_profile_schema()
-    section = next((s for s in schema.sections if s.key == "capabilities"), None)
-    assert section is not None, "the profile schema must carry a capabilities section"
+    section = _capabilities_section()
     field_keys = {field.key: field for field in section.fields}
     for capability in ServiceCapability:
         field = field_keys.get(capability.value)
@@ -42,8 +50,7 @@ def test_every_capability_has_a_boolean_schema_field() -> None:
 def test_no_orphan_capability_schema_field() -> None:
     # The reverse parity: every boolean field in the capabilities section is a
     # known enum member (no schema field without an enum identity).
-    schema = load_user_profile_schema()
-    section = next(s for s in schema.sections if s.key == "capabilities")
+    section = _capabilities_section()
     enum_values = {capability.value for capability in ServiceCapability}
     for field in section.fields:
         assert field.key in enum_values, f"schema field {field.key} has no ServiceCapability member"

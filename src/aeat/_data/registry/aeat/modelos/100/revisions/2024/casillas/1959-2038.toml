@@ -3,6 +3,6 @@ id = "2038"
 number = "2038"
 label = "Importe generado en 2024"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
-semantic_role = "irpf_deduccion_murcia_importe_generado"
+semantic_role = "irpf_deduccion_murcia_recursos_energeticos_renovables_generado"
 legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

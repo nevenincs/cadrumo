@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-06-15-service-capabilities-plan]]"
 ---
-
-
-
 
 # Add ServiceCapability StrEnum (cloud_evidence_upload, llm_vision, google_export) in core with per-member docstrings
 
@@ -29,4 +26,3 @@ The closed capability set has one core authority shared by schema, resolver, and
 ## Notes
 
 None.
-

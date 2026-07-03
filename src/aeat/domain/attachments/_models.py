@@ -18,8 +18,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.identity import BucketId
-from ...core.time import parse_iso_datetime
-from ...core.time._utc import validate_utc_aware
+from ...core.time import parse_iso_datetime, validate_utc_aware
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentValidationError
 from ._ids import AttachmentId
@@ -91,17 +90,17 @@ class Attachment(BaseModel):
     the stored bytes, and the model enforces that ``attachment_id == sha256``
     so the manifest cannot drift from the byte payload it references.
 
-    The manifest also records the originating channel (:class:`aeat.domain.attachments.AttachmentSource`),
-    the document kind (:class:`aeat.domain.attachments.AttachmentKind`), and
+    The manifest also records the originating channel (:class:`domain.attachments.AttachmentSource`),
+    the document kind (:class:`domain.attachments.AttachmentKind`), and
     optional cross-references back to transaction and invoice identifiers so
     the evidence layer is traversable in either direction.
 
     Attributes:
         attachment_id: 64-character lowercase hex SHA-256 digest. Equals
             :attr:`sha256`.
-        kind: Document kind. See :class:`aeat.domain.attachments.AttachmentKind`.
+        kind: Document kind. See :class:`domain.attachments.AttachmentKind`.
         source: Channel the bytes were captured from. See
-            :class:`aeat.domain.attachments.AttachmentSource`.
+            :class:`domain.attachments.AttachmentSource`.
         source_reference: Channel-specific reference (e.g. a Gmail message id,
             a Drive file id, a local path).
         sha256: 64-character lowercase hex SHA-256 of the stored bytes.
@@ -326,7 +325,7 @@ class AttachmentCatalogue(BaseModel):
         return cls.model_validate(tuple(attachments))
 
     @override
-    def __iter__(self) -> Iterator[Attachment]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[Attachment]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
         """Iterate over catalogue attachments."""
         return iter(self.attachments.values())
 

@@ -1,8 +1,7 @@
 """Precedence-chain tests for the active-profile resolver.
 
-The resolver lives at
-`aeat.application.workflow._models.resolve_active_bucket_id`. It
-consults two precedence rungs in order:
+The resolver lives at `aeat.core.resolve_active_bucket_id`. It consults
+two precedence rungs in order:
 
 1. `Settings.aeat_active_profile` (`AEAT_ACTIVE_PROFILE` env var, or
    an `override_settings(aeat_active_profile=...)` context manager).
@@ -17,6 +16,8 @@ that surface it to the operator can refuse with a typed
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -30,39 +31,35 @@ from .._profile_bucket_scan import resolve_profile_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-
-def test_resolver_returns_none_when_no_rung_resolves(tmp_path: Path) -> None:
-    """A fresh root with no env override + no pointer yields None."""
-
-    with override_settings(aeat_active_profile=None, aeat_local_storage_root=tmp_path):
-        assert resolve_active_bucket_id() is None
+_MANIFEST_CREATED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
 
 
-def test_pointer_file_wins_when_only_rung_two_is_set(tmp_path: Path) -> None:
-    """With no env override, the pointer file is the canonical default."""
+def test_workflow_models_do_not_expose_active_bucket_resolver_shims() -> None:
+    """Workflow models must not be an alternate import path for core resolvers."""
 
-    write_pointer(tmp_path, BucketPointer(bucket_id="catering", schema_version=1))
+    from .. import _models as workflow_models
 
-    with override_settings(aeat_active_profile=None, aeat_local_storage_root=tmp_path):
-        assert resolve_active_bucket_id() == "catering"
-
-
-def test_settings_override_wins_over_pointer_file(tmp_path: Path) -> None:
-    """Rung one (Settings) takes precedence over rung two (pointer)."""
-
-    write_pointer(tmp_path, BucketPointer(bucket_id="catering", schema_version=1))
-
-    with override_settings(aeat_active_profile="translation", aeat_local_storage_root=tmp_path):
-        assert resolve_active_bucket_id() == "translation"
+    assert not hasattr(workflow_models, "resolve_active_bucket_id")
+    assert not hasattr(workflow_models, "require_active_bucket_id")
 
 
-def test_empty_settings_override_falls_through_to_pointer(tmp_path: Path) -> None:
-    """An empty override (whitespace) does not block rung two."""
+def test_resolver_uses_active_profile_precedence_chain(tmp_path: Path) -> None:
+    """Settings override wins over the active-profile pointer; blank settings fall through."""
+    cases = (
+        (None, None, None),
+        (None, "catering", "catering"),
+        ("translation", "catering", "translation"),
+        ("   ", "catering", "catering"),
+    )
 
-    write_pointer(tmp_path, BucketPointer(bucket_id="catering", schema_version=1))
+    for index, (settings_profile, pointer_bucket_id, expected_bucket_id) in enumerate(cases):
+        case_root = tmp_path / f"precedence-{index}"
+        case_root.mkdir()
+        if pointer_bucket_id is not None:
+            write_pointer(case_root, BucketPointer(bucket_id=pointer_bucket_id, schema_version=1))
 
-    with override_settings(aeat_active_profile="   ", aeat_local_storage_root=tmp_path):
-        assert resolve_active_bucket_id() == "catering"
+        with override_settings(aeat_active_profile=settings_profile, aeat_local_storage_root=case_root):
+            assert resolve_active_bucket_id() == expected_bucket_id
 
 
 def test_no_active_profile_error_has_registered_error_code() -> None:
@@ -93,8 +90,6 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     ``bucket_id`` and the operator ``label``, exactly as ``profile create``
     materialises it.
     """
-    from datetime import UTC, datetime
-
     from ....adapters.persistence.storage.bucket import (
         BucketLifecycleStatus,
         BucketManifest,
@@ -104,14 +99,13 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     )
     from ....adapters.persistence.storage.master_key import KdfParams
 
-    now = datetime.now(UTC).replace(microsecond=0)
     provision_bucket_directory(root, bucket_id)
     write_manifest(
         bucket_paths(root, bucket_id),
         BucketManifest(
             bucket_id=bucket_id,
             label=label,
-            created_at=now,
+            created_at=_MANIFEST_CREATED_AT,
             last_unlocked_at=None,
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
@@ -121,17 +115,54 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     )
 
 
-def test_resolve_profile_bucket_resolves_an_active_profile_by_uuid(tmp_path: Path) -> None:
-    """A UUID identifier resolves directly to its bucket pointer."""
+def _tombstone_bucket(root: Path, *, bucket_id: str, label: str) -> None:
+    """Write a real tombstoned bucket manifest at ``<root>/buckets/<bucket_id>/``."""
+    from ....adapters.persistence.storage.bucket import (
+        BucketLifecycleStatus,
+        BucketManifest,
+        bucket_paths,
+        provision_bucket_directory,
+        write_manifest,
+    )
+    from ....adapters.persistence.storage.master_key import KdfParams
 
-    uuid = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
-    _write_live_bucket(tmp_path, bucket_id=uuid, label="operator")
+    provision_bucket_directory(root, bucket_id)
+    write_manifest(
+        bucket_paths(root, bucket_id),
+        BucketManifest(
+            bucket_id=bucket_id,
+            label=label,
+            created_at=_MANIFEST_CREATED_AT,
+            last_unlocked_at=None,
+            kdf_params=KdfParams.default().to_manifest_params(),
+            recovery_enrolled=False,
+            schema_version=1,
+            status=BucketLifecycleStatus.TOMBSTONED,
+        ),
+    )
 
-    pointer = resolve_profile_bucket(uuid, root=tmp_path)
 
-    assert pointer is not None
-    assert pointer.bucket_id == uuid
-    assert pointer.label == "operator"
+def test_resolve_profile_bucket_uuid_respects_lifecycle_filter(tmp_path: Path) -> None:
+    """UUID resolution respects the live-surface lifecycle filter."""
+    cases: tuple[tuple[Callable[..., None], bool, bool], ...] = (
+        (_write_live_bucket, False, True),
+        (_tombstone_bucket, False, False),
+        (_tombstone_bucket, True, True),
+    )
+
+    for index, (bucket_writer, include_tombstoned, expected_found) in enumerate(cases):
+        case_root = tmp_path / f"lifecycle-{index}"
+        uuid = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
+        bucket_writer(case_root, bucket_id=uuid, label="operator")
+
+        pointer = resolve_profile_bucket(uuid, root=case_root, include_tombstoned=include_tombstoned)
+
+        if expected_found:
+            assert pointer is not None
+            assert pointer.bucket_id == uuid
+            assert pointer.label == "operator"
+        else:
+            assert pointer is None
 
 
 def test_resolve_profile_bucket_resolves_an_active_profile_by_display_name(tmp_path: Path) -> None:

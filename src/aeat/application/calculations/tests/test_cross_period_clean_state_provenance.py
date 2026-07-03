@@ -7,17 +7,17 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....core import Period
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ExternalEvidenceKind,
-    ModeloRecordCatalogueRepository,
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
-    VerificationReportCatalogueRepository,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit, verify_modelo_revision
@@ -27,55 +27,55 @@ from .. import (
     CrossPeriodExpectedMemberSet,
     evaluate_cross_period_clean_state,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     BUCKET_ID as _BUCKET_ID,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     CLOCK as _CLOCK,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     GROUP_MEMBER_A as _GROUP_MEMBER_A,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     GROUP_MEMBER_B as _GROUP_MEMBER_B,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     M353_PERIOD as _M353_PERIOD,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     M353_YEAR as _M353_YEAR,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     M390_PERIOD as _M390_PERIOD,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     M390_REVISION as _M390_REVISION,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     M390_YEAR as _M390_YEAR,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     m390_first_quarter_evidence as _m390_first_quarter_evidence,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     member_fan_in_requirement as _member_fan_in_requirement,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     persist_justificante_metadata as _persist_justificante_metadata,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     seed_member_322_filing as _seed_member_322_filing,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     seed_official_303_source_filings as _seed_official_303_source_filings,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     snapshot_353 as _snapshot_353,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     snapshot_390 as _snapshot_390,
 )
-from .test_cross_period_clean_state import (
+from ._cross_period_clean_state_support import (
     store_ready_profile as _store_ready_profile,
 )
 
@@ -266,7 +266,7 @@ def test_cross_period_clean_state_blocks_dangling_justificante_evidence_referenc
         observation_repository = CalculationObservationRepository()
         _seed_official_303_source_filings(
             observation_repository=observation_repository,
-            skip_justificante_metadata_periods={"1T"},
+            omit_justificante_metadata_periods={"1T"},
         )
 
         verdict = evaluate_cross_period_clean_state(
@@ -292,7 +292,7 @@ def test_cross_period_clean_state_blocks_csv_register_without_justificante_verif
         _seed_official_303_source_filings(
             observation_repository=observation_repository,
             evidence_kind_by_period={"1T": ExternalEvidenceKind.AEAT_CSV_REGISTER},
-            skip_justificante_metadata_periods={"1T"},
+            omit_justificante_metadata_periods={"1T"},
         )
 
         verdict = evaluate_cross_period_clean_state(
@@ -365,7 +365,7 @@ def test_cross_period_clean_state_blocks_live_capture_without_justificante_verif
         _seed_official_303_source_filings(
             observation_repository=observation_repository,
             evidence_kind_by_period={"1T": ExternalEvidenceKind.AEAT_LIVE_CAPTURE},
-            skip_justificante_metadata_periods={"1T"},
+            omit_justificante_metadata_periods={"1T"},
         )
 
         verdict = evaluate_cross_period_clean_state(
@@ -394,7 +394,7 @@ def test_cross_period_clean_state_blocks_mismatched_justificante_metadata(tmp_pa
         observation_repository = CalculationObservationRepository()
         _seed_official_303_source_filings(
             observation_repository=observation_repository,
-            skip_justificante_metadata_periods={"1T"},
+            omit_justificante_metadata_periods={"1T"},
         )
         _persist_justificante_metadata("JUST-1T", modelo="303", period="2T", filing_year=_M390_YEAR)
 

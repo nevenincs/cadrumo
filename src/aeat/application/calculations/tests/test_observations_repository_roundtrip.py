@@ -27,7 +27,7 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
-from ....domain.iva_compensation._reconciliation import (
+from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
@@ -56,6 +56,7 @@ _IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
 _M303_PRINTED_RESULT_REFERENCE_CASILLA: CasillaId = _casilla_id("69")
 _M130_ABSENT_BY_DESIGN_CASILLA: CasillaId = _casilla_id("15")
 _M130_PAYMENT_BASE_CASILLA: CasillaId = _casilla_id("14")
+_CAPTURED_AT = datetime(2026, 5, 28, 11, 35, 0, tzinfo=UTC)
 
 
 def _populated_observation() -> RegistryModeloObservation:
@@ -71,8 +72,8 @@ def _populated_observation() -> RegistryModeloObservation:
                 operand_refs=(),
                 operand_casilla_refs=(),
                 operand_values=(),
-                legal_refs=("liva.art-21",),
-                source_refs=("aeat.iva.2025",),
+                legal_refs=("ley-37-1992:art-21",),
+                source_refs=("aeat-iva-2025",),
             ),
             CasillaObservation(
                 casilla_id=_IVA_RESULTADO_CASILLA,
@@ -81,8 +82,8 @@ def _populated_observation() -> RegistryModeloObservation:
                 operand_refs=(_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA),
                 operand_casilla_refs=(_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA),
                 operand_values=(Decimal("20000.00"), Decimal("7654.33")),
-                legal_refs=("liva.art-94",),
-                source_refs=("aeat.iva.2025",),
+                legal_refs=("ley-37-1992:art-94",),
+                source_refs=("aeat-iva-2025",),
             ),
         ),
     )
@@ -95,12 +96,11 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         original = _populated_observation()
-        captured_at = datetime.now(UTC).replace(microsecond=0)
         repo = CalculationObservationRepository()
         repo.save_observation(
             original,
             source_kind="aeat_sede_justificante",
-            captured_at=captured_at,
+            captured_at=_CAPTURED_AT,
             source_metadata={
                 "aeat_register_status": "ALTA",
                 "aeat_expediente_id": "202530300000001Z",
@@ -111,7 +111,7 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
         assert loaded is not None
         assert loaded.observation == original
         assert loaded.source_kind == "aeat_sede_justificante"
-        assert loaded.captured_at == captured_at
+        assert loaded.captured_at == _CAPTURED_AT
         assert loaded.source_metadata == {
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": "202530300000001Z",
@@ -125,7 +125,7 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
             Decimal("20000.00"),
             Decimal("7654.33"),
         )
-        assert loaded_computed.legal_refs == ("liva.art-94",)
+        assert loaded_computed.legal_refs == ("ley-37-1992:art-94",)
 
 
 def test_calculation_observation_repository_rejects_printed_number_reference(
@@ -141,8 +141,8 @@ def test_calculation_observation_repository_rejects_printed_number_reference(
             CasillaObservation(
                 casilla_id=_M303_PRINTED_RESULT_REFERENCE_CASILLA,
                 value=Decimal("1.00"),
-                legal_refs=("liva.art-94",),
-                source_refs=("aeat.iva.2025",),
+                legal_refs=("ley-37-1992:art-94",),
+                source_refs=("aeat-iva-2025",),
             ),
         ),
     )
@@ -153,7 +153,7 @@ def test_calculation_observation_repository_rejects_printed_number_reference(
             repo.save_observation(
                 observation,
                 source_kind="aeat_sede_justificante",
-                captured_at=datetime.now(UTC).replace(microsecond=0),
+                captured_at=_CAPTURED_AT,
             )
 
         assert "canonical casilla.id values" in str(raised.value)
@@ -180,8 +180,8 @@ def test_calculation_observation_repository_rejects_printed_operand_casilla_ref(
                 operand_refs=(_M303_PRINTED_RESULT_REFERENCE_CASILLA,),
                 operand_casilla_refs=(_M303_PRINTED_RESULT_REFERENCE_CASILLA,),
                 operand_values=(Decimal("1.00"),),
-                legal_refs=("liva.art-94",),
-                source_refs=("aeat.iva.2025",),
+                legal_refs=("ley-37-1992:art-94",),
+                source_refs=("aeat-iva-2025",),
             ),
         ),
     )
@@ -192,7 +192,7 @@ def test_calculation_observation_repository_rejects_printed_operand_casilla_ref(
             repo.save_observation(
                 observation,
                 source_kind="aeat_sede_justificante",
-                captured_at=datetime.now(UTC).replace(microsecond=0),
+                captured_at=_CAPTURED_AT,
             )
 
         assert raised.value.context is not None
@@ -243,12 +243,11 @@ def test_calculation_observation_absent_by_design_flag_survives_encrypted_storag
             ),
         )
 
-        captured_at = datetime.now(UTC).replace(microsecond=0)
         repo = CalculationObservationRepository()
         repo.save_observation(
             absent_by_design_observation,
             source_kind="aeat_sede_justificante",
-            captured_at=captured_at,
+            captured_at=_CAPTURED_AT,
         )
         loaded = repo.load_observation("130", Period.from_year_and_code(2026, "1T"))
 
@@ -319,12 +318,12 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+    from ....adapters.persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ....adapters.persistence.storage.sql import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
     from .._observations_repository import observation_key
 
@@ -332,12 +331,11 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         original = _populated_observation()
-        captured_at = datetime.now(UTC).replace(microsecond=0)
         repo = CalculationObservationRepository()
         repo.save_observation(
             original,
             source_kind="aeat_sede_justificante",
-            captured_at=captured_at,
+            captured_at=_CAPTURED_AT,
         )
 
         object_key = observation_key("303", Period.from_year_and_code(2025, "1T"))
@@ -388,19 +386,41 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
             decided_at=decided_at,
         )
 
+        latest_key = iva_wallet_decision_key("12345678Z", Period.from_year_and_code(2026, "2T"))
+        event_key = iva_wallet_decision_event_key(decision)
+
         repo.save_decision(decision)
+        latest_record = repo.secure_object_repository.load(
+            repo.namespace,
+            latest_key,
+            expected_class=repo.sensitivity,
+            max_supported_version=repo.schema_version,
+        )
+        event_record = repo.secure_object_repository.load(
+            repo.history_namespace,
+            event_key,
+            expected_class=repo.sensitivity,
+            max_supported_version=repo.schema_version,
+        )
+        cleartext_key_record = repo.secure_object_repository.load(
+            repo.namespace,
+            "12345678Z:2026:2T",
+            expected_class=repo.sensitivity,
+            max_supported_version=repo.schema_version,
+        )
         loaded = repo.load_decision("12345678Z", Period.from_year_and_code(2026, "2T"))
 
+        assert latest_record is not None
+        assert event_record is not None
+        assert cleartext_key_record is None
         assert loaded == decision
         assert loaded is not None
         assert loaded.selected_authority == "aeat_wallet"
         assert loaded.selected_amount == Decimal("1200")
         assert loaded.blocked is False
         assert repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T")) == (decision,)
-        assert iva_wallet_decision_key("12345678Z", Period.from_year_and_code(2026, "2T")).startswith(
-            "iva-wallet-decision:",
-        )
-        assert iva_wallet_decision_event_key(decision).startswith("iva-wallet-decision-event:")
+        assert latest_key.startswith("iva-wallet-decision:")
+        assert event_key.startswith("iva-wallet-decision-event:")
         database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
         assert b"12345678Z" not in database_bytes
         assert b"12345678Z:2026:2T" not in database_bytes

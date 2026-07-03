@@ -4,6 +4,20 @@ These records project provider catalogue entries, readiness checks, live-login
 results, and preflight state through :class:`AuthProvidersReport`,
 :class:`AuthStatusResult`, :class:`AuthTestResult`, and
 :class:`LiveAuthPreflightReport`.
+
+See Also:
+    :mod:`application.auth._operator`
+        Application services that construct these result contracts for CLI
+        commands.
+    :mod:`application.state_projection`
+        Canonical readiness projection consumed by status and test results.
+    :class:`application.workflow.WorkflowState`
+        Encrypted state envelope carrying the persisted
+        :class:`application.auth.AuthState`.
+    :class:`application.auth.AuthProviderDescription`
+        Provider-readiness description that feeds provider catalogue output.
+    :class:`application.auth.AuthenticatedAeatSessionResult`
+        Live-session result consumed by :class:`AuthLoginResult`.
 """
 
 from __future__ import annotations
@@ -46,6 +60,11 @@ class AuthProvidersReport(BaseModel):
 class AuthConfigureResult(BaseModel):
     """Result of configuring an auth provider in workflow state.
 
+    The provider selection has already been written to
+    :class:`application.auth.AuthState` inside
+    :class:`application.workflow.WorkflowState` when this result is
+    returned.
+
     ``complete`` reports whether the provider is now operationally
     usable. The certificate provider configured without a resolvable
     ``--file`` records the provider selection but is NOT operationally
@@ -69,7 +88,15 @@ class AuthConfigureResult(BaseModel):
 
 
 class AuthStatusResult(BaseModel):
-    """Current local auth readiness state."""
+    """Current local auth readiness state.
+
+    Built from
+    :class:`application.state_projection.OperatorStateProjection`.
+    Provider readiness mirrors
+    :class:`application.state_projection.ProjectionAuthReadiness`;
+    active-profile fields mirror
+    :class:`application.state_projection.ProjectionActiveProfile`.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -130,7 +157,13 @@ class AuthTestResult(AuthStatusResult):
 
 
 class LiveAuthPreflightReport(BaseModel):
-    """Redacted live-auth readiness report rendered before operator approval waits."""
+    """Redacted live-auth readiness report rendered before operator approval waits.
+
+    Combines the :class:`AuthTestResult` readiness fields with live-auth
+    identity-alignment settings before
+    :class:`core.access_gate.AeatAccessGate` can allow an authenticated
+    read.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -160,7 +193,12 @@ class LiveAuthPreflightReport(BaseModel):
 
 
 class AuthLoginResult(BaseModel):
-    """Result of an operator-triggered live authentication attempt."""
+    """Result of an operator-triggered live authentication attempt.
+
+    Summarises the
+    :class:`application.auth.AuthenticatedAeatSessionResult` produced by
+    the provider-session lifecycle without exposing session material.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -175,13 +213,113 @@ class AuthLoginResult(BaseModel):
 
 
 class AuthClearResult(BaseModel):
-    """Result of clearing local auth metadata and persisted state."""
+    """Result of clearing local auth metadata and persisted state.
+
+    Reports the local side effects after
+    :func:`application.auth.clear_operator_auth` resets
+    :class:`application.auth.AuthState`, deletes persisted sessions, and
+    removes acquisition locks for the requested provider scope.
+    """
 
     model_config = _STRICT_FROZEN
 
     removed_sessions: int
     cleared_workflow_state: bool
     cleared_locks: int
+
+
+class CertificateSourceNotFoundError(AeatError, KeyError):
+    """Raised when an operator names a certificate source that is not registered."""
+
+
+class CertificateSourcePayload(BaseModel):
+    """One registered certificate source, operator-facing.
+
+    Projects :class:`application.auth.CertificateSourceRecord` for the
+    ``certificate register`` / ``certificate list`` verbs. Never carries
+    certificate passwords or key material — only the filesystem
+    reference already stored in workflow state.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    name: str
+    certificate_path: str
+    friendly_name: str = ""
+    active: bool = False
+    registered_at: str = ""
+
+
+class CertificateSourceListResult(BaseModel):
+    """Result of ``aeat config auth certificate list``."""
+
+    model_config = _STRICT_FROZEN
+
+    sources: tuple[CertificateSourcePayload, ...] = ()
+    active_source: str = ""
+
+
+class CertificateSourceMutationResult(BaseModel):
+    """Result of registering, selecting, or removing a certificate source."""
+
+    model_config = _STRICT_FROZEN
+
+    name: str
+    certificate_path: str = ""
+    active: bool = False
+    removed: bool = False
+
+
+class CertificateSourceCheckEntry(BaseModel):
+    """Expiry/rotation verdict for one registered certificate source.
+
+    Reuses the same local PKCS#12 health classification
+    :func:`application.auth.probe_provider_configuration` runs for the
+    single-certificate provider path (``ok`` / ``expiring`` / ``expired`` /
+    ``corrupt`` / ``unreadable`` / ``file_missing``), applied per named
+    source in :class:`application.auth.AuthState.certificate_sources`
+    rather than only the active ``certificate_path``. Never carries
+    certificate passwords or key material.
+
+    Attributes:
+        name: The registered source name.
+        certificate_path: Filesystem path of the source's PKCS#12 bundle.
+        friendly_name: Optional human-readable label.
+        active: Whether this source is the currently selected one.
+        result: Typed :class:`application.auth.ProviderProbeResult` verdict
+            (as its string value, matching the sibling ``AuthTestResult``
+            convention).
+        summary: Localised one-line operator-facing verdict.
+        days_until_expiry: Whole days until ``not_after``, when the
+            certificate could be parsed; negative when already expired;
+            ``None`` when expiry could not be determined (unreadable,
+            corrupt, missing path/file, or no configured decode password).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    name: str
+    certificate_path: str
+    friendly_name: str = ""
+    active: bool = False
+    result: str = ""
+    summary: str = ""
+    days_until_expiry: int | None = None
+
+
+class CertificateSourceCheckReport(BaseModel):
+    """Result of ``aeat config auth certificate check``.
+
+    ``has_warnings`` is ``True`` when at least one entry's ``result`` is
+    ``expiring`` or ``expired``, letting the CLI decide whether to attach
+    a non-blocking rotation-reminder :class:`~core.json_contract.Notice`
+    per entry without re-deriving the same predicate.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    entries: tuple[CertificateSourceCheckEntry, ...] = ()
+    has_warnings: bool = False
 
 
 __all__ = [
@@ -196,5 +334,11 @@ __all__ = [
     "AuthProvidersReport",
     "AuthStatusResult",
     "AuthTestResult",
+    "CertificateSourceCheckEntry",
+    "CertificateSourceCheckReport",
+    "CertificateSourceListResult",
+    "CertificateSourceMutationResult",
+    "CertificateSourceNotFoundError",
+    "CertificateSourcePayload",
     "LiveAuthPreflightReport",
 ]

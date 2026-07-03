@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#ledger-interface-contract'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-ledger-interface-contract-research]]"
 ---
-
-
 
 # `ledger-interface-contract` adr: `Uniform ledger response envelope, ID resolution, and sorting` | (**status:** `accepted`)
 
@@ -221,5 +219,3 @@ the D6 field addition, which is covered by the mandated roundtrip test.
   as a positional `Argument` resolved through the single shared shim over
   `resolve_transaction_id`, never as a `--id` Option and never via a duplicated
   resolver.
-
-

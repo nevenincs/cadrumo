@@ -10,14 +10,14 @@ id = "modelo-131-filing"
 surface = "filing"
 consumer = "aeat.application.filing"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure"]
 [[revisions."2026".application_links]]
 id = "modelo-131-export"
 surface = "export"
 consumer = "aeat.application.filing.export_draft"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".application_links]]
 id = "modelo-131-verification"
@@ -38,28 +38,28 @@ id = "modelo-131-approval"
 surface = "approval"
 consumer = "aeat.application.workflow.approval"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-instructions"]
 [[revisions."2026".application_links]]
 id = "modelo-131-reconciliation"
 surface = "reconciliation"
 consumer = "aeat.application.reconciliation"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-instructions"]
 [[revisions."2026".application_links]]
 id = "modelo-131-extractor"
 surface = "extractor"
 consumer = "aeat.adapters.inbound.declaracion"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-modelo-131-formulario-presentacion", "aeat-dr-131-2026"]
 [[revisions."2026".application_links]]
 id = "modelo-131-portal-cross-reference"
 surface = "portal"
 consumer = "portal_m131_pago_fraccionado_eo"
 requires_snapshot = true
-legal_refs = ["orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = [
     "aeat-modelo-131-procedure",
     "aeat-modelo-131-formulario-presentacion",
@@ -70,19 +70,19 @@ id = "modelo-131-filed-declarations-observation"
 surface = "portal"
 consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
 [[revisions."2026".application_links]]
 id = "modelo-131-deadline"
 surface = "deadline"
 consumer = "aeat.domain.deadlines"
 requires_snapshot = true
-legal_refs = ["orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-procedure"]
 [[revisions."2026".application_links]]
 id = "modelo-131-workflow"
 surface = "workflow"
 consumer = "aeat.application.workflow"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]

@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#storage-backend-security-review'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-14-storage-backend-security-review-adr]]'
   - '[[2026-06-14-storage-backend-security-review-research]]'
 ---
-
 
 # `storage-backend-security-review` plan
 
@@ -154,12 +153,6 @@ anti-tautology proof; every change is one atomic explicit-pathspec commit on the
 shared branch, authored only over files with no peer WIP.
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

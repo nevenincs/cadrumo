@@ -17,8 +17,13 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from .._preflight import LedgerPreflightIssueReason as R
-from .._preflight import _issues_for_transaction
+from .._preflight import (
+    LedgerPreflightIssue,
+    _issues_for_transaction,
+)
+from .._preflight import (
+    LedgerPreflightIssueReason as R,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -37,7 +42,7 @@ def _tx(
     fx_rate: Decimal | None = None,
 ) -> Transaction:
     raw = RawTransaction(
-        transaction_id="row-x",
+        provider_transaction_id="row-x",
         booked_date=date(2026, 1, 15),
         value_date=date(2026, 1, 15),
         amount=Decimal("121.00"),
@@ -58,6 +63,8 @@ def _tx(
         "raw": raw,
         "direction": direction,
         "business_classification": BusinessClassification.BUSINESS,
+        "source_jurisdiction": "ES",
+        "group_label": None,
         "category_id": "material_oficina",
         "taxable_base": taxable_base,
         "iva_rate": iva_rate,
@@ -72,39 +79,89 @@ def _tx(
     return Transaction.model_validate(payload)
 
 
-def test_recargo_surfaces_anomaly_not_missing_fact() -> None:
-    issues = _issues_for_transaction(_tx(iva_category="recargo_equivalencia", iva_amount=None, iva_rate=None))
-    assert [i.reason for i in issues] == [R.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA]
-    assert "non-deductible acquisition cost" in issues[0].detail
+def _assert_single_issue(
+    label: str,
+    issues: tuple[LedgerPreflightIssue, ...],
+    expected_reason: R,
+    *,
+    present_detail: tuple[str, ...] = (),
+    absent_detail: tuple[str, ...] = (),
+) -> None:
+    assert [i.reason for i in issues] == [expected_reason], label
+    detail = issues[0].detail
+    for token in present_detail:
+        assert token in detail, label
+    for token in absent_detail:
+        assert token not in detail, label
 
 
-def test_incoming_recargo_anomaly_points_to_recargo_amount_not_purchase() -> None:
-    issues = _issues_for_transaction(
-        _tx(
-            direction=TransactionDirection.INCOMING,
-            iva_category="recargo_equivalencia",
-            iva_amount=None,
-            iva_rate=None,
+def test_preflight_surfaces_non_declarable_iva_anomalies() -> None:
+    cases: tuple[tuple[str, Transaction, R, tuple[str, ...], tuple[str, ...]], ...] = (
+        (
+            "outgoing-recargo",
+            _tx(iva_category="recargo_equivalencia", iva_amount=None, iva_rate=None),
+            R.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA,
+            ("non-deductible acquisition cost",),
+            (),
+        ),
+        (
+            "incoming-recargo",
+            _tx(
+                direction=TransactionDirection.INCOMING,
+                iva_category="recargo_equivalencia",
+                iva_amount=None,
+                iva_rate=None,
+            ),
+            R.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA,
+            ("recargo_amount",),
+            ("purchase",),
+        ),
+        (
+            "unknown",
+            _tx(iva_category="unknown", iva_amount=None, iva_rate=None, taxable_base=None),
+            R.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
+            (),
+            (),
+        ),
+        (
+            "erroneous-invoice",
+            _tx(iva_category="erroneous_invoice", iva_amount=None, iva_rate=None, taxable_base=None),
+            R.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
+            (),
+            (),
         ),
     )
 
-    assert [i.reason for i in issues] == [R.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA]
-    assert "recargo_amount" in issues[0].detail
-    assert "purchase" not in issues[0].detail
+    for label, transaction, expected_reason, present_detail, absent_detail in cases:
+        _assert_single_issue(
+            label,
+            _issues_for_transaction(transaction),
+            expected_reason,
+            present_detail=present_detail,
+            absent_detail=absent_detail,
+        )
 
 
-def test_unknown_and_erroneous_categories_surface_anomaly() -> None:
-    for cat in ("unknown", "erroneous_invoice"):
-        issues = _issues_for_transaction(_tx(iva_category=cat, iva_amount=None, iva_rate=None, taxable_base=None))
-        assert [i.reason for i in issues] == [R.ANOMALY_NON_DECLARABLE_IVA_CATEGORY], cat
+def test_foreign_currency_preflight_separates_converted_and_unconverted_rows() -> None:
+    cases: tuple[tuple[str, Transaction, R, tuple[str, ...]], ...] = (
+        (
+            "converted",
+            _tx(currency="GBP", value_in_eur=Decimal("142.35"), fx_rate=Decimal("1.176")),
+            R.MISSING_EUR_TAX_SUBSTRATE,
+            ("value_in_eur", "explicit EUR tax substrate", "exclude the row"),
+        ),
+        (
+            "unconverted",
+            _tx(currency="GBP", value_in_eur=None, fx_rate=None),
+            R.UNSUPPORTED_CURRENCY,
+            (),
+        ),
+    )
 
-
-def test_converted_foreign_row_is_not_flagged_unsupported_currency() -> None:
-    # GBP row with a value_in_eur conversion applied at import aggregates fine.
-    issues = _issues_for_transaction(_tx(currency="GBP", value_in_eur=Decimal("142.35"), fx_rate=Decimal("1.176")))
-    assert all(i.reason is not R.UNSUPPORTED_CURRENCY for i in issues)
-
-
-def test_unconverted_foreign_row_is_flagged_unsupported_currency() -> None:
-    issues = _issues_for_transaction(_tx(currency="GBP", value_in_eur=None, fx_rate=None))
-    assert [i.reason for i in issues] == [R.UNSUPPORTED_CURRENCY]
+    for label, transaction, expected_reason, present_detail in cases:
+        _assert_single_issue(
+            label,
+            _issues_for_transaction(transaction),
+            expected_reason,
+            present_detail=present_detail,
+        )

@@ -1,7 +1,19 @@
 """Live AEAT session acquisition helpers.
 
-This module uses :class:`AeatSession` and :class:`Settings` to acquire
-authenticated sessions for live AEAT operations.
+This module is the shared read-only entry gate for application-live services.
+It loads :class:`Settings`, enforces
+:meth:`aeat.core.access_gate.AeatAccessGate.require_live_read`, and only then
+returns an authenticated :class:`AeatSession`. It never calls
+``require_live_write`` and never performs AEAT-side mutations.
+
+See Also:
+    :class:`~aeat.core.access_gate.AeatAccessGate`
+        Core gate that authorizes pytest live reads and refuses all live writes.
+    :func:`~aeat.application.auth.ensure_authenticated_aeat_session`
+        Auth service called only after the read gate passes.
+    :mod:`aeat.application.live`
+        Public read-only live facade that routes remote acquisition helpers
+        through this session boundary.
 """
 
 from __future__ import annotations
@@ -17,7 +29,12 @@ async def active_verified_session(
     operation: str = "live-filed-read",
     target_url: str | None = None,
 ) -> tuple[AeatSession, Settings]:
-    """Return an :class:`AeatSession` and :class:`Settings` after enforcing the live-read gate."""
+    """Return an :class:`AeatSession` and :class:`Settings` after the live-read gate.
+
+    The ``operation`` and optional ``target_url`` are forwarded to the
+    authentication service for diagnostics and provider routing after
+    :class:`AeatAccessGate` has authorized a read-only live operation.
+    """
     settings = load_settings()
     AeatAccessGate(settings).require_live_read()
     result = await ensure_authenticated_aeat_session(

@@ -3,7 +3,12 @@
 Two noun-groups (``payable_invoice``, ``collectible_invoice``) each
 expose the canonical five-verb CRUD spine
 ``add``/``remove``/``update``/``view``/``list``. Records are
-bucket-scoped and persisted as encrypted secure-object documents per noun-kind.
+bucket-scoped and persisted as encrypted :class:`BusinessOperationInvoiceDocument`
+payloads through
+:class:`~aeat.adapters.persistence.storage.SecureBoundRepository` per
+noun-kind, under the
+:data:`aeat.adapters.persistence.storage.LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE`
+namespace contract.
 
 The records are intentionally slim. Business-detail enrichment (line
 items, IVA breakdown, reconciliation linkages) belongs to the
@@ -24,7 +29,6 @@ MutatingNounGroupContract.
 from __future__ import annotations
 
 import re
-import uuid
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -32,22 +36,26 @@ from typing import override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
-from ...adapters.persistence.storage import LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE
-from ...adapters.persistence.storage.envelope import SecureBoundRepository
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...core import STRICT_FROZEN_CONFIG
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.storage import (
+    LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
+    SecureBoundRepository,
+    secure_object_repository_for_bucket,
+)
+from ...core import STRICT_FROZEN_CONFIG, IntracomOperationType
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
+from ...domain import canonical_decimal_string
 from ...domain.buckets import (
-    BucketEventHistoryRepository,
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 
 
 class BusinessOperationInvoiceDirection(StrEnum):
@@ -61,23 +69,6 @@ class BusinessOperationInvoiceDirection(StrEnum):
 
     PAYABLE_INVOICE = "payable_invoice"
     COLLECTIBLE_INVOICE = "collectible_invoice"
-
-
-class IntracomOperationType(StrEnum):
-    """M349 intracomunitaria operation type codes per BOE M349 schema.
-
-    E = entrega de bienes, S = prestación de servicios, T = triangular,
-    R = rectificación, A = adquisición de bienes, ADQUISICION_SERVICIOS =
-    adquisición de servicios (code "I"), M = miscelánea.
-    """
-
-    E = "E"
-    S = "S"
-    T = "T"
-    R = "R"
-    A = "A"
-    ADQUISICION_SERVICIOS = "I"
-    M = "M"
 
 
 class BusinessOperationInvoiceInputError(AeatError):
@@ -118,6 +109,7 @@ _EU_IVA_PATTERNS: dict[str, re.Pattern[str]] = {
     "SE": re.compile(r"^SE\d{12}$"),
     "SI": re.compile(r"^SI\d{8}$"),
     "SK": re.compile(r"^SK\d{10}$"),
+    "XI": re.compile(r"^XI[0-9A-Z]{5}$|^XI[0-9A-Z]{9}$|^XI[0-9A-Z]{12}$"),
 }
 
 
@@ -163,8 +155,9 @@ class BusinessOperationInvoice(BaseModel):
 
     Intracom fields (``country_code``, ``eu_iva_id``, ``operation_type``)
     are ``None`` for domestic invoices and are set for EU intracomunitaria
-    operations that feed M349 aggregation. Existing records without these
-    fields grandfather in as ``None`` (schema migration per spec §5).
+    operations that feed M349 aggregation. The current persisted shape always
+    carries the three keys; domestic invoices record them explicitly as
+    ``None``.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -183,9 +176,9 @@ class BusinessOperationInvoice(BaseModel):
     total_amount: Decimal = Field(default=Decimal("0"))
     notes: str = Field(default="", max_length=2000)
     # Intracom EU fields — None for domestic invoices.
-    country_code: str | None = Field(default=None, min_length=2, max_length=2)
-    eu_iva_id: str | None = Field(default=None, max_length=20)
-    operation_type: IntracomOperationType | None = Field(default=None)
+    country_code: str | None = Field(min_length=2, max_length=2)
+    eu_iva_id: str | None = Field(max_length=20)
+    operation_type: IntracomOperationType | None
     created_at: datetime
     updated_at: datetime
 
@@ -199,6 +192,68 @@ class BusinessOperationInvoice(BaseModel):
         if value is None:
             return None
         return format(value, "f")
+
+
+#: Bound on the mint-time collision disambiguator. A genuine collision needs an
+#: identical invoice (same fields and coarse-clock instant) already stored, so a
+#: handful of attempts is the realistic ceiling; the cap exists so a derivation
+#: regression that drops the disambiguator from the digest fails loudly instead of
+#: spinning forever.
+_ID_DISAMBIGUATION_CAP = 1024
+
+
+def derive_business_operation_invoice_id(
+    *,
+    bucket_id: str,
+    source_kind: BusinessOperationInvoiceDirection,
+    counterparty_nif: str,
+    counterparty_name: str,
+    invoice_number: str,
+    invoice_date: str,
+    currency: str,
+    taxable_base: Decimal,
+    iva_rate: Decimal | None,
+    iva_amount: Decimal,
+    total_amount: Decimal,
+    notes: str,
+    country_code: str | None,
+    eu_iva_id: str | None,
+    operation_type: IntracomOperationType | None,
+    created_at: datetime,
+    disambiguator: int = 0,
+) -> str:
+    """Return the content-addressed id for a business-operation invoice record.
+
+    Mirrors :func:`aeat.domain.transactions.derive_transaction_id`: a SHA-256
+    digest (truncated to 16 hex chars, the prior surrogate's width) over the
+    record's identifying fields, so the id is stable under a frozen-clock replay
+    and directly referenceable as an ``aeat app ledger invoice`` argument,
+    needing no output mask. ``created_at`` plus the ``disambiguator`` ordinal
+    preserve the genuine-duplicate case: two legitimately distinct invoices must
+    keep distinct ids, so the mint site increments ``disambiguator`` on the rare
+    digest collision rather than colliding.
+    """
+    return content_hash_hex(
+        {
+            "bucket_id": bucket_id,
+            "source_kind": source_kind.value,
+            "counterparty_nif": counterparty_nif,
+            "counterparty_name": counterparty_name,
+            "invoice_number": invoice_number,
+            "invoice_date": invoice_date,
+            "currency": currency,
+            "taxable_base": canonical_decimal_string(taxable_base),
+            "iva_rate": canonical_decimal_string(iva_rate) if iva_rate is not None else "",
+            "iva_amount": canonical_decimal_string(iva_amount),
+            "total_amount": canonical_decimal_string(total_amount),
+            "notes": notes,
+            "country_code": country_code or "",
+            "eu_iva_id": eu_iva_id or "",
+            "operation_type": operation_type.value if operation_type is not None else "",
+            "created_at": created_at.isoformat(),
+            "disambiguator": disambiguator,
+        },
+    )[:16]
 
 
 class BusinessOperationInvoicePatch(BaseModel):
@@ -246,7 +301,23 @@ class BusinessOperationInvoiceDocument(BaseModel):
 
 
 class BusinessOperationInvoiceRepository(SecureBoundRepository[BusinessOperationInvoiceDocument]):
-    """Encrypted repository for one bucket/source-kind invoice catalogue."""
+    """Encrypted store for one bucket/source-kind invoice catalogue.
+
+    The namespace, sensitivity, schema version, and object-key contract come
+    from
+    :data:`aeat.adapters.persistence.storage.LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE`.
+    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    wraps each :class:`BusinessOperationInvoiceDocument` in a
+    :class:`~aeat.adapters.persistence.storage.Envelope` before writing it.
+
+    See Also:
+        :class:`BusinessOperationInvoiceDocument`
+            Bucket-local payload grouped by invoice direction.
+        :class:`PayableInvoiceService`
+            CRUD service for vendor invoices.
+        :class:`CollectibleInvoiceService`
+            CRUD service for customer invoices.
+    """
 
     namespace = LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.namespace
     sensitivity = LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.sensitivity
@@ -288,7 +359,10 @@ def _emit_invoice_event(
     occurred_at: datetime,
     actor: str,
 ) -> str:
-    from ...domain.buckets._event import BucketEvent, derive_bucket_event_id
+    from ...domain.buckets import (
+        BucketEvent,
+        derive_bucket_event_id,
+    )
 
     object_type = _OBJECT_TYPE_MAP[record.source_kind.value]
     payload = {
@@ -409,8 +483,44 @@ class _BusinessOperationInvoiceService:
         actor: str = "cli",
     ) -> BusinessOperationInvoiceResult:
         now = _utc_now()
+        # Normalise country_code to the stored (upper) form so the id derives
+        # from the same value the record persists (the model upper-cases it).
+        normalised_country_code = country_code.upper() if country_code is not None else None
+        records = _load(self._settings, self.source_kind, bucket_id)
+        existing_ids = {existing.invoice_id for existing in records}
+        for disambiguator in range(_ID_DISAMBIGUATION_CAP):
+            invoice_id = derive_business_operation_invoice_id(
+                bucket_id=bucket_id,
+                source_kind=self.source_kind,
+                counterparty_nif=counterparty_nif,
+                counterparty_name=counterparty_name,
+                invoice_number=invoice_number,
+                invoice_date=invoice_date,
+                currency=currency,
+                taxable_base=taxable_base,
+                iva_rate=iva_rate,
+                iva_amount=iva_amount,
+                total_amount=total_amount,
+                notes=notes,
+                country_code=normalised_country_code,
+                eu_iva_id=eu_iva_id,
+                operation_type=operation_type,
+                created_at=now,
+                disambiguator=disambiguator,
+            )
+            if invoice_id not in existing_ids:
+                break
+        else:
+            # Unreachable unless the derivation stops incorporating the
+            # disambiguator: then every attempt collides and the loop would spin
+            # forever. Fail loudly on the bounded cap instead of hanging.
+            raise RuntimeError(
+                f"could not derive a unique business-operation invoice id after "
+                f"{_ID_DISAMBIGUATION_CAP} attempts; the content digest is not "
+                "incorporating the disambiguator (a derivation regression)",
+            )
         record = BusinessOperationInvoice(
-            invoice_id=uuid.uuid4().hex[:16],
+            invoice_id=invoice_id,
             source_kind=self.source_kind,
             bucket_id=bucket_id,
             counterparty_nif=counterparty_nif,
@@ -429,7 +539,6 @@ class _BusinessOperationInvoiceService:
             created_at=now,
             updated_at=now,
         )
-        records = _load(self._settings, self.source_kind, bucket_id)
         records.append(record)
         _save(self._settings, self.source_kind, bucket_id, records)
         created_type = _EVENT_MAP[self.source_kind.value][0]
@@ -531,7 +640,6 @@ __all__ = [
     "BusinessOperationInvoiceRepository",
     "BusinessOperationInvoiceResult",
     "CollectibleInvoiceService",
-    "IntracomOperationType",
     "PayableInvoiceService",
     "validate_eu_iva_id",
 ]

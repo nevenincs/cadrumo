@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from functools import cache
 
 import pytest
 from pydantic import ValidationError
@@ -11,24 +10,27 @@ from pydantic import ValidationError
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import CasillaId, RegistryCatalogues, RegistryValidationError, validated_casilla_id
+from .._binding_selector_utils import selector_as_dict
 from .._bindings import RegistryModeloObservation
-from .._loader import load_registry_tree
-from .._relations import relation_source_requirements, resolve_relation_values_from_observations
+from .._relations import (
+    RegistryFoldRequirement,
+    relation_source_requirements,
+    resolve_relation_values_from_observations,
+)
 from .._schema import ModeloDefinition, ModeloRevision
 from .._schema_surfaces import RelationDefinition
 from .._validate import RegistryValidator
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _M115_BASE_CASILLA: CasillaId = validated_casilla_id("02", surface="_M115_BASE_CASILLA")
 _M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03", surface="_M115_RETENCIONES_CASILLA")
 _UNKNOWN_SOURCE_CASILLA: CasillaId = validated_casilla_id("missing-output", surface="_UNKNOWN_SOURCE_CASILLA")
 
 
-@cache
 def _committed_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    return load_registry_tree(_REGISTRY_ROOT)
+    return _committed_registry_tree()
 
 
 def _modelo(modelos: tuple[ModeloDefinition, ...], modelo_id: str) -> ModeloDefinition:
@@ -109,6 +111,22 @@ def test_modelo_180_relation_source_requirements_identify_source_filings() -> No
         assert requirement.aggregation_op == "sum"
     assert by_output[_M115_BASE_CASILLA].target_bindings == ("modelo-180-115-base-anual",)
     assert by_output[_M115_RETENCIONES_CASILLA].target_bindings == ("modelo-180-115-retenciones-anual",)
+
+
+def test_registry_fold_requirement_rejects_non_modelo_id_source_modelo() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        RegistryFoldRequirement.model_validate(
+            {
+                "source_modelo": "modelo-115",
+                "filing_year": 2026,
+                "periods": ("1T",),
+                "source_casilla_ids": (_M115_BASE_CASILLA,),
+            },
+        )
+
+    message = str(exc_info.value)
+    assert "source_modelo" in message
+    assert r"^\d{3}$" in message
 
 
 def test_relation_source_requirements_obey_target_periods() -> None:
@@ -199,6 +217,30 @@ def test_registry_validator_rejects_relation_to_unknown_source_modelo() -> None:
         )
 
 
+def test_registry_validator_rejects_dependency_classification_to_unknown_source_modelo() -> None:
+    modelos, catalogues = _committed_tree()
+    modelo = _modelo(modelos, "100")
+    revision = modelo.revisions["2025"]
+    classification = next(
+        item for item in revision.dependency_classifications if item.source_modelo == "303" and not item.relation_refs
+    )
+    mutated_classification = classification.model_copy(update={"source_modelo": "999"})
+    mutated_revision = revision.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                mutated_classification if item.id == classification.id else item
+                for item in revision.dependency_classifications
+            ),
+        },
+    )
+    mutated_modelo = _with_revision(modelo, mutated_revision)
+
+    with pytest.raises(RegistryValidationError, match=r"dependency classification .* unknown source modelo"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
+            _replace_modelo(modelos, mutated_modelo),
+        )
+
+
 def test_registry_validator_rejects_relation_source_period_outside_source_revision() -> None:
     modelos, catalogues = _committed_tree()
     modelo = _modelo(modelos, "180")
@@ -270,12 +312,8 @@ def test_registry_validator_rejects_relation_source_casilla_display_token() -> N
     source_modelo = _modelo(modelos, "303")
     revision = target_modelo.revisions["2010-y-siguientes"]
     source_revision = source_modelo.revisions["2009-y-siguientes"]
-    relation = next(
-        item
-        for item in revision.relations
-        if item.id == "modelo-390-rel-303-compensacion-ultimo-periodo"
-    )
-    source_casilla = next(item for item in source_revision.casillas if item.id == relation.source_casilla_id)
+    relation = next(item for item in revision.relations if item.id == "modelo-390-rel-303-cuota-devengada-total")
+    source_casilla = next(item for item in source_revision.casillas if item.number != item.id)
     assert source_casilla.number != source_casilla.id
 
     noncanonical_source_id = validated_casilla_id(
@@ -306,7 +344,7 @@ def test_registry_validator_rejects_previous_filing_source_casilla_id_missing_fr
     revision = modelo.revisions["2019-y-siguientes"]
     revision_scoped_only = validated_casilla_id("0059", surface="M100 revision-scoped test casilla")
     binding = next(item for item in revision.bindings if item.id == "irpf.previous_year_economic_activity_net_income")
-    mutated_selector = {**binding.selector, "source_casilla_ids": (revision_scoped_only,)}
+    mutated_selector = {**selector_as_dict(binding), "source_casilla_ids": (revision_scoped_only,)}
     mutated_binding = binding.model_copy(update={"selector": mutated_selector})
     mutated_revision = revision.model_copy(
         update={"bindings": tuple(mutated_binding if item.id == binding.id else item for item in revision.bindings)},
@@ -324,14 +362,15 @@ def test_registry_validator_rejects_previous_filing_source_casilla_display_token
     modelo = _modelo(modelos, "303")
     revision = modelo.revisions["2009-y-siguientes"]
     binding = next(item for item in revision.bindings if item.id == "modelo-303-compensacion-pendiente-anteriores")
-    source_casilla = next(item for item in revision.casillas if item.id == binding.selector["source_casilla_id"])
+    selector = selector_as_dict(binding)
+    source_casilla = next(item for item in revision.casillas if item.id == selector["source_casilla_id"])
     assert source_casilla.number != source_casilla.id
 
     noncanonical_source_id = validated_casilla_id(
         source_casilla.number,
         surface="previous_filing display token source casilla id",
     )
-    mutated_selector = {**binding.selector, "source_casilla_id": noncanonical_source_id}
+    mutated_selector = {**selector, "source_casilla_id": noncanonical_source_id}
     mutated_binding = binding.model_copy(update={"selector": mutated_selector})
     mutated_revision = revision.model_copy(
         update={"bindings": tuple(mutated_binding if item.id == binding.id else item for item in revision.bindings)},

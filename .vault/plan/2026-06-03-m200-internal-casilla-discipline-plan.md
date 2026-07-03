@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#m200-internal-casilla-discipline'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-03-m200-internal-casilla-discipline-adr]]'
   - '[[2026-06-03-m200-internal-casilla-discipline-research]]'
   - '[[2026-06-02-modelo-200-base-determination-adr]]'
 ---
-
 
 # `m200-internal-casilla-discipline` `Modelo 200 internal-only casilla discipline: schema field, gate exemption, bin-aplicada-maxima migration` plan
 

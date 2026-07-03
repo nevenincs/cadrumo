@@ -35,6 +35,7 @@ import pytest
 
 from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id, validated_casilla_id_map
 from .._taxation_comparison import (
+    INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT,
     TaxationComparisonError,
     TaxationRecommendation,
     compare_taxation_modes,
@@ -66,47 +67,48 @@ _M100_TRABAJO_INGRESO_CASILLA: CasillaId = validated_casilla_id(
 
 _BASE_INPUTS: dict[CasillaId, Decimal] = _casilla_values(
     {
-    # Computed casillas supplied as zero inputs so the engine can evaluate them.
-    "0003": Decimal("0"),
-    "0429": Decimal("0"),
-    "0501": Decimal("0"),
-    "0506": Decimal("0"),
-    "0507": Decimal("0"),
-    "0513": Decimal("0"),
-    "0514": Decimal("0"),
-    "0515": Decimal("0"),
-    "0516": Decimal("0"),
-    "0517": Decimal("0"),
-    "0518": Decimal("0"),
-    "0544": Decimal("0"),
-    "0549": Decimal("0"),
-    "0554": Decimal("0"),
-    "0555": Decimal("0"),
-    "0556": Decimal("0"),
-    "0557": Decimal("0"),
-    "0558": Decimal("0"),
-    "0559": Decimal("0"),
-    "0564": Decimal("0"),
-    "0565": Decimal("0"),
-    "0566": Decimal("0"),
-    "0584": Decimal("0"),
-    "0568": Decimal("0"),
-    "0569": Decimal("0"),
-    "0572": Decimal("0"),
-    "0574": Decimal("0"),
-    "0577": Decimal("0"),
-    "0579": Decimal("0"),
+        # Computed casillas supplied as zero inputs so the engine can evaluate them.
+        "0003": Decimal("0"),
+        "0429": Decimal("0"),
+        "0501": Decimal("0"),
+        "0506": Decimal("0"),
+        "0507": Decimal("0"),
+        # 0513/0514 (mínimo por descendientes) are computed (Option A engine);
+        # the zero for these
+        # childless test couples is supplied via the
+        # renta-2025-profile-minimo-descendientes-estatal binding in
+        # _BASE_BINDINGS below, not as a manual casilla input.
+        "0515": Decimal("0"),
+        "0516": Decimal("0"),
+        "0517": Decimal("0"),
+        "0518": Decimal("0"),
+        "0544": Decimal("0"),
+        "0549": Decimal("0"),
+        "0554": Decimal("0"),
+        "0555": Decimal("0"),
+        "0556": Decimal("0"),
+        "0557": Decimal("0"),
+        "0558": Decimal("0"),
+        "0559": Decimal("0"),
+        "0564": Decimal("0"),
+        "0565": Decimal("0"),
+        "0566": Decimal("0"),
+        "0584": Decimal("0"),
+        "0568": Decimal("0"),
+        "0569": Decimal("0"),
+        "0572": Decimal("0"),
+        "0574": Decimal("0"),
+        "0577": Decimal("0"),
+        "0579": Decimal("0"),
     }
 )
 
 _ZERO_RELATIONS = {
     "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
     "renta-2025-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2025-rel-115-retenciones-trimestrales": Decimal("0"),
     "renta-2025-rel-123-retenciones-trimestrales": Decimal("0"),
     "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
     "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
-    "renta-2025-rel-180-retenciones-anuales": Decimal("0"),
     "renta-2025-rel-190-retenciones-anuales": Decimal("0"),
     "renta-2025-rel-193-retenciones-anuales": Decimal("0"),
 }
@@ -122,6 +124,18 @@ _BASE_BINDINGS = {
     # Fresh-filer scenarios: no prior-period BL negativa to compensate
     # (LIRPF art. 50.3 carry-forward; defaults to 0 for new couples).
     "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+    # No other unidad-familiar members' base for the Madrid nacimiento/adopción
+    # límite-unidad-familiar check (madrid-dl-1-2010:art-18).
+    "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+    # No Madrid nacimiento/adopción-eligible descendants in these scenarios.
+    "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+    # Childless couple: Art. 58/61 LIRPF mínimo por descendientes aggregate is
+    # zero (Option A engine) for both the estatal and autonómico halves — a
+    # childless profile resolves to zero regardless of the Madrid tax
+    # residence declared below (#593's per-CCAA divergence only matters when
+    # eligible descendants exist).
+    "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+    "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
 }
 
 _BASE_ENUM_BINDINGS = {"renta-2025-profile-tax-residence-ccaa": "madrid"}
@@ -243,6 +257,63 @@ def test_comparison_result_structure_is_typed(snapshot_2025: RegistrySnapshot) -
     assert len(result.recommendation_reason) > 10
 
 
+def test_individual_branch_honesty_caveat_surfaces(snapshot_2025: RegistrySnapshot) -> None:
+    """Every comparison result discloses the single-earner-only scope limit.
+
+    The individual run
+    reuses the unidad familiar's single input set, so it faithfully models only
+    a single-earner household. The result MUST carry an explicit, operator-facing
+    caveat so a two-earner individual figure is never presented as authoritative
+    (``no-silent-under-declaration`` / ``aeat-safety-legal-gates``). The caveat
+    must be non-silent: present on the typed result regardless of which mode wins.
+    """
+    inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("52000")}
+    result = compare_taxation_modes(
+        snapshot_2025,
+        inputs=inputs,
+        binding_values=_BASE_BINDINGS,
+        enum_binding_values=_BASE_ENUM_BINDINGS,
+        relation_values=_ZERO_RELATIONS,
+        date_binding_values=_BASE_DATE_BINDINGS,
+    )
+
+    # The first slice is single-earner-faithful only; the flag must say so.
+    assert result.individual_branch_single_earner_only is True
+
+    # The disclosure text is the single-sourced constant and must honestly name
+    # the limitation (single-earner faithful; two-earner not yet modelled).
+    assert result.individual_branch_caveat == INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT
+    caveat = result.individual_branch_caveat.lower()
+    assert "single-earner" in caveat
+    assert "two-earner" in caveat
+    assert "not yet available" in caveat
+
+
+def test_individual_branch_caveat_present_when_individual_recommended(
+    snapshot_2025: RegistrySnapshot,
+) -> None:
+    """The caveat rides even the INDIVIDUAL and INDIFFERENT recommendations.
+
+    The honesty risk is sharpest when the tool recommends individual filing: an
+    operator with a two-earner household could act on a figure the comparator
+    cannot faithfully compute. The caveat must not be gated on the conjunta win,
+    so a zero-income run (which cannot favour conjunta via Art. 84 on nil base)
+    still carries the disclosure.
+    """
+    inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("0")}
+    result = compare_taxation_modes(
+        snapshot_2025,
+        inputs=inputs,
+        binding_values=_BASE_BINDINGS,
+        enum_binding_values=_BASE_ENUM_BINDINGS,
+        relation_values=_ZERO_RELATIONS,
+        date_binding_values=_BASE_DATE_BINDINGS,
+    )
+
+    assert result.individual_branch_single_earner_only is True
+    assert result.individual_branch_caveat == INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT
+
+
 # DEFERRED: non-zero BL-negativa-anterior coverage test. Diagnostic 2026-06-03
 # established that the renta-2025-base-liquidable-negativa-general-anterior
 # binding feeds the STOCK casilla 1388 ("Pendiente de aplicación al principio
@@ -267,8 +338,7 @@ def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
     registry declaration in aeat.core.errors.registry._application, not
     hand-computed.
     """
-    from ....core.errors import ERROR_REGISTRY, build_error_envelope
-    from ....core.errors._registry import get_registered_error_code
+    from ....core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
     from .._taxation_comparison import TaxationComparisonError
 
     # Registry membership: the declared code must be present in ERROR_REGISTRY.

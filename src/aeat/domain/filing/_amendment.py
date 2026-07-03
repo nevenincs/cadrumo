@@ -1,4 +1,4 @@
-"""Strict amendment domain records for :mod:`aeat.domain.filing`.
+"""Strict amendment domain records for :mod:`domain.filing`.
 
 Houses the immutable records that describe an AEAT amendment. The
 ``amended_draft`` field on each amendment record holds the originating
@@ -10,11 +10,11 @@ Concrete variants are :class:`ModeloComplementaria` (LGT Art. 122.2)
 and :class:`ModeloSustitutiva` (LGT Art. 122.1), the
 :class:`CasillaChange` delta entries, and the :class:`AmendmentKind`
 enum. The orchestration use case
-:func:`aeat.application.filing.build_complementaria` lives at
-:mod:`aeat.application.filing._complementaria`; this module contains
+:func:`application.filing.build_complementaria` lives at
+:mod:`application.filing._complementaria`; this module contains
 only the typed shapes and the deterministic
 :func:`make_amendment_id` helper so the repository (also under
-:mod:`aeat.domain.filing`) can persist amendments without depending
+:mod:`domain.filing`) can persist amendments without depending
 on the application layer.
 
 Callers operate on the discriminated union ``ModeloComplementaria |
@@ -43,7 +43,7 @@ type CasillaInputs = ModeloInputs
 """Updated casilla inputs supplied to an amendment build.
 
 An amendment restates casilla values, so its input contract is the
-same canonical :data:`aeat.domain.filing.ModeloInputs` mapping the
+same canonical :data:`domain.filing.ModeloInputs` mapping the
 filing builder consumes."""
 
 

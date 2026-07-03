@@ -10,7 +10,7 @@ vision reader instead.
 
 from __future__ import annotations
 
-from ...adapters.inbound.pdf._pdfplumber import extract_pages_text_from_bytes
+from ...adapters.inbound.pdf import extract_pages_text_from_bytes
 from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError
 from ._evidence_input import EvidenceInput
 

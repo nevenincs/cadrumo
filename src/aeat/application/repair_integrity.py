@@ -1,29 +1,38 @@
-"""Backend services for secure-object integrity and inventory diagnostics.
+"""Secure-object repair diagnostics, remediation decisions, and policy coverage.
 
-Implements the subverbs for configuration repair and integrity checks. Each function
-returns a strict Pydantic report consumed by the CLI's ``_emit``
-renderer; both functions are read-only and emit no bucket events. Integrity
-sweeps iterate every namespace inside a :class:`SecureObjectRepository` to
-assess decryptability and produce per-namespace counts.
+The read side of this module produces metadata-only reports over encrypted
+secure-object rows. Integrity sweeps iterate namespaces in a
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` and return
+per-namespace
+:class:`~aeat.adapters.persistence.storage.SecureObjectNamespaceIntegrity`
+counts; inventory rows expose row metadata and HMAC digests, never natural
+keys or payload bytes. These reports
+back the repair integrity surface and the quarantine dry-run path without
+emitting bucket events.
 
-  ``build_repair_integrity_report``  per-namespace decryptability
-                                     summary (optionally filtered to
-                                     one namespace) plus an aggregate
-                                     ``DiagnosticCheck`` row carrying
-                                     the required ``next_action`` or
-                                     ``dead_end`` field.
+The write side is deliberately narrow: :class:`RepairRemediationDecision`
+records persist non-destructive preserve / quarantine / rebuild /
+export-required planning outcomes as encrypted AUDIT-class rows. A decision
+record is evidence for a later operator workflow, not mutation authority.
 
-  ``build_repair_list_report``       namespace inventory: every stored
-                                     lookup digest under the supplied
-                                     namespace, plus per-namespace
-                                     decryptability counts.
+The policy catalog returned by
+:func:`build_repair_policy_command_surface_catalog` mirrors repair, recovery,
+import, export, and bucket-history command surfaces against registered
+:class:`SecureObjectNamespaceDefinition` metadata. Tests use it as a drift gate
+so new maintenance surfaces cannot appear without an explicit namespace policy.
 
-Repair-remediation decisions are non-destructive planning records
-persisted as encrypted AUDIT-class secure-object rows in a
-profile-local namespace. The full preserve/quarantine/rebuild/
-export-required semantics and repair-policy command-surface catalog
-live here; the design mandates that mutation is never authorised
-from a decision record alone.
+See Also:
+    :mod:`aeat.application.diagnostics`
+        Builds the user-facing repair report and delegates quarantine preview /
+        commit flows through this module's active-bucket repair session.
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+        Encrypted SQL repository whose namespace integrity probes and
+        quarantine operation supply the repair data.
+    :data:`~aeat.adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`
+        Central registry copied into repair-policy namespace rows.
+    :mod:`aeat.entrypoints.cli._config._repair_cli`
+        CLI command surface that renders these reports and policy-backed repair
+        actions.
 """
 
 from __future__ import annotations
@@ -42,11 +51,11 @@ from ..adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
+    SecureObjectNamespaceIntegrity,
+    SecureObjectRepository,
 )
 from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectDecryptabilityRow,
-    SecureObjectNamespaceIntegrity,
-    SecureObjectRepository,
 )
 from ..core import STRICT_FROZEN_CONFIG
 from ..core.errors import CoreError
@@ -93,8 +102,12 @@ _RepairDecisionOutcome = Literal["preserve", "quarantine", "rebuild", "export-re
 class _SecureObjectRepositoryProtocol(Protocol):
     """Structural interface consumed by the repair-integrity application layer.
 
-    ``SecureObjectRepository`` satisfies this protocol without forcing the
-    application layer to depend on the concrete SQL implementation.
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    satisfies this protocol. The interface is limited to namespace enumeration,
+    integrity probing, key inventory, and
+    :class:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectDecryptabilityRow`
+    iteration so read-only repair reports can be tested against the real
+    repository without granting mutation APIs to the report builders.
     """
 
     def list_namespaces(self) -> tuple[str, ...]: ...
@@ -104,7 +117,20 @@ class _SecureObjectRepositoryProtocol(Protocol):
 
 
 class RepairIntegrityReport(BaseModel):
-    """Output of ``aeat config repair integrity [--namespace N]``."""
+    """Metadata-only secure-object integrity report.
+
+    ``namespaces`` carries one :class:`SecureObjectNamespaceIntegrity` per
+    probed namespace. ``check`` is the aggregate :class:`DiagnosticCheck` row
+    used by repair renderers; failing reports carry the quarantine command as
+    the next action.
+
+    See Also:
+        :func:`build_repair_integrity_report`
+            Producer that fills this report from real secure-object
+            decryptability probes.
+        :class:`~aeat.application.diagnostics.SecureObjectIntegrityReport`
+            Config-repair rollup that uses the same namespace integrity shape.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -115,7 +141,16 @@ class RepairIntegrityReport(BaseModel):
 
 
 class RepairListRow(BaseModel):
-    """One row in the secure-object repair inventory."""
+    """One metadata row in the secure-object repair inventory.
+
+    Rows are projected from
+    :class:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectDecryptabilityRow`
+    values returned by
+    :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.iter_namespace_decryptability`.
+    ``object_key_digest`` is the stored HMAC digest, not the natural object key.
+    ``reason`` is populated only for unreadable rows and must remain a diagnostic
+    class of failure rather than decrypted payload context.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -130,7 +165,13 @@ class RepairListRow(BaseModel):
 
 
 class RepairListReport(BaseModel):
-    """Output of the secure-object repair inventory."""
+    """Internal secure-object inventory report for one namespace.
+
+    The report combines the namespace's :class:`SecureObjectNamespaceIntegrity`
+    counts with metadata-only :class:`RepairListRow` entries. Operator-facing
+    repair commands render aggregate integrity and quarantine previews rather
+    than exposing a broad raw list command.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -144,7 +185,7 @@ class RepairListReport(BaseModel):
 def _aggregate_integrity(
     integrity: tuple[SecureObjectNamespaceIntegrity, ...],
 ) -> DiagnosticCheck:
-    """Render the cross-namespace summary as one DiagnosticCheck row.
+    """Render the cross-namespace summary as one :class:`DiagnosticCheck` row.
 
     The check honours the exhaustiveness lock: ``fail`` / ``warn`` rows
     MUST carry exactly one of ``next_action`` / ``dead_end``; ``ok`` rows
@@ -176,9 +217,12 @@ def build_repair_integrity_report(
     namespace: str | None = None,
     repository: _SecureObjectRepositoryProtocol | None = None,
 ) -> RepairIntegrityReport:
-    """Probe namespace integrity. When ``namespace`` is set, restrict scope.
+    """Probe secure-object decryptability and return a :class:`RepairIntegrityReport`.
 
-    Returns a :class:`RepairIntegrityReport`.
+    When ``namespace`` is set, only that namespace is probed; otherwise every
+    namespace currently present in the repository is scanned. Without an injected
+    repository, the probe opens the active bucket repair session before resolving
+    the runtime-bound :class:`SecureObjectRepository`.
     """
     if repository is not None:
         return _build_repair_integrity_report(namespace=namespace, repository=repository)
@@ -206,7 +250,23 @@ def _build_repair_integrity_report(
 
 @contextmanager
 def active_bucket_repair_session() -> Generator[None]:
-    """Open the active bucket session so integrity probes test decryptability, not bootstrap state."""
+    """Best-effort session opener for active-bucket repair diagnostics.
+
+    Repair integrity and quarantine previews need to test decryptability under
+    the active bucket key, but they are bootstrap-adjacent diagnostics rather
+    than profile enrollment flows. If a session is already active it is reused;
+    otherwise the configured master-key provider is entered for the span. A
+    provider failure is logged and the caller still observes the normal
+    repository/runtime readiness result.
+
+    See Also:
+        :func:`~aeat.application.diagnostics.preview_quarantine_unreadable_secure_objects`
+            Dry-run repair flow that uses this context before probing
+            decryptability.
+        :func:`~aeat.application.diagnostics.quarantine_unreadable_secure_objects`
+            Commit flow that uses this context before calling
+            :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.quarantine_unreadable_rows`.
+    """
     provider: object | None = None
     try:
         from ..adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
@@ -239,7 +299,7 @@ def build_repair_list_report(
     only_unreadable: bool = False,
     repository: _SecureObjectRepositoryProtocol | None = None,
 ) -> RepairListReport:
-    """List object keys stored under ``namespace``.
+    """List secure-object metadata stored under ``namespace``.
 
     ``--all`` returns every key; ``--unreadable`` filters to only the
     rows whose payload cannot be decrypted under the current master
@@ -248,8 +308,11 @@ def build_repair_list_report(
     bandwidth control on large namespaces — same as ``--all`` for
     namespaces with no integrity issues.
 
-    Returns a :class:`RepairListReport` enumerating the matching object
-    keys and their decryptability status.
+    Returns a :class:`RepairListReport` enumerating matching HMAC digests and
+    their decryptability status. The report never exposes natural object keys or
+    payload bytes. Without an injected repository, the list path enters
+    :func:`active_bucket_repair_session` before resolving the active
+    :class:`SecureObjectRepository`.
     """
     if include_all and only_unreadable:
         raise RepairIntegrityError(
@@ -300,7 +363,7 @@ def _build_repair_list_report(
 
 
 def _active_bucket_repair_repository() -> SecureObjectRepository:
-    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+    from ..adapters.persistence.storage import secure_object_repository_for_active_bucket
 
     return secure_object_repository_for_active_bucket()
 
@@ -324,13 +387,21 @@ class RepairRemediationDecision(BaseModel):
     Decision records persist preserve / quarantine / rebuild /
     export-required planning outcomes without authorising mutation.
     ``mutation_authorized`` is hard-typed to ``False`` so a decision
-    record can never be mistaken for an execute order.
+    record can never be mistaken for an execute order. The policy catalog keeps
+    these records visible through :class:`RepairPolicyCommandSurface`
+    decision-trail anchors.
 
     The ``decision_id`` is content-bound via
     :func:`repair_remediation_decision_id` to every other field, so
     persisting an arbitrary sha-shaped key for a different remediation
     target or evidence requirement set is rejected at load time by the
     re-derivation guard.
+
+    See Also:
+        :class:`RepairRemediationDecisionRepository`
+            Profile-local encrypted persistence for these decision records.
+        :data:`~aeat.adapters.persistence.storage.REPAIR_INTEGRITY_DECISION_NAMESPACE`
+            Secure-object namespace used to store the decisions.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -366,7 +437,7 @@ def repair_remediation_decision_id(
     Content-bound to every payload field including ``decided_at`` so
     two structurally identical re-runs at the same instant produce the
     same id; differing payloads produce different ids. The hash domain
-    matches the model's field set exactly so the load-time
+    matches the :class:`RepairRemediationDecision` field set exactly so the load-time
     re-derivation guard catches any payload mutation that bypassed
     the constructor.
     """
@@ -389,10 +460,10 @@ def repair_remediation_decision_id(
 class RepairRemediationDecisionRepository:
     """Profile-local persistence for :class:`RepairRemediationDecision` records.
 
-    Decisions are persisted as encrypted AUDIT-class secure-object rows
-    under the active profile's bucket. The object key is the decision's
-    content-addressed ``decision_id``; the payload is the decision's
-    JSON model_dump. Listing returns rows in decision-time descending
+    Decisions are persisted through :class:`SecureObjectRepository` as encrypted
+    AUDIT-class secure-object rows under the active profile's bucket. The object
+    key is the decision's content-addressed ``decision_id``; the payload is the
+    decision's JSON model dump. Listing returns rows in decision-time descending
     order.
 
     The repository accepts an optional ``SecureObjectRepository``
@@ -407,7 +478,7 @@ class RepairRemediationDecisionRepository:
     def _repo(self) -> SecureObjectRepository:
         if self._repository is not None:
             return self._repository
-        from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+        from ..adapters.persistence.storage import secure_object_repository_for_active_bucket
 
         return secure_object_repository_for_active_bucket()
 
@@ -503,7 +574,12 @@ def _expected_repair_decision_id(decision: RepairRemediationDecision) -> str:
 
 
 class RepairPolicyNamespaceClassification(BaseModel):
-    """Minimal namespace classification attached to a repair-policy surface."""
+    """Minimal namespace classification attached to a repair-policy surface.
+
+    Embedded in :class:`RepairPolicyNamespacePolicy` so command catalog rows can
+    describe non-registered bundle / filing / ledger surfaces and registered
+    secure-object namespace scopes with the same shape.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -511,7 +587,15 @@ class RepairPolicyNamespaceClassification(BaseModel):
 
 
 class RepairPolicyNamespacePolicy(BaseModel):
-    """Policy metadata for one namespace governed by a command surface."""
+    """Policy metadata for one namespace governed by a command surface.
+
+    Registered secure-object namespaces copy owner, sensitivity, schema version,
+    and scope from :class:`SecureObjectNamespaceDefinition` so repair and
+    recovery surfaces stay tied to the namespace registry instead of parallel
+    role markers. :class:`RepairPolicyCommandSurface` attaches these rows to
+    every CLI surface that can inspect, repair, import, export, or recover
+    namespace-owned data.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -529,7 +613,18 @@ class RepairPolicyNamespacePolicy(BaseModel):
 
 
 class RepairPolicyCommandSurface(BaseModel):
-    """One catalogued repair-policy CLI command surface."""
+    """One catalogued repair-policy CLI command surface.
+
+    Each row links a command path to its owner domains, decision-trail anchors,
+    and the namespace policies that constrain any repair or recovery behavior
+    reachable from that command family.
+
+    See Also:
+        :class:`RepairPolicyNamespacePolicy`
+            Per-namespace policy rows attached to a command surface.
+        :func:`build_repair_policy_command_surface_catalog`
+            Executable catalog that mirrors the repair and recovery CLI surface.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -622,8 +717,17 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
 
     The catalog mirrors the Typer command registry for repair,
     recovery, import, export, and bucket-history surfaces. It is used
-    as an executable drift gate: adding a new command in those families
-    requires a policy row here.
+    as an executable drift gate: adding a new command in those families requires
+    a policy row here, and secure-object rows must derive their metadata from the
+    central namespace registry. Each row also carries decision links for
+    :class:`RepairRemediationDecision` governance.
+
+    See Also:
+        :data:`~aeat.adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`
+            Source of secure-object namespace metadata copied into catalog
+            policies.
+        :class:`~aeat.adapters.persistence.storage.SecureObjectNamespaceDefinition`
+            Registered namespace declaration projected into policy rows.
     """
     return (
         _surface("config repair logs", command_family="repair", owner_domains=("diagnostics",)),

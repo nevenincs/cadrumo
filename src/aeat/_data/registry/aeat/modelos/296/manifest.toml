@@ -1,0 +1,10 @@
+[modelo]
+id = "296"
+title = "IRNR resumen anual de retenciones e ingresos a cuenta"
+official_name = "Modelo 296. Impuesto sobre la Renta de no Residentes. No residentes sin establecimiento permanente. Declaración anual de retenciones e ingresos a cuenta."
+tax_domain = "irnr"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = ["orden-hac-56-2024:art-1", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]

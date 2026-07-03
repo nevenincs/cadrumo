@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#docs-architecture'
 date: '2026-06-01'
-modified: '2026-06-01'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `docs-architecture` audit: campaign-close honesty review
 
@@ -96,4 +94,3 @@ Two items from the recommendations remain open as follow-on hardening rather
 than blockers: wiring the docstring-signature accuracy checker into the docs
 lane once its findings reach zero, and raising the coverage floor as further
 docstrings land. Both are improvements on top of a now-green gate.
-

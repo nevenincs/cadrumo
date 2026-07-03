@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#eliminate-shims'
 date: '2026-05-13'
-modified: '2026-05-13'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `eliminate-shims` audit: `chore/eliminate-shims state audit`
 

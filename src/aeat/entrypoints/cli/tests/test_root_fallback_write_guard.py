@@ -20,6 +20,8 @@ _GUARDED_WRITE_VERBS: tuple[tuple[str, ...], ...] = (
     ("config", "auth", "login"),
     ("app", "ledger", "link", "tx", "--invoice-id", "inv"),
     ("app", "modelo", "work", "verify", "abc"),
+    ("app", "modelo", "work", "file", "abc"),
+    ("app", "modelo", "export", "abc", "--output", "out.txt"),
     ("config", "profile", "censo", "pull"),
 )
 
@@ -173,6 +175,13 @@ def _combined_output(result: subprocess.CompletedProcess[str]) -> str:
     return f"{result.stdout}\n{result.stderr}"
 
 
+def _assert_no_internal_import_leak(output: str) -> None:
+    assert "Traceback" not in output
+    assert "ImportError" not in output
+    assert "register_work_revision_commands" not in output
+    assert "_modelo_work_revision_cli" not in output
+
+
 @pytest.mark.parametrize("verb", _GUARDED_WRITE_VERBS, ids=lambda value: " ".join(value))
 def test_guarded_write_verbs_refuse_root_fallback_database(tmp_path: Path, verb: tuple[str, ...]) -> None:
     """Profile-bound write verbs refuse before writing to the root fallback database."""
@@ -181,6 +190,7 @@ def test_guarded_write_verbs_refuse_root_fallback_database(tmp_path: Path, verb:
 
     assert result.returncode == 2, _combined_output(result)
     output = _combined_output(result)
+    _assert_no_internal_import_leak(output)
     assert "No active profile" in output
     assert "profile create" in output
     assert not (tmp_path / "aeat.db").exists()
@@ -194,8 +204,11 @@ def test_guarded_write_verbs_refuse_explicit_database_url(tmp_path: Path, verb: 
 
     assert result.returncode == 2, _combined_output(result)
     output = _combined_output(result)
+    _assert_no_internal_import_leak(output)
     assert "Storage runtime is not ready" in output
     assert "database route is not attached to an active profile bucket" in output
+    assert "AEAT_DATABASE_URL" in output
+    assert "AEAT_LOCAL_STORAGE_ROOT" in output
     assert not (tmp_path / "explicit.db").exists()
 
 
@@ -218,6 +231,39 @@ def test_config_switch_remains_recovery_path_on_root_fallback_database(tmp_path:
     output = _combined_output(result)
     assert "Unknown profile: does-not-exist" in output
     assert "No active profile" not in output
+
+
+def test_stub_only_modelo_work_create_reaches_leaf_refusal_on_root_fallback_database(tmp_path: Path) -> None:
+    """Stub-only modelos refuse with their legal route before the root profile guard."""
+
+    result = _run_aeat(
+        tmp_path,
+        (
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "210",
+            "--year",
+            "2025",
+            "--period",
+            "EVENT-1",
+            "--revision",
+            "2025",
+        ),
+    )
+
+    assert result.returncode == 2, _combined_output(result)
+    output = _combined_output(result)
+    assert "REFUSED_CLI_BOUNDARY" in output
+    assert "Modelo 210" in output
+    assert "G320" in output
+    assert "No active profile" not in output
+    assert "perfil activo" not in output
+    assert not (tmp_path / "aeat.db").exists()
 
 
 @pytest.mark.parametrize("verb_path", _GUARDED_PREDICATE_PATHS)

@@ -39,11 +39,13 @@ You MUST respect these rules at all times:
 @.codex/rules/composition-service-no-parallel-write-path.md
 @.codex/rules/core-struct-docstring-links.md
 @.codex/rules/cross-period-suppression-grounded-in-registry-classification.md
+@.codex/rules/dynamic-import-targets-the-public-facade.md
 @.codex/rules/firmware-reference-parity.builtin.md
 @.codex/rules/fixture-provenance-declared-in-sidecar.md
 @.codex/rules/full-tree-gate-must-distinguish-owner.md
 @.codex/rules/generated-reference-is-cli-owned.builtin.md
 @.codex/rules/glossary-concepts-are-taxpayer-facing.md
+@.codex/rules/iva-cuota-devengada-includes-recargo-equivalencia.md
 @.codex/rules/ledger-amount-is-absolute-direction-is-authority.md
 @.codex/rules/ledger-derived-revisions-bundle-evidence.md
 @.codex/rules/ledger-evidence-bytes-not-links.md
@@ -60,6 +62,7 @@ You MUST respect these rules at all times:
 @.codex/rules/no-silent-under-declaration.md
 @.codex/rules/no-tautological-calculation-tests.md
 @.codex/rules/one-aggregation-path-pull-equals-calculate.md
+@.codex/rules/operator-harness-cites-live-cli-surface.md
 @.codex/rules/period-filter-single-boundary-authority.md
 @.codex/rules/plan-closure-requires-exec-records.md
 @.codex/rules/registry-calculation-legal-grounding.md
@@ -71,6 +74,8 @@ You MUST respect these rules at all times:
 @.codex/rules/sensitive-financial-data-secure-storage-only.md
 @.codex/rules/service-imports-via-top-level-reexports.md
 @.codex/rules/shipped-search-licence-clean.md
+@.codex/rules/single-subject-mutation-is-idempotent-guarded.md
+@.codex/rules/subagent-commits-require-explicit-pathspec.md
 @.codex/rules/terminology-scaffold-preserve-contract.md
 @.codex/rules/terminology-single-declaration.md
 @.codex/rules/tests-live-under-domain-tests-folders.md
@@ -78,9 +83,11 @@ You MUST respect these rules at all times:
 @.codex/rules/vaultspec-archive-discipline.builtin.md
 @.codex/rules/vaultspec-cli.builtin.md
 @.codex/rules/vaultspec-codify.builtin.md
+@.codex/rules/vaultspec-discovery.builtin.md
 @.codex/rules/vaultspec-dry-run-discipline.builtin.md
 @.codex/rules/vaultspec-plan-editing-discipline.builtin.md
 @.codex/rules/vaultspec-rag.builtin.md
 @.codex/rules/vaultspec-system.builtin.md
 @.codex/rules/vaultspec.builtin.md
+@.codex/rules/verification-grounding-needs-oracle-evidence.md
 </vaultspec>

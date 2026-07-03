@@ -33,24 +33,14 @@ def test_boundary_surface_remains_exported() -> None:
     assert as_path is not None
 
 
-def test_resources_returns_a_registry() -> None:
-    """The factory returns a :class:`ResourceRegistry` instance."""
+def test_resources_factory_returns_cached_registry_that_can_be_cleared() -> None:
+    """The factory returns a cached registry whose aggregate clear is safe."""
 
     registry = resources()
 
     assert isinstance(registry, ResourceRegistry)
-
-
-def test_resources_is_cached() -> None:
-    """Repeat calls return the identical registry instance."""
-
-    assert resources() is resources()
-
-
-def test_registry_clear_is_safe_when_empty() -> None:
-    """The aggregate :meth:`clear` tolerates the empty foundation registry."""
-
-    resources().clear()
+    assert registry is resources()
+    registry.clear()
 
 
 class _NamedResourceKey(TypedResourceKey):
@@ -77,53 +67,28 @@ class _UppercaseResourceRepository(ResourceCacheRepository[str, _NamedResourceKe
         return key.name.upper()
 
 
-def test_repository_caches_after_first_load() -> None:
-    """A second :meth:`get` for the same key returns the cached value."""
+def test_repository_identity_map_caches_distinct_keys_and_clear_forces_reload() -> None:
+    """Repository get caches by key, separates distinct keys, and clear_cache reloads."""
 
     repo = _UppercaseResourceRepository()
-    key = _NamedResourceKey(name="alpha")
+    alpha = _NamedResourceKey(name="alpha")
+    beta = _NamedResourceKey(name="beta")
 
-    first = repo.get(key)
-    second = repo.get(key)
+    first = repo.get(alpha)
+    second = repo.get(alpha)
 
     assert first == "ALPHA"
     assert first is second
     assert repo._load_calls == 1
-
-
-def test_repository_loads_distinct_keys_independently() -> None:
-    """Distinct keys yield distinct cached values."""
-
-    repo = _UppercaseResourceRepository()
-
-    assert repo.get(_NamedResourceKey(name="a")) == "A"
-    assert repo.get(_NamedResourceKey(name="b")) == "B"
+    assert repo.get(beta) == "BETA"
     assert repo._load_calls == 2
 
-
-def test_repository_clear_cache_forces_reload() -> None:
-    """:meth:`clear_cache` empties the Identity Map."""
-
-    repo = _UppercaseResourceRepository()
-    key = _NamedResourceKey(name="alpha")
-
-    repo.get(key)
     repo.clear_cache()
-    repo.get(key)
-
-    assert repo._load_calls == 2
-
-
-def test_typed_resource_key_is_frozen() -> None:
-    """Typed keys are frozen so they can serve as Identity Map dict keys."""
-
-    key = _NamedResourceKey(name="alpha")
-
-    with pytest.raises(ValidationError):
-        key.__setattr__("name", "beta")
+    repo.get(alpha)
+    assert repo._load_calls == 3
 
 
-def test_typed_resource_key_is_hashable() -> None:
+def test_typed_resource_key_is_frozen_and_hashable() -> None:
     """Frozen Pydantic key models are hashable; Identity Map dict use depends on this."""
 
     a = _NamedResourceKey(name="alpha")
@@ -133,6 +98,8 @@ def test_typed_resource_key_is_hashable() -> None:
     container = {a: "first"}
     assert container[b] == "first"  # same value -> same hash
     assert c not in container
+    with pytest.raises(ValidationError):
+        a.__setattr__("name", "beta")
 
 
 def test_error_hierarchy_subclasses_resource_load_error() -> None:
@@ -158,18 +125,14 @@ def test_registry_clear_tolerates_empty_dataclass() -> None:
     registry.clear()
 
 
-def test_unimplemented_repository_get_raises_not_implemented_error() -> None:
-    """A ResourceCacheRepository that forgets to override _load raises on first get."""
+def test_unimplemented_repository_defaults_raise_not_implemented_error() -> None:
+    """Repositories must override _load and all when they expose a finite key space."""
 
     class _MissingRepo(ResourceCacheRepository[str, _NamedResourceKey]):
         pass
 
     with pytest.raises(NotImplementedError):
         _MissingRepo().get(_NamedResourceKey(name="x"))
-
-
-def test_unimplemented_repository_all_raises_not_implemented_error() -> None:
-    """The default :meth:`all` is unsafe; Repositories with a finite key space override."""
 
     repo = _UppercaseResourceRepository()
 
@@ -178,7 +141,7 @@ def test_unimplemented_repository_all_raises_not_implemented_error() -> None:
 
 
 def test_resources_factory_composes_every_repository() -> None:
-    """The factory wires all twelve Repositories into the registry."""
+    """The factory wires every current Repository into the registry."""
 
     resources.cache_clear()
     registry = resources()
@@ -190,7 +153,6 @@ def test_resources_factory_composes_every_repository() -> None:
         "legal_parameters",
         "manuals",
         "modelos",
-        "normatives",
         "recargo_bands",
         "topics",
         "user_profile_schema",

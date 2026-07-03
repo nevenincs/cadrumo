@@ -1,7 +1,9 @@
 """Portal registry command registration for ``aeat app live portals``.
 
-The list verb accepts :class:`PortalCategory` filters and projects local portal
-registry metadata into CLI envelopes.
+The list verb accepts :class:`PortalCategory` filters and projects local
+:class:`PortalMetadata` records from :data:`PORTAL_REGISTRY` into
+:class:`PortalEntryPayload` envelopes. The view verb resolves one
+:class:`Portal` through :func:`get_portal` and emits :class:`PortalsViewResult`.
 """
 
 from __future__ import annotations
@@ -42,7 +44,7 @@ def register_portals_commands(app: typer.Typer) -> None:
 
 
 def _portal_row(metadata) -> _PortalRow:
-    from ...domain.portals._hosts import portal_host_name
+    from ...domain.portals import portal_host_name
 
     # `metadata.label` and `metadata.purpose` are Translatable
     # translation keys (e.g. `entries.portal_sede_root.label`). A bare
@@ -88,7 +90,9 @@ def portals_list(
     """List local AEAT portal registry entries, optionally filtered by category or modelo.
 
     The ``category`` option is parsed as :class:`PortalCategory` and passed to
-    the registry category filter.
+    :func:`portals_by_category`; ``--modelo`` uses :func:`portals_for_modelo`.
+    All rows are :class:`PortalEntryPayload` projections emitted through
+    :class:`PortalsListResult`.
     """
     from ...domain.portals import PORTAL_REGISTRY, portals_by_category, portals_for_modelo
 
@@ -125,7 +129,11 @@ def portals_show(
         typer.Argument(help=tr("cli.app.live.portals.portal_id_help", default="Portal enum value.")),
     ],
 ) -> None:
-    """Show one portal-registry entry by its ``Portal`` enum value id."""
+    """Show one portal-registry entry by its :class:`Portal` id.
+
+    The id resolves through :func:`get_portal` and emits the local
+    :class:`PortalEntryPayload` projection as :class:`PortalsViewResult`.
+    """
     from ...domain.portals import UnknownPortalError, get_portal
 
     try:

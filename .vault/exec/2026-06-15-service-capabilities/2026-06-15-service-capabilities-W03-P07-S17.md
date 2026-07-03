@@ -3,15 +3,12 @@ tags:
   - '#exec'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S17'
 related:
   - "[[2026-06-15-service-capabilities-plan]]"
   - "[[2026-06-15-service-capabilities-audit]]"
 ---
-
-
-
 
 # DEFERRED follow-up: add an llm_vision=off two-mode (scan PDF + image) evidence-refusal regression (honesty review M1)
 

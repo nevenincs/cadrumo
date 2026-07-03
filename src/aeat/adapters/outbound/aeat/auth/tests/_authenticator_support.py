@@ -40,6 +40,7 @@ from .. import (
     AeatLoginAssertionError,
     AeatSession,
     AeatSessionExpiredError,
+    AuthConfigurationError,
     BrowserContextLike,
     BrowserSessionLike,
     CertificateLoginAssertionDetail,
@@ -95,15 +96,24 @@ def _serialise_pkcs12(
     *,
     subject_attrs: list[x509.NameAttribute[str | bytes]] | None,
     not_valid_after: datetime | None,
+    subject_name: x509.Name | None = None,
 ) -> bytes:
-    """Generate a real self-signed PKCS#12 bundle and return its bytes."""
+    """Generate a real self-signed PKCS#12 bundle and return its bytes.
+
+    ``subject_name`` takes precedence over ``subject_attrs`` and lets a
+    caller supply a pre-built :class:`x509.Name` carrying a multi-valued
+    RDN (``CN=X+SERIALNUMBER=Y``) that a flat attribute list cannot express.
+    """
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    attrs = subject_attrs or [
-        x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
-        x509.NameAttribute(NameOID.COMMON_NAME, "NOMBRE APELLIDO1 APELLIDO2 - 12345678Z"),
-        x509.NameAttribute(NameOID.SERIAL_NUMBER, "IDCES-12345678Z"),
-    ]
-    subject = issuer = x509.Name(attrs)
+    if subject_name is not None:
+        subject = issuer = subject_name
+    else:
+        attrs = subject_attrs or [
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "NOMBRE APELLIDO1 APELLIDO2 - 12345678Z"),
+            x509.NameAttribute(NameOID.SERIAL_NUMBER, "IDCES-12345678Z"),
+        ]
+        subject = issuer = x509.Name(attrs)
     now = datetime.now(UTC)
     cert = (
         x509.CertificateBuilder()
@@ -143,6 +153,7 @@ def _build_bundle(
     *,
     subject_attrs: list[x509.NameAttribute[str | bytes]] | None = None,
     not_valid_after: datetime | None = None,
+    subject_name: x509.Name | None = None,
 ) -> Path:
     """Generate a real self-signed PKCS#12 bundle on disk.
 
@@ -151,10 +162,16 @@ def _build_bundle(
     regenerate.
     """
     out = tmp_path / "bundle.p12"
-    if subject_attrs is None and not_valid_after is None:
+    if subject_attrs is None and not_valid_after is None and subject_name is None:
         out.write_bytes(_default_pkcs12_bytes())
         return out
-    out.write_bytes(_serialise_pkcs12(subject_attrs=subject_attrs, not_valid_after=not_valid_after))
+    out.write_bytes(
+        _serialise_pkcs12(
+            subject_attrs=subject_attrs,
+            not_valid_after=not_valid_after,
+            subject_name=subject_name,
+        )
+    )
     return out
 
 
@@ -163,6 +180,7 @@ def _load_cert(
     *,
     subject_attrs: list[x509.NameAttribute[str | bytes]] | None = None,
     not_valid_after: datetime | None = None,
+    subject_name: x509.Name | None = None,
 ) -> LoadedCertificate:
     """Build a bundle + load it under a deterministic env var name."""
     from pydantic import SecretStr
@@ -171,6 +189,7 @@ def _load_cert(
         tmp_path,
         subject_attrs=subject_attrs,
         not_valid_after=not_valid_after,
+        subject_name=subject_name,
     )
     bundle = CertificateBundle(
         path=bundle_path,
@@ -248,6 +267,12 @@ class _RaisingBrowserContext:
 
 
 class _RecordingBrowserSession:
+    # ``BrowserSessionProfileLike`` conformance: ``None`` exercises the
+    # settings-derived storage-state fallback in
+    # ``AeatAuthenticator._resolve_storage_state_path`` rather than
+    # raising ``AttributeError`` on plain attribute access.
+    profile: None = None
+
     def __init__(
         self,
         cert_ok: bool = True,
@@ -356,7 +381,7 @@ def _settings_factory():
     """Yield a cert-shaped Settings factory built on the centralized scope helper.
 
     Delegates the async-context-safe ContextVar mutation to
-    :func:`aeat.tests.settings_scope.settings_factory`, then wraps the
+    :func:`aeat-tests.settings_scope.settings_factory`, then wraps the
     generic factory with this module's certificate-bundle defaults
     (path, passphrase, backend, verify URL, token-dir derived from the
     bundle path). Tests pass the bundle ``Path`` as the single
@@ -764,7 +789,7 @@ async def test_authenticator_synchronous_surface(tmp_path: Path, _settings_facto
     settings = _settings_factory(bundle_path)
     async with AeatAuthenticator(settings) as auth:
         cert = auth.load_certificate()
-        nif = auth.extract_nif_from_subject(cert)
+        nif = extract_nif_from_subject(cert)
         assert nif == "12345678Z"
 
 
@@ -809,8 +834,9 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, _settings_factor
     across the subsequent ``authenticate()`` call. Proves the
     single-lock invariant by reauthenticating and confirming no
     timeout. Does NOT prove correct delegation (no happy-path
-    browser factory is injected here); that is covered by the live
-    test suite in ``test_authenticator_live.py``.
+    browser factory is injected here); that is covered by
+    ``test_reauthenticate_happy_path_with_fake_browser_factory`` in
+    ``test_authenticator_part2.py``.
     """
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
@@ -828,10 +854,15 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, _settings_factor
             subject="CN=x",
         )
         # authenticate() without an injected browser_session_factory
-        # raises AeatLoginAssertionError; we only care that the call
-        # returns in bounded time (no deadlock).
-        with pytest.raises(AeatLoginAssertionError, match=r"login|browser|session|factory|reauthenticate"):
+        # raises AuthConfigurationError (missing-factory taxonomy, per
+        # AeatAuthenticator._resolve_browser_session); we only care that
+        # the call returns in bounded time (no deadlock).
+        with pytest.raises(AuthConfigurationError, match=r"browser.*session factory"):
             await asyncio.wait_for(auth.reauthenticate(session), timeout=5.0)
+    # The handshake runs before browser-session resolution inside
+    # authenticate(), so the verifier is invoked once (for the delegated
+    # authenticate() call) even though that call ultimately fails at the
+    # later missing-factory step.
     assert verifier.calls == 1
 
 
@@ -913,8 +944,6 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, _settings_
             return None
 
     class _SuspendingContext:
-        _aeat_certificate_thumbprint: str = ""
-
         async def new_page(self) -> _SuspendingPage:
             return _SuspendingPage()
 
@@ -923,7 +952,7 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, _settings_
 
     cert = authenticator.load_certificate()
     ctx = _SuspendingContext()
-    ctx._aeat_certificate_thumbprint = cert.sha256_thumbprint
+    setattr(ctx, CERTIFICATE_CONTEXT_MARKER, cert.sha256_thumbprint)
     authenticator._context = cast(BrowserContextLike, ctx)
 
     now = datetime.now(UTC)

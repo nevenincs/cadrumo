@@ -1,0 +1,135 @@
+[[revisions."2019-y-siguientes".casillas]]
+id = "01"
+number = "01"
+label = "Numero de perceptores por transmisiones o reembolsos de acciones y participaciones de IIC"
+section = ["liquidacion", "iic_transmisiones_reembolsos"]
+data_type = "integer"
+semantic_role = "iic_transmision_perceptores"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "02"
+number = "02"
+label = "Base de retenciones e ingresos a cuenta por transmisiones o reembolsos de acciones y participaciones de IIC"
+section = ["liquidacion", "iic_transmisiones_reembolsos"]
+data_type = "money"
+semantic_role = "iic_transmision_base"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "03"
+number = "03"
+label = "Retenciones e ingresos a cuenta por transmisiones o reembolsos de acciones y participaciones de IIC"
+section = ["liquidacion", "iic_transmisiones_reembolsos"]
+data_type = "money"
+semantic_role = "iic_transmision_retenciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "04"
+number = "04"
+label = "Numero de perceptores por transmisiones de derechos de suscripcion"
+section = ["liquidacion", "derechos_suscripcion"]
+data_type = "integer"
+semantic_role = "derechos_suscripcion_perceptores"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "05"
+number = "05"
+label = "Base de retenciones e ingresos a cuenta por transmisiones de derechos de suscripcion"
+section = ["liquidacion", "derechos_suscripcion"]
+data_type = "money"
+semantic_role = "derechos_suscripcion_base"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "06"
+number = "06"
+label = "Retenciones e ingresos a cuenta por transmisiones de derechos de suscripcion"
+section = ["liquidacion", "derechos_suscripcion"]
+data_type = "money"
+semantic_role = "derechos_suscripcion_retenciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "07"
+number = "07"
+label = "Base del pago a cuenta previsto en la disposicion adicional decimonovena de la Ley 35/2006"
+section = ["liquidacion", "pago_a_cuenta"]
+data_type = "money"
+semantic_role = "pago_a_cuenta_base"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "08"
+number = "08"
+label = "Pago a cuenta previsto en la disposicion adicional decimonovena de la Ley 35/2006"
+section = ["liquidacion", "pago_a_cuenta"]
+data_type = "money"
+semantic_role = "pago_a_cuenta_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "09"
+number = "09"
+label = "Total liquidacion: suma de retenciones, ingresos a cuenta, pagos a cuenta y regularizacion"
+section = ["liquidacion", "total_liquidacion"]
+data_type = "money"
+semantic_role = "total_liquidacion"
+required = false
+input_kind = "computed"
+formula = "modelo-117-total-liquidacion"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "10"
+number = "10"
+label = "Resultados a ingresar de anteriores declaraciones por el mismo concepto, ejercicio y periodo"
+section = ["liquidacion", "complementaria"]
+data_type = "money"
+semantic_role = "anteriores_declaraciones_resultado_ingresar"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "11"
+number = "11"
+label = "Resultado a ingresar"
+section = ["liquidacion", "resultado"]
+data_type = "money"
+semantic_role = "cuota_a_ingresar"
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"], source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"] }
+required = false
+input_kind = "computed"
+formula = "modelo-117-resultado-ingresar"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"]
+

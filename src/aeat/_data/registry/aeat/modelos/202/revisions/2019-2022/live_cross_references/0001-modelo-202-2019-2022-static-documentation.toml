@@ -17,4 +17,4 @@ synthetic_data_allowed = false
 requires_authentication = false
 requires_aeat_authorization = false
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
-source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+source_refs = ["aeat-modelo-202-instructions-2018-2022"]

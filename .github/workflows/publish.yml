@@ -1,0 +1,72 @@
+# PyPI publish via Trusted Publishing (OIDC) — HUMAN-GATED: manual dispatch only.
+#
+# Operator-approved exception (2026-07-03) to the local-token publish lane in
+# RELEASING.md: the operator registered this exact workflow (publish.yml) and
+# the `pypi` environment as the project's pending Trusted Publisher on PyPI.
+# There is NO automatic trigger — no tag push, no schedule — a human presses
+# the button, matching the LOCAL-ONLY HUMAN-GATED release discipline's intent.
+#
+# `aeat` publishes WHEEL-ONLY: the sdist packs the full source tree including
+# the corpus source binaries (~180 MB, over PyPI's 100 MB default cap). The
+# guards below refuse a fat wheel outright, so dispatching from a branch
+# without the wheel-split build config fails loudly instead of uploading.
+name: publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      distribution:
+        description: "Distribution to publish"
+        type: choice
+        options:
+          - aeat
+          - aeat-data
+        default: aeat
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Build aeat (wheel only)
+        if: ${{ inputs.distribution == 'aeat' }}
+        run: uv build --wheel --out-dir dist
+
+      - name: Build aeat-data companion
+        if: ${{ inputs.distribution == 'aeat-data' }}
+        run: uv build --wheel --project packaging/aeat_data --out-dir dist
+
+      - name: Guard the artifact (size cap, slim-wheel split)
+        run: |
+          python - <<'EOF'
+          import pathlib, sys, zipfile
+
+          wheels = sorted(pathlib.Path("dist").glob("*.whl"))
+          if len(wheels) != 1:
+              sys.exit(f"expected exactly one wheel in dist/, found {[w.name for w in wheels]}")
+          wheel = wheels[0]
+          size_mb = wheel.stat().st_size / 1e6
+          print(f"{wheel.name}: {size_mb:.1f} MB")
+          if wheel.name.startswith("aeat_cli-"):
+              if size_mb > 100:
+                  sys.exit("aeat wheel exceeds the 100 MB PyPI cap - was this dispatched "
+                           "from a branch without the wheel-split build config?")
+              leaked = [n for n in zipfile.ZipFile(wheel).namelist()
+                        if n.startswith("aeat/_data/corpus/")
+                        and n.lower().endswith((".pdf", ".xls", ".xlsx"))]
+              if leaked:
+                  sys.exit(f"slim aeat wheel leaked {len(leaked)} corpus source binaries")
+          EOF
+
+      - name: Publish to PyPI (Trusted Publishing)
+        run: uv publish --trusted-publishing always dist/*

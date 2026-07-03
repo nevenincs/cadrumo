@@ -1,4 +1,15 @@
-"""Application-owned operator surface contract for the CLI workflow redesign."""
+"""Application-owned operator-surface contract for the workflow redesign.
+
+This module declares the accepted :class:`RootSurface` records, canonical
+:class:`~aeat.core.BindingSourceKind` subset, parser-only
+:class:`SourceKindAlias` records, mounted :class:`MountedCommandFamily`
+records, backend :class:`ServiceOwner` inventory, log metadata, and registered
+error-code tuple that build the immutable :class:`OperatorSurfaceContract`.
+
+It owns contract data only: command adapters render and enforce this shape
+without redefining it. The module does not inspect storage, read environment
+variables, construct repositories, or traverse the live command tree.
+"""
 
 from __future__ import annotations
 
@@ -41,6 +52,9 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "verify-recovery",
             "auth",
             "repair",
+            "check",
+            "google",
+            "reset",
         ),
     ),
     RootSurface(
@@ -48,7 +62,17 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         purpose="operational tax workflow over the active profile bucket",
         owns_storage_maintenance=False,
         owns_operational_workflow=True,
-        required_children=("overview", "ledger", "live", "modelo", "registry", "review"),
+        required_children=(
+            "overview",
+            "ledger",
+            "live",
+            "modelo",
+            "registry",
+            "review",
+            "contract",
+            "agent",
+            "quickfile",
+        ),
     ),
 )
 
@@ -86,7 +110,13 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "logout",
             "status",
             "censo",
+            "descendiente",
             "history",
+            "capabilities",
+            "preflight",
+            "validate",
+            "archive",
+            "subject-access-request",
         ),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -150,7 +180,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="auth",
         operator_question="configure and inspect local authentication state for read-only AEAT access",
         service_owner="aeat.application.auth",
-        commands=("providers", "configure", "status", "test", "clear", "apoderado", "diagnostics"),
+        commands=("providers", "configure", "status", "test", "clear", "apoderado", "diagnostics", "login"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -159,7 +189,34 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="repair",
         operator_question="diagnose local configuration, logs, connectivity, and secure-object integrity",
         service_owner="aeat.application.diagnostics",
-        commands=("connectivity", "integrity", "quarantine", "reset-progress", "logs"),
+        commands=("connectivity", "integrity", "quarantine", "reset-progress", "logs", "profile"),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.DIAGNOSTICS,
+        root=RootSurfaceName.CONFIG,
+        child="check",
+        operator_question="check local provisioning readiness and active-profile capability state",
+        service_owner="aeat.application.provisioning",
+        commands=("check",),
+        mutability=OperatorMutability.READ_ONLY,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.GOOGLE,
+        root=RootSurfaceName.CONFIG,
+        child="google",
+        operator_question="configure Google account auth, Drive folder, and worksheet export mirror",
+        service_owner="aeat.application.storage",
+        commands=("folder", "login", "logout", "register", "status", "sync"),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.DIAGNOSTICS,
+        root=RootSurfaceName.CONFIG,
+        child="reset",
+        operator_question="reset operator-entered local configuration scopes",
+        service_owner="aeat.application.config_reset",
+        commands=("reset",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -168,7 +225,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="overview",
         operator_question="summarize active profile work state and period calendar readiness",
         service_owner="aeat.application.overview",
-        commands=("status",),
+        commands=("status", "agenda", "backlog", "calendar", "explain"),
         mutability=OperatorMutability.READ_ONLY,
     ),
     MountedCommandFamily(
@@ -185,6 +242,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "attach",
             "archive",
             "stash",
+            "exclude",
             "remove",
             "reset",
             "split",
@@ -201,6 +259,17 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "import",
             "review",
             "ratios",
+            "categories",
+            "doclink",
+            "evidence",
+            "inventory",
+            "invoice",
+            "participation",
+            "providers",
+            "llm-diagnostics",
+            "restore",
+            "rule",
+            "bienes-inversion",
         ),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -210,7 +279,16 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="live",
         operator_question="perform explicit read-only AEAT live observations",
         service_owner="aeat.application.live",
-        commands=(FilingStatus.FILED,),
+        commands=(
+            "borrador",
+            "expedientes",
+            FilingStatus.FILED,
+            "iva-wallet",
+            "justificante",
+            "notifications",
+            "portals",
+            "verify",
+        ),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -219,7 +297,27 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="modelo",
         operator_question="inspect modelo registry data and manage modelo work units",
         service_owner="aeat.application.modelo",
-        commands=("list", "describe", "casillas", "bindings", "formulas", "work"),
+        commands=(
+            "list",
+            "describe",
+            "casilla",
+            "casillas",
+            "bindings",
+            "formulas",
+            "work",
+            "aggregate",
+            "audit",
+            "compare",
+            "export",
+            "filing-record",
+            "history",
+            "iva-wallet",
+            "m036",
+            "project",
+            "readiness",
+            "reconcile",
+            "verification-report",
+        ),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -228,7 +326,16 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="registry",
         operator_question="inspect and verify local registry authority data",
         service_owner="aeat.application.registry",
-        commands=("inspect", "verify", "audit-oracles", "verify-filed-state", "workbooks", "parity"),
+        commands=(
+            "inspect",
+            "verify",
+            "audit-oracles",
+            "verify-filed-state",
+            "workbooks",
+            "parity",
+            "citations",
+            "manuals",
+        ),
         mutability=OperatorMutability.READ_ONLY,
     ),
     MountedCommandFamily(
@@ -239,6 +346,35 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         service_owner="aeat.application.review",
         commands=("queue", "view"),
         mutability=OperatorMutability.READ_ONLY,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.CONTRACT,
+        root=RootSurfaceName.APP,
+        child="contract",
+        operator_question="emit the operator-surface capability manifest the agent harness reads",
+        service_owner="aeat.application.operator_surface",
+        commands=("contract",),
+        mutability=OperatorMutability.READ_ONLY,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.AGENT,
+        root=RootSurfaceName.APP,
+        child="agent",
+        operator_question="materialise the shipped operator agent harness (rules, personas, skills) for a runtime",
+        service_owner="aeat.application.operator_surface",
+        commands=("agent",),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.QUICKFILE,
+        root=RootSurfaceName.APP,
+        child="quickfile",
+        operator_question=(
+            "run the full local modelo filing chain (readiness, calculate, verify, export) in one command"
+        ),
+        service_owner="aeat.application.modelo",
+        commands=("quickfile",),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
 )
 
@@ -281,6 +417,21 @@ SERVICE_OWNERS: tuple[ServiceOwner, ...] = (
         owner="aeat.application.review",
         notes="owns operator review items and edits across source domains",
     ),
+    ServiceOwner(
+        capability="provisioning_readiness",
+        owner="aeat.application.provisioning",
+        notes="owns local provisioning readiness checked by config check",
+    ),
+    ServiceOwner(
+        capability="google_export_mirror",
+        owner="aeat.application.storage",
+        notes="owns Google auth, Drive folder, and worksheet export-mirror state for config google",
+    ),
+    ServiceOwner(
+        capability="config_reset",
+        owner="aeat.application.config_reset",
+        notes="owns the operator-entered configuration scope reset behind config reset",
+    ),
 )
 
 OperatorSurfaceErrorCodes: tuple[str, ...] = ("REFUSED_OPERATOR_SURFACE_CONTRACT",)
@@ -289,10 +440,13 @@ OperatorSurfaceErrorCodes: tuple[str, ...] = ("REFUSED_OPERATOR_SURFACE_CONTRACT
 def build_operator_surface_contract() -> OperatorSurfaceContract:
     """Build the immutable :class:`OperatorSurfaceContract`.
 
-    Returns the canonical declaration of the modelo lifecycle steps,
-    operator-facing CLI surfaces, and orthogonal verb axes the rest
-    of the codebase reads from. The contract is constructed once at
-    import time so every consumer sees the same shape.
+    Returns the canonical declaration of modelo lifecycle steps, accepted
+    :class:`RootSurface` values, parser-only :class:`SourceKindAlias` records,
+    mounted :class:`MountedCommandFamily` values, and backend
+    :class:`ServiceOwner` mappings. The resulting
+    :class:`OperatorSurfaceLogFields` are emitted through the shared logger as
+    stable, non-secret metadata. Consumers that need the singleton view should
+    call :func:`get_operator_surface_contract`, which caches this builder.
     """
     lifecycle = LifecycleContract(
         steps=(
@@ -325,13 +479,22 @@ def get_operator_surface_contract() -> OperatorSurfaceContract:
     """Return the cached backend-owned operator surface contract.
 
     Returns the :class:`OperatorSurfaceContract` describing the accepted
-    root surfaces and registered feature flags.
+    root surfaces, source-kind aliases, command families, service owners, log
+    fields, and registered error-code contract. The cache guarantees every
+    application and adapter consumer observes the same immutable contract object
+    for the current process.
     """
     return build_operator_surface_contract()
 
 
 def require_accepted_root(name: str) -> RootSurface:
-    """Return the :class:`RootSurface` for an accepted root, or raise a registered application error."""
+    """Return the :class:`RootSurface` for an accepted root.
+
+    Raises :class:`OperatorSurfaceContractError` when ``name`` is outside the
+    backend-owned root contract. The refusal carries localized reason and
+    suggestion text, while the accepted path returns the exact
+    :class:`RootSurface` record from :func:`get_operator_surface_contract`.
+    """
     normalized = name.strip().lower()
     for root in get_operator_surface_contract().roots:
         if root.name.value == normalized:
@@ -349,7 +512,10 @@ def require_accepted_root(name: str) -> RootSurface:
 def resolve_source_kind_alias(value: str) -> BindingSourceKind:
     """Resolve canonical source kinds and parser-only aliases.
 
-    Returns a :class:`BindingSourceKind`.
+    Returns a canonical :class:`BindingSourceKind` from either the enum token
+    itself or an input-only :class:`SourceKindAlias`. The accepted set is the
+    :data:`SOURCE_KINDS` subset, and aliases in :data:`SOURCE_KIND_ALIASES`
+    never introduce an operator-only source-kind taxonomy.
     """
     normalized = value.strip().lower()
     for source_kind in SOURCE_KINDS:

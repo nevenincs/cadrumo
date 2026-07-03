@@ -22,8 +22,10 @@ from .._modelo_payloads import (
     CalculationRevisionPayload,
     ObservationPayload,
     WorkCalculateResult,
+    WorkObservationsResult,
     WorkRevisionResult,
 )
+from .._modelo_revision_payload_parts import DetailRowPayload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -57,10 +59,34 @@ def _base_revision_fields() -> dict[str, Any]:
                 casilla_id=_PAYLOAD_CASILLA,
                 value="1234.56",
                 formula_id="f1",
-                legal_refs=("art-1",),
+                legal_refs=("ley-58-2003:art-120",),
                 operand_refs=(_PAYLOAD_CASILLA, "iva.rate"),
                 operand_casilla_refs=(_PAYLOAD_CASILLA,),
                 source_refs=("libro-1",),
+            ),
+        ),
+        detail_rows=(
+            DetailRowPayload(
+                index=1,
+                row_type="operador",
+                fields={
+                    "codigo_pais": "DE",
+                    "nif_comunitario": "DE123456789",
+                    "razon_social": "DE Auto GmbH",
+                    "clave_operacion": "E",
+                    "importe": "1500.00",
+                },
+            ),
+            DetailRowPayload(
+                index=2,
+                row_type="operador",
+                fields={
+                    "codigo_pais": "FR",
+                    "nif_comunitario": "FR12345678901",
+                    "razon_social": "Equipement Garage SARL",
+                    "clave_operacion": "E",
+                    "importe": "900.00",
+                },
             ),
         ),
         binding_overrides={"src1": "ledger-abc"},
@@ -85,6 +111,8 @@ def test_calculation_revision_payload_input_values_by_casilla_id_roundtrips() ->
     assert restored == original
     assert restored.input_values_by_casilla_id == {_INPUT_EJERCICIO_CASILLA: "2024", _INPUT_PERIODO_CASILLA: "1T"}
     assert restored.relation_overrides == {_RELATION_OVERRIDE: "725.75"}
+    assert restored.detail_rows[0].fields["nif_comunitario"] == "DE123456789"
+    assert restored.detail_rows[1].fields["importe"] == "900.00"
 
 
 def test_calculation_revision_payload_input_values_by_casilla_id_rejects_non_string_values() -> None:
@@ -118,7 +146,7 @@ def test_observation_payload_rejects_non_canonical_casilla_id() -> None:
         ObservationPayload(
             casilla_id=_NON_CANONICAL_KEY,
             value="1234.56",
-            legal_refs=("art-1",),
+            legal_refs=("ley-58-2003:art-120",),
             source_refs=("libro-1",),
         )
 
@@ -130,9 +158,34 @@ def test_observation_payload_rejects_non_canonical_operand_casilla_ref() -> None
             value="1234.56",
             operand_refs=("iva.rate",),
             operand_casilla_refs=(_NON_CANONICAL_KEY,),
-            legal_refs=("art-1",),
+            legal_refs=("ley-58-2003:art-120",),
             source_refs=("libro-1",),
         )
+
+
+def test_observation_payload_carries_formula_op_through_json_channel() -> None:
+    """The typed ``op`` survives model_dump_json / model_validate_json.
+
+    The draft-review inline trace (``op(refs) = op(values) = value``) is fully
+    reconstructible from the JSON observation, so ``op`` must round-trip through
+    the strict envelope alongside the operand lineage.
+    """
+
+    original = ObservationPayload(
+        casilla_id=_PAYLOAD_CASILLA,
+        value="1234.56",
+        formula_id="f1",
+        op="subtract",
+        operand_refs=(_PAYLOAD_CASILLA, "iva.rate"),
+        operand_casilla_refs=(_PAYLOAD_CASILLA,),
+        operand_values=("2000.00", "765.44"),
+        legal_refs=("ley-58-2003:art-120",),
+        source_refs=("libro-1",),
+    )
+    restored = ObservationPayload.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.op == "subtract"
 
 
 def test_observation_payload_rejects_untraced_operand_casilla_ref() -> None:
@@ -142,7 +195,7 @@ def test_observation_payload_rejects_untraced_operand_casilla_ref() -> None:
             value="1234.56",
             operand_refs=("iva.rate",),
             operand_casilla_refs=(_PAYLOAD_CASILLA,),
-            legal_refs=("art-1",),
+            legal_refs=("ley-58-2003:art-120",),
             source_refs=("libro-1",),
         )
 
@@ -183,6 +236,7 @@ def test_work_calculate_result_input_values_by_casilla_id_roundtrips() -> None:
     assert restored == payload
     assert isinstance(restored.input_values_by_casilla_id, dict)
     assert all(isinstance(v, str) for v in restored.input_values_by_casilla_id.values())
+    assert restored.detail_rows[0].fields["razon_social"] == "DE Auto GmbH"
 
 
 def test_work_calculate_result_input_values_by_casilla_id_rejects_non_string_values() -> None:
@@ -222,6 +276,7 @@ def test_work_revision_result_input_values_by_casilla_id_roundtrips() -> None:
     assert restored == payload
     assert isinstance(restored.input_values_by_casilla_id, dict)
     assert all(isinstance(v, str) for v in restored.input_values_by_casilla_id.values())
+    assert {row.fields["nif_comunitario"] for row in restored.detail_rows} == {"DE123456789", "FR12345678901"}
 
 
 def test_work_revision_result_input_values_by_casilla_id_rejects_non_string_values() -> None:
@@ -238,3 +293,20 @@ def test_work_revision_result_casilla_values_rejects_non_canonical_casilla_key()
 
     with pytest.raises(ValidationError, match="String should match pattern"):
         WorkRevisionResult(**fields)
+
+
+def test_work_observations_result_roundtrips_observation_contract() -> None:
+    """The observations-only command preserves the same strict observation payload contract."""
+    fields = _base_revision_fields()
+    payload = WorkObservationsResult(
+        calculation_revision_id=fields["calculation_revision_id"],
+        work_unit_id=fields["work_unit_id"],
+        state=fields["state"],
+        observation_count=len(fields["observations"]),
+        observations=fields["observations"],
+    )
+    restored = WorkObservationsResult.model_validate_json(payload.model_dump_json())
+
+    assert restored == payload
+    assert restored.observation_count == 1
+    assert restored.observations[0].legal_refs == ("ley-58-2003:art-120",)

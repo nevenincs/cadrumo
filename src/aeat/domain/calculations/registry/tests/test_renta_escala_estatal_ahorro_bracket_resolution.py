@@ -39,14 +39,12 @@ from functools import cache
 
 import pytest
 
-from .....core.resources import bundled_path
 from .._errors import RegistryValidationError
 from .._formula_runtime import _resolve_bracket
-from .._loader import load_registry_tree
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _ALL_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 _YEARS_WITH_200K_BRACKET = (2021, 2022, 2023, 2024, 2025)
 _YEARS_WITH_300K_BRACKET = (2023, 2024, 2025)
@@ -54,74 +52,73 @@ _YEARS_WITH_300K_BRACKET = (2023, 2024, 2025)
 
 @cache
 def _ahorro_table(year: int):
-    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(m for m in modelos if m.id == "100")
+    modelo, _ = _committed_modelo("100")
     revision = modelo.revisions[str(year)]
     return next(p for p in revision.parameters if p.id == f"renta-{year}-escala-estatal-base-ahorro")
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_ahorro_escala_declares_art_66_legal_ref(year: int) -> None:
+def test_ahorro_escala_declares_art_66_legal_ref() -> None:
     """The estatal ahorro escala must carry the art.66 legal grounding."""
-    table = _ahorro_table(year)
-    assert "ley-35-2006:art-66" in table.legal_refs
-    assert table.data_type == "bracket_table"
+    for year in _ALL_YEARS:
+        table = _ahorro_table(year)
+        assert "ley-35-2006:art-66" in table.legal_refs
+        assert table.data_type == "bracket_table"
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_ahorro_escala_resolves_at_zero_base(year: int) -> None:
-    table = _ahorro_table(year)
-    cuota = _resolve_bracket(table, Decimal("0"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("0")
+def test_ahorro_escala_resolves_at_zero_base() -> None:
+    for year in _ALL_YEARS:
+        table = _ahorro_table(year)
+        cuota = _resolve_bracket(table, Decimal("0"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("0"), year
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_ahorro_escala_aeat_manual_2800_worked_example(year: int) -> None:
+def test_ahorro_escala_aeat_manual_2800_worked_example() -> None:
     """AEAT Manual Renta 2025 page 954: 2.800 EUR base liquidable del ahorro.
 
     The manual states "Gravamen estatal 2.800 x 9,50% = 266". The first
     bracket marginal rate (9,50%) has been stable across every ejercicio
     covered here, so the published 266 EUR is the oracle for all years.
     """
-    table = _ahorro_table(year)
-    cuota = _resolve_bracket(table, Decimal("2800"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("266.000")
+    for year in _ALL_YEARS:
+        table = _ahorro_table(year)
+        cuota = _resolve_bracket(table, Decimal("2800"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("266.000"), year
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_ahorro_escala_at_6000_breakpoint_matches_published_incremento(year: int) -> None:
+def test_ahorro_escala_at_6000_breakpoint_matches_published_incremento() -> None:
     """At 6.000 EUR the cuota equals the published incremento of the
     second bracket: 570 EUR (AEAT manual art.66.1 estatal table)."""
-    table = _ahorro_table(year)
-    cuota = _resolve_bracket(table, Decimal("6000"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("570.000")
+    for year in _ALL_YEARS:
+        table = _ahorro_table(year)
+        cuota = _resolve_bracket(table, Decimal("6000"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("570.000"), year
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_ahorro_escala_at_50000_breakpoint_matches_published_incremento(year: int) -> None:
+def test_ahorro_escala_at_50000_breakpoint_matches_published_incremento() -> None:
     """At 50.000 EUR the cuota equals the published incremento of the
     third bracket: 5.190 EUR (AEAT manual art.66.1 estatal table)."""
-    table = _ahorro_table(year)
-    cuota = _resolve_bracket(table, Decimal("50000"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("5190.000")
+    for year in _ALL_YEARS:
+        table = _ahorro_table(year)
+        cuota = _resolve_bracket(table, Decimal("50000"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("5190.000"), year
 
 
-@pytest.mark.parametrize("year", _YEARS_WITH_200K_BRACKET)
-def test_ahorro_escala_at_200000_breakpoint_matches_published_incremento(year: int) -> None:
+def test_ahorro_escala_at_200000_breakpoint_matches_published_incremento() -> None:
     """At 200.000 EUR the cuota equals the published incremento of the
     bracket added by Ley 11/2020 (effective 2021): 22.440 EUR."""
-    table = _ahorro_table(year)
-    cuota = _resolve_bracket(table, Decimal("200000"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("22440.000")
+    for year in _YEARS_WITH_200K_BRACKET:
+        table = _ahorro_table(year)
+        cuota = _resolve_bracket(table, Decimal("200000"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("22440.000"), year
 
 
-@pytest.mark.parametrize("year", _YEARS_WITH_300K_BRACKET)
-def test_ahorro_escala_at_300000_breakpoint_matches_published_incremento(year: int) -> None:
+def test_ahorro_escala_at_300000_breakpoint_matches_published_incremento() -> None:
     """At 300.000 EUR the cuota equals the published incremento of the
     top bracket added by Ley 31/2022 (effective 2023): 35.940 EUR."""
-    table = _ahorro_table(year)
-    cuota = _resolve_bracket(table, Decimal("300000"), {"filing_period": date(year, 12, 31)})
-    assert cuota == Decimal("35940.000")
+    for year in _YEARS_WITH_300K_BRACKET:
+        table = _ahorro_table(year)
+        cuota = _resolve_bracket(table, Decimal("300000"), {"filing_period": date(year, 12, 31)})
+        assert cuota == Decimal("35940.000"), year
 
 
 def test_ahorro_escala_2020_top_bracket_is_open_11_5_percent() -> None:
@@ -166,9 +163,9 @@ def test_ahorro_escala_2021_2022_top_marginal_rate_is_13_percent() -> None:
         assert top.marginal_rate == Decimal("0.13")
 
 
-@pytest.mark.parametrize("year", _ALL_YEARS)
-def test_ahorro_escala_rejects_date_outside_year_window(year: int) -> None:
-    table = _ahorro_table(year)
-    other_year = year - 5
-    with pytest.raises(RegistryValidationError, match="no bracket valid"):
-        _resolve_bracket(table, Decimal("2800"), {"filing_period": date(other_year, 6, 1)})
+def test_ahorro_escala_rejects_date_outside_year_window() -> None:
+    for year in _ALL_YEARS:
+        table = _ahorro_table(year)
+        other_year = year - 5
+        with pytest.raises(RegistryValidationError, match="no bracket valid"):
+            _resolve_bracket(table, Decimal("2800"), {"filing_period": date(other_year, 6, 1)})

@@ -23,7 +23,16 @@ The records intentionally do not embed the AEAT submission lifecycle
 (:mod:`aeat.domain.submission`) — local export and live submit are
 separate concerns and live submit is permanently forbidden.
 
+This module is the draft-level renderer. The work-unit export service in
+:mod:`aeat.application.modelo._export` rebuilds an approved
+:class:`aeat.domain.filing.ModeloDraft` from a
+:class:`aeat.domain.modelos.CalculationRevision`, then delegates here to write
+and verify the fichero-BOE bytes.
+
 See Also:
+    :func:`aeat.application.modelo._export.export_modelo_revision`
+        Higher-level work-unit export service that replays a calculation
+        revision before calling this draft renderer.
     :mod:`aeat.adapters.outbound.aeat.export`
         Outbound export-format adapter errors and fixed-width helper
         namespace.
@@ -35,44 +44,64 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from datetime import datetime
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
+from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
+from xml.etree import ElementTree
 
+from defusedxml import ElementTree as DefusedElementTree
 from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period, ResultDisposition, result_disposition_is_refund
+from ...core import (
+    Modelo,
+    Period,
+    ResultDisposition,
+    result_disposition_is_refund,
+)
 from ...core.decimal import coerce_decimal
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.hashing import sha256_file, sha256_hex
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
 from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
+    CalculationCompletenessManifest,
     CasillaFieldKind,
     CasillaId,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     RegistryValidationError,
+    SourceReference,
+    XmlDictionaryEntry,
     parse_export_payload,
+    xml_dictionary_entries,
 )
+from ...domain.contribuyente import modelo100_ecivil_export_code
 from ...domain.filing import (
     FilingExportError,
     FilingExportValidationError,
     ModeloCasillaProvenance,
     ModeloDraft,
 )
-from ...domain.submission._protocols import ModeloDraftStatus
+from ...domain.submission import ModeloDraftStatus
 from .runtime import RegistrySchemaAccessor, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
 
 _SHA256_HEX_LENGTH = 64
 """Length of a hex-encoded SHA-256 digest used by export receipts."""
+
+
+@dataclass(frozen=True)
+class _RecordRenderRow:
+    row_index: int | None
+    active_binding_ids: frozenset[BindingId]
 
 
 class DeclaracionExportFormat(StrEnum):
@@ -85,6 +114,7 @@ class DeclaracionExportFormat(StrEnum):
     """
 
     FICHERO_BOE = "fichero-boe"
+    XML_DICTIONARY = "xml-dictionary"
 
 
 class DeclaracionVerifyVerdict(StrEnum):
@@ -280,6 +310,9 @@ def export_draft(
         :func:`verify_export`
             Re-read a local export file and compare parser-covered casillas
             against the approved draft.
+        :func:`aeat.application.modelo._export.export_modelo_revision`
+            Work-unit-facing export orchestration that supplies an approved
+            draft reconstructed from a calculation revision.
         :func:`aeat.domain.calculations.registry.parse_export_payload`
             Registry parser used by the verification path.
     """
@@ -293,10 +326,18 @@ def export_draft(
         raise FilingExportError(_missing_export_layout_message(draft.modelo))
     layout = subview.export_layouts[0]
     _raise_if_export_layout_not_renderable(draft.modelo, layout)
-    payload = _render_layout(layout, draft=draft, headers=headers)
+    payload = _render_export_layout(layout, draft=draft, headers=headers, schema_provider=provider)
     if not payload:
         raise FilingExportError(f"modelo {draft.modelo!r} export layout {layout.id!r} rendered an empty payload")
-    casilla_provenance = _exported_casilla_provenance(layout, draft=draft)
+    casilla_provenance = _exported_casilla_provenance(layout, draft=draft, schema_provider=provider)
+    if subview.completeness_manifest is not None:
+        assert_export_mirrors_manifest(
+            layout,
+            draft=draft,
+            headers=headers,
+            schema_provider=provider,
+            manifest=subview.completeness_manifest,
+        )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_bytes(payload)
     digest = sha256_hex(payload)
@@ -304,7 +345,7 @@ def export_draft(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
         period=draft.period,
-        format=DeclaracionExportFormat.FICHERO_BOE,
+        format=_declaracion_export_format(layout),
         output_path=output_path,
         byte_size=len(payload),
         file_sha256=digest,
@@ -314,22 +355,41 @@ def export_draft(
     )
 
 
-def _raise_if_export_layout_not_renderable(modelo: str, layout: ExportLayoutDefinition) -> None:
+def export_layout_renderability_reason(
+    modelo: str,
+    layout: ExportLayoutDefinition | None,
+) -> str | None:
+    """Return why ``layout`` cannot currently produce local declaration bytes."""
+    if layout is None:
+        return "the registry snapshot has no complete export_layouts definition"
+    if layout.format == "xml_dictionary":
+        if layout.dictionary_source_ref is None:
+            return f"XML dictionary export layout {layout.id!r} declares no dictionary source"
+        return None
     if layout.format != "fixed_width":
-        raise FilingExportError(
-            f"modelo {modelo!r} export layout {layout.id!r} uses unsupported format {layout.format!r}; "
-            "the local fichero-BOE exporter currently renders fixed_width layouts only",
-        )
+        return f"export layout {layout.id!r} uses unsupported format {layout.format!r}"
     if not layout.records:
-        raise FilingExportError(f"modelo {modelo!r} export layout {layout.id!r} declares no export records")
+        return f"export layout {layout.id!r} declares no export records"
+    return None
+
+
+def _raise_if_export_layout_not_renderable(modelo: str, layout: ExportLayoutDefinition) -> None:
+    reason = export_layout_renderability_reason(modelo, layout)
+    if reason is not None:
+        raise FilingExportError(_export_layout_not_renderable_message(modelo, reason))
 
 
 def _missing_export_layout_message(modelo: str) -> str:
+    reason = export_layout_renderability_reason(modelo, None)
+    assert reason is not None
+    return _export_layout_not_renderable_message(modelo, reason)
+
+
+def _export_layout_not_renderable_message(modelo: str, reason: str) -> str:
     return (
-        f"modelo {modelo!r} fichero-BOE export is unsupported: "
-        "the registry snapshot has no complete export_layouts definition. "
+        f"modelo {modelo!r} local declaration export is unsupported: {reason}. "
         "Calculation, verification, and local filing surfaces may exist for this modelo, "
-        "but this command cannot produce a BOE export file and does not certify legal correctness."
+        "but this command cannot produce an AEAT-compatible export file and does not certify legal correctness."
     )
 
 
@@ -384,7 +444,12 @@ def verify_export(
     payload = file_path.read_bytes()
     digest = sha256_hex(payload)
     try:
-        mismatched, checked = _mismatched_casilla_ids(subview.export_layouts[0], draft=draft, payload=payload)
+        mismatched, checked = _mismatched_casilla_ids(
+            subview.export_layouts[0],
+            draft=draft,
+            payload=payload,
+            schema_provider=provider,
+        )
     except RegistryValidationError:
         _logger.warning("declaration export verification could not parse %s", file_path, exc_info=True)
         return DeclaracionVerifyResult(
@@ -445,6 +510,24 @@ def _did_page_suppressed(record: ExportRecordDefinition, *, headers: dict[str, s
     return not result_disposition_is_refund(disposition)
 
 
+def _declaracion_export_format(layout: ExportLayoutDefinition) -> DeclaracionExportFormat:
+    if layout.format == "xml_dictionary":
+        return DeclaracionExportFormat.XML_DICTIONARY
+    return DeclaracionExportFormat.FICHERO_BOE
+
+
+def _render_export_layout(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+    schema_provider: RegistrySchemaAccessor,
+) -> bytes:
+    if layout.format == "xml_dictionary":
+        return _render_xml_dictionary_layout(layout, draft=draft, headers=headers, schema_provider=schema_provider)
+    return _render_layout(layout, draft=draft, headers=headers)
+
+
 def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, headers: dict[str, str]) -> bytes:
     chunks: list[bytes] = []
     normalized_headers = {key.lower(): value for key, value in headers.items()}
@@ -455,7 +538,7 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, header
     for record in sorted(layout.records, key=lambda item: item.order):
         if _did_page_suppressed(record, headers=normalized_headers):
             continue
-        for row_index in _record_row_indexes(record, binding_values):
+        for row in _record_render_rows(record, binding_values):
             _guard_record_export(record, casilla_values=casilla_values)
             text = _render_record(
                 record,
@@ -463,7 +546,7 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, header
                 headers=normalized_headers,
                 casilla_values=casilla_values,
                 binding_values=binding_values,
-                row_index=row_index,
+                row=row,
             )
             if record.line_ending == "crlf":
                 text += "\r\n"
@@ -475,31 +558,221 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, header
 
 render_layout = _render_layout
 
+_XML_SCHEMA_INSTANCE_NS = "http://www.w3.org/2001/XMLSchema-instance"
+ElementTree.register_namespace("xsi", _XML_SCHEMA_INSTANCE_NS)
 
-def _record_row_indexes(
+
+def _render_xml_dictionary_layout(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+    schema_provider: RegistrySchemaAccessor,
+) -> bytes:
+    entries = xml_dictionary_entries(layout, source_root=schema_provider.source_root, sources=schema_provider.sources)
+    xsd_source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
+    version = _latest_xml_dictionary_xsd_version(xsd_source, source_root=schema_provider.source_root)
+    root = ElementTree.Element(
+        "Declaracion",
+        {
+            "modelo": draft.modelo,
+            "ejercicio": str(draft.period.filing_year),
+            "periodo": draft.period.registry_token,
+            "versionxsd": version,
+            f"{{{_XML_SCHEMA_INSTANCE_NS}}}noNamespaceSchemaLocation": xsd_source.source_url,
+        },
+    )
+    normalized_headers = {key.lower(): value for key, value in headers.items()}
+    casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
+    for entry in entries:
+        rendered = _xml_dictionary_rendered_value(
+            entry,
+            draft=draft,
+            casilla_values=casilla_values,
+            headers=normalized_headers,
+        )
+        if rendered is None or rendered == "":
+            continue
+        _set_xml_dictionary_path(root, entry.path, rendered)
+    return ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
+
+
+def _xml_dictionary_xsd_source(
+    layout: ExportLayoutDefinition,
+    sources: Mapping[str, SourceReference],
+) -> SourceReference:
+    refs = set(layout.source_refs)
+    for source in sources.values():
+        if source.id in refs and source.kind == "xsd":
+            return source
+    raise FilingExportError(f"XML dictionary export layout {layout.id!r} has no resolved XSD source")
+
+
+def _latest_xml_dictionary_xsd_version(source: SourceReference, *, source_root: Path | None) -> str:
+    if source_root is None:
+        raise FilingExportError(f"XML dictionary XSD source {source.id!r} requires source_root")
+    try:
+        root = DefusedElementTree.parse(source_root / source.corpus_path).getroot()
+    except (DefusedElementTree.ParseError, OSError) as exc:
+        raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed") from exc
+    versions: list[str] = []
+    for simple_type in root.iter("{http://www.w3.org/2001/XMLSchema}simpleType"):
+        if simple_type.attrib.get("name") != "tipo_VersionXSD":
+            continue
+        for enumeration in simple_type.iter("{http://www.w3.org/2001/XMLSchema}enumeration"):
+            value = enumeration.attrib.get("value")
+            if value:
+                versions.append(value)
+    if not versions:
+        raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} declares no versionxsd values")
+    return sorted(versions, key=lambda item: tuple(int(part) for part in item.split(".")))[-1]
+
+
+def _xml_dictionary_rendered_value(
+    entry: XmlDictionaryEntry,
+    *,
+    draft: ModeloDraft,
+    casilla_values: dict[CasillaId, object],
+    headers: dict[str, str],
+) -> str | None:
+    raw = casilla_values.get(entry.casilla_id) if entry.casilla_id is not None else None
+    if raw is None:
+        raw = _xml_dictionary_header_value(entry, draft=draft, headers=headers)
+    if raw is None:
+        return None
+    rendered = _format_xml_dictionary_value(entry.data_type, raw)
+    if draft.modelo == Modelo.M100 and entry.field_id == "ECIVIL":
+        try:
+            return modelo100_ecivil_export_code(rendered)
+        except ValueError as exc:
+            raise FilingExportValidationError(str(exc)) from exc
+    return rendered
+
+
+def _xml_dictionary_header_value(
+    entry: XmlDictionaryEntry,
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+) -> object | None:
+    path_tail = entry.path.rsplit("/", 1)[-1].lstrip("@").lower()
+    for key in (entry.field_id.lower(), path_tail):
+        value = headers.get(key)
+        if value is not None:
+            return value
+    if entry.field_id == "DPNIF_D":
+        return draft.profile_tax_id
+    if entry.field_id == "DP_APENOM_D":
+        return headers.get("legal_name") or " ".join(
+            part for part in (headers.get("surnames", ""), headers.get("name", "")) if part
+        )
+    return None
+
+
+def _format_xml_dictionary_value(data_type: str, value: object) -> str:
+    if isinstance(value, bool):
+        return "S" if value else "N"
+    if isinstance(value, date):
+        return f"{value.day}/{value.month}/{value.year}"
+    normalized_type = data_type.upper()
+    if normalized_type.startswith(("N", "P")):
+        amount = coerce_decimal(value, default=Decimal("0")) or Decimal("0")
+        return f"{round_to_cents(amount):.2f}"
+    return str(value).strip()
+
+
+def _set_xml_dictionary_path(root: ElementTree.Element[str], absolute_path: str, value: str) -> None:
+    parts = tuple(part for part in absolute_path.strip("/").split("/") if part)
+    if not parts:
+        raise FilingExportValidationError("XML dictionary entry path must not be empty")
+    current = root
+    for index, part in enumerate(parts):
+        if index == 0 and part == root.tag:
+            continue
+        if part.startswith("@"):
+            if index != len(parts) - 1:
+                raise FilingExportValidationError("XML dictionary attribute must terminate its path")
+            current.set(part[1:], value)
+            return
+        child = next((candidate for candidate in current if candidate.tag == part), None)
+        if child is None:
+            child = ElementTree.SubElement(current, part)
+        current = child
+    current.text = value
+
+
+def _record_render_rows(
     record: ExportRecordDefinition,
     binding_values: dict[tuple[BindingId, int | None], object],
-) -> tuple[int | None, ...]:
+) -> tuple[_RecordRenderRow, ...]:
     if record.repeat != "binding_rows":
         if record.binding_record is not None and not _record_has_binding_value(record, binding_values):
             return ()
-        return (None,)
-    binding_ids = {
-        field.binding for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None
-    }
+        return (_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),)
+    binding_fields = _record_binding_fields(record)
     row_indexes = sorted(
-        row_index for binding_id, row_index in binding_values if binding_id in binding_ids and row_index is not None
+        {
+            row_index
+            for binding_id, row_index in binding_values
+            if row_index is not None
+            and any(field.binding == binding_id for field in binding_fields)
+            and _is_active_binding_value(binding_values[(binding_id, row_index)])
+        },
     )
-    return tuple(dict.fromkeys(row_indexes))
+    rows: list[_RecordRenderRow] = []
+    for row_index in row_indexes:
+        active_fields = tuple(
+            field
+            for field in binding_fields
+            if _is_active_binding_value(binding_values.get((field.binding, row_index)))
+        )
+        for group in _compatible_binding_field_groups(active_fields):
+            rows.append(
+                _RecordRenderRow(
+                    row_index=row_index,
+                    active_binding_ids=frozenset(field.binding for field in group if field.binding is not None),
+                ),
+            )
+    return tuple(rows)
+
+
+def _record_binding_fields(record: ExportRecordDefinition) -> tuple[ExportFieldDefinition, ...]:
+    return tuple(
+        field for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None
+    )
+
+
+def _is_active_binding_value(value: object) -> bool:
+    return value is not None and value != ""
+
+
+def _compatible_binding_field_groups(
+    fields: tuple[ExportFieldDefinition, ...],
+) -> tuple[tuple[ExportFieldDefinition, ...], ...]:
+    groups: list[list[ExportFieldDefinition]] = []
+    for field in sorted(fields, key=lambda item: (item.offset or 0, str(item.id))):
+        for group in groups:
+            if not any(_export_fields_overlap(field, existing) for existing in group):
+                group.append(field)
+                break
+        else:
+            groups.append([field])
+    return tuple(tuple(group) for group in groups)
+
+
+def _export_fields_overlap(left: ExportFieldDefinition, right: ExportFieldDefinition) -> bool:
+    if left.offset is None or left.length is None or right.offset is None or right.length is None:
+        return False
+    left_end = left.offset + left.length - 1
+    right_end = right.offset + right.length - 1
+    return left.offset <= right_end and right.offset <= left_end
 
 
 def _record_has_binding_value(
     record: ExportRecordDefinition,
     binding_values: dict[tuple[BindingId, int | None], object],
 ) -> bool:
-    binding_ids = {
-        field.binding for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None
-    }
+    binding_ids = {field.binding for field in _record_binding_fields(record)}
     return any(
         binding_id in binding_ids and value not in {None, ""} for (binding_id, _), value in binding_values.items()
     )
@@ -523,7 +796,7 @@ def _render_record(
     headers: dict[str, str],
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
-    row_index: int | None,
+    row: _RecordRenderRow,
 ) -> str:
     positioned = all(field.offset is not None for field in record.fields)
     if not positioned:
@@ -534,13 +807,16 @@ def _render_record(
                 headers=headers,
                 casilla_values=casilla_values,
                 binding_values=binding_values,
-                row_index=row_index,
+                row_index=row.row_index,
             )
             for field in record.fields
+            if _field_is_active_for_row(field, row)
         )
     length = max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)
     buffer = [" "] * length
     for field in sorted(record.fields, key=lambda item: item.offset or 0):
+        if not _field_is_active_for_row(field, row):
+            continue
         if field.offset is None:
             raise FilingExportValidationError(f"export field {field.id!r} must declare offset")
         rendered = _render_field(
@@ -549,7 +825,7 @@ def _render_record(
             headers=headers,
             casilla_values=casilla_values,
             binding_values=binding_values,
-            row_index=row_index,
+            row_index=row.row_index,
         )
         start = field.offset - 1
         end = start + len(rendered)
@@ -557,6 +833,14 @@ def _render_record(
             raise FilingExportError(f"export field {field.id!r} overlaps another field")
         buffer[start:end] = rendered
     return "".join(buffer)
+
+
+def _field_is_active_for_row(field: ExportFieldDefinition, row: _RecordRenderRow) -> bool:
+    if not row.active_binding_ids:
+        return True
+    if field.kind != CasillaFieldKind.BINDING:
+        return True
+    return field.binding in row.active_binding_ids
 
 
 def _render_field(
@@ -735,11 +1019,17 @@ def _mismatched_casilla_ids(
     *,
     draft: ModeloDraft,
     payload: bytes,
+    schema_provider: RegistrySchemaAccessor,
 ) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]]:
     values = {value.casilla_id: value.value for value in draft.values}
     mismatched: list[CasillaId] = []
     checked: list[CasillaId] = []
-    for parsed in parse_export_payload(layout, payload).casillas:
+    for parsed in parse_export_payload(
+        layout,
+        payload,
+        source_root=schema_provider.source_root,
+        sources=schema_provider.sources,
+    ).casillas:
         if parsed.casilla_id is None:
             continue
         checked.append(parsed.casilla_id)
@@ -767,7 +1057,23 @@ def _exported_casilla_provenance(
     layout: ExportLayoutDefinition,
     *,
     draft: ModeloDraft,
+    schema_provider: RegistrySchemaAccessor,
 ) -> tuple[ModeloCasillaProvenance, ...]:
+    if layout.format == "xml_dictionary":
+        entries = xml_dictionary_entries(
+            layout,
+            source_root=schema_provider.source_root,
+            sources=schema_provider.sources,
+        )
+        draft_casillas = {value.casilla_id for value in draft.values}
+        return _provenance_for_casillas(
+            draft,
+            (
+                entry.casilla_id
+                for entry in entries
+                if entry.casilla_id is not None and entry.casilla_id in draft_casillas
+            ),
+        )
     draft_casillas = {value.casilla_id for value in draft.values}
     layout_casillas = (
         field.casilla_id
@@ -780,12 +1086,152 @@ def _exported_casilla_provenance(
     return _provenance_for_casillas(draft, layout_casillas)
 
 
+def boe_representable_casilla_ids(
+    layout: ExportLayoutDefinition,
+    *,
+    headers: dict[str, str],
+    schema_provider: RegistrySchemaAccessor,
+) -> frozenset[CasillaId]:
+    """Return the casillas the ``.boe`` layout files a slot for, for this disposition.
+
+    A casilla is *representable* when the official record design carries a field
+    for it that this draft's disposition does not suppress. ``xml_dictionary``
+    layouts derive their casillas from the dictionary entries; ``fixed_width``
+    layouts from every ``CASILLA`` field plus the binding-row casilla mappings
+    (``row_field_casilla_ids``), across records not suppressed for the disposition
+    (e.g. the DID refund page on a non-refund filing).
+
+    The completeness gate intersects the calculation-completeness manifest with
+    this set: a manifest casilla absent here is a calculation-closure casilla the
+    official filed record does not carry, so it is out of scope for the ``.boe``
+    parity gate rather than a drift.
+    """
+    if layout.format == "xml_dictionary":
+        entries = xml_dictionary_entries(
+            layout,
+            source_root=schema_provider.source_root,
+            sources=schema_provider.sources,
+        )
+        return frozenset(entry.casilla_id for entry in entries if entry.casilla_id is not None)
+    normalized_headers = {key.lower(): value for key, value in headers.items()}
+    representable: set[CasillaId] = set()
+    for record in layout.records:
+        if _did_page_suppressed(record, headers=normalized_headers):
+            continue
+        for field in record.fields:
+            if field.kind == CasillaFieldKind.CASILLA and field.casilla_id is not None:
+                representable.add(field.casilla_id)
+        representable.update(record.row_field_casilla_ids.values())
+    return frozenset(representable)
+
+
+def rendered_casilla_ids(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+    schema_provider: RegistrySchemaAccessor,
+) -> frozenset[CasillaId]:
+    """Return the representable casillas whose value actually reaches disk.
+
+    A representable casilla reaches disk only when the :class:`ModeloDraft`
+    carries a value for it; a representable casilla absent from
+    ``draft.values`` renders as a blank fixed-width slot (or an omitted xml
+    element), which is the structurally-thin file the completeness gate
+    exists to refuse. This is the rendered set the gate compares against the
+    manifest-required-and-representable set.
+    """
+    # build_draft emits a ModeloValue for every declared casilla, using
+    # value=None (kind=EMPTY) as the "nothing here" marker, so casilla-id
+    # membership in draft.values is NOT value presence: an EMPTY casilla would
+    # render as a blank slot. Filter to real values (value is None iff EMPTY).
+    valued_casillas = {value.casilla_id for value in draft.values if value.value is not None}
+    return frozenset(
+        boe_representable_casilla_ids(layout, headers=headers, schema_provider=schema_provider) & valued_casillas
+    )
+
+
+def assert_export_mirrors_manifest(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+    schema_provider: RegistrySchemaAccessor,
+    manifest: CalculationCompletenessManifest,
+) -> None:
+    """Panic if the ``.boe`` would not mirror the manifest-required structure.
+
+    The completeness gate: every casilla that is a calculation RESULT (declares a
+    formula) or is schema-required, and that the calculation-completeness manifest
+    lists AND the official record files (``representable`` for this
+    :class:`ModeloDraft`'s disposition), MUST carry a value on disk. Such a casilla
+    rendered blank means the calculation did not populate it -- a structurally-thin
+    file behind a valid SHA-256 digest, which this gate refuses with a hard
+    :class:`FilingExportError` naming every missing casilla with its official record
+    number and segmento, so the panic is loud and explicit.
+
+    Optional operator-input casillas -- retenciones, prior payments, deductions the
+    taxpayer may legitimately not have -- are NOT required to carry a value: a blank
+    slot for them is a valid zero, not a thin file (grounded in the AEAT casilla
+    semantics; e.g. Modelo 131 casillas 02/08/09/12/14 are optional inputs), so they
+    are excluded from the required set. A manifest casilla absent from the
+    representable set is a calculation-closure casilla the official record does not
+    file and is likewise out of scope. Callers pass ``manifest`` only when the
+    revision declares one; a revision without a manifest is handled by the
+    coverage-advisory path, not here.
+
+    The gate applies only to the fixed-width fichero-BOE. In that format every
+    field occupies its byte slot always, so an omitted required casilla renders a
+    blank slot behind a valid digest -- the structurally-thin file. An
+    ``xml_dictionary`` export instead omits an absent casilla as an absent
+    optional element, which is legitimate (a filer declares only the casillas its
+    situation requires), so completeness is not asserted for that transport.
+    """
+    if layout.format != "fixed_width":
+        return
+    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=schema_provider)
+    rendered = rendered_casilla_ids(layout, draft=draft, headers=headers, schema_provider=schema_provider)
+    # Require a value on disk only for calculation RESULTS (casillas declaring a
+    # formula) and schema-required casillas. Optional operator inputs -- retenciones,
+    # prior payments, deductions the taxpayer may legitimately not have -- render a
+    # blank slot that is a valid zero, not a thin file, so they are excluded from the
+    # required set (grounded in the AEAT casilla semantics, e.g. Modelo 131 casillas
+    # 02/08/09/12/14).
+    collection = schema_provider.get_collection(draft.modelo)
+    required_applicable = {
+        casilla.casilla_id
+        for casilla in manifest.casillas
+        if (schema := collection.get(casilla.casilla_id)) is not None
+        and (schema.formula is not None or schema.required)
+    } & representable
+    missing = sorted(required_applicable - rendered)
+    if not missing:
+        return
+    metadata = {casilla.casilla_id: (casilla.number, casilla.segmento) for casilla in manifest.casillas}
+    rendered_missing = "; ".join(_format_missing_casilla(casilla_id, metadata[casilla_id]) for casilla_id in missing)
+    raise FilingExportError(
+        f"fichero-BOE export for modelo {draft.modelo!r} would omit {len(missing)} required "
+        f"casilla(s) the official record files, rendering them as blank slots (structurally-thin "
+        f"filing): {rendered_missing}. Every required casilla must be declared in the draft before export.",
+    )
+
+
+def _format_missing_casilla(casilla_id: CasillaId, metadata: tuple[str, str | None]) -> str:
+    number, segmento = metadata
+    if segmento is not None:
+        return f"{casilla_id} (segmento {segmento}, casilla {number})"
+    return f"{casilla_id} (casilla {number})"
+
+
 __all__ = [
     "DeclaracionExportFormat",
     "DeclaracionExportResult",
     "DeclaracionVerifyResult",
     "DeclaracionVerifyVerdict",
+    "assert_export_mirrors_manifest",
+    "boe_representable_casilla_ids",
     "export_draft",
     "render_layout",
+    "rendered_casilla_ids",
     "verify_export",
 ]

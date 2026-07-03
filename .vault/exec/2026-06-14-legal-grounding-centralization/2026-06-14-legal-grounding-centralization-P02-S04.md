@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#legal-grounding-centralization'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S04'
 related:
   - "[[2026-06-14-legal-grounding-centralization-plan]]"
 ---
-
-
-
 
 # F1: wire resolve_reduccion to the dormant _resolve_tier_reduccion_rate registry reader
 
@@ -57,4 +54,3 @@ matches the constant), so the override test uses a deliberately-wrong in-test te
 exercise the override branch without authoring a fixture registry.
 
 ## Notes
-

@@ -12,11 +12,13 @@ from collections.abc import Mapping
 
 from ._ids import CasillaId
 from ._schema import (
+    KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     LegalReference,
     ModeloRevision,
     SourceReference,
 )
+from ._schema_surfaces import CasillaDefinition
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import _missing_refs
 
@@ -47,6 +49,14 @@ def validate_cross_reference_section(
             predicate_owner = f"{owner} applicability predicate {predicate.field!r}"
             failures.extend(_missing_refs(prefix, predicate_owner, predicate.legal_refs, legal_refs, "legal"))
             failures.extend(_missing_refs(prefix, predicate_owner, predicate.source_refs, source_refs, "source"))
+            failures.extend(
+                evidence.require_source_tier(
+                    prefix,
+                    predicate_owner,
+                    predicate.source_refs,
+                    "official_source_guidance",
+                ),
+            )
         if cross_reference.oracle_id is not None:
             prior = oracle_bindings.get(cross_reference.oracle_id)
             if prior is not None:
@@ -82,10 +92,10 @@ def validate_workbook_parity_section(
                 f"{prefix}: workbook parity {workbook.id!r} formula workbook "
                 "requires executable parity evidence source",
             )
-        if workbook.formula_coverage != "formula_form" and source.evidence_tier == "executable_parity_evidence":
+        if workbook.formula_coverage != "formula_form" and source.evidence_tier != "layout_authority":
             failures.append(
-                f"{prefix}: workbook parity {workbook.id!r} non-formula workbook must not use "
-                "executable parity evidence source",
+                f"{prefix}: workbook parity {workbook.id!r} non-formula workbook "
+                "requires layout_authority source evidence",
             )
 
 
@@ -106,6 +116,10 @@ def _predicate_operator_name(expression: str) -> str | None:
 
 _CASILLA_LIST_PREDICATE = _re.compile(r"^(?P<operator>[a-z_]+)\(\[(?P<ids>[^\]]*)\]\)$")
 _EXACT_CASILLA_LIST_ARITY: Mapping[str, int] = {
+    # advisory_when_positive names exactly one casilla id and routes through the
+    # generic single-casilla validation (exact arity 1 + unknown-casilla check).
+    "advisory_when_positive": 1,
+    "advisory_when_computed_diverges": 2,
     "cap_le_when_positive": 2,
     "equals": 2,
     "implies_nonzero": 2,
@@ -113,10 +127,41 @@ _EXACT_CASILLA_LIST_ARITY: Mapping[str, int] = {
 }
 _MIN_CASILLA_LIST_ARITY: Mapping[str, int] = {
     "all_nonzero": 1,
+    "at_most_one_positive": 2,
     "any_nonzero": 1,
     "implies_any_nonzero": 2,
 }
 _CASILLA_LIST_OPERATORS = frozenset(_EXACT_CASILLA_LIST_ARITY) | frozenset(_MIN_CASILLA_LIST_ARITY)
+_APPLICATION_LINK_ALLOWED_SOURCE_TIERS: Mapping[str, tuple[str, ...]] = {
+    "export": ("layout_authority",),
+    "extractor": ("layout_authority", "official_source_guidance"),
+    "portal": ("official_source_guidance", "executable_parity_evidence"),
+}
+_DEFAULT_APPLICATION_LINK_SOURCE_TIERS = ("official_source_guidance",)
+
+
+def _allowed_application_link_source_tiers(surface: str) -> tuple[str, ...]:
+    return _APPLICATION_LINK_ALLOWED_SOURCE_TIERS.get(surface, _DEFAULT_APPLICATION_LINK_SOURCE_TIERS)
+
+
+def _application_link_source_tier_failures(
+    prefix: str,
+    owner: str,
+    refs: tuple[str, ...],
+    *,
+    surface: str,
+    source_refs: Mapping[str, SourceReference],
+) -> list[str]:
+    allowed_tiers = _allowed_application_link_source_tiers(surface)
+    for ref in refs:
+        source = source_refs.get(ref)
+        if source is not None and source.evidence_tier in allowed_tiers:
+            return []
+    if len(allowed_tiers) == 1:
+        requirement = f"{allowed_tiers[0]} source evidence"
+    else:
+        requirement = f"one of {', '.join(allowed_tiers)} source evidence"
+    return [f"{prefix}: {owner} requires {requirement}"]
 
 
 def _parse_predicate_casilla_id_tokens(ids_fragment: str) -> list[str]:
@@ -193,6 +238,152 @@ def _roll_forward_balances_predicate_arity_failures(
     return failures
 
 
+# casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
+# "consequent_casilla_id"]) — categorical-conditional material implication.
+# Unlike the other casilla-list operators, the middle token is a literal
+# string, not a casilla id, so it cannot route through the generic
+# _casilla_list_predicate_failures (which validates every bracketed token as
+# a casilla id). Mirrors roll_forward_balances's bespoke-validator shape:
+# this authoring-time gate rejects a malformed arity, an unknown antecedent
+# or consequent casilla id, or an empty literal at registry load, rather than
+# letting the runtime evaluator's defensive bad-arity branch (returns False —
+# never fires) silently mask a typo.
+_CASILLA_EQUALS_IMPLIES_NONZERO_PREDICATE = _re.compile(
+    r"^casilla_equals_implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$",
+)
+
+
+def _casilla_equals_implies_nonzero_predicate_failures(
+    prefix: str,
+    owner: str,
+    expression: str,
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> list[str]:
+    """Return failures for a malformed ``casilla_equals_implies_nonzero`` predicate."""
+    match = _CASILLA_EQUALS_IMPLIES_NONZERO_PREDICATE.match(expression.strip())
+    if match is None:
+        return [
+            f"{prefix}: {owner} casilla_equals_implies_nonzero expression {expression!r} is malformed; "
+            'expected casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal", "consequent_casilla_id"])',
+        ]
+    tokens = _parse_predicate_casilla_id_tokens(match.group("ids"))
+    failures: list[str] = []
+    if len(tokens) != 3:
+        failures.append(
+            f"{prefix}: {owner} casilla_equals_implies_nonzero must name exactly three tokens "
+            f"(antecedent casilla id, literal, consequent casilla id), got {len(tokens)}: {tokens!r}",
+        )
+        return failures
+    antecedent_id, literal, consequent_id = tokens
+    antecedent = casilla_by_id.get(antecedent_id)
+    if antecedent_id not in casillas:
+        failures.append(
+            f"{prefix}: {owner} casilla_equals_implies_nonzero references unknown antecedent casilla {antecedent_id!r}",
+        )
+    elif antecedent is not None and antecedent.data_type != "text":
+        failures.append(
+            f"{prefix}: {owner} casilla_equals_implies_nonzero antecedent casilla {antecedent_id!r} "
+            "must have data_type 'text'",
+        )
+    if not literal:
+        failures.append(f"{prefix}: {owner} casilla_equals_implies_nonzero literal must be non-empty")
+    consequent = casilla_by_id.get(consequent_id)
+    if consequent_id not in casillas:
+        failures.append(
+            f"{prefix}: {owner} casilla_equals_implies_nonzero references unknown consequent casilla {consequent_id!r}",
+        )
+    elif consequent is not None and consequent.data_type == "text":
+        failures.append(
+            f"{prefix}: {owner} casilla_equals_implies_nonzero consequent casilla {consequent_id!r} "
+            "must not have data_type 'text'",
+        )
+    return failures
+
+
+# deduccion_requires_adquisicion_before(["amount_id", "acquisition_date_id",
+# "construction_date_id", "cutoff_iso"]) — eligibility-conditional advisory.
+# Mixes three casilla ids with a trailing ISO-date literal, so it cannot route
+# through the generic _casilla_list_predicate_failures (which validates every
+# bracketed token as a casilla id). This authoring-time gate rejects a malformed
+# arity, an unknown amount/date casilla, a non-text date casilla, or an
+# unparseable cutoff at registry load rather than letting the runtime evaluator's
+# defensive bad-arity / unparseable-cutoff branch (returns False — never fires)
+# silently mask a typo.
+_DEDUCCION_REQUIRES_ADQUISICION_BEFORE_PREDICATE = _re.compile(
+    r"^deduccion_requires_adquisicion_before\(\[(?P<ids>[^\]]*)\]\)$",
+)
+_ISO_DATE_LITERAL = _re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_PROFILE_FLAG_ENABLED_PREDICATE = _re.compile(r'^profile_flag_enabled\("(?P<field>[^"]+)"\)$')
+
+
+def _deduccion_requires_adquisicion_before_predicate_failures(
+    prefix: str,
+    owner: str,
+    expression: str,
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> list[str]:
+    """Return failures for a malformed ``deduccion_requires_adquisicion_before`` predicate."""
+    match = _DEDUCCION_REQUIRES_ADQUISICION_BEFORE_PREDICATE.match(expression.strip())
+    if match is None:
+        return [
+            f"{prefix}: {owner} deduccion_requires_adquisicion_before expression {expression!r} is malformed; "
+            'expected deduccion_requires_adquisicion_before(["amount_casilla_id", '
+            '"acquisition_date_casilla_id", "construction_date_casilla_id", "cutoff_iso"])',
+        ]
+    tokens = _parse_predicate_casilla_id_tokens(match.group("ids"))
+    failures: list[str] = []
+    if len(tokens) != 4:
+        failures.append(
+            f"{prefix}: {owner} deduccion_requires_adquisicion_before must name exactly four tokens "
+            f"(amount casilla id, acquisition-date casilla id, construction-date casilla id, cutoff ISO date), "
+            f"got {len(tokens)}: {tokens!r}",
+        )
+        return failures
+    amount_id, acquisition_date_id, construction_date_id, cutoff = tokens
+    if amount_id not in casillas:
+        failures.append(
+            f"{prefix}: {owner} deduccion_requires_adquisicion_before references unknown amount casilla {amount_id!r}",
+        )
+    for role, date_id in (("acquisition-date", acquisition_date_id), ("construction-date", construction_date_id)):
+        if date_id not in casillas:
+            failures.append(
+                f"{prefix}: {owner} deduccion_requires_adquisicion_before references unknown "
+                f"{role} casilla {date_id!r}",
+            )
+            continue
+        casilla = casilla_by_id.get(date_id)
+        if casilla is not None and casilla.data_type != "text":
+            failures.append(
+                f"{prefix}: {owner} deduccion_requires_adquisicion_before {role} casilla {date_id!r} "
+                "must have data_type 'text'",
+            )
+    if not _ISO_DATE_LITERAL.match(cutoff):
+        failures.append(
+            f"{prefix}: {owner} deduccion_requires_adquisicion_before cutoff {cutoff!r} "
+            "must be an ISO date literal (YYYY-MM-DD)",
+        )
+    return failures
+
+
+def _profile_flag_enabled_predicate_failures(prefix: str, owner: str, expression: str) -> list[str]:
+    """Return failures for a malformed ``profile_flag_enabled`` advisory."""
+    match = _PROFILE_FLAG_ENABLED_PREDICATE.match(expression.strip())
+    if match is None:
+        return [
+            f"{prefix}: {owner} profile_flag_enabled expression {expression!r} is malformed; expected "
+            'profile_flag_enabled("profile_field_name")',
+        ]
+    field = match.group("field")
+    if field not in KNOWN_PROFILE_FLAG_ADVISORY_FIELDS:
+        return [
+            f"{prefix}: {owner} profile_flag_enabled references unsupported profile field {field!r}; "
+            f"supported fields: {sorted(KNOWN_PROFILE_FLAG_ADVISORY_FIELDS)!r}",
+        ]
+    return []
+
+
 def validate_verification_expectation_section(
     failures: list[str],
     *,
@@ -201,14 +392,35 @@ def validate_verification_expectation_section(
     casillas: set[CasillaId],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
+    casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
+
     for expectation in revision.verification_expectations:
         owner = f"verification expectation {expectation.id}"
         failures.extend(_missing_refs(prefix, owner, expectation.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, expectation.source_refs, source_refs, "source"))
+        failures.extend(
+            evidence.require_source_tier(
+                prefix,
+                owner,
+                expectation.source_refs,
+                "official_source_guidance",
+            ),
+        )
         for casilla_id in expectation.computed_casilla_ids:
             if casilla_id not in casillas:
                 failures.append(f"{prefix}: {owner} references unknown casilla {casilla_id!r}")
+        for casilla_id in expectation.reconcile_when_present_casilla_ids:
+            if casilla_id not in casillas:
+                failures.append(
+                    f"{prefix}: {owner} reconcile-when-present references unknown casilla {casilla_id!r}",
+                )
+        for casilla_id in expectation.externally_grounded_casilla_ids:
+            if casilla_id not in casillas:
+                failures.append(
+                    f"{prefix}: {owner} externally-grounded references unknown casilla {casilla_id!r}",
+                )
         for total_kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
             if casilla_id not in casillas:
                 failures.append(
@@ -254,6 +466,37 @@ def validate_verification_expectation_section(
             failures.extend(
                 _roll_forward_balances_predicate_arity_failures(prefix, owner, predicate.expression, casillas),
             )
+        elif op_name == "casilla_equals_implies_nonzero":
+            # casilla_equals_implies_nonzero(["antecedent_id", "literal",
+            # "consequent_id"]) mixes two casilla ids with a literal string;
+            # reject a malformed arity, an unknown antecedent/consequent
+            # casilla, or an empty literal at authoring time.
+            failures.extend(
+                _casilla_equals_implies_nonzero_predicate_failures(
+                    prefix,
+                    owner,
+                    predicate.expression,
+                    casillas,
+                    casilla_by_id,
+                ),
+            )
+        elif op_name == "deduccion_requires_adquisicion_before":
+            # deduccion_requires_adquisicion_before(["amount_id",
+            # "acquisition_date_id", "construction_date_id", "cutoff_iso"]) mixes
+            # three casilla ids with a trailing ISO-date literal; reject a
+            # malformed arity, an unknown amount/date casilla, a non-text date
+            # casilla, or an unparseable cutoff at authoring time.
+            failures.extend(
+                _deduccion_requires_adquisicion_before_predicate_failures(
+                    prefix,
+                    owner,
+                    predicate.expression,
+                    casillas,
+                    casilla_by_id,
+                ),
+            )
+        elif op_name == "profile_flag_enabled":
+            failures.extend(_profile_flag_enabled_predicate_failures(prefix, owner, predicate.expression))
         elif op_name in _CASILLA_LIST_OPERATORS:
             failures.extend(
                 _casilla_list_predicate_failures(
@@ -273,11 +516,21 @@ def validate_application_link_section(
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     for link in revision.application_links:
         owner = f"application link {link.id}"
         failures.extend(_missing_refs(prefix, owner, link.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, link.source_refs, source_refs, "source"))
+        failures.extend(
+            _application_link_source_tier_failures(
+                prefix,
+                owner,
+                link.source_refs,
+                surface=link.surface,
+                source_refs=source_refs,
+            ),
+        )
 
 
 def validate_deadline_window_section(
@@ -287,12 +540,22 @@ def validate_deadline_window_section(
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
     for window in revision.deadline_windows:
         owner = f"deadline window {window.id}"
         failures.extend(_missing_refs(prefix, owner, window.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, window.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_source_tier(prefix, owner, window.source_refs, "official_source_guidance"))
         for condition in window.applicability_conditions:
             condition_owner = f"deadline condition for {window.id}"
             failures.extend(_missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))
             failures.extend(_missing_refs(prefix, condition_owner, condition.source_refs, source_refs, "source"))
+            failures.extend(
+                evidence.require_source_tier(
+                    prefix,
+                    condition_owner,
+                    condition.source_refs,
+                    "official_source_guidance",
+                ),
+            )

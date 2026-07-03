@@ -9,13 +9,11 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
 
 import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from .....core.resources import resources
 from ....iva import (
     EUMemberState,
     InvoiceKind,
@@ -32,13 +30,14 @@ from .. import (
     unsupported_ledger_oss_observations,
     validate_ledger_oss_aggregation_binding_definition,
 )
+from .._binding_selector_utils import selector_as_dict
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@lru_cache(maxsize=1)
 def _modelo_369_union_revision() -> ModeloRevision:
-    modelo = resources().modelos.get("369")
+    modelo, _catalogues = _committed_modelo("369")
     return modelo.revisions["esquema-union"]
 
 
@@ -47,7 +46,7 @@ def _binding(binding_id: str = "modelo-369-union-de-services-21pct") -> DataBind
 
 
 def _with_selector(binding: DataBindingDefinition, **updates: object) -> DataBindingDefinition:
-    return binding.model_copy(update={"selector": {**binding.selector, **updates}})
+    return binding.model_copy(update={"selector": {**selector_as_dict(binding), **updates}})
 
 
 def _with_aggregation(binding: DataBindingDefinition, op: BindingAggregationOp) -> DataBindingDefinition:
@@ -90,36 +89,20 @@ def test_validate_accepts_canonical_oss_union_binding() -> None:
     assert result is None
 
 
-def test_validate_rejects_unknown_regime() -> None:
+@pytest.mark.parametrize(
+    "selector_updates",
+    (
+        pytest.param({"regime": "bogus"}, id="regime"),
+        pytest.param({"destination_member_state": "zz"}, id="destination-member-state"),
+        pytest.param({"rate_kind": "medium"}, id="rate-kind"),
+        pytest.param({"invoice_direction": "sideways"}, id="invoice-direction"),
+        pytest.param({"transaction_kinds": ("ill-defined",)}, id="transaction-kind"),
+        pytest.param({"transaction_kinds": ()}, id="empty-transaction-kinds"),
+    ),
+)
+def test_validate_rejects_malformed_selector_values(selector_updates: dict[str, object]) -> None:
     with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_oss_aggregation_binding_definition(_with_selector(_binding(), regime="bogus"))
-
-
-def test_validate_rejects_unknown_destination_member_state() -> None:
-    with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_oss_aggregation_binding_definition(_with_selector(_binding(), destination_member_state="zz"))
-
-
-def test_validate_rejects_unknown_rate_kind() -> None:
-    with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_oss_aggregation_binding_definition(_with_selector(_binding(), rate_kind="medium"))
-
-
-def test_validate_rejects_unknown_invoice_direction() -> None:
-    with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_oss_aggregation_binding_definition(_with_selector(_binding(), invoice_direction="sideways"))
-
-
-def test_validate_rejects_unknown_transaction_kind() -> None:
-    with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_oss_aggregation_binding_definition(
-            _with_selector(_binding(), transaction_kinds=("ill-defined",)),
-        )
-
-
-def test_validate_rejects_empty_transaction_kinds() -> None:
-    with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_oss_aggregation_binding_definition(_with_selector(_binding(), transaction_kinds=()))
+        validate_ledger_oss_aggregation_binding_definition(_with_selector(_binding(), **selector_updates))
 
 
 def test_validate_rejects_non_sum_aggregation() -> None:

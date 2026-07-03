@@ -3,7 +3,7 @@
 Each module under this package defines one
 :class:`ResourceCacheRepository` subclass plus its typed key model
 where needed. The :class:`ResourceRegistry` aggregates them in
-:mod:`aeat.core.resources._registry`.
+:mod:`core.resources._registry`.
 """
 
 from __future__ import annotations
@@ -16,7 +16,6 @@ from .iva_rate_tables import IvaRateTableRepository
 from .legal_parameters import LegalParameterRepository
 from .manuals import ManualKey, ManualRepository
 from .modelos import StaticModeloRepository
-from .normatives import NormativeRepository
 from .recargo_bands import RecargoBandsRepository
 from .topics import TopicCatalogueRepository
 from .user_profile import UserProfileSchemaRepository
@@ -30,7 +29,6 @@ __all__ = [
     "LegalParameterRepository",
     "ManualKey",
     "ManualRepository",
-    "NormativeRepository",
     "RecargoBandsRepository",
     "StaticModeloRepository",
     "TopicCatalogueRepository",

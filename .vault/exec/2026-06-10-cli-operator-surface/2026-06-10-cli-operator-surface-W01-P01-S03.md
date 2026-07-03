@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-06-10-cli-operator-surface-plan]]"
 ---
-
-
-
 
 # narrow the doclink --source enum choice to the three members the handler accepts or widen the handler so the advertised set matches, satisfying the new gate
 
@@ -50,4 +47,3 @@ GOOGLE_DRIVE happy-path journey passes. `aeat.locales scaffold --check` clean
 
 `DocumentLinkSource` member values equal the matching `AttachmentSource` values,
 so `to_attachment_source()` is a total mapping.
-

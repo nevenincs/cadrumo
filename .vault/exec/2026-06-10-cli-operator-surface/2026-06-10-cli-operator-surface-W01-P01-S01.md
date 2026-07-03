@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-06-10'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-06-10-cli-operator-surface-plan]]"
 ---
-
-
-
 
 # add a test-time conformance gate that pins next-action and failure-hint strings naming a command path to a live command, mirroring the documented-command gate mechanism
 

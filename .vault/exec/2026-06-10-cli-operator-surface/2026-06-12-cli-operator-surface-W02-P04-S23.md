@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-30'
 step_id: 'S23'
 related:
   - '[[2026-06-10-cli-operator-surface-plan]]'
@@ -26,4 +26,3 @@ S23 is closed. Import guidance no longer overstates stash/archive permanence.
 ## Checks
 
 - `rg "permanent|restore|reversible" docs/how-to/import-bank-statements.md`
-

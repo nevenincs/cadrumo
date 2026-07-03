@@ -37,6 +37,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.aggregation import BindingSourceKind
@@ -48,21 +52,19 @@ from ....domain.calculations.registry import (
     resolve_bound_inputs_by_casilla_id,
     validated_casilla_id,
 )
-from ....domain.invoices import InvoiceCatalogueRepository
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.transactions import TransactionCatalogueRepository
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation._errors import AggregationValidationError
-from ...aggregation._retencion_observations_repository import RetencionObservationRepository
-from ...aggregation._retenciones import RetencionObservation, RetencionScheme
-from ...aggregation._source_mesh import (
+from ...aggregation import (
+    AggregationValidationError,
     CalculationSourceContext,
     CalculationSourceResolution,
+    RetencionObservation,
+    RetencionObservationRepository,
+    RetencionScheme,
     merge_source_resolutions,
 )
-from ...calculations import RelationPrefillSourceResolver
-from ...calculations._observations_repository import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository, RelationPrefillSourceResolver
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
@@ -70,7 +72,8 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bucket-fold-in"
+_BUCKET_ID = "00000000-0000-4000-8000-000000000180"
+_PROFILE_LABEL = "Relation fold-in profile"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _YEAR = 2025
@@ -92,8 +95,8 @@ _M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
 _M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
 
 # Distinct per-quarter bases so a cross-quarter contamination surfaces as a
-# mismatch. Casilla 01 = perceptores (manual int), 02 = base (manual money),
-# 03 = retenciones (computed 19% of 02), 04 = anteriores (manual zero).
+# mismatch. Casillas 01/02 resolve through the M115 retenciones aggregation
+# bindings, 03 = retenciones (computed 19% of 02), 04 = anteriores (manual zero).
 _QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
     "1T": {
         _M115_PERCEPTORES_CASILLA: Decimal("2"),
@@ -122,8 +125,34 @@ _M180_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
+        _seed_ready_profile(profile.repository)
         yield profile.repository
+
+
+def _seed_ready_profile(objects: SecureObjectRepository) -> None:
+    """Persist a filing-ready profile for the annual M180 work-unit gate."""
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+        UserProfileRecord(
+            profile_id=_BUCKET_ID,
+            display_name=_PROFILE_LABEL,
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="rental withholding activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            ),
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
 
 
 def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[CasillaId, Decimal]:
@@ -136,11 +165,18 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[Ca
     }
     for period, casilla_inputs in _QUARTERS.items():
         snapshot = auth.snapshot("115", filing_year=_YEAR, period=period)
-        inputs = {**resolve_bound_inputs_by_casilla_id(snapshot.revision, {}), **casilla_inputs}
+        binding_values = {
+            "modelo-115-perceptores": casilla_inputs[_M115_PERCEPTORES_CASILLA],
+            "modelo-115-base-retenciones": casilla_inputs[_M115_BASE_CASILLA],
+        }
+        inputs = {
+            **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+            _M115_ANTERIORES_CASILLA: casilla_inputs[_M115_ANTERIORES_CASILLA],
+        }
         result = calculate_registry_snapshot(
             snapshot,
             inputs=inputs,
-            binding_values={},
+            binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
         )
         obs_repo.save_observation(

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date
-from functools import lru_cache
 from itertools import pairwise
 
 import pytest
@@ -18,19 +17,17 @@ from .. import (
     ModeloRevision,
     RegistryValidator,
     build_snapshot,
-    load_registry_tree,
 )
+from .._binding_selector_utils import selector_as_dict
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_232():
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(modelo for modelo in modelos if modelo.id == "232")
-    return modelo, catalogues
+    return _committed_modelo("232")
 
 
 def test_committed_modelo_232_validates_against_catalogues() -> None:
@@ -61,6 +58,7 @@ def test_committed_modelo_232_resolves_revision_by_filing_year(
         period="0A",
     )
     assert snapshot.revision.id == expected_revision
+    assert snapshot.revision.orden_aplicabilidad == ("orden-hfp-816-2017:art-1",)
 
 
 def test_committed_modelo_232_is_informative_only() -> None:
@@ -90,6 +88,8 @@ def test_committed_modelo_232_is_informative_only() -> None:
 
 def test_committed_modelo_232_workbook_parity_resolves_to_corpus_artefact() -> None:
     modelo, catalogues = _load_modelo_232()
+    assert catalogues.sources["aeat-modelo-232-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-232-2017-form"].evidence_tier == "layout_authority"
     expected_sources = {
         "2018-y-siguientes": "aeat-dr-232-2018",
         "2016-2017": "aeat-dr-232-2016",
@@ -120,6 +120,14 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
         "document-submission",
         "declaration-submission",
     ],
+)
+_DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
+    [
+        "ley-27-2014:art-19",
+        "ley-58-2003:art-93",
+        "orden-hfp-816-2017:art-1",
+        "orden-hfp-816-2017:art-3",
+    ]
 )
 
 
@@ -158,6 +166,22 @@ def test_committed_modelo_232_declaration_pdf_extraction_profile_targets_declara
             assert profile.confidence == "strict"
             assert profile.failure_semantics == "fail_hard"
             assert {t.casilla_id for t in profile.target_casillas} <= casilla_ids
+
+
+def test_committed_modelo_232_declaration_pdf_profile_legal_refs_match_target_casillas() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        pdf_profiles = [profile for profile in revision.extraction_profiles if profile.surface == "declaracion_pdf"]
+        assert pdf_profiles, revision.id
+        for profile in pdf_profiles:
+            target_refs = frozenset(
+                legal_ref
+                for target in profile.target_casillas
+                for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+            )
+            assert target_refs == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
+            assert set(profile.legal_refs) == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
 
 
 def test_committed_modelo_232_verification_expectation_is_informative_strict() -> None:
@@ -406,16 +430,12 @@ _SECTION_5_6_RANGE = (13, 3072)
 
 
 def _layout_bindings_for(revision: ModeloRevision, record_name: str) -> tuple[DataBindingDefinition, ...]:
-    return tuple(
-        binding
-        for binding in revision.bindings
-        if isinstance(binding.selector.get("record"), str) and binding.selector["record"] == record_name
-    )
+    return tuple(binding for binding in revision.bindings if selector_as_dict(binding).get("record") == record_name)
 
 
 def _selector_int(binding: DataBindingDefinition, key: str) -> int:
     """Extract an integer selector value from a binding; asserts the value is numeric."""
-    value = binding.selector[key]
+    value = selector_as_dict(binding)[key]
     assert isinstance(value, (int, str))
     return int(value)
 

@@ -31,7 +31,7 @@ from ..diagnostics import (
     _overall_status,
     _profile_check,
 )
-from ..wizard._status import WizardStatusReport
+from ..wizard import WizardStatusReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

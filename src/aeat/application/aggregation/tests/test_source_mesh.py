@@ -10,8 +10,8 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage.errors import DecryptionError
 from ....core import BindingSourceKind
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import CasillaId, load_registry_tree, validated_casilla_id
+from ....core.resources import resources
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from .. import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
@@ -59,11 +59,74 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
     )
 
     assert tuple(resolution.source_transaction_ids) == ("tx-1", "tx-2")
+    assert resolution.diagnostics[0].binding_source is BindingSourceKind.WITHHOLDING
+    assert resolution.provenance[0].binding_source is BindingSourceKind.LEDGER_IVA_AGGREGATION
     assert resolution.model_dump(mode="json")["binding_values"] == {"modelo-303-iva-repercutido-general-cuota": "21.00"}
     assert resolution.model_dump(mode="json")["date_binding_values"] == {"profile-birth-date": "1980-01-31"}
     assert resolution.model_dump(mode="json")["relation_values"] == {"modelo-180-rel-115-base-anual": "2128.75"}
     with pytest.raises(ValidationError, match="Extra inputs"):
         CalculationSourceResolution.model_validate({"resolver_id": "ledger-iva", "unexpected": True})
+
+
+def test_source_diagnostic_keeps_advisory_category_separate_from_binding_source() -> None:
+    diagnostic = CalculationSourceDiagnostic(
+        reason="settlement_not_computed",
+        source_kind="settlement_casilla",
+        message="settlement casilla must be operator-verified",
+    )
+
+    assert diagnostic.source_kind == "settlement_casilla"
+    assert diagnostic.binding_source is None
+
+
+def test_source_diagnostic_rejects_mismatched_binding_source_projection() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_iva_aggregation",
+            binding_source=BindingSourceKind.PROFILE,
+            message="source kind and binding source disagree",
+        )
+
+    context = exc_info.value.errors()[0].get("ctx")
+    assert context is not None
+    error = context["error"]
+    assert isinstance(error, SourceMeshError)
+    assert str(error) == "aggregation.source_mesh.errors.binding_source_mismatch"
+
+
+def test_source_provenance_projects_canonical_binding_source() -> None:
+    provenance = CalculationSourceProvenance(
+        source_kind=BindingSourceKind.RELATION_PREFILL,
+        source_ref="relation:modelo-100-rel-130",
+        relation_id="modelo-100-rel-130-pagos-fraccionados",
+        source_modelo="130",
+        source_filing_year=2026,
+        source_periods=("1T",),
+        source_casilla_ids=("19",),
+        legal_refs=("rd-439-2007:art-110",),
+        source_refs=("aeat-modelo-130-instructions",),
+    )
+
+    assert provenance.source_kind == BindingSourceKind.RELATION_PREFILL.value
+    assert provenance.binding_source is BindingSourceKind.RELATION_PREFILL
+    assert provenance.model_dump(mode="json")["binding_source"] == BindingSourceKind.RELATION_PREFILL.value
+    assert provenance.model_dump(mode="json")["source_casilla_ids"] == ["19"]
+
+
+def test_relation_source_provenance_rejects_incomplete_typed_trace() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceProvenance(
+            source_kind=BindingSourceKind.RELATION_PREFILL,
+            source_ref="relation:modelo-100-rel-130",
+            relation_id="modelo-100-rel-130-pagos-fraccionados",
+        )
+
+    context = exc_info.value.errors()[0].get("ctx")
+    assert context is not None
+    error = context["error"]
+    assert isinstance(error, SourceMeshError)
+    assert str(error) == "aggregation.source_mesh.errors.relation_provenance_incomplete"
 
 
 def test_source_resolution_rejects_legacy_bound_casilla_inputs_key() -> None:
@@ -115,9 +178,8 @@ def test_source_resolution_rejects_noncanonical_relation_keys() -> None:
     assert unresolved_exc.value.errors()[0]["loc"][0] == "unresolved_relation_ids"
 
 
-@pytest.mark.parametrize(
-    ("payload", "message_key"),
-    (
+def test_source_resolution_validator_errors_are_localized() -> None:
+    cases: tuple[tuple[dict[str, object], str], ...] = (
         (
             {"resolver_id": "source-mesh", "owned_sources": ("profile", " ")},
             "aggregation.source_mesh.errors.owned_sources_blank",
@@ -134,21 +196,18 @@ def test_source_resolution_rejects_noncanonical_relation_keys() -> None:
             {"resolver_id": "source-mesh", "source_transaction_ids": ("tx-1", "tx-1")},
             "aggregation.source_mesh.errors.source_transaction_ids_duplicate",
         ),
-    ),
-)
-def test_source_resolution_validator_errors_are_localized(
-    payload: dict[str, object],
-    message_key: str,
-) -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        CalculationSourceResolution.model_validate(payload)
+    )
 
-    context = exc_info.value.errors()[0].get("ctx")
-    assert context is not None
-    error = context["error"]
-    assert isinstance(error, SourceMeshError)
-    assert str(error) == message_key
-    assert error.translated_message == message_key
+    for payload, message_key in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            CalculationSourceResolution.model_validate(payload)
+
+        context = exc_info.value.errors()[0].get("ctx")
+        assert context is not None, message_key
+        error = context["error"]
+        assert isinstance(error, SourceMeshError), message_key
+        assert str(error) == message_key
+        assert error.translated_message == message_key
 
 
 def test_owned_sources_unknown_token_is_rejected_by_the_typed_field() -> None:
@@ -306,8 +365,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
 
 
 def test_unhandled_source_diagnostics_name_modelo_binding_and_source_kind() -> None:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo_303 = next(modelo for modelo in modelos if modelo.id == "303")
+    modelo_303 = resources().modelos.get("303")
     revision = modelo_303.revisions["2009-y-siguientes"]
 
     diagnostics = collect_unhandled_source_diagnostics(revision, handled_sources=frozenset())

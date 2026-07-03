@@ -21,9 +21,11 @@ from typing import Literal
 from pydantic import BaseModel
 
 from ...core.setup_answers import register_project_answers as _register_project_answers
-from ..user_profile._orchestration import register_active_profile, set_active_fields
-from ..workflow._errors import WorkflowInputMismatchError
-from ..workflow._models import WorkflowState
+from ..user_profile import (
+    register_active_profile,
+    set_active_fields,
+)
+from ..workflow import WorkflowInputMismatchError, WorkflowState
 from ._models import WizardFlow, WizardQuestion
 
 WizardPersistMode = Literal["create", "edit"]
@@ -189,8 +191,7 @@ def persist_patch(
     from ...domain.user_profile import UserProfileFact
 
     facts = tuple(
-        UserProfileFact(path=path, value=value)
-        for path, value in profile_values_from_patch(flow, supplied).items()
+        UserProfileFact(path=path, value=value) for path, value in profile_values_from_patch(flow, supplied).items()
     )
     return set_active_fields(state, facts)
 

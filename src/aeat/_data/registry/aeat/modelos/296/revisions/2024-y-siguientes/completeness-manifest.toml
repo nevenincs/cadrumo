@@ -1,0 +1,14 @@
+# Modelo 296 calculation-completeness manifest: closure is the total (05) and its operand (04).
+
+[revisions."2024-y-siguientes".completeness_manifest]
+source_ref = "boe-modelo-296-form-layout"
+legal_refs = ["orden-hac-56-2024:art-1", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["boe-modelo-296-form-layout"]
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "05"
+number = "05"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "04"
+number = "04"

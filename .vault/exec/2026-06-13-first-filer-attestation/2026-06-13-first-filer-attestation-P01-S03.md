@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#first-filer-attestation'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-06-13-first-filer-attestation-plan]]"
 ---
-
-
-
 
 # Add the suppressed no_prior_obligation facet field plus its clean-property treatment to CrossPeriodDependencyEvidence so a scoped-out requirement is explicit and non-silent
 

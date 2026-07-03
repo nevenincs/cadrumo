@@ -3,15 +3,13 @@ tags:
   - '#adr'
   - '#no-synthetic-sede-live-surfaces'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-30'
 related:
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-research]]'
   - '[[2026-05-07-live-parity-oracle-adr]]'
   - '[[2026-05-08-live-parity-oracle-adr]]'
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
 ---
-
-
 
 # `no-synthetic-sede-live-surfaces` adr: `Synthetic data is prohibited on AEAT-hosted live surfaces` | (**status:** `accepted`)
 

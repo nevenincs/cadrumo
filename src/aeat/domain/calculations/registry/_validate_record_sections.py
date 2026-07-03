@@ -1,10 +1,26 @@
-"""Core :class:`ModeloRevision` record-section validation helpers."""
+"""Core revision record-section validation helpers.
+
+Validates the primary record sections declared on a
+:class:`~aeat.domain.calculations.registry.ModeloRevision`: casillas, formulas,
+parameters, bindings, and extraction profiles. Each validator checks local
+reference closure plus legal/source grounding through
+:class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`.
+
+See Also:
+    :func:`aeat.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
+        Per-revision dispatcher that invokes these record-section validators.
+    :mod:`aeat.domain.calculations.registry._validate_formulas`
+        Formula-expression validation used by the formula section.
+    :mod:`aeat.domain.calculations.registry._validate_extraction_profiles`
+        Extraction-profile artefact and specimen gates used by this module.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
 
+from ._binding_selector_utils import selector_as_dict
 from ._bindings import (
     is_layout_binding_selector,
     validate_binding_selector_shape,
@@ -24,6 +40,8 @@ from ._validate_helpers import _missing_refs
 from ._validate_revision_identity import _duplicates
 from ._validate_revision_rules import validate_dated_values
 
+_CASILLA_METADATA_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
+
 
 def validate_casilla_section(
     failures: list[str],
@@ -35,10 +53,23 @@ def validate_casilla_section(
     export_field_ids: set[str],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
+    """Append casilla metadata, formula, binding, and export-ref failures.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    :class:`~aeat.domain.calculations.registry.CasillaDefinition` rows. Each
+    casilla, constraint, and alias must be legally/source grounded; formula,
+    binding, alternate-binding, and export-field references must point at ids in
+    the shared revision-validation context.
+    """
     for casilla in revision.casillas:
-        failures.extend(_missing_refs(prefix, f"casilla {casilla.id}", casilla.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, f"casilla {casilla.id}", casilla.source_refs, source_refs, "source"))
+        owner = f"casilla {casilla.id}"
+        failures.extend(_missing_refs(prefix, owner, casilla.legal_refs, legal_refs, "legal"))
+        failures.extend(_missing_refs(prefix, owner, casilla.source_refs, source_refs, "source"))
+        failures.extend(
+            evidence.require_any_source_tier(prefix, owner, casilla.source_refs, _CASILLA_METADATA_SOURCE_TIERS)
+        )
         if casilla.constraints is not None:
             constraint_owner = f"casilla {casilla.id} constraints"
             failures.extend(
@@ -47,10 +78,26 @@ def validate_casilla_section(
             failures.extend(
                 _missing_refs(prefix, constraint_owner, casilla.constraints.source_refs, source_refs, "source"),
             )
+            failures.extend(
+                evidence.require_any_source_tier(
+                    prefix,
+                    constraint_owner,
+                    casilla.constraints.source_refs,
+                    _CASILLA_METADATA_SOURCE_TIERS,
+                ),
+            )
         for alias in casilla.aliases:
             alias_owner = f"casilla {casilla.id} alias {alias.label!r}"
             failures.extend(_missing_refs(prefix, alias_owner, alias.legal_refs, legal_refs, "legal"))
             failures.extend(_missing_refs(prefix, alias_owner, alias.source_refs, source_refs, "source"))
+            failures.extend(
+                evidence.require_any_source_tier(
+                    prefix,
+                    alias_owner,
+                    alias.source_refs,
+                    _CASILLA_METADATA_SOURCE_TIERS,
+                ),
+            )
         if casilla.formula is not None and casilla.formula not in formulas:
             failures.append(f"{prefix}: casilla {casilla.id!r} references unknown formula {casilla.formula!r}")
         if (
@@ -64,6 +111,11 @@ def validate_casilla_section(
             )
         if casilla.binding is not None and casilla.binding not in bindings:
             failures.append(f"{prefix}: casilla {casilla.id!r} references unknown binding {casilla.binding!r}")
+        for binding in casilla.alternate_bindings:
+            if binding not in bindings:
+                failures.append(
+                    f"{prefix}: casilla {casilla.id!r} references unknown alternate binding {binding!r}",
+                )
         for export_ref in casilla.export_refs:
             if export_ref not in export_field_ids:
                 failures.append(f"{prefix}: casilla {casilla.id!r} references unknown export field {export_ref!r}")
@@ -82,11 +134,19 @@ def validate_formula_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> None:
+    """Append formula reference, evidence, citation, and duplicate-target failures.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    :class:`~aeat.domain.calculations.registry.FormulaDefinition` rows. Each
+    formula must cite official-source guidance, target a declared
+    :class:`~aeat.domain.calculations.registry.CasillaId`, and contain only
+    expression references accepted by
+    :func:`aeat.domain.calculations.registry._validate_formulas.validate_formula_expression`.
+    """
     for formula in revision.formulas:
         owner = f"formula {formula.id}"
         failures.extend(_missing_refs(prefix, owner, formula.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, formula.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_legal_authority_refs(prefix, owner, formula.legal_refs))
         failures.extend(evidence.require_source_tier(prefix, owner, formula.source_refs, "official_source_guidance"))
         failures.extend(
             evidence.validate_source_citations(
@@ -124,11 +184,17 @@ def validate_parameter_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> None:
+    """Append parameter reference, citation, and dated-value failures.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    :class:`~aeat.domain.calculations.registry.ParameterDefinition` rows. Each
+    parameter must carry known legal/source refs, official-source citations, and
+    valid dated-value windows.
+    """
     for parameter in revision.parameters:
         owner = f"parameter {parameter.id}"
         failures.extend(_missing_refs(prefix, owner, parameter.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, parameter.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_legal_authority_refs(prefix, owner, parameter.legal_refs))
         failures.extend(evidence.require_source_tier(prefix, owner, parameter.source_refs, "official_source_guidance"))
         failures.extend(
             evidence.validate_source_citations(
@@ -140,13 +206,6 @@ def validate_parameter_section(
             ),
         )
         failures.extend(validate_dated_values(prefix, parameter.id, parameter.values))
-        for row in parameter.convenio_rates:
-            row_owner = (
-                f"parameter {parameter.id} convenio_rate "
-                f"{row.country_code}/{row.tipo_renta}/{row.valid_from.isoformat()}"
-            )
-            failures.extend(_missing_refs(prefix, row_owner, row.legal_refs, legal_refs, "legal"))
-            failures.extend(evidence.require_legal_authority_refs(prefix, row_owner, row.legal_refs))
 
 
 def validate_binding_section(
@@ -158,13 +217,20 @@ def validate_binding_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> None:
+    """Append binding selector-shape, reference, and evidence failures.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    :class:`~aeat.domain.calculations.registry.DataBindingDefinition` rows.
+    Selectors are validated through the single binding-selector contract; layout
+    bindings require layout-authority evidence, while other bindings require
+    official-source guidance and source citations.
+    """
     for binding in revision.bindings:
         failures.extend(f"{prefix}: {fail}" for fail in validate_binding_selector_shape(binding))
     for binding in revision.bindings:
         owner = f"binding {binding.id}"
         failures.extend(_missing_refs(prefix, owner, binding.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, binding.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_legal_authority_refs(prefix, owner, binding.legal_refs))
         if _is_layout_binding(binding):
             failures.extend(evidence.require_source_tier(prefix, owner, binding.source_refs, "layout_authority"))
         else:
@@ -189,7 +255,7 @@ def validate_binding_section(
 
 def _is_layout_binding(binding: DataBindingDefinition) -> bool:
     """Layout-binding predicate, delegated to the typed manual_input shape."""
-    return is_layout_binding_selector(binding.selector)
+    return is_layout_binding_selector(selector_as_dict(binding))
 
 
 def validate_extraction_profile_section(
@@ -202,12 +268,23 @@ def validate_extraction_profile_section(
     exported_casillas: set[CasillaId],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
     corpus_root: Path | None = None,
 ) -> None:
+    """Append extraction-profile reference, artefact, and specimen failures.
+
+    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    :class:`~aeat.domain.calculations.registry.ExtractionProfileDefinition`
+    rows. Each profile must target declared/exported casillas as required,
+    declare layout-authority evidence, use a dotted parser callable, and satisfy
+    bundled justificante PDF specimen/round-trip gates when a corpus root is
+    available.
+    """
     for profile in revision.extraction_profiles:
         owner = f"extraction profile {profile.id}"
         failures.extend(_missing_refs(prefix, owner, profile.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, profile.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_source_tier(prefix, owner, profile.source_refs, "layout_authority"))
         failures.extend(validate_dotted_callable(prefix, owner, profile.parser))
         target_casilla_ids = tuple(t.casilla_id for t in profile.target_casillas)
         for casilla_id in target_casilla_ids:

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#silent-zero-base-aggregation'
 date: '2026-06-20'
-modified: '2026-06-20'
+modified: '2026-06-30'
 step_id: 'S09'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-plan]]"
 ---
-
-
-
 
 # bind the recargo casillas, update the M303 manifest and construct, and add a real-behavior test that a recargo supplier's recargo cuota aggregates instead of reporting zero
 

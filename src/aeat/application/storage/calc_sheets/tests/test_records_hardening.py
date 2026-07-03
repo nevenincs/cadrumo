@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import Period
-from .....domain.calculations.registry import CasillaId, validated_casilla_id
+from .....domain.calculations.registry import CasillaId, LegalRefId, validated_casilla_id
 from .._errors import CalcSheetsRecordError
 from .._records import (
     OperatorInput,
@@ -32,6 +32,7 @@ _IVA_DEVENGADO_BASE_CASILLA: CasillaId = validated_casilla_id(
     "iva.devengado.base",
     surface="_IVA_DEVENGADO_BASE_CASILLA",
 )
+_VALID_LEGAL_REF: LegalRefId = "ley-37-1992:art-99"
 
 
 def _metadata() -> SheetExportMetadata:
@@ -145,7 +146,7 @@ def test_sheet_plan_records_reject_generic_casilla_key() -> None:
             {
                 "address": value_address,
                 "sign": "non_negative",
-                "legal_refs": ("ley-x:art-1",),
+                "legal_refs": (_VALID_LEGAL_REF,),
                 "casilla": _IVA_DEVENGADO_BASE_CASILLA,
             },
         )
@@ -157,6 +158,16 @@ def test_sheet_plan_records_reject_generic_casilla_key() -> None:
                 "pattern": "#,##0.00",
                 "casilla": _IVA_DEVENGADO_BASE_CASILLA,
             },
+        )
+
+
+def test_sheet_cell_constraint_rejects_blank_legal_ref() -> None:
+    with pytest.raises(ValidationError, match="legal_refs"):
+        SheetCellConstraint(
+            address=SheetCellAddress.at(TabName.ENTRADAS, row=2, column=4),
+            sign="non_negative",
+            legal_refs=(" ",),
+            casilla_id=_IVA_DEVENGADO_BASE_CASILLA,
         )
 
 

@@ -7,9 +7,16 @@ modelled as a frozen, strict pydantic v2 model so callers see typed,
 immutable values and any drift between the TOML and the schema fails fast
 at import time.
 
+This is a read-only remote-mirror registry for public, externally defined
+constants. Runtime-tunable values such as timeouts, storage roots, and operator
+choices belong in :class:`core.config.Settings`; profile data, tokens,
+passphrases, bucket ids, and SQL routes do not belong here. Loading the registry
+only reads packaged TOML (or an explicit audit/test path) and never opens
+storage, writes files, or contacts remote providers.
+
 The typed root is :class:`ExternalConstants`, with AEAT-specific subsections
 grouped under :class:`AeatSection`; callers normally reach it through
-:meth:`~aeat.core.config.Settings.external_constants`. The volatile Pre303 and
+:meth:`core.config.Settings.external_constants`. The volatile Pre303 and
 IVA-wallet browser surface remains lazily validated as :class:`AeatPre303Surface`
 so selector churn does not poison unrelated configuration reads.
 """
@@ -18,11 +25,13 @@ from __future__ import annotations
 
 import re
 import tomllib
+from collections.abc import Mapping
 from decimal import Decimal
 from enum import StrEnum
 from functools import cached_property, lru_cache
 from importlib.resources import files  # nosemgrep
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Final, Literal
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -60,13 +69,23 @@ CLASSIFIED_BY_AUTO: Final[str] = "auto"
 
 
 class _Frozen(BaseModel):
-    """Strict, frozen base for external-constant submodels."""
+    """Strict, frozen base for external-constant submodels.
+
+    Unknown TOML keys are rejected and parsed instances are immutable, so a
+    newly added external value must be represented in the schema before
+    production code can consume it.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
 
 class AeatDomains(_Frozen):
-    """AEAT and related government hostnames."""
+    """AEAT and related government hostnames.
+
+    Hostnames are registry data, not executable literals in live drivers.
+    Callers combine these origins with path sections below instead of
+    re-declaring Sede, Cl@ve, BOE, or numbered AEAT subdomain strings.
+    """
 
     host_suffix: str = Field(min_length=1)
     sede: str = Field(min_length=1)
@@ -82,7 +101,12 @@ class AeatDomains(_Frozen):
 
 
 class AeatSedePaths(_Frozen):
-    """Relative path templates against the sede / www6 origins."""
+    """Relative path templates against configured AEAT origins.
+
+    These values are route fragments and templates only; consumers choose the
+    correct origin from :class:`AeatDomains` or an overrideable
+    :class:`core.config.Settings` field before building a full URL.
+    """
 
     auth_gate_4033: str
     expedientes_resumen: str
@@ -206,7 +230,13 @@ class AeatOracles(_Frozen):
 
 
 class AeatLiveSafety(_Frozen):
-    """Centralized allow-list labels for audited live AEAT browser actions."""
+    """Centralized allow-list labels for audited live AEAT browser actions.
+
+    The patterns identify reviewed action categories for live-surface guards.
+    They do not authorize a write by themselves; command policy, capability
+    checks, and live-write gates remain responsible for deciding whether an
+    operation may run.
+    """
 
     auth_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     wallet_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
@@ -232,7 +262,12 @@ class AeatLiveSafety(_Frozen):
 
 
 class AeatPortalPaths(_Frozen):
-    """Centralized AEAT portal catalogue paths keyed by :class:`Portal` id."""
+    """Centralized AEAT portal catalogue paths keyed by :class:`Portal` id.
+
+    Portal entries resolve their route fragments from this registry so the
+    catalogue can describe AEAT surfaces without carrying host or path source
+    literals in each entry module.
+    """
 
     filing_censo_path_regex: str = Field(min_length=1)
     filing_censo_path_description: str = Field(min_length=1)
@@ -263,13 +298,13 @@ class AeatSection(_Frozen):
     section of the registry: every value tracks the AEAT portal's HTML
     and may break on a portal redesign. To keep that volatility from
     poisoning the whole registry — and therefore every ``Settings()``
-    construction, since :class:`~aeat.core.config.Settings` resolves
+    construction, since :class:`core.config.Settings` resolves
     AEAT-URL defaults through :func:`load_external_constants` — the raw
     ``[aeat.pre303]`` mapping is kept untyped and validated lazily into a
     strict :class:`AeatPre303Surface` only on first access via the
     :attr:`pre303` property. A missing or malformed pre303 block thus
     never raises while parsing the registry; it surfaces as a clean
-    :class:`~aeat.core.errors.CoreValidationError` to the wallet /
+    :class:`core.errors.CoreValidationError` to the wallet /
     representation flows that actually consume it, and leaves
     selector-free commands (``config profile status``, ``modelo list``,
     …) entirely unaffected.
@@ -295,7 +330,7 @@ class AeatSection(_Frozen):
         ``[aeat.pre303]`` block cannot break registry parsing for the
         many CLI paths that never scrape the AEAT portal. When the block
         is broken the leaked :exc:`pydantic.ValidationError` is wrapped
-        in a :class:`~aeat.core.errors.CoreValidationError` carrying an
+        in a :class:`core.errors.CoreValidationError` carrying an
         operator-facing recovery hint.
         """
         try:
@@ -337,7 +372,12 @@ class OnlineServicesSection(_Frozen):
 
 
 class ExternalConstants(_Frozen):
-    """Top-level registry model mirroring the TOML root."""
+    """Top-level registry model mirroring the TOML root.
+
+    The root intentionally separates AEAT-owned surfaces from other online
+    services so call sites can depend on the narrow subsection they need while
+    still sharing one typed registry load.
+    """
 
     aeat: AeatSection
     online_services: OnlineServicesSection
@@ -365,7 +405,7 @@ LATIN_1_ENCODING: Final[str] = "latin-1"
 #:
 #: Identical in coverage to :data:`LATIN_1_ENCODING` at runtime; declared as a
 #: typed ``Literal["iso-8859-1"]`` so callers that pass it to a
-#: :data:`~aeat.adapters.outbound.aeat.export._formats._record_spec.FicheroBoeEncoding`
+#: :data:`adapters.outbound.aeat.export._formats._record_spec.FicheroBoeEncoding`
 #: parameter satisfy the static type checker without a cast.
 ISO_8859_1_ENCODING: Final[Literal["iso-8859-1"]] = "iso-8859-1"
 
@@ -425,6 +465,41 @@ SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = tuple(lang.value for lang i
 #: Counterparties whose annual operations total at most this amount are NOT declarable.
 M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 
+#: IVA regularización de deducciones por bienes de inversión — regulatory constants
+#: (LIVA arts. 107-109, Ley 37/1992, BOE-A-1992-28740), re-read verbatim from the
+#: bundled consolidated corpus ``corpus/normatives/html/ley-37-1992-art-107.html``
+#: and ``-art-109.html`` per ``legal-grounding-verifies-bundled-authoritative-corpus``.
+#:
+#: Art. 107.Uno: movable capital goods regularise over the "cuatro años naturales
+#: siguientes" to acquisition; art. 107.Tres: "terrenos o edificaciones" over the
+#: "nueve años naturales siguientes". These are the count of FOLLOWING years in the
+#: regularisation window (the acquisition year itself is the year the deduction was
+#: made).
+IVA_BIEN_INVERSION_MUEBLE_VENTANA_ANOS: Final[int] = 4
+IVA_BIEN_INVERSION_INMUEBLE_VENTANA_ANOS: Final[int] = 9
+
+#: Art. 107.Uno: the regularisation is practised only "cuando … exista una diferencia
+#: superior a diez puntos" between the definitive deduction percentage of the year and
+#: the one that prevailed in the acquisition year. The gate is STRICT (> 10 points);
+#: a difference of exactly 10 points does not trigger a regularisation. Binding
+#: provision: Art. 107.Uno LIVA (Ley 37/1992).
+IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS: Final[Decimal] = Decimal("10")
+
+#: Art. 109.3.º: "La diferencia positiva o negativa se dividirá por cinco o, tratándose
+#: de terrenos o edificaciones, por diez". The per-year regularisation quotient divides
+#: the deduction difference by 5 for movable goods and 10 for land/buildings. Binding
+#: provision: Art. 109.3.º LIVA (Ley 37/1992).
+IVA_BIEN_INVERSION_MUEBLE_DIVISOR: Final[Decimal] = Decimal("5")
+IVA_BIEN_INVERSION_INMUEBLE_DIVISOR: Final[Decimal] = Decimal("10")
+
+#: Art. 108.Dos.5.º bienes-de-escaso-valor exclusion: a good "cuyo valor de adquisición
+#: sea inferior a quinientas mil pesetas" is NOT a bien de inversión. The consolidated
+#: corpus still states the figure in pesetas; 500.000 ptas is the historic amount whose
+#: euro equivalent is 3.005,06 € (the same figure the Modelo 347 floor carries). A good
+#: whose acquisition value is at or above this threshold may qualify; below it is
+#: excluded. Binding provision: Art. 108.Dos.5.º LIVA (Ley 37/1992).
+IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR: Final[Decimal] = Decimal("3005.06")
+
 #: Modelo 720 declaration floor per asset class (``bloque``). Binding provision: RD 1065/2007
 #: arts. 42 bis/ter/quater (added by RD 1558/2012) under LGT DA 18ª — each block
 #: (cuentas / valores-seguros / inmuebles) carries an independent 50.000 € umbral.
@@ -437,11 +512,48 @@ MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
 #: qualifying days and this ceiling.  Binding provision: Art. 7.p) LIRPF.
 ART_7P_EXEMPTION_CAP_EUR: Final[Decimal] = Decimal("60100")
 
-#: Art. 96.3 LIRPF (Ley 35/2006) secondary-pagador filing floor.
-#: A natural person whose rendimientos del trabajo originate from more than one
-#: pagador must file Modelo 100 when aggregate income from the 2nd and subsequent
-#: pagadores exceeds this amount.  Binding provision: Art. 96.3 LIRPF (Ley 35/2006).
+#: Art. 96.3 LIRPF (Ley 35/2006) secondary-pagador trigger amount. When work
+#: income comes from more than one pagador, the reduced filing-exemption limit
+#: (see ``WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR``) applies only
+#: when the aggregate income from the 2nd and subsequent pagadores STRICTLY
+#: exceeds this amount; at or below it the general 22.000 € limit is retained
+#: (Art. 96.3.a.1.º). Binding provision: Art. 96.3 LIRPF (Ley 35/2006). This
+#: trigger is year-stable and has not been revalued.
 MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR: Final[Decimal] = Decimal("1500")
+
+#: Art. 96.2.a) LIRPF (Ley 35/2006) GENERAL filing-exemption ceiling for
+#: rendimientos íntegros del trabajo. A natural person whose work income does not
+#: exceed this amount (single pagador, or multiple pagadores with the 2nd-and-
+#: subsequent aggregate at or below 1.500 €) is NOT obliged to file Modelo 100 on
+#: account of work income. Binding provision: Art. 96.2.a) LIRPF (Ley 35/2006).
+#: This ceiling is year-stable.
+WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR: Final[Decimal] = Decimal("22000")
+
+#: Art. 96.3 LIRPF (Ley 35/2006) REDUCED filing-exemption ceiling for
+#: rendimientos íntegros del trabajo, keyed by filing year (the year the income
+#: was obtained). The general 22.000 € ceiling drops to this reduced amount when
+#: work income comes from more than one pagador AND the 2nd-and-subsequent
+#: aggregate exceeds ``MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR`` (1.500 €).
+#: The amount is DATED: 2019-2022 use 14.000 € (Art. 96.3 LIRPF base value,
+#: post-Ley 26/2014); 2023 uses 15.000 € (Ley 31/2022 PGE-2023,
+#: BOE-A-2022-22128, art. 96.3 modification); 2024-2026 use 15.876 €
+#: (RD-Ley 4/2024, BOE-A-2024-13066, art. 96.3 modification, confirmed by
+#: the bundled consolidated LIRPF art-96 corpus).
+#: Binding provision: Art. 96.3 LIRPF (Ley 35/2006), as modified per year above.
+#: A filing year beyond the latest tabulated entry resolves to the latest known
+#: amount (forward-compatible) until a new law revalues it.
+WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR: Final[Mapping[int, Decimal]] = MappingProxyType(
+    {
+        2019: Decimal("14000"),
+        2020: Decimal("14000"),
+        2021: Decimal("14000"),
+        2022: Decimal("14000"),
+        2023: Decimal("15000"),
+        2024: Decimal("15876"),
+        2025: Decimal("15876"),
+        2026: Decimal("15876"),
+    },
+)
 
 #: Art. 40.3 LIS (Ley 27/2014, BOE-A-2014-12328) INCN threshold that makes the
 #: base-imponible pago-fraccionado modality MANDATORY for Modelo 202. A taxpayer
@@ -467,7 +579,7 @@ MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR: Final[Decimal] = Decimal("1
 #: This is the LIVA art. 90 Uno general rate (Ley 37/1992, BOE-A-1992-28740)
 #: currently in force for Spain (ES).
 #: The DATED authoritative percentage lives in ``registry/aeat/iva/rates.toml``
-#: and is resolved via :func:`aeat.domain.iva.lookup_rate`; this constant is
+#: and is resolved via :func:`domain.iva.lookup_rate`; this constant is
 #: bound to that registry authority by a gate test so it cannot silently drift.
 DEFAULT_IVA_GENERAL_RATE_PCT: Final[Decimal] = Decimal("21.00")
 
@@ -575,7 +687,12 @@ def load_external_constants(path: Path | None = None) -> ExternalConstants:
     Cached per-process; the first call reads and validates
     ``external_constants.toml`` from the package directory via
     ``importlib.resources`` so the resolution path is identical
-    under editable installs and built wheels.
+    under editable installs and built wheels. Passing ``path`` is reserved for
+    audits and tests that need to validate an alternate TOML payload against the
+    same schema.
+
+    Args:
+        path: Optional TOML file to parse instead of the packaged registry.
 
     Returns:
         The process-wide cached :class:`ExternalConstants` instance.

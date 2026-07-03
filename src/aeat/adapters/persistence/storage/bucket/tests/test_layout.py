@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ......core.errors import build_error_envelope
-from .._errors import BucketAlreadyPresentError, BucketValidationError
+from ......core.errors import ERROR_REGISTRY, build_error_envelope
+from .._errors import BucketAlreadyPresentError, BucketPathTooLongError, BucketValidationError
 from .._layout import (
     BucketPaths,
     bucket_paths,
@@ -22,12 +22,13 @@ def test_provision_creates_three_subdirectories(tmp_path: Path) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
 
     assert paths.bucket_dir == tmp_path / "buckets" / "alpha"
-    assert paths.db_dir.is_dir()
-    assert paths.blobs_dir.is_dir()
-    assert paths.audit_dir.is_dir()
-    assert paths.db_dir == paths.bucket_dir / "db"
-    assert paths.blobs_dir == paths.bucket_dir / "blobs"
-    assert paths.audit_dir == paths.bucket_dir / "audit"
+    for subdir, dirname in (
+        (paths.db_dir, "db"),
+        (paths.blobs_dir, "blobs"),
+        (paths.audit_dir, "audit"),
+    ):
+        assert subdir == paths.bucket_dir / dirname
+        assert subdir.is_dir()
 
 
 def test_provision_is_fail_closed_on_existing_bucket(tmp_path: Path) -> None:
@@ -75,19 +76,16 @@ def test_provision_rejects_empty_bucket_id(tmp_path: Path) -> None:
 
 
 def test_provision_rejects_path_separator_in_bucket_id(tmp_path: Path) -> None:
-    with pytest.raises(BucketValidationError, match="path separator"):
-        provision_bucket_directory(tmp_path, "a/b")
-    with pytest.raises(BucketValidationError, match="path separator"):
-        provision_bucket_directory(tmp_path, "a\\b")
+    for bucket_id in ("a/b", "a\\b"):
+        with pytest.raises(BucketValidationError, match="path separator"):
+            provision_bucket_directory(tmp_path, bucket_id)
 
 
 def test_bucket_paths_is_pure_no_filesystem_side_effects(tmp_path: Path) -> None:
     paths = bucket_paths(tmp_path, "alpha")
 
-    assert not paths.bucket_dir.exists()
-    assert not paths.db_dir.exists()
-    assert not paths.blobs_dir.exists()
-    assert not paths.audit_dir.exists()
+    for path in (paths.bucket_dir, paths.db_dir, paths.blobs_dir, paths.audit_dir):
+        assert not path.exists()
     assert isinstance(paths, BucketPaths)
 
 
@@ -111,3 +109,36 @@ def test_two_buckets_share_buckets_parent(tmp_path: Path) -> None:
 
     assert alpha.bucket_dir.parent == beta.bucket_dir.parent
     assert alpha.bucket_dir.parent == tmp_path / "buckets"
+
+
+# ── WIN-003 — Windows MAX_PATH (long-path) classification ────────────────────
+
+
+def test_bucket_path_too_long_error_is_registered_in_error_registry() -> None:
+    """BucketPathTooLongError must have a bound ErrorCode in ERROR_REGISTRY."""
+    assert "ERROR_STORAGE_BUCKET_PATH_TOO_LONG" in ERROR_REGISTRY
+
+
+def test_bucket_path_too_long_error_round_trips_through_build_error_envelope() -> None:
+    """build_error_envelope must produce a valid, redacted envelope for the new error."""
+    err = BucketPathTooLongError(bucket_id="alpha", path="C:\\deep\\buckets\\alpha")
+    envelope = build_error_envelope(err)
+    assert envelope.code == "ERROR_STORAGE_BUCKET_PATH_TOO_LONG"
+    assert envelope.retryable is False
+    assert envelope.context == {"bucket_id": "alpha", "path": "C:\\deep\\buckets\\alpha"}
+
+
+def test_provision_still_raises_already_present_for_a_real_file_collision(tmp_path: Path) -> None:
+    """A genuine FileExistsError collision is NOT misclassified as a long-path failure.
+
+    Regression guard for the new ``except OSError`` branch added alongside
+    ``FileExistsError`` handling in :func:`provision_bucket_directory`:
+    confirms a real, unrelated collision (the already-fail-closed path)
+    still raises :class:`BucketAlreadyPresentError`, never
+    :class:`BucketPathTooLongError`.
+    """
+    provision_bucket_directory(tmp_path, "alpha")
+
+    with pytest.raises(BucketAlreadyPresentError) as excinfo:
+        provision_bucket_directory(tmp_path, "alpha")
+    assert not isinstance(excinfo.value, BucketPathTooLongError)

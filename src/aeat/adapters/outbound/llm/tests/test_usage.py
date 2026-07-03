@@ -18,6 +18,8 @@ from .. import LLMProvider, LLMResponse, UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_CREATED_AT = datetime(2026, 5, 28, 12, 35, 0, tzinfo=UTC)
+
 
 def test_usage_recorder_round_trip_and_summary(tmp_path: Path) -> None:
     """Usage records should round-trip through JSONL and summarize correctly."""
@@ -31,7 +33,7 @@ def test_usage_recorder_round_trip_and_summary(tmp_path: Path) -> None:
         output_tokens=6,
         cost_estimate_usd=Decimal("0.000135"),
         cache_hit=False,
-        created_at=datetime.now(UTC),
+        created_at=_CREATED_AT,
         request_id="request-id",
     )
     record = recorder.build_record(response, prompt_id="translation_v1", caller="test-suite")
@@ -60,7 +62,7 @@ def test_usage_default_root_uses_central_settings(tmp_path: Path) -> None:
         output_tokens=6,
         cost_estimate_usd=Decimal("0.000135"),
         cache_hit=False,
-        created_at=datetime.now(UTC),
+        created_at=_CREATED_AT,
         request_id="request-id",
     )
     record = recorder.build_record(response, prompt_id="translation_v1", caller="test-suite")

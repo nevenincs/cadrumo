@@ -16,42 +16,33 @@ justificante reference. The index is co-written atomically inside the same
 the composition-service single-writer discipline); it is a read-side cache, never
 a second source of truth, and is fully rebuildable from the revision catalogue.
 
-The index is keyed by ``transaction_id`` and persisted one secure :class:`Envelope` per
-transaction, so a revision over N contributing transactions co-emits N index
-upserts. Each upsert merges its new participation into that transaction's entry
-without disturbing the participations already recorded for it.
+The index is keyed by ``transaction_id`` and persisted one secure
+:class:`~aeat.adapters.persistence.storage.Envelope` per transaction, so a
+revision over N contributing transactions co-emits N index upserts. Each upsert
+merges its new participation into that transaction's entry without disturbing
+the participations already recorded for it.
 
 See :func:`derive_participation_index_id` for the object-key grammar, and the
 ``TransactionParticipationIndexRepository`` for the encrypted persistence
 boundary mirroring the :class:`CalculationRevision` catalogue repository at
-:class:`SensitivityClass` FINANCIAL.
+:class:`~aeat.adapters.persistence.storage.SensitivityClass` FINANCIAL.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Annotated, cast
+from typing import Annotated, cast
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from ...core import Period
-from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import TransactionId
-from ...core.logging import get_logger
-from ...core.time import now
 from ._codes import ModeloCode
 from ._errors import ModeloError, ModeloValidationError
 from ._ids import CalculationRevisionId, FilingRecordId, WorkUnitId
-from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
-
-if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage import SecureObjectRepository, SecureObjectWrite
-
-_LOGGER = get_logger(__name__)
 
 PARTICIPATION_INDEX_NAMESPACE = "aeat.domain.modelos.participation_index"
 PARTICIPATION_INDEX_SCHEMA_VERSION = 1
-_PARTICIPATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
 
 _JustificanteReference = Annotated[
     str,
@@ -177,129 +168,10 @@ class TransactionParticipationIndexPersistenceError(ModeloError):
     """Raised when the participation index cannot be persisted or loaded."""
 
 
-class TransactionParticipationIndexRepository:
-    """Read / write one transaction's participation index in encrypted storage.
-
-    Mirrors the :class:`CalculationRevision` catalogue repository: persistence is
-    delegated to a :class:`SecureObjectRepository` at :class:`SensitivityClass`
-    FINANCIAL under the active profile bucket, one secure object per
-    ``transaction_id``. The participation index is critically sensitive financial
-    data (it links a ledger transaction to its filings); no plaintext index is
-    ever written to disk.
-    """
-
-    def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
-        if objects is not None:
-            self._objects = objects
-            self._bucket_id = bucket_id.strip() if bucket_id is not None else None
-            return
-        self._bucket_id = resolve_modelo_repository_bucket_id(
-            bucket_id,
-            error_type=TransactionParticipationIndexPersistenceError,
-        )
-        self._objects = secure_objects_for_modelo_bucket(self._bucket_id)
-
-    @property
-    def bucket_id(self) -> str | None:
-        """Identifier of the per-profile storage bucket this repository reads and writes."""
-        return self._bucket_id
-
-    @property
-    def secure_object_repository(self) -> SecureObjectRepository:
-        """Return the :class:`SecureObjectRepository` backend used by this repository."""
-        return self._objects
-
-    def exists(self, transaction_id: str) -> bool:
-        """Report whether a participation index has been persisted for ``transaction_id``."""
-        return self._objects.exists(PARTICIPATION_INDEX_NAMESPACE, derive_participation_index_id(transaction_id))
-
-    def load(self, transaction_id: str) -> TransactionRevisionParticipationIndex:
-        """Load and decrypt one transaction's persisted participation index.
-
-        Returns an empty :class:`TransactionRevisionParticipationIndex` for that
-        transaction when nothing has been persisted yet, rather than raising.
-        """
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
-        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-
-        object_key = derive_participation_index_id(transaction_id)
-        try:
-            record = self._objects.load(
-                PARTICIPATION_INDEX_NAMESPACE,
-                object_key,
-                expected_class=SensitivityClass.FINANCIAL,
-                max_supported_version=PARTICIPATION_INDEX_SCHEMA_VERSION,
-            )
-        except (ClassificationError, EnvelopeVersionError) as exc:
-            _LOGGER.error("participation-index integrity error", exc_info=True)
-            raise TransactionParticipationIndexPersistenceError(
-                "participation-index integrity error",
-                translated_message=_PARTICIPATION_PERSISTENCE_MESSAGE,
-                context={"reason": "secure_object_integrity", "cause_type": type(exc).__name__},
-            ) from exc
-        if record is None:
-            return TransactionRevisionParticipationIndex(transaction_id=object_key)
-        envelope = Envelope[TransactionRevisionParticipationIndex].model_validate_json(
-            record.payload.decode(UTF_8_ENCODING),
-        )
-        if envelope.classification is not SensitivityClass.FINANCIAL:
-            _LOGGER.error("participation-index classification mismatch")
-            raise TransactionParticipationIndexPersistenceError(
-                "participation-index classification mismatch",
-                translated_message=_PARTICIPATION_PERSISTENCE_MESSAGE,
-                context={
-                    "reason": "classification_mismatch",
-                    "expected_classification": SensitivityClass.FINANCIAL.value,
-                    "actual_classification": envelope.classification.value,
-                },
-            )
-        if envelope.schema_version > PARTICIPATION_INDEX_SCHEMA_VERSION:
-            _LOGGER.error("participation-index envelope version unsupported")
-            raise TransactionParticipationIndexPersistenceError(
-                "participation-index envelope version unsupported",
-                translated_message=_PARTICIPATION_PERSISTENCE_MESSAGE,
-                context={
-                    "reason": "unsupported_envelope_version",
-                    "stored_schema_version": envelope.schema_version,
-                    "max_supported_version": PARTICIPATION_INDEX_SCHEMA_VERSION,
-                },
-            )
-        return envelope.payload
-
-    def save(self, index: TransactionRevisionParticipationIndex) -> None:
-        """Persist one transaction's participation index to encrypted storage."""
-        self._objects.save_many((self.to_secure_object_write(index),))
-
-    def to_secure_object_write(self, index: TransactionRevisionParticipationIndex) -> SecureObjectWrite:
-        """Return the :class:`SecureObjectWrite` upsert for ``index`` without committing it.
-
-        Mirrors the bucket-event-history repository so the participation write
-        can be passed to ``save_with_secure_object_writes`` as an extra write
-        slot, co-emitting atomically with the revision save.
-        """
-        from ...adapters.persistence.storage import Envelope, SecureObjectWrite, SensitivityClass
-
-        envelope = Envelope[TransactionRevisionParticipationIndex](
-            schema_version=PARTICIPATION_INDEX_SCHEMA_VERSION,
-            written_at=now(),
-            classification=SensitivityClass.FINANCIAL,
-            payload=index,
-        )
-        return SecureObjectWrite(
-            namespace=PARTICIPATION_INDEX_NAMESPACE,
-            object_key=derive_participation_index_id(index.transaction_id),
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=PARTICIPATION_INDEX_SCHEMA_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
-        )
-
-
 __all__ = [
     "PARTICIPATION_INDEX_NAMESPACE",
     "PARTICIPATION_INDEX_SCHEMA_VERSION",
     "TransactionParticipationIndexPersistenceError",
-    "TransactionParticipationIndexRepository",
     "TransactionRevisionParticipation",
     "TransactionRevisionParticipationIndex",
     "derive_participation_index_id",

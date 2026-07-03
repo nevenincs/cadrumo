@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 step_id: 'S03'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
-
-
-
 
 # Flip box 09 (RG 21pct cuota) to input_kind computed with formula modelo-303-dr303-09-projection, a single-leaf FormulaDefinition target 09 copying iva.repercutido.general, carrying box 09 legal_refs
 

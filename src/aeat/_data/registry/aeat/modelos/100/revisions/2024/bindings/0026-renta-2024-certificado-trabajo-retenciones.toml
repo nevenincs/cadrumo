@@ -1,0 +1,11 @@
+[[revisions."2024".bindings]]
+id = "renta-2024-certificado-trabajo-retenciones"
+source = "manual_input"
+selector = { casilla_id = "0596", data_type = "money" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-101", "rd-439-2007:art-80", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2024"]

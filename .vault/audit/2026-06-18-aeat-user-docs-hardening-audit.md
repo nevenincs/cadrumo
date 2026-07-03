@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#aeat-user-docs-hardening'
 date: '2026-06-18'
-modified: '2026-06-18'
+modified: '2026-06-30'
 related:
   - "[[2026-06-16-aeat-user-docs-hardening-plan]]"
 ---
-
-
 
 # `aeat-user-docs-hardening` audit: `Naive-user persona documentation and functionality review`
 

@@ -3,11 +3,14 @@ from pathlib import Path
 
 import pytest
 import yaml
-from typer.testing import CliRunner
 
-from ..locales._ast_scanner import scan_namespace_markers, scan_source_tree
+from ..locales import (
+    scan_namespace_markers,
+    scan_source_tree,
+)
 from ..locales.cli import app
 from ..locales.manager import LocaleError, LocaleManager, LocaleNode
+from .cli_runner import invoke_typer_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -170,6 +173,53 @@ def test_remove_locale_value_deletes_existing_leaf(tmp_path: Path):
     assert "    app_help: Auditar y generar catálogos de traducción\n" in text
 
 
+def test_remove_locale_value_prunes_empty_namespace(tmp_path: Path):
+    """Removing the last leaf below a namespace removes the stale parent row too."""
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "en.yml"
+    locale_path.write_text(
+        "wizard:\n"
+        "  setup:\n"
+        "    flags:\n"
+        "      old-option:\n"
+        "        help: Old option\n"
+        "      current-option:\n"
+        "        help: Current option\n",
+        encoding="utf-8",
+    )
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    temp_manager.remove_locale_value("en", "wizard.setup.flags.old-option.help")
+
+    text = locale_path.read_text(encoding="utf-8")
+    assert "old-option" not in text
+    assert "      current-option:\n" in text
+    assert "        help: Current option\n" in text
+
+
+def test_remove_locale_value_deletes_yaml_null_leaf(tmp_path: Path):
+    """A stale empty YAML key can be removed through the locale manager."""
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "en.yml"
+    locale_path.write_text(
+        "wizard:\n  setup:\n    flags:\n      old-option:\n      current-option:\n        help: Current option\n",
+        encoding="utf-8",
+    )
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    temp_manager.remove_locale_value("en", "wizard.setup.flags.old-option")
+
+    text = locale_path.read_text(encoding="utf-8")
+    assert "old-option" not in text
+    assert "      current-option:\n" in text
+
+
 def test_set_locale_value_rejects_locale_path_traversal(tmp_path: Path):
     """The locale setter only writes locale files under its configured root."""
 
@@ -190,7 +240,7 @@ def test_set_locale_value_rejects_locale_path_traversal(tmp_path: Path):
 def test_locale_set_cli_rejects_path_like_locale_without_writing() -> None:
     """The canonical locale CLI rejects traversal-shaped locale arguments."""
 
-    result = CliRunner().invoke(app, ["set", "../outside", "cli.locales.app_help", "unsafe"])
+    result = invoke_typer_app(app, ["set", "../outside", "cli.locales.app_help", "unsafe"])
 
     assert result.exit_code != 0
     assert "Invalid locale code" in result.output
@@ -368,7 +418,7 @@ def test_fstring_registry_expands_sal_and_sll_keys() -> None:
     These two enum values caused the #553 structural-repair-exception incident because
     scaffold could not generate their locale keys from the namespace marker alone.
     """
-    from ..locales._fstring_registry import get_registered_keys
+    from ..locales import get_registered_keys
 
     keys = get_registered_keys()
     assert "wizard.setup.taxpayer-type.legal-entity-form.choices.sal.label" in keys, (
@@ -381,8 +431,8 @@ def test_fstring_registry_expands_sal_and_sll_keys() -> None:
 
 def test_fstring_registry_covers_all_legal_entity_form_members() -> None:
     """Every LegalEntityForm member must have a registered locale key."""
-    from ..domain.deadlines._models import LegalEntityForm
-    from ..locales._fstring_registry import get_registered_keys
+    from ..domain.deadlines import LegalEntityForm
+    from ..locales import get_registered_keys
 
     keys = get_registered_keys()
     missing = []
@@ -398,8 +448,8 @@ def test_fstring_registry_covers_all_legal_entity_form_members() -> None:
 
 def test_fstring_registry_covers_all_fiscal_residency_members() -> None:
     """Every FiscalResidency member must have a registered locale key."""
-    from ..domain.deadlines._models import FiscalResidency
-    from ..locales._fstring_registry import get_registered_keys
+    from ..domain.deadlines import FiscalResidency
+    from ..locales import get_registered_keys
 
     keys = get_registered_keys()
     missing = []
@@ -423,7 +473,7 @@ def test_fstring_registry_all_keys_present_in_all_locales(manager: LocaleManager
     scaffolded. A failure here means a new enum value was added without running
     scaffold (or scaffold does not cover it yet).
     """
-    from ..locales._fstring_registry import get_registered_keys
+    from ..locales import get_registered_keys
 
     registered_keys = get_registered_keys()
     errors = []
@@ -449,7 +499,7 @@ def test_scaffold_inserts_fstring_registry_keys(tmp_path: Path) -> None:
     Simulates the SAL/SLL incident: an empty locale file receives scaffold and
     must contain every registered key as a placeholder afterwards.
     """
-    from ..locales._fstring_registry import get_registered_keys
+    from ..locales import get_registered_keys
 
     locales_dir = tmp_path / "locales"
     locales_dir.mkdir()

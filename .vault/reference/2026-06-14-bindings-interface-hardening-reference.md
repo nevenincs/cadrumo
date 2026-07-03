@@ -3,13 +3,11 @@ tags:
   - '#reference'
   - '#bindings-interface-hardening'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related:
   - "[[2026-06-14-bindings-interface-hardening-adr]]"
   - "[[2026-06-14-bindings-interface-hardening-research]]"
 ---
-
-
 
 # `bindings-interface-hardening` reference: `bindings interface code anchors: validator dispatch, selector models, carrier and CLI payloads`
 

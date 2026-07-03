@@ -3,21 +3,18 @@
 from __future__ import annotations
 
 from datetime import date
-from functools import lru_cache
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_360() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "360")
-    return modelo, catalogues
+    return _committed_modelo("360")
 
 
 def test_modelo_360_validator_accepts_committed_definition() -> None:
@@ -29,12 +26,14 @@ def test_modelo_360_validator_accepts_committed_definition() -> None:
 
 
 def test_modelo_360_metadata_matches_orden_eha_789_2010() -> None:
-    modelo, _ = _load_modelo_360()
+    modelo, catalogues = _load_modelo_360()
     assert modelo.tax_domain == "iva"
     assert modelo.cadence == "ad_hoc"
     assert "orden-eha-789-2010:art-1" in modelo.legal_refs
     assert "orden-eha-789-2010:art-4" in modelo.legal_refs
     assert "aeat-dr-360-2010" in modelo.source_refs
+    assert catalogues.sources["aeat-modelo-360-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-360-2010-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_360_revision_starts_at_2010() -> None:
@@ -42,6 +41,7 @@ def test_modelo_360_revision_starts_at_2010() -> None:
     revision = modelo.revisions["2010-y-siguientes"]
     assert revision.valid_from == date(2010, 4, 1)
     assert revision.period_selector.year_from == 2010
+    assert revision.orden_aplicabilidad == ("orden-eha-789-2010:art-1",)
 
 
 def test_modelo_360_september_30_deadline_matches_orden_eha_789_2010_art_4() -> None:
@@ -63,6 +63,7 @@ def test_modelo_360_snapshot_builds_for_ad_hoc_period() -> None:
     modelo, catalogues = _load_modelo_360()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="AD-HOC")
     assert snapshot.revision.id == "2010-y-siguientes"
+    assert snapshot.revision.orden_aplicabilidad == ("orden-eha-789-2010:art-1",)
     assert "orden-eha-789-2010:art-1" in snapshot.legal
 
 

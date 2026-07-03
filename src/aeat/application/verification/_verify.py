@@ -3,6 +3,12 @@
 Verifies a parsed declaracion against the engine output for the same inputs.
 The :class:`ValidatedRegistryAuthority` supplies the :class:`RegistrySnapshot`
 used to run the formula engine over operator-provided casilla values.
+
+The verifier consumes :class:`InboundDeclaracionObservation` values from the inbound
+parser, selects the law-determined registry revision for the filing period,
+calculates the snapshot with supplied :class:`BindingId` values, and emits a
+local :class:`VerificationVerdict`. It does not perform live AEAT reads or
+filing-state reconciliation.
 """
 
 from __future__ import annotations
@@ -15,7 +21,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
 
-from ...adapters.inbound.declaracion import DeclaracionObservation
+from ...adapters.inbound.declaracion import InboundDeclaracionObservation
 from ...core import Period
 from ...core.decimal import coerce_decimal
 from ...core.logging import get_logger
@@ -76,7 +82,7 @@ class _Discrepancy:
 
 
 def verify_declaracion(
-    declaracion: DeclaracionObservation,
+    declaracion: InboundDeclaracionObservation,
     *,
     binding_values: Mapping[BindingId, Decimal] | None = None,
     registry_root: Path | None = None,
@@ -86,17 +92,15 @@ def verify_declaracion(
     Args:
         declaracion: The parsed filing returned by
             :func:`aeat.adapters.inbound.declaracion.parse_declaracion`.
-        binding_values: External registry binding facts required for
+        binding_values: External :class:`BindingId` facts required for
             calculations that depend on facts not printed in the declaration.
         registry_root: Optional registry root override. Defaults to
             ``registry/aeat`` under the repository root.
 
     Returns:
-        A frozen :class:`aeat.application.verification.VerificationVerdict`
-        carrying the status, every
-        :class:`aeat.application.verification.ClassifiedDiscrepancy`,
-        the coverage fraction, a multilingual narrative, and the UTC
-        timestamp the verdict was produced.
+        A frozen :class:`VerificationVerdict` carrying the status, every
+        :class:`ClassifiedDiscrepancy`, the coverage fraction, a multilingual
+        narrative key, and the UTC timestamp the verdict was produced.
 
     Raises:
         VerificationError: When the registry snapshot cannot be loaded for
@@ -104,6 +108,7 @@ def verify_declaracion(
     """
     period = _parse_period(declaracion.period, declaracion.ejercicio)
     snapshot = _load_snapshot(declaracion, period=period, registry_root=registry_root)
+    _assert_snapshot_ref_matches(declaracion, snapshot, period=period)
     try:
         policy = snapshot.verification_policy()
     except RegistryValidationError as exc:
@@ -158,9 +163,10 @@ def verify_declaracion(
         if warning.casilla_id is not None and warning.code in _UNRELIABLE_WARNING_CODES
     }
     registry_casilla_ids = declared_casilla_ids(snapshot.revision)
+    reconciled_casilla_ids = policy.computed_casilla_ids | policy.reconcile_when_present_casilla_ids
     discrepancies: list[ClassifiedDiscrepancy] = []
     for casilla_id, actual in sorted(extracted.items()):
-        if casilla_id in registry_casilla_ids and casilla_id not in policy.computed_casilla_ids:
+        if casilla_id in registry_casilla_ids and casilla_id not in reconciled_casilla_ids:
             continue
         expected = result.values.get(casilla_id, actual)
         delta = actual - expected
@@ -182,6 +188,10 @@ def verify_declaracion(
     classified = tuple(discrepancies)
     coverage = _compute_coverage(declaracion, policy.computed_casilla_ids)
     status = _derive_status(classified, coverage, min_coverage=policy.min_coverage)
+    externally_grounded = policy.externally_grounded_casilla_ids & reconciled_casilla_ids
+    independently_grounded_fraction = (
+        len(externally_grounded) / len(reconciled_casilla_ids) if reconciled_casilla_ids else 0.0
+    )
     return VerificationVerdict(
         modelo=declaracion.modelo,
         period=period,
@@ -190,17 +200,20 @@ def verify_declaracion(
         status=status,
         discrepancies=classified,
         coverage=coverage,
+        externally_grounded_casilla_ids=tuple(sorted(externally_grounded)),
+        independently_grounded_fraction=independently_grounded_fraction,
         narrative=_compose_narrative(declaracion, status, classified, coverage),
         verified_at=now(),
     )
 
 
 def _load_snapshot(
-    declaracion: DeclaracionObservation,
+    declaracion: InboundDeclaracionObservation,
     *,
     period: Period,
     registry_root: Path | None,
 ) -> RegistrySnapshot:
+    """Load the :class:`RegistrySnapshot` selected by declaracion modelo and period."""
     try:
         from ...core.resources import resources
 
@@ -225,7 +238,36 @@ def _load_snapshot(
         ) from exc
 
 
-def _decimal_extracted_values(declaracion: DeclaracionObservation) -> dict[CasillaId, Decimal]:
+def _assert_snapshot_ref_matches(
+    declaracion: InboundDeclaracionObservation,
+    snapshot: RegistrySnapshot,
+    *,
+    period: Period,
+) -> None:
+    """Assert the observation's stamped ref matches law-determined resolution."""
+    ref = declaracion.registry_snapshot_ref
+    observed = (ref.modelo, ref.revision_id, ref.modelo_year, ref.period)
+    resolved = (snapshot.modelo.id, snapshot.revision.id, snapshot.filing_year, snapshot.period)
+    if observed == resolved:
+        return
+    raise VerificationError(
+        translated_message="application.verification.errors.registry_snapshot_ref_mismatch",
+        context={
+            "modelo": declaracion.modelo,
+            "period": _period_context(period),
+            "observed_ref": _snapshot_ref_context(*observed),
+            "resolved_ref": _snapshot_ref_context(*resolved),
+        },
+    )
+
+
+def _snapshot_ref_context(modelo: str, revision_id: str, modelo_year: int, period: str) -> str:
+    """Return an operator-facing registry snapshot coordinate."""
+    return f"registry:{modelo}:{revision_id}:{modelo_year}:{period}"
+
+
+def _decimal_extracted_values(declaracion: InboundDeclaracionObservation) -> dict[CasillaId, Decimal]:
+    """Return decimal printed values keyed by canonical :class:`CasillaId`."""
     extracted: dict[CasillaId, Decimal] = {}
     for value in declaracion.values:
         printed = value.printed_value
@@ -258,7 +300,7 @@ def _period_context(period: Period) -> str:
 
 
 def _period_end_date(period: Period) -> date:
-    """Return the verification filing date while preserving legacy semantics."""
+    """Return the registry date context for this :class:`Period`."""
     code = period.registry_token
     if code in {"1T", "2T", "3T", "4T", "0A"}:
         return period.end_date
@@ -334,7 +376,7 @@ def _classify_discrepancy(
 
 
 def _compute_coverage(
-    declaracion: DeclaracionObservation,
+    declaracion: InboundDeclaracionObservation,
     expected_casilla_ids: AbstractSet[CasillaId],
 ) -> float:
     """Return the fraction of registry casillas the extraction supplied.
@@ -378,7 +420,7 @@ def _derive_status(
 
 
 def _compose_narrative(
-    declaracion: DeclaracionObservation,
+    declaracion: InboundDeclaracionObservation,
     status: VerificationStatus,
     classified: tuple[ClassifiedDiscrepancy, ...],
     coverage: float,

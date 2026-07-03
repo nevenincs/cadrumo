@@ -9,14 +9,17 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, InputKind, validated_casilla_id
 from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
-from ....domain.modelos._calculation_revision import (
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    ModeloCode,
+    ModeloDetailRow,
+    WorkUnit,
     derive_calculation_revision_id,
+    derive_work_unit_id,
 )
-from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._row_models import Modelo349OperadorRow, ModeloDetailRow
-from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.registry_observations import registry_grounded_observations
 from .._revision_replay_inputs import revision_filing_replay_inputs
 
@@ -32,6 +35,12 @@ _M390_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id(
     "decl.tipo-declaracion",
     surface="_M390_TIPO_DECLARACION_CASILLA",
 )
+_M100_RETENCIONES_TRABAJO_CASILLA: CasillaId = validated_casilla_id(
+    "0596",
+    surface="_M100_RETENCIONES_TRABAJO_CASILLA",
+)
+_M100_SALARY_CERT_RETENCIONES_BINDING = "renta-2024-certificado-trabajo-retenciones"
+_M100_M111_RETENCIONES_BINDING = "renta-2024-modelo-111-retenciones-periodicas"
 
 
 def _work_unit(*, modelo: str, filing_year: int, period_code: str) -> WorkUnit:
@@ -59,6 +68,7 @@ def _work_unit(*, modelo: str, filing_year: int, period_code: str) -> WorkUnit:
 def _revision(
     work_unit: WorkUnit,
     *,
+    state: CalculationRevisionState = CalculationRevisionState.BORRADOR,
     input_values_by_casilla_id: dict[CasillaId, str] | None = None,
     binding_overrides: dict[str, str] | None = None,
     relation_overrides: dict[str, str] | None = None,
@@ -79,7 +89,7 @@ def _revision(
             detail_rows=detail_rows,
         ),
         work_unit_id=work_unit.work_unit_id,
-        state=CalculationRevisionState.BORRADOR,
+        state=state,
         input_values_by_casilla_id=inputs,
         binding_overrides=bindings,
         relation_overrides=relations,
@@ -93,6 +103,8 @@ def _revision(
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        verified_at=_CLOCK if state is not CalculationRevisionState.BORRADOR else None,
+        verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
     )
 
 
@@ -116,9 +128,7 @@ def test_revision_replay_inputs_do_not_replay_required_manual_defaults() -> None
     work_unit = _work_unit(modelo="180", filing_year=2024, period_code="0A")
     snapshot = resources().modelos.authority.snapshot("180", filing_year=2024, period="0A")
     manual_required = next(
-        casilla
-        for casilla in snapshot.revision.casillas
-        if casilla.required and casilla.input_kind == InputKind.MANUAL
+        casilla for casilla in snapshot.revision.casillas if casilla.required and casilla.input_kind == InputKind.MANUAL
     )
     revision = _revision(
         work_unit,
@@ -174,6 +184,45 @@ def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved()
     assert replay_inputs["renta-2025-rel-131-pagos-fraccionados"] == "0"
 
 
+def test_revision_replay_inputs_recover_salary_certificate_binding_for_m100_2024_0596() -> None:
+    work_unit = _work_unit(modelo="100", filing_year=2024, period_code="0A")
+    revision = _revision(
+        work_unit,
+        input_values_by_casilla_id={_M100_RETENCIONES_TRABAJO_CASILLA: "4500"},
+        casilla_values={_M100_RETENCIONES_TRABAJO_CASILLA: Decimal("4500")},
+    )
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+
+    assert replay_inputs[_M100_SALARY_CERT_RETENCIONES_BINDING] == "4500"
+    assert _M100_RETENCIONES_TRABAJO_CASILLA not in replay_inputs
+    assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
+
+
+def test_revision_replay_inputs_recover_m100_2024_0596_from_verified_revision_values() -> None:
+    work_unit = _work_unit(modelo="100", filing_year=2024, period_code="0A")
+    revision = _revision(
+        work_unit,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        relation_overrides={
+            "renta-2024-rel-130-pagos-fraccionados": "1520.00",
+            "renta-2024-rel-131-pagos-fraccionados": "0",
+        },
+        casilla_values={
+            _M100_RETENCIONES_TRABAJO_CASILLA: Decimal("4500.00"),
+            "0604": Decimal("1520.00"),
+            "0609": Decimal("6020.00"),
+        },
+    )
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+
+    assert replay_inputs[_M100_SALARY_CERT_RETENCIONES_BINDING] == "4500"
+    assert replay_inputs["renta-2024-rel-130-pagos-fraccionados"] == "1520.00"
+    assert _M100_RETENCIONES_TRABAJO_CASILLA not in replay_inputs
+    assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
+
+
 def test_revision_replay_inputs_strip_m349_country_prefix_from_export_nif_subfield() -> None:
     work_unit = _work_unit(modelo="349", filing_year=2026, period_code="1T")
     revision = _revision(
@@ -193,3 +242,33 @@ def test_revision_replay_inputs_strip_m349_country_prefix_from_export_nif_subfie
 
     assert replay_inputs["iva-349-operador-row-codigo-pais"] == {"1": "DE"}
     assert replay_inputs["iva-349-operador-row-nif"] == {"1": "123456789"}
+
+
+def test_revision_replay_inputs_project_m349_rectification_row_bindings() -> None:
+    work_unit = _work_unit(modelo="349", filing_year=2026, period_code="1T")
+    revision = _revision(
+        work_unit,
+        detail_rows=(
+            Modelo349RectificacionRow(
+                codigo_pais="DE",
+                nif_comunitario="DE123456789",
+                razon_social="ALEMAN GMBH",
+                clave_operacion="E",
+                ejercicio="2025",
+                periodo="2T",
+                base_rectificada=Decimal("1100.00"),
+                base_anterior=Decimal("1000.00"),
+            ),
+        ),
+    )
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+
+    assert replay_inputs["iva-349-rectificacion-row-codigo-pais"] == {"1": "DE"}
+    assert replay_inputs["iva-349-rectificacion-row-nif"] == {"1": "123456789"}
+    assert replay_inputs["iva-349-rectificacion-row-apellidos"] == {"1": "ALEMAN GMBH"}
+    assert replay_inputs["iva-349-rectificacion-row-clave"] == {"1": "E"}
+    assert replay_inputs["iva-349-rectificacion-row-ejercicio"] == {"1": "2025"}
+    assert replay_inputs["iva-349-rectificacion-row-periodo"] == {"1": "2T"}
+    assert replay_inputs["iva-349-rectificacion-row-base-rectificada"] == {"1": Decimal("1100.00")}
+    assert replay_inputs["iva-349-rectificacion-row-base-anterior"] == {"1": Decimal("1000.00")}

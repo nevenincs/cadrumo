@@ -19,6 +19,8 @@ from .. import LLMCache, LLMProvider, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_CREATED_AT = datetime(2026, 5, 28, 12, 20, 0, tzinfo=UTC)
+
 
 def _response() -> LLMResponse:
     return LLMResponse(
@@ -29,7 +31,7 @@ def _response() -> LLMResponse:
         output_tokens=2,
         cost_estimate_usd=Decimal("0.000060"),
         cache_hit=False,
-        created_at=datetime.now(UTC),
+        created_at=_CREATED_AT,
         request_id="request-id",
     )
 
@@ -139,9 +141,15 @@ def test_cache_default_root_uses_central_settings(tmp_path: Path) -> None:
     assert not configured_root.exists()
 
 
-@pytest.mark.parametrize(
-    "model",
-    [
+def test_cache_path_rejects_unsafe_model_identifiers(tmp_path: Path) -> None:
+    # regression: ``key.model`` flows from the operator-
+    # configured registry / env-driven ``model_override``. A path-
+    # shaped value must not let the cache write outside ``root_dir``.
+    from .. import LLMCacheError
+
+    cache = LLMCache(root_dir=tmp_path)
+    request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
+    unsafe_models = (
         "../escape",
         "..\\escape",
         "../../etc/passwd",
@@ -150,19 +158,14 @@ def test_cache_default_root_uses_central_settings(tmp_path: Path) -> None:
         "C:\\Windows\\System32",
         "model\x00with-null",
         "",
-    ],
-)
-def test_cache_path_rejects_unsafe_model_identifiers(tmp_path: Path, model: str) -> None:
-    # regression: ``key.model`` flows from the operator-
-    # configured registry / env-driven ``model_override``. A path-
-    # shaped value must not let the cache write outside ``root_dir``.
-    from .. import LLMCacheError
-
-    cache = LLMCache(root_dir=tmp_path)
-    request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
-    key = cache.build_key(request, LLMProvider.ANTHROPIC, model)
-    with pytest.raises(LLMCacheError):
-        cache._path_for(key)
+    )
+    for model in unsafe_models:
+        key = cache.build_key(request, LLMProvider.ANTHROPIC, model)
+        try:
+            with pytest.raises(LLMCacheError):
+                cache._path_for(key)
+        except AssertionError as exc:
+            raise AssertionError(f"unsafe model identifier was accepted: {model!r}") from exc
 
 
 def test_cache_path_normalises_namespaced_model(tmp_path: Path) -> None:
@@ -214,25 +217,26 @@ def test_cache_payload_canary_is_encrypted_in_database(tmp_path: Path) -> None:
         )
 
 
-@pytest.mark.parametrize(
-    "corrupted_payload",
-    [
-        b"not-json-at-all",
-        b"",
-        b"{]",
-        b'{"logical_root": "/some/path", "entry": "not-a-dict"}',
-        b'{"logical_root": "/some/path", "entry": {"response": {}}}',
-    ],
-)
-def test_entry_from_payload_rejects_malformed_bytes(tmp_path: Path, corrupted_payload: bytes) -> None:
+def test_entry_from_payload_rejects_malformed_bytes(tmp_path: Path) -> None:
     # ``_entry_from_payload`` calls ``CachedEntry.model_validate_json``
     # before consuming any field; malformed or structurally invalid
     # payloads must raise rather than silently producing a corrupt entry.
     from .. import LLMCacheError
 
     cache = LLMCache(root_dir=tmp_path)
-    with pytest.raises((LLMCacheError, ValueError, KeyError)):
-        cache._entry_from_payload(corrupted_payload)
+    corrupted_payloads = (
+        b"not-json-at-all",
+        b"",
+        b"{]",
+        b'{"logical_root": "/some/path", "entry": "not-a-dict"}',
+        b'{"logical_root": "/some/path", "entry": {"response": {}}}',
+    )
+    for corrupted_payload in corrupted_payloads:
+        try:
+            with pytest.raises((LLMCacheError, ValueError, KeyError)):
+                cache._entry_from_payload(corrupted_payload)
+        except AssertionError as exc:
+            raise AssertionError(f"malformed cache payload was accepted: {corrupted_payload!r}") from exc
 
 
 def test_entry_from_payload_rejects_wrong_logical_root(tmp_path: Path) -> None:

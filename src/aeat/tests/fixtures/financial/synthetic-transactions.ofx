@@ -9,8 +9,23 @@ OLDFILEUID:NONE
 NEWFILEUID:NONE
 
 <OFX>
+  <SIGNONMSGSRSV1>
+    <SONRS>
+      <STATUS>
+        <CODE>0
+        <SEVERITY>INFO
+      </STATUS>
+      <DTSERVER>20260413090000
+      <LANGUAGE>ENG
+    </SONRS>
+  </SIGNONMSGSRSV1>
   <BANKMSGSRSV1>
     <STMTTRNRS>
+      <TRNUID>1
+      <STATUS>
+        <CODE>0
+        <SEVERITY>INFO
+      </STATUS>
       <STMTRS>
         <CURDEF>EUR
         <BANKACCTFROM>
@@ -19,6 +34,8 @@ NEWFILEUID:NONE
           <ACCTTYPE>CHECKING
         </BANKACCTFROM>
         <BANKTRANLIST>
+          <DTSTART>20260401000000
+          <DTEND>20260430235959
           <STMTTRN>
             <TRNTYPE>CREDIT
             <DTPOSTED>20260410120000
@@ -33,9 +50,13 @@ NEWFILEUID:NONE
             <TRNAMT>-42.10
             <FITID>FIT-002
             <NAME>SOFTWARE SAAS
-            <MEMO>Suscripción mensual
+            <MEMO>Suscripcion mensual
           </STMTTRN>
         </BANKTRANLIST>
+        <LEDGERBAL>
+          <BALAMT>833.45
+          <DTASOF>20260430235959
+        </LEDGERBAL>
       </STMTRS>
     </STMTTRNRS>
   </BANKMSGSRSV1>

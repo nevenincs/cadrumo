@@ -254,7 +254,7 @@ def test_year_n_4t_credit_produces_carry_forward_saldo(tmp_path: Path) -> None:
             period="4T",
             cuota_binding_overrides=_YEAR_N_4T_INPUTS,
             relation_values={},
-    )
+        )
     assert produced > 0
     assert result.values[_M303_RESULTADO_CASILLA] < Decimal("0")
     assert result.values[_M303_SALDO_COMPENSACION_CASILLA] > Decimal("0")

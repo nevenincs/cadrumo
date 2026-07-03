@@ -3,15 +3,14 @@ tags:
   - '#adr'
   - '#code-duplication-sweep'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 related:
   - "[[2026-05-19-code-duplication-sweep-research]]"
   - "[[2026-05-19-spanish-tax-glossary-reference]]"
   - "[[2026-05-19-code-duplication-sweep-adr]]"
 ---
 
-
-# spanish-stem-terminology-authority adr: Spanish Stem Terminology Authority for Tax-Domain Identifiers | (**status:** accepted)
+# spanish-stem-terminology-authority adr: Spanish Stem Terminology Authority for Tax-Domain Identifiers | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -38,7 +37,6 @@ The prior code-duplication-sweep ADR proposed consolidating Value-Added Tax unde
 - Persistence renames where the identifier is encoded in column names, table names, or envelope schema headers require a strict roundtrip-test gate before and after the rename.
 - Public CLI JSON contract field names are not in scope for this ADR.
 - The Spanish-stem rule applies only to tax-domain identifiers as catalogued in the glossary reference. Infrastructure suffixes and international identifiers remain English.
-
 
 ## Implementation
 
@@ -82,7 +80,6 @@ No rename may produce stem-stuttering. If the canonical stem already appears in 
 
 The rule generalises: a single canonical stem appears at most once per identifier, and the surrounding tokens are infrastructure suffixes from the English-exceptions list.
 
-
 ### 4. Snapshot disambiguation
 
 Snapshot is a generic infrastructure suffix and stays English in every case EXCEPT where the entity is itself the AEAT-prepared Modelo draft. The semantic test is what entity is captured, not what suffix is used:
@@ -120,7 +117,6 @@ The prior code-duplication-sweep ADR proposed creating a VatClassification schem
 - VatClassification, VatRegulation, VATRateKind, the entire domain/vat package surface, the IssuerResidency / CustomerResidency pair, and InvoiceDirection migrate into domain/iva (or the existing IVA-bearing package, to be selected during plan retargeting).
 - _iva_ledger.py and _IvaLedgerSelector are the canonical ledger-aggregation surface.
 - The W03.P04 phase in the existing plan must be retargeted by the plan-authoring agent to consolidate VAT into IVA, not the reverse.
-
 
 ### 7. Canonical rename ledger
 
@@ -199,7 +195,6 @@ Footnote 1: ModeloRecord already exists in src/aeat/adapters/persistence/storage
 
 Footnote 2: DraftStatus and FilingDraftStatus carry identical 10-value sets. Consolidate to a single ModeloDraftStatus enum and remove the duplicate.
 
-
 #### Declaracion cluster (Declaration to Declaracion)
 
 Stem authority: declaracion per Ley 58/2003 LGT Articulo 119.
@@ -257,7 +252,6 @@ Stem authority: censo per RD 1065/2007 RGAGI.
 | CensusParseError | src/aeat/adapters/outbound/aeat/sede/_census.py | CensoParseError | public-API |
 
 The module path src/aeat/application/live/_census.py and the outbound module src/aeat/adapters/outbound/aeat/sede/_census.py also rename to _censo.py in lockstep with the contained symbols.
-
 
 #### IVA cluster (VAT to IVA, reversing prior ADR)
 

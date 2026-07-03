@@ -44,40 +44,42 @@ def test_detect_returns_template_revision_with_header_markers() -> None:
     assert revision.detected_from == "header"
 
 
-def test_detect_returns_none_when_modelo_header_is_missing() -> None:
-    page = "Ejercicio: 2025\nOther data follows.\n"
-
+@pytest.mark.parametrize(
+    "page",
+    [
+        pytest.param("Ejercicio: 2025\nOther data follows.\n", id="missing-modelo"),
+        pytest.param("Modelo: 130\nOther data follows.\n", id="missing-ejercicio"),
+    ],
+)
+def test_detect_returns_none_when_required_header_is_missing(page: str) -> None:
     assert detect_template_revision_from_pages((page,)) is None
 
 
-def test_detect_returns_none_when_ejercicio_header_is_missing() -> None:
-    page = "Modelo: 130\nOther data follows.\n"
-
-    assert detect_template_revision_from_pages((page,)) is None
-
-
-def test_detect_uses_orden_hac_footer_to_pin_revision_tag() -> None:
-    """When the PDF carries an `Orden HAC/819/2024` footer, the
-    revision tag uses the year + orden number rather than the
-    fallback ``{ejercicio}.01`` sentinel."""
-    page = "Modelo: 303\nEjercicio: 2025\nResto del cuerpo...\nAprobado por Orden HAC/819/2024 BOE 30-07-2024.\n"
+@pytest.mark.parametrize(
+    ("page", "expected_revision"),
+    [
+        pytest.param(
+            "Modelo: 303\nEjercicio: 2025\nResto del cuerpo...\nAprobado por Orden HAC/819/2024 BOE 30-07-2024.\n",
+            "2024.orden-819",
+            id="orden-hac-footer",
+        ),
+        pytest.param(
+            "Modelo: 130\nEjercicio: 2025\nNo Orden footer here.\n",
+            "2025.01",
+            id="fallback-ejercicio",
+        ),
+    ],
+)
+def test_detect_revision_tag_from_orden_hac_footer_or_ejercicio_fallback(
+    page: str,
+    expected_revision: str,
+) -> None:
+    """Orden HAC footers pin the revision tag; otherwise the detector uses ``{ejercicio}.01``."""
 
     revision = detect_template_revision_from_pages((page,))
 
     assert revision is not None
-    assert revision.revision == "2024.orden-819"
-
-
-def test_detect_falls_back_to_ejercicio_01_when_no_orden_hac() -> None:
-    """Without an Orden HAC footer the detector emits the conservative
-    ``{ejercicio}.01`` revision tag — registry resolution is then
-    responsible for refusing unregistered revisions."""
-    page = "Modelo: 130\nEjercicio: 2025\nNo Orden footer here.\n"
-
-    revision = detect_template_revision_from_pages((page,))
-
-    assert revision is not None
-    assert revision.revision == "2025.01"
+    assert revision.revision == expected_revision
 
 
 def test_detect_searches_first_two_pages_for_ejercicio_header() -> None:

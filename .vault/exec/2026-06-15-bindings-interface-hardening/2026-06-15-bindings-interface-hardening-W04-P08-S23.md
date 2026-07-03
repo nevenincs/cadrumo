@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#bindings-interface-hardening'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S23'
 related:
   - "[[2026-06-15-bindings-interface-hardening-plan]]"
 ---
-
-
-
 
 # expose the binding provenance on BindingRowPayload and BindingPreviewRowPayload and convert bindings list from the list[dict[str,object]] bag to the typed payload
 

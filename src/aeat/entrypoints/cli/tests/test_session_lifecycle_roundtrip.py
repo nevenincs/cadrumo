@@ -34,8 +34,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.errors import SessionExpiredError, StorageValidationError
+from ....adapters.persistence.storage.master_key import BucketSession
 from ....adapters.persistence.storage.master_key._active_session import _active_session
-from ....adapters.persistence.storage.master_key._bucket_session import BucketSession
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....adapters.persistence.storage.sql.secure_objects import SensitivityClass
 from ....core.config import override_settings
@@ -43,7 +43,7 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_NAMESPACE = "aeat.test.session.lifecycle"
+_NAMESPACE = "aeat-test.session.lifecycle"
 _OBJECT_KEY = "roundtrip-row"
 _CLASSIFICATION = SensitivityClass.OPERATIONAL
 

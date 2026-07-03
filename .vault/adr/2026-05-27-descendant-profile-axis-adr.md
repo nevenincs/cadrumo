@@ -3,14 +3,13 @@ tags:
   - '#adr'
   - '#descendant-profile-axis'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-04-21-modelo-100-renta-adr]]"
   - "[[2026-05-08-renta-cuota-integra-state-scale-adr]]"
   - '[[2026-06-04-descendant-profile-axis-research]]'
 ---
-
 
 # `descendant-profile-axis` adr: Descendant profile axis | (**status:** `accepted`)
 

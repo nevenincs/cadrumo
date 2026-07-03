@@ -30,21 +30,30 @@ The four behaviours under test:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.calculations.registry import (
+    IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
+    MODELO_303_IVA_COMPENSATION_BINDING_ID,
     CasillaId,
     RegistryModeloObservation,
     validated_casilla_id,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
+from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
 from ...calculations._cross_period_clean_state import _OFFICIAL_SOURCE_KINDS
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
@@ -54,7 +63,6 @@ from .. import (
     create_work_unit,
 )
 from .._calculation_actions import (
-    _previous_filing_resolution_excluding_iva_compensation,
     _resolve_bucket_source_mesh,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -78,6 +86,20 @@ _T1 = datetime(2026, 4, 10, 9, 0, 0, tzinfo=UTC)
 _T2 = datetime(2026, 4, 11, 9, 0, 0, tzinfo=UTC)
 _T3 = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 7, 10, 9, 0, 0, tzinfo=UTC)
+_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
+
+
+@pytest.fixture
+def repos(tmp_path: Path) -> Iterator[_Repos]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        yield (
+            WorkUnitCatalogueRepository(objects=objects),
+            CalculationRevisionCatalogueRepository(objects=objects),
+            ModeloRecordCatalogueRepository(objects=objects),
+            VerificationReportCatalogueRepository(objects=objects),
+            BucketEventHistoryRepository(objects=objects),
+        )
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -91,9 +113,10 @@ _M303_COMPENSACION_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion
 _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores",
 )
+_M130_DIFERENCIA_PREVIA_CASILLA: CasillaId = _casilla_id("14")
 
-# The M130 carry binding casilla 15 lifts. Casilla 15 (input_kind=bound) reads its
-# value from this previous_filing binding; the carried saldo-negativo flows through it.
+# The M130 carry binding feeds computed casilla 15. Calculation caps the raw
+# previous_filing saldo-negativo at the current positive C14 before it flows through.
 _CARRY_BINDING_ID = "modelo-130-resultados-negativos-anteriores"
 
 # Inputs that drive Modelo 130 1T to a NEGATIVE Diferencia (casilla 17):
@@ -114,7 +137,6 @@ _NEGATIVE_1T_INPUTS: dict[CasillaId, Decimal] = {
     _M130_WITHHELD_CASILLA: Decimal("0"),
     _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
     _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
-    _M130_CARRY_FORWARD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("5000"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
@@ -140,7 +162,7 @@ _2T_INPUTS_WITHOUT_15: dict[CasillaId, Decimal] = {
 def _seed_130(repos_: _Repos, *, period: str, clock: datetime):
     wu_repo = repos_[0]
     return create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, period),
@@ -210,62 +232,76 @@ def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
 def _seed_first_year_activity_profile(repos_: _Repos) -> None:
     objects = repos_[4].secure_object_repository
     profile = UserProfileRecord(
-        profile_id="default",
+        profile_id=_BUCKET_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="identity.name", value="Test"),
             UserProfileFact(path="identity.surnames", value="Autonomo"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="provenance.source", value="test_fixture"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             UserProfileFact(path="censo.activity_start_date", value="2026-01-01"),
         ),
         created_at=_T1,
         updated_at=_T1,
     )
-    UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(profile)
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
 
 
 def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
     objects = repos_[4].secure_object_repository
     profile = UserProfileRecord(
-        profile_id="default",
+        profile_id=_BUCKET_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="identity.legal_name", value="Test Company SL"),
             UserProfileFact(path="identity.name", value="Test"),
             UserProfileFact(path="identity.surnames", value="Company"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+            UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="provenance.source", value="test_fixture"),
             UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
         ),
         created_at=_T1,
         updated_at=_T1,
     )
-    UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(profile)
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
 
 
 def _seed_first_303_activity_profile(repos_: _Repos) -> None:
     objects = repos_[4].secure_object_repository
     profile = UserProfileRecord(
-        profile_id="default",
+        profile_id=_BUCKET_ID,
         display_name="Test first IVA profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="identity.legal_name", value="Test Company SL"),
             UserProfileFact(path="identity.name", value="Test"),
             UserProfileFact(path="identity.surnames", value="Company"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+            UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="provenance.source", value="test_fixture"),
             UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
         ),
         created_at=_T1,
         updated_at=_T1,
     )
-    UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(profile)
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
 
 
 def test_local_file_then_next_period_calculate_carries_previous_filing_value(repos: _Repos) -> None:
@@ -292,9 +328,10 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(rep
     )
 
     carried_casilla_15 = Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA])
-    assert carried_casilla_15 == carried_seed, (
-        f"2T casilla 15 must auto-carry the filed 1T saldo-negativo {carried_seed}; got {carried_casilla_15}"
-    )
+    c14 = Decimal(result.revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA])
+    assert Decimal(result.revision.binding_overrides[_CARRY_BINDING_ID]) == carried_seed
+    assert carried_seed > c14 > Decimal("0")
+    assert carried_casilla_15 == c14
 
 
 def test_first_year_activity_start_calculate_scopes_prior_year_m100_binding(repos: _Repos) -> None:
@@ -317,7 +354,10 @@ def test_first_year_activity_start_calculate_scopes_prior_year_m100_binding(repo
     assert Decimal(result.revision.binding_overrides["irpf.previous_year_economic_activity_net_income"]) == Decimal(
         "0",
     )
-    assert Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA]) == carried_seed
+    c14 = Decimal(result.revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA])
+    assert Decimal(result.revision.binding_overrides[_CARRY_BINDING_ID]) == carried_seed
+    assert carried_seed > c14 > Decimal("0")
+    assert Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA]) == c14
 
 
 def test_app_filing_source_kind_is_not_official_evidence() -> None:
@@ -342,15 +382,27 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     cross-YEAR non-official prior still blocks. The within-year reconstruction can reach
     export; the operator files every period with AEAT externally.
     """
-    from ....domain.modelos import CalculationRevisionState, upsert_calculation_revision
-    from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-    from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
-    from ...calculations._cross_period_clean_state import CrossPeriodCleanStateBlocker
+    from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+    from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+    from ....domain.modelos import (
+        CalculationRevisionState,
+        upsert_calculation_revision,
+    )
+    from ...calculations import CrossPeriodCleanStateBlocker
     from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
-    wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
     _file_1t_with_negative_result(repos)
+    local_filing = fr_repo.load().current_for(
+        bucket_id=_BUCKET_ID,
+        modelo="130",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+    )
+    assert local_filing is not None
+    assert local_filing.aeat_accepted is False
+    assert local_filing.external_evidence is None
     # Confirm the carry observation was persisted under the non-official source_kind.
     stored = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
     assert stored is not None
@@ -398,17 +450,12 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     )
     assert verdict is not None
     same_year = [
-        d
-        for d in verdict.dependencies
-        if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026
+        d for d in verdict.dependencies if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026
     ]
     assert same_year, "expected the same-year M130/2026 carry dependency"
     assert all(d.clean for d in same_year)
     assert all(d.non_official_local_chain_advisory for d in same_year)
-    assert all(
-        CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE not in d.blockers
-        for d in same_year
-    )
+    assert all(CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE not in d.blockers for d in same_year)
     assert verdict.has_non_official_local_chain_advisory
     # The cross-YEAR dependency is NOT relaxed - the same-year scope is the safety boundary.
     cross_year = [d for d in verdict.dependencies if d.requirement.filing_year != 2026]
@@ -442,9 +489,10 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(repos: _Repo
     )
 
     casilla_15 = Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA])
-    assert casilla_15 == override_value, (
-        f"caller --binding {override_value} must override the auto-carried {carried_seed}; got {casilla_15}"
-    )
+    c14 = Decimal(result.revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA])
+    assert Decimal(result.revision.binding_overrides[_CARRY_BINDING_ID]) == override_value
+    assert override_value > c14 > Decimal("0")
+    assert casilla_15 == c14
 
 
 def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> None:
@@ -452,9 +500,9 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
 
     A prior 303 filing whose observation carries the compensation casillas is persisted
     locally. The carry resolver's raw output DOES surface the
-    ``modelo-303-compensacion-pendiente-anteriores`` binding (proven first), but the
-    enrollment helper :func:`_previous_filing_resolution_excluding_iva_compensation`
-    strips it so the iva-wallet decision remains the sole owner.
+    ``modelo-303-compensacion-pendiente-anteriores`` binding (proven first), but
+    the enrolled resolver receives the registry-declared iva-wallet-owned set as
+    ``excluded_binding_ids`` so the iva-wallet decision remains the sole owner.
     """
     from ....core import Period
     from ...aggregation import CalculationSourceContext
@@ -463,7 +511,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
     wu_repo = repos[0]
     _seed_existing_303_activity_profile(repos)
     work_unit_303 = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "2T"),
@@ -484,19 +532,22 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
         revision=snapshot.revision,
     )
     raw = PreviousFilingSourceResolver(registry_snapshot=snapshot).resolve(context)
-    assert _MODELO_303_IVA_COMPENSATION_BINDING_ID in raw.binding_values, (
+    assert MODELO_303_IVA_COMPENSATION_BINDING_ID in raw.binding_values, (
         "test precondition: the raw resolver must surface the 303 compensation binding "
         "so the exclusion has something to strip"
     )
 
-    filtered = _previous_filing_resolution_excluding_iva_compensation(raw)
-    assert _MODELO_303_IVA_COMPENSATION_BINDING_ID not in filtered.binding_values
+    filtered = PreviousFilingSourceResolver(
+        registry_snapshot=snapshot,
+        excluded_binding_ids=IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
+    ).resolve(context)
+    assert MODELO_303_IVA_COMPENSATION_BINDING_ID not in filtered.binding_values
     assert all(
-        not item.source_ref.endswith(f":{_MODELO_303_IVA_COMPENSATION_BINDING_ID}") for item in filtered.provenance
+        not item.source_ref.endswith(f":{MODELO_303_IVA_COMPENSATION_BINDING_ID}") for item in filtered.provenance
     )
     # Every other binding the raw resolver carried survives the exclusion untouched.
     for binding_id, value in raw.binding_values.items():
-        if binding_id == _MODELO_303_IVA_COMPENSATION_BINDING_ID:
+        if binding_id == MODELO_303_IVA_COMPENSATION_BINDING_ID:
             continue
         assert filtered.binding_values[binding_id] == value
 
@@ -508,7 +559,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
     wu_repo = repos[0]
     _seed_existing_303_activity_profile(repos)
     work_unit_303 = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "2T"),
@@ -526,7 +577,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
         invoice_repository=None,
     )
 
-    assert _MODELO_303_IVA_COMPENSATION_BINDING_ID not in resolution.binding_values
+    assert MODELO_303_IVA_COMPENSATION_BINDING_ID not in resolution.binding_values
     assert "modelo-303-rel-self-compensacion-anteriores" not in resolution.relation_values
     assert all("modelo-303-rel-self-compensacion-anteriores" not in item.source_ref for item in resolution.provenance)
 
@@ -536,7 +587,7 @@ def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(repos
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_existing_303_activity_profile(repos)
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
@@ -560,7 +611,7 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_first_303_activity_profile(repos)
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
@@ -577,7 +628,7 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -
         clock=_T1,
     )
     revision = result.revision
-    assert Decimal(revision.binding_overrides[_MODELO_303_IVA_COMPENSATION_BINDING_ID]) == Decimal("0")
+    assert Decimal(revision.binding_overrides[MODELO_303_IVA_COMPENSATION_BINDING_ID]) == Decimal("0")
     assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
 
 
@@ -618,8 +669,8 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
     verdict is clean => the quarter is reachable to verify/export. If suppression did NOT
     cover the previous_filing M100 dep, this verdict would be unclean (a real gap).
     """
-    from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-    from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+    from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+    from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
     from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
@@ -651,9 +702,7 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
     assert all(d.suppressed_pre_activity for d in cross_year)
     # The same-year M130/2026 dep is admitted with the disclosing advisory.
     same_year = [
-        d
-        for d in verdict.dependencies
-        if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026
+        d for d in verdict.dependencies if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026
     ]
     assert same_year and all(d.non_official_local_chain_advisory for d in same_year)
     # Both handled -> the verdict is clean -> the quarter is reachable.

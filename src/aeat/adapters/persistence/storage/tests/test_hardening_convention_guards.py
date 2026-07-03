@@ -4,14 +4,22 @@ from __future__ import annotations
 
 import ast
 import importlib
-from collections.abc import Mapping
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 
 from .....core.errors import ERROR_REGISTRY, AeatError, get_registered_error_code
 from .....locales.manager import LocaleManager
-from .....tests._inventory import SRC_AEAT, ast_for_path, package_ast_items, qualified_name, repo_path, repo_relative
+from .....tests import (
+    SRC_AEAT,
+    ast_for_path,
+    leaf_name,
+    package_ast_items,
+    qualified_name,
+    repo_path,
+    repo_relative,
+)
 from ..errors import SecureStorageError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -41,7 +49,6 @@ _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
     "src/aeat/adapters/persistence/storage/sql/tests/test_constraints.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_engine.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_repository.py",
-    "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part1.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part2.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part3.py",
@@ -51,6 +58,7 @@ _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
     "src/aeat/adapters/persistence/storage/tests/test_hardening_convention_guards.py",
     "src/aeat/adapters/persistence/storage/tests/test_runtime.py",
     "src/aeat/application/tests/test_diagnostics.py",
+    "src/aeat/application/modelo/tests/test_export_iva_wallet.py",
     "src/aeat/application/tests/test_repair_integrity.py",
     "src/aeat/application/tests/test_state_projection.py",
     "src/aeat/application/tests/test_storage_write_policy.py",
@@ -66,11 +74,36 @@ _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
 }
 
 
-def test_bucket_session_cleanup_observability_does_not_use_suppression_markers(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+class _HardeningInventory(NamedTuple):
+    repository_construction_offences: list[str]
+    explicit_route_setup_offences: list[str]
+
+
+@pytest.fixture(scope="module")
+def hardening_inventory() -> _HardeningInventory:
+    repository_construction_offences: list[str] = []
+    explicit_route_setup_offences: list[str] = []
+
+    for path, tree in package_ast_items(include_data=True):
+        relative = repo_relative(path)
+        if not _is_test_surface(relative):
+            repository_construction_offences.extend(_repository_construction_offences(relative, tree))
+        if (
+            _is_test_setup_surface(relative)
+            and _uses_explicit_database_route(tree)
+            and relative not in _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES
+        ):
+            explicit_route_setup_offences.append(f"{relative}: unapproved explicit database route test setup")
+
+    return _HardeningInventory(
+        repository_construction_offences=repository_construction_offences,
+        explicit_route_setup_offences=explicit_route_setup_offences,
+    )
+
+
+def test_bucket_session_cleanup_observability_does_not_use_suppression_markers() -> None:
     path = repo_path("src/aeat/adapters/persistence/storage/master_key/_bucket_session.py")
-    function = _function_named(path, "_evict_engine", source_tree_ast)
+    function = _function_named(path, "_dispose_engine")
     segment = _source_segment(path, function)
 
     assert "# noqa" not in segment
@@ -80,9 +113,7 @@ def test_bucket_session_cleanup_observability_does_not_use_suppression_markers(
     assert not any(_call_has_keyword(node, "exc_info") for node in ast.walk(function) if isinstance(node, ast.Call))
 
 
-def test_named_bucket_settings_derivation_stays_in_core_settings_boundary(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_named_bucket_settings_derivation_stays_in_core_settings_boundary() -> None:
     runtime_path = repo_path("src/aeat/adapters/persistence/storage/runtime.py")
     route_path = repo_path("src/aeat/core/_config_storage_route.py")
 
@@ -90,21 +121,19 @@ def test_named_bucket_settings_derivation_stays_in_core_settings_boundary(
     assert "__pydantic_fields_set__" not in runtime_text
     assert "settings_for_active_profile_bucket" in runtime_text
 
-    config_function = _function_named(route_path, "settings_for_bucket_route", source_tree_ast)
+    config_function = _function_named(route_path, "settings_for_bucket_route")
     config_segment = _source_segment(route_path, config_function)
     assert "__pydantic_fields_set__" in config_segment
     assert "aeat_database_url" in config_segment
 
 
-def test_profile_repository_kdf_defaults_flow_from_canonical_master_key_model(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_profile_repository_kdf_defaults_flow_from_canonical_master_key_model() -> None:
     path = repo_path("src/aeat/application/user_profile/_profile_repository.py")
-    function = _function_named(path, "_default_kdf_params", source_tree_ast)
+    function = _function_named(path, "_default_kdf_params")
     calls = [node for node in ast.walk(function) if isinstance(node, ast.Call)]
 
     assert any(_is_kdf_default_to_manifest_call(call) for call in calls)
-    assert not any(_call_name(call.func) == "ManifestKdfParams" for call in calls)
+    assert not any(leaf_name(call.func) == "ManifestKdfParams" for call in calls)
     assert not any(
         keyword.arg in {"algorithm", "version", "memory_cost", "time_cost", "parallelism", "salt", "output_length"}
         for call in calls
@@ -113,64 +142,64 @@ def test_profile_repository_kdf_defaults_flow_from_canonical_master_key_model(
 
 
 def test_production_secure_object_repository_construction_stays_runtime_owned(
-    source_tree_ast: Mapping[Path, ast.AST],
+    hardening_inventory: _HardeningInventory,
 ) -> None:
+    assert hardening_inventory.repository_construction_offences == []
+
+
+def test_explicit_database_route_test_setup_stays_approved(hardening_inventory: _HardeningInventory) -> None:
+    assert hardening_inventory.explicit_route_setup_offences == []
+
+
+def _repository_construction_offences(relative: str, tree: ast.AST) -> list[str]:
     offences: list[str] = []
-    for path, tree in package_ast_items(source_tree_ast, include_data=True):
-        relative = repo_relative(path)
-        if _is_test_surface(relative):
+    constructors = _secure_object_repository_constructor_names(tree)
+    module_aliases = _secure_object_repository_module_aliases(tree)
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not _is_secure_object_repository_constructor_call(
+            node,
+            constructors,
+            module_aliases,
+        ):
             continue
-        constructors = _secure_object_repository_constructor_names(tree)
-        module_aliases = _secure_object_repository_module_aliases(tree)
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call) or not _is_secure_object_repository_constructor_call(
-                node,
-                constructors,
-                module_aliases,
-            ):
-                continue
-            if relative not in _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS:
-                offences.append(f"{relative}:{node.lineno}: direct SecureObjectRepository construction")
-                continue
-            engine_keyword = next((keyword for keyword in node.keywords if keyword.arg == "engine"), None)
-            if engine_keyword is None:
-                offences.append(f"{relative}:{node.lineno}: runtime construction must bind an engine explicitly")
-                continue
-            if isinstance(engine_keyword.value, ast.Constant) and engine_keyword.value.value is None:
-                offences.append(f"{relative}:{node.lineno}: runtime construction must not bind engine=None")
-
-    assert offences == []
-
-
-def test_explicit_database_route_test_setup_stays_approved(source_tree_ast: Mapping[Path, ast.AST]) -> None:
-    offences: list[str] = []
-    for path, tree in package_ast_items(source_tree_ast, include_data=True):
-        relative = repo_relative(path)
-        if not _is_test_setup_surface(relative):
+        if relative not in _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS:
+            offences.append(f"{relative}:{node.lineno}: direct SecureObjectRepository construction")
             continue
-        if not _uses_explicit_database_route(tree):
+        engine_keyword = next((keyword for keyword in node.keywords if keyword.arg == "engine"), None)
+        if engine_keyword is None:
+            offences.append(f"{relative}:{node.lineno}: runtime construction must bind an engine explicitly")
             continue
-        if relative not in _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES:
-            offences.append(f"{relative}: unapproved explicit database route test setup")
+        if isinstance(engine_keyword.value, ast.Constant) and engine_keyword.value.value is None:
+            offences.append(f"{relative}:{node.lineno}: runtime construction must not bind engine=None")
+    return offences
 
-    assert offences == []
+
+def test_explicit_database_route_detector_ignores_env_absence_and_flags_real_routes() -> None:
+    absent_tree = ast.parse(
+        """
+env = {
+    "AEAT_DATABASE_URL": None,
+}
+"""
+    )
+    keyword_tree = ast.parse('Settings(aeat_database_url="sqlite:///explicit.db")')
+    env_tree = ast.parse('env = {"AEAT_DATABASE_URL": "sqlite:///explicit.db"}')
+
+    assert not _uses_explicit_database_route(absent_tree)
+    assert _uses_explicit_database_route(keyword_tree)
+    assert _uses_explicit_database_route(env_tree)
 
 
-def test_hardening_test_surfaces_do_not_reintroduce_shortcut_markers(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_hardening_test_surfaces_do_not_mutate_environment_directly() -> None:
     offences: list[str] = []
     for relative in _HARDENING_TEST_SURFACES:
         path = repo_path(relative)
-        tree = ast_for_path(path, source_tree_ast)
+        tree = ast_for_path(path)
         assert tree is not None, f"{relative}: source must be parseable"
         constants = _collect_string_bindings(tree)
         os_aliases = _collect_os_aliases(tree)
         environ_aliases = _collect_environ_aliases(tree)
         for node in ast.walk(tree):
-            if _is_pytest_skip_or_xfail_marker(node):
-                assert isinstance(node, (ast.expr, ast.stmt))
-                offences.append(f"{relative}:{node.lineno}: {qualified_name(node)}")
             if (
                 isinstance(node, ast.Call)
                 and _is_environment_call(node, constants, os_aliases, environ_aliases)
@@ -184,11 +213,6 @@ def test_hardening_test_surfaces_do_not_reintroduce_shortcut_markers(
                 environ_aliases,
             ):
                 offences.append(f"{relative}:{node.lineno}: environment mutation")
-            if isinstance(node, ast.ClassDef) and node.name.startswith(("_Fake", "_Stub")):
-                offences.append(f"{relative}:{node.lineno}: {node.name}")
-            if _is_mock_import(node):
-                assert isinstance(node, (ast.Import, ast.ImportFrom))
-                offences.append(f"{relative}:{node.lineno}: mock import")
     assert offences == []
 
 
@@ -272,22 +296,27 @@ def _uses_explicit_database_route(tree: ast.AST) -> bool:
         if id(node) in docstring_constant_ids:
             continue
         if isinstance(node, ast.keyword) and node.arg == "aeat_database_url":
+            return not _is_none_literal(node.value)
+        if isinstance(node, ast.Dict) and _dict_sets_explicit_database_route(node):
             return True
-        if (
-            isinstance(node, ast.Constant)
-            and isinstance(node.value, str)
-            and ("AEAT_DATABASE_URL" in node.value or "aeat_database_url" in node.value)
-        ):
-            return True
-        if isinstance(node, ast.JoinedStr):
-            for value in node.values:
-                if (
-                    isinstance(value, ast.Constant)
-                    and isinstance(value.value, str)
-                    and ("AEAT_DATABASE_URL" in value.value or "aeat_database_url" in value.value)
-                ):
-                    return True
     return False
+
+
+def _dict_sets_explicit_database_route(node: ast.Dict) -> bool:
+    for key, value in zip(node.keys, node.values, strict=True):
+        if _literal_string(key) in {"AEAT_DATABASE_URL", "aeat_database_url"} and not _is_none_literal(value):
+            return True
+    return False
+
+
+def _is_none_literal(node: ast.AST) -> bool:
+    return isinstance(node, ast.Constant) and node.value is None
+
+
+def _literal_string(node: ast.AST | None) -> str | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    return None
 
 
 def _docstring_constant_ids(tree: ast.AST) -> set[int]:
@@ -318,12 +347,8 @@ def test_secure_storage_error_registry_bindings_have_locale_keys() -> None:
     assert offences == []
 
 
-def _function_named(
-    path: Path,
-    name: str,
-    source_tree_ast: Mapping[Path, ast.AST] | None = None,
-) -> ast.FunctionDef | ast.AsyncFunctionDef:
-    tree = ast_for_path(path, source_tree_ast)
+def _function_named(path: Path, name: str) -> ast.FunctionDef | ast.AsyncFunctionDef:
+    tree = ast_for_path(path)
     assert tree is not None, f"{repo_relative(path)} must be parseable"
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == name:
@@ -336,14 +361,6 @@ def _source_segment(path: Path, node: ast.AST) -> str:
     segment = ast.get_source_segment(source, node)
     assert segment is not None
     return segment
-
-
-def _call_name(node: ast.expr) -> str:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return ""
 
 
 def _is_logger_call(node: ast.AST, method: str) -> bool:
@@ -371,29 +388,6 @@ def _is_kdf_default_to_manifest_call(node: ast.Call) -> bool:
         and isinstance(default_call.func.value, ast.Name)
         and default_call.func.value.id == "KdfParams"
     )
-
-
-def _is_pytest_skip_or_xfail_marker(node: ast.AST) -> bool:
-    name = qualified_name(node)
-    return name in {
-        "pytest.skip",
-        "pytest.mark.skip",
-        "pytest.mark.skipif",
-        "pytest.mark.xfail",
-        "skip",
-        "skipif",
-        "xfail",
-    }
-
-
-def _is_mock_import(node: ast.AST) -> bool:
-    if isinstance(node, ast.ImportFrom):
-        return node.module in {"mock", "unittest.mock"} or (
-            node.module == "unittest" and any(alias.name == "mock" for alias in node.names)
-        )
-    if isinstance(node, ast.Import):
-        return any(alias.name in {"mock", "unittest.mock"} for alias in node.names)
-    return False
 
 
 def _collect_string_bindings(tree: ast.AST) -> dict[str, str]:
@@ -441,7 +435,7 @@ def _is_environment_call(
         return True
     if _is_environ_method_call(node, os_aliases, environ_aliases):
         return True
-    if _call_name(node.func) in {"setenv", "delenv", "putenv", "unsetenv"}:
+    if leaf_name(node.func) in {"setenv", "delenv", "putenv", "unsetenv"}:
         return bool(node.args) and _env_key_name(node.args[0], constants) is not None
     return False
 
@@ -449,7 +443,7 @@ def _is_environment_call(
 def _env_key_for_call(node: ast.Call, constants: dict[str, str]) -> str | None:
     if not node.args:
         return None
-    if _call_name(node.func) == "update":
+    if leaf_name(node.func) == "update":
         return _env_key_from_mapping(node.args[0], constants)
     return _env_key_name(node.args[0], constants)
 

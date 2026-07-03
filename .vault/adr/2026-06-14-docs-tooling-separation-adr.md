@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#docs-tooling-separation'
 date: '2026-06-14'
-modified: '2026-06-14'
+modified: '2026-06-15'
 related:
   - "[[2026-06-14-docs-tooling-separation-research]]"
   - "[[2026-06-04-aeat-cli-userdocs-hardening-plan]]"

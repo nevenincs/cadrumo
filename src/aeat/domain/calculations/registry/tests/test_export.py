@@ -15,19 +15,23 @@ calculation tautologies.
 from __future__ import annotations
 
 import tomllib
-from decimal import Decimal
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
+from .....core import BindingSourceKind
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path
-from .._errors import RegistryValidationError
+from .._binding_selector_utils import (
+    BindingFixedExportSelector,
+    BindingRowExportSelector,
+    binding_export_selector,
+)
 from .._export import (
-    _binding_data_type,
     _export_fields_overlap,
     _justification_for_binding_data_type,
     _padding_for_binding_data_type,
-    _selector_int,
 )
 from .._schema import DataBindingDefinition, ExportFieldDefinition
 
@@ -118,16 +122,18 @@ def _field(
     )
 
 
-def _binding(selector: dict[str, Any]) -> DataBindingDefinition:
-    # ``withholding`` is free-form at the schema level (no entry in
-    # ``_BINDING_SELECTOR_REGISTRY``), so the F8 construction-time selector gate
-    # does not constrain the arbitrary selector mappings these tests feed to the
-    # generic selector-extraction helpers (``selector_int`` / ``data_type``).
+def _binding(
+    selector: dict[str, Any],
+    *,
+    source: BindingSourceKind = BindingSourceKind.MANUAL_INPUT,
+    aggregation: BindingAggregation | None = None,
+) -> DataBindingDefinition:
     return DataBindingDefinition.model_validate(
         {
             "id": "binding-under-test",
-            "source": "withholding",
+            "source": source,
             "selector": selector,
+            "aggregation": aggregation,
             "legal_refs": ("ley-37-1992:art-1",),
             "source_refs": ("aeat-dr-303-2025",),
         },
@@ -139,23 +145,22 @@ def _binding(selector: dict[str, Any]) -> DataBindingDefinition:
 # ---------------------------------------------------------------------------
 
 
-def test_export_fields_overlap_returns_false_when_left_offset_is_none() -> None:
-    left = _field(field_id="a", offset=None, length=5)
-    right = _field(field_id="b", offset=0, length=5)
-
-    assert _export_fields_overlap(left, right) is False
-
-
-def test_export_fields_overlap_returns_false_when_left_length_is_none() -> None:
-    left = _field(field_id="a", offset=0, length=None)
-    right = _field(field_id="b", offset=0, length=5)
-
-    assert _export_fields_overlap(left, right) is False
-
-
-def test_export_fields_overlap_returns_false_when_right_offset_is_none() -> None:
-    left = _field(field_id="a", offset=0, length=5)
-    right = _field(field_id="b", offset=None, length=5)
+@pytest.mark.parametrize(
+    ("left_offset", "left_length", "right_offset", "right_length"),
+    (
+        pytest.param(None, 5, 0, 5, id="left-offset"),
+        pytest.param(0, None, 0, 5, id="left-length"),
+        pytest.param(0, 5, None, 5, id="right-offset"),
+    ),
+)
+def test_export_fields_overlap_returns_false_when_position_is_incomplete(
+    left_offset: int | None,
+    left_length: int | None,
+    right_offset: int | None,
+    right_length: int | None,
+) -> None:
+    left = _field(field_id="a", offset=left_offset, length=left_length)
+    right = _field(field_id="b", offset=right_offset, length=right_length)
 
     assert _export_fields_overlap(left, right) is False
 
@@ -191,60 +196,96 @@ def test_export_fields_overlap_returns_false_for_separated_fields() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _selector_int
+# binding_export_selector
 # ---------------------------------------------------------------------------
 
 
-def test_selector_int_accepts_int_value() -> None:
-    binding = _binding({"offset": 42})
+def test_binding_export_selector_accepts_fixed_field_shape() -> None:
+    binding = _binding(
+        {
+            "record": "DPA",
+            "field": "ingresos-integros",
+            "offset": 42,
+            "length": 10,
+            "data_type": "money",
+        },
+    )
 
-    assert _selector_int(binding, "offset") == 42
+    selector = binding_export_selector(binding)
 
-
-def test_selector_int_coerces_decimal_value() -> None:
-    binding = _binding({"offset": Decimal("17")})
-
-    assert _selector_int(binding, "offset") == 17
-
-
-def test_selector_int_raises_when_selector_value_is_tuple() -> None:
-    binding = _binding({"offset": ("1", "2")})
-
-    with pytest.raises(RegistryValidationError, match="must be numeric"):
-        _selector_int(binding, "offset")
-
-
-def test_selector_int_raises_when_selector_key_is_absent() -> None:
-    binding = _binding({"offset": 5})
-
-    with pytest.raises(RegistryValidationError, match="'length'"):
-        _selector_int(binding, "length")
+    assert isinstance(selector, BindingFixedExportSelector)
+    assert selector.record == "DPA"
+    assert selector.field == "ingresos-integros"
+    assert selector.offset == 42
+    assert selector.length == 10
+    assert selector.data_type == "money"
 
 
-# ---------------------------------------------------------------------------
-# _binding_data_type
-# ---------------------------------------------------------------------------
+def test_binding_export_selector_accepts_row_field_shape() -> None:
+    binding = _binding(
+        {
+            "record": "perceptor",
+            "row_field": "retencion_practicada",
+            "fact": "row_field",
+            "grouping": "per_perceptor",
+        },
+        source=BindingSourceKind.WITHHOLDING,
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+    )
+
+    selector = binding_export_selector(binding)
+
+    assert isinstance(selector, BindingRowExportSelector)
+    assert selector.record == "perceptor"
+    assert selector.row_field == "retencion_practicada"
 
 
-@pytest.mark.parametrize("data_type", ["text", "integer", "decimal", "money", "date", "boolean"])
-def test_binding_data_type_accepts_each_allowed_type(data_type: str) -> None:
-    binding = _binding({"data_type": data_type})
+def test_binding_export_selector_ignores_non_export_row_fact_without_record() -> None:
+    binding = _binding(
+        {
+            "row_field": "retencion_practicada",
+            "fact": "row_field",
+            "grouping": "per_perceptor",
+        },
+        source=BindingSourceKind.WITHHOLDING,
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+    )
 
-    assert _binding_data_type(binding, data_type) == data_type
+    assert binding_export_selector(binding) is None
 
 
-def test_binding_data_type_raises_on_unknown_type_string() -> None:
-    binding = _binding({"data_type": "weird"})
+def test_binding_export_selector_ignores_value_data_type_without_record() -> None:
+    binding = _binding({"casilla_id": "0168", "data_type": "boolean", "true_value": "N", "false_value": "S"})
 
-    with pytest.raises(RegistryValidationError, match="not exportable"):
-        _binding_data_type(binding, "weird")
+    assert binding_export_selector(binding) is None
 
 
-def test_binding_data_type_raises_when_value_is_not_a_string() -> None:
-    binding = _binding({"data_type": "text"})
+def test_binding_export_selector_rejects_partial_fixed_field_shape() -> None:
+    with pytest.raises(ValidationError):
+        _binding({"record": "DPA", "offset": 42, "data_type": "money"})
 
-    with pytest.raises(RegistryValidationError, match="not exportable"):
-        _binding_data_type(binding, 42)
+
+def test_binding_export_selector_rejects_ambiguous_fixed_and_row_shape() -> None:
+    with pytest.raises(ValidationError):
+        _binding(
+            {
+                "record": "DPA",
+                "row_field": "importe",
+                "offset": 42,
+                "length": 10,
+                "data_type": "money",
+            },
+        )
+
+
+def test_binding_export_selector_rejects_unknown_data_type() -> None:
+    with pytest.raises(ValidationError):
+        _binding({"record": "DPA", "offset": 42, "length": 10, "data_type": "weird"})
+
+
+def test_binding_export_selector_rejects_non_integer_offset() -> None:
+    with pytest.raises(ValidationError):
+        _binding({"record": "DPA", "offset": ("1", "2"), "length": 10, "data_type": "money"})
 
 
 # ---------------------------------------------------------------------------
@@ -252,30 +293,21 @@ def test_binding_data_type_raises_when_value_is_not_a_string() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_padding_for_binding_data_type_returns_left_zero_for_money() -> None:
+@pytest.mark.parametrize(
+    ("data_type", "padding"),
+    (
+        pytest.param("money", "left_zero", id="money"),
+        pytest.param("integer", "left_zero", id="integer"),
+        pytest.param("decimal", "left_zero", id="decimal"),
+        pytest.param("text", "right_space", id="text"),
+        pytest.param("date", "right_space", id="date"),
+        pytest.param("boolean", "right_space", id="boolean"),
+    ),
+)
+def test_padding_for_binding_data_type(data_type: str, padding: str) -> None:
     """Numeric fixed-width export fields pad with leading zeros so the
     parser can recover the magnitude unambiguously."""
-    assert _padding_for_binding_data_type("money") == "left_zero"
-
-
-def test_padding_for_binding_data_type_returns_left_zero_for_integer() -> None:
-    assert _padding_for_binding_data_type("integer") == "left_zero"
-
-
-def test_padding_for_binding_data_type_returns_left_zero_for_decimal() -> None:
-    assert _padding_for_binding_data_type("decimal") == "left_zero"
-
-
-def test_padding_for_binding_data_type_returns_right_space_for_text() -> None:
-    assert _padding_for_binding_data_type("text") == "right_space"
-
-
-def test_padding_for_binding_data_type_returns_right_space_for_date() -> None:
-    assert _padding_for_binding_data_type("date") == "right_space"
-
-
-def test_padding_for_binding_data_type_returns_right_space_for_boolean() -> None:
-    assert _padding_for_binding_data_type("boolean") == "right_space"
+    assert _padding_for_binding_data_type(data_type) == padding
 
 
 # ---------------------------------------------------------------------------
@@ -283,25 +315,16 @@ def test_padding_for_binding_data_type_returns_right_space_for_boolean() -> None
 # ---------------------------------------------------------------------------
 
 
-def test_justification_for_binding_data_type_returns_right_for_money() -> None:
-    assert _justification_for_binding_data_type("money") == "right"
-
-
-def test_justification_for_binding_data_type_returns_right_for_integer() -> None:
-    assert _justification_for_binding_data_type("integer") == "right"
-
-
-def test_justification_for_binding_data_type_returns_right_for_decimal() -> None:
-    assert _justification_for_binding_data_type("decimal") == "right"
-
-
-def test_justification_for_binding_data_type_returns_left_for_text() -> None:
-    assert _justification_for_binding_data_type("text") == "left"
-
-
-def test_justification_for_binding_data_type_returns_left_for_date() -> None:
-    assert _justification_for_binding_data_type("date") == "left"
-
-
-def test_justification_for_binding_data_type_returns_left_for_boolean() -> None:
-    assert _justification_for_binding_data_type("boolean") == "left"
+@pytest.mark.parametrize(
+    ("data_type", "justification"),
+    (
+        pytest.param("money", "right", id="money"),
+        pytest.param("integer", "right", id="integer"),
+        pytest.param("decimal", "right", id="decimal"),
+        pytest.param("text", "left", id="text"),
+        pytest.param("date", "left", id="date"),
+        pytest.param("boolean", "left", id="boolean"),
+    ),
+)
+def test_justification_for_binding_data_type(data_type: str, justification: str) -> None:
+    assert _justification_for_binding_data_type(data_type) == justification

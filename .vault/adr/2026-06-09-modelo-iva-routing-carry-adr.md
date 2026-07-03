@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#modelo-iva-routing-carry'
 date: '2026-06-09'
-modified: '2026-06-09'
+modified: '2026-06-30'
 related:
   - "[[2026-06-09-modelo-iva-routing-carry-research]]"
 ---
-
-
 
 # `modelo-iva-routing-carry` adr: `M303 reverse-charge routing, #64 advisory refinement, and cross-period local carry` | (**status:** `accepted`)
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from functools import cache
+
 import pytest
 
 from .....core.resources import resources
@@ -11,6 +13,7 @@ from .._schema import DataBindingDefinition
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@cache
 def _modelo_100_bindings() -> dict[BindingId, DataBindingDefinition]:
     authority = resources().modelos.authority
     snapshot = authority.snapshot("100", filing_year=2025, period="0A")

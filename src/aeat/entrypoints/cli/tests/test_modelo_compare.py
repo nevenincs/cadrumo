@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile._repository import UserProfileLifecycleRepository
+from ....application.user_profile import UserProfileLifecycleRepository
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -370,9 +370,7 @@ def test_compare_delta_rows_carry_provenance() -> None:
     )
 
     # Simulate the obs_by_id lookup from modelo_compare.
-    obs_by_id: dict[CasillaId, CasillaObservation] = {
-        obs.casilla_id: obs for obs in engine_result.observations
-    }
+    obs_by_id: dict[CasillaId, CasillaObservation] = {obs.casilla_id: obs for obs in engine_result.observations}
 
     # Computed casillas (03, 07, 19) must carry non-empty provenance.
     for casilla_id in (

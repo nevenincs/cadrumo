@@ -15,7 +15,6 @@ from .....core.resources import bundled_path
 from .. import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
-    ConvenioRateRow,
     ExportFieldDefinition,
     ExtractionTargetDefinition,
     FormulaExpression,
@@ -55,9 +54,21 @@ _MODELO_130_DIR = _REGISTRY_ROOT / "modelos" / "130"
 
 
 @cache
-def _committed_modelo(modelo_id: str) -> tuple[ModeloDefinition, RegistryCatalogues]:
+def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    return tuple(modelos), catalogues
+
+
+@cache
+def _committed_modelo(modelo_id: str) -> tuple[ModeloDefinition, RegistryCatalogues]:
+    modelos, catalogues = _committed_registry_tree()
     return next(modelo for modelo in modelos if modelo.id == modelo_id), catalogues
+
+
+@cache
+def _committed_snapshot(modelo_id: str, filing_year: int, period: str):
+    modelo, catalogues = _committed_modelo(modelo_id)
+    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period=period)
 
 
 def _committed_registry() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -153,6 +164,14 @@ _SNAPSHOT_HEADER_EXPECTATIONS = (
 _EXPECTED_LIVE_CROSS_REFERENCES = frozenset({"modelo-130-static-official", "modelo-130-filed-declarations-read"})
 
 _EXPECTED_DEADLINE_WINDOWS = (
+    "modelo-130-2024-1t",
+    "modelo-130-2024-2t",
+    "modelo-130-2024-3t",
+    "modelo-130-2024-4t",
+    "modelo-130-2025-1t",
+    "modelo-130-2025-2t",
+    "modelo-130-2025-3t",
+    "modelo-130-2025-4t",
     "modelo-130-2026-1t",
     "modelo-130-2026-2t",
     "modelo-130-2026-3t",
@@ -177,28 +196,6 @@ def _keyed_bracket(key: str, value: str = "0.24") -> KeyedBracketEntry:
     return KeyedBracketEntry(
         key=key,
         value=Decimal(value),
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
-    )
-
-
-def _convenio_row(
-    country_code: str,
-    tipo_renta: str,
-    rate: str,
-    *,
-    legal_ref_anchor: str = "convenio-art-7",
-    legal_refs: tuple[str, ...] | None = None,
-    notes: str | None = None,
-) -> ConvenioRateRow:
-    resolved_legal_refs = (legal_ref_anchor,) if legal_refs is None and rate != "NOT_YET_AUTHORED" else legal_refs or ()
-    return ConvenioRateRow(
-        country_code=country_code,
-        tipo_renta=tipo_renta,
-        rate=rate,
-        legal_ref_anchor=legal_ref_anchor,
-        legal_refs=resolved_legal_refs,
-        notes=notes,
         valid_from=date(2025, 1, 1),
         valid_to=date(2025, 12, 31),
     )

@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Period
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.deadlines import (
@@ -18,12 +19,11 @@ from ....domain.deadlines import (
     IVARegime,
     TaxpayerProfile,
 )
-from ....domain.filing import ModeloDraftError
 from ....domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ExternalEvidenceKind,
+    ModeloRecordStatus,
     ModeloVerificationFindingKind,
     derive_calculation_revision_id,
     upsert_calculation_revision,
@@ -56,6 +56,42 @@ from .justificante_metadata import persist_justificante_metadata
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CLOCK = datetime(2026, 6, 5, 10, 0, tzinfo=UTC)
+_M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
+    "decl.ejercicio",
+    surface="_M390_EJERCICIO_CASILLA",
+)
+_M390_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id(
+    "decl.tipo-declaracion",
+    surface="_M390_TIPO_DECLARACION_CASILLA",
+)
+_M202_2026_2P_REQUIRED_BINDING_OVERRIDES = {
+    "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior": "0",
+    "modelo-202-2025-y-siguientes-incn-prior-12-months": "7000000",
+    "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores": "0",
+}
+_CROSS_PERIOD_EXPORT_PROFILE_ID = "39000000-0000-4000-8000-000000000001"
+_CROSS_PERIOD_FILE_PROFILE_ID = "39000000-0000-4000-8000-000000000002"
+_CROSS_PERIOD_MARK_PROFILE_ID = "39000000-0000-4000-8000-000000000003"
+_CROSS_PERIOD_303_PROFILE_ID = "30300000-0000-4000-8000-000000000303"
+_SALARIED_M100_PROFILE_ID = "10000000-0000-4000-8000-000000000100"
+_SALARIED_M100_ZERO_BIN_PROFILE_ID = "10000000-0000-4000-8000-000000000101"
+_CROSS_PERIOD_390_IMPORTED_PROFILE_ID = "39000000-0000-4000-8000-000000000390"
+_CROSS_PERIOD_353_PROFILE_ID = "35300000-0000-4000-8000-000000000353"
+_CROSS_PERIOD_353_ROSTER_PROFILE_ID = "35300000-0000-4000-8000-000000000354"
+_DECLARED_CROSS_PERIOD_PROFILE_IDS = {
+    ("390", "0A"): "39000000-0000-4000-8000-000000000004",
+    ("180", "0A"): "18000000-0000-4000-8000-000000000180",
+    ("190", "0A"): "19000000-0000-4000-8000-000000000190",
+    ("193", "0A"): "19300000-0000-4000-8000-000000000193",
+    ("100", "0A"): "10000000-0000-4000-8000-000000000102",
+    ("202", "2P"): "20200000-0000-4000-8000-000000000202",
+    ("200", "0A"): "20000000-0000-4000-8000-000000000200",
+}
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _register_wizard_catalogue() -> None:
+    from ...wizard import _catalogue  # noqa: F401  (import for registration side effect)
 
 
 def _workflow_profile() -> TaxpayerProfile:
@@ -69,6 +105,46 @@ def _workflow_profile() -> TaxpayerProfile:
     )
 
 
+def _seed_ready_profile(bucket_id: str, objects: object | None = None, *, modelo: str = "390") -> None:
+    is_legal_entity = modelo in {"200", "202", "353"}
+    facts = [
+        UserProfileFact(path="identity.tax_id", value="B12345674" if is_legal_entity else "X1234567L"),
+        UserProfileFact(path="identity.name", value="Test"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="activities.description", value="economic activity"),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="provenance.source", value="test_fixture"),
+        UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+    ]
+    if is_legal_entity:
+        facts.extend(
+            (
+                UserProfileFact(path="identity.legal_name", value="Test Company SL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
+                UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="7000000"),
+            ),
+        )
+    else:
+        facts.extend(
+            (
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            ),
+        )
+    record = UserProfileRecord(
+        profile_id=bucket_id,
+        display_name="Test runtime profile",
+        facts=tuple(facts),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(record)
+
+
 def _seed_m100_profile_facts(bucket_id: str, objects: object) -> None:
     record = UserProfileRecord(
         profile_id=bucket_id,
@@ -78,6 +154,12 @@ def _seed_m100_profile_facts(bucket_id: str, objects: object) -> None:
             UserProfileFact(path="identity.name", value="Test"),
             UserProfileFact(path="identity.surnames", value="Salaried"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="activities.description", value="salaried income"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="provenance.source", value="test_fixture"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_taxpayer.sex", value="M"),
@@ -98,7 +180,17 @@ def _seed_verified_revision(
     filing_year: int,
     period: str,
 ) -> str:
+    _seed_ready_profile(bucket_id, modelo=modelo)
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    binding_overrides = _verified_revision_binding_overrides(
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+    )
+    casilla_values = _verified_revision_casilla_values(
+        modelo=modelo,
+        filing_year=filing_year,
+    )
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -110,13 +202,21 @@ def _seed_verified_revision(
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values={},
+        binding_overrides=binding_overrides,
+        casilla_values=casilla_values,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        binding_overrides=binding_overrides,
+        casilla_values=casilla_values,
+        observations=registry_grounded_observations(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            casilla_values=casilla_values,
+        ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
         verified_at=_CLOCK,
@@ -125,6 +225,26 @@ def _seed_verified_revision(
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
     return revision_id
+
+
+def _verified_revision_binding_overrides(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+) -> dict[str, str]:
+    if modelo == "202" and filing_year == 2026 and period == "2P":
+        return dict(_M202_2026_2P_REQUIRED_BINDING_OVERRIDES)
+    return {}
+
+
+def _verified_revision_casilla_values(*, modelo: str, filing_year: int) -> dict[CasillaId, Decimal]:
+    if modelo == "390":
+        return {
+            _M390_EJERCICIO_CASILLA: Decimal(filing_year),
+            _M390_TIPO_DECLARACION_CASILLA: Decimal("0"),
+        }
+    return {}
 
 
 def _seed_draft_revision(
@@ -137,6 +257,7 @@ def _seed_draft_revision(
     relation_overrides: dict[str, str] | None = None,
     casilla_values: dict[CasillaId, Decimal] | None = None,
 ) -> str:
+    _seed_ready_profile(bucket_id, modelo=modelo)
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
     work_unit = create_work_unit(
         bucket_id=bucket_id,
@@ -172,11 +293,11 @@ def _seed_draft_revision(
 
 
 def test_export_refuses_verified_cross_period_revision_without_clean_sources(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-export") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_EXPORT_PROFILE_ID) as profile:
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
-            modelo="390",
-            filing_year=2025,
+            modelo="180",
+            filing_year=2026,
             period="0A",
         )
 
@@ -184,7 +305,7 @@ def test_export_refuses_verified_cross_period_revision_without_clean_sources(tmp
             export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=revision_id,
-                    output_path=tmp_path / "modelo-390.txt",
+                    output_path=tmp_path / "modelo-180.txt",
                     actor="operator-test",
                 ),
                 workflow_profile=_workflow_profile(),
@@ -195,7 +316,7 @@ def test_export_refuses_verified_cross_period_revision_without_clean_sources(tmp
 
 
 def test_file_refuses_verified_cross_period_revision_without_clean_sources(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-file") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_FILE_PROFILE_ID) as profile:
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
             modelo="390",
@@ -215,7 +336,7 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(tmp_p
 
 
 def test_direct_mark_verified_refuses_cross_period_revision_without_clean_sources(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-mark") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_MARK_PROFILE_ID) as profile:
         revision_id = _seed_draft_revision(
             bucket_id=profile.bucket_id,
             modelo="390",
@@ -256,7 +377,7 @@ def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
     filing_year: int,
     period: str,
 ) -> None:
-    bucket_id = f"cross-period-{modelo}-{period}".lower()
+    bucket_id = _DECLARED_CROSS_PERIOD_PROFILE_IDS[(modelo, period)]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
@@ -277,7 +398,7 @@ def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
 
 
 def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_dependency(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-303") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_303_PROFILE_ID) as profile:
         revision_id = _seed_draft_revision(
             bucket_id=profile.bucket_id,
             modelo="303",
@@ -307,7 +428,7 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp
     scopes every withholding/pagos dependency (111/115/123/130/131/180/184/190/193) out as
     not-applicable, so the salaried filer's M100 carries no CROSS_PERIOD_DEPENDENCY_UNCLEAN finding.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="c3-salaried-m100") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SALARIED_M100_PROFILE_ID) as profile:
         revision_id = _seed_draft_revision(
             bucket_id=profile.bucket_id,
             modelo="100",
@@ -342,7 +463,10 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp
 def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path: Path) -> None:
     """A salaried M100 with explicit zero prior BIN is filable without prior M100 evidence."""
     zero_binding = "renta-2025-base-liquidable-negativa-general-anterior"
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="c3-salaried-m100-zero-bin") as profile:
+    retenciones_trabajo_binding = "renta-2025-modelo-111-retenciones-periodicas"
+    retenciones_trabajo_casilla = "0596"
+    retenciones_trabajo_amount = Decimal("4200.00")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SALARIED_M100_ZERO_BIN_PROFILE_ID) as profile:
         _seed_m100_profile_facts(profile.bucket_id, profile.repository)
         snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
         work_unit = create_work_unit(
@@ -365,13 +489,14 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
             },
             binding_values={
                 "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-                "renta-2025-modelo-111-retenciones-periodicas": Decimal("4200.00"),
-                "renta-2025-modelo-115-retenciones-periodicas": Decimal("0"),
+                retenciones_trabajo_binding: retenciones_trabajo_amount,
                 "renta-2025-modelo-123-retenciones-periodicas": Decimal("0"),
                 zero_binding: Decimal("0"),
             },
             clock=_CLOCK,
         ).revision
+        assert Decimal(revision.casilla_values[retenciones_trabajo_casilla]) == retenciones_trabajo_amount
+        assert Decimal(revision.binding_overrides[retenciones_trabajo_binding]) == retenciones_trabajo_amount
         revision_id = revision.calculation_revision_id
         salaried = _workflow_profile().model_copy(
             update={
@@ -388,7 +513,17 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
 
     assert report.granted_verificado_completo is True
     assert not any(
-        finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
+        finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN for finding in report.findings
+    )
+    # The not-applicable advisory directs the operator to enter suffered
+    # retenciones via the --binding source rather than --casilla. Its prose is
+    # localised (the runtime resolves the Spanish catalogue string, e.g. "no
+    # aplicables" / "--binding CLAVE=VALOR"), so assert on the locale-stable CLI
+    # flag tokens the guidance names in every locale, not the English wording.
+    assert any(
+        finding.kind is ModeloVerificationFindingKind.ADVISORY
+        and "--binding" in finding.message
+        and "--casilla" in finding.message
         for finding in report.findings
     )
     assert any(
@@ -398,8 +533,9 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
     )
 
 
-def test_export_modelo_390_passes_clean_state_with_imported_bound_justificantes(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-390-imported") as profile:
+def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_390_IMPORTED_PROFILE_ID) as profile:
+        _seed_ready_profile(profile.bucket_id, profile.repository, modelo="390")
         target_snapshot = resources().modelos.authority.snapshot("390", filing_year=2025, period="0A")
         observations = CalculationObservationRepository()
         requirements_by_source: dict[tuple[str, int, str], set[CasillaId]] = {}
@@ -473,20 +609,21 @@ def test_export_modelo_390_passes_clean_state_with_imported_bound_justificantes(
             period="0A",
         )
 
-        with pytest.raises(ModeloDraftError):
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=revision_id,
-                    output_path=tmp_path / "modelo-390.txt",
-                    actor="operator-test",
-                ),
-                workflow_profile=_workflow_profile(),
-                clock=_CLOCK,
-            )
+        filing = file_modelo_revision(
+            revision_id,
+            actor="operator-test",
+            workflow_profile=_workflow_profile(),
+            clock=_CLOCK,
+        )
+
+    assert filing.modelo == "390"
+    assert filing.filing_year == 2025
+    assert filing.period == Period.from_year_and_code(2025, "0A")
+    assert filing.status is ModeloRecordStatus.VIGENTE
 
 
 def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-353") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_353_PROFILE_ID) as profile:
         snapshot = resources().modelos.authority.snapshot("353", filing_year=2026, period="12")
         requirement = next(
             item for item in cross_period_dependency_requirements(snapshot) if item.requires_member_fan_in
@@ -539,7 +676,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
 
 
 def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-353-profile-roster") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_353_ROSTER_PROFILE_ID) as profile:
         snapshot = resources().modelos.authority.snapshot("353", filing_year=2026, period="12")
         requirement = next(
             item for item in cross_period_dependency_requirements(snapshot) if item.requires_member_fan_in

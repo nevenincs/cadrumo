@@ -1,7 +1,7 @@
 """Remote ciphertext mirror manifest construction, persistence, and inspection.
 
 This module converts
-:class:`aeat.adapters.persistence.storage.sql._secure_object_records.SecureObjectRawRow`
+:class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRawRow`
 records into :class:`RemoteMirrorNamespaceManifest` payloads, stores those
 payloads through :class:`StorageProvider` under
 :data:`REMOTE_MIRROR_MANIFEST_NAMESPACE`, and reports mirror drift as
@@ -42,7 +42,7 @@ def build_remote_mirror_namespace_manifest(
     """Build a :class:`RemoteMirrorNamespaceManifest` for one ciphertext namespace.
 
     Only rows whose
-    :class:`~aeat.adapters.persistence.storage.sql._secure_object_records.SecureObjectRawRow`
+    :class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRawRow`
     namespace matches ``namespace`` are included. Each row becomes a
     :class:`RemoteMirrorObjectManifest`, and the latest revision watermark is
     derived from the newest ``revision_written_at`` among those entries.
@@ -69,11 +69,14 @@ def put_remote_mirror_namespace_manifest(
     provider: StorageProvider,
     manifest: RemoteMirrorNamespaceManifest,
 ) -> ProviderObjectMetadata:
-    """Persist ``manifest`` through ``provider`` and return its :class:`ProviderObjectMetadata`.
+    """Persist ``manifest`` through ``provider`` and return its metadata.
 
     The manifest JSON is written as an object in
     :data:`REMOTE_MIRROR_MANIFEST_NAMESPACE` with a
-    :func:`aeat.core.hashing.sha256_hex` content hash.
+    :func:`core.hashing.sha256_hex` content hash.
+
+    Returns:
+        The provider's :class:`ProviderObjectMetadata` for the manifest object.
     """
     payload = manifest.model_dump_json().encode("utf-8")
     return provider.put(
@@ -93,7 +96,8 @@ def get_remote_mirror_namespace_manifest(
 
     Missing manifest objects return ``None``. Malformed manifest payloads are
     translated to :class:`OutboundStorageIntegrityError` so callers can handle
-    them through the outbound storage error hierarchy.
+    them through the :class:`adapters.outbound.storage.OutboundStorageError`
+    hierarchy.
     """
     try:
         payload, _metadata = provider.get(REMOTE_MIRROR_MANIFEST_NAMESPACE, _manifest_object_key_hmac(namespace))
@@ -161,7 +165,7 @@ def inspect_remote_mirror_download(
     provider: StorageProvider,
     remote_manifest: RemoteMirrorNamespaceManifest,
 ) -> RemoteMirrorInspection:
-    """Return whether every object in ``remote_manifest`` is downloadable.
+    """Inspect whether every object in ``remote_manifest`` is downloadable.
 
     Missing objects, unreadable objects, integrity failures, and provider
     metadata drift are reported as ``PARTIAL_DOWNLOAD`` issues on the returned

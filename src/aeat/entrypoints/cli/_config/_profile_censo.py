@@ -2,7 +2,7 @@
 
 Mounts the operator-facing censo-sync surface on the existing
 ``config profile`` subgroup. The backend is
-:class:`aeat.application.user_profile.CensoSyncService`; this module is the
+:class:`CensoSyncService`; this module is the
 thin Typer layer that resolves the active profile/bucket, calls the
 application service, emits payload + text, and surfaces typed refusals.
 Censo lifecycle event enrollment is owned by the application service.
@@ -16,7 +16,7 @@ so operators see the canonical name now and get an explicit message
 about what is missing rather than a silent absence.
 
 The repository connection is injected into
-:class:`aeat.application.user_profile.CensoSyncService` so censo apply and
+:class:`CensoSyncService` so censo apply and
 refresh events stay application-owned.
 """
 
@@ -72,9 +72,9 @@ def _active_pointer() -> tuple[str, str]:
 
 
 def _build_service(bucket_id: str):
-    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ....adapters.persistence.storage import secure_object_repository_for_bucket
     from ....application.user_profile import CensoSyncService
-    from ....domain.buckets import BucketEventHistoryRepository
 
     return CensoSyncService(
         bucket_id=bucket_id,

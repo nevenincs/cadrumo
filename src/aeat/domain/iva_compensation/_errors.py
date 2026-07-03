@@ -4,7 +4,8 @@ These guard-violation errors are raised by the pure carry-forward,
 reconciliation, and balance logic. Each inherits from both
 :class:`~aeat.core.errors.AeatError` (so the failure reaches the typed error
 registry with a stable code and structured context) and :exc:`ValueError` (so
-existing ``except ValueError`` guards at call sites keep working).
+scalar validation and coercion failures retain the standard Python error
+category).
 """
 
 from __future__ import annotations
@@ -26,8 +27,8 @@ class IvaCompensationYearRangeError(AeatError, ValueError):
     Replaces bare :exc:`ValueError` at the year-range guards in
     :func:`iva_compensation_period_key` and
     :func:`build_iva_compensation_carry_forward_report`. Inherits from
-    :exc:`ValueError` to preserve compatibility with any existing ``except
-    ValueError`` guard at the call site.
+    :exc:`ValueError` because these guards validate caller-supplied scalar year
+    values while still surfacing a typed AEAT error.
     """
 
 
@@ -36,8 +37,8 @@ class IvaCompensationDecimalParseError(AeatError, ValueError):
 
     Replaces the bare :exc:`ValueError` re-raised from
     :exc:`~decimal.InvalidOperation` inside the casilla-decimal coercion helper.
-    Inherits from :exc:`ValueError` to preserve compatibility and chains the
-    original :exc:`~decimal.InvalidOperation` cause.
+    Inherits from :exc:`ValueError` because it reports a scalar coercion failure
+    and chains the original :exc:`~decimal.InvalidOperation` cause.
     """
 
 

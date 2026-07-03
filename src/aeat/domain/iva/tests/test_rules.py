@@ -5,8 +5,10 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 
-from .. import IvaCategory, cite, resolve_catalogue
+from ....core.i18n import Translatable as tr
+from .. import IvaCategory, IvaCitation, IvaCitationSource, cite, resolve_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -15,18 +17,31 @@ _CATALOGUE = resolve_catalogue(on=date(2025, 1, 1))
 
 def test_catalogue_covers_every_iva_category() -> None:
     assert set(_CATALOGUE.regulations.keys()) == set(IvaCategory)
-    assert len(_CATALOGUE) == 17
+    assert len(_CATALOGUE) == 18
 
 
-def test_catalogue_has_at_least_32_citations() -> None:
+def test_catalogue_has_at_least_33_citations() -> None:
     total = sum(len(regulation.citations) for regulation in _CATALOGUE)
-    assert total >= 32
+    assert total >= 33
 
 
 def test_every_citation_has_non_empty_quoted_text() -> None:
     for regulation in _CATALOGUE:
         for citation in regulation.citations:
             assert citation.quoted_text.strip()
+
+
+def test_iva_citation_rejects_blank_quoted_text_at_schema_boundary() -> None:
+    with pytest.raises(ValidationError, match="quoted_text"):
+        IvaCitation.model_validate(
+            {
+                "source": IvaCitationSource.LEY_37_1992,
+                "article": "Art. 90.Uno",
+                "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a90",
+                "quoted_text": tr("   "),
+                "retrieval_date": date(2026, 7, 1),
+            },
+        )
 
 
 def test_cite_domestic_general_mentions_ley_37_1992() -> None:

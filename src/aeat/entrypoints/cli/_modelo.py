@@ -18,10 +18,10 @@ import click
 import typer
 
 from ...application.modelo import (
+    AmendmentComplementariaLiabilityDecreaseError,
     AmendmentEvidenceMissingError,
+    AmendmentKindNotPermittedError,
     AmendmentTargetStateError,
-    CalculationRevision,
-    CalculationRevisionAmendmentKind,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloCalculationRevisionDefault,
@@ -36,7 +36,6 @@ from ...application.modelo import (
     ModeloWorkSelectorContradictionError,
     ModeloWorkUnitNotFoundError,
     ModeloWorkVisibleTargetAmbiguousError,
-    WorkUnit,
     WorkUnitNotFoundError,
     amend_modelo_revision,
     declared_modelo_period_tokens,
@@ -54,10 +53,13 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
+from ...domain.modelos import CalculationRevision, CalculationRevisionAmendmentKind, WorkUnit
 from ._common import activate_subcommand_output_language
 from ._modelo_aggregate_cli import register_aggregate_commands
+from ._modelo_amend_wizard_cli import register_amend_wizard_commands
 from ._modelo_audit_cli import audit_app as audit_app
 from ._modelo_audit_cli import register_audit_commands
+from ._modelo_cli_support import MISSING_INPUT_TRANSLATED_MESSAGES
 from ._modelo_cli_support import (
     bad_parameter_from_error as _bad_parameter_from_error,
 )
@@ -84,6 +86,9 @@ from ._modelo_cli_support import (
 )
 from ._modelo_cli_support import (
     selector_bad_parameter as _selector_bad_parameter,
+)
+from ._modelo_cli_support import (
+    unsupported_local_work_period_refusal as _unsupported_local_work_period_refusal,
 )
 from ._modelo_cli_support import (
     validate_calculation_revision_id as _validate_calculation_revision_id,
@@ -126,12 +131,14 @@ from ._modelo_rendering import (
 from ._modelo_rendering import (
     verification_report_payload as _verification_report_payload,
 )
+from ._modelo_review_package_cli import register_review_package_commands
 from ._modelo_work import create_work_app
 from ._modelo_work_calculate_cli import register_work_calculate_commands
 from ._modelo_work_lifecycle_cli import register_work_lifecycle_commands
 from ._modelo_work_revision_cli import register_work_revision_commands
 from ._modelo_work_runs_cli import register_work_run_commands
 from ._modelo_work_verification_cli import register_work_verification_commands
+from ._modelo_work_wizard_cli import register_work_wizard_commands
 
 _log = get_logger(__name__)
 
@@ -302,7 +309,7 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
 
 
 def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -> Period:
-    """Normalise CLI ``--year/--period`` into a typed :class:`~aeat.core.Period`.
+    """Normalise CLI ``--year/--period`` into a typed :class:`Period`.
 
     Operators pass AEAT registry tokens (``1T``, ``0A``, ``01``); the
     backend expects one typed filing period. Registry-only callers should
@@ -318,6 +325,8 @@ def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -
     try:
         return Period.from_year_and_code(year, period.strip())
     except PeriodError as exc:
+        if refusal := _unsupported_local_work_period_refusal(modelo=modelo, token=period):
+            raise refusal from exc
         raise typer.BadParameter(_period_token_error(year, period, modelo, fallback=str(exc))) from exc
 
 
@@ -411,20 +420,6 @@ register_aggregate_commands(app, resolve_year_period=_resolve_year_period)
 work_app = create_work_app()
 app.add_typer(work_app, name="work")
 
-
-#: Registry-validation translated-message keys that signal an
-#: unsatisfied calculation input the operator can supply with
-#: ``--binding`` / ``--relation``. The first ``work calculate`` of a
-#: modelo that consumes a binding fails with one of these; the guidance
-#: helper turns the bare refusal into a self-correcting message.
-_MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
-    {
-        "errors.calc.binding_value_missing",
-        "errors.calc.bound_casilla_binding_value_missing",
-        "errors.calc.enum_binding_value_missing",
-        "errors.calc.relation_value_missing",
-    },
-)
 
 _M200_M202_PAGOS_RELATION_IDS: frozenset[str] = frozenset(
     {
@@ -546,7 +541,7 @@ def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str)
     Non-input registry-validation errors fall through unchanged.
     """
     base = tr(error.translated_message, **(error.context or {})) if error.translated_message is not None else str(error)
-    if error.translated_message not in _MISSING_INPUT_TRANSLATED_MESSAGES:
+    if error.translated_message not in MISSING_INPUT_TRANSLATED_MESSAGES:
         return base
 
     # Loading the work unit refines the discovery command with the concrete
@@ -566,6 +561,21 @@ def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str)
             base=base,
             error=error,
             discover_command=discover_command,
+        )
+    if error.translated_message == "errors.calc.date_binding_value_missing":
+        binding_id = (error.context or {}).get("binding_id")
+        if not isinstance(binding_id, str):
+            binding_id = "the missing date binding"
+        return tr(
+            "cli.app.modelo.work.missing_date_binding_guidance",
+            default=(
+                "{base} Set {binding_id} on the active profile, then rerun calculate. "
+                "Date-valued profile facts cannot be supplied with --binding. "
+                "Run `{discover}` to list every binding the calculation still needs."
+            ),
+            base=base,
+            binding_id=binding_id,
+            discover=discover_command,
         )
     if _ledger_sourced_missing_binding(error, unit):
         return tr(
@@ -614,6 +624,16 @@ register_work_calculate_commands(
     calculate_input_bundle_from_cli=_work_calculate_input_bundle_from_cli,
     bad_parameter_from_error=_bad_parameter_from_error,
     missing_binding_guidance=_missing_binding_guidance,
+)
+
+
+register_work_wizard_commands(
+    work_app,
+    activate_output_language=activate_subcommand_output_language,
+    require_active_profile=_require_active_profile,
+    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
+    resolve_default_actor=_resolve_default_actor,
+    bad_parameter_from_error=_bad_parameter_from_error,
 )
 
 
@@ -727,6 +747,22 @@ def work_compare_taxation(
         recommendation=comparison.recommendation.value,
         recommendation_reason=comparison.recommendation_reason,
     )
+    from ._modelo_rendering import advisory_notice
+
+    # Honesty caveat (ADR 2026-07-01): the individual branch is faithful only for
+    # a single-earner unidad familiar. Surface it on the typed notices channel so
+    # an operator is never misled into trusting a two-earner individual figure the
+    # comparator cannot compute (cli-notices-are-the-only-diagnostic-channel).
+    caveat_notice = (
+        advisory_notice(
+            "modelo.work.compare_taxation.individual_single_earner_only",
+            comparison.individual_branch_caveat,
+            context={"individual_branch_single_earner_only": "true"},
+        )
+        if comparison.individual_branch_single_earner_only
+        else None
+    )
+
     lines = [
         "operation\tmodelo.work.compare_taxation",
         f"filing_year\t{comparison.filing_year}",
@@ -745,7 +781,15 @@ def work_compare_taxation(
             default="RECOMENDACIÓN: {recommendation} — {reason}",
         ),
     ]
-    _emit_envelope(ctx, command="modelo.work.compare_taxation", result=result, lines=lines)
+    if caveat_notice is not None:
+        lines.append(f"WARNING\t{comparison.individual_branch_caveat}")
+    _emit_envelope(
+        ctx,
+        command="modelo.work.compare_taxation",
+        result=result,
+        lines=lines,
+        notices=[caveat_notice] if caveat_notice is not None else None,
+    )
 
 
 register_work_revision_commands(
@@ -919,6 +963,7 @@ def _required_amendment_inputs(
     reason: str | None,
     set_overrides: list[str] | None,
 ) -> tuple[str, str, str, tuple[str, ...]]:
+    """Return raw amendment CLI inputs or raise one combined option error."""
     missing: list[str] = []
     if not from_filing_record_id or not from_filing_record_id.strip():
         missing.append("--from-filing-record")
@@ -942,6 +987,7 @@ def _required_amendment_inputs(
 
 
 def _parse_amendment_kind(kind: str) -> CalculationRevisionAmendmentKind:
+    """Parse ``--kind`` into :class:`CalculationRevisionAmendmentKind`."""
     try:
         return CalculationRevisionAmendmentKind(kind.strip())
     except ValueError as exc:
@@ -955,6 +1001,7 @@ def _parse_amendment_kind(kind: str) -> CalculationRevisionAmendmentKind:
 
 
 def _parse_amendment_overrides(set_overrides: tuple[str, ...]) -> dict[CasillaId, Decimal]:
+    """Parse ``--set`` values into validated ``CasillaId`` decimal overrides."""
     overrides: dict[CasillaId, Decimal] = {}
     for spec in set_overrides:
         key, value = _parse_amendment_casilla(spec)
@@ -1003,7 +1050,17 @@ def work_amend(
     ``--reason``, and at least one ``--set``) are batch-validated so a
     run missing several flags reports every absent one in a single
     refusal instead of forcing the operator to rediscover them one
-    invocation at a time.
+    invocation at a time. The command then parses the requested
+    :class:`CalculationRevisionAmendmentKind`, validates each override as a
+    ``CasillaId`` decimal, delegates to
+    :func:`amend_modelo_revision`, and emits a
+    :class:`WorkAmendResult`.
+
+    The application service requires the source
+    :class:`ModeloRecord` to carry
+    :class:`ExternalEvidence`; locally filed records cannot
+    enter this path. The new record is an internal filing envelope and does not
+    submit anything to AEAT.
     """
     from_filing_record_id, kind, reason, set_specs = _required_amendment_inputs(
         from_filing_record_id=from_filing_record_id,
@@ -1027,6 +1084,8 @@ def work_amend(
         ModeloRecordNotFoundError,
         AmendmentEvidenceMissingError,
         AmendmentTargetStateError,
+        AmendmentKindNotPermittedError,
+        AmendmentComplementariaLiabilityDecreaseError,
         CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
         WorkUnitNotFoundError,
@@ -1051,6 +1110,16 @@ def work_amend(
     ]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
     _emit_envelope(ctx, command="modelo.work.amend", result=result, lines=lines)
+
+
+register_amend_wizard_commands(
+    work_app,
+    activate_output_language=activate_subcommand_output_language,
+    require_active_profile=_require_active_profile,
+    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
+    resolve_default_actor=_resolve_default_actor,
+    bad_parameter_from_error=_bad_parameter_from_error,
+)
 
 
 register_record_commands(
@@ -1105,7 +1174,11 @@ def modelo_history(
     ] = None,
 ) -> None:
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
-    from ...domain.buckets import BucketEvent, BucketEventHistoryRepository, BucketEventType
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...domain.buckets import BucketEvent, BucketEventType
+
+    def _event_filing_year(payload: dict[str, str]) -> str:
+        return (payload.get("filing_year") or payload.get("year") or "").strip()
 
     repo = BucketEventHistoryRepository()
     catalogue = repo.load()
@@ -1113,6 +1186,7 @@ def modelo_history(
         BucketEventType.MODELO_CALCULATION_CREATED,
         BucketEventType.MODELO_VERIFICATION_PASSED,
         BucketEventType.MODELO_VERIFICATION_REFUSED,
+        BucketEventType.MODELO_EXPORTED,
         BucketEventType.MODELO_FILED,
         BucketEventType.MODELO_FILED_SUPERSEDED,
         BucketEventType.MODELO_AMENDED,
@@ -1128,7 +1202,7 @@ def modelo_history(
         payload_map = dict(event.payload)
         if payload_map.get("modelo", "") != modelo:
             continue
-        if year is not None and payload_map.get("year", "").strip() != str(year):
+        if year is not None and _event_filing_year(payload_map) != str(year):
             continue
         if period is not None and payload_map.get("period", "") != period:
             continue
@@ -1171,6 +1245,9 @@ register_reconcile_commands(
 
 
 register_audit_commands(app)
+
+
+register_review_package_commands(app)
 
 
 register_export_commands(

@@ -35,6 +35,7 @@ from typing import Any
 
 import pytest
 
+from ....core.paths import PROJECT_ROOT
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.user_profile import (
@@ -44,6 +45,7 @@ from ....domain.user_profile import (
     profile_binding_selectors,
 )
 from .._profile_binding import (
+    inject_derived_autonomic_deduccion_facts,
     inject_derived_marriage_facts,
     profile_fact_index,
     resolve_profile_binding_value,
@@ -52,10 +54,16 @@ from .._profile_binding import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "binding-pin-test-operator"
+_PROFILE_ID = "10000000-0000-4000-8000-000000000477"
+_BUCKET_ID = _PROFILE_ID
 _YEAR = 2025
 _PERIOD = "0A"
 _CLOCK = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
+_M100_2025_XSD = (
+    PROJECT_ROOT
+    / "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_100/files"
+    / "03-100-esquema-xsd-ejercicio-2025-actualizado-14-04-2026-796-kb-ejecutable.xsd"
+)
 
 
 def _modelo_100_snapshot() -> RegistrySnapshot:
@@ -86,7 +94,7 @@ def _full_m100_profile() -> UserProfileRecord:
     strings as ``str``; Decimals as ``Decimal``.
     """
     return UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Binding pin test taxpayer",
         facts=(
             # 0006 renta-2025-profile-tax-id
@@ -101,7 +109,7 @@ def _full_m100_profile() -> UserProfileRecord:
             # 0010 renta-2025-profile-taxpayer-sex
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             # 0011 renta-2025-profile-marital-status
-            UserProfileFact(path="renta_taxpayer.marital_status", value="casado"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="2"),
             # 0045 renta-2025-profile-marriage-full-year (derived from marriage_date at bind time)
             # 0046 renta-2025-profile-marriage-month-start
             # 0047 renta-2025-profile-marriage-month-end
@@ -213,6 +221,9 @@ def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
     # profile facts but are injected at binding-resolution time.  The full-population
     # fixture supplies renta_taxpayer.marriage_date so injection populates them here.
     inject_derived_marriage_facts(fact_index, _YEAR)
+    # Madrid nacimiento/adopción derived scalars (eligible count + unidad-familiar
+    # base) are likewise injected at resolution time, defaulting to 0.
+    inject_derived_autonomic_deduccion_facts(fact_index, _YEAR)
 
     # Deliberately absent binding — tested separately.
     absent = "renta-2025-profile-taxpayer-death-date"
@@ -242,7 +253,7 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
     """A single taxpayer does not owe an impossible marriage date to resolve 0245-0247."""
     snapshot = _modelo_100_snapshot()
     record = UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Single binding pin taxpayer",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -263,11 +274,52 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
     assert resolved.binding_values["renta-2025-profile-marriage-month-end"] == Decimal("0")
 
 
+def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
+    """Profile-only marital status 5 must not reach Modelo 100 ECIVIL export channels."""
+    snapshot = _modelo_100_snapshot()
+    ecivil_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == "ECIVIL")
+    ecivil_binding_id = ecivil_casilla.binding
+    assert ecivil_casilla.data_type == "text"
+    assert ecivil_binding_id == "renta-2025-profile-marital-status"
+
+    ecivil_binding = next(binding for binding in snapshot.revision.bindings if binding.id == ecivil_binding_id)
+    selector = ecivil_binding.selector
+    assert selector.profile_key == "renta_taxpayer.marital_status"
+    assert selector.xsd_path == "/DatosIdentificativos/Declarante/ECIVIL"
+    assert selector.dictionary_field == "ECIVIL"
+    assert selector.valid_at == "2025-12-31"
+    assert b'<xs:pattern value="([1-4]){1}"/>' in _M100_2025_XSD.read_bytes()
+
+    record = UserProfileRecord(
+        profile_id=_PROFILE_ID,
+        display_name="Registered pareja de hecho binding pin taxpayer",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 15)),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="5"),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+        ),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+
+    resolved = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET_ID, profile_record=record)
+
+    assert ecivil_binding_id not in resolved.binding_values
+    assert ecivil_binding_id not in resolved.enum_binding_values
+    assert ecivil_binding_id not in resolved.date_binding_values
+    assert resolved.binding_values["renta-2025-profile-marriage-full-year"] == Decimal("0")
+    assert resolved.binding_values["renta-2025-profile-marriage-month-start"] == Decimal("0")
+    assert resolved.binding_values["renta-2025-profile-marriage-month-end"] == Decimal("0")
+
+
 def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved() -> None:
     """A married taxpayer still needs the actual marriage date for Art. 82 month facts."""
     snapshot = _modelo_100_snapshot()
     record = UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Married binding pin taxpayer",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -421,29 +473,35 @@ def test_repeating_collection_selectors_yield_known_alias() -> None:
             )
 
 
-def test_binding_count_is_exactly_33() -> None:
-    """M100 2025 has exactly 33 ``source = 'profile'`` bindings.
+def test_binding_count_is_exactly_37() -> None:
+    """M100 2025 has exactly 37 ``source = 'profile'`` bindings.
 
     This acts as a structural sentinel: adding or removing a profile binding
     without updating this test will fail, prompting a review of whether the
     pin tests cover the new binding.
 
-    Breakdown of the 33: 22 scalar bindings (single-value profile reads
+    Breakdown of the 37: 26 scalar bindings (single-value profile reads
     keyed by entity_type, ccaa, estimation_regime, income categories,
     address-cadastral references, plus the three matrimonio-sobrevenido
-    derived scalars: marriage_full_year, marriage_month_start,
-    marriage_month_end added for Art. 82 LIRPF casillas 0245/0246/0247)
+    derived scalars marriage_full_year / marriage_month_start /
+    marriage_month_end added for Art. 82 LIRPF casillas 0245/0246/0247, the
+    two Comunidad de Madrid nacimiento/adopción derived scalars
+    madrid_nacimiento_adopcion_eligible_count and
+    unidad_familiar_otros_miembros_base added for casilla 1039 / DL 1/2010,
+    the anualidades_sin_minimo_descendientes eligibility flag for the
+    Art. 64/75 separate-escala régimen, and the Art. 58/61 LIRPF mínimo por
+    descendientes aggregate added by the Option A engine)
     plus 11 family-repeating-collection bindings (per-dependent / per-spouse
     / per-child arrays whose cardinality follows the operator's declared
     family composition).
-    The split matters when a new binding lands: a 23-scalar / 10-collection
-    rebalance still totals 33 but indicates a different schema shift
+    The split matters when a new binding lands: a scalar/collection
+    rebalance still totals 37 but indicates a different schema shift
     (operator-data field add vs family-collection contract change).
     Future drift in the sentinel meaning is prevented by this note
     plus the descriptive assertion message below.
     """
     profile_bindings = _profile_bindings()
-    assert len(profile_bindings) == 33, (
-        f"expected 33 profile-sourced bindings in M100 2025, found {len(profile_bindings)}: "
+    assert len(profile_bindings) == 37, (
+        f"expected 37 profile-sourced bindings in M100 2025, found {len(profile_bindings)}: "
         + ", ".join(str(b.id) for b in profile_bindings)
     )

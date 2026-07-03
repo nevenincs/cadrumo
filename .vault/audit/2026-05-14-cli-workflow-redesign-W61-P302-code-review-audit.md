@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-05-14'
+modified: '2026-06-30'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]'
@@ -15,8 +15,6 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-w61-p302-s1811-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w61-p302-s1812-exec]]'
 ---
-
-
 
 # `cli-workflow-redesign` W61.P302 Code Review
 

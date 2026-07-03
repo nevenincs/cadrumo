@@ -10,29 +10,30 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
     CasillaId,
     RegistryModeloObservation,
     validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.justificante import Justificante, JustificanteRepository
+from ....domain.justificante import Justificante
 from ....domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloCode,
     ModeloRecord,
-    ModeloRecordCatalogueRepository,
     ModeloRecordStatus,
-    VerificationReportCatalogueRepository,
     WorkUnit,
-    WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
     derive_filing_record_id,
     derive_work_unit_id,
@@ -40,6 +41,7 @@ from ....domain.modelos import (
     upsert_filing_record,
     upsert_work_unit,
 )
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
@@ -52,12 +54,13 @@ from ...calculations import (
     CrossPeriodDependencyRequirement,
     cross_period_dependency_requirements,
 )
+from ...user_profile import UserProfileLifecycleRepository
 from .. import create_work_unit, import_external_filing_evidence, verify_modelo_revision
-from .._actions import _cross_period_clean_state_next_action
+from .._verification_actions import _cross_period_clean_state_next_action
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "cross-period-clean-state-gates"
+_BUCKET_ID = "39039039-0390-4390-8390-390390390390"
 _CLOCK = datetime(2026, 6, 5, 11, 0, 0, tzinfo=UTC)
 _M303_REVISION = "2023-y-siguientes"
 _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")
@@ -67,6 +70,29 @@ def _workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
+    )
+
+
+def _store_ready_profile_record() -> None:
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
+        UserProfileRecord(
+            profile_id=_BUCKET_ID,
+            display_name="Cross-period clean-state profile",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value=str(_workflow_profile().tax_id)),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="design"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value=IVARegime.GENERAL.value),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            ),
+            created_at=_CLOCK,
+            updated_at=_CLOCK,
+        ),
     )
 
 
@@ -178,7 +204,7 @@ def _seed_303_cross_period_sources(
         )
         values = _source_values(period, tuple(sorted(source_casilla_ids)))
         if evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER:
-            _seed_legacy_source_filing_record(
+            _seed_source_filing_record_without_import_flow(
                 work_unit=work_unit,
                 casilla_values=values,
                 evidence_kind=evidence_kind,
@@ -223,7 +249,7 @@ def _seed_303_cross_period_sources(
         )
 
 
-def _seed_legacy_source_filing_record(
+def _seed_source_filing_record_without_import_flow(
     *,
     work_unit: WorkUnit,
     casilla_values: dict[CasillaId, Decimal],
@@ -265,7 +291,6 @@ def _seed_legacy_source_filing_record(
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit.work_unit_id,
         calculation_revision_id=revision_id,
-        filed_at=_CLOCK,
         filed_by="aeat-import-test",
     )
     filings = filing_repository.load()
@@ -308,6 +333,8 @@ def _clean_state_repair_evidence(
             source_casilla_ids=(_M303_SOURCE_CASILLA_01,),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=("binding-303-casilla-01",),
+            legal_refs=("ley-58-2003:art-119",),
+            source_refs=("aeat-modelo-303-procedure",),
         ),
         missing_member_nifs=missing_member_nifs,
         unexpected_member_nifs=unexpected_member_nifs,
@@ -381,9 +408,12 @@ def _clean_state_repair_verdict(
         (
             (CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION,),
             (
-                "Capture or import AEAT justificante evidence for source modelo=303 year=2025 period=1T. "
-                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A` or "
-                "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`, then rerun verification."
+                "Capture/import AEAT evidence for source modelo=303 year=2025 period=1T. "
+                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A`, "
+                "`aeat app live justificante pull --modelo 303 --year 2025 --period 1T`, "
+                "`aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
+                "--evidence-id CSV --set CASILLA=VALUE`, or "
+                "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`; rerun verification."
             ),
             (),
             (),
@@ -391,9 +421,12 @@ def _clean_state_repair_verdict(
         (
             (CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD,),
             (
-                "Capture or import AEAT justificante evidence for source modelo=303 year=2025 period=1T. "
-                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A` or "
-                "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`, then rerun verification."
+                "Capture/import AEAT evidence for source modelo=303 year=2025 period=1T. "
+                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A`, "
+                "`aeat app live justificante pull --modelo 303 --year 2025 --period 1T`, "
+                "`aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
+                "--evidence-id CSV --set CASILLA=VALUE`, or "
+                "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`; rerun verification."
             ),
             (),
             (),
@@ -433,6 +466,7 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
     tmp_path: Path,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _store_ready_profile_record()
         objects = profile.repository
         work_units = WorkUnitCatalogueRepository(objects=objects)
         calculations = CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
@@ -471,6 +505,9 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
     assert any(
         finding.next_action is not None
         and "aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A" in finding.next_action
+        and "aeat app live justificante pull --modelo 303 --year 2025 --period 1T" in finding.next_action
+        and "aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf"
+        in finding.next_action
         and "aeat app modelo reconcile file WORK_UNIT_ID --file PATH" in finding.next_action
         for finding in cross_period_findings
     )
@@ -482,6 +519,7 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
     tmp_path: Path,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _store_ready_profile_record()
         objects = profile.repository
         work_units = WorkUnitCatalogueRepository(objects=objects)
         calculations = CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
@@ -535,6 +573,7 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
     than silently opening. The grant stays refused.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _store_ready_profile_record()
         objects = profile.repository
         work_units = WorkUnitCatalogueRepository(objects=objects)
         calculations = CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
@@ -589,6 +628,7 @@ def test_verify_surfaces_operator_declared_suppression_advisory_without_blocking
     from datetime import date
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _store_ready_profile_record()
         objects = profile.repository
         work_units = WorkUnitCatalogueRepository(objects=objects)
         calculations = CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)

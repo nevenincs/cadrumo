@@ -69,9 +69,11 @@ def transactions_pending(
     ``catalogue`` is an optional :class:`TransactionCatalogue` override; the repository is
     loaded when ``None``.
 
-    Skips fully-classified rows (BUSINESS / PERSONAL / MIXED) and rows
-    explicitly skipped by rule (``SKIPPED_BY_RULE``) — those have a
-    final disposition and do not want the operator's attention.
+    Skips fully-classified rows (BUSINESS / PERSONAL / MIXED), rows
+    explicitly skipped by rule (``SKIPPED_BY_RULE``), and rows the
+    operator reviewed and deliberately excluded (``REVIEWED_EXCLUDED``)
+    — those have a final disposition and do not want the operator's
+    attention.
     """
     if catalogue is None:
         catalogue = _load_transactions(settings, bucket_id=bucket_id)
@@ -127,11 +129,14 @@ def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | Non
     """First-match-wins severity per the BusinessClassification states.
 
     Returns ``None`` when the state has a final disposition that does
-    not warrant the operator's attention (classified or rule-excluded).
+    not warrant the operator's attention (classified, rule-excluded, or
+    reviewed-and-excluded).
     """
     if is_classified(state):
         return None
     if state is BusinessClassification.SKIPPED_BY_RULE:
+        return None
+    if state is BusinessClassification.REVIEWED_EXCLUDED:
         return None
     if state is BusinessClassification.FAILED_VALIDATION:
         return ReviewSeverity.CRITICAL
@@ -143,7 +148,7 @@ def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | Non
 
 
 def _load_transactions(settings: Settings, *, bucket_id: str) -> TransactionCatalogue | None:
-    from ...domain.transactions import TransactionCatalogueRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 
     del settings
     repository = TransactionCatalogueRepository(bucket_id=bucket_id)
@@ -216,7 +221,7 @@ def invoices_pending(
 
 
 def _load_invoices(settings: Settings, *, bucket_id: str) -> InvoiceCatalogue | None:
-    from ...domain.invoices import InvoiceCatalogueRepository
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 
     del settings
     repository = InvoiceCatalogueRepository(bucket_id=bucket_id)
@@ -348,7 +353,7 @@ def _resolve_active_tax_id(settings: Settings) -> str | None:
     """Return the active profile's tax id, or ``None`` when unknown."""
     del settings
     try:
-        from ..user_profile._orchestration import fact_value
+        from ..user_profile import fact_value
         from ..workflow import workflow_state_repository
     except ImportError:
         _LOGGER.debug("review adapters could not import workflow status helpers", exc_info=True)
@@ -370,7 +375,7 @@ def _load_drafts(settings: Settings, *, bucket_id: str) -> tuple[tuple[Path, Mod
     can identify the draft without consulting a plaintext draft
     directory.
     """
-    from ...domain.filing import ModeloDraftRepository
+    from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 
     del settings
     repository = ModeloDraftRepository(bucket_id=bucket_id)

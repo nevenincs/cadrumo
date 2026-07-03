@@ -19,6 +19,7 @@ formulas = [
     "renta-2022-cambio-residencia-extranjero-suma",
     "renta-2022-cambio-residencia-ganancias-reducidas",
     "renta-2022-criptomonedas-ganancia-no-exenta",
+    "renta-2022-ganancia-cripto-imputable",
     "renta-2022-criptomonedas-ganancias-suma",
     "renta-2022-criptomonedas-perdidas-suma",
     "renta-2022-derechos-suscripcion-ganancias-reducidas",

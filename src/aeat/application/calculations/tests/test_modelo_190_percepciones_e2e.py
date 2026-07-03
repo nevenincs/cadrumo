@@ -16,8 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.aggregation import WithholdingSourceResolver, persist_withholding_observations
-from ....application.aggregation._source_mesh import CalculationSourceContext
+from ....application.aggregation import WithholdingSourceResolver, persist_percepcion_observations
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -26,9 +25,11 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from ...aggregation import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_BUCKET_ID = "36363636-3636-4363-8363-363636363636"
 _TOTAL_PERCEPCIONES = validated_casilla_id("decl.total-percepciones", surface="test")
 
 
@@ -45,9 +46,9 @@ def _obs(nif: str, clave: str) -> WithholdingObservation:
 
 def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(tmp_path: Path) -> None:
     """3 percepciones (one perceptor under 2 claves + a second) -> decl.total-percepciones == 3."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         period = Period.from_year_and_code(2024, "0A")
-        persist_withholding_observations(
+        persist_percepcion_observations(
             modelo="190",
             filing_year=2024,
             period=period,
@@ -56,7 +57,7 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
         snapshot = resources().modelos.authority.snapshot("190", filing_year=2024, period="0A")
         resolution = WithholdingSourceResolver().resolve(
             CalculationSourceContext(
-                bucket_id="operator",
+                bucket_id=_BUCKET_ID,
                 modelo="190",
                 filing_year=2024,
                 period=period,

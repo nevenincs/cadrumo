@@ -1,10 +1,11 @@
-"""Application services for bucket-scoped manual ledger transactions.
+"""Application export service for bucket-scoped manual ledger snapshots.
 
-Services operate over a :class:`TransactionCatalogueRepository` for ledger
-state, a :class:`BucketEventHistoryRepository` for durable audit events, and
-an optional :class:`InvoiceCatalogueRepository` for purchase-invoice evidence
-cascade on removal. The inner functions accept a :class:`TransactionCatalogue`
-or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
+The export action reads a loaded
+:class:`~aeat.domain.transactions.TransactionCatalogue`, projects
+:class:`~aeat.application.ledger.LedgerExportRow` instances, serializes them
+with :func:`~aeat.application.export.serialize_tabular_rows`, emits a
+``LEDGER_TRANSACTION_EXPORTED`` bucket event, and returns
+:class:`~aeat.application.ledger.LedgerExportResult`.
 """
 
 from __future__ import annotations
@@ -19,16 +20,16 @@ if TYPE_CHECKING:
 
 from ...core import Period
 from ...domain.buckets import (
+    BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions import (
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepositoryProtocol,
     TransactionLifecycleState,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ..export import serialize_tabular_rows
 from ._actions_common import (
     _bucket_event_repository,
@@ -64,6 +65,8 @@ _LEDGER_EXPORT_FIELDNAMES = (
     "taxable_base",
     "iva_rate",
     "iva_amount",
+    "iva_category",
+    "counterparty_eu_member_state",
     "irpf_category",
     "usage_ratio_id",
     "prorrata_reference",
@@ -84,10 +87,10 @@ def export_ledger_transactions(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> LedgerExportResult:
-    """Export canonical bucket-local ledger transaction rows and emit an audit event.
+    """Export rows for a :class:`~aeat.application.ledger.LedgerExportCommand`.
 
     Returns:
-        :class:`LedgerExportResult`: The export outcome.
+        :class:`~aeat.application.ledger.LedgerExportResult`: The export outcome.
     """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
@@ -201,6 +204,12 @@ def _ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExp
         taxable_base=_optional_decimal(transaction.taxable_base),
         iva_rate=_optional_decimal(transaction.iva_rate),
         iva_amount=_optional_decimal(transaction.iva_amount),
+        iva_category=transaction.iva_category.value if transaction.iva_category is not None else "",
+        counterparty_eu_member_state=(
+            transaction.counterparty_eu_member_state.value
+            if transaction.counterparty_eu_member_state is not None
+            else ""
+        ),
         irpf_category=transaction.irpf_category or "",
         usage_ratio_id=transaction.usage_ratio_id or "",
         prorrata_reference=transaction.prorrata_reference or "",

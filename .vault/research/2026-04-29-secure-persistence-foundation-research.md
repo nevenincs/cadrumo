@@ -3,14 +3,12 @@ tags:
   - '#research'
   - '#secure-persistence-foundation'
 date: '2026-04-29'
-modified: '2026-04-29'
+modified: '2026-06-30'
 related:
   - "[[2026-04-28-secure-persistence-foundation-exec]]"
   - "[[2026-04-30-secure-persistence-foundation-wave12-adr]]"
   - "[[2026-04-27-secure-persistence-foundation-research]]"
 ---
-
-
 
 # `secure-persistence-foundation` wave-3 research
 

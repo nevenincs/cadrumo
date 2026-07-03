@@ -12,20 +12,22 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...domain.invoices import (
     InvoiceCatalogue,
-    InvoiceCatalogueRepository,
+    InvoiceCatalogueRepositoryProtocol,
     InvoiceError,
+    ReconciliationSuggestion,
+    link_transaction,
+    suggest_reconciliations,
 )
-from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.invoices._service import ReconciliationSuggestion, link_transaction, suggest_reconciliations
 from ...domain.transactions import (
     TransactionCatalogue,
-    TransactionCatalogueRepository,
+    TransactionCatalogueRepositoryProtocol,
     TransactionError,
     link_invoice,
 )
-from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 
 
 class ReconciliationSkippedSuggestion(BaseModel):

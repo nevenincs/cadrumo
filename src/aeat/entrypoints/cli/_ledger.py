@@ -1,11 +1,15 @@
 """User-facing ledger and transaction management CLI commands.
 
-Provides the ``aeat ledger`` command group for importing, reviewing, and
-exporting financial transaction data. Transaction records are accessed
-through :class:`TransactionCatalogueRepository` and invoice records through
-:class:`InvoiceCatalogueRepository`. Lifecycle events are appended to the
-profile audit trail via :class:`BucketEventHistoryRepository`. Mutation and
-read verbs emit typed :class:`OutputSchema` envelopes so CLI JSON stays aligned
+Provides the ``aeat app ledger`` command group for importing, reviewing, and
+exporting financial transaction data. Transaction records are accessed through
+:class:`TransactionCatalogueRepository` and invoice
+records through :class:`InvoiceCatalogueRepository`.
+Lifecycle events are appended to the profile audit trail via
+:class:`BucketEventHistoryRepository`. Mutation and read
+verbs validate registered
+:class:`OutputSchema` payloads and emit
+:class:`SchemaEnvelope` documents through
+:func:`_emit_envelope` so CLI JSON stays aligned
 with the registered ledger payload contracts.
 """
 
@@ -17,6 +21,7 @@ from typing import Annotated
 import typer
 from pydantic import ValidationError
 
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import (
     LedgerTransactionResultPayload,
     LLMProvider,
@@ -32,16 +37,21 @@ from ...application.ledger import (
 from ...core import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
-from ...domain.iva._schema import EUMemberState, IvaCategory
+from ...domain.iva import (
+    EUMemberState,
+    IvaCategory,
+)
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
-    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionIdPrefixError,
+    TransactionValidationError,
     is_classified,
 )
+from ._bienes_inversion_cli import register_bienes_inversion_commands
 from ._common import (
     _bad,
     _emit_envelope,
@@ -63,6 +73,7 @@ from ._ledger_lifecycle_cli import (
     ledger_attach,
     ledger_doclink,
     ledger_merge,
+    ledger_pull_folder,
     ledger_remove,
     ledger_reset,
     ledger_split,
@@ -80,6 +91,7 @@ from ._ledger_read_cli import register_read_commands
 from ._ledger_rules_cli import register_rule_commands, rule_app
 from ._ledger_support import (
     _invoice_link_error_bad_parameter,
+    _ledger_transaction_validation_bad,
     _ledger_validation_bad,
     _parse_amount_magnitude,
     _parse_decimal,
@@ -104,6 +116,7 @@ __all__ = [
     "ledger_attach",
     "ledger_doclink",
     "ledger_merge",
+    "ledger_pull_folder",
     "ledger_remove",
     "ledger_reset",
     "ledger_split",
@@ -128,7 +141,7 @@ def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> s
     live row matches, it walks the edit-lineage chain so a superseded
     (pre-``update``) id written down by the operator still resolves to the
     current row — see
-    :func:`aeat.application.ledger.resolve_lineage_transaction_id`. The
+    :func:`resolve_lineage_transaction_id`. The
     content-addressed id stays authoritative; this is a read-side lookup
     convenience, never a change to how ids are minted.
     """
@@ -205,6 +218,16 @@ def ledger_add(
     taxable_base: str | None = typer.Option(None, "--taxable-base", help=tr("cli.ledger.add.taxable_base_help")),
     iva_rate: str | None = typer.Option(None, "--iva-rate", help=tr("cli.ledger.add.iva_rate_help")),
     iva_amount: str | None = typer.Option(None, "--iva-amount", help=tr("cli.ledger.add.iva_amount_help")),
+    iva_category: IvaCategory | None = typer.Option(
+        None,
+        "--iva-category",
+        help=tr("cli.ledger.classify.iva_category_help"),
+    ),
+    counterparty_eu_member_state: EUMemberState | None = typer.Option(
+        None,
+        "--counterparty-eu-member-state",
+        help=tr("cli.ledger.classify.counterparty_eu_member_state_help"),
+    ),
     recargo_amount: str | None = typer.Option(None, "--recargo-amount", help=tr("cli.ledger.add.recargo_amount_help")),
     irpf_category: str | None = typer.Option(None, "--irpf-category", help=tr("cli.ledger.add.irpf_category_help")),
     usage_ratio_id: str | None = typer.Option(None, "--usage-ratio-id", help=tr("cli.ledger.add.usage_ratio_help")),
@@ -238,8 +261,7 @@ def ledger_add(
 ) -> None:
     """Create one manual ledger transaction through the bucket-scoped backend."""
     operator_assignable_on_add = (
-        is_classified(business_classification)
-        or business_classification is BusinessClassification.NOT_YET_PROCESSED
+        is_classified(business_classification) or business_classification is BusinessClassification.NOT_YET_PROCESSED
     )
     if not operator_assignable_on_add:
         # PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE / FAILED_VALIDATION are
@@ -288,6 +310,8 @@ def ledger_add(
             taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
             iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
             iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+            iva_category=iva_category,
+            counterparty_eu_member_state=counterparty_eu_member_state,
             recargo_amount=_parse_decimal(recargo_amount, label="recargo-amount"),
             irpf_category=irpf_category,
             usage_ratio_id=usage_ratio_id,
@@ -302,6 +326,8 @@ def ledger_add(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    except TransactionValidationError as exc:
+        raise _ledger_transaction_validation_bad(exc) from exc
     # The gross-invariant (`taxable_base + iva_amount == amount`) and other
     # `Transaction.model_validate` rules fire inside `create_manual_transaction`,
     # raising a pydantic `ValidationError` whose default rendering dumps the full
@@ -329,6 +355,34 @@ def ledger_add(
             "transaction": transaction_payload.model_dump(mode="json"),
         },
     )
+    # An empty bucket_event_ids tuple is the guarded-idempotent no-op signal
+    # from create_manual_transaction: the keyed add matched an already-stored
+    # row and wrote nothing. Surface it as an info Notice on the typed channel
+    # (never a bespoke result field) and fold the same text into the lines so
+    # JSON and text output cannot drift.
+    notices: list[Notice] = []
+    noop_lines: list[str] = []
+    if not result.bucket_event_ids:
+        noop_message = tr(
+            "cli.ledger.add.idempotent_noop",
+            transaction_id=result.ref.transaction_id,
+            default=(
+                f"Idempotent no-op: a transaction with this idempotency key already exists "
+                f"({result.ref.transaction_id}); nothing was added."
+            ),
+        )
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.add.idempotent_noop",
+                message=noop_message,
+                context={
+                    "transaction_id": result.ref.transaction_id,
+                    "idempotency_key": command.idempotency_key or "",
+                },
+            )
+        )
+        noop_lines.append(noop_message)
     _emit_envelope(
         ctx,
         command="ledger.add",
@@ -339,7 +393,9 @@ def ledger_add(
             f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
             f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
             f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+            *noop_lines,
         ],
+        notices=notices or None,
     )
 
 
@@ -483,7 +539,7 @@ def ledger_classify(
         help=tr("cli.ledger.classify.auto_split_help"),
     ),
     reject: bool = typer.Option(False, "--reject", help=tr("cli.ledger.classify.reject_help")),
-    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.classify.reason_help")),
+    reason: str | None = typer.Option(None, "--reason", help=tr("cli.ledger.classify.reason_help")),
 ) -> None:
     """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--from-csv)."""
     if auto_split:
@@ -499,7 +555,7 @@ def ledger_classify(
             evidence_acknowledged=evidence_acknowledged,
             vision_model=vision_model,
             reject=reject,
-            reason=reason,
+            reason=reason or "",
         )
         return
     if llm is not None or read_evidence:
@@ -516,7 +572,7 @@ def ledger_classify(
             "evidence_acknowledged": evidence_acknowledged,
             "vision_model": vision_model,
             "reject": reject,
-            "reason": reason,
+            "reason": reason or "",
         }
         if saturate:
             ledger_saturate_llm(**saturate_kwargs)
@@ -577,6 +633,19 @@ def ledger_classify(
                 ),
             ),
         )
+    if reason is not None and not reason.strip():
+        # A manual classification may record WHY via --reason, persisted to the
+        # transaction notes. An explicitly empty/whitespace reason carries no
+        # rationale; refuse it instructively rather than silently dropping it.
+        raise _bad(
+            tr(
+                "cli.ledger.classify.reason_empty",
+                default=(
+                    "Refused. --reason must record why you are classifying this "
+                    "transaction. Pass a non-empty rationale, or omit --reason."
+                ),
+            ),
+        )
     validated_category_id = _validate_category_id(category_id)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
     if classification is BusinessClassification.MIXED and business_pct is None:
@@ -606,6 +675,7 @@ def ledger_classify(
             irpf_category=irpf_category,
             iva_category=iva_category,
             counterparty_eu_member_state=counterparty_eu_member_state,
+            notes=reason,
         )
         result = update_manual_transaction_fields(
             bucket_id=transaction_repository.bucket_id,
@@ -618,6 +688,8 @@ def ledger_classify(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    except TransactionValidationError as exc:
+        raise _ledger_transaction_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerClassifySingleResult
 
     transaction_payload = ledger_transaction_payload(result.transaction)
@@ -758,9 +830,9 @@ def ledger_link(
     ),
 ) -> None:
     """Bind a transaction to invoice / evidence references in one call."""
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...application.invoices import link_invoice_transaction_repositories
-    from ...domain.invoices import InvoiceCatalogueRepository
-    from ...domain.invoices._errors import InvoiceLinkError
+    from ...domain.invoices import InvoiceLinkError
 
     if invoice_id is None and evidence_id is None:
         raise _bad(
@@ -866,6 +938,9 @@ register_business_invoice_commands(app)
 
 
 register_inventory_commands(app)
+
+
+register_bienes_inversion_commands(app)
 
 
 register_evidence_commands(app)

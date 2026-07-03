@@ -3,13 +3,13 @@
   "source_kind": "normatives_html",
   "status": "ok",
   "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-58.html",
-  "source_sha256": "8fe2bbf0d92a8ad3048b7302a52bf6fdb0ba6f615316441d0ea8eb51e972685d",
+  "source_sha256": "0af899f1ac3934c03a1397b1b0d8b671ac9e584e4832b5fef3a3cadf64bd04ed",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {
-      "text": "1. El mínimo por descendientes será, por cada uno de ellos menor de veinticinco años o con discapacidad, cualquiera que sea su edad, siempre que conviva con el contribuyente y no tenga rentas anuales, excluidas las exentas, superiores a 8.000 euros, de:\n2.400 euros anuales por el primero.\n2.700 euros anuales por el segundo.\n4.000 euros anuales por el tercero.\n4.500 euros anuales por el cuarto y siguientes.\n2. Cuando el descendiente sea menor de tres años, el mínimo a que se refiere el apartado 1 anterior se aumentará en 3.000 euros anuales.",
+      "text": "1. El mínimo por descendientes será, por cada uno de ellos menor de veinticinco años o con discapacidad, cualquiera que sea su edad, siempre que conviva con el contribuyente y no tenga rentas anuales, excluidas las exentas, superiores a 8.000 euros, de:\n2.400 euros anuales por el primero.\n2.700 euros anuales por el segundo.\n4.000 euros anuales por el tercero.\n4.500 euros anuales por el cuarto y siguientes.\n2. Cuando el descendiente sea menor de tres años, el mínimo a que se refiere el apartado 1 anterior se aumentará en 2.800 euros anuales.",
       "title": "Artículo 58. Mínimo por descendientes.",
       "section": "Artículo 58. Mínimo por descendientes.",
       "anchor": null

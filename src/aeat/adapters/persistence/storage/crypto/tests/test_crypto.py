@@ -28,9 +28,9 @@ def _fresh_key() -> bytes:
 class TestEncryptDecryptRoundTrip:
     """``encrypt_record`` and ``decrypt_record`` are inverse functions."""
 
-    @pytest.mark.parametrize(
-        "plaintext",
-        [
+    def test_round_trip(self) -> None:
+        """Encrypt-then-decrypt returns the original bytes for varied payloads."""
+        plaintexts = (
             b"",
             b"hello",
             "movimientos bancarios — autónomo, NIF 12345678Z, año 2025".encode(),
@@ -39,14 +39,11 @@ class TestEncryptDecryptRoundTrip:
             # value keeps pytest-xdist's collection identical across workers
             # without sacrificing the "large-payload round-trip" coverage.
             bytes(i % 256 for i in range(4096)),
-        ],
-        ids=["empty", "ascii", "unicode", "raw-bytes", "large-4096"],
-    )
-    def test_round_trip(self, plaintext: bytes) -> None:
-        """Encrypt-then-decrypt returns the original bytes for varied payloads."""
-        key = _fresh_key()
-        blob = encrypt_record(plaintext, key=key)
-        assert decrypt_record(blob, key=key) == plaintext
+        )
+        for plaintext in plaintexts:
+            key = _fresh_key()
+            blob = encrypt_record(plaintext, key=key)
+            assert decrypt_record(blob, key=key) == plaintext
 
     def test_round_trip_with_associated_data(self) -> None:
         """Associated data must be supplied identically at decrypt."""
@@ -82,64 +79,46 @@ class TestEncryptDecryptRoundTrip:
 class TestTamperDetection:
     """Any modification to nonce, ciphertext, key, or AAD raises DecryptionError."""
 
-    def test_wrong_key_raises(self) -> None:
-        plaintext = b"payload"
-        blob = encrypt_record(plaintext, key=_fresh_key())
-        with pytest.raises(DecryptionError):
-            decrypt_record(blob, key=_fresh_key())
-
-    def test_tampered_ciphertext_raises(self) -> None:
+    def test_modified_nonce_ciphertext_tag_or_key_raises(self) -> None:
         key = _fresh_key()
         blob = encrypt_record(b"payload", key=key)
         flipped_first_byte = bytes([blob.ciphertext[0] ^ 0x01]) + blob.ciphertext[1:]
-        tampered = EncryptedBlob(nonce=blob.nonce, ciphertext=flipped_first_byte)
-        with pytest.raises(DecryptionError):
-            decrypt_record(tampered, key=key)
-
-    def test_tampered_tag_raises(self) -> None:
-        key = _fresh_key()
-        blob = encrypt_record(b"payload", key=key)
         flipped_last_byte = blob.ciphertext[:-1] + bytes([blob.ciphertext[-1] ^ 0x01])
-        tampered = EncryptedBlob(nonce=blob.nonce, ciphertext=flipped_last_byte)
-        with pytest.raises(DecryptionError):
-            decrypt_record(tampered, key=key)
-
-    def test_swapped_nonce_raises(self) -> None:
-        key = _fresh_key()
-        blob = encrypt_record(b"payload", key=key)
         other_nonce = secrets.token_bytes(NONCE_SIZE)
         # Ensure we picked a different nonce; collision odds are 2**-96.
         assert other_nonce != blob.nonce
-        with pytest.raises(DecryptionError):
-            decrypt_record(EncryptedBlob(nonce=other_nonce, ciphertext=blob.ciphertext), key=key)
+        cases = (
+            (blob, _fresh_key()),
+            (EncryptedBlob(nonce=blob.nonce, ciphertext=flipped_first_byte), key),
+            (EncryptedBlob(nonce=blob.nonce, ciphertext=flipped_last_byte), key),
+            (EncryptedBlob(nonce=other_nonce, ciphertext=blob.ciphertext), key),
+        )
+        for candidate_blob, candidate_key in cases:
+            with pytest.raises(DecryptionError):
+                decrypt_record(candidate_blob, key=candidate_key)
 
-    def test_aad_mismatch_raises(self) -> None:
+    def test_aad_mismatch_or_omission_raises(self) -> None:
         key = _fresh_key()
         blob = encrypt_record(b"payload", key=key, associated_data=b"context:a")
         with pytest.raises(DecryptionError):
             decrypt_record(blob, key=key, associated_data=b"context:b")
 
-    def test_missing_aad_at_decrypt_raises(self) -> None:
-        """Encrypting with AAD then decrypting without it MUST fail."""
-        key = _fresh_key()
-        blob = encrypt_record(b"payload", key=key, associated_data=b"context")
+        missing_aad_blob = encrypt_record(b"payload", key=key, associated_data=b"context")
         with pytest.raises(DecryptionError):
-            decrypt_record(blob, key=key)
+            decrypt_record(missing_aad_blob, key=key)
 
 
 class TestKeySizeValidation:
     """The substrate refuses anything other than a 32-byte AES-256 key."""
 
-    @pytest.mark.parametrize("invalid_size", [0, 15, 16, 24, 33, 64])
-    def test_encrypt_rejects_wrong_key_size(self, invalid_size: int) -> None:
-        with pytest.raises(EncryptionError):
-            encrypt_record(b"payload", key=secrets.token_bytes(invalid_size))
-
-    @pytest.mark.parametrize("invalid_size", [0, 15, 16, 24, 33, 64])
-    def test_decrypt_rejects_wrong_key_size(self, invalid_size: int) -> None:
+    def test_encrypt_and_decrypt_reject_wrong_key_sizes(self) -> None:
         blob = encrypt_record(b"payload", key=_fresh_key())
-        with pytest.raises(EncryptionError):
-            decrypt_record(blob, key=secrets.token_bytes(invalid_size))
+        for invalid_size in (0, 15, 16, 24, 33, 64):
+            invalid_key = secrets.token_bytes(invalid_size)
+            with pytest.raises(EncryptionError):
+                encrypt_record(b"payload", key=invalid_key)
+            with pytest.raises(EncryptionError):
+                decrypt_record(blob, key=invalid_key)
 
     def test_encrypt_wraps_invalid_plaintext_type_as_encryption_error(self) -> None:
         with pytest.raises(EncryptionError):
@@ -188,25 +167,20 @@ class TestEncryptedBlobShape:
 class TestHkdfDerivation:
     """``derive_key`` produces deterministic, context-bound key material."""
 
-    def test_deterministic_for_fixed_inputs(self) -> None:
+    def test_deterministic_and_bound_to_context_and_salt(self) -> None:
         ikm = b"master-key-material"
         salt = b"per-store-salt"
         first = derive_key(key_material=ikm, salt=salt, context=b"aeat.context.v1")
         second = derive_key(key_material=ikm, salt=salt, context=b"aeat.context.v1")
         assert first == second
 
-    def test_different_contexts_yield_different_keys(self) -> None:
-        ikm = b"master-key-material"
-        salt = b"per-store-salt"
-        a = derive_key(key_material=ikm, salt=salt, context=b"aeat.lookup.v1")
-        b = derive_key(key_material=ikm, salt=salt, context=b"aeat.envelope.v1")
-        assert a != b
+        lookup_key = derive_key(key_material=ikm, salt=salt, context=b"aeat.lookup.v1")
+        envelope_key = derive_key(key_material=ikm, salt=salt, context=b"aeat.envelope.v1")
+        assert lookup_key != envelope_key
 
-    def test_different_salts_yield_different_keys(self) -> None:
-        ikm = b"master-key-material"
-        a = derive_key(key_material=ikm, salt=b"salt-a", context=b"aeat.context.v1")
-        b = derive_key(key_material=ikm, salt=b"salt-b", context=b"aeat.context.v1")
-        assert a != b
+        salt_a_key = derive_key(key_material=ikm, salt=b"salt-a", context=b"aeat.context.v1")
+        salt_b_key = derive_key(key_material=ikm, salt=b"salt-b", context=b"aeat.context.v1")
+        assert salt_a_key != salt_b_key
 
     def test_default_length_is_aes256_key_size(self) -> None:
         derived = derive_key(
@@ -216,33 +190,25 @@ class TestHkdfDerivation:
         )
         assert len(derived) == KEY_SIZE
 
-    @pytest.mark.parametrize("length", [16, 24, 48, 64])
-    def test_custom_length(self, length: int) -> None:
-        derived = derive_key(
-            key_material=b"ikm",
-            salt=b"salt",
-            context=b"aeat.context.v1",
-            length=length,
-        )
-        assert len(derived) == length
-
-    def test_zero_length_rejected(self) -> None:
-        with pytest.raises(KeyDerivationError):
-            derive_key(
+    def test_custom_length(self) -> None:
+        for length in (16, 24, 48, 64):
+            derived = derive_key(
                 key_material=b"ikm",
                 salt=b"salt",
                 context=b"aeat.context.v1",
-                length=0,
+                length=length,
             )
+            assert len(derived) == length
 
-    def test_negative_length_rejected(self) -> None:
-        with pytest.raises(KeyDerivationError):
-            derive_key(
-                key_material=b"ikm",
-                salt=b"salt",
-                context=b"aeat.context.v1",
-                length=-1,
-            )
+    def test_non_positive_length_rejected(self) -> None:
+        for length in (0, -1):
+            with pytest.raises(KeyDerivationError):
+                derive_key(
+                    key_material=b"ikm",
+                    salt=b"salt",
+                    context=b"aeat.context.v1",
+                    length=length,
+                )
 
     def test_invalid_context_type_is_wrapped_as_key_derivation_error(self) -> None:
         with pytest.raises(KeyDerivationError):
@@ -258,7 +224,7 @@ class TestHkdfDerivation:
         derived = derive_key(
             key_material=master,
             salt=b"per-store-salt",
-            context=b"aeat.test.v1",
+            context=b"aeat-test.v1",
         )
         plaintext = b"end-to-end derived-key encryption"
         blob = encrypt_record(plaintext, key=derived)
@@ -268,25 +234,19 @@ class TestHkdfDerivation:
 class TestErrorCodeRegistration:
     """Every new exception class binds to a registered ErrorCode."""
 
-    @pytest.mark.parametrize(
-        ("error_class", "expected_code"),
-        [
+    def test_classes_bind_to_registered_codes(self) -> None:
+        cases = (
             ("EncryptionError", "INTEGRITY_STORAGE_ENCRYPTION"),
             ("DecryptionError", "INTEGRITY_STORAGE_DECRYPTION"),
             ("KeyDerivationError", "INTEGRITY_STORAGE_KEY_DERIVATION"),
             ("NonceCollisionError", "INTEGRITY_STORAGE_NONCE_COLLISION"),
             ("PersistenceError", "FAIL_STORAGE_PERSISTENCE"),
-        ],
-    )
-    def test_class_binds_to_registered_code(
-        self,
-        error_class: str,
-        expected_code: str,
-    ) -> None:
-        from ......core.errors._registry import bind_error_code
+        )
+        from ......core.errors import bind_error_code
         from ... import errors as storage_errors
 
-        cls = getattr(storage_errors, error_class)
-        bound = bind_error_code(cls)
-        assert bound is not None
-        assert bound.code == expected_code
+        for error_class, expected_code in cases:
+            cls = getattr(storage_errors, error_class)
+            bound = bind_error_code(cls)
+            assert bound is not None
+            assert bound.code == expected_code

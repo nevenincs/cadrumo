@@ -60,9 +60,11 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
     BindingId,
     CasillaId,
@@ -70,8 +72,6 @@ from ....domain.calculations.registry import (
     RelationId,
     validated_casilla_id,
 )
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -85,8 +85,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 #: Modelo id this module enrolls into the multi-year-renta authorization gate.
 _MODELO = "100"
-_BUCKET_ID = "operator"
+_PROFILE_ID = "10010000-0000-4100-8100-000000000101"
+_BUCKET_ID = _PROFILE_ID
 _PERIOD = "0A"
+
 
 #: Casillas on the cross-renta Anexo-C base-liquidable-general-negativa carry.
 #: 1391 is the end-of-year *generated* saldo pending future application; 1388
@@ -149,14 +151,22 @@ def _seed_taxpayer_unit_profile() -> None:
     # fixture stamps on the bucket's profile manifest ("Test runtime profile");
     # a divergent label trips the torn-rename guard in ProfileAggregate.
     record = UserProfileRecord(
-        profile_id=_BUCKET_ID,
+        profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Operator"),
+            UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="varon"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
+            UserProfileFact(path="renta_taxpayer.sex", value="H"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
@@ -170,6 +180,8 @@ def _seed_taxpayer_unit_profile() -> None:
             UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
             UserProfileFact(path="renta_family.descendientes_menores_3_2024", value=Decimal("0")),
             UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=Decimal("0")),
+            UserProfileFact(path="renta_family.unidad_familiar_otros_miembros_base", value=Decimal("0")),
+            UserProfileFact(path="renta_family.madrid_nacimiento_adopcion_eligible_count", value=Decimal("0")),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,

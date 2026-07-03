@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....domain._identifiers import ModeloIdentifier
+from ....domain import ModeloIdentifier
 from ....tests.secure_sql import isolated_runtime_profile
 from .._history_models import ModeloHistory, ModeloHistoryEntry
 from .._history_repository import ModeloHistoryRepository
@@ -21,31 +21,31 @@ from .._history_repository import ModeloHistoryRepository
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "filing-runtime"
+_LATEST_SUBMITTED_AT = datetime(2026, 5, 28, 11, 25, 0, tzinfo=UTC)
 
 
 def _populated_history() -> ModeloHistory:
     """Build a ModeloHistory with multiple entries spanning distinct periods."""
 
-    now = datetime.now(UTC).replace(microsecond=0)
     return ModeloHistory(
         modelo=ModeloIdentifier("303"),
         entries=(
             ModeloHistoryEntry(
                 modelo=ModeloIdentifier("303"),
                 period=Period.from_year_and_code(2025, "1T"),
-                submitted_at=now - timedelta(days=90),
+                submitted_at=_LATEST_SUBMITTED_AT - timedelta(days=90),
                 status="ACEPTADA",
             ),
             ModeloHistoryEntry(
                 modelo=ModeloIdentifier("303"),
                 period=Period.from_year_and_code(2025, "2T"),
-                submitted_at=now - timedelta(days=30),
+                submitted_at=_LATEST_SUBMITTED_AT - timedelta(days=30),
                 status="ACEPTADA",
             ),
             ModeloHistoryEntry(
                 modelo=ModeloIdentifier("303"),
                 period=Period.from_year_and_code(2025, "3T"),
-                submitted_at=now,
+                submitted_at=_LATEST_SUBMITTED_AT,
                 status="RECHAZADA",
             ),
         ),

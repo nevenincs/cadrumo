@@ -29,9 +29,14 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
     CasillaId,
     InputKind,
@@ -39,17 +44,13 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.justificante import Justificante, JustificanteRepository
-from ....domain.modelos import ExternalEvidenceKind
-from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
-from ....domain.modelos._verification_report import (
+from ....domain.justificante import Justificante
+from ....domain.modelos import (
+    ExternalEvidenceKind,
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
+    WorkUnit,
 )
-from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from ....domain.modelos._work_unit import WorkUnit
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.registry_observations import registry_grounded_observations
@@ -93,6 +94,8 @@ _M130_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id("10", surface
 _M130_A_DEDUCIR_CASILLA: CasillaId = validated_casilla_id("15", surface="_M130_A_DEDUCIR_CASILLA")
 _M130_RESULTADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_RESULTADO_PREVIO_CASILLA")
 _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_RESULTADO_CASILLA")
+_BUCKET_ID = "00000000-0000-4000-8000-000000000131"
+_PROFILE_LABEL = "M130 verification test"
 
 
 def _required_manual_casillas_for_m130() -> tuple[CasillaId, ...]:
@@ -116,13 +119,17 @@ def _seed_runtime_profile_record(bucket_id: str) -> None:
     UserProfileLifecycleRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="M130 verification test",
+            display_name=_PROFILE_LABEL,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X1234567L"),
                 UserProfileFact(path="identity.name", value="Marta"),
                 UserProfileFact(path="identity.surnames", value="Verifier"),
+                UserProfileFact(path="activities.description", value="design services"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
                 UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
             ),
@@ -156,8 +163,8 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, filing_year: int, p
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over a fresh isolated profile."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
-        _seed_runtime_profile_record("default")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
+        _seed_runtime_profile_record(_BUCKET_ID)
         objects = profile.repository
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
@@ -269,7 +276,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
     )
 
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo=_M130_MODELO,
         filing_year=_M130_FILING_YEAR,
         period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
@@ -325,7 +332,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
     required = _required_manual_casillas_for_m130()
 
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo=_M130_MODELO,
         filing_year=_M130_FILING_YEAR,
         period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
@@ -341,7 +348,6 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
         _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
         _M130_RETENCIONES_CASILLA: Decimal("0"),
         _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
-        _M130_A_DEDUCIR_CASILLA: Decimal("0"),
         _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
         _M130_RESULTADO_CASILLA: Decimal("0"),
     }
@@ -393,6 +399,8 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
     assert verified.ledger_filing_evidence is not None
     assert verified.ledger_filing_evidence.snapshot_fingerprint == verified.ledger_filing_snapshot.snapshot_fingerprint
     assert {entry.casilla_id for entry in verified.ledger_filing_evidence.manual_entries} >= set(casilla_inputs)
+    assert all(row.legal_refs and row.source_refs for row in verified.ledger_filing_evidence.rows)
+    assert all(entry.legal_refs and entry.source_refs for entry in verified.ledger_filing_evidence.manual_entries)
 
 
 def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
@@ -413,7 +421,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
     wu_repo, cr_repo, _filing_repo, _vr_repo, bv_repo = repos
 
     work_unit = create_work_unit(
-        bucket_id="default",
+        bucket_id=_BUCKET_ID,
         modelo=_M130_MODELO,
         filing_year=_M130_FILING_YEAR,
         period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
@@ -431,7 +439,6 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
             _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
             _M130_RETENCIONES_CASILLA: Decimal("0"),
             _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
-            _M130_A_DEDUCIR_CASILLA: Decimal("0"),
             _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
             _M130_RESULTADO_CASILLA: Decimal("0"),
         },

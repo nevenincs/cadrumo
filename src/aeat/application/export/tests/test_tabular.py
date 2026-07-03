@@ -10,7 +10,7 @@ from typing import cast
 import pytest
 from openpyxl import load_workbook
 
-from ....core.errors import build_error_envelope, declared_error_codes
+from ....core.errors import ERROR_REGISTRY, build_error_envelope, declared_error_codes
 from ....core.external_constants import CSV_MIME_TYPE, JSONL_MIME_TYPE, UTF_8_ENCODING, XLSX_MIME_TYPE
 from .. import ExportSerializationFormat, serialize_tabular_rows
 from .._errors import ExportFieldError, ExportFormatError
@@ -93,13 +93,6 @@ def test_serialize_tabular_rows_rejects_unknown_fields() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_export_format_error_is_in_error_registry() -> None:
-    """ExportFormatError must be registered so the CLI can handle it."""
-    from ....core.errors import ERROR_REGISTRY
-
-    assert "REFUSED_EXPORT_FORMAT" in ERROR_REGISTRY
-
-
 def test_export_format_error_registry_uses_distinct_application_and_adapter_classes() -> None:
     """The export format error classes must keep distinct registry identities.
 
@@ -118,31 +111,18 @@ def test_export_format_error_registry_uses_distinct_application_and_adapter_clas
     ]
 
 
-def test_export_field_error_is_in_error_registry() -> None:
-    """ExportFieldError must be registered so the CLI can handle it."""
-    from ....core.errors import ERROR_REGISTRY
+def test_export_errors_are_registered_with_expected_attributes() -> None:
+    """Export errors must be registered so the CLI can handle them."""
+    cases = (
+        ("REFUSED_EXPORT_FORMAT", "errors.refused.refused_export_format"),
+        ("REFUSED_EXPORT_FIELD", "errors.refused.refused_export_field"),
+    )
 
-    assert "REFUSED_EXPORT_FIELD" in ERROR_REGISTRY
-
-
-def test_export_format_error_code_attributes() -> None:
-    """ERROR_REGISTRY entry for ExportFormatError carries expected attributes."""
-    from ....core.errors import ERROR_REGISTRY
-
-    code = ERROR_REGISTRY["REFUSED_EXPORT_FORMAT"]
-    assert code.code == "REFUSED_EXPORT_FORMAT"
-    assert code.message_key == "errors.refused.refused_export_format"
-    assert code.retryable is False
-
-
-def test_export_field_error_code_attributes() -> None:
-    """ERROR_REGISTRY entry for ExportFieldError carries expected attributes."""
-    from ....core.errors import ERROR_REGISTRY
-
-    code = ERROR_REGISTRY["REFUSED_EXPORT_FIELD"]
-    assert code.code == "REFUSED_EXPORT_FIELD"
-    assert code.message_key == "errors.refused.refused_export_field"
-    assert code.retryable is False
+    for code_key, message_key in cases:
+        code = ERROR_REGISTRY[code_key]
+        assert code.code == code_key
+        assert code.message_key == message_key
+        assert code.retryable is False
 
 
 # ---------------------------------------------------------------------------
@@ -150,32 +130,31 @@ def test_export_field_error_code_attributes() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_export_format_error_build_error_envelope() -> None:
-    """build_error_envelope must succeed for ExportFormatError."""
-
-    err = ExportFormatError(
-        translated_message="errors.refused.refused_export_format",
-        context={"export_format": "xml"},
+def test_export_errors_build_error_envelope() -> None:
+    """build_error_envelope must succeed for export errors."""
+    cases: tuple[tuple[ExportFormatError | ExportFieldError, str], ...] = (
+        (
+            ExportFormatError(
+                translated_message="errors.refused.refused_export_format",
+                context={"export_format": "xml"},
+            ),
+            "REFUSED_EXPORT_FORMAT",
+        ),
+        (
+            ExportFieldError(
+                translated_message="errors.refused.refused_export_field",
+                context={"reason": "fieldnames_empty"},
+            ),
+            "REFUSED_EXPORT_FIELD",
+        ),
     )
-    envelope = build_error_envelope(err)
-    assert envelope.code == "REFUSED_EXPORT_FORMAT"
-    assert envelope.category == "REFUSED"
-    assert envelope.retryable is False
-    assert envelope.message != ""
 
-
-def test_export_field_error_build_error_envelope() -> None:
-    """build_error_envelope must succeed for ExportFieldError."""
-
-    err = ExportFieldError(
-        translated_message="errors.refused.refused_export_field",
-        context={"reason": "fieldnames_empty"},
-    )
-    envelope = build_error_envelope(err)
-    assert envelope.code == "REFUSED_EXPORT_FIELD"
-    assert envelope.category == "REFUSED"
-    assert envelope.retryable is False
-    assert envelope.message != ""
+    for error, expected_code in cases:
+        envelope = build_error_envelope(error)
+        assert envelope.code == expected_code
+        assert envelope.category == "REFUSED"
+        assert envelope.retryable is False
+        assert envelope.message != ""
 
 
 # ---------------------------------------------------------------------------
@@ -183,40 +162,22 @@ def test_export_field_error_build_error_envelope() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_export_format_error_locale_key_present_in_catalogue() -> None:
-    """The locale catalogue must carry the refused_export_format key for every locale."""
+def test_export_error_locale_keys_present_in_catalogue() -> None:
+    """The locale catalogue must carry export error keys for every locale."""
     import importlib.resources
     import pathlib
 
     import yaml
 
     locale_dir = pathlib.Path(str(importlib.resources.files("aeat.locales")))
-    for locale_code in ("en", "es", "ca", "hu"):
-        text = (locale_dir / f"{locale_code}.yml").read_text(encoding=UTF_8_ENCODING)
-        data = yaml.safe_load(text)
-        value = data.get("errors", {}).get("refused", {}).get("refused_export_format")
-        assert value, (
-            f"locale {locale_code!r}: 'errors.refused.refused_export_format' key is "
-            f"missing or empty in {locale_code}.yml"
-        )
-
-
-def test_export_field_error_locale_key_present_in_catalogue() -> None:
-    """The locale catalogue must carry the refused_export_field key for every locale."""
-    import importlib.resources
-    import pathlib
-
-    import yaml
-
-    locale_dir = pathlib.Path(str(importlib.resources.files("aeat.locales")))
-    for locale_code in ("en", "es", "ca", "hu"):
-        text = (locale_dir / f"{locale_code}.yml").read_text(encoding=UTF_8_ENCODING)
-        data = yaml.safe_load(text)
-        value = data.get("errors", {}).get("refused", {}).get("refused_export_field")
-        assert value, (
-            f"locale {locale_code!r}: 'errors.refused.refused_export_field' key is "
-            f"missing or empty in {locale_code}.yml"
-        )
+    for locale_key in ("refused_export_format", "refused_export_field"):
+        for locale_code in ("en", "es", "ca", "hu"):
+            text = (locale_dir / f"{locale_code}.yml").read_text(encoding=UTF_8_ENCODING)
+            data = yaml.safe_load(text)
+            value = data.get("errors", {}).get("refused", {}).get(locale_key)
+            assert value, (
+                f"locale {locale_code!r}: 'errors.refused.{locale_key}' key is missing or empty in {locale_code}.yml"
+            )
 
 
 # ---------------------------------------------------------------------------

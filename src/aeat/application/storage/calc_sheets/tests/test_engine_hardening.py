@@ -11,6 +11,7 @@ from .....core.resources import resources
 from .....domain.calculations.registry import FormulaDefinition, ParameterDefinition
 from .._engine import _resolve_scalar, _rounding_rule_for, build_export_plan
 from .._errors import CalcSheetsEngineError
+from .._records import RelationValues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -45,6 +46,25 @@ def test_guide_paragraphs_resolve_through_output_language() -> None:
     )
 
 
+def test_blank_relation_values_carry_registry_grounding() -> None:
+    snapshot = resources().modelos.authority.snapshot("180", filing_year=2026, period="0A")
+
+    plan = build_export_plan(snapshot, relation_values=RelationValues())
+
+    assert plan.relation_provenance is not None
+    relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
+    relation_rows = plan.relation_provenance.values
+    assert relation_rows
+    for row in relation_rows:
+        relation = relations_by_id[row.relation]
+        assert row.value is None
+        assert row.provenance == "operator_manual"
+        assert row.source_modelo == relation.source_modelo
+        assert row.source_casilla_ids == (relation.source_casilla_id,)
+        assert set(relation.legal_refs) <= set(row.legal_refs)
+        assert set(relation.source_refs) <= set(row.source_refs)
+
+
 def test_unsupported_rounding_error_omits_raw_rounding_token() -> None:
     formula = FormulaDefinition.model_construct(id="formula-sensitive", rounding="private-rounding-token")
 
@@ -63,8 +83,8 @@ def test_missing_scalar_value_error_uses_translated_message_and_structured_conte
         id="parameter-without-current-value",
         data_type="money",
         unit="EUR",
-        legal_refs=("boe-test",),
-        source_refs=("source-test",),
+        legal_refs=("ley-58-2003:art-29",),
+        source_refs=("aeat-source-test",),
     )
 
     with pytest.raises(CalcSheetsEngineError) as raised:

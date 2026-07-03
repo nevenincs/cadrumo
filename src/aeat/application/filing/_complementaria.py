@@ -17,8 +17,8 @@ repository stores both amendment variants.
 See Also:
     :mod:`aeat.domain.filing`
         Canonical amendment records, draft records, and governed
-        repositories used by this application boundary.
-    :class:`aeat.domain.filing.ModeloAmendmentRepository`
+        repository ports used by this application boundary.
+    :class:`aeat.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`
         AUDIT-classified encrypted persistence for complementaria and
         sustitutiva records.
     :mod:`aeat.application.modelo._amendment_actions`
@@ -31,6 +31,8 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Protocol, runtime_checkable
 
+from ...adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
+from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ...core import Period
 from ...core.logging import get_logger
 from ...domain.filing import (
@@ -44,7 +46,6 @@ from ...domain.filing import (
     ModeloCode,
     ModeloComplementaria,
     ModeloDraft,
-    ModeloDraftRepository,
     ModeloInputs,
     ModeloInputValue,
     ModeloSustitutiva,
@@ -107,8 +108,6 @@ def build_complementaria(
         amended_draft=amended_draft,
         created_at=amended_draft.created_at,
     )
-    from ...domain.filing import ModeloAmendmentRepository
-
     ModeloAmendmentRepository().save(amendment)
     _logger.info(
         "built complementaria amendment_id=%s submission_id=%s",
@@ -211,8 +210,6 @@ def load_amendment(amendment_id: str) -> ModeloComplementaria | ModeloSustitutiv
     Returns a :class:`ModeloComplementaria` or :class:`ModeloSustitutiva`
     depending on the amendment kind.
     """
-    from ...domain.filing import ModeloAmendmentRepository
-
     repository = ModeloAmendmentRepository()
     try:
         repository.envelope_path_for(amendment_id)
@@ -231,8 +228,6 @@ def list_amendments(*, modelo: str | None = None) -> tuple[ModeloComplementaria 
     Each element is a :class:`ModeloSustitutiva` or
     :class:`ModeloComplementaria` depending on its amendment kind.
     """
-    from ...domain.filing import ModeloAmendmentRepository
-
     repository = ModeloAmendmentRepository()
     results = tuple(
         amendment for amendment in repository.iter_amendments() if modelo is None or amendment.original_model == modelo

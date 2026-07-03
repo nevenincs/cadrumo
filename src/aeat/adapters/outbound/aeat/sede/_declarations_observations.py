@@ -1,9 +1,19 @@
 """Filed-declaration observation and registry interpretation helpers.
 
-The Sede capture path resolves a :class:`RegistrySnapshot` through
-:class:`ValidatedRegistryAuthority`, interprets its :class:`ModeloRevision`, and
-materialises filed rows as provenance-bearing :class:`CasillaObservation`
-records.
+The Sede capture path resolves a
+:class:`RegistrySnapshot` through
+:class:`ValidatedRegistryAuthority`,
+interprets its :class:`ModeloRevision`, and
+materialises filed rows as provenance-bearing
+:class:`CasillaObservation` records.
+
+See Also:
+    :func:`~aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation`
+        Browser capture surface that produces filed-declaration observations.
+    :func:`registry_observation_from_filed_declaration`
+        Conversion boundary from Sede observations to registry observations.
+    :func:`resolve_previous_filing_bindings_from_filed_declarations`
+        Resolver that folds filed observations into previous-filing bindings.
 """
 
 from __future__ import annotations
@@ -45,7 +55,7 @@ from .....domain.calculations.registry import (
     resolve_relation_values_from_observations,
     validated_casilla_id,
 )
-from .....domain.iva_compensation._carry_forward import derive_303_compensation_available
+from .....domain.iva_compensation import derive_303_compensation_available
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
 from ._browser_constants import SEDE_BODY_ENCODING as _SEDE_BODY_ENCODING
 from ._declarations_schema import Declaracion
@@ -460,7 +470,16 @@ def _verify_submitted_file_context(
 def registry_observation_from_filed_declaration(
     observation: FiledDeclaracionObservation,
 ) -> RegistryModeloObservation:
-    """Convert a filed-declaration observation into a :class:`RegistryModeloObservation`."""
+    """Convert a filed-declaration observation into registry observation rows.
+
+    The :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
+    is checked against the selected
+    :class:`RegistrySnapshot`; each accepted
+    :class:`~aeat.adapters.outbound.aeat.sede.ObservedCasillaValue` becomes a
+    provenance-bearing :class:`CasillaObservation`
+    inside the returned
+    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`.
+    """
     period_token = observation.period.registry_token
     snapshot = _registry_authority().snapshot(
         observation.modelo,
@@ -595,9 +614,15 @@ def resolve_previous_filing_bindings_from_filed_declarations(
 ) -> dict[BindingId, Decimal]:
     """Resolve registry previous-filing bindings from filed AEAT observations.
 
-    The :class:`ModeloRevision` supplies the previous-filing binding selectors;
-    filed Sede observations are converted before the registry resolver folds
-    their casilla values.
+    The :class:`ModeloRevision` supplies the
+    previous-filing binding selectors and the :class:`~aeat.core.Period` selects
+    the target filing period. Filed Sede
+    :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation` rows
+    are converted to
+    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` before
+    :func:`~aeat.domain.calculations.registry.resolve_previous_filing_binding_values`
+    folds their casilla values into :class:`~aeat.domain.calculations.registry.BindingId`
+    outputs.
     """
     return resolve_previous_filing_binding_values(
         revision,
@@ -616,8 +641,15 @@ def resolve_relation_values_from_filed_declarations(
 ) -> dict[RelationId, Decimal]:
     """Resolve registry cross-model relation values from filed AEAT observations.
 
-    The :class:`ModeloRevision` supplies relation declarations; filed Sede
-    observations are converted before relation values are folded.
+    The :class:`ModeloRevision` supplies the
+    relation declarations and the :class:`~aeat.core.Period` selects the target
+    filing period. Filed Sede
+    :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation` rows
+    are converted to
+    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` before
+    :func:`~aeat.domain.calculations.registry.resolve_relation_values_from_observations`
+    folds their casilla values into :class:`~aeat.domain.calculations.registry.RelationId`
+    outputs.
     """
     return resolve_relation_values_from_observations(
         revision,

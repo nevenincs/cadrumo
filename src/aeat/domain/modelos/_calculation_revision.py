@@ -50,8 +50,14 @@ from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, Validatio
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
 from .._identifiers import canonical_decimal_string as _canonical_decimal
-from ..calculations.registry._bindings import CasillaObservation
-from ..calculations.registry._ids import BindingId, CasillaId, RelationId, validated_casilla_id
+from ..calculations.registry import (
+    BindingId,
+    CasillaId,
+    CasillaObservation,
+    RegistryCalculationUnresolvedOutcome,
+    RelationId,
+    validated_casilla_id,
+)
 from ._errors import ModeloError, ModeloValidationError
 from ._ids import CalculationRevisionId, WorkUnitId
 from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
@@ -74,14 +80,25 @@ class CalculationRevisionAmendmentKind(StrEnum):
     Aligned with Spanish tax law's legally-distinct amendment shapes:
 
     * ``COMPLEMENTARIA`` — corrective filing that adds to the prior
-      filing's tax due. Filed when the operator discovers an error
-      that under-reported tax.
+      filing's tax due (LGT art. 122.2, ``ley-58-2003:art-122``). Filed
+      when the operator discovers an error that under-reported tax.
     * ``SUSTITUTIVA`` — substitute filing that replaces the prior
-      filing entirely. Used for material restatements.
+      filing entirely (LGT art. 122.1). Used for material restatements.
+    * ``RECTIFICATIVA`` — autoliquidación rectificativa: the unified
+      amendment mechanism established by LGT art. 120.4
+      (``ley-58-2003:art-120``, apartado 4) and developed by RD 117/2024
+      (which amended the Reglamento de gestión, RD 1065/2007). For the
+      modelos whose tax-specific orden implements it (Modelo 303 from
+      the 2023-y-siguientes revision onward), the rectificativa replaces
+      BOTH the complementaria and the separate solicitud de rectificación:
+      a single amended autoliquidación that may raise OR lower the
+      resultado, carrying its own fichero-BOE indicator and, when it
+      lowers the cuota to a refund, the operator's devolución account.
     """
 
     COMPLEMENTARIA = "complementaria"
     SUSTITUTIVA = "sustitutiva"
+    RECTIFICATIVA = "rectificativa"
 
 
 ModeloActorLabel = Annotated[
@@ -319,9 +336,18 @@ class CalculationRevision(BaseModel):
     # engine's typed entries so operand_refs, operand_values, legal_refs,
     # and source_refs survive the domain boundary.
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
+    # Typed unresolved-outcome envelope carrying the casillas the engine could
+    # NOT resolve to a Decimal value (an unresolvable IRNR rate omits its
+    # casilla rather than emitting an in-band sentinel magnitude). Populated
+    # from the engine result's ``unresolved_outcomes`` so the verification layer
+    # can convert each into a BLOCKING finding post-persistence. Rides beside
+    # ``observations`` and, like it, is deliberately NOT threaded into
+    # ``derive_calculation_revision_id`` (it is derived from the same inputs, not
+    # an independent identity axis).
+    unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = Field(default_factory=tuple)
     # Immutable content-addressed snapshot of the ledger state this revision was
     # computed from (per the modelo-filing-ledger-snapshot ADR). Captured at
-    # verify/file time over ``source_transaction_ids``; ``None`` for legacy
+    # verify/file time over ``source_transaction_ids``; ``None`` for unsnapshotted
     # revisions and for borradores not yet snapshotted. Deliberately NOT threaded
     # into ``derive_calculation_revision_id`` so the content-addressed id is
     # unaffected. A non-ledger modelo carries an empty-but-valid snapshot.
@@ -332,8 +358,8 @@ class CalculationRevision(BaseModel):
     # snapshot's ``snapshot_fingerprint``. Where ``ledger_filing_snapshot`` proves
     # *whether* the ledger drifted, this carries *what the ledger said* so the
     # fact basis can be reconstituted and exported as filing evidence. Captured at
-    # verify/file time; ``None`` for legacy revisions. Deliberately NOT threaded
-    # into ``derive_calculation_revision_id``.
+    # verify/file time; ``None`` for revisions without ledger evidence. Deliberately
+    # NOT threaded into ``derive_calculation_revision_id``.
     ledger_filing_evidence: LedgerFilingEvidence | None = None
     # Operator-supplied detail rows for informational modelos whose
     # content is a list of repeating records rather than scalar casilla
@@ -384,7 +410,7 @@ class CalculationRevision(BaseModel):
         # The typed `observations` envelope is the logical source of truth;
         # the flat `casilla_values` field is a denormalised cache enforced
         # equal to the projection of observations. A non-empty flat map
-        # without observations is an incomplete revision, not a legacy shape
+        # without observations is an incomplete revision, not a shape
         # to tolerate in this unreleased project.
         if self.casilla_values and not self.observations:
             raise ModeloValidationError(
@@ -517,7 +543,7 @@ class CalculationRevisionCatalogue(BaseModel):
         return tuple(rev for rev in self.revisions.values() if rev.work_unit_id == work_unit_id)
 
     @override
-    def __iter__(self) -> Iterator[CalculationRevision]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[CalculationRevision]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
         return iter(self.revisions.values())
 
     def __len__(self) -> int:

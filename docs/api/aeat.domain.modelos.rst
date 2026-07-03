@@ -27,7 +27,6 @@ Submodules
    aeat.domain.modelos._protocols
    aeat.domain.modelos._repository
    aeat.domain.modelos._row_models
-   aeat.domain.modelos._runtime_repository
    aeat.domain.modelos._sal_reserva_especial
    aeat.domain.modelos._verification_report
    aeat.domain.modelos._verification_repository

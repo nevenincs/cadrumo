@@ -50,17 +50,49 @@ def _assert_profile_record_present(ctx: typer.Context, *, profile_id: str, bucke
     except _AeatError as exc:
         locked = _locked_store_refusal(exc)
         if locked is not None:
+            _activate_bucket_output_language_hint(ctx, bucket_id=bucket_id)
             raise locked from exc
         _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label, error=exc)
         raise typer.Exit(code=2) from exc
     except Exception as exc:
         locked = _locked_store_refusal(exc)
         if locked is not None:
+            _activate_bucket_output_language_hint(ctx, bucket_id=bucket_id)
             raise locked from exc
         _log.debug("config profile readiness wrapped unexpected profile-record exception", exc_info=True)
         boundary = _ConfigBoundaryError(exc)
         _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label, error=boundary)
         raise typer.Exit(code=2) from boundary
+
+
+def _activate_bucket_output_language_hint(ctx: typer.Context, *, bucket_id: str) -> None:
+    """Pin render language to the failed target bucket when no explicit language was supplied."""
+    if _settings_has_explicit_output_language():
+        return
+
+    from ....application.user_profile import resolve_profile_output_language_hint
+    from ....core.config import override_settings
+    from ....core.i18n import clear_output_language_cache
+
+    language = resolve_profile_output_language_hint(bucket_id)
+    if language is None:
+        return
+    ctx.with_resource(override_settings(aeat_output_language=language))
+    clear_output_language_cache()
+
+
+def _settings_has_explicit_output_language() -> bool:
+    from ....core.config import load_settings
+    from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+
+    try:
+        settings = load_settings()
+    except (AttributeError, KeyError, ValueError):
+        return False
+    if "aeat_output_language" not in settings.model_fields_set:
+        return False
+    raw = str(getattr(settings.aeat_output_language, "value", settings.aeat_output_language)).strip().lower()
+    return raw in SUPPORTED_OUTPUT_LANGUAGES
 
 
 def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str) -> None:
@@ -124,7 +156,7 @@ def _emit_profile_record_unreadable(
 
 def _read_profile_record(*, profile_id: str, bucket_id: str):
     """Read a profile record under a bucket session scoped to that profile."""
-    from ....adapters.persistence.storage import has_active_bucket_session
+    from ....adapters.persistence.storage.master_key import has_active_bucket_session
     from ....application.user_profile import build_lifecycle_service, profile_storage_session
     from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 

@@ -15,6 +15,11 @@ to :func:`~aeat.core.redaction.redact_for_log`; this module keeps only
 logging-specific key-paired placeholders such as cookies, passphrases, and
 certificate serial suffixes. Per-run JSONL handlers are attached with
 :func:`attach_run_sink` so the same filter protects observability output.
+
+Logging is a diagnostic channel, not the CLI result contract. Operator-facing
+success payloads and typed :class:`~aeat.core.json_contract.Notice` values are
+rendered through the JSON/text output stack; this module only prepares redacted
+log records and plaintext diagnostic log files rooted by settings.
 """
 
 from __future__ import annotations
@@ -28,7 +33,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, overload, override
 
 if TYPE_CHECKING:
-    from .observability._context import RunContextInfo
+    from .observability import RunContextInfo
 from .redaction import redact_for_log
 
 _CONFIGURED = False
@@ -181,7 +186,15 @@ def _scrub_positional_args(message: str, args: tuple[Any, ...]) -> tuple[Any, ..
 
 
 class SecretScrubbingFilter(logging.Filter):
-    """Redact sensitive fields from log records before formatting."""
+    """Redact sensitive fields from log records before formatting.
+
+    The filter mutates each :class:`logging.LogRecord` in place so handlers,
+    stderr diagnostics, and JSONL run sinks see the same scrubbed record. It is
+    deliberately narrower than CLI output redaction: structured command results
+    still route through :mod:`aeat.core.output_rendering` or
+    :mod:`aeat.core.json_contract`, while this filter protects logging-only
+    message text, %-format args, exception text, and ``extra`` fields.
+    """
 
     @override
     def filter(self, record: logging.LogRecord) -> bool:
@@ -255,7 +268,7 @@ def _install_run_context_record_factory() -> None:
         nonlocal cached_vars
         record = previous_factory(*args, **kwargs)
         if cached_vars is None:
-            from .observability._context import (
+            from .observability import (
                 RUN_CONTEXT_VAR,
                 STEP_CONTEXT_VAR,
             )
@@ -306,8 +319,48 @@ def default_log_file_path() -> Path:
     return log_dir.expanduser() / _DEFAULT_LOG_FILE_NAME
 
 
+def _prepare_log_directory(log_file: Path) -> str | None:
+    """Best-effort create the diagnostic log directory.
+
+    Returns ``None`` when the directory already exists or was created, and a
+    short ``"<ErrorType>: <detail>"`` reason string when creation failed with
+    an :exc:`OSError`.
+
+    File logging is a best-effort diagnostic channel, not the operator result
+    contract. An ``AEAT_LOCAL_STORAGE_ROOT`` / ``AEAT_LOG_DIR`` that the
+    process cannot create — an inaccessible Windows path the operator's
+    account may not write, a path routed under a non-directory, a
+    ``PermissionError`` — MUST degrade to stderr-only logging rather than
+    crash CLI startup. Because :func:`get_logger` (and therefore this call)
+    runs at module-import time, an unguarded ``mkdir`` here escapes as a raw
+    Python traceback long before any CLI error boundary exists. Swallowing the
+    :exc:`OSError` into a reason string keeps startup alive; the caller
+    surfaces the reason as an instructive, redacted diagnostic.
+    """
+    try:
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        return f"{type(exc).__name__}: {exc}"
+    return None
+
+
 def configure_logging() -> None:
-    """Configures the project-wide logging defaults."""
+    """Configure the project-wide diagnostic logging defaults.
+
+    Installs settings-derived stderr/file handlers, the run-context record
+    factory, and :class:`SecretScrubbingFilter` on the root logger plus every
+    configured handler. The file handler writes redacted diagnostic plaintext
+    under :func:`default_log_file_path`; this module does not encrypt logs or
+    persist them through secure-object repositories.
+
+    When the diagnostic log directory cannot be created (an inaccessible
+    ``AEAT_LOCAL_STORAGE_ROOT`` / ``AEAT_LOG_DIR``), logging degrades to
+    stderr-only and records an instructive diagnostic naming the likely
+    remedy — it never crashes CLI startup with a raw traceback.
+
+    The function is idempotent so early imports can safely call
+    :func:`get_logger` without duplicating handlers.
+    """
     global _CONFIGURED
     if _CONFIGURED:
         return
@@ -315,9 +368,30 @@ def configure_logging() -> None:
     from .config import load_settings
 
     log_file = default_log_file_path()
-    log_file.parent.mkdir(parents=True, exist_ok=True)
+    log_directory_failure = _prepare_log_directory(log_file)
+    file_logging_enabled = log_directory_failure is None
 
     settings = load_settings()
+    configured_handlers: dict[str, dict[str, Any]] = {
+        "stderr": {
+            "level": settings.aeat_log_stderr_level,
+            "formatter": "standard",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stderr",
+            "filters": ["drop_run_event"],
+        },
+    }
+    root_handlers = ["stderr"]
+    if file_logging_enabled:
+        configured_handlers["file"] = {
+            "level": settings.aeat_log_file_level,
+            "formatter": "standard",
+            "class": "logging.FileHandler",
+            "filename": str(log_file),
+            "encoding": "utf-8",
+            "filters": ["drop_run_event"],
+        }
+        root_handlers.append("file")
     logging.config.dictConfig(
         {
             "version": 1,
@@ -328,25 +402,9 @@ def configure_logging() -> None:
             "filters": {
                 "drop_run_event": {"()": f"{__name__}._DropRunEventFilter"},
             },
-            "handlers": {
-                "stderr": {
-                    "level": settings.aeat_log_stderr_level,
-                    "formatter": "standard",
-                    "class": "logging.StreamHandler",
-                    "stream": "ext://sys.stderr",
-                    "filters": ["drop_run_event"],
-                },
-                "file": {
-                    "level": settings.aeat_log_file_level,
-                    "formatter": "standard",
-                    "class": "logging.FileHandler",
-                    "filename": str(log_file),
-                    "encoding": "utf-8",
-                    "filters": ["drop_run_event"],
-                },
-            },
+            "handlers": configured_handlers,
             "root": {
-                "handlers": ["stderr", "file"],
+                "handlers": root_handlers,
                 "level": settings.aeat_log_root_level,
             },
             "loggers": {
@@ -380,6 +438,21 @@ def configure_logging() -> None:
             handler.addFilter(SecretScrubbingFilter())
 
     _CONFIGURED = True
+
+    if not file_logging_enabled:
+        # Surface the degrade at ERROR so it clears the default ERROR-gated
+        # stderr handler (a WARNING would be swallowed) and flows through the
+        # secret-scrubbing filter installed above. Never silent: the operator
+        # is told what failed and the concrete remedy, in place of the raw
+        # import-time traceback this degrade replaces.
+        logging.getLogger(__name__).error(
+            "Diagnostic file logging disabled: cannot create the log directory %s (%s). "
+            "Continuing with stderr-only logging. Ensure AEAT_LOCAL_STORAGE_ROOT / AEAT_LOG_DIR "
+            "points at a path your account can write; on Windows check the folder's permissions, "
+            "run from a directory you own, or set AEAT_LOCAL_STORAGE_ROOT to a writable location.",
+            log_file.parent,
+            log_directory_failure,
+        )
 
 
 def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:
@@ -424,6 +497,9 @@ def attach_run_sink(sink: logging.Handler) -> None:
         sink: The :class:`logging.Handler` (typically
             :class:`aeat.core.observability._sink.JsonlRunSink`) to
             attach to the root logger.
+
+    The sink is a diagnostic observability target. It receives redacted log
+    records, not CLI result payloads or secure-storage records.
     """
     if not any(isinstance(f, SecretScrubbingFilter) for f in sink.filters):
         sink.addFilter(SecretScrubbingFilter())
@@ -453,7 +529,13 @@ def detach_run_sink(sink: logging.Handler) -> None:
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Returns a configured logger for the given module name.
+    """Return a configured logger for the given module name.
+
+    Preferred over direct :func:`logging.getLogger` in production modules
+    because it ensures the project defaults are installed and attaches
+    :class:`SecretScrubbingFilter` directly to the returned logger. Startup
+    modules that must use stdlib logging before settings load rely on later
+    propagation through the configured root logger instead.
 
     Args:
         name: The name of the module, typically __name__.

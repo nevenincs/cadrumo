@@ -20,42 +20,40 @@ _BASE_VALUES: dict[str, str] = {
 }
 
 
-def test_profile_key_validation_blocks_irnr_without_country() -> None:
-    result = validate_profile_values(
-        {
-            **_BASE_VALUES,
-            "taxpayer_type.fiscal_residency": "non_resident_irnr",
-        },
+def test_profile_key_validation_applies_irnr_conditional_requirements() -> None:
+    cases = (
+        (
+            "missing-country",
+            {"taxpayer_type.fiscal_residency": "non_resident_irnr"},
+            False,
+            ("taxpayer_type.country_of_fiscal_residence",),
+        ),
+        (
+            "gb-missing-representante",
+            {
+                "taxpayer_type.fiscal_residency": "non_resident_irnr",
+                "taxpayer_type.country_of_fiscal_residence": "GB",
+            },
+            False,
+            ("taxpayer_type.representante_fiscal_nif", "taxpayer_type.representante_fiscal_nombre"),
+        ),
+        (
+            "eu-country",
+            {
+                "taxpayer_type.fiscal_residency": "non_resident_irnr",
+                "taxpayer_type.country_of_fiscal_residence": "FR",
+            },
+            True,
+            (),
+        ),
     )
 
-    assert result.valid is False
-    assert "taxpayer_type.country_of_fiscal_residence" in result.missing_required
+    for case_id, overrides, expected_valid, expected_missing in cases:
+        result = validate_profile_values({**_BASE_VALUES, **overrides})
 
-
-def test_profile_key_validation_blocks_gb_irnr_without_representante() -> None:
-    result = validate_profile_values(
-        {
-            **_BASE_VALUES,
-            "taxpayer_type.fiscal_residency": "non_resident_irnr",
-            "taxpayer_type.country_of_fiscal_residence": "GB",
-        },
-    )
-
-    assert result.valid is False
-    assert "taxpayer_type.representante_fiscal_nif" in result.missing_required
-    assert "taxpayer_type.representante_fiscal_nombre" in result.missing_required
-
-
-def test_profile_key_validation_accepts_eu_irnr_without_representante() -> None:
-    result = validate_profile_values(
-        {
-            **_BASE_VALUES,
-            "taxpayer_type.fiscal_residency": "non_resident_irnr",
-            "taxpayer_type.country_of_fiscal_residence": "FR",
-        },
-    )
-
-    assert result.valid is True
+        assert result.valid is expected_valid, case_id
+        for missing_path in expected_missing:
+            assert missing_path in result.missing_required, case_id
 
 
 def test_lifecycle_validation_reports_conditional_irnr_profile_errors() -> None:
@@ -68,17 +66,58 @@ def test_lifecycle_validation_reports_conditional_irnr_profile_errors() -> None:
         UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="GB"),
     )
 
-    report = ProfileValidationService(schema=schema).validate_facts("gb-nonresident", facts)
+    report = ProfileValidationService(schema=schema).validate_facts("77777777-7777-4777-8777-777777777777", facts)
 
     error_paths = {issue.path for issue in report.issues if issue.severity.value == "error"}
     assert "taxpayer_type.representante_fiscal_nif" in error_paths
     assert "taxpayer_type.representante_fiscal_nombre" in error_paths
 
 
+def test_profile_key_validation_does_not_require_iva_regime_for_natural_person_without_activity() -> None:
+    result = validate_profile_values(
+        {
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "capital_inmobiliario",
+        }
+    )
+
+    assert result.valid is True
+    assert "iva.regime" not in result.missing_required
+
+
+def test_lifecycle_validation_allows_natural_person_without_activity_to_omit_iva_regime() -> None:
+    schema = resources().user_profile_schema.singleton
+    facts = (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+        UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
+    )
+
+    report = ProfileValidationService(schema=schema).validate_facts("77777777-7777-4777-8777-777777777777", facts)
+
+    error_paths = {issue.path for issue in report.issues if issue.severity.value == "error"}
+    assert "iva.regime" not in error_paths
+
+
+def test_lifecycle_validation_requires_natural_person_with_activity_to_declare_iva_regime() -> None:
+    schema = resources().user_profile_schema.singleton
+    facts = (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+        UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    )
+
+    report = ProfileValidationService(schema=schema).validate_facts("77777777-7777-4777-8777-777777777777", facts)
+
+    error_paths = {issue.path for issue in report.issues if issue.severity.value == "error"}
+    assert "iva.regime" in error_paths
+
+
 def test_profile_preflight_reports_irnr_country_as_missing_before_modelo_work() -> None:
     schema = resources().user_profile_schema.singleton
     record = UserProfileRecord(
-        profile_id="irnr-no-country",
+        profile_id="88888888-8888-4888-8888-888888888888",
         display_name="IRNR no country",
         facts=(
             UserProfileFact(path="identity.tax_id", value="X1234567L"),

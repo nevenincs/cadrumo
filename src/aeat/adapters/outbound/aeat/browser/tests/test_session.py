@@ -1,5 +1,6 @@
 """Unit tests for BrowserSession factory."""
 
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar, cast, override
 
@@ -19,6 +20,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _FIXTURES_ROOT = FIXTURES_DIR / "site_health"
 _PROBE_URL = f"{Settings.external_constants().aeat.domains.sede}/"
+_CERT_NOT_BEFORE = datetime(2026, 5, 28, 14, 5, 0, tzinfo=UTC)
+_CERT_NOT_AFTER = datetime(2099, 5, 28, 14, 5, 0, tzinfo=UTC)
 
 
 class _RecordingEvasion(EvasionStrategy):
@@ -188,6 +191,8 @@ class ContentFailingPage:
 @pytest.mark.asyncio
 async def test_browser_session_creation(tmp_path: Path) -> None:
     """Test creating a browser context with a concrete Playwright adapter."""
+    from ...auth import CERTIFICATE_CONTEXT_MARKER
+
     settings = Settings()
     profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
     evasion = _RecordingEvasion()
@@ -205,7 +210,7 @@ async def test_browser_session_creation(tmp_path: Path) -> None:
     assert context.kwargs["locale"] == "es-ES"
     assert context.kwargs["timezone_id"] == "Europe/Madrid"
     assert "storage_state" not in context.kwargs
-    assert not hasattr(context, "_aeat_certificate_thumbprint")
+    assert not hasattr(context, CERTIFICATE_CONTEXT_MARKER)
 
 
 @pytest.mark.asyncio
@@ -271,7 +276,6 @@ async def test_browser_session_prefers_explicit_storage_state_path(tmp_path: Pat
 @pytest.mark.asyncio
 async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     """Certificate propagates into new_context kwargs and thumbprint marker."""
-    from datetime import UTC, datetime, timedelta
 
     from cryptography import x509
     from cryptography.hazmat.primitives import hashes, serialization
@@ -296,15 +300,14 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
             x509.NameAttribute(NameOID.SERIAL_NUMBER, "12345678Z"),
         ],
     )
-    now = datetime.now(UTC)
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)
         .issuer_name(issuer)
         .public_key(key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(now - timedelta(days=1))
-        .not_valid_after(now + timedelta(days=365))
+        .not_valid_before(_CERT_NOT_BEFORE)
+        .not_valid_after(_CERT_NOT_AFTER)
         .sign(key, hashes.SHA256())
     )
     secret = SecretStr("pw")

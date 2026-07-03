@@ -20,28 +20,26 @@ class _EvidenceHolder(BaseModel):
     evidence_id: EvidenceId
 
 
-def test_bundle_id_accepts_canonical_sha256_hex_digest() -> None:
-    digest = hashlib.sha256(b"bundle-payload").hexdigest()
-    assert _BundleHolder(bundle_id=digest).bundle_id == digest
+def test_ids_accept_canonical_sha256_hex_digest() -> None:
+    cases = (
+        (_BundleHolder, "bundle_id", b"bundle-payload"),
+        (_EvidenceHolder, "evidence_id", b"evidence-payload"),
+    )
+
+    for holder, field_name, payload in cases:
+        digest = hashlib.sha256(payload).hexdigest()
+        instance = holder.model_validate({field_name: digest})
+        assert getattr(instance, field_name) == digest, field_name
 
 
-def test_evidence_id_accepts_canonical_sha256_hex_digest() -> None:
-    digest = hashlib.sha256(b"evidence-payload").hexdigest()
-    assert _EvidenceHolder(evidence_id=digest).evidence_id == digest
+def test_ids_reject_noncanonical_digest_shapes() -> None:
+    cases = (
+        (_BundleHolder, "bundle_id", "A" * 64),
+        (_BundleHolder, "bundle_id", "a" * 63),
+        (_BundleHolder, "bundle_id", "a" * 65),
+        (_EvidenceHolder, "evidence_id", "z" * 64),
+    )
 
-
-def test_bundle_id_rejects_uppercase_hex() -> None:
-    with pytest.raises(ValidationError):
-        _BundleHolder(bundle_id="A" * 64)
-
-
-def test_bundle_id_rejects_wrong_length() -> None:
-    with pytest.raises(ValidationError):
-        _BundleHolder(bundle_id="a" * 63)
-    with pytest.raises(ValidationError):
-        _BundleHolder(bundle_id="a" * 65)
-
-
-def test_evidence_id_rejects_non_hex_characters() -> None:
-    with pytest.raises(ValidationError):
-        _EvidenceHolder(evidence_id="z" * 64)
+    for holder, field_name, raw_id in cases:
+        with pytest.raises(ValidationError):
+            holder.model_validate({field_name: raw_id})

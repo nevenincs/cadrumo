@@ -109,12 +109,11 @@ def _load_active_taxpayer_profile():
     the storage runtime.
     """
 
-    from ....application.user_profile._orchestration import profile_storage_session
-    from ....application.user_profile._projections import record_to_path_values
-    from ....application.workflow._persistence import workflow_state_repository
+    from ....application.user_profile import profile_storage_session, record_to_path_values
+    from ....application.workflow import workflow_state_repository
     from ....core import read_pointer
     from ....core.config import load_settings
-    from ....domain.deadlines._profiles import taxpayer_profile_from_mapping
+    from ....domain.deadlines import taxpayer_profile_from_mapping
 
     pointer = read_pointer(load_settings().aeat_local_storage_root)
     assert pointer is not None, "config profile create did not mint an active bucket pointer"

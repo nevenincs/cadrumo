@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-05-19'
-modified: '2026-05-19'
+modified: '2026-06-30'
 related:
   - "[[2026-05-19-schema-hardening-m100-section-inventory-audit]]"
   - "[[2026-05-19-schema-hardening-role-taxonomy-reference]]"
@@ -18,7 +18,7 @@ Five clusters from `resultados.*`: `resultado_declaracion` (~27),
 `irpf_ccaa_res` (~3), `datos_adicionales_res` (~33), plus
 `minimo_per_fam_res` (~14, skip-check).
 
-Revisions checked: 2020–2025 for every proposed id.  
+Revisions checked: 2020–2025 for every proposed id.
 Read-only: no TOML files modified.
 
 ---

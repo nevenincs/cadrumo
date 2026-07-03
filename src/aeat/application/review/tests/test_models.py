@@ -50,7 +50,7 @@ def _summary(text: str = "demo") -> tr:
 
 def _raw() -> RawTransaction:
     return RawTransaction(
-        transaction_id="prov-1",
+        provider_transaction_id="prov-1",
         booked_date=date(2026, 4, 10),
         value_date=date(2026, 4, 10),
         amount=Decimal("12.34"),
@@ -74,6 +74,8 @@ def _transaction() -> Transaction:
         {
             "raw": _raw(),
             "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
         },
     )

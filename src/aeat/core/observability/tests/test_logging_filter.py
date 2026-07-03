@@ -45,6 +45,21 @@ class _CaptureHandler(logging.Handler):
         self.records.append(record)
 
 
+def _record_with_optional_run_event(*, message: str, run_event: object | None = None) -> logging.LogRecord:
+    record = logging.LogRecord(
+        name="aeat-test",
+        level=logging.INFO,
+        pathname=__file__,
+        lineno=0,
+        msg=message,
+        args=None,
+        exc_info=None,
+    )
+    if run_event is not None:
+        record.run_event = run_event
+    return record
+
+
 class TestRunContextLoggingFilter:
     def test_attributes_present_inside_and_outside_run_context(
         self,
@@ -88,28 +103,13 @@ class TestStderrRunEventFilter:
         from ...logging import _DropRunEventFilter
 
         filt = _DropRunEventFilter()
-        plain = logging.LogRecord(
-            name="aeat.test",
-            level=logging.INFO,
-            pathname=__file__,
-            lineno=0,
-            msg="plain",
-            args=None,
-            exc_info=None,
+        cases = (
+            (_record_with_optional_run_event(message="plain"), True),
+            (_record_with_optional_run_event(message="run event", run_event=object()), False),
         )
-        assert filt.filter(plain) is True, "plain records must pass"
 
-        event = logging.LogRecord(
-            name="aeat.test",
-            level=logging.INFO,
-            pathname=__file__,
-            lineno=0,
-            msg="run event",
-            args=None,
-            exc_info=None,
-        )
-        event.run_event = object()  # sentinel — any truthy value qualifies
-        assert filt.filter(event) is False, "run_event records must be dropped"
+        for record, expected in cases:
+            assert filt.filter(record) is expected
 
     def test_events_still_reach_jsonl_sink_end_to_end(
         self,

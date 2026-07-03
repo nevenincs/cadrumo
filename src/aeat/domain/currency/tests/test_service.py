@@ -1,26 +1,20 @@
 from datetime import date
 from decimal import Decimal
-from typing import override
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
+from ....adapters.outbound.fx import EcbReferenceRateProvider
 from .._models import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
 )
-from .._service import CurrencyNormalizationService, ExchangeRateProvider
+from .._service import CurrencyNormalizationService
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-class _TableRateProvider(ExchangeRateProvider):
-    @override
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
-        if currency == "USD":
-            return Decimal("0.85")
-        if currency == "GBP":
-            return Decimal("1.15")
-        return None
+_ECB_2026_01_02_USD_QUOTE = Decimal("1.1700")
+_ECB_2026_01_02_USD_RATE = Decimal("1") / _ECB_2026_01_02_USD_QUOTE
 
 
 def test_currency_normalization_native_eur() -> None:
@@ -46,9 +40,9 @@ def test_currency_normalization_missing_provider() -> None:
 
 
 def test_currency_normalization_missing_rate() -> None:
-    svc = CurrencyNormalizationService(rate_provider=_TableRateProvider())
+    svc = CurrencyNormalizationService(rate_provider=EcbReferenceRateProvider())
     amount = MonetaryAmount(amount=Decimal("100.00"), currency="JPY")
-    result = svc.normalize(amount, date(2026, 1, 1))
+    result = svc.normalize(amount, date(2026, 1, 2))
 
     assert result.status == CurrencyNormalizationStatus.MISSING_RATE
     assert result.eur_amount == Decimal("0.0")
@@ -56,12 +50,12 @@ def test_currency_normalization_missing_rate() -> None:
 
 
 def test_currency_normalization_success() -> None:
-    svc = CurrencyNormalizationService(rate_provider=_TableRateProvider())
+    svc = CurrencyNormalizationService(rate_provider=EcbReferenceRateProvider())
     amount = MonetaryAmount(amount=Decimal("100.00"), currency="USD")
-    result = svc.normalize(amount, date(2026, 1, 1))
+    result = svc.normalize(amount, date(2026, 1, 2))
 
     assert result.status == CurrencyNormalizationStatus.NORMALIZED
-    assert result.eur_amount == Decimal("85.00")
-    assert result.rate == Decimal("0.85")
+    assert result.eur_amount == Decimal("85.47")
+    assert result.rate == _ECB_2026_01_02_USD_RATE
     assert result.rate_source == "provider"
     assert result.original == amount

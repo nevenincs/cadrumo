@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#storage-backend-security-review'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S31'
 related:
   - "[[2026-06-14-storage-backend-security-review-plan]]"
 ---
-
-
-
 
 # Move the transaction catalogue to one secure-object row per transaction keyed by transaction id so single-row mutations stop rewriting the whole catalogue
 
@@ -19,7 +16,6 @@ related:
 - `src/aeat/domain/transactions/_repository.py`
 
 ## Description
-
 
 - Confirm the premise: `TransactionCatalogueRepository` stores the entire
   catalogue as ONE encrypted secure-object row keyed
@@ -69,7 +65,6 @@ test). The 5 failures in the broad sweep were peer-state contamination (the
 isolation, confirmed not owned here.
 
 ## Notes
-
 
 Performance finding (medium): single-row mutations rewriting the whole catalogue is
 O(n) write amplification per ledger edit. Correctness is unaffected today; this is a

@@ -4,7 +4,7 @@ tags:
   - "#exec"
   - "#trabajador-del-mar"
 date: "2026-05-31"
-modified: '2026-05-31'
+modified: '2026-06-29'
 related:
   - "[[2026-05-31-trabajador-del-mar-plan]]"
   - "[[2026-05-31-trabajador-del-mar-adr]]"
@@ -65,7 +65,7 @@ a verb that does not yet exist.
     all three pathway anchors.
   - `TestMaritimeExemptionEnvelopeCarriesLegalRefs` -- three tests
     covering S24: Art. 7.p) envelope carries BOE-A-2006-20764, REBECA
-    envelope carries BOE-A-1994-16100, flat casilla_values matches the
+    envelope carries BOE-A-1994-15794, flat casilla_values matches the
     typed observation value.
   - `TestRetmarMandatoryFilingWarningSurface` -- five tests covering
     S25: both AeatError subclasses are registered with correct code +
@@ -80,7 +80,7 @@ a verb that does not yet exist.
 ## BOE Citations
 
 - Ley 35/2006 Art. 7.p) BOE-A-2006-20764 -- asserted in Art. 7.p) envelope legal_refs
-- Ley 19/1994 Arts. 73-75 BOE-A-1994-16100 -- asserted in REBECA envelope legal_refs
+- Ley 19/1994 Arts. 73-75 BOE-A-1994-15794 -- asserted in REBECA envelope legal_refs
 - Ley 35/2006 DA 41 BOE-A-2006-20764 -- asserted in DA 41 inactive translated message
 - Ley 47/2015 BOE-A-2015-11346 -- asserted in RETMAR translated message and in
   ProfileCompletenessError context

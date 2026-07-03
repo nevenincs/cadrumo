@@ -68,7 +68,7 @@ def test_repository_setup_error_enrolled() -> None:
 
 
 def test_profile_label_ambiguous_error_enrolled() -> None:
-    from ..workflow._errors import ProfileLabelAmbiguousError
+    from ..workflow import ProfileLabelAmbiguousError
 
     envelope = _assert_enrolled(ProfileLabelAmbiguousError, "profile label 'test' is ambiguous: 2 buckets carry it")
     assert envelope.code == "REFUSED_PROFILE_LABEL_AMBIGUOUS"
@@ -105,7 +105,7 @@ def test_repair_decision_not_found_is_subtype_of_repair_integrity() -> None:
 
 
 def test_snapshot_not_found_error_enrolled() -> None:
-    from ..live._snapshot_base import SnapshotNotFoundError
+    from ..live import SnapshotNotFoundError
 
     assert issubclass(SnapshotNotFoundError, AeatError), "SnapshotNotFoundError must inherit AeatError"
     assert issubclass(SnapshotNotFoundError, KeyError), "SnapshotNotFoundError must still inherit KeyError"
@@ -115,8 +115,7 @@ def test_snapshot_not_found_error_enrolled() -> None:
 
 def test_snapshot_not_found_subclasses_still_work() -> None:
     """Per-service subclasses remain catchable as both AeatError and KeyError."""
-    from ..live._borrador_100 import BorradorSnapshotNotFoundError
-    from ..live._snapshot_base import SnapshotNotFoundError
+    from ..live import BorradorSnapshotNotFoundError, SnapshotNotFoundError
 
     assert issubclass(BorradorSnapshotNotFoundError, SnapshotNotFoundError)
     assert issubclass(BorradorSnapshotNotFoundError, AeatError)
@@ -129,7 +128,7 @@ def test_snapshot_not_found_subclasses_still_work() -> None:
 
 
 def test_modelo_applicability_filter_error_enrolled() -> None:
-    from ..modelo._actions import ModeloApplicabilityFilterError
+    from ..modelo import ModeloApplicabilityFilterError
 
     envelope = _assert_enrolled(ModeloApplicabilityFilterError, "Unknown applicability filter: 'bad_filter'")
     assert envelope.code is not None

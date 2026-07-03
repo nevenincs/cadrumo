@@ -1,7 +1,7 @@
 ---
 tags: ["#plan", "#aeat-cli-hardening"]
 date: 2026-05-08
-modified: '2026-05-08'
+modified: '2026-06-30'
 related:
   - "[[2026-04-24-aeat-cli-wireframe-adr]]"
   - "[[2026-05-07-user-profile-backend-schema-plan]]"
@@ -11,8 +11,6 @@ related:
   - "[[2026-04-27-auth-cli-research]]"
   - "[[2026-05-12-cli-design-research]]"
 ---
-
-
 
 # `aeat-cli-hardening` `Broad CLI Review And Backend Alignment` plan
 

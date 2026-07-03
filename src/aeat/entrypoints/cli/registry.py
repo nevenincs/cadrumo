@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, cast
 
+import click
 import typer
+import typer._click.types as typer_click_types
 
 from ...application.registry import (
+    RegistryRevisionDiffReport,
     audit_registry_oracles,
+    diff_registry_revisions,
     inspect_registry_tree,
     replay_registry_parity,
     run_registry_parity,
@@ -16,12 +20,14 @@ from ...application.registry import (
     verify_registry_tree,
     verify_registry_workbooks,
 )
+from ...core import NON_REGISTRY_MODELOS, Modelo
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import OracleEnvironment as _OracleEnvironment
 from ._common import _emit_envelope
-from ._registry_corpus import citations_app, manuals_app
+from ._registry_corpus import citations_app, guard_corpus_companion, manuals_app
+from ._registry_diff_payloads import RegistryDiffRevisionsResult
 from ._registry_payloads import (
     RegistryAuditOraclesResult,
     RegistryInspectResult,
@@ -54,6 +60,25 @@ app.add_typer(workbooks_app, name="workbooks")
 app.add_typer(parity_app, name="parity")
 app.add_typer(citations_app, name="citations")
 app.add_typer(manuals_app, name="manuals")
+
+# The accepted-code set for the ``modelo`` argument is derived from the closed
+# core identifier taxonomy, mirroring ``_MODELO_CHOICE`` in
+# ``_modelo_discovery_cli.py``. Help and parse-time refusals must render even
+# while a peer registry authoring slice is fail-hard invalid; the year-to-year
+# resolution refusal itself still comes from the registry-backed service.
+#
+# typer vendors its own copy of click, so ``click.Choice`` is a
+# ``click.types.ParamType`` while ``typer.Argument``'s ``click_type`` expects
+# ``typer._click.types.ParamType``. They are the same object at runtime (the
+# vendored click), so the cast only bridges the static type duality.
+# CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
+# click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
+# are the same runtime object behind two static names; the cast bridges only that
+# static duality, with no Any escape.
+_DIFF_MODELO_CHOICE: typer_click_types.ParamType = cast(
+    typer_click_types.ParamType,
+    click.Choice([modelo.value for modelo in Modelo if modelo not in NON_REGISTRY_MODELOS]),
+)
 
 
 def _metric_line(key: str, value: object) -> str:
@@ -153,7 +178,13 @@ def verify_registry_cmd(
 ) -> None:
     """Validate every registry modelo against shared legal/source catalogues."""
     registry_root = _resolve_registry_root(registry_root)
-    report = verify_registry_tree(registry_root, source_root=_resolve_source_root(source_root))
+    resolved_source_root = _resolve_source_root(source_root)
+    guard_corpus_companion(
+        capability=tr("cli.registry.errors.capability.registry_verify"),
+        registry_root=registry_root,
+        source_root=resolved_source_root,
+    )
+    report = verify_registry_tree(registry_root, source_root=resolved_source_root)
     _emit_envelope(
         ctx,
         command="registry.verify",
@@ -311,6 +342,119 @@ def verify_filed_state_cmd(
     )
 
 
+@app.command("diff-revisions", help=tr("cli.registry.diff_revisions_help"))
+def diff_revisions_cmd(
+    ctx: typer.Context,
+    modelo: Annotated[
+        str,
+        typer.Argument(click_type=_DIFF_MODELO_CHOICE, help=tr("cli.registry.diff_revisions_modelo_help")),
+    ],
+    from_year: Annotated[
+        int,
+        typer.Option("--from-year", help=tr("cli.registry.diff_revisions_from_year_help")),
+    ],
+    to_year: Annotated[
+        int,
+        typer.Option("--to-year", help=tr("cli.registry.diff_revisions_to_year_help")),
+    ],
+    registry_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--registry-root",
+            file_okay=False,
+            dir_okay=True,
+            readable=True,
+            help=tr("cli.registry.inspect_registry_root_help"),
+        ),
+    ] = None,
+    source_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--source-root",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            readable=True,
+            help=tr("cli.registry.verify_source_root_help"),
+        ),
+    ] = None,
+) -> None:
+    """Diff the two registry revisions of one modelo that cover ``--from-year`` and ``--to-year``.
+
+    Surfaces what changed in the AEAT filing rulebook year-to-year: added,
+    removed, and renumbered casillas; changed formulas, parameters
+    (rates/thresholds), and bindings; and revision-level legal reference
+    deltas. Each bare filing year resolves to exactly one covering revision;
+    an ambiguous or uncovered year is refused naming the modelo's declared
+    revisions.
+    """
+    report = diff_registry_revisions(
+        modelo,
+        from_year=from_year,
+        to_year=to_year,
+        registry_root=_resolve_registry_root(registry_root),
+        source_root=_resolve_source_root(source_root),
+    )
+    _emit_envelope(
+        ctx,
+        command="registry.diff_revisions",
+        result=RegistryDiffRevisionsResult.model_validate(report.model_dump(mode="json")),
+        lines=_diff_revisions_lines(report),
+    )
+
+
+def _diff_revisions_lines(report: RegistryRevisionDiffReport) -> list[str]:
+    lines = [
+        _metric_line("modelo", report.modelo),
+        _metric_line("from_revision_id", report.from_revision_id),
+        _metric_line("to_revision_id", report.to_revision_id),
+        _metric_line("same_revision", report.same_revision),
+        _metric_line("added_casilla_count", len(report.added_casillas)),
+        _metric_line("removed_casilla_count", len(report.removed_casillas)),
+        _metric_line("renumbered_casilla_count", len(report.renumbered_casillas)),
+        _metric_line("changed_casilla_legal_ref_count", len(report.changed_casilla_legal_refs)),
+        _metric_line("added_formula_count", len(report.added_formulas)),
+        _metric_line("removed_formula_count", len(report.removed_formulas)),
+        _metric_line("changed_formula_count", len(report.changed_formulas)),
+        _metric_line("added_parameter_count", len(report.added_parameters)),
+        _metric_line("removed_parameter_count", len(report.removed_parameters)),
+        _metric_line("changed_parameter_count", len(report.changed_parameters)),
+        _metric_line("added_binding_count", len(report.added_bindings)),
+        _metric_line("removed_binding_count", len(report.removed_bindings)),
+        _metric_line("revision_legal_refs_added", ",".join(report.revision_legal_refs_added)),
+        _metric_line("revision_legal_refs_removed", ",".join(report.revision_legal_refs_removed)),
+    ]
+    for casilla in report.added_casillas:
+        lines.append("\t".join(("added_casilla", casilla.id, casilla.number, casilla.label)))
+    for casilla in report.removed_casillas:
+        lines.append("\t".join(("removed_casilla", casilla.id, casilla.number, casilla.label)))
+    for renumbered in report.renumbered_casillas:
+        lines.append(
+            "\t".join(
+                (
+                    "renumbered_casilla",
+                    renumbered.continuidad_id,
+                    f"{renumbered.from_id}({renumbered.from_number})",
+                    f"{renumbered.to_id}({renumbered.to_number})",
+                ),
+            ),
+        )
+    lines.extend(f"changed_casilla_legal_refs\t{casilla_id}" for casilla_id in report.changed_casilla_legal_refs)
+    lines.extend(f"added_formula\t{formula_id}" for formula_id in report.added_formulas)
+    lines.extend(f"removed_formula\t{formula_id}" for formula_id in report.removed_formulas)
+    for formula in report.changed_formulas:
+        lines.append("\t".join(("changed_formula", formula.id, formula.target_casilla_id)))
+    lines.extend(f"added_parameter\t{parameter_id}" for parameter_id in report.added_parameters)
+    lines.extend(f"removed_parameter\t{parameter_id}" for parameter_id in report.removed_parameters)
+    for parameter in report.changed_parameters:
+        lines.append("\t".join(("changed_parameter", parameter.id, parameter.data_type)))
+    for binding in report.added_bindings:
+        lines.append("\t".join(("added_binding", binding.id, binding.source)))
+    for binding in report.removed_bindings:
+        lines.append("\t".join(("removed_binding", binding.id, binding.source)))
+    return lines
+
+
 @workbooks_app.command("verify", help=tr("cli.registry.workbooks_verify_help"))
 def verify_workbooks_cmd(
     ctx: typer.Context,
@@ -355,6 +499,11 @@ def verify_workbooks_cmd(
     ] = None,
 ) -> None:
     """Run the read-only workbook parity backend verification."""
+    guard_corpus_companion(
+        capability=tr("cli.registry.errors.capability.workbooks_verify"),
+        registry_root=_resolve_registry_root(None),
+        source_root=_resolve_source_root(None),
+    )
     report = verify_registry_workbooks(
         root=_resolve_workbook_root(root),
         limit=limit,
@@ -437,10 +586,17 @@ def run_parity_cmd(
     ] = None,
 ) -> None:
     """Run one stored parity scenario and archive the resulting tape."""
+    resolved_registry_root = _resolve_registry_root(registry_root)
+    resolved_source_root = _resolve_source_root(source_root)
+    guard_corpus_companion(
+        capability=tr("cli.registry.errors.capability.parity"),
+        registry_root=resolved_registry_root,
+        source_root=resolved_source_root,
+    )
     tape, target = run_registry_parity(
         scenario_path=scenario_path,
-        registry_root=_resolve_registry_root(registry_root),
-        source_root=_resolve_source_root(source_root),
+        registry_root=resolved_registry_root,
+        source_root=resolved_source_root,
         store_root=_resolve_parity_store_root(store_root),
         output=output,
     )
@@ -495,10 +651,17 @@ def replay_parity_cmd(
     ] = None,
 ) -> None:
     """Replay one archived parity tape against the current registry runtime."""
+    resolved_registry_root = _resolve_registry_root(registry_root)
+    resolved_source_root = _resolve_source_root(source_root)
+    guard_corpus_companion(
+        capability=tr("cli.registry.errors.capability.parity"),
+        registry_root=resolved_registry_root,
+        source_root=resolved_source_root,
+    )
     report = replay_registry_parity(
         tape_path=tape_path,
-        registry_root=_resolve_registry_root(registry_root),
-        source_root=_resolve_source_root(source_root),
+        registry_root=resolved_registry_root,
+        source_root=resolved_source_root,
     )
     _emit_envelope(
         ctx,

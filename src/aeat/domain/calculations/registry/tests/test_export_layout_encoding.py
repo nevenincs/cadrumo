@@ -43,8 +43,8 @@ def _record(*, record_id: str, encoding: str) -> ExportRecordDefinition:
                 padding="none",
                 justification="none",
                 signed=False,
-                legal_refs=("liva.art-1",),
-                source_refs=("aeat.src.1",),
+                legal_refs=("ley-37-1992:art-1",),
+                source_refs=("aeat-src-1",),
             ),
         ),
     )
@@ -56,8 +56,8 @@ def test_layout_with_one_encoding_validates() -> None:
     layout = ExportLayoutDefinition(
         id="layout.single",
         format="fixed_width",
-        source_refs=("aeat.src.1",),
-        legal_refs=("liva.art-1",),
+        source_refs=("aeat-src-1",),
+        legal_refs=("ley-37-1992:art-1",),
         records=(
             _record(record_id="record.a", encoding="iso-8859-1"),
             _record(record_id="record.b", encoding="iso-8859-1"),
@@ -72,8 +72,8 @@ def test_layout_with_alias_encodings_validates() -> None:
     layout = ExportLayoutDefinition(
         id="layout.aliased",
         format="fixed_width",
-        source_refs=("aeat.src.1",),
-        legal_refs=("liva.art-1",),
+        source_refs=("aeat-src-1",),
+        legal_refs=("ley-37-1992:art-1",),
         records=(
             _record(record_id="record.a", encoding="latin-1"),
             _record(record_id="record.b", encoding="iso-8859-1"),
@@ -91,8 +91,8 @@ def test_layout_with_mixed_canonical_encodings_rejected() -> None:
         ExportLayoutDefinition(
             id="layout.mixed",
             format="fixed_width",
-            source_refs=("aeat.src.1",),
-            legal_refs=("liva.art-1",),
+            source_refs=("aeat-src-1",),
+            legal_refs=("ley-37-1992:art-1",),
             records=(
                 _record(record_id="record.a", encoding="cp1252"),
                 _record(record_id="record.b", encoding="iso-8859-15"),
@@ -106,9 +106,9 @@ def test_xml_dictionary_layout_skips_record_encoding_check() -> None:
     layout = ExportLayoutDefinition(
         id="layout.xml",
         format="xml_dictionary",
-        dictionary_source_ref="aeat.dict.1",
-        source_refs=("aeat.dict.1",),
-        legal_refs=("liva.art-1",),
+        dictionary_source_ref="aeat-dict-1",
+        source_refs=("aeat-dict-1",),
+        legal_refs=("ley-37-1992:art-1",),
         records=(),
     )
     assert layout.format == "xml_dictionary"

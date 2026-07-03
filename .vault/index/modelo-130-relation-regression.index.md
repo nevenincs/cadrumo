@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#modelo-130-relation-regression'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-29'
 related:
   - '[[2026-05-19-modelo-130-relation-regression-W01-P02-S01]]'
   - '[[2026-05-19-modelo-130-relation-regression-W01-P02-S02]]'
@@ -42,7 +42,7 @@ Auto-generated index of all documents tagged with `#modelo-130-relation-regressi
 
 - `2026-05-26-bound-casilla-binding-resolution-sweep-audit` - `modelo-130-relation-regression` audit: `bound-casilla-binding-resolution-sweep`
 - `2026-05-26-modelo-130-relation-regression-audit` - `modelo-130-relation-regression` audit: `modelo-130-carry-forward-binding-silently-dead`
-- `2026-05-27-modelo-130-relation-regression-audit` - `modelo-130-relation-regression` audit: `art-110-5-corpus-fragment-gap`
+- `2026-05-27-modelo-130-relation-regression-audit` - `modelo-130-relation-regression` audit: `rd-439-art-110-current-corpus-correction`
 - `2026-05-27-modelo-130-relation-regression-code-review-audit` - `modelo-130-relation-regression` audit: code review (P08.S56)
 - `2026-05-27-registry-loader-shared-worktree-race-audit` - registry loader shared-worktree race — documented limitation
 

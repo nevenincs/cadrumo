@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-130-relation-regression'
 date: '2026-06-02'
-modified: '2026-06-02'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-05-19-modelo-130-relation-regression-plan]]"
 ---
-
-
-
 
 # add Modelo 130 carry-forward tests for casillas `15`, `17`, `19`, and `saldo-negativo-fin-periodo`
 

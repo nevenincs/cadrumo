@@ -24,7 +24,8 @@ from pydantic import BaseModel
 from ...core import STRICT_FROZEN_CONFIG
 from ..config import PROJECT_ROOT, load_settings
 from ..logging import attach_run_sink, detach_run_sink, get_logger
-from ..time._clock import now
+from ..time import now
+from ._capture import _CAPTURE_SINK
 from ._fingerprint import (
     compute_corpus_sha256,
     compute_db_sha256,
@@ -39,7 +40,7 @@ from ._models import (
     StepBoundaryPayload,
 )
 from ._sink import JsonlRunSink
-from ._store import _run_dir, _validate_run_id, save_trace
+from ._store import _run_dir, _validate_run_id, save_envelope, save_trace
 
 _log = get_logger(__name__)
 
@@ -255,6 +256,17 @@ def run_context(
     target = _run_dir(info.run_id)
     sink = JsonlRunSink(target / _EVENTS_FILENAME, run_id=info.run_id)
 
+    # Arm result-envelope capture for the run so the emitted
+    # ``SchemaEnvelope`` is persisted as a golden artifact (closing the
+    # F1 gap: replay can now assert "the same JSON came out"). Nesting-
+    # aware: if an outer scope (e.g. ``replay_run``) already armed a
+    # sink, reuse it and do not persist here — that outer scope owns the
+    # comparison. Capture is a no-op cost when no JSON is emitted.
+    pre_existing_capture = _CAPTURE_SINK.get()
+    owns_capture = pre_existing_capture is None
+    envelope_sink: list[dict[str, object]] = [] if owns_capture else pre_existing_capture
+    capture_token = _CAPTURE_SINK.set(envelope_sink) if owns_capture else None
+
     # Set the contextvars BEFORE attaching the sink. Symmetric with
     # detach-before-reset on unwind. Without this ordering, log records
     # emitted by another thread on the root logger during the window
@@ -314,6 +326,20 @@ def run_context(
             persistence_error = exc
             _log.warning("failed to persist RunTrace for run %s", info.run_id, exc_info=True)
         finally:
+            # Persist the last emitted result envelope (a command emits
+            # exactly one success envelope) as this run's golden artifact.
+            # Best-effort: an envelope-persist failure must never mask the
+            # run outcome. Only the owning context persists; a reused sink
+            # belongs to the outer scope.
+            if owns_capture and envelope_sink:
+                try:
+                    save_envelope(info.run_id, dict(envelope_sink[-1]))
+                except Exception:
+                    _log.warning(
+                        "failed to persist result envelope for run %s",
+                        info.run_id,
+                        exc_info=True,
+                    )
             # Detach the sink BEFORE resetting the contextvars so a
             # trailing log record from another thread can't land on
             # this sink with a stale run_id. Mirror of the attach
@@ -324,6 +350,8 @@ def run_context(
                 _log.warning("failed to detach sink for run %s", info.run_id, exc_info=True)
             STEP_CONTEXT_VAR.reset(step_token)
             RUN_CONTEXT_VAR.reset(run_token)
+            if capture_token is not None:
+                _CAPTURE_SINK.reset(capture_token)
             try:
                 sink.close()
             except Exception:

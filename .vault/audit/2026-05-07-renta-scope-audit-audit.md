@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#renta-scope-audit'
 date: '2026-05-07'
-modified: '2026-05-07'
+modified: '2026-06-30'
 related:
   - "[[2026-05-06-renta-cuota-chain-rollout-plan]]"
   - "[[2026-05-03-calculation-truth-registry-pending-adr]]"
   - "[[2026-05-03-calculation-truth-registry-rebuild-plan]]"
 ---
-
-
 
 # `renta-scope-audit` audit: `renta scope audit and gaps inventory`
 

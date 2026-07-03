@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#llm-ledger-classification'
 date: '2026-06-03'
-modified: '2026-06-03'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-03-llm-ledger-classification-adr]]'
   - '[[2026-06-03-llm-ledger-classification-research]]'
 ---
-
 
 # `llm-ledger-classification` `Wire LLM-assisted ledger classification (MVP): application use case, CLI surface, tests, docs` plan
 
@@ -38,16 +37,8 @@ Lock the contract with real-behavior tests, document the surface, and verify wit
 
 ## Description
 
-
 ## Steps
 
-
-
-
-
-
-
 ## Parallelization
-
 
 ## Verification

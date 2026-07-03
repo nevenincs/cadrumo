@@ -1,4 +1,34 @@
-"""Post-calculation advisory coordination for :class:`ModeloRevision` work calculations."""
+"""Post-calculation advisory coordination for bucket aggregation calculations.
+
+The bucket aggregation calculate path first resolves source-backed values,
+executes the registry formula engine, and persists the calculated revision. This
+module then fans out advisory-only checks over the loaded
+:class:`ModeloRevision` and the computed :class:`CasillaId` value map, returning
+non-blocking
+:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` rows for the
+caller to append to source mesh diagnostics. It does not compute, override, or
+persist casilla values.
+
+The prior-payment collectors need persisted filing observations, so the
+coordinator shares one
+:class:`~aeat.application.calculations.CalculationObservationRepository` instance
+across them. The official-box and settlement collectors read only the revision
+structure and calculated casilla values. Together the collectors extend the
+source mesh's no-silent-under-declaration diagnostics with checks whose evidence
+only exists after the revision has been calculated.
+
+See Also:
+    :func:`~aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+        Calls this coordinator after the calculation revision has been created.
+    :func:`~aeat.application.modelo._official_box_advisory.collect_official_box_unpopulated_diagnostics`:
+        Mirrors registry-authored ADVISORY predicates as calculate diagnostics.
+    :mod:`~aeat.application.modelo._prior_payment_advisory`:
+        Emits Modelo 130 prior-payment carry degradation advisories.
+    :func:`~aeat.application.modelo._settlement_grade_advisory.collect_settlement_not_computed_diagnostics`:
+        Emits structural settlement-completeness advisories for partially modelled revisions.
+    :func:`~aeat.application.modelo._bienes_inversion_advisory.collect_bienes_inversion_regularizacion_diagnostics`:
+        Emits the Modelo 303 capital-goods IVA regularización proposed-casilla-43 advisory.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +38,8 @@ from decimal import Decimal
 from ...domain.calculations.registry import CasillaId, ModeloRevision
 from ..aggregation import CalculationSourceDiagnostic
 from ..calculations import CalculationObservationRepository
+from ._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
+from ._minimo_descendientes_advisory import collect_minimo_descendientes_undeclared_diagnostics
 from ._official_box_advisory import collect_official_box_unpopulated_diagnostics
 from ._prior_payment_advisory import (
     collect_prior_payment_minoracion_not_captured_diagnostics,
@@ -25,7 +57,60 @@ def collect_bucket_aggregation_advisory_diagnostics(
     modelo: str,
     period_token: str,
     filing_year: int,
+    bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return advisory diagnostics raised after bucket aggregation calculation.
+
+    Runs the calculate-path advisory collectors in tuple order:
+    official-box transcription, Modelo 130 prior-payment under-deduction, Modelo
+    130 prior-payment minoracion capture, settlement-not-computed structure, the
+    Modelo 100 mínimo-por-descendientes undeclared-facts advisory, and the Modelo
+    303 capital-goods IVA regularización (LIVA arts. 107-110) proposed-casilla-43
+    advisory. These diagnostics are informational and non-blocking; the
+    calculation result already exists, and the caller merely appends these rows
+    to the source mesh's existing
+    :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+    sequence.
+
+    The Modelo 100 mínimo-por-descendientes casillas (0513/0514) are no longer
+    advisory-only for the halving/blank-entry checks the prior interim Option B
+    module raised: the ``modelo-100-minimo-descendientes-engine`` ADR's Option A
+    landed a computed engine (:func:`~aeat.application.modelo.inject_derived_minimo_descendientes_facts`)
+    that derives the Art. 58/61 LIRPF aggregate — including the custodia-compartida
+    halving — directly from the active profile, so those two checks are structurally
+    unreachable and were retired. A new, narrower advisory
+    (:func:`~aeat.application.modelo._minimo_descendientes_advisory.collect_minimo_descendientes_undeclared_diagnostics`)
+    replaces them: because a genuinely childless profile and a profile that simply
+    never declared its descendientes both resolve 0513 to the same zero, this
+    collector flags the ambiguous case (0513 = 0 and no descendiente facts declared
+    at all) and points the operator at ``aeat config profile descendiente add``.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose predicates, casillas, and
+            formulas are inspected.
+        casilla_values: Computed engine values keyed by :class:`CasillaId`.
+        modelo: Target modelo identifier used by modelo-specific advisory
+            collectors.
+        period_token: Bare registry period token for the filing being
+            calculated.
+        filing_year: Filing year whose same-ejercicio prior observations may be
+            inspected.
+        bucket_id: Bucket identifier used by profile-backed advisory
+            collectors.
+
+    Returns:
+        Tuple of
+        :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+        advisory rows, or an empty tuple when no post-calculation advisory fires.
+
+    See Also:
+        :class:`~aeat.application.calculations.CalculationObservationRepository`:
+            Supplies the prior-filing observation catalogue used by the Modelo
+            130 prior-payment advisory collectors.
+        :func:`~aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+            Appends this tuple to the source mesh diagnostics on the returned
+            bucket aggregation result.
+    """
     observation_repository = CalculationObservationRepository()
     return (
         collect_official_box_unpopulated_diagnostics(revision, casilla_values)
@@ -43,4 +128,16 @@ def collect_bucket_aggregation_advisory_diagnostics(
             observation_repository=observation_repository,
         )
         + collect_settlement_not_computed_diagnostics(revision)
+        + collect_minimo_descendientes_undeclared_diagnostics(
+            revision,
+            casilla_values,
+            modelo=modelo,
+            bucket_id=bucket_id,
+        )
+        + collect_bienes_inversion_regularizacion_diagnostics(
+            modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
+            bucket_id=bucket_id,
+        )
     )

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#llm-classification-workflow'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S06'
 related:
   - "[[2026-06-14-llm-classification-workflow-plan]]"
 ---
-
-
-
 
 # Add locale keys via aeat.locales
 
@@ -32,4 +29,3 @@ Locale parity, honesty, and scaffold --check clean; documented-command conforman
 ## Notes
 
 All locale edits routed through `python -m aeat.locales set` (aeat-locales-cli); no hand-edited YAML.
-

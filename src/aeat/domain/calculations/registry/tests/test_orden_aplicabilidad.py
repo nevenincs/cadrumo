@@ -1,41 +1,35 @@
-"""Real-behaviour tests for the orden_aplicabilidad ratchet gate.
+"""Real-behaviour tests for the orden_aplicabilidad gate.
 
 Tests cover:
-- Ratchet: new unstamped revision is a hard failure; existing unstamped
-  revision is a follow-up item (not a hard failure).
+- Any unstamped revision is a hard failure.
 - A stamped entry that resolves in the catalogue with corpus_ref and is in
   legal_refs passes cleanly.
 - A dangling (non-existent) orden_aplicabilidad entry is a hard failure.
 - An orden_aplicabilidad entry present in the catalogue but absent from
   legal_refs is a hard failure.
-- Backfilled revisions (M100/2025, M130, M111, M123, M131, M303, M369)
+- Backfilled revisions (M036, M100/2025, M130, M111, M123, M131, M202, M232,
+  M303, M369)
   load from the committed registry without hard failures.
 - Open-ended *-y-siguientes revisions in the backfilled set have
   orden_aplicabilidad declared (connective gate).
 
-No mocks, no skips, no xfail.  The ratchet date is 2026-06-10.
+No mocks, no skips, no xfail.
 """
 
 from __future__ import annotations
 
 from datetime import date
-from functools import cache
 
 import pytest
 
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from .._ids import LegalRefId, SourceRefId
 from .._schema import (
     LegalReference,
-    ModeloDefinition,
     ModeloRevision,
     PeriodSelector,
-    RegistryCatalogues,
 )
-from .._validate_orden_aplicabilidad import (
-    ORDEN_APLICABILIDAD_RATCHET_DATE,
-    validate_orden_aplicabilidad,
-)
+from .._validate_orden_aplicabilidad import validate_orden_aplicabilidad
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -44,11 +38,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # Shared helpers
 # ---------------------------------------------------------------------------
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
+_VALID_LEGAL_REF_ID: LegalRefId = "orden-test-0001:art-1"
+_NON_ORDEN_LEGAL_REF: LegalRefId = "ley-58-2003:art-29"
 
 # Minimal synthetic legal catalogue entry for tests.
 _VALID_LEGAL_REF = LegalReference(
-    id="orden-test-0001:art-1",
+    id=_VALID_LEGAL_REF_ID,
     evidence_tier="legal_authority",
     authority="boe",
     kind="orden",
@@ -57,16 +52,17 @@ _VALID_LEGAL_REF = LegalReference(
     permalink="https://www.boe.es/eli/es/o/2000/01/01/test-0001",
     effective_from=date(2000, 1, 1),
     review_status="reviewed",
+    reviewed_at=date(2026, 7, 1),
+    reviewed_by="codex test fixture",
+    required_text=("Artículo 1",),
 )
-# Minimal source ref used wherever a test revision needs one valid reference
-# before the orden_aplicabilidad gate can run.
-_MINIMAL_SOURCE_REF = "src-test-0001"
+# Minimal source ref used wherever a test revision needs one valid source
+# reference before the orden_aplicabilidad gate can run.
+_MINIMAL_SOURCE_REF: SourceRefId = "src-test-0001"
 
 _VALID_CATALOGUE: dict[str, LegalReference] = {
-    "orden-test-0001:art-1": _VALID_LEGAL_REF,
+    _VALID_LEGAL_REF_ID: _VALID_LEGAL_REF,
 }
-
-_POST_RATCHET_DATE = ORDEN_APLICABILIDAD_RATCHET_DATE  # 2026-06-10
 
 
 def _make_revision(
@@ -78,8 +74,8 @@ def _make_revision(
     year_to: int | None = None,
     years: tuple[int, ...] = (),
     periods: tuple[str, ...] = ("1T",),
-    legal_refs: tuple[str, ...] | None = None,
-    orden_aplicabilidad: tuple[str, ...] = (),
+    legal_refs: tuple[LegalRefId, ...] | None = None,
+    orden_aplicabilidad: tuple[LegalRefId, ...] = (),
 ) -> ModeloRevision:
     """Build a minimal ModeloRevision for gate testing.
 
@@ -94,7 +90,7 @@ def _make_revision(
     else:
         raise ValueError("supply either year_from or years")
     # LegalRefs and SourceRefs both require min_length=1 before this gate runs.
-    effective_legal_refs: tuple[str, ...] = legal_refs if legal_refs is not None else (_MINIMAL_SOURCE_REF,)
+    effective_legal_refs: tuple[LegalRefId, ...] = legal_refs if legal_refs is not None else (_NON_ORDEN_LEGAL_REF,)
     return ModeloRevision(
         id=revision_id,
         valid_from=valid_from,
@@ -107,25 +103,24 @@ def _make_revision(
 
 
 # ---------------------------------------------------------------------------
-# Ratchet: new unstamped revision is a hard failure
+# Missing orden_aplicabilidad is a hard failure
 # ---------------------------------------------------------------------------
 
 
-def test_ratchet_hard_fails_new_revision_without_orden_aplicabilidad() -> None:
-    """A new revision (valid_from >= ratchet date) with no orden_aplicabilidad is a
-    hard failure.  This is the ratchet gate: new revisions MUST be stamped.
-    """
+def test_missing_orden_aplicabilidad_is_hard_failure() -> None:
+    """Any revision without orden_aplicabilidad is a hard failure."""
     revision = _make_revision(
-        revision_id="test-new-unstamped",
-        valid_from=_POST_RATCHET_DATE,  # on ratchet date
-        valid_to=date(2026, 12, 31),
-        years=(2026,),
+        revision_id="test-unstamped",
+        valid_from=date(2019, 1, 1),
+        valid_to=date(2019, 12, 31),
+        years=(2019,),
         periods=("1T",),
-        # legal_refs defaults to minimal entry (min_length=1 satisfied)
+        # legal_refs defaults to a non-orden legal entry (min_length=1 satisfied)
         orden_aplicabilidad=(),
     )
-    hard, follow_up = validate_orden_aplicabilidad(
-        "modelo test revision test-new-unstamped",
+
+    hard = validate_orden_aplicabilidad(
+        "modelo test revision test-unstamped",
         "test",
         revision,
         _VALID_CATALOGUE,
@@ -133,38 +128,6 @@ def test_ratchet_hard_fails_new_revision_without_orden_aplicabilidad() -> None:
     assert len(hard) == 1, f"Expected one hard failure, got {hard}"
     assert "MUST declare" in hard[0]
     assert "orden_aplicabilidad" in hard[0]
-    assert len(follow_up) == 0
-
-
-# ---------------------------------------------------------------------------
-# Ratchet: existing (pre-ratchet) unstamped revision is a follow-up, not
-# a hard failure — the registry MUST still load.
-# ---------------------------------------------------------------------------
-
-
-def test_ratchet_follow_up_for_existing_revision_without_orden_aplicabilidad() -> None:
-    """A pre-ratchet revision without orden_aplicabilidad produces a follow-up item
-    (not a hard failure) so the existing corpus continues to load.
-    """
-    pre_ratchet_date = date(2019, 1, 1)
-    revision = _make_revision(
-        revision_id="test-old-unstamped",
-        valid_from=pre_ratchet_date,
-        valid_to=date(2019, 12, 31),
-        years=(2019,),
-        periods=("1T",),
-        # legal_refs defaults to minimal entry (min_length=1 satisfied)
-        orden_aplicabilidad=(),
-    )
-    hard, follow_up = validate_orden_aplicabilidad(
-        "modelo test revision test-old-unstamped",
-        "test",
-        revision,
-        _VALID_CATALOGUE,
-    )
-    assert len(hard) == 0, f"Expected no hard failures, got {hard}"
-    assert len(follow_up) == 1
-    assert "follow-up backfill" in follow_up[0].lower() or "backfill" in follow_up[0].lower()
 
 
 # ---------------------------------------------------------------------------
@@ -174,7 +137,7 @@ def test_ratchet_follow_up_for_existing_revision_without_orden_aplicabilidad() -
 
 def test_valid_orden_aplicabilidad_passes_all_checks() -> None:
     """A stamped revision with a valid catalogue entry, corpus_ref, and the entry
-    also present in legal_refs produces no hard failures and no follow-up items.
+    also present in legal_refs produces no hard failures.
     """
     revision = _make_revision(
         revision_id="test-stamped-valid",
@@ -186,14 +149,13 @@ def test_valid_orden_aplicabilidad_passes_all_checks() -> None:
         legal_refs=("orden-test-0001:art-1",),
         orden_aplicabilidad=("orden-test-0001:art-1",),
     )
-    hard, follow_up = validate_orden_aplicabilidad(
+    hard = validate_orden_aplicabilidad(
         "modelo test revision test-stamped-valid",
         "test",
         revision,
         _VALID_CATALOGUE,
     )
     assert len(hard) == 0, f"Unexpected hard failures: {hard}"
-    assert len(follow_up) == 0, f"Unexpected follow-up items: {follow_up}"
 
 
 # ---------------------------------------------------------------------------
@@ -215,7 +177,7 @@ def test_dangling_orden_aplicabilidad_entry_is_hard_failure() -> None:
         # This entry does not exist in _VALID_CATALOGUE:
         orden_aplicabilidad=("orden-nonexistent-9999:art-1",),
     )
-    hard, _ = validate_orden_aplicabilidad(
+    hard = validate_orden_aplicabilidad(
         "modelo test revision test-dangling",
         "test",
         revision,
@@ -242,12 +204,12 @@ def test_orden_aplicabilidad_absent_from_legal_refs_is_hard_failure() -> None:
         years=(2020,),
         periods=("1T",),
         # orden-test-0001:art-1 is intentionally NOT in legal_refs (only the
-        # minimal required ref is present), but IS in the catalogue — triggers
+        # non-orden legal ref is present), but IS in the catalogue — triggers
         # check (iii) failure.
-        legal_refs=(_MINIMAL_SOURCE_REF,),
+        legal_refs=(_NON_ORDEN_LEGAL_REF,),
         orden_aplicabilidad=("orden-test-0001:art-1",),
     )
-    hard, _ = validate_orden_aplicabilidad(
+    hard = validate_orden_aplicabilidad(
         "modelo test revision test-missing-from-legal-refs",
         "test",
         revision,
@@ -258,36 +220,30 @@ def test_orden_aplicabilidad_absent_from_legal_refs_is_hard_failure() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Open-ended *-y-siguientes without orden_aplicabilidad is a follow-up
-# (pre-ratchet) — the connective gate applied as advisory backfill signal
+# Open-ended *-y-siguientes without orden_aplicabilidad is a hard failure
 # ---------------------------------------------------------------------------
 
 
-def test_s24_open_ended_pre_ratchet_revision_without_orden_is_follow_up() -> None:
-    """An open-ended (year_from set, valid_to None) pre-ratchet revision without
-    orden_aplicabilidad is a follow-up item (connective gate).  It does NOT
-    block load — it tracks the open-ended claim as needing BOE anchoring.
-    """
+def test_s24_open_ended_revision_without_orden_is_hard_failure() -> None:
+    """An open-ended revision without orden_aplicabilidad is a hard failure."""
     revision = _make_revision(
-        revision_id="test-open-ended-pre-ratchet",
+        revision_id="test-open-ended-unstamped",
         valid_from=date(2019, 1, 1),
         valid_to=None,  # open-ended
         year_from=2019,
         periods=("1T",),
-        # legal_refs defaults to minimal entry (min_length=1 satisfied)
+        # legal_refs defaults to a non-orden legal entry (min_length=1 satisfied)
         orden_aplicabilidad=(),
     )
-    hard, follow_up = validate_orden_aplicabilidad(
-        "modelo test revision test-open-ended-pre-ratchet",
+    hard = validate_orden_aplicabilidad(
+        "modelo test revision test-open-ended-unstamped",
         "test",
         revision,
         _VALID_CATALOGUE,
     )
-    assert len(hard) == 0, f"Expected no hard failures, got {hard}"
-    assert len(follow_up) == 1
-    # Connective gate message must mention open-ended / y siguientes / BOE
-    msg = follow_up[0].lower()
-    assert "open-ended" in msg or "y siguientes" in msg or "open_ended" in msg
+    assert len(hard) == 1, f"Expected one hard failure, got {hard}"
+    assert "MUST declare" in hard[0]
+    assert "orden_aplicabilidad" in hard[0]
 
 
 # ---------------------------------------------------------------------------
@@ -295,17 +251,31 @@ def test_s24_open_ended_pre_ratchet_revision_without_orden_is_follow_up() -> Non
 # ---------------------------------------------------------------------------
 
 
-@cache
-def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    return tuple(modelos), catalogues
+def test_committed_registry_has_no_unstamped_revisions() -> None:
+    """Every committed revision declares orden_aplicabilidad."""
+    modelos, _catalogues = _committed_registry_tree()
+    offenders = sorted(
+        f"{modelo.id}/{revision_id}"
+        for modelo in modelos
+        for revision_id, revision in modelo.revisions.items()
+        if not revision.orden_aplicabilidad
+    )
+
+    assert not offenders, "Committed revisions without orden_aplicabilidad:\n  " + "\n  ".join(offenders)
 
 
 @pytest.mark.parametrize(
     ("modelo_id", "revision_id"),
     [
+        ("036", "2025-02-03-y-siguientes"),
+        ("100", "2020"),
+        ("100", "2021"),
+        ("100", "2022"),
+        ("100", "2023"),
+        ("100", "2024"),
         ("100", "2025"),
         ("111", "2019-y-siguientes"),
+        ("115", "2019-y-siguientes"),
         ("123", "2019-2023"),
         ("123", "2024-y-siguientes"),
         ("130", "2019-y-siguientes"),
@@ -313,17 +283,41 @@ def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCa
         ("131", "2024"),
         ("131", "2025"),
         ("131", "2026"),
+        ("151", "2015-y-siguientes"),
+        ("180", "2019-2022"),
+        ("180", "2023-y-siguientes"),
+        ("184", "2015-y-siguientes"),
+        ("190", "2024-y-siguientes"),
+        ("193", "2024-y-siguientes"),
+        ("200", "2024-y-siguientes"),
+        ("202", "2019-2022"),
+        ("202", "2023-2024"),
+        ("202", "2025-y-siguientes"),
+        ("210", "2025"),
+        ("232", "2016-2017"),
+        ("232", "2018-y-siguientes"),
         ("303", "2023-y-siguientes"),
         ("303", "2009-y-siguientes"),
+        ("322", "2008-y-siguientes"),
+        ("308", "2009-y-siguientes"),
+        ("309", "2004-y-siguientes"),
+        ("347", "2008-y-siguientes"),
+        ("353", "2008-y-siguientes"),
+        ("360", "2010-y-siguientes"),
         ("369", "esquema-exterior"),
         ("369", "esquema-union"),
         ("369", "esquema-importacion"),
+        ("390", "2010-y-siguientes"),
+        ("349", "2020-y-siguientes"),
+        ("714", "2021-y-siguientes"),
+        ("720", "2013-y-siguientes"),
+        ("840", "2003-y-siguientes"),
     ],
 )
 def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revision_id: str) -> None:
     """Each backfilled revision declares a non-empty orden_aplicabilidad that resolves
     in the legal catalogue with corpus_ref and is present in legal_refs — the three
-    ratchet gate checks all pass, and the hard-failure list is empty.
+    gate checks all pass, and the hard-failure list is empty.
     """
     modelos, catalogues = _committed_registry_tree()
     modelo = next((m for m in modelos if m.id == modelo_id), None)
@@ -335,7 +329,7 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revis
         f"Backfilled revision {modelo_id}/{revision_id} has empty orden_aplicabilidad"
     )
 
-    hard, _ = validate_orden_aplicabilidad(
+    hard = validate_orden_aplicabilidad(
         f"modelo {modelo_id} revision {revision_id}",
         modelo_id,
         revision,
@@ -353,14 +347,36 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revis
 @pytest.mark.parametrize(
     ("modelo_id", "revision_id"),
     [
+        ("036", "2025-02-03-y-siguientes"),
         ("111", "2019-y-siguientes"),
+        ("115", "2019-y-siguientes"),
         ("123", "2024-y-siguientes"),
         ("130", "2019-y-siguientes"),
+        ("151", "2015-y-siguientes"),
+        ("180", "2023-y-siguientes"),
+        ("184", "2015-y-siguientes"),
+        ("190", "2024-y-siguientes"),
+        ("193", "2024-y-siguientes"),
+        ("200", "2024-y-siguientes"),
+        ("202", "2025-y-siguientes"),
+        ("210", "2025"),
+        ("232", "2018-y-siguientes"),
         ("303", "2023-y-siguientes"),
         ("303", "2009-y-siguientes"),
+        ("322", "2008-y-siguientes"),
+        ("308", "2009-y-siguientes"),
+        ("309", "2004-y-siguientes"),
+        ("347", "2008-y-siguientes"),
+        ("353", "2008-y-siguientes"),
+        ("360", "2010-y-siguientes"),
         ("369", "esquema-exterior"),
         ("369", "esquema-union"),
         ("369", "esquema-importacion"),
+        ("390", "2010-y-siguientes"),
+        ("349", "2020-y-siguientes"),
+        ("714", "2021-y-siguientes"),
+        ("720", "2013-y-siguientes"),
+        ("840", "2003-y-siguientes"),
     ],
 )
 def test_s24_open_ended_backfilled_revision_has_orden_aplicabilidad(modelo_id: str, revision_id: str) -> None:

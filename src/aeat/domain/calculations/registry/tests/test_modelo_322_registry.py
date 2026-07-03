@@ -3,21 +3,18 @@
 from __future__ import annotations
 
 from datetime import date
-from functools import lru_cache
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@lru_cache(maxsize=1)
 def _load_modelo_322() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if m.id == "322")
-    return modelo, catalogues
+    return _committed_modelo("322")
 
 
 def test_modelo_322_validator_accepts_committed_definition() -> None:
@@ -29,13 +26,15 @@ def test_modelo_322_validator_accepts_committed_definition() -> None:
 
 
 def test_modelo_322_metadata_matches_orden_eha_3434_2007() -> None:
-    modelo, _ = _load_modelo_322()
+    modelo, catalogues = _load_modelo_322()
     assert modelo.tax_domain == "iva"
     assert modelo.cadence == "monthly"
     assert modelo.jurisdiction == "ES-AEAT"
     assert "orden-eha-3434-2007:art-1" in modelo.legal_refs
     assert "orden-eha-3434-2007:art-8" in modelo.legal_refs
     assert "aeat-dr-322-2026" in modelo.source_refs
+    assert catalogues.sources["aeat-modelo-322-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources["boe-modelo-322-2007-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_322_revision_starts_at_2008() -> None:
@@ -44,6 +43,7 @@ def test_modelo_322_revision_starts_at_2008() -> None:
     assert revision.valid_from == date(2008, 1, 1)
     assert revision.period_selector.year_from == 2008
     assert len(revision.period_selector.periods) == 12
+    assert revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-1",)
 
 
 def test_modelo_322_snapshot_builds_for_each_month() -> None:
@@ -57,10 +57,11 @@ def test_modelo_322_snapshot_builds_for_each_month() -> None:
             period=period,
         )
         assert snapshot.revision.id == "2008-y-siguientes"
+        assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-1",)
 
 
-def test_modelo_322_january_period_closes_last_day_of_february() -> None:
-    """Art 8 special case: January period closes on the last day of February."""
+def test_modelo_322_january_period_uses_official_calendar_shift() -> None:
+    """January 2026 closes on 2026-03-02 in the AEAT 2026 calendar."""
     modelo, _ = _load_modelo_322()
     revision = modelo.revisions["2008-y-siguientes"]
     windows = {w.id: w for w in revision.deadline_windows}
@@ -71,7 +72,9 @@ def test_modelo_322_january_period_closes_last_day_of_february() -> None:
 
     jan_2026 = windows["modelo-322-2026-01"]
     assert jan_2026.opens_on == date(2026, 2, 1)
-    assert jan_2026.closes_on == date(2026, 2, 28)
+    assert jan_2026.closes_on == date(2026, 3, 2)
+    assert "aeat-modelo-322-procedure" in jan_2026.source_refs
+    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in jan_2026.source_refs
 
 
 def test_modelo_322_other_months_close_within_30_days_of_following_month() -> None:

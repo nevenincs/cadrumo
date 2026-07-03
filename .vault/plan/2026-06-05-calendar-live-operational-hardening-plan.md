@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#calendar-live-operational-hardening'
 date: '2026-06-05'
-modified: '2026-06-05'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-05-calendar-live-operational-hardening-adr]]'
@@ -14,7 +14,6 @@ related:
   - '[[2026-06-04-calendar-live-filing-integration-live-verification-audit]]'
   - '[[2026-06-02-modelo-721-cripto-data-fidelity-adr]]'
 ---
-
 
 # `calendar-live-operational-hardening` `implementation` plan
 

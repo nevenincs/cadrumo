@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#eoy-final-calculation'
 date: '2026-06-22'
-modified: '2026-06-22'
+modified: '2026-06-30'
 related:
   - '[[2026-06-21-eoy-final-calculation-audit]]'
+  - '[[2026-06-30-eoy-final-calculation-research]]'
 ---
-
-
 
 # `eoy-final-calculation` adr: `Annual returns must derive their headline figures (M100 income, M200 cuota liquida)` | (**status:** `accepted`)
 

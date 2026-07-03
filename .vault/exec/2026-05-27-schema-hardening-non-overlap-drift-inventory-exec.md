@@ -3,12 +3,10 @@ tags:
   - '#exec'
   - '#schema-hardening'
 date: '2026-05-27'
-modified: '2026-05-27'
+modified: '2026-06-30'
 related:
   - '[[2026-05-27-schema-hardening-m100-revision-drift-research]]'
 ---
-
-
 
 # `schema-hardening` `non-overlap-drift-inventory`
 

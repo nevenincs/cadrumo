@@ -3,8 +3,11 @@
 ``CensoSnapshot`` holds the AEAT-side censo facts the operator's
 profile must mirror. AEAT is the binding legal source of truth for
 censo data; the local profile is a cache that must be kept honest.
-Snapshot records are persisted as :class:`Envelope` objects through a
-:class:`SecureObjectRepository` at IDENTITY sensitivity under the censo namespace.
+Snapshot records are persisted as
+:class:`~aeat.adapters.persistence.storage.Envelope` objects through a
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
+``IDENTITY`` :class:`~aeat.adapters.persistence.storage.SensitivityClass` under
+the censo namespace.
 
 The snapshot pattern mirrors :mod:`aeat.application.live._borrador_100`:
 content-addressed snapshot ids, encrypted SQLite persistence under a
@@ -28,7 +31,9 @@ from pydantic import BaseModel, Field, model_validator
 from ...adapters.persistence.storage import (
     LIVE_CENSO_SNAPSHOT_NAMESPACE as CENSO_SNAPSHOT_STORAGE_NAMESPACE,
 )
-from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...adapters.persistence.storage import (
+    SecureObjectRepository,
+)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
 from ...core.time import now

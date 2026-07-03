@@ -3,9 +3,15 @@
 Defines the boundary types every extractor produces — the
 :class:`TemplateRevision` triple that identifies an AEAT template
 revision, the :class:`ExtractionWarning` advisory record, and the
-top-level :class:`DeclaracionObservation` aggregate. All models are
+top-level :class:`InboundDeclaracionObservation` aggregate. All models are
 frozen and ``extra="forbid"`` so accidental field drift surfaces at
 validation time.
+
+These records carry observations, not calculation authority. The parser stamps
+current observations with a
+:class:`~aeat.domain.calculations.registry.RegistrySnapshotRef` so downstream
+flows can re-resolve the registry coordinate that supplied the extraction
+profile.
 """
 
 from __future__ import annotations
@@ -19,15 +25,15 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Period, PeriodError
 from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef
-from ..pdf._shared import ExtractedCasilla
+from ..pdf import ExtractedCasilla
 
 
 class TemplateRevision(BaseModel):
     """Detected or caller-resolved declaration template identity.
 
-    Identifies modelo, ejercicio, and revision tag discovered during
-    detection. Registry snapshots decide whether that template is usable
-    for extraction and verification.
+    Identifies modelo, ejercicio, and revision tag discovered during detection.
+    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` instances
+    decide whether that template is usable for extraction and verification.
 
     Attributes:
         modelo: Stable modelo identifier.
@@ -52,7 +58,7 @@ class ExtractionWarning(BaseModel):
 
     Captures non-fatal extraction conditions (casilla missing, label
     ambiguous, value unparseable, bbox fallback used, ...). Surfaces in
-    :attr:`DeclaracionObservation.warnings`.
+    :attr:`InboundDeclaracionObservation.warnings`.
 
     Attributes:
         casilla_id: The affected casilla identifier, or ``None`` when
@@ -74,7 +80,7 @@ class ExtractionWarning(BaseModel):
     primitive_attempted: Literal["acroform", "label_regex", "bbox", "ocr", "merged"]
 
 
-class DeclaracionObservation(BaseModel):
+class InboundDeclaracionObservation(BaseModel):
     """Observed values parsed from a declaración PDF.
 
     Attributes:
@@ -84,6 +90,8 @@ class DeclaracionObservation(BaseModel):
         ejercicio: Four-digit tax year as printed on the receipt.
         tax_id: NIF / NIE of the filer (as printed).
         template_revision: Which AEAT template the PDF matches.
+        registry_snapshot_ref: Four-axis registry coordinate that supplied the
+            extraction profile.
         values: Tuple of observed :class:`ExtractedCasilla` records.
         warnings: Tuple of advisories — unresolved casillas, ambiguous
             labels, bbox fallbacks, etc.
@@ -100,16 +108,15 @@ class DeclaracionObservation(BaseModel):
     period: Period = Field()
     tax_id: str = Field(min_length=4, max_length=32)
     template_revision: TemplateRevision
-    registry_snapshot_ref: RegistrySnapshotRef | None = None
+    registry_snapshot_ref: RegistrySnapshotRef
     """Four-axis registry coordinate captured at parse time.
 
     Populated by the parser from the active ``RegistrySnapshot`` so a
     persisted observation can be re-resolved against the live registry
     catalogue with a single
-    :meth:`ValidatedRegistryAuthority.snapshot` call. ``None`` for
-    legacy observations parsed before this field existed; new
-    observations carry the ref to detect silent AEAT template drift
-    on subsequent registry releases.
+    :meth:`ValidatedRegistryAuthority.snapshot` call. Current observations
+    always carry the ref so downstream checks can detect silent AEAT template
+    drift on subsequent registry releases.
     """
     values: tuple[ExtractedCasilla, ...]
     warnings: tuple[ExtractionWarning, ...] = ()

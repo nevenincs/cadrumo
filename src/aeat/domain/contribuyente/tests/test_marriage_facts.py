@@ -28,6 +28,63 @@ from .._marriage_facts import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 FILING_YEAR = 2024
+_DERIVED_FACT_KEYS = {
+    "renta_taxpayer.marriage_date",
+    "renta_taxpayer.marriage_full_year",
+    "renta_taxpayer.marriage_month_start",
+    "renta_taxpayer.marriage_month_end",
+}
+_FULL_YEAR_CASES = (
+    ("prior-year", date(2023, 9, 15), True),
+    ("same-year", date(2024, 3, 22), False),
+    ("same-year-first-day", date(2024, 1, 1), False),
+    ("future-year", date(2025, 1, 1), False),
+)
+_MONTH_START_CASES = (
+    ("prior-year", date(2023, 9, 15), 1),
+    ("march", date(2024, 3, 22), 3),
+    ("december", date(2024, 12, 1), 12),
+    ("future-year", date(2025, 3, 1), None),
+)
+_ORACLE_FACT_CASES = (
+    (
+        "sobrevenido-march-2024",
+        date(2024, 3, 22),
+        False,
+        3,
+        {
+            "renta_taxpayer.marriage_full_year": "0",
+            "renta_taxpayer.marriage_month_start": "3",
+            "renta_taxpayer.marriage_month_end": "12",
+        },
+    ),
+    (
+        "full-year-september-2023",
+        date(2023, 9, 15),
+        True,
+        1,
+        {
+            "renta_taxpayer.marriage_full_year": "1",
+            "renta_taxpayer.marriage_month_start": "1",
+            "renta_taxpayer.marriage_month_end": "12",
+        },
+    ),
+)
+_DERIVED_FACT_KEY_CASES = (
+    ("sobrevenido", date(2024, 6, 15), _DERIVED_FACT_KEYS),
+    ("full-year", date(2022, 4, 1), _DERIVED_FACT_KEYS),
+    ("future-year", date(2025, 3, 1), {"renta_taxpayer.marriage_date"}),
+)
+_PARSE_VALID_CASES = (
+    ("iso", "2024-03-22", date(2024, 3, 22)),
+    ("whitespace", "  2023-09-15  ", date(2023, 9, 15)),
+    ("leap-day", "2024-02-29", date(2024, 2, 29)),
+)
+_PARSE_INVALID_CASES = (
+    ("slash-format", "22/03/2024", "YYYY-MM-DD"),
+    ("nonsense", "not-a-date", None),
+    ("invalid-leap-day", "2023-02-29", None),
+)
 
 
 # ---------------------------------------------------------------------------
@@ -36,39 +93,17 @@ FILING_YEAR = 2024
 
 
 class TestMarriageFullYear:
-    def test_marriage_prior_year_is_full_year(self) -> None:
-        """Marriage in 2023 → vigente todo el año 2024."""
-        assert marriage_full_year(date(2023, 9, 15), FILING_YEAR) is True
-
-    def test_marriage_same_year_is_not_full_year(self) -> None:
-        """Marriage in 2024 → sobrevenido, not full year."""
-        assert marriage_full_year(date(2024, 3, 22), FILING_YEAR) is False
-
-    def test_marriage_same_year_first_day_is_not_full_year(self) -> None:
-        """Marriage on 2024-01-01 → technically sobrevenido (started in filing year)."""
-        assert marriage_full_year(date(2024, 1, 1), FILING_YEAR) is False
-
-    def test_marriage_future_year_is_not_full_year(self) -> None:
-        """Marriage in 2025 → not active in 2024."""
-        assert marriage_full_year(date(2025, 1, 1), FILING_YEAR) is False
+    def test_cases(self) -> None:
+        """Prior-year marriage is full-year; filing-year or future marriage is not."""
+        for case_id, marriage_date, expected in _FULL_YEAR_CASES:
+            assert marriage_full_year(marriage_date, FILING_YEAR) is expected, case_id
 
 
 class TestMarriageMonthStart:
-    def test_prior_year_marriage_returns_1(self) -> None:
-        """Prior-year marriage → primer mes is always 1 (active from January)."""
-        assert marriage_month_start(date(2023, 9, 15), FILING_YEAR) == 1
-
-    def test_march_marriage_returns_3(self) -> None:
-        """Marriage in March 2024 → primer mes is 3."""
-        assert marriage_month_start(date(2024, 3, 22), FILING_YEAR) == 3
-
-    def test_december_marriage_returns_12(self) -> None:
-        """Marriage in December 2024 → primer mes is 12."""
-        assert marriage_month_start(date(2024, 12, 1), FILING_YEAR) == 12
-
-    def test_future_year_returns_none(self) -> None:
-        """Future-year marriage → None (no active month in filing year)."""
-        assert marriage_month_start(date(2025, 3, 1), FILING_YEAR) is None
+    def test_cases(self) -> None:
+        """Prior-year, filing-year, and future-year marriage month-start cases."""
+        for case_id, marriage_date, expected in _MONTH_START_CASES:
+            assert marriage_month_start(marriage_date, FILING_YEAR) == expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -79,28 +114,14 @@ class TestMarriageMonthStart:
 class TestMarriageOracleCases:
     """Oracle cases from task spec #213 grounded in Art. 82 LIRPF."""
 
-    def test_oracle_matrimonio_sobrevenido_march_2024(self) -> None:
-        """marriage_date=2024-03-22, filing 2024 → casilla 0245=0, 0246=3, 0247=12."""
-        md = date(2024, 3, 22)
-        assert marriage_full_year(md, FILING_YEAR) is False  # 0245 = 0
-        ms = marriage_month_start(md, FILING_YEAR)
-        assert ms == 3  # 0246 = 3
-        # month_end is always 12 when married (year-end by convention)
-        facts = dict(marriage_derived_facts(md, FILING_YEAR))
-        assert facts["renta_taxpayer.marriage_full_year"] == "0"
-        assert facts["renta_taxpayer.marriage_month_start"] == "3"
-        assert facts["renta_taxpayer.marriage_month_end"] == "12"
-
-    def test_oracle_matrimonio_vigente_todo_anio_sep_2023(self) -> None:
-        """marriage_date=2023-09-15, filing 2024 → casilla 0245=1, 0246=1, 0247=12."""
-        md = date(2023, 9, 15)
-        assert marriage_full_year(md, FILING_YEAR) is True  # 0245 = 1
-        ms = marriage_month_start(md, FILING_YEAR)
-        assert ms == 1  # 0246 = 1 (active from January of filing year)
-        facts = dict(marriage_derived_facts(md, FILING_YEAR))
-        assert facts["renta_taxpayer.marriage_full_year"] == "1"
-        assert facts["renta_taxpayer.marriage_month_start"] == "1"
-        assert facts["renta_taxpayer.marriage_month_end"] == "12"
+    def test_oracle_fact_cases(self) -> None:
+        """Task spec #213 oracle cases for casillas 0245, 0246, and 0247."""
+        for case_id, marriage_date, expected_full_year, expected_month_start, expected_facts in _ORACLE_FACT_CASES:
+            assert marriage_full_year(marriage_date, FILING_YEAR) is expected_full_year, case_id
+            assert marriage_month_start(marriage_date, FILING_YEAR) == expected_month_start, case_id
+            facts = dict(marriage_derived_facts(marriage_date, FILING_YEAR))
+            for fact_path, expected_value in expected_facts.items():
+                assert facts[fact_path] == expected_value, case_id
 
     def test_oracle_no_marriage_date_emits_no_facts(self) -> None:
         """marriage_date=None → no derived facts emitted → casillas default to 0.
@@ -122,33 +143,11 @@ class TestMarriageOracleCases:
 
 
 class TestMarriageDerivedFacts:
-    def test_derived_facts_keys_sobrevenido(self) -> None:
-        """marriage_date=2024-06-15 → four facts emitted."""
-        md = date(2024, 6, 15)
-        facts = dict(marriage_derived_facts(md, FILING_YEAR))
-        assert set(facts.keys()) == {
-            "renta_taxpayer.marriage_date",
-            "renta_taxpayer.marriage_full_year",
-            "renta_taxpayer.marriage_month_start",
-            "renta_taxpayer.marriage_month_end",
-        }
-
-    def test_derived_facts_keys_full_year(self) -> None:
-        """Prior-year marriage → four facts emitted."""
-        md = date(2022, 4, 1)
-        facts = dict(marriage_derived_facts(md, FILING_YEAR))
-        assert set(facts.keys()) == {
-            "renta_taxpayer.marriage_date",
-            "renta_taxpayer.marriage_full_year",
-            "renta_taxpayer.marriage_month_start",
-            "renta_taxpayer.marriage_month_end",
-        }
-
-    def test_derived_facts_future_marriage_emits_only_date(self) -> None:
-        """Future-year marriage → only marriage_date fact emitted (no derived months)."""
-        md = date(2025, 3, 1)
-        facts = dict(marriage_derived_facts(md, FILING_YEAR))
-        assert set(facts.keys()) == {"renta_taxpayer.marriage_date"}
+    def test_derived_fact_key_cases(self) -> None:
+        """Filing-year/prior-year marriages emit derived facts; future marriages emit only the date."""
+        for case_id, marriage_date, expected_keys in _DERIVED_FACT_KEY_CASES:
+            facts = dict(marriage_derived_facts(marriage_date, FILING_YEAR))
+            assert set(facts.keys()) == expected_keys, case_id
 
     def test_marriage_date_roundtrip_via_facts(self) -> None:
         """Store marriage_date as fact → recover via marriage_date_from_facts."""
@@ -177,23 +176,16 @@ class TestMarriageDerivedFacts:
 
 
 class TestParseMarriageDateFlag:
-    def test_valid_iso_date_returns_date(self) -> None:
-        assert parse_marriage_date_flag("2024-03-22") == date(2024, 3, 22)
+    def test_valid_cases(self) -> None:
+        for case_id, raw, expected in _PARSE_VALID_CASES:
+            assert parse_marriage_date_flag(raw) == expected, case_id
 
-    def test_leading_whitespace_is_stripped(self) -> None:
-        assert parse_marriage_date_flag("  2023-09-15  ") == date(2023, 9, 15)
-
-    def test_invalid_format_raises_value_error(self) -> None:
-        with pytest.raises(ValueError, match="YYYY-MM-DD"):
-            parse_marriage_date_flag("22/03/2024")
-
-    def test_nonsense_string_raises_value_error(self) -> None:
-        with pytest.raises(ValueError):
-            parse_marriage_date_flag("not-a-date")
-
-    def test_february_29_valid_leap_year(self) -> None:
-        assert parse_marriage_date_flag("2024-02-29") == date(2024, 2, 29)
-
-    def test_february_29_invalid_non_leap_raises(self) -> None:
-        with pytest.raises(ValueError):
-            parse_marriage_date_flag("2023-02-29")
+    def test_invalid_cases(self) -> None:
+        for case_id, raw, match in _PARSE_INVALID_CASES:
+            if match is None:
+                with pytest.raises(ValueError) as exc_info:
+                    parse_marriage_date_flag(raw)
+            else:
+                with pytest.raises(ValueError, match=match) as exc_info:
+                    parse_marriage_date_flag(raw)
+            assert isinstance(exc_info.value, ValueError), case_id

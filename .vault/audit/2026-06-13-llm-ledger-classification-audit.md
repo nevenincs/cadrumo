@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#llm-ledger-classification'
 date: '2026-06-13'
-modified: '2026-06-13'
+modified: '2026-06-30'
 related:
   - "[[2026-06-04-llm-ledger-classification-adr]]"
   - "[[2026-06-04-llm-ledger-classification-plan]]"
 ---
-
-
 
 # `llm-ledger-classification` audit: `Saturation pipeline: peer review (PASS) + persona test findings`
 
@@ -142,5 +140,3 @@ rates are looked up and numbers derived with `round_to_cents`; a
 `gross == base + iva` invariant guards the triple). The successful structural
 enforcement is evidence the candidate is the right rule; promote it from the
 ADR rather than restating it here.
-
-

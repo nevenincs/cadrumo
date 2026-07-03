@@ -55,7 +55,6 @@ _DATE_2025 = {"filing_period": date(2025, 12, 31)}
 _BINDINGS_2024: dict[str, Decimal] = {
     "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
     "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
     "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
     # declaration_type = 1 (individual) → 0461 computed = 0
@@ -66,6 +65,8 @@ _BINDINGS_2024: dict[str, Decimal] = {
     "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
     "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
     "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+    "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
+    "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
     # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
     "renta-2024-profile-marriage-full-year": Decimal("0"),
     "renta-2024-profile-marriage-month-start": Decimal("0"),
@@ -82,7 +83,6 @@ _ENUM_BINDINGS_2024 = {"renta-2024-profile-tax-residence-ccaa": "madrid"}
 _RELATION_VALUES_2024: dict[str, Decimal] = {
     "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-115-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
     "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
@@ -266,6 +266,12 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
         "renta-2025-profile-marriage-month-start": Decimal("0"),
         "renta-2025-profile-marriage-month-end": Decimal("0"),
         "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+        # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
+        # facts; neutral zero when the chain under test is unrelated.
+        "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+        "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+        "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     # 2025 revision requires all cross-model relation values; supply zeros for
     # all relations so the ahorro chain can be exercised in isolation.

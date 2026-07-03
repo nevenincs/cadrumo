@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#calendar-semantics'
 date: '2026-06-12'
-modified: '2026-06-12'
+modified: '2026-06-13'
 related:
   - '[[2026-06-12-live-pull-verification-sweep-plan]]'
   - '[[2026-06-05-calendar-filing-semantics-adr]]'

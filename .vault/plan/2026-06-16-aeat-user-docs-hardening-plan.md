@@ -3,24 +3,16 @@ tags:
   - '#plan'
   - '#aeat-user-docs-hardening'
 date: '2026-06-16'
-modified: '2026-06-16'
+modified: '2026-06-30'
 tier: L1
 related:
   - '[[2026-06-04-aeat-cli-userdocs-hardening-adr]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-research]]'
 ---
 
-
-
-
-
-
-
 # `aeat-user-docs-hardening` plan
 
-
 ## Description
-
 
 ## Steps
 
@@ -59,6 +51,4 @@ related:
 
 ## Parallelization
 
-
 ## Verification
-

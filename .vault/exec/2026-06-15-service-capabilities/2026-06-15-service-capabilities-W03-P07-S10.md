@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-30'
 step_id: 'S10'
 related:
   - "[[2026-06-15-service-capabilities-plan]]"
 ---
-
-
-
 
 # Tests + locales + how-to onboarding doc across capabilities, probes, doctor, provisioning
 

@@ -9,8 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..core.i18n import tr
-from ..core.i18n._render import DEFAULT_OUTPUT_LANGUAGE
+from ..core.i18n import DEFAULT_OUTPUT_LANGUAGE, tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -92,7 +91,7 @@ def test_locales_cli_keys_render_differently_across_supported_languages() -> Non
     at least one non-default language, demonstrating the keys are live catalogue
     entries and not tautological fallbacks.
     """
-    from ..core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES
+    from ..core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 
     rendered_values = set()
     for lang in SUPPORTED_OUTPUT_LANGUAGES:

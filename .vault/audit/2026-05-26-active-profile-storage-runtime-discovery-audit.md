@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-05-26'
-modified: '2026-05-26'
+modified: '2026-06-30'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
@@ -12,8 +12,6 @@ related:
   - '[[2026-05-21-profile-uuid-identity-adr]]'
   - '[[2026-05-07-user-profile-backend-schema-adr]]'
 ---
-
-
 
 # Active-profile storage runtime discovery audit
 

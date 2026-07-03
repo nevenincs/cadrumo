@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
@@ -18,7 +18,7 @@ from ....adapters.persistence.storage import (
     SensitivityClass,
     StorageValidationError,
 )
-from ....adapters.persistence.storage.bucket._errors import BucketValidationError
+from ....adapters.persistence.storage.bucket import BucketValidationError
 from ....adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import override_settings
@@ -45,23 +45,49 @@ from .._orchestration import profile_create_storage_span
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_RUNTIME_BUCKET_ID = "8127d068-f112-445b-b90e-ccf5e0139167"
+_BUCKET_ID = "eab96552-b170-4499-9436-5f06884dd062"
+
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(
         tmp_path=tmp_path,
-        bucket_id="user-profile-repository-test",
+        bucket_id=_RUNTIME_BUCKET_ID,
     ) as profile:
         yield profile.repository
 
 
-def test_object_key_helpers_reject_blank_inputs() -> None:
-    with pytest.raises(BucketValidationError, match="profile_id must not be blank"):
-        user_profile_value_object_key("  ")
-    with pytest.raises(BucketValidationError, match="profile_id must not be blank"):
-        user_profile_snapshot_object_key(" ", "snap-1")
-    with pytest.raises(BucketValidationError, match="snapshot_id must not be blank"):
-        user_profile_snapshot_object_key("a4f1c2e0-1111-4222-8333-444455556666", "")
+@pytest.mark.parametrize(
+    ("helper", "args", "expected_message"),
+    (
+        pytest.param(
+            user_profile_value_object_key,
+            ("  ",),
+            "profile_id must not be blank",
+            id="value-profile-id",
+        ),
+        pytest.param(
+            user_profile_snapshot_object_key,
+            (" ", "snap-1"),
+            "profile_id must not be blank",
+            id="snapshot-profile-id",
+        ),
+        pytest.param(
+            user_profile_snapshot_object_key,
+            ("a4f1c2e0-1111-4222-8333-444455556666", ""),
+            "snapshot_id must not be blank",
+            id="snapshot-id",
+        ),
+    ),
+)
+def test_object_key_helpers_reject_blank_inputs(
+    helper: Callable[..., str],
+    args: tuple[str, ...],
+    expected_message: str,
+) -> None:
+    with pytest.raises(BucketValidationError, match=expected_message):
+        helper(*args)
 
 
 def test_object_key_helpers_compose_canonical_keys() -> None:
@@ -142,14 +168,14 @@ def test_default_lifecycle_repository_requires_ready_runtime(tmp_path: Path) -> 
 
 
 def test_lifecycle_load_missing_raises_profile_not_found(secure_objects: SecureObjectRepository) -> None:
-    repo = UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects)
+    repo = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     with pytest.raises(ProfileNotFoundError) as excinfo:
-        repo.load("operator")
+        repo.load("11111111-1111-4111-8111-111111111111")
     assert str(excinfo.value) == "profile record not found in secure storage"
     assert excinfo.value.translated_message == "application.user_profile.errors.repository_profile_record_missing"
     assert tr(excinfo.value.translated_message, locale="en") != excinfo.value.translated_message
-    assert excinfo.value.context == {"profile_id": "operator", "bucket_id": "bucket-a"}
-    assert "operator" not in str(excinfo.value)
+    assert excinfo.value.context == {"profile_id": "11111111-1111-4111-8111-111111111111", "bucket_id": _BUCKET_ID}
+    assert "11111111-1111-4111-8111-111111111111" not in str(excinfo.value)
 
 
 def test_lifecycle_load_rejects_inner_classification_without_identifier_leak(
@@ -177,7 +203,7 @@ def test_lifecycle_load_rejects_inner_classification_without_identifier_leak(
     )
 
     with pytest.raises(ClassificationError) as excinfo:
-        UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects).load(profile_id)
+        UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).load(profile_id)
 
     assert str(excinfo.value) == "profile record classification is incompatible with this repository"
     assert (
@@ -217,7 +243,7 @@ def test_lifecycle_load_rejects_inner_version_without_identifier_leak(
     )
 
     with pytest.raises(EnvelopeVersionError) as excinfo:
-        UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects).load(profile_id)
+        UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).load(profile_id)
 
     assert str(excinfo.value) == "profile record schema version is not supported"
     assert (
@@ -234,13 +260,13 @@ def test_lifecycle_load_rejects_inner_version_without_identifier_leak(
 
 def test_snapshot_round_trip_carries_canonical_hash(secure_objects: SecureObjectRepository) -> None:
     profile = UserProfileRecord(
-        profile_id="operator",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
-    snapshot_id = new_profile_snapshot_id("operator")
+    snapshot_id = new_profile_snapshot_id("11111111-1111-4111-8111-111111111111")
     snapshot = UserProfileSnapshot.from_profile(profile, snapshot_id=snapshot_id)
-    repo = UserProfileSnapshotRepository(bucket_id="bucket-a", objects=secure_objects)
+    repo = UserProfileSnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
 
     repo.save(snapshot)
     assert repo.exists(snapshot_id)
@@ -250,13 +276,13 @@ def test_snapshot_round_trip_carries_canonical_hash(secure_objects: SecureObject
 
 
 def test_snapshot_load_missing_raises_snapshot_not_found(secure_objects: SecureObjectRepository) -> None:
-    repo = UserProfileSnapshotRepository(bucket_id="bucket-a", objects=secure_objects)
+    repo = UserProfileSnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     with pytest.raises(ProfileSnapshotNotFoundError) as excinfo:
         repo.load("missing")
     assert str(excinfo.value) == "profile snapshot not found in secure storage"
     assert excinfo.value.translated_message == "application.user_profile.errors.repository_profile_snapshot_missing"
     assert tr(excinfo.value.translated_message, locale="en") != excinfo.value.translated_message
-    assert excinfo.value.context == {"snapshot_id": "missing", "bucket_id": "bucket-a"}
+    assert excinfo.value.context == {"snapshot_id": "missing", "bucket_id": _BUCKET_ID}
     assert "missing" not in str(excinfo.value)
 
 
@@ -277,7 +303,7 @@ def test_snapshot_load_rejects_inner_classification_without_identifier_leak(
     )
     secure_objects.save(
         namespace=USER_PROFILE_SNAPSHOT_NAMESPACE,
-        object_key=user_profile_snapshot_object_key("bucket-a", snapshot.snapshot_id),
+        object_key=user_profile_snapshot_object_key(_BUCKET_ID, snapshot.snapshot_id),
         classification=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity,
         schema_version=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
         written_at=envelope.written_at,
@@ -285,7 +311,7 @@ def test_snapshot_load_rejects_inner_classification_without_identifier_leak(
     )
 
     with pytest.raises(ClassificationError) as excinfo:
-        UserProfileSnapshotRepository(bucket_id="bucket-a", objects=secure_objects).load(snapshot.snapshot_id)
+        UserProfileSnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects).load(snapshot.snapshot_id)
 
     assert str(excinfo.value) == "profile snapshot classification is incompatible with this repository"
     assert (
@@ -317,7 +343,7 @@ def test_snapshot_load_rejects_inner_version_without_identifier_leak(
     )
     secure_objects.save(
         namespace=USER_PROFILE_SNAPSHOT_NAMESPACE,
-        object_key=user_profile_snapshot_object_key("bucket-a", snapshot.snapshot_id),
+        object_key=user_profile_snapshot_object_key(_BUCKET_ID, snapshot.snapshot_id),
         classification=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity,
         schema_version=USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
         written_at=envelope.written_at,
@@ -325,7 +351,7 @@ def test_snapshot_load_rejects_inner_version_without_identifier_leak(
     )
 
     with pytest.raises(EnvelopeVersionError) as excinfo:
-        UserProfileSnapshotRepository(bucket_id="bucket-a", objects=secure_objects).load(snapshot.snapshot_id)
+        UserProfileSnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects).load(snapshot.snapshot_id)
 
     assert str(excinfo.value) == "profile snapshot schema version is not supported"
     assert (

@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#dead-code-purge'
 date: '2026-06-13'
-modified: '2026-06-15'
+modified: '2026-06-30'
 related: []
 ---
-
-
 
 # `dead-code-purge` audit: `Dead Code and Dead Export Inventory — Pass 1`
 
@@ -273,5 +271,3 @@ classes through the same vulture→AST→cross-reference confirmation in a follo
 batch (methods need extra care for protocol/ABC/override membership).
 
 ## Codification candidates
-
-
