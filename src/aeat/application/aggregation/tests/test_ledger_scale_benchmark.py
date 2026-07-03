@@ -64,7 +64,6 @@ from ....application.modelo import (
     persist_filed_revision_observation,
 )
 from ....core import Period
-from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, RegistryModeloObservation, validated_casilla_id
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.transactions import (
@@ -306,7 +305,7 @@ def _seed_taxpayer_profile() -> None:
 def _p95(samples: list[float]) -> float:
     """Return the 95th percentile of ``samples`` (nearest-rank, no interpolation)."""
     ordered = sorted(samples)
-    rank = max(0, min(len(ordered) - 1, int(round(0.95 * (len(ordered) - 1)))))
+    rank = max(0, min(len(ordered) - 1, round(0.95 * (len(ordered) - 1))))
     return ordered[rank]
 
 
@@ -320,12 +319,14 @@ def scale_bucket() -> Iterator[SecureObjectRepository]:
     """
     import tempfile
 
-    with tempfile.TemporaryDirectory(prefix="aeat-scale-bench-") as tmp_dir:
-        with isolated_runtime_profile(tmp_path=Path(tmp_dir), bucket_id=_BUCKET_ID) as profile:
-            _seed_scale_ledger(profile.repository)
-            _seed_prior_year_m130_minoracion(profile.repository)
-            _seed_taxpayer_profile()
-            yield profile.repository
+    with (
+        tempfile.TemporaryDirectory(prefix="aeat-scale-bench-") as tmp_dir,
+        isolated_runtime_profile(tmp_path=Path(tmp_dir), bucket_id=_BUCKET_ID) as profile,
+    ):
+        _seed_scale_ledger(profile.repository)
+        _seed_prior_year_m130_minoracion(profile.repository)
+        _seed_taxpayer_profile()
+        yield profile.repository
 
 
 def test_scale_fixture_seeds_the_documented_volume(scale_bucket: SecureObjectRepository) -> None:
@@ -356,7 +357,7 @@ def test_ledger_read_p95_latency(scale_bucket: SecureObjectRepository) -> None:
         assert len(catalogue) == _TOTAL_TRANSACTIONS
 
     p95 = _p95(samples)
-    print(  # noqa: T201 -- benchmark report line, intentionally surfaced in test output
+    print(
         f"\n[bench] ledger_read: n={_SAMPLE_COUNT} "
         f"p95={p95:.3f}s mean={statistics.mean(samples):.3f}s "
         f"min={min(samples):.3f}s max={max(samples):.3f}s "
@@ -401,7 +402,7 @@ def test_ledger_aggregation_filter_p95_latency(scale_bucket: SecureObjectReposit
         assert isinstance(result.casilla_values, Mapping)
 
     p95 = _p95(samples)
-    print(  # noqa: T201 -- benchmark report line
+    print(
         f"\n[bench] ledger_aggregation_filter: n={_SAMPLE_COUNT} "
         f"p95={p95:.3f}s mean={statistics.mean(samples):.3f}s "
         f"min={min(samples):.3f}s max={max(samples):.3f}s "
@@ -472,7 +473,7 @@ def test_modelo_calculate_p95_latency(scale_bucket: SecureObjectRepository) -> N
 
     reported = samples[:_SAMPLE_COUNT]
     p95 = _p95(reported)
-    print(  # noqa: T201 -- benchmark report line
+    print(
         f"\n[bench] modelo_calculate: n={len(reported)} (of {len(samples)} real quarters computed) "
         f"p95={p95:.3f}s mean={statistics.mean(reported):.3f}s "
         f"min={min(reported):.3f}s max={max(reported):.3f}s "

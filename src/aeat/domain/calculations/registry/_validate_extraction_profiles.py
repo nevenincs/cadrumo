@@ -7,6 +7,13 @@ from pathlib import Path
 
 from ._schema import ExtractionProfileDefinition, ExtractionTargetDefinition
 
+# The two `adapters.inbound` prefixes are a SANCTIONED dynamic domain -> adapters
+# edge: this validator dynamically imports the registry-declared parser module by
+# public-facade string target (per `dynamic-import-targets-the-public-facade`) to
+# confirm the `parser =` dotted path resolves. It is a string target invisible to
+# grimp / import-linter, so it is out of scope of the static ports-inversion seam
+# (`test_zero_production_domain_to_adapters_edges`), which covers persistence
+# coupling; see the ports-inversion ADR's post-close honesty-review note.
 _ALLOWED_EXTRACTION_PARSER_MODULE_PREFIXES: tuple[str, ...] = (
     "aeat.adapters.inbound.borrador",
     "aeat.adapters.inbound.declaracion",

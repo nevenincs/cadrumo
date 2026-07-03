@@ -2,16 +2,18 @@
 
 An operator (or an LLM agent driving the CLI) needs to run experiments
 (imports, classifications, calculations) without polluting the main profile's
-records, and discard the experiment cleanly afterwards. A sandbox is an
-ordinary profile bucket labelled with the reserved
+records, and discard the experiment cleanly afterwards — or, when the
+experiment is worth keeping around for later, move it into reversible
+dormancy instead of erasing it outright. A sandbox is an ordinary profile
+bucket labelled with the reserved
 :data:`~aeat.application.bucket_maintenance.SANDBOX_LABEL_PREFIX`; every verb
 here delegates to :mod:`aeat.application.bucket_maintenance`
-(``create_sandbox`` / ``discard_sandbox`` / ``BucketMaintenanceService``),
-which in turn delegates to the same atomic profile-create span and
-destructive-erase primitives ``config profile create`` / ``duplicate`` /
-``delete`` already use — this module owns only CLI argument parsing, pointer
-resolution, and envelope emission
-(``composition-service-no-parallel-write-path``).
+(``create_sandbox`` / ``discard_sandbox`` / ``archive_sandbox`` /
+``restore_sandbox`` / ``BucketMaintenanceService``), which in turn delegates
+to the same atomic profile-create span and destructive-erase / soft-tombstone
+primitives ``config profile create`` / ``duplicate`` / ``delete`` already use
+— this module owns only CLI argument parsing, pointer resolution, and
+envelope emission (``composition-service-no-parallel-write-path``).
 
 Isolation is not a new guarantee this module invents: it is the pre-existing
 per-bucket encrypted-storage boundary every profile bucket already has (one
@@ -49,6 +51,8 @@ def register_sandbox_commands(profile_app: typer.Typer) -> None:
     _register_sandbox_use_command(sandbox_app)
     _register_sandbox_discard_command(sandbox_app)
     _register_sandbox_prune_command(sandbox_app)
+    _register_sandbox_archive_command(sandbox_app)
+    _register_sandbox_restore_command(sandbox_app)
     profile_app.add_typer(sandbox_app, name="sandbox")
 
 
@@ -482,6 +486,199 @@ def _register_sandbox_prune_command(app: typer.Typer) -> None:
             notices = (skipped_notice,)
             lines.append(f"INFO\t{skipped_notice.message}")
         _emit_envelope(ctx, command="config.profile.sandbox.prune", result=result, lines=lines, notices=notices)
+
+
+def _register_sandbox_archive_command(app: typer.Typer) -> None:
+    @app.command(
+        "archive",
+        help=tr(
+            "cli.config.profile.sandbox.archive_help",
+            default="Move a sandbox into reversible dormancy without erasing it.",
+        ),
+    )
+    def config_profile_sandbox_archive(
+        ctx: typer.Context,
+        name: str = typer.Argument(
+            ...,
+            help=tr("cli.config.profile.sandbox.archive_name_help", default="Sandbox name (without the prefix)."),
+        ),
+        confirmed: bool = typer.Option(
+            False,
+            "--yes",
+            help=tr("cli.config.profile.sandbox.archive_yes_help", default="Confirm the archive."),
+        ),
+        dry_run: bool = typer.Option(
+            False,
+            "--dry-run/--no-dry-run",
+            help=tr(
+                "cli.config.profile.sandbox.archive_dry_run_help",
+                default="Preview the archive without moving the sandbox out of the live surface.",
+            ),
+        ),
+        output_language: OutputLanguage | None = typer.Option(
+            None,
+            "--output-language",
+            "--language",
+            help=tr("cli.config.auth.output_language_help"),
+        ),
+    ) -> None:
+        """Archive a sandbox bucket through ``archive_sandbox``, or preview it with ``--dry-run``."""
+        _activate_subcommand_output_language(ctx, output_language)
+        from ....application.bucket_maintenance import (
+            ArchiveSandboxCommand,
+            SandboxDiscardRefusedError,
+            SandboxNotFoundError,
+            archive_sandbox,
+            sandbox_label,
+        )
+        from ....application.workflow import read_profile_bucket
+        from ....domain.buckets import BucketArchiveRefusedError
+        from .._config_payloads import ConfigProfileSandboxArchiveResult
+
+        label = sandbox_label(name)
+        pointer = read_profile_bucket(label)
+        if pointer is None:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.sandbox.unknown_sandbox",
+                context={"name": name},
+            )
+
+        if dry_run:
+            lines = [
+                "dry_run\ttrue",
+                f"bucket_id\t{pointer.bucket_id}",
+                f"label\t{pointer.label}",
+            ]
+            result = ConfigProfileSandboxArchiveResult(bucket_id=pointer.bucket_id, label=pointer.label)
+            _emit_envelope(ctx, command="config.profile.sandbox.archive", result=result, lines=lines)
+            return
+
+        if not confirmed:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.sandbox.archive_requires_yes",
+                context={"name": name},
+            )
+        try:
+            outcome = archive_sandbox(
+                ArchiveSandboxCommand(bucket_id=pointer.bucket_id, confirmed=confirmed),
+            )
+        except SandboxNotFoundError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.sandbox.unknown_sandbox",
+                context={"name": name},
+            ) from exc
+        except SandboxDiscardRefusedError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.sandbox.discard_not_a_sandbox",
+                context={"name": name},
+            ) from exc
+        except BucketArchiveRefusedError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.sandbox.archive_active_profile",
+                context={"name": name},
+            ) from exc
+
+        result = ConfigProfileSandboxArchiveResult(bucket_id=outcome.bucket_id, label=outcome.label)
+        restore_notice = Notice(
+            severity=NoticeSeverity.INFO,
+            code="config.profile.sandbox.archive.restorable",
+            message=tr(
+                "cli.config.profile.sandbox.archive_restorable_info",
+                default=(
+                    "The sandbox is now dormant; run 'aeat config profile sandbox restore %{name}' to bring it back."
+                ),
+                name=name,
+            ),
+            suggestion=f"aeat config profile sandbox restore {name}",
+        )
+        _emit_envelope(
+            ctx,
+            command="config.profile.sandbox.archive",
+            result=result,
+            lines=(
+                "dry_run\tfalse",
+                f"bucket_id\t{outcome.bucket_id}",
+                f"label\t{outcome.label}",
+                f"INFO\t{restore_notice.message}",
+            ),
+            notices=(restore_notice,),
+        )
+
+
+def _register_sandbox_restore_command(app: typer.Typer) -> None:
+    @app.command(
+        "restore",
+        help=tr(
+            "cli.config.profile.sandbox.restore_help",
+            default="Bring an archived sandbox back to active status.",
+        ),
+    )
+    def config_profile_sandbox_restore(
+        ctx: typer.Context,
+        name: str = typer.Argument(
+            ...,
+            help=tr("cli.config.profile.sandbox.restore_name_help", default="Sandbox name (without the prefix)."),
+        ),
+        output_language: OutputLanguage | None = typer.Option(
+            None,
+            "--output-language",
+            "--language",
+            help=tr("cli.config.auth.output_language_help"),
+        ),
+    ) -> None:
+        """Restore an archived sandbox bucket through ``restore_sandbox``."""
+        _activate_subcommand_output_language(ctx, output_language)
+        from ....application.bucket_maintenance import (
+            RestoreSandboxCommand,
+            SandboxDiscardRefusedError,
+            SandboxNotArchivedError,
+            SandboxNotFoundError,
+            restore_sandbox,
+            sandbox_label,
+        )
+        from ....application.workflow import read_profile_bucket
+        from .._config_payloads import ConfigProfileSandboxRestoreResult
+
+        label = sandbox_label(name)
+        # The sandbox is dormant (tombstoned) after an archive, so the
+        # live-surface resolver must include tombstoned candidates to find
+        # it — the mirror of ``discard``'s lookup, which only ever targets
+        # a live sandbox.
+        pointer = read_profile_bucket(label, include_tombstoned=True)
+        if pointer is None:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.sandbox.unknown_sandbox",
+                context={"name": name},
+            )
+
+        try:
+            outcome = restore_sandbox(RestoreSandboxCommand(bucket_id=pointer.bucket_id))
+        except SandboxNotFoundError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.sandbox.unknown_sandbox",
+                context={"name": name},
+            ) from exc
+        except SandboxDiscardRefusedError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.sandbox.discard_not_a_sandbox",
+                context={"name": name},
+            ) from exc
+        except SandboxNotArchivedError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.sandbox.restore_not_archived",
+                context={"name": name},
+            ) from exc
+
+        result = ConfigProfileSandboxRestoreResult(bucket_id=outcome.bucket_id, label=outcome.label)
+        _emit_envelope(
+            ctx,
+            command="config.profile.sandbox.restore",
+            result=result,
+            lines=(
+                f"bucket_id\t{outcome.bucket_id}",
+                f"label\t{outcome.label}",
+            ),
+        )
 
 
 __all__ = ["register_sandbox_commands", "sandbox_app"]

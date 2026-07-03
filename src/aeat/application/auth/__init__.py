@@ -114,10 +114,13 @@ class AuthProviderKind(StrEnum):
     Attributes:
         CERTIFICATE: PKCS#12 client certificate (FNMT-RCM and equivalents).
         CLAVE_MOVIL: operator-mediated ``Cl@ve`` Móvil flow.
+        CLAVE_PERMANENTE: DNI/NIE + password ``Cl@ve`` Permanente flow, used
+            for AEAT read paths without an FNMT certificate or a phone.
     """
 
     CERTIFICATE = "certificate"
     CLAVE_MOVIL = "clave_movil"
+    CLAVE_PERMANENTE = "clave_permanente"
 
 
 class AuthProviderDescription(BaseModel):
@@ -245,6 +248,15 @@ from ._apoderado import (
     ApoderadoService,
     ApoderadoStatus,
 )
+from ._certificate_secret_backend import (
+    CertificateSecretBackend,
+    CertificateSecretBackendKind,
+    CertificateSecretBackendUnavailableError,
+    CertificateSecretNotFoundError,
+    KeyringCertificateSecretBackend,
+    SecureStorageCertificateSecretBackend,
+    certificate_secret_backend,
+)
 from ._certificate_sources import (
     CertificateSourceNoActiveBucketError,
 )
@@ -256,7 +268,10 @@ from ._certificate_sources_operator import (
     list_operator_certificate_sources,
     register_operator_certificate_source,
     remove_operator_certificate_source,
+    remove_operator_certificate_source_secret,
+    resolve_certificate_source_secret,
     select_operator_certificate_source,
+    set_operator_certificate_source_secret,
 )
 from ._diagnostics import (
     AUTH_DIAGNOSTIC_PHONE_STATES,
@@ -302,6 +317,7 @@ from ._operator_results import (
     CertificateSourceMutationResult,
     CertificateSourceNotFoundError,
     CertificateSourcePayload,
+    CertificateSourceSecretMutationResult,
     LiveAuthPreflightReport,
 )
 from ._sessions import (
@@ -356,6 +372,10 @@ __all__ = [
     "AuthStatusResult",
     "AuthTestResult",
     "AuthenticatedAeatSessionResult",
+    "CertificateSecretBackend",
+    "CertificateSecretBackendKind",
+    "CertificateSecretBackendUnavailableError",
+    "CertificateSecretNotFoundError",
     "CertificateSourceCheckEntry",
     "CertificateSourceCheckReport",
     "CertificateSourceListResult",
@@ -364,11 +384,14 @@ __all__ = [
     "CertificateSourceNotFoundError",
     "CertificateSourcePayload",
     "CertificateSourceRecord",
+    "CertificateSourceSecretMutationResult",
     "CorruptAuthSessionError",
+    "KeyringCertificateSecretBackend",
     "LiveAuthPreflightReport",
     "PersistedAuthSession",
     "ProviderConfigurationProbe",
     "ProviderProbeResult",
+    "SecureStorageCertificateSecretBackend",
     "SessionDeserializationError",
     "StateCertificateSourceNotFoundError",
     "StorageStatePaths",
@@ -376,6 +399,7 @@ __all__ = [
     "auth_acquisition_lock_path",
     "auth_lock_ttl_seconds",
     "build_live_auth_preflight_report",
+    "certificate_secret_backend",
     "check_operator_certificate_sources",
     "clear_auth_acquisition_lock",
     "clear_operator_auth",
@@ -400,9 +424,12 @@ __all__ = [
     "record_auth_diagnostic_phone_state",
     "register_operator_certificate_source",
     "remove_operator_certificate_source",
+    "remove_operator_certificate_source_secret",
     "require_verified_aeat_session",
+    "resolve_certificate_source_secret",
     "select_operator_certificate_source",
     "select_provider",
+    "set_operator_certificate_source_secret",
     "storage_state_paths",
     "test_operator_auth",
     "update_auth",

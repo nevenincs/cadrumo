@@ -26,7 +26,9 @@ __all__ = [
     "WithholdingClaveBreakdown",
     "WithholdingObservation",
     "WithholdingObservationRequirement",
+    "WithholdingTotalsParity",
     "aggregate_withholding_by_clave",
+    "compute_withholding_totals_parity",
     "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
     "validate_withholding_binding_selector_shape",
@@ -409,4 +411,97 @@ def aggregate_withholding_by_clave(
             retencion_total=retencion[clave],
         )
         for clave in sorted(percepciones)
+    )
+
+
+class WithholdingTotalsParity(BaseModel):
+    """Totals-parity verdict between per-perceptor withholding rows and the Modelo 190 resumen-anual summary casillas.
+
+    Modelo 190's summary casillas (``decl.percepciones-total``,
+    ``decl.retenciones-total``) are computed by SUMMING the taxpayer's four
+    Modelo 111 quarterly filings (``source = "relation_prefill"``,
+    ``op = "sum"`` over casillas ``02/05/08/.../26`` and ``28`` respectively) —
+    an entirely INDEPENDENT source from the per-perceptor-clave
+    :class:`WithholdingObservation` detail (the AEAT Diseño de Registros type-2
+    "registro de perceptor" rows, ``source = "withholding"``) that materialises
+    the ``modelo-190-perceptor-row-*`` bindings and the distinct-percepción
+    count. Nothing in the registry cross-checks that the two sources agree.
+
+    This model is the pure comparison result of that cross-check: the sum of
+    every persisted perceptor's ``percibido_dinerario + percibido_especie``
+    against the resolved ``decl.percepciones-total`` value, and the sum of
+    every persisted perceptor's ``retencion_practicada + ingreso_a_cuenta``
+    against the resolved ``decl.retenciones-total`` value. ``is_consistent``
+    is ``True`` only when both deltas are within ``tolerance`` — a divergence
+    on either side surfaces as a loud, actionable finding
+    (``no-silent-under-declaration``), never a silent pass.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    percepciones_row_total: Decimal = Field(ge=Decimal("0"))
+    percepciones_summary_total: Decimal = Field(ge=Decimal("0"))
+    percepciones_delta: Decimal
+    retenciones_row_total: Decimal = Field(ge=Decimal("0"))
+    retenciones_summary_total: Decimal = Field(ge=Decimal("0"))
+    retenciones_delta: Decimal
+    row_count: int = Field(ge=0)
+    tolerance: Decimal = Field(ge=Decimal("0"))
+    is_consistent: bool
+
+
+def compute_withholding_totals_parity(
+    observations: Iterable[WithholdingObservation],
+    *,
+    percepciones_summary_total: Decimal,
+    retenciones_summary_total: Decimal,
+    tolerance: Decimal = Decimal("0.01"),
+) -> WithholdingTotalsParity:
+    """Cross-check summed per-perceptor withholding rows against the resolved Modelo 190 summary casillas.
+
+    Args:
+        observations: The persisted per-perceptor-clave
+            :class:`WithholdingObservation` rows (the AEAT Diseño de Registros
+            type-2 "registro de perceptor" detail).
+        percepciones_summary_total: The resolved value of casilla
+            ``decl.percepciones-total`` (the M111-relation-derived summary
+            total), typically read from
+            ``revision.casilla_values["decl.percepciones-total"]``.
+        retenciones_summary_total: The resolved value of casilla
+            ``decl.retenciones-total``, typically read from
+            ``revision.casilla_values["decl.retenciones-total"]``.
+        tolerance: Maximum absolute delta (EUR) that does not surface a
+            divergence. Defaults to one cent, matching the registry's
+            standard rounding tolerance.
+
+    Returns:
+        A :class:`WithholdingTotalsParity` verdict. ``is_consistent`` is
+        ``False`` whenever either summed total diverges from its
+        corresponding summary casilla by more than ``tolerance`` — a missing
+        or dropped perceptor row under-declares the row-level total below the
+        summary casilla and must surface as a divergence, never silently
+        collapse into ``is_consistent=True``.
+    """
+    rows = tuple(observations)
+    percepciones_row_total = sum(
+        (row.percibido_dinerario + row.percibido_especie for row in rows),
+        Decimal("0"),
+    )
+    retenciones_row_total = sum(
+        (row.retencion_practicada + row.ingreso_a_cuenta for row in rows),
+        Decimal("0"),
+    )
+    percepciones_delta = percepciones_row_total - percepciones_summary_total
+    retenciones_delta = retenciones_row_total - retenciones_summary_total
+    is_consistent = abs(percepciones_delta) <= tolerance and abs(retenciones_delta) <= tolerance
+    return WithholdingTotalsParity(
+        percepciones_row_total=percepciones_row_total,
+        percepciones_summary_total=percepciones_summary_total,
+        percepciones_delta=percepciones_delta,
+        retenciones_row_total=retenciones_row_total,
+        retenciones_summary_total=retenciones_summary_total,
+        retenciones_delta=retenciones_delta,
+        row_count=len(rows),
+        tolerance=tolerance,
+        is_consistent=is_consistent,
     )

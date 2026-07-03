@@ -41,6 +41,7 @@ from . import (
     ProfileLifecycleResult,
     ProfileListing,
     ProfileListResult,
+    ReactivateProfileCommand,
     RegisterProfileCommand,
     RemoveProfileCommand,
     RenameProfileCommand,
@@ -52,6 +53,7 @@ _PROFILE_LIFECYCLE_ACTOR = "aeat.application.user_profile"
 _PROFILE_ALREADY_EXISTS_MESSAGE = "profile already exists in the active bucket"
 _PROFILE_TOMBSTONED_RENAME_MESSAGE = "tombstoned profile cannot be renamed"
 _PROFILE_TOMBSTONED_DUPLICATE_MESSAGE = "tombstoned profile cannot be duplicated"
+_PROFILE_NOT_TOMBSTONED_MESSAGE = "profile is not tombstoned; reactivate refuses a live profile"
 _PROFILE_SCHEMA_VALIDATION_MESSAGE = "profile facts failed schema validation"
 
 
@@ -178,6 +180,27 @@ class ProfileLifecycleService:
             occurred_at=tombstoned.updated_at,
         )
         return ProfileLifecycleResult(profile=tombstoned, applied_at=tombstoned.updated_at)
+
+    def reactivate(self, command: ReactivateProfileCommand) -> ProfileLifecycleResult:
+        """Restore a tombstoned root to active status; symmetric inverse of :meth:`remove`.
+
+        Refuses if the target is not currently tombstoned, so a
+        reactivate can never silently no-op against an already-active
+        profile.
+
+        Returns a :class:`ProfileLifecycleResult` with the reactivated profile.
+        """
+        record = self._repository.load(command.profile_id)
+        if record.status is not UserProfileStatus.TOMBSTONED:
+            raise _profile_not_tombstoned_error(command.profile_id)
+        reactivated = record.reactivate()
+        self._repository.save(reactivated)
+        self._emit_event(
+            event_type=BucketEventType.PROFILE_REACTIVATED,
+            object_id=reactivated.profile_id,
+            occurred_at=reactivated.updated_at,
+        )
+        return ProfileLifecycleResult(profile=reactivated, applied_at=reactivated.updated_at)
 
     def rename(self, command: RenameProfileCommand) -> ProfileLifecycleResult:
         """Update a live profile's display label and return a :class:`ProfileLifecycleResult`.
@@ -351,6 +374,14 @@ def _profile_tombstoned_error(profile_id: str, *, action: Literal["rename", "dup
             context={"profile_id": profile_id, "action": action},
             translated_message="application.user_profile.errors.lifecycle_profile_tombstoned_duplicate",
         )
+
+
+def _profile_not_tombstoned_error(profile_id: str) -> ProfileNotFoundError:
+    return ProfileNotFoundError(
+        _PROFILE_NOT_TOMBSTONED_MESSAGE,
+        context={"profile_id": profile_id, "action": "reactivate"},
+        translated_message="application.user_profile.errors.lifecycle_profile_not_tombstoned",
+    )
 
 
 __all__ = ["ProfileLifecycleService"]

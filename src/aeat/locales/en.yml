@@ -516,6 +516,8 @@ application:
           before reading AEAT data.
   bucket_maintenance:
     errors:
+      archive_active_bucket: 'The active bucket cannot be archived; switch to another profile first.'
+      archive_not_confirmed: 'Archiving is a reversible state transition, but it still requires explicit confirmation.'
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -526,6 +528,7 @@ application:
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
+      restore_not_archived: 'The bucket is not archived (tombstoned); there is nothing to restore.'
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
   calculations:
     iva_compensation:
@@ -1148,6 +1151,7 @@ application:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
         one taxpayer must have one profile.
       lifecycle_profile_already_exists: A profile already exists in the active bucket.
+      lifecycle_profile_not_tombstoned: 'The profile is not tombstoned; reactivate refuses a live profile.'
       lifecycle_profile_tombstoned_duplicate: A removed profile cannot be duplicated.
       lifecycle_profile_tombstoned_rename: A removed profile cannot be renamed.
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
@@ -2666,6 +2670,13 @@ cli:
       sandbox:
         already_exists: A sandbox named %{label} already exists. Pick a different
           name or discard the existing one first.
+        archive_active_profile: 'Sandbox %{name} is the active profile; switch to another profile before archiving it.'
+        archive_dry_run_help: 'Preview the archive without moving the sandbox out of the live surface.'
+        archive_help: 'Move a sandbox into reversible dormancy without erasing it.'
+        archive_name_help: 'Sandbox name (without the prefix).'
+        archive_requires_yes: 'Archiving a sandbox is a state transition. Re-run ''aeat config profile sandbox archive %{name} --yes'' to confirm.'
+        archive_restorable_info: 'The sandbox is now dormant; run ''aeat config profile sandbox restore %{name}'' to bring it back.'
+        archive_yes_help: 'Confirm the archive.'
         create_active_info: The sandbox is now the ACTIVE profile; every command runs
           against it until you switch away or discard it.
         create_from_profile_help: Seed the sandbox with an existing profile's facts
@@ -2695,6 +2706,9 @@ cli:
           another profile and re-run 'aeat config profile sandbox prune --yes' to
           discard it.
         prune_yes_help: Confirm discarding every sandbox.
+        restore_help: 'Bring an archived sandbox back to active status.'
+        restore_name_help: 'Sandbox name (without the prefix).'
+        restore_not_archived: '%{name} is not archived; there is nothing to restore.'
         source_not_found: No live profile named %{name} to seed the sandbox from.
         unknown_sandbox: 'Unknown sandbox: %{name}. Run ''aeat config profile sandbox
           list'' to see registered sandboxes.'
@@ -2863,11 +2877,14 @@ cli:
       until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
     llm_usage:
       header: 'LLM run usage:'
-      help: 'Report LLM run-usage totals (counts, durations, success rate) by provider and model.'
-      no_run_data: 'No LLM run telemetry recorded yet. Run an LLM-assisted classification to populate it.'
-      provider_help: 'Restrict the summary to this provider label (e.g. claude, antigravity, codex).'
-      since_help: 'Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.'
-      until_help: 'Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.'
+      help: Report LLM run-usage totals (counts, durations, success rate) by provider
+        and model.
+      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
+        to populate it.
+      provider_help: Restrict the summary to this provider label (e.g. claude, antigravity,
+        codex).
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
+      until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
     next_action:
       inspect_registry_toml: Inspect the registry TOML sources to identify the problem.
     repair:
