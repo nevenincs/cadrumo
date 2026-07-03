@@ -3759,8 +3759,7 @@ cli:
         de les quals depèn la decisió. Local; mai contacta amb AEAT.
       modelo_help: Identificador del modelo AEAT (p. ex. 303, 130, 100).
       year_help: Exercici fiscal per avaluar l'aplicabilitat; per defecte, l'any actual.
-    local_work_units_unavailable: L'estat local de les unitats de treball de Model
-      del resum no està disponible; no es pot mostrar sense un estat de treball persistit.
+    local_work_units_unavailable: 'No s''ha pogut carregar l''estat local de les unitats de treball de Model; aquesta vista es deriva del calendari de terminis i pot sobrenotificar un esborrany en curs com a encara pendent o ometre esborranys en curs més antics.'
     period: Període
     period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
       0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'

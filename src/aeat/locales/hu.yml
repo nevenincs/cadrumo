@@ -3731,8 +3731,7 @@ cli:
       modelo_help: AEAT-nyomtatványazonosító (pl. 303, 130, 100).
       year_help: 'Az alkalmazhatóság-értékelés adóéve; alapértelmezés: az aktuális
         év.'
-    local_work_units_unavailable: Az áttekintés helyi Modelo munkaegység-állapota
-      nem érhető el; nem jeleníthető meg megőrzött munkaállapot nélkül.
+    local_work_units_unavailable: 'A helyi Modelo munkaegység-állapot nem tölthető be; ez az áttekintés a határidőnaptárból származik, és egy folyamatban lévő piszkozatot még esedékesként túljelezhet, vagy régebbi folyamatban lévő piszkozatokat kihagyhat.'
     period: Időszak
     period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
       01-12 (hónapok). A --year kapcsolóval adja meg az évet.'

@@ -3798,9 +3798,7 @@ cli:
       modelo_help: Identificador del modelo AEAT (p. ej. 303, 130, 100).
       year_help: Ejercicio fiscal para evaluar la aplicabilidad; por defecto, el año
         actual.
-    local_work_units_unavailable: El estado local de las unidades de trabajo de Modelo
-      del resumen no está disponible; no se puede mostrar sin un estado de trabajo
-      persistido.
+    local_work_units_unavailable: 'No se pudo cargar el estado local de las unidades de trabajo de Modelo; esta vista se deriva del calendario de plazos y puede sobrenotificar un borrador en curso como aún pendiente u omitir borradores en curso más antiguos.'
     period: Periodo
     period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual),
       01-12 (meses). Combínelo con --year para elegir el año.'
