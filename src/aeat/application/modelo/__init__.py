@@ -321,9 +321,11 @@ from ._review_package_counter_sign import (
     verify_counter_signed_receipt,
 )
 from ._review_package_recipient_encryption import (
+    RecipientDecryptedPackage,
     RecipientDecryptionError,
     RecipientEncryptedPackage,
     RecipientEncryptionError,
+    RecipientPackageExpiredError,
     decrypt_review_package_for_recipient,
     encrypt_review_package_for_recipient,
 )
@@ -335,6 +337,13 @@ from ._review_package_recipient_registry import (
     RecipientFingerprintRegistryRepository,
     RecipientNotRegisteredError,
     public_key_hex_from_raw_bytes,
+)
+from ._review_package_recipient_replay_guard import (
+    ConsumedNonceLedger,
+    ConsumedNonceRecord,
+    RecipientPackageReplayedError,
+    RecipientReplayGuardError,
+    RecipientReplayGuardRepository,
 )
 from ._review_package_signing import (
     ReviewPackageSigningError,
@@ -471,6 +480,8 @@ __all__ = [
     "CasillaDivergence",
     "CasillaDivergenceKind",
     "CasillaProvenanceMissingError",
+    "ConsumedNonceLedger",
+    "ConsumedNonceRecord",
     "CounterSignedReceipt",
     "DataInventoryCasilla",
     "DataInventoryChecklist",
@@ -585,6 +596,7 @@ __all__ = [
     "QuickfileStageOutcome",
     "QuickfileStageStatus",
     "RecipientAlreadyRegisteredError",
+    "RecipientDecryptedPackage",
     "RecipientDecryptionError",
     "RecipientEncryptedPackage",
     "RecipientEncryptionError",
@@ -593,6 +605,10 @@ __all__ = [
     "RecipientFingerprintRegistryError",
     "RecipientFingerprintRegistryRepository",
     "RecipientNotRegisteredError",
+    "RecipientPackageExpiredError",
+    "RecipientPackageReplayedError",
+    "RecipientReplayGuardError",
+    "RecipientReplayGuardRepository",
     "ReconciliationCrossBucketRefusedError",
     "ReconciliationDeclaracionSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",

@@ -843,4 +843,37 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.modelo._review_package_recipient_encryption.RecipientPackageExpiredError",
+        ErrorCode(
+            code="REFUSED_MODELO_RECIPIENT_PACKAGE_EXPIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.recipient_decryption_failed",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._review_package_recipient_replay_guard.RecipientReplayGuardError",
+        ErrorCode(
+            code="ERROR_MODELO_RECIPIENT_REPLAY_GUARD",
+            category=ErrorCategory.ERROR,
+            message_key="application.modelo.errors.recipient_registry_load_failed",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._review_package_recipient_replay_guard.RecipientPackageReplayedError",
+        ErrorCode(
+            code="REFUSED_MODELO_RECIPIENT_PACKAGE_REPLAYED",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.recipient_decryption_failed",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

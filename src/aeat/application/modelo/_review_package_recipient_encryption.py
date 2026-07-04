@@ -47,10 +47,42 @@ public key carries no secrecy requirement (it is looked up from
 the ephemeral sender private key exists only for the duration of one
 call and is never persisted.
 
+Expiry and replay defence (``2026-07-04-recipient-encryption-adr``, the
+review-only/expiry/replay follow-up slice): every envelope carries an
+``issued_at`` timestamp, an optional ``valid_until`` deadline, a random
+``envelope_nonce_hex`` (independent of the AEAD nonce embedded in
+``ciphertext``, minted purely as a replay-detection token), and a
+``review_only`` flag.
+
+* **Expiry** is checked entirely inside :func:`decrypt_review_package_for_recipient`
+  against an explicit, caller-supplied ``now`` (never the wall clock read
+  directly by this module, so the check is deterministic and testable): a
+  package presented after its ``valid_until`` deadline is refused before AEAD
+  decryption is even attempted. A ``valid_until=None`` envelope never expires.
+* **Replay defence** is a TWO-PARTY contract this module only half-owns: the
+  envelope's ``envelope_nonce_hex`` is the token a caller checks against
+  :class:`~aeat.application.modelo.RecipientReplayGuardRepository` (a
+  persisted, bucket-scoped consumed-nonce ledger) before or after calling
+  :func:`decrypt_review_package_for_recipient` -- this module mints and
+  carries the nonce but performs no persistence itself (this is the
+  ``composition-service-no-parallel-write-path`` boundary: encryption and
+  decryption stay pure in-memory primitives, and the CLI decrypt-side
+  composition owns the ledger check).
+* **Review-only mode** (``review_only=True``) asserts the sealed package
+  carries no filing authority: the recipient may read and verify it, but it
+  is NOT evidence that the underlying revision has been (or will be) filed
+  with AEAT. :func:`decrypt_review_package_for_recipient` returns a typed
+  :class:`RecipientDecryptedPackage` (bytes plus the ``review_only`` flag)
+  rather than bare ``bytes``, so a downstream consumer cannot lose the flag
+  and mistake a review-only handoff for a filing artefact.
+
 See Also:
     :mod:`aeat.application.modelo._review_package_recipient_registry`
         Where a recipient's trusted public key is registered and looked
         up before calling this module.
+    :mod:`aeat.application.modelo._review_package_recipient_replay_guard`
+        The consumed-nonce ledger a caller composes around
+        :func:`decrypt_review_package_for_recipient` for replay defence.
     :mod:`aeat.application.modelo._review_package`
         Builds and integrity-verifies the review package this module
         encrypts.
@@ -58,14 +90,18 @@ See Also:
 
 from __future__ import annotations
 
+import secrets
+from datetime import datetime, timedelta
+
 from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,
     X25519PublicKey,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
+from ...core.time import now as _utc_now
 
 #: Wire-format version of the recipient-encryption envelope. Bumped when
 #: the envelope schema changes shape.
@@ -80,6 +116,10 @@ _HKDF_CONTEXT_PREFIX = b"aeat.review_package.recipient_encryption.v1"
 
 _HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
 
+#: Byte length of the replay-detection nonce (independent of, and never
+#: reused as, the AEAD nonce embedded inside ``ciphertext``).
+_REPLAY_NONCE_BYTES = 32
+
 
 class RecipientEncryptionError(AeatError):
     """Base error for review-package recipient-encryption failures."""
@@ -88,11 +128,12 @@ class RecipientEncryptionError(AeatError):
 class RecipientDecryptionError(RecipientEncryptionError):
     """Raised when a recipient-encrypted package fails to decrypt.
 
-    Covers both cryptographic AEAD-tag failure (tampered ciphertext or
-    wrong private key) and a mismatched recipient public key (the
-    caller's private key does not correspond to the envelope's declared
-    recipient public key) -- never distinguished further, so an attacker
-    cannot use error content to learn which check failed.
+    Covers cryptographic AEAD-tag failure (tampered ciphertext or wrong
+    private key), a mismatched recipient public key (the caller's private
+    key does not correspond to the envelope's declared recipient public
+    key), and an expired ``valid_until`` deadline -- never distinguished
+    further, so an attacker cannot use error content to learn which check
+    failed.
     """
 
 
@@ -103,6 +144,17 @@ class RecipientEncryptedPackage(BaseModel):
     both raw 32-byte X25519 public keys, hex-encoded. ``ciphertext``
     is the AEAD wire form (``nonce || ciphertext_with_tag``) produced by
     :func:`~aeat.adapters.persistence.storage.crypto.encrypt_record`.
+
+    ``envelope_nonce_hex`` is a replay-detection token, independent of the
+    AEAD nonce embedded in ``ciphertext``: a caller checks it against
+    :class:`~aeat.application.modelo.RecipientReplayGuardRepository` to
+    refuse a package presented more than once. ``issued_at`` /
+    ``valid_until`` bound the envelope's validity window (``valid_until``
+    of ``None`` means the envelope never expires); the deadline is checked
+    inside :func:`decrypt_review_package_for_recipient` against an explicit
+    caller-supplied ``now``, never the wall clock read by this module.
+    ``review_only`` asserts the sealed package carries no filing authority
+    -- see the module docstring.
     """
 
     model_config = _STRICT_FROZEN
@@ -111,6 +163,16 @@ class RecipientEncryptedPackage(BaseModel):
     ephemeral_public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     recipient_public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     ciphertext: bytes = Field(min_length=1)
+    envelope_nonce_hex: str = Field(pattern=_HEX_PATTERN_64)
+    issued_at: datetime
+    valid_until: datetime | None = Field(default=None)
+    review_only: bool = Field(default=False)
+
+    @model_validator(mode="after")
+    def _valid_until_is_after_issued_at(self) -> RecipientEncryptedPackage:
+        if self.valid_until is not None and self.valid_until <= self.issued_at:
+            raise ValueError("valid_until must be strictly after issued_at")
+        return self
 
 
 def _hkdf_context(recipient_public_key_hex: str) -> bytes:
@@ -138,6 +200,9 @@ def encrypt_review_package_for_recipient(
     package_bytes: bytes,
     *,
     recipient_public_key_hex: str,
+    review_only: bool = False,
+    valid_for: timedelta | None = None,
+    issued_at: datetime | None = None,
 ) -> RecipientEncryptedPackage:
     """Seal ``package_bytes`` so only ``recipient_public_key_hex``'s holder can open it.
 
@@ -155,10 +220,22 @@ def encrypt_review_package_for_recipient(
         recipient_public_key_hex: The recipient's raw 32-byte X25519
             public key, hex-encoded (see
             :class:`~aeat.application.modelo.RecipientFingerprintRecord`).
+        review_only: When ``True``, marks the sealed package as carrying
+            no filing authority -- see the module docstring. Defaults to
+            ``False`` (a normal filing-grade handoff).
+        valid_for: Optional validity window measured from ``issued_at``.
+            When supplied, the envelope's ``valid_until`` is
+            ``issued_at + valid_for`` and
+            :func:`decrypt_review_package_for_recipient` refuses the
+            package once that deadline has passed. ``None`` (the default)
+            produces an envelope that never expires.
+        issued_at: Optional override for the envelope's ``issued_at``
+            timestamp (tests only); defaults to the current UTC time.
 
     Raises:
         RecipientEncryptionError: If ``recipient_public_key_hex`` is not
-            a well-formed X25519 public key.
+            a well-formed X25519 public key, or if ``valid_for`` is not a
+            strictly positive duration.
     """
     from ...adapters.persistence.storage.crypto import derive_key, encrypt_record
 
@@ -169,6 +246,12 @@ def encrypt_review_package_for_recipient(
             "recipient_public_key_hex is not a well-formed X25519 public key",
             translated_message="application.modelo.errors.recipient_encryption_invalid_key",
         ) from exc
+
+    if valid_for is not None and valid_for <= timedelta(0):
+        raise RecipientEncryptionError(
+            "valid_for must be a strictly positive duration",
+            translated_message="application.modelo.errors.recipient_encryption_invalid_key",
+        )
 
     ephemeral_private_key = X25519PrivateKey.generate()
     ephemeral_public_key = ephemeral_private_key.public_key()
@@ -186,35 +269,85 @@ def encrypt_review_package_for_recipient(
         associated_data=_associated_data(recipient_public_key_hex),
     )
 
+    envelope_issued_at = issued_at or _utc_now()
+    envelope_valid_until = envelope_issued_at + valid_for if valid_for is not None else None
+
     return RecipientEncryptedPackage(
         ephemeral_public_key_hex=ephemeral_public_key_hex,
         recipient_public_key_hex=recipient_public_key_hex,
         ciphertext=encrypted.to_wire(),
+        envelope_nonce_hex=secrets.token_hex(_REPLAY_NONCE_BYTES),
+        issued_at=envelope_issued_at,
+        valid_until=envelope_valid_until,
+        review_only=review_only,
     )
+
+
+class RecipientPackageExpiredError(RecipientDecryptionError):
+    """Raised when a recipient-encrypted package is presented past its ``valid_until`` deadline.
+
+    A subclass of :class:`RecipientDecryptionError` (rather than a sibling)
+    so an existing ``except RecipientDecryptionError`` catch-all keeps
+    working verbatim; callers that need to distinguish expiry from a
+    cryptographic failure may catch this subclass specifically, though the
+    ADR's undifferentiated-failure posture means the rendered message is
+    identical either way.
+    """
+
+
+class RecipientDecryptedPackage(BaseModel):
+    """Recovered plaintext bytes plus the envelope's carried disposition flags.
+
+    Returned by :func:`decrypt_review_package_for_recipient` instead of
+    bare ``bytes`` so a downstream consumer cannot lose the ``review_only``
+    flag and mistake a review-only handoff for a filing-grade artefact.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    package_bytes: bytes = Field(min_length=1)
+    review_only: bool
 
 
 def decrypt_review_package_for_recipient(
     envelope: RecipientEncryptedPackage,
     *,
     recipient_private_key: X25519PrivateKey,
-) -> bytes:
+    now: datetime | None = None,
+) -> RecipientDecryptedPackage:
     """Reverse :func:`encrypt_review_package_for_recipient` and return the package bytes.
 
     Reconstructs the same derived AEAD key by performing ECDH between
     ``recipient_private_key`` and the envelope's ephemeral public key,
     then decrypts and authenticates. A wrong ``recipient_private_key`` (or
     any tampering of ``envelope.ciphertext`` or the declared public keys)
-    fails AEAD authentication.
+    fails AEAD authentication. Before any cryptographic work, the envelope's
+    ``valid_until`` deadline (when set) is checked against ``now``; an
+    expired envelope is refused without attempting decryption.
+
+    Replay defence is NOT performed here: this function is a pure
+    encrypt/decrypt primitive with no persistence dependency
+    (``composition-service-no-parallel-write-path``). A caller that needs
+    replay defence composes
+    :class:`~aeat.application.modelo.RecipientReplayGuardRepository` around
+    this call, keyed on ``envelope.envelope_nonce_hex``.
 
     Args:
         envelope: The :class:`RecipientEncryptedPackage` produced by
             :func:`encrypt_review_package_for_recipient`.
         recipient_private_key: The recipient's own X25519 private key.
+        now: The instant to evaluate ``envelope.valid_until`` against.
+            Defaults to the current UTC time; tests inject an explicit
+            value rather than relying on the wall clock.
 
     Returns:
-        The original plaintext review-package archive bytes.
+        A :class:`RecipientDecryptedPackage` carrying the original
+        plaintext review-package archive bytes and the envelope's
+        ``review_only`` disposition.
 
     Raises:
+        RecipientPackageExpiredError: If ``envelope.valid_until`` is set
+            and ``now`` is at or past that deadline.
         RecipientDecryptionError: If ``recipient_private_key`` does not
             match the envelope's declared recipient public key, or the
             ciphertext fails AEAD authentication for any reason
@@ -222,6 +355,13 @@ def decrypt_review_package_for_recipient(
     """
     from ...adapters.persistence.storage import DecryptionError
     from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, derive_key
+
+    evaluated_at = now or _utc_now()
+    if envelope.valid_until is not None and evaluated_at >= envelope.valid_until:
+        raise RecipientPackageExpiredError(
+            "recipient-encrypted package has expired; the recipient must request a fresh package",
+            translated_message="application.modelo.errors.recipient_decryption_failed",
+        )
 
     recipient_public_key_hex = recipient_private_key.public_key().public_bytes_raw().hex()
     if recipient_public_key_hex != envelope.recipient_public_key_hex:
@@ -238,7 +378,7 @@ def decrypt_review_package_for_recipient(
         context=_hkdf_context(envelope.recipient_public_key_hex),
     )
     try:
-        return decrypt_record(
+        recovered = decrypt_record(
             EncryptedBlob.from_wire(envelope.ciphertext),
             key=derived_key,
             associated_data=_associated_data(envelope.recipient_public_key_hex),
@@ -249,11 +389,15 @@ def decrypt_review_package_for_recipient(
             translated_message="application.modelo.errors.recipient_decryption_failed",
         ) from exc
 
+    return RecipientDecryptedPackage(package_bytes=recovered, review_only=envelope.review_only)
+
 
 __all__ = [
+    "RecipientDecryptedPackage",
     "RecipientDecryptionError",
     "RecipientEncryptedPackage",
     "RecipientEncryptionError",
+    "RecipientPackageExpiredError",
     "decrypt_review_package_for_recipient",
     "encrypt_review_package_for_recipient",
 ]
