@@ -32,7 +32,7 @@ _MODELOS = [
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain,windows", _MODELOS)
-def test_validator_accepts_committed_definition(mid, rev, approval, plazo, doc, domain, windows) -> None:
+def test_validator_accepts_committed_definition(mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int) -> None:
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert modelo.tax_domain is domain
@@ -40,7 +40,7 @@ def test_validator_accepts_committed_definition(mid, rev, approval, plazo, doc, 
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain,windows", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(mid, rev, approval, plazo, doc, domain, windows) -> None:
+def test_approval_and_plazo_resolve_as_legal_authority(mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int) -> None:
     _, catalogues = _committed_modelo(mid)
     for ref in (approval, plazo):
         entry = catalogues.legal[ref]
@@ -49,7 +49,7 @@ def test_approval_and_plazo_resolve_as_legal_authority(mid, rev, approval, plazo
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain,windows", _MODELOS)
-def test_deadline_windows_cite_the_plazo(mid, rev, approval, plazo, doc, domain, windows) -> None:
+def test_deadline_windows_cite_the_plazo(mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int) -> None:
     """Each window count matches the verbatim plazo cadence and every window cites
     the plazo article — no window is authored without its grounding."""
     modelo, _ = _committed_modelo(mid)
