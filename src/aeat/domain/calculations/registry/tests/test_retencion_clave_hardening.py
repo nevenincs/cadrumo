@@ -37,7 +37,7 @@ def _observation(*, clave: str, subclave: str = "") -> WithholdingObservation:
         source_id="row-1",
         perceptor_tax_id="11111111H",
         transaction_date=date(2024, 3, 15),
-        clave=clave,
+        clave=clave,  # pydantic mode="before" validator coerces str → RetencionClave
         subclave=subclave,
         percibido_dinerario=Decimal("1000"),
     )

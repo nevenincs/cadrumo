@@ -19,6 +19,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from .....core.aggregation import RetencionClave
 from .._bindings import (
     AtributionMemberObservation,
     DonativoDonorObservation,
@@ -48,7 +49,7 @@ def test_withholding_observation_country_code_must_be_uppercase_alphabetic() -> 
             perceptor_tax_id="12345678A",
             country_code="es",
             transaction_date=date(2025, 3, 15),
-            clave="A",
+            clave=RetencionClave.A,
         )
     with pytest.raises(ValidationError, match="country_code must be uppercase alphabetic"):
         WithholdingObservation(
@@ -56,7 +57,7 @@ def test_withholding_observation_country_code_must_be_uppercase_alphabetic() -> 
             perceptor_tax_id="12345678A",
             country_code="E1",
             transaction_date=date(2025, 3, 15),
-            clave="A",
+            clave=RetencionClave.A,
         )
 
 
@@ -66,12 +67,12 @@ def test_withholding_observation_clave_must_be_a_valid_retencion_clave() -> None
     member -- the closed-set hardening that replaced the former uppercase-only check.
     """
     with pytest.raises(ValidationError, match="not a valid RetencionClave"):
-        WithholdingObservation(
-            source_id="p1",
-            perceptor_tax_id="12345678A",
-            transaction_date=date(2025, 3, 15),
-            clave="a",
-        )
+        WithholdingObservation.model_validate({
+            "source_id": "p1",
+            "perceptor_tax_id": "12345678A",
+            "transaction_date": date(2025, 3, 15),
+            "clave": "a",
+        })
 
 
 def test_withholding_observation_amounts_reject_negative() -> None:
@@ -80,7 +81,7 @@ def test_withholding_observation_amounts_reject_negative() -> None:
             source_id="p1",
             perceptor_tax_id="12345678A",
             transaction_date=date(2025, 3, 15),
-            clave="A",
+            clave=RetencionClave.A,
             retencion_practicada=Decimal("-1"),
         )
 
@@ -91,7 +92,7 @@ def test_withholding_observation_amounts_must_be_decimal_not_bool() -> None:
             source_id="p1",
             perceptor_tax_id="12345678A",
             transaction_date=date(2025, 3, 15),
-            clave="A",
+            clave=RetencionClave.A,
             retencion_practicada=cast(Decimal, True),
         )
 
@@ -108,7 +109,7 @@ def test_build_withholding_rows_per_perceptor_sums_amounts() -> None:
             perceptor_tax_id="12345678A",
             perceptor_legal_name="P One",
             transaction_date=date(2025, 3, 15),
-            clave="A",
+            clave=RetencionClave.A,
             percibido_dinerario=a_dinerario_q1,
             retencion_practicada=a_retencion_q1,
         ),
@@ -117,7 +118,7 @@ def test_build_withholding_rows_per_perceptor_sums_amounts() -> None:
             perceptor_tax_id="12345678A",
             perceptor_legal_name="P One",
             transaction_date=date(2025, 6, 15),
-            clave="A",
+            clave=RetencionClave.A,
             percibido_dinerario=a_dinerario_q2,
             retencion_practicada=a_retencion_q2,
         ),
@@ -126,7 +127,7 @@ def test_build_withholding_rows_per_perceptor_sums_amounts() -> None:
             perceptor_tax_id="87654321Z",
             perceptor_legal_name="P Two",
             transaction_date=date(2025, 4, 1),
-            clave="G",
+            clave=RetencionClave.G,
             percibido_dinerario=z_dinerario,
             retencion_practicada=Decimal("5500"),
         ),
@@ -147,14 +148,14 @@ def test_build_withholding_rows_per_perceptor_clave_distinguishes_clave_tuples()
             source_id="p1a",
             perceptor_tax_id="12345678A",
             transaction_date=date(2025, 3, 15),
-            clave="A",
+            clave=RetencionClave.A,
             percibido_dinerario=Decimal("100"),
         ),
         WithholdingObservation(
             source_id="p1b",
             perceptor_tax_id="12345678A",
             transaction_date=date(2025, 4, 15),
-            clave="G",
+            clave=RetencionClave.G,
             percibido_dinerario=Decimal("200"),
         ),
     )

@@ -217,13 +217,13 @@ def test_ledger_spec_is_frozen() -> None:
 
 
 def test_specs_reject_inconsistent_construction() -> None:
-    cases = (
-        (LedgerEditSpec, {"category": "software"}),
-        (InvoiceEditSpec, {"base": Decimal("100.00")}),
-    )
-    for spec_type, kwargs in cases:
-        with pytest.raises(ValueError, match=r"clauses|category|base|inconsistent"):
-            spec_type(clauses=(), **kwargs)
+    # Test LedgerEditSpec rejects empty clauses with non-empty category
+    with pytest.raises(ValueError, match=r"clauses|category|inconsistent"):
+        LedgerEditSpec(clauses=(), category="software")
+
+    # Test InvoiceEditSpec rejects empty clauses with non-empty base
+    with pytest.raises(ValueError, match=r"clauses|base|inconsistent"):
+        InvoiceEditSpec(clauses=(), base=Decimal("100.00"))
 
 
 # ---------------------------------------------------------------------

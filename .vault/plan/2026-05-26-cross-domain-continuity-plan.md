@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cross-domain-continuity'
 date: '2026-05-26'
-modified: '2026-07-02'
+modified: '2026-07-04'
 tier: L4
 related:
   - '[[2026-05-26-cross-domain-continuity-audit]]'
@@ -14,6 +14,16 @@ related:
   - '[[2026-05-26-cross-domain-continuity-adr]]'
   - '[[2026-06-04-cross-domain-continuity-research]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: P02, P64, S01 -->
 
@@ -84,7 +94,7 @@ Four separate period-resolution sites: parse_canonical_period period_start_date 
 - [x] `W01.P07.S27` - consolidate _registry_period_token to share a normaliser with the calculate path; `src/aeat/application/workflow/_engine.py`.
 - [x] `W01.P07.S28` - property test that for every supported period token all three sibling functions agree; `src/aeat/domain/test_period_property.py`.
 - [x] `W01.P07.S29` - regression test that modelo work verify succeeds on the same 1P token create and calculate accepted; `src/aeat/entrypoints/cli/test_modelo_period_consistency.py`.
-- [ ] `W01.P07.S233` - R7-INES-7 fix period token notation inconsistency in overview backlog; `M111 surfaces as 2026Q1 while the rest of the system uses 1T; consolidate period rendering through parse_canonical_period output form so backlog and calendar agree; `src/aeat/application/overview/`.
+- [x] `W01.P07.S233` - R7-INES-7 fix period token notation inconsistency in overview backlog; `M111 surfaces as 2026Q1 while the rest of the system uses 1T; consolidate period rendering through parse_canonical_period output form so backlog and calendar agree; `src/aeat/application/overview/`.
 
 ### Phase `W01.P08` - i18n placeholder validator silent-swallow elimination
 
@@ -430,6 +440,7 @@ Bulk of Cluster O. Each Step is a single file drift resolution. Mechanical and r
 
 Seven identical copies of _missing_refs across _validate modules. Extract to a single helper module and import.
 
+
 ### Phase `W09.P40` - ledger aggregation duplication pair resolution
 
 Three structurally identical guard pairs between _iva_ledger.py and _renta_ledger.py: currency business-classification branch and business-proportion extraction.
@@ -476,7 +487,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [x] `W09.P41.S254` - S209 BATCH 3 mixed-fixture triage for test_profile_lifecycle_verbs test_root_grammar_invariants test_root_help_shape; `split create-path tests from active-session tests across test classes or parametrised fixtures; some functions may need isolated_profile_storage_root other functions need isolated_runtime_profile; `src/aeat/entrypoints/cli/`.
 - [ ] `W09.P41.S255` - follow-on to W08.P35.S140 sweep: convert 120 hardcoded f-string error raises across 43 application files identified by the Haiku discovery sweep; `full file list and operator-facing subset filed in S140 Step Record; batch by surface (modelo registry storage etc) per locale CLI rule scaffold-then-fill; mechanical work; `src/aeat/application/`.
 - [x] `W09.P41.S256` - FU-W07-D surface legal_refs and source_refs on projected M100 casilla values in modelo project verb output payload; `calculation-grounding rule requires every casilla observation to carry its provenance; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W09.P41.S257` - FU-W07-E hexagonal violation in modelo project CLI verb: calculate_registry_snapshot imported from domain.calculations.registry directly at the CLI layer; `extract snapshot acquisition + engine call into a thin application.modelo service function and have the verb call only that service; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W09.P41.S257` - FU-W07-E hexagonal violation in modelo project CLI verb: calculate_registry_snapshot imported from domain.calculations.registry directly at the CLI layer; `extract snapshot acquisition + engine call into a thin application.modelo service function and have the verb call only that service; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W09.P41.S258` - FU-W07-F document or test that resources().modelos.authority and _service()._authority yield identical RegistrySnapshots; `the modelo project verb test asserts via two distinct paths but the equivalence is currently implicit; `src/aeat/application/modelo/`.
 - [x] `W09.P41.S259` - FU-W07-G S118 + S118-fix co-landing convention note: 604bf217d and f4108869d both touch the S118 scope without an intervening Step record; `documentation-only note for W09; `.vaultspec/`.
 - [x] `W09.P41.S261` - FU-W08-C drop unsecured-backend monkeypatches from test_output_language_parity _isolated_state fixture; `--help tests reach no storage layer so no replacement fixture needed; `src/aeat/entrypoints/cli/test_output_language_parity.py`.

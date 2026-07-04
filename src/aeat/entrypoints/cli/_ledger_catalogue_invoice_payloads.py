@@ -68,6 +68,19 @@ class CatalogueInvoiceCreateResult(CatalogueInvoiceRecordPayload):
     """
 
 
+@register_schema("ledger.invoice.catalogue.wizard")
+class CatalogueInvoiceWizardResult(CatalogueInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger invoice catalogue wizard``.
+
+    Mirrors the ``invoice`` inside the application-layer result returned by
+    :func:`create_invoice_via_wizard`. ``already_existed`` reports the guarded
+    idempotent no-op path: ``True`` when the same content-derived identity was
+    already catalogued and nothing was written.
+    """
+
+    already_existed: bool = False
+
+
 @register_schema("ledger.invoice.catalogue.view")
 class CatalogueInvoiceViewResult(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice catalogue view``.
@@ -140,4 +153,5 @@ __all__ = [
     "CatalogueInvoiceRecordPayload",
     "CatalogueInvoiceRemoveResult",
     "CatalogueInvoiceViewResult",
+    "CatalogueInvoiceWizardResult",
 ]

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -143,7 +144,7 @@ def test_modelo_100_2024_personal_family_construct_is_profile_backed() -> None:
         assert casilla.binding == binding_id
         binding = bindings[binding_id]
         assert binding.source is BindingSourceKind.PROFILE
-        selector = binding.selector
+        selector: Any = binding.selector
         assert selector.dictionary_field == casilla_id
 
 
@@ -178,7 +179,7 @@ def test_modelo_100_2024_family_row_bindings_address_repeating_profile_collectio
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
 
     for binding_id, (collection, field) in _ROW_BINDINGS.items():
-        selector = bindings[binding_id].selector
+        selector: Any = bindings[binding_id].selector
         assert selector.profile_model == "RentaFamilyProfile"
         assert selector.collection == collection
         assert selector.field == field

@@ -99,6 +99,9 @@ ignore_imports =
     aeat.domain.calculations.registry.tests.test_binding_coverage_breadth -> aeat.application.aggregation
     aeat.domain.calculations.registry.tests.test_binding_coverage_breadth -> aeat.application.modelo._calculation_actions
     aeat.domain.calculations.registry.tests.test_ledger_renta_income_binding -> aeat.application.aggregation
+    # W04.P08.S47: source-connectivity gate joins the domain registry inventory
+    # against the live-mesh disposition taxonomy (application.aggregation public set).
+    aeat.domain.calculations.registry.tests.test_source_enrollment -> aeat.application.aggregation
     aeat.domain.calculations.registry.tests.test_referential_integrity_part4 -> aeat.application.diagnostics
     aeat.domain.modelos.tests.test_work_unit -> aeat.application.user_profile
 
@@ -801,6 +804,7 @@ ignore_imports =
     aeat.domain.calculations.registry.tests.test_binding_coverage_breadth -> aeat.application.aggregation
     aeat.domain.calculations.registry.tests.test_binding_coverage_breadth -> aeat.application.modelo._calculation_actions
     aeat.domain.calculations.registry.tests.test_ledger_renta_income_binding -> aeat.application.aggregation
+    aeat.domain.calculations.registry.tests.test_source_enrollment -> aeat.application.aggregation
     aeat.domain.calculations.registry.tests.test_referential_integrity_part4 -> aeat.application.diagnostics
     aeat.domain.calculations.registry.tests.test_referential_integrity_part4 -> aeat.tests.secure_sql
     aeat.domain.currency.tests.test_service -> aeat.adapters.outbound.fx

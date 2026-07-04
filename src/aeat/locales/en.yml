@@ -625,6 +625,10 @@ application:
           the link update.
         transaction_not_found: Transaction %{transaction_id} was not found in the
           transaction catalogue.
+    wizard:
+      errors:
+        build_failed: 'invoice wizard refused: %{detail}'
+        field_errors: 'invoice wizard refused %{field_count} field(s): %{detail}'
   ledger:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
@@ -1481,6 +1485,8 @@ cli:
           remove_help: Delete one reconciliation catalogue invoice.
           view_help: Show one reconciliation catalogue invoice by id or unambiguous
             prefix.
+          wizard_help: 'Guided, non-interactive manual entry when extraction is unavailable.'
+          wizard_idempotent_noop: 'Idempotent no-op: an invoice with this identity already exists (%{invoice_id}); nothing was created.'
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
         eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
@@ -1976,6 +1982,10 @@ cli:
           X25519 encryption keypair (minted on first use) and write the recovered
           package ZIP to --output. Local-only; never contacts AEAT.
         decrypt_output_help: Path to write the recovered review package ZIP to.
+        encrypt_feedback_help: Seal a recipient's review feedback (a note, optionally
+          a counter-signed receipt) back to the originator so only the originator's
+          private key can open it, and write the envelope to --output. Local-only;
+          never contacts AEAT.
         encrypt_for_recipient_help: Seal a review package so only a registered recipient's
           private key can open it, and write the encrypted envelope to --output. Local-only;
           never contacts AEAT.
@@ -1984,16 +1994,43 @@ cli:
           by `encrypt-for-recipient`.
         errors:
           envelope_not_found: Recipient-encrypted envelope not found at {envelope_path}.
+          feedback_envelope_not_found: Feedback envelope not found at {envelope_path}.
           invalid_valid_for_days: --valid-for-days must be a strictly positive integer.
           output_required: Supply --output PATH for the review package ZIP.
           package_not_found: Review package not found at {package_path}.
           receipt_not_found: Receipt envelope not found at {receipt_path}.
           signature_not_found: Signature envelope not found at {signature_path}.
+        feedback_counter_signer_public_key_help: The reviewer's Ed25519 signing public
+          key the counter-signature must verify against (required when the feedback
+          carries a receipt).
+        feedback_envelope_path_help: Path to the originator-encrypted feedback envelope
+          JSON produced by `encrypt-feedback`.
+        feedback_note_help: Free-text verdict or note (e.g. `reviewed, no changes`).
+        feedback_operator_public_key_help: Your own Ed25519 signing public key the
+          original signature must verify against.
+        feedback_output_help: Path to write the originator-encrypted feedback envelope
+          JSON to.
+        feedback_package_help: Path to your locally-held original review package ZIP
+          a counter-signed receipt is verified against.
+        feedback_receipt_help: Optional counter-signed receipt JSON (from `counter-sign`)
+          to bundle as a formal sign-off.
+        feedback_revision_id_help: Calculation revision id the feedback concerns (from
+          the reviewed package descriptor).
+        feedback_submitted_by_help: The reviewer's actor label (e.g. the accountant's
+          display name).
+        feedback_work_unit_id_help: Work unit id the feedback concerns (from the reviewed
+          package descriptor).
         group_help: Build a shareable review package and verify its integrity.
+        import_feedback_help: Open a feedback envelope with this bucket's X25519 keypair,
+          verify any counter-signed receipt against your locally-held review package,
+          and attach the verified countersignature to your approval journal. Local-only;
+          never contacts AEAT.
         notes_help: Free-text note embedded in the package descriptor (e.g. why it
           was shared).
         operator_public_key_help: The operator's (original signer's) public key, as
           64 lowercase hex characters.
+        originator_id_help: Registered originator id whose public key seals the feedback
+          (see `aeat config collab recipient add`).
         output_help: Path to write the review package ZIP to.
         package_path_help: Path to the review package ZIP to verify.
         public_key_help: Signer's public key, as 64 lowercase hex characters.
@@ -2547,19 +2584,28 @@ cli:
     google:
       client_json_help: Path to a Cloud Console Desktop OAuth client JSON file
       credential_source:
-        delegate_help: 'Chained impersonation delegate service-account email (repeatable)'
+        delegate_help: Chained impersonation delegate service-account email (repeatable)
         detail:
-          impersonation_config_invalid: 'the impersonation configuration is invalid: {detail}'
-          oauth_desktop_rejects_impersonation_options: '--kind oauth_desktop does not accept --target-principal, --scope, --delegate, --subject, or --lifetime-seconds'
-          target_principal_required: '--target-principal is required when --kind is service_account_impersonation'
-        help: 'Select which Google credential source the active profile uses (interactive OAuth Desktop, or a shared service-account impersonation grant)'
-        kind_help: 'Credential source: oauth_desktop (default, interactive consent) or service_account_impersonation (shared SA via ADC + IAM)'
-        lifetime_help: 'Requested impersonated token lifetime in seconds (defaults to Google''s 3600s ceiling)'
-        scope_help: 'OAuth scope requested for the impersonated token (repeatable; defaults to the Sheets/Drive data-access scopes)'
-        set_help: 'Persist the active profile''s Google credential-source selection'
-        show_help: 'Show the active profile''s persisted Google credential-source selection'
-        subject_help: 'Workspace user email to impersonate via domain-wide delegation (optional)'
-        target_principal_help: 'Service-account email to impersonate (required for --kind service_account_impersonation)'
+          impersonation_config_invalid: 'the impersonation configuration is invalid:
+            {detail}'
+          oauth_desktop_rejects_impersonation_options: --kind oauth_desktop does not
+            accept --target-principal, --scope, --delegate, --subject, or --lifetime-seconds
+          target_principal_required: --target-principal is required when --kind is
+            service_account_impersonation
+        help: Select which Google credential source the active profile uses (interactive
+          OAuth Desktop, or a shared service-account impersonation grant)
+        kind_help: 'Credential source: oauth_desktop (default, interactive consent)
+          or service_account_impersonation (shared SA via ADC + IAM)'
+        lifetime_help: Requested impersonated token lifetime in seconds (defaults
+          to Google's 3600s ceiling)
+        scope_help: OAuth scope requested for the impersonated token (repeatable;
+          defaults to the Sheets/Drive data-access scopes)
+        set_help: Persist the active profile's Google credential-source selection
+        show_help: Show the active profile's persisted Google credential-source selection
+        subject_help: Workspace user email to impersonate via domain-wide delegation
+          (optional)
+        target_principal_help: Service-account email to impersonate (required for
+          --kind service_account_impersonation)
       detail:
         client_json_bad_wrapper: client JSON at {path} has a non-object "installed"
           wrapper
@@ -2577,14 +2623,16 @@ cli:
           mirror manifest.
       errors:
         adc_stale: 'Application Default Credentials could not be refreshed: {detail}'
-        adc_unavailable: 'Application Default Credentials are not available on this host: {detail}'
+        adc_unavailable: 'Application Default Credentials are not available on this
+          host: {detail}'
         auth_failed: 'Google authentication failed: {detail}'
         browser_open: 'Could not open a browser to authorise Google access: {detail}'
         client_not_registered: No Google OAuth client is registered for this profile.
           Run `aeat config google register --client-json <path>` first.
         client_revoked: The registered Google OAuth client has been revoked. Re-register
           it with `aeat config google register`.
-        impersonation_refused: 'The service-account impersonation grant was refused: {detail}'
+        impersonation_refused: 'The service-account impersonation grant was refused:
+          {detail}'
         keychain_locked: The system keychain that stores the Google credentials is
           locked or unavailable.
         loopback_bind: 'Could not open a local port to complete Google sign-in: {detail}'
@@ -3150,6 +3198,35 @@ cli:
       state_backend_unreadable: Workflow state store is not readable.
       venv_in_sync: Virtual environment is in sync.
       venv_stale: Virtual environment is stale.
+    telemetry:
+      app_help: Inspect and control the default-off, opt-in remote telemetry tier.
+      bad_tier: '--tier must be one of: %{accepted}; got %{value!r}.'
+      endpoint_help: Preview/send as if AEAT_TELEMETRY_ENDPOINT were this URL for
+        this invocation only; omit to use the deployment's actual configured endpoint.
+      flush:
+        acknowledge_help: Acknowledge this specific remote-telemetry send. Required
+          (in addition to opt-in and a non-off tier) for --no-dry-run to actually
+          transmit; never sticky, re-affirm on every invocation.
+        consent_refused_notice: 'Nothing was sent: remote telemetry is off by default
+          (opt-in, tier, gestor mode, or per-invocation acknowledgement refused it).'
+        dry_run_help: Preview the payload that would be sent without transmitting
+          anything (default). Pass --no-dry-run to actually send when the consent
+          gate permits.
+        dry_run_notice: 'Dry run: this payload was built but nothing was transmitted.'
+        header: 'Telemetry payload (dry run, nothing sent):'
+        help: Build the aggregate local telemetry payload and, unless --dry-run, send
+          it.
+        no_endpoint_notice: 'Nothing was sent: no AEAT_TELEMETRY_ENDPOINT is configured.'
+      opt_in_help: Preview/send as if AEAT_TELEMETRY_OPT_IN were this value for this
+        invocation only; omit to use the deployment's actual configured setting.
+      status:
+        header: 'Remote telemetry posture:'
+        help: Report the current remote-telemetry consent posture. Never emits anything.
+        off_hint: Telemetry stays fully local by default. To opt in, set AEAT_TELEMETRY_OPT_IN=true
+          and AEAT_TELEMETRY_TIER to crash_only or full in env/.env.
+      tier_help: Preview/send as if AEAT_TELEMETRY_TIER were this value (off / crash_only
+        / full) for this invocation only; omit to use the deployment's actual configured
+        tier.
     version:
       no_revisions: No registry revisions available.
       registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas,

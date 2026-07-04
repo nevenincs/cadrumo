@@ -98,10 +98,10 @@ def _authority():
     return resources().modelos.authority
 
 
-def test_canonical_fleet_is_forty_six_distinct_modelos() -> None:
-    """The canonical fleet — the gate's denominator — is exactly 46 distinct ids.
+def test_canonical_fleet_is_sixty_distinct_modelos() -> None:
+    """The canonical fleet — the gate's denominator — is exactly 60 distinct ids.
 
-    46 is the count of registry-loadable modelo directories under
+    60 is the count of registry-loadable modelo directories under
     ``src/aeat/_data/registry/aeat/modelos/`` today (verified against the live
     registry by :func:`test_canonical_fleet_covers_every_loadable_modelo` below,
     which asserts zero drift in either direction). A prior worktree-consolidation
@@ -116,11 +116,31 @@ def test_canonical_fleet_is_forty_six_distinct_modelos() -> None:
     accordingly. 45 was the honest, registry-verified count once the accidental
     data loss was corrected; it became 46 when Modelo 182 (donativos, donaciones
     y aportaciones recibidas, Orden EHA/3021/2007) was promoted from
-    :data:`aeat.core.UNMODELED_OBLIGATIONS` to a real registry definition.
+    :data:`aeat.core.UNMODELED_OBLIGATIONS` to a real registry definition. It
+    became 47 when Modelo 216 (IRNR retenciones e ingresos a cuenta, Orden
+    EHA/3290/2008 approval + trimestral plazo art 4, current layout Orden
+    HAC/56/2024) was likewise promoted from
+    :data:`aeat.core.UNMODELED_OBLIGATIONS` to a real registry definition. It
+    became 49 when Modelo 222 (pago fraccionado IS en régimen de consolidación
+    fiscal, Orden HFP/227/2017 art 2 approval + art 5 trimestral plazo) and
+    Modelo 220 (declaración anual IS del grupo fiscal, Orden HAC/657/2025 +
+    art. 124 LIS plazo) were promoted together from
+    :data:`aeat.core.UNMODELED_OBLIGATIONS` to real registry definitions. It
+    became 55 when six M182-template annual/monthly informativas were promoted
+    together, each grounded in its bundled approving orden's approval + plazo
+    articles: Modelo 165 (Orden HAP/2455/2013), 233 (HAC/1400/2018) and 156
+    (HAC/3580/2003) — annual January plazo — plus 038 (HAC/66/2002), 185
+    (HAC/1197/2025) and 186 (HAC/539/2003) — monthly plazo. It became 60 when
+    five further informativas were promoted: 179 (Orden HAC/612/2021), 181
+    (EHA/3514/2009) and 270 (HAP/2368/2013) — annual January plazo — plus 234
+    (HAC/342/2021, DAC6, event-driven 30-día plazo per RGAT art 46.3) and 238
+    (HAC/72/2024, DAC7, annual plazo delegated to RGAT art 54.6). 234 and 238
+    carry no calendar deadline_windows because their specific window lives in the
+    RGAT (RD 1065/2007), which is not bundled — a fixed date is not fabricated.
     """
     assert len(CANONICAL_MODELO_FLEET) == FLEET_SIZE
     assert len(set(CANONICAL_MODELO_FLEET)) == FLEET_SIZE
-    assert FLEET_SIZE == 46
+    assert FLEET_SIZE == 60
 
 
 def test_canonical_fleet_covers_every_loadable_modelo() -> None:

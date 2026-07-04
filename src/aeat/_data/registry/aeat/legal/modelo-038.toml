@@ -1,0 +1,68 @@
+[legal."orden-hac-66-2002:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-66-2002.html#a1"
+document_id = "BOE-A-2002-1041"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041#a1"
+published_at = 2002-01-15
+effective_from = 2002-01-16
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2002-1041 art 1; pending operator re-stamp)"
+notes = "Orden HAC/66/2002 art 1: aprueba el modelo 038, relación de operaciones realizadas por entidades inscritas en registros públicos, declaración informativa. Orden habilitante del modelo 038."
+required_text = [
+    "Se aprueba el modelo 038",
+    "Relación de operaciones realizadas por entidades inscritas en registros públicos",
+]
+
+[legal."orden-hac-66-2002:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-66-2002.html#a6"
+document_id = "BOE-A-2002-1041"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041#a6"
+published_at = 2002-01-15
+effective_from = 2002-01-16
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2002-1041 art 6; pending operator re-stamp)"
+notes = "Orden HAC/66/2002 art 6: plazo de presentación del modelo 038. La relación se presenta durante cada mes natural respecto de las inscripciones autorizadas en el mes inmediato anterior (periodicidad mensual)."
+required_text = [
+    "se llevará a cabo durante cada mes natural",
+    "inscripciones autorizadas en el mes inmediato anterior",
+]
+
+[sources."enrolled-modelo-038-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-66-2002.html"
+sha256 = "c123f133bec99b783a698eb3b595f8a5ef580629760e4857f4fc463f0d2adab9"
+bytes = 1093
+retrieved_at = 2026-07-04
+published_at = 2002-01-15
+applies_from = 2002-01-16
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041"
+review_status = "reviewed"
+
+# Same bundled orden HTML, registered a second time under layout_authority tier
+# for the per-revision workbook-parity-coverage gate. This is NOT the
+# authoritative AEAT Diseño de Registros (fichero-BOE fixed-width layout) — that
+# is not bundled. It grounds only the static form-approval layout, honestly
+# satisfying the parity gate without asserting a verified byte-position design.
+[sources."enrolled-modelo-038-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-66-2002.html"
+sha256 = "c123f133bec99b783a698eb3b595f8a5ef580629760e4857f4fc463f0d2adab9"
+bytes = 1093
+retrieved_at = 2026-07-04
+published_at = 2002-01-15
+applies_from = 2002-01-16
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041"
+review_status = "reviewed"

@@ -284,10 +284,14 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
 
     ecivil_binding = next(binding for binding in snapshot.revision.bindings if binding.id == ecivil_binding_id)
     selector = ecivil_binding.selector
-    assert selector.profile_key == "renta_taxpayer.marital_status"
-    assert selector.xsd_path == "/DatosIdentificativos/Declarante/ECIVIL"
-    assert selector.dictionary_field == "ECIVIL"
-    assert selector.valid_at == "2025-12-31"
+    profile_key = getattr(selector, "profile_key", None)
+    xsd_path = getattr(selector, "xsd_path", None)
+    dictionary_field = getattr(selector, "dictionary_field", None)
+    valid_at = getattr(selector, "valid_at", None)
+    assert profile_key == "renta_taxpayer.marital_status"
+    assert xsd_path == "/DatosIdentificativos/Declarante/ECIVIL"
+    assert dictionary_field == "ECIVIL"
+    assert valid_at == "2025-12-31"
     assert b'<xs:pattern value="([1-4]){1}"/>' in _M100_2025_XSD.read_bytes()
 
     record = UserProfileRecord(

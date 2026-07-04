@@ -51,16 +51,18 @@ def test_bundled_export_field_kinds_are_hydrated_enum_members() -> None:
 
 def test_binding_derived_export_fields_preserve_enum_kind() -> None:
     """The binding-derived export path emits CasillaFieldKind members."""
+    from .._withholding_bindings import _WithholdingSelector
 
+    selector = _WithholdingSelector.model_validate({
+        "fact": "row_field",
+        "record": "perceptor",
+        "row_field": "retencion_practicada",
+        "grouping": "per_perceptor",
+    })
     binding = DataBindingDefinition(
         id="binding.rows",
         source=BindingSourceKind.WITHHOLDING,
-        selector={
-            "fact": "row_field",
-            "record": "perceptor",
-            "row_field": "retencion_practicada",
-            "grouping": "per_perceptor",
-        },
+        selector=selector,
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
@@ -112,16 +114,17 @@ def test_binding_derived_export_fields_preserve_enum_kind() -> None:
 
 def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_authored() -> None:
     """One official fixed-width field can represent multiple source-specific row bindings."""
+    from .._withholding_bindings import _WithholdingSelector
 
     public_binding = DataBindingDefinition(
         id="binding.rows.public",
         source=BindingSourceKind.WITHHOLDING,
-        selector={
+        selector=_WithholdingSelector.model_validate({
             "fact": "row_field",
             "record": "perceptor",
             "row_field": "retencion_practicada",
             "grouping": "per_perceptor",
-        },
+        }),
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
@@ -129,12 +132,12 @@ def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_autho
     mirror_binding = DataBindingDefinition(
         id="binding.rows.mirror",
         source=BindingSourceKind.WITHHOLDING,
-        selector={
+        selector=_WithholdingSelector.model_validate({
             "fact": "row_field",
             "record": "perceptor",
             "row_field": "retencion_practicada",
             "grouping": "per_perceptor",
-        },
+        }),
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
@@ -185,16 +188,17 @@ def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_autho
 
 def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> None:
     """A casilla template row field becomes one binding export field, not one per source."""
+    from .._withholding_bindings import _WithholdingSelector
 
     public_binding = DataBindingDefinition(
         id="binding.rows.public",
         source=BindingSourceKind.WITHHOLDING,
-        selector={
+        selector=_WithholdingSelector.model_validate({
             "fact": "row_field",
             "record": "perceptor",
             "row_field": "retencion_practicada",
             "grouping": "per_perceptor",
-        },
+        }),
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
@@ -202,12 +206,12 @@ def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> 
     mirror_binding = DataBindingDefinition(
         id="binding.rows.mirror",
         source=BindingSourceKind.WITHHOLDING,
-        selector={
+        selector=_WithholdingSelector.model_validate({
             "fact": "row_field",
             "record": "perceptor",
             "row_field": "retencion_practicada",
             "grouping": "per_perceptor",
-        },
+        }),
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),

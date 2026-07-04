@@ -234,12 +234,15 @@ def test_invoice_catalogue_source_resolver_folds_slim_received_service_acquisiti
         ),
     )
 
+    from ....domain.modelos import Modelo349OperadorRow
+
     assert resolution.binding_values["iva-349-declarante-numero-operadores-adquisicion"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones-adquisicion"] == Decimal("3000.00")
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("3000.00")
     assert len(resolution.detail_rows) == 1
     row = resolution.detail_rows[0]
+    assert isinstance(row, Modelo349OperadorRow)
     assert row.codigo_pais == "IT"
     assert row.nif_comunitario == "IT12345678901"
     assert row.clave_operacion == "I"
@@ -276,10 +279,13 @@ def test_invoice_catalogue_source_resolver_folds_slim_consignment_transfer_for_m
         ),
     )
 
+    from ....domain.modelos import Modelo349OperadorRow
+
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("100.00")
     assert len(resolution.detail_rows) == 1
     row = resolution.detail_rows[0]
+    assert isinstance(row, Modelo349OperadorRow)
     assert row.codigo_pais == "DE"
     assert row.nif_comunitario == "DE222222222"
     assert row.clave_operacion == "R"
@@ -347,16 +353,25 @@ def test_invoice_catalogue_source_resolver_accepts_current_slim_business_invoice
         ),
     )
 
-    expected_rows = {
+    from ....domain.modelos import Modelo349OperadorRow
+
+    expected_amounts = {
         (nif, operation_type.value): amount for operation_type, nif, amount in (*collectible_cases, *payable_cases)
     }
-    rows = {(row.nif_comunitario, row.clave_operacion): row for row in resolution.detail_rows}
-    assert set(rows) == set(expected_rows)
-    for key, amount in expected_rows.items():
-        assert rows[key].importe == amount
-    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal(len(expected_rows))
+    # Filter to only Modelo349OperadorRow rows (the expected type for M349 operations)
+    operator_rows = [row for row in resolution.detail_rows if isinstance(row, Modelo349OperadorRow)]
+    # Verify all expected keys are present in operator_rows
+    found_keys = {(row.nif_comunitario, row.clave_operacion) for row in operator_rows}
+    expected_keys = set(expected_amounts)
+    assert found_keys == expected_keys
+    # Verify amounts for each row
+    for row in operator_rows:
+        row_key: tuple[str, str] = (row.nif_comunitario, str(row.clave_operacion))
+        assert row_key in expected_amounts
+        assert row.importe == expected_amounts[row_key]
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal(len(expected_amounts))
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == sum(
-        expected_rows.values(),
+        expected_amounts.values(),
         Decimal("0"),
     )
     assert resolution.binding_values["iva-349-declarante-numero-operadores-adquisicion"] == Decimal(

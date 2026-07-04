@@ -26,6 +26,7 @@ would go silent (also caught here).
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 import pytest
 
@@ -53,7 +54,9 @@ _MANIFEST_MODELOS = [
 ]
 
 
-def _manifest_and_casillas(modelo, year, period, on):
+def _manifest_and_casillas(
+    modelo: str, year: int, period: str, on: date
+) -> tuple[Any, dict[str, Any]]:
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
     revision = snapshot.revision
     manifest = revision.completeness_manifest
@@ -62,7 +65,7 @@ def _manifest_and_casillas(modelo, year, period, on):
     return manifest, by_id
 
 
-def _gate_required_ids(manifest, by_id) -> set:
+def _gate_required_ids(manifest: Any, by_id: dict[str, Any]) -> set[str]:
     # Mirror the gate exactly: formula (== COMPUTED) or schema-required.
     return {
         mc.casilla_id
@@ -72,7 +75,9 @@ def _gate_required_ids(manifest, by_id) -> set:
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _MANIFEST_MODELOS)
-def test_gate_required_set_equals_computed_plus_schema_required(modelo, year, period, on) -> None:
+def test_gate_required_set_equals_computed_plus_schema_required(
+    modelo: str, year: int, period: str, on: date
+) -> None:
     manifest, by_id = _manifest_and_casillas(modelo, year, period, on)
     required = _gate_required_ids(manifest, by_id)
 
@@ -90,7 +95,9 @@ def test_gate_required_set_equals_computed_plus_schema_required(modelo, year, pe
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _MANIFEST_MODELOS)
-def test_no_computed_or_required_casilla_is_excluded(modelo, year, period, on) -> None:
+def test_no_computed_or_required_casilla_is_excluded(
+    modelo: str, year: int, period: str, on: date
+) -> None:
     # Under-strict drift guard: no calculation result and no schema-required casilla
     # may fall out of the required set (that would let a real thin file through).
     manifest, by_id = _manifest_and_casillas(modelo, year, period, on)
@@ -107,7 +114,9 @@ def test_no_computed_or_required_casilla_is_excluded(modelo, year, period, on) -
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _MANIFEST_MODELOS)
-def test_excluded_casillas_are_optional_non_computed(modelo, year, period, on) -> None:
+def test_excluded_casillas_are_optional_non_computed(
+    modelo: str, year: int, period: str, on: date
+) -> None:
     # Over-strict drift guard: every EXCLUDED manifest casilla is a non-required,
     # non-computed casilla (an optional BOUND/MANUAL value or a non-required
     # INFORMATIONAL field) -- legitimately blank/zero, so excluding it is correct.

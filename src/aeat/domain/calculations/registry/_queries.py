@@ -10,6 +10,7 @@ optional revision id.
 from __future__ import annotations
 
 import re
+from collections import Counter, defaultdict
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
@@ -508,6 +509,78 @@ class ModeloFormulasReport(BaseModel):
     rows: tuple[ModeloFormulaRow, ...]
 
 
+class RegistrySourceSite(BaseModel):
+    """One committed modelo revision that declares a given binding source kind.
+
+    A *binding source kind* is the :class:`~aeat.core.BindingSourceKind` a
+    registry :class:`~aeat.domain.calculations.registry.DataBindingDefinition`
+    declares as the origin of its value. This row records that a particular
+    revision declares at least one binding of the parent source kind, with the
+    per-revision count.
+
+    Attributes:
+        modelo: Short numeric modelo identifier (e.g. ``"303"``).
+        revision_id: Registry revision id declaring the bindings.
+        binding_count: Number of bindings in this revision that declare the
+            parent inventory row's source kind.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    modelo: str
+    revision_id: str
+    binding_count: int = Field(ge=1)
+
+
+class RegistrySourceInventoryRow(BaseModel):
+    """Every committed revision that declares one binding source kind.
+
+    Attributes:
+        source_kind: The :class:`~aeat.core.BindingSourceKind` this row
+            inventories.
+        sites: The committed revisions declaring the source kind, sorted by
+            ``(modelo, revision_id)``.
+        total_binding_count: Total bindings across every site declaring the
+            source kind.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_kind: BindingSourceKind
+    sites: tuple[RegistrySourceSite, ...]
+    total_binding_count: int = Field(ge=1)
+
+
+class RegistrySourceInventoryReport(BaseModel):
+    """Registry-wide inventory of every declared binding source kind.
+
+    Pure registry introspection returned by
+    ``RegistryQueryService.source_inventory``: for every committed modelo
+    revision it records which :class:`~aeat.core.BindingSourceKind` members the
+    registry actually declares in its bindings, and which revisions declare
+    each. It is the registry side of the source-connectivity gate — it makes
+    "which sources does the committed registry declare, and where" computable so
+    a caller can join it against the live-mesh disposition registry (the
+    application layer's ``build_binding_source_dispositions``) and prove every
+    declared source is enrolled or explicitly deferred, never a silent blank.
+    The enrolled / deferred / reserved disposition itself is a live-mesh
+    (application) fact; this domain report stays independent of it.
+
+    Attributes:
+        rows: One row per declared source kind, sorted by the source kind's
+            string value.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    rows: tuple[RegistrySourceInventoryRow, ...]
+
+    @property
+    def declared_source_kinds(self) -> frozenset[BindingSourceKind]:
+        """The set of :class:`~aeat.core.BindingSourceKind` members the registry declares."""
+        return frozenset(row.source_kind for row in self.rows)
+
+
 class RegistryQueryService:
     """Stable Python facade over the validated modelo registry authority."""
 
@@ -551,6 +624,47 @@ class RegistryQueryService:
             if (year is None or _modelo_covers_year(modelo, year)) and (domain is None or modelo.tax_domain == domain)
         ]
         return ModeloListReport(modelos=tuple(sorted(rows, key=lambda row: row.code)))
+
+    def source_inventory(self) -> RegistrySourceInventoryReport:
+        """Report every :class:`~aeat.core.BindingSourceKind` the committed registry declares, and where.
+
+        Walks every committed modelo revision and every binding it declares,
+        grouping by the binding's ``source`` kind. The result records, per
+        source kind, the committed revisions that declare it and the per-revision
+        binding count. This is a pure registry introspection surface — it does
+        not consult the live calculation mesh — so it stays inside the domain
+        boundary. A caller in the application layer joins this inventory against
+        the disposition registry (``build_binding_source_dispositions``) to
+        prove that every declared source kind is enrolled or explicitly deferred,
+        never silently blank (the ``no-dormant-source-resolvers`` connectivity
+        contract).
+
+        Returns:
+            A :class:`RegistrySourceInventoryReport` whose rows are sorted by the
+            source kind's string value; each row's sites are sorted by
+            ``(modelo, revision_id)``.
+        """
+        sites_by_source: dict[BindingSourceKind, list[RegistrySourceSite]] = defaultdict(list)
+        for modelo in self._authority.modelos:
+            for revision in modelo.revisions.values():
+                counts: Counter[BindingSourceKind] = Counter(binding.source for binding in revision.bindings)
+                for source, count in counts.items():
+                    sites_by_source[source].append(
+                        RegistrySourceSite(
+                            modelo=str(modelo.id),
+                            revision_id=str(revision.id),
+                            binding_count=count,
+                        ),
+                    )
+        rows = tuple(
+            RegistrySourceInventoryRow(
+                source_kind=source,
+                sites=tuple(sorted(sites, key=lambda site: (site.modelo, site.revision_id))),
+                total_binding_count=sum(site.binding_count for site in sites),
+            )
+            for source, sites in sites_by_source.items()
+        )
+        return RegistrySourceInventoryReport(rows=tuple(sorted(rows, key=lambda row: row.source_kind.value)))
 
     def describe_modelo(
         self,

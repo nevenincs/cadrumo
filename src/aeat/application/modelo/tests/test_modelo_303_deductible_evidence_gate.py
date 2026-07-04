@@ -305,6 +305,8 @@ def test_modelo_303_verify_warns_deductible_vat_missing_evidence_and_output_gap(
 
     assert revision.casilla_values[_DEVENGADA_TOTAL] == sale.iva_amount
     assert revision.casilla_values[_DEDUCIBLE_TOTAL] == purchase.iva_amount
+    assert sale.iva_amount is not None
+    assert purchase.iva_amount is not None
     assert revision.casilla_values[_RESULTADO] == sale.iva_amount - purchase.iva_amount
 
     report = verify_modelo_revision(
@@ -428,16 +430,17 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
 def _work_unit() -> WorkUnit:
     period = Period.from_year_and_code(_YEAR, _PERIOD)
     revision_id = "2023-y-siguientes"
+    modelo: str = "303"  # Widen literal type to str for ModeloCode validator
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
-            modelo="303",
+            modelo=modelo,
             filing_year=_YEAR,
             period=period,
             revision_id=revision_id,
         ),
         bucket_id=_BUCKET_ID,
-        modelo="303",
+        modelo=modelo,
         filing_year=_YEAR,
         period=period,
         revision_id=revision_id,
@@ -512,6 +515,7 @@ def test_modelo_303_export_refuses_legacy_verified_deductible_vat_missing_eviden
             calculation_repository=cr_repo,
         )
 
+    assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "deductible_vat_evidence_missing"
     assert exc_info.value.suggestion is not None
     assert "aeat app ledger evidence add" in exc_info.value.suggestion
@@ -541,6 +545,7 @@ def test_modelo_303_internal_file_refuses_legacy_verified_deductible_vat_missing
             clock=_VERIFIED_AT,
         )
 
+    assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "deductible_vat_evidence_missing"
     assert exc_info.value.suggestion is not None
     assert "aeat app ledger evidence add" in exc_info.value.suggestion

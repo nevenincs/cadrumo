@@ -22,3 +22,4 @@ Submodules
    aeat.application.invoices._queries
    aeat.application.invoices._reconciliation
    aeat.application.invoices._source_resolver
+   aeat.application.invoices._wizard
