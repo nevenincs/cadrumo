@@ -623,6 +623,7 @@ application:
         schema_formula_changed: la procedencia del esquema o la formula ha cambiado
         transaction_catalogue_changed: el catalogo de transacciones ha cambiado
         unknown: '%{reason}'
+        profile_activity_changed: 'la actividad del perfil del contribuyente ha cambiado'
     runtime:
       errors:
         active_profile_load_failed: 'No se pudo cargar el perfil activo de presentacion:

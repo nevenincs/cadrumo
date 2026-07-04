@@ -617,6 +617,7 @@ application:
         schema_formula_changed: la procedencia de l'esquema o la formula ha canviat
         transaction_catalogue_changed: el cataleg de transaccions ha canviat
         unknown: '%{reason}'
+        profile_activity_changed: 'l''activitat del perfil del contribuent ha canviat'
     runtime:
       errors:
         active_profile_load_failed: 'No s ha pogut carregar el perfil actiu de presentacio:
