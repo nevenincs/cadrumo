@@ -929,6 +929,13 @@ application:
         %{filing_year} %{period}; completa antes estos datos de perfil: %{missing}.'
       profile_readiness_profile_missing: No existe un perfil activo persistido para
         este trabajo de modelo; crea o repara el perfil antes de continuar.
+      recipient_decryption_failed: No se ha podido descifrar el paquete cifrado para el destinatario; la clave no coincide o el paquete ha sido manipulado.
+      recipient_encryption_invalid_key: La clave publica del destinatario no es una clave publica X25519 valida.
+      recipient_registry_already_exists: El destinatario %{recipient_id} ya esta registrado.
+      recipient_registry_generic: Se ha producido un error en el registro de huellas digitales de destinatarios.
+      recipient_registry_invalid_public_key: La clave publica proporcionada no es una clave X25519 valida de 32 bytes (se recibieron %{length} bytes).
+      recipient_registry_load_failed: No se ha podido cargar el registro de huellas digitales de destinatarios.
+      recipient_registry_not_found: No hay ningun destinatario registrado con el id %{recipient_id}.
       reconcile_declaration_unsupported: La reconciliación por casilla desde PDF de
         declaración aún no está habilitada para este modelo; reconcilia un justificante
         descargado con aeat app modelo reconcile file, o espera a que este modelo

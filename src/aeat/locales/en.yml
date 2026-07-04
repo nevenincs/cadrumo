@@ -847,6 +847,13 @@ application:
         %{period}; complete these profile facts first: %{missing}.'
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
+      recipient_decryption_failed: The recipient-encrypted package could not be decrypted; the key does not match or the package was tampered with.
+      recipient_encryption_invalid_key: 'The recipient''s public key is not a well-formed X25519 public key.'
+      recipient_registry_already_exists: Recipient %{recipient_id} is already registered.
+      recipient_registry_generic: An error occurred with the recipient fingerprint registry.
+      recipient_registry_invalid_public_key: The supplied public key is not a valid 32-byte X25519 key (got %{length} bytes).
+      recipient_registry_load_failed: Unable to load the recipient fingerprint registry.
+      recipient_registry_not_found: No recipient is registered under id %{recipient_id}.
       reconcile_declaration_unsupported: Declaration-PDF casilla-level reconcile is
         not yet enrolled for this modelo; reconcile a downloaded justificante via
         aeat app modelo reconcile file, or wait for this modelo to be enrolled.

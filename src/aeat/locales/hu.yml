@@ -861,6 +861,13 @@ application:
         modellhez; előbb töltse ki ezeket a profiladatokat: %{missing}.'
       profile_readiness_profile_missing: Nincs perzisztált aktív profil ehhez a modelo
         munkához; folytatás előtt hozza létre vagy javítsa a profilt.
+      recipient_decryption_failed: A cimzett szamara titkositott csomagot nem sikerult megfejteni; a kulcs nem megfelelo, vagy a csomagot modositottak.
+      recipient_encryption_invalid_key: A cimzett nyilvanos kulcsa nem egy ervenyes X25519 nyilvanos kulcs.
+      recipient_registry_already_exists: A(z) %{recipient_id} cimzett mar regisztralva van.
+      recipient_registry_generic: Hiba tortent a cimzetti ujjlenyomat-nyilvantartasban.
+      recipient_registry_invalid_public_key: A megadott nyilvanos kulcs nem egy ervenyes 32 bajtos X25519 kulcs (%{length} bajt erkezett).
+      recipient_registry_load_failed: Nem sikerult betolteni a cimzetti ujjlenyomat-nyilvantartast.
+      recipient_registry_not_found: Nincs %{recipient_id} azonositoju regisztralt cimzett.
       reconcile_declaration_unsupported: A bevallás-PDF rovatszintű egyeztetése még
         nincs engedélyezve ehhez a modellhez; egyeztessen egy letöltött justificantét
         az aeat app modelo reconcile file paranccsal, vagy várjon, amíg ez a modell

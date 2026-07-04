@@ -918,6 +918,13 @@ application:
         %{period}; completa abans aquestes dades de perfil: %{missing}.'
       profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
         a aquest treball de model; crea o repara el perfil abans de continuar.
+      recipient_decryption_failed: 'No s''ha pogut desxifrar el paquet xifrat per al destinatari; la clau no coincideix o el paquet ha estat manipulat.'
+      recipient_encryption_invalid_key: La clau publica del destinatari no es una clau publica X25519 valida.
+      recipient_registry_already_exists: El destinatari %{recipient_id} ja esta registrat.
+      recipient_registry_generic: 'S''ha produit un error en el registre d''empremtes digitals de destinataris.'
+      recipient_registry_invalid_public_key: 'La clau publica proporcionada no es una clau X25519 valida de 32 bytes (s''han rebut %{length} bytes).'
+      recipient_registry_load_failed: 'No s''ha pogut carregar el registre d''empremtes digitals de destinataris.'
+      recipient_registry_not_found: 'No hi ha cap destinatari registrat amb l''id %{recipient_id}.'
       reconcile_declaration_unsupported: La reconciliació per casella des de PDF de
         declaració encara no està habilitada per a aquest model; reconcilia un justificant
         descarregat amb aeat app modelo reconcile file, o espera que aquest model
