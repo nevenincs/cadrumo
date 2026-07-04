@@ -2092,9 +2092,8 @@ cli:
         app_help: 'Concilia una unidad de trabajo de modelo con su justificante AEAT:
           pull descarga el justificante de AEAT y concilia; file concilia un PDF local;
           history lista las conciliaciones anteriores.'
-        file_help: Concilia una unidad de trabajo contra un PDF de justificante local.
-          Solo local; nunca contacta con AEAT.
-        file_path_help: Ruta al PDF del justificante AEAT con el que conciliar.
+        file_help: 'Concilia una unidad de trabajo contra un PDF de justificante o declaración local. Solo local; nunca contacta con AEAT.'
+        file_path_help: 'Ruta al PDF local de justificante o declaración con el que conciliar.'
         history_empty: Aun no hay conciliaciones registradas.
         history_help: Lista las conciliaciones registradas para el perfil activo.
         history_work_unit_id_help: Id de unidad de trabajo opcional para acotar el
@@ -2103,6 +2102,7 @@ cli:
           contra el. Contacta con AEAT (solo lectura).
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
           inequívoco).
+        file_kind_help: 'Tipo de documento de evidencia: justificante (recibo AEAT, todos los modelos) o declaration (PDF de declaración presentada, conciliación a nivel de casilla, solo modelos habilitados). Por defecto justificante.'
       requires:
         help: 'Muestra la lista de datos necesarios para un modelo y periodo: qué
           casillas hay que rellenar a mano, cuáles son opcionales, cuáles se rellenan
