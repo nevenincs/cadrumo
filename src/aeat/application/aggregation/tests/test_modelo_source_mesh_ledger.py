@@ -296,6 +296,7 @@ def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_tran
             ),
         )
 
+    assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "invoice_domestic_iva_not_in_transaction_ledger"
     assert exc_info.value.context["period"] == "1T"
     assert exc_info.value.context["invoice_count"] == "1"
