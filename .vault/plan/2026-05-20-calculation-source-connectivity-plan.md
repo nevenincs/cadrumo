@@ -107,11 +107,11 @@ Make deductible expense context region-aware only where the data model and categ
 
 Define resolver readiness gates for property and inventory sources before calculation enrollment.
 
-- [ ] `W03.P07.S39` - Define fincas calculation source readiness diagnostics; `src/aeat/domain/fincas/_source_readiness.py`.
-- [ ] `W03.P07.S40` - Define fincas resolver adapter boundaries without enrolling calculations; `src/aeat/application/aggregation/_source_fincas.py`.
-- [ ] `W03.P07.S41` - Define inventory calculation source readiness diagnostics; `src/aeat/application/inventory/_source_readiness.py`.
-- [ ] `W03.P07.S42` - Define inventory resolver adapter boundaries without enrolling calculations; `src/aeat/application/aggregation/_source_inventory.py`.
-- [ ] `W03.P07.S43` - Test fincas and inventory resolvers emit blocked readiness diagnostics; `src/aeat/application/aggregation/test_source_mesh_readiness.py`.
+- [x] `W03.P07.S39` - Define fincas calculation source readiness diagnostics; `src/aeat/domain/fincas/_source_readiness.py`.
+- [x] `W03.P07.S40` - Define fincas resolver adapter boundaries without enrolling calculations; `src/aeat/application/aggregation/_source_fincas.py`.
+- [x] `W03.P07.S41` - Define inventory calculation source readiness diagnostics; `src/aeat/application/inventory/_source_readiness.py`.
+- [x] `W03.P07.S42` - Define inventory resolver adapter boundaries without enrolling calculations; `src/aeat/application/aggregation/_source_inventory.py`.
+- [x] `W03.P07.S43` - Test fincas and inventory resolvers emit blocked readiness diagnostics; `src/aeat/application/aggregation/test_source_mesh_readiness.py`.
 
 ## Wave `W04` - verification and rollout
 
