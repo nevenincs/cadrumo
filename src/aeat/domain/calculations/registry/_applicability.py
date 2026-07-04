@@ -907,6 +907,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         legal_refs=(
             "orden-hac-610-2021:art-1",
             "orden-hac-610-2021:art-2",
+            "ley-37-1992:art-163-octiesdecies",
+            "ley-37-1992:art-163-unvicies",
             "ley-37-1992:art-163-quinvicies",
         ),
     ),

@@ -90,7 +90,8 @@ _MCP_PERSONA_INTERPOLATION = "${user_config.persona}"
 #
 # The marketplace layout target (ADR "Marketplace") emits the git-repo content
 # a dedicated public marketplace repository serves: a ``.claude-plugin/``
-# ``marketplace.json`` listing the aeat plugin plus the plugin tree it points
+# ``marketplace.json`` (marketplace name ``neve``) listing the aeat plugin plus
+# the plugin tree it points
 # at, materialised UNDER the marketplace root at ``plugins/aeat`` via the same
 # ``materialise_plugin`` emitter, so the marketplace manifest and the plugin it
 # serves cannot drift. Every field name here is the one the live
@@ -99,8 +100,11 @@ _MCP_PERSONA_INTERPOLATION = "${user_config.persona}"
 # ``plugins[].source`` path, so the generator materialises the pointed-at plugin
 # itself rather than trusting the manifest alone.
 _MARKETPLACE_MANIFEST = "marketplace.json"
-_MARKETPLACE_NAME = "aeat-marketplace"
-_MARKETPLACE_DESCRIPTION = "Distribution marketplace for the aeat Spanish-tax Claude plugin."
+# The marketplace NAME is the ecosystem namespace users address plugins under
+# (``<plugin>@neve``), independent of the repo it is served from; kebab-case
+# (lowercase) is required by the claude.ai marketplace sync.
+_MARKETPLACE_NAME = "neve"
+_MARKETPLACE_DESCRIPTION = "Neve plugin marketplace — Claude plugins including the aeat Spanish-tax assistant."
 _MARKETPLACE_OWNER_NAME = _PLUGIN_AUTHOR_NAME
 _MARKETPLACE_PLUGINS_SUBDIR = "plugins"
 # The relative source the marketplace manifest points at, resolved from the
