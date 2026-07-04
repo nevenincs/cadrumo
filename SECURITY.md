@@ -13,15 +13,34 @@ versions.
 Report suspected vulnerabilities privately. Do not open a public issue for a
 security problem.
 
-- Preferred channel: open a private report through GitHub's private
-  vulnerability reporting on this repository (`Security` tab -> `Report a
-  vulnerability`).
-- Alternative channel: email the maintainer at `SECURITY_CONTACT`.
+- **Primary channel: GitHub private vulnerability reporting.** Open the
+  `Security` tab on this repository and select `Report a vulnerability`. This
+  opens a confidential draft advisory visible only to you and the
+  maintainers, with no email address or other secret required on either
+  side. This is the intended disclosure path for this project.
 
-> Maintainer action required: replace the `SECURITY_CONTACT` placeholder above
-> with a real disclosure address, or remove the email line and rely on GitHub
-> private reporting only. The placeholder ships intentionally so no personal
-> address is committed.
+  If the `Report a vulnerability` button is not visible, private
+  vulnerability reporting has not yet been enabled on this repository. See
+  the maintainer note below, and fall back to the secondary channel.
+
+- **Secondary channel (not yet available):** a dedicated security-contact
+  email address. None is published yet. A maintainer may add one to this
+  document in the future as a secondary channel; until that happens, if the
+  primary channel is unavailable, open a regular issue asking to be
+  contacted privately and omit technical detail — do not post vulnerability
+  details in a public issue.
+
+> Maintainer follow-up: **Private vulnerability reporting** is a per-repository
+> toggle under `Settings -> Code security -> Private vulnerability reporting`.
+> On a public repository this is a free, one-click enable. This repository is
+> currently private, and GitHub only offers private vulnerability reporting
+> on private repositories as part of GitHub Advanced Security; confirm current
+> plan eligibility before relying on it. If enabling it is not possible while
+> the repository stays private, the options are: make the repository public
+> (enabling the toggle becomes free), enable GitHub Advanced Security for this
+> repository, or publish a secondary security-contact email as the working
+> primary channel instead. This tracks the same private-repository plan
+> constraint already recorded for branch protection.
 
 Include in your report:
 
