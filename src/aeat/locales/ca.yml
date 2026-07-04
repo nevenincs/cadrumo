@@ -918,13 +918,18 @@ application:
         %{period}; completa abans aquestes dades de perfil: %{missing}.'
       profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
         a aquest treball de model; crea o repara el perfil abans de continuar.
-      recipient_decryption_failed: 'No s''ha pogut desxifrar el paquet xifrat per al destinatari; la clau no coincideix o el paquet ha estat manipulat.'
-      recipient_encryption_invalid_key: La clau publica del destinatari no es una clau publica X25519 valida.
+      recipient_decryption_failed: No s'ha pogut desxifrar el paquet xifrat per al
+        destinatari; la clau no coincideix o el paquet ha estat manipulat.
+      recipient_encryption_invalid_key: La clau publica del destinatari no es una
+        clau publica X25519 valida.
       recipient_registry_already_exists: El destinatari %{recipient_id} ja esta registrat.
-      recipient_registry_generic: 'S''ha produit un error en el registre d''empremtes digitals de destinataris.'
-      recipient_registry_invalid_public_key: 'La clau publica proporcionada no es una clau X25519 valida de 32 bytes (s''han rebut %{length} bytes).'
-      recipient_registry_load_failed: 'No s''ha pogut carregar el registre d''empremtes digitals de destinataris.'
-      recipient_registry_not_found: 'No hi ha cap destinatari registrat amb l''id %{recipient_id}.'
+      recipient_registry_generic: S'ha produit un error en el registre d'empremtes
+        digitals de destinataris.
+      recipient_registry_invalid_public_key: La clau publica proporcionada no es una
+        clau X25519 valida de 32 bytes (s'han rebut %{length} bytes).
+      recipient_registry_load_failed: No s'ha pogut carregar el registre d'empremtes
+        digitals de destinataris.
+      recipient_registry_not_found: No hi ha cap destinatari registrat amb l'id %{recipient_id}.
       reconcile_declaration_unsupported: La reconciliació per casella des de PDF de
         declaració encara no està habilitada per a aquest model; reconcilia un justificant
         descarregat amb aeat app modelo reconcile file, o espera que aquest model
@@ -1048,10 +1053,28 @@ application:
           a una Fase futura sota la task #229 (corpus BOE pendent). Establiu profile.country_of_fiscal_residence
           per reclamar la tarifa Convenio aplicable, o espereu que el corpus baseline
           incorpori aquesta fila.'
+      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: s''ha aplicat el tipus
+        de Convenio Espanya-%{cc} (%{document_id}) per a tipo_renta=%{tipo_renta}.
+        El benefici del conveni nomes esta disponible per al beneficiari efectiu resident
+        en aquest Estat que compleixi les condicions de limitacio de beneficis del
+        conveni; confirmi l''elegibilitat abans d''aplicar aquest tipus.'
+      m210_convenio_lob_advisory_next_action: Confirmi que el contribuent compleix
+        les condicions de beneficiari efectiu i de limitacio de beneficis del Convenio
+        Espanya-%{cc} (%{document_id}) abans d'aplicar el tipus del conveni; revisi
+        l'article especific del conveni, no nomes el marc general del Model de Conveni
+        de l'OCDE.
       m210_convenio_rate_missing:
-        next_action: 'Autoritzeu una fila de Convenio España-{cc} per a tipo_renta={tipo_renta} a registry/aeat/treaties/, o desestableixi profile.country_of_fiscal_residence per usar el baseline TRLIRNR Art 25.'
-      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY: la casella %{casilla_id} es zero pero el contribuent te un descendent elegible (recompte %{weighted_count}) per a la deduccio de Madrid. El disparador automatic queda tancat per a unitats conjunta/casats perque no es pot avaluar el limit de renda familiar; confirmeu l''elegibilitat manualment.'
-      madrid_nacimiento_adopcion_eligibility_advisory_next_action: 'Confirmeu que la base imposable de la unitat familiar esta dins del limit aplicable i, si escau, introduiu la casella 1039 manualment (madrid-dl-1-2010:art-4, art-18).'
+        next_action: Autoritzeu una fila de Convenio España-{cc} per a tipo_renta={tipo_renta}
+          a registry/aeat/treaties/, o desestableixi profile.country_of_fiscal_residence
+          per usar el baseline TRLIRNR Art 25.
+      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
+        la casella %{casilla_id} es zero pero el contribuent te un descendent elegible
+        (recompte %{weighted_count}) per a la deduccio de Madrid. El disparador automatic
+        queda tancat per a unitats conjunta/casats perque no es pot avaluar el limit
+        de renda familiar; confirmeu l''elegibilitat manualment.'
+      madrid_nacimiento_adopcion_eligibility_advisory_next_action: Confirmeu que la
+        base imposable de la unitat familiar esta dins del limit aplicable i, si escau,
+        introduiu la casella 1039 manualment (madrid-dl-1-2010:art-4, art-18).
       missing_required_casilla: La casella obligatòria %{casilla_id} no és present
         a les dades d'entrada del càlcul.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La
@@ -1131,8 +1154,6 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
-      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: s''ha aplicat el tipus de Convenio Espanya-%{cc} (%{document_id}) per a tipo_renta=%{tipo_renta}. El benefici del conveni nomes esta disponible per al beneficiari efectiu resident en aquest Estat que compleixi les condicions de limitacio de beneficis del conveni; confirmi l''elegibilitat abans d''aplicar aquest tipus.'
-      m210_convenio_lob_advisory_next_action: 'Confirmi que el contribuent compleix les condicions de beneficiari efectiu i de limitacio de beneficis del Convenio Espanya-%{cc} (%{document_id}) abans d''aplicar el tipus del conveni; revisi l''article especific del conveni, no nomes el marc general del Model de Conveni de l''OCDE.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
@@ -2959,6 +2980,8 @@ cli:
       rename_source_help: Nom actual del perfil
       rename_target_help: Nou nom del perfil
       sandbox:
+        active_indicator_info: Estàs operant dins del sandbox %{label}, no en un perfil
+          real; totes les ordres s'executen contra aquest bucket aïllat i descartable.
         already_exists: Ja existeix un sandbox anomenat %{label}. Trieu un altre nom
           o descarteu primer l'existent.
         archive_active_profile: El sandbox %{name} és el perfil actiu; canvia a un
@@ -2992,12 +3015,14 @@ cli:
         help: Executa experiments en un bucket aïllat i descartable que mai afecta
           l'estat del perfil principal.
         list_help: Llista tots els sandboxes.
-        merge_help: 'Promou els moviments del llibre o els registres de models d''un sandbox a un altre perfil.'
-        merge_into_help: 'Nom del perfil de destinació al qual es promouen els registres del sandbox.'
-        merge_name_help: 'Nom del sandbox (sense el prefix).'
-        merge_promoted_info: 'S''ha promogut %{scope} de %{source} a %{target}.'
+        merge_help: Promou els moviments del llibre o els registres de models d'un
+          sandbox a un altre perfil.
+        merge_into_help: Nom del perfil de destinació al qual es promouen els registres
+          del sandbox.
+        merge_name_help: Nom del sandbox (sense el prefix).
+        merge_promoted_info: S'ha promogut %{scope} de %{source} a %{target}.
         merge_scope_help: 'Categoria de dades a promoure: ledger, modelo o all.'
-        merge_yes_help: 'Confirma la promoció de les dades del sandbox.'
+        merge_yes_help: Confirma la promoció de les dades del sandbox.
         prune_dry_run_help: Mostra una previsualitzacio de quins sandboxes es descartarien
           sense descartar-los.
         prune_help: Descarta tots els sandboxes alhora.
@@ -3019,7 +3044,6 @@ cli:
           tots.
         use_help: Canvia el perfil actiu a un sandbox existent.
         use_name_help: Nom del sandbox (sense el prefix).
-        active_indicator_info: 'Estàs operant dins del sandbox %{label}, no en un perfil real; totes les ordres s''executen contra aquest bucket aïllat i descartable.'
       sar_catalogue_info: 'Aquest arxiu conté totes les categories de dades personals
         del perfil: identitat i dades del perfil, unitats de treball de models, moviments
         del llibre, revisions de càlcul i registres de presentació. Els bytes de les
@@ -4882,7 +4906,8 @@ errors:
       límit MAX_PATH de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt
       o activa LongPathsEnabled (vegeu `aeat config check`).
     error_submission_validation: Un model d'enviament no ha superat la validació.
-    error_telemetry_schema: Una clau de mètrica de telemetria no està registrada a l'esquema tancat de mètriques de la seva ordre.
+    error_telemetry_schema: Una clau de mètrica de telemetria no està registrada a
+      l'esquema tancat de mètriques de la seva ordre.
     error_transaction_catalogue: El catàleg de transaccions no és vàlid o és inconsistent.
     error_transaction_classification_rule: Una regla de classificació del llibre major
       no és vàlida.
@@ -4943,6 +4968,7 @@ errors:
       del llibre del bucket.
     fail_financial_usage_ratios_usage_ratio_persistence: No s'ha pogut llegir o escriure
       el perfil de percentatges d'ús.
+    fail_google_adc_unavailable: 'No s''han trobat credencials predeterminades d''aplicació (ADC) en aquest equip. Executeu gcloud auth application-default login.'
     fail_google_browser_open: No s'ha pogut obrir el navegador per mostrar la pàgina
       de consentiment de Google. Obre l'enllaç manualment.
     fail_google_loopback_bind: El receptor HTTP local no ha pogut obrir un port. Tanca
@@ -5357,6 +5383,7 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un percentatge d'ús d'oficina a
       casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
       amb el valor del cens.
+    refused_google_impersonation: 'IAM ha rebutjat emetre un testimoni de suplantació per al compte de servei de destinació. Concediu-li el rol roles/iam.serviceAccountTokenCreator.'
     refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
       interactiu amb navegador; executa'l des d'una shell interactiva.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona

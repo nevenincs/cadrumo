@@ -847,11 +847,15 @@ application:
         %{period}; complete these profile facts first: %{missing}.'
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
-      recipient_decryption_failed: The recipient-encrypted package could not be decrypted; the key does not match or the package was tampered with.
-      recipient_encryption_invalid_key: 'The recipient''s public key is not a well-formed X25519 public key.'
+      recipient_decryption_failed: The recipient-encrypted package could not be decrypted;
+        the key does not match or the package was tampered with.
+      recipient_encryption_invalid_key: The recipient's public key is not a well-formed
+        X25519 public key.
       recipient_registry_already_exists: Recipient %{recipient_id} is already registered.
-      recipient_registry_generic: An error occurred with the recipient fingerprint registry.
-      recipient_registry_invalid_public_key: The supplied public key is not a valid 32-byte X25519 key (got %{length} bytes).
+      recipient_registry_generic: An error occurred with the recipient fingerprint
+        registry.
+      recipient_registry_invalid_public_key: The supplied public key is not a valid
+        32-byte X25519 key (got %{length} bytes).
       recipient_registry_load_failed: Unable to load the recipient fingerprint registry.
       recipient_registry_not_found: No recipient is registered under id %{recipient_id}.
       reconcile_declaration_unsupported: Declaration-PDF casilla-level reconcile is
@@ -969,10 +973,27 @@ application:
           a future Phase under task #229 (BOE corpus pending). Set profile.country_of_fiscal_residence
           to claim the applicable Convenio rate, or wait for the baseline corpus to
           incorporate this row.'
+      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: the Convenio Espana-%{cc}
+        (%{document_id}) treaty rate has been applied for tipo_renta=%{tipo_renta}.
+        Treaty relief is available only to a genuine beneficial owner resident in
+        that state who satisfies the treaty''s limitation-of-benefits conditions;
+        confirm eligibility before relying on this rate.'
+      m210_convenio_lob_advisory_next_action: Confirm the taxpayer satisfies the beneficial-ownership
+        and limitation-of-benefits conditions of Convenio Espana-%{cc} (%{document_id})
+        before relying on the treaty rate; review the treaty's specific LOB / beneficiario
+        efectivo article, not only the general OECD Model Convention framework.
       m210_convenio_rate_missing:
-        next_action: 'Author a Convenio España-{cc} treaty override row for tipo_renta={tipo_renta} under registry/aeat/treaties/, or unset profile.country_of_fiscal_residence to fall back to the TRLIRNR Art 25 baseline.'
-      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY: casilla %{casilla_id} is zero but the filer has a Madrid nacimiento/adopcion-eligible descendant (weighted count %{weighted_count}). Auto-trigger is fail-closed for conjunta/married units since the unidad-familiar income limit cannot be evaluated; confirm eligibility manually.'
-      madrid_nacimiento_adopcion_eligibility_advisory_next_action: 'Confirm the unidad-familiar base imponible is within the applicable limit and, if eligible, enter casilla 1039 manually (madrid-dl-1-2010:art-4, art-18).'
+        next_action: Author a Convenio España-{cc} treaty override row for tipo_renta={tipo_renta}
+          under registry/aeat/treaties/, or unset profile.country_of_fiscal_residence
+          to fall back to the TRLIRNR Art 25 baseline.
+      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
+        casilla %{casilla_id} is zero but the filer has a Madrid nacimiento/adopcion-eligible
+        descendant (weighted count %{weighted_count}). Auto-trigger is fail-closed
+        for conjunta/married units since the unidad-familiar income limit cannot be
+        evaluated; confirm eligibility manually.'
+      madrid_nacimiento_adopcion_eligibility_advisory_next_action: Confirm the unidad-familiar
+        base imponible is within the applicable limit and, if eligible, enter casilla
+        1039 manually (madrid-dl-1-2010:art-4, art-18).
       missing_required_casilla: Required casilla %{casilla_id} is not present in the
         calculation revision inputs.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: The
@@ -1048,8 +1069,6 @@ application:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
-      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: the Convenio Espana-%{cc} (%{document_id}) treaty rate has been applied for tipo_renta=%{tipo_renta}. Treaty relief is available only to a genuine beneficial owner resident in that state who satisfies the treaty''s limitation-of-benefits conditions; confirm eligibility before relying on this rate.'
-      m210_convenio_lob_advisory_next_action: 'Confirm the taxpayer satisfies the beneficial-ownership and limitation-of-benefits conditions of Convenio Espana-%{cc} (%{document_id}) before relying on the treaty rate; review the treaty''s specific LOB / beneficiario efectivo article, not only the general OECD Model Convention framework.'
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
@@ -2778,6 +2797,8 @@ cli:
       rename_source_help: Existing profile name
       rename_target_help: New profile name
       sandbox:
+        active_indicator_info: You are operating inside the sandbox %{label}, not
+          a real profile; every command runs against this isolated, discardable bucket.
         already_exists: A sandbox named %{label} already exists. Pick a different
           name or discard the existing one first.
         archive_active_profile: Sandbox %{name} is the active profile; switch to another
@@ -2811,12 +2832,13 @@ cli:
         help: Run experiments in an isolated, discardable bucket that never touches
           main profile state.
         list_help: List every sandbox bucket.
-        merge_help: 'Promote a sandbox''s ledger and/or modelo records into another profile.'
-        merge_into_help: 'Target profile name the sandbox''s records are promoted into.'
-        merge_name_help: 'Sandbox name (without the prefix).'
-        merge_promoted_info: 'Promoted %{scope} from %{source} into %{target}.'
+        merge_help: Promote a sandbox's ledger and/or modelo records into another
+          profile.
+        merge_into_help: Target profile name the sandbox's records are promoted into.
+        merge_name_help: Sandbox name (without the prefix).
+        merge_promoted_info: Promoted %{scope} from %{source} into %{target}.
         merge_scope_help: 'Data category to promote: ledger, modelo, or all.'
-        merge_yes_help: 'Confirm promoting sandbox data.'
+        merge_yes_help: Confirm promoting sandbox data.
         prune_dry_run_help: Preview which sandboxes would be discarded without discarding
           them.
         prune_help: Discard every sandbox bucket at once.
@@ -2837,7 +2859,6 @@ cli:
         usage_name_help: Sandbox name (without the prefix); omit to report every sandbox.
         use_help: Switch the active profile to an existing sandbox.
         use_name_help: Sandbox name (without the prefix).
-        active_indicator_info: 'You are operating inside the sandbox %{label}, not a real profile; every command runs against this isolated, discardable bucket.'
       sar_catalogue_info: 'This archive holds every personal-data category kept for
         the profile: identity and profile facts, modelo work units, ledger transactions,
         calculation revisions, and filing records. Attachment evidence bytes and AEAT
@@ -4599,7 +4620,8 @@ errors:
       MAX_PATH limit. Move AEAT_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled
       (see `aeat config check`).
     error_submission_validation: A submission model failed validation.
-    error_telemetry_schema: A telemetry metric key was not registered in the closed metric schema for its command.
+    error_telemetry_schema: A telemetry metric key was not registered in the closed
+      metric schema for its command.
     error_transaction_catalogue: The transaction catalogue is invalid or inconsistent.
     error_transaction_classification_rule: A ledger classification rule is invalid.
     error_transaction_llm_classifier: The transaction classification by the language
@@ -4653,6 +4675,7 @@ errors:
       or used.
     fail_financial_usage_ratios_usage_ratio_persistence: The usage-ratio profile could
       not be read or written.
+    fail_google_adc_unavailable: 'Application Default Credentials could not be found on this host. Run gcloud auth application-default login.'
     fail_google_browser_open: The browser could not be opened to show the Google consent
       page. Open the link manually.
     fail_google_loopback_bind: The local HTTP receiver could not bind a port. Close
@@ -5035,6 +5058,7 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: A saved home-office usage ratio
       disagrees with the censo, which is the binding legal source. Align it with the
       censo value.
+    refused_google_impersonation: 'IAM refused to mint an impersonated token for the target service account. Grant it roles/iam.serviceAccountTokenCreator.'
     refused_google_non_interactive: Google login needs an interactive terminal with
       a browser; run it from an interactive shell.
     refused_google_profile_unbound: No active profile is bound. Select a profile or

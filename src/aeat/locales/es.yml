@@ -929,13 +929,19 @@ application:
         %{filing_year} %{period}; completa antes estos datos de perfil: %{missing}.'
       profile_readiness_profile_missing: No existe un perfil activo persistido para
         este trabajo de modelo; crea o repara el perfil antes de continuar.
-      recipient_decryption_failed: No se ha podido descifrar el paquete cifrado para el destinatario; la clave no coincide o el paquete ha sido manipulado.
-      recipient_encryption_invalid_key: La clave publica del destinatario no es una clave publica X25519 valida.
+      recipient_decryption_failed: No se ha podido descifrar el paquete cifrado para
+        el destinatario; la clave no coincide o el paquete ha sido manipulado.
+      recipient_encryption_invalid_key: La clave publica del destinatario no es una
+        clave publica X25519 valida.
       recipient_registry_already_exists: El destinatario %{recipient_id} ya esta registrado.
-      recipient_registry_generic: Se ha producido un error en el registro de huellas digitales de destinatarios.
-      recipient_registry_invalid_public_key: La clave publica proporcionada no es una clave X25519 valida de 32 bytes (se recibieron %{length} bytes).
-      recipient_registry_load_failed: No se ha podido cargar el registro de huellas digitales de destinatarios.
-      recipient_registry_not_found: No hay ningun destinatario registrado con el id %{recipient_id}.
+      recipient_registry_generic: Se ha producido un error en el registro de huellas
+        digitales de destinatarios.
+      recipient_registry_invalid_public_key: La clave publica proporcionada no es
+        una clave X25519 valida de 32 bytes (se recibieron %{length} bytes).
+      recipient_registry_load_failed: No se ha podido cargar el registro de huellas
+        digitales de destinatarios.
+      recipient_registry_not_found: No hay ningun destinatario registrado con el id
+        %{recipient_id}.
       reconcile_declaration_unsupported: La reconciliación por casilla desde PDF de
         declaración aún no está habilitada para este modelo; reconcilia un justificante
         descargado con aeat app modelo reconcile file, o espera a que este modelo
@@ -1064,10 +1070,28 @@ application:
           aplazado a una Fase futura bajo task #229 (corpus BOE pendiente). Establezca
           profile.country_of_fiscal_residence para reclamar la tarifa Convenio aplicable,
           o espere a que el corpus baseline incorpore esta fila.'
+      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: se ha aplicado el tipo
+        de Convenio Espana-%{cc} (%{document_id}) para tipo_renta=%{tipo_renta}. El
+        beneficio del convenio solo esta disponible para el beneficiario efectivo
+        residente en ese Estado que cumpla las condiciones de limitacion de beneficios
+        del convenio; confirme la elegibilidad antes de aplicar este tipo.'
+      m210_convenio_lob_advisory_next_action: Confirme que el contribuyente cumple
+        las condiciones de beneficiario efectivo y de limitacion de beneficios del
+        Convenio Espana-%{cc} (%{document_id}) antes de aplicar el tipo del convenio;
+        revise el articulo especifico del convenio, no solo el marco general del Modelo
+        de Convenio de la OCDE.
       m210_convenio_rate_missing:
-        next_action: 'Autorice una fila de Convenio España-{cc} para tipo_renta={tipo_renta} en registry/aeat/treaties/, o desestablezca profile.country_of_fiscal_residence para usar el baseline TRLIRNR Art 25.'
-      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY: la casilla %{casilla_id} es cero pero el contribuyente tiene un descendiente elegible (recuento %{weighted_count}) para la deduccion de Madrid. El disparo automatico esta cerrado para unidades conjunta/casados porque no se puede evaluar el limite de renta familiar; confirme la elegibilidad manualmente.'
-      madrid_nacimiento_adopcion_eligibility_advisory_next_action: 'Confirme que la base imponible de la unidad familiar esta dentro del limite aplicable y, si procede, introduzca la casilla 1039 manualmente (madrid-dl-1-2010:art-4, art-18).'
+        next_action: Autorice una fila de Convenio España-{cc} para tipo_renta={tipo_renta}
+          en registry/aeat/treaties/, o desestablezca profile.country_of_fiscal_residence
+          para usar el baseline TRLIRNR Art 25.
+      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
+        la casilla %{casilla_id} es cero pero el contribuyente tiene un descendiente
+        elegible (recuento %{weighted_count}) para la deduccion de Madrid. El disparo
+        automatico esta cerrado para unidades conjunta/casados porque no se puede
+        evaluar el limite de renta familiar; confirme la elegibilidad manualmente.'
+      madrid_nacimiento_adopcion_eligibility_advisory_next_action: Confirme que la
+        base imponible de la unidad familiar esta dentro del limite aplicable y, si
+        procede, introduzca la casilla 1039 manualmente (madrid-dl-1-2010:art-4, art-18).
       missing_required_casilla: La casilla requerida %{casilla_id} no está presente
         en los datos de entrada del cálculo.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La
@@ -1147,8 +1171,6 @@ application:
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
-      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: se ha aplicado el tipo de Convenio Espana-%{cc} (%{document_id}) para tipo_renta=%{tipo_renta}. El beneficio del convenio solo esta disponible para el beneficiario efectivo residente en ese Estado que cumpla las condiciones de limitacion de beneficios del convenio; confirme la elegibilidad antes de aplicar este tipo.'
-      m210_convenio_lob_advisory_next_action: 'Confirme que el contribuyente cumple las condiciones de beneficiario efectivo y de limitacion de beneficios del Convenio Espana-%{cc} (%{document_id}) antes de aplicar el tipo del convenio; revise el articulo especifico del convenio, no solo el marco general del Modelo de Convenio de la OCDE.'
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
@@ -2994,6 +3016,9 @@ cli:
       rename_source_help: Nombre actual del perfil
       rename_target_help: Nuevo nombre del perfil
       sandbox:
+        active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
+          perfil real; todos los comandos se ejecutan contra este bucket aislado y
+          descartable.
         already_exists: Ya existe un sandbox llamado %{label}. Elija otro nombre o
           descarte primero el existente.
         archive_active_profile: El sandbox %{name} es el perfil activo; cambia a otro
@@ -3027,12 +3052,14 @@ cli:
         help: Ejecuta experimentos en un bucket aislado y descartable que nunca afecta
           al estado del perfil principal.
         list_help: Lista todos los sandboxes.
-        merge_help: 'Promueve los movimientos del libro o los registros de modelos de un sandbox a otro perfil.'
-        merge_into_help: 'Nombre del perfil de destino al que se promueven los registros del sandbox.'
-        merge_name_help: 'Nombre del sandbox (sin el prefijo).'
-        merge_promoted_info: 'Se promovió %{scope} de %{source} a %{target}.'
+        merge_help: Promueve los movimientos del libro o los registros de modelos
+          de un sandbox a otro perfil.
+        merge_into_help: Nombre del perfil de destino al que se promueven los registros
+          del sandbox.
+        merge_name_help: Nombre del sandbox (sin el prefijo).
+        merge_promoted_info: Se promovió %{scope} de %{source} a %{target}.
         merge_scope_help: 'Categoría de datos a promover: ledger, modelo o all.'
-        merge_yes_help: 'Confirma la promoción de los datos del sandbox.'
+        merge_yes_help: Confirma la promoción de los datos del sandbox.
         prune_dry_run_help: Muestra una vista previa de que sandboxes se descartarian
           sin descartarlos.
         prune_help: Descarta todos los sandboxes a la vez.
@@ -3054,7 +3081,6 @@ cli:
           de todos.
         use_help: Cambia el perfil activo a un sandbox existente.
         use_name_help: Nombre del sandbox (sin el prefijo).
-        active_indicator_info: 'Estás operando dentro del sandbox %{label}, no en un perfil real; todos los comandos se ejecutan contra este bucket aislado y descartable.'
       sar_catalogue_info: 'Este archivo contiene todas las categorías de datos personales
         del perfil: identidad y datos del perfil, unidades de trabajo de modelos,
         movimientos del libro, revisiones de cálculo y registros de presentación.
@@ -4929,7 +4955,8 @@ errors:
       límite MAX_PATH de Windows. Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más
       corta o habilite LongPathsEnabled (véase `aeat config check`).
     error_submission_validation: Un modelo de envío no superó la validación.
-    error_telemetry_schema: Una clave de métrica de telemetría no está registrada en el esquema cerrado de métricas de su comando.
+    error_telemetry_schema: Una clave de métrica de telemetría no está registrada
+      en el esquema cerrado de métricas de su comando.
     error_transaction_catalogue: El catálogo de transacciones no es válido o es inconsistente.
     error_transaction_classification_rule: Una regla de clasificación del libro mayor
       no es válida.
@@ -4991,6 +5018,7 @@ errors:
       libro del bucket.
     fail_financial_usage_ratios_usage_ratio_persistence: No se pudo leer o escribir
       el perfil de porcentajes de uso.
+    fail_google_adc_unavailable: 'No se han encontrado credenciales predeterminadas de aplicación (ADC) en este equipo. Ejecute gcloud auth application-default login.'
     fail_google_browser_open: No se pudo abrir el navegador para mostrar la página
       de consentimiento de Google. Abre el enlace manualmente.
     fail_google_loopback_bind: El receptor HTTP local no pudo abrir un puerto. Cierra
@@ -5402,6 +5430,7 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un porcentaje de uso de oficina
       en casa guardado no coincide con el censo, que es la fuente legal vinculante.
       Alinéalo con el valor del censo.
+    refused_google_impersonation: 'IAM ha rechazado emitir un token de suplantación para la cuenta de servicio de destino. Concédale el rol roles/iam.serviceAccountTokenCreator.'
     refused_google_non_interactive: El inicio de sesión de Google necesita un terminal
       interactivo con navegador; ejecútalo desde una shell interactiva.
     refused_google_profile_unbound: No hay ningún perfil activo vinculado. Selecciona
