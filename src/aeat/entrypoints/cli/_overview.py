@@ -36,6 +36,7 @@ from ...application.overview import (
 from ...application.overview import (
     OverviewCalendar,
     OverviewCalendarEvent,
+    OverviewCalendarFilingEvidence,
     OverviewCalendarRange,
     build_overview_calendar,
     build_overview_calendar_events,
@@ -47,6 +48,7 @@ from ...core.hashing import sha256_hex
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
+from ...domain.modelos import WorkUnit
 from ._common import (
     _bad,
     _canonical_period,
@@ -191,7 +193,7 @@ def _local_modelo_record_calendar_events(
     return events, None
 
 
-def _local_modelo_work_units(bucket_id: str) -> tuple[tuple[object, ...], Notice | None]:
+def _local_modelo_work_units(bucket_id: str) -> tuple[tuple[WorkUnit, ...], Notice | None]:
     """Return ``(active work units, degradation notice-or-None)``.
 
     Work units are an OPTIONAL enrichment of the overview surfaces: they annotate
@@ -278,7 +280,7 @@ def _local_calendar_filing_evidence(
     events: tuple[OverviewCalendarEvent, ...],
     *,
     expected_tax_id: str | None = None,
-) -> tuple[tuple[object, ...], Notice | None]:
+) -> tuple[tuple[OverviewCalendarFilingEvidence, ...], Notice | None]:
     """Return ``(local/AEAT filing evidence rows, degradation-notice-or-None)``.
 
     The resulting :class:`OverviewCalendarFilingEvidence` rows feed
@@ -775,7 +777,7 @@ def overview_calendar(
         lines.append(f"coverage_advised\t{len(cal.coverage.advised)}\t{notice.message}")
     post_filing_notices = overview_post_filing_event_notices(cal.events)
     for notice in post_filing_notices:
-        lines.append(f"post_filing_pending\t{len(notice.context)}\t{notice.message}")
+        lines.append(f"post_filing_pending\t{len(notice.context or {})}\t{notice.message}")
     calendar_notices = [*coverage_notices, *post_filing_notices]
     for notice in evidence_notices:
         lines.append(f"{notice.code}\t{notice.message}")
@@ -915,7 +917,7 @@ def _overview_calendar_all_profiles(
         for notice in overview_post_filing_event_notices(cal.events):
             tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": pointer.label}})
             all_coverage_notices.append(tagged)
-            all_lines.append(f"post_filing_pending\t{pointer.label}\t{len(notice.context)}\t{notice.message}")
+            all_lines.append(f"post_filing_pending\t{pointer.label}\t{len(notice.context or {})}\t{notice.message}")
 
         all_calendars.append(
             {
