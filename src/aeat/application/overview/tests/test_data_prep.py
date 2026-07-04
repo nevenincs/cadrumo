@@ -47,7 +47,7 @@ _PERIOD_1T_2026 = Period.from_year_and_code(2026, "1T")
 
 
 @pytest.fixture
-def _tx_repository(tmp_path: Path) -> Generator[TransactionCatalogueRepository, None, None]:
+def _tx_repository(tmp_path: Path) -> Generator[TransactionCatalogueRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
 

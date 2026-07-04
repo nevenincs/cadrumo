@@ -349,6 +349,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core.corpus_manifest._bundle_signing.CorpusBundleSigningError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_CORPUS_BUNDLE_SIGNATURE",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_corpus_bundle_signature",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.corpus_manifest._bundle_signing.CorpusBundleSigningKeyNotFoundError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_CORPUS_BUNDLE_SIGNING_KEY_NOT_FOUND",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_corpus_bundle_signing_key_not_found",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core.access_gate._errors.AccessGateSubmissionError",
         ErrorCode(
             code="ERROR_ACCESS_GATE_SUBMISSION",

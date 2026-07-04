@@ -88,7 +88,9 @@ def test_authority_snapshot_runs_real_modelo_calculation(_packaged_authority: Va
     assert casilla_15.absent_by_design is False
 
 
-def test_authority_snapshot_is_authority_owned_revision_projection(_packaged_authority: ValidatedRegistryAuthority) -> None:
+def test_authority_snapshot_is_authority_owned_revision_projection(
+    _packaged_authority: ValidatedRegistryAuthority,
+) -> None:
     authority = _packaged_authority
 
     snapshot = authority.snapshot("130", filing_year=2026, period="1T")
