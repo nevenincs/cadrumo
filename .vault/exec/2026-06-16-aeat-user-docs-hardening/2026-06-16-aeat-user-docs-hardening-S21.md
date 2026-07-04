@@ -1,0 +1,68 @@
+---
+tags:
+  - '#exec'
+  - '#aeat-user-docs-hardening'
+date: '2026-07-04'
+modified: '2026-07-04'
+step_id: 'S21'
+related:
+  - "[[2026-06-16-aeat-user-docs-hardening-plan]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #exec) and one feature tag.
+     Replace aeat-user-docs-hardening with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     step_id is the originating Step's canonical identifier, e.g. S01.
+     The S21 and 2026-06-16-aeat-user-docs-hardening-plan placeholders are machine-filled by
+     `vaultspec-core vault add exec`; do not fill them by hand.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
+     parent plan.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+<!-- STEP RECORD:
+     This file represents one Step from the originating plan. Identified
+     by its canonical leaf identifier (S##) and ancestor display path.
+     The Harden onboarding.md and ## Scope
+
+- `docs/how-to/onboarding.md` placeholders below are machine-filled
+     by `vaultspec-core vault add exec` from the originating Step row;
+     do not fill them by hand. -->
+
+# Harden onboarding.md
+
+## Scope
+
+- `docs/how-to/onboarding.md`
+
+## Description
+
+- Author the net-new `onboarding.md` (the page was MISSING; this is the one genuine net-new step of the plan, wireframe-approved before authoring).
+- Design it as a NARRATIVE JOURNEY MAP, not a second command walkthrough: `quickstart.md` already owns the concrete shortest command path, so onboarding orients a newcomer through the whole lifecycle and ROUTES to the deep guide at each stage rather than inlining command sequences (per aeat-documentation-workflow story-driven + cross-linking, avoiding duplication).
+- Lead with the never-submit safety boundary (aeat prepares/checks/exports LOCAL files; the human files at the AEAT portal) - the load-bearing local-first, human-gated framing per aeat-safety-legal-gates - then the six-stage journey-at-a-glance and a pointer to Quickstart.
+- Walk the six stages with one or two orienting sentences plus the cross-link each: Stage 1 profile-setup, Stage 2 import-bank-statements, Stage 3 classify-transactions, Stage 4 choose-modelo, Stage 5 filing-readiness + verification-reports, Stage 6 file-at-aeat + reconcile. Add a passphrase (S-PASS) and Spanish-runtime (S-LANG) "Before you begin", and a "Where to go next" pointing at the explanation/boundary pages, calendar, troubleshooting, and glossary.
+- Register the page in the how-to `index.md` router (a "Get Started" card ahead of Quickstart) so it is reachable.
+
+## Outcome
+
+- `onboarding.md` authored as the journey-map orientation, with imperative stage headers, taxpayer-general terms (NIF/CIF/DNI/NIE), relative markdown links, no self-praise, and no inlined command sequences (it routes; the linked guides execute).
+- Registered in `docs/how-to/index.md` under "How do I start this?".
+- Gates: CLI conformance `test_documented_command_conformance.py -m integration` = 59 passed (the new page is scanned and carries no command claims, so nothing to drift); the Sphinx `-n -W` build result is recorded in the Notes.
+
+## Notes
+
+- No `aeat ...` command invocation is inlined in onboarding.md by design - it is a router - so there is nothing for the command-conformance gate to falsify beyond link integrity.
+- This closes the `aeat-user-docs-hardening` plan at 32/32: 31 verify-closes of existing pages against the 2026-06-18 persona audit's findings (all resolved at HEAD) plus this one net-new orientation page.

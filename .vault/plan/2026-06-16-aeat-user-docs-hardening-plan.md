@@ -46,7 +46,7 @@ related:
 - [x] `S18` - Harden modelo-036.md; `docs/how-to/modelo-036.md`.
 - [x] `S19` - Harden modelo-303.md; `docs/how-to/modelo-303.md`.
 - [x] `S20` - Harden modelo-390.md; `docs/how-to/modelo-390.md`.
-- [ ] `S21` - Harden onboarding.md; `docs/how-to/onboarding.md`.
+- [x] `S21` - Harden onboarding.md; `docs/how-to/onboarding.md`.
 - [x] `S22` - Harden profile-setup.md; `docs/how-to/profile-setup.md`.
 - [x] `S23` - Harden protect-data-access.md; `docs/how-to/protect-data-access.md`.
 - [x] `S24` - Harden quickstart.md; `docs/how-to/quickstart.md`.
