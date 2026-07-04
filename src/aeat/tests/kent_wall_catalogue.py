@@ -285,6 +285,17 @@ KENT_WALL_CATALOGUE: tuple[KentWallEntry, ...] = (
         test_module="src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py",
         test_function="test_modelo_202_art_40_2_cuota_incn_below_threshold",
     ),
+    KentWallEntry(
+        issue=257,
+        kent_perspective=(
+            "Kent's usage ratio (home-office/mileage/phone split) actually feeds "
+            "the deductible-expense calculation, not just a stored preference: "
+            "his classified ledger expenses aggregate into the registry-computed "
+            "M100 casilla at the ratio-adjusted amount."
+        ),
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py",
+        test_function="test_work_calculate_modelo_100_routes_marta_auto_ledger_expenses",
+    ),
 )
 """The enrolled representative subset of closed Kent walls.
 
