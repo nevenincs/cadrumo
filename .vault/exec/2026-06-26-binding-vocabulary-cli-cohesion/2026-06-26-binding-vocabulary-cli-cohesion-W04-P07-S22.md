@@ -39,11 +39,14 @@ related:
 
 - The Sheets transport and compute intents are now separate operator verbs, per `aeat-cli-pull-and-file-standard`.
 - Focused verification passed:
+  - `uv run --no-sync vaultspec-rag search "google sync calc pull compute transport separate command" --type code --port 8766 --max-results 12 --timeout 30`
   - `uv run --no-sync pytest -q src/aeat/entrypoints/cli/tests/test_google_payloads.py` (`7 passed`)
-  - `uv run --no-sync aeat config google sync calc --help`
+  - `uv run --no-sync aeat config google sync calc --help` shows separate `pull` and `compute` commands; `pull` reads operator-edited cells to typed records and `compute` emits calculated casilla values without persistence.
   - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py` (`140 passed`)
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` ran and failed on an unrelated docs citation in `docs/HARNESS-USERDOCS-KICKOFF-BRIEF.md` (`aeat app agent --layout plugin`), not on the calc pull/compute command paths.
+  - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` (`58 passed`)
+- Blocking evidence:
+  - `uv run --no-sync pytest --collect-only -q` is currently red (`12182/14891 tests collected`, `2709 deselected`, `8 errors`) because the non-authored untracked `src/aeat/_data/registry/aeat/modelos/145/` scaffold makes registry validation fail: the `2012-01-31-y-siguientes` revision has no casilla files and no official workbook parity coverage.
 
 ## Notes
 
-No plan step check was run in this pass. The plan file currently has non-authored WIP that only removes the template link-rule comment block, so mutating the checkbox would violate the shared-worktree abort-on-WIP rule. This record reconciles the missing exec evidence only.
+No plan step check was run in this pass. The S22 target files and plan file are clean, but the step's mandatory collect-only gate is red due to unrelated non-authored registry WIP. This record reconciles current evidence without claiming closure.
