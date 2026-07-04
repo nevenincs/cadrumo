@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -981,11 +982,12 @@ def _corrupt_first_ccaa_dispatch(expression: object, bad_parameter: str) -> tupl
     level; the tree is walked to corrupt the first reachable dispatch table.
     """
     if getattr(expression, "op", None) == "lookup_bracket_by_ccaa":
-        leaf = expression.args[2]
+        expr: Any = expression
+        leaf = expr.args[2]
         mutated_dispatch = {**leaf.dispatch_table, "madrid": bad_parameter}
         mutated_leaf = leaf.model_copy(update={"dispatch_table": mutated_dispatch})
-        mutated_args = (expression.args[0], expression.args[1], mutated_leaf)
-        return expression.model_copy(update={"args": mutated_args}), True
+        mutated_args = (expr.args[0], expr.args[1], mutated_leaf)
+        return expr.model_copy(update={"args": mutated_args}), True
     new_args = []
     changed = False
     for arg in getattr(expression, "args", ()) or ():
@@ -996,7 +998,8 @@ def _corrupt_first_ccaa_dispatch(expression: object, bad_parameter: str) -> tupl
         else:
             new_args.append(arg)
     if changed:
-        return expression.model_copy(update={"args": tuple(new_args)}), True
+        expr_copy: Any = expression
+        return expr_copy.model_copy(update={"args": tuple(new_args)}), True
     return expression, False
 
 

@@ -55,6 +55,7 @@ from ._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceListResult,
     CatalogueInvoiceRemoveResult,
     CatalogueInvoiceViewResult,
+    CatalogueInvoiceWizardResult,
 )
 from ._ledger_payloads import (
     InvoiceAddResult,
@@ -540,6 +541,134 @@ def catalogue_create(
         command="ledger.invoice.catalogue.create",
         result=CatalogueInvoiceCreateResult.model_validate(_catalogue_invoice_payload(result.invoice)),
         lines=_catalogue_invoice_lines(result.invoice),
+    )
+
+
+@catalogue_app.command(
+    "wizard",
+    help=tr(
+        "cli.app.ledger.invoice.catalogue.wizard_help",
+        default="Guided, non-interactive manual entry when extraction is unavailable.",
+    ),
+)
+def catalogue_wizard(
+    ctx: typer.Context,
+    kind: InvoiceKindOption = typer.Option(
+        ...,
+        "--kind",
+        help=tr(
+            "cli.app.ledger.invoice.kind_help",
+            default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
+        ),
+    ),
+    counterparty_nif: str = typer.Option(..., "--counterparty-nif"),
+    counterparty_name: str = typer.Option(..., "--counterparty-name"),
+    invoice_number: str = typer.Option(..., "--invoice-number"),
+    invoice_date: str = typer.Option(
+        ...,
+        "--invoice-date",
+        help=tr("cli.app.ledger.invoice.invoice_date_help", default="Invoice date (YYYY-MM-DD)."),
+    ),
+    taxable_base: str = typer.Option(..., "--taxable-base"),
+    iva_rate: str | None = typer.Option(None, "--iva-rate"),
+    currency: str = typer.Option(DEFAULT_CURRENCY, "--currency"),
+    country_code: str = typer.Option(
+        "ES",
+        "--country-code",
+        help=tr(
+            "cli.app.ledger.invoice.catalogue.country_code_help",
+            default="Counterparty ISO 3166-1 alpha-2 country code.",
+        ),
+    ),
+    operation_type: str | None = typer.Option(
+        None,
+        "--operation-type",
+        help=tr(
+            "cli.app.ledger.invoice.operation_type_help",
+            default=(
+                "M349 operation type: E entrega, S servicios, T triangular,"
+                " R rectificación, A adquisición bienes, I adquisición servicios,"
+                " M miscelánea."
+            ),
+        ),
+    ),
+    notes: str = typer.Option("", "--notes"),
+) -> None:
+    """Guided manual-entry invoice creation for when extraction is unavailable.
+
+    A non-interactive, step-wise validated entry point: every field is
+    supplied up front as an option (the operator is an autonomous agent that
+    cannot answer an interactive prompt), and every field is validated
+    independently before any write is attempted — a malformed NIF and a
+    malformed date are BOTH reported in one refusal, never just the first one
+    found (``no-silent-under-declaration``). The write delegates to the same
+    :func:`aeat.application.invoices.create_catalogue_invoice` primitive
+    ``catalogue create`` uses (``composition-service-no-parallel-write-path``).
+    A retry with identical fields resolves to the already-catalogued
+    content-derived identity and is reported as a guarded idempotent no-op
+    rather than re-written or raised as a duplicate
+    (``single-subject-mutation-is-idempotent-guarded``).
+    """
+    from ...application.invoices import create_invoice_via_wizard
+    from ...domain.invoices import InvoiceValidationError
+
+    bucket_id = _business_invoice_bucket_id()
+    parsed_operation_type = _parse_intracom_operation_type(
+        operation_type,
+        translation_key="cli.app.ledger.invoice.operation_type_invalid",
+    )
+    iva_category = _catalogue_iva_category_for_operation_type(parsed_operation_type)
+    try:
+        wizard_result = create_invoice_via_wizard(
+            bucket_id=bucket_id,
+            kind=InvoiceKind(kind.value),
+            counterparty_nif=counterparty_nif,
+            counterparty_name=counterparty_name,
+            invoice_number=invoice_number,
+            invoice_date=invoice_date,
+            taxable_base=taxable_base,
+            iva_rate=iva_rate,
+            currency=currency,
+            country_code=country_code,
+            notes=notes,
+            iva_category=iva_category,
+            operation_type=parsed_operation_type,
+        )
+    except InvoiceValidationError as exc:
+        message = tr(exc.translated_message, **(exc.context or {})) if exc.translated_message else str(exc)
+        raise _bad(message) from exc
+
+    payload = _catalogue_invoice_payload(wizard_result.invoice)
+    payload["already_existed"] = wizard_result.already_existed
+    lines = _catalogue_invoice_lines(wizard_result.invoice)
+    lines.append(f"already_existed\t{wizard_result.already_existed}")
+
+    notices: list[Notice] = []
+    if wizard_result.already_existed:
+        noop_message = tr(
+            "cli.app.ledger.invoice.catalogue.wizard_idempotent_noop",
+            invoice_id=wizard_result.invoice.invoice_id,
+            default=(
+                "Idempotent no-op: an invoice with this identity already exists "
+                f"({wizard_result.invoice.invoice_id}); nothing was created."
+            ),
+        )
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.invoice.catalogue.wizard.idempotent_noop",
+                message=noop_message,
+                context={"invoice_id": wizard_result.invoice.invoice_id},
+            ),
+        )
+        lines.append(noop_message)
+
+    _emit_envelope(
+        ctx,
+        command="ledger.invoice.catalogue.wizard",
+        result=CatalogueInvoiceWizardResult.model_validate(payload),
+        lines=lines,
+        notices=notices,
     )
 
 

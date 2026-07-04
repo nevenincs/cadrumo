@@ -129,7 +129,7 @@ class TestRunEventPayload:
 
         for payload_kwargs in cases:
             with pytest.raises(ValidationError, match=r"must set exactly one variant"):
-                RunEventPayload(**payload_kwargs)
+                RunEventPayload.model_validate(payload_kwargs)
 
 
 class TestTimezoneAwareness:

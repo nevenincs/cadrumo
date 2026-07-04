@@ -81,7 +81,17 @@ def _lookup_bracket_by_ccaa_nodes(expression: object) -> list[object]:
 
 def _dispatch_leaves(expression: object) -> list[object]:
     """Return the dispatch_table leaf (args[2]) of every lookup_bracket_by_ccaa node."""
-    return [node.args[2] for node in _lookup_bracket_by_ccaa_nodes(expression)]
+    leaves: list[object] = []
+    for node in _lookup_bracket_by_ccaa_nodes(expression):
+        args = getattr(node, "args", None)
+        if args is not None and len(args) > 2:
+            leaves.append(args[2])
+    return leaves
+
+
+def _get_dispatch_table(dispatch_leaf: object) -> dict[str, str] | None:
+    """Safely extract dispatch_table from a dispatch leaf node."""
+    return getattr(dispatch_leaf, "dispatch_table", None)
 
 
 def _committed_modelo_100() -> ModeloDefinition:
@@ -141,10 +151,11 @@ def test_autonomic_formula_dispatch_table_covers_every_ccaa(modelo_100: ModeloDe
             dispatch_leaves = _dispatch_leaves(formula.expression)
             assert dispatch_leaves, f"ejercicio {ejercicio} casilla {target_casilla_id}: no dispatch_table leaf found"
             for dispatch_leaf in dispatch_leaves:
-                assert dispatch_leaf.dispatch_table is not None, (
+                dispatch_table = _get_dispatch_table(dispatch_leaf)
+                assert dispatch_table is not None, (
                     f"ejercicio {ejercicio} casilla {target_casilla_id}: args[2] is not a dispatch_table leaf"
                 )
-                observed_keys = frozenset(dispatch_leaf.dispatch_table)
+                observed_keys = frozenset(dispatch_table)
                 missing = _EXPECTED_CCAA_KEYS - observed_keys
                 extra = observed_keys - _EXPECTED_CCAA_KEYS
                 assert not missing, (
@@ -171,8 +182,9 @@ def test_autonomic_formula_dispatch_values_resolve_to_declared_parameters(modelo
             assert dispatch_leaves, f"ejercicio {ejercicio} casilla {target_casilla_id}: no dispatch_table leaf found"
 
             for dispatch_leaf in dispatch_leaves:
-                assert dispatch_leaf.dispatch_table is not None
-                for ccaa, parameter_id in dispatch_leaf.dispatch_table.items():
+                dispatch_table = _get_dispatch_table(dispatch_leaf)
+                assert dispatch_table is not None
+                for ccaa, parameter_id in dispatch_table.items():
                     assert parameter_id in parameters_by_id, (
                         f"ejercicio {ejercicio} casilla {target_casilla_id} ccaa {ccaa}: "
                         "dispatch_table references unknown parameter "
@@ -202,8 +214,9 @@ def test_autonomic_dispatch_parameters_follow_canonical_naming_pattern(modelo_10
             assert dispatch_leaves, f"ejercicio {ejercicio} casilla {target_casilla_id}: no dispatch_table leaf found"
 
             for dispatch_leaf in dispatch_leaves:
-                assert dispatch_leaf.dispatch_table is not None
-                for ccaa, parameter_id in dispatch_leaf.dispatch_table.items():
+                dispatch_table = _get_dispatch_table(dispatch_leaf)
+                assert dispatch_table is not None
+                for ccaa, parameter_id in dispatch_table.items():
                     ccaa_slug = ccaa.replace("_", "-")
                     expected_id = f"renta-{ejercicio}-escala-autonomica-{ccaa_slug}-base-general"
                     assert parameter_id == expected_id, (

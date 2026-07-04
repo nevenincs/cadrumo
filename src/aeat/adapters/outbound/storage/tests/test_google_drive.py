@@ -54,6 +54,7 @@ def test_google_drive_provider_rejects_blank_constructor_values_with_localized_m
 
         exc = raised.value
         assert exc.translated_message == message
+        assert exc.translated_message is not None
         assert exc.context == context
         assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
 
@@ -92,6 +93,7 @@ def test_google_drive_provider_rejects_blank_put_values_before_service_construct
 
         exc = raised.value
         assert exc.translated_message == message
+        assert exc.translated_message is not None
         assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
 
 

@@ -334,6 +334,8 @@ def test_madrid_resident_three_descendants_autonomico_exceeds_estatal(year: int)
 
     estatal_value = fact_index[_aggregate_key(year)]
     autonomico_value = fact_index[_autonomico_aggregate_key(year)]
+    assert isinstance(estatal_value, Decimal), f"Expected Decimal, got {type(estatal_value)}"
+    assert isinstance(autonomico_value, Decimal), f"Expected Decimal, got {type(autonomico_value)}"
     assert autonomico_value > estatal_value
 
     estatal_tranches, _ = _registry_tranches(snapshot)
@@ -369,6 +371,10 @@ def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channe
     madrid_tranches, _ = _registry_tranches(snapshot, ccaa_infix="madrid")
     expected_estatal = estatal_tranches[0] + estatal_tranches[1] + estatal_tranches[2]
     expected_autonomico = madrid_tranches[0] + madrid_tranches[1] + madrid_tranches[2]
-    assert resolution.binding_values[estatal_binding_id] == expected_estatal
-    assert resolution.binding_values[autonomico_binding_id] == expected_autonomico
-    assert resolution.binding_values[autonomico_binding_id] > resolution.binding_values[estatal_binding_id]
+    estatal_resolved = resolution.binding_values[estatal_binding_id]
+    autonomico_resolved = resolution.binding_values[autonomico_binding_id]
+    assert isinstance(estatal_resolved, Decimal), f"Expected Decimal, got {type(estatal_resolved)}"
+    assert isinstance(autonomico_resolved, Decimal), f"Expected Decimal, got {type(autonomico_resolved)}"
+    assert estatal_resolved == expected_estatal
+    assert autonomico_resolved == expected_autonomico
+    assert autonomico_resolved > estatal_resolved

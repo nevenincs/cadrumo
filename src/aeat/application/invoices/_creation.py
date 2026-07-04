@@ -46,6 +46,18 @@ _NUMERIC_IVA_RATE_SLOTS: dict[Decimal, IvaRate] = {
 }
 
 
+def numeric_iva_rate_slots() -> dict[Decimal, IvaRate]:
+    """Return the closed set of operator-supplied IVA percentage slots.
+
+    A copy of the module-private mapping :func:`_resolve_iva_rate_slot` and
+    :func:`build_catalogue_invoice` consume internally, exposed for other
+    invoice-creation transports (e.g. the manual-entry wizard) that must
+    validate a percentage against the same accepted set before it reaches
+    :func:`build_catalogue_invoice`.
+    """
+    return dict(_NUMERIC_IVA_RATE_SLOTS)
+
+
 class CatalogueInvoiceCreateResult(BaseModel):
     """Result of persisting one rich catalogue invoice."""
 
@@ -210,4 +222,5 @@ __all__ = [
     "CatalogueInvoiceCreateResult",
     "build_catalogue_invoice",
     "create_catalogue_invoice",
+    "numeric_iva_rate_slots",
 ]

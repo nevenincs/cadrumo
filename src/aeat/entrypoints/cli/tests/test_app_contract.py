@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -35,10 +36,10 @@ def _isolated_state(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _manifest() -> dict[str, object]:
+def _manifest() -> dict[str, Any]:
     result = invoke_cached_cli(["--format", "json", "app", "contract"])
     assert result.exit_code == 0, result.output
-    envelope = json.loads(result.output)
+    envelope: dict[str, Any] = json.loads(result.output)
     assert envelope["command"] == "contract"
     assert envelope["status"] == "success"
     return envelope["result"]

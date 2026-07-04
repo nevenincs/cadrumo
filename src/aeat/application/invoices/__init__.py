@@ -64,6 +64,7 @@ from ._creation import (
     CatalogueInvoiceCreateResult,
     build_catalogue_invoice,
     create_catalogue_invoice,
+    numeric_iva_rate_slots,
 )
 from ._importing import (
     InvoiceImportResult,
@@ -110,6 +111,7 @@ from ._reconciliation import (
     reconcile_invoice_repositories,
 )
 from ._source_resolver import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
+from ._wizard import InvoiceWizardFieldError, InvoiceWizardResult, create_invoice_via_wizard
 
 __all__ = [
     "BULK_INVOICE_IMPORT_ALLOWED_COLUMNS",
@@ -128,10 +130,13 @@ __all__ = [
     "InvoiceReviewProjection",
     "InvoiceRowPayload",
     "InvoiceTransactionLinkResult",
+    "InvoiceWizardFieldError",
+    "InvoiceWizardResult",
     "ReconciliationSkippedSuggestion",
     "apply_manual_invoice_match",
     "build_catalogue_invoice",
     "create_catalogue_invoice",
+    "create_invoice_via_wizard",
     "find_invoice",
     "find_unmatched",
     "get_invoice_from_repository",
@@ -147,6 +152,7 @@ __all__ = [
     "list_unmatched_invoice_repository_rows",
     "list_unmatched_invoice_rows",
     "merge_invoice_import",
+    "numeric_iva_rate_slots",
     "parse_invoice_payload",
     "project_invoice_payment_matches",
     "project_invoice_review",

@@ -91,6 +91,7 @@ from ._service import (
     suggest_reconciliations,
     verify_link_consistency,
 )
+from ._validators import validate_country_code, validate_iva_number
 # isort: on
 
 __all__ = [
@@ -120,5 +121,7 @@ __all__ = [
     "link_transaction",
     "numeric_iva_rate_percentages",
     "suggest_reconciliations",
+    "validate_country_code",
+    "validate_iva_number",
     "verify_link_consistency",
 ]

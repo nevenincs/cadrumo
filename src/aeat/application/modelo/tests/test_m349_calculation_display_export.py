@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -126,13 +127,13 @@ def _calculated_revision(
 ) -> tuple[RegistrySnapshot, WorkUnit, CalculationRevision]:
     snapshot = _m349_snapshot(period=period)
     work_unit = _work_unit(period=period, snapshot=snapshot)
-    row = Modelo349OperadorRow(
-        codigo_pais=country,
-        nif_comunitario=vat_id,
-        razon_social=name,
-        clave_operacion=clave,
-        importe=amount,
-    )
+    row = Modelo349OperadorRow.model_validate({
+        "codigo_pais": country,
+        "nif_comunitario": vat_id,
+        "razon_social": name,
+        "clave_operacion": clave,
+        "importe": amount,
+    })
     binding_values = {
         "iva-349-declarante-numero-operadores": Decimal("1"),
         "iva-349-declarante-importe-operaciones": amount,
@@ -175,8 +176,10 @@ def _calculated_revision(
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    legacy_rendered_revision = "\n".join(calculation_revision_lines(legacy_revision))
-    legacy_payload = calculation_revision_payload(legacy_revision)
+    calc_lines: Any = calculation_revision_lines
+    calc_payload: Any = calculation_revision_payload
+    legacy_rendered_revision = "\n".join(calc_lines(legacy_revision))
+    legacy_payload = calc_payload(legacy_revision)
     assert "casilla\top." not in legacy_rendered_revision
     assert "casilla\trect." not in legacy_rendered_revision
     assert not any(casilla_id.startswith("op.") for casilla_id in legacy_payload.casilla_values)
@@ -305,7 +308,8 @@ def test_m349_calculation_revision_display_and_export_agree_for_operator_row(
         _DECL_NUMERO_RECTIFICACIONES: Decimal("0"),
         _DECL_IMPORTE_RECTIFICACIONES: Decimal("0"),
     }
-    rendered_revision = "\n".join(calculation_revision_lines(revision))
+    calc_lines_inner: Any = calculation_revision_lines
+    rendered_revision = "\n".join(calc_lines_inner(revision))
     assert "casilla\top." not in rendered_revision
     assert "casilla\trect." not in rendered_revision
     assert f"detail_row\t1\toperador\tcodigo_pais={country}" in rendered_revision
@@ -395,7 +399,8 @@ def test_m349_rectification_detail_row_feeds_summary_display_and_export() -> Non
         _DECL_NUMERO_RECTIFICACIONES: Decimal("1"),
         _DECL_IMPORTE_RECTIFICACIONES: Decimal("100.00"),
     }
-    rendered_revision = "\n".join(calculation_revision_lines(revision))
+    calc_lines_rect: Any = calculation_revision_lines
+    rendered_revision = "\n".join(calc_lines_rect(revision))
     assert "casilla\trect." not in rendered_revision
     assert "detail_row\t1\trectificacion\tcodigo_pais=DE" in rendered_revision
     assert "ejercicio=2025" in rendered_revision

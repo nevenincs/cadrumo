@@ -32,6 +32,7 @@ from .....application.filing import build_runtime_schema_provider
 from .....application.filing._export import boe_representable_casilla_ids
 from .....core import Period
 from .....core.resources import resources
+from .....domain.calculations.registry import RegistrySnapshot
 from .. import build_export_plan
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -60,14 +61,14 @@ _COVERED = [
 ]
 
 
-def _workbook_emitted_ids(snapshot) -> set:
+def _workbook_emitted_ids(snapshot: RegistrySnapshot) -> set[str]:
     plan = build_export_plan(snapshot)
     emitted = {cell.casilla_id for cell in plan.value_cells if cell.casilla_id is not None}
     emitted.update(cell.casilla_id for cell in plan.formula_cells)
     return emitted
 
 
-def _boe_representable_ids(modelo: str, year: int, period: str) -> set:
+def _boe_representable_ids(modelo: str, year: int, period: str) -> set[str]:
     provider = build_runtime_schema_provider(
         filing_year=year, period=Period.from_year_and_code(year, period), modelos=(modelo,)
     )
@@ -78,7 +79,7 @@ def _boe_representable_ids(modelo: str, year: int, period: str) -> set:
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
-def test_fichero_boe_files_no_casilla_the_workbook_does_not_compute(modelo, year, period, on) -> None:
+def test_fichero_boe_files_no_casilla_the_workbook_does_not_compute(modelo: str, year: int, period: str, on: date) -> None:
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
     workbook = _workbook_emitted_ids(snapshot)
     boe = _boe_representable_ids(modelo, year, period)
@@ -93,7 +94,7 @@ def test_fichero_boe_files_no_casilla_the_workbook_does_not_compute(modelo, year
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
-def test_both_transports_cover_the_computed_manifest_casillas(modelo, year, period, on) -> None:
+def test_both_transports_cover_the_computed_manifest_casillas(modelo: str, year: int, period: str, on: date) -> None:
     # Both transports must cover every COMPUTED manifest casilla the fichero-BOE
     # can represent (the fichero-BOE via its representable set, the workbook via an
     # emitted cell), so neither drops a required calculation result the other keeps.
@@ -103,6 +104,7 @@ def test_both_transports_cover_the_computed_manifest_casillas(modelo, year, peri
     workbook = _workbook_emitted_ids(snapshot)
     boe = _boe_representable_ids(modelo, year, period)
 
+    assert revision.completeness_manifest is not None
     computed_representable = {
         mc.casilla_id
         for mc in revision.completeness_manifest.casillas

@@ -54,7 +54,7 @@ def _authority_snapshot(modelo: str, filing_year: int, period: str) -> RegistryS
 
 def _observation(nif: str) -> RetencionObservation:
     return RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id=f"tx-{nif}",
         perceptor_nif=nif,
         perceptor_name="Arrendador Ejemplo SL",
@@ -135,7 +135,7 @@ def test_resolver_materialises_modelo_115_count_and_base_from_real_store(tmp_pat
             period=period,
             observations=[
                 RetencionObservation(
-                    source_kind="ledger_transaction",
+                    source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                     source_object_id="rent-ledger-row-001",
                     perceptor_nif="B12345678",
                     perceptor_name="Arrendador Ejemplo SL",
@@ -171,7 +171,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_real_sto
             period=period,
             observations=[
                 RetencionObservation(
-                    source_kind="ledger_transaction",
+                    source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                     source_object_id="payroll-row-001",
                     perceptor_nif="11111111H",
                     perceptor_name="Trabajador Ejemplo",
@@ -181,7 +181,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_real_sto
                     accrued_on="2026-01-31",
                 ),
                 RetencionObservation(
-                    source_kind="ledger_transaction",
+                    source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                     source_object_id="activity-row-001",
                     perceptor_nif="22222222J",
                     perceptor_name="Profesional Ejemplo A",
@@ -191,7 +191,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_real_sto
                     accrued_on="2026-02-28",
                 ),
                 RetencionObservation(
-                    source_kind="ledger_transaction",
+                    source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                     source_object_id="professional-row-001",
                     perceptor_nif="33333333P",
                     perceptor_name="Profesional Ejemplo B",
@@ -201,7 +201,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_real_sto
                     accrued_on="2026-03-15",
                 ),
                 RetencionObservation(
-                    source_kind="ledger_transaction",
+                    source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                     source_object_id="prize-row-001",
                     perceptor_nif="44444444A",
                     perceptor_name="Premio Ejemplo",

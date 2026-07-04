@@ -66,10 +66,10 @@ _P_2025_Q1 = Period.from_year_and_code(2025, "1T")
 _P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
 
 
-def _retencion_obs(*, source_kind: str = "ledger_transaction") -> RetencionObservation:
+def _retencion_obs(*, source_kind: BindingSourceKind = BindingSourceKind.LEDGER_TRANSACTION) -> RetencionObservation:
     return RetencionObservation(
         source_kind=source_kind,
-        source_object_id=f"{source_kind}-ret-1",
+        source_object_id=f"{source_kind.value}-ret-1",
         perceptor_nif="B00000001",
         perceptor_name="Proveedor Retencion",
         scheme=RetencionScheme.WORK_INCOME,
@@ -107,7 +107,7 @@ def _counterpart_obs(
 
 def _asset_obs(
     *,
-    source_kind: str = "purchase_invoice_evidence",
+    source_kind: BindingSourceKind = BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
     source_id: str | None = None,
     asset_class: ForeignAssetClass = ForeignAssetClass.ACCOUNT,
     asset_external_id: str | None = None,
@@ -117,9 +117,9 @@ def _asset_obs(
 ) -> ForeignAssetIngestObservation:
     return ForeignAssetIngestObservation(
         source_kind=source_kind,
-        source_object_id=source_id or f"{source_kind}-asset-1",
+        source_object_id=source_id or f"{source_kind.value}-asset-1",
         asset_class=asset_class,
-        asset_external_id=asset_external_id or f"{source_kind}-account",
+        asset_external_id=asset_external_id or f"{source_kind.value}-account",
         country=country,
         valuation_eur=Decimal(valuation),
         acquisition_date=acquisition_date,
@@ -209,7 +209,7 @@ def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None
     command = PerModeloAggregationCommand(
         modelo="111",
         period=_P_2025_Q1,
-        retencion_observations=(_retencion_obs(source_kind="ledger_transaction"),),
+        retencion_observations=(_retencion_obs(source_kind=BindingSourceKind.LEDGER_TRANSACTION),),
     )
 
     result = aggregate_per_modelo(command)
@@ -313,8 +313,8 @@ def test_counterpart_m349_mesh_resolution_matches_prior_aggregate_exactly() -> N
 
 def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics() -> None:
     observations = (
-        _asset_obs(source_kind="purchase_invoice_evidence", valuation="25000.00"),
-        _asset_obs(source_kind="payable_invoice", valuation="25000.01"),
+        _asset_obs(source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE, valuation="25000.00"),
+        _asset_obs(source_kind=BindingSourceKind.PAYABLE_INVOICE, valuation="25000.01"),
     )
     command = PerModeloAggregationCommand(
         modelo="720",
@@ -336,7 +336,7 @@ def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics(
 def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> None:
     observations = (
         _asset_obs(
-            source_kind="ledger_transaction",
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
             source_id="tx-account-ad",
             asset_external_id="AD-ACCOUNT-001",
             country="AD",
@@ -344,7 +344,7 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
             acquisition_date="2020-01-15",
         ),
         _asset_obs(
-            source_kind="payable_invoice",
+            source_kind=BindingSourceKind.PAYABLE_INVOICE,
             source_id="payable-account-ch",
             asset_external_id="CH-ACCOUNT-002",
             country="CH",
@@ -352,7 +352,7 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
             acquisition_date="2021-02-20",
         ),
         _asset_obs(
-            source_kind="collectible_invoice",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             source_id="small-security",
             asset_class=ForeignAssetClass.SECURITY,
             asset_external_id="LI-SECURITY-001",
@@ -535,7 +535,7 @@ def _mixed_scheme_retencion_observations() -> tuple[RetencionObservation, ...]:
 
     def _obs(*, nif: str, name: str, scheme: RetencionScheme, base: str, ret: str) -> RetencionObservation:
         return RetencionObservation(
-            source_kind="ledger_transaction",
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
             source_object_id=f"ledger_transaction-{nif}",
             perceptor_nif=nif,
             perceptor_name=name,
@@ -601,7 +601,7 @@ def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count() ->
     # distinct NIFs must still count as two perceptors through the one shared path.
     observations = (
         RetencionObservation(
-            source_kind="ledger_transaction",
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
             source_object_id="ledger_transaction-urban-a",
             perceptor_nif="B00000041",
             perceptor_name="Arrendador A",
@@ -611,7 +611,7 @@ def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count() ->
             accrued_on="2025-03-01",
         ),
         RetencionObservation(
-            source_kind="ledger_transaction",
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
             source_object_id="ledger_transaction-urban-b",
             perceptor_nif="B00000042",
             perceptor_name="Arrendador B",

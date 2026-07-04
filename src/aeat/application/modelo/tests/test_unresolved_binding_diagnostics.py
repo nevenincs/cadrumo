@@ -31,7 +31,7 @@ import pytest
 
 from ....core import BindingSourceKind
 from ....core.resources import resources
-from ....domain.calculations.registry import FormulaExpression, RegistryValidationError
+from ....domain.calculations.registry import FormulaExpression, ModeloRevision, RegistryValidationError
 from ....domain.calculations.registry._formula_runtime import (
     _evaluate_expression,
     _UnresolvedFormulaDependencyError,
@@ -44,7 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _LEDGER_IVA = BindingSourceKind.LEDGER_IVA_AGGREGATION
 
 
-def _modelo_303_revision() -> object:
+def _modelo_303_revision() -> ModeloRevision:
     return resources().modelos.authority.snapshot("303", filing_year=2024, period="1T").revision
 
 

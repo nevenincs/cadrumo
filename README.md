@@ -70,6 +70,7 @@ Every command carries its own `--help`.
 ## Getting help
 
 Report bugs and ask questions on the [issue tracker](https://github.com/wgergely/aeat/issues).
+Report a security vulnerability privately instead, per [`SECURITY.md`](SECURITY.md).
 
 ## Documentation
 
