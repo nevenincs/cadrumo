@@ -29,14 +29,32 @@ _WORKSPACE_HASH = "a" * 64
 _CAPTURED_AT = "2026-07-04T00:00:00+00:00"
 
 
-def test_registry_starts_empty_no_producer_wired_yet() -> None:
-    """The metric registry is deliberately empty in this slice.
+def test_registry_declares_only_the_wired_non_sensitive_operational_commands() -> None:
+    """The metric registry is closed to exactly the commands with a real producer.
 
-    No producer has been wired to emit remote-eligible telemetry yet; this
-    slice ships only the gate, the schema, and the scrub. A future slice adds
-    registry entries alongside its producer.
+    This slice wires three non-sensitive operational producers (CLI
+    command-invocation counting, local-LLM-run counting/timing, error-kind
+    frequency counting). No other command is registered.
     """
-    assert dict(TELEMETRY_METRIC_REGISTRY) == {}
+    assert set(TELEMETRY_METRIC_REGISTRY) == {
+        "diagnostics.command_invocation",
+        "diagnostics.llm_run",
+        "diagnostics.error_frequency",
+    }
+
+
+@pytest.mark.parametrize("command", list(TELEMETRY_METRIC_REGISTRY))
+def test_every_registered_metric_key_is_remote_allowed_and_non_sensitive(command: str) -> None:
+    """Every declared counter/timing on every registered command is a plain
+    operational count or duration -- never a field shaped like financial or
+    identity content.
+    """
+    schema = TELEMETRY_METRIC_REGISTRY[command]
+    forbidden_substrings = ("nif", "amount", "iban", "name", "description", "message", "path", "profile_id")
+    for key, spec in {**schema.counters, **schema.timings_ms}.items():
+        assert spec.remote_allowed is True
+        lowered = key.lower()
+        assert not any(bad in lowered for bad in forbidden_substrings), key
 
 
 def test_payload_rejects_an_unknown_field_structurally() -> None:

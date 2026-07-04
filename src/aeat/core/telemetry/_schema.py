@@ -127,13 +127,81 @@ class TelemetryEventPayload(BaseModel):
     captured_at: str = Field(min_length=1)
 
 
-TELEMETRY_METRIC_REGISTRY: Mapping[str, MetricSchema] = MappingProxyType({})
+TELEMETRY_METRIC_REGISTRY: Mapping[str, MetricSchema] = MappingProxyType(
+    {
+        "diagnostics.command_invocation": MetricSchema(
+            command="diagnostics.command_invocation",
+            counters={
+                "invocations": CounterSpec(
+                    description="Count of completed CLI command invocations, regardless of outcome.",
+                    remote_allowed=True,
+                ),
+                "succeeded": CounterSpec(
+                    description="Count of completed CLI command invocations that succeeded.",
+                    remote_allowed=True,
+                ),
+                "failed": CounterSpec(
+                    description="Count of completed CLI command invocations that raised.",
+                    remote_allowed=True,
+                ),
+            },
+            timings_ms={
+                "duration": TimingSpec(
+                    description="Wall-clock CLI command invocation duration in milliseconds.",
+                    remote_allowed=True,
+                ),
+            },
+        ),
+        "diagnostics.llm_run": MetricSchema(
+            command="diagnostics.llm_run",
+            counters={
+                "runs": CounterSpec(
+                    description="Count of completed local LLM classification/completion runs.",
+                    remote_allowed=True,
+                ),
+                "succeeded": CounterSpec(
+                    description="Count of local LLM runs that completed without raising.",
+                    remote_allowed=True,
+                ),
+                "failed": CounterSpec(
+                    description="Count of local LLM runs that raised.",
+                    remote_allowed=True,
+                ),
+            },
+            timings_ms={
+                "duration": TimingSpec(
+                    description="Wall-clock local LLM run duration in milliseconds.",
+                    remote_allowed=True,
+                ),
+            },
+        ),
+        "diagnostics.error_frequency": MetricSchema(
+            command="diagnostics.error_frequency",
+            counters={
+                "occurrences": CounterSpec(
+                    description=(
+                        "Count of occurrences of a single closed error-kind label "
+                        "(an exception class name, never free exception text)."
+                    ),
+                    remote_allowed=True,
+                ),
+            },
+        ),
+    },
+)
 """Closed command -> :class:`MetricSchema` registry.
 
-Deliberately empty in this slice: no producer wires a remote-eligible metric
-yet (per ``2026-07-04-remote-telemetry-adr``, the gate and schema land before
-any producer). A future slice adds entries here alongside the producer that
-uses them.
+Every entry declares only non-sensitive operational counters/timings: CLI
+command-invocation counts and duration, local-LLM-run counts and duration, and
+error-kind occurrence frequency. ``error_kind`` on :class:`TelemetryEventPayload`
+is always a short closed label (an exception class name such as
+``"LLMClassifierError"``, mirroring
+:attr:`~aeat.adapters.outbound.llm.LLMRunRecord.error_kind`) -- never raw
+exception text, a file path, a NIF, or any other operator-controlled content.
+No entry here declares a counter/timing keyed by anything financial, personal,
+or free-text; extending this registry with such a key is refused structurally
+by :class:`TelemetryEventPayload`'s ``extra="forbid"`` allowlist regardless of
+what a producer attempts to pass.
 """
 
 

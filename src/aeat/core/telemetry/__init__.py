@@ -20,6 +20,14 @@ No network transport ships in this slice. :func:`emit_telemetry_event`'s
 default sink, :class:`LocalNoopTelemetrySink`, discards the payload -- this
 proves the gate-then-schema-then-emit pipeline end-to-end without any real
 transmission, per ``2026-07-04-remote-telemetry-adr``.
+
+Three non-sensitive operational producers are wired in this slice
+(:func:`emit_command_invocation_telemetry`, :func:`emit_llm_run_telemetry`,
+:func:`emit_error_frequency_telemetry`), each registered in
+:data:`TELEMETRY_METRIC_REGISTRY` and exercising the full gate-then-schema-
+then-emit pipeline against the local sink. No live network transport ships
+here either; a future slice wires a real HTTP sink behind the same
+:class:`TelemetrySink` protocol.
 """
 
 from __future__ import annotations
@@ -27,6 +35,11 @@ from __future__ import annotations
 from ._consent import telemetry_emit_permitted
 from ._emit import LocalNoopTelemetrySink, TelemetrySink, emit_telemetry_event
 from ._errors import TelemetrySchemaError
+from ._producers import (
+    emit_command_invocation_telemetry,
+    emit_error_frequency_telemetry,
+    emit_llm_run_telemetry,
+)
 from ._schema import (
     TELEMETRY_METRIC_REGISTRY,
     CounterSpec,
@@ -47,6 +60,9 @@ __all__ = [
     "TelemetryTier",
     "TimingSpec",
     "build_telemetry_payload",
+    "emit_command_invocation_telemetry",
+    "emit_error_frequency_telemetry",
+    "emit_llm_run_telemetry",
     "emit_telemetry_event",
     "telemetry_emit_permitted",
     "workspace_hash",
