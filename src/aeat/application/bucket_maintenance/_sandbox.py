@@ -3,35 +3,35 @@
 A sandbox is an ordinary profile bucket distinguished only by a reserved
 operator-visible label prefix (:data:`SANDBOX_LABEL_PREFIX`). It rides the
 exact same encrypted per-bucket storage substrate every profile uses
-(:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` via the
+(:class:`~adapters.persistence.storage.SecureObjectRepository` via the
 bucket-scoped runtime wrapper): there is no plaintext scratch directory and no
 parallel storage backend. Isolation is the pre-existing per-bucket engine
 guarantee (see
-:mod:`~aeat.application.workflow.tests.test_per_bucket_engine_isolation`);
+:mod:`~application.workflow.tests.test_per_bucket_engine_isolation`);
 this module adds nothing to that guarantee, it only composes the existing
 single-writer primitives behind an experiment-lifecycle vocabulary.
 
 The service delegates every write to an existing primitive
 (``composition-service-no-parallel-write-path``):
 
-- :func:`~aeat.application.user_profile.register_active_profile` (via the
+- :func:`~application.user_profile.register_active_profile` (via the
   ``config profile create`` / ``duplicate`` atomic-create span) provisions
   the sandbox bucket, optionally seeded from a source profile's live facts —
   exactly the same fork ``config profile duplicate`` already performs. The
   source bucket is opened read-only (a lifecycle-service ``read``) and is
   never written to, so seeding cannot mutate main state.
-- :func:`~aeat.application.user_profile.select_profile_with_lifecycle_span`
+- :func:`~application.user_profile.select_profile_with_lifecycle_span`
   activates a named sandbox as the current session (``config switch``'s
   primitive).
-- :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.delete
+- :class:`~application.bucket_maintenance.BucketMaintenanceService`.delete
   composes the existing soft-tombstone-then-hard-erase primitives to discard
   the sandbox bucket entirely.
-- :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.archive
+- :class:`~application.bucket_maintenance.BucketMaintenanceService`.archive
   composes the soft-tombstone-only primitive to move a sandbox into reversible
   dormancy (the bucket directory, manifest, and encrypted record survive
-  intact); :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.restore
+  intact); :meth:`~application.bucket_maintenance.BucketMaintenanceService`.restore
   is its symmetric inverse.
-- :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.browse
+- :class:`~application.bucket_maintenance.BucketMaintenanceService`.browse
   (via a read-only lifecycle session, not the active bucket) backs
   :func:`preview_discard_sandbox`, so an operator can see what a discard would
   remove before confirming it.
@@ -42,7 +42,7 @@ bulk verb composes the same single-bucket primitives per row rather than
 re-implementing bucket erasure.
 
 The destructive-action protocol mirrors
-:class:`~aeat.application.bucket_maintenance.DeleteBucketCommand`: a discard
+:class:`~application.bucket_maintenance.DeleteBucketCommand`: a discard
 requires ``confirmed=True``, refuses the active bucket (the operator switches
 away first — the existing ``BucketMaintenanceService.delete`` contract), and
 additionally refuses to discard any bucket whose label is not sandbox-tagged
@@ -129,7 +129,7 @@ class SandboxMergeScope(StrEnum):
     """Closed axis of promotable data categories a sandbox merge may select.
 
     ``LEDGER`` promotes ledger transactions only (the manual/imported
-    :class:`~aeat.domain.transactions.Transaction` catalogue, which already
+    :class:`~domain.transactions.Transaction` catalogue, which already
     carries classification decisions on each row). ``MODELO`` promotes the
     modelo work-unit, calculation-revision, and filing-record catalogues.
     ``ALL`` promotes every one of the above in one call.
@@ -145,7 +145,7 @@ class PreviewDiscardSandboxCommand(BaseModel):
 
     Read-only counterpart to :class:`DiscardSandboxCommand`: it never opens
     the target bucket for write and never calls
-    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.delete.
+    :meth:`~application.bucket_maintenance.BucketMaintenanceService`.delete.
     ``allow_non_sandbox`` mirrors the discard command's escape hatch so a
     preview against a non-sandbox bucket reports the same "not a sandbox"
     refusal a real discard would, rather than silently previewing an erase
@@ -162,7 +162,7 @@ class PreviewDiscardSandboxResult(BaseModel):
     """Read-only preview of what discarding a sandbox would remove.
 
     ``namespaces`` is the same per-namespace row-count inventory
-    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.browse
+    :meth:`~application.bucket_maintenance.BucketMaintenanceService`.browse
     returns for the active bucket, computed here for a bucket that need not
     be active. ``is_active`` flags whether the target is the current session
     — a real discard of it would be refused until the operator switches away.
@@ -219,7 +219,7 @@ class DiscardSandboxCommand(BaseModel):
     """Operator request to permanently erase a sandbox bucket.
 
     ``confirmed=True`` is required, mirroring
-    :class:`~aeat.application.bucket_maintenance.DeleteBucketCommand`.
+    :class:`~application.bucket_maintenance.DeleteBucketCommand`.
     ``allow_non_sandbox`` must be explicitly set to erase a bucket whose
     label does NOT carry the reserved sandbox prefix — the default refuses,
     so a mistaken discard of a real profile is not silently possible.
@@ -247,7 +247,7 @@ class ArchiveSandboxCommand(BaseModel):
 
     Unlike :class:`DiscardSandboxCommand`, ``archive`` never removes the
     sandbox bucket: it composes
-    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.archive
+    :meth:`~application.bucket_maintenance.BucketMaintenanceService`.archive
     (soft tombstone only), so the bucket directory, manifest, and
     encrypted record all survive intact and :func:`restore_sandbox` can
     bring the same sandbox back. ``confirmed=True`` mirrors
@@ -337,8 +337,8 @@ def create_sandbox(command: CreateSandboxCommand) -> CreateSandboxResult:
     """Fork a fresh, isolated sandbox bucket and make it the active profile.
 
     Composes the canonical atomic-create span
-    (:func:`~aeat.application.user_profile.profile_create_storage_span` +
-    :func:`~aeat.application.user_profile.register_active_profile`) — the
+    (:func:`~application.user_profile.profile_create_storage_span` +
+    :func:`~application.user_profile.register_active_profile`) — the
     exact primitive ``config profile create`` and ``config profile
     duplicate`` already use — so the sandbox bucket, its manifest, its
     encrypted record, and the active-profile pointer land in one
@@ -410,7 +410,7 @@ def preview_discard_sandbox(command: PreviewDiscardSandboxCommand) -> PreviewDis
     """Report what discarding ``command.bucket_id`` would remove, without removing it.
 
     Reads the target bucket's namespace inventory through a read-only
-    lifecycle session (:func:`~aeat.application.user_profile.profile_storage_session`)
+    lifecycle session (:func:`~application.user_profile.profile_storage_session`)
     — the identical read-only pattern :func:`create_sandbox` already uses to
     seed from a non-active source profile — so a sandbox need not be the
     active bucket to be previewed. No write primitive is invoked; the target
@@ -472,7 +472,7 @@ def list_sandboxes() -> tuple[tuple[BucketId, str], ...]:
 def discard_sandbox(command: DiscardSandboxCommand) -> DiscardSandboxResult:
     """Permanently erase the sandbox bucket identified by ``command.bucket_id``.
 
-    Composes :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.delete
+    Composes :class:`~application.bucket_maintenance.BucketMaintenanceService`.delete
     — the same soft-tombstone-then-hard-directory-removal primitive
     ``config profile delete`` uses — after confirming the target either
     carries the reserved sandbox label or the caller explicitly set
@@ -505,7 +505,7 @@ def discard_sandbox(command: DiscardSandboxCommand) -> DiscardSandboxResult:
 def archive_sandbox(command: ArchiveSandboxCommand) -> ArchiveSandboxResult:
     """Move the sandbox bucket identified by ``command.bucket_id`` into reversible dormancy.
 
-    Composes :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.archive
+    Composes :class:`~application.bucket_maintenance.BucketMaintenanceService`.archive
     — the same soft-tombstone-only primitive that leaves the bucket
     directory, manifest, and encrypted record intact — after confirming
     the target either carries the reserved sandbox label or the caller
@@ -534,7 +534,7 @@ def archive_sandbox(command: ArchiveSandboxCommand) -> ArchiveSandboxResult:
 def restore_sandbox(command: RestoreSandboxCommand) -> RestoreSandboxResult:
     """Bring the archived sandbox bucket identified by ``command.bucket_id`` back to active.
 
-    Composes :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.restore
+    Composes :class:`~application.bucket_maintenance.BucketMaintenanceService`.restore
     — the symmetric inverse of :func:`archive_sandbox` — after confirming
     the target either carries the reserved sandbox label or the caller
     explicitly set ``allow_non_sandbox=True``. Refuses when the target is
@@ -565,7 +565,7 @@ def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
 
     Composes the SAME typed-catalogue repositories and domain upsert
     primitives the portable-bundle import path
-    (:func:`~aeat.application.user_profile.deserialize_profile_bundle`) uses
+    (:func:`~application.user_profile.deserialize_profile_bundle`) uses
     for ledger/work-unit/calculation-revision/filing-record restore
     (``composition-service-no-parallel-write-path``): this function does not
     reimplement a write path, it selects which of those existing upserts to
