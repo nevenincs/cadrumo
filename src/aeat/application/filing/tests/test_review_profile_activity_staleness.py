@@ -27,7 +27,7 @@ import pytest
 from ....core import Period, read_pointer
 from ....core.config import load_settings
 from ....domain.submission import ModeloDraftStatus
-from ....entrypoints.cli.tests._profile_cli_support import create_quiet_profile, edit_quiet_profile
+from ....entrypoints.cli.tests import create_quiet_profile, edit_quiet_profile
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...user_profile import profile_storage_session
 from .. import (
