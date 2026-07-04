@@ -16,17 +16,18 @@ or the corpus-split escape hatch declared below.
 
 The corpus-split escape hatch has since been PARTIALLY realised at the wheel
 boundary: the wheel-split decision ships the corpus source binaries
-(``corpus/**/*.{pdf,xls,xlsx}``) in the separate ``aeat-data`` companion and the
-derived runtime surfaces in the slim ``aeat`` wheel — from the ONE source tree,
-which is unchanged, so the 550 MiB total-tree gate still stands and still guards
-every byte. But a single total ceiling could now be silently EVADED by the
-split: runtime (slim-wheel) payload could balloon while the total stays under
-budget because the corpus-binary slice happened to shrink, and neither
-distribution's own growth would be visible. So the budget is measured per
-distribution as well: the tree is partitioned exhaustively into the runtime
-(slim ``aeat`` wheel) slice and the corpus-binary (``aeat-data`` companion)
-slice, each carries its own ceiling, and the partition is asserted exhaustive so
-no byte can hide between the two.
+(``corpus/**/*.{pdf,xls,xlsx}``) in the two ``aeat-data-manuals`` /
+``aeat-data-official`` companions and the derived runtime surfaces in the slim
+``aeat`` wheel — from the ONE source tree, which is unchanged, so the 550 MiB
+total-tree gate still stands and still guards every byte. But a single total
+ceiling could now be silently EVADED by the split: runtime (slim-wheel) payload
+could balloon while the total stays under budget because the corpus-binary slice
+happened to shrink, and neither side's own growth would be visible. So the budget
+is measured per side as well: the tree is partitioned exhaustively into the
+runtime (slim ``aeat`` wheel) slice and the corpus-binary slice (the ONE slice
+the two ``aeat-data-*`` companions ship between them), each carries its own
+ceiling, and the partition is asserted exhaustive so no byte can hide between the
+two.
 
 The gate reads the tree size directly (summed file bytes, deterministic across
 filesystems, unlike block-rounded ``du``) so the arithmetic lives in one place.
@@ -43,10 +44,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DATA_ROOT = SRC_AEAT / "_data"
 
-# Corpus source binaries — the slice the wheel-split ships in the ``aeat-data``
-# companion; everything else in the tree is the runtime (slim ``aeat`` wheel)
-# slice. A file is a corpus source binary when it lives under ``corpus/`` and
-# carries one of these suffixes (the same pattern the aeat wheel excludes).
+# Corpus source binaries — the slice the wheel-split ships across the two
+# ``aeat-data-*`` companions; everything else in the tree is the runtime (slim
+# ``aeat`` wheel) slice. A file is a corpus source binary when it lives under
+# ``corpus/`` and carries one of these suffixes (the same pattern the aeat wheel
+# excludes).
 _CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
 
 # Declared budget: 550 MiB — the 516 MiB measured at the most recent review plus
@@ -95,9 +97,10 @@ def _data_tree_bytes() -> int:
 def _data_slice_bytes() -> tuple[int, int, int]:
     """Return ``(total, corpus_binary, runtime)`` byte sizes, partitioning the tree.
 
-    ``corpus_binary`` is the ``aeat-data`` companion slice and ``runtime`` is the
-    slim ``aeat`` wheel slice; the two are disjoint and exhaustive, so
-    ``corpus_binary + runtime == total`` by construction.
+    ``corpus_binary`` is the slice the two ``aeat-data-*`` companions ship
+    between them and ``runtime`` is the slim ``aeat`` wheel slice; the two are
+    disjoint and exhaustive, so ``corpus_binary + runtime == total`` by
+    construction.
     """
 
     total = 0
@@ -145,17 +148,17 @@ def test_runtime_slice_within_slim_wheel_budget() -> None:
         f"the runtime (slim aeat wheel) _data slice is {runtime_mib:.1f} MiB, over the "
         f"{_RUNTIME_DATA_BUDGET_MIB} MiB per-distribution ceiling. This slice is the tree minus the corpus source "
         f"binaries (extracted text, normative html, registry, terminology, agent data). Raise the ceiling with a "
-        f"reviewed decision that records why the runtime payload grew, or move payload to the aeat-data companion."
+        f"reviewed decision that records why the runtime payload grew, or move payload to the aeat-data-* companions."
     )
 
 
 def test_corpus_binary_slice_within_companion_budget() -> None:
-    """The corpus-binary (``aeat-data`` companion) slice stays under its ceiling."""
+    """The corpus-binary (``aeat-data-*`` companions) slice stays under its ceiling."""
 
     _total, corpus_binary, _runtime = _data_slice_bytes()
     corpus_mib = corpus_binary / 1024 / 1024
     assert corpus_binary <= _CORPUS_BINARY_BUDGET_BYTES, (
-        f"the corpus-binary (aeat-data companion) _data slice is {corpus_mib:.1f} MiB, over the "
+        f"the corpus-binary (aeat-data-* companions) _data slice is {corpus_mib:.1f} MiB, over the "
         f"{_CORPUS_BINARY_BUDGET_MIB} MiB per-distribution ceiling. Raise the ceiling with a reviewed decision that "
         f"records why the corpus source binaries grew."
     )
