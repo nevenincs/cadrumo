@@ -134,7 +134,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_DOMAIN_RETENTION_FLOOR",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_retention_floor",
-            default_suggestion="aeat config profile erase --help",
+            default_suggestion="aeat config profile delete --help",
             retryable=False,
             runbook_id=None,
         ),
