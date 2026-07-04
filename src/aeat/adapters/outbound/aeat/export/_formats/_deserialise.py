@@ -1,7 +1,7 @@
 """Fichero-BOE deserialiser for explicit fixed-width specs.
 
 Round-trip inverse of
-:func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`.
+:func:`adapters.outbound.aeat.export._formats._serialise.serialise`.
 Takes a fichero-BOE byte payload plus a :class:`RecordFieldSpec` tuple and
 yields a :class:`ParsedRecord` carrying the per-field values (as
 strings, :class:`datetime.date` for date fields, or
@@ -11,14 +11,14 @@ Use this module when the caller already has adapter-local
 :class:`RecordFieldSpec` or :class:`SegmentSpec` declarations and needs a
 byte-level round-trip check. The application export-verification flow
 parses registry layouts through
-:func:`aeat.domain.calculations.registry.parse_export_payload` so it can
+:func:`domain.calculations.registry.parse_export_payload` so it can
 compare a file against the canonical
-:class:`aeat.domain.calculations.registry.ExportLayoutDefinition`.
+:class:`domain.calculations.registry.ExportLayoutDefinition`.
 
 See Also:
-    :func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`
+    :func:`adapters.outbound.aeat.export._formats._serialise.serialise`
         Explicit-spec serialiser that produces the bytes parsed here.
-    :class:`aeat.domain.calculations.registry.ParsedExportPayload`
+    :class:`domain.calculations.registry.ParsedExportPayload`
         Registry-level parsed payload used by the application verifier.
 """
 
@@ -53,7 +53,7 @@ class ParsedRecord(BaseModel):
     Each field value is keyed by ``field_id``; currency fields also appear
     in :attr:`casilla_values` keyed by ``casilla_id`` for easy
     cross-reference against
-    :class:`aeat.application.filing.ModeloDraft`.
+    :class:`application.filing.ModeloDraft`.
 
     Attributes:
         field_values: Every ``field_id`` mapped to its parsed value
@@ -67,7 +67,7 @@ class ParsedRecord(BaseModel):
     See Also:
         :class:`RecordFieldSpec`
             Field declarations that drive the parser.
-        :class:`aeat.domain.calculations.registry.ParsedExportPayload`
+        :class:`domain.calculations.registry.ParsedExportPayload`
             Registry-level parser result for application export
             verification.
     """
@@ -96,7 +96,7 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
     """Decode a zero-padded cents string into a 2-decimal :class:`Decimal`.
 
     Inverse of
-    :func:`aeat.adapters.outbound.aeat.export._formats._record_spec.encode_currency`.
+    :func:`adapters.outbound.aeat.export._formats._record_spec.encode_currency`.
     With ``inline_sign=True``, byte 0 is the sign marker (``"N"`` for
     negatives, ``" "`` for non-negatives) and the remaining bytes carry
     the zero-padded absolute magnitude.
@@ -351,7 +351,7 @@ class ParsedEnvelope(BaseModel):
     See Also:
         :class:`SegmentSpec`
             Segment declarations consumed by :func:`deserialise_envelope`.
-        :func:`aeat.domain.calculations.registry.parse_export_payload`
+        :func:`domain.calculations.registry.parse_export_payload`
             Registry-level parser for application export verification.
     """
 
