@@ -124,7 +124,9 @@ def test_conditional_computed_casilla_trace_equals_declared_formula_inputs() -> 
     """
     draft, schema_provider = _build_modelo_303_1t_draft()
     collection = schema_provider.get_collection("303")
-    declared_inputs = collection.get(_M303_PRORRATA_PORCENTAJE_CASILLA).formula_input_casilla_ids
+    schema = collection.get(_M303_PRORRATA_PORCENTAJE_CASILLA)
+    assert schema is not None
+    declared_inputs = schema.formula_input_casilla_ids
 
     # The casilla genuinely has more than one declared input (both branches of
     # the conditional reference distinct casillas); otherwise the short-circuit

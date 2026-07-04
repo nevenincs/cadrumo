@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 # Claude Desktop install proof — aeat plugin
 
 Live verification record for the claude-ecosystem-packaging campaign

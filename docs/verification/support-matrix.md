@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 # Verified support matrix — aeat Claude plugin
 
 The measured — never aspirational — client support state for the aeat

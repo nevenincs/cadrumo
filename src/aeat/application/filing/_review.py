@@ -111,6 +111,10 @@ class ModeloApprovalStaleReason(StrEnum):
         PRIOR_FILING_OBSERVATIONS_CHANGED: Prior filed observations in the
             bucket (the previous_filing carry and relation fold-in source)
             have been updated since approval.
+        PROFILE_ACTIVITY_CHANGED: The taxpayer profile facts that scope
+            relation resolution (activity-start date, m111 no-retenciones
+            attestations, declared income categories) have changed since
+            approval.
         CATEGORY_PROFILES_CHANGED: The fiscal category profile catalog
             has been edited since approval.
         SCHEMA_FORMULA_CHANGED: The registry-backed casilla schema or formula set
@@ -123,6 +127,7 @@ class ModeloApprovalStaleReason(StrEnum):
     TRANSACTION_CATALOGUE_CHANGED = "CATALOGO_TRANSACCIONES_CAMBIADO"
     INVOICE_CATALOGUE_CHANGED = "CATALOGO_FACTURAS_CAMBIADO"
     PRIOR_FILING_OBSERVATIONS_CHANGED = "OBSERVACIONES_DECLARACIONES_ANTERIORES_CAMBIADAS"
+    PROFILE_ACTIVITY_CHANGED = "ACTIVIDAD_PERFIL_CAMBIADA"
     CATEGORY_PROFILES_CHANGED = "PERFILES_CATEGORIA_CAMBIADOS"
     SCHEMA_FORMULA_CHANGED = "ESQUEMA_FORMULA_CAMBIADO"
 
@@ -135,6 +140,7 @@ def compute_current_approval_basis(
     transaction_catalogue: TransactionCatalogue | None = None,
     invoice_catalogue: InvoiceCatalogue | None = None,
     prior_filing_observations_fingerprint: str | None = None,
+    profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
 ) -> ModeloApprovalBasis:
     """Return the :class:`ModeloApprovalBasis` digests for current upstream state.
@@ -143,16 +149,18 @@ def compute_current_approval_basis(
     persisted :class:`TransactionCatalogue`, the supplied or persisted
     :class:`~domain.invoices.InvoiceCatalogue` (a calculation source
     resolved through the source mesh), the bucket's prior filed observations (the
-    ``previous_filing`` carry and relation fold-in source), the supplied or bundled
+    ``previous_filing`` carry and relation fold-in source), the bucket's taxpayer
+    profile facts that scope relation resolution, the supplied or bundled
     :class:`~domain.categories.CategoryProfile` mapping, and the active
     registry schema/formula surface exposed by ``schema_provider``.
 
-    The invoice-catalogue and prior-filing-observations digests make an
-    ``APROBADO`` draft stale when its upstream invoices or prior filed values
-    change, closing the gap left by fingerprinting only the ledger transaction
-    catalogue. Like the transaction catalogue they are self-loaded from
-    ``bucket_id`` so stale detection is reproducible at refresh time without
-    running the source mesh in the review layer.
+    The invoice-catalogue, prior-filing-observations, and profile-activity digests
+    make an ``APROBADO`` draft stale when its upstream invoices, prior filed
+    values, or relation-scoping profile facts change, closing the gap left by
+    fingerprinting only the ledger transaction catalogue. Like the transaction
+    catalogue they are self-loaded from ``bucket_id`` so stale detection is
+    reproducible at refresh time without running the source mesh in the review
+    layer.
 
     Args:
         draft: The :class:`domain.filing.ModeloDraft` whose basis
@@ -176,6 +184,11 @@ def compute_current_approval_basis(
             skip the bucket self-load for a deterministic basis without exposing
             the private stored-observation envelope type or routing to a
             non-active bucket.
+        profile_activity_fingerprint: Optional precomputed taxpayer-profile
+            digest. When ``None``, the digest is self-loaded from the bucket's
+            :class:`~application.user_profile.ProfileRepository`. A precomputed
+            override (typically :func:`empty_profile_activity_fingerprint`) lets a
+            caller skip the bucket self-load for a deterministic basis.
         category_profiles: Optional override of the active category
             profile map. Defaults to the bundled 2025 registry.
 
@@ -189,6 +202,11 @@ def compute_current_approval_basis(
         if prior_filing_observations_fingerprint is not None
         else _load_prior_filing_observations_fingerprint(bucket_id)
     )
+    profile_fingerprint = (
+        profile_activity_fingerprint
+        if profile_activity_fingerprint is not None
+        else _load_profile_activity_fingerprint(bucket_id)
+    )
     profiles = category_profiles if category_profiles is not None else resolve_category_profiles(2025)
     return ModeloApprovalBasis(
         draft_payload_fingerprint=draft.draft_id,
@@ -196,6 +214,7 @@ def compute_current_approval_basis(
         transaction_catalogue_fingerprint=_transaction_catalogue_fingerprint(catalogue),
         invoice_catalogue_fingerprint=_invoice_catalogue_fingerprint(invoices),
         prior_filing_observations_fingerprint=prior_observations_fingerprint,
+        profile_activity_fingerprint=profile_fingerprint,
         category_profiles_fingerprint=_category_profiles_fingerprint(profiles),
         schema_formula_fingerprint=_schema_formula_fingerprint(
             draft,
@@ -224,6 +243,7 @@ def approval_stale_reasons(
     transaction_catalogue: TransactionCatalogue | None = None,
     invoice_catalogue: InvoiceCatalogue | None = None,
     prior_filing_observations_fingerprint: str | None = None,
+    profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
 ) -> tuple[ModeloApprovalStaleReason, ...]:
     """Return the ordered stale reasons for ``draft``.
@@ -243,6 +263,8 @@ def approval_stale_reasons(
             override; forwarded to :func:`compute_current_approval_basis`.
         prior_filing_observations_fingerprint: Optional precomputed prior-filing
             digest override; forwarded to :func:`compute_current_approval_basis`.
+        profile_activity_fingerprint: Optional precomputed taxpayer-profile
+            digest override; forwarded to :func:`compute_current_approval_basis`.
         category_profiles: Optional category profile map override.
 
     Returns:
@@ -259,6 +281,7 @@ def approval_stale_reasons(
         transaction_catalogue=transaction_catalogue,
         invoice_catalogue=invoice_catalogue,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
+        profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
     )
     reasons: list[ModeloApprovalStaleReason] = []
@@ -275,6 +298,8 @@ def approval_stale_reasons(
         reasons.append(ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED)
     if stored_basis.prior_filing_observations_fingerprint != current_basis.prior_filing_observations_fingerprint:
         reasons.append(ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED)
+    if stored_basis.profile_activity_fingerprint != current_basis.profile_activity_fingerprint:
+        reasons.append(ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED)
     if stored_basis.category_profiles_fingerprint != current_basis.category_profiles_fingerprint:
         reasons.append(ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED)
     if stored_basis.schema_formula_fingerprint != current_basis.schema_formula_fingerprint:
@@ -291,6 +316,7 @@ def approve_draft(
     transaction_catalogue: TransactionCatalogue | None = None,
     invoice_catalogue: InvoiceCatalogue | None = None,
     prior_filing_observations_fingerprint: str | None = None,
+    profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
     approved_at: datetime | None = None,
 ) -> ModeloDraft:
@@ -312,6 +338,8 @@ def approve_draft(
         invoice_catalogue: Optional :class:`~domain.invoices.InvoiceCatalogue`
             override; forwarded to :func:`compute_current_approval_basis`.
         prior_filing_observations_fingerprint: Optional precomputed prior-filing
+            digest override; forwarded to :func:`compute_current_approval_basis`.
+        profile_activity_fingerprint: Optional precomputed taxpayer-profile
             digest override; forwarded to :func:`compute_current_approval_basis`.
         category_profiles: Optional category profile map override.
         approved_at: Optional timestamp; defaults to the canonical clock helper.
@@ -343,6 +371,7 @@ def approve_draft(
         transaction_catalogue=transaction_catalogue,
         invoice_catalogue=invoice_catalogue,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
+        profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
     )
     updated = draft.model_copy(
@@ -405,6 +434,7 @@ def refresh_review_status(
     transaction_catalogue: TransactionCatalogue | None = None,
     invoice_catalogue: InvoiceCatalogue | None = None,
     prior_filing_observations_fingerprint: str | None = None,
+    profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
     refreshed_at: datetime | None = None,
 ) -> ModeloDraft:
@@ -427,6 +457,8 @@ def refresh_review_status(
         invoice_catalogue: Optional :class:`~domain.invoices.InvoiceCatalogue`
             override; forwarded to :func:`approval_stale_reasons`.
         prior_filing_observations_fingerprint: Optional precomputed prior-filing
+            digest override; forwarded to :func:`approval_stale_reasons`.
+        profile_activity_fingerprint: Optional precomputed taxpayer-profile
             digest override; forwarded to :func:`approval_stale_reasons`.
         category_profiles: Optional category profile map override.
         refreshed_at: Optional timestamp; defaults to
@@ -478,6 +510,7 @@ def refresh_review_status(
         transaction_catalogue=transaction_catalogue,
         invoice_catalogue=invoice_catalogue,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
+        profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
     )
     next_status = ModeloDraftStatus.APROBACION_CADUCADA if reasons else ModeloDraftStatus.APROBADO
@@ -526,6 +559,8 @@ def describe_stale_reason(reason: ModeloApprovalStaleReason) -> str:
             return tr("application.filing.review.stale_reasons.invoice_catalogue_changed")
         case ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED:
             return tr("application.filing.review.stale_reasons.prior_filing_observations_changed")
+        case ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED:
+            return tr("application.filing.review.stale_reasons.profile_activity_changed")
         case ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED:
             return tr("application.filing.review.stale_reasons.category_profiles_changed")
         case ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED:
@@ -644,6 +679,52 @@ def empty_prior_filing_observations_fingerprint() -> str:
     the invoice fingerprint accepts.
     """
     return _prior_filing_observations_fingerprint(())
+
+
+def _load_profile_activity_fingerprint(bucket_id: str) -> str:
+    """Digest the bucket's taxpayer profile facts from the secure backend.
+
+    Self-loads the bucket-scoped :class:`~application.user_profile.ProfileRepository`
+    and fingerprints the wizard-free canonical projection
+    (:func:`~application.user_profile.record_to_path_values`) — the SAME projection
+    the relation resolver reads to scope relation resolution (activity-start date,
+    m111 no-retenciones attestations, declared income categories). So the digest
+    changes whenever a relation-scoping profile fact changes — reproducibly, from
+    ``bucket_id`` alone, without running the source mesh. An absent profile yields
+    the stable empty-projection digest.
+    """
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile import ProfileRepository, record_to_path_values
+
+    try:
+        aggregate = ProfileRepository().load(bucket_id)
+    except ProfileNotFoundError:
+        return _profile_activity_fingerprint(None)
+    return _profile_activity_fingerprint(record_to_path_values(aggregate.record))
+
+
+def _profile_activity_fingerprint(path_values: Mapping[str, str] | None) -> str:
+    """Order-independent digest of the wizard-free taxpayer-profile projection.
+
+    Hashes the canonical ``path -> value`` projection (every profile fact rendered
+    to text) in sort-canonical order, so the digest is stable across re-serialisation
+    and changes on any profile-fact edit. This is the wizard-free calc-relevant view
+    by construction, so it carries no volatile persistence field to exclude. ``None``
+    (no profile for the bucket) yields the stable empty-projection digest.
+    """
+    payload = sorted((path_values or {}).items())
+    return _sha256_payload(payload)
+
+
+def empty_profile_activity_fingerprint() -> str:
+    """Return the digest of an absent taxpayer profile.
+
+    A caller passes this to :func:`compute_current_approval_basis` /
+    :func:`approve_draft` to stamp a deterministic profile digest without a bucket
+    self-load (e.g. a test approving against a non-active/sentinel bucket with no
+    profile), mirroring the empty overrides the other source fingerprints accept.
+    """
+    return _profile_activity_fingerprint(None)
 
 
 def _draft_review_fingerprint(draft: ModeloDraft) -> str:

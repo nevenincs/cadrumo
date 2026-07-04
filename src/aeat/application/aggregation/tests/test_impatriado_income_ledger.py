@@ -29,6 +29,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import Period
 from ....domain.calculations.registry import (
     BindingId,
@@ -47,10 +48,12 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....tests.secure_sql import isolated_runtime_profile
 from .._impatriado_income_ledger import (
     ImpatriadoIncomeLedgerAggregation,
     ImpatriadoIncomeLedgerAggregationIssueReason,
     aggregate_impatriado_income_ledger,
+    aggregate_impatriado_income_ledger_from_repositories,
 )
 from .._renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
@@ -62,6 +65,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _ANNUAL_2024 = Period.from_year_and_code(2024, "0A")
 _BASE_CASILLA = "impatriado.base-liquidable-general"
 _M151_REGISTRY_DIR = Path(__file__).resolve().parents[3] / "_data" / "registry" / "aeat" / "modelos" / "151"
+_BUCKET_ID = "16161616-1616-4616-8616-161616161616"
 
 
 def _impatriado_transaction(
@@ -240,6 +244,48 @@ def test_registry_binding_resolves_es_source_total_into_base() -> None:
 
     binding_id: BindingId = "modelo-151-impatriado-base-liquidable-general"
     assert resolved[binding_id] == Decimal("120000.00")
+
+
+def test_repository_backed_aggregation_reports_out_of_period_catalogue_transactions(
+    tmp_path: Path,
+) -> None:
+    """A catalogue transaction outside the requested ejercicio must surface as an issue.
+
+    Regression test (issue #408): the repository-backed entry point must NOT
+    pre-filter the loaded catalogue by date range. ``OUTSIDE_PERIOD`` is a
+    genuine no-silent-under-declaration-class diagnostic -- an operator
+    querying 2024 needs to see that a 2025-dated catalogue transaction exists
+    and was excluded, not have it silently vanish before the classifier ever
+    runs (a pre-filtering optimisation would make this issue structurally
+    unreachable).
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        in_period = _impatriado_transaction(
+            "row-in-period",
+            amount=Decimal("30000.00"),
+            source_jurisdiction="ES",
+            value_date=date(2024, 6, 1),
+        )
+        out_of_period = _impatriado_transaction(
+            "row-out-of-period",
+            amount=Decimal("45000.00"),
+            source_jurisdiction="ES",
+            value_date=date(2025, 1, 15),
+        )
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        repository.save(TransactionCatalogue.from_transactions((in_period, out_of_period)))
+
+        result = aggregate_impatriado_income_ledger_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_ANNUAL_2024,
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository),
+        )
+
+    assert {o.transaction_id for o in result.observations} == {in_period.transaction_id}
+    assert _base_total(result) == Decimal("30000.00")
+    assert len(result.issues) == 1
+    assert result.issues[0].reason is ImpatriadoIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert result.issues[0].transaction_id == out_of_period.transaction_id
 
 
 def test_registry_binding_definition_validates_and_rejects_wrong_casilla() -> None:

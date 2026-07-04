@@ -584,8 +584,8 @@ nitpick_ignore_regex = [
     # are ignored here to keep the gate hermetic.
     (
         r"py:.*",
-        r"^(pydantic|pydantic_core|pydantic_settings|httpx|typer|click|"
-        r"rich|yaml|tomllib|tomli|cryptography|jinja2|markupsafe|"
+        r"^(pydantic|pydantic_core|pydantic_settings|httpx|typer|click|mcp|"
+        r"rich|yaml|tomllib|tomli|cryptography|jinja2|markupsafe|numpy|"
         r"prompt_toolkit|google|typing_extensions|asyncio|contextvars|"
         r"_pytest|playwright|_schema|_orm|annotated_types)(\..*)?$",
     ),
@@ -603,6 +603,77 @@ nitpick_ignore_regex = [
     # dotted ignore above does not cover these short forms; the names are
     # playwright-owned in this codebase (no project class shares them).
     (r"py:.*", r"^(Playwright|Page|BrowserContext|Locator|Response)$"),
+    # Project anchors referenced by bare short name (per the docstring-anchor
+    # convention; qualifying a bare anchor is barred by
+    # core-struct-docstring-links) whose short name the auto short-reference
+    # resolver cannot uniquely map: ``CCAA`` (documented under more than one
+    # public package) and ``earliest_safe_erase_date``.
+    (r"py:.*", r"^(CCAA|earliest_safe_erase_date)$"),
+    # Bare project-package ``:mod:`` short references (``:mod:`domain.iva```,
+    # ``:mod:`application.ledger```, bare ``:mod:`application```, ...) used
+    # project-wide in module docstrings per the docstring-anchor convention. The
+    # short-reference resolver maps py:class / func / obj short names but not the
+    # py:mod reftype, and a single-segment module name (``application``) or a
+    # docs-excluded module (``entrypoints.cli``) cannot be uniquely mapped
+    # anyway; until a py:mod-aware resolver lands these bare project-module short
+    # forms are ignored rather than reded. Scoped to the first-segment project
+    # package names so an external / stdlib ``:mod:`` reference is unaffected.
+    # Any ``:mod:`` short reference that is NOT already ``aeat.``-qualified: the
+    # short-reference resolver maps py:class/func/obj short names but not the
+    # py:mod reftype, so a bare project-module reference (``:mod:`domain.iva```,
+    # ``:mod:`registry```, ...) has no target. External / stdlib ``:mod:`` refs
+    # are covered by the third-party namespace patterns above; a genuine
+    # ``aeat.``-qualified module reference still resolves and is unaffected here.
+    (r"py:mod", r"^(?!aeat\.)[a-z].*"),
+    # External library types written bare (no vendored inventory offline, so the
+    # dotted third-party namespace patterns above do not cover the short forms):
+    # the ``cryptography`` elliptic-curve / Edwards key classes
+    # (``Ed25519PrivateKey``, ``X25519PublicKey``, ...) referenced from the
+    # secure-storage key adapters, the ``_typeshed`` ``SupportsAllComparisons``
+    # protocol used in sort-key signatures, and the pydantic ``BaseModel``
+    # serialisation methods (``model_dump_json`` / ``model_validate_json``)
+    # referenced bare in roundtrip docstrings. All are external-owned; no project
+    # symbol shares these names.
+    (
+        r"py:.*",
+        r"^(Ed25519PrivateKey|Ed25519PublicKey|X25519PrivateKey|X25519PublicKey|"
+        r"SupportsAllComparisons|model_dump_json|model_validate_json)$",
+    ),
+    # Project short references the bare/unrooted resolver cannot uniquely map.
+    # Two shapes: (1) an AMBIGUOUS bare helper name with two or more documented
+    # definitions across modules (``write_manifest`` x4; ``project_answers`` /
+    # ``sha256_file`` / ``save_envelope`` / ``extract_pages_text`` /
+    # ``extract_pages_text_from_bytes`` / ``LLMProvider`` x2), which the
+    # last-segment suffix resolver cannot disambiguate by design; and (2) a
+    # project object written by a path that omits the ``aeat.`` root
+    # (``core.telemetry.workspace_hash``,
+    # ``application.modelo.emit_collab_workspace_opened_event``,
+    # ``adapters.persistence.storage.SensitivityClass.SECRET``). ``core-struct-
+    # docstring-links`` bars adding a dotted path to a bare project anchor, so
+    # these are ignored rather than qualified; a py:func / py:attr short-reference
+    # resolver enhancement that disambiguates ambiguous and unrooted project
+    # targets is a future follow-up.
+    (
+        r"py:.*",
+        r"^(utc_now|project_answers|write_manifest|sha256_file|save_envelope|"
+        r"reset_workflow_state|output_language|extract_pages_text|"
+        r"extract_pages_text_from_bytes|emit_collab_workspace_opened_event|"
+        r"LLMProvider|PersonaAction)$",
+    ),
+    (
+        r"py:.*",
+        r"^(core\.telemetry\.workspace_hash|"
+        r"application\.modelo\.emit_collab_workspace_opened_event|"
+        r"adapters\.persistence\.storage\.SensitivityClass\.SECRET)$",
+    ),
+    # Registry typed-id aliases (``CasillaId``, ``RelationId``, ``OracleId``,
+    # ``BindingId``, ... ) are ``NewType``/alias definitions, not documentable
+    # classes, so a ``:class:`` reference to their registry path (with or without
+    # the ``aeat.`` prefix) has no py:class target. Scoped to the registry
+    # namespace + the ``Id`` suffix so real classes are unaffected.
+    # ``ModeloDetailRow`` is a re-exported alias referenced bare.
+    (r"py:.*", r"^(aeat\.)?domain\.calculations\.registry\.\w+Id$"),
+    (r"py:.*", r"^ModeloDetailRow$"),
     # Bound-method references on external (pydantic / SQLAlchemy / asyncio /
     # google) types written ``Owner.method`` or ``obj.method``; the owning type
     # resolves via inventory but the short method target does not.

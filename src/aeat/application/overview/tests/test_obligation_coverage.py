@@ -18,6 +18,7 @@ same failure mode for any applicable obligation omitted from the surfaced set.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 
 import pytest
@@ -113,7 +114,7 @@ def _assert_total_partition(report: ObligationCoverageReport) -> None:
 
 
 @_PERSONAS
-def test_coverage_partitions_full_registry_set(profile_factory) -> None:
+def test_coverage_partitions_full_registry_set(profile_factory: Callable[[], TaxpayerProfile]) -> None:
     """No registry modelo is silently absent from the coverage report."""
     profile = profile_factory()
     surfaced = {"100", "130", "303"}  # an illustrative surfaced subset

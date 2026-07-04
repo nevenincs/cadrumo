@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.resources import resources
 from ....domain.calculations.registry import resolve_ledger_renta_income_aggregation_binding_values
 from ....domain.transactions import TransactionCatalogue
-from .._renta_income_ledger import aggregate_renta_income_ledger, aggregate_renta_m100_income_ledger
+from .._renta_income_ledger import (
+    RentaIncomeLedgerAggregationIssueReason,
+    aggregate_renta_income_ledger,
+    aggregate_renta_m100_income_ledger,
+    aggregate_renta_m100_income_ledger_from_repositories,
+)
 from ._renta_income_aggregation_support import (
     _ANNUAL_2024,
     _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
@@ -18,9 +27,17 @@ from ._renta_income_aggregation_support import (
     _Q1_2024,
     _actividad_transaction_with_source,
     _income_transaction,
+    isolated_renta_income_objects,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    with isolated_renta_income_objects(tmp_path) as objects:
+        yield objects
+
 
 # S385a: source_jurisdiction provenance pass-through (#258)
 #
@@ -129,6 +146,40 @@ def test_m100_annual_income_sums_full_ejercicio_into_casilla_0171() -> None:
         (jan_amount, dec_amount),
         Decimal("0"),
     )
+    # Regression (issue #408): the excluded prior-year row must surface as a
+    # visible OUTSIDE_PERIOD issue, not silently vanish.
+    assert len(result.issues) == 1
+    assert result.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert result.issues[0].transaction_id == prior.transaction_id
+
+
+def test_repository_backed_m100_aggregation_reports_out_of_period_catalogue_transactions(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A catalogue transaction outside the requested ejercicio must surface as an issue.
+
+    Regression test (issue #408): the repository-backed M100 entry point must
+    NOT pre-filter the loaded catalogue by date range -- ``OUTSIDE_PERIOD`` is
+    a genuine no-silent-under-declaration-class diagnostic over the FULL
+    persisted catalogue, not just the pure-aggregator path above.
+    """
+    jan_amount, prior_amount = Decimal("3000.00"), Decimal("999.00")
+    jan = _income_transaction("m100-repo-jan", value_date=date(2024, 1, 20), amount=jan_amount)
+    prior = _income_transaction("m100-repo-prior", value_date=date(2023, 12, 31), amount=prior_amount)
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions((jan, prior)))
+
+    result = aggregate_renta_m100_income_ledger_from_repositories(
+        bucket_id="test",
+        period=_ANNUAL_2024,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+
+    assert {o.transaction_id for o in result.observations} == {jan.transaction_id}
+    assert result.casilla_aggregation.casilla_values[_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA] == jan_amount
+    assert len(result.issues) == 1
+    assert result.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert result.issues[0].transaction_id == prior.transaction_id
 
 
 def test_m100_annual_income_rejects_non_annual_period() -> None:

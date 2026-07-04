@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 # Golden itinerary proof — regularizar-atrasos through the installed plugin
 
 Verification record for the claude-ecosystem-packaging campaign

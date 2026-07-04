@@ -7,7 +7,7 @@ import hashlib
 import pytest
 from pydantic import ValidationError
 
-from ....tests.fixtures.identity_holder import single_field_model
+from ....tests.fixtures.identity_holder import single_field_model, single_field_value
 from .. import SnapshotId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -17,7 +17,7 @@ _Holder = single_field_model("snapshot_id", SnapshotId)
 
 def test_snapshot_id_constraint_accepts_canonical_digest_and_rejects_invalid_values() -> None:
     digest = hashlib.sha256(b"payload").hexdigest()
-    assert _Holder(snapshot_id=digest).snapshot_id == digest
+    assert single_field_value(_Holder(snapshot_id=digest), "snapshot_id") == digest
 
     cases = (
         hashlib.sha256(b"payload").hexdigest().upper(),

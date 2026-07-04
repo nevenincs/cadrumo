@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests.env_scope import isolated_aeat_env
+from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
 from ..config import PROJECT_ROOT, Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def _settings_from_env(**env: str) -> Settings:
     with isolated_aeat_env(**env):
-        return Settings(_env_file=None)
+        return settings_without_env_file()
 
 
 def _assert_shared_storage_dirs(settings: Settings, storage_root: Path) -> None:

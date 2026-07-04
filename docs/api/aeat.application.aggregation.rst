@@ -35,6 +35,8 @@ Submodules
    aeat.application.aggregation._retenciones
    aeat.application.aggregation._service
    aeat.application.aggregation._shared_issue_reasons
+   aeat.application.aggregation._source_fincas
+   aeat.application.aggregation._source_inventory
    aeat.application.aggregation._source_mesh
    aeat.application.aggregation._source_profile
    aeat.application.aggregation._withholding_source

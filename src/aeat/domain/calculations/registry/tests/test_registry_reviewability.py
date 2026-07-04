@@ -19,11 +19,18 @@ _MAX_BASELINE_TOML_LINES = 1_400
 _MAX_BASELINE_TOML_LINE_CHARS = 520
 _MAX_NEW_VALIDATOR_MODULE_LINES = 300
 _VALIDATOR_MODULE_LINE_BASELINES = {
-    # +83 lines from the M131 índice-exceso incompatibility advisory fix
-    # (#594), which added the casilla_equals_implies_diverges bespoke arity
-    # validator and its registry-gate dispatch (mirroring
-    # casilla_equals_implies_nonzero's shape); re-pinned to the present size.
-    "_validate_surfaces.py": 644,
+    # Shrunk from 720 to 341 lines (#601): the verification-predicate DSL
+    # validator cluster (arity/shape validators for equals, roll_forward_
+    # balances, casilla_equals_implies_*, deduccion_requires_adquisicion_
+    # before, profile_flag_enabled) moved to the sibling
+    # _validate_verification_predicates.py module, leaving only the
+    # cross-reference, workbook-parity, verification-expectation dispatch,
+    # application-link, and deadline-window section validators here.
+    "_validate_surfaces.py": 350,
+    # New sibling module extracted from _validate_surfaces.py (#601): the
+    # verification-predicate DSL operator arity/shape validators, split out
+    # once _validate_surfaces.py grew past its complexity baseline.
+    "_validate_verification_predicates.py": 430,
     "_validate_cross_revision.py": 424,
     "_validate_record_sections.py": 305,
     "_validate_references.py": 312,

@@ -38,6 +38,7 @@ Paths covered:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast, override
@@ -154,7 +155,7 @@ class _CaptureFailingContext(_RecordingBrowserContext):
 class _CaptureFailingBrowserSession:
     """Session that yields a context whose capture step raises."""
 
-    def __init__(self, cert: LoadedCertificate, storage_state: dict[str, object]) -> None:
+    def __init__(self, cert: LoadedCertificate, storage_state: Mapping[str, object]) -> None:
         self._cert = cert
         self._storage_state = storage_state
         self.created: list[_CaptureFailingContext] = []
@@ -165,7 +166,7 @@ class _CaptureFailingBrowserSession:
         *,
         provisioner: object | None = None,
         storage_state_path: Path | None = None,
-        storage_state: dict[str, object] | None = None,
+        storage_state: Mapping[str, object] | None = None,
     ) -> _CaptureFailingContext:
         del provisioner, storage_state_path, storage_state
         ctx = _CaptureFailingContext(self._cert, storage_state=self._storage_state)

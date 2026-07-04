@@ -642,13 +642,26 @@ class _MemoizedTransactionCatalogueRepository:
 
     :meth:`load_for_date_range` is ALSO memoized, keyed by the exact
     ``(start, end)`` window, so two resolvers that request the identical
-    window in one calculate invocation share one targeted scan instead of
-    each independently re-scanning. A resolver requesting a distinct window
-    gets its own cache entry rather than colliding with an unrelated one.
-    Only :class:`LedgerRentaExpenseAggregationSourceResolver` currently calls
-    ``load_for_date_range`` (issue #408); the other ledger resolvers cannot
-    safely pre-filter by date because their ``OUTSIDE_PERIOD`` diagnostic
-    requires visibility into the FULL catalogue, so they still call ``load``.
+    window in one calculate invocation would share one targeted scan instead
+    of each independently re-scanning. A resolver requesting a distinct
+    window would get its own cache entry rather than colliding with an
+    unrelated one.
+
+    As of issue #599, NO ledger resolver currently calls
+    ``load_for_date_range``: every one of the five, including
+    :class:`LedgerRentaExpenseAggregationSourceResolver` (the last holdout),
+    now calls ``load`` and reads the FULL catalogue, because each
+    aggregator's ``OUTSIDE_PERIOD`` diagnostic requires visibility into
+    catalogue rows outside the requested window to avoid silently dropping a
+    legitimately in-scope row (a no-silent-under-declaration violation — see
+    #599). The range-load memoization branch, the underlying
+    :meth:`~TransactionCatalogueRepositoryProtocol.load_for_date_range`
+    method, and the plaintext
+    :class:`~adapters.persistence.storage.sql.TransactionDateIndexRow` index
+    it reads are deliberately RETAINED, not dead code: they are the
+    foundation a deferred #408 perf redesign (index-served diagnostics,
+    pending a design decision on reordering classification gates or widening
+    the index) would build on.
     """
 
     __slots__ = ("_catalogue", "_date_range_catalogues", "_repository")

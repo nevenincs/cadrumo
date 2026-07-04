@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 # Architecture Decision Records Index
 
 This project maintains **511 Architecture Decision Records** documenting

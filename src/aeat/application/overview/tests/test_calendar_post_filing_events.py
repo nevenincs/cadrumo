@@ -10,6 +10,7 @@ exactly the demand / enforcement categories.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from typing import Literal
 
 import pytest
 from pydantic import AnyHttpUrl
@@ -30,7 +31,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _RANGE = OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31))
 
 
-def _notification(*, certificado_id: str, concepto: str, tipo: str, leida: bool | None) -> RemoteNotification:
+def _notification(
+    *,
+    certificado_id: str,
+    concepto: str,
+    tipo: Literal["notificacion", "comunicacion", "pendiente", "unknown"],
+    leida: bool | None,
+) -> RemoteNotification:
     return RemoteNotification(
         certificado_id=certificado_id,
         tipo=tipo,

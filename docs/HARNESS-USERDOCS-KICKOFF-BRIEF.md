@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 # Harness userdocs initiative — kickoff brief ("Working with an AI assistant")
 
 **Audience of this brief:** the team/session that will author the user-facing

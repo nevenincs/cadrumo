@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 # Public marketplace install proof — aeat@neve
 
 Live verification for the claude-ecosystem-packaging campaign, 2026-07-04.

@@ -1,7 +1,7 @@
 """Public facade for immutable ledger transactions.
 
 This package re-exports the transaction domain boundary used by
-:mod:`application.ledger`: :class:`Transaction` wraps an upstream
+:mod:`aeat.application.ledger`: :class:`Transaction` wraps an upstream
 :class:`RawTransaction` and its :class:`RawProvenance`, while
 :class:`TransactionCatalogue` keeps the immutable mapping keyed by the
 content-derived transaction id. Import helpers such as
@@ -48,20 +48,20 @@ provides the rebuildable inverse audit lookup from one ledger transaction to
 finalized revisions and filing records.
 
 See Also:
-    :mod:`application.ledger`
+    :mod:`aeat.application.ledger`
         Operator-facing lifecycle that creates, edits, classifies, splits,
         attaches evidence, and preflights bucket-scoped transactions.
-    :mod:`application.aggregation`
+    :mod:`aeat.application.aggregation`
         Source resolvers that turn transaction catalogues into
         :class:`application.aggregation.CalculationSourceResolution`
         payloads for modelo calculation.
     :func:`application.aggregation._ledger_filing_snapshot.compute_ledger_filing_snapshot`
         Captures tax-relevant transaction fields for finalized calculation
         revisions.
-    :mod:`domain.invoices`
+    :mod:`aeat.domain.invoices`
         Invoice catalogue and reconciliation records referenced by
         ``invoice_id`` and ``purchase_invoice_evidence_id``.
-    :mod:`domain.usage_ratios`
+    :mod:`aeat.domain.usage_ratios`
         Proportionality profiles referenced by ledger rows before aggregation.
 """
 

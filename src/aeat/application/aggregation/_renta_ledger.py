@@ -273,19 +273,18 @@ def aggregate_renta_ledger_expenses_from_repositories(
             t("aggregation.renta_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    # Filtering by date range before decrypt is a pure performance optimisation
-    # (issue #408): only annual periods have a calendar span
-    # (``Period.has_date_span``), and this aggregation only ever accepts an
-    # annual period (``_resolve_annual_period`` below refuses anything else),
-    # so an annual period's own inclusive span IS the exact filing-date window
-    # every row in this aggregation is filtered against. A non-annual period
-    # falls back to the unfiltered full load; the row-level
-    # ``_resolve_annual_period`` refusal downstream still fires unchanged.
-    transactions = (
-        repository.load_for_date_range(period.start_date, period.end_date)
-        if period.has_date_span()
-        else repository.load()
-    )
+    # NOT pre-filtered by date range (issue #408 / #599): a transaction's OWN
+    # date can fall outside the requested annual window while its LINKED
+    # INVOICE's issue date (the actual ``fact.filing_date`` the classifier
+    # below tests) falls inside it, and the reverse — a transaction inside the
+    # window whose linked invoice puts it outside. Pre-filtering by the
+    # transaction's own date with ``load_for_date_range`` silently drops both
+    # shapes before ``_classify_renta_transaction`` ever runs, so the
+    # ``OUTSIDE_PERIOD`` diagnostic the operator needs to see never fires for a
+    # multi-year catalogue. Mirrors the same revert already applied to
+    # ``_iva_ledger`` / ``_renta_income_ledger`` / ``_renta_gasto_ledger`` /
+    # ``_impatriado_income_ledger`` for the identical reason.
+    transactions = repository.load()
     invoices_repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     if invoices_repository.bucket_id != bucket_id:
         raise AggregationValidationError(

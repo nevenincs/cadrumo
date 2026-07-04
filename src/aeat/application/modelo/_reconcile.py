@@ -332,7 +332,7 @@ class ReconciliationCrossBucketRefusedError(AeatError):
     """
 
 
-def _require_declaration_enrolled_modelo(work_unit_id: WorkUnitId) -> None:
+def _require_declaration_enrolled_modelo(work_unit_id: WorkUnitId) -> WorkUnit:
     """Refuse an unenrolled modelo before spending effort parsing its PDF.
 
     Declaración parsing (template detection, registry-profile extraction) is
@@ -340,6 +340,11 @@ def _require_declaration_enrolled_modelo(work_unit_id: WorkUnitId) -> None:
     is refused immediately from the work unit's own declared modelo, before any
     file is opened, rather than only after a parse attempt happens to fail for
     an unrelated reason.
+
+    Returns the loaded :class:`~aeat.domain.modelos.WorkUnit` so the caller can
+    reuse its already-known modelo/filing_year/period as
+    :func:`aeat.adapters.inbound.declaracion.parse_declaracion` overrides,
+    rather than reloading the catalogue a second time.
     """
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 
@@ -357,6 +362,7 @@ def _require_declaration_enrolled_modelo(work_unit_id: WorkUnitId) -> None:
                 "enrolled_modelos": ",".join(sorted(_DECLARATION_CASILLA_RECONCILE_MODELOS)),
             },
         )
+    return work_unit
 
 
 def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliationReport:
@@ -386,12 +392,25 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         A :class:`ModeloReconciliationReport`.
     """
     if command.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
-        _require_declaration_enrolled_modelo(command.work_unit_id)
+        work_unit = _require_declaration_enrolled_modelo(command.work_unit_id)
 
         from ...adapters.inbound.declaracion import DeclaracionParseError, parse_declaracion
 
         try:
-            declaracion = parse_declaracion(command.source_path)
+            # The addressed work unit already knows its own modelo/año/period;
+            # forwarding them as overrides lets a declaración PDF that lacks a
+            # detectable "Ejercicio: YYYY" header stamp still parse, instead
+            # of failing template detection outright. A PDF that genuinely
+            # belongs to a different modelo or ejercicio still raises here
+            # (`_resolve_template` reconciles a successful detection against
+            # the override and raises on conflict) -- the wrong-PDF-mismatch
+            # detection this reconcile depends on is unchanged.
+            declaracion = parse_declaracion(
+                command.source_path,
+                modelo_override=str(work_unit.modelo),
+                año_override=work_unit.filing_year,
+                period_override=work_unit.period.registry_token,
+            )
         except DeclaracionParseError as exc:
             raise _evidence_invalid_refusal(exc, source_ref=str(command.source_path)) from exc
         return _reconcile_parsed_declaracion(

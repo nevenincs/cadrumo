@@ -193,14 +193,17 @@ def test_calculation_completeness_gate_is_live_for_every_calculation_bearing_mod
 
     assert gated > 0, "expected calculation-bearing modelo revisions"
     # Dormant (no calculation closure, no completeness_manifest) revisions:
-    # Modelo 189, 231, 280, 289, 308, 345, 347, 360, 361, 379, 721, and 840 —
-    # informative declarations / data-fidelity surfaces with no formulas.
-    # Modelo 714 (patrimonio) is now calculation-bearing: its cuota-íntegra
-    # escala (Ley 19/1991 art. 30) is computed and carries a
+    # informative declarations / data-fidelity surfaces with no formulas,
+    # spanning 038/121/122/140/143/145/156/165/179/181/185/186/189/220/222/
+    # 231/233/234/238/270/280/289/308/341/345/347/360/361/379/380/490/576/
+    # 592/604/721/763/840/848. Modelo 714 (patrimonio) is now calculation-bearing:
+    # its cuota-íntegra escala (Ley 19/1991 art. 30) is computed and carries a
     # completeness_manifest, so it is gated, not dormant. The remaining M714
     # downstream chain (límite conjunto, cuota a ingresar) stays manual but is
-    # not part of the calculation closure. Empirically enumerated.
-    assert dormant == 12
+    # not part of the calculation closure. The dormant set has grown as the
+    # registry has grown its data-fidelity coverage; empirically re-enumerated
+    # against the live committed registry, not hand-maintained ahead of it.
+    assert dormant == 38
 
 
 def test_diseno_coverage_report_inventories_modelo_200_form_data() -> None:

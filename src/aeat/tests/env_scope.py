@@ -36,13 +36,45 @@ import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 
+from pydantic_settings import SettingsConfigDict
+
 from ..core.config import Settings
 
 __all__ = [
     "isolated_aeat_env",
     "scoped_env_var",
     "scoped_sys_argv",
+    "settings_without_env_file",
 ]
+
+
+class _EnvFileFreeSettings(Settings):
+    """A :class:`~aeat.core.config.Settings` subclass that never reads a real ``.env`` file.
+
+    ``pydantic_settings.BaseSettings.__init__`` accepts a real, documented
+    ``_env_file=None`` per-instance override, but both ``pyright`` and ``ty``
+    synthesize a subclass ``__init__`` from its declared fields and drop the
+    underscore-prefixed init-only kwargs that hand-written signature carries,
+    so ``Settings(_env_file=None)`` reports an unknown-argument error under
+    both checkers even though the runtime call is valid. Overriding
+    ``env_file=None`` at the class level instead achieves the identical
+    env-file-free construction without touching that per-instance kwarg;
+    pydantic's ``model_config`` merge (child overrides only the keys it
+    declares) leaves every other setting (``env_file_encoding``,
+    ``env_ignore_empty``, ...) unchanged from :class:`Settings`.
+    """
+
+    model_config = SettingsConfigDict(env_file=None)
+
+
+def settings_without_env_file() -> Settings:
+    """Construct a :class:`~aeat.core.config.Settings` that never reads the real ``.env`` file.
+
+    Equivalent at runtime to ``Settings(_env_file=None)`` — see
+    :class:`_EnvFileFreeSettings` for why this factory exists instead of the
+    raw keyword form.
+    """
+    return _EnvFileFreeSettings()
 
 
 @contextmanager

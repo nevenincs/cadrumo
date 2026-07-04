@@ -89,7 +89,13 @@ def test_date_index_table_carries_only_non_sensitive_routing_columns(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         engine = profile.repository.engine
-        _orm.Base.metadata.create_all(engine, tables=[_orm.TransactionDateIndexRow.__table__])
+        # ``MetaData.tables`` is properly typed ``dict[str, Table]``; the ORM
+        # class's own ``__table__`` attribute is typed as the more general
+        # ``FromClause`` in the SQLAlchemy stubs even though it is always a
+        # real ``Table`` at runtime for a mapped class, so looking it up by
+        # name avoids that stub-precision gap.
+        table = _orm.Base.metadata.tables[_orm.TransactionDateIndexRow.__tablename__]
+        _orm.Base.metadata.create_all(engine, tables=[table])
         columns = {column["name"] for column in sa_inspect(engine).get_columns("transaction_date_index")}
 
     assert columns == _NON_SENSITIVE_COLUMNS

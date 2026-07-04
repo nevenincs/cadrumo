@@ -43,6 +43,63 @@ class Diagnostic:
     message: str
 
 
+@dataclass(frozen=True)
+class _ExternalGap:
+    """One documented, irreducible external-import diagnostic to suppress."""
+
+    path_suffix: str
+    checker: str
+    rule: str
+    needle: str
+    reason: str
+
+
+# Documented, reviewed suppression for genuinely-irreducible external
+# dependency / third-party-stub IMPORT gaps — deliberately NOT a tech-debt
+# baseline. Each entry is a proven optional-dep / missing-stub import that no
+# in-source escape (``# type: ignore`` / ``cast`` / ``Any``) and no local stub
+# can resolve within the two checkers' constraints. The match is intentionally
+# tight — (path suffix, checker, rule, message substring) — so a NEW diagnostic
+# in these files under any other rule or naming ANY other symbol is still a hard
+# failure. Reviewed 2026-07-04.
+_IRREDUCIBLE_EXTERNAL_GAPS: tuple[_ExternalGap, ...] = (
+    _ExternalGap(
+        "application/corpus_search/_model_loader.py",
+        "ty",
+        "unresolved-import",
+        "model2vec",
+        "model2vec is the optional aeat[search] extra, absent from the type-check env; "
+        "no types-model2vec distribution exists.",
+    ),
+    _ExternalGap(
+        "application/corpus_search/_model_loader.py",
+        "pyright",
+        "reportMissingImports",
+        "model2vec",
+        "model2vec is the optional aeat[search] extra, not installed in the type-check env.",
+    ),
+    _ExternalGap(
+        "adapters/outbound/google/tests/_drive_media_server.py",
+        "ty",
+        "unresolved-import",
+        "build_from_document",
+        "googleapiclient.build_from_document is real at runtime but absent from "
+        "google-api-python-client-stubs; ty ignores local stub overrides (pyright resolves it).",
+    ),
+)
+
+
+def _is_irreducible_external_gap(diagnostic: Diagnostic) -> bool:
+    """Return True when a diagnostic matches a documented irreducible external-import gap."""
+    return any(
+        diagnostic.checker == gap.checker
+        and diagnostic.rule == gap.rule
+        and diagnostic.path.endswith(gap.path_suffix)
+        and gap.needle in diagnostic.message
+        for gap in _IRREDUCIBLE_EXTERNAL_GAPS
+    )
+
+
 def _norm(path: str) -> str:
     """Normalise a checker path to a forward-slash project-relative form."""
     forward = path.replace("\\", "/")
@@ -157,7 +214,9 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    diagnostics = collect_ty() + collect_pyright()
+    collected = collect_ty() + collect_pyright()
+    suppressed = [d for d in collected if _is_irreducible_external_gap(d)]
+    diagnostics = [d for d in collected if not _is_irreducible_external_gap(d)]
 
     if args.full:
         if diagnostics:
@@ -165,7 +224,18 @@ def main() -> int:
             print(f"\n{len(diagnostics)} type diagnostics (advisory).")
         else:
             print("no type diagnostics.")
+        if suppressed:
+            print(f"\n{len(suppressed)} documented irreducible external-import gap(s) suppressed:")
+            for d in sorted(suppressed, key=lambda x: (x.path, x.checker)):
+                print(f"  {d.path}:{d.line}: {d.checker}[{d.rule}] {d.message}")
         return 0
+
+    # Never a silent cap: disclose the documented suppressions even on green.
+    if suppressed:
+        print(
+            f"note: {len(suppressed)} documented irreducible external-import gap(s) suppressed "
+            "(optional deps / third-party stubs) - see _IRREDUCIBLE_EXTERNAL_GAPS in dev/quality/types.py",
+        )
 
     if not diagnostics:
         return 0

@@ -144,7 +144,8 @@ def test_user_profile_imports_before_registry_barrel() -> None:
 
 
 def _schema_without_field(
-    schema: ProfileSchemaDefinition, path: str,
+    schema: ProfileSchemaDefinition,
+    path: str,
 ) -> ProfileSchemaDefinition:
     section_key, field_key = path.split(".", 1)
     sections = []

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....tests.env_scope import isolated_aeat_env
+from ....tests.env_scope import isolated_aeat_env, settings_without_env_file
 from ...config import Settings
 from .. import TelemetryTier
 
@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def _settings_from_env(**env: str) -> Settings:
     with isolated_aeat_env(**env):
-        return Settings(_env_file=None)
+        return settings_without_env_file()
 
 
 def test_telemetry_settings_default_to_the_fully_inert_posture() -> None:

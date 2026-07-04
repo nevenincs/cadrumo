@@ -37,7 +37,7 @@ import pytest
 
 from ....core import Period
 from ....domain.deadlines import build_recovery_for_overdue, resolve_filing_closes_on
-from ....domain.modelos import WorkUnit, derive_work_unit_id
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from .._work_plazo import modelo_work_plazo_summary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -70,7 +70,7 @@ def _work_unit_for(quarter: str, filing_year: int) -> WorkUnit:
     return WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET_ID,
-        modelo="303",
+        modelo=ModeloCode("303"),
         filing_year=filing_year,
         period=period,
         revision_id=_REVISION_ID,

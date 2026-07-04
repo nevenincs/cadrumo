@@ -63,7 +63,12 @@ from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, Taxpaye
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import EUMemberState, InvoiceKind, IvaCategory
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import CalculationRevision, VerificationCompletenessStatus, WorkUnit
+from ....domain.modelos import (
+    CalculationRevision,
+    VerificationCompletenessStatus,
+    VerificationReport,
+    WorkUnit,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -605,7 +610,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, filing_yea
     )
 
 
-def _non_official_local_chain_advisory_periods(report) -> set[str]:
+def _non_official_local_chain_advisory_periods(report: VerificationReport) -> set[str]:
     periods: set[str] = set()
     for finding in report.findings:
         if finding.kind.value != "advisory":
