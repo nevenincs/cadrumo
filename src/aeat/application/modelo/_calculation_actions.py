@@ -641,13 +641,14 @@ class _MemoizedTransactionCatalogueRepository:
     the wrapper stays a strict read-through cache, not a write cache.
 
     :meth:`load_for_date_range` is ALSO memoized, keyed by the exact
-    ``(start, end)`` window: the M130 income and gasto resolvers both request
-    the identical ``[Jan 1 of the period's year, quarter-end]`` cumulative
-    window in one calculate invocation (issue #408), so without a per-window
-    cache the index-backed pre-filter optimisation would trade one shared
-    full scan for two independent targeted scans. A resolver requesting a
-    distinct window (e.g. a different modelo's annual span) still gets its own
-    cache entry rather than colliding with an unrelated window.
+    ``(start, end)`` window, so two resolvers that request the identical
+    window in one calculate invocation share one targeted scan instead of
+    each independently re-scanning. A resolver requesting a distinct window
+    gets its own cache entry rather than colliding with an unrelated one.
+    Only :class:`LedgerRentaExpenseAggregationSourceResolver` currently calls
+    ``load_for_date_range`` (issue #408); the other ledger resolvers cannot
+    safely pre-filter by date because their ``OUTSIDE_PERIOD`` diagnostic
+    requires visibility into the FULL catalogue, so they still call ``load``.
     """
 
     __slots__ = ("_catalogue", "_date_range_catalogues", "_repository")
