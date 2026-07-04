@@ -2045,6 +2045,7 @@ cli:
           letrehozva), es a visszaallitott csomag ZIP kiirasa a --output helyre. Csak
           helyi; soha nem lep kapcsolatba az AEAT-tal.
         decrypt_output_help: A visszaallitott ellenorzo csomag ZIP kiirasi utvonala.
+        encrypt_feedback_help: 'Lezárja egy címzett felülvizsgálati visszajelzését (egy megjegyzést, opcionálisan egy ellenjegyzett elismervényt) vissza a kibocsátónak, hogy csak a kibocsátó privát kulcsa nyithassa meg, és a borítékot a --output helyre írja. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
         encrypt_for_recipient_help: Egy ellenorzo csomag lezarasa ugy, hogy csak a
           regisztralt cimzett privat kulcsa nyithassa meg, es a titkositott boritek
           kiirasa a --output helyre. Csak helyi; soha nem lep kapcsolatba az AEAT-tal.
@@ -2054,6 +2055,7 @@ cli:
         errors:
           envelope_not_found: 'Nem talalhato cimzett szamara titkositott boritek itt:
             {envelope_path}.'
+          feedback_envelope_not_found: 'A visszajelzési boríték nem található itt: {envelope_path}.'
           invalid_valid_for_days: A --valid-for-days erteknek szigoruan pozitiv egesz
             szamnak kell lennie.
           output_required: Adja meg a --output ÚTVONAL kapcsolót az áttekintő csomag
@@ -2061,11 +2063,23 @@ cli:
           package_not_found: 'Nem található áttekintő csomag itt: {package_path}.'
           receipt_not_found: 'A nyugta nem található itt: {receipt_path}.'
           signature_not_found: 'Az aláírás-boríték nem található itt: {signature_path}.'
+        feedback_counter_signer_public_key_help: 'A felülvizsgáló Ed25519 aláíró nyilvános kulcsa, amellyel szemben az ellenjegyzést ellenőrizni kell (kötelező, ha a visszajelzés elismervényt tartalmaz).'
+        feedback_envelope_path_help: 'Az `encrypt-feedback` által előállított, kibocsátónak titkosított visszajelzési boríték JSON útvonala.'
+        feedback_note_help: 'Szabad szöveges ítélet vagy megjegyzés (pl. `felülvizsgálva, nincs változás`).'
+        feedback_operator_public_key_help: 'A saját Ed25519 aláíró nyilvános kulcsa, amellyel szemben az eredeti aláírást ellenőrizni kell.'
+        feedback_output_help: 'Az az útvonal, ahová a kibocsátónak titkosított visszajelzési boríték JSON-ját írja.'
+        feedback_package_help: 'A helyben tárolt eredeti felülvizsgálati csomag ZIP útvonala, amellyel szemben az ellenjegyzett elismervényt ellenőrzik.'
+        feedback_receipt_help: 'Opcionális ellenjegyzett elismervény JSON (a `counter-sign`-ból) formális jóváhagyásként való csatoláshoz.'
+        feedback_revision_id_help: 'A számítási revízió azonosítója, amelyre a visszajelzés vonatkozik (a felülvizsgált csomag leírójából).'
+        feedback_submitted_by_help: 'A felülvizsgáló szereplő címkéje (pl. a könyvelő megjelenítendő neve).'
+        feedback_work_unit_id_help: 'A munkaegység azonosítója, amelyre a visszajelzés vonatkozik (a felülvizsgált csomag leírójából).'
         group_help: Megosztható áttekintő csomag összeállítása és integritásának ellenőrzése.
+        import_feedback_help: 'Megnyit egy visszajelzési borítékot ennek a bucketnek az X25519 kulcspárjával, ellenőriz minden ellenjegyzett elismervényt a helyben tárolt felülvizsgálati csomaggal szemben, és csatolja az ellenőrzött ellenjegyzést a jóváhagyási naplójához. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
         notes_help: A csomag leírójába ágyazott szabad szöveges megjegyzés (pl. a
           megosztás oka).
         operator_public_key_help: Az operátor (eredeti aláíró) nyilvános kulcsa, 64
           kisbetűs hexadecimális karakterként.
+        originator_id_help: 'Regisztrált kibocsátó-azonosító, amelynek nyilvános kulcsa lezárja a visszajelzést (lásd `aeat config collab recipient add`).'
         output_help: Az elérési út, ahová az áttekintő csomag ZIP fájlját írni kell.
         package_path_help: Az ellenőrizendő áttekintő csomag ZIP fájljának elérési
           útja.
@@ -2662,19 +2676,33 @@ cli:
       client_json_help: Egy Cloud Console asztali OAuth ügyfél JSON-fájljának elérési
         útja.
       credential_source:
-        delegate_help: 'Láncolt megszemélyesítés delegnált szolgáltatási fiók e-mail címe (ismételhető)'
+        delegate_help: Láncolt megszemélyesítés delegnált szolgáltatási fiók e-mail
+          címe (ismételhető)
         detail:
-          impersonation_config_invalid: 'a megszemélyesítési konfiguráció érvénytelen: {detail}'
-          oauth_desktop_rejects_impersonation_options: 'a --kind oauth_desktop nem fogadja el a --target-principal, --scope, --delegate, --subject vagy --lifetime-seconds paramétereket'
-          target_principal_required: 'a --target-principal kötelező, ha a --kind értéke service_account_impersonation'
-        help: 'Válassza ki, hogy az aktív profil melyik Google hitelesítőadat-forrást használja (interaktív OAuth asztali beállítás, vagy megosztott szolgáltatási fiók megszemélyesítése)'
-        kind_help: 'Hitelesítőadat-forrás: oauth_desktop (alapértelmezett, interaktív hozzájárulás) vagy service_account_impersonation (megosztott szolgáltatási fiók ADC + IAM révén)'
-        lifetime_help: 'A megszemélyesített token kért élettartama másodpercben (alapértelmezetten a Google 3600 másodperces felső határa)'
-        scope_help: 'A megszemélyesített tokenhez kért OAuth hatókör (ismételhető; alapértelmezetten a Sheets/Drive adathozzáférési hatókörök)'
-        set_help: 'Mentése az aktív profil Google hitelesítőadat-forrás kiválasztásának'
-        show_help: 'Az aktív profil mentétt Google hitelesítőadat-forrás kiválasztásának megjelenítése'
-        subject_help: 'A domainre kiterjedő delegalással megszemélyesítendő Workspace felhasználói e-mail cím (nem kötelező)'
-        target_principal_help: 'A megszemélyesítendő szolgáltatási fiók e-mail címe (kötelező --kind service_account_impersonation esetén)'
+          impersonation_config_invalid: 'a megszemélyesítési konfiguráció érvénytelen:
+            {detail}'
+          oauth_desktop_rejects_impersonation_options: a --kind oauth_desktop nem
+            fogadja el a --target-principal, --scope, --delegate, --subject vagy --lifetime-seconds
+            paramétereket
+          target_principal_required: a --target-principal kötelező, ha a --kind értéke
+            service_account_impersonation
+        help: Válassza ki, hogy az aktív profil melyik Google hitelesítőadat-forrást
+          használja (interaktív OAuth asztali beállítás, vagy megosztott szolgáltatási
+          fiók megszemélyesítése)
+        kind_help: 'Hitelesítőadat-forrás: oauth_desktop (alapértelmezett, interaktív
+          hozzájárulás) vagy service_account_impersonation (megosztott szolgáltatási
+          fiók ADC + IAM révén)'
+        lifetime_help: A megszemélyesített token kért élettartama másodpercben (alapértelmezetten
+          a Google 3600 másodperces felső határa)
+        scope_help: A megszemélyesített tokenhez kért OAuth hatókör (ismételhető;
+          alapértelmezetten a Sheets/Drive adathozzáférési hatókörök)
+        set_help: Mentése az aktív profil Google hitelesítőadat-forrás kiválasztásának
+        show_help: Az aktív profil mentétt Google hitelesítőadat-forrás kiválasztásának
+          megjelenítése
+        subject_help: A domainre kiterjedő delegalással megszemélyesítendő Workspace
+          felhasználói e-mail cím (nem kötelező)
+        target_principal_help: A megszemélyesítendő szolgáltatási fiók e-mail címe
+          (kötelező --kind service_account_impersonation esetén)
       detail:
         client_json_bad_wrapper: A(z) {path} elérési útján lévő ügyfél JSON-ja nem
           rendelkezik megfelelő "installed" wrapper objektummal.
@@ -2693,8 +2721,10 @@ cli:
           hasznalhat --limit kapcsolot, mert egy korlatozott eles futas reszleges
           tavoli tukor manifestet hozna letre.
       errors:
-        adc_stale: 'Az alapértelmezett alkalmazás-hitelesítő adatok (ADC) frissítése nem sikerült: {detail}'
-        adc_unavailable: 'Az alapértelmezett alkalmazás-hitelesítő adatok (ADC) nem érhetők el ezen a gépen: {detail}'
+        adc_stale: 'Az alapértelmezett alkalmazás-hitelesítő adatok (ADC) frissítése
+          nem sikerült: {detail}'
+        adc_unavailable: 'Az alapértelmezett alkalmazás-hitelesítő adatok (ADC) nem
+          érhetők el ezen a gépen: {detail}'
         auth_failed: 'Google-hitelesítés sikertelen: {detail}'
         browser_open: 'Nem sikerült megnyitni a böngészőt a Google-hozzáférés engedélyezéséhez:
           {detail}'
@@ -2702,7 +2732,8 @@ cli:
           Futtassa: `aeat config google register --client-json <elérési_út>`.'
         client_revoked: 'A regisztrált Google OAuth-ügyfél visszavonásra került. Regisztrálja
           újra: `aeat config google register`.'
-        impersonation_refused: 'A szolgáltatási fiók megszemélyesítését elutasították: {detail}'
+        impersonation_refused: 'A szolgáltatási fiók megszemélyesítését elutasították:
+          {detail}'
         keychain_locked: A Google-hitelesítő adatokat tároló rendszerkulcstartó zárolt
           vagy nem elérhető.
         loopback_bind: 'Nem sikerült helyi portot megnyitni a Google-bejelentkezés
@@ -3316,6 +3347,44 @@ cli:
       state_backend_unreadable: Az állapot-tár nem olvasható.
       venv_in_sync: A virtuális környezet szinkronban van.
       venv_stale: A virtuális környezet elavult.
+    telemetry:
+      app_help: Az alapértelmezetten kikapcsolt, opcionális távoli telemetria szint
+        ellenőrzése és vezérlése.
+      bad_tier: 'A --tier értékének a következők egyikének kell lennie: %{accepted};
+        kapott érték: %{value!r}.'
+      endpoint_help: Előnézet/küldés úgy, mintha az AEAT_TELEMETRY_ENDPOINT ez az
+        URL lenne csak ehhez a futtatáshoz; hagyd el, hogy a telepítés ténylegesen
+        beállított végpontját használd.
+      flush:
+        acknowledge_help: Ennek a konkrét távoli telemetria küldésnek a megerősítése.
+          Szükséges (az opt-in és a nem-off szint mellett) ahhoz, hogy a --no-dry-run
+          ténylegesen küldjön; soha nem marad megjegyezve, minden futtatásnál újra
+          meg kell erősíteni.
+        consent_refused_notice: 'Semmit nem küldtünk el: a távoli telemetria alapértelmezetten
+          ki van kapcsolva (az opt-in, a szint, a gestor mód vagy az adott futtatás
+          megerősítése elutasította).'
+        dry_run_help: Előnézetben mutatja a küldendő adatcsomagot anélkül, hogy bármit
+          is elküldene (alapértelmezett). Használd a --no-dry-run kapcsolót a tényleges
+          küldéshez, ha a hozzájárulási szűrő engedélyezi.
+        dry_run_notice: 'Próbafuttatás: ez az adatcsomag elkészült, de semmit nem
+          küldtünk el.'
+        header: 'Telemetria adatcsomag (próbafuttatás, nem küldtünk semmit):'
+        help: Összeállítja az összesített helyi telemetria adatcsomagot, és --dry-run
+          hiányában elküldi.
+        no_endpoint_notice: 'Semmit nem küldtünk el: nincs beállítva AEAT_TELEMETRY_ENDPOINT.'
+      opt_in_help: Előnézet/küldés úgy, mintha az AEAT_TELEMETRY_OPT_IN ezt az értéket
+        venné fel csak ehhez a futtatáshoz; hagyd el, hogy a telepítés ténylegesen
+        beállított értékét használd.
+      status:
+        header: 'Távoli telemetria állapota:'
+        help: A jelenlegi távoli telemetria hozzájárulási állapotának jelentése. Soha
+          nem küld semmit.
+        off_hint: A telemetria alapértelmezetten teljesen helyi marad. A bekapcsoláshoz
+          állítsd be az AEAT_TELEMETRY_OPT_IN=true értéket és az AEAT_TELEMETRY_TIER-t
+          crash_only vagy full értékre az env/.env fájlban.
+      tier_help: Előnézet/küldés úgy, mintha az AEAT_TELEMETRY_TIER ezt az értéket
+        venné fel (off / crash_only / full) csak ehhez a futtatáshoz; hagyd el a ténylegesen
+        beállított szinthez.
     version:
       no_revisions: Nincsenek elérhető nyilvántartási revíziók.
       registry_summary: '%{package} %{version}: %{modelos} nyomtatvány, %{casillas}

@@ -2129,6 +2129,7 @@ cli:
           el par de claves X25519 de este bucket (generado en el primer uso) y escribe
           el paquete recuperado en --output. Solo local; nunca contacta con la AEAT.
         decrypt_output_help: Ruta donde escribir el ZIP del paquete de revision recuperado.
+        encrypt_feedback_help: 'Sella los comentarios de revisión de un destinatario (una nota y, opcionalmente, un recibo contrafirmado) de vuelta al originador para que solo la clave privada del originador pueda abrirlos, y escribe el sobre en --output. Solo local; nunca contacta con la AEAT.'
         encrypt_for_recipient_help: Sella un paquete de revision para que solo la
           clave privada de un destinatario registrado pueda abrirlo, y escribe el
           sobre cifrado en --output. Solo local; nunca contacta con la AEAT.
@@ -2139,17 +2140,30 @@ cli:
         errors:
           envelope_not_found: No se encontro el sobre cifrado para el destinatario
             en {envelope_path}.
+          feedback_envelope_not_found: 'No se encontró el sobre de comentarios en {envelope_path}.'
           invalid_valid_for_days: --valid-for-days debe ser un entero estrictamente
             positivo.
           output_required: Indique --output RUTA para el ZIP del paquete de revisión.
           package_not_found: No se encontró el paquete de revisión en {package_path}.
           receipt_not_found: No se encontró el recibo en {receipt_path}.
           signature_not_found: No se encontró el sobre de firma en {signature_path}.
+        feedback_counter_signer_public_key_help: 'La clave pública de firma Ed25519 del revisor contra la que debe verificarse la contrafirma (obligatoria cuando los comentarios incluyen un recibo).'
+        feedback_envelope_path_help: 'Ruta al JSON del sobre de comentarios cifrado para el originador producido por `encrypt-feedback`.'
+        feedback_note_help: 'Veredicto o nota de texto libre (p. ej. `revisado, sin cambios`).'
+        feedback_operator_public_key_help: 'Tu propia clave pública de firma Ed25519 contra la que debe verificarse la firma original.'
+        feedback_output_help: 'Ruta donde escribir el JSON del sobre de comentarios cifrado para el originador.'
+        feedback_package_help: 'Ruta a tu paquete de revisión original guardado localmente contra el que se verifica un recibo contrafirmado.'
+        feedback_receipt_help: 'Recibo contrafirmado opcional en JSON (de `counter-sign`) para incluir como aprobación formal.'
+        feedback_revision_id_help: 'Id de la revisión de cálculo a la que se refieren los comentarios (del descriptor del paquete revisado).'
+        feedback_submitted_by_help: 'Etiqueta del actor revisor (p. ej. el nombre para mostrar del asesor).'
+        feedback_work_unit_id_help: 'Id de la unidad de trabajo a la que se refieren los comentarios (del descriptor del paquete revisado).'
         group_help: Construye un paquete de revisión compartible y verifica su integridad.
+        import_feedback_help: 'Abre un sobre de comentarios con el par de claves X25519 de este bucket, verifica cualquier recibo contrafirmado contra tu paquete de revisión guardado localmente y adjunta la contrafirma verificada a tu registro de aprobación. Solo local; nunca contacta con la AEAT.'
         notes_help: Nota de texto libre incluida en el descriptor del paquete (p.
           ej. el motivo del envío).
         operator_public_key_help: Clave pública del operador (firmante original),
           en 64 caracteres hexadecimales en minúscula.
+        originator_id_help: 'Id de originador registrado cuya clave pública sella los comentarios (véase `aeat config collab recipient add`).'
         output_help: Ruta donde escribir el ZIP del paquete de revisión.
         package_path_help: Ruta del ZIP del paquete de revisión a verificar.
         public_key_help: Clave pública del firmante, en 64 caracteres hexadecimales
@@ -2750,19 +2764,33 @@ cli:
     google:
       client_json_help: Ruta al archivo JSON del cliente OAuth Desktop de Cloud Console
       credential_source:
-        delegate_help: 'Correo de cuenta de servicio delegada en una suplantación encadenada (repetible)'
+        delegate_help: Correo de cuenta de servicio delegada en una suplantación encadenada
+          (repetible)
         detail:
-          impersonation_config_invalid: 'la configuración de suplantación no es válida: {detail}'
-          oauth_desktop_rejects_impersonation_options: '--kind oauth_desktop no acepta --target-principal, --scope, --delegate, --subject ni --lifetime-seconds'
-          target_principal_required: '--target-principal es obligatorio cuando --kind es service_account_impersonation'
-        help: 'Selecciona qué fuente de credenciales de Google usa el perfil activo (OAuth interactivo de escritorio, o una suplantación compartida de cuenta de servicio)'
-        kind_help: 'Fuente de credenciales: oauth_desktop (por defecto, consentimiento interactivo) o service_account_impersonation (cuenta de servicio compartida mediante ADC + IAM)'
-        lifetime_help: 'Duración solicitada del token suplantado en segundos (por defecto el límite de 3600s de Google)'
-        scope_help: 'Alcance OAuth solicitado para el token suplantado (repetible; por defecto los alcances de acceso a datos de Sheets/Drive)'
-        set_help: 'Guarda la selección de fuente de credenciales de Google del perfil activo'
-        show_help: 'Muestra la selección de fuente de credenciales de Google guardada para el perfil activo'
-        subject_help: 'Correo del usuario de Workspace a suplantar mediante delegación en todo el dominio (opcional)'
-        target_principal_help: 'Correo de la cuenta de servicio a suplantar (obligatorio con --kind service_account_impersonation)'
+          impersonation_config_invalid: 'la configuración de suplantación no es válida:
+            {detail}'
+          oauth_desktop_rejects_impersonation_options: --kind oauth_desktop no acepta
+            --target-principal, --scope, --delegate, --subject ni --lifetime-seconds
+          target_principal_required: --target-principal es obligatorio cuando --kind
+            es service_account_impersonation
+        help: Selecciona qué fuente de credenciales de Google usa el perfil activo
+          (OAuth interactivo de escritorio, o una suplantación compartida de cuenta
+          de servicio)
+        kind_help: 'Fuente de credenciales: oauth_desktop (por defecto, consentimiento
+          interactivo) o service_account_impersonation (cuenta de servicio compartida
+          mediante ADC + IAM)'
+        lifetime_help: Duración solicitada del token suplantado en segundos (por defecto
+          el límite de 3600s de Google)
+        scope_help: Alcance OAuth solicitado para el token suplantado (repetible;
+          por defecto los alcances de acceso a datos de Sheets/Drive)
+        set_help: Guarda la selección de fuente de credenciales de Google del perfil
+          activo
+        show_help: Muestra la selección de fuente de credenciales de Google guardada
+          para el perfil activo
+        subject_help: Correo del usuario de Workspace a suplantar mediante delegación
+          en todo el dominio (opcional)
+        target_principal_help: Correo de la cuenta de servicio a suplantar (obligatorio
+          con --kind service_account_impersonation)
       detail:
         client_json_bad_wrapper: el JSON de cliente en {path} tiene un envoltorio
           "installed" que no es un objeto
@@ -2780,8 +2808,10 @@ cli:
           usar --limit salvo que --dry-run este activado, porque una ejecucion real
           acotada crearia un manifiesto remoto parcial.
       errors:
-        adc_stale: 'No se pudieron renovar las Credenciales Predeterminadas de la Aplicación (ADC): {detail}'
-        adc_unavailable: 'Las Credenciales Predeterminadas de la Aplicación (ADC) no están disponibles en este equipo: {detail}'
+        adc_stale: 'No se pudieron renovar las Credenciales Predeterminadas de la
+          Aplicación (ADC): {detail}'
+        adc_unavailable: 'Las Credenciales Predeterminadas de la Aplicación (ADC)
+          no están disponibles en este equipo: {detail}'
         auth_failed: 'La autenticación con Google falló: {detail}'
         browser_open: 'No se pudo abrir un navegador para autorizar el acceso a Google:
           {detail}'
@@ -2790,7 +2820,8 @@ cli:
           <ruta>`.
         client_revoked: El cliente OAuth de Google registrado ha sido revocado. Vuelve
           a registrarlo con `aeat config google register`.
-        impersonation_refused: 'Se rechazó la suplantación de la cuenta de servicio: {detail}'
+        impersonation_refused: 'Se rechazó la suplantación de la cuenta de servicio:
+          {detail}'
         keychain_locked: El llavero del sistema que guarda las credenciales de Google
           está bloqueado o no disponible.
         loopback_bind: 'No se pudo abrir un puerto local para completar el inicio
@@ -3409,6 +3440,43 @@ cli:
       state_backend_unreadable: El almacen de estado del flujo de trabajo no es accesible.
       venv_in_sync: El entorno virtual esta sincronizado.
       venv_stale: El entorno virtual esta desactualizado.
+    telemetry:
+      app_help: Inspecciona y controla el nivel de telemetría remota, desactivado
+        por defecto y opcional.
+      bad_tier: '--tier debe ser uno de: %{accepted}; se recibió %{value!r}.'
+      endpoint_help: Previsualiza/envía como si AEAT_TELEMETRY_ENDPOINT fuera esta
+        URL solo para esta ejecución; omítelo para usar el endpoint configurado realmente
+        en el despliegue.
+      flush:
+        acknowledge_help: Confirma este envío concreto de telemetría remota. Requerido
+          (además del opt-in y de un nivel distinto de off) para que --no-dry-run
+          transmita de verdad; nunca queda guardado, hay que reafirmarlo en cada ejecución.
+        consent_refused_notice: 'No se envió nada: la telemetría remota está desactivada
+          por defecto (el opt-in, el nivel, el modo gestor o la confirmación de esta
+          ejecución la rechazaron).'
+        dry_run_help: Previsualiza la carga útil que se enviaría sin transmitir nada
+          (por defecto). Pasa --no-dry-run para enviarla realmente cuando el filtro
+          de consentimiento lo permita.
+        dry_run_notice: 'Simulacro: esta carga útil se construyó pero no se transmitió
+          nada.'
+        header: 'Carga útil de telemetría (simulacro, no se envió nada):'
+        help: Construye la carga útil agregada de telemetría local y, salvo --dry-run,
+          la envía.
+        no_endpoint_notice: 'No se envió nada: no hay ningún AEAT_TELEMETRY_ENDPOINT
+          configurado.'
+      opt_in_help: Previsualiza/envía como si AEAT_TELEMETRY_OPT_IN tuviera este valor
+        solo para esta ejecución; omítelo para usar el ajuste configurado realmente
+        en el despliegue.
+      status:
+        header: 'Postura de telemetría remota:'
+        help: Informa de la postura de consentimiento de telemetría remota. Nunca
+          emite nada.
+        off_hint: La telemetría permanece totalmente local por defecto. Para activarla,
+          define AEAT_TELEMETRY_OPT_IN=true y AEAT_TELEMETRY_TIER a crash_only o full
+          en env/.env.
+      tier_help: Previsualiza/envía como si AEAT_TELEMETRY_TIER tuviera este valor
+        (off / crash_only / full) solo para esta ejecución; omítelo para usar el nivel
+        configurado realmente.
     version:
       no_revisions: No hay revisiones del registro disponibles.
       registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas,
