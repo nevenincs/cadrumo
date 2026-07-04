@@ -35,6 +35,7 @@ related:
   - '[[2026-05-20-calculation-source-connectivity-W04-P09-S52]]'
   - '[[2026-05-20-calculation-source-connectivity-W04-P09-S53]]'
   - '[[2026-05-20-calculation-source-connectivity-W04-P09-S54]]'
+  - '[[2026-05-20-calculation-source-connectivity-W05-P10-S62]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'
   - '[[2026-05-20-calculation-source-connectivity-plan]]'
   - '[[2026-05-20-calculation-source-connectivity-research]]'
@@ -107,6 +108,7 @@ Auto-generated index of all documents tagged with `#calculation-source-connectiv
 - `2026-05-20-calculation-source-connectivity-W04-P09-S52` - Test approval staleness changes when invoice source data changes
 - `2026-05-20-calculation-source-connectivity-W04-P09-S53` - Test calculation revision roundtrip preserves source refs
 - `2026-05-20-calculation-source-connectivity-W04-P09-S54` - Run feature surface quality gate for source mesh touched files
+- `2026-05-20-calculation-source-connectivity-W05-P10-S62` - Follow-up: extend the approval-basis source fingerprint beyond the invoice catalogue to the remaining self-loadable mesh sources (profile, previous_filing, relations) without coupling the review layer to the full source mesh
 
 ### plan
 
