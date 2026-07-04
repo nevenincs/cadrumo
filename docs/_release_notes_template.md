@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 <!--
 Release notes template for aeat-cli. Copy this block, fill it in from the
 `just release` dry-run log (conventional-commit groups since the last tag),
