@@ -20,10 +20,25 @@ profile — no mocks. Confirms:
    only non-secret configuration.
 5. An unaccepted ``--kind`` value is refused, and the refusal names the
    accepted set (Click ``Choice`` rendering).
+
+Most assertions drive `set`/`show` through separate `invoke_cached_cli`
+invocations, matching the project's standard CLI-runner pattern: each
+command opens and tears down its own bucket session
+(`ctx.with_resource(get_master_key_provider())`), so a persisted selection
+is proven by a later command re-loading it from secure storage rather than
+by a bare post-invocation repository read (the active-session ContextVar
+is unbound once a command returns). The two tests that need to call a
+non-CLI primitive directly (`build_google_credentials`,
+`load_credential_source_selection`) instead wrap the whole exchange in
+`isolated_runtime_profile`, whose `with`-block keeps one bucket session
+active across both the CLI invocation and the direct call — the same
+pattern :mod:`adapters.outbound.google.tests.test_session_store_roundtrip`
+and :mod:`adapters.outbound.storage.tests.test_factory` use.
 """
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -34,15 +49,30 @@ from .....adapters.outbound.storage import build_google_credentials
 from .....core import GoogleCredentialSourceKind
 from .....core.config import override_settings
 from .....tests.cli_runner import invoke_cached_cli
-from .....tests.secure_sql import isolated_profile_storage_root
+from .....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _TARGET_PRINCIPAL = "aeat-export@example-project.iam.gserviceaccount.com"
 
+_PROFILE_CREATE_ARGS = (
+    "--entity-type",
+    "natural_person",
+    "--tax-id",
+    "00000000T",
+    "--irpf-income-categories",
+    "actividad_economica",
+    "--name",
+    "Test",
+    "--surnames",
+    "Operator",
+    "--quiet",
+    "--accept-defaults",
+)
+
 
 @pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path):  # noqa: ANN201 - pytest fixture generator
+def _isolated_cli_backend(tmp_path: Path):
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(
@@ -58,21 +88,7 @@ def _isolated_cli_backend(tmp_path: Path):  # noqa: ANN201 - pytest fixture gene
 
 def _create_profile(name: str = "google-credential-source-operator") -> str:
     """Provision and activate a real profile; return its resolved profile id."""
-    result = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            name,
-            "--quiet",
-            "--tax-id",
-            "00000000T",
-            "--activity",
-            "Servicios",
-            "--iva-regime",
-            "GENERAL",
-        ],
-    )
+    result = invoke_cached_cli(["config", "profile", "create", name, *_PROFILE_CREATE_ARGS])
     assert result.exit_code == 0, result.output
     return name
 
@@ -106,32 +122,58 @@ def test_set_service_account_impersonation_then_show_reflects_it() -> None:
 
 
 def test_set_impersonation_persists_no_secret_field(tmp_path: Path) -> None:
-    """The persisted selection roundtrips through secure storage with no secret field."""
-    profile = _create_profile()
+    """The persisted selection roundtrips through secure storage with no secret field.
 
-    result = invoke_cached_cli(
-        [
-            "config",
-            "google",
-            "credential-source",
-            "set",
-            "--kind",
-            GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION.value,
-            "--target-principal",
-            _TARGET_PRINCIPAL,
-            "--scope",
-            "https://www.googleapis.com/auth/drive.file",
-        ],
-    )
-    assert result.exit_code == 0, result.output
+    Asserted through both surfaces: the CLI ``show`` JSON payload schema
+    (:class:`GoogleCredentialSourceShowResult`) is itself the proof no secret
+    field exists — it declares exactly `target_principal` / `target_scopes`
+    / `delegates` / `subject` / `lifetime_s`, never a private key or access
+    token field — and a direct secure-storage reload (inside the same
+    `isolated_runtime_profile` bucket session) confirms the persisted
+    `--scope` value round-trips byte-for-byte. The CLI's standing
+    `url-host-only` output-redaction policy (`redact_for_cli_output`)
+    deliberately truncates a scope URL's path in *rendered* text, so the
+    full-URL assertion reads the persisted record rather than the CLI text.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="impersonation-no-secret-field") as profile:
+        set_result = invoke_cached_cli(
+            [
+                "config",
+                "google",
+                "credential-source",
+                "set",
+                "--kind",
+                GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION.value,
+                "--target-principal",
+                _TARGET_PRINCIPAL,
+                "--scope",
+                "https://www.googleapis.com/auth/drive.file",
+            ],
+        )
+        assert set_result.exit_code == 0, set_result.output
 
-    selection = load_credential_source_selection(profile)
+        show_result = invoke_cached_cli(["--format", "json", "config", "google", "credential-source", "show"])
+        assert show_result.exit_code == 0, show_result.output
+        assert GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION.value in show_result.output
+        assert _TARGET_PRINCIPAL in show_result.output
+        payload = json.loads(show_result.output)["result"]
+        assert set(payload.keys()) == {
+            "operation",
+            "profile",
+            "configured",
+            "kind",
+            "target_principal",
+            "target_scopes",
+            "delegates",
+            "subject",
+            "lifetime_s",
+        }
+
+        selection = load_credential_source_selection(profile.bucket_id)
+
     assert selection is not None
-    assert selection.kind is GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION
     assert selection.impersonation is not None
-    assert selection.impersonation.target_principal == _TARGET_PRINCIPAL
-    # The persisted model carries only configuration: no SA private key,
-    # refresh token, or access token field exists anywhere on it.
+    assert selection.impersonation.target_scopes == ("https://www.googleapis.com/auth/drive.file",)
     assert set(selection.impersonation.model_dump().keys()) == {
         "target_principal",
         "target_scopes",
@@ -141,7 +183,7 @@ def test_set_impersonation_persists_no_secret_field(tmp_path: Path) -> None:
     }
 
 
-def test_factory_dispatches_to_impersonation_after_cli_set(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_factory_dispatches_to_impersonation_after_cli_set(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """The CLI-persisted selection genuinely drives `build_google_credentials`.
 
     Pointing `GOOGLE_APPLICATION_CREDENTIALS` at a nonexistent path makes the
@@ -151,59 +193,59 @@ def test_factory_dispatches_to_impersonation_after_cli_set(monkeypatch: pytest.M
     if the factory actually dispatched to the impersonation resolver (the
     OAuth-Desktop path would instead raise a client-not-registered error).
     """
-    profile = _create_profile()
     monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json")
 
-    result = invoke_cached_cli(
-        [
-            "config",
-            "google",
-            "credential-source",
-            "set",
-            "--kind",
-            GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION.value,
-            "--target-principal",
-            _TARGET_PRINCIPAL,
-        ],
-    )
-    assert result.exit_code == 0, result.output
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-dispatch-credential-source") as profile:
+        result = invoke_cached_cli(
+            [
+                "config",
+                "google",
+                "credential-source",
+                "set",
+                "--kind",
+                GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION.value,
+                "--target-principal",
+                _TARGET_PRINCIPAL,
+            ],
+        )
+        assert result.exit_code == 0, result.output
 
-    with pytest.raises(GoogleAuthAdcUnavailableError) as raised:
-        build_google_credentials(profile=profile)
+        with pytest.raises(GoogleAuthAdcUnavailableError) as raised:
+            build_google_credentials(profile=profile.bucket_id)
 
     assert raised.value.context == {"target_principal": _TARGET_PRINCIPAL}
 
 
-def test_set_oauth_desktop_restores_the_default_after_impersonation() -> None:
-    profile = _create_profile()
+def test_set_oauth_desktop_restores_the_default_after_impersonation(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="restore-oauth-desktop-credential-source") as profile:
+        impersonation_result = invoke_cached_cli(
+            [
+                "config",
+                "google",
+                "credential-source",
+                "set",
+                "--kind",
+                GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION.value,
+                "--target-principal",
+                _TARGET_PRINCIPAL,
+            ],
+        )
+        assert impersonation_result.exit_code == 0, impersonation_result.output
 
-    impersonation_result = invoke_cached_cli(
-        [
-            "config",
-            "google",
-            "credential-source",
-            "set",
-            "--kind",
-            GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION.value,
-            "--target-principal",
-            _TARGET_PRINCIPAL,
-        ],
-    )
-    assert impersonation_result.exit_code == 0, impersonation_result.output
+        restore_result = invoke_cached_cli(
+            [
+                "config",
+                "google",
+                "credential-source",
+                "set",
+                "--kind",
+                GoogleCredentialSourceKind.OAUTH_DESKTOP.value,
+            ],
+        )
+        assert restore_result.exit_code == 0, restore_result.output
 
-    restore_result = invoke_cached_cli(
-        [
-            "config",
-            "google",
-            "credential-source",
-            "set",
-            "--kind",
-            GoogleCredentialSourceKind.OAUTH_DESKTOP.value,
-        ],
-    )
-    assert restore_result.exit_code == 0, restore_result.output
+        selection = load_credential_source_selection(profile.bucket_id)
 
-    selection = load_credential_source_selection(profile)
     assert selection is not None
     assert selection.kind is GoogleCredentialSourceKind.OAUTH_DESKTOP
     assert selection.impersonation is None
