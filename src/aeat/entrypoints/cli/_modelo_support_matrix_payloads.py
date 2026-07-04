@@ -1,6 +1,6 @@
 """JSON payload schemas for ``aeat app modelo support-matrix``.
 
-Projects :class:`~aeat.domain.calculations.registry.ModeloEntry` (and its
+Projects :class:`~domain.calculations.registry.ModeloEntry` (and its
 nested rename / deprecation / portal-compatibility records) onto the CLI's
 strict :class:`OutputSchema` contract. Every field mirrors the domain report
 unchanged; this module only pins the JSON transport shape.
