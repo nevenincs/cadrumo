@@ -183,7 +183,13 @@ def aggregate_renta_gasto_ledger_from_repositories(
             t("aggregation.renta_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    transactions = repository.load()
+    # Filtering by date range before decrypt is a pure performance optimisation
+    # (issue #408): the cumulative window this aggregation computes internally
+    # is [Jan 1 of the period's year, the declared quarter's end date] (RD
+    # 439/2007 art. 110.2), so pre-filtering to that exact window reproduces
+    # the unfiltered result -- no row the aggregation would admit falls outside it.
+    resolved_period = _resolve_quarterly_period(period)
+    transactions = repository.load_for_date_range(date(resolved_period.year, 1, 1), resolved_period.end_date)
     return aggregate_renta_gasto_ledger(transactions, bucket_id=bucket_id, period=period)
 
 
