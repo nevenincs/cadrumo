@@ -4,20 +4,20 @@ The extractor reads printed casilla/value rows from a Renta artefact using the
 year-stable ``NNNN label amount`` grammar used by the supported 2021-2025
 extractor registrations and exercised by the checked 2021-2023 fixture PDFs
 plus the generated 2025 parser tests. The class name records the original 2025
-implementation point, but :mod:`aeat.adapters.inbound.borrador._extractors`
+implementation point, but :mod:`adapters.inbound.borrador._extractors`
 deliberately maps every supported year to this implementation while the observed
 row grammar remains stable.
 
 This is a read-only inbound adapter. It does not define Modelo 100
 completeness, resolve a
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot`, or make
+:class:`~domain.calculations.registry.RegistrySnapshot`, or make
 filing-grade authority decisions. When callers pass a
-:class:`~aeat.adapters.inbound.borrador._schema.BorradorExtractionProfile`, the
+:class:`~adapters.inbound.borrador._schema.BorradorExtractionProfile`, the
 extractor filters to that profile and fails hard if observed coverage is
 insufficient.
 
 Rows are extracted from the concatenated text stream, so
-:class:`~aeat.adapters.inbound.pdf.ExtractedCasilla` records preserve the
+:class:`~adapters.inbound.pdf.ExtractedCasilla` records preserve the
 printed value and confidence but do not capture per-row bounding boxes.
 """
 
@@ -60,7 +60,7 @@ class Modelo100ObservedV2025Extractor:
 
     Reads the printed text via the backend facade's ``extract_pages_text``
     primitive, locates printed casilla rows, and returns a strict
-    :class:`~aeat.adapters.inbound.borrador._schema.InboundBorradorObservation`.
+    :class:`~adapters.inbound.borrador._schema.InboundBorradorObservation`.
 
     Attributes:
         año: The original implementation year. The extractor registry may map
@@ -76,19 +76,19 @@ class Modelo100ObservedV2025Extractor:
         artefact_kind: ArtefactKind,
         extraction_profile: BorradorExtractionProfile | None = None,
     ) -> InboundBorradorObservation:
-        """Parse ``pdf_path`` into a :class:`~aeat.adapters.inbound.borrador._schema.InboundBorradorObservation`.
+        """Parse ``pdf_path`` into a :class:`~adapters.inbound.borrador._schema.InboundBorradorObservation`.
 
         Args:
             pdf_path: Path to the Modelo 100 PDF.
             artefact_kind: The artefact kind discovered by
-                :func:`~aeat.adapters.inbound.borrador._detect.detect_artefact_kind`
+                :func:`~adapters.inbound.borrador._detect.detect_artefact_kind`
                 (or supplied by the caller as an override).
             extraction_profile: Optional caller-supplied registry-profile
                 projection that declares target casillas and minimum coverage
                 for this parse.
 
         Returns:
-            The strict :class:`~aeat.adapters.inbound.borrador._schema.InboundBorradorObservation`
+            The strict :class:`~adapters.inbound.borrador._schema.InboundBorradorObservation`
             with observed casillas extracted.
 
         Raises:
