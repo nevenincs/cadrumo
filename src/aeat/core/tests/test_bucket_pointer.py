@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import pytest
 from pydantic import ValidationError
 
 from .. import BucketPointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+class _BucketPointerKwargs(TypedDict):
+    bucket_id: str
+    schema_version: int
 
 
 def test_json_round_trip() -> None:
@@ -27,10 +34,11 @@ def test_toml_round_trip() -> None:
 
 
 def test_rejects_invalid_constructor_fields() -> None:
-    for kwargs in (
+    cases: tuple[_BucketPointerKwargs, ...] = (
         {"bucket_id": "", "schema_version": 1},
         {"bucket_id": "bucket-001", "schema_version": 0},
-    ):
+    )
+    for kwargs in cases:
         with pytest.raises(ValidationError):
             BucketPointer(**kwargs)
 
