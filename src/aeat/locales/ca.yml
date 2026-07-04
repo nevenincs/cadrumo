@@ -1042,9 +1042,7 @@ application:
           per reclamar la tarifa Convenio aplicable, o espereu que el corpus baseline
           incorpori aquesta fila.'
       m210_convenio_rate_missing:
-        next_action: Autoritzeu la fila Convenio España-{cc} a m210-convenio-rates
-          per a tipo_renta={tipo_renta}, o desestableixi profile.convenio_doble_imposicion_country
-          per usar el baseline TRLIRNR Art 25.
+        next_action: 'Autoritzeu una fila de Convenio España-{cc} per a tipo_renta={tipo_renta} a registry/aeat/treaties/, o desestableixi profile.country_of_fiscal_residence per usar el baseline TRLIRNR Art 25.'
       missing_required_casilla: La casella obligatòria %{casilla_id} no és present
         a les dades d'entrada del càlcul.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La
@@ -1124,6 +1122,8 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
+      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: s''ha aplicat el tipus de Convenio Espanya-%{cc} (%{document_id}) per a tipo_renta=%{tipo_renta}. El benefici del conveni nomes esta disponible per al beneficiari efectiu resident en aquest Estat que compleixi les condicions de limitacio de beneficis del conveni; confirmi l''elegibilitat abans d''aplicar aquest tipus.'
+      m210_convenio_lob_advisory_next_action: 'Confirmi que el contribuent compleix les condicions de beneficiari efectiu i de limitacio de beneficis del Convenio Espanya-%{cc} (%{document_id}) abans d''aplicar el tipus del conveni; revisi l''article especific del conveni, no nomes el marc general del Model de Conveni de l''OCDE.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
@@ -3010,6 +3010,7 @@ cli:
           tots.
         use_help: Canvia el perfil actiu a un sandbox existent.
         use_name_help: Nom del sandbox (sense el prefix).
+        active_indicator_info: 'Estàs operant dins del sandbox %{label}, no en un perfil real; totes les ordres s''executen contra aquest bucket aïllat i descartable.'
       sar_catalogue_info: 'Aquest arxiu conté totes les categories de dades personals
         del perfil: identitat i dades del perfil, unitats de treball de models, moviments
         del llibre, revisions de càlcul i registres de presentació. Els bytes de les

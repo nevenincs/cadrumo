@@ -988,9 +988,7 @@ application:
           Convenio tarifa igenylesehez, vagy varja meg amig a baseline korpusz beepiti
           ezt a sort.'
       m210_convenio_rate_missing:
-        next_action: Hozzon létre Convenio España-{cc} sort a m210-convenio-rates
-          paraméterben tipo_renta={tipo_renta} értékhez, vagy állítsa vissza profile.convenio_doble_imposicion_country
-          értékét a TRLIRNR Art 25 alapérték használatához.
+        next_action: 'Hozzon letre egy Convenio Espana-{cc} szerzodesi sort a tipo_renta={tipo_renta} ertekhez a registry/aeat/treaties/ alatt, vagy allitsa vissza a profile.country_of_fiscal_residence erteket a TRLIRNR Art 25 alapertek hasznalatahoz.'
       missing_required_casilla: A kötelező %{casilla_id} casilla hiányzik a számítási
         revízió bemeneti adataiból.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: Az
@@ -1069,6 +1067,8 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
+      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: a Convenio Spanyolorszag-%{cc} (%{document_id}) egyezmenyi adokulcs alkalmazasra kerult a tipo_renta=%{tipo_renta} ertekhez. Az egyezmenyes kedvezmeny csak az adott allamban illetoseggel rendelkezo tenyleges haszonhuzo szamara all rendelkezesre, aki teljesiti az egyezmeny kedvezmenykorlatozasi (LOB) felteteleit; a tipus alkalmazasa elott ellenorizze a jogosultsagot.'
+      m210_convenio_lob_advisory_next_action: 'Ellenorizze, hogy az adozo teljesiti a Convenio Spanyolorszag-%{cc} (%{document_id}) tenyleges haszonhuzoi es kedvezmenykorlatozasi (LOB) felteteleit, mielott az egyezmenyi adokulcsot alkalmazza; tekintse at az egyezmeny konkret cikkelyet, ne csak az OECD Modellegyezmeny altalanos LOB koncepciojat.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás
@@ -2967,6 +2967,7 @@ cli:
           jelentéséhez.
         use_help: Az aktív profil váltása egy meglévő sandboxra.
         use_name_help: A sandbox neve (előtag nélkül).
+        active_indicator_info: 'A(z) %{label} homokozóban dolgozol, nem egy valódi profilban; minden parancs ebben az elkülönített, eldobható tárolóban fut.'
       sar_catalogue_info: 'Ez az archívum a profilhoz tárolt összes személyesadat-kategóriát
         tartalmazza: azonosító és profiladatok, modelo munkaegységek, főkönyvi tételek,
         számítási revíziók és benyújtási nyilvántartások. A csatolt bizonyítékok bájtjai

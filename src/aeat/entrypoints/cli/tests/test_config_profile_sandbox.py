@@ -27,10 +27,15 @@ storage (no mocks, per the roundtrip-discipline rule) and prove:
 - ``restore`` reverses ``archive``: it brings the same sandbox back to
   the live surface with its data intact, and refuses a sandbox that was
   never archived.
+- every command run while a sandbox is the active profile surfaces a
+  persistent sandbox-active indicator (an info ``Notice`` in ``--json``,
+  a ``SANDBOX`` banner line in text mode) naming the sandbox; a command
+  run against a real (non-sandbox) profile carries neither.
 """
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 
@@ -40,7 +45,7 @@ from click.testing import Result
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ._profile_lifecycle_support import create_profile_via_cli
-from .envelope_helpers import unwrap_schema_envelope
+from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -756,3 +761,78 @@ def test_sandbox_merge_unknown_target_profile_refuses() -> None:
         ),
     )
     assert result.exit_code != 0
+
+
+# ---------------------------------------------------------------------
+# Persistent sandbox-active indicator (#422 final slice)
+# ---------------------------------------------------------------------
+
+
+def test_sandbox_active_indicator_appears_in_json_notices_while_sandbox_is_active() -> None:
+    """An unrelated ``--json`` command surfaces an info notice naming the active sandbox."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+
+    shown = _invoke(("--format", "json", "config", "profile", "show"))
+    assert shown.exit_code == 0, shown.output
+    notices = unwrap_envelope_notices(shown.output)
+    sandbox_notices = [n for n in notices if n["code"] == "config.profile.sandbox.active_indicator"]
+    assert len(sandbox_notices) == 1, notices
+    assert sandbox_notices[0]["severity"] == "info"
+    assert "sandbox:bakeoff" in sandbox_notices[0]["message"]
+
+    envelope = json.loads(shown.output)
+    assert envelope["status"] == "success"
+
+
+def test_sandbox_active_indicator_appears_as_text_banner_while_sandbox_is_active() -> None:
+    """A text-mode command run against an active sandbox prints a ``SANDBOX`` banner line."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+
+    shown = _invoke(("config", "profile", "show"))
+    assert shown.exit_code == 0, shown.output
+    assert "SANDBOX\t" in shown.output
+    assert "sandbox:bakeoff" in shown.output
+
+
+def test_sandbox_active_indicator_absent_for_a_real_profile() -> None:
+    """A command run against a real (non-sandbox) profile carries no sandbox indicator."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    shown_json = _invoke(("--format", "json", "config", "profile", "show"))
+    assert shown_json.exit_code == 0, shown_json.output
+    notices = unwrap_envelope_notices(shown_json.output)
+    assert all(n["code"] != "config.profile.sandbox.active_indicator" for n in notices)
+
+    shown_text = _invoke(("config", "profile", "show"))
+    assert shown_text.exit_code == 0, shown_text.output
+    assert "SANDBOX\t" not in shown_text.output
+
+
+def test_sandbox_active_indicator_absent_when_no_profile_is_active() -> None:
+    """A cold-start command (no active profile at all) carries no sandbox indicator."""
+    result = _invoke(("--format", "json", "config", "profile", "list"))
+    assert result.exit_code == 0, result.output
+    notices = unwrap_envelope_notices(result.output)
+    assert all(n["code"] != "config.profile.sandbox.active_indicator" for n in notices)
+
+
+def test_sandbox_active_indicator_names_the_currently_active_sandbox_after_switch() -> None:
+    """Switching between two sandboxes updates the banner's named sandbox on the next command."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "zeta", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "profile", "sandbox", "create", "eta", "--from-profile", "main")).exit_code == 0
+    # "eta" is now the active bucket (the most recently created sandbox).
+
+    shown = _invoke(("config", "profile", "show"))
+    assert shown.exit_code == 0, shown.output
+    assert "sandbox:eta" in shown.output
+    assert "sandbox:zeta" not in shown.output
+
+    assert _invoke(("config", "profile", "sandbox", "use", "zeta")).exit_code == 0
+    shown_after_use = _invoke(("config", "profile", "show"))
+    assert shown_after_use.exit_code == 0, shown_after_use.output
+    assert "sandbox:zeta" in shown_after_use.output
