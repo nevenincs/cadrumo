@@ -7,8 +7,12 @@ operator would see.
 
 from __future__ import annotations
 
-import click
+from typing import override
+
 import pytest
+from typer._click.core import Command as ClickCommand
+from typer._click.core import Context as ClickContext
+from typer.core import TyperGroup
 
 from ...cli import command_schema_refs
 from .._dispatch import is_exposable_command
@@ -23,10 +27,11 @@ from .._input_schema import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-class _RaisingGroup(click.Group):
-    """A real click group whose subcommand resolution raises, as a hostile subtree would."""
+class _RaisingGroup(TyperGroup):
+    """A real typer command group whose subcommand resolution raises, as a hostile subtree would."""
 
-    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
+    @override
+    def get_command(self, ctx: ClickContext, cmd_name: str) -> ClickCommand | None:
         raise RuntimeError("Type not yet supported: <hostile parameter>")
 
 
