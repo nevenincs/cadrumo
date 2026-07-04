@@ -25,6 +25,7 @@ class PayerFact(StrEnum):
     PAYS_CAPITAL_INCOME_WITH_RETENCION = "pays_capital_income_with_retencion"
     IVA_GROUP_MEMBER = "iva_group_member"
     IVA_GROUP_DOMINANT_ENTITY = "iva_group_dominant_entity"
+    OSS_ENROLLED = "oss_enrolled"
 
 
 def payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
@@ -52,3 +53,5 @@ def payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
             return profile.iva.group_member_enrolled
         case PayerFact.IVA_GROUP_DOMINANT_ENTITY:
             return profile.iva.group_dominant_entity_enrolled
+        case PayerFact.OSS_ENROLLED:
+            return profile.iva.oss_enrolled
