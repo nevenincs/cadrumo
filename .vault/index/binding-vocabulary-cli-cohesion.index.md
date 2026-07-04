@@ -26,6 +26,8 @@ related:
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W03-P05-S18]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W03-P06-S19]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W03-P06-S20]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W04-P07-S21]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W04-P07-S22]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S25]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S26]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S27]]'
@@ -73,6 +75,8 @@ Auto-generated index of all documents tagged with `#binding-vocabulary-cli-cohes
 - `2026-06-26-binding-vocabulary-cli-cohesion-W03-P05-S16` - Prefix the live-capture / sede-tier Observation carriers where the bare stem collides (FiledDeclaracionObservation, IvaCompensationWalletObservation, NifIvaCheckObservation, DeclaracionObservation, BorradorObservation), one atomic relocation commit per renamed carrier tagged relocation:<symbol>, each regenerating docs-scaffold + API-stub + docstring-core-struct in the same commit
 - `2026-06-26-binding-vocabulary-cli-cohesion-W03-P05-S17` - Prefix the oracle-tier Observation carriers where the bare stem collides (RentaWebOpenObservation, GroiObservation, AeatNifIvaObservation
 - `2026-06-26-binding-vocabulary-cli-cohesion-W03-P05-S18` - Verify W03.P05 no-shift: run pytest --collect-only -q clean, the affected aggregation / sede / oracle test modules green, and assert the calc/registry-tier anchor carriers (CasillaObservation, RegistryModeloObservation) and all role-suffixed *ObservationRequirement / *Repository / *Store / *Protocol names were NOT renamed
+- `2026-06-26-binding-vocabulary-cli-cohesion-W04-P07-S21` - OPERATOR-VISIBLE: rename the bindings preview verb (G1) to a value-bearing name that says what it sources rather than the UI gesture, under aeat-cli-pull-and-file-standard, as one atomic commit
+- `2026-06-26-binding-vocabulary-cli-cohesion-W04-P07-S22` - OPERATOR-VISIBLE: reconcile the calc pull --compute verb (G2) with the one produce-bound-casilla-values-from-sources story, separating the Sheets-transport pull from the compute multiplexing per aeat-cli-pull-and-file-standard, as one atomic commit
 - `2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S27` - DEFERRED FOLLOW-UP verification: when F8 lands, run pytest --collect-only -q clean, test_schema_hygiene.py and the bindings-framework gate suite green, and assert the selector union is behaviour-preserving over the prior validate-time selector models
 
 ### plan
