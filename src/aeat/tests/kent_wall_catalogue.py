@@ -308,6 +308,17 @@ KENT_WALL_CATALOGUE: tuple[KentWallEntry, ...] = (
         test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
         test_function="test_reconcile_file_kind_declaration_catches_casilla_divergence",
     ),
+    KentWallEntry(
+        issue=321,
+        kent_perspective=(
+            "Kent has his Modelo 130 declaración PDF and reconciles a work unit "
+            "against it via `aeat app modelo reconcile file --kind declaration`: "
+            "a computed casilla that disagrees with the filed declaración is "
+            "caught as a real divergence, not a silent identity match."
+        ),
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
+        test_function="test_reconcile_file_kind_declaration_m130_catches_casilla_divergence",
+    ),
 )
 """The enrolled representative subset of closed Kent walls.
 
