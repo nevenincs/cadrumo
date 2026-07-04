@@ -2,7 +2,7 @@
 
 Provisions the inventory calculation-source surface without enrolling it as a live
 calculation source. Inventory is not yet ready to feed registry bindings
-(:func:`aeat.application.inventory.inventory_source_readiness`), so this resolver
+(:func:`~application.inventory.inventory_source_readiness`), so this resolver
 resolves NO binding value and emits a blocked-readiness
 :class:`CalculationSourceDiagnostic`. It is deliberately NOT registered in
 ``merge_source_resolutions``: it exists so the surface is provisioned and its
