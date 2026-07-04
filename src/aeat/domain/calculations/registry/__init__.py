@@ -330,6 +330,9 @@ from ._queries import (
     ModeloListReport,
     ModeloListRow,
     RegistryQueryService,
+    RegistrySourceInventoryReport,
+    RegistrySourceInventoryRow,
+    RegistrySourceSite,
 )
 from ._record_design import (
     DerivedDisenoCasilla,
@@ -642,6 +645,9 @@ __all__ = [
     "RegistrySnapshot",
     "RegistrySnapshotError",
     "RegistrySnapshotRef",
+    "RegistrySourceInventoryReport",
+    "RegistrySourceInventoryRow",
+    "RegistrySourceSite",
     "RegistryUnresolvedOutcomeReason",
     "RegistryValidationError",
     "RegistryValidator",
