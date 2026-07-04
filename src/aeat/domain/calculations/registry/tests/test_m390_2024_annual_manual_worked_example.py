@@ -401,6 +401,99 @@ def test_m390_annual_devengada_anti_tautology_recargo_changes_total() -> None:
     assert with_recargo.values[_CASILLA_RESULTADO] - without_recargo.values[_CASILLA_RESULTADO] == Decimal("3744.00")
 
 
+def _dr_super_reducido_repercutido(
+    ledger_id: str,
+    *,
+    day_month: tuple[int, int],
+    base: Decimal,
+    iva: Decimal,
+    recargo: Decimal,
+):
+    month, day = day_month
+    return {
+        "ledger_id": ledger_id,
+        "transaction_date": date(2024, month, day),
+        "category": IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+        "rate_kind": IvaRateKind.SUPER_REDUCED,
+        "flow_direction": IvaFlowDirection.REPERCUTIDO,
+        "base_amount": base,
+        "iva_amount": iva,
+        "recargo_amount": recargo,
+    }
+
+
+def _calculate_with_super_reducido_recargo(*, include_super_reducido_recargo: bool) -> object:
+    """The manual's 1T scenario plus one synthetic super-reducido (4pct) sale.
+
+    The AEAT manual worked example this module grounds against charges no
+    super-reducido recargo (the manual's own ``el senor 'X'`` scenario has no
+    4pct-rate operations), so the 0.5pct tier cannot be graded against a
+    bundled oracle figure; this scenario is therefore synthetic and
+    structural, proving the mechanism the same delta-based way the
+    general/reducido tiers are proven above rather than asserting an absolute
+    figure the manual never states.
+    """
+    snapshot = resources().modelos.authority.snapshot("390", filing_year=_FILING_YEAR, period=_PERIOD)
+    observations = (
+        *_annual_observations(include_recargo=True),
+        IvaLedgerObservation(
+            **_dr_super_reducido_repercutido(
+                "synthetic-super-reducido-recargo-equivalencia",
+                day_month=(6, 30),
+                base=Decimal("10000.00"),
+                iva=Decimal("400.00"),
+                recargo=Decimal("50.00") if include_super_reducido_recargo else Decimal("0"),
+            ),
+        ),
+    )
+    binding_values: dict[str, Decimal] = {
+        "modelo-390-prev-303-cuota-devengada-total": Decimal("0"),
+        "modelo-390-prev-303-cuota-deducible-total": Decimal("0"),
+        "modelo-390-prev-303-resultado-regimen-general": Decimal("0"),
+        "modelo-390-prev-303-cuota-devengada-simplificado": Decimal("0"),
+        "modelo-390-prev-303-compensacion-ultimo-periodo": Decimal("0"),
+        "modelo-390-prev-303-compensacion-generada-ejercicio-no-97": Decimal("0"),
+        **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
+    }
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    return calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": date(2025, 1, 30)},
+    )
+
+
+def test_m390_super_reducido_recargo_delta() -> None:
+    """Adding a super-reducido (0.5pct) recargo line raises the annual devengada total.
+
+    Closes the residual gap the general/reducido tiers left: before this fix,
+    ``iva.anual.cuota-devengada-total`` had no ``iva.anual.repercutido.recargo.
+    super-reducido`` casilla, binding, or formula term at all — a
+    recargo-de-equivalencia filer whose supplier charged the 4pct
+    super-reducido rate (and therefore the 0.5pct recargo, LIVA art. 161) had
+    that tier's annual cuota silently excluded, symmetrically breaking
+    ``modelo-390-cuota-devengada-total-equals-reconciliacion-303`` for that
+    filer the same way the pre-fix general/reducido omission did.
+
+    Anti-tautology: this does not hand-compute the with-recargo absolute
+    figure from the registry's own formula under test. It runs the full
+    calculation engine twice — once with a super-reducido recargo ledger
+    observation, once with the identical scenario but that recargo zeroed —
+    and asserts the delta equals exactly the dropped recargo_amount. A
+    formula that ignored the super-reducido recargo term, or always returned
+    a constant, would fail this check.
+    """
+    with_recargo = _calculate_with_super_reducido_recargo(include_super_reducido_recargo=True)
+    without_recargo = _calculate_with_super_reducido_recargo(include_super_reducido_recargo=False)
+
+    assert with_recargo.values[_CASILLA_DEVENGADA] - without_recargo.values[_CASILLA_DEVENGADA] == Decimal("50.00")
+    # Recargo is devengado-only (no matching deducible leg), so the deducible
+    # total is unchanged and the resultado shifts by exactly the same amount.
+    assert with_recargo.values[_CASILLA_DEDUCIBLE] == without_recargo.values[_CASILLA_DEDUCIBLE]
+    assert with_recargo.values[_CASILLA_RESULTADO] - without_recargo.values[_CASILLA_RESULTADO] == Decimal("50.00")
+
+
 def test_m390_2024_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
