@@ -4,8 +4,12 @@
 
 * ``reconcile pull <work-unit>`` fetches the justificante from AEAT (the
   ``pull`` standard) and reconciles against it in one flow.
-* ``reconcile file <work-unit> --file PATH`` reconciles against a local
-  justificante PDF (the ``--file`` standard); local-only, never contacts AEAT.
+* ``reconcile file <work-unit> --file PATH [--kind justificante|declaration]``
+  reconciles against a local PDF (the ``--file`` standard); local-only, never
+  contacts AEAT. ``--kind`` selects the evidence document's KIND, orthogonal to
+  the pull/file transport axis: ``justificante`` (the default, every modelo) or
+  ``declaration`` (a filed declaración PDF, casilla-level reconcile, enrolled
+  modelos only -- see :data:`aeat.application.modelo._reconcile._DECLARATION_CASILLA_RECONCILE_MODELOS`).
 * ``reconcile history`` lists past reconciliations.
 """
 
@@ -251,7 +255,9 @@ def reconcile_pull_verb(
     "file",
     help=tr(
         "cli.app.modelo.reconcile.file_help",
-        default="Reconcile a work unit against a local justificante PDF. Local-only; never contacts AEAT.",
+        default=(
+            "Reconcile a work unit against a local justificante or declaración PDF. Local-only; never contacts AEAT."
+        ),
     ),
 )
 def reconcile_file_verb(
@@ -262,7 +268,7 @@ def reconcile_file_verb(
             "--file",
             help=tr(
                 "cli.app.modelo.reconcile.file_path_help",
-                default="Path to the AEAT justificante PDF to reconcile against.",
+                default="Path to the local justificante or declaración PDF to reconcile against.",
             ),
         ),
     ],
@@ -276,11 +282,7 @@ def reconcile_file_verb(
     kind: _KindOpt = None,
 ) -> None:
     """Reconcile a work unit against a local justificante or declaración PDF file."""
-    from ...application.modelo import (
-        ModeloReconciliationCommand,
-        ModeloReconciliationEvidenceKind,
-        modelo_reconcile,
-    )
+    from ...application.modelo import ModeloReconciliationCommand, modelo_reconcile
 
     resolved_actor = actor.strip() if actor else _resolve_default_actor_value()
     resolved_kind = kind if kind is not None else ModeloReconciliationEvidenceKind.JUSTIFICANTE

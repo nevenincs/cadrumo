@@ -1,30 +1,44 @@
 """CLI surface tests for the `aeat app modelo reconcile` group.
 
-`reconcile file --file PATH` reconciles a local justificante; `reconcile history`
-lists past runs. `reconcile pull` fetches from AEAT (a live read) and is covered
-by the application-layer orchestrator + reconcile_capture tests, not here.
+`reconcile file --file PATH` reconciles a local justificante (the default
+`--kind`) or a filed declaración (`--kind declaration`, casilla-level compare,
+enrolled modelos only); `reconcile history` lists past runs. `reconcile pull`
+fetches from AEAT (a live read) and is covered by the application-layer
+orchestrator + reconcile_capture tests, not here.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import (
+    profile_create_storage_span,
+    register_minimal_profile,
+    set_active_fields,
+)
 from ....application.workflow import workflow_state_repository
 from ....core import Period
+from ....domain.calculations.registry import validated_casilla_id
 from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionState,
     ModeloCode,
     WorkUnit,
+    derive_calculation_revision_id,
     derive_work_unit_id,
+    upsert_calculation_revision,
     upsert_work_unit,
 )
 from ....tests import FIXTURES_DIR
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -177,3 +191,222 @@ def test_reconcile_history_lists_recorded_reconciliation() -> None:
     result = invoke_cached_cli(["app", "modelo", "reconcile", "history"])
     assert result.exit_code == 0, result.output
     assert "reconciliation_count\t1" in result.output
+
+
+# --- `--kind declaration`: casilla-level declaración reconcile (#317-#327) --
+
+MODELO_303_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "303" / "2024-1T.pdf"
+"""Synthetic-generated (declared ``synthetic_generated`` in its sidecar), AEAT
+Modelo 303 layout-faithful declaración PDF for ejercicio 2024, 1T. Its
+extraction has been independently confirmed by
+``test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy``
+(``adapters/inbound/declaracion/tests/test_parser_boundary_m303.py``); the
+values asserted below are read straight from that confirmed parse, not
+hand-guessed."""
+
+_M303_DECLARACION_TAX_ID = "Y0000001S"
+"""Tax id the M303 declaración fixture prints; must match the active profile's
+``identity.tax_id`` for the reconcile's header identity compare to pass."""
+
+_M303_2024_1T_REVISION_ID = "2023-y-siguientes"
+"""Law-determined registry revision for M303 filing_year=2024, period=1T
+(confirmed via ``authority.snapshot("303", filing_year=2024, period="1T").revision.id``);
+required by ``revision-resolution-is-law-determined`` so the seeded work unit's
+pinned ``revision_id`` matches the resolver's answer."""
+
+# The 9 `computed_casilla_ids` the registry's verification policy actually
+# reconciles for this revision AND that the 2024-1T fixture prints; the other
+# 4 declared computed ids (`iva.compensacion-disponible-fin-periodo`,
+# `iva.compensacion-generada-periodo`, `iva.cuota-deducible-total`,
+# `iva.cuota-devengada-total`) are absent from this older fixture's printed
+# layout and are deliberately left un-persisted below so both sides are
+# `None` for them (a legitimate skip, not a divergence) rather than seeding a
+# fabricated value for a casilla the fixture never prints.
+_M303_2024_1T_MATCHING_CASILLA_VALUES: dict[str, Decimal] = {
+    "27": Decimal("13200.00"),
+    "45": Decimal("8400.00"),
+    "64": Decimal("4800.00"),
+    "66": Decimal("4800.00"),
+    "71": Decimal("4800.00"),
+    "iva.compensacion-aplicada-periodo": Decimal("0.00"),
+    "iva.compensacion-pendiente-periodos-posteriores": Decimal("0.00"),
+    "iva.resultado": Decimal("4800.00"),
+    "iva.resultado-regimen-general": Decimal("4800.00"),
+}
+
+
+@pytest.fixture
+def _m303_declaracion_profile() -> None:
+    """Retarget the module-level autouse profile's `identity.tax_id` to the
+    M303 declaración fixture's printed NIF (`Y0000001S`), distinct from the
+    module's justificante-fixture NIF (`00000000T`). Reuses the same isolated
+    backend `_isolated_backend` already opened for the test rather than
+    nesting a second storage root, which `SecureObjectRepository` per-bucket
+    session handling does not support."""
+    from ....domain.user_profile import UserProfileFact
+
+    workflow_state_repository().update(
+        lambda state: set_active_fields(
+            state,
+            [UserProfileFact(path="identity.tax_id", value=_M303_DECLARACION_TAX_ID)],
+        ),
+    )
+
+
+def _seed_m303_work_unit_with_revision(*, casilla_values: dict[str, Decimal]) -> str:
+    """Seed an M303 2024/1T work unit plus a persisted, filed `CalculationRevision`
+    carrying `casilla_values` — the persisted "computed" side the declaración
+    reconcile compares the fixture's "filed" side against."""
+    state = workflow_state_repository().load()
+    bucket_id = state.active_profile_bucket_id()
+    assert bucket_id is not None
+    period = Period.from_year_and_code(2024, "1T")
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo="303",
+        filing_year=2024,
+        period=period,
+        revision_id=_M303_2024_1T_REVISION_ID,
+    )
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period=period,
+        revision_id=_M303_2024_1T_REVISION_ID,
+        name="303-2024-1T",
+        created_at=datetime(2026, 5, 1, tzinfo=UTC),
+        updated_at=datetime(2026, 5, 1, tzinfo=UTC),
+    )
+    WorkUnitCatalogueRepository().save(upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit))
+
+    validated_values = {validated_casilla_id(k, surface="test"): v for k, v in casilla_values.items()}
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values=validated_values,
+    )
+    repo = CalculationRevisionCatalogueRepository()
+    repo.save(
+        upsert_calculation_revision(
+            repo.load(),
+            CalculationRevision(
+                calculation_revision_id=revision_id,
+                work_unit_id=work_unit_id,
+                state=CalculationRevisionState.PRESENTADO,
+                casilla_values=validated_values,
+                observations=registry_grounded_observations(
+                    modelo="303",
+                    filing_year=2024,
+                    period="1T",
+                    casilla_values=validated_values,
+                ),
+                created_at=datetime(2026, 5, 1, tzinfo=UTC),
+                updated_at=datetime(2026, 5, 1, tzinfo=UTC),
+                verified_at=datetime(2026, 5, 1, tzinfo=UTC),
+                verified_by="test",
+                filed_at=datetime(2026, 5, 1, tzinfo=UTC),
+                filed_by="test",
+            ),
+        ),
+    )
+    return work_unit_id
+
+
+def test_reconcile_file_kind_declaration_matches_when_computed_agrees(
+    _m303_declaracion_profile: str,
+) -> None:
+    """`reconcile file --file --kind declaration` reports a clean `matches` when
+    the persisted revision's computed casilla values agree with the filed
+    declaración the fixture prints -- the calc-verify-roundtrip claim behind
+    Kent wall #326 (Modelo 303), proven end-to-end through the real CLI
+    against a real (synthetic-declared) declaración PDF, not a hand-computed
+    in-memory observation."""
+    work_unit_id = _seed_m303_work_unit_with_revision(casilla_values=_M303_2024_1T_MATCHING_CASILLA_VALUES)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_303_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tdeclaration" in result.output
+    assert "verdict\tmatches" in result.output
+    assert "diffs\t0" in result.output
+
+
+def test_reconcile_file_kind_declaration_catches_casilla_divergence(
+    _m303_declaracion_profile: str,
+) -> None:
+    """A computed revision that disagrees with the filed declaración on one
+    casilla is CAUGHT as a typed `casilla` diff naming both values -- not a
+    silent identity `matches` (`no-silent-under-declaration`). Proves the
+    engine actually re-derives and compares the casilla, rather than the
+    reconcile trivially passing regardless of the persisted value."""
+    mismatched = dict(_M303_2024_1T_MATCHING_CASILLA_VALUES)
+    mismatched["iva.resultado"] = Decimal("5300.00")  # fixture prints 4800.00
+    work_unit_id = _seed_m303_work_unit_with_revision(casilla_values=mismatched)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_303_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tdeclaration" in result.output
+    assert "verdict\tmismatches" in result.output
+    assert "diff\tiva.resultado\twork_unit=5300.00\tevidence=4800.00" in result.output
+
+
+def test_reconcile_file_kind_declaration_refuses_unenrolled_modelo(
+    _m303_declaracion_profile: str,
+) -> None:
+    """A modelo outside `_DECLARATION_CASILLA_RECONCILE_MODELOS` (e.g. 100)
+    refuses `--kind declaration` cleanly rather than silently degrading to a
+    header-only compare."""
+    work_unit_id = _seed_work_unit(modelo="100", filing_year=2024, period="0A")
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_303_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code != 0, result.output
+
+
+def test_reconcile_file_default_kind_is_justificante() -> None:
+    """Omitting `--kind` preserves the pre-existing default behaviour
+    (justificante), so no existing caller's behaviour changes."""
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+
+    result = invoke_cached_cli(
+        ["app", "modelo", "reconcile", "file", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tjustificante" in result.output

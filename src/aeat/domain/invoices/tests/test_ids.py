@@ -18,7 +18,7 @@ _Holder = single_field_model("invoice_id", InvoiceId)
 def test_accepts_canonical_sha256_hex_digest() -> None:
     digest = hashlib.sha256(b"invoice-payload").hexdigest()
     holder = _Holder(invoice_id=digest)
-    assert getattr(holder, "invoice_id") == digest
+    assert holder.invoice_id == digest
 
 
 def test_rejects_noncanonical_digest_shapes() -> None:
