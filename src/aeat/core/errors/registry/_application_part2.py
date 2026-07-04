@@ -855,6 +855,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._review_package_recipient_encryption.RecipientEncryptionKeyNotFoundError",
+        ErrorCode(
+            code="REFUSED_MODELO_RECIPIENT_ENCRYPTION_KEY_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.recipient_encryption_key_not_found",
+            default_suggestion="aeat app modelo review-package encrypt-for-recipient --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._review_package_recipient_replay_guard.RecipientReplayGuardError",
         ErrorCode(
             code="ERROR_MODELO_RECIPIENT_REPLAY_GUARD",
