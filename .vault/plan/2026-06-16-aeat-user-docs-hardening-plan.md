@@ -26,9 +26,9 @@ related:
 
 ## Steps
 
-- [ ] `S01` - Harden authenticate-with-aeat.md; `docs/how-to/authenticate-with-aeat.md`.
+- [x] `S01` - Harden authenticate-with-aeat.md; `docs/how-to/authenticate-with-aeat.md`.
 - [ ] `S02` - Harden censo-update.md; `docs/how-to/censo-update.md`.
-- [ ] `S03` - Harden check-aeat-notifications.md; `docs/how-to/check-aeat-notifications.md`.
+- [x] `S03` - Harden check-aeat-notifications.md; `docs/how-to/check-aeat-notifications.md`.
 - [x] `S04` - Harden choose-modelo.md; `docs/how-to/choose-modelo.md`.
 - [x] `S05` - Harden classify-transactions.md; `docs/how-to/classify-transactions.md`.
 - [x] `S06` - Harden classify-with-llm-evidence.md; `docs/how-to/classify-with-llm-evidence.md`.
@@ -50,7 +50,7 @@ related:
 - [x] `S22` - Harden profile-setup.md; `docs/how-to/profile-setup.md`.
 - [ ] `S23` - Harden protect-data-access.md; `docs/how-to/protect-data-access.md`.
 - [x] `S24` - Harden quickstart.md; `docs/how-to/quickstart.md`.
-- [ ] `S25` - Harden read-live-aeat-data.md; `docs/how-to/read-live-aeat-data.md`.
+- [x] `S25` - Harden read-live-aeat-data.md; `docs/how-to/read-live-aeat-data.md`.
 - [ ] `S26` - Harden reconcile.md; `docs/how-to/reconcile.md`.
 - [x] `S27` - Harden review-calculation-values.md; `docs/how-to/review-calculation-values.md`.
 - [ ] `S28` - Harden review-queue.md; `docs/how-to/review-queue.md`.
