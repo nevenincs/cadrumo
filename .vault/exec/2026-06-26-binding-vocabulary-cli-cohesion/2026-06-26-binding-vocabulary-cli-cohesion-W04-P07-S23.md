@@ -42,10 +42,11 @@ related:
   - `uv run --no-sync vaultspec-rag search "work calculate verb one learnable verb story binding vocabulary" --type code --port 8766 --max-results 12 --timeout 30`
   - `uv run --no-sync aeat app modelo work calculate --help`
   - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py` (`140 passed`)
-- The documented-command conformance gate was rerun and failed on unrelated `aeat app agent` citations in `docs/HARNESS-USERDOCS-KICKOFF-BRIEF.md` and `README.md`; it did not report a `work calculate` citation failure.
-- Focused collect-only over the selected CLI surfaces was attempted, but the current pytest marker configuration deselected the selected tests and returned `no tests collected`; no collection error specific to `work calculate` was observed.
+  - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` (`58 passed`)
+- Blocking evidence:
+  - `uv run --no-sync pytest --collect-only -q` is currently red because non-authored untracked Modelo 145 registry scaffolding invalidates registry authority before collection completes.
 
 ## Notes
 
-- No plan step check was run in this pass. The plan file currently has non-authored WIP that only removes the template link-rule comment block, so mutating the checkbox would violate the shared-worktree abort-on-WIP rule.
+- No plan step check was run in this pass. The plan file and S23 target files are clean, but the mandatory collect-only gate is red due to unrelated non-authored registry WIP.
 - No runtime, locale, docs-scaffold, or generated schema files were edited for S23 because the live surface is already aligned.
