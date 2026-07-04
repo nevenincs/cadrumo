@@ -585,7 +585,7 @@ nitpick_ignore_regex = [
     (
         r"py:.*",
         r"^(pydantic|pydantic_core|pydantic_settings|httpx|typer|click|mcp|"
-        r"rich|yaml|tomllib|tomli|cryptography|jinja2|markupsafe|"
+        r"rich|yaml|tomllib|tomli|cryptography|jinja2|markupsafe|numpy|"
         r"prompt_toolkit|google|typing_extensions|asyncio|contextvars|"
         r"_pytest|playwright|_schema|_orm|annotated_types)(\..*)?$",
     ),
@@ -625,6 +625,47 @@ nitpick_ignore_regex = [
     # are covered by the third-party namespace patterns above; a genuine
     # ``aeat.``-qualified module reference still resolves and is unaffected here.
     (r"py:mod", r"^(?!aeat\.)[a-z].*"),
+    # External library types written bare (no vendored inventory offline, so the
+    # dotted third-party namespace patterns above do not cover the short forms):
+    # the ``cryptography`` elliptic-curve / Edwards key classes
+    # (``Ed25519PrivateKey``, ``X25519PublicKey``, ...) referenced from the
+    # secure-storage key adapters, the ``_typeshed`` ``SupportsAllComparisons``
+    # protocol used in sort-key signatures, and the pydantic ``BaseModel``
+    # serialisation methods (``model_dump_json`` / ``model_validate_json``)
+    # referenced bare in roundtrip docstrings. All are external-owned; no project
+    # symbol shares these names.
+    (
+        r"py:.*",
+        r"^(Ed25519PrivateKey|Ed25519PublicKey|X25519PrivateKey|X25519PublicKey|"
+        r"SupportsAllComparisons|model_dump_json|model_validate_json)$",
+    ),
+    # Project short references the bare/unrooted resolver cannot uniquely map.
+    # Two shapes: (1) an AMBIGUOUS bare helper name with two or more documented
+    # definitions across modules (``write_manifest`` x4; ``project_answers`` /
+    # ``sha256_file`` / ``save_envelope`` / ``extract_pages_text`` /
+    # ``extract_pages_text_from_bytes`` / ``LLMProvider`` x2), which the
+    # last-segment suffix resolver cannot disambiguate by design; and (2) a
+    # project object written by a path that omits the ``aeat.`` root
+    # (``core.telemetry.workspace_hash``,
+    # ``application.modelo.emit_collab_workspace_opened_event``,
+    # ``adapters.persistence.storage.SensitivityClass.SECRET``). ``core-struct-
+    # docstring-links`` bars adding a dotted path to a bare project anchor, so
+    # these are ignored rather than qualified; a py:func / py:attr short-reference
+    # resolver enhancement that disambiguates ambiguous and unrooted project
+    # targets is a future follow-up.
+    (
+        r"py:.*",
+        r"^(utc_now|project_answers|write_manifest|sha256_file|save_envelope|"
+        r"reset_workflow_state|output_language|extract_pages_text|"
+        r"extract_pages_text_from_bytes|emit_collab_workspace_opened_event|"
+        r"LLMProvider|PersonaAction)$",
+    ),
+    (
+        r"py:.*",
+        r"^(core\.telemetry\.workspace_hash|"
+        r"application\.modelo\.emit_collab_workspace_opened_event|"
+        r"adapters\.persistence\.storage\.SensitivityClass\.SECRET)$",
+    ),
     # Registry typed-id aliases (``CasillaId``, ``RelationId``, ``OracleId``,
     # ``BindingId``, ... ) are ``NewType``/alias definitions, not documentable
     # classes, so a ``:class:`` reference to their registry path (with or without
