@@ -85,3 +85,27 @@ related:
   `modelo 145 revision 2012-01-31-y-siguientes: revision must declare official workbook parity coverage`
   and `revision must declare at least one casilla`.
 - No S24 plan check was run because the row requires clean collect-only evidence.
+
+## Closure retry (2026-07-04, observed at `c3cd141a0c`)
+
+- The stale M145 collect-only blocker is cleared in the current worktree:
+  `uv run --no-sync pytest --collect-only -q` wrote full output to
+  `C:\Users\hello\AppData\Local\Temp\aeat-d9-current-collect-retry-20260704.log`
+  and completed clean: `12276/14908 tests collected (2632 deselected) in 109.26s`.
+- The locale blocker is cleared:
+  `uv run --no-sync python -m aeat.locales audit` reports `ok` for `ca.yml`, `en.yml`,
+  `es.yml`, and `hu.yml`.
+- W04.P07 conformance gates are green:
+  - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`
+    wrote `C:\Users\hello\AppData\Local\Temp\aeat-d9-vocab-docconf-20260704.log`: `58 passed`.
+  - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py`
+    wrote `C:\Users\hello\AppData\Local\Temp\aeat-d9-vocab-jsonschema-20260704.log`: `140 passed`.
+  - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_output_language_parity.py src/aeat/entrypoints/cli/tests/test_language_flag_help_honesty.py`
+    wrote `C:\Users\hello\AppData\Local\Temp\aeat-d9-vocab-locale-honesty-20260704.log`: `21 passed`.
+- Source-only stale-command search over the operator surfaces found no `bindings preview`,
+  `modelo.bindings.preview`, `calc pull --compute`, `pull --compute`, or
+  `config.google.sync.calc.pull_compute` hit.
+- Current HEAD carries the reconciled commands: `app modelo bindings resolve`,
+  `config google sync calc compute`, and the canonical `app modelo work calculate`.
+
+This retry supplies the missing clean-gate evidence for checking `W04.P07.S24`.
