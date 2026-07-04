@@ -1,12 +1,12 @@
 """Shared leaf models for the workflow and review packages.
 
-:mod:`aeat.application.workflow` and :mod:`aeat.application.review` need each
+:mod:`application.workflow` and :mod:`application.review` need each
 other's pydantic models at runtime: :class:`WorkflowEvent` is instantiated by
 review actions and embedded as a field type on
-:class:`~aeat.application.review.InvoiceReviewRecord` and
-:class:`~aeat.application.review.LedgerReviewRecord`; those two review records
+:class:`~application.review.InvoiceReviewRecord` and
+:class:`~application.review.LedgerReviewRecord`; those two review records
 are in turn embedded as field types on
-:class:`~aeat.application.workflow.WorkflowState`. Neither side can import the
+:class:`~application.workflow.WorkflowState`. Neither side can import the
 other's public facade without re-entering a partially-initialised package
 during Python's import machinery (the facade `__init__` for either package
 pulls in the other), and pydantic's eager field-type resolution makes the
@@ -22,8 +22,8 @@ its facade. Consumers outside these two packages are unaffected — they already
 import through the public facades, which keep re-exporting the same names.
 
 This module is private application-layer plumbing consumed only by
-:mod:`aeat.application.workflow` and :mod:`aeat.application.review`; it is not
-part of the :mod:`aeat.application` public surface and carries no `__all__`.
+:mod:`application.workflow` and :mod:`application.review`; it is not
+part of the :mod:`application` public surface and carries no `__all__`.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ from ..domain.contribuyente import normalise_key
 class WorkflowEvent(BaseModel):
     """One operator-visible event emitted by a mutating workflow verb.
 
-    Events are appended to :attr:`~aeat.application.workflow.WorkflowState.bucket_events`
+    Events are appended to :attr:`~application.workflow.WorkflowState.bucket_events`
     so the operator can audit which actions ran, when, and against which
     object. ``action`` names the verb (e.g. ``"profile.created"``); ``reason``
     carries a free-form human-readable annotation; ``bucket_id`` and
