@@ -1,0 +1,66 @@
+---
+tags:
+  - '#exec'
+  - '#m303-refund-fichero-block'
+date: '2026-07-04'
+modified: '2026-07-04'
+step_id: 'S02'
+related:
+  - "[[2026-06-24-m303-refund-fichero-block-plan]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #exec) and one feature tag.
+     Replace m303-refund-fichero-block with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     step_id is the originating Step's canonical identifier, e.g. S01.
+     The S02 and 2026-06-24-m303-refund-fichero-block-plan placeholders are machine-filled by
+     `vaultspec-core vault add exec`; do not fill them by hand.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
+     parent plan.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+<!-- STEP RECORD:
+     This file represents one Step from the originating plan. Identified
+     by its canonical leaf identifier (S##) and ancestor display path.
+     The Add the typed refund-account carrier grouping iban and the new fields, with an IBAN structural field validator that rejects a malformed IBAN at the boundary and ## Scope
+
+- `src/aeat/domain/deadlines/_models.py` placeholders below are machine-filled
+     by `vaultspec-core vault add exec` from the originating Step row;
+     do not fill them by hand. -->
+
+# Add the typed refund-account carrier grouping iban and the new fields, with an IBAN structural field validator that rejects a malformed IBAN at the boundary
+
+## Scope
+
+- `src/aeat/domain/deadlines/_models.py`
+
+## Description
+
+- Add the typed `RefundAccount` carrier model to the deadlines domain models, grouping the optional `iban` with the `swift_bic`, `bank_name`, `bank_address`, `bank_city`, `bank_country_code`, and derived `sepa_marca` fields.
+- Add an IBAN structural field validator that runs in before-mode: canonicalise the input, treat `None` and blank as "no account on file", and reject a malformed IBAN at the secure-storage boundary.
+- Reuse the shared core primitives `IBAN_SHAPE_RE` and `iban_mod_97` for the shape and mod-97 checks rather than re-implementing IBAN validation, raising the domain `DeadlineValidationError` on a shape miss or a mod-97 failure.
+
+## Outcome
+
+- `RefundAccount` is defined in `src/aeat/domain/deadlines/_models.py`, importing `IBAN_SHAPE_RE`, `iban_mod_97` from `...core`, and is exported from the deadlines package facade.
+- The `_validate_iban` before-validator rejects a shape-invalid or mod-97-invalid IBAN with `DeadlineValidationError` and passes `None` through as no-account-on-file.
+- The refund-account persistence roundtrip test class exercises the validator directly: a valid IBAN is accepted and canonicalised, `None` passes through, and malformed input is refused. All pass at HEAD.
+
+## Notes
+
+- This record documents the verified landed state at HEAD.
+- IBAN validation reuses the single canonical core home per the schema-central-config authority; no parallel IBAN regex or mod-97 routine was introduced.

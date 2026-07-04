@@ -15,8 +15,11 @@
 #     0 / 1.140 / 10.380 / 44.880 / 71.880 en los límites inferiores de cada
 #     tramo. Extraída verbatim del texto consolidado ley-35-2006.html#a93
 #     (legal ley-35-2006:art-93 + ley-35-2006:art-93-ahorro). NO es la escala del
-#     ahorro general del IRPF (art. 66/76): el tramo superior del régimen de
-#     impatriados es el 30 %, distinto del 28 % de la escala general.
+#     ahorro general del IRPF (art. 66/76): el régimen de impatriados aplica su
+#     propia escala única del art. 93.2.e).2.º — una sola tabla estatal sin tramo
+#     autonómico. La distinción es la base legal y la estructura de tabla única,
+#     no el tipo marginal: para 2025 ambos tramos superiores coinciden en el 30 %
+#     (tras la Ley 7/2024, que elevó también la escala general del 28 % al 30 %).
 
 [[revisions."2025-y-siguientes".parameters]]
 id = "modelo-151.escala-cuota-integra-general"

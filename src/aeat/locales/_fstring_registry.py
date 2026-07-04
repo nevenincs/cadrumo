@@ -62,6 +62,32 @@ _LEY_49_2002_QUESTION_IDS: tuple[str, ...] = (
     "ley-49-2002-renunciation-date",
 )
 
+# The `cli.config.google.errors.*` refusal-frame suffixes
+# `_GOOGLE_ERROR_KEY_SUFFIX` (`entrypoints.cli._config._google_errors`) maps
+# each concrete `GoogleAuthError` subclass name to. The map's values are the
+# complete bounded enumeration; the dynamic `f"cli.config.google.errors.{suffix}"`
+# build site is not otherwise visible to the static AST scanner.
+_GOOGLE_ERROR_SUFFIXES: tuple[str, ...] = (
+    "validation",
+    "client_not_registered",
+    "client_revoked",
+    "token_revoked",
+    "token_expired",
+    "scope_insufficient",
+    "network",
+    "loopback_bind",
+    "browser_open",
+    "non_interactive",
+    "unsecured_mode",
+    "keychain_locked",
+    "profile_unbound",
+    "adc_unavailable",
+    "adc_stale",
+    "impersonation_refused",
+    "storage",
+    "auth_failed",
+)
+
 
 def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Construct the registration tuple at import time.
@@ -152,6 +178,11 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="wizard.setup.flags Ley 49/2002 CLI flags",
             key_factory=lambda v: f"wizard.setup.flags.{v}.help",
             values=_LEY_49_2002_QUESTION_IDS,
+        ),
+        FStringKeyRegistration(
+            description="cli.config.google.errors.* (_GOOGLE_ERROR_KEY_SUFFIX refusal frames)",
+            key_factory=lambda v: f"cli.config.google.errors.{v}",
+            values=_GOOGLE_ERROR_SUFFIXES,
         ),
     )
 

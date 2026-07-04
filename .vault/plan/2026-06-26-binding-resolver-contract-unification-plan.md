@@ -3,12 +3,22 @@ tags:
   - '#plan'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-07-02'
+modified: '2026-07-04'
 tier: L2
 related:
   - '[[2026-06-26-binding-resolver-contract-unification-adr]]'
   - '[[2026-06-26-binding-resolver-contract-unification-research]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `binding-resolver-contract-unification` plan
 
@@ -42,8 +52,8 @@ Bring counterpart 347/349 and foreign-assets 720 onto the live calculate mesh as
 - [ ] `P03.S21` - Prove the counterpart 347/349 mesh resolver produces a CORRECT aggregation value by oracle/calc-smoke check against a 347 and a 349 fixture, asserting the live-mesh resolution equals the prior aggregate_counterpart_347/349 output exactly so the now-resolving (no longer deferred) source cannot silently under-declare; `src/aeat/application/aggregation/tests/test_per_modelo_service.py`.
 - [ ] `P03.S20` - Prove the foreign-assets 720 mesh resolver produces a CORRECT aggregation value by oracle/calc-smoke check against a 720 fixture, asserting the live-mesh resolution equals the prior aggregate_foreign_assets_720 output exactly so the now-resolving (no longer deferred) source cannot silently under-declare; `src/aeat/application/aggregation/tests/test_per_modelo_service.py`.
 - [ ] `P03.S12` - Enroll the counterpart and foreign-assets resolvers in merge_source_resolutions and remove FOREIGN_ASSET from DEFERRED_SOURCE_KINDS now that it has a live resolver, applying the apply-cached-on-collision drive against the live peer WIP; `src/aeat/application/modelo/_calculation_actions.py`.
-- [ ] `P03.S13` - Collapse the retenciones double-path so the per-modelo service retenciones branch delegates to the same mesh RetencionesAggregationSourceResolver, retiring the duplicate retenciones service result type without changing the landed perceptor-count result; `src/aeat/application/aggregation/_service.py`.
-- [ ] `P03.S19` - Prove the retenciones collapse is behaviour-preserving by asserting the single mesh RetencionesAggregationSourceResolver reproduces the prior per-modelo-service aggregation value exactly against a 111/115/123/180/190/193 fixture, with the landed perceptor-count result unchanged and no casilla value shift; `src/aeat/application/aggregation/tests/test_per_modelo_service.py`.
+- [x] `P03.S13` - Collapse the retenciones double-path so the per-modelo service retenciones branch delegates to the same mesh RetencionesAggregationSourceResolver, retiring the duplicate retenciones service result type without changing the landed perceptor-count result; `src/aeat/application/aggregation/_service.py`.
+- [x] `P03.S19` - Prove the retenciones collapse is behaviour-preserving by asserting the single mesh RetencionesAggregationSourceResolver reproduces the prior per-modelo-service aggregation value exactly against a 111/115/123/180/190/193 fixture, with the landed perceptor-count result unchanged and no casilla value shift; `src/aeat/application/aggregation/tests/test_per_modelo_service.py`.
 - [ ] `P03.S14` - Keep the CLI aggregate verb as a thin delegating projection whose aggregation delegates to the ONE mesh resolver with no re-implemented aggregation in the verb and whose persist-retencion-observations side-effect delegates to the existing single-writer observation repository with no bespoke parallel write path per composition-service-no-parallel-write-path, retiring the verb ONLY if proven to have no distinct operator purpose beyond calculate/pull and then only with the full documented-command-conformance plus how-to plus suggestion/next_action/help sweep; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `P04` - One disposition registry plus parity gate
