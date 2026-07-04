@@ -64,10 +64,14 @@ class _StoredPriorObservation(Protocol):
     the volatile field the digest must ignore.
     """
 
-    observation: RegistryModeloObservation
-    source_kind: str
-    member_nif: str | None
-    stamped_revision_id: str
+    @property
+    def observation(self) -> RegistryModeloObservation: ...
+    @property
+    def source_kind(self) -> str: ...
+    @property
+    def member_nif(self) -> str | None: ...
+    @property
+    def stamped_revision_id(self) -> str: ...
 
 
 _logger = get_logger(__name__)
