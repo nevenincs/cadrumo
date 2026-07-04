@@ -20,6 +20,7 @@ from ...portals import (
     PORTAL_REGISTRY,
     PortalDriftEvent,
     PortalDriftField,
+    PortalMetadata,
     UrlStability,
     evaluate_portal_drift,
 )
@@ -29,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _FIXED_INSTANT = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
 
 
-def _any_entry() -> object:
+def _any_entry() -> PortalMetadata:
     """Return one real registered portal metadata entry."""
     return next(iter(PORTAL_REGISTRY.values()))
 
