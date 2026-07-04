@@ -50,3 +50,15 @@ related:
 
 - No plan step check was run in this pass. The plan file and S23 target files are clean, but the mandatory collect-only gate is red due to unrelated non-authored registry WIP.
 - No runtime, locale, docs-scaffold, or generated schema files were edited for S23 because the live surface is already aligned.
+
+## Closure retry (2026-07-04, observed at `c3cd141a0c`)
+
+- The stale collect-only blocker is cleared in the current HEAD/worktree.
+- `git grep` at HEAD confirms `work calculate` remains the committed canonical calculation entry: `@work_app.command("calculate")`, text operation `modelo.work.calculate`, envelope command `modelo.work.calculate`, and write-policy allowlist `app modelo work calculate`.
+- `uv run --no-sync aeat app modelo work calculate --help` succeeds and exposes the calculation entrypoint with binding, relation, casilla, and row input channels.
+- Source-only stale-command search found no retired `bindings preview` or Sheets `pull --compute` wording on the operator vocabulary surface.
+- `uv run --no-sync pytest --collect-only -q` wrote full output to `C:\Users\hello\AppData\Local\Temp\aeat-d9-current-collect-retry-20260704.log` and completed clean: `12276/14908 tests collected (2632 deselected) in 109.26s`.
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` wrote `C:\Users\hello\AppData\Local\Temp\aeat-d9-vocab-docconf-20260704.log`: `58 passed`.
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py` wrote `C:\Users\hello\AppData\Local\Temp\aeat-d9-vocab-jsonschema-20260704.log`: `140 passed`.
+
+This retry supplies the missing clean-gate evidence for checking `W04.P07.S23`.
