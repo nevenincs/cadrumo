@@ -3,13 +3,23 @@ tags:
   - '#plan'
   - '#calculation-source-connectivity'
 date: '2026-05-20'
-modified: '2026-06-30'
+modified: '2026-07-04'
 tier: L3
 related:
   - '[[2026-05-20-calculation-source-connectivity-research]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'
   - '[[2026-05-21-calculation-source-connectivity-reference]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `calculation-source-connectivity` `source mesh implementation` plan
 
@@ -70,13 +80,13 @@ Enroll profile, previous filing, relation, borrador, and IVA wallet sources as e
 Adapt invoice, evidence, payable, collectible, counterpart, and withholding sources into repository-backed source resolution.
 
 - [x] `W02.P05.S25` - Adapt InvoiceCatalogue observations into source mesh resolution; `src/aeat/application/invoices/_source_resolver.py`.
-- [ ] `W02.P05.S26` - Adapt purchase invoice evidence records into source mesh resolution; `src/aeat/application/ledger/_evidence.py`.
-- [ ] `W02.P05.S27` - Adapt payable invoice records into source mesh resolution; `src/aeat/application/ledger/_business_operation_invoice.py`.
-- [ ] `W02.P05.S28` - Adapt collectible invoice records into source mesh resolution; `src/aeat/application/ledger/_business_operation_invoice.py`.
+- [x] `W02.P05.S26` - Adapt purchase invoice evidence records into source mesh resolution; `src/aeat/application/ledger/_evidence.py`.
+- [x] `W02.P05.S27` - Adapt payable invoice records into source mesh resolution; `src/aeat/application/ledger/_business_operation_invoice.py`.
+- [x] `W02.P05.S28` - Adapt collectible invoice records into source mesh resolution; `src/aeat/application/ledger/_business_operation_invoice.py`.
 - [ ] `W02.P05.S29` - Enroll counterpart aggregation registry provider through source mesh; `src/aeat/application/aggregation/_registry_provider.py`.
-- [ ] `W02.P05.S30` - Enroll retenciones aggregation through repository backed source resolution; `src/aeat/application/aggregation/_retenciones.py`.
-- [ ] `W02.P05.S31` - Test invoice ledger cross references produce stable source refs; `src/aeat/application/aggregation/test_source_mesh_invoices.py`.
-- [ ] `W02.P05.S32` - Test retenciones source observations are period and source kind filtered; `src/aeat/application/aggregation/test_source_mesh_retenciones.py`.
+- [x] `W02.P05.S30` - Enroll retenciones aggregation through repository backed source resolution; `src/aeat/application/aggregation/_retenciones.py`.
+- [x] `W02.P05.S31` - Test invoice ledger cross references produce stable source refs; `src/aeat/application/aggregation/test_source_mesh_invoices.py`.
+- [x] `W02.P05.S32` - Test retenciones source observations are period and source kind filtered; `src/aeat/application/aggregation/test_source_mesh_retenciones.py`.
 
 ## Wave `W03` - domain expansion gates
 

@@ -3,10 +3,16 @@ generated: true
 tags:
   - '#index'
   - '#calculation-source-connectivity'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-04'
+modified: '2026-07-04'
 related:
   - '[[2026-05-20-calculation-source-connectivity-W02-P04-S24]]'
+  - '[[2026-05-20-calculation-source-connectivity-W02-P05-S26]]'
+  - '[[2026-05-20-calculation-source-connectivity-W02-P05-S27]]'
+  - '[[2026-05-20-calculation-source-connectivity-W02-P05-S28]]'
+  - '[[2026-05-20-calculation-source-connectivity-W02-P05-S30]]'
+  - '[[2026-05-20-calculation-source-connectivity-W02-P05-S31]]'
+  - '[[2026-05-20-calculation-source-connectivity-W02-P05-S32]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'
   - '[[2026-05-20-calculation-source-connectivity-plan]]'
   - '[[2026-05-20-calculation-source-connectivity-research]]'
@@ -51,6 +57,12 @@ Auto-generated index of all documents tagged with `#calculation-source-connectiv
 - `2026-05-21-calculation-source-connectivity-w01-p01-s01-s06-exec` - `calculation-source-connectivity` `W01.P01.S01-S06`
 - `2026-05-21-calculation-source-connectivity-w01-p02-s07-s12-exec` - W01.P02 Existing Ledger Path Wrapper
 - `2026-05-21-calculation-source-connectivity-w01-p03-s13-s17-exec` - W01.P03 Default Calculation Enrollment
+- `2026-05-20-calculation-source-connectivity-W02-P05-S26` - Adapt purchase invoice evidence records into source mesh resolution
+- `2026-05-20-calculation-source-connectivity-W02-P05-S27` - Adapt payable invoice records into source mesh resolution
+- `2026-05-20-calculation-source-connectivity-W02-P05-S28` - Adapt collectible invoice records into source mesh resolution
+- `2026-05-20-calculation-source-connectivity-W02-P05-S30` - Enroll retenciones aggregation through repository backed source resolution
+- `2026-05-20-calculation-source-connectivity-W02-P05-S31` - Test invoice ledger cross references produce stable source refs
+- `2026-05-20-calculation-source-connectivity-W02-P05-S32` - Test retenciones source observations are period and source kind filtered
 
 ### plan
 
