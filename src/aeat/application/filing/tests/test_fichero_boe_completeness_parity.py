@@ -57,6 +57,8 @@ def _m131_headers() -> dict[str, str]:
     return {"declaration_type": "I"}
 
 
+_CoveredCase = tuple[str, Callable[[], Any], Callable[[], dict[str, str]], int | None, str | None]
+
 # (modelo, draft builder, headers builder, filing_year, period) — fixed-width
 # covered modelos that declare a completeness manifest and have a reusable complete
 # approved draft. filing_year/period pin the schema provider to the same revision
@@ -68,7 +70,7 @@ def _m131_headers() -> dict[str, str]:
 # resumen anual) is covered with its 2025/0A provider: the required-applicable
 # set is the three computed annual totals (cuota devengada/deducible/resultado),
 # each of which carries a real DR390 box (34/64/65) via export_refs.
-_COVERED = [
+_COVERED: tuple[_CoveredCase, ...] = (
     ("130", _approved_registry_draft, _modelo_130_export_headers, None, None),
     ("111", _approved_modelo_111_registry_draft, _modelo_111_export_headers, None, None),
     ("115", _approved_modelo_115_registry_draft, _modelo_115_export_headers, None, None),
@@ -76,11 +78,11 @@ _COVERED = [
     ("131", _approved_modelo_131_registry_draft, _m131_headers, None, None),
     ("200", _approved_modelo_200_registry_draft, _modelo_200_export_headers, 2024, "0A"),
     ("390", _approved_modelo_390_registry_draft, _modelo_390_export_headers, 2025, "0A"),
-]
+)
 
 # Broader fixed-width, manifest-bearing set for the structural dormancy lock
 # below (no complete draft needed — the check is layout-vs-manifest only).
-_DORMANCY_MODELOS = [
+_DORMANCY_MODELOS = (
     ("130", 2025, "1T"),
     ("111", 2025, "1T"),
     ("115", 2025, "1T"),
@@ -89,67 +91,54 @@ _DORMANCY_MODELOS = [
     ("303", 2025, "1T"),
     ("200", 2025, "0A"),
     ("390", 2025, "0A"),
-]
+)
 
 
-@pytest.mark.parametrize(("modelo", "build_draft_fn", "headers_fn", "filing_year", "period"), _COVERED)
-def test_complete_draft_reaches_disk_for_every_required_casilla(
-    modelo: str,
-    build_draft_fn: Callable[[], Any],
-    headers_fn: Callable[[], dict[str, str]],
-    filing_year: int | None,
-    period: str | None,
-    tmp_path: Path,
-) -> None:
-    provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
-    draft = build_draft_fn()
-    headers = headers_fn()
-    subview = provider.get_subview(modelo)
-    layout = subview.export_layouts[0]
-    manifest = subview.completeness_manifest
-    assert manifest is not None, f"modelo {modelo} must declare a completeness manifest to ground the parity gate"
+def test_complete_draft_reaches_disk_for_every_required_casilla() -> None:
+    for modelo, build_draft_fn, headers_fn, filing_year, period in _COVERED:
+        provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
+        draft = build_draft_fn()
+        headers = headers_fn()
+        subview = provider.get_subview(modelo)
+        layout = subview.export_layouts[0]
+        manifest = subview.completeness_manifest
+        assert manifest is not None, f"modelo {modelo} must declare a completeness manifest to ground the parity gate"
 
-    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
-    rendered = rendered_casilla_ids(layout, draft=draft, headers=headers, schema_provider=provider)
-    # Mirror the gate's required set: calculation RESULTS (formula) and
-    # schema-required casillas that are representable. Optional inputs are excluded
-    # (a blank optional input is a valid zero, not a thin file).
-    collection = provider.get_collection(modelo)
-    required_applicable = {
-        casilla.casilla_id
-        for casilla in manifest.casillas
-        if (schema := collection.get(casilla.casilla_id)) is not None
-        and (schema.formula is not None or schema.required)
-    } & representable
+        representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+        rendered = rendered_casilla_ids(layout, draft=draft, headers=headers, schema_provider=provider)
+        # Mirror the gate's required set: calculation RESULTS (formula) and
+        # schema-required casillas that are representable. Optional inputs are excluded
+        # (a blank optional input is a valid zero, not a thin file).
+        collection = provider.get_collection(modelo)
+        required_applicable = {
+            casilla.casilla_id
+            for casilla in manifest.casillas
+            if (schema := collection.get(casilla.casilla_id)) is not None
+            and (schema.formula is not None or schema.required)
+        } & representable
 
-    # Non-vacuous: the gate is genuinely active for this modelo.
-    assert required_applicable, f"modelo {modelo} has an empty required-applicable set; the gate would pass trivially"
-    # Parity: every required computed/schema-required casilla reaches disk for a complete draft.
-    missing = sorted(required_applicable - rendered)
-    assert not missing, f"modelo {modelo} complete draft omits required casillas: {missing}"
+        # Non-vacuous: the gate is genuinely active for this modelo.
+        assert required_applicable, (
+            f"modelo {modelo} has an empty required-applicable set; the gate would pass trivially"
+        )
+        # Parity: every required computed/schema-required casilla reaches disk for a complete draft.
+        missing = sorted(required_applicable - rendered)
+        assert not missing, f"modelo {modelo} complete draft omits required casillas: {missing}"
 
 
-@pytest.mark.parametrize(("modelo", "build_draft_fn", "headers_fn", "filing_year", "period"), _COVERED)
-def test_complete_draft_exports_without_panic(
-    modelo: str,
-    build_draft_fn: Callable[[], Any],
-    headers_fn: Callable[[], dict[str, str]],
-    filing_year: int | None,
-    period: str | None,
-    tmp_path: Path,
-) -> None:
-    provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
-    draft = build_draft_fn()
-    output = tmp_path / f"modelo-{modelo}.txt"
+def test_complete_draft_exports_without_panic(tmp_path: Path) -> None:
+    for modelo, build_draft_fn, headers_fn, filing_year, period in _COVERED:
+        provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
+        draft = build_draft_fn()
+        output = tmp_path / f"modelo-{modelo}.txt"
 
-    receipt = export_draft(draft, output_path=output, headers=headers_fn(), schema_provider=provider)
+        receipt = export_draft(draft, output_path=output, headers=headers_fn(), schema_provider=provider)
 
-    assert output.exists()
-    assert receipt.file_sha256
+        assert output.exists(), modelo
+        assert receipt.file_sha256, modelo
 
 
-@pytest.mark.parametrize(("modelo", "year", "period"), _DORMANCY_MODELOS)
-def test_no_manifest_casilla_is_representable_only_via_binding_rows(modelo: str, year: int, period: str) -> None:
+def test_no_manifest_casilla_is_representable_only_via_binding_rows() -> None:
     # Dormancy lock for the row_field_casilla_ids false-panic vector: the rendered
     # set is derived from draft.values, so a manifest-required casilla whose only
     # representable route is a binding-row (row_field_casilla_ids) mapping -- never
@@ -159,65 +148,60 @@ def test_no_manifest_casilla_is_representable_only_via_binding_rows(modelo: str,
     # to teach rendered_casilla_ids about binding-materialised row casillas (or add
     # a registry-build validator forbidding a manifest-required row_field-only
     # casilla).
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=date(year, 6, 1))
-    revision = snapshot.revision
-    manifest = revision.completeness_manifest
-    assert manifest is not None
-    layout = sorted(revision.export_layouts, key=lambda item: item.id)[0]
-    assert layout.format == "fixed_width"
+    for modelo, year, period in _DORMANCY_MODELOS:
+        snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=date(year, 6, 1))
+        revision = snapshot.revision
+        manifest = revision.completeness_manifest
+        assert manifest is not None, modelo
+        layout = sorted(revision.export_layouts, key=lambda item: item.id)[0]
+        assert layout.format == "fixed_width", modelo
 
-    casilla_field_ids = {
-        field.casilla_id
-        for record in layout.records
-        for field in record.fields
-        if field.kind == CasillaFieldKind.CASILLA and field.casilla_id is not None
-    }
-    row_field_ids: set[str] = set()
-    for record in layout.records:
-        row_field_ids.update(record.row_field_casilla_ids.values())
+        casilla_field_ids = {
+            field.casilla_id
+            for record in layout.records
+            for field in record.fields
+            if field.kind == CasillaFieldKind.CASILLA and field.casilla_id is not None
+        }
+        row_field_ids: set[str] = set()
+        for record in layout.records:
+            row_field_ids.update(record.row_field_casilla_ids.values())
 
-    manifest_ids = {casilla.casilla_id for casilla in manifest.casillas}
-    row_field_only_required = (manifest_ids & row_field_ids) - casilla_field_ids
-    assert not row_field_only_required, (
-        f"modelo {modelo}: manifest-required casillas representable only via binding rows "
-        f"(would false-panic): {sorted(row_field_only_required)}"
-    )
+        manifest_ids = {casilla.casilla_id for casilla in manifest.casillas}
+        row_field_only_required = (manifest_ids & row_field_ids) - casilla_field_ids
+        assert not row_field_only_required, (
+            f"modelo {modelo}: manifest-required casillas representable only via binding rows "
+            f"(would false-panic): {sorted(row_field_only_required)}"
+        )
 
 
-@pytest.mark.parametrize(("modelo", "build_draft_fn", "headers_fn", "filing_year", "period"), _COVERED)
-def test_structural_fidelity_holds_for_every_covered_modelo(
-    modelo: str,
-    build_draft_fn: Callable[[], Any],
-    headers_fn: Callable[[], dict[str, str]],
-    filing_year: int | None,
-    period: str | None,
-) -> None:
+def test_structural_fidelity_holds_for_every_covered_modelo() -> None:
     # The parity gate asserts more than casilla presence: the rendered casilla
     # numbering/segmento must mirror the registry CasillaDefinition, and the
     # rendered record order must follow the registry export-layout declaration
     # order. Both must hold for the real shipped structure of every covered
     # modelo (including the multi-segment M200 and the annual M390), so the
     # fidelity gate is grounded rather than false-firing on legitimate layouts.
-    provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
-    subview = provider.get_subview(modelo)
-    layout = subview.export_layouts[0]
-    manifest = subview.completeness_manifest
-    assert manifest is not None
-    headers = headers_fn()
-    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+    for modelo, _build_draft_fn, headers_fn, filing_year, period in _COVERED:
+        provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
+        subview = provider.get_subview(modelo)
+        layout = subview.export_layouts[0]
+        manifest = subview.completeness_manifest
+        assert manifest is not None, modelo
+        headers = headers_fn()
+        representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
 
-    _assert_record_order_fidelity(modelo=modelo, layout=layout, headers=headers)
-    _assert_casilla_metadata_fidelity(
-        modelo=modelo,
-        manifest=manifest,
-        representable=representable,
-        casilla_metadata=subview.casilla_record_metadata,
-    )
+        _assert_record_order_fidelity(modelo=modelo, layout=layout, headers=headers)
+        _assert_casilla_metadata_fidelity(
+            modelo=modelo,
+            manifest=manifest,
+            representable=representable,
+            casilla_metadata=subview.casilla_record_metadata,
+        )
 
-    # Non-vacuous: the metadata fidelity check actually cross-checked at least one
-    # representable manifest casilla against the registry declaration.
-    cross_checked = [casilla.casilla_id for casilla in manifest.casillas if casilla.casilla_id in representable]
-    assert cross_checked, f"modelo {modelo}: metadata fidelity check is vacuous (no representable manifest casilla)"
+        # Non-vacuous: the metadata fidelity check actually cross-checked at least one
+        # representable manifest casilla against the registry declaration.
+        cross_checked = [casilla.casilla_id for casilla in manifest.casillas if casilla.casilla_id in representable]
+        assert cross_checked, f"modelo {modelo}: metadata fidelity check is vacuous (no representable manifest casilla)"
 
 
 def test_rendered_casilla_number_drift_panics() -> None:
