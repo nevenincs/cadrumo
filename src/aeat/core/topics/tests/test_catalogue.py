@@ -99,10 +99,12 @@ def test_topic_requires_legal_refs() -> None:
     """A topic cannot be registered without legal grounding."""
 
     with pytest.raises(ValidationError) as raised:
-        Topic(
-            slug="ungrounded-topic",
-            title_key="topic.ungrounded-topic.title",
-            body_key="topic.ungrounded-topic.body",
+        Topic.model_validate(
+            {
+                "slug": "ungrounded-topic",
+                "title_key": "topic.ungrounded-topic.title",
+                "body_key": "topic.ungrounded-topic.body",
+            },
         )
 
     assert "legal_refs" in str(raised.value)
