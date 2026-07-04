@@ -20,11 +20,11 @@ no-silent-under-declaration gap at the settlement period: it reads the
 CURRENT year's own registry-computed prorrata figures (never a fabricated
 value) and looks up the PRIOR year's persisted ``iva.prorrata-porcentaje``
 observation from the local
-:class:`~aeat.application.calculations.CalculationObservationRepository` — the
+:class:`~application.calculations.CalculationObservationRepository` — the
 same same-modelo prior-filing lookup pattern
-:mod:`~aeat.application.modelo._prior_payment_advisory` already uses for the
+:mod:`~application.modelo._prior_payment_advisory` already uses for the
 Modelo 130 casilla-05 carry. When a real prior-year percentage is found, the
-pure :func:`~aeat.application.calculations.build_prorrata_regularizacion_advisory`
+pure :func:`~application.calculations.build_prorrata_regularizacion_advisory`
 projection runs against real, non-fabricated inputs and its advisory is
 surfaced verbatim (never re-implemented). When no prior-year observation
 exists (a first-filing ejercicio, or the operator has not yet filed the prior
@@ -39,17 +39,17 @@ filers); this collector only inspects the revision on those periods so a
 mid-year quarter does not raise noise for a compute that is not yet due.
 
 See Also:
-    :mod:`~aeat.application.modelo._calculation_diagnostics`:
+    :mod:`~application.modelo._calculation_diagnostics`:
         Post-calculation coordinator that calls this collector with the
         computed casilla values and the shared observation repository.
-    :mod:`~aeat.application.calculations._prorrata_regularizacion`:
+    :mod:`~application.calculations._prorrata_regularizacion`:
         Pure advisory-projection function this collector wires to the
         registry-computed annual prorrata figures.
-    :mod:`~aeat.application.modelo._bienes_inversion_advisory`:
+    :mod:`~application.modelo._bienes_inversion_advisory`:
         Sibling deferred-source collector for the capital-goods IVA
         regularización (LIVA arts. 107-110), whose settlement-period gating
         this module mirrors.
-    :mod:`~aeat.application.modelo._prior_payment_advisory`:
+    :mod:`~application.modelo._prior_payment_advisory`:
         Origin of the same-modelo prior-filing observation lookup pattern
         this collector reuses for the prior-year definitive-percentage carry.
 """
@@ -98,7 +98,7 @@ def _prior_year_definitiva_pct(
     """Return the prior ejercicio's persisted definitive prorrata percentage.
 
     Scans the local Modelo 303 observation catalogue (mirroring
-    :mod:`~aeat.application.modelo._prior_payment_advisory`'s same-modelo
+    :mod:`~application.modelo._prior_payment_advisory`'s same-modelo
     prior-filing lookup) for a settlement-period observation in
     ``filing_year - 1`` that carries a value for ``porcentaje_id`` — the same
     ``iva.prorrata-porcentaje`` canonical casilla id shared by every M303
@@ -133,7 +133,7 @@ def collect_prorrata_regularizacion_diagnostics(
     ``iva.prorrata-porcentaje``, ``iva.cuota-deducible-total``) from
     ``casilla_values`` and looks up the PRIOR year's persisted definitive
     percentage from ``observation_repository``. When both are available, the
-    pure :func:`~aeat.application.calculations.build_prorrata_regularizacion_advisory`
+    pure :func:`~application.calculations.build_prorrata_regularizacion_advisory`
     projection runs and its advisory (or silence, when no regularización is
     due) is returned verbatim. When the prior-year percentage cannot be found,
     a lighter pending advisory fires whenever the current year shows
@@ -151,7 +151,7 @@ def collect_prorrata_regularizacion_diagnostics(
         filing_year: The filing year regularised (the year whose prior
             ejercicio's percentage is looked up).
         observation_repository: The local
-            :class:`~aeat.application.calculations.CalculationObservationRepository`
+            :class:`~application.calculations.CalculationObservationRepository`
             scanned for the prior-year definitive-percentage carry.
 
     Returns:
