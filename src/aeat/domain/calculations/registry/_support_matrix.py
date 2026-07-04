@@ -2,21 +2,21 @@
 
 :class:`ModeloEntry` is the first-class typed roll-up of "what does modelo X
 actually support", derived entirely from the loaded
-:class:`~aeat.domain.calculations.registry.ModeloDefinition` /
-:class:`~aeat.domain.calculations.registry.ModeloRevision` records — never
+:class:`~domain.calculations.registry.ModeloDefinition` /
+:class:`~domain.calculations.registry.ModeloRevision` records — never
 hand-maintained. It composes existing registry primitives rather than
 re-implementing them:
 
 * calc-grade / manifest / export-format / extractor detection mirrors
   ``dev.registry.matrix`` (contributor-facing capability probe);
 * rename tracking reads the revision's already-declared
-  :class:`~aeat.domain.calculations.registry.CasillaContinuidadEvolutionDefinition`
+  :class:`~domain.calculations.registry.CasillaContinuidadEvolutionDefinition`
   entries (the ``casilla_continuidad_evolutions`` field);
 * deprecation policy reads the revision's already-declared
-  :class:`~aeat.domain.calculations.registry.SupportRemovalDecisionDefinition`
+  :class:`~domain.calculations.registry.SupportRemovalDecisionDefinition`
   entries (the ``support_removal_decisions`` mapping);
 * portal-compatibility tracking reads the revision's declared
-  :class:`~aeat.domain.calculations.registry.LiveCrossReferenceDecision` entries
+  :class:`~domain.calculations.registry.LiveCrossReferenceDecision` entries
   (surface kind and evidence tier).
 
 Coverage honesty (``no-silent-under-declaration``): a modelo missing a
@@ -66,7 +66,7 @@ def _calculation_closure_casilla_ids(revision: ModeloRevision, modelo_id: str):
 class ModeloRenameRecord(BaseModel):
     """One declared per-ejercicio casilla continuity evolution.
 
-    Projects a :class:`~aeat.domain.calculations.registry.CasillaContinuidadEvolutionDefinition`
+    Projects a :class:`~domain.calculations.registry.CasillaContinuidadEvolutionDefinition`
     already declared on the revision — this record never invents rename
     history; it surfaces what the registry already tracks per continuity
     chain (``continuidad_id``).
@@ -91,7 +91,7 @@ class ModeloRenameRecord(BaseModel):
 class ModeloSupportRemovalRecord(BaseModel):
     """One declared deprecation decision for a modelo revision.
 
-    Projects a :class:`~aeat.domain.calculations.registry.SupportRemovalDecisionDefinition`
+    Projects a :class:`~domain.calculations.registry.SupportRemovalDecisionDefinition`
     already declared on the revision.
 
     Attributes:
@@ -113,7 +113,7 @@ class ModeloSupportRemovalRecord(BaseModel):
 class ModeloPortalCompatibilityRef(BaseModel):
     """One declared AEAT-portal cross-reference for a modelo revision.
 
-    Projects a :class:`~aeat.domain.calculations.registry.LiveCrossReferenceDecision`
+    Projects a :class:`~domain.calculations.registry.LiveCrossReferenceDecision`
     already declared on the revision — the registry's own record of which live
     AEAT surface the modelo has been cross-checked against and under what
     evidence tier.
