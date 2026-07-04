@@ -42,6 +42,8 @@ related:
   - '[[2026-05-20-calculation-source-connectivity-W05-P10-S62]]'
   - '[[2026-05-20-calculation-source-connectivity-W05-P11-S58]]'
   - '[[2026-05-20-calculation-source-connectivity-W05-P11-S59]]'
+  - '[[2026-05-20-calculation-source-connectivity-W05-P11-S60]]'
+  - '[[2026-05-20-calculation-source-connectivity-W05-P11-S61]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'
   - '[[2026-05-20-calculation-source-connectivity-plan]]'
   - '[[2026-05-20-calculation-source-connectivity-research]]'
@@ -123,6 +125,8 @@ Auto-generated index of all documents tagged with `#calculation-source-connectiv
 - `2026-05-20-calculation-source-connectivity-W05-P10-S62` - Follow-up: extend the approval-basis source fingerprint beyond the invoice catalogue to the remaining self-loadable mesh sources (profile, previous_filing, relations) without coupling the review layer to the full source mesh
 - `2026-05-20-calculation-source-connectivity-W05-P11-S58` - Run code review after each completed implementation wave
 - `2026-05-20-calculation-source-connectivity-W05-P11-S59` - Run architecture boundary audit for source mesh directionality
+- `2026-05-20-calculation-source-connectivity-W05-P11-S60` - Run calculation grounding audit for provenance and legal refs
+- `2026-05-20-calculation-source-connectivity-W05-P11-S61` - Run hardening pass for silent zero and missing source diagnostics
 
 ### plan
 

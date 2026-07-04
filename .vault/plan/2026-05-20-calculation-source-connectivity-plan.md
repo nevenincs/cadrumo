@@ -158,5 +158,5 @@ Review each implemented wave for architectural drift missing provenance stale fi
 
 - [x] `W05.P11.S58` - Run code review after each completed implementation wave; `.agents/skills/vaultspec-code-review/SKILL.md`.
 - [x] `W05.P11.S59` - Run architecture boundary audit for source mesh directionality; `src/aeat/application/aggregation`.
-- [ ] `W05.P11.S60` - Run calculation grounding audit for provenance and legal refs; `src/aeat/application/modelo`.
-- [ ] `W05.P11.S61` - Run hardening pass for silent zero and missing source diagnostics; `src/aeat/domain/calculations/registry`.
+- [x] `W05.P11.S60` - Run calculation grounding audit for provenance and legal refs; `src/aeat/application/modelo`.
+- [x] `W05.P11.S61` - Run hardening pass for silent zero and missing source diagnostics; `src/aeat/domain/calculations/registry`.
