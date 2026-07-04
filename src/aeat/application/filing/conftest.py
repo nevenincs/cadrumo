@@ -6,21 +6,24 @@ copies in ``_test_repository``, ``_test_history_repository``, and
 ``_test_complementaria_repository`` collapse into one autouse conftest
 fixture.
 
-Per-test scope is intentional: filing-repository tests persist
-encrypted records and assert against per-test ``tmp_path`` filesystem
-state. A module-scoped hoist (attempted in peer commit 4f83fefb9 as a
-W30.P64.S804 perf win) is incompatible with these tests because they
-do not use Session().begin_nested() for transactional rollback; the
-hoist let one test's persisted records bleed into another's list+iter
-assertions and broke the encrypted-payload-path lookup which uses the
-per-test tmp_path. The proper hoist would also need a per-test
-rollback teardown, which is tracked separately. Until that lands,
-function-scope autouse is the correct shape.
+Module-scope hoisting (W30.P64.S804): the expensive bucket runtime
+(Argon2id KEK derivation, wrapped-DEK mint, session open, engine + table
+create) is provisioned once per test module by ``_active_bucket_runtime``.
+Per-test isolation is restored by the autouse ``_reset_filing_store``
+teardown, which truncates the module-shared ``secure_objects`` table
+before each test. This is the real per-test on-disk reset the S804
+infeasibility audit called for, not the fictional ``Session().begin_nested()``
+savepoint (a savepoint cannot roll back on-disk keystore/manifest state, and
+the catalogue rows are the only thing that actually accumulates). Tests that
+scan the at-rest database bytes read the module runtime's ``storage_root``
+rather than their own per-test ``tmp_path``.
 
 See Also:
     :func:`aeat-tests.secure_sql.isolated_runtime_profile`
         Shared helper that provisions the real active-profile bucket runtime
         used by this fixture.
+    :func:`aeat-tests.secure_sql.reset_secure_object_store`
+        Per-test teardown that truncates the module-shared secure-object store.
     :class:`aeat-tests.secure_sql.TestRuntimeProfile`
         Frozen record yielded by the helper so tests can inspect the isolated
         storage root, bucket id, runtime, and repository.
@@ -32,17 +35,34 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterator
-from pathlib import Path
 
 import pytest
 
-from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, reset_secure_object_store
 
 _BUCKET_ID = "filing-test"
 
 
-@pytest.fixture(autouse=True)
-def _active_bucket_runtime(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    """Yield a function-scoped active filing bucket runtime for each test."""
+@pytest.fixture(scope="module")
+def _active_bucket_runtime(tmp_path_factory: pytest.TempPathFactory) -> Iterator[TestRuntimeProfile]:
+    """Provision the active filing bucket runtime once per test module (S804)."""
+    tmp_path = tmp_path_factory.mktemp("filing-runtime")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
+
+
+@pytest.fixture(autouse=True)
+def _reset_filing_store(_active_bucket_runtime: TestRuntimeProfile) -> Iterator[None]:
+    """Truncate the module-shared secure-object store before each test.
+
+    Load-bearing per-test isolation: without it the module-shared runtime bleeds
+    persisted records across tests (a prior test's filing records appear in a
+    later test's list/iter assertions) and the anti-tautology at-rest scans stop
+    biting. The reset is cheap (a whole-table DELETE); the costly bucket
+    provisioning is paid once by ``_active_bucket_runtime``.
+    """
+    reset_secure_object_store(_active_bucket_runtime.repository)
+    yield
+
+
+__all__ = ["_active_bucket_runtime", "_reset_filing_store"]
