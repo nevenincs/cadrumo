@@ -5,7 +5,7 @@ encrypted review package -- an accountant or gestor -- by the SHA-256
 fingerprint of that recipient's X25519 public key, verified out-of-band
 (read aloud, compared over a separate channel) before it is trusted.
 It is the taxpayer-side companion to
-:mod:`aeat.application.modelo._review_package_recipient_encryption`,
+:mod:`application.modelo._review_package_recipient_encryption`,
 which consumes a registered recipient's public key to seal a review
 package so only that recipient's matching private key can open it.
 
@@ -17,21 +17,21 @@ encrypts feedback back to the taxpayer) is out of scope for this
 module.
 
 Persistence follows the exact shape of
-:class:`~aeat.adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`:
+:class:`~adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`:
 one ``FINANCIAL``-sensitivity secure-object singleton per bucket, an
 empty register when absent, and duplicate-``recipient_id`` refusal on
 add.
 
 See Also:
-    :mod:`aeat.application.modelo._review_package_recipient_encryption`
+    :mod:`application.modelo._review_package_recipient_encryption`
         Consumes a registered recipient's public key to encrypt a
         review package.
-    :mod:`aeat.application.modelo._review_package_signing`
+    :mod:`application.modelo._review_package_signing`
         Sibling per-profile keypair primitive (Ed25519, signature-only)
         this module's X25519 keypair concept deliberately does not
         share key material with -- signing and encryption keys must
         not be reused across purposes.
-    :class:`~aeat.adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`
+    :class:`~adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`
         The structural template this repository mirrors.
 """
 
