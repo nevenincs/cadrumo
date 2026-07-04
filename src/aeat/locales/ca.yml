@@ -687,6 +687,10 @@ application:
           d aplicar l enllac.
         transaction_not_found: No s ha trobat la transaccio %{transaction_id} al cataleg
           de transaccions.
+    wizard:
+      errors:
+        build_failed: 'l''assistent de factures ha rebutjat: %{detail}'
+        field_errors: 'l''assistent de factures ha rebutjat %{field_count} camp(s): %{detail}'
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
@@ -1581,6 +1585,8 @@ cli:
           remove_help: Elimina una factura del catàleg de conciliació.
           view_help: Mostra una factura del catàleg de conciliació per identificador
             o prefix no ambigu.
+          wizard_help: 'Entrada manual guiada i no interactiva quan l''extracció no està disponible.'
+          wizard_idempotent_noop: 'Sense operació idempotent: ja existeix una factura amb aquesta identitat (%{invoice_id}); no s''ha creat res.'
         country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
           intracomunitàries UE)
         eu_iva_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
@@ -2100,7 +2106,10 @@ cli:
           parell de claus X25519 d'aquest bucket (generat en el primer us) i escriu
           el paquet recuperat a --output. Nomes local; mai contacta amb l'AEAT.
         decrypt_output_help: Ruta on escriure el ZIP del paquet de revisio recuperat.
-        encrypt_feedback_help: 'Segella els comentaris de revisió d''un destinatari (una nota i, opcionalment, un rebut contrasignat) de tornada a l''originador perquè només la clau privada de l''originador els pugui obrir, i escriu el sobre a --output. Només local; mai contacta amb l''AEAT.'
+        encrypt_feedback_help: Segella els comentaris de revisió d'un destinatari
+          (una nota i, opcionalment, un rebut contrasignat) de tornada a l'originador
+          perquè només la clau privada de l'originador els pugui obrir, i escriu el
+          sobre a --output. Només local; mai contacta amb l'AEAT.
         encrypt_for_recipient_help: Segella un paquet de revisio perque nomes la clau
           privada d'un destinatari registrat el pugui obrir, i escriu el sobre xifrat
           a --output. Nomes local; mai contacta amb l'AEAT.
@@ -2111,30 +2120,45 @@ cli:
         errors:
           envelope_not_found: No s'ha trobat el sobre xifrat per al destinatari a
             {envelope_path}.
-          feedback_envelope_not_found: 'No s''ha trobat el sobre de comentaris a {envelope_path}.'
+          feedback_envelope_not_found: No s'ha trobat el sobre de comentaris a {envelope_path}.
           invalid_valid_for_days: --valid-for-days ha de ser un enter estrictament
             positiu.
           output_required: Indiqueu --output CAMÍ per al ZIP del paquet de revisió.
           package_not_found: No s'ha trobat el paquet de revisió a {package_path}.
           receipt_not_found: No s'ha trobat el rebut a {receipt_path}.
           signature_not_found: No s'ha trobat el sobre de signatura a {signature_path}.
-        feedback_counter_signer_public_key_help: 'La clau pública de signatura Ed25519 del revisor contra la qual s''ha de verificar la contrasignatura (obligatòria quan els comentaris inclouen un rebut).'
-        feedback_envelope_path_help: 'Ruta al JSON del sobre de comentaris xifrat per a l''originador produït per `encrypt-feedback`.'
-        feedback_note_help: 'Veredicte o nota de text lliure (p. ex. `revisat, sense canvis`).'
-        feedback_operator_public_key_help: 'La teva pròpia clau pública de signatura Ed25519 contra la qual s''ha de verificar la signatura original.'
-        feedback_output_help: 'Ruta on escriure el JSON del sobre de comentaris xifrat per a l''originador.'
-        feedback_package_help: 'Ruta al teu paquet de revisió original desat localment contra el qual es verifica un rebut contrasignat.'
-        feedback_receipt_help: 'Rebut contrasignat opcional en JSON (de `counter-sign`) per incloure com a aprovació formal.'
-        feedback_revision_id_help: 'Id de la revisió de càlcul a què es refereixen els comentaris (del descriptor del paquet revisat).'
-        feedback_submitted_by_help: 'Etiqueta de l''actor revisor (p. ex. el nom per mostrar de l''assessor).'
-        feedback_work_unit_id_help: 'Id de la unitat de treball a què es refereixen els comentaris (del descriptor del paquet revisat).'
+        feedback_counter_signer_public_key_help: La clau pública de signatura Ed25519
+          del revisor contra la qual s'ha de verificar la contrasignatura (obligatòria
+          quan els comentaris inclouen un rebut).
+        feedback_envelope_path_help: Ruta al JSON del sobre de comentaris xifrat per
+          a l'originador produït per `encrypt-feedback`.
+        feedback_note_help: Veredicte o nota de text lliure (p. ex. `revisat, sense
+          canvis`).
+        feedback_operator_public_key_help: La teva pròpia clau pública de signatura
+          Ed25519 contra la qual s'ha de verificar la signatura original.
+        feedback_output_help: Ruta on escriure el JSON del sobre de comentaris xifrat
+          per a l'originador.
+        feedback_package_help: Ruta al teu paquet de revisió original desat localment
+          contra el qual es verifica un rebut contrasignat.
+        feedback_receipt_help: Rebut contrasignat opcional en JSON (de `counter-sign`)
+          per incloure com a aprovació formal.
+        feedback_revision_id_help: Id de la revisió de càlcul a què es refereixen
+          els comentaris (del descriptor del paquet revisat).
+        feedback_submitted_by_help: Etiqueta de l'actor revisor (p. ex. el nom per
+          mostrar de l'assessor).
+        feedback_work_unit_id_help: Id de la unitat de treball a què es refereixen
+          els comentaris (del descriptor del paquet revisat).
         group_help: Construeix un paquet de revisió compartible i verifica'n la integritat.
-        import_feedback_help: 'Obre un sobre de comentaris amb el parell de claus X25519 d''aquest bucket, verifica qualsevol rebut contrasignat contra el teu paquet de revisió desat localment i adjunta la contrasignatura verificada al teu registre d''aprovació. Només local; mai contacta amb l''AEAT.'
+        import_feedback_help: Obre un sobre de comentaris amb el parell de claus X25519
+          d'aquest bucket, verifica qualsevol rebut contrasignat contra el teu paquet
+          de revisió desat localment i adjunta la contrasignatura verificada al teu
+          registre d'aprovació. Només local; mai contacta amb l'AEAT.
         notes_help: Nota de text lliure inclosa al descriptor del paquet (p. ex. el
           motiu de l'enviament).
         operator_public_key_help: Clau pública de l'operador (signant original), en
           64 caràcters hexadecimals en minúscula.
-        originator_id_help: 'Id d''originador registrat la clau pública del qual segella els comentaris (vegeu `aeat config collab recipient add`).'
+        originator_id_help: Id d'originador registrat la clau pública del qual segella
+          els comentaris (vegeu `aeat config collab recipient add`).
         output_help: Camí on escriure el ZIP del paquet de revisió.
         package_path_help: Camí del ZIP del paquet de revisió a verificar.
         public_key_help: Clau pública del signant, en 64 caràcters hexadecimals en

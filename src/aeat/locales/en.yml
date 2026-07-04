@@ -625,6 +625,10 @@ application:
           the link update.
         transaction_not_found: Transaction %{transaction_id} was not found in the
           transaction catalogue.
+    wizard:
+      errors:
+        build_failed: 'invoice wizard refused: %{detail}'
+        field_errors: 'invoice wizard refused %{field_count} field(s): %{detail}'
   ledger:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
@@ -1481,6 +1485,8 @@ cli:
           remove_help: Delete one reconciliation catalogue invoice.
           view_help: Show one reconciliation catalogue invoice by id or unambiguous
             prefix.
+          wizard_help: 'Guided, non-interactive manual entry when extraction is unavailable.'
+          wizard_idempotent_noop: 'Idempotent no-op: an invoice with this identity already exists (%{invoice_id}); nothing was created.'
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
         eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
@@ -1976,7 +1982,10 @@ cli:
           X25519 encryption keypair (minted on first use) and write the recovered
           package ZIP to --output. Local-only; never contacts AEAT.
         decrypt_output_help: Path to write the recovered review package ZIP to.
-        encrypt_feedback_help: 'Seal a recipient''s review feedback (a note, optionally a counter-signed receipt) back to the originator so only the originator''s private key can open it, and write the envelope to --output. Local-only; never contacts AEAT.'
+        encrypt_feedback_help: Seal a recipient's review feedback (a note, optionally
+          a counter-signed receipt) back to the originator so only the originator's
+          private key can open it, and write the envelope to --output. Local-only;
+          never contacts AEAT.
         encrypt_for_recipient_help: Seal a review package so only a registered recipient's
           private key can open it, and write the encrypted envelope to --output. Local-only;
           never contacts AEAT.
@@ -1985,29 +1994,43 @@ cli:
           by `encrypt-for-recipient`.
         errors:
           envelope_not_found: Recipient-encrypted envelope not found at {envelope_path}.
-          feedback_envelope_not_found: 'Feedback envelope not found at {envelope_path}.'
+          feedback_envelope_not_found: Feedback envelope not found at {envelope_path}.
           invalid_valid_for_days: --valid-for-days must be a strictly positive integer.
           output_required: Supply --output PATH for the review package ZIP.
           package_not_found: Review package not found at {package_path}.
           receipt_not_found: Receipt envelope not found at {receipt_path}.
           signature_not_found: Signature envelope not found at {signature_path}.
-        feedback_counter_signer_public_key_help: 'The reviewer''s Ed25519 signing public key the counter-signature must verify against (required when the feedback carries a receipt).'
-        feedback_envelope_path_help: 'Path to the originator-encrypted feedback envelope JSON produced by `encrypt-feedback`.'
-        feedback_note_help: 'Free-text verdict or note (e.g. `reviewed, no changes`).'
-        feedback_operator_public_key_help: 'Your own Ed25519 signing public key the original signature must verify against.'
-        feedback_output_help: 'Path to write the originator-encrypted feedback envelope JSON to.'
-        feedback_package_help: 'Path to your locally-held original review package ZIP a counter-signed receipt is verified against.'
-        feedback_receipt_help: 'Optional counter-signed receipt JSON (from `counter-sign`) to bundle as a formal sign-off.'
-        feedback_revision_id_help: 'Calculation revision id the feedback concerns (from the reviewed package descriptor).'
-        feedback_submitted_by_help: 'The reviewer''s actor label (e.g. the accountant''s display name).'
-        feedback_work_unit_id_help: 'Work unit id the feedback concerns (from the reviewed package descriptor).'
+        feedback_counter_signer_public_key_help: The reviewer's Ed25519 signing public
+          key the counter-signature must verify against (required when the feedback
+          carries a receipt).
+        feedback_envelope_path_help: Path to the originator-encrypted feedback envelope
+          JSON produced by `encrypt-feedback`.
+        feedback_note_help: Free-text verdict or note (e.g. `reviewed, no changes`).
+        feedback_operator_public_key_help: Your own Ed25519 signing public key the
+          original signature must verify against.
+        feedback_output_help: Path to write the originator-encrypted feedback envelope
+          JSON to.
+        feedback_package_help: Path to your locally-held original review package ZIP
+          a counter-signed receipt is verified against.
+        feedback_receipt_help: Optional counter-signed receipt JSON (from `counter-sign`)
+          to bundle as a formal sign-off.
+        feedback_revision_id_help: Calculation revision id the feedback concerns (from
+          the reviewed package descriptor).
+        feedback_submitted_by_help: The reviewer's actor label (e.g. the accountant's
+          display name).
+        feedback_work_unit_id_help: Work unit id the feedback concerns (from the reviewed
+          package descriptor).
         group_help: Build a shareable review package and verify its integrity.
-        import_feedback_help: 'Open a feedback envelope with this bucket''s X25519 keypair, verify any counter-signed receipt against your locally-held review package, and attach the verified countersignature to your approval journal. Local-only; never contacts AEAT.'
+        import_feedback_help: Open a feedback envelope with this bucket's X25519 keypair,
+          verify any counter-signed receipt against your locally-held review package,
+          and attach the verified countersignature to your approval journal. Local-only;
+          never contacts AEAT.
         notes_help: Free-text note embedded in the package descriptor (e.g. why it
           was shared).
         operator_public_key_help: The operator's (original signer's) public key, as
           64 lowercase hex characters.
-        originator_id_help: 'Registered originator id whose public key seals the feedback (see `aeat config collab recipient add`).'
+        originator_id_help: Registered originator id whose public key seals the feedback
+          (see `aeat config collab recipient add`).
         output_help: Path to write the review package ZIP to.
         package_path_help: Path to the review package ZIP to verify.
         public_key_help: Signer's public key, as 64 lowercase hex characters.
