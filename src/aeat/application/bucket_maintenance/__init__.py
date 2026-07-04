@@ -37,10 +37,16 @@ digests, so import re-saves them through the recipient bucket's
 :class:`adapters.persistence.storage.SecureObjectRepository` and
 re-encrypts under that bucket's DEK.
 This package exposes the lifecycle composition verbs ``archive``,
-``browse``, ``delete``, ``export``, ``import``, ``inspect``, ``rename``,
-and ``restore``. The ``search`` verb is deferred behind its own ADR
-because it must route through domain repositories instead of decrypting
+``browse``, ``delete``, ``disk_usage``, ``export``, ``import``, ``inspect``,
+``rename``, and ``restore``. The ``search`` verb is deferred behind its own
+ADR because it must route through domain repositories instead of decrypting
 secure-object storage directly.
+
+:meth:`BucketMaintenanceService.disk_usage` measures a bucket's on-disk
+footprint by summing regular-file byte sizes under its fixed directory
+layout (:func:`adapters.persistence.storage.bucket.bucket_paths`); it reads
+only filesystem metadata, never decrypted content, so it can measure a
+non-active (even archived) bucket without opening a storage session.
 
 :func:`create_sandbox` and :func:`discard_sandbox` expose a discardable
 experiment-workspace lifecycle over the same primitives: a sandbox is an
@@ -82,9 +88,12 @@ from ._contracts import (
     ArchiveBucketResult,
     BrowseBucketCommand,
     BrowseBucketResult,
+    BucketDiskUsageSubdirRow,
     BucketNamespaceInventoryRow,
     DeleteBucketCommand,
     DeleteBucketResult,
+    DiskUsageBucketCommand,
+    DiskUsageBucketResult,
     ExportBucketCommand,
     ExportBucketResult,
     ImportBucketCommand,
@@ -134,6 +143,7 @@ __all__ = [
     "ArchiveSandboxResult",
     "BrowseBucketCommand",
     "BrowseBucketResult",
+    "BucketDiskUsageSubdirRow",
     "BucketMaintenanceService",
     "BucketNamespaceInventoryRow",
     "CreateSandboxCommand",
@@ -142,6 +152,8 @@ __all__ = [
     "DeleteBucketResult",
     "DiscardSandboxCommand",
     "DiscardSandboxResult",
+    "DiskUsageBucketCommand",
+    "DiskUsageBucketResult",
     "ExportBucketCommand",
     "ExportBucketResult",
     "ImportBucketCommand",

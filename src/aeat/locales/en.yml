@@ -2787,6 +2787,8 @@ cli:
           list'' to see registered sandboxes.'
         use_help: Switch the active profile to an existing sandbox.
         use_name_help: Sandbox name (without the prefix).
+        usage_help: 'Report the on-disk footprint of one sandbox, or every sandbox at once.'
+        usage_name_help: 'Sandbox name (without the prefix); omit to report every sandbox.'
       sar_catalogue_info: 'This archive holds every personal-data category kept for
         the profile: identity and profile facts, modelo work units, ledger transactions,
         calculation revisions, and filing records. Attachment evidence bytes and AEAT

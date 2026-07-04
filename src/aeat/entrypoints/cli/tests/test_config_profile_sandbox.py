@@ -40,6 +40,7 @@ from click.testing import Result
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ._profile_lifecycle_support import create_profile_via_cli
+from .envelope_helpers import unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -524,4 +525,69 @@ def test_sandbox_archive_then_discard_requires_restore_first() -> None:
     assert read_profile_bucket("sandbox:one-way") is not None
     discarded = _invoke(("config", "profile", "sandbox", "discard", "one-way", "--yes"))
     assert discarded.exit_code == 0, discarded.output
+
+
+def test_sandbox_usage_reports_a_named_sandbox_footprint() -> None:
+    """``sandbox usage <name>`` reports a real non-zero on-disk footprint for one sandbox."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "diskcheck", "--from-profile", "main")).exit_code == 0
+
+    report = _invoke(("config", "profile", "sandbox", "usage", "diskcheck"))
+    assert report.exit_code == 0, report.output
+    assert "sandbox:diskcheck" in report.output
+    assert "total_bytes\t" in report.output
+    # A freshly-forked sandbox already has a real manifest + SQLite database
+    # on disk (from the seeded facts), so its footprint must be non-zero.
+    total_line = next(line for line in report.output.splitlines() if line.startswith("total_bytes\t"))
+    assert int(total_line.split("\t", 1)[1]) > 0
+
+
+def test_sandbox_usage_unknown_name_refuses() -> None:
+    refused = _invoke(("config", "profile", "sandbox", "usage", "does-not-exist"))
+    assert refused.exit_code != 0, refused.output
+
+
+def test_sandbox_usage_with_no_name_reports_every_sandbox_and_a_grand_total() -> None:
+    """``sandbox usage`` with no name reports every sandbox and sums their totals."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "usage-a", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "profile", "sandbox", "create", "usage-b", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    report = _invoke(("config", "profile", "sandbox", "usage"))
+    assert report.exit_code == 0, report.output
+    assert "sandbox:usage-a" in report.output
+    assert "sandbox:usage-b" in report.output
+
+    json_report = _invoke(("--format", "json", "config", "profile", "sandbox", "usage"))
+    assert json_report.exit_code == 0, json_report.output
+    result = unwrap_schema_envelope(json_report.output)
+    labels = {row["label"] for row in result["sandboxes"]}
+    assert labels == {"sandbox:usage-a", "sandbox:usage-b"}
+    assert result["total_bytes"] == sum(row["total_bytes"] for row in result["sandboxes"])
+    assert result["total_bytes"] > 0
+
+
+def test_sandbox_usage_measures_an_archived_sandbox_without_reactivating_it() -> None:
+    """``sandbox usage`` can measure an archived (dormant) sandbox by name.
+
+    Mirrors ``restore``'s tombstone-inclusive label lookup: a disk-usage
+    report is a read-only filesystem walk, so it must not require the
+    operator to restore the sandbox first.
+    """
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "dormant", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "profile", "sandbox", "archive", "dormant", "--yes")).exit_code == 0
+
+    report = _invoke(("config", "profile", "sandbox", "usage", "dormant"))
+    assert report.exit_code == 0, report.output
+    assert "sandbox:dormant" in report.output
+
+    # Still archived: the usage report is read-only and did not reactivate it.
+    from ....application.workflow import read_profile_bucket
+
+    assert read_profile_bucket("sandbox:dormant") is None
+    assert read_profile_bucket("sandbox:dormant", include_tombstoned=True) is not None
     assert read_profile_bucket("sandbox:one-way") is None

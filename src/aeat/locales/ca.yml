@@ -2966,6 +2966,8 @@ cli:
           sandbox list'' per veure els sandboxes registrats.'
         use_help: Canvia el perfil actiu a un sandbox existent.
         use_name_help: Nom del sandbox (sense el prefix).
+        usage_help: 'Informar de l''espai en disc d''un sandbox, o de tots alhora.'
+        usage_name_help: 'Nom del sandbox (sense el prefix); ometre per informar de tots.'
       sar_catalogue_info: 'Aquest arxiu conté totes les categories de dades personals
         del perfil: identitat i dades del perfil, unitats de treball de models, moviments
         del llibre, revisions de càlcul i registres de presentació. Els bytes de les
