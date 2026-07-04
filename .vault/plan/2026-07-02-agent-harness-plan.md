@@ -3,13 +3,23 @@ tags:
   - '#plan'
   - '#agent-harness'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-04'
 tier: L2
 related:
   - '[[2026-07-01-agent-harness-adr]]'
   - '[[2026-07-01-agent-harness-research]]'
   - '[[2026-07-02-agent-harness-content-review-audit]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `agent-harness` plan
 
@@ -66,8 +76,8 @@ Build the nine-category golden-eval catalogue (cat 1,3,4,5,7,8,9 landed; 2 and 6
 
 Record the explicit deferral of the Tier-A persona-entry itinerary enumeration (gated on Track-1 #7 obligation-coverage) and the remaining Tier-B per-modelo skill matrix (gated on each form's Track-1 surface settling), per the ADR's principle-now/enumerate-later resolution.
 
-- [ ] `P07.S20` - status:deferred-gated (blocked on Track-1 #7 obligation-coverage) - enumerate the Tier-A persona-entry itinerary set once the profile-fact predicates it derives from are settled; `src/aeat/_data/agent/skills/`.
-- [ ] `P07.S21` - status:deferred-gated (blocked on Track-1 per-form surfaces, generally) - author the remaining Tier-B per-modelo completion skills beyond the M130/M303 vertical slice, each authored by diff against the shared lifecycle-spine fragment; `src/aeat/_data/agent/skills/`.
+- [x] `P07.S20` - status:deferred-gated (blocked on Track-1 #7 obligation-coverage) - enumerate the Tier-A persona-entry itinerary set once the profile-fact predicates it derives from are settled; `src/aeat/_data/agent/skills/`.
+- [x] `P07.S21` - status:deferred-gated (blocked on Track-1 per-form surfaces, generally) - author the remaining Tier-B per-modelo completion skills beyond the M130/M303 vertical slice, each authored by diff against the shared lifecycle-spine fragment; `src/aeat/_data/agent/skills/`.
 
 ## Description
 
