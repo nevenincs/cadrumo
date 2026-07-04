@@ -861,13 +861,6 @@ application:
         modellhez; előbb töltse ki ezeket a profiladatokat: %{missing}.'
       profile_readiness_profile_missing: Nincs perzisztált aktív profil ehhez a modelo
         munkához; folytatás előtt hozza létre vagy javítsa a profilt.
-      recipient_decryption_failed: 'A cimzett szamara titkositott csomagot nem sikerult megfejteni; a kulcs nem megfelelo, vagy a csomagot modositottak.'
-      recipient_encryption_invalid_key: 'A cimzett nyilvanos kulcsa nem egy ervenyes X25519 nyilvanos kulcs.'
-      recipient_registry_already_exists: 'A(z) %{recipient_id} cimzett mar regisztralva van.'
-      recipient_registry_generic: 'Hiba tortent a cimzetti ujjlenyomat-nyilvantartasban.'
-      recipient_registry_invalid_public_key: 'A megadott nyilvanos kulcs nem egy ervenyes 32 bajtos X25519 kulcs (%{length} bajt erkezett).'
-      recipient_registry_load_failed: 'Nem sikerult betolteni a cimzetti ujjlenyomat-nyilvantartast.'
-      recipient_registry_not_found: 'Nincs %{recipient_id} azonositoju regisztralt cimzett.'
       reconcile_declaration_unsupported: A bevallás-PDF rovatszintű egyeztetése még
         nincs engedélyezve ehhez a modellhez; egyeztessen egy letöltött justificantét
         az aeat app modelo reconcile file paranccsal, vagy várjon, amíg ez a modell
@@ -994,23 +987,8 @@ application:
           Allitsa be a profile.country_of_fiscal_residence erteket az alkalmazhato
           Convenio tarifa igenylesehez, vagy varja meg amig a baseline korpusz beepiti
           ezt a sort.'
-      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: a Convenio Spanyolorszag-%{cc}
-        (%{document_id}) egyezmenyi adokulcs alkalmazasra kerult a tipo_renta=%{tipo_renta}
-        ertekhez. Az egyezmenyes kedvezmeny csak az adott allamban illetoseggel rendelkezo
-        tenyleges haszonhuzo szamara all rendelkezesre, aki teljesiti az egyezmeny
-        kedvezmenykorlatozasi (LOB) felteteleit; a tipus alkalmazasa elott ellenorizze
-        a jogosultsagot.'
-      m210_convenio_lob_advisory_next_action: Ellenorizze, hogy az adozo teljesiti
-        a Convenio Spanyolorszag-%{cc} (%{document_id}) tenyleges haszonhuzoi es kedvezmenykorlatozasi
-        (LOB) felteteleit, mielott az egyezmenyi adokulcsot alkalmazza; tekintse at
-        az egyezmeny konkret cikkelyet, ne csak az OECD Modellegyezmeny altalanos
-        LOB koncepciojat.
       m210_convenio_rate_missing:
-        next_action: Hozzon letre egy Convenio Espana-{cc} szerzodesi sort a tipo_renta={tipo_renta}
-          ertekhez a registry/aeat/treaties/ alatt, vagy allitsa vissza a profile.country_of_fiscal_residence
-          erteket a TRLIRNR Art 25 alapertek hasznalatahoz.
-      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY: a(z) %{casilla_id} rovat nulla, de van jogosult leszarmazottak (sulyozott szam %{weighted_count}) a madridi levonashoz. Az automatikus kivaltas zart egyutt adozo/hazas egysegeknel, mert a csaladi jovedelemhatar nem ertekelheto; erositse meg kezileg a jogosultsagot.'
-      madrid_nacimiento_adopcion_eligibility_advisory_next_action: 'Erositse meg, hogy a csaladi egyseg adoalapja a vonatkozo hataron belul van, es ha jogosult, toltse ki kezzel az 1039 rovatot (madrid-dl-1-2010:art-4, art-18).'
+        next_action: 'Hozzon letre egy Convenio Espana-{cc} szerzodesi sort a tipo_renta={tipo_renta} ertekhez a registry/aeat/treaties/ alatt, vagy allitsa vissza a profile.country_of_fiscal_residence erteket a TRLIRNR Art 25 alapertek hasznalatahoz.'
       missing_required_casilla: A kötelező %{casilla_id} casilla hiányzik a számítási
         revízió bemeneti adataiból.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: Az
@@ -1089,6 +1067,8 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
+      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: a Convenio Spanyolorszag-%{cc} (%{document_id}) egyezmenyi adokulcs alkalmazasra kerult a tipo_renta=%{tipo_renta} ertekhez. Az egyezmenyes kedvezmeny csak az adott allamban illetoseggel rendelkezo tenyleges haszonhuzo szamara all rendelkezesre, aki teljesiti az egyezmeny kedvezmenykorlatozasi (LOB) felteteleit; a tipus alkalmazasa elott ellenorizze a jogosultsagot.'
+      m210_convenio_lob_advisory_next_action: 'Ellenorizze, hogy az adozo teljesiti a Convenio Spanyolorszag-%{cc} (%{document_id}) tenyleges haszonhuzoi es kedvezmenykorlatozasi (LOB) felteteleit, mielott az egyezmenyi adokulcsot alkalmazza; tekintse at az egyezmeny konkret cikkelyet, ne csak az OECD Modellegyezmeny altalanos LOB koncepciojat.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás
@@ -2925,8 +2905,6 @@ cli:
       rename_source_help: A meglévő profilnév.
       rename_target_help: Az új profilnév.
       sandbox:
-        active_indicator_info: A(z) %{label} homokozóban dolgozol, nem egy valódi
-          profilban; minden parancs ebben az elkülönített, eldobható tárolóban fut.
         already_exists: Már létezik %{label} nevű sandbox. Válasszon másik nevet,
           vagy előbb dobja el a meglévőt.
         archive_active_profile: A(z) %{name} sandbox az aktív profil; válts másik
@@ -2961,13 +2939,12 @@ cli:
         help: Futtass kísérleteket egy elkülönített, eldobható workspace-ben, amely
           soha nem érinti a fő profil állapotát.
         list_help: Minden sandbox listázása.
-        merge_help: A sandbox főkönyvi tételeinek és/vagy modelo nyilvántartásainak
-          beemelése egy másik profilba.
-        merge_into_help: A célprofil neve, amelybe a sandbox nyilvántartásait beemeli.
-        merge_name_help: A sandbox neve (előtag nélkül).
+        merge_help: 'A sandbox főkönyvi tételeinek és/vagy modelo nyilvántartásainak beemelése egy másik profilba.'
+        merge_into_help: 'A célprofil neve, amelybe a sandbox nyilvántartásait beemeli.'
+        merge_name_help: 'A sandbox neve (előtag nélkül).'
         merge_promoted_info: '%{scope} beemelve innen: %{source}, ide: %{target}.'
         merge_scope_help: 'A beemelendő adatkategória: ledger, modelo vagy all.'
-        merge_yes_help: A sandbox adatainak beemelését megerősíti.
+        merge_yes_help: 'A sandbox adatainak beemelését megerősíti.'
         prune_dry_run_help: Elonezet arrol, mely sandboxokat torolne, anelkul, hogy
           torolne oket.
         prune_help: Az osszes sandbox egyszerre torlese.
@@ -2990,6 +2967,7 @@ cli:
           jelentéséhez.
         use_help: Az aktív profil váltása egy meglévő sandboxra.
         use_name_help: A sandbox neve (előtag nélkül).
+        active_indicator_info: 'A(z) %{label} homokozóban dolgozol, nem egy valódi profilban; minden parancs ebben az elkülönített, eldobható tárolóban fut.'
       sar_catalogue_info: 'Ez az archívum a profilhoz tárolt összes személyesadat-kategóriát
         tartalmazza: azonosító és profiladatok, modelo munkaegységek, főkönyvi tételek,
         számítási revíziók és benyújtási nyilvántartások. A csatolt bizonyítékok bájtjai
@@ -4830,8 +4808,7 @@ errors:
       egy rövidebb útvonalra, vagy engedélyezze a LongPathsEnabled beállítást (lásd
       `aeat config check`).
     error_submission_validation: Egy benyújtási modell nem ment át az érvényesítésen.
-    error_telemetry_schema: Egy telemetriai metrikakulcs nincs regisztrálva a parancs
-      zárt metrikasémájában.
+    error_telemetry_schema: Egy telemetriai metrikakulcs nincs regisztrálva a parancs zárt metrikasémájában.
     error_transaction_catalogue: A tranzakció-katalógus érvénytelen vagy ellentmondásos.
     error_transaction_classification_rule: Egy főkönyvi osztályozási szabály érvénytelen.
     error_transaction_llm_classifier: A tranzakció osztályozása a nyelvi modell által
