@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from ....tests.fixtures.identity_holder import single_field_model
+from ....tests.fixtures.identity_holder import single_field_model, single_field_value
 from .. import ProfileId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -23,7 +23,7 @@ def test_profile_id_constraint_accepts_valid_values_and_rejects_invalid_values()
     )
 
     for profile_id, expected in valid_cases:
-        assert _Holder(profile_id=profile_id).profile_id == expected
+        assert single_field_value(_Holder(profile_id=profile_id), "profile_id") == expected
 
     invalid_cases = (
         "operator",
