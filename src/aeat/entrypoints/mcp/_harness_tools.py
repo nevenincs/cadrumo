@@ -25,12 +25,19 @@ The operating-layer text is read through the ``aeat.agent`` package facade
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...agent import iter_personas, operator_rules_text
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.i18n import tr
 from ._persona_scope import AgentPersona
+
+if TYPE_CHECKING:
+    # Typing-only: the MCP SDK is an optional runtime dependency (``aeat[agent]``);
+    # the real import stays deferred to inside the function body below.
+    from mcp.types import Tool
 
 #: The floor tool's MCP name, following the per-verb ``aeat_<key>`` naming
 #: convention (``_dispatch.tool_name_for_command``): the conceptual
@@ -157,7 +164,7 @@ def render_harness_floor_text(payload: HarnessFloorPayload) -> str:
     return "\n".join(parts)
 
 
-def build_harness_floor_tool() -> object:
+def build_harness_floor_tool() -> Tool:
     """Build the SDK ``Tool`` object for the ``harness.load`` floor tool.
 
     Lazily imports the SDK types so the module still imports when the
