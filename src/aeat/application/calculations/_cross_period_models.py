@@ -22,7 +22,7 @@ class _ObservationPayload(Protocol):
     """Structural interface for the observation envelope payload consumed here.
 
     Matches the public attribute surface of
-    :class:`~aeat.application.calculations._observations_repository._ObservationPayload`
+    :class:`~application.calculations._observations_repository._ObservationPayload`
     without importing its private name.
     """
 
@@ -164,7 +164,7 @@ def _period_strictly_before_activity_start(period: Period, activity_start_date: 
     are suppressed. A period is strictly-prior when its entire inclusive span ends
     before the activity-start date - mirroring the deadline engine's pre-start
     gate (``closes_on < activity_start_date``,
-    :func:`aeat.domain.deadlines._engine`) against the same operator-declared
+    :func:`domain.deadlines._engine`) against the same operator-declared
     field. The comparison is routed through :class:`Period` boundary authority
     (:attr:`Period.end_date`) per ``period-filter-single-boundary-authority`` - no
     parallel inclusion math.
