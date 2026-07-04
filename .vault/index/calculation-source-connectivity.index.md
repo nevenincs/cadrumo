@@ -10,6 +10,7 @@ related:
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S26]]'
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S27]]'
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S28]]'
+  - '[[2026-05-20-calculation-source-connectivity-W02-P05-S29]]'
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S30]]'
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S31]]'
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S32]]'
@@ -81,6 +82,7 @@ Auto-generated index of all documents tagged with `#calculation-source-connectiv
 - `2026-05-20-calculation-source-connectivity-W02-P05-S26` - Adapt purchase invoice evidence records into source mesh resolution
 - `2026-05-20-calculation-source-connectivity-W02-P05-S27` - Adapt payable invoice records into source mesh resolution
 - `2026-05-20-calculation-source-connectivity-W02-P05-S28` - Adapt collectible invoice records into source mesh resolution
+- `2026-05-20-calculation-source-connectivity-W02-P05-S29` - Adjudicate counterpart source provider against accepted 2026-07-04-counterpart-source-provider-adr (Option D): repository-backed provider in the counterpart family module, owned_sources narrowed to the two reserved kinds, RESERVED and non-enrolled until the first M347 declaring binding co-lands enrollment plus the S21 correctness gate
 - `2026-05-20-calculation-source-connectivity-W02-P05-S30` - Enroll retenciones aggregation through repository backed source resolution
 - `2026-05-20-calculation-source-connectivity-W02-P05-S31` - Test invoice ledger cross references produce stable source refs
 - `2026-05-20-calculation-source-connectivity-W02-P05-S32` - Test retenciones source observations are period and source kind filtered
