@@ -15,14 +15,14 @@ from ....application.calculations import (
 from ....core import Period
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile
-from ._iva_wallet_inspector_support import _NIF, _store_profile_with_nif, _unwrap_envelope
+from ._iva_wallet_inspector_support import _NIF, _SEED_BUCKET_ID, _store_profile_with_nif, _unwrap_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def test_cli_correct_verb_requires_confirm(tmp_path: Path) -> None:
     """Correct verb requires --confirm; without it, exit code is non-zero."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
         _store_profile_with_nif(_NIF)
         seed_iva_compensation_period(
             taxpayer_nif=_NIF,
@@ -52,7 +52,7 @@ def test_cli_correct_verb_requires_confirm(tmp_path: Path) -> None:
 
 def test_cli_correct_verb_happy_path_overwrites_seed(tmp_path: Path) -> None:
     """Correct verb with --confirm overwrites the seeded amount and reports it."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
         _store_profile_with_nif(_NIF)
         seed_iva_compensation_period(
             taxpayer_nif=_NIF,
@@ -94,7 +94,7 @@ def test_cli_correct_verb_happy_path_overwrites_seed(tmp_path: Path) -> None:
 
 def test_cli_correct_verb_refuses_when_no_record(tmp_path: Path) -> None:
     """Correct verb refuses a period that has no seeded record (seed first)."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
         _store_profile_with_nif(_NIF)
         result = invoke_cached_cli(
             [

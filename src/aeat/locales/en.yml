@@ -851,7 +851,8 @@ application:
         the key does not match or the package was tampered with.
       recipient_encryption_invalid_key: The recipient's public key is not a well-formed
         X25519 public key.
-      recipient_encryption_key_not_found: 'No recipient encryption keypair has been minted yet for this bucket.'
+      recipient_encryption_key_not_found: No recipient encryption keypair has been
+        minted yet for this bucket.
       recipient_registry_already_exists: Recipient %{recipient_id} is already registered.
       recipient_registry_generic: An error occurred with the recipient fingerprint
         registry.
@@ -1968,14 +1969,19 @@ cli:
         counter_sign_output_help: Path to write the counter-signed receipt JSON to.
         counter_signer_public_key_help: The accountant's (counter-signer's) public
           key, as 64 lowercase hex characters.
-        decrypt_help: 'Open a recipient-encrypted review package with this bucket''s X25519 encryption keypair (minted on first use) and write the recovered package ZIP to --output. Local-only; never contacts AEAT.'
-        decrypt_output_help: 'Path to write the recovered review package ZIP to.'
-        encrypt_for_recipient_help: 'Seal a review package so only a registered recipient''s private key can open it, and write the encrypted envelope to --output. Local-only; never contacts AEAT.'
-        encrypt_output_help: 'Path to write the recipient-encrypted envelope JSON to.'
-        envelope_path_help: 'Path to the recipient-encrypted envelope JSON produced by `encrypt-for-recipient`.'
+        decrypt_help: Open a recipient-encrypted review package with this bucket's
+          X25519 encryption keypair (minted on first use) and write the recovered
+          package ZIP to --output. Local-only; never contacts AEAT.
+        decrypt_output_help: Path to write the recovered review package ZIP to.
+        encrypt_for_recipient_help: Seal a review package so only a registered recipient's
+          private key can open it, and write the encrypted envelope to --output. Local-only;
+          never contacts AEAT.
+        encrypt_output_help: Path to write the recipient-encrypted envelope JSON to.
+        envelope_path_help: Path to the recipient-encrypted envelope JSON produced
+          by `encrypt-for-recipient`.
         errors:
-          envelope_not_found: 'Recipient-encrypted envelope not found at {envelope_path}.'
-          invalid_valid_for_days: '--valid-for-days must be a strictly positive integer.'
+          envelope_not_found: Recipient-encrypted envelope not found at {envelope_path}.
+          invalid_valid_for_days: --valid-for-days must be a strictly positive integer.
           output_required: Supply --output PATH for the review package ZIP.
           package_not_found: Review package not found at {package_path}.
           receipt_not_found: Receipt envelope not found at {receipt_path}.
@@ -1989,8 +1995,11 @@ cli:
         package_path_help: Path to the review package ZIP to verify.
         public_key_help: Signer's public key, as 64 lowercase hex characters.
         receipt_path_help: Path to the counter-signed receipt JSON produced by `counter-sign`.
-        recipient_id_help: 'Registered recipient id (see `aeat config collab recipient add`).'
-        review_only_help: 'Mark the sealed package as carrying no filing authority (the recipient may read and verify it, but it is not evidence the underlying revision has been or will be filed).'
+        recipient_id_help: Registered recipient id (see `aeat config collab recipient
+          add`).
+        review_only_help: Mark the sealed package as carrying no filing authority
+          (the recipient may read and verify it, but it is not evidence the underlying
+          revision has been or will be filed).
         revision_help: Calculation revision id to package; defaults to the work unit's
           most recent verified-complete or filed revision.
         sign_help: Sign a review package's checksum manifest with the bucket's Ed25519
@@ -1998,7 +2007,8 @@ cli:
           --output. Local-only; never contacts AEAT.
         sign_output_help: Path to write the signature envelope JSON to.
         signature_path_help: Path to the signature envelope JSON produced by `sign`.
-        valid_for_days_help: 'Optional validity window in days; omit for a package that never expires.'
+        valid_for_days_help: Optional validity window in days; omit for a package
+          that never expires.
         verify_help: Verify a review package's checksum manifest (integrity only;
           does not assert who built it). Local-only; never contacts AEAT.
         verify_receipt_help: 'Verify both signature layers of a counter-signed review-package
@@ -2499,17 +2509,19 @@ cli:
       missing: missing
       profile_label: profile
     collab:
-      help: 'Manage trusted recipients for review-package collaboration.'
+      help: Manage trusted recipients for review-package collaboration.
       recipient:
-        add_help: 'Register a trusted recipient''s X25519 public key by fingerprint.'
+        add_help: Register a trusted recipient's X25519 public key by fingerprint.
         errors:
-          invalid_public_key: '--public-key must be exactly 64 lowercase hex characters (a raw 32-byte X25519 public key).'
-        help: 'Record, list, and remove trusted review-package recipients.'
-        label_help: 'Optional free-text display name for the recipient.'
-        list_help: 'List every trusted recipient registered on the active profile.'
-        public_key_help: 'The recipient''s raw X25519 public key, as 64 lowercase hex characters.'
-        recipient_id_help: 'Stable operator-chosen label (e.g. ''kents-accountant'').'
-        remove_help: 'Remove one trusted recipient by id from the active profile.'
+          invalid_public_key: --public-key must be exactly 64 lowercase hex characters
+            (a raw 32-byte X25519 public key).
+        help: Record, list, and remove trusted review-package recipients.
+        label_help: Optional free-text display name for the recipient.
+        list_help: List every trusted recipient registered on the active profile.
+        public_key_help: The recipient's raw X25519 public key, as 64 lowercase hex
+          characters.
+        recipient_id_help: Stable operator-chosen label (e.g. 'kents-accountant').
+        remove_help: Remove one trusted recipient by id from the active profile.
     custody:
       confirm_new_passphrase_help: Repeat the new secret-store passphrase.
       confirm_new_passphrase_prompt: 'Confirm new AEAT secret-store passphrase: '
@@ -4698,6 +4710,7 @@ errors:
       or used.
     fail_financial_usage_ratios_usage_ratio_persistence: The usage-ratio profile could
       not be read or written.
+    fail_google_adc_stale: 'Application Default Credentials could not be refreshed. Run gcloud auth application-default login.'
     fail_google_adc_unavailable: Application Default Credentials could not be found
       on this host. Run gcloud auth application-default login.
     fail_google_browser_open: The browser could not be opened to show the Google consent
