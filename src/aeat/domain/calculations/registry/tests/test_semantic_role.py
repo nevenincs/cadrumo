@@ -17,7 +17,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Iterable
 from datetime import date
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -134,7 +134,20 @@ class TestSemanticRoleFieldShape:
         assert rebuilt == c
 
     def test_invalid_semantic_role_shape_rejected(self) -> None:
-        cases: tuple[tuple[str, _PartialCasillaUpdate], ...] = (
+        cases: tuple[
+            tuple[
+                str,
+                dict[
+                    Literal[
+                        "semantic_role",
+                        "semantic_role_cardinality",
+                        "semantic_role_cardinality_reason",
+                    ],
+                    str,
+                ],
+            ],
+            ...,
+        ] = (
             ("empty-role", {"semantic_role": ""}),
             (
                 "singleton-without-role",
