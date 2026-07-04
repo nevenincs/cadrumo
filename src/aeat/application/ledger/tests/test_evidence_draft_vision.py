@@ -99,6 +99,12 @@ class TestGroundExtractedFields:
         draft = _ground_extracted_fields(fields, raw_text_length=10)
         assert draft.invoice_date is None
 
+    def test_iso8601_date_also_grounds(self) -> None:
+        """A model that normalises the printed day-first date to ISO-8601 still grounds."""
+        fields = _VisionExtractedFields.model_validate_json(_extraction_json(invoice_date="2026-03-10"))
+        draft = _ground_extracted_fields(fields, raw_text_length=10)
+        assert draft.invoice_date == "2026-03-10"
+
     def test_unparsable_amount_is_dropped(self) -> None:
         fields = _VisionExtractedFields.model_validate_json(_extraction_json(taxable_base="lots of money"))
         draft = _ground_extracted_fields(fields, raw_text_length=10)

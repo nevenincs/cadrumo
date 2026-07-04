@@ -151,10 +151,22 @@ def _grounded_invoice_number(raw: str | None) -> str | None:
 
 
 def _grounded_date(raw: str | None) -> str | None:
+    """Parse *raw* as a day-first (``DD-MM-YYYY`` / ``DD/MM/YYYY``) or ISO-8601 date.
+
+    A vision model transcribing a printed Spanish invoice date returns the
+    day-first form the document actually shows (mirroring the text-layer
+    heuristic's ``_DATE_RE``); ISO-8601 is tried second in case the model
+    normalises the printed value itself. Only these two real, registered
+    :data:`aeat.core.parsing._DateFmt` members are ever passed -- an invented
+    format string silently degrades to one of the two delegates
+    (:func:`aeat.core.parsing._parse_date` has no third branch), which would
+    make a "fallback" attempt a silent no-op duplicate.
+    """
     if raw is None:
         return None
-    for fmt in ("ddmmyyyy", "yyyymmdd"):
-        parsed = parse_date(raw.strip(), fmt=fmt, on_error="none")
+    cleaned = raw.strip()
+    for fmt in ("ddmmyyyy", "iso8601"):
+        parsed = parse_date(cleaned, fmt=fmt, on_error="none")
         if parsed is not None:
             return parsed.isoformat()
     return None
