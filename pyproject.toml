@@ -158,21 +158,25 @@ search = [
   "snowballstemmer>=2.2,<4",
   "numpy>=1.26,<3",
 ]
-# Corpus source binaries (official AEAT PDF/XLS/XLSX) as the `aeat-data`
-# companion distribution, exact-version-locked to this package. The slim core
-# wheel excludes these binaries (the wheel excludes below); without the
-# companion the registry integrity gate surfaces a loud advisory and the
-# `aeat app registry` verification verbs refuse with this extra's install
-# hint. With it installed, source verification is byte-identical to a full
-# checkout. Reviewed data ships as an artifact — never fetched at install or
-# run time (product-packaging ADR).
+# Corpus source binaries (official AEAT PDF/XLS/XLSX) as TWO sub-cap companion
+# distributions, each exact-version-locked to this package. The binaries split
+# along the corpus directory seam — `aeat-data-manuals` ships `corpus/manuals`,
+# `aeat-data-official` ships `corpus/aeat_official` + `corpus/normatives` — so
+# each wheel stays under PyPI's 100 MB per-file cap and no size grant is needed;
+# together they cover every corpus source binary. The slim core wheel excludes
+# these binaries (the wheel excludes below); without BOTH companions the
+# registry integrity gate surfaces a loud advisory and the `aeat app registry`
+# verification verbs refuse with this extra's install hint. With them installed,
+# source verification is byte-identical to a full checkout. Reviewed data ships
+# as an artifact — never fetched at install or run time (product-packaging ADR).
 corpus-sources = [
-  "aeat-data==0.1.0",
+  "aeat-data-manuals==0.1.0",
+  "aeat-data-official==0.1.0",
 ]
 # Convenience aggregate: every optional integration at once. `corpus-sources`
-# is deliberately excluded until the aeat-data distribution is published on
-# PyPI (its file-size grant rides the first release; see RELEASING.md) —
-# including it now would make `aeat-cli[all]` unresolvable.
+# is deliberately excluded until the two data companions are published on PyPI
+# (both are sub-cap and need no size grant; see RELEASING.md) — including it now
+# would make `aeat-cli[all]` unresolvable.
 all = [
   "aeat-cli[google]",
   "aeat-cli[browser]",
@@ -200,9 +204,10 @@ exclude = [
   # Corpus source binaries (the AEAT/BOE manuals and workbooks) are 94% of the
   # wheel's compressed weight and serve only the always-on registry integrity
   # hash chain and the opt-in `aeat app registry` verification verbs at runtime.
-  # They ship in the separate `aeat-data` companion distribution (installed via
-  # the `aeat-cli[corpus-sources]` extra) under a mirrored `aeat_data/_data/corpus`
-  # tree; the corpus locator resolves either root. Every derived surface the
+  # They ship in the two `aeat-data-manuals` / `aeat-data-official` companion
+  # distributions (installed together via the `aeat-cli[corpus-sources]` extra)
+  # under a mirrored `aeat_data/_data/corpus` tree; the corpus locator resolves
+  # either root. Every derived surface the
   # grounding search and legal gates read at runtime — extracted text
   # (`*.extracted.md`/`.json`), normative html, registry, terminology — stays in
   # this wheel. Excluding only the source binaries keeps the slim `aeat` wheel
@@ -240,11 +245,12 @@ explicit = true
 torch = [
     {index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
 ]
-# aeat-data is not on PyPI until its file-size grant lands (RELEASING.md), so
-# the dev resolver builds the companion from its in-repo project. uv sources
-# never reach the published wheel metadata: an installed `aeat-cli[corpus-sources]`
-# still resolves the bare `aeat-data==0.1.0` pin from the index.
-aeat-data = { path = "packaging/aeat_data" }
+# The two data companions are not yet on PyPI, so the dev resolver builds each
+# from its in-repo project. uv sources never reach the published wheel metadata:
+# an installed `aeat-cli[corpus-sources]` still resolves the bare
+# `aeat-data-manuals==0.1.0` / `aeat-data-official==0.1.0` pins from the index.
+aeat-data-manuals = { path = "packaging/aeat_data_manuals" }
+aeat-data-official = { path = "packaging/aeat_data_official" }
 
 [tool.vaultspec-rag]
 managed-torch-direct-dependency = true
@@ -585,9 +591,10 @@ convention = "google"
 # literal argv (no user/untrusted input), in an isolated subprocess so the
 # build's package imports and global state do not leak into the test process.
 "dev/docs/tests/test_docs_build.py" = ["S603"]
-# The aeat-data distribution gate builds the companion wheel with the trusted
-# `uv` build driver and enumerates corpus binaries via `git ls-files` (partial
-# paths resolved from PATH by design), mirroring the src/aeat wheel-build gates.
+# The aeat-data distribution gate builds the two companion wheels with the
+# trusted `uv` build driver and enumerates corpus binaries via `git ls-files`
+# (partial paths resolved from PATH by design), mirroring the src/aeat
+# wheel-build gates.
 "dev/packaging/tests/test_aeat_data_distribution.py" = ["S603", "S607"]
 "src/aeat/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
@@ -892,9 +899,10 @@ ignore_decorators = [
 [tool.deptry.per_rule_ignores]
 # `aeat-cli`: the `all` convenience extra self-references the capability extras
 # (`aeat-cli[google]` etc.); deptry reads the self-reference as an unused dependency.
-# `aeat-data`: a data-only companion distribution with no importable code the
-# scanner can see; the corpus locator reaches its `aeat_data` package
-# dynamically through `importlib.resources` (the corpus-binary resolution seam).
-DEP002 = ["aeat-cli", "aeat-data", "formulas", "python-dotenv", "rich", "tzdata"]
+# `aeat-data-manuals` / `aeat-data-official`: two data-only companion
+# distributions with no importable code the scanner can see; the corpus locator
+# reaches their shared `aeat_data` namespace package dynamically through
+# `importlib.resources` (the corpus-binary resolution seam).
+DEP002 = ["aeat-cli", "aeat-data-manuals", "aeat-data-official", "formulas", "python-dotenv", "rich", "tzdata"]
 DEP003 = ["click", "pydantic_core"]
 DEP004 = ["pytest", "reportlab"]
