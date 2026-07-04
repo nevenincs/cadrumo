@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import ast
 import re
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -75,7 +76,7 @@ def _file_has_inline_tzinfo_guard(
     return False
 
 
-def test_no_inline_tzinfo_guards_in_production_code() -> None:
+def test_no_inline_tzinfo_guards_in_production_code(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Assert zero ``tzinfo is None`` inline guards remain outside the UTC module.
 
     Consumes the shared production AST cache so the per-file parse cost
@@ -84,7 +85,7 @@ def test_no_inline_tzinfo_guards_in_production_code() -> None:
     violations: list[str] = []
     canonical_utc = _CANONICAL_UTC_MODULE.resolve()
 
-    for py_file, tree in production_ast_items():
+    for py_file, tree in production_ast_items(source_tree_ast):
         # Skip the canonical UTC module — it is the allowed home.
         if py_file.resolve() == canonical_utc:
             continue

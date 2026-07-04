@@ -52,13 +52,13 @@ def _collect_violations(source_tree_ast: Mapping[Path, ast.AST] | None = None) -
     return cast_rationale_violations(source_tree_ast)
 
 
-def test_every_cast_has_rationale_marker() -> None:
+def test_every_cast_has_rationale_marker(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Every production cast() call must have a CAST-RATIONALE-* comment.
 
     Consumes the shared production AST cache so the per-file parse cost
     is amortised across the full ratchet suite.
     """
-    violations = _collect_violations()
+    violations = _collect_violations(source_tree_ast)
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(
