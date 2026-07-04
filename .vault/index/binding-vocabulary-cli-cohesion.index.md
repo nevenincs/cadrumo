@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#binding-vocabulary-cli-cohesion'
-date: '2026-07-02'
-modified: '2026-07-02'
+date: '2026-07-04'
+modified: '2026-07-04'
 related:
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S01]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S02]]'
@@ -20,10 +20,15 @@ related:
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W02-P04-S12]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W02-P04-S13]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W02-P04-S14]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W03-P05-S15]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W03-P05-S16]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W03-P05-S17]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W03-P05-S18]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W03-P06-S19]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W03-P06-S20]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S25]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S26]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S27]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-plan]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-reference]]'
@@ -62,8 +67,13 @@ Auto-generated index of all documents tagged with `#binding-vocabulary-cli-cohes
 - `2026-06-26-binding-vocabulary-cli-cohesion-W02-P04-S14` - Verify W02.P04 no-shift: run pytest --collect-only -q clean, the aggregation / filing-runtime test modules green, and assert ModeloSourceResolver / CalculationSourceResolution / merge_source_resolutions were NOT renamed (the phase-2.2 settled contract is intact)
 - `2026-06-26-binding-vocabulary-cli-cohesion-W03-P06-S19` - Assert and document the three prefill tiers are distinct and not merged: relation prefill (_relation_prefill.py, RelationPrefillSourceResolver), previous-filing direct carry (_binding_prefill.py), and AEAT borrador pre-fill (registry _schema.py aeat_prefilled / borrador-fed typed_enum)
 - `2026-06-26-binding-vocabulary-cli-cohesion-W03-P06-S20` - Verify W03.P06 no-shift: run pytest --collect-only -q clean and assert the prefill modules retain distinct names and tiers with no merge and no behaviour change (docstring-only clarification)
-- `2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S25` - DEFERRED FOLLOW-UP (do NOT execute as part of W01-W04
+- `2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S25` - Replace DataBindingDefinition.selector with the BindingSourceKind selector union
 - `2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S26` - DEFERRED FOLLOW-UP (paired with the selector union): narrow the typed_enum stringly-typed pointer (str-or-None enum class name) on DataBindingDefinition to a typed enum-class reference, sweeping the bindings list CLI table, the ModeloBindingQueryRow projection, the borrador resolver, and the Sheets-pull router
+- `2026-06-26-binding-vocabulary-cli-cohesion-W03-P05-S15` - Prefix the ledger-aggregation-tier Observation carriers with a consistent domain prefix (IvaLedgerObservation, OssIossLedgerObservation, RetencionObservation, CounterpartObservation, CounterpartAggregationObservation, ForeignAssetIngestObservation, RentaDeductibleExpenseObservation, the detail-record family RelatedPartyOperationObservation / Modelo720RowObservation / AtributionMemberObservation / RefundOperationObservation, WithholdingObservation, InvoiceObservation), one atomic relocation commit per renamed carrier tagged relocation:<symbol>, each regenerating docs-scaffold + API-stub + docstring-core-struct in the same commit
+- `2026-06-26-binding-vocabulary-cli-cohesion-W03-P05-S16` - Prefix the live-capture / sede-tier Observation carriers where the bare stem collides (FiledDeclaracionObservation, IvaCompensationWalletObservation, NifIvaCheckObservation, DeclaracionObservation, BorradorObservation), one atomic relocation commit per renamed carrier tagged relocation:<symbol>, each regenerating docs-scaffold + API-stub + docstring-core-struct in the same commit
+- `2026-06-26-binding-vocabulary-cli-cohesion-W03-P05-S17` - Prefix the oracle-tier Observation carriers where the bare stem collides (RentaWebOpenObservation, GroiObservation, AeatNifIvaObservation
+- `2026-06-26-binding-vocabulary-cli-cohesion-W03-P05-S18` - Verify W03.P05 no-shift: run pytest --collect-only -q clean, the affected aggregation / sede / oracle test modules green, and assert the calc/registry-tier anchor carriers (CasillaObservation, RegistryModeloObservation) and all role-suffixed *ObservationRequirement / *Repository / *Store / *Protocol names were NOT renamed
+- `2026-06-26-binding-vocabulary-cli-cohesion-W05-P08-S27` - DEFERRED FOLLOW-UP verification: when F8 lands, run pytest --collect-only -q clean, test_schema_hygiene.py and the bindings-framework gate suite green, and assert the selector union is behaviour-preserving over the prior validate-time selector models
 
 ### plan
 
