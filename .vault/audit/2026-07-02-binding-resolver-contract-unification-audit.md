@@ -195,11 +195,15 @@ foreign-assets resolvers, and must not remove `FOREIGN_ASSET` from
 re-ratify `foreign_asset` with no promotion date and a requirement for its own
 grounded design ADR.
 
-`P03.S14` is still open. The retenciones portion of the CLI aggregate command is
-now a thin projection over the service and the shared retenciones dispatch, but the
-verb still covers the unresolved counterpart/foreign-assets shape-C preview surface
-and still carries the Modelo 190 clave-breakdown projection. It needs a focused
-S14 execution record and command-conformance evidence before it can be checked.
+`P03.S14` now has focused execution evidence. The live aggregate command has moved
+from the plan's older `_modelo.py` path into `_modelo_aggregate_cli.py`; the entrypoint
+delegates aggregation to `aggregate_per_modelo`, delegates retenciones persistence to
+`persist_retencion_observations`, and does not call the family-specific aggregation
+cores directly. This pass added the missing S14 exec record, updated the backend-boundary
+gate to treat `_modelo_aggregate_cli.py` as the one canonical aggregate command module,
+and verified the focused CLI/service surface. The S14 checkbox remains unchecked only
+because the plan file carries non-authored WIP, so mutating it would violate the
+shared-worktree safety rule.
 
 RAG discovery could not be refreshed during this pass because the singleton
 `vaultspec-rag` service on port 8766 was crashed while still owned by a live
@@ -215,16 +219,17 @@ checked; `P03.S21` has an exec record with completed M349 exactness evidence and
 formal M347 blocker (`DFR-D9-P03-S21-M347-COUNTERPART-SOURCE-MODELLING`); `P03.S20`
 has an exec record with completed M720 aggregate-to-registry-row evidence and a
 formal row-envelope blocker (`DFR-D9-P03-S20-M720-ROW-INDEXED-ENVELOPE`). The vault
-plan remains open; `P03.S12` is ordered behind those blocked gates, `P03.S14` still
-needs focused CLI projection evidence, and `P05.S18` cannot run until the P03
-remainder is reconciled. The bindings freeze is not liftable from this campaign.
+plan remains open; `P03.S12` is ordered behind those blocked gates, `P03.S14` has
+matching exec evidence but awaits a peer-clean checkbox mutation, and `P05.S18`
+cannot run until the P03 remainder is reconciled. The bindings freeze is not liftable
+from this campaign.
 
 ## Recommendations
 
 Do not check `P03.S21` until a real M347 counterpart-source model exists and a 347
 fixture proves exact resolver-vs-aggregate parity. Do not check `P03.S20` until the
 M720 row projection is returned through the live mesh rather than only validated
-internally. Do not run `P03.S12` while those gates remain deferred. Execute `P03.S14`
-only as a focused CLI projection/conformance pass, without expanding counterpart or
-foreign-assets resolver semantics. Do not lift the bindings freeze from this
-campaign: `vault plan status` still reports open steps.
+internally. Do not run `P03.S12` while those gates remain deferred. Check `P03.S14`
+only after the plan-file WIP clears and no newer source drift invalidates the exec
+evidence. Do not lift the bindings freeze from this campaign: `vault plan status`
+still reports open steps.
