@@ -81,7 +81,6 @@ from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     ModeloCrossPeriodCleanStateError,
     ModeloExportCommand,
-    ModeloExportUnsupportedError,
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
     export_modelo_revision,
@@ -746,26 +745,32 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_export(
     assert annual_report.granted_verificado_completo is True, annual_report.findings
     assert _non_official_local_chain_advisory_periods(annual_report) == set(_QUARTER_ORDER), annual_report.findings
 
+    # Modelo 390 gained a renderable fichero-BOE export layout (issue #508); the
+    # annual resumen now exports fixed-width bytes the same way each M303
+    # quarter does above, rather than refusing with ModeloExportUnsupportedError.
     annual_output = tmp_path / f"m390-{_IRENE_YEAR}.boe"
-    with pytest.raises(ModeloExportUnsupportedError) as exc_info:
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=annual.calculation_revision_id,
-                output_path=annual_output,
-                actor="irene",
-            ),
-            workflow_profile=workflow_profile,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=filing_repo,
-            verification_repository=verification_repo,
-            bucket_event_repository=event_repo,
-            calculation_observation_repository=observation_repo,
-            clock=_IRENE_FILE_AT,
-        )
-    assert exc_info.value.translated_message == "application.modelo.errors.export_unsupported"
-    assert "390" in str(exc_info.value.context)
-    assert not annual_output.exists()
+    annual_export = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=annual.calculation_revision_id,
+            output_path=annual_output,
+            actor="irene",
+        ),
+        workflow_profile=workflow_profile,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=filing_repo,
+        verification_repository=verification_repo,
+        bucket_event_repository=event_repo,
+        calculation_observation_repository=observation_repo,
+        clock=_IRENE_FILE_AT,
+    )
+    assert annual_export.output_path == annual_output
+    assert annual_export.modelo == "390"
+    assert annual_export.format == "fichero-boe"
+    assert annual_output.stat().st_size > 0
+    exported_bytes = annual_output.read_bytes()
+    assert exported_bytes
+    assert _IRENE_TAX_ID.encode("ascii") in exported_bytes
 
 
 def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
