@@ -175,12 +175,17 @@ def _active_sandbox_notice() -> Notice | None:
     opening the encrypted per-bucket database — and checks it against the
     reserved sandbox label prefix
     (:func:`~aeat.application.bucket_maintenance.is_sandbox_label`). Returns
-    ``None`` when no profile is active, the active bucket's manifest cannot
-    be read, or the active profile is not a sandbox, so a real profile's
-    output is never annotated. The manifest is deliberately re-read on every
-    call (no caching) so a mid-process ``switch``/``sandbox use`` is
-    reflected on the very next command.
+    ``None`` when no profile is active, the active bucket's manifest is
+    absent, unreadable, or fails strict validation, or the active profile
+    is not a sandbox, so a real profile's output is never annotated and a
+    corrupt/torn manifest degrades this purely-advisory indicator rather
+    than breaking every command's output (mirrors the tolerant scan
+    ``application.workflow.list_profile_buckets`` already applies). The
+    manifest is deliberately re-read on every call (no caching) so a
+    mid-process ``switch``/``sandbox use`` is reflected on the very next
+    command.
     """
+    from ...adapters.persistence.storage import StorageValidationError
     from ...application.bucket_maintenance import is_sandbox_label
     from ...application.workflow import read_profile_bucket_by_id
     from ...core import resolve_active_bucket_id
@@ -189,7 +194,10 @@ def _active_sandbox_notice() -> Notice | None:
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         return None
-    pointer = read_profile_bucket_by_id(bucket_id)
+    try:
+        pointer = read_profile_bucket_by_id(bucket_id)
+    except StorageValidationError:
+        return None
     if pointer is None or not is_sandbox_label(pointer.label):
         return None
     return Notice(
