@@ -413,7 +413,13 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                         operand_values=tuple(operand_values),
                         legal_refs=tuple(formula.legal_refs),
                         source_refs=tuple(formula.source_refs),
-                        context=exc.context,
+                        # UnresolvedFormulaOutcomeError.context is always a str-keyed,
+                        # str-valued mapping (its constructor only accepts
+                        # Mapping[str, str]); the inherited AeatError.context attribute
+                        # is declared dict[str, object] | None for the general error
+                        # hierarchy, so re-stringify here rather than narrowing the
+                        # shared base attribute for every AeatError subclass.
+                        context={str(key): str(value) for key, value in (exc.context or {}).items()},
                     ),
                 )
                 continue
