@@ -319,6 +319,44 @@ KENT_WALL_CATALOGUE: tuple[KentWallEntry, ...] = (
         test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
         test_function="test_reconcile_file_kind_declaration_m130_catches_casilla_divergence",
     ),
+    KentWallEntry(
+        issue=318,
+        kent_perspective=(
+            "Kent has his Modelo 111 declaración PDF and reconciles a work unit "
+            "against it via `aeat app modelo reconcile file --kind declaration`, "
+            "even though the fixture's own header lacks a detectable ejercicio "
+            "stamp -- the work unit's own known context lets the parse succeed, "
+            "and a computed casilla that disagrees with the filed declaración "
+            "is still caught as a real divergence."
+        ),
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
+        test_function="test_reconcile_file_kind_declaration_m111_catches_casilla_divergence",
+    ),
+    KentWallEntry(
+        issue=327,
+        kent_perspective=(
+            "Kent has his Modelo 390 (IVA resumen anual) declaración PDF and "
+            "reconciles a work unit against it via `aeat app modelo reconcile "
+            "file --kind declaration`: a computed IVA anual casilla that "
+            "disagrees with the filed declaración is caught as a real "
+            "divergence."
+        ),
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
+        test_function="test_reconcile_file_kind_declaration_m390_catches_casilla_divergence",
+    ),
+    KentWallEntry(
+        issue=328,
+        kent_perspective=(
+            "Kent has his Modelo 190 (resumen anual de retenciones) "
+            "declaración PDF and reconciles a work unit against it via "
+            "`aeat app modelo reconcile file --kind declaration`: a computed "
+            "retenciones-total casilla that disagrees with the filed "
+            "declaración is caught as a real divergence, the Tier-S summary "
+            "return calc-verify-roundtrip claim."
+        ),
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
+        test_function="test_reconcile_file_kind_declaration_m190_catches_casilla_divergence",
+    ),
 )
 """The enrolled representative subset of closed Kent walls.
 
