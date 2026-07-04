@@ -1,24 +1,24 @@
 """Registry-backed formula runtime using typed operation graphs.
 
 Evaluates
-:class:`~aeat.domain.calculations.registry.FormulaExpression` trees declared on
-a :class:`~aeat.domain.calculations.registry.ModeloRevision` against casilla
+:class:`~domain.calculations.registry.FormulaExpression` trees declared on
+a :class:`~domain.calculations.registry.ModeloRevision` against casilla
 inputs and binding values drawn from a
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot`.
+:class:`~domain.calculations.registry.RegistrySnapshot`.
 The calculation entry point :func:`calculate_registry_snapshot` is the
 primary surface used by
-:class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`-backed
+:class:`~domain.calculations.registry.ValidatedRegistryAuthority`-backed
 callers to produce
-:class:`~aeat.domain.calculations.registry.CasillaObservation` rows with full
+:class:`~domain.calculations.registry.CasillaObservation` rows with full
 provenance.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._runtime_graph`
+    :mod:`domain.calculations.registry._runtime_graph`
         Produces formula evaluation order and dependency projections.
-    :mod:`aeat.domain.calculations.registry._formula_runtime_ops`
+    :mod:`domain.calculations.registry._formula_runtime_ops`
         Arithmetic, rounding, and parameter lookup helpers called by this
         evaluator.
-    :mod:`aeat.domain.calculations.registry._formula_initial_values`
+    :mod:`domain.calculations.registry._formula_initial_values`
         Builds the initial casilla value map and materialised observation
         envelope for this runtime.
 """
@@ -91,9 +91,9 @@ class RegistryCalculationEntry(BaseModel):
     """One trace row emitted by the registry formula runtime.
 
     Carries the per-formula provenance for a single formula-computed
-    :class:`~aeat.domain.calculations.registry.CasillaId`. Entries cover only
+    :class:`~domain.calculations.registry.CasillaId`. Entries cover only
     casillas computed by a registry formula; input and bound casillas remain in
-    :class:`~aeat.domain.calculations.registry.CasillaObservation` storage and
+    :class:`~domain.calculations.registry.CasillaObservation` storage and
     must be read through :attr:`RegistryCalculationResult.observations`.
     """
 
@@ -136,9 +136,9 @@ class RegistryCalculationResult(BaseModel):
     """Calculated outputs for one registry snapshot.
 
     Canonical storage is :attr:`observations`: a typed tuple of
-    :class:`~aeat.domain.calculations.registry.CasillaObservation` covering
+    :class:`~domain.calculations.registry.CasillaObservation` covering
     every casilla on the
-    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` revision
+    :class:`~domain.calculations.registry.RegistrySnapshot` revision
     (inputs, bound, and formula-computed). Each observation carries
     its final Decimal ``value`` plus the legal / source provenance for
     that casilla pulled from the registry. Formula-computed
@@ -265,16 +265,16 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     them in a dedicated channel preserves the Decimal-only invariant.
 
     The returned :class:`RegistryCalculationResult` stores
-    :class:`~aeat.domain.calculations.registry.CasillaObservation` rows for all
+    :class:`~domain.calculations.registry.CasillaObservation` rows for all
     materialised casillas. Input validation is delegated to
-    :mod:`aeat.domain.calculations.registry._formula_runtime_ops` and
-    :mod:`aeat.domain.calculations.registry._formula_text_inputs`; initial
+    :mod:`domain.calculations.registry._formula_runtime_ops` and
+    :mod:`domain.calculations.registry._formula_text_inputs`; initial
     casilla values and absent-by-design markers are delegated to
-    :mod:`aeat.domain.calculations.registry._formula_initial_values`.
+    :mod:`domain.calculations.registry._formula_initial_values`.
 
     Args:
         snapshot: The
-            :class:`~aeat.domain.calculations.registry.RegistrySnapshot` that
+            :class:`~domain.calculations.registry.RegistrySnapshot` that
             supplies the revision, casilla definitions, and formula graph to
             evaluate.
         inputs: Operator-supplied input casilla values; rejected if any value
@@ -283,7 +283,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             date-aware ops; ``filing_period`` defaults to the snapshot's
             year-end when absent.
         binding_values: Optional resolved numeric binding values keyed by
-            :class:`~aeat.domain.calculations.registry.DataBindingDefinition`
+            :class:`~domain.calculations.registry.DataBindingDefinition`
             id; Decimal-only.
         enum_binding_values: Optional string-valued bindings (e.g. profile
             CCAA) keyed by binding id; consumed by enum-routed ops.
@@ -1050,7 +1050,7 @@ def _evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _E
     declared IAE epígrafe (a text casilla) and up to seven módulo unit-count
     casillas (the highest signo count among the tabled activities), looks up
     each módulo's coefficient in the registry-declared
-    :class:`~aeat.domain.calculations.registry.ParameterDefinition`
+    :class:`~domain.calculations.registry.ParameterDefinition`
     (``data_type='keyed_bracket_table'``, key ``"<epígrafe>:<módulo>"``), and
     sums the per-módulo products.
 
@@ -1790,7 +1790,7 @@ def _m100_eo_agraria_read_indice(casilla_id: CasillaId, ctx: _EvalContext) -> De
     only ever reaches :attr:`_EvalContext.text_values`, never
     :attr:`_EvalContext.values` (the numeric map defaults it to zero and never
     receives the operator's real figure), so reading it through
-    :func:`~aeat.domain.calculations.registry._formula_runtime_ops.numeric_casilla_value`
+    :func:`~domain.calculations.registry._formula_runtime_ops.numeric_casilla_value`
     alone would silently and permanently treat índice 4 as never declared.
     Checking ``text_values`` first — and falling back to the numeric map only
     when the casilla is genuinely absent from ``text_values`` (true for every
