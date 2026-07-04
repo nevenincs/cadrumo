@@ -33,7 +33,7 @@ import json
 import os
 import time
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -47,6 +47,7 @@ from ._models import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover - typing-only imports
+    from anthropic.types import MessageParam, ToolParam
     from mcp import ClientSession
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
@@ -114,6 +115,12 @@ class PersonaDriver(Protocol):
     async def next_action(self, last: LiveToolCallRecord | None) -> PersonaAction: ...  # pragma: no cover
 
 
+#: The submitted-form-data value shape the MCP ``ElicitResult.content`` field
+#: accepts on the wire (``mcp.types.ElicitResult.content``): strings, numbers,
+#: booleans, or arrays of strings.
+ElicitationContentValue = str | int | float | bool | list[str] | None
+
+
 class ElicitationResponder(Protocol):
     """Decides one elicitation exchange: the action and (on accept) the content."""
 
@@ -121,13 +128,13 @@ class ElicitationResponder(Protocol):
         self,
         message: str,
         requested_schema: Mapping[str, object],
-    ) -> tuple[ElicitationAction, Mapping[str, object] | None]: ...  # pragma: no cover - protocol
+    ) -> tuple[ElicitationAction, Mapping[str, ElicitationContentValue] | None]: ...  # pragma: no cover - protocol
 
 
 def decline_all_elicitations(
     message: str,
     requested_schema: Mapping[str, object],
-) -> tuple[ElicitationAction, Mapping[str, object] | None]:
+) -> tuple[ElicitationAction, Mapping[str, ElicitationContentValue] | None]:
     """The safe default responder: decline every server-initiated question.
 
     Returns:
@@ -139,7 +146,7 @@ def decline_all_elicitations(
 def accept_all_confirmations(
     message: str,
     requested_schema: Mapping[str, object],
-) -> tuple[ElicitationAction, Mapping[str, object] | None]:
+) -> tuple[ElicitationAction, Mapping[str, ElicitationContentValue] | None]:
     """A scenario responder that accepts every confirmation with empty content.
 
     Use only in scenarios that deliberately exercise the post-confirmation
@@ -201,8 +208,8 @@ class AnthropicPersonaDriver:
         self._max_model_turns = max_model_turns
         self._turns = 0
         self._system = system_prompt
-        self._messages: list[dict[str, object]] = [{"role": "user", "content": user_brief}]
-        self._tool_defs: list[dict[str, object]] = []
+        self._messages: list[MessageParam] = [{"role": "user", "content": user_brief}]
+        self._tool_defs: list[ToolParam] = []
         self._pending: list[PersonaAction] = []
         self._open_tool_use_id: str | None = None
         self._open_tool_name: str | None = None
@@ -245,8 +252,8 @@ class AnthropicPersonaDriver:
             model=self._model,
             max_tokens=self._max_tokens,
             system=self._system,
-            messages=self._messages,  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-SDK-MESSAGE-PARAM: the SDK's MessageParam TypedDict union is not expressible for an incrementally-built list without casting every append site.
-            tools=self._tool_defs,  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-SDK-TOOL-PARAM: same SDK TypedDict boundary as above.
+            messages=self._messages,
+            tools=self._tool_defs,
         )
         self._messages.append({"role": "assistant", "content": response.content})
         last_step = self._open_tool_name or ""
@@ -317,7 +324,7 @@ async def run_live_session_async(
         import mcp.types as mcp_types
         from mcp import ClientSession, StdioServerParameters
         from mcp.client.stdio import stdio_client
-        from mcp.shared.context import RequestContext  # noqa: F401  (documents the callback contract)
+        from mcp.shared.context import RequestContext
     except ImportError as exc:  # pragma: no cover - exercised only without the extra
         raise LiveHarnessError(_MCP_INSTALL_HINT) from exc
 
@@ -326,9 +333,9 @@ async def run_live_session_async(
     elicitations: list[LiveElicitationRecord] = []
 
     async def _on_elicitation(
-        context: object,
-        params: object,
-    ) -> object:
+        context: RequestContext[ClientSession, Any],
+        params: mcp_types.ElicitRequestParams,
+    ) -> mcp_types.ElicitResult | mcp_types.ErrorData:
         message = str(getattr(params, "message", ""))
         schema = getattr(params, "requestedSchema", None) or {}
         action, content = elicitation_responder(message, schema if isinstance(schema, Mapping) else {})
