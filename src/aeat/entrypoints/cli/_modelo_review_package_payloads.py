@@ -123,9 +123,50 @@ class ModeloReviewPackageVerifyReceiptResult(OutputSchema):
     is_valid: bool
 
 
+@register_schema("modelo.review_package.encrypt_for_recipient")
+class ModeloReviewPackageEncryptForRecipientResult(OutputSchema):
+    """Review-package encrypt-for-recipient result.
+
+    The private ephemeral sender key never appears in this payload (it exists
+    only transiently in process memory for the duration of the call, per
+    :func:`~aeat.application.modelo.encrypt_review_package_for_recipient`).
+    ``valid_until`` is ``None`` when the sealed package never expires.
+    """
+
+    operation: str = "modelo.review_package.encrypt_for_recipient"
+    package_path: str
+    output_path: str
+    recipient_id: str
+    recipient_public_key_hex: str
+    review_only: bool
+    issued_at: str
+    valid_until: str | None = None
+
+
+@register_schema("modelo.review_package.decrypt")
+class ModeloReviewPackageDecryptResult(OutputSchema):
+    """Review-package decrypt (recipient side) result.
+
+    The recipient's own private key never appears in this payload (it is
+    minted-or-loaded from encrypted secure storage and used only transiently
+    to decrypt, per
+    :func:`~aeat.application.modelo.ensure_recipient_encryption_keypair`).
+    ``review_only`` asserts the recovered package carries no filing authority
+    -- see :func:`~aeat.application.modelo.decrypt_review_package_for_recipient`.
+    """
+
+    operation: str = "modelo.review_package.decrypt"
+    envelope_path: str
+    output_path: str
+    bucket_id: str
+    review_only: bool
+
+
 __all__ = [
     "ModeloReviewPackageBuildResult",
     "ModeloReviewPackageCounterSignResult",
+    "ModeloReviewPackageDecryptResult",
+    "ModeloReviewPackageEncryptForRecipientResult",
     "ModeloReviewPackageSignResult",
     "ModeloReviewPackageVerifyReceiptResult",
     "ModeloReviewPackageVerifyResult",

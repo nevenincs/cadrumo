@@ -10,16 +10,6 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `claude-ecosystem-packaging` plan
 
 Ship the aeat CLI plus the aeat-mcp harness as the first real product install: a slim published wheel, a corpus-binaries companion, and a one-click Claude plugin verified end to end on a real client.

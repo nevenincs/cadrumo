@@ -3,11 +3,21 @@ tags:
   - '#plan'
   - '#modelo-151-beckham-source-scope'
 date: '2026-07-01'
-modified: '2026-07-01'
+modified: '2026-07-04'
 tier: L2
 related:
   - '[[2026-07-01-modelo-151-beckham-source-scope-adr]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `modelo-151-beckham-source-scope` plan
 
@@ -21,7 +31,7 @@ Consume the source_jurisdiction axis: fold ES-source income into impatriado.base
 
 Ingest art. 93.2.e.2 / art. 25.1.f TRLIRNR savings-band schedule and add the source-scoped base del ahorro
 
-- [ ] `P02.S02` - Ingest the art. 93.2.e.2 savings-band corpus and add the source-scoped base del ahorro and its escala; `src/aeat/_data/corpus/normatives/html,src/aeat/_data/registry/aeat/modelos/151`.
+- [x] `P02.S02` - Ingest the art. 93.2.e.2 savings-band corpus and add the source-scoped base del ahorro and its escala; `src/aeat/_data/corpus/normatives/html,src/aeat/_data/registry/aeat/modelos/151`.
 
 ## Description
 

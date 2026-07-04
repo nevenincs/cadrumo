@@ -48,6 +48,7 @@ def _untranslatable_internal_only_ids(snapshot: RegistrySnapshot) -> set[str]:
             excluded.add(casilla.id)
     return excluded
 
+
 # (modelo, filing_year, period, on) — supported modelos whose registry formulas
 # are export-capable (every formula op has a closed-form Sheets translation), so
 # a live-formula workbook can be built and held to official-casilla parity.

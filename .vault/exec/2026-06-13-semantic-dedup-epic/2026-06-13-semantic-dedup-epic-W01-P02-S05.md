@@ -9,9 +9,6 @@ related:
   - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
 
-
-
-
 # Delete the dormant _formats currency encode/serialise/deserialise path and its tests, or record an explicit retention rationale if a near-term consumer is planned
 
 ## Scope

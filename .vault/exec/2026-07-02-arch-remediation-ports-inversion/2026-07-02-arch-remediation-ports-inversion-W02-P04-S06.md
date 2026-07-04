@@ -9,9 +9,6 @@ related:
   - "[[2026-07-02-arch-remediation-ports-inversion-plan]]"
 ---
 
-
-
-
 # Relocate the invoices repository behind its domain port in one atomic commit, deleting its pinned domain-to-adapters entries
 
 ## Scope

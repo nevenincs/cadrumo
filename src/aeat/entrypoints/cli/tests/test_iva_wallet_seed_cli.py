@@ -22,7 +22,7 @@ from ....domain.iva_compensation import (
 )
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile
-from ._iva_wallet_inspector_support import _NIF, _store_profile_with_nif, _unwrap_envelope
+from ._iva_wallet_inspector_support import _NIF, _SEED_BUCKET_ID, _store_profile_with_nif, _unwrap_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -122,7 +122,7 @@ def test_seed_iva_compensation_refuses_duplicate(tmp_path: Path) -> None:
 
 def test_cli_seed_verb_refuses_without_confirm(tmp_path: Path) -> None:
     """Seed verb requires --confirm; without it, exit code is non-zero."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
         _store_profile_with_nif(_NIF)
         result = invoke_cached_cli(
             ["app", "modelo", "iva-wallet", "seed", "--filing-year", "2024", "--period", "4T", "--amount", "1200.00"],
@@ -134,7 +134,7 @@ def test_cli_seed_verb_refuses_without_confirm(tmp_path: Path) -> None:
 
 def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
     """Seed verb with --confirm creates the state and emits the correct fields."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
         _store_profile_with_nif(_NIF)
         result = invoke_cached_cli(
             [
@@ -171,7 +171,7 @@ def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
 
 def test_cli_override_verb_records_taxpayer_override_decision(tmp_path: Path) -> None:
     """The override verb records a non-blocking taxpayer_override decision."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
         _store_profile_with_nif(_NIF)
         result = invoke_cached_cli(
             [
@@ -210,7 +210,7 @@ def test_cli_override_verb_records_taxpayer_override_decision(tmp_path: Path) ->
 
 def test_cli_override_verb_refuses_without_confirm(tmp_path: Path) -> None:
     """Override verb requires --confirm; without it, exit code is non-zero."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
         _store_profile_with_nif(_NIF)
         result = invoke_cached_cli(
             [
@@ -237,7 +237,7 @@ def test_cli_override_verb_refuses_without_confirm(tmp_path: Path) -> None:
 
 def test_cli_override_verb_requires_evidence_locator(tmp_path: Path) -> None:
     """A blank --evidence-locator is refused: provenance is mandatory, not optional."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
         _store_profile_with_nif(_NIF)
         result = invoke_cached_cli(
             [
@@ -265,7 +265,7 @@ def test_cli_override_verb_requires_evidence_locator(tmp_path: Path) -> None:
 
 def test_cli_seed_verb_refuses_duplicate(tmp_path: Path) -> None:
     """Seed verb refuses a second seed for the same period."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
         _store_profile_with_nif(_NIF)
         first_result = invoke_cached_cli(
             [
