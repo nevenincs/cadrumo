@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -57,6 +58,7 @@ _MADRID_PARTIAL_DIVERGENCE_YEARS = (2020, 2021)
 _MADRID_FULL_DIVERGENCE_YEARS = (2022, 2023, 2024, 2025)
 
 
+@lru_cache
 def _snapshot(year: int) -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=year, period="0A")
 
@@ -100,24 +102,24 @@ def _registry_tranches(snapshot: RegistrySnapshot, *, ccaa_infix: str | None = N
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("year", _ENGINE_FILING_YEARS)
-def test_all_six_revisions_expose_the_full_parameter_set(year: int) -> None:
-    snapshot = _snapshot(year)
-    tranches, menor_tres = _registry_tranches(snapshot)
-    assert len(tranches) == 4
-    assert all(amount > 0 for amount in tranches)
-    assert menor_tres > 0
+def test_all_six_revisions_expose_the_full_parameter_set() -> None:
+    for year in _ENGINE_FILING_YEARS:
+        snapshot = _snapshot(year)
+        tranches, menor_tres = _registry_tranches(snapshot)
+        assert len(tranches) == 4, year
+        assert all(amount > 0 for amount in tranches), year
+        assert menor_tres > 0, year
 
 
-@pytest.mark.parametrize("year", _ENGINE_FILING_YEARS)
-def test_estatal_and_autonomico_casillas_are_computed(year: int) -> None:
-    revision = _snapshot(year).revision
-    estatal = next(c for c in revision.casillas if c.semantic_role == _MINIMO_ESTATAL_ROLE)
-    autonomico = next(c for c in revision.casillas if c.semantic_role == _MINIMO_AUTONOMICO_ROLE)
-    assert estatal.input_kind == "computed"
-    assert estatal.formula is not None
-    assert autonomico.input_kind == "computed"
-    assert autonomico.formula is not None
+def test_estatal_and_autonomico_casillas_are_computed() -> None:
+    for year in _ENGINE_FILING_YEARS:
+        revision = _snapshot(year).revision
+        estatal = next(c for c in revision.casillas if c.semantic_role == _MINIMO_ESTATAL_ROLE)
+        autonomico = next(c for c in revision.casillas if c.semantic_role == _MINIMO_AUTONOMICO_ROLE)
+        assert estatal.input_kind == "computed", year
+        assert estatal.formula is not None, year
+        assert autonomico.input_kind == "computed", year
+        assert autonomico.formula is not None, year
 
 
 # ---------------------------------------------------------------------------
@@ -192,17 +194,17 @@ def test_idempotent_explicit_fact_preserved() -> None:
     assert fact_index[_aggregate_key(2024)] == Decimal("999")
 
 
-@pytest.mark.parametrize("year", _ENGINE_FILING_YEARS)
-def test_one_eligible_descendant_matches_registry_first_tranche_across_all_years(year: int) -> None:
-    snapshot = _snapshot(year)
-    tranches, _ = _registry_tranches(snapshot)
-    fact_index: dict[str, object] = {
-        "renta_family.descendiente.0.birth_date": "2015-01-01",
-        "renta_family.descendiente.0.convivencia": "true",
-    }
-    fact_index_narrowed: Any = fact_index
-    inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
-    assert fact_index[_aggregate_key(year)] == tranches[0]
+def test_one_eligible_descendant_matches_registry_first_tranche_across_all_years() -> None:
+    for year in _ENGINE_FILING_YEARS:
+        snapshot = _snapshot(year)
+        tranches, _ = _registry_tranches(snapshot)
+        fact_index: dict[str, object] = {
+            "renta_family.descendiente.0.birth_date": "2015-01-01",
+            "renta_family.descendiente.0.convivencia": "true",
+        }
+        fact_index_narrowed: Any = fact_index
+        inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
+        assert fact_index[_aggregate_key(year)] == tranches[0], year
 
 
 # ---------------------------------------------------------------------------
@@ -254,74 +256,73 @@ def _binding_id_for_autonomico(snapshot: RegistrySnapshot) -> str:
     return matches[0]
 
 
-@pytest.mark.parametrize("year", _ENGINE_FILING_YEARS)
-def test_every_revision_declares_the_autonomico_binding(year: int) -> None:
-    snapshot = _snapshot(year)
-    binding_id = _binding_id_for_autonomico(snapshot)
-    assert binding_id == f"renta-{year}-profile-minimo-descendientes-autonomico"
+def test_every_revision_declares_the_autonomico_binding() -> None:
+    for year in _ENGINE_FILING_YEARS:
+        snapshot = _snapshot(year)
+        binding_id = _binding_id_for_autonomico(snapshot)
+        assert binding_id == f"renta-{year}-profile-minimo-descendientes-autonomico"
 
 
-@pytest.mark.parametrize("year", _ENGINE_FILING_YEARS)
-def test_non_madrid_ccaa_autonomico_mirrors_estatal_for_two_descendants(year: int) -> None:
+def test_non_madrid_ccaa_autonomico_mirrors_estatal_for_two_descendants() -> None:
     """A CCAA absent from the wired divergence table mirrors the estatal aggregate.
 
     Cataluña, like every CCAA except Madrid, has no wired override, so the
     autonómico aggregate must equal the estatal one for the identical
     descendientes facts — the ADR's documented mirror-estatal default.
     """
-    snapshot = _snapshot(year)
-    fact_index: dict[str, object] = {
-        "tax_residence.ccaa": "cataluna",
-        "renta_family.descendiente.0.birth_date": "2010-01-01",
-        "renta_family.descendiente.0.convivencia": "true",
-        "renta_family.descendiente.1.birth_date": "2015-06-01",
-        "renta_family.descendiente.1.convivencia": "true",
-    }
-    fact_index_narrowed: Any = fact_index
-    inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
-    assert fact_index[_aggregate_key(year)] == fact_index[_autonomico_aggregate_key(year)]
+    for year in _ENGINE_FILING_YEARS:
+        snapshot = _snapshot(year)
+        fact_index: dict[str, object] = {
+            "tax_residence.ccaa": "cataluna",
+            "renta_family.descendiente.0.birth_date": "2010-01-01",
+            "renta_family.descendiente.0.convivencia": "true",
+            "renta_family.descendiente.1.birth_date": "2015-06-01",
+            "renta_family.descendiente.1.convivencia": "true",
+        }
+        fact_index_narrowed: Any = fact_index
+        inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
+        assert fact_index[_aggregate_key(year)] == fact_index[_autonomico_aggregate_key(year)], year
 
 
-@pytest.mark.parametrize("year", _MADRID_PARTIAL_DIVERGENCE_YEARS)
-def test_madrid_first_two_descendants_match_estatal_for_partial_divergence_years(year: int) -> None:
+def test_madrid_first_two_descendants_match_estatal_for_partial_divergence_years() -> None:
     """For 2020/2021 Madrid's 1º/2º tranches coincide with the estatal Art. 58 figures.
 
     Grounded in the bundled AEAT Renta 2020/2021 manuals' own "Importante"
     note: "las cuantías del mínimo por descendientes para el primer y segundo
     hijo ... coinciden con las fijadas artículo 58 de la Ley del IRPF".
     """
-    snapshot = _snapshot(year)
-    estatal_tranches, _ = _registry_tranches(snapshot)
-    madrid_tranches, _ = _registry_tranches(snapshot, ccaa_infix="madrid")
-    assert madrid_tranches[0] == estatal_tranches[0]
-    assert madrid_tranches[1] == estatal_tranches[1]
+    for year in _MADRID_PARTIAL_DIVERGENCE_YEARS:
+        snapshot = _snapshot(year)
+        estatal_tranches, _ = _registry_tranches(snapshot)
+        madrid_tranches, _ = _registry_tranches(snapshot, ccaa_infix="madrid")
+        assert madrid_tranches[0] == estatal_tranches[0], year
+        assert madrid_tranches[1] == estatal_tranches[1], year
 
 
-@pytest.mark.parametrize("year", _ENGINE_FILING_YEARS)
-def test_madrid_third_and_fourth_tranches_diverge_from_estatal_every_year(year: int) -> None:
+def test_madrid_third_and_fourth_tranches_diverge_from_estatal_every_year() -> None:
     """Madrid's own tercer/cuarto-y-siguientes tranches diverge every engine year (DL 1/2010 art. 2)."""
-    snapshot = _snapshot(year)
-    estatal_tranches, _ = _registry_tranches(snapshot)
-    madrid_tranches, _ = _registry_tranches(snapshot, ccaa_infix="madrid")
-    assert madrid_tranches[2] != estatal_tranches[2]
-    assert madrid_tranches[3] != estatal_tranches[3]
-    assert madrid_tranches[2] == Decimal("4400")
-    assert madrid_tranches[3] == Decimal("4950")
+    for year in _ENGINE_FILING_YEARS:
+        snapshot = _snapshot(year)
+        estatal_tranches, _ = _registry_tranches(snapshot)
+        madrid_tranches, _ = _registry_tranches(snapshot, ccaa_infix="madrid")
+        assert madrid_tranches[2] != estatal_tranches[2], year
+        assert madrid_tranches[3] != estatal_tranches[3], year
+        assert madrid_tranches[2] == Decimal("4400"), year
+        assert madrid_tranches[3] == Decimal("4950"), year
 
 
-@pytest.mark.parametrize("year", _MADRID_FULL_DIVERGENCE_YEARS)
-def test_madrid_all_tranches_and_menor_tres_diverge_for_full_divergence_years(year: int) -> None:
+def test_madrid_all_tranches_and_menor_tres_diverge_for_full_divergence_years() -> None:
     """From 2022 Madrid's own table diverges on every tranche including menor-3."""
-    snapshot = _snapshot(year)
-    estatal_tranches, estatal_menor_tres = _registry_tranches(snapshot)
-    madrid_tranches, madrid_menor_tres = _registry_tranches(snapshot, ccaa_infix="madrid")
-    for madrid_amount, estatal_amount in zip(madrid_tranches, estatal_tranches, strict=True):
-        assert madrid_amount != estatal_amount
-    assert madrid_menor_tres != estatal_menor_tres
+    for year in _MADRID_FULL_DIVERGENCE_YEARS:
+        snapshot = _snapshot(year)
+        estatal_tranches, estatal_menor_tres = _registry_tranches(snapshot)
+        madrid_tranches, madrid_menor_tres = _registry_tranches(snapshot, ccaa_infix="madrid")
+        for madrid_amount, estatal_amount in zip(madrid_tranches, estatal_tranches, strict=True):
+            assert madrid_amount != estatal_amount, year
+        assert madrid_menor_tres != estatal_menor_tres, year
 
 
-@pytest.mark.parametrize("year", _ENGINE_FILING_YEARS)
-def test_madrid_resident_three_descendants_autonomico_exceeds_estatal(year: int) -> None:
+def test_madrid_resident_three_descendants_autonomico_exceeds_estatal() -> None:
     """A Madrid-resident filer with 3 descendants gets a higher autonómico aggregate.
 
     Three descendants trigger the diverging tercer tranche in every engine
@@ -329,29 +330,30 @@ def test_madrid_resident_three_descendants_autonomico_exceeds_estatal(year: int)
     one (general Art. 58 tranches) for the identical descendientes facts —
     the exact under-computation #593 reports for Madrid family filers.
     """
-    snapshot = _snapshot(year)
-    fact_index: dict[str, object] = {
-        "tax_residence.ccaa": "madrid",
-        "renta_family.descendiente.0.birth_date": "2005-01-01",
-        "renta_family.descendiente.0.convivencia": "true",
-        "renta_family.descendiente.1.birth_date": "2008-01-01",
-        "renta_family.descendiente.1.convivencia": "true",
-        "renta_family.descendiente.2.birth_date": "2012-01-01",
-        "renta_family.descendiente.2.convivencia": "true",
-    }
-    fact_index_narrowed: Any = fact_index
-    inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
+    for year in _ENGINE_FILING_YEARS:
+        snapshot = _snapshot(year)
+        fact_index: dict[str, object] = {
+            "tax_residence.ccaa": "madrid",
+            "renta_family.descendiente.0.birth_date": "2005-01-01",
+            "renta_family.descendiente.0.convivencia": "true",
+            "renta_family.descendiente.1.birth_date": "2008-01-01",
+            "renta_family.descendiente.1.convivencia": "true",
+            "renta_family.descendiente.2.birth_date": "2012-01-01",
+            "renta_family.descendiente.2.convivencia": "true",
+        }
+        fact_index_narrowed: Any = fact_index
+        inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
 
-    estatal_value = fact_index[_aggregate_key(year)]
-    autonomico_value = fact_index[_autonomico_aggregate_key(year)]
-    assert isinstance(estatal_value, Decimal), f"Expected Decimal, got {type(estatal_value)}"
-    assert isinstance(autonomico_value, Decimal), f"Expected Decimal, got {type(autonomico_value)}"
-    assert autonomico_value > estatal_value
+        estatal_value = fact_index[_aggregate_key(year)]
+        autonomico_value = fact_index[_autonomico_aggregate_key(year)]
+        assert isinstance(estatal_value, Decimal), f"{year}: Expected Decimal, got {type(estatal_value)}"
+        assert isinstance(autonomico_value, Decimal), f"{year}: Expected Decimal, got {type(autonomico_value)}"
+        assert autonomico_value > estatal_value, year
 
-    estatal_tranches, _ = _registry_tranches(snapshot)
-    madrid_tranches, _ = _registry_tranches(snapshot, ccaa_infix="madrid")
-    assert estatal_value == estatal_tranches[0] + estatal_tranches[1] + estatal_tranches[2]
-    assert autonomico_value == madrid_tranches[0] + madrid_tranches[1] + madrid_tranches[2]
+        estatal_tranches, _ = _registry_tranches(snapshot)
+        madrid_tranches, _ = _registry_tranches(snapshot, ccaa_infix="madrid")
+        assert estatal_value == estatal_tranches[0] + estatal_tranches[1] + estatal_tranches[2], year
+        assert autonomico_value == madrid_tranches[0] + madrid_tranches[1] + madrid_tranches[2], year
 
 
 def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channel(tmp_path: Path) -> None:
