@@ -1,17 +1,17 @@
 """Locale-translation loading and merging for the directory-mode TOML loader.
 
-Extracted from :mod:`aeat.domain.calculations.registry._loader` to keep that
+Extracted from :mod:`domain.calculations.registry._loader` to keep that
 module under its size budget (`aeat-architecture-boundaries`,
 `registry-resolver-family-extraction`). Owns the ``locales/*.toml`` read,
 merge, referential-integrity check, and casilla-injection pipeline that
-:func:`aeat.domain.calculations.registry._loader.load_modelo_directory`
+:func:`domain.calculations.registry._loader.load_modelo_directory`
 applies after merging a modelo's revision fragments. Per
 `aeat-locales-cli`, the modelo schema-local translation TOML this module
 reads is authored only through the ``aeat.locales modelo`` CLI; this module
 is the read-side compiler for that authored data, not an authoring surface.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._loader`
+    :mod:`domain.calculations.registry._loader`
         Owns directory-mode modelo/revision fragment merging and calls
         :func:`apply_locales` once the revision TOML is merged.
 """
@@ -252,7 +252,7 @@ def apply_locales(modelo_dir: Path, merged_revisions: dict[str, object]) -> None
     """Load, validate, and inject a modelo directory's locale TOML in place.
 
     Called once by
-    :func:`aeat.domain.calculations.registry._loader._load_modelo_directory_cached`
+    :func:`domain.calculations.registry._loader._load_modelo_directory_cached`
     after a directory-mode modelo's revision fragments are merged, so the
     locale keys can be validated against the final casilla/continuity id set.
     """
