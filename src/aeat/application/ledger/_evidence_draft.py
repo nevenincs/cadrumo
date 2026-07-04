@@ -30,11 +30,27 @@ resolves an already-stored ``purchase_invoice_evidence`` record or a linked
 :func:`._evidence_input.resolve_attachment_evidence_input`) and runs
 :func:`extract_invoice_fields` over them, so ``aeat app ledger evidence extract``
 needs only a bucket id plus one of the two reference ids.
+
+:func:`confirm_invoice_draft_from_evidence` is the non-interactive CONFIRM step
+that closes the review loop: it re-runs the on-host extraction, applies any
+operator-supplied field overrides (extraction is best-effort -- every field may
+be corrected), and delegates the actual write to
+:func:`aeat.application.invoices.create_catalogue_invoice` -- the sole
+sanctioned :class:`aeat.domain.invoices.Invoice` writer
+(``composition-service-no-parallel-write-path``). A confirm keyed on the same
+evidence/attachment reference and the same resolved fields is a guarded no-op
+that returns the existing invoice rather than raising or duplicating
+(``single-subject-mutation-is-idempotent-guarded``); a same-reference confirm
+whose resolved fields genuinely differ from the already-stored invoice mints a
+second, distinct invoice record (a different content-derived
+:attr:`~aeat.domain.invoices.Invoice.invoice_id`) rather than silently
+overwriting one filer's data with another's.
 """
 
 from __future__ import annotations
 
 import re
+from datetime import date
 from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel
@@ -44,6 +60,8 @@ from ...core.config import Settings
 from ...core.decimal import normalize_decimal_separators
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.parsing import parse_date
+from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol
+from ...domain.iva import InvoiceKind
 from ._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from ._evidence_input import (
     EvidenceInput,
@@ -52,7 +70,13 @@ from ._evidence_input import (
 )
 from ._evidence_textlayer import extract_evidence_text
 
-__all__ = ["InvoiceDraft", "extract_invoice_draft_from_evidence", "extract_invoice_fields"]
+__all__ = [
+    "InvoiceConfirmationResult",
+    "InvoiceDraft",
+    "confirm_invoice_draft_from_evidence",
+    "extract_invoice_draft_from_evidence",
+    "extract_invoice_fields",
+]
 
 # A Spanish NIF / NIE / CIF token: 8 digits + letter, or a leading letter
 # (K/L/M for NIF, X/Y/Z for NIE, A-H/J/N/P-S/U/V/W for CIF) + 7 digits + a
@@ -287,3 +311,195 @@ def extract_invoice_draft_from_evidence(
         assert attachment_id is not None  # narrowed by the exactly-one guard above
         evidence_input = resolve_attachment_evidence_input(attachment_id, store=store)
     return extract_invoice_fields(evidence_input)
+
+
+class InvoiceConfirmationResult(BaseModel):
+    """Outcome of confirming a reviewed :class:`InvoiceDraft` into an :class:`Invoice`.
+
+    Attributes:
+        invoice: The persisted (or already-existing, on a guarded no-op)
+            :class:`aeat.domain.invoices.Invoice`.
+        draft: The re-run on-host extraction the confirmation was based on
+            (before overrides were applied), kept so the operator can see what
+            was actually read from the document versus what they overrode.
+        created: ``True`` when this call minted a new catalogue row;
+            ``False`` when an invoice with the identical derived identity
+            already existed and this call returned it unchanged (the guarded
+            idempotent-retry no-op).
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    invoice: Invoice
+    draft: InvoiceDraft
+    created: bool
+
+
+def _require_confirmed_field(value: Decimal | str | None, *, field: str) -> Decimal | str:
+    if value is None:
+        raise PurchaseInvoiceEvidenceInputError(
+            f"cannot confirm an invoice: {field} could not be extracted and no --{field.replace('_', '-')} "
+            "override was supplied",
+            suggestion=(
+                "aeat app ledger evidence extract --evidence-id <id>  # review the draft, then re-run confirm "
+                f"with an explicit --{field.replace('_', '-')} override"
+            ),
+        )
+    return value
+
+
+def confirm_invoice_draft_from_evidence(
+    *,
+    bucket_id: str,
+    kind: InvoiceKind,
+    counterparty_country: str = "ES",
+    evidence_id: str | None = None,
+    attachment_id: str | None = None,
+    counterparty_tax_id: str | None = None,
+    counterparty_name: str | None = None,
+    invoice_number: str | None = None,
+    invoice_date: date | None = None,
+    taxable_base: Decimal | None = None,
+    iva_rate: Decimal | None = None,
+    currency: str = "EUR",
+    notes: str = "",
+    settings: Settings | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+) -> InvoiceConfirmationResult:
+    """Re-extract one evidence reference and confirm it into a real :class:`Invoice`.
+
+    Re-runs :func:`extract_invoice_draft_from_evidence` on-host (bytes and text
+    stay in memory only), then layers any operator-supplied override on top of
+    each extracted field -- extraction is best-effort, so every field may be
+    corrected before the record is minted. The resulting identity fields are
+    handed to :func:`aeat.application.invoices.create_catalogue_invoice`, the
+    single sanctioned :class:`Invoice` writer
+    (``composition-service-no-parallel-write-path``); this function never
+    writes the catalogue itself.
+
+    Idempotent-guarded (``single-subject-mutation-is-idempotent-guarded``): the
+    persisted :attr:`Invoice.invoice_id` is a stable hash of
+    ``(kind, invoice_number, issued_at, counterparty_tax_id, currency,
+    grand_total)`` — a confirm carrying identical resolved fields to an
+    already-persisted invoice returns that invoice unchanged
+    (``created=False``, no new bucket write); a confirm whose resolved fields
+    genuinely differ mints a distinct invoice record rather than overwriting.
+
+    Args:
+        bucket_id: Active ledger bucket the evidence belongs to.
+        kind: Invoice direction (``issued`` or ``received``) — extraction
+            cannot infer this; the operator must state it.
+        counterparty_country: ISO 3166-1 alpha-2 counterparty country code.
+            Defaults to ``"ES"``; override for a non-Spanish counterparty.
+        evidence_id: A ``purchase_invoice_evidence`` record id, or ``None``.
+        attachment_id: A linked attachment id, or ``None``. Exactly one of
+            *evidence_id* / *attachment_id* must be supplied.
+        counterparty_tax_id: Override for the extracted supplier tax id.
+        counterparty_name: Override (there is no extraction heuristic for the
+            counterparty's display name yet, so this is normally required).
+        invoice_number: Override for the extracted invoice number.
+        invoice_date: Override for the extracted invoice date.
+        taxable_base: Override for the extracted taxable base.
+        iva_rate: Override for the extracted IVA rate (``None`` resolves to
+            the EXEMPT slot, matching :func:`build_catalogue_invoice`).
+        currency: ISO-4217 currency code. Defaults to ``"EUR"``.
+        notes: Free-text operator notes carried onto the invoice.
+        settings: Resolved ``Settings``; ``load_settings()`` when ``None``.
+        invoice_repository: Optional injected
+            :class:`InvoiceCatalogueRepositoryProtocol` (testing seam).
+
+    Returns:
+        :class:`InvoiceConfirmationResult`: The persisted (or pre-existing)
+        invoice, the re-run draft it was checked against, and whether this
+        call minted a new record.
+
+    Raises:
+        PurchaseInvoiceEvidenceInputError: When neither or both of
+            *evidence_id* / *attachment_id* are supplied, when the resolved
+            evidence has no usable text layer, or when a required field is
+            ``None`` after overrides (extraction found nothing and the
+            operator supplied no override).
+        PurchaseInvoiceEvidenceNotFoundError: When *evidence_id* names no
+            record in *bucket_id*.
+        InvoiceValidationError: When the resolved fields fail invoice-model
+            validation (e.g. an invalid counterparty tax id or IVA rate).
+    """
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice
+    from ...core.config import load_settings as _load_settings
+
+    resolved_settings = settings or _load_settings()
+    draft = extract_invoice_draft_from_evidence(
+        bucket_id=bucket_id,
+        evidence_id=evidence_id,
+        attachment_id=attachment_id,
+        settings=resolved_settings,
+    )
+
+    resolved_counterparty_tax_id = _require_confirmed_field(
+        counterparty_tax_id or draft.supplier_tax_id,
+        field="counterparty_tax_id",
+    )
+    assert isinstance(resolved_counterparty_tax_id, str)
+    resolved_invoice_number = _require_confirmed_field(
+        invoice_number or draft.invoice_number,
+        field="invoice_number",
+    )
+    assert isinstance(resolved_invoice_number, str)
+    resolved_invoice_date = invoice_date
+    if resolved_invoice_date is None and draft.invoice_date is not None:
+        resolved_invoice_date = date.fromisoformat(draft.invoice_date)
+    if resolved_invoice_date is None:
+        raise PurchaseInvoiceEvidenceInputError(
+            "cannot confirm an invoice: invoice_date could not be extracted and no --invoice-date "
+            "override was supplied",
+            suggestion="aeat app ledger evidence extract --evidence-id <id>",
+        )
+    resolved_taxable_base = _require_confirmed_field(taxable_base or draft.taxable_base, field="taxable_base")
+    assert isinstance(resolved_taxable_base, Decimal)
+    resolved_iva_rate = iva_rate if iva_rate is not None else draft.iva_rate
+    resolved_counterparty_name = (counterparty_name or "").strip()
+    if not resolved_counterparty_name:
+        raise PurchaseInvoiceEvidenceInputError(
+            "cannot confirm an invoice: counterparty_name has no extraction heuristic yet and "
+            "no --counterparty-name override was supplied",
+            suggestion="aeat app ledger evidence extract --evidence-id <id>",
+        )
+
+    repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
+    candidate = build_catalogue_invoice(
+        bucket_id=bucket_id,
+        kind=kind,
+        counterparty_name=resolved_counterparty_name,
+        counterparty_tax_id=resolved_counterparty_tax_id,
+        counterparty_country=counterparty_country,
+        invoice_number=resolved_invoice_number,
+        issued_at=resolved_invoice_date,
+        taxable_base=resolved_taxable_base,
+        iva_rate=resolved_iva_rate,
+        currency=currency,
+        notes=notes,
+    )
+    catalogue = repository.load()
+    existing = catalogue.get(candidate.invoice_id)
+    if existing is not None:
+        # Guarded idempotent retry (single-subject-mutation-is-idempotent-guarded):
+        # the confirm's resolved identity fields hash to an invoice already in the
+        # catalogue -- return it unchanged rather than raising or re-writing.
+        return InvoiceConfirmationResult(invoice=existing, draft=draft, created=False)
+
+    result = create_catalogue_invoice(
+        bucket_id=bucket_id,
+        kind=kind,
+        counterparty_name=resolved_counterparty_name,
+        counterparty_tax_id=resolved_counterparty_tax_id,
+        counterparty_country=counterparty_country,
+        invoice_number=resolved_invoice_number,
+        issued_at=resolved_invoice_date,
+        taxable_base=resolved_taxable_base,
+        iva_rate=resolved_iva_rate,
+        currency=currency,
+        notes=notes,
+        repository=repository,
+    )
+    return InvoiceConfirmationResult(invoice=result.invoice, draft=draft, created=True)

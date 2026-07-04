@@ -1363,12 +1363,24 @@ cli:
         unknown_disposal_regime: 'Unknown disposal regime {regime!r}; accepted: {accepted}'
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
+        confirm_already_exists_message: 'An invoice with this identity already exists; returning it unchanged rather than creating a duplicate.'
+        confirm_counterparty_name_help: 'Counterparty display name (no extraction heuristic yet; normally required).'
+        confirm_counterparty_nif_help: 'Override the extracted supplier tax id.'
+        confirm_currency_help: 'ISO-4217 currency code.'
+        confirm_help: 'Re-extract evidence on-host and confirm it into a real catalogue Invoice.'
+        confirm_invoice_date_help: 'Override the extracted invoice date (YYYY-MM-DD).'
+        confirm_invoice_number_help: 'Override the extracted invoice number.'
+        confirm_iva_rate_help: 'Override the extracted IVA rate (omit to keep the extracted value).'
+        confirm_link_hint_message: 'Link this invoice to a ledger transaction with `aeat app ledger link`.'
+        confirm_taxable_base_help: 'Override the extracted taxable base.'
         evidence_id_help: Evidence id (exact match)
-        extract_attachment_id_help: 'Linked attachment id to extract from (alternative to --evidence-id).'
-        extract_evidence_id_help: 'Purchase invoice evidence record id to extract from.'
-        extract_help: 'Read an invoice PDF''s fields on-host into a reviewable draft.'
-        extract_reference_required: 'Supply exactly one of --evidence-id or --attachment-id.'
-        extract_review_hint_message: 'This is a best-effort draft; confirm every field before minting an invoice.'
+        extract_attachment_id_help: Linked attachment id to extract from (alternative
+          to --evidence-id).
+        extract_evidence_id_help: Purchase invoice evidence record id to extract from.
+        extract_help: Read an invoice PDF's fields on-host into a reviewable draft.
+        extract_reference_required: Supply exactly one of --evidence-id or --attachment-id.
+        extract_review_hint_message: This is a best-effort draft; confirm every field
+          before minting an invoice.
         group_help: Purchase invoice evidence in PDF or image form
         invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
         invoice_number_help: Supplier invoice number
@@ -2785,10 +2797,11 @@ cli:
         source_not_found: No live profile named %{name} to seed the sandbox from.
         unknown_sandbox: 'Unknown sandbox: %{name}. Run ''aeat config profile sandbox
           list'' to see registered sandboxes.'
+        usage_help: Report the on-disk footprint of one sandbox, or every sandbox
+          at once.
+        usage_name_help: Sandbox name (without the prefix); omit to report every sandbox.
         use_help: Switch the active profile to an existing sandbox.
         use_name_help: Sandbox name (without the prefix).
-        usage_help: 'Report the on-disk footprint of one sandbox, or every sandbox at once.'
-        usage_name_help: 'Sandbox name (without the prefix); omit to report every sandbox.'
       sar_catalogue_info: 'This archive holds every personal-data category kept for
         the profile: identity and profile facts, modelo work units, ledger transactions,
         calculation revisions, and filing records. Attachment evidence bytes and AEAT

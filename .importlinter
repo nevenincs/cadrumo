@@ -352,6 +352,8 @@ ignore_imports =
     aeat.application.invoices.tests.test_source_resolver -> aeat.tests.secure_sql
     aeat.application.ledger.tests.test_business_operation_invoice -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_evidence -> aeat.adapters.persistence.storage.sql
+    aeat.application.ledger.tests.test_evidence_draft -> aeat.adapters.persistence.profile.invoices
+    aeat.application.ledger.tests.test_evidence_draft -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_llm_evidence_split -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_llm_reject -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_llm_reject -> aeat.tests.secure_sql
@@ -673,6 +675,7 @@ ignore_imports =
     aeat.application.ledger._actions_import -> aeat.adapters.**
     aeat.application.ledger._business_operation_invoice -> aeat.adapters.**
     aeat.application.ledger._evidence -> aeat.adapters.**
+    aeat.application.ledger._evidence_draft -> aeat.adapters.**
     aeat.application.ledger._evidence_textlayer -> aeat.adapters.**
     aeat.application.ledger._llm_classification -> aeat.adapters.**
     aeat.application.ledger._llm_diagnostics -> aeat.adapters.**

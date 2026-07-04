@@ -1391,12 +1391,27 @@ cli:
           {accepted}'
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
+        confirm_already_exists_message: 'Mar letezik szamla ezzel az azonossaggal; valtozatlanul visszaadva, nem pedig duplikaciot letrehozva.'
+        confirm_counterparty_name_help: 'A partner megjelenitett neve (meg nincs kinyerest segito heurisztika; altalaban kotelezo).'
+        confirm_counterparty_nif_help: 'Felulirja a kinyert szallitoi adoazonositot.'
+        confirm_currency_help: 'ISO-4217 penznemkod.'
+        confirm_help: 'Ujra kinyeri a bizonylatot helyben, es megerositi valodi katalogus-szamlakent.'
+        confirm_invoice_date_help: 'Felulirja a kinyert szamla datumat (EEEE-HH-NN).'
+        confirm_invoice_number_help: 'Felulirja a kinyert szamlaszamot.'
+        confirm_iva_rate_help: 'Felulirja a kinyert AFA-kulcsot (hagyja ki a kinyert ertek megtartasahoz).'
+        confirm_link_hint_message: 'Kapcsold ossze ezt a szamlat egy konyvelesi tetellel az `aeat app ledger link` paranccsal.'
+        confirm_taxable_base_help: 'Felulirja a kinyert adoalapot.'
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
-        extract_attachment_id_help: 'A kapcsolt melléklet azonosítója, amelyből az adatokat ki kell nyerni (a --evidence-id alternatívája).'
-        extract_evidence_id_help: 'A beszerzési számla bizonylat azonosítója, amelyből az adatokat ki kell nyerni.'
-        extract_help: 'A számla PDF mezőinek helyi (on-host) beolvasása áttekinthető piszkozatba.'
-        extract_reference_required: 'Adja meg pontosan az egyiket: --evidence-id vagy --attachment-id.'
-        extract_review_hint_message: 'Ez egy hozzávetőleges piszkozat; minden mezőt erősítsen meg, mielőtt számlát hoz létre belőle.'
+        extract_attachment_id_help: A kapcsolt melléklet azonosítója, amelyből az
+          adatokat ki kell nyerni (a --evidence-id alternatívája).
+        extract_evidence_id_help: A beszerzési számla bizonylat azonosítója, amelyből
+          az adatokat ki kell nyerni.
+        extract_help: A számla PDF mezőinek helyi (on-host) beolvasása áttekinthető
+          piszkozatba.
+        extract_reference_required: 'Adja meg pontosan az egyiket: --evidence-id vagy
+          --attachment-id.'
+        extract_review_hint_message: Ez egy hozzávetőleges piszkozat; minden mezőt
+          erősítsen meg, mielőtt számlát hoz létre belőle.
         group_help: Vásárlásiszámla-bizonyíték PDF- vagy képformátumban.
         invoice_date_help: A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN),
           pl. 2026-01-15.
@@ -2920,10 +2935,12 @@ cli:
           lenne.
         unknown_sandbox: 'Ismeretlen sandbox: %{name}. Futtassa az ''aeat config profile
           sandbox list'' parancsot a regisztrált sandboxok megtekintéséhez.'
+        usage_help: Egy homokozó (sandbox) lemezterület-használatának jelentése, vagy
+          az összesé egyszerre.
+        usage_name_help: A homokozó neve (előtag nélkül); hagyja üresen az összes
+          jelentéséhez.
         use_help: Az aktív profil váltása egy meglévő sandboxra.
         use_name_help: A sandbox neve (előtag nélkül).
-        usage_help: 'Egy homokozó (sandbox) lemezterület-használatának jelentése, vagy az összesé egyszerre.'
-        usage_name_help: 'A homokozó neve (előtag nélkül); hagyja üresen az összes jelentéséhez.'
       sar_catalogue_info: 'Ez az archívum a profilhoz tárolt összes személyesadat-kategóriát
         tartalmazza: azonosító és profiladatok, modelo munkaegységek, főkönyvi tételek,
         számítási revíziók és benyújtási nyilvántartások. A csatolt bizonyítékok bájtjai

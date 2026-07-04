@@ -8,15 +8,24 @@ grounded fields with no file written and no field fabricated. No mocks.
 from __future__ import annotations
 
 import hashlib
+from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
+from ....domain.invoices import InvoiceValidationError
+from ....domain.iva import InvoiceKind
 from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
-from .._evidence_draft import extract_invoice_draft_from_evidence, extract_invoice_fields
+from .._evidence_draft import (
+    confirm_invoice_draft_from_evidence,
+    extract_invoice_draft_from_evidence,
+    extract_invoice_fields,
+)
 from .._evidence_input import EvidenceInput
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import isolated_settings as isolated_settings
@@ -235,6 +244,207 @@ class TestExtractInvoiceDraftFromEvidence:
             bucket_id=_BUCKET_ID,
             evidence_id=record.evidence_id,
             settings=isolated_settings,
+        )
+
+        assert list(empty_dir.iterdir()) == []
+
+
+class TestConfirmInvoiceDraftFromEvidence:
+    """Real-behaviour tests for the non-interactive confirm-into-Invoice step.
+
+    Confirms delegate the write to
+    :func:`aeat.application.invoices.create_catalogue_invoice` (the sole
+    sanctioned :class:`~aeat.domain.invoices.Invoice` writer); these tests
+    assert the resulting row is a genuine catalogue member (re-loaded through
+    a fresh :class:`InvoiceCatalogueRepository`), that a same-identity
+    re-confirm is a guarded no-op, and that an override wins over the
+    extracted value. No mocks.
+    """
+
+    def _repo(self, secure_objects: SecureObjectRepository) -> InvoiceCatalogueRepository:
+        return InvoiceCatalogueRepository(objects=secure_objects)
+
+    def test_confirm_mints_a_real_catalogue_invoice(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        pdf_path = tmp_path / "factura.pdf"
+        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        repo = self._repo(secure_objects)
+
+        confirmation = confirm_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            evidence_id=record.evidence_id,
+            counterparty_name="Acme Suministros SL",
+            settings=isolated_settings,
+            invoice_repository=repo,
+        )
+
+        assert confirmation.created is True
+        assert confirmation.invoice.counterparty_tax_id == _SUPPLIER_CIF
+        assert confirmation.invoice.invoice_number == "2026-0142"
+        assert confirmation.invoice.grand_total == Decimal("121.00")
+        # The draft the confirmation was checked against is echoed back.
+        assert confirmation.draft.supplier_tax_id == _SUPPLIER_CIF
+
+        # Re-load through a FRESH repository handle: the row is genuinely
+        # persisted, not merely returned by this call.
+        reloaded = InvoiceCatalogueRepository(objects=secure_objects).load()
+        assert confirmation.invoice.invoice_id in reloaded
+
+    def test_confirm_is_idempotent_guarded_on_identical_resolved_fields(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        pdf_path = tmp_path / "factura.pdf"
+        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        repo = self._repo(secure_objects)
+
+        first = confirm_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            evidence_id=record.evidence_id,
+            counterparty_name="Acme Suministros SL",
+            settings=isolated_settings,
+            invoice_repository=repo,
+        )
+        assert first.created is True
+
+        second = confirm_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            evidence_id=record.evidence_id,
+            counterparty_name="Acme Suministros SL",
+            settings=isolated_settings,
+            invoice_repository=repo,
+        )
+
+        assert second.created is False
+        assert second.invoice.invoice_id == first.invoice.invoice_id
+        # No duplicate: the catalogue still carries exactly one invoice.
+        assert len(InvoiceCatalogueRepository(objects=secure_objects).load()) == 1
+
+    def test_confirm_honours_an_override_over_the_extracted_value(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        pdf_path = tmp_path / "factura.pdf"
+        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        repo = self._repo(secure_objects)
+
+        confirmation = confirm_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            evidence_id=record.evidence_id,
+            counterparty_name="Acme Suministros SL",
+            invoice_number="OVERRIDE-9999",
+            taxable_base=Decimal("500.00"),
+            settings=isolated_settings,
+            invoice_repository=repo,
+        )
+
+        assert confirmation.created is True
+        assert confirmation.invoice.invoice_number == "OVERRIDE-9999"
+        assert confirmation.invoice.base_total == Decimal("500.00")
+        # The extracted draft itself is untouched by the override -- it
+        # still reports what was actually read from the document.
+        assert confirmation.draft.invoice_number == "2026-0142"
+        assert confirmation.draft.taxable_base == Decimal("100.00")
+
+    def test_confirm_missing_required_field_refuses_not_fabricates(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """A field absent from extraction with no override refuses loudly."""
+        pdf_path = tmp_path / "factura.pdf"
+        pdf_path.write_bytes(_text_pdf_bytes(_PARTIAL_INVOICE_LINES))
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        repo = self._repo(secure_objects)
+
+        with pytest.raises(PurchaseInvoiceEvidenceInputError):
+            confirm_invoice_draft_from_evidence(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.RECEIVED,
+                evidence_id=record.evidence_id,
+                counterparty_name="Acme Suministros SL",
+                # No override for supplier_tax_id / invoice_number, which the
+                # partial layout does not carry either.
+                settings=isolated_settings,
+                invoice_repository=repo,
+            )
+        # Nothing was written on the refused attempt.
+        assert len(InvoiceCatalogueRepository(objects=secure_objects).load()) == 0
+
+    def test_confirm_rejects_an_invalid_counterparty_tax_id_override(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        pdf_path = tmp_path / "factura.pdf"
+        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        repo = self._repo(secure_objects)
+
+        # The counterparty tax-id checksum is enforced by a pydantic
+        # ``model_validator(mode="before")`` on ``Invoice`` itself, so an
+        # override that fails the AEAT checksum surfaces as a pydantic
+        # ``ValidationError`` (not the domain ``InvoiceValidationError``,
+        # which governs post-construction invariants such as duplicate
+        # identity) -- either way, an invalid override refuses rather than
+        # silently minting a malformed invoice.
+        with pytest.raises((InvoiceValidationError, ValidationError)):
+            confirm_invoice_draft_from_evidence(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.RECEIVED,
+                evidence_id=record.evidence_id,
+                counterparty_name="Acme Suministros SL",
+                counterparty_tax_id="not-a-real-nif",
+                settings=isolated_settings,
+                invoice_repository=repo,
+            )
+        # Nothing was written on the refused attempt.
+        assert len(InvoiceCatalogueRepository(objects=secure_objects).load()) == 0
+
+    def test_confirm_never_writes_a_file(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+        tmp_path_factory: pytest.TempPathFactory,
+    ) -> None:
+        """The evidence bytes are re-read into memory only; nothing lands on disk."""
+        pdf_path = tmp_path / "factura.pdf"
+        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        repo = self._repo(secure_objects)
+
+        empty_dir = tmp_path_factory.mktemp("no-write-expected-confirm")
+        confirm_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            evidence_id=record.evidence_id,
+            counterparty_name="Acme Suministros SL",
+            settings=isolated_settings,
+            invoice_repository=repo,
         )
 
         assert list(empty_dir.iterdir()) == []
