@@ -15,8 +15,10 @@ The disposition-suppression case is covered by ``test_export_completeness_sets``
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -92,7 +94,12 @@ _DORMANCY_MODELOS = [
 
 @pytest.mark.parametrize(("modelo", "build_draft_fn", "headers_fn", "filing_year", "period"), _COVERED)
 def test_complete_draft_reaches_disk_for_every_required_casilla(
-    modelo: str, build_draft_fn, headers_fn, filing_year, period, tmp_path: Path
+    modelo: str,
+    build_draft_fn: Callable[[], Any],
+    headers_fn: Callable[[], dict[str, str]],
+    filing_year: int | None,
+    period: str | None,
+    tmp_path: Path,
 ) -> None:
     provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
     draft = build_draft_fn()
@@ -124,7 +131,12 @@ def test_complete_draft_reaches_disk_for_every_required_casilla(
 
 @pytest.mark.parametrize(("modelo", "build_draft_fn", "headers_fn", "filing_year", "period"), _COVERED)
 def test_complete_draft_exports_without_panic(
-    modelo: str, build_draft_fn, headers_fn, filing_year, period, tmp_path: Path
+    modelo: str,
+    build_draft_fn: Callable[[], Any],
+    headers_fn: Callable[[], dict[str, str]],
+    filing_year: int | None,
+    period: str | None,
+    tmp_path: Path,
 ) -> None:
     provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
     draft = build_draft_fn()
@@ -160,7 +172,7 @@ def test_no_manifest_casilla_is_representable_only_via_binding_rows(modelo: str,
         for field in record.fields
         if field.kind == CasillaFieldKind.CASILLA and field.casilla_id is not None
     }
-    row_field_ids: set = set()
+    row_field_ids: set[str] = set()
     for record in layout.records:
         row_field_ids.update(record.row_field_casilla_ids.values())
 
@@ -174,7 +186,11 @@ def test_no_manifest_casilla_is_representable_only_via_binding_rows(modelo: str,
 
 @pytest.mark.parametrize(("modelo", "build_draft_fn", "headers_fn", "filing_year", "period"), _COVERED)
 def test_structural_fidelity_holds_for_every_covered_modelo(
-    modelo: str, build_draft_fn, headers_fn, filing_year, period
+    modelo: str,
+    build_draft_fn: Callable[[], Any],
+    headers_fn: Callable[[], dict[str, str]],
+    filing_year: int | None,
+    period: str | None
 ) -> None:
     # The parity gate asserts more than casilla presence: the rendered casilla
     # numbering/segmento must mirror the registry CasillaDefinition, and the

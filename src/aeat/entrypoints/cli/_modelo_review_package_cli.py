@@ -54,6 +54,7 @@ from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     CounterSignedReceipt,
+    FeedbackCounterSignatureInvalidError,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloCalculationRevisionSelectorNotFoundError,
@@ -75,19 +76,24 @@ from ...application.modelo import (
     RecipientReplayGuardRepository,
     ReviewPackageCounterSigningError,
     ReviewPackageError,
+    ReviewPackageFeedbackError,
     ReviewPackageIntegrityError,
     ReviewPackageRevisionStateError,
     ReviewPackageSigningError,
     SignedReviewPackage,
     WorkUnitNotFoundError,
+    build_feedback_package,
     build_review_package,
     counter_sign_review_package,
     decrypt_review_package_for_recipient,
+    emit_collab_feedback_countersign_attached_event,
+    encrypt_feedback_package_for_originator,
     encrypt_review_package_for_recipient,
     ensure_recipient_encryption_keypair,
     ensure_review_package_signing_keypair,
     export_modelo_revision,
     get_work_unit,
+    import_feedback_package,
     resolve_modelo_revision_for_operator_target,
     review_package_signing_public_key,
     sign_review_package,
@@ -109,7 +115,9 @@ from ._modelo_review_package_payloads import (
     ModeloReviewPackageBuildResult,
     ModeloReviewPackageCounterSignResult,
     ModeloReviewPackageDecryptResult,
+    ModeloReviewPackageEncryptFeedbackResult,
     ModeloReviewPackageEncryptForRecipientResult,
+    ModeloReviewPackageImportFeedbackResult,
     ModeloReviewPackageSignResult,
     ModeloReviewPackageVerifyReceiptResult,
     ModeloReviewPackageVerifyResult,
@@ -1016,6 +1024,304 @@ def review_package_decrypt(
         f"review_only\t{decrypted.review_only}",
     ]
     _emit_envelope(ctx, command="modelo.review_package.decrypt", result=result, lines=lines)
+
+
+@review_package_app.command(
+    "encrypt-feedback",
+    help=tr(
+        "cli.app.modelo.review_package.encrypt_feedback_help",
+        default=(
+            "Seal a recipient's review feedback (a note, optionally a counter-signed "
+            "receipt) back to the originator so only the originator's private key can "
+            "open it, and write the envelope to --output. Local-only; never contacts AEAT."
+        ),
+    ),
+)
+def review_package_encrypt_feedback(
+    ctx: typer.Context,
+    originator_id: Annotated[
+        str,
+        typer.Option(
+            "--originator",
+            help=tr(
+                "cli.app.modelo.review_package.originator_id_help",
+                default=(
+                    "Registered originator id whose public key seals the feedback "
+                    "(see `aeat config collab recipient add`)."
+                ),
+            ),
+        ),
+    ],
+    work_unit_id: Annotated[
+        str,
+        typer.Option(
+            "--work-unit-id",
+            help=tr(
+                "cli.app.modelo.review_package.feedback_work_unit_id_help",
+                default="Work unit id the feedback concerns (from the reviewed package descriptor).",
+            ),
+        ),
+    ],
+    calculation_revision_id: Annotated[
+        str,
+        typer.Option(
+            "--calculation-revision-id",
+            help=tr(
+                "cli.app.modelo.review_package.feedback_revision_id_help",
+                default="Calculation revision id the feedback concerns (from the reviewed package descriptor).",
+            ),
+        ),
+    ],
+    submitted_by: Annotated[
+        str,
+        typer.Option(
+            "--by",
+            help=tr(
+                "cli.app.modelo.review_package.feedback_submitted_by_help",
+                default="The reviewer's actor label (e.g. the accountant's display name).",
+            ),
+        ),
+    ],
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            help=tr(
+                "cli.app.modelo.review_package.feedback_output_help",
+                default="Path to write the originator-encrypted feedback envelope JSON to.",
+            ),
+        ),
+    ],
+    note: Annotated[
+        str,
+        typer.Option(
+            "--note",
+            help=tr(
+                "cli.app.modelo.review_package.feedback_note_help",
+                default="Free-text verdict or note (e.g. `reviewed, no changes`).",
+            ),
+        ),
+    ] = "",
+    receipt: Annotated[
+        Path | None,
+        typer.Option(
+            "--receipt",
+            help=tr(
+                "cli.app.modelo.review_package.feedback_receipt_help",
+                default="Optional counter-signed receipt JSON (from `counter-sign`) to bundle as a formal sign-off.",
+            ),
+        ),
+    ] = None,
+    bucket_id: Annotated[
+        str | None,
+        typer.Option("--bucket-id", help=_BUCKET_ID_HELP),
+    ] = None,
+) -> None:
+    """Seal review feedback back to the originator's registered public key."""
+    from ._modelo_cli_support import bad_parameter_from_error
+
+    resolved_bucket_id = _resolve_signing_bucket_id(bucket_id)
+    registry = RecipientFingerprintRegistryRepository(bucket_id=resolved_bucket_id)
+    try:
+        originator = registry.get(originator_id)
+    except RecipientNotRegisteredError as exc:
+        raise bad_parameter_from_error(exc) from exc
+
+    counter_signed_receipt: CounterSignedReceipt | None = None
+    if receipt is not None:
+        if not receipt.exists():
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.review_package.errors.receipt_not_found",
+                    receipt_path=str(receipt),
+                    default="Counter-signed receipt not found at {receipt_path}.",
+                ),
+            )
+        try:
+            counter_signed_receipt = CounterSignedReceipt.model_validate_json(
+                receipt.read_text(encoding="utf-8"),
+            )
+        except ValueError as exc:
+            raise bad_parameter_from_error(ReviewPackageCounterSigningError(str(exc))) from exc
+
+    try:
+        feedback = build_feedback_package(
+            bucket_id=originator.recipient_id,
+            work_unit_id=work_unit_id,
+            calculation_revision_id=calculation_revision_id,
+            note=note,
+            counter_signed_receipt=counter_signed_receipt,
+            submitted_by=submitted_by,
+        )
+        envelope = encrypt_feedback_package_for_originator(
+            feedback,
+            originator_public_key_hex=originator.public_key_hex,
+        )
+    except (ReviewPackageFeedbackError, RecipientEncryptionError) as exc:
+        raise bad_parameter_from_error(exc) from exc
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+
+    result = ModeloReviewPackageEncryptFeedbackResult(
+        output_path=str(output),
+        originator_id=originator_id,
+        originator_public_key_hex=originator.public_key_hex,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=calculation_revision_id,
+        has_counter_sign=counter_signed_receipt is not None,
+        issued_at=envelope.issued_at.isoformat(),
+        valid_until=envelope.valid_until.isoformat() if envelope.valid_until is not None else None,
+    )
+    lines = [
+        "operation\tmodelo.review_package.encrypt_feedback",
+        f"output_path\t{output}",
+        f"originator_id\t{originator_id}",
+        f"work_unit_id\t{work_unit_id}",
+        f"calculation_revision_id\t{calculation_revision_id}",
+        f"has_counter_sign\t{counter_signed_receipt is not None}",
+    ]
+    _emit_envelope(ctx, command="modelo.review_package.encrypt_feedback", result=result, lines=lines)
+
+
+@review_package_app.command(
+    "import-feedback",
+    help=tr(
+        "cli.app.modelo.review_package.import_feedback_help",
+        default=(
+            "Open a feedback envelope with this bucket's X25519 keypair, verify any "
+            "counter-signed receipt against your locally-held review package, and attach "
+            "the verified countersignature to your approval journal. Local-only; never contacts AEAT."
+        ),
+    ),
+)
+def review_package_import_feedback(
+    ctx: typer.Context,
+    envelope_path: Annotated[
+        Path,
+        typer.Argument(
+            help=tr(
+                "cli.app.modelo.review_package.feedback_envelope_path_help",
+                default="Path to the originator-encrypted feedback envelope JSON produced by `encrypt-feedback`.",
+            ),
+        ),
+    ],
+    package: Annotated[
+        Path,
+        typer.Option(
+            "--package",
+            help=tr(
+                "cli.app.modelo.review_package.feedback_package_help",
+                default=(
+                    "Path to your locally-held original review package ZIP a "
+                    "counter-signed receipt is verified against."
+                ),
+            ),
+        ),
+    ],
+    operator_public_key_hex: Annotated[
+        str,
+        typer.Option(
+            "--operator-public-key",
+            help=tr(
+                "cli.app.modelo.review_package.feedback_operator_public_key_help",
+                default="Your own Ed25519 signing public key the original signature must verify against.",
+            ),
+        ),
+    ],
+    counter_signer_public_key_hex: Annotated[
+        str | None,
+        typer.Option(
+            "--counter-signer-public-key",
+            help=tr(
+                "cli.app.modelo.review_package.feedback_counter_signer_public_key_help",
+                default=(
+                    "The reviewer's Ed25519 signing public key the counter-signature "
+                    "must verify against (required when the feedback carries a receipt)."
+                ),
+            ),
+        ),
+    ] = None,
+    bucket_id: Annotated[
+        str | None,
+        typer.Option("--bucket-id", help=_BUCKET_ID_HELP),
+    ] = None,
+) -> None:
+    """Import, verify, and journal a recipient's feedback package."""
+    from ._modelo_cli_support import bad_parameter_from_error
+
+    if not envelope_path.exists():
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.review_package.errors.feedback_envelope_not_found",
+                envelope_path=str(envelope_path),
+                default="Feedback envelope not found at {envelope_path}.",
+            ),
+        )
+    if not package.exists():
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.review_package.errors.package_not_found",
+                package_path=str(package),
+                default="Review package not found at {package_path}.",
+            ),
+        )
+
+    try:
+        envelope = RecipientEncryptedPackage.model_validate_json(envelope_path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise bad_parameter_from_error(RecipientEncryptionError(str(exc))) from exc
+
+    resolved_bucket_id = _resolve_signing_bucket_id(bucket_id)
+
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+
+    repository = secure_object_repository_for_bucket(resolved_bucket_id)
+    keypair = ensure_recipient_encryption_keypair(bucket_id=resolved_bucket_id, repository=repository)
+
+    try:
+        imported = import_feedback_package(
+            envelope,
+            originator_private_key=keypair.private_key(),
+            reviewed_package_path=package,
+            operator_public_key_hex=operator_public_key_hex,
+            counter_signer_public_key_hex=counter_signer_public_key_hex,
+        )
+    except (RecipientDecryptionError, ReviewPackageFeedbackError, FeedbackCounterSignatureInvalidError) as exc:
+        raise bad_parameter_from_error(exc) from exc
+
+    attached = False
+    if imported.counter_signature_verified:
+        from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+
+        emit_collab_feedback_countersign_attached_event(
+            imported,
+            bucket_id=resolved_bucket_id,
+            repository=BucketEventHistoryRepository(objects=repository),
+        )
+        attached = True
+
+    result = ModeloReviewPackageImportFeedbackResult(
+        envelope_path=str(envelope_path),
+        bucket_id=resolved_bucket_id,
+        work_unit_id=imported.feedback.work_unit_id,
+        calculation_revision_id=imported.feedback.calculation_revision_id,
+        note=imported.feedback.note,
+        submitted_by=imported.feedback.submitted_by,
+        counter_signature_verified=imported.counter_signature_verified,
+        attached_to_journal=attached,
+    )
+    lines = [
+        "operation\tmodelo.review_package.import_feedback",
+        f"envelope_path\t{envelope_path}",
+        f"bucket\t{resolved_bucket_id}",
+        f"work_unit_id\t{imported.feedback.work_unit_id}",
+        f"calculation_revision_id\t{imported.feedback.calculation_revision_id}",
+        f"submitted_by\t{imported.feedback.submitted_by}",
+        f"counter_signature_verified\t{imported.counter_signature_verified}",
+        f"attached_to_journal\t{attached}",
+    ]
+    _emit_envelope(ctx, command="modelo.review_package.import_feedback", result=result, lines=lines)
 
 
 def _resolve_optional_cli_period(*, year: int | None, period: str | None) -> Period | None:

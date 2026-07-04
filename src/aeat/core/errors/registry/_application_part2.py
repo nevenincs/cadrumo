@@ -909,4 +909,26 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.modelo._review_package_feedback.ReviewPackageFeedbackError",
+        ErrorCode(
+            code="ERROR_MODELO_REVIEW_PACKAGE_FEEDBACK",
+            category=ErrorCategory.ERROR,
+            message_key="application.modelo.errors.review_package_generic",
+            default_suggestion="aeat app modelo review-package build --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._review_package_feedback.FeedbackCounterSignatureInvalidError",
+        ErrorCode(
+            code="REFUSED_MODELO_REVIEW_PACKAGE_FEEDBACK_COUNTERSIGN_INVALID",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.review_package_generic",
+            default_suggestion="aeat app modelo review-package verify-receipt --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

@@ -64,9 +64,25 @@ if TYPE_CHECKING:
     from ...core.config import Settings
     from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
-    from ._expedientes import ExpedientesCapture, ExpedientesService
-    from ._notifications import NotificationsService
-    from ._verify import VerifyService, VerifySurface, VerifyVerdict
+    from ._expedientes import (
+        ExpedientesCapture,
+        ExpedientesService,
+        PersistedExpedientesSnapshot,
+        expedientes_snapshot_object_key,
+    )
+    from ._notifications import (
+        NotificationsService,
+        PersistedNotificationsSnapshot,
+        notifications_snapshot_object_key,
+    )
+    from ._verify import (
+        VerifyObservation,
+        VerifyObservationRepository,
+        VerifyService,
+        VerifySurface,
+        VerifyVerdict,
+        verify_observation_object_key,
+    )
 
 from ...adapters.outbound.aeat.sede import Declaracion as _Declaracion
 from ...adapters.outbound.aeat.sede import open_declarations_register as _open_declarations_register

@@ -11,6 +11,7 @@ from ....application.user_profile import profile_storage_session
 from ....core import Period, resolve_active_bucket_id
 from ....core.time import now
 from ....domain.modelos import (
+    ModeloCode,
     WorkUnit,
     derive_work_unit_id,
     upsert_work_unit,
@@ -55,7 +56,7 @@ def _create_historical_work_unit(
     unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
-        modelo=modelo,
+        modelo=ModeloCode(modelo),
         filing_year=year,
         period=work_period,
         revision_id=revision_id,
@@ -93,7 +94,23 @@ def _seed_historical_m130_m303_work() -> dict[tuple[str, int, str], str]:
 
 
 def _entries_by_target(entries: list[dict[str, object]]) -> dict[tuple[str, int, str], dict[str, object]]:
-    return {(str(entry["modelo"]), int(entry["filing_year"]), str(entry["period"])): entry for entry in entries}
+    result: dict[tuple[str, int, str], dict[str, object]] = {}
+    for entry in entries:
+        modelo = entry.get("modelo")
+        filing_year = entry.get("filing_year")
+        period = entry.get("period")
+        if isinstance(modelo, str) and isinstance(filing_year, int) and isinstance(period, str):
+            result[(modelo, filing_year, period)] = entry
+    return result
+
+
+def _get_nested_dict_value(obj: object, key: str) -> dict[str, object] | None:
+    """Safely access a nested dict value from an object-typed dict."""
+    if isinstance(obj, dict):
+        value = obj.get(key)
+        if isinstance(value, dict):
+            return value
+    return None
 
 
 def test_calendar_surfaces_created_historical_m130_m303_work_units(_isolated_cli_backend: Path) -> None:
@@ -203,7 +220,9 @@ def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late(
     assert entry["local_work_unit_id"] == work_unit_id
     assert entry["status"] == "FILED"
     assert entry["user_state"] == "filed"
-    assert entry["filing_evidence"]["local_filing_state"] == "ready_to_file"
-    assert entry["filing_evidence"]["local_filing_record_id"] == _CURRENT_FILING_RECORD_ID
-    assert entry["filing_evidence"]["local_calculation_revision_id"] == _FILED_CALCULATION_REVISION_ID
-    assert entry["filing_evidence"]["aeat_submission_state"] == "not_observed"
+    filing_evidence = _get_nested_dict_value(entry, "filing_evidence")
+    assert filing_evidence is not None
+    assert filing_evidence.get("local_filing_state") == "ready_to_file"
+    assert filing_evidence.get("local_filing_record_id") == _CURRENT_FILING_RECORD_ID
+    assert filing_evidence.get("local_calculation_revision_id") == _FILED_CALCULATION_REVISION_ID
+    assert filing_evidence.get("aeat_submission_state") == "not_observed"

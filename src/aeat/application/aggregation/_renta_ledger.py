@@ -37,6 +37,7 @@ from ...core import Modelo, Period, PeriodKind
 from ...core.resources import resources
 from ...domain.calculations.registry import CasillaId
 from ...domain.categories import CategoryProfile, SpendingCategory
+from ...domain.contribuyente import CCAA
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
 from ...domain.renta import (
@@ -49,6 +50,8 @@ from ...domain.renta import (
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
     normalize_spending_category,
+    resolve_region_category_profiles,
+    select_deductibility_profile,
 )
 from ...domain.transactions import (
     BusinessClassification,
@@ -107,6 +110,7 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     AMOUNT_MISMATCH = "amount_mismatch"
     INVALID_LEDGER_FACT = "invalid_ledger_fact"
     INELIGIBLE_DEDUCTIBILITY = "ineligible_deductibility"
+    REGION_UNDECLARED_FOR_OVERRIDE = "region_undeclared_for_override"
 
 
 class RentaLedgerAggregationIssue(BaseModel):
@@ -238,6 +242,8 @@ def aggregate_renta_ledger_expenses(
     usage_ratios: Mapping[SpendingCategory, Decimal] | None = None,
     activity_key: str = "default",
     modelo: str = Modelo.M100.value,
+    residence_ccaa: CCAA | None = None,
+    region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations.
 
@@ -254,6 +260,12 @@ def aggregate_renta_ledger_expenses(
             observations' provenance; defaults to ``"default"``.
         modelo: Modelo identifier (``"100"`` IRPF or ``"130"`` pagos
             fraccionados) selecting the per-modelo deductibility rules.
+        residence_ccaa: Optional ordinary residence comunidad autonoma, used only
+            to select a territorial-regime deductibility override; inert while the
+            override layer is empty and general expense deductibility is state law.
+        region_category_overrides: Optional per-:class:`CCAA` category-profile
+            override layer; defaults to :func:`resolve_region_category_profiles`
+            (empty) so every fact falls through to the state year profile.
 
     Returns a :class:`RentaLedgerExpenseAggregation` containing the accepted
     observations, exclusion issues, and binding-ready casilla totals.
@@ -261,9 +273,15 @@ def aggregate_renta_ledger_expenses(
     resolved_period = _resolve_annual_period(period)
     resolved_profile_year = profile_year if profile_year is not None else resolved_period.year
     profiles = resources().category_profiles.get(resolved_profile_year)
+    region_overrides = (
+        region_category_overrides
+        if region_category_overrides is not None
+        else resolve_region_category_profiles(resolved_profile_year)
+    )
     context = RentaDeductibilityContext(
         profile_year=resolved_profile_year,
         usage_ratios=dict(usage_ratios or {}),
+        residence_ccaa=residence_ccaa,
     )
     observations: list[RentaDeductibleExpenseObservation] = []
     issues: list[RentaLedgerAggregationIssue] = []
@@ -282,6 +300,7 @@ def aggregate_renta_ledger_expenses(
             resolved_period=resolved_period,
             resolved_profile_year=resolved_profile_year,
             profiles=profiles,
+            region_overrides=region_overrides,
             context=context,
             activity_key=activity_key,
         )
@@ -309,6 +328,7 @@ def _classify_renta_transaction(
     resolved_period: Period,
     resolved_profile_year: int,
     profiles: Mapping[SpendingCategory, CategoryProfile],
+    region_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]],
     context: RentaDeductibilityContext,
     activity_key: str,
 ) -> RentaDeductibleExpenseObservation | RentaLedgerAggregationIssue:
@@ -404,6 +424,26 @@ def _classify_renta_transaction(
             reason=RentaLedgerAggregationIssueReason.MISSING_CATEGORY_PROFILE,
             detail=f"category {category.value!r} has no profile for {resolved_profile_year}",
         )
+    category_region_overrides = {
+        ccaa: overrides[category] for ccaa, overrides in region_overrides.items() if category in overrides
+    }
+    selected_profile = select_deductibility_profile(
+        state_profile=profile,
+        region_override_profiles=category_region_overrides,
+        context=context,
+    )
+    if selected_profile is None:
+        return RentaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+            category_id=category_id,
+            reason=RentaLedgerAggregationIssueReason.REGION_UNDECLARED_FOR_OVERRIDE,
+            detail=(
+                f"category {category.value!r} carries a territorial-regime deductibility override for "
+                f"{resolved_profile_year} but the residence comunidad autonoma is undeclared"
+            ),
+        )
+    profile = selected_profile
     evidence_payload = _purchase_invoice_evidence_payload(
         invoices=invoices,
         bucket_id=bucket_id,

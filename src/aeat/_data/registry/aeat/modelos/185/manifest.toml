@@ -1,0 +1,17 @@
+[modelo]
+id = "185"
+title = "Declaración informativa mensual de cotizaciones de afiliados y mutualistas"
+official_name = "Modelo 185. Declaración informativa mensual de cotizaciones de afiliados y mutualistas."
+tax_domain = "informative"
+cadence = "monthly"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-hac-1197-2025:art-1",
+    "orden-hac-1197-2025:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-185-procedure",
+    "enrolled-modelo-185-layout",
+]

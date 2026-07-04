@@ -71,7 +71,11 @@ from ....domain.transactions import (
 )
 from ....domain.usage_ratios import UsageRatioProfile
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import (
+    TestRuntimeProfile,
+    isolated_runtime_profile,
+    reset_secure_object_store,
+)
 from .. import ManualLedgerTransactionCommand, ManualLedgerTransactionResult, create_manual_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -129,6 +133,7 @@ __all__ = [
     "TransactionValidationError",
     "UsageRatioProfile",
     "_create_manual_row",
+    "_ledger_module_runtime",
     "_repositories",
     "archive_manual_transaction",
     "attach_manual_transaction_evidence",
@@ -154,10 +159,32 @@ __all__ = [
 ]
 
 
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+@pytest.fixture(scope="module")
+def _ledger_module_runtime(tmp_path_factory: pytest.TempPathFactory) -> Iterator[TestRuntimeProfile]:
+    """Provision the expensive bucket runtime once per test module (S804).
+
+    Hoisting the Argon2id KEK derivation, wrapped-DEK mint, session open, and
+    per-bucket engine/table create out of per-test scope is the S804 perf win.
+    Per-test isolation is restored by the function-scoped ``secure_objects``
+    fixture, which truncates the shared store before each test.
+    """
+    tmp_path = tmp_path_factory.mktemp("ledger-action-runtime")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
+        yield profile
+
+
+@pytest.fixture
+def secure_objects(_ledger_module_runtime: TestRuntimeProfile) -> Iterator[SecureObjectRepository]:
+    """Yield the module-shared repository over a per-test-reset secure-object store.
+
+    The costly bucket provisioning is paid once by ``_ledger_module_runtime``;
+    this fixture truncates the shared ``secure_objects`` table before each test so
+    per-test isolation holds without re-minting the bucket. The reset is
+    load-bearing: without it the module-shared store bleeds persisted rows across
+    tests and idempotency / anti-tautology assertions stop biting.
+    """
+    reset_secure_object_store(_ledger_module_runtime.repository)
+    yield _ledger_module_runtime.repository
 
 
 def _repositories(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID):

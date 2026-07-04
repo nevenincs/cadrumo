@@ -757,7 +757,7 @@ search_path = ["src", "stubs"]
 testpaths = ["src/aeat"]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
-addopts = "--tb=short -m 'unit' --strict-markers --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity"
+addopts = "-n auto --dist=loadfile --tb=short -m 'unit' --strict-markers --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity"
 asyncio_mode = "strict"
 markers = [
   "unit: deterministic tests with no external I/O",

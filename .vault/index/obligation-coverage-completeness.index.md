@@ -18,6 +18,7 @@ related:
   - '[[2026-06-30-obligation-coverage-completeness-P03-S10]]'
   - '[[2026-06-30-obligation-coverage-completeness-P03-S11]]'
   - '[[2026-06-30-obligation-coverage-completeness-P03-S12]]'
+  - '[[2026-06-30-obligation-coverage-completeness-P03-S13]]'
   - '[[2026-06-30-obligation-coverage-completeness-P03-S14]]'
   - '[[2026-06-30-obligation-coverage-completeness-P03-S15]]'
   - '[[2026-06-30-obligation-coverage-completeness-adr]]'
@@ -56,6 +57,7 @@ Auto-generated index of all documents tagged with `#obligation-coverage-complete
 - `2026-06-30-obligation-coverage-completeness-P03-S15` - Wire coverage onto the undeclared-profile path so it reconciles the full universe instead of returning empty.
 - `2026-06-30-obligation-coverage-completeness-P02-S06` - Author the Modelo 190 annual deadline window with legal grounding verified against the bundled corpus.
 - `2026-06-30-obligation-coverage-completeness-P02-S07` - Disposition the class-C window-but-no-seed modelos as seed rules or advisories.
+- `2026-06-30-obligation-coverage-completeness-P03-S13` - Ratchet UNMODELED_OBLIGATIONS toward AEATs full form set and promote each to a grounded registry definition.
 
 ### plan
 

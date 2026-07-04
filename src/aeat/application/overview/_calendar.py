@@ -102,6 +102,7 @@ from ._coverage import build_obligation_coverage
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
+    from ...domain.calculations.registry import DeadlineWindowDefinition
     from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
     from ..live import JustificanteCaptureSnapshot, PersistedExpedientesSnapshot, PersistedNotificationsSnapshot
@@ -169,7 +170,7 @@ def _work_unit_window_matches(unit: _WorkUnit, window: object) -> bool:
     return unit.period.registry_token == _ANNUAL_PERIOD_CODE and window_year == unit.filing_year + 1
 
 
-def _registry_window_for_work_unit(unit: _WorkUnit) -> object | None:
+def _registry_window_for_work_unit(unit: _WorkUnit) -> DeadlineWindowDefinition | None:
     """Return a registry deadline window for ``unit`` when one is bundled."""
     from ...core.resources import resources
     from ...domain.calculations.registry import RegistryError

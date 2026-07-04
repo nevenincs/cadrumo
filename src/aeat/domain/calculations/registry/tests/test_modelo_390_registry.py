@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -11,6 +12,7 @@ from .....core.resources import bundled_path
 from .. import (
     CasillaId,
     ModeloDefinition,
+    ModeloRevision,
     RegistryCatalogues,
     RegistryValidationError,
     RegistryValidator,
@@ -118,7 +120,7 @@ def _load_modelo_390() -> tuple[ModeloDefinition, RegistryCatalogues]:
     return _committed_modelo("390")
 
 
-def _replace_revision(modelo: ModeloDefinition, revision) -> ModeloDefinition:
+def _replace_revision(modelo: ModeloDefinition, revision: ModeloRevision) -> ModeloDefinition:
     return modelo.model_copy(
         update={
             "revisions": {
@@ -326,13 +328,15 @@ def test_modelo_390_declares_annual_compensation_result_fields() -> None:
     box_97_binding = bindings["modelo-390-prev-303-compensacion-ultimo-periodo"]
     box_662_binding = bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"]
     assert box_97_binding.source == "iva_compensation_annual_partition"
-    assert box_97_binding.selector.source_modelo == "303"
+    box_97_selector: Any = box_97_binding.selector
+    assert box_97_selector.source_modelo == "303"
     assert binding_source_casilla_ids(box_97_binding) == compensation_source_ids
-    assert box_97_binding.selector.partition_output == "last_period_amount"
+    assert box_97_selector.partition_output == "last_period_amount"
     assert box_662_binding.source == "iva_compensation_annual_partition"
-    assert box_662_binding.selector.source_modelo == "303"
+    box_662_selector: Any = box_662_binding.selector
+    assert box_662_selector.source_modelo == "303"
     assert binding_source_casilla_ids(box_662_binding) == compensation_source_ids
-    assert box_662_binding.selector.partition_output == "generated_not_in_last_amount"
+    assert box_662_selector.partition_output == "generated_not_in_last_amount"
     assert "modelo-390-rel-303-compensacion-ultimo-periodo" not in relations
     assert "modelo-390-rel-303-compensacion-generada-ejercicio-no-97" not in relations
 

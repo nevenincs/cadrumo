@@ -56,8 +56,31 @@ def _line_value(output: str, key: str) -> str:
 
 
 def _json_result(output: str) -> dict[str, object]:
-    envelope = json.loads(output)
-    return envelope["result"]
+    envelope: dict[str, object] = json.loads(output)
+    result = envelope["result"]
+    assert isinstance(result, dict), f"Expected dict, got {type(result)}"
+    return result
+
+
+def _get_list_value(payload: dict[str, object], key: str) -> list[object]:
+    """Safely extract a list value from a JSON payload dict."""
+    value = payload[key]
+    assert isinstance(value, list), f"Expected list for {key}, got {type(value)}"
+    return value
+
+
+def _get_dict_value(payload: dict[str, object], key: str) -> dict[str, object]:
+    """Safely extract a dict value from a JSON payload dict."""
+    value = payload[key]
+    assert isinstance(value, dict), f"Expected dict for {key}, got {type(value)}"
+    return value
+
+
+def _get_int_value(payload: dict[str, object], key: str) -> int:
+    """Safely extract an int value from a JSON payload dict."""
+    value = payload[key]
+    assert isinstance(value, int), f"Expected int for {key}, got {type(value)}"
+    return value
 
 
 def test_required_columns_cover_the_documented_row_shape() -> None:
@@ -90,23 +113,28 @@ def test_bulk_import_creates_one_invoice_per_valid_row(tmp_path: Path) -> None:
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = _json_result(result.output)
-    assert payload["rows"] == 3
-    assert payload["created"] == 3
-    assert payload["skipped_duplicate"] == 0
-    assert payload["refused"] == []
-    created_ids = payload["created_invoice_ids"]
+    assert _get_int_value(payload, "rows") == 3
+    assert _get_int_value(payload, "created") == 3
+    assert _get_int_value(payload, "skipped_duplicate") == 0
+    assert _get_list_value(payload, "refused") == []
+    created_ids = _get_list_value(payload, "created_invoice_ids")
     assert len(created_ids) == 3
-    assert all(len(invoice_id) == 64 for invoice_id in created_ids)
+    assert all(isinstance(id_val, str) and len(id_val) == 64 for id_val in created_ids)
 
     listed = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "invoice", "catalogue", "list", "--kind", "received"],
     )
     assert listed.exit_code == 0, listed.output
-    rows = _json_result(listed.output)["rows"]
-    numbers = {row["invoice_number"] for row in rows}
+    listed_payload = _json_result(listed.output)
+    rows = _get_list_value(listed_payload, "rows")
+    numbers = {row["invoice_number"] for row in rows if isinstance(row, dict) and "invoice_number" in row}
     assert {"2026-BULK-001", "2026-BULK-002", "2026-BULK-003"}.issubset(numbers)
-    exempt_row = next(row for row in rows if row["invoice_number"] == "2026-BULK-003")
-    assert exempt_row["iva_total"] == "0"
+    exempt_row = next(
+        (row for row in rows if isinstance(row, dict) and row.get("invoice_number") == "2026-BULK-003"),
+        None,
+    )
+    assert exempt_row is not None, "Expected to find row with invoice_number 2026-BULK-003"
+    assert exempt_row.get("iva_total") == "0"
 
 
 def test_bulk_import_reimport_of_identical_file_is_idempotent_no_op(tmp_path: Path) -> None:
@@ -126,8 +154,8 @@ def test_bulk_import_reimport_of_identical_file_is_idempotent_no_op(tmp_path: Pa
     )  # fmt: skip
     assert first.exit_code == 0, first.output
     first_payload = _json_result(first.output)
-    assert first_payload["created"] == 1
-    assert first_payload["skipped_duplicate"] == 0
+    assert _get_int_value(first_payload, "created") == 1
+    assert _get_int_value(first_payload, "skipped_duplicate") == 0
 
     second = invoke_cached_cli(
         [
@@ -138,16 +166,17 @@ def test_bulk_import_reimport_of_identical_file_is_idempotent_no_op(tmp_path: Pa
     )  # fmt: skip
     assert second.exit_code == 0, second.output
     second_payload = _json_result(second.output)
-    assert second_payload["rows"] == 1
-    assert second_payload["created"] == 0
-    assert second_payload["skipped_duplicate"] == 1
-    assert second_payload["refused"] == []
+    assert _get_int_value(second_payload, "rows") == 1
+    assert _get_int_value(second_payload, "created") == 0
+    assert _get_int_value(second_payload, "skipped_duplicate") == 1
+    assert _get_list_value(second_payload, "refused") == []
 
     listed = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "invoice", "catalogue", "list", "--kind", "received"],
     )
-    rows = _json_result(listed.output)["rows"]
-    matching = [row for row in rows if row["invoice_number"] == "2026-DUP-001"]
+    listed_payload = _json_result(listed.output)
+    rows = _get_list_value(listed_payload, "rows")
+    matching = [row for row in rows if isinstance(row, dict) and row.get("invoice_number") == "2026-DUP-001"]
     assert len(matching) == 1, "re-import must not duplicate the invoice record"
 
 
@@ -174,14 +203,22 @@ def test_bulk_import_refuses_malformed_row_with_row_number_and_field(tmp_path: P
     # per-row refusals.
     assert result.exit_code == 0, result.output
     payload = _json_result(result.output)
-    assert payload["rows"] == 3
-    assert payload["created"] == 1
-    refused = payload["refused"]
+    assert _get_int_value(payload, "rows") == 3
+    assert _get_int_value(payload, "created") == 1
+    refused = _get_list_value(payload, "refused")
     assert len(refused) == 2
-    bad_date_failure = next(f for f in refused if f["row_number"] == 3)
-    assert bad_date_failure["field"] == "invoice_date"
-    missing_nif_failure = next(f for f in refused if f["row_number"] == 4)
-    assert missing_nif_failure["field"] == "counterparty_nif"
+    bad_date_failure = next(
+        (f for f in refused if isinstance(f, dict) and f.get("row_number") == 3),
+        None,
+    )
+    assert bad_date_failure is not None, "Expected refusal with row_number 3"
+    assert bad_date_failure.get("field") == "invoice_date"
+    missing_nif_failure = next(
+        (f for f in refused if isinstance(f, dict) and f.get("row_number") == 4),
+        None,
+    )
+    assert missing_nif_failure is not None, "Expected refusal with row_number 4"
+    assert missing_nif_failure.get("field") == "counterparty_nif"
 
 
 def test_bulk_import_all_rows_refused_exits_nonzero_with_notice(tmp_path: Path) -> None:
@@ -200,9 +237,12 @@ def test_bulk_import_all_rows_refused_exits_nonzero_with_notice(tmp_path: Path) 
         ],
     )  # fmt: skip
     assert result.exit_code == 1, result.output
-    envelope = json.loads(result.output)
-    assert envelope["notices"], "all-refused import must carry a notice"
-    assert envelope["notices"][0]["severity"] == "warning"
+    envelope: dict[str, object] = json.loads(result.output)
+    notices = _get_list_value(envelope, "notices")
+    assert notices, "all-refused import must carry a notice"
+    first_notice = next((n for n in notices if isinstance(n, dict)), None)
+    assert first_notice is not None, "Expected at least one notice"
+    assert first_notice.get("severity") == "warning"
 
 
 def test_bulk_import_kind_issued_routes_to_collectible_invoices(tmp_path: Path) -> None:
@@ -222,19 +262,21 @@ def test_bulk_import_kind_issued_routes_to_collectible_invoices(tmp_path: Path) 
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = _json_result(result.output)
-    assert payload["created"] == 1
+    assert _get_int_value(payload, "created") == 1
 
     issued_listed = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "invoice", "catalogue", "list", "--kind", "issued"],
     )
-    issued_rows = _json_result(issued_listed.output)["rows"]
-    assert any(row["invoice_number"] == "2026-ISSUED-001" for row in issued_rows)
+    issued_payload = _json_result(issued_listed.output)
+    issued_rows = _get_list_value(issued_payload, "rows")
+    assert any(isinstance(row, dict) and row.get("invoice_number") == "2026-ISSUED-001" for row in issued_rows)
 
     received_listed = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "invoice", "catalogue", "list", "--kind", "received"],
     )
-    received_rows = _json_result(received_listed.output)["rows"]
-    assert not any(row["invoice_number"] == "2026-ISSUED-001" for row in received_rows)
+    received_payload = _json_result(received_listed.output)
+    received_rows = _get_list_value(received_payload, "rows")
+    assert not any(isinstance(row, dict) and row.get("invoice_number") == "2026-ISSUED-001" for row in received_rows)
 
 
 def test_bulk_import_file_not_found_refuses_cleanly(tmp_path: Path) -> None:
@@ -267,5 +309,6 @@ def test_bulk_import_unknown_column_is_refused(tmp_path: Path) -> None:
     listed = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "invoice", "catalogue", "list", "--kind", "received"],
     )
-    rows = _json_result(listed.output)["rows"]
-    assert not any(row["invoice_number"] == "2026-BOGUS-001" for row in rows)
+    listed_payload = _json_result(listed.output)
+    rows = _get_list_value(listed_payload, "rows")
+    assert not any(isinstance(row, dict) and row.get("invoice_number") == "2026-BOGUS-001" for row in rows)

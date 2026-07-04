@@ -288,7 +288,7 @@ class TestInvariants:
 
         with pytest.raises(ValidationError, match="held_at_year_end_count"):
             ForeignAssetClassRollup(
-                source_kind="ledger_transaction",
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                 asset_class=ForeignAssetClass.ACCOUNT,
                 assets_count=2,
                 held_at_year_end_count=99,
@@ -300,7 +300,7 @@ class TestInvariants:
         from pydantic import ValidationError
 
         row = ForeignAssetClassRollup(
-            source_kind="ledger_transaction",
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
             asset_class=ForeignAssetClass.ACCOUNT,
             assets_count=1,
             held_at_year_end_count=1,

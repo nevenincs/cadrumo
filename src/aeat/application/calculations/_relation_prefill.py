@@ -58,7 +58,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, TypedDict
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import BindingSourceKind, Modelo, Period
@@ -67,12 +67,17 @@ from ...core.parsing import parse_iso8601_date
 from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
+    CasillaId,
+    LegalRefId,
+    ModeloId,
     ModeloRevision,
     RegistryFoldRequirement,
     RegistryModeloObservation,
     RegistrySnapshot,
     RegistryValidationError,
+    RelationDefinition,
     RelationId,
+    SourceRefId,
     materialize_relation_binding_values,
     relation_source_requirements,
     resolve_observed_requirement_value,
@@ -172,10 +177,19 @@ def _provenance_note(
     )
 
 
+class _RelationGrounding(TypedDict):
+    """Registry relation source identity and grounding, keyed for ``RelationValue`` unpacking."""
+
+    source_modelo: ModeloId
+    source_casilla_ids: tuple[CasillaId, ...]
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
+
+
 def _relation_value_grounding(
-    relation: object,
+    relation: RelationDefinition,
     requirement: RegistryFoldRequirement | None,
-) -> dict[str, object]:
+) -> _RelationGrounding:
     """Project registry relation source identity and grounding onto a scalar relation value."""
     return {
         "source_modelo": requirement.source_modelo if requirement is not None else relation.source_modelo,
@@ -195,7 +209,7 @@ def _relation_provenance_ref(item: RelationValue) -> str:
     return f"{item.relation}:{source_modelo}:{source_year}:{source_periods}:{source_casillas}"
 
 
-def _relation_source_filing_year(relation: object, *, filing_year: int) -> int:
+def _relation_source_filing_year(relation: RelationDefinition, *, filing_year: int) -> int:
     selector = relation.source_revision_selector
     if selector.year is not None:
         return selector.year
@@ -225,22 +239,19 @@ def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     return record_to_path_values(aggregate.record)
 
 
-def _contains_profile_token(raw: object, token: str) -> bool | None:
-    """Return whether a profile projection value contains ``token``, or None if absent."""
+def _contains_profile_token(raw: str | None, token: str) -> bool | None:
+    """Return whether a profile projection value contains ``token``, or None if absent.
+
+    ``raw`` is a :func:`_profile_path_values_for_bucket` projection leaf, always a
+    plain ``str`` (the projection renders every fact value to text) or ``None``
+    when the fact is absent.
+    """
     if raw is None:
         return None
-    if isinstance(raw, str):
-        stripped = raw.strip()
-        if not stripped:
-            return None
-        return token in {item.strip() for item in stripped.replace(";", ",").split(",") if item.strip()}
-    try:
-        # TYPE-IGNORE-RATIONALE-PROFILE-TOKEN-CONTAINER: ``raw`` is an untyped
-        # profile projection value; a non-iterable raises TypeError, caught
-        # below, so the runtime is already defensive against the static escape.
-        return token in set(raw)  # type: ignore[arg-type]
-    except TypeError:
-        return False
+    stripped = raw.strip()
+    if not stripped:
+        return None
+    return token in {item.strip() for item in stripped.replace(";", ",").split(",") if item.strip()}
 
 
 def _pagos_fraccionados_not_applicable_source_modelos(bucket_id: str) -> frozenset[str]:
@@ -858,14 +869,14 @@ def _modelo_202_first_period_previous_payment_defaults(
     """Resolve M202 same-model previous-payment carries to zero before their first target period."""
     if modelo != Modelo.M202.value:
         return {}
-    relations_by_target: dict[BindingId, list] = {}
+    relations_by_target: dict[BindingId, list[RelationDefinition]] = {}
     for relation in revision.relations:
         relations_by_target.setdefault(relation.target_binding, []).append(relation)
     values: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
         if binding.source is not BindingSourceKind.RELATION_PREFILL:
             continue
-        relations = tuple(relations_by_target.get(binding.id, ()))
+        relations = tuple(relations_by_target.get(binding.id, []))
         if not relations:
             continue
         if any(not relation.target_periods or period in relation.target_periods for relation in relations):
