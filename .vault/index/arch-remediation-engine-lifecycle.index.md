@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-engine-lifecycle'
-date: '2026-07-02'
-modified: '2026-07-02'
+date: '2026-07-04'
+modified: '2026-07-04'
 related:
   - '[[2026-07-02-arch-remediation-engine-lifecycle-P01-S01]]'
   - '[[2026-07-02-arch-remediation-engine-lifecycle-P01-S02]]'
@@ -19,6 +19,7 @@ related:
   - '[[2026-07-02-arch-remediation-engine-lifecycle-P03-S11]]'
   - '[[2026-07-02-arch-remediation-engine-lifecycle-adr]]'
   - '[[2026-07-02-arch-remediation-engine-lifecycle-plan]]'
+  - '[[2026-07-04-arch-remediation-engine-lifecycle-audit]]'
 ---
 
 # `arch-remediation-engine-lifecycle` feature index
@@ -30,6 +31,10 @@ Auto-generated index of all documents tagged with `#arch-remediation-engine-life
 ### adr
 
 - `2026-07-02-arch-remediation-engine-lifecycle-adr` - `arch-remediation-engine-lifecycle` adr: `engine and bucket-session lifecycle unification` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-04-arch-remediation-engine-lifecycle-audit` - `arch-remediation-engine-lifecycle` audit: `campaign close honesty review`
 
 ### exec
 
