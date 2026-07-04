@@ -5,10 +5,15 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ....adapters.persistence.storage import SecureObjectRepository
+
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistryModeloObservation
@@ -105,7 +110,9 @@ def _workflow_profile() -> TaxpayerProfile:
     )
 
 
-def _seed_ready_profile(bucket_id: str, objects: object | None = None, *, modelo: str = "390") -> None:
+def _seed_ready_profile(
+    bucket_id: str, objects: SecureObjectRepository | None = None, *, modelo: str = "390"
+) -> None:
     is_legal_entity = modelo in {"200", "202", "353"}
     facts = [
         UserProfileFact(path="identity.tax_id", value="B12345674" if is_legal_entity else "X1234567L"),
@@ -145,7 +152,7 @@ def _seed_ready_profile(bucket_id: str, objects: object | None = None, *, modelo
     UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(record)
 
 
-def _seed_m100_profile_facts(bucket_id: str, objects: object) -> None:
+def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | None) -> None:
     record = UserProfileRecord(
         profile_id=bucket_id,
         display_name="Test runtime profile",
