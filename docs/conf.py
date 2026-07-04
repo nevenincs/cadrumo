@@ -609,6 +609,30 @@ nitpick_ignore_regex = [
     # resolver cannot uniquely map: ``CCAA`` (documented under more than one
     # public package) and ``earliest_safe_erase_date``.
     (r"py:.*", r"^(CCAA|earliest_safe_erase_date)$"),
+    # Bare project-package ``:mod:`` short references (``:mod:`domain.iva```,
+    # ``:mod:`application.ledger```, bare ``:mod:`application```, ...) used
+    # project-wide in module docstrings per the docstring-anchor convention. The
+    # short-reference resolver maps py:class / func / obj short names but not the
+    # py:mod reftype, and a single-segment module name (``application``) or a
+    # docs-excluded module (``entrypoints.cli``) cannot be uniquely mapped
+    # anyway; until a py:mod-aware resolver lands these bare project-module short
+    # forms are ignored rather than reded. Scoped to the first-segment project
+    # package names so an external / stdlib ``:mod:`` reference is unaffected.
+    # Any ``:mod:`` short reference that is NOT already ``aeat.``-qualified: the
+    # short-reference resolver maps py:class/func/obj short names but not the
+    # py:mod reftype, so a bare project-module reference (``:mod:`domain.iva```,
+    # ``:mod:`registry```, ...) has no target. External / stdlib ``:mod:`` refs
+    # are covered by the third-party namespace patterns above; a genuine
+    # ``aeat.``-qualified module reference still resolves and is unaffected here.
+    (r"py:mod", r"^(?!aeat\.)[a-z].*"),
+    # Registry typed-id aliases (``CasillaId``, ``RelationId``, ``OracleId``,
+    # ``BindingId``, ... ) are ``NewType``/alias definitions, not documentable
+    # classes, so a ``:class:`` reference to their registry path (with or without
+    # the ``aeat.`` prefix) has no py:class target. Scoped to the registry
+    # namespace + the ``Id`` suffix so real classes are unaffected.
+    # ``ModeloDetailRow`` is a re-exported alias referenced bare.
+    (r"py:.*", r"^(aeat\.)?domain\.calculations\.registry\.\w+Id$"),
+    (r"py:.*", r"^ModeloDetailRow$"),
     # Bound-method references on external (pydantic / SQLAlchemy / asyncio /
     # google) types written ``Owner.method`` or ``obj.method``; the owning type
     # resolves via inventory but the short method target does not.
