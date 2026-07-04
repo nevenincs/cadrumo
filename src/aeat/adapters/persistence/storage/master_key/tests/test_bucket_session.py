@@ -6,6 +6,7 @@ import ast
 import inspect
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -118,6 +119,22 @@ def test_touch_resets_idle_deadline() -> None:
     assert session.is_expired(past_window + timedelta(minutes=16)) is True
 
 
+class _KeyMaterialOverride(TypedDict, total=False):
+    """The subset of :func:`_open_session`'s kwargs this parametrize overrides.
+
+    A plain ``dict[str, bytes]`` cannot be ``**``-unpacked against
+    ``_open_session``'s heterogeneously-typed kwargs (``bucket_id: str``,
+    ``idle_minutes: int``, ``opened_at: datetime`` alongside ``kek``/``dek:
+    bytes``): the checker cannot prove the dict carries only the two
+    ``bytes``-typed keys. This ``TypedDict`` names exactly those two optional
+    keys so the ``**`` unpack matches per-key against ``_open_session``'s real
+    parameter types.
+    """
+
+    kek: bytes
+    dek: bytes
+
+
 @pytest.mark.parametrize(
     ("key_material", "message"),
     [
@@ -126,7 +143,7 @@ def test_touch_resets_idle_deadline() -> None:
     ],
     ids=("kek", "dek"),
 )
-def test_open_rejects_wrong_size_key_material(key_material: dict[str, bytes], message: str) -> None:
+def test_open_rejects_wrong_size_key_material(key_material: _KeyMaterialOverride, message: str) -> None:
     with pytest.raises(StorageValidationError, match=message) as exc_info:
         _open_session(**key_material)
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_validation"
