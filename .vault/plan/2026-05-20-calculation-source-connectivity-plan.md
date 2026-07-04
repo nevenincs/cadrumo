@@ -131,12 +131,12 @@ Prevent silent all-zero outputs by validating every registry source against reso
 
 Verify real operator flows and calculation provenance with repository-backed tests and approval-basis coverage.
 
-- [ ] `W04.P09.S49` - Include resolver fingerprints in approval basis; `src/aeat/application/filing/_review.py`.
-- [ ] `W04.P09.S50` - Persist source refs and fingerprints on calculation revisions; `src/aeat/domain/modelos/_calculation.py`.
-- [ ] `W04.P09.S51` - Emit bucket events with source mesh diagnostics and fingerprints; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W04.P09.S52` - Test approval staleness changes when invoice source data changes; `src/aeat/application/filing/test_source_mesh_review.py`.
-- [ ] `W04.P09.S53` - Test calculation revision roundtrip preserves source refs; `src/aeat/application/modelo/test_source_mesh_revision_roundtrip.py`.
-- [ ] `W04.P09.S54` - Run feature surface quality gate for source mesh touched files; `.agents/skills/feature-surface-gate/SKILL.md`.
+- [x] `W04.P09.S49` - Include resolver fingerprints in approval basis; `src/aeat/application/filing/_review.py`.
+- [x] `W04.P09.S50` - Persist source refs and fingerprints on calculation revisions; `src/aeat/domain/modelos/_calculation.py`.
+- [x] `W04.P09.S51` - Emit bucket events with source mesh diagnostics and fingerprints; `src/aeat/application/modelo/_actions.py`.
+- [x] `W04.P09.S52` - Test approval staleness changes when invoice source data changes; `src/aeat/application/filing/test_source_mesh_review.py`.
+- [x] `W04.P09.S53` - Test calculation revision roundtrip preserves source refs; `src/aeat/application/modelo/test_source_mesh_revision_roundtrip.py`.
+- [x] `W04.P09.S54` - Run feature surface quality gate for source mesh touched files; `.agents/skills/feature-surface-gate/SKILL.md`.
 
 ## Wave `W05` - continuous discovery hardening and review
 
@@ -149,6 +149,7 @@ Re-run source discovery during implementation and extend this plan whenever a re
 - [ ] `W05.P10.S55` - Re-run registry source inventory after each implementation wave; `src/aeat/_data/registry/aeat/modelos`.
 - [ ] `W05.P10.S56` - Extend plan rows for newly discovered unenrolled source surfaces; `.vault/plan/2026-05-20-calculation-source-connectivity-plan.md`.
 - [ ] `W05.P10.S57` - Document discovered source surfaces in execution records; `.vault/exec/2026-05-20-calculation-source-connectivity`.
+- [ ] `W05.P10.S62` - Follow-up: extend the approval-basis source fingerprint beyond the invoice catalogue to the remaining self-loadable mesh sources (profile, previous_filing, relations) without coupling the review layer to the full source mesh; `src/aeat/application/filing/_review.py`.
 
 ### Phase `W05.P11` - review audit and hardening
 
