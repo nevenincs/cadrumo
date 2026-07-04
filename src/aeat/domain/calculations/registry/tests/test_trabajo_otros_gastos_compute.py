@@ -30,6 +30,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from functools import lru_cache
 
 import pytest
 
@@ -68,6 +69,7 @@ def _evaluate(expression: FormulaExpression, values: Mapping[CasillaId, Decimal]
     )
 
 
+@lru_cache
 def _revision(year: str):
     modelo, _catalogues = _committed_modelo("100")
     return modelo.revisions[year]
@@ -82,25 +84,24 @@ def _formula_for_target(revision: ModeloRevision, target: str) -> FormulaDefinit
     return formula
 
 
-@pytest.mark.parametrize("year", _IN_SCOPE_REVISIONS)
-def test_casilla_0019_is_computed_and_grounded(year: str) -> None:
+def test_casilla_0019_is_computed_and_grounded() -> None:
     """0019 is a COMPUTED casilla wired to the art. 19.2.f otros-gastos formula."""
-    revision = _revision(year)
-    casilla = _casilla(revision, "0019")
-    assert casilla is not None, f"M100 {year} must declare casilla 0019"
-    assert casilla.input_kind == "computed", (
-        f"M100 {year} casilla 0019 must be computed (art. 19.2.f auto-apply), found {casilla.input_kind!r}"
-    )
-    assert casilla.formula == f"renta-{year}-trabajo-otros-gastos"
-    assert "ley-35-2006:art-19" in casilla.legal_refs
+    for year in _IN_SCOPE_REVISIONS:
+        revision = _revision(year)
+        casilla = _casilla(revision, "0019")
+        assert casilla is not None, f"M100 {year} must declare casilla 0019"
+        assert casilla.input_kind == "computed", (
+            f"M100 {year} casilla 0019 must be computed (art. 19.2.f auto-apply), found {casilla.input_kind!r}"
+        )
+        assert casilla.formula == f"renta-{year}-trabajo-otros-gastos", year
+        assert "ley-35-2006:art-19" in casilla.legal_refs, year
 
-    formula = _formula_for_target(revision, "0019")
-    assert "ley-35-2006:art-19" in formula.legal_refs
-    assert formula.expression.op == "min", "0019 caps the EUR 2.000 at the rendimiento via min(...)"
+        formula = _formula_for_target(revision, "0019")
+        assert "ley-35-2006:art-19" in formula.legal_refs, year
+        assert formula.expression.op == "min", f"M100 {year} 0019 must cap via min(...)"
 
 
-@pytest.mark.parametrize("year", _IN_SCOPE_REVISIONS)
-def test_casilla_0019_auto_applies_the_2000_euro_otros_gastos(year: str) -> None:
+def test_casilla_0019_auto_applies_the_2000_euro_otros_gastos() -> None:
     """0019 = min(2.000, max(0, 0018)): the art. 19.2.f EUR 2.000 auto-apply.
 
     Expected values from LIRPF art. 19.2.f (the EUR 2.000 figure and its cap at
@@ -110,14 +111,14 @@ def test_casilla_0019_auto_applies_the_2000_euro_otros_gastos(year: str) -> None
     - rendimiento 0018 = 1.200 below 2.000       -> otros gastos = 1.200 (capped);
     - rendimiento 0018 = 0 (no trabajo income)   -> otros gastos = 0.
     """
-    expression = _formula_for_target(_revision(year), "0019").expression
-    assert _evaluate(expression, {"0018": Decimal("5000")}) == _ART_19_2F_OTROS_GASTOS_EUR
-    assert _evaluate(expression, {"0018": Decimal("1200")}) == Decimal("1200")
-    assert _evaluate(expression, {"0018": Decimal("0")}) == Decimal("0")
+    for year in _IN_SCOPE_REVISIONS:
+        expression = _formula_for_target(_revision(year), "0019").expression
+        assert _evaluate(expression, {"0018": Decimal("5000")}) == _ART_19_2F_OTROS_GASTOS_EUR, year
+        assert _evaluate(expression, {"0018": Decimal("1200")}) == Decimal("1200"), year
+        assert _evaluate(expression, {"0018": Decimal("0")}) == Decimal("0"), year
 
 
-@pytest.mark.parametrize("year", _IN_SCOPE_REVISIONS)
-def test_casilla_0022_clamps_net_and_enforces_letter_f_cap(year: str) -> None:
+def test_casilla_0022_clamps_net_and_enforces_letter_f_cap() -> None:
     """0022 = max(0, 0018 - 0019 - 0020 - 0021): clamp + art. 19.2.f letter-f cap.
 
     The letter-f cap ("los gastos deducibles ... tendrán como límite el
@@ -131,39 +132,40 @@ def test_casilla_0022_clamps_net_and_enforces_letter_f_cap(year: str) -> None:
       sum of otros gastos (6.000) exceeds the rendimiento, so the letter-f cap
       floors the net at 0 (pre-clamp this drove the net to -1.000).
     """
-    expression = _formula_for_target(_revision(year), "0022").expression
-    assert expression.op == "max", "0022 must clamp the net rendimiento at zero"
+    for year in _IN_SCOPE_REVISIONS:
+        expression = _formula_for_target(_revision(year), "0022").expression
+        assert expression.op == "max", f"M100 {year} 0022 must clamp the net rendimiento at zero"
 
-    base = {
-        "0018": Decimal("5000"),
-        "0019": Decimal("2000"),
-        "0020": Decimal("0"),
-        "0021": Decimal("0"),
-    }
-    assert _evaluate(expression, base) == Decimal("3000")
+        base = {
+            "0018": Decimal("5000"),
+            "0019": Decimal("2000"),
+            "0020": Decimal("0"),
+            "0021": Decimal("0"),
+        }
+        assert _evaluate(expression, base) == Decimal("3000"), year
 
-    over_entered = {
-        "0018": Decimal("5000"),
-        "0019": Decimal("2000"),
-        "0020": Decimal("4000"),
-        "0021": Decimal("0"),
-    }
-    assert _evaluate(expression, over_entered) == Decimal("0")
+        over_entered = {
+            "0018": Decimal("5000"),
+            "0019": Decimal("2000"),
+            "0020": Decimal("4000"),
+            "0021": Decimal("0"),
+        }
+        assert _evaluate(expression, over_entered) == Decimal("0"), year
 
 
-@pytest.mark.parametrize("year", _IN_SCOPE_REVISIONS)
-def test_otros_gastos_feeds_net_end_to_end(year: str) -> None:
+def test_otros_gastos_feeds_net_end_to_end() -> None:
     """Composing 0019 then 0022 reproduces the AEAT auto-apply chain.
 
     A contribuyente with rendimiento íntegro minorado 0018 = 5.000 who enters no
     otros-gastos value still receives the automatic EUR 2.000 (0019) and a net
     rendimiento of 3.000 (0022) — the over-taxation core of issue #568.
     """
-    revision = _revision(year)
-    otros = _formula_for_target(revision, "0019").expression
-    neto = _formula_for_target(revision, "0022").expression
+    for year in _IN_SCOPE_REVISIONS:
+        revision = _revision(year)
+        otros = _formula_for_target(revision, "0019").expression
+        neto = _formula_for_target(revision, "0022").expression
 
-    values: dict[CasillaId, Decimal] = {"0018": Decimal("5000"), "0020": Decimal("0"), "0021": Decimal("0")}
-    values["0019"] = _evaluate(otros, values)
-    assert values["0019"] == _ART_19_2F_OTROS_GASTOS_EUR
-    assert _evaluate(neto, values) == Decimal("3000")
+        values: dict[CasillaId, Decimal] = {"0018": Decimal("5000"), "0020": Decimal("0"), "0021": Decimal("0")}
+        values["0019"] = _evaluate(otros, values)
+        assert values["0019"] == _ART_19_2F_OTROS_GASTOS_EUR, year
+        assert _evaluate(neto, values) == Decimal("3000"), year

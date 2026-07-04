@@ -12,7 +12,6 @@ from ....core import BindingSourceKind, Period
 from ....core.errors import get_registered_error_code
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    resolve_counterpart_binding_values,
     resolve_foreign_asset_binding_row_values,
 )
 from ... import aggregation
@@ -48,8 +47,6 @@ from .._counterpart import (
     CounterpartSourceKind,
     OperationKind347,
     OperationKind349,
-    _m349_declarante_summary_union,
-    _registry_observations_from_counterpart_aggregation,
     aggregate_counterpart_349,
 )
 from .._foreign_assets import (
@@ -251,7 +248,7 @@ def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() 
     assert declarable_counterparty_nifs_347(result.aggregation) == frozenset({"B00000001"})
 
 
-def test_counterpart_m349_mesh_resolution_matches_prior_aggregate_exactly() -> None:
+def test_counterpart_m349_service_keeps_invoice_observations_outside_reserved_resolver_claim() -> None:
     observations = (
         _counterpart_obs(
             nif="DE123456789",
@@ -294,20 +291,16 @@ def test_counterpart_m349_mesh_resolution_matches_prior_aggregate_exactly() -> N
         period=_P_2025_Q1,
         revision=snapshot.revision,
     )
-    expected_values = resolve_counterpart_binding_values(
-        snapshot.revision,
-        _registry_observations_from_counterpart_aggregation(expected_aggregation),
-    )
-    expected_values = _m349_declarante_summary_union(context=context, binding_values=expected_values)
 
     resolution = CounterpartAggregationSourceResolver(observations=observations).resolve(context)
 
     assert service_result.aggregation == expected_aggregation
-    assert dict(resolution.binding_values) == expected_values
-    assert {item.source_ref for item in resolution.provenance} == {
-        "collectible_invoice:sale-de",
-        "payable_invoice:purchase-it",
-    }
+    assert resolution.owned_sources == (
+        BindingSourceKind.LEDGER_TRANSACTION,
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    )
+    assert resolution.binding_values == {}
+    assert resolution.provenance == ()
     assert resolution.source_transaction_ids == ()
 
 

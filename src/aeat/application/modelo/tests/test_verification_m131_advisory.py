@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from functools import lru_cache
 
 import pytest
 
@@ -23,8 +24,10 @@ _M131_ADVISORY_PREDICATE_IDS = {
     "2025": "modelo-131-2025-pago-fraccionado-determinado-cuando-rendimientos-positivos",
     "2026": "modelo-131-2026-pago-fraccionado-determinado-cuando-rendimientos-positivos",
 }
+_M131_REVISION_IDS = tuple(sorted(_M131_ADVISORY_PREDICATE_IDS))
 
 
+@lru_cache
 def _m131_advisory_predicate(revision_id: str) -> VerificationPredicateDefinition:
     """Load the shipped M131 silent-under-declaration advisory from the authority."""
     revision = resources().modelos.authority.validate_modelo("131").revisions[revision_id]
@@ -35,50 +38,50 @@ def _m131_advisory_predicate(revision_id: str) -> VerificationPredicateDefinitio
     return predicate
 
 
-@pytest.mark.parametrize("revision_id", sorted(_M131_ADVISORY_PREDICATE_IDS))
-def test_m131_advisory_ships_in_every_revision(revision_id: str) -> None:
+def test_m131_advisory_ships_in_every_revision() -> None:
     """Every M131 revision carries the C01->C02 silent-under-declaration advisory."""
-    predicate = _m131_advisory_predicate(revision_id)
-    assert "rd-439-2007:art-110" in tuple(str(r) for r in predicate.legal_refs)
+    for revision_id in _M131_REVISION_IDS:
+        predicate = _m131_advisory_predicate(revision_id)
+        assert "rd-439-2007:art-110" in tuple(str(r) for r in predicate.legal_refs), revision_id
 
 
-@pytest.mark.parametrize("revision_id", sorted(_M131_ADVISORY_PREDICATE_IDS))
-def test_m131_advisory_fires_when_rendimientos_positive_but_pago_zero(revision_id: str) -> None:
+def test_m131_advisory_fires_when_rendimientos_positive_but_pago_zero() -> None:
     """Positive C01 with zero C02 surfaces a warning advisory."""
-    predicate = _m131_advisory_predicate(revision_id)
-    casilla_values: dict[CasillaId, Decimal] = {
-        _CASILLA_01: Decimal("18000.00"),
-        _CASILLA_02: Decimal("0"),
-    }
+    for revision_id in _M131_REVISION_IDS:
+        predicate = _m131_advisory_predicate(revision_id)
+        casilla_values: dict[CasillaId, Decimal] = {
+            _CASILLA_01: Decimal("18000.00"),
+            _CASILLA_02: Decimal("0"),
+        }
 
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
 
-    assert len(findings) == 1
-    assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
-    assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
-    assert "rd-439-2007:art-110" in findings[0].legal_refs
+        assert len(findings) == 1, revision_id
+        assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY, revision_id
+        assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING, revision_id
+        assert "rd-439-2007:art-110" in findings[0].legal_refs, revision_id
 
 
-@pytest.mark.parametrize("revision_id", sorted(_M131_ADVISORY_PREDICATE_IDS))
-def test_m131_advisory_silent_when_pago_fraccionado_present(revision_id: str) -> None:
+def test_m131_advisory_silent_when_pago_fraccionado_present() -> None:
     """Positive C01 and positive C02 satisfy the implication."""
-    predicate = _m131_advisory_predicate(revision_id)
-    casilla_values: dict[CasillaId, Decimal] = {
-        _CASILLA_01: Decimal("18000.00"),
-        _CASILLA_02: Decimal("360.00"),
-    }
+    for revision_id in _M131_REVISION_IDS:
+        predicate = _m131_advisory_predicate(revision_id)
+        casilla_values: dict[CasillaId, Decimal] = {
+            _CASILLA_01: Decimal("18000.00"),
+            _CASILLA_02: Decimal("360.00"),
+        }
 
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
-    assert findings == []
+        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        assert findings == [], revision_id
 
 
-@pytest.mark.parametrize("revision_id", sorted(_M131_ADVISORY_PREDICATE_IDS))
-def test_m131_advisory_silent_when_no_datos_base_activity(revision_id: str) -> None:
+def test_m131_advisory_silent_when_no_datos_base_activity() -> None:
     """No datos-base rendimientos holds trivially."""
-    predicate = _m131_advisory_predicate(revision_id)
+    for revision_id in _M131_REVISION_IDS:
+        predicate = _m131_advisory_predicate(revision_id)
 
-    explicit_zero: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("0"), _CASILLA_02: Decimal("0")}
-    absent: dict[CasillaId, Decimal] = {}
+        explicit_zero: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("0"), _CASILLA_02: Decimal("0")}
+        absent: dict[CasillaId, Decimal] = {}
 
-    assert evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == []
-    assert evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == []
+        assert evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == [], revision_id
+        assert evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == [], revision_id

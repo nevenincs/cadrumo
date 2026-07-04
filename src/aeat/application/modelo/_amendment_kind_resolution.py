@@ -1,7 +1,7 @@
 """Period-aware amendment-kind resolution and the liability-increase guard.
 
 AEAT's amendment mechanism for a self-assessment changed over time (see
-:mod:`aeat.core._amendment_kind_regime` for the full grounding). Before the
+:mod:`core._amendment_kind_regime` for the full grounding). Before the
 ``autoliquidación rectificativa`` unification, a correction that raised the
 tax due filed as a ``complementaria`` (LGT art. 122.2) while a correction
 that lowered it required the separate ``solicitud de rectificación``
@@ -10,7 +10,7 @@ lower a taxpayer's own declared liability. This module is the single place
 that:
 
 * refuses an operator-requested
-  :class:`~aeat.domain.modelos.CalculationRevisionAmendmentKind` that the
+  :class:`~domain.modelos.CalculationRevisionAmendmentKind` that the
   resolved ``(modelo, period)`` does not legally permit, naming the accepted
   kind set in the refusal (never a bare "invalid" message); and
 * classifies, for a pre-rectificativa period, whether the requested
@@ -24,10 +24,10 @@ that:
 illegal kind can never reach the catalogue.
 
 See Also:
-    :func:`aeat.core.resolve_amendment_kind_regime`:
+    :func:`core.resolve_amendment_kind_regime`:
         Codified per-modelo, period-aware permitted-kind table this module
-        binds to :class:`~aeat.domain.modelos.CalculationRevisionAmendmentKind`.
-    :func:`aeat.application.modelo.amend_modelo_revision`:
+        binds to :class:`~domain.modelos.CalculationRevisionAmendmentKind`.
+    :func:`application.modelo.amend_modelo_revision`:
         The composition path that calls this module's guard before building
         the amendment revision.
 """
@@ -64,7 +64,7 @@ def assert_amendment_kind_permitted(
     """Refuse ``amendment_kind`` unless the resolved period legally permits it.
 
     Reads the codified regime from
-    :func:`~aeat.core.resolve_amendment_kind_regime` for ``modelo`` and
+    :func:`~core.resolve_amendment_kind_regime` for ``modelo`` and
     ``period`` and checks ``amendment_kind`` against the permitted set. A
     modelo with no codified rectificativa-adoption boundary (e.g. M130/M131,
     which carry no bundled rectificativa grounding) always resolves to the
@@ -104,17 +104,17 @@ def liability_direction_for_amendment(
     """Classify whether a correction increases, decreases, or leaves liability unchanged.
 
     Thin, typed wrapper over
-    :func:`~aeat.core.classify_amendment_liability_direction` for callers
+    :func:`~core.classify_amendment_liability_direction` for callers
     inside the modelo application layer. ``baseline_result`` and
     ``corrected_result`` are the modelo's signed final-result casilla value
     before and after the operator's overrides.
 
     The classification is load-bearing only for pre-rectificativa periods:
-    :attr:`~aeat.core.AmendmentLiabilityDirection.INCREASE` is
+    :attr:`~core.AmendmentLiabilityDirection.INCREASE` is
     ``complementaria`` territory (LGT art. 122.2); ``DECREASE`` is
     ``solicitud de rectificación`` territory (LGT art. 120.3) that a
     self-filed complementaria cannot lawfully carry — see
-    :func:`aeat.application.modelo.amend_modelo_revision`'s pre-rectificativa
+    :func:`application.modelo.amend_modelo_revision`'s pre-rectificativa
     complementaria-direction guard.
     """
     return AmendmentLiabilityDirection(
@@ -126,7 +126,7 @@ def _summed_result(modelo: str, casilla_values: Mapping[CasillaId, Decimal]) -> 
     """Sum the modelo's codified final-result casilla(s) from a casilla-value map.
 
     Returns ``None`` when the modelo has no codified result-disposition spec
-    (:func:`~aeat.core.result_disposition_casilla_ids`); callers must then skip
+    (:func:`~core.result_disposition_casilla_ids`); callers must then skip
     the liability-direction guard rather than compare against a fabricated
     zero baseline.
     """
@@ -147,11 +147,11 @@ def assert_complementaria_liability_direction_permitted(
     """Refuse a pre-rectificativa ``complementaria`` that decreases liability.
 
     Only load-bearing for a pre-rectificativa period (see
-    :func:`~aeat.core.resolve_amendment_kind_regime`): once rectificativa
+    :func:`~core.resolve_amendment_kind_regime`): once rectificativa
     applies, both directions route through the unified mechanism and this
     guard is a no-op. For a pre-rectificativa period requesting
     ``COMPLEMENTARIA``, sums the modelo's codified final-result casilla(s)
-    (:func:`~aeat.core.result_disposition_casilla_ids`) before and after the
+    (:func:`~core.result_disposition_casilla_ids`) before and after the
     operator's overrides and refuses when the correction lowers the declared
     liability — that correction is legally a ``solicitud de rectificación``
     (LGT art. 120.3), not a complementaria (LGT art. 122.2).

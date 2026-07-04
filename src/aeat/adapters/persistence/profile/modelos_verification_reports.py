@@ -2,14 +2,14 @@
 
 :class:`VerificationReportCatalogueRepository` persists and loads
 :class:`VerificationReport` entries in a :class:`VerificationReportCatalogue`
-via :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
-``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`. The
+via :class:`~adapters.persistence.storage.SecureObjectRepository` at
+``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass`. The
 catalogue is stored as a single encrypted BLOB per profile bucket, wrapped in
-:class:`~aeat.adapters.persistence.storage.Envelope` before serialisation.
+:class:`~adapters.persistence.storage.Envelope` before serialisation.
 
 This concrete repository is the persistence adapter behind the read-side
-:class:`~aeat.domain.modelos.VerificationReportCatalogueRepositoryProtocol`. It
-lives in the persistence adapter (not in :mod:`aeat.domain.modelos`) because its
+:class:`~domain.modelos.VerificationReportCatalogueRepositoryProtocol`. It
+lives in the persistence adapter (not in :mod:`domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`VerificationReportCatalogue` model and its pure mutators.
 """
@@ -41,10 +41,10 @@ class VerificationReportCatalogueRepository:
     """Repository over encrypted SQL-backed verification-report catalogue storage.
 
     The catalogue payload is wrapped in
-    :class:`~aeat.adapters.persistence.storage.Envelope` before
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.Envelope` before
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
     persists it; this class is the concrete load/save implementation behind
-    :class:`~aeat.domain.modelos.VerificationReportCatalogueRepositoryProtocol`.
+    :class:`~domain.modelos.VerificationReportCatalogueRepositoryProtocol`.
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:

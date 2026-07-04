@@ -2,15 +2,15 @@
 
 The helpers here keep the live Cl@ve Permanente form driver small: they
 classify the configured DNI/NIE identity (reusing the shared
-:func:`aeat.adapters.outbound.aeat.auth._clave_movil_support.classify_identity`
+:func:`adapters.outbound.aeat.auth._clave_movil_support.classify_identity`
 format check, since DNI/NIE shape validation is not Móvil-specific) and attach
 the closed :class:`ClavePermanenteFailureMode` taxonomy to provider errors.
 
 Cl@ve Permanente login failures are raised as the existing registered
 :class:`AuthConfigurationError` / :class:`AuthError` classes (carrying a
 ``failure_mode`` key in ``context``) rather than new dedicated subclasses.
-Every :class:`aeat.core.errors.AeatError` subclass requires a declared
-:class:`aeat.core.errors.ErrorCode` registry row with a locale-backed
+Every :class:`core.errors.AeatError` subclass requires a declared
+:class:`core.errors.ErrorCode` registry row with a locale-backed
 ``message_key``; reusing the already-registered Cl@ve Móvil-sibling base
 classes here avoids growing that registry (and its locale surface) as part of
 this slice. A future pass may promote dedicated

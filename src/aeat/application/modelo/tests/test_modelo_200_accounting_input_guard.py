@@ -230,6 +230,7 @@ def test_m200_refuses_business_ledger_rows_without_accounting_result_input(
     message = resolve_error_message(error)
     assert "does not derive accounting profit from ledger transactions yet" in message
     assert "3 business ledger row(s)" in message
+    assert error.context is not None
     assert error.context["required_casilla_id"] == _RESULTADO_CONTABLE
     assert error.context["ledger_transaction_count"] == 3
     assert error.suggestion is not None

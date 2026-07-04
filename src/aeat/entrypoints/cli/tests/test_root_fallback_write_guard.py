@@ -175,6 +175,10 @@ def _combined_output(result: subprocess.CompletedProcess[str]) -> str:
     return f"{result.stdout}\n{result.stderr}"
 
 
+def _case_output(args: tuple[str, ...], result: subprocess.CompletedProcess[str]) -> str:
+    return f"case={' '.join(args)}\n{_combined_output(result)}"
+
+
 def _assert_no_internal_import_leak(output: str) -> None:
     assert "Traceback" not in output
     assert "ImportError" not in output
@@ -182,44 +186,45 @@ def _assert_no_internal_import_leak(output: str) -> None:
     assert "_modelo_work_revision_cli" not in output
 
 
-@pytest.mark.parametrize("verb", _GUARDED_WRITE_VERBS, ids=lambda value: " ".join(value))
-def test_guarded_write_verbs_refuse_root_fallback_database(tmp_path: Path, verb: tuple[str, ...]) -> None:
+def test_guarded_write_verbs_refuse_root_fallback_database(tmp_path: Path) -> None:
     """Profile-bound write verbs refuse before writing to the root fallback database."""
 
-    result = _run_aeat(tmp_path, verb)
+    for verb in _GUARDED_WRITE_VERBS:
+        result = _run_aeat(tmp_path, verb)
 
-    assert result.returncode == 2, _combined_output(result)
-    output = _combined_output(result)
-    _assert_no_internal_import_leak(output)
-    assert "No active profile" in output
-    assert "profile create" in output
-    assert not (tmp_path / "aeat.db").exists()
+        output = _case_output(verb, result)
+        _assert_no_internal_import_leak(output)
+        assert result.returncode == 2, output
+        assert "No active profile" in output
+        assert "profile create" in output
+        assert not (tmp_path / "aeat.db").exists(), output
 
 
-@pytest.mark.parametrize("verb", _GUARDED_WRITE_VERBS, ids=lambda value: " ".join(value))
-def test_guarded_write_verbs_refuse_explicit_database_url(tmp_path: Path, verb: tuple[str, ...]) -> None:
+def test_guarded_write_verbs_refuse_explicit_database_url(tmp_path: Path) -> None:
     """Profile-bound write verbs refuse operator-supplied database URL routes."""
 
-    result = _run_aeat_explicit_database(tmp_path, verb)
+    for verb in _GUARDED_WRITE_VERBS:
+        result = _run_aeat_explicit_database(tmp_path, verb)
 
-    assert result.returncode == 2, _combined_output(result)
-    output = _combined_output(result)
-    _assert_no_internal_import_leak(output)
-    assert "Storage runtime is not ready" in output
-    assert "database route is not attached to an active profile bucket" in output
-    assert "AEAT_DATABASE_URL" in output
-    assert "AEAT_LOCAL_STORAGE_ROOT" in output
-    assert not (tmp_path / "explicit.db").exists()
+        output = _case_output(verb, result)
+        _assert_no_internal_import_leak(output)
+        assert result.returncode == 2, output
+        assert "Storage runtime is not ready" in output
+        assert "database route is not attached to an active profile bucket" in output
+        assert "AEAT_DATABASE_URL" in output
+        assert "AEAT_LOCAL_STORAGE_ROOT" in output
+        assert not (tmp_path / "explicit.db").exists(), output
 
 
-@pytest.mark.parametrize("verb", _BOOTSTRAP_SAFE_PROBES, ids=lambda value: " ".join(value))
-def test_bootstrap_safe_probes_still_run_on_root_fallback_database(tmp_path: Path, verb: tuple[str, ...]) -> None:
+def test_bootstrap_safe_probes_still_run_on_root_fallback_database(tmp_path: Path) -> None:
     """Help, repair object-integrity, and registry read probes remain available on a fresh root."""
 
-    result = _run_aeat(tmp_path, verb)
+    for verb in _BOOTSTRAP_SAFE_PROBES:
+        result = _run_aeat(tmp_path, verb)
 
-    assert result.returncode == 0, _combined_output(result)
-    assert "No active profile" not in _combined_output(result)
+        output = _case_output(verb, result)
+        assert result.returncode == 0, output
+        assert "No active profile" not in output
 
 
 def test_config_switch_remains_recovery_path_on_root_fallback_database(tmp_path: Path) -> None:
@@ -266,18 +271,18 @@ def test_stub_only_modelo_work_create_reaches_leaf_refusal_on_root_fallback_data
     assert not (tmp_path / "aeat.db").exists()
 
 
-@pytest.mark.parametrize("verb_path", _GUARDED_PREDICATE_PATHS)
-def test_root_fallback_guard_predicate_covers_profile_bound_mutations(verb_path: str) -> None:
+def test_root_fallback_guard_predicate_covers_profile_bound_mutations() -> None:
     """The central guard covers known mutation surfaces discovered during contract review."""
 
-    assert is_profile_bound_write_verb_path(verb_path)
+    for verb_path in _GUARDED_PREDICATE_PATHS:
+        assert is_profile_bound_write_verb_path(verb_path), verb_path
 
 
-@pytest.mark.parametrize("verb_path", _UNGARDED_PREDICATE_PATHS)
-def test_root_fallback_guard_predicate_leaves_read_and_recovery_paths_open(verb_path: str) -> None:
+def test_root_fallback_guard_predicate_leaves_read_and_recovery_paths_open() -> None:
     """The central guard does not capture read-only probes or profile-switch recovery."""
 
-    assert not is_profile_bound_write_verb_path(verb_path)
+    for verb_path in _UNGARDED_PREDICATE_PATHS:
+        assert not is_profile_bound_write_verb_path(verb_path), verb_path
 
 
 def test_cli_root_delegates_route_classification_to_backend_policy() -> None:

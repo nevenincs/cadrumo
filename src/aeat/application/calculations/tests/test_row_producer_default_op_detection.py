@@ -38,13 +38,15 @@ def _rows_default_detail_binding() -> DataBindingDefinition:
     detected as a row producer even though ``aggregation`` is ``None``.
     """
 
-    return DataBindingDefinition(
-        id="synthetic-detail-row",
-        source=BindingSourceKind.FOREIGN_ASSET,
-        selector={"fact": "row_field", "grouping": "per_foreign_asset", "row_field": "valuation_amount"},
-        aggregation=None,
-        legal_refs=("ley-7-2012:dt-18",),
-        source_refs=("aeat-modelo-720",),
+    return DataBindingDefinition.model_validate(
+        {
+            "id": "synthetic-detail-row",
+            "source": BindingSourceKind.FOREIGN_ASSET,
+            "selector": {"fact": "row_field", "grouping": "per_foreign_asset", "row_field": "valuation_amount"},
+            "aggregation": None,
+            "legal_refs": ("ley-7-2012:dt-18",),
+            "source_refs": ("aeat-modelo-720",),
+        },
     )
 
 
@@ -74,13 +76,15 @@ def test_row_field_lookup_detects_none_aggregation_rows_default_binding() -> Non
 
 def test_row_field_lookup_rejects_rows_binding_without_row_set_projection() -> None:
     revision = resources().modelos.get("720").revisions["2013-y-siguientes"]
-    malformed_row_binding = DataBindingDefinition(
-        id="synthetic-row-without-grouping",
-        source=BindingSourceKind.FOREIGN_ASSET,
-        selector={"fact": "row_field", "row_field": "valuation_amount"},
-        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
-        legal_refs=("ley-7-2012:dt-18",),
-        source_refs=("aeat-modelo-720",),
+    malformed_row_binding = DataBindingDefinition.model_validate(
+        {
+            "id": "synthetic-row-without-grouping",
+            "source": BindingSourceKind.FOREIGN_ASSET,
+            "selector": {"fact": "row_field", "row_field": "valuation_amount"},
+            "aggregation": BindingAggregation(op=BindingAggregationOp.ROWS),
+            "legal_refs": ("ley-7-2012:dt-18",),
+            "source_refs": ("aeat-modelo-720",),
+        },
     )
     revision_with_malformed_row = revision.model_copy(update={"bindings": (malformed_row_binding,)})
 

@@ -1,14 +1,14 @@
 """Remote-telemetry consent gate.
 
-Mirrors :func:`aeat.application.ledger.cloud_evidence_read_permitted`'s exact
+Mirrors :func:`application.ledger.cloud_evidence_read_permitted`'s exact
 shape (gestor-mode absolute bar, then the deployment opt-in flag, then the
 tier, then the per-invocation acknowledgement, all ANDed) so the codebase's
 off-host consent gates stay uniform
 (``sensitive-financial-data-secure-storage-only``,
 ``2026-07-04-remote-telemetry-adr``). Settings is imported lazily inside the
 function body to avoid the circular import that would result from
-``core.config`` importing :mod:`aeat.core.telemetry` for
-:class:`~aeat.core.telemetry.TelemetryTier` at module scope.
+``core.config`` importing :mod:`core.telemetry` for
+:class:`~core.telemetry.TelemetryTier` at module scope.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ def telemetry_emit_permitted(settings: Settings, *, acknowledged: bool) -> bool:
     4. The operator acknowledged this specific invocation
        (``acknowledged`` is ``True``). The acknowledgement is never sticky;
        it must be re-affirmed at every call site, mirroring
-       :func:`aeat.application.ledger.cloud_evidence_read_permitted`.
+       :func:`application.ledger.cloud_evidence_read_permitted`.
 
     Args:
         settings: Resolved deployment settings carrying the telemetry

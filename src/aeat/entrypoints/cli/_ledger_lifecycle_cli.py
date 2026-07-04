@@ -496,7 +496,7 @@ def ledger_pull_folder(
                         "'aeat app ledger attach --attachment-id ...'."
                     ),
                 ),
-                context={"folder_id": folder_id, "refused_count": refused_count},
+                context={"folder_id": folder_id, "refused_count": str(refused_count)},
             ),
         )
     _emit_envelope(

@@ -2,7 +2,7 @@
 
 :func:`emit_telemetry_event` is the ONLY function a producer calls to emit a
 remote-eligible telemetry event. It composes the consent gate
-(:func:`~aeat.core.telemetry.telemetry_emit_permitted`) with a pluggable
+(:func:`~core.telemetry.telemetry_emit_permitted`) with a pluggable
 :class:`TelemetrySink`; when the gate refuses, emission is a pure no-op --
 nothing is constructed, nothing is written, nothing is sent.
 
@@ -65,8 +65,8 @@ def emit_telemetry_event(
 
     Args:
         payload: The already-constructed, already-allowlisted
-            :class:`~aeat.core.telemetry.TelemetryEventPayload` (build it with
-            :func:`~aeat.core.telemetry.build_telemetry_payload` so its
+            :class:`~core.telemetry.TelemetryEventPayload` (build it with
+            :func:`~core.telemetry.build_telemetry_payload` so its
             counters/timings are schema-validated).
         settings: Resolved deployment settings.
         acknowledged: Whether the operator acknowledged remote telemetry for

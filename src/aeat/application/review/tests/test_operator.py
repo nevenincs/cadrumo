@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from ....core.config import Settings, override_settings
 from ....core.errors import resolve_error_message
 from ...user_profile import profile_create_storage_span
+from .. import ReviewSeverity, ReviewState
 from .._errors import ReviewError, ReviewKindReservedError
 from .._operator import ACCEPTED_KINDS, ReviewQueueRow, _resolve_internal_kinds, project_review_item
 
@@ -50,8 +51,8 @@ def test_review_queue_row_rejects_blank_legal_refs() -> None:
             bucket_id="b" * 32,
             modelo="303",
             period=None,
-            severity="high",
-            state="pending",
+            severity=ReviewSeverity.HIGH,
+            state=ReviewState.PENDING,
             blocking=True,
             current_owner_surface="app modelo",
             canonical_next_command="aeat app modelo work verify draft-abc",

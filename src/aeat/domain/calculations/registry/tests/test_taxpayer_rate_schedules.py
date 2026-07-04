@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from .....core.resources import bundled_path
-from .. import build_snapshot
+from .. import FormulaExpression, ParameterId, build_snapshot
 from .._binding_selector_utils import selector_as_dict
 from ._registry_schema_support import _committed_modelo
 
@@ -55,10 +57,10 @@ def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
     # From 2024/2025 the autonomic escala formula wraps its lookup_bracket_by_ccaa
     # operators in the LIRPF art. 64/75 anualidades separate-escala if_then_else
     # predicate (#532), so the dispatch table is no longer at the top level.
-    def _first_ccaa_dispatch_table(expression: object) -> dict | None:
-        if getattr(expression, "op", None) == "lookup_bracket_by_ccaa":
+    def _first_ccaa_dispatch_table(expression: FormulaExpression) -> Mapping[str, ParameterId] | None:
+        if expression.op == "lookup_bracket_by_ccaa":
             return expression.args[2].dispatch_table
-        for arg in getattr(expression, "args", ()) or ():
+        for arg in expression.args:
             found = _first_ccaa_dispatch_table(arg)
             if found is not None:
                 return found

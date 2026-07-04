@@ -494,28 +494,43 @@ def _expected_modulos_generales(
     temporada: Decimal = Decimal("0"),
     inicio_actividad: Decimal = Decimal("0"),
 ) -> Decimal:
-    """Reproduce the full Fase 3ª índices correctores generales cascade (b.1, b.2/b.4, b.3).
+    """Reproduce the full Fase 3ª índices correctores generales cascade.
 
     Independently transcribed from Orden HAC/1347/2024 Anexo II, instrucción
-    2.3's own enumeration order and incompatibilidades, not re-derived from
-    the ``m131_resolve_modulos_indices_generales`` op under test.
+    2.3's own literal enumeration order — "Los índices correctores se
+    aplicarán según el orden que aparecen enumerados a continuación" — b.1
+    (empresas de pequeña dimensión), THEN b.2 (temporada), THEN b.3 (exceso),
+    THEN b.4 (inicio de nuevas actividades), each applied on the rendimiento
+    LEFT BY THE PREVIOUS STEP. This helper is transcribed from the law's own
+    textual sequence, not re-derived from (or mirroring the intermediate
+    steps of) the ``m131_resolve_modulos_indices_generales`` op under test:
+    b.3's exceso threshold is a non-linear piecewise function of its input,
+    so applying b.4 before b.3 (as a prior defect in the op under test did)
+    yields a materially different, non-commutative result — this oracle
+    must reproduce the LAW's order exactly, not any convenient regrouping.
     """
     if minorado <= Decimal("0"):
         return minorado
     aplica_pequena_dimension = pequena_dimension > Decimal("0") and epigrafe not in _EPIGRAFES_INDICE_ESPECIAL
     rendimiento = minorado
+    # b.1) empresas de pequeña dimensión.
     if aplica_pequena_dimension:
         rendimiento = rendimiento * pequena_dimension
+        # b.1 excludes b.3 outright, and the Orden never reaches b.2/b.4 once
+        # b.1 applies.
+        return _money_round(rendimiento)
+    # b.2) temporada — applied BEFORE b.3.
     if temporada > Decimal("0"):
         rendimiento = rendimiento * temporada
-    elif inicio_actividad > Decimal("0"):
-        rendimiento = rendimiento * inicio_actividad
-    if aplica_pequena_dimension:
-        return _money_round(rendimiento)
+    # b.3) exceso — applied on the b.2-rectificado rendimiento.
     cuantia = _CUANTIA_EXCESO.get(epigrafe)
-    if cuantia is None or rendimiento <= cuantia:
-        return _money_round(rendimiento)
-    return _money_round(cuantia + _INDICE_EXCESO * (rendimiento - cuantia))
+    if cuantia is not None and rendimiento > cuantia:
+        rendimiento = cuantia + _INDICE_EXCESO * (rendimiento - cuantia)
+    # b.4) inicio de nuevas actividades — applied on the b.3-rectificado
+    # rendimiento, and only when b.2 (temporada) is absent (mutual exclusion).
+    if temporada <= Decimal("0") and inicio_actividad > Decimal("0"):
+        rendimiento = rendimiento * inicio_actividad
+    return _money_round(rendimiento)
 
 
 def _run_modulos_engine(
@@ -2248,6 +2263,42 @@ class TestModulosIndicesCorrectoresGenerales:
         _previo, minorado, modulos, _actividad = self._run_673_1(indice_inicio_actividad=Decimal("0.80"))
         expected = _expected_modulos_generales(minorado, epigrafe="673.1", inicio_actividad=Decimal("0.80"))
         assert modulos == expected
+
+    def test_inicio_actividad_after_exceso_regression_b1347_2024_orden_order(self) -> None:
+        """b.4 MUST be applied AFTER b.3 (exceso), never before — regression for the reversed-order defect.
+
+        Orden HAC/1347/2024 Anexo II, instrucción 2.3: "Los índices
+        correctores se aplicarán según el orden que aparecen enumerados a
+        continuación ... sobre el rendimiento neto minorado o, en su caso,
+        sobre el rectificado por aplicación de los mismos" — the literal
+        enumeration is b.1, b.2, b.3 (exceso), b.4 (inicio de nuevas
+        actividades). b.3's exceso threshold is a non-linear piecewise
+        function (identity below the tabled cuantía; ``cuantía + índice ×
+        exceso`` above), so grouping b.4 with b.2 ahead of b.3 (rather than
+        strictly sequencing b.1 -> b.2 -> b.3 -> b.4) yields a materially
+        different figure. This test uses the 673.1 Cafés y bares de categoría
+        especial base from the AEAT Manual práctico de Renta 2025 worked
+        example (Capítulo 8) — rendimiento neto minorado 41.368,57, cuantía de
+        exceso 30.586,03, índice de exceso 1,30 — with b.4 = 0,80 (primer año
+        de ejercicio de la actividad) declared alone (no b.2 temporada):
+
+        * Law-correct (b.3 THEN b.4): 30.586,03 + 1,30 × (41.368,57 -
+          30.586,03) = 44.603,33; 44.603,33 × 0,80 = 35.682,67 (money-2
+          rounded at the formula's output stage).
+        * Defect (b.4 THEN b.3, the reversed order this test guards against):
+          41.368,57 × 0,80 = 33.094,856 (below the 30.586,03 cuantía, so b.3
+          never fires) = 33.847,50 once erroneously re-run through b.3's
+          formula on the already-b.4-adjusted figure — a distinct, wrong
+          result this test would have passed under the reversed order.
+        """
+        _previo, minorado, modulos, _actividad = self._run_673_1(indice_inicio_actividad=Decimal("0.80"))
+        assert minorado == Decimal("41368.57")
+        expected = _expected_modulos_generales(minorado, epigrafe="673.1", inicio_actividad=Decimal("0.80"))
+        assert expected == Decimal("35682.67")
+        assert modulos == expected
+        # The reversed (defective) order would have produced 33.847,50 —
+        # confirm the engine does NOT reproduce that figure.
+        assert modulos != Decimal("33847.50")
 
     def test_temporada_and_inicio_actividad_declared_together_temporada_wins(self) -> None:
         """b.2 and b.4 are mutually exclusive; temporada (enumeration order) wins, inicio is ignored."""

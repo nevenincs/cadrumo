@@ -1,9 +1,9 @@
 """Telemetry-package error types.
 
 Declared alongside the schema/consent/emit modules per the project's
-error-taxonomy convention: every :class:`~aeat.core.errors.AeatError`
+error-taxonomy convention: every :class:`~core.errors.AeatError`
 subclass binds to a registered
-:class:`~aeat.core.errors.ErrorCode` row (``core/errors/registry/_core.py``).
+:class:`~core.errors.ErrorCode` row (``core/errors/registry/_core.py``).
 """
 
 from __future__ import annotations

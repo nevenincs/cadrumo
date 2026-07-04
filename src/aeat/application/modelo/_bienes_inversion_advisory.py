@@ -8,10 +8,10 @@ unmodelled, separately-deferred source
 ``2026-07-01-iva-complexity-hardening-scope-adr``). Per
 ``2026-07-01-iva-bienes-inversion-regularizacion-adr`` (Decision 2), the bounded
 first slice does not force-fit casilla 43 as a hard binding; instead it reads the
-profile-scoped :class:`~aeat.domain.bienes_inversion.BienesInversionIvaRegister`
+profile-scoped :class:`~domain.bienes_inversion.BienesInversionIvaRegister`
 and, when it holds capital goods in their LIVA art. 107 regularisation window for
 the filing year, surfaces a non-blocking
-:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` naming the
+:class:`~application.aggregation.CalculationSourceDiagnostic` naming the
 proposed casilla-43 value (or, absent the deferred definitive-percentage input,
 which goods are pending it) — never a silent blank
 (``no-silent-under-declaration``). Per ADR Decision 3, a good the register records
@@ -27,26 +27,26 @@ collector only inspects the register on those periods so a mid-year quarter does
 not raise noise for a compute that is not yet due.
 
 This module supplies the ``prorrata_definitiva_by_identifier`` mapping to
-:func:`~aeat.application.calculations.build_bienes_inversion_regularizacion_advisory`
+:func:`~application.calculations.build_bienes_inversion_regularizacion_advisory`
 as an empty mapping: the current-year definitive percentage is the deferred
 input the ADR names, so every in-window, non-disposed good is reported pending
 it until that source lands, rather than silently omitted. It likewise supplies no
 ``cuota_devengada_entrega_by_identifier`` to
-:func:`~aeat.application.calculations.build_bienes_inversion_transmision_advisory`,
+:func:`~application.calculations.build_bienes_inversion_transmision_advisory`,
 so the regla-1ª cap stays unapplied until the operator's own cuota devengada on
 the disposal is captured — the disposal figure itself is never withheld pending
 that cap.
 
 See Also:
-    :mod:`~aeat.application.modelo._calculation_diagnostics`:
+    :mod:`~application.modelo._calculation_diagnostics`:
         Post-calculation coordinator that calls this collector with the owning
         bucket id.
-    :mod:`~aeat.application.calculations._bienes_inversion_regularizacion`:
+    :mod:`~application.calculations._bienes_inversion_regularizacion`:
         Pure advisory-projection functions this collector wires to the register.
-    :mod:`~aeat.application.bienes_inversion`:
+    :mod:`~application.bienes_inversion`:
         Application-layer facade exposing the register repository this
         collector loads.
-    :mod:`~aeat.domain.bienes_inversion`:
+    :mod:`~domain.bienes_inversion`:
         Register records, the art-109 annual compute, and the art-110 disposal
         compute.
 """
@@ -82,12 +82,12 @@ def collect_bienes_inversion_regularizacion_diagnostics(
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return the bienes-de-inversión regularización advisories for one calculation.
 
-    Loads the active bucket's :class:`~aeat.domain.bienes_inversion.BienesInversionIvaRegister`
+    Loads the active bucket's :class:`~domain.bienes_inversion.BienesInversionIvaRegister`
     and projects it through both
-    :func:`~aeat.application.calculations.build_bienes_inversion_regularizacion_advisory`
+    :func:`~application.calculations.build_bienes_inversion_regularizacion_advisory`
     (the ordinary annual art-109 comparison, for in-window, non-disposed goods)
     and
-    :func:`~aeat.application.calculations.build_bienes_inversion_transmision_advisory`
+    :func:`~application.calculations.build_bienes_inversion_transmision_advisory`
     (the art-110 single disposal regularización, for a good disposed of during
     ``filing_year``) for ``filing_year``. Returns an empty tuple for every modelo
     other than Modelo 303, for a non-settlement period (the regularización is a

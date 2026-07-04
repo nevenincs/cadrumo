@@ -114,6 +114,7 @@ def test_sheet_evidence_rows_require_grounding() -> None:
             transaction_id="c" * 64,
             amount=Decimal("121.00"),
             currency="EUR",
+            legal_refs=(),
             source_refs=_SOURCE_REFS,
         )
 
@@ -123,6 +124,7 @@ def test_sheet_evidence_rows_require_grounding() -> None:
             value="140000.00",
             kind="casilla_input",
             legal_refs=_LEGAL_REFS,
+            source_refs=(),
         )
 
 

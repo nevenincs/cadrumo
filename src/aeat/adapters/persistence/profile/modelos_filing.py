@@ -2,14 +2,14 @@
 
 :class:`ModeloRecordCatalogueRepository` persists and loads
 :class:`ModeloRecord` entries in a :class:`ModeloRecordCatalogue` via
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
-``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
-using an :class:`~aeat.adapters.persistence.storage.Envelope` wrapper. The
+:class:`~adapters.persistence.storage.SecureObjectRepository` at
+``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass`
+using an :class:`~adapters.persistence.storage.Envelope` wrapper. The
 catalogue is stored as a single encrypted BLOB per profile bucket.
 
 This concrete repository is the persistence adapter behind the read-side
-:class:`~aeat.domain.modelos.ModeloRecordCatalogueRepositoryProtocol`. It lives
-in the persistence adapter (not in :mod:`aeat.domain.modelos`) because its
+:class:`~domain.modelos.ModeloRecordCatalogueRepositoryProtocol`. It lives
+in the persistence adapter (not in :mod:`domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`ModeloRecordCatalogue` model and its pure mutators.
 """
@@ -41,15 +41,15 @@ _FILING_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_filing_record_persistence
 class ModeloRecordCatalogueRepository:
     """Repository over encrypted SQL-backed filing-record catalogue storage.
 
-    :data:`aeat.adapters.persistence.storage.MODELO_FILING_RECORD_CATALOGUE_NAMESPACE`
+    :data:`adapters.persistence.storage.MODELO_FILING_RECORD_CATALOGUE_NAMESPACE`
     is the central namespace, schema-version, sensitivity, and singleton-key
     contract for the encrypted :class:`ModeloRecordCatalogue` row. The
     catalogue payload keeps member-scoped current/history lookups in the domain
     type, while this repository wraps it in
-    :class:`~aeat.adapters.persistence.storage.Envelope` and writes it through
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+    :class:`~adapters.persistence.storage.Envelope` and writes it through
+    :class:`~adapters.persistence.storage.SecureObjectRepository`.
     It exposes the concrete load/save implementation behind
-    :class:`~aeat.domain.modelos.ModeloRecordCatalogueRepositoryProtocol`.
+    :class:`~domain.modelos.ModeloRecordCatalogueRepositoryProtocol`.
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
@@ -75,7 +75,7 @@ class ModeloRecordCatalogueRepository:
         encrypted records from another's. Returns the resolved bucket
         identifier, or ``None`` when the repository was constructed against
         an injected
-        :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+        :class:`~adapters.persistence.storage.SecureObjectRepository`
         and no bucket id was supplied.
         """
         return self._bucket_id
@@ -175,7 +175,7 @@ class ModeloRecordCatalogueRepository:
         """Persist the filing-record catalogue as a single encrypted BLOB.
 
         Wraps ``catalogue`` in a ``FINANCIAL``-class
-        :class:`~aeat.adapters.persistence.storage.Envelope` stamped with the
+        :class:`~adapters.persistence.storage.Envelope` stamped with the
         current schema version and write timestamp, then writes it through the
         secure object store. The entire catalogue is rewritten as one encrypted
         object per bucket, replacing any prior catalogue for this bucket.
@@ -188,9 +188,9 @@ class ModeloRecordCatalogueRepository:
     def to_secure_object_write(self, catalogue: ModeloRecordCatalogue) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it.
 
-        The returned :class:`~aeat.adapters.persistence.storage.SecureObjectWrite`
-        carries the same :class:`~aeat.adapters.persistence.storage.Envelope`
-        and :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+        The returned :class:`~adapters.persistence.storage.SecureObjectWrite`
+        carries the same :class:`~adapters.persistence.storage.Envelope`
+        and :class:`~adapters.persistence.storage.SensitivityClass`
         classification that :meth:`save` would persist directly.
         """
         from ..storage import Envelope, SecureObjectWrite, SensitivityClass
@@ -220,7 +220,7 @@ class ModeloRecordCatalogueRepository:
         Args:
             catalogue: The :class:`ModeloRecordCatalogue` to persist.
             extra_writes: Additional
-                :class:`~aeat.adapters.persistence.storage.SecureObjectWrite`
+                :class:`~adapters.persistence.storage.SecureObjectWrite`
                 objects to commit atomically with the catalogue.
         """
         self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))

@@ -138,6 +138,7 @@ from ._revision_persistence import persist_calculation_revision
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import RegistrySnapshot
+    from ...domain.transactions import TransactionCatalogue
     from ..aggregation import (
         CalculationSourceDiagnostic,
         CalculationSourceResolution,
@@ -614,6 +615,58 @@ def calculate_modelo_revision_from_bucket_aggregation(
     ).revision
 
 
+class _MemoizedTransactionCatalogueRepository:
+    """Read-through cache over one :class:`TransactionCatalogueRepositoryProtocol` load.
+
+    The bucket-aggregation source mesh (:func:`_resolve_bucket_source_mesh`)
+    constructs up to five independent ledger resolvers
+    (``LedgerIvaAggregationSourceResolver``,
+    ``LedgerRentaExpenseAggregationSourceResolver``,
+    ``LedgerRentaIncomeAggregationSourceResolver``,
+    ``LedgerImpatriadoIncomeAggregationSourceResolver``,
+    ``LedgerRentaGastoAggregationSourceResolver``) against the SAME
+    transaction repository, and every enrolled resolver independently calls
+    :meth:`~TransactionCatalogueRepositoryProtocol.load` when its binding
+    source is declared on the target revision. At 30k-row ledger scale this
+    repeats a full per-row decrypt-and-validate scan (~0.3-0.4s) once per
+    enrolled resolver within a SINGLE calculate invocation — a real,
+    measured P95 contributor (issue #408) with no behavioural benefit, since
+    :class:`~aeat.domain.transactions.TransactionCatalogue` is frozen and the
+    mesh never writes between resolver calls.
+
+    This wrapper loads the underlying repository at most once per instance
+    and returns the identical frozen :class:`TransactionCatalogue` to every
+    caller. ``save`` is not memoized (it is never called during source-mesh
+    resolution; see the module docstring) and delegates straight through so
+    the wrapper stays a strict read-through cache, not a write cache.
+    """
+
+    __slots__ = ("_catalogue", "_repository")
+
+    def __init__(self, repository: TransactionCatalogueRepository) -> None:
+        self._repository = repository
+        self._catalogue: TransactionCatalogue | None = None
+
+    @property
+    def bucket_id(self) -> str:
+        """Return the wrapped repository's bound bucket id."""
+        return self._repository.bucket_id
+
+    def exists(self) -> bool:
+        """Delegate straight through; not memoized (cheap index-only read)."""
+        return self._repository.exists()
+
+    def load(self) -> TransactionCatalogue:
+        """Return the cached catalogue, loading it from storage at most once."""
+        if self._catalogue is None:
+            self._catalogue = self._repository.load()
+        return self._catalogue
+
+    def save(self, catalogue: TransactionCatalogue) -> None:
+        """Delegate to the wrapped repository; never called during mesh resolution."""
+        self._repository.save(catalogue)
+
+
 def _resolve_bucket_source_mesh(
     snapshot: RegistrySnapshot,
     work_unit: WorkUnit,
@@ -629,7 +682,16 @@ def _resolve_bucket_source_mesh(
     the result with the unhandled-binding-source advisories for any declared
     source with no enrolled resolver. Returns the merged
     :class:`~aeat.application.aggregation.CalculationSourceResolution`.
+
+    The transaction repository is wrapped in :class:`_MemoizedTransactionCatalogueRepository`
+    so every enrolled ledger resolver shares one ``load()`` of the bucket's
+    transaction catalogue instead of each resolver independently re-scanning
+    and re-decrypting it (see that class's docstring; issue #408).
     """
+    resolved_transaction_repository = transaction_repository or TransactionCatalogueRepository(
+        bucket_id=work_unit.bucket_id,
+    )
+    memoized_transaction_repository = _MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
     from ..aggregation import (
         CalculationSourceContext,
         CalculationSourceDiagnostic,
@@ -660,20 +722,22 @@ def _resolve_bucket_source_mesh(
     )
     source_resolution = merge_source_resolutions(
         (
-            LedgerIvaAggregationSourceResolver(transaction_repository=transaction_repository).resolve(context),
+            LedgerIvaAggregationSourceResolver(
+                transaction_repository=memoized_transaction_repository,
+            ).resolve(context),
             LedgerRentaExpenseAggregationSourceResolver(
-                transaction_repository=transaction_repository,
+                transaction_repository=memoized_transaction_repository,
                 invoice_repository=invoice_repository,
             ).resolve(context),
             # M130 actividad-económica income (ledger_renta_income_aggregation).
             LedgerRentaIncomeAggregationSourceResolver(
-                transaction_repository=transaction_repository,
+                transaction_repository=memoized_transaction_repository,
             ).resolve(context),
             # M130 deductible-expense / gasto into casilla 02
             # (ledger_renta_gasto_aggregation) — the OUTGOING sibling of the
             # income resolver, same cumulative quarterly window.
             LedgerRentaGastoAggregationSourceResolver(
-                transaction_repository=transaction_repository,
+                transaction_repository=memoized_transaction_repository,
             ).resolve(context),
             # M151 impatriado (Ley Beckham) Spanish-source base
             # (ledger_impatriado_income_aggregation): folds only ES-source income
@@ -681,7 +745,7 @@ def _resolve_bucket_source_mesh(
             # segregates every foreign / jurisdiction-unresolved row as a typed
             # BECKHAM_FOREIGN_SOURCE_SEGREGATED source diagnostic (art. 93.2 LIRPF).
             LedgerImpatriadoIncomeAggregationSourceResolver(
-                transaction_repository=transaction_repository,
+                transaction_repository=memoized_transaction_repository,
             ).resolve(context),
             # M369 OSS/IOSS (ledger_oss_aggregation).  The live path projects
             # OSS/IOSS-tagged issued invoices into validated ledger candidates;

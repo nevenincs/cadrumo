@@ -37,6 +37,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core.aggregation import RetencionClave
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -97,7 +98,7 @@ _CONSISTENT_WITHHOLDING_OBSERVATIONS: tuple[WithholdingObservation, ...] = (
         perceptor_tax_id="11111111H",
         perceptor_legal_name="Perceptor One",
         transaction_date=date(_FILING_YEAR, 3, 15),
-        clave="A",
+        clave=RetencionClave.A,
         percibido_dinerario=Decimal("25000.00"),
         retencion_practicada=Decimal("5750.00"),
     ),
@@ -106,7 +107,7 @@ _CONSISTENT_WITHHOLDING_OBSERVATIONS: tuple[WithholdingObservation, ...] = (
         perceptor_tax_id="22222222J",
         perceptor_legal_name="Perceptor Two",
         transaction_date=date(_FILING_YEAR, 6, 1),
-        clave="A",
+        clave=RetencionClave.A,
         percibido_dinerario=Decimal("15000.00"),
         percibido_especie=Decimal("5000.00"),
         retencion_practicada=Decimal("2800.00"),

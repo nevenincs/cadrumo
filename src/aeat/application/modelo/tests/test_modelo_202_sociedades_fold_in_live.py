@@ -511,7 +511,11 @@ def test_m202_2p_no_prior_filing_refuses_zero_draft_on_live_calculate(
             clock=_T1,
         )
 
-    assert set(exc_info.value.context["missing_bindings"]) == {
+    context = exc_info.value.context
+    assert context is not None
+    missing_bindings = context["missing_bindings"]
+    assert isinstance(missing_bindings, tuple)
+    assert set(missing_bindings) == {
         _M202_CUOTA_BASE_BINDING,
         _M202_PAGOS_ANTERIORES_BINDING,
     }

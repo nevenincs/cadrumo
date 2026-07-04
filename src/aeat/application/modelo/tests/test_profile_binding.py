@@ -219,12 +219,14 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> Non
 
 
 def _snapshot_with_decimal_profile_binding(snapshot: RegistrySnapshot) -> RegistrySnapshot:
-    binding = DataBindingDefinition(
-        id=_SYNTHETIC_DECIMAL_PROFILE_BINDING,
-        source=BindingSourceKind.PROFILE,
-        selector={"profile_key": "usage_ratios.business_ratio"},
-        legal_refs=snapshot.revision.legal_refs,
-        source_refs=snapshot.revision.source_refs,
+    binding = DataBindingDefinition.model_validate(
+        {
+            "id": _SYNTHETIC_DECIMAL_PROFILE_BINDING,
+            "source": BindingSourceKind.PROFILE,
+            "selector": {"profile_key": "usage_ratios.business_ratio"},
+            "legal_refs": snapshot.revision.legal_refs,
+            "source_refs": snapshot.revision.source_refs,
+        },
     )
     formula = FormulaDefinition(
         id="test-profile-business-ratio-decimal-formula",
@@ -317,12 +319,14 @@ def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistryS
     pattern: a yes/no profile fact consumed as a numeric 1/0 operand
     inside an ``if_then_else`` predicate on the Decimal channel.
     """
-    binding = DataBindingDefinition(
-        id=_SYNTHETIC_BOOL_PROFILE_BINDING,
-        source=BindingSourceKind.PROFILE,
-        selector={"profile_key": "entity.new_entity_override"},
-        legal_refs=snapshot.revision.legal_refs,
-        source_refs=snapshot.revision.source_refs,
+    binding = DataBindingDefinition.model_validate(
+        {
+            "id": _SYNTHETIC_BOOL_PROFILE_BINDING,
+            "source": BindingSourceKind.PROFILE,
+            "selector": {"profile_key": "entity.new_entity_override"},
+            "legal_refs": snapshot.revision.legal_refs,
+            "source_refs": snapshot.revision.source_refs,
+        },
     )
     formula = FormulaDefinition(
         id="test-profile-new-entity-bool-formula",

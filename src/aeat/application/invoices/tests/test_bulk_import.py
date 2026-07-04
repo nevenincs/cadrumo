@@ -14,6 +14,7 @@ from __future__ import annotations
 import io
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from openpyxl import Workbook
@@ -35,7 +36,7 @@ _BUCKET_ID = "29292929-2929-4292-8292-292929292929"
 _CIF = "A58818501"
 
 
-def _csv_rows(text: str) -> list[tuple[int, dict[str, object]]]:
+def _csv_rows(text: str) -> list[tuple[int, dict[str | Any, str | Any]]]:
     import csv as _csv
 
     reader = _csv.DictReader(io.StringIO(text))
@@ -132,6 +133,7 @@ def test_read_bulk_invoice_import_rows_reads_csv_and_xlsx_identically(tmp_path: 
     xlsx_path = tmp_path / "invoices.xlsx"
     workbook = Workbook()
     sheet = workbook.active
+    assert sheet is not None
     sheet.append(
         ["counterparty_nif", "counterparty_name", "invoice_number", "invoice_date", "taxable_base", "iva_rate"],
     )

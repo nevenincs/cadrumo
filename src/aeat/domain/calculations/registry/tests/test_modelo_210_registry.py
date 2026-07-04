@@ -156,8 +156,8 @@ def test_modelo_210_form_order_is_boe_corpus_backed() -> None:
 
     assert source.evidence_tier == "layout_authority"
     assert source.corpus_path == "corpus/normatives/html/orden-eha-3316-2010.html"
-    assert source.sha256 == "413352a4ff18d20aad32a88e422375598c16fdc9d98553fb6e0ee7b9be4559af"
-    assert source.bytes == 249463
+    assert source.sha256 == "c40939b99cd2091b924a78e0690977a0f7c1f82c734fb0275f1085234c91a21d"
+    assert source.bytes == 249282
     assert source.applies_from == date(2011, 1, 3)
     source_text = (bundled_path() / source.corpus_path).read_text(encoding="utf-8")
     assert "Última actualización publicada el 23/06/2026" in source_text
@@ -194,8 +194,8 @@ def test_modelo_210_2026_order_is_bundled_and_referenced_by_current_surfaces() -
     layout_2024_source = catalogues.sources["boe-modelo-210-2024-form-layout"]
 
     assert deadline_source.corpus_path == "corpus/normatives/html/orden-hac-623-2026.html"
-    assert deadline_source.sha256 == "6377e90dadde044d6872ad025171391275f18b88be67bd47f7ad64437725c56c"
-    assert deadline_source.bytes == 64700
+    assert deadline_source.sha256 == "b901936072eb6bd8213dd84e9bd493a65d10b652b3b62dbe42228e1094f38074"
+    assert deadline_source.bytes == 64566
     assert deadline_source.source_url == "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
     assert deadline_source.published_at == date(2026, 6, 23)
     assert deadline_source.applies_from == date(2026, 1, 1)
@@ -317,7 +317,7 @@ def test_modelo_210_imputed_real_estate_aeat_guidance_source_is_available() -> N
     source = catalogues.sources["aeat-irnr-renta-imputada-inmueble-urbano"]
     assert source.authority == "aeat"
     assert source.kind == "instructions"
-    assert source.sha256 == "9631d3b915c2bcc8223e72861d66cace55a16cdbb32ac175308807a88cce25ca"
+    assert source.sha256 == "a954f18028c83634641e2197b7ca67fc540686f0117bcae69fc96c51bc15ed83"
 
     source_text = (bundled_path() / source.corpus_path).read_text(encoding="utf-8")
     assert "base imponible" in source_text

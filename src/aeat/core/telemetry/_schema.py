@@ -7,7 +7,7 @@ string field wide enough to carry operator-controlled financial or identity
 content. A producer's counters and timings are validated against
 :data:`TELEMETRY_METRIC_REGISTRY` — a closed, code-authored mapping from
 command dotted-path to its declared metric keys — so an unregistered key
-raises :class:`~aeat.core.telemetry._errors.TelemetrySchemaError` rather than
+raises :class:`~core.telemetry._errors.TelemetrySchemaError` rather than
 silently passing through, and a registered-but-not-``remote_allowed`` key is
 silently dropped from the outgoing payload (it may still exist for local-only
 diagnostics; it is simply never remote-eligible).
@@ -196,7 +196,7 @@ command-invocation counts and duration, local-LLM-run counts and duration, and
 error-kind occurrence frequency. ``error_kind`` on :class:`TelemetryEventPayload`
 is always a short closed label (an exception class name such as
 ``"LLMClassifierError"``, mirroring
-:attr:`~aeat.adapters.outbound.llm.LLMRunRecord.error_kind`) -- never raw
+:attr:`~adapters.outbound.llm.LLMRunRecord.error_kind`) -- never raw
 exception text, a file path, a NIF, or any other operator-controlled content.
 No entry here declares a counter/timing keyed by anything financial, personal,
 or free-text; extending this registry with such a key is refused structurally

@@ -90,6 +90,12 @@ def test_installed_storage_root_derives_every_substrate_dir(tmp_path: Path) -> N
         settings.aeat_blob_store_dir,
         settings.aeat_audit_dir,
     ):
+        # aeat_log_dir is declared Optional (an explicit AEAT_LOG_DIR override
+        # could stay None), but this construction leaves it unset, so the
+        # `_resolve_log_dir_under_storage_root` validator always roots it - the
+        # assertion below is real test coverage of that resolution, not just a
+        # narrowing hack.
+        assert derived is not None
         assert root in derived.parents
         assert PROJECT_ROOT not in derived.parents
 
@@ -226,6 +232,10 @@ def test_fresh_install_settings_tree_never_lands_under_project_root(tmp_path: Pa
         settings.aeat_audit_dir,
     )
     for path in state_tree:
+        # aeat_log_dir is declared Optional, but this construction leaves it
+        # unset, so the resolution validator always roots it - see the same
+        # note in test_installed_storage_root_derives_every_substrate_dir above.
+        assert path is not None
         assert resolution.platform_user_data_root in path.parents or path == resolution.storage_root
         assert PROJECT_ROOT not in path.parents
         assert path != PROJECT_ROOT / "var" / "storage"

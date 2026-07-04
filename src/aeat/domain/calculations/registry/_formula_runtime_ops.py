@@ -35,6 +35,8 @@ from ._ids import CasillaId, validated_casilla_id
 from ._schema import DatedValue, ModeloRevision, ParameterDefinition
 
 if TYPE_CHECKING:
+    from _typeshed import SupportsAllComparisons
+
     from ._formula_runtime import _EvalContext
 
 _ZERO = Decimal("0")
@@ -318,7 +320,11 @@ def reject_non_string[Key](values: Mapping[Key, str], label: str) -> None:
             raise RegistryValidationError(f"{label} {key!r} must be a non-empty string")
 
 
-def reject_unknown_external_values[Key](items: Mapping[Key, Decimal], known_ids: set[Key], label: str) -> None:
+def reject_unknown_external_values[Key: SupportsAllComparisons](
+    items: Mapping[Key, Decimal],
+    known_ids: set[Key],
+    label: str,
+) -> None:
     """Reject external ids not declared by the current registry snapshot."""
     unknown = sorted(set(items).difference(known_ids))
     if unknown:

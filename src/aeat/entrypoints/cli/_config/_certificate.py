@@ -291,7 +291,7 @@ def certificate_check(
     active certificate provider, applied per named source rather than
     only the currently selected one. A source within the warning or
     critical renewal window surfaces a non-blocking warning
-    :class:`~aeat.core.json_contract.Notice` naming it, so a gestor
+    :class:`~core.json_contract.Notice` naming it, so a gestor
     managing several apoderado certificates gets a reminder for each one
     individually rather than only the active certificate.
     """

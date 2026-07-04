@@ -877,7 +877,12 @@ class ModeloScheduleDefinition(RegistryModel):
 class DataBindingDefinition(RegistryModel):
     id: BindingId
     source: BindingSourceKind
-    selector: BindingSelector
+    # Accepts a raw authoring mapping (the TOML shape, and the shape every
+    # constructor call site in the test suite passes) in addition to an
+    # already-typed selector model: ``_coerce_selector`` (a ``mode="before"``
+    # validator, below) hydrates either into the source-family model at
+    # construction, so the declared input type must cover both.
+    selector: BindingSelector | Mapping[str, object]
     aggregation: BindingAggregation | None = None
     typed_enum: BindingTypedEnumKind | None = None
     """Closed-set enum class name a consumer routes the binding value through.
