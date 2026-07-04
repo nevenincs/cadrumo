@@ -179,6 +179,7 @@ from ._review import (
     compute_current_approval_basis,
     compute_review_checksum,
     describe_stale_reason,
+    empty_prior_filing_observations_fingerprint,
     refresh_review_status,
     unapprove_draft,
 )
@@ -881,6 +882,7 @@ __all__ = [
     "compute_review_checksum",
     "derive_validation_status",
     "describe_stale_reason",
+    "empty_prior_filing_observations_fingerprint",
     "export_draft",
     "export_layout_renderability_reason",
     "filing_profile_from_taxpayer",

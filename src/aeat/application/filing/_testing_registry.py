@@ -32,7 +32,13 @@ from ...domain.filing import ModeloDraft, ModeloInputs
 from ...domain.invoices import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import TransactionCatalogue
-from . import ModeloBuilderError, approve_draft, build_draft, build_runtime_schema_provider
+from . import (
+    ModeloBuilderError,
+    approve_draft,
+    build_draft,
+    build_runtime_schema_provider,
+    empty_prior_filing_observations_fingerprint,
+)
 
 _REGISTRY_TEST_BUCKET_ID = "registry-test"
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
@@ -110,6 +116,7 @@ def build_registry_filing_draft(
             schema_provider=schema_provider,
             transaction_catalogue=TransactionCatalogue(),
             invoice_catalogue=InvoiceCatalogue(),
+            prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
         )
     return draft.model_copy(
         update={

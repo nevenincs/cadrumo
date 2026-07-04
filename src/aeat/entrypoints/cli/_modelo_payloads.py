@@ -65,6 +65,13 @@ from ._modelo_bindings_payloads import (
     ModeloBindingsPreviewResult,
 )
 from ._modelo_revision_payload_parts import DetailRowPayload, ObservationPayload, ResultSummaryRowPayload
+from ._modelo_support_matrix_payloads import (
+    ModeloPortalCompatibilityRefPayload,
+    ModeloRenamePayload,
+    ModeloSupportMatrixEntryPayload,
+    ModeloSupportMatrixResult,
+    ModeloSupportRemovalPayload,
+)
 from ._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
 from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
 from ._payloads_modelo_reconcile import (
@@ -1298,6 +1305,7 @@ __all__ = [
     "ModeloHistoryResult",
     "ModeloLifecycleEventPayload",
     "ModeloListResult",
+    "ModeloPortalCompatibilityRefPayload",
     "ModeloProjectResult",
     "ModeloReadinessMissingBindingPayload",
     "ModeloReadinessMissingRequirementPayload",
@@ -1307,8 +1315,12 @@ __all__ = [
     "ModeloRecordListResult",
     "ModeloRecordPayload",
     "ModeloRecordShowResult",
+    "ModeloRenamePayload",
     "ModeloRequiresResult",
     "ModeloRowPayload",
+    "ModeloSupportMatrixEntryPayload",
+    "ModeloSupportMatrixResult",
+    "ModeloSupportRemovalPayload",
     "ObservationPayload",
     "ResultSummaryRowPayload",
     "VerificationReportListResult",

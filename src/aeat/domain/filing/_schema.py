@@ -21,7 +21,7 @@ from ...core.identity import SubjectTaxId
 from ..calculations.registry import BindingId, CasillaId, FormulaId, LegalRefId, RegistrySnapshotRef, SourceRefId
 from ..submission import ModeloDraftStatus
 
-APPROVAL_BASIS_VERSION = "review-basis-v2"
+APPROVAL_BASIS_VERSION = "review-basis-v3"
 
 
 class ModeloValueKind(StrEnum):
@@ -152,6 +152,7 @@ class ModeloApprovalBasis(BaseModel):
     draft_review_fingerprint: str
     transaction_catalogue_fingerprint: str
     invoice_catalogue_fingerprint: str
+    prior_filing_observations_fingerprint: str
     category_profiles_fingerprint: str
     schema_formula_fingerprint: str
 
