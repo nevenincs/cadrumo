@@ -20,8 +20,8 @@ from ....application.ledger import (
 from ....core import BindingSourceKind, IntracomOperationType, Period
 from ....core.errors import AeatError, get_registered_error_code, resolve_error_message
 from ....core.external_constants import M347_THRESHOLD_EUR
-from ....core.resources import resources
-from ....domain.calculations.registry import RegistryValidationError
+from ....core.resources import bundled_path, resources
+from ....domain.calculations.registry import RegistryValidationError, load_modelo_directory
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.modelos import Modelo349CountryPrefixContextError
@@ -59,6 +59,11 @@ class TestInvoiceDirectionToSourceKind:
 
 _BUCKET_ID = "24242424-2424-4242-8242-242424242424"
 _OTHER_BUCKET_ID = "25252525-2525-4252-8252-252525252525"
+
+
+def _modelo_revision(modelo_id: str, revision_id: str):
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", modelo_id))
+    return modelo.revisions[revision_id]
 
 
 @pytest.fixture
@@ -288,7 +293,7 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         invoice_repository=InvoiceCatalogueRepository(objects=secure_profile.repository),
         business_invoice_repository=BusinessOperationInvoiceRepository(objects=secure_profile.repository),
     )
-    m347_snapshot = resources().modelos.authority.snapshot("347", filing_year=2025, period="0A")
+    m347_revision = _modelo_revision("347", "2008-y-siguientes")
 
     m347_resolution = resolver.resolve(
         CalculationSourceContext(
@@ -296,7 +301,7 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
             modelo="347",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
-            revision=m347_snapshot.revision,
+            revision=m347_revision,
         ),
     )
 
@@ -311,14 +316,14 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         f"collectible_invoice:{floor_control.record.invoice_id}",
     }
 
-    m349_snapshot = resources().modelos.authority.snapshot("349", filing_year=2025, period="1T")
+    m349_revision = _modelo_revision("349", "2020-y-siguientes")
     m349_resolution = resolver.resolve(
         CalculationSourceContext(
             bucket_id=secure_profile.bucket_id,
             modelo="349",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "1T"),
-            revision=m349_snapshot.revision,
+            revision=m349_revision,
         ),
     )
 
