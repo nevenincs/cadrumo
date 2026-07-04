@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#fichero-boe-parity-gate'
-date: '2026-07-02'
-modified: '2026-07-02'
+date: '2026-07-04'
+modified: '2026-07-04'
 related:
   - '[[2026-07-01-fichero-boe-parity-gate-P01-S01]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P01-S02]]'
@@ -14,11 +14,14 @@ related:
   - '[[2026-07-01-fichero-boe-parity-gate-P02-S06]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P02-S07]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P03-S08]]'
+  - '[[2026-07-01-fichero-boe-parity-gate-P03-S09]]'
+  - '[[2026-07-01-fichero-boe-parity-gate-P03-S10]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P03-S11]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P03-S12]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P03-S13]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P03-S14]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P04-S15]]'
+  - '[[2026-07-01-fichero-boe-parity-gate-P04-S16]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P04-S17]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P04-S18]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P05-S19]]'
@@ -62,6 +65,9 @@ Auto-generated index of all documents tagged with `#fichero-boe-parity-gate`.
 - `2026-07-01-fichero-boe-parity-gate-P04-S18` - Add an anti-tautology drift case mutating a rendered field number or order and asserting the gate panics
 - `2026-07-01-fichero-boe-parity-gate-P05-S19` - Extend the modelo-export-mirrors-official-structure rule source to bind the fichero-BOE transport and mandate full-structure mirror-or-panic, then run vaultspec-core sync
 - `2026-07-01-fichero-boe-parity-gate-P05-S20` - Run the filing and modelo export test suites plus src/aeat collect-only and capture a green owner-scoped gate
+- `2026-07-01-fichero-boe-parity-gate-P03-S09` - Add a pre-write structural-fidelity assertion that every rendered casilla number and segmento matches the registry-declared metadata with zero drift
+- `2026-07-01-fichero-boe-parity-gate-P03-S10` - Add a pre-write record and section-order assertion that the rendered record order follows the registry declaration order
+- `2026-07-01-fichero-boe-parity-gate-P04-S16` - Assert rendered numbering, segmento and record order fidelity in the fichero-BOE parity test
 
 ### plan
 
