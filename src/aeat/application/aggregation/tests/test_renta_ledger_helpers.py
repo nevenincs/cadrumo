@@ -94,6 +94,7 @@ def test_business_proportion_business_classification_preserves_magnitude() -> No
     """BUSINESS rows pass through the canonical amount magnitude; business_pct ignored."""
     proportion = business_proportion(BusinessClassification.BUSINESS, None)
 
+    assert proportion is not None
     assert proportion == Decimal("1")
     assert _business_fact_amount(Decimal("100.00"), proportion) == Decimal("100.00")
 
@@ -103,6 +104,7 @@ def test_business_proportion_mixed_classification_scales_by_business_pct() -> No
     business percentage — for example a 60% business-use phone bill of
     100 EUR yields a 60 EUR deductible base."""
     proportion = business_proportion(BusinessClassification.MIXED, Decimal("0.60"))
+    assert proportion is not None
     assert proportion == Decimal("0.60")
 
     result = _business_fact_amount(Decimal("100.00"), proportion)
