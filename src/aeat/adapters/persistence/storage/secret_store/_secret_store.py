@@ -1,11 +1,11 @@
 """Encrypted, file-locked store for secret and session-bearing records.
 
-Layered on top of :class:`aeat.adapters.persistence.storage.blob_store.EncryptedBlobStore`
-and :func:`aeat.core.locks.exclusive_file_lock`, the store persists
+Layered on top of :class:`adapters.persistence.storage.blob_store.EncryptedBlobStore`
+and :func:`core.locks.exclusive_file_lock`, the store persists
 short-lived bearer state (:class:`SensitivityClass` SESSION) and long-lived
 authentication material (:class:`SensitivityClass` SECRET) under a stable
 string key. Each record is wrapped in an
-:class:`aeat.adapters.persistence.storage.envelope.Envelope` of
+:class:`adapters.persistence.storage.envelope.Envelope` of
 :class:`SecretRecord`, encrypted via the blob store's per-record DEK wrapped
 by the active :class:`MasterKeyProvider` using AES-256-GCM, and indexed by
 an HMAC-SHA256 digest of the natural-key string so consumers can query
@@ -13,13 +13,13 @@ an HMAC-SHA256 digest of the natural-key string so consumers can query
 
 A JSON catalogue file at ``store_dir / "index.json"`` maps the hex
 digest of each key to the underlying
-:class:`aeat.adapters.persistence.storage.blob_store.BlobReference`.
+:class:`adapters.persistence.storage.blob_store.BlobReference`.
 Every mutation acquires ``exclusive_file_lock(store_dir / "secrets.lock")``
 so parallel writers serialise rather than race.
 
 The retention contract is enforced at write time: SECRET- and SESSION-class
 records MUST carry an ``expires_at`` field; the store raises
-:exc:`~aeat.adapters.persistence.storage.RetentionPolicyError`
+:exc:`~adapters.persistence.storage.RetentionPolicyError`
 when it is absent.
 """
 
@@ -80,8 +80,8 @@ class SecretRecord(BaseModel):
         value: Secret payload as raw bytes. Plaintext on the API surface
             only; the blob store encrypts before write.
         classification: Sensitivity class. Must be
-            :attr:`aeat.core.classification.SensitivityClass.SECRET` or
-            :attr:`aeat.core.classification.SensitivityClass.SESSION`;
+            :attr:`core.classification.SensitivityClass.SECRET` or
+            :attr:`core.classification.SensitivityClass.SESSION`;
             other classes are rejected by the field validator at
             construction time.
         metadata: Operator-supplied non-secret tags (e.g. operator
@@ -157,11 +157,11 @@ class _SecretIndex(BaseModel):
 class SecretStore:
     """Repository for the substrate's secret and session-bearing state.
 
-    Wraps an :class:`aeat.adapters.persistence.storage.blob_store.EncryptedBlobStore`
+    Wraps an :class:`adapters.persistence.storage.blob_store.EncryptedBlobStore`
     behind a digest-keyed index so callers can query records by their
     natural string key without that key ever appearing in plaintext on
     disk. Mutating operations are serialised via
-    :func:`aeat.core.locks.exclusive_file_lock`.
+    :func:`core.locks.exclusive_file_lock`.
     """
 
     def __init__(
@@ -180,7 +180,7 @@ class SecretStore:
                 persisted via this repository.
             master_key_provider: Optional override. Used to derive the
                 lookup sub-key via HKDF. Falls back to
-                :func:`aeat.adapters.persistence.storage.master_key.get_master_key_provider`.
+                :func:`adapters.persistence.storage.master_key.get_master_key_provider`.
         """
         self._store_dir = Path(store_dir)
         self._blob_store = blob_store
@@ -288,18 +288,18 @@ class SecretStore:
         """Persist ``record`` and return the underlying blob reference.
 
         Acquires the store-wide
-        :func:`aeat.core.locks.exclusive_file_lock` for the duration
+        :func:`core.locks.exclusive_file_lock` for the duration
         of the write.
 
         Args:
             record: The :class:`SecretRecord` to persist.
             overwrite: If ``True``, replace any existing record at the
                 same key. If ``False`` (default), raise
-                :exc:`~aeat.adapters.persistence.storage.SecretAlreadyExistsError`
+                :exc:`~adapters.persistence.storage.SecretAlreadyExistsError`
                 on collision.
 
         Returns:
-            The :class:`aeat.adapters.persistence.storage.blob_store.BlobReference`
+            The :class:`adapters.persistence.storage.blob_store.BlobReference`
             for the freshly written blob.
         """
         self._store_dir.mkdir(parents=True, exist_ok=True)
@@ -315,7 +315,7 @@ class SecretStore:
         """Locked-by-caller variant of :meth:`put`.
 
         The caller MUST already hold the store-wide
-        :func:`aeat.core.locks.exclusive_file_lock`. Used by
+        :func:`core.locks.exclusive_file_lock`. Used by
         :meth:`put` (which wraps in a fresh lock) and :meth:`rotate`
         (which holds the lock across get and put for atomicity).
         """
@@ -430,7 +430,7 @@ class SecretStore:
     def rotate(self, key: str, new_value: bytes, *, expires_at: datetime | None = None) -> BlobReference:
         """Replace the value of an existing secret and return the new blob reference.
 
-        Holds the store-wide :func:`aeat.core.locks.exclusive_file_lock`
+        Holds the store-wide :func:`core.locks.exclusive_file_lock`
         across the read and write so a concurrent :meth:`rotate`,
         :meth:`put`, or :meth:`delete` cannot interleave between the
         lookup and the overwrite.
@@ -442,7 +442,7 @@ class SecretStore:
                 mandates it.
 
         Returns:
-            The :class:`aeat.adapters.persistence.storage.blob_store.BlobReference`
+            The :class:`adapters.persistence.storage.blob_store.BlobReference`
             of the rotated blob.
 
         """
