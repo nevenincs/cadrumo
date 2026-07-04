@@ -16,18 +16,22 @@ no ``extra`` field, no free-text field wide enough to carry operator content,
 and no metric key can be emitted remotely unless it is explicitly registered
 in :data:`TELEMETRY_METRIC_REGISTRY` with ``remote_allowed=True``.
 
-No network transport ships in this slice. :func:`emit_telemetry_event`'s
-default sink, :class:`LocalNoopTelemetrySink`, discards the payload -- this
-proves the gate-then-schema-then-emit pipeline end-to-end without any real
-transmission, per ``2026-07-04-remote-telemetry-adr``.
+:func:`emit_telemetry_event`'s default sink, :class:`LocalNoopTelemetrySink`,
+discards the payload -- this proves the gate-then-schema-then-emit pipeline
+end-to-end without any real transmission, per
+``2026-07-04-remote-telemetry-adr``. :class:`HttpTelemetrySink` is the real
+network-transmitting implementation of the same :class:`TelemetrySink`
+protocol: it is structurally inert (a pure no-op) unless a caller both builds
+it with a configured ``settings.aeat_telemetry_endpoint`` AND the consent gate
+already permitted emission, and any transport failure is swallowed rather than
+raised. No caller wires it as a default sink in this slice; a producer or CLI
+surface must explicitly opt a call site into it.
 
 Three non-sensitive operational producers are wired in this slice
 (:func:`emit_command_invocation_telemetry`, :func:`emit_llm_run_telemetry`,
 :func:`emit_error_frequency_telemetry`), each registered in
 :data:`TELEMETRY_METRIC_REGISTRY` and exercising the full gate-then-schema-
-then-emit pipeline against the local sink. No live network transport ships
-here either; a future slice wires a real HTTP sink behind the same
-:class:`TelemetrySink` protocol.
+then-emit pipeline against the local sink.
 """
 
 from __future__ import annotations
@@ -35,6 +39,7 @@ from __future__ import annotations
 from ._consent import telemetry_emit_permitted
 from ._emit import LocalNoopTelemetrySink, TelemetrySink, emit_telemetry_event
 from ._errors import TelemetrySchemaError
+from ._http_sink import HttpTelemetrySink
 from ._producers import (
     emit_command_invocation_telemetry,
     emit_error_frequency_telemetry,
@@ -53,6 +58,7 @@ from ._workspace import workspace_hash
 __all__ = [
     "TELEMETRY_METRIC_REGISTRY",
     "CounterSpec",
+    "HttpTelemetrySink",
     "LocalNoopTelemetrySink",
     "TelemetryEventPayload",
     "TelemetrySchemaError",
