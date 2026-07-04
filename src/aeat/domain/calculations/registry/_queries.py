@@ -252,7 +252,7 @@ class ModeloCasillaDetailReport(BaseModel):
     listing, this report addresses a single casilla by its id (or printed
     number) and, when the casilla is computed, resolves and carries the
     formula's structured expression. Every field is sourced from the
-    authoritative :class:`~aeat.domain.calculations.registry.CasillaDefinition`
+    authoritative :class:`~domain.calculations.registry.CasillaDefinition`
     on the selected revision, never recomputed.
 
     Attributes:
@@ -403,7 +403,7 @@ class ModeloBindingQueryRow(BaseModel):
     Non-empty only for a ``manual_input`` binding whose selector declares
     ``data_type = "boolean"`` (the Modelo 100 estimación-directa modality flag),
     which the registry formulas consume as a numeric ``1`` / ``0`` operand. Each
-    :class:`~aeat.domain.calculations.registry.BooleanBindingEncodedValue` pairs
+    :class:`~domain.calculations.registry.BooleanBindingEncodedValue` pairs
     the decimal the operator must type on ``--binding`` with the boolean sense
     and the underlying casilla token it maps to, so the listing surface can teach
     the decimal-to-meaning mapping before a calculation is attempted, derived
@@ -513,8 +513,8 @@ class ModeloFormulasReport(BaseModel):
 class RegistrySourceSite(BaseModel):
     """One committed modelo revision that declares a given binding source kind.
 
-    A *binding source kind* is the :class:`~aeat.core.BindingSourceKind` a
-    registry :class:`~aeat.domain.calculations.registry.DataBindingDefinition`
+    A *binding source kind* is the :class:`~core.BindingSourceKind` a
+    registry :class:`~domain.calculations.registry.DataBindingDefinition`
     declares as the origin of its value. This row records that a particular
     revision declares at least one binding of the parent source kind, with the
     per-revision count.
@@ -537,7 +537,7 @@ class RegistrySourceInventoryRow(BaseModel):
     """Every committed revision that declares one binding source kind.
 
     Attributes:
-        source_kind: The :class:`~aeat.core.BindingSourceKind` this row
+        source_kind: The :class:`~core.BindingSourceKind` this row
             inventories.
         sites: The committed revisions declaring the source kind, sorted by
             ``(modelo, revision_id)``.
@@ -557,7 +557,7 @@ class RegistrySourceInventoryReport(BaseModel):
 
     Pure registry introspection returned by
     ``RegistryQueryService.source_inventory``: for every committed modelo
-    revision it records which :class:`~aeat.core.BindingSourceKind` members the
+    revision it records which :class:`~core.BindingSourceKind` members the
     registry actually declares in its bindings, and which revisions declare
     each. It is the registry side of the source-connectivity gate — it makes
     "which sources does the committed registry declare, and where" computable so
@@ -578,7 +578,7 @@ class RegistrySourceInventoryReport(BaseModel):
 
     @property
     def declared_source_kinds(self) -> frozenset[BindingSourceKind]:
-        """The set of :class:`~aeat.core.BindingSourceKind` members the registry declares."""
+        """The set of :class:`~core.BindingSourceKind` members the registry declares."""
         return frozenset(row.source_kind for row in self.rows)
 
 
@@ -621,7 +621,7 @@ class RegistryQueryService:
                 at least one revision whose ``period_selector`` covers the
                 given filing year. ``None`` returns all registered modelos.
             domain: When supplied, restricts the listing to modelos whose
-                registry :class:`~aeat.core.TaxDomain` equals the requested
+                registry :class:`~core.TaxDomain` equals the requested
                 tax family (e.g. ``TaxDomain.IVA``). ``None`` returns every
                 family. The ``year`` and ``domain`` filters compose: passing
                 both narrows to modelos that satisfy each.
@@ -643,7 +643,7 @@ class RegistryQueryService:
         return ModeloListReport(modelos=tuple(sorted(rows, key=lambda row: row.code)))
 
     def source_inventory(self) -> RegistrySourceInventoryReport:
-        """Report every :class:`~aeat.core.BindingSourceKind` the committed registry declares, and where.
+        """Report every :class:`~core.BindingSourceKind` the committed registry declares, and where.
 
         Walks every committed modelo revision and every binding it declares,
         grouping by the binding's ``source`` kind. The result records, per
