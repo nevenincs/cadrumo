@@ -4,14 +4,14 @@ Given an ``EvidenceInput`` already resolved from secure storage (see
 :mod:`._evidence_input`), :func:`extract_invoice_fields` runs the in-tree
 on-host text-layer extractor (:func:`._evidence_textlayer.extract_evidence_text`)
 and applies grounded heuristics -- the shared Spanish tax-id validator
-(:func:`aeat.core.identity.validate_spanish_tax_id`), the shared day-first date
-parser (:func:`aeat.core.parsing.parse_date`), and the shared European decimal
-separator normaliser (:func:`aeat.core.decimal.normalize_decimal_separators`) --
+(:func:`core.identity.validate_spanish_tax_id`), the shared day-first date
+parser (:func:`core.parsing.parse_date`), and the shared European decimal
+separator normaliser (:func:`core.decimal.normalize_decimal_separators`) --
 to recover a supplier NIF/NIE/CIF, invoice number, invoice date, taxable base,
 IVA rate, IVA amount, and grand total.
 
 This is the extraction PRIMITIVE only: it returns an :class:`InvoiceDraft` the
-operator reviews and confirms. It never persists an :class:`aeat.domain.invoices.Invoice`
+operator reviews and confirms. It never persists an :class:`domain.invoices.Invoice`
 and never guesses a value it cannot ground in the extracted text -- every field
 it cannot recover is left ``None`` rather than fabricated
 (``no-silent-under-declaration`` in spirit: an unconfident field is absent, not
@@ -27,8 +27,8 @@ A scan-only PDF (no embedded text layer) or an image attachment has nothing for
 :func:`extract_invoice_fields` to read, so
 :func:`extract_invoice_draft_from_evidence` falls back to the on-host LOCAL vision
 reader (:mod:`._evidence_draft_vision`) -- the same rasterise-then-read-with-Ollama
-transport :class:`aeat.application.ledger.LocalVisionLLMClassifier` already uses for
-classification, gated by :attr:`aeat.core.ServiceCapability.LLM_VISION` and never a
+transport :class:`application.ledger.LocalVisionLLMClassifier` already uses for
+classification, gated by :attr:`core.ServiceCapability.LLM_VISION` and never a
 cloud call. When on-host vision reading is disabled for the profile, or the local
 Ollama runtime is unreachable, the caller gets a typed, instructive refusal --
 never a silent empty draft.
@@ -46,21 +46,21 @@ bucket id plus one of the two reference ids.
 that closes the review loop: it re-runs the on-host extraction, applies any
 operator-supplied field overrides (extraction is best-effort -- every field may
 be corrected), and delegates the actual write to
-:func:`aeat.application.invoices.create_catalogue_invoice` -- the sole
-sanctioned :class:`aeat.domain.invoices.Invoice` writer
+:func:`application.invoices.create_catalogue_invoice` -- the sole
+sanctioned :class:`domain.invoices.Invoice` writer
 (``composition-service-no-parallel-write-path``). A confirm keyed on the same
 evidence/attachment reference and the same resolved fields is a guarded no-op
 that returns the existing invoice rather than raising or duplicating
 (``single-subject-mutation-is-idempotent-guarded``); a same-reference confirm
 whose resolved fields genuinely differ from the already-stored invoice mints a
 second, distinct invoice record (a different content-derived
-:attr:`~aeat.domain.invoices.Invoice.invoice_id`) rather than silently
+:attr:`~domain.invoices.Invoice.invoice_id`) rather than silently
 overwriting one filer's data with another's.
 
 Confirming also auto-links the source evidence to the resulting invoice:
-:func:`aeat.domain.attachments.link_attachment_invoice` appends the invoice's id
-to the backing :class:`~aeat.domain.attachments.Attachment`'s
-:attr:`~aeat.domain.attachments.Attachment.linked_invoice_ids`, closing the
+:func:`domain.attachments.link_attachment_invoice` appends the invoice's id
+to the backing :class:`~domain.attachments.Attachment`'s
+:attr:`~domain.attachments.Attachment.linked_invoice_ids`, closing the
 provenance loop in both directions (the invoice is discoverable from the
 evidence, and the evidence is the invoice's traceable source). The link is
 re-asserted on a guarded no-op confirm too, so a re-confirm never regresses a
@@ -145,7 +145,7 @@ class InvoiceDraft(BaseModel):
     Every field is optional: a field the extractor cannot ground in the
     document's text is left ``None`` rather than guessed. The operator reviews
     this draft and supplies or corrects fields before any
-    :class:`aeat.domain.invoices.Invoice` is minted from it -- this model is
+    :class:`domain.invoices.Invoice` is minted from it -- this model is
     never itself persisted as a filing-grade record.
 
     Attributes:
@@ -300,7 +300,7 @@ def extract_invoice_draft_from_evidence(
 
     Returns:
         :class:`InvoiceDraft`: The best-effort extracted fields, for operator
-        review. Never itself persisted as an :class:`aeat.domain.invoices.Invoice`.
+        review. Never itself persisted as an :class:`domain.invoices.Invoice`.
 
     Raises:
         PurchaseInvoiceEvidenceInputError: When neither or both of
@@ -345,11 +345,11 @@ def extract_invoice_draft_from_evidence(
 def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Settings) -> InvoiceDraft:
     """Rasterise/encode *evidence* and read it with the on-host local vision model.
 
-    Gated by :attr:`aeat.core.ServiceCapability.LLM_VISION` -- an operator who has
+    Gated by :attr:`core.ServiceCapability.LLM_VISION` -- an operator who has
     opted out gets a typed refusal naming the capability toggle, never a silent
     empty draft. A missing/unreachable local Ollama runtime, or an unrasterisable
     PDF, is converted to the same instructive refusal the classification vision
-    path uses (:func:`aeat.application.provisioning.probe_ollama_vision`).
+    path uses (:func:`application.provisioning.probe_ollama_vision`).
     """
     import httpx
 
@@ -391,7 +391,7 @@ class InvoiceConfirmationResult(BaseModel):
 
     Attributes:
         invoice: The persisted (or already-existing, on a guarded no-op)
-            :class:`aeat.domain.invoices.Invoice`.
+            :class:`domain.invoices.Invoice`.
         draft: The re-run on-host extraction the confirmation was based on
             (before overrides were applied), kept so the operator can see what
             was actually read from the document versus what they overrode.
@@ -445,7 +445,7 @@ def confirm_invoice_draft_from_evidence(
     stay in memory only), then layers any operator-supplied override on top of
     each extracted field -- extraction is best-effort, so every field may be
     corrected before the record is minted. The resulting identity fields are
-    handed to :func:`aeat.application.invoices.create_catalogue_invoice`, the
+    handed to :func:`application.invoices.create_catalogue_invoice`, the
     single sanctioned :class:`Invoice` writer
     (``composition-service-no-parallel-write-path``); this function never
     writes the catalogue itself.
