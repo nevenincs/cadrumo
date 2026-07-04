@@ -112,6 +112,7 @@ from ._errors import (
     GoogleAuthValidationError,
 )
 from ._impersonation import (
+    GoogleAuthAdcStaleError,
     GoogleAuthAdcUnavailableError,
     GoogleAuthImpersonationRefusedError,
     GoogleCredentialSourceSelection,
@@ -154,6 +155,7 @@ __all__ = [
     "DriveFolderDocument",
     "DriveFolderListing",
     "GoogleApiResponseBody",
+    "GoogleAuthAdcStaleError",
     "GoogleAuthAdcUnavailableError",
     "GoogleAuthBrowserOpenError",
     "GoogleAuthClientNotRegisteredError",
