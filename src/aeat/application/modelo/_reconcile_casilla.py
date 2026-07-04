@@ -1,7 +1,7 @@
 """Casilla-level divergence detection between a computed revision and a filed declaration.
 
 ``detect_casilla_divergences`` is the typed, pure comparison primitive this
-module contributes to :mod:`aeat.application.modelo._reconcile`: given the
+module contributes to :mod:`application.modelo._reconcile`: given the
 canonical ``revision.casilla_values`` a work unit already persisted (the same
 values the calculate path, the result summary, and the export surface render,
 per ``one-aggregation-path-pull-equals-calculate``) and the per-casilla values a
@@ -12,9 +12,9 @@ sides declare the casilla but the amounts disagree beyond tolerance),
 declaration omitted it), and ``extra_in_filed`` (the filed declaration prints a
 casilla the computed revision never resolved a value for). The comparison is
 scoped to the registry's own reconciliation policy
-(:meth:`~aeat.domain.calculations.registry.RegistrySnapshot.verification_policy`)
+(:meth:`~domain.calculations.registry.RegistrySnapshot.verification_policy`)
 so the compared set is declared registry data, never an ad hoc casilla list —
-the same scoping :func:`aeat.application.verification.verify_declaracion` already
+the same scoping :func:`application.verification.verify_declaracion` already
 applies to printed-vs-computed comparisons before a filing, kept here for the
 after-filing reconcile use.
 
@@ -83,11 +83,11 @@ def detect_casilla_divergences(
 
     Args:
         computed: Canonical ``{casilla_id: value}`` read from the persisted
-            :class:`~aeat.domain.modelos.CalculationRevision`
+            :class:`~domain.modelos.CalculationRevision`
             (``revision.casilla_values``).
         filed: ``{casilla_id: value}`` printed on the filed declaration, decoded
             from the declaration parser's
-            :class:`~aeat.adapters.inbound.pdf.ExtractedCasilla` rows.
+            :class:`~adapters.inbound.pdf.ExtractedCasilla` rows.
         scope: Optional casilla-id-to-anything mapping restricting comparison to
             its keys (typically the registry's ``verification_policy()``
             ``computed_casilla_ids``). When supplied, both ``computed`` and
