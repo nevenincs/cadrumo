@@ -11,7 +11,11 @@ related:
   - '[[2026-06-16-aeat-user-docs-hardening-S09]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S12]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S14]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S19]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S22]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S24]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S27]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S32]]'
   - '[[2026-06-16-aeat-user-docs-hardening-plan]]'
   - '[[2026-06-18-aeat-user-docs-hardening-audit]]'
   - '[[2026-07-04-aeat-user-docs-hardening-adr]]'
@@ -38,7 +42,11 @@ Auto-generated index of all documents tagged with `#aeat-user-docs-hardening`.
 - `2026-06-16-aeat-user-docs-hardening-S09` - Harden file-at-aeat.md
 - `2026-06-16-aeat-user-docs-hardening-S12` - Harden filing-readiness.md
 - `2026-06-16-aeat-user-docs-hardening-S14` - Harden import-bank-statements.md
+- `2026-06-16-aeat-user-docs-hardening-S19` - Harden modelo-303.md
 - `2026-06-16-aeat-user-docs-hardening-S22` - Harden profile-setup.md
+- `2026-06-16-aeat-user-docs-hardening-S24` - Harden quickstart.md
+- `2026-06-16-aeat-user-docs-hardening-S27` - Harden review-calculation-values.md
+- `2026-06-16-aeat-user-docs-hardening-S32` - Harden verification-reports.md
 
 ### plan
 
