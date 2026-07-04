@@ -22,6 +22,8 @@ blanking a casilla on the live calculate path.
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import pytest
 
 from .....application.aggregation import (
@@ -36,13 +38,23 @@ from .....application.aggregation import (
 # truth without re-declaring it.
 from .....application.modelo._calculation_actions import _ENROLLED_SOURCE_KINDS
 from .....core import BindingSourceKind
-from .. import InputKind
+from .. import InputKind, PeriodSelector
 from .._authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _representative_scope(period_selector) -> tuple[int, str]:
+class _ScanResult(TypedDict):
+    modelos_scanned: set[str]
+    revisions_scanned: int
+    bound_casillas_scanned: int
+    bindings_scanned: int
+    dangling_binds: list[str]
+    undispositioned_sources: list[str]
+    disposition_states: set[BindingSourceDisposition]
+
+
+def _representative_scope(period_selector: PeriodSelector) -> tuple[int, str]:
     """Return one ``(filing_year, period)`` that the revision's selector covers.
 
     A revision declares its applicable years as either an explicit ``years``
@@ -51,10 +63,11 @@ def _representative_scope(period_selector) -> tuple[int, str]:
     selector covers by construction, so the validated snapshot builds for it.
     """
     year = period_selector.years[0] if period_selector.years else period_selector.year_from
+    assert year is not None
     return int(year), period_selector.periods[0]
 
 
-def _scan() -> dict[str, object]:
+def _scan() -> _ScanResult:
     """Walk every modelo × revision and collect breadth facts and violations.
 
     Returns a record carrying the traversal counts (for the anti-tautology
