@@ -128,16 +128,23 @@ def _check_marker_near_def(lines: list[str], lineno: int, token: str, window: in
     return any(token in ln for ln in lines[start:end])
 
 
-@pytest.mark.parametrize("path,func_name", _KWARGS_ANY_MANDATE, ids=lambda x: x if isinstance(x, str) else x.name)
-def test_snapshot_dispatch_hooks_carry_kwargs_any_rationale(path: Path, func_name: str) -> None:
+def test_snapshot_dispatch_hooks_carry_kwargs_any_rationale() -> None:
     """Each mandated snapshot-dispatch hook must carry a KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH marker."""
-    assert path.exists(), f"Expected source file not found: {path}"
-    lines = _source_lines(path)
-    def_lines = _find_def_lines(lines, (func_name,))
-    assert func_name in def_lines, f"{path.name}: could not locate def {func_name}"
-    lineno = def_lines[func_name]
-    found = _check_marker_near_def(lines, lineno, _KWARGS_RATIONALE_TOKEN)
-    assert found, (
-        f"{path.name}:{lineno} def {func_name}: missing {_KWARGS_RATIONALE_TOKEN!r} "
-        f"in the 10 lines preceding the definition"
-    )
+    failures: list[str] = []
+    for path, func_name in _KWARGS_ANY_MANDATE:
+        if not path.exists():
+            failures.append(f"Expected source file not found: {path}")
+            continue
+        lines = _source_lines(path)
+        def_lines = _find_def_lines(lines, (func_name,))
+        if func_name not in def_lines:
+            failures.append(f"{path.name}: could not locate def {func_name}")
+            continue
+        lineno = def_lines[func_name]
+        if not _check_marker_near_def(lines, lineno, _KWARGS_RATIONALE_TOKEN):
+            failures.append(
+                f"{path.name}:{lineno} def {func_name}: missing {_KWARGS_RATIONALE_TOKEN!r} "
+                f"in the 10 lines preceding the definition",
+            )
+
+    assert not failures, "\n".join(failures)
