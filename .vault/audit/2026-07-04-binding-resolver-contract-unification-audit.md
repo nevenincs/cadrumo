@@ -6,21 +6,20 @@ date: '2026-07-04'
 modified: '2026-07-04'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-plan]]"
+  - "[[2026-06-26-binding-resolver-contract-unification-P03-S12]]"
   - "[[2026-06-26-binding-resolver-contract-unification-P03-S14]]"
+  - "[[2026-06-26-binding-resolver-contract-unification-P05-S18]]"
 ---
 
-# `binding-resolver-contract-unification` audit: `S14 code review`
+# `binding-resolver-contract-unification` audit: `S12/S14/S18 evidence review`
 
 ## Scope
 
-Review of the S14 resolver-contract follow-up: the aggregate CLI boundary test update,
-the new S14 exec record, and the close-audit status change. The review checked that the
-test update follows the live command split without weakening the no-parallel-aggregation
-assertion.
+Review of the resolver-contract follow-up evidence records for S12, S14, and S18. The review checked that S12 and S18 are recorded as blockers rather than implementation closure, and that the S14 aggregate CLI evidence remains a narrow command-boundary confirmation.
 
 ## Findings
 
-No blocking findings.
+No blocking findings in the evidence records.
 
 The single code change updates the boundary gate's canonical aggregate CLI path from
 `_modelo.py` to `_modelo_aggregate_cli.py`, matching the current command registration
@@ -29,7 +28,16 @@ usage outside that one module and still rejects direct family-specific aggregati
 everywhere, including the canonical module. Focused tests and the feature vault check
 passed before this review.
 
+The S12 blocker record is accurate under the current architecture: `foreign_asset`
+is explicitly re-ratified as deferred by the source-kind deferrals ADR, and S20/S21
+remain blocked by the M720 row-indexed envelope and M347 counterpart-source modelling
+gaps. Enrolling the resolvers or removing `FOREIGN_ASSET` from the deferred set now
+would overclaim and contradict the freeze.
+
+The S18 blocker record is also accurate: the final full-surface resolver-contract
+gate is downstream of P03, so running or checking it while S20/S21/S12 remain blocked
+would make the plan appear complete before the resolver/envelope decisions exist.
+
 ## Recommendations
 
-Leave the S14 plan checkbox untouched until the non-authored plan-file WIP clears, then
-re-check that the exec evidence is still current before using `vault plan step check`.
+Leave S12 and S18 unchecked until the named P03 blockers are resolved or replaced by a coordinator-approved successor decision. Leave the S14 plan checkbox untouched until the non-authored plan-file WIP clears, then re-check that the exec evidence is still current before using `vault plan step check`.
