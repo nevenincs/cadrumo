@@ -40,8 +40,8 @@ _InvoiceRowField = Literal[
 ]
 
 # Canonical invoice-shaped binding source kinds. Re-exported from
-# :data:`aeat.core.aggregation.INVOICE_BINDING_SOURCE_KINDS`, which derives the
-# set from :class:`~aeat.core.BindingSourceKind` (the single source-kind
+# :data:`core.aggregation.INVOICE_BINDING_SOURCE_KINDS`, which derives the
+# set from :class:`~core.BindingSourceKind` (the single source-kind
 # taxonomy) rather than hand-listing strings. Every consumer that needs "is
 # this binding an invoice binding?" routes through this name.
 __all__ = [
@@ -645,7 +645,7 @@ class Modelo349OperadorTotalsParity(BaseModel):
     groups them into per-``(country, party_tax_id, clave)`` rows
     (:func:`_build_operator_clave_rows`). Nothing in the registry
     cross-checks that the two paths agree, so a defect in either aggregator —
-    or a manual-entry :class:`~aeat.domain.modelos.Modelo349OperadorRow` set
+    or a manual-entry :class:`~domain.modelos.Modelo349OperadorRow` set
     that omits an operator the summary already counted — would silently
     under- or over-declare one side without detection.
 
