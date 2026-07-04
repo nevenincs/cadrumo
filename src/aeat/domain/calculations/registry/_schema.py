@@ -115,6 +115,7 @@ __all__ = [
     "RegistrySnapshot",
     "RegistrySnapshotRef",
     "RegistryVerificationPolicy",
+    "RelationDefinition",
     "RelationPeriodAlignment",
     "RelationRevisionSelector",
     "ReviewStatus",
