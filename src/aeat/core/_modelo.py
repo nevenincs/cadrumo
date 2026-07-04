@@ -231,9 +231,6 @@ class Modelo(StrEnum):
 #: declaraciones informativas and retención forms; it is not yet AEAT's full
 #: ~200-form set.
 UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
-    Modelo.M490: "Impuesto sobre Determinados Servicios Digitales (autoliquidacion trimestral)",
-    Modelo.M604: "Impuesto sobre las Transacciones Financieras (autoliquidacion mensual)",
-    Modelo.M763: "Impuesto sobre actividades de juego (autoliquidacion trimestral)",
     Modelo.M592: "impuesto especial sobre envases de plastico no reutilizables (fabricantes/adquirentes)",
     Modelo.M576: "IEDMT autoliquidacion por matriculacion de determinados medios de transporte",
     Modelo.M121: "comunicacion de cesion del derecho a deducciones por familia numerosa o discapacidad",
