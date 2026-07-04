@@ -145,7 +145,7 @@ def _collect_inline_bool_violations() -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def test_no_bare_date_fromisoformat() -> None:
+def test_no_bare_date_fromisoformat(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Zero ``date.fromisoformat(`` calls survive in production modules.
 
     All date parsing must go through ``_parse_iso8601_date`` or
@@ -154,7 +154,7 @@ def test_no_bare_date_fromisoformat() -> None:
     Consumes the shared production AST cache so the per-file parse cost
     is amortised across the full ratchet suite.
     """
-    violations = _collect_fromisoformat_violations()
+    violations = _collect_fromisoformat_violations(source_tree_ast)
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(
