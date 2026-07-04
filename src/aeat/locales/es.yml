@@ -1471,12 +1471,26 @@ cli:
           {accepted}'
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
+        confirm_already_exists_message: 'Ya existe una factura con esta identidad; se devuelve sin cambios en lugar de crear un duplicado.'
+        confirm_counterparty_name_help: 'Nombre de la contraparte (sin heuristica de extraccion todavia; normalmente obligatorio).'
+        confirm_counterparty_nif_help: 'Sobrescribe el NIF del proveedor extraido.'
+        confirm_currency_help: 'Codigo de moneda ISO-4217.'
+        confirm_help: 'Vuelve a extraer el justificante en el equipo local y confirmalo como una factura real del catalogo.'
+        confirm_invoice_date_help: 'Sobrescribe la fecha de factura extraida (AAAA-MM-DD).'
+        confirm_invoice_number_help: 'Sobrescribe el numero de factura extraido.'
+        confirm_iva_rate_help: 'Sobrescribe el tipo de IVA extraido (omitir para conservar el valor extraido).'
+        confirm_link_hint_message: 'Vincula esta factura a un movimiento del libro con `aeat app ledger link`.'
+        confirm_taxable_base_help: 'Sobrescribe la base imponible extraida.'
         evidence_id_help: Identificador del justificante (coincidencia exacta)
-        extract_attachment_id_help: 'Identificador del adjunto vinculado del que extraer los datos (alternativa a --evidence-id).'
-        extract_evidence_id_help: 'Identificador del justificante de factura de compra del que extraer los datos.'
-        extract_help: 'Lee los campos de una factura en PDF en el propio equipo y genera un borrador para revisar.'
-        extract_reference_required: 'Indique exactamente uno de --evidence-id o --attachment-id.'
-        extract_review_hint_message: 'Este es un borrador aproximado; confirme cada campo antes de crear una factura.'
+        extract_attachment_id_help: Identificador del adjunto vinculado del que extraer
+          los datos (alternativa a --evidence-id).
+        extract_evidence_id_help: Identificador del justificante de factura de compra
+          del que extraer los datos.
+        extract_help: Lee los campos de una factura en PDF en el propio equipo y genera
+          un borrador para revisar.
+        extract_reference_required: Indique exactamente uno de --evidence-id o --attachment-id.
+        extract_review_hint_message: Este es un borrador aproximado; confirme cada
+          campo antes de crear una factura.
         group_help: Justificantes de facturas de compra en PDF o imagen
         invoice_date_help: Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD),
           p. ej. 2026-01-15.
@@ -2999,10 +3013,11 @@ cli:
           al sandbox.
         unknown_sandbox: 'Sandbox desconocido: %{name}. Ejecute ''aeat config profile
           sandbox list'' para ver los sandboxes registrados.'
+        usage_help: Informar del espacio en disco de un sandbox, o de todos a la vez.
+        usage_name_help: Nombre del sandbox (sin el prefijo); omitir para informar
+          de todos.
         use_help: Cambia el perfil activo a un sandbox existente.
         use_name_help: Nombre del sandbox (sin el prefijo).
-        usage_help: 'Informar del espacio en disco de un sandbox, o de todos a la vez.'
-        usage_name_help: 'Nombre del sandbox (sin el prefijo); omitir para informar de todos.'
       sar_catalogue_info: 'Este archivo contiene todas las categorías de datos personales
         del perfil: identidad y datos del perfil, unidades de trabajo de modelos,
         movimientos del libro, revisiones de cálculo y registros de presentación.

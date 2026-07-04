@@ -1456,12 +1456,26 @@ cli:
           {accepted}'
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
+        confirm_already_exists_message: 'Ja existeix una factura amb aquesta identitat; es retorna sense canvis en lloc de crear-ne un duplicat.'
+        confirm_counterparty_name_help: 'Nom de la contrapart (sense heuristica d''extraccio encara; normalment obligatori).'
+        confirm_counterparty_nif_help: 'Sobreescriu el NIF del proveidor extret.'
+        confirm_currency_help: 'Codi de moneda ISO-4217.'
+        confirm_help: 'Torna a extreure el justificant en local i confirma''l com a factura real del cataleg.'
+        confirm_invoice_date_help: 'Sobreescriu la data de factura extreta (AAAA-MM-DD).'
+        confirm_invoice_number_help: 'Sobreescriu el numero de factura extret.'
+        confirm_iva_rate_help: 'Sobreescriu el tipus d''IVA extret (ometre per mantenir el valor extret).'
+        confirm_link_hint_message: 'Vincula aquesta factura a un moviment del llibre amb `aeat app ledger link`.'
+        confirm_taxable_base_help: 'Sobreescriu la base imposable extreta.'
         evidence_id_help: Identificador del justificant (coincidencia exacta)
-        extract_attachment_id_help: 'Identificador de l''adjunt vinculat del qual extreure les dades (alternativa a --evidence-id).'
-        extract_evidence_id_help: 'Identificador del justificant de factura de compra del qual extreure les dades.'
-        extract_help: 'Llegeix els camps d''una factura en PDF al mateix equip i genera un esborrany per revisar.'
-        extract_reference_required: 'Indiqueu exactament un de --evidence-id o --attachment-id.'
-        extract_review_hint_message: 'Aquest és un esborrany aproximat; confirmeu cada camp abans de crear una factura.'
+        extract_attachment_id_help: Identificador de l'adjunt vinculat del qual extreure
+          les dades (alternativa a --evidence-id).
+        extract_evidence_id_help: Identificador del justificant de factura de compra
+          del qual extreure les dades.
+        extract_help: Llegeix els camps d'una factura en PDF al mateix equip i genera
+          un esborrany per revisar.
+        extract_reference_required: Indiqueu exactament un de --evidence-id o --attachment-id.
+        extract_review_hint_message: Aquest és un esborrany aproximat; confirmeu cada
+          camp abans de crear una factura.
         group_help: Justificants de factures de compra en PDF o imatge
         invoice_date_help: Data d'emissió de la factura en ISO 8601 (AAAA-MM-DD),
           p. ex. 2026-01-15.
@@ -2964,10 +2978,11 @@ cli:
           al sandbox.
         unknown_sandbox: 'Sandbox desconegut: %{name}. Executeu ''aeat config profile
           sandbox list'' per veure els sandboxes registrats.'
+        usage_help: Informar de l'espai en disc d'un sandbox, o de tots alhora.
+        usage_name_help: Nom del sandbox (sense el prefix); ometre per informar de
+          tots.
         use_help: Canvia el perfil actiu a un sandbox existent.
         use_name_help: Nom del sandbox (sense el prefix).
-        usage_help: 'Informar de l''espai en disc d''un sandbox, o de tots alhora.'
-        usage_name_help: 'Nom del sandbox (sense el prefix); ometre per informar de tots.'
       sar_catalogue_info: 'Aquest arxiu conté totes les categories de dades personals
         del perfil: identitat i dades del perfil, unitats de treball de models, moviments
         del llibre, revisions de càlcul i registres de presentació. Els bytes de les

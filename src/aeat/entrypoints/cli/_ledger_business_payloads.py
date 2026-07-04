@@ -300,3 +300,35 @@ class EvidenceExtractResult(OutputSchema):
     iva_amount: str | None = None
     grand_total: str | None = None
     raw_text_length: int = 0
+
+
+@register_schema("ledger.evidence.confirm")
+class EvidenceConfirmResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger evidence extract --confirm``.
+
+    Reports the persisted (or already-existing, on a guarded no-op) rich
+    catalogue :class:`~aeat.domain.invoices.Invoice` -- mirroring
+    ``CatalogueInvoiceRecordPayload`` -- plus the resolved evidence reference
+    and a ``created`` flag distinguishing a fresh write
+    (``single-subject-mutation-is-idempotent-guarded``) from a same-identity
+    guarded retry.
+    """
+
+    bucket_id: str
+    evidence_id: str | None = None
+    attachment_id: str | None = None
+    created: bool
+    invoice_id: str
+    kind: str
+    invoice_number: str
+    issued_at: str
+    counterparty_name: str
+    counterparty_tax_id: str
+    counterparty_country: str
+    base_total: str
+    iva_total: str
+    grand_total: str
+    currency: str
+    payment_status: str
+    linked_transaction_ids: list[str] = []
+    notes: str = ""
