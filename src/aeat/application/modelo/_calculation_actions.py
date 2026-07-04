@@ -138,7 +138,7 @@ from ._revision_persistence import persist_calculation_revision
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import RegistrySnapshot
-    from ...domain.transactions import TransactionCatalogue
+    from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepositoryProtocol
     from ..aggregation import (
         CalculationSourceDiagnostic,
         CalculationSourceResolution,
@@ -652,7 +652,7 @@ class _MemoizedTransactionCatalogueRepository:
 
     __slots__ = ("_catalogue", "_date_range_catalogues", "_repository")
 
-    def __init__(self, repository: TransactionCatalogueRepository) -> None:
+    def __init__(self, repository: TransactionCatalogueRepositoryProtocol) -> None:
         self._repository = repository
         self._catalogue: TransactionCatalogue | None = None
         self._date_range_catalogues: dict[tuple[date, date], TransactionCatalogue] = {}
