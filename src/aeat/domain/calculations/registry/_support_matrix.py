@@ -1,0 +1,266 @@
+"""Typed per-modelo support-matrix registry.
+
+:class:`ModeloEntry` is the first-class typed roll-up of "what does modelo X
+actually support", derived entirely from the loaded
+:class:`~aeat.domain.calculations.registry.ModeloDefinition` /
+:class:`~aeat.domain.calculations.registry.ModeloRevision` records — never
+hand-maintained. It composes existing registry primitives rather than
+re-implementing them:
+
+* calc-grade / manifest / export-format / extractor detection mirrors
+  ``dev.registry.matrix`` (contributor-facing capability probe);
+* rename tracking reads the revision's already-declared
+  :class:`~aeat.domain.calculations.registry.CasillaContinuidadEvolutionDefinition`
+  entries (the ``casilla_continuidad_evolutions`` field);
+* deprecation policy reads the revision's already-declared
+  :class:`~aeat.domain.calculations.registry.SupportRemovalDecisionDefinition`
+  entries (the ``support_removal_decisions`` mapping);
+* portal-compatibility tracking reads the revision's declared
+  :class:`~aeat.domain.calculations.registry.LiveCrossReferenceDecision` entries
+  (surface kind and evidence tier).
+
+Coverage honesty (``no-silent-under-declaration``): a modelo missing a
+capability, rename record, deprecation decision, or portal cross-reference
+reports an explicit empty/False value, never a fabricated positive.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+
+from pydantic import BaseModel, ConfigDict
+
+from ._authority import ValidatedRegistryAuthority
+from ._ids import ModeloId, RevisionId
+from ._schema import CalculationClass, EvidenceTier, ModeloDefinition, ModeloRevision
+from ._schema_surfaces import CasillaContinuidadEvolutionDefinition
+
+__all__ = [
+    "ModeloEntry",
+    "ModeloPortalCompatibilityRef",
+    "ModeloRenameRecord",
+    "ModeloSupportRemovalRecord",
+    "build_support_matrix",
+]
+
+
+def _latest_revision(modelo: ModeloDefinition) -> ModeloRevision:
+    """Return the revision with the most recent ``valid_from`` for ``modelo``.
+
+    A modelo always declares at least one revision
+    (:meth:`ModeloDefinition._validate_revisions` enforces this at load time),
+    so the max is always well-defined.
+    """
+    return max(modelo.revisions.values(), key=lambda revision: revision.valid_from)
+
+
+def _calculation_closure_casilla_ids(revision: ModeloRevision, modelo_id: str):
+    # Deferred import: avoids a module cycle between the record-design
+    # coverage module (which itself imports from ``_queries``-adjacent
+    # surfaces) and this new support-matrix module.
+    from ._record_design_coverage import calculation_closure_casilla_ids
+
+    return calculation_closure_casilla_ids(revision, modelo_id)
+
+
+class ModeloRenameRecord(BaseModel):
+    """One declared per-ejercicio casilla continuity evolution.
+
+    Projects a :class:`~aeat.domain.calculations.registry.CasillaContinuidadEvolutionDefinition`
+    already declared on the revision — this record never invents rename
+    history; it surfaces what the registry already tracks per continuity
+    chain (``continuidad_id``).
+
+    Attributes:
+        continuidad_id: The stable continuity chain identifier a casilla's
+            number/label is tracked under across revisions.
+        from_revision: Revision id the evolution starts from.
+        to_revision: Revision id the evolution lands on.
+        evolution_kind: The declared nature of the change (e.g.
+            ``"label_evolved"``, ``"repurposed"``, ``"retired"``).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    continuidad_id: str
+    from_revision: RevisionId
+    to_revision: RevisionId
+    evolution_kind: str
+
+
+class ModeloSupportRemovalRecord(BaseModel):
+    """One declared deprecation decision for a modelo revision.
+
+    Projects a :class:`~aeat.domain.calculations.registry.SupportRemovalDecisionDefinition`
+    already declared on the revision.
+
+    Attributes:
+        subject_type: The kind of surface removed from filing-grade support
+            (e.g. ``"export_layout"``, ``"live_cross_reference"``).
+        subject_id: The identifier of the removed surface.
+        reason: The declared regulatory/technical reason for removal.
+        evidence_note: Human-readable evidence backing the decision.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    subject_type: str
+    subject_id: str
+    reason: str
+    evidence_note: str
+
+
+class ModeloPortalCompatibilityRef(BaseModel):
+    """One declared AEAT-portal cross-reference for a modelo revision.
+
+    Projects a :class:`~aeat.domain.calculations.registry.LiveCrossReferenceDecision`
+    already declared on the revision — the registry's own record of which live
+    AEAT surface the modelo has been cross-checked against and under what
+    evidence tier.
+
+    Attributes:
+        id: Stable registry identifier for the cross-reference decision.
+        surface: The live AEAT surface kind cross-checked (e.g.
+            ``"public_read_surface"``, ``"integration_test_service"``).
+        evidence_tier: The declared evidence tier backing the cross-reference.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    id: str
+    surface: str
+    evidence_tier: EvidenceTier
+
+
+class ModeloEntry(BaseModel):
+    """First-class typed support-matrix record for one modelo.
+
+    Derived entirely from the loaded registry authority — every field is a
+    direct read or fold over the modelo's latest revision, never a
+    hand-maintained value. See :func:`build_support_matrix`.
+
+    Attributes:
+        modelo_id: The AEAT modelo identifier (e.g. ``"303"``).
+        title: Human-readable display name from the registry.
+        calculation_class: The modelo's declared calculation role
+            (``"filing"``, ``"informative"``, or ``"summary"``).
+        revision_count: Number of registry revisions declared for this modelo.
+        latest_revision_id: The id of the revision this entry's capabilities
+            are probed against (the revision with the most recent
+            ``valid_from``).
+        latest_revision_valid_from: That revision's applicability start date.
+        supported_revision_ids: Every declared revision id, oldest
+            ``valid_from`` first.
+        calc_grade: Whether the latest revision's calculation closure is
+            non-empty (has at least one formula/binding/verification wiring
+            the engine traverses).
+        has_completeness_manifest: Whether the latest revision declares a
+            calculation-completeness manifest.
+        has_fixed_width_export: Whether the latest revision registers a
+            ``fixed_width`` (fichero-BOE) export layout.
+        has_xml_dictionary_export: Whether the latest revision registers an
+            ``xml_dictionary`` export layout.
+        has_extractor: Whether the latest revision registers at least one
+            extraction profile.
+        extraction_profile_count: Count of extraction profiles on the latest
+            revision.
+        renames: Declared per-ejercicio casilla continuity evolutions on the
+            latest revision.
+        deprecations: Declared support-removal (deprecation) decisions on the
+            latest revision.
+        portal_compatibility_refs: Declared AEAT-portal cross-references on
+            the latest revision.
+        is_deprecated: ``True`` when the latest revision declares at least one
+            support-removal decision.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    modelo_id: ModeloId
+    title: str
+    calculation_class: CalculationClass
+    revision_count: int
+    latest_revision_id: RevisionId
+    latest_revision_valid_from: date
+    supported_revision_ids: tuple[RevisionId, ...]
+    calc_grade: bool
+    has_completeness_manifest: bool
+    has_fixed_width_export: bool
+    has_xml_dictionary_export: bool
+    has_extractor: bool
+    extraction_profile_count: int
+    renames: tuple[ModeloRenameRecord, ...]
+    deprecations: tuple[ModeloSupportRemovalRecord, ...]
+    portal_compatibility_refs: tuple[ModeloPortalCompatibilityRef, ...]
+
+    @property
+    def is_deprecated(self) -> bool:
+        """Return whether the latest revision declares a support-removal decision."""
+        return bool(self.deprecations)
+
+
+def _rename_record(evolution: CasillaContinuidadEvolutionDefinition) -> ModeloRenameRecord:
+    return ModeloRenameRecord(
+        continuidad_id=str(evolution.continuidad_id),
+        from_revision=evolution.from_revision,
+        to_revision=evolution.to_revision,
+        evolution_kind=evolution.evolution_kind,
+    )
+
+
+def _entry_for_modelo(modelo: ModeloDefinition) -> ModeloEntry:
+    revision = _latest_revision(modelo)
+    closure = _calculation_closure_casilla_ids(revision, modelo.id)
+    export_formats = {layout.format for layout in revision.export_layouts}
+    supported_revision_ids = tuple(
+        item.id for item in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
+    )
+    renames = tuple(_rename_record(evolution) for evolution in revision.casilla_continuidad_evolutions)
+    deprecations = tuple(
+        ModeloSupportRemovalRecord(
+            subject_type=decision.subject_type,
+            subject_id=decision.subject_id,
+            reason=decision.reason,
+            evidence_note=decision.evidence_note,
+        )
+        for decision in revision.support_removal_decisions
+    )
+    portal_refs = tuple(
+        ModeloPortalCompatibilityRef(
+            id=str(decision.id),
+            surface=decision.surface,
+            evidence_tier=decision.evidence_tier,
+        )
+        for decision in revision.live_cross_references
+    )
+    return ModeloEntry(
+        modelo_id=modelo.id,
+        title=modelo.title,
+        calculation_class=modelo.calculation_class,
+        revision_count=len(modelo.revisions),
+        latest_revision_id=revision.id,
+        latest_revision_valid_from=revision.valid_from,
+        supported_revision_ids=supported_revision_ids,
+        calc_grade=bool(closure),
+        has_completeness_manifest=revision.completeness_manifest is not None,
+        has_fixed_width_export="fixed_width" in export_formats,
+        has_xml_dictionary_export="xml_dictionary" in export_formats,
+        has_extractor=bool(revision.extraction_profiles),
+        extraction_profile_count=len(revision.extraction_profiles),
+        renames=renames,
+        deprecations=deprecations,
+        portal_compatibility_refs=portal_refs,
+    )
+
+
+def build_support_matrix(authority: ValidatedRegistryAuthority) -> tuple[ModeloEntry, ...]:
+    """Probe every modelo in ``authority`` and return its :class:`ModeloEntry`.
+
+    Args:
+        authority: The registry authority to probe.
+
+    Returns:
+        Every modelo's :class:`ModeloEntry`, sorted by ``modelo_id``.
+    """
+    entries = (_entry_for_modelo(modelo) for modelo in authority.modelos)
+    return tuple(sorted(entries, key=lambda entry: entry.modelo_id))

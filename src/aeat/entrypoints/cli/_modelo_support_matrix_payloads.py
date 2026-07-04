@@ -1,0 +1,77 @@
+"""JSON payload schemas for ``aeat app modelo support-matrix``.
+
+Projects :class:`~aeat.domain.calculations.registry.ModeloEntry` (and its
+nested rename / deprecation / portal-compatibility records) onto the CLI's
+strict :class:`OutputSchema` contract. Every field mirrors the domain report
+unchanged; this module only pins the JSON transport shape.
+"""
+
+from __future__ import annotations
+
+from ._schemas import OutputSchema, register_schema
+
+
+class ModeloRenamePayload(OutputSchema):
+    """One declared per-ejercicio casilla continuity evolution."""
+
+    continuidad_id: str
+    from_revision: str
+    to_revision: str
+    evolution_kind: str
+
+
+class ModeloSupportRemovalPayload(OutputSchema):
+    """One declared deprecation (support-removal) decision."""
+
+    subject_type: str
+    subject_id: str
+    reason: str
+    evidence_note: str
+
+
+class ModeloPortalCompatibilityRefPayload(OutputSchema):
+    """One declared AEAT-portal cross-reference."""
+
+    id: str
+    surface: str
+    evidence_tier: str
+
+
+class ModeloSupportMatrixEntryPayload(OutputSchema):
+    """One modelo's support-matrix row."""
+
+    modelo_id: str
+    title: str
+    calculation_class: str
+    revision_count: int
+    latest_revision_id: str
+    latest_revision_valid_from: str
+    supported_revision_ids: list[str]
+    calc_grade: bool
+    has_completeness_manifest: bool
+    has_fixed_width_export: bool
+    has_xml_dictionary_export: bool
+    has_extractor: bool
+    extraction_profile_count: int
+    renames: list[ModeloRenamePayload]
+    deprecations: list[ModeloSupportRemovalPayload]
+    portal_compatibility_refs: list[ModeloPortalCompatibilityRefPayload]
+    is_deprecated: bool
+
+
+@register_schema("modelo.support_matrix")
+class ModeloSupportMatrixResult(OutputSchema):
+    """Registry-wide per-modelo support/capability matrix result."""
+
+    operation: str = "modelo.support_matrix"
+    modelo_count: int
+    entries: list[ModeloSupportMatrixEntryPayload]
+
+
+__all__ = [
+    "ModeloPortalCompatibilityRefPayload",
+    "ModeloRenamePayload",
+    "ModeloSupportMatrixEntryPayload",
+    "ModeloSupportMatrixResult",
+    "ModeloSupportRemovalPayload",
+]
