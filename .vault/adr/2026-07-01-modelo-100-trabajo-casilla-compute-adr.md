@@ -196,3 +196,48 @@ correct.
 Closes / unblocks: #568 (0019 auto-apply + letter-f cap + 0022 clamp), the #574 followup (art.
 52 EUR 1.500 individual sub-limit over-reduction). Extends the art-20 advisory-first pattern
 (`2026-06-15-art20-trabajo-reduccion-compute-adr`).
+
+## Phase 2b reconciliation (post-implementation, #574 code review)
+
+Phase 2b shipped at `d7b7e314c` and was code-reviewed. The review confirmed the Considerations
+section's premise needed correction on one point and surfaced one additional gap in the shipped
+formula; both are resolved in the same follow-up commit as this reconciliation.
+
+**Casilla 0463 is NOT a mixed individual/employer catch-all.** The Considerations section above
+states "casilla 0463 mixes individual and empresarial aportaciones in one box" as the reason Gap
+C could not be cleanly computed. The AEAT Diseño de Registros field dictionary
+(`01-100-diccionario-declaracion-individual-ejercicio-2025-*.properties`) disproves this: 0463
+(`RGEA`, "Aportaciones individuales y contribuciones empresariales") is its OWN disjoint
+data-entry field, distinct from 0427 (`RGCONT`, "Contribuciones empresariales... **excepto**...
+las aportaciones de empresarios individuales") — 0427's own label explicitly EXCLUDES what 0463
+covers. Casilla 0467 (`RSUMAD`) is a pure additive SUM of 0463+0464+0465+0438+0426+0427+0499+0466,
+confirming every summand is its own independently-declared box, not an overlapping catch-all. An
+employer contribution cannot legitimately land in 0463; it has its own dedicated box (0427/0426/
+0438). This removed the blocker the Considerations section identified, and the tiered compute
+(pooling 0463+0465 as "individual" and 0426+0427+0438+0499 as "employer-linked backing") is sound
+on this axis.
+
+**A genuinely separate defect was found and fixed: art. 52.1's 1.º and 2.º increments are not
+interchangeable.** The shipped formula pooled casilla 0499 (aportaciones de trabajadores por
+cuenta propia o autónomos, empresarios individuales) together with 0426/0427/0438 as uniformly
+unlocking the full EUR 8.500 art. 52.1.1.º increment. The bundled `ley-35-2006` art. 52.1 corpus
+text is explicit that 1.º ("En 8.500 euros anuales") is conditioned on "contribuciones
+empresariales, o... aportaciones del trabajador al mismo instrumento de previsión social"
+(0426/0427/0438 only), while 2.º ("En 4.250 euros anuales") is the SEPARATE increment for
+"aportaciones... realizadas por trabajadores por cuenta propia o autónomos" (0499) — and the two
+increments are additive but jointly re-capped at EUR 8.500 total ("en todo caso, la cuantía
+máxima de reducción por aplicación de los incrementos previstos en los números 1.º y 2.º
+anteriores será de 8.500 euros anuales"). A purely-0499-backed filer was therefore silently
+granted up to EUR 8.500 of increment capacity when only EUR 4.250 is legally available — an
+over-reduction / under-tax. The formula was corrected to split the two sub-tiers
+(`min(0426+0427+0438, 8500)` plus `min(0499, 4250)`, jointly re-capped at `8500`) in both the
+2024 and 2025 revisions, and the `_art52_reduccion_advisory_finding` defense-in-depth advisory
+(2021-2023, where 0468 stays MANUAL) was extended to resolve casilla 0499 so it no longer
+false-positives on a legitimate 0499-only reducción above EUR 1.500.
+
+Both fixes are grounded in the bundled `ley-35-2006` art. 52 corpus text (arts. 52.1.b, 52.1.1.º,
+52.1.2.º) and the AEAT DR field dictionary; new manual-derived chain tests
+(`test_art52_tiered_autonomo_only_aportacion_capped_at_1500_plus_4250`,
+`test_art52_tiered_employer_and_autonomo_increments_jointly_recapped_at_8500`) lock the corrected
+boundary, alongside a new advisory contract test
+(`test_art52_reduccion_advisory_silent_when_autonomo_backed`).

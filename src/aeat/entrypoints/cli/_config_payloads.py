@@ -1009,6 +1009,26 @@ class CertificateSourceCheckPayload(OutputSchema):
     has_warnings: bool = False
 
 
+@register_schema("config.auth.certificate.secret.set")
+class CertificateSourceSecretMutationPayload(OutputSchema):
+    """JSON envelope for ``certificate secret set`` / ``certificate secret remove``.
+
+    Mirrors :class:`application.auth.CertificateSourceSecretMutationResult`.
+    Never carries the secret value itself — only whether one is now
+    registered, which backend holds it, and whether the call rotated an
+    existing secret.
+    """
+
+    name: str
+    backend: str = ""
+    has_secret: bool = False
+    rotated: bool = False
+    removed: bool = False
+
+
+register_schema("config.auth.certificate.secret.remove")(CertificateSourceSecretMutationPayload)
+
+
 # ---------------------------------------------------------------------------
 # Auth diagnostics verb result schemas
 # ---------------------------------------------------------------------------
@@ -1213,3 +1233,57 @@ class ConfigProfileSandboxRestoreResult(OutputSchema):
 
     bucket_id: str
     label: str
+
+
+class SandboxDiskUsageSubdirPayload(OutputSchema):
+    """One on-disk subdirectory row in a sandbox disk-usage report.
+
+    Mirrors :class:`~aeat.application.bucket_maintenance.BucketDiskUsageSubdirRow`:
+    a fixed-layout subdirectory name (``db``, ``blobs``, ``audit``) plus its
+    summed regular-file byte total and file count.
+    """
+
+    subdir: str
+    total_bytes: int
+    file_count: int
+
+
+class SandboxDiskUsagePayload(OutputSchema):
+    """One sandbox's disk-usage row within a ``sandbox usage`` report."""
+
+    label: str
+    bucket_id: str
+    total_bytes: int
+    subdirs: list[SandboxDiskUsageSubdirPayload]
+
+
+@register_schema("config.profile.sandbox.usage")
+class ConfigProfileSandboxUsageResult(OutputSchema):
+    """JSON envelope for ``aeat config profile sandbox usage``.
+
+    Reports the on-disk footprint of one named sandbox, or of every sandbox
+    at once when no name is given (``total_bytes`` then sums across every
+    listed sandbox). The measurement reads only filesystem metadata — never
+    decrypted secure-object content — via
+    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.disk_usage.
+    """
+
+    total_bytes: int
+    sandboxes: list[SandboxDiskUsagePayload]
+
+
+@register_schema("config.profile.sandbox.merge")
+class ConfigProfileSandboxMergeResult(OutputSchema):
+    """JSON envelope for ``aeat config profile sandbox merge``.
+
+    Reports the promoted scope, the source sandbox and target profile
+    labels, and the per-category row counts merged via
+    :func:`~aeat.application.bucket_maintenance.merge_sandbox`. A re-run
+    against unchanged sandbox content reports the same counts (an
+    idempotent no-op write into the target, never a duplicate row).
+    """
+
+    scope: str
+    source_label: str
+    target_label: str
+    merged_counts: dict[str, int]

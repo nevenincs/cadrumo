@@ -65,6 +65,7 @@ See Also:
 from ._bienes_inversion_regularizacion import (
     CASILLA_REGULARIZACION_BIENES_INVERSION,
     build_bienes_inversion_regularizacion_advisory,
+    build_bienes_inversion_transmision_advisory,
 )
 from ._binding_prefill import (
     BindingPrefillReport,
@@ -134,6 +135,10 @@ from ._observations_repository import (
     iva_wallet_decision_key,
     observation_key,
 )
+from ._prorrata_regularizacion import (
+    CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
+    build_prorrata_regularizacion_advisory,
+)
 from ._relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
 from ._row_set_assembly import (
     AssembledObservations,
@@ -151,6 +156,7 @@ IvaCompensationReconciliationReport.model_rebuild()
 
 __all__ = [
     "CASILLA_REGULARIZACION_BIENES_INVERSION",
+    "CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA",
     "M111_NO_RETENCIONES_PROFILE_PATH",
     "AssembledObservations",
     "BindingPrefillReport",
@@ -190,6 +196,8 @@ __all__ = [
     "assemble_withholding_observations",
     "assert_enrollment_matches_manifest",
     "build_bienes_inversion_regularizacion_advisory",
+    "build_bienes_inversion_transmision_advisory",
+    "build_prorrata_regularizacion_advisory",
     "correct_iva_compensation_period",
     "cross_check_iva_compensation_annual_summary",
     "cross_period_dependency_inventory",

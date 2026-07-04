@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#repo-health-triage'
 date: '2026-06-04'
-modified: '2026-06-30'
+modified: '2026-07-04'
 tier: L3
 related:
   - '[[2026-06-04-repo-health-triage-research]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-05-19-code-duplication-sweep-plan]]'
   - '[[2026-05-26-secure-storage-test-hygiene-audit]]'
 ---
+
 
 # `repo-health-triage` `diagnostic remediation` plan
 
@@ -236,9 +237,9 @@ Resolve dependency, dead-code, Ruff, security, and duplication advisory findings
 
 Run the complete diagnostic surface, persist a final all-green matrix, close plan rows through the CLI, and complete mandatory VaultSpec review before declaring the campaign green.
 
-- [ ] `W06.P21.S83` - Run hard gate suite and persist green evidence; `.vault/audit`.
-- [ ] `W06.P21.S84` - Run full quality-audit and persist final diagnostic matrix; `.vault/audit`.
-- [ ] `W06.P21.S85` - Complete mandatory code review and close all-green campaign state; `.vault/exec`.
+- [x] `W06.P21.S83` - Run hard gate suite and persist green evidence; `.vault/audit`.
+- [x] `W06.P21.S84` - Run full quality-audit and persist final diagnostic matrix; `.vault/audit`.
+- [x] `W06.P21.S85` - Complete mandatory code review and close all-green campaign state; `.vault/exec`.
 
 ## Parallelization
 

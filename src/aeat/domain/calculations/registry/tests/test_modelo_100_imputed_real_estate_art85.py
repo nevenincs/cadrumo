@@ -9,8 +9,7 @@ from functools import cache
 
 import pytest
 
-from .....core.resources import bundled_path
-from .._authority import ValidatedRegistryAuthority
+from .._authority import ValidatedRegistryAuthority, bundled_authority
 from .._errors import RegistryValidationError
 from .._formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .._schema import RegistrySnapshot
@@ -20,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @cache
 def _authority() -> ValidatedRegistryAuthority:
-    return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    return bundled_authority()
 
 
 def _snapshot(year: int) -> RegistrySnapshot:

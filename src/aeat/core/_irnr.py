@@ -42,6 +42,8 @@ class TipoRentaIrnr(StrEnum):
         GENERAL: Art. 25.1.a general non-resident rate (24%).
         UE_RESIDENTE: Art. 25.1.a reduced rate for EU/EEA residents (19%).
         PENSION: Art. 25.1.b progressive pension tariff (bracket table).
+        DIVIDEND: Art. 25.1.f.1º dividends / other income from participation
+            in an entity's own funds (19%).
         INTEREST: Art. 25.1.f.2º interest / capital-cession income (19%).
         GANANCIA_PATRIMONIAL: Art. 25.1.f.3º capital gains (19%).
         INMOBILIARIA: Art. 13.1.h imputed urban real-estate income (24% base).
@@ -50,6 +52,7 @@ class TipoRentaIrnr(StrEnum):
     GENERAL = "general"
     UE_RESIDENTE = "ue_residente"
     PENSION = "pension"
+    DIVIDEND = "dividend"
     INTEREST = "interest"
     GANANCIA_PATRIMONIAL = "ganancia_patrimonial"
     INMOBILIARIA = "inmobiliaria"

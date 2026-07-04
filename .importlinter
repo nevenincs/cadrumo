@@ -310,6 +310,7 @@ ignore_imports =
     aeat.application.aggregation.tests.test_source_mesh_profile_live -> aeat.adapters.outbound.aeat.sede
     aeat.application.aggregation.tests.test_source_mesh_profile_live -> aeat.tests.secure_sql
     aeat.application.auth.tests.test_apoderado -> aeat.tests.secure_sql
+    aeat.application.auth.tests.test_certificate_secret_backend -> aeat.adapters.persistence.storage
     aeat.application.auth.tests.test_diagnostics -> aeat.adapters.persistence.storage
     aeat.application.auth.tests.test_diagnostics -> aeat.tests.secure_sql
     aeat.application.auth.tests.test_ensure_session -> aeat.adapters.outbound.aeat.auth
@@ -351,6 +352,8 @@ ignore_imports =
     aeat.application.invoices.tests.test_source_resolver -> aeat.tests.secure_sql
     aeat.application.ledger.tests.test_business_operation_invoice -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_evidence -> aeat.adapters.persistence.storage.sql
+    aeat.application.ledger.tests.test_evidence_draft -> aeat.adapters.persistence.profile.invoices
+    aeat.application.ledger.tests.test_evidence_draft -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_llm_evidence_split -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_llm_reject -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_llm_reject -> aeat.tests.secure_sql
@@ -645,6 +648,8 @@ ignore_imports =
     aeat.application.aggregation._withholding_source -> aeat.adapters.**
     aeat.application.auth -> aeat.adapters.**
     aeat.application.auth._apoderado -> aeat.adapters.**
+    aeat.application.auth._certificate_secret_backend -> aeat.adapters.**
+    aeat.application.auth._certificate_sources_operator -> aeat.adapters.**
     aeat.application.auth._diagnostics -> aeat.adapters.**
     aeat.application.auth._operator -> aeat.adapters.**
     aeat.application.auth._operator_probes -> aeat.adapters.**
@@ -652,6 +657,7 @@ ignore_imports =
     aeat.application.auth._sessions -> aeat.adapters.**
     aeat.application.bienes_inversion -> aeat.adapters.**
     aeat.application.bucket_maintenance._manifest_digest -> aeat.adapters.**
+    aeat.application.bucket_maintenance._sandbox -> aeat.adapters.**
     aeat.application.bucket_maintenance._service -> aeat.adapters.**
     aeat.application.calculations._iva_compensation_annual_partition -> aeat.adapters.**
     aeat.application.calculations._iva_compensation_history -> aeat.adapters.**
@@ -670,6 +676,8 @@ ignore_imports =
     aeat.application.ledger._actions_import -> aeat.adapters.**
     aeat.application.ledger._business_operation_invoice -> aeat.adapters.**
     aeat.application.ledger._evidence -> aeat.adapters.**
+    aeat.application.ledger._evidence_draft -> aeat.adapters.**
+    aeat.application.ledger._evidence_draft_vision -> aeat.adapters.**
     aeat.application.ledger._evidence_textlayer -> aeat.adapters.**
     aeat.application.ledger._llm_classification -> aeat.adapters.**
     aeat.application.ledger._llm_diagnostics -> aeat.adapters.**

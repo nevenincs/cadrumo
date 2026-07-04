@@ -393,6 +393,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.outbound.google._impersonation.GoogleAuthAdcUnavailableError",
+        ErrorCode(
+            code="FAIL_GOOGLE_ADC_UNAVAILABLE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_google_adc_unavailable",
+            default_suggestion="gcloud auth application-default login",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.outbound.google._impersonation.GoogleAuthImpersonationRefusedError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_IMPERSONATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_google_impersonation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.outbound.storage._errors.OutboundStorageError",
         ErrorCode(
             code="FAIL_OUTBOUND_STORAGE",

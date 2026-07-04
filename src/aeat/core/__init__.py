@@ -22,7 +22,9 @@ plus :func:`pointer_path`, :func:`read_pointer`, :func:`write_pointer`,
 helpers expose the codified :class:`ResultDisposition` mapping and its
 casilla/refund predicates. Service and operator-adjacent primitives include
 :class:`ServiceCapability`, :class:`LedgerSortField`,
-:class:`LedgerSortOrder`, :data:`IBAN_SHAPE_RE`, and :func:`iban_mod_97`.
+:class:`LedgerSortOrder`, :data:`IBAN_SHAPE_RE`, and :func:`iban_mod_97`. The
+closed :class:`GoogleCredentialSourceKind` taxonomy governs which mechanism
+:mod:`adapters.outbound.google` uses to obtain Google API credentials.
 
 ``BindingSourceKind``, ``BucketPointer``, and the active-bucket IO helpers are
 resolved through ``__getattr__`` so storage, config, and aggregation callers
@@ -67,6 +69,7 @@ from ._amendment_kind_regime import (
 )
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
+from ._google_credential_source import GoogleCredentialSourceKind
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
@@ -143,6 +146,7 @@ __all__: list[str] = [
     "BucketPointer",
     "CasillaId",
     "ConvenioOverrideKind",
+    "GoogleCredentialSourceKind",
     "IntracomOperationType",
     "LedgerSortField",
     "LedgerSortOrder",

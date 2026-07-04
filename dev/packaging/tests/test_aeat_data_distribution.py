@@ -1,21 +1,38 @@
-"""Packaging gate for the ``aeat-data`` corpus companion distribution.
+"""Packaging gate for the two ``aeat-data-*`` corpus companion distributions.
 
 The wheel-split decision moves the corpus source binaries
-(``_data/corpus/**/*.{pdf,xls,xlsx}``) out of the slim ``aeat`` wheel and into a
-separate ``aeat-data`` companion. This gate proves the companion side of that
-boundary end-to-end by building the real companion wheel and asserting:
+(``_data/corpus/**/*.{pdf,xls,xlsx}``) out of the slim ``aeat`` wheel. Because
+the full binary set exceeds PyPI's 100 MB per-file cap, it is split along the
+corpus directory seam into TWO sub-cap companions, each under the cap so no size
+grant is needed:
 
-1. It packages EXACTLY the git-tracked corpus source binaries — no more, no
-   fewer — each under the mirrored ``aeat_data/_data/corpus/<relative>`` path the
-   runtime corpus-locator seam resolves.
-2. It ships NOTHING else besides the ``aeat_data/__init__.py`` package root and
-   the wheel ``.dist-info`` metadata — in particular none of the corpus DERIVED
-   surfaces (extracted text, html, json), which stay in the ``aeat`` wheel.
-3. Its version equals the root ``aeat`` distribution version, so the companion
+* ``aeat-data-manuals`` ships ``corpus/manuals``.
+* ``aeat-data-official`` ships ``corpus/aeat_official`` and ``corpus/normatives``.
+
+Both ship subtrees of the SAME ``aeat_data`` PEP 420 implicit namespace package
+(NEITHER ships ``aeat_data/__init__.py``, which would collide on a joint
+install), so ``importlib.resources.files("aeat_data")`` resolves a
+``MultiplexedPath`` over both installed portions.
+
+This gate builds both real companion wheels and asserts:
+
+1. Each companion packages EXACTLY the git-tracked corpus source binaries under
+   its owned subtree — no more, no fewer — each under the mirrored
+   ``aeat_data/_data/corpus/<relative>`` path the runtime corpus-locator seam
+   resolves.
+2. The two companions are DISJOINT and their union equals the FULL tracked
+   corpus-binary set — every binary the slim ``aeat`` wheel sheds is shipped by
+   exactly one companion, and none twice.
+3. Neither ships ``aeat_data/__init__.py`` (the namespace-package invariant) nor
+   any corpus DERIVED surface (extracted text, html, json) — those stay in the
+   ``aeat`` wheel.
+4. Each version equals the root ``aeat`` distribution version, so a companion
    can only ship at the same version as the runtime wheel that resolves it.
+5. Each built wheel is under PyPI's 100 MB per-file cap — the whole point of the
+   split, asserted as a hard requirement.
 
 The expected binary set is derived from the git-tracked source tree, not from
-the wheel under test, so the parity assertion is not tautological. No mocks,
+the wheels under test, so the parity assertion is not tautological. No mocks,
 fakes, or skips: the real ``uv build`` pipeline runs, and a missing ``uv``/``git``
 binary fails loudly.
 """
@@ -26,6 +43,7 @@ import shutil
 import subprocess
 import tomllib
 import zipfile
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -33,10 +51,51 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-_COMPANION_ROOT = _REPO_ROOT / "packaging" / "aeat_data"
+_PACKAGING_ROOT = _REPO_ROOT / "packaging"
 _CORPUS_SOURCE_PREFIX = "src/aeat/_data/corpus/"
 _CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
 _COMPANION_CORPUS_PREFIX = "aeat_data/_data/corpus/"
+# PyPI's default per-file size cap, in the decimal-MB convention the publish
+# guard and CI artifact guard use (bytes / 1e6). The split exists to keep every
+# companion wheel under this without a size grant.
+_PYPI_FILE_CAP_BYTES = 100 * 1_000_000
+
+
+@dataclass(frozen=True)
+class _Companion:
+    """One corpus companion distribution and the corpus subtrees it owns."""
+
+    dist_name: str
+    project_dir: str
+    wheel_glob: str
+    owned_subdirs: tuple[str, ...]
+
+
+# The split contract: which corpus top-level subtrees each companion owns. The
+# owned sets are disjoint and their union is every corpus subtree carrying source
+# binaries; the exhaustiveness test proves that against the live tracked tree.
+_COMPANIONS = (
+    _Companion(
+        dist_name="aeat-data-manuals",
+        project_dir="aeat_data_manuals",
+        wheel_glob="aeat_data_manuals-*.whl",
+        owned_subdirs=("manuals",),
+    ),
+    _Companion(
+        dist_name="aeat-data-official",
+        project_dir="aeat_data_official",
+        wheel_glob="aeat_data_official-*.whl",
+        owned_subdirs=("aeat_official", "normatives"),
+    ),
+)
+
+
+@dataclass(frozen=True)
+class _BuiltWheel:
+    """The archive members and on-disk byte size of one built companion wheel."""
+
+    members: frozenset[str]
+    size_bytes: int
 
 
 def _tracked_corpus_binaries() -> set[str]:
@@ -55,8 +114,8 @@ def _tracked_corpus_binaries() -> set[str]:
         check=True,
     )
     tracked = {line.strip().replace("\\", "/") for line in result.stdout.splitlines() if line.strip()}
-    # Mirror the companion build hook: the aeat wheel sheds every tests/ subtree,
-    # so test-pool binaries are not runtime corpus data and the companion omits
+    # Mirror the companion build hooks: the aeat wheel sheds every tests/ subtree,
+    # so test-pool binaries are not runtime corpus data and the companions omit
     # them too.
     tracked = {path for path in tracked if "/tests/" not in path}
     if not tracked:
@@ -66,81 +125,148 @@ def _tracked_corpus_binaries() -> set[str]:
     return tracked
 
 
+def _companion_member(tracked_path: str) -> str:
+    """Map a tracked ``src/aeat/_data/corpus/...`` path to its companion archive path."""
+    return f"{_COMPANION_CORPUS_PREFIX}{tracked_path.removeprefix(_CORPUS_SOURCE_PREFIX)}"
+
+
+def _expected_members(companion: _Companion) -> set[str]:
+    """Return the companion archive members expected for a companion's owned subtree."""
+    owned_prefixes = tuple(f"{_CORPUS_SOURCE_PREFIX}{subdir}/" for subdir in companion.owned_subdirs)
+    return {_companion_member(path) for path in _tracked_corpus_binaries() if path.startswith(owned_prefixes)}
+
+
 def _pyproject_version(pyproject: Path) -> str:
     """Return the ``project.version`` string declared by a pyproject file."""
     with pyproject.open("rb") as handle:
         return str(tomllib.load(handle)["project"]["version"])
 
 
-@pytest.fixture(scope="module")
-def companion_members() -> frozenset[str]:
-    """Build the aeat-data companion wheel and return its archive member paths."""
-    if shutil.which("uv") is None:
-        raise AssertionError(
-            "uv binary not found on PATH; the aeat-data distribution gate cannot run without the build driver",
-        )
-    out_dir = _COMPANION_ROOT / "dist-test"
+def _build_wheel(companion: _Companion) -> _BuiltWheel:
+    """Build one companion wheel and return its members and byte size."""
+    project_root = _PACKAGING_ROOT / companion.project_dir
+    out_dir = project_root / "dist-test"
     if out_dir.exists():
         shutil.rmtree(out_dir)
     try:
         subprocess.run(
             ["uv", "build", "--wheel", "--out-dir", str(out_dir)],
-            cwd=_COMPANION_ROOT,
+            cwd=project_root,
             capture_output=True,
             text=True,
             check=True,
         )
-        wheels = sorted(out_dir.glob("aeat_data-*.whl"))
+        wheels = sorted(out_dir.glob(companion.wheel_glob))
         if len(wheels) != 1:
-            raise AssertionError(f"expected exactly one aeat_data-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
-        with zipfile.ZipFile(wheels[0]) as archive:
-            return frozenset(info.filename for info in archive.infolist())
+            raise AssertionError(
+                f"expected exactly one {companion.wheel_glob} in {out_dir}; got {[w.name for w in wheels]!r}"
+            )
+        wheel = wheels[0]
+        with zipfile.ZipFile(wheel) as archive:
+            members = frozenset(info.filename for info in archive.infolist())
+        return _BuiltWheel(members=members, size_bytes=wheel.stat().st_size)
     finally:
         if out_dir.exists():
             shutil.rmtree(out_dir)
 
 
-def test_companion_packages_exactly_the_tracked_corpus_binaries(companion_members: frozenset[str]) -> None:
-    """The companion carries every tracked corpus binary under a mirrored path, and no other."""
-    expected = {
-        f"{_COMPANION_CORPUS_PREFIX}{path.removeprefix(_CORPUS_SOURCE_PREFIX)}" for path in _tracked_corpus_binaries()
-    }
-    shipped_corpus = {member for member in companion_members if member.startswith(_COMPANION_CORPUS_PREFIX)}
-    missing = sorted(expected - shipped_corpus)
-    extra = sorted(shipped_corpus - expected)
-    assert not missing, f"companion is missing {len(missing)} tracked corpus binaries; first ten: {missing[:10]!r}"
+@pytest.fixture(scope="module")
+def built_wheels() -> dict[str, _BuiltWheel]:
+    """Build both companion wheels once and return them keyed by distribution name."""
+    if shutil.which("uv") is None:
+        raise AssertionError(
+            "uv binary not found on PATH; the aeat-data distribution gate cannot run without the build driver",
+        )
+    return {companion.dist_name: _build_wheel(companion) for companion in _COMPANIONS}
+
+
+def _corpus_members(built: _BuiltWheel) -> set[str]:
+    """Return the corpus-tree members of a built wheel."""
+    return {member for member in built.members if member.startswith(_COMPANION_CORPUS_PREFIX)}
+
+
+@pytest.mark.parametrize("companion", _COMPANIONS, ids=lambda c: c.dist_name)
+def test_companion_packages_exactly_its_owned_subtree(
+    built_wheels: dict[str, _BuiltWheel], companion: _Companion
+) -> None:
+    """Each companion carries every tracked binary under its owned subtree, and no other."""
+    expected = _expected_members(companion)
+    assert expected, f"{companion.dist_name} owns no tracked corpus binaries; the split contract has regressed"
+    shipped = _corpus_members(built_wheels[companion.dist_name])
+    missing = sorted(expected - shipped)
+    extra = sorted(shipped - expected)
+    assert not missing, f"{companion.dist_name} is missing {len(missing)} owned binaries; first ten: {missing[:10]!r}"
     assert not extra, (
-        f"companion ships {len(extra)} corpus members not in the tracked binary set; first ten: {extra[:10]!r}"
+        f"{companion.dist_name} ships {len(extra)} corpus members outside its owned subtree; first ten: {extra[:10]!r}"
     )
 
 
-def test_companion_ships_no_derived_or_foreign_members(companion_members: frozenset[str]) -> None:
-    """The companion carries only corpus binaries, the package root, and dist-info metadata."""
+def test_companions_are_disjoint_and_exhaustive(built_wheels: dict[str, _BuiltWheel]) -> None:
+    """The two companions share no member and together ship the full tracked corpus set."""
+    manuals = _corpus_members(built_wheels["aeat-data-manuals"])
+    official = _corpus_members(built_wheels["aeat-data-official"])
+    overlap = sorted(manuals & official)
+    assert not overlap, f"the two companions ship {len(overlap)} shared corpus member(s): {overlap[:10]!r}"
+
+    union = manuals | official
+    expected_full = {_companion_member(path) for path in _tracked_corpus_binaries()}
+    missing = sorted(expected_full - union)
+    extra = sorted(union - expected_full)
+    assert not missing, (
+        f"the companions together miss {len(missing)} tracked corpus binaries "
+        f"(a binary shed by the slim wheel that no companion ships); first ten: {missing[:10]!r}"
+    )
+    assert not extra, (
+        f"the companions together ship {len(extra)} corpus members not in the tracked set; first ten: {extra[:10]!r}"
+    )
+
+
+@pytest.mark.parametrize("companion", _COMPANIONS, ids=lambda c: c.dist_name)
+def test_companion_ships_no_init_or_derived_member(built_wheels: dict[str, _BuiltWheel], companion: _Companion) -> None:
+    """No ``aeat_data/__init__.py`` (namespace invariant), no derived surfaces, nothing foreign."""
+    members = built_wheels[companion.dist_name].members
+    assert "aeat_data/__init__.py" not in members, (
+        f"{companion.dist_name} ships aeat_data/__init__.py; both companions must be PEP 420 namespace "
+        "portions or a joint install collides on that path"
+    )
     foreign = sorted(
-        member
-        for member in companion_members
-        if not member.startswith(_COMPANION_CORPUS_PREFIX)
-        and member != "aeat_data/__init__.py"
-        and ".dist-info/" not in member
+        member for member in members if not member.startswith(_COMPANION_CORPUS_PREFIX) and ".dist-info/" not in member
     )
     assert not foreign, (
-        f"companion ships {len(foreign)} member(s) outside the corpus binary set and package scaffold: {foreign[:10]!r}"
+        f"{companion.dist_name} ships {len(foreign)} member(s) outside the corpus binary set: {foreign[:10]!r}"
     )
     derived = sorted(
         member
-        for member in companion_members
+        for member in members
         if member.startswith(_COMPANION_CORPUS_PREFIX) and not member.lower().endswith(_CORPUS_BINARY_SUFFIXES)
     )
     assert not derived, (
-        f"companion ships {len(derived)} corpus DERIVED member(s) that belong in the aeat wheel: {derived[:10]!r}"
+        f"{companion.dist_name} ships {len(derived)} corpus DERIVED member(s) that belong in the aeat wheel: "
+        f"{derived[:10]!r}"
     )
 
 
-def test_companion_version_matches_root_distribution() -> None:
-    """The aeat-data version is locked to the root aeat distribution version."""
-    companion_version = _pyproject_version(_COMPANION_ROOT / "pyproject.toml")
+@pytest.mark.parametrize("companion", _COMPANIONS, ids=lambda c: c.dist_name)
+def test_companion_version_matches_root_distribution(companion: _Companion) -> None:
+    """Each companion version is locked to the root aeat distribution version."""
+    companion_version = _pyproject_version(_PACKAGING_ROOT / companion.project_dir / "pyproject.toml")
     root_version = _pyproject_version(_REPO_ROOT / "pyproject.toml")
     assert companion_version == root_version, (
-        f"aeat-data version {companion_version!r} does not match the root aeat version {root_version!r}; "
-        "the companion must ship version-locked to the runtime wheel that resolves it — bump both together"
+        f"{companion.dist_name} version {companion_version!r} does not match the root aeat version "
+        f"{root_version!r}; each companion must ship version-locked to the runtime wheel that resolves it — "
+        "bump all together"
+    )
+
+
+@pytest.mark.parametrize("companion", _COMPANIONS, ids=lambda c: c.dist_name)
+def test_companion_wheel_is_under_the_pypi_file_cap(
+    built_wheels: dict[str, _BuiltWheel], companion: _Companion
+) -> None:
+    """Each companion wheel stays under PyPI's 100 MB per-file cap — the reason for the split."""
+    size_bytes = built_wheels[companion.dist_name].size_bytes
+    size_mb = size_bytes / 1_000_000
+    assert size_bytes < _PYPI_FILE_CAP_BYTES, (
+        f"{companion.dist_name} wheel is {size_mb:.1f} MB, at or over PyPI's 100 MB per-file cap; the split "
+        "exists precisely to keep each companion sub-cap without a size grant — the corpus seam partition must "
+        "be rebalanced or a third companion carved"
     )

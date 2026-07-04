@@ -67,7 +67,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import bundled_path, resources
+from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from .. import (
     CasillaId,
@@ -81,8 +81,6 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_SOURCE_ROOT = bundled_path()
 
 _CASILLA_DEVENGADA: CasillaId = validated_casilla_id(
     "iva.cuota-devengada-total",
@@ -163,7 +161,9 @@ def test_m353_2024_grupo_omega_delta_manual_worked_example() -> None:
     assert result.values[_CASILLA_RESULTADO] == Decimal("3000.00")
 
 
-def test_m353_2024_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction() -> None:
+def test_m353_2024_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
     """The manual-oracle grounding of the three aggregated totals is
     enrolled, not just computed.
 
@@ -175,7 +175,7 @@ def test_m353_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     declared+validated data, never hand-computed or asserted from a
     synthetic fixture.
     """
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    authority = registry_authority
     snapshot = authority.snapshot("353", filing_year=_FILING_YEAR, period=_PERIOD)
     policy = snapshot.verification_policy()
 

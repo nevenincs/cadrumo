@@ -109,8 +109,8 @@ consumer path is the **Claude plugin** — generated from the harness source by
 `packaging/marketplace/`, installable one-click across Claude Cowork / Claude
 Code / Claude Desktop. Its `.mcp.json` launches the server via
 `uvx --from "aeat-cli[agent]==<version>" aeat-mcp` from the published PyPI package (slim
-~39 MB wheel; corpus source binaries ride the optional `aeat-data` companion
-via `aeat[corpus-sources]`). The old `.mcpb` bundle under `packaging/mcpb/` is
+~39 MB wheel; corpus source binaries ride the two optional `aeat-data-*`
+companions via `aeat[corpus-sources]`). The old `.mcpb` bundle under `packaging/mcpb/` is
 a DEMOTED secondary — do not document it as the install path. See RELEASING.md
 for the publish sequencing and `docs/verification/claude-code-install-proof.md`
 for the live install proof and verified support matrix.

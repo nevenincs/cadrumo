@@ -535,4 +535,15 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.core.telemetry._errors.TelemetrySchemaError",
+        ErrorCode(
+            code="ERROR_TELEMETRY_SCHEMA",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_telemetry_schema",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

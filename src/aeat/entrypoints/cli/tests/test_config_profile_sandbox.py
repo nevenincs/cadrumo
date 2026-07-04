@@ -27,10 +27,15 @@ storage (no mocks, per the roundtrip-discipline rule) and prove:
 - ``restore`` reverses ``archive``: it brings the same sandbox back to
   the live surface with its data intact, and refuses a sandbox that was
   never archived.
+- every command run while a sandbox is the active profile surfaces a
+  persistent sandbox-active indicator (an info ``Notice`` in ``--json``,
+  a ``SANDBOX`` banner line in text mode) naming the sandbox; a command
+  run against a real (non-sandbox) profile carries neither.
 """
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 
@@ -40,6 +45,7 @@ from click.testing import Result
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ._profile_lifecycle_support import create_profile_via_cli
+from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -524,4 +530,367 @@ def test_sandbox_archive_then_discard_requires_restore_first() -> None:
     assert read_profile_bucket("sandbox:one-way") is not None
     discarded = _invoke(("config", "profile", "sandbox", "discard", "one-way", "--yes"))
     assert discarded.exit_code == 0, discarded.output
+
+
+def test_sandbox_usage_reports_a_named_sandbox_footprint() -> None:
+    """``sandbox usage <name>`` reports a real non-zero on-disk footprint for one sandbox."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "diskcheck", "--from-profile", "main")).exit_code == 0
+
+    report = _invoke(("config", "profile", "sandbox", "usage", "diskcheck"))
+    assert report.exit_code == 0, report.output
+    assert "sandbox:diskcheck" in report.output
+    assert "total_bytes\t" in report.output
+    # A freshly-forked sandbox already has a real manifest + SQLite database
+    # on disk (from the seeded facts), so its footprint must be non-zero.
+    total_line = next(line for line in report.output.splitlines() if line.startswith("total_bytes\t"))
+    assert int(total_line.split("\t", 1)[1]) > 0
+
+
+def test_sandbox_usage_unknown_name_refuses() -> None:
+    refused = _invoke(("config", "profile", "sandbox", "usage", "does-not-exist"))
+    assert refused.exit_code != 0, refused.output
+
+
+def test_sandbox_usage_with_no_name_reports_every_sandbox_and_a_grand_total() -> None:
+    """``sandbox usage`` with no name reports every sandbox and sums their totals."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "usage-a", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "profile", "sandbox", "create", "usage-b", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    report = _invoke(("config", "profile", "sandbox", "usage"))
+    assert report.exit_code == 0, report.output
+    assert "sandbox:usage-a" in report.output
+    assert "sandbox:usage-b" in report.output
+
+    json_report = _invoke(("--format", "json", "config", "profile", "sandbox", "usage"))
+    assert json_report.exit_code == 0, json_report.output
+    result = unwrap_schema_envelope(json_report.output)
+    labels = {row["label"] for row in result["sandboxes"]}
+    assert labels == {"sandbox:usage-a", "sandbox:usage-b"}
+    assert result["total_bytes"] == sum(row["total_bytes"] for row in result["sandboxes"])
+    assert result["total_bytes"] > 0
+
+
+def test_sandbox_usage_measures_an_archived_sandbox_without_reactivating_it() -> None:
+    """``sandbox usage`` can measure an archived (dormant) sandbox by name.
+
+    Mirrors ``restore``'s tombstone-inclusive label lookup: a disk-usage
+    report is a read-only filesystem walk, so it must not require the
+    operator to restore the sandbox first.
+    """
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "dormant", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "profile", "sandbox", "archive", "dormant", "--yes")).exit_code == 0
+
+    report = _invoke(("config", "profile", "sandbox", "usage", "dormant"))
+    assert report.exit_code == 0, report.output
+    assert "sandbox:dormant" in report.output
+
+    # Still archived: the usage report is read-only and did not reactivate it.
+    from ....application.workflow import read_profile_bucket
+
+    assert read_profile_bucket("sandbox:dormant") is None
+    assert read_profile_bucket("sandbox:dormant", include_tombstoned=True) is not None
     assert read_profile_bucket("sandbox:one-way") is None
+
+
+def _add_ledger_transaction(*, description: str, amount: str = "42.00") -> str:
+    added = _invoke(
+        (
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-03-10",
+            "--amount",
+            amount,
+            "--direction",
+            "OUTGOING",
+            "--description",
+            description,
+        ),
+    )
+    assert added.exit_code == 0, added.output
+    payload = unwrap_schema_envelope(added.output)
+    return str(payload["transaction"]["transaction_id"])
+
+
+def test_sandbox_merge_ledger_promotes_rows_from_sandbox_into_main() -> None:
+    """``sandbox merge --scope ledger`` copies sandbox ledger rows into the target profile.
+
+    Real encrypted per-bucket storage: the sandbox and main profile each
+    hold their own ``TransactionCatalogueRepository``, and the merge must
+    make the sandbox row appear in main's catalogue without disturbing
+    main's own pre-existing row.
+    """
+    create_profile_via_cli("main")
+    main_transaction_id = _add_ledger_transaction(description="Main office rent")
+
+    created = _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main"))
+    assert created.exit_code == 0, created.output
+    sandbox_transaction_id = _add_ledger_transaction(description="Sandbox experiment purchase")
+
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    merged = _invoke(
+        (
+            "--format",
+            "json",
+            "config",
+            "profile",
+            "sandbox",
+            "merge",
+            "bakeoff",
+            "--into",
+            "main",
+            "--scope",
+            "ledger",
+            "--yes",
+        ),
+    )
+    assert merged.exit_code == 0, merged.output
+    payload = unwrap_schema_envelope(merged.output)
+    assert payload["scope"] == "ledger"
+    assert payload["source_label"] == "sandbox:bakeoff"
+    assert payload["target_label"] == "main"
+    assert payload["merged_counts"]["ledger_transactions"] == 1
+
+    listed = _invoke(("--format", "json", "app", "ledger", "list"))
+    assert listed.exit_code == 0, listed.output
+    listed_ids = {row["transaction_id"] for row in unwrap_schema_envelope(listed.output)["rows"]}
+    assert main_transaction_id in listed_ids
+    assert sandbox_transaction_id in listed_ids
+
+    # The merge stamps a BUCKET_MERGED audit event into the target (main)
+    # bucket's own event history, mirroring every other maintenance verb.
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ....application.user_profile import profile_storage_session
+    from ....application.workflow import read_profile_bucket
+    from ....domain.buckets import BucketEventType
+
+    main_pointer = read_profile_bucket("main")
+    assert main_pointer is not None
+    with profile_storage_session(main_pointer.bucket_id):
+        catalogue = BucketEventHistoryRepository().load()
+    merge_events = [event for event in catalogue.events.values() if event.event_type is BucketEventType.BUCKET_MERGED]
+    assert len(merge_events) == 1
+    assert merge_events[0].payload["scope"] == "ledger"
+    assert merge_events[0].payload["source_label"] == "sandbox:bakeoff"
+
+
+def test_sandbox_merge_ledger_is_idempotent_on_rerun() -> None:
+    """Re-running the same merge does not duplicate the promoted rows.
+
+    ``merge_sandbox`` upserts by the sandbox transaction's own
+    content-addressed id, so promoting the same unchanged sandbox content
+    twice must leave the target catalogue with the same row count.
+    """
+    create_profile_via_cli("main")
+    _add_ledger_transaction(description="Main baseline row")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+    _add_ledger_transaction(description="Sandbox row one")
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    merge_args = (
+        "config",
+        "profile",
+        "sandbox",
+        "merge",
+        "bakeoff",
+        "--into",
+        "main",
+        "--scope",
+        "ledger",
+        "--yes",
+    )
+    first = _invoke(merge_args)
+    assert first.exit_code == 0, first.output
+    second = _invoke(merge_args)
+    assert second.exit_code == 0, second.output
+
+    listed = _invoke(("--format", "json", "app", "ledger", "list"))
+    assert listed.exit_code == 0, listed.output
+    rows = unwrap_schema_envelope(listed.output)["rows"]
+    # Main's own row plus exactly one promoted sandbox row, never a duplicate
+    # from the second merge run.
+    assert len(rows) == 2
+
+
+def test_sandbox_merge_refuses_without_yes() -> None:
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    result = _invoke(("config", "profile", "sandbox", "merge", "bakeoff", "--into", "main", "--scope", "ledger"))
+    assert result.exit_code != 0
+    assert "--yes" in result.output
+
+
+def test_sandbox_merge_unknown_sandbox_name_refuses() -> None:
+    create_profile_via_cli("main")
+
+    result = _invoke(
+        ("config", "profile", "sandbox", "merge", "does-not-exist", "--into", "main", "--scope", "ledger", "--yes"),
+    )
+    assert result.exit_code != 0
+
+
+def test_sandbox_merge_unknown_target_profile_refuses() -> None:
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    result = _invoke(
+        (
+            "config",
+            "profile",
+            "sandbox",
+            "merge",
+            "bakeoff",
+            "--into",
+            "no-such-profile",
+            "--scope",
+            "ledger",
+            "--yes",
+        ),
+    )
+    assert result.exit_code != 0
+
+
+# ---------------------------------------------------------------------
+# Persistent sandbox-active indicator (#422 final slice)
+# ---------------------------------------------------------------------
+
+
+def test_sandbox_active_indicator_appears_in_json_notices_while_sandbox_is_active() -> None:
+    """An unrelated ``--json`` command surfaces an info notice naming the active sandbox."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+
+    shown = _invoke(("--format", "json", "config", "profile", "show"))
+    assert shown.exit_code == 0, shown.output
+    notices = unwrap_envelope_notices(shown.output)
+    sandbox_notices = [n for n in notices if n["code"] == "config.profile.sandbox.active_indicator"]
+    assert len(sandbox_notices) == 1, notices
+    assert sandbox_notices[0]["severity"] == "info"
+    assert "sandbox:bakeoff" in sandbox_notices[0]["message"]
+
+    envelope = json.loads(shown.output)
+    assert envelope["status"] == "success"
+
+
+def test_sandbox_active_indicator_appears_as_text_banner_while_sandbox_is_active() -> None:
+    """A text-mode command run against an active sandbox prints a ``SANDBOX`` banner line."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+
+    shown = _invoke(("config", "profile", "show"))
+    assert shown.exit_code == 0, shown.output
+    assert "SANDBOX\t" in shown.output
+    assert "sandbox:bakeoff" in shown.output
+
+
+def test_sandbox_active_indicator_absent_for_a_real_profile() -> None:
+    """A command run against a real (non-sandbox) profile carries no sandbox indicator."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    shown_json = _invoke(("--format", "json", "config", "profile", "show"))
+    assert shown_json.exit_code == 0, shown_json.output
+    notices = unwrap_envelope_notices(shown_json.output)
+    assert all(n["code"] != "config.profile.sandbox.active_indicator" for n in notices)
+
+    shown_text = _invoke(("config", "profile", "show"))
+    assert shown_text.exit_code == 0, shown_text.output
+    assert "SANDBOX\t" not in shown_text.output
+
+
+def test_sandbox_active_indicator_absent_when_no_profile_is_active() -> None:
+    """A cold-start command (no active profile at all) carries no sandbox indicator."""
+    result = _invoke(("--format", "json", "config", "profile", "list"))
+    assert result.exit_code == 0, result.output
+    notices = unwrap_envelope_notices(result.output)
+    assert all(n["code"] != "config.profile.sandbox.active_indicator" for n in notices)
+
+
+def test_sandbox_active_indicator_names_the_currently_active_sandbox_after_switch() -> None:
+    """Switching between two sandboxes updates the banner's named sandbox on the next command."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "zeta", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "profile", "sandbox", "create", "eta", "--from-profile", "main")).exit_code == 0
+    # "eta" is now the active bucket (the most recently created sandbox).
+
+    shown = _invoke(("config", "profile", "show"))
+    assert shown.exit_code == 0, shown.output
+    assert "sandbox:eta" in shown.output
+    assert "sandbox:zeta" not in shown.output
+
+    assert _invoke(("config", "profile", "sandbox", "use", "zeta")).exit_code == 0
+    shown_after_use = _invoke(("config", "profile", "show"))
+    assert shown_after_use.exit_code == 0, shown_after_use.output
+    assert "sandbox:zeta" in shown_after_use.output
+
+
+def test_sandbox_active_indicator_helper_degrades_silently_on_a_corrupt_active_manifest() -> None:
+    """The indicator helper itself must never raise on a corrupt active manifest.
+
+    Exercises :func:`~aeat.entrypoints.cli._common._active_sandbox_notice`
+    directly against a bucket whose manifest is torn/corrupt AND is the
+    currently active bucket (``AEAT_ACTIVE_PROFILE`` points at it). This
+    isolates the indicator's own defensive handling: the helper must
+    return ``None`` rather than propagate the storage-validation failure,
+    independent of how any particular CLI command's *other* pre-existing
+    active-profile plumbing (the root callback's label normalisation,
+    which is unrelated to this feature) happens to react to the same
+    corruption.
+    """
+    from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
+    from ....application.workflow import read_profile_bucket
+    from ....core.config import load_settings, override_settings
+    from .._common import _active_sandbox_notice
+
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "torn", "--from-profile", "main")).exit_code == 0
+
+    live_pointer = read_profile_bucket("sandbox:torn")
+    assert live_pointer is not None
+    paths = bucket_paths(load_settings().aeat_local_storage_root, live_pointer.bucket_id)
+    manifest_file = manifest_path(paths)
+    manifest_file.write_text("not = [valid toml", encoding="utf-8")
+
+    with override_settings(aeat_active_profile=live_pointer.bucket_id):
+        assert _active_sandbox_notice() is None
+
+
+def test_sandbox_active_indicator_absent_when_a_non_active_sandbox_manifest_is_corrupt() -> None:
+    """A corrupt manifest on a non-active sandbox never breaks an unrelated command.
+
+    ``config profile list`` tolerates a per-bucket manifest read failure by
+    construction (``list_profile_buckets`` skips unreadable manifests); this
+    proves the corruption of a bucket that is NOT the active profile never
+    surfaces the sandbox indicator and never breaks the command.
+    """
+    from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
+    from ....application.workflow import read_profile_bucket
+    from ....core.config import load_settings
+
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "torn", "--from-profile", "main")).exit_code == 0
+    live_pointer = read_profile_bucket("sandbox:torn")
+    assert live_pointer is not None
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    paths = bucket_paths(load_settings().aeat_local_storage_root, live_pointer.bucket_id)
+    manifest_file = manifest_path(paths)
+    manifest_file.write_text("not = [valid toml", encoding="utf-8")
+
+    listed = _invoke(("config", "profile", "list"))
+    assert listed.exit_code == 0, listed.output
+    assert "SANDBOX\t" not in listed.output

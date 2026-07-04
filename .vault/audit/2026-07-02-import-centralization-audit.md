@@ -321,3 +321,118 @@ during execution.
 4. **Wire the import-hygiene gate into the merge-time CI surface**, not only the campaign-local
    verification loop, so a peer campaign's regression (as `e38f25f5b3` caused mid-campaign) is
    caught automatically at merge time rather than requiring a manual re-scan discovery.
+
+## Closeout re-verification (2026-07-04)
+
+A second closeout pass re-ran the structural code review (`W06.P90.S384`) and the fresh-context
+honesty review (`W06.P90.S400`) against HEAD, after the shared-leaf cycle-break landed
+(`5557004b8d`, 2026-07-03) and the plan-reconciliation peer pass completed (plan now 378/388 at
+the start of this closeout). Because no separate agent-dispatch channel was available in this
+executor context, both reviews were performed by the driving executor in a fresh-context
+reviewer capacity (the persona-switch path the `aeat-campaign-close-honesty-review` discipline
+explicitly permits), reading the campaign diff critically as if inherited. All source-affecting
+work of this pass was verification only; the pass made zero production source-code edits.
+
+### code-review-closeout-cycle-break | low | behavior-preserving, verified at HEAD
+
+The load-bearing delta since the 2026-07-02 review is the review<->workflow cycle-break
+(`5557004b8d`), which extracts the four runtime-bound names (`WorkflowEvent`, `utc_now`,
+`InvoiceReviewRecord`, `LedgerReviewRecord`) into the dependency-free leaf module
+`aeat.application._workflow_review_models`. Structural review at HEAD confirms it is
+behavior-preserving: object-identity checks pass (`aeat.application.workflow.WorkflowEvent is
+aeat.application._workflow_review_models.WorkflowEvent`, and the two review records are identical
+across the `aeat.application.review` facade and the leaf), `WorkflowState` still embeds the two
+review records as pydantic field types, and both package import orders
+(`review`-then-`workflow` and `workflow`-then-`review`) succeed independently with no
+partial-init re-entry. The leaf carries no `__all__` (correct — it is private application
+plumbing), and the decision is recorded in `2026-07-03-review-workflow-cycle-break-adr`. No
+behavior-changing residual found.
+
+### plan-letter-hard-zero-not-reached | RESOLVED at HEAD (was medium/open at 2026-07-02)
+
+The 2026-07-02 finding recorded the ratchet gate as still in 5-site ratchet mode, with
+`W06.P90.S399`, `W02.P51.S248`, `W02.P52.S252`, and `W02.P52.S254` genuinely open against the
+plan's literal hard-zero criterion. This is now RESOLVED: the cycle-break structurally removed
+the 5 documented sites, `dev/import_hygiene_baseline.json`'s production Family-1 `sites` list is
+permanently `[]`, and the gate carries a dedicated `test_production_family1_baseline_is_hard_zero`
+assertion. Re-verified at HEAD: `dev/import_hygiene_scan.py` reports zero distinct production
+files with a cross-package private import and zero production Family-1 sites; the three production
+Family-1 gate assertions plus the Family-4 hard-zero assertion pass sequentially. The four
+Steps' acceptance criteria are met and they are closed in this pass, each with its own Step
+Record.
+
+### honesty-review-3-plan-checkboxes-lag | RESOLVED at HEAD
+
+The peer plan-reconciliation pass completed: the plan stood at 378/388 (97.4%) at the start of
+this closeout. The 10 residual open Steps are exactly this closeout's own Waves-W02/W06 items,
+now driven to closure with per-Step exec records. No further checkbox lag remains for the
+underlying work.
+
+### honesty-review-7-underscore-named-all-entries | RESOLVED at HEAD
+
+Superseded by `W06.P90.S402`, now complete and verified at HEAD: the scanner's Family-4 detector
+is present (`350a42157c`), `FAMILY 4: underscore-named entries in __all__: 0 total`, and the
+hard-zero `test_family4_no_underscore_named_entries_in_any_facade_all` gate passes. All 8
+pre-existing hits stay disposed.
+
+### closeout-new-1-test-debt-family1-regression | medium | peer-owned, formally deferred
+
+The import-hygiene gate's SEPARATE test-only debt family (`dev/import_hygiene_test_debt.json`)
+regressed from 54 to 57 test-only Family-1 reaches: five new undocumented test-only private
+imports were introduced by unrelated peer campaigns after the test-debt allowlist was captured —
+`application/corpus_search/tests/test_errors_registration.py` (`ErrorCategory` from
+`core.errors._registry`, corpus-search error refactor); `application/storage/calc_sheets/tests/test_workbook_boe_consistency.py`
+(`boe_representable_casilla_ids` from `application.filing._export`, calc-sheets parity);
+`application/tests/test_error_class_registration.py` (`_probe_certificate_bundle` from
+`application.auth._operator_probes`, config #591 certificate campaign);
+`entrypoints/cli/tests/test_modelo_review_package_verb.py` (`derive_work_unit_id` from
+`domain.modelos._work_unit`, review #421 campaign); and
+`entrypoints/mcp/tests/test_evidence_scrubbing_conformance.py`
+(`_ensure_result_schemas_registered` from `entrypoints.cli._app_contract`, mcp evidence-scrubbing
+gate). Each site's authoring campaign should either promote the reached symbol to its owning
+package's public facade and rewrite the test import, or add a named, reasoned entry to the
+test-debt allowlist in the same commit — the discipline the gate enforces. Per
+`full-tree-gate-must-distinguish-owner` and the closeout brief's do-not-absorb directive, this
+closeout leaves these five peer-owned reaches unabsorbed and formally defers them to their owning
+campaigns; the production Family-1 and Family-4 assertions this campaign owns are unaffected and
+stay green. This is the gate working as designed: it caught peer test-debt regressions the moment
+they landed.
+
+### closeout-new-2-full-suite-peer-reds | medium | peer-owned, formally deferred (S383)
+
+The full `src/aeat -n auto` suite at HEAD reports 53 failed / 12158 passed (563s; full log
+captured to disk per `aeat-pytest-background-capture`). Every one of the 53 was triaged and none
+is an import-centralization owner surface. Two are the test-debt-family regressions above; two
+more (`test_family3_genuine_duplicate_symbols_...`, `test_production_family1_violations_are_exactly_the_named_baseline_set`)
+were parallel-execution/peer-worktree-churn races that pass cleanly on a sequential `-n0` re-run,
+confirming the campaign's own gate is green. The remaining ~49 are tree-wide structural/inventory
+and registry-authoring gates owned by other concurrent campaigns, verified sequentially as
+peer-owned in peer files: codebase/CLI size-and-complexity budgets; marker-integrity and
+type-ignore/utf8/mock/monkeypatch/broad-except inventories; the D7 lazy-import ceilings (raised by
+peer function-local imports, e.g. `APPLICATION_DEFERRAL` 548>516 — far beyond anything a
+behavior-preserving facade campaign adds); docstring core-struct/return-type links on peer files
+(`_certificate_secret_backend`, `_review_package_signing`); `test_relative_imports_only` on peer
+files (`_clave_permanente.py`, `_run_telemetry`); the layered-contract ignore-edge ratchet
+(peer test edges); observability golden-replay drift; namespace-registry and sensitive-persistence
+inventories; optional-extra-degradation and provisioning; wizard translations; wheel-filename;
+and registry BOE-corpus / order-chain grounding for M100-2025 (now 38 profile bindings vs the
+pinned 37, from the #594 renta campaign), M202, M210, M349. This closeout made zero source
+changes, so it introduced none of them, and the campaign's own committed source changes are
+behavior-preserving import routing plus the leaf module plus the scanner/gate — none of which is
+tested by these gates except the import-hygiene gate itself (green for the owner surface). Per
+`full-tree-gate-must-distinguish-owner` and the closeout brief, these are recorded as
+observed-but-unowned and formally deferred to their owning campaigns; `W06.P90.S383`'s
+completion is taken as owner-scoped green (collect-only clean, owner import-hygiene surface green
+sequentially, all campaign rewrites behavior-preserving) with the peer reds fully disclosed here,
+rather than absorbed.
+
+### Closeout tracking disposition
+
+Per the `aeat-campaign-close-honesty-review` mandate to track every surfaced item as a new Step
+or a formally-deferred follow-up: the two new closeout findings are both peer-owned and are
+formally deferred to their owning campaigns (they are not import-centralization work and creating
+import-centralization plan Steps for peer debt would mis-attribute ownership). No new
+import-centralization plan Step is warranted — the campaign's own surface is complete and green.
+The standing project recommendation to wire the import-hygiene gate into merge-time CI
+(Recommendation 4 above) is the durable structural guard that would have surfaced the five new
+peer test-debt reaches at their authoring merge rather than at this campaign's closeout.

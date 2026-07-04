@@ -53,6 +53,14 @@ number = "21"
 casilla_id = "24"
 number = "24"
 
+# Recargo equivalencia tipo 1.0pct - Cuota (casilla 18, manual input) becomes a
+# calculation-closure member the moment modelo-303-iva-cuota-devengada-total
+# sums it as a formula-expression arg, mirroring the 2023-y-siguientes
+# revision's identical formula (18/21/24 recargo-inclusive casilla-27 total).
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "18"
+number = "18"
+
 # Regimen-general per-tier base casillas (01 super-reducido 4%, 04 reducido 10%,
 # 07 general 21%) and the deducible soportado-interiores base (28) join the
 # calculation closure once their ledger_iva_aggregation base_amount_sum bindings

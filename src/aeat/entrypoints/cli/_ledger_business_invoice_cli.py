@@ -12,12 +12,15 @@ service over the encrypted
 from __future__ import annotations
 
 from enum import StrEnum
+from pathlib import Path
 
 import typer
 
 from ...application.invoices import (
     create_catalogue_invoice,
+    import_invoices_from_rows,
     invoice_direction_to_source_kind,
+    read_bulk_invoice_import_rows,
     remove_catalogue_invoice,
     resolve_catalogue_invoice_from_repository,
 )
@@ -32,6 +35,7 @@ from ...application.ledger import (
 from ...core import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva import InvoiceKind, IvaCategory
 from ._common import (
     _bad,
@@ -47,6 +51,7 @@ from ._common import (
 )
 from ._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceCreateResult,
+    CatalogueInvoiceImportResult,
     CatalogueInvoiceListResult,
     CatalogueInvoiceRemoveResult,
     CatalogueInvoiceViewResult,
@@ -536,6 +541,108 @@ def catalogue_create(
         result=CatalogueInvoiceCreateResult.model_validate(_catalogue_invoice_payload(result.invoice)),
         lines=_catalogue_invoice_lines(result.invoice),
     )
+
+
+@catalogue_app.command(
+    "import",
+    help=tr(
+        "cli.app.ledger.invoice.catalogue.import_help",
+        default="Bulk-create catalogue invoices from a CSV or XLSX file.",
+    ),
+)
+def catalogue_import(
+    ctx: typer.Context,
+    file: Path = typer.Option(
+        ...,
+        "--file",
+        help=tr(
+            "cli.app.ledger.invoice.catalogue.import_file_help",
+            default=(
+                "Path to a CSV or XLSX file of invoice rows (counterparty_nif, "
+                "counterparty_name, invoice_number, invoice_date, taxable_base, "
+                "and optional iva_rate/currency/country_code/notes)."
+            ),
+        ),
+    ),
+    kind: InvoiceKindOption = typer.Option(
+        ...,
+        "--kind",
+        help=tr(
+            "cli.app.ledger.invoice.kind_help",
+            default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
+        ),
+    ),
+) -> None:
+    """Bulk-create reconciliation catalogue invoices from a CSV/XLSX file.
+
+    Each row is handed one at a time to
+    :func:`aeat.application.invoices.create_catalogue_invoice` -- the same sole
+    write path ``catalogue create`` uses for a single invoice; this verb never
+    writes the catalogue itself. A row whose content-derived identity already
+    exists in the catalogue (a re-import of an unchanged file) is reported
+    ``skipped_duplicate`` rather than re-written or raised. A malformed row
+    (missing field, bad date, unsupported IVA rate) is reported in ``refused``
+    with its row number and the failing field; the remaining valid rows still
+    import.
+    """
+    from ...domain.invoices import InvoiceValidationError
+
+    bucket_id = _business_invoice_bucket_id()
+    if not file.exists():
+        raise _bad(
+            tr(
+                "cli.app.ledger.invoice.catalogue.import_file_not_found",
+                path=str(file),
+                default=f"File not found: {file}",
+            ),
+        )
+    try:
+        rows = list(read_bulk_invoice_import_rows(file))
+        result = import_invoices_from_rows(rows, bucket_id=bucket_id, kind=InvoiceKind(kind.value))
+    except InvoiceValidationError as exc:
+        raise _bad(str(exc)) from exc
+
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"rows\t{result.rows}",
+        f"created\t{result.created}",
+        f"skipped_duplicate\t{result.skipped_duplicate}",
+        f"refused\t{len(result.refused)}",
+    ]
+    notices: list[Notice] = []
+    for failure in result.refused:
+        lines.append(f"  refused\trow={failure.row_number}\tfield={failure.field}\treason={failure.reason}")
+    if result.rows > 0 and result.created == 0 and result.refused:
+        message = tr(
+            "cli.app.ledger.invoice.catalogue.import_all_refused",
+            default="bulk invoice import failed: every row was refused; no invoices were created",
+        )
+        lines.insert(1, message)
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.invoice.catalogue.import.all_refused",
+                message=message,
+                context={"rows": str(result.rows), "refused": str(len(result.refused))},
+            ),
+        )
+    payload = {
+        "bucket_id": bucket_id,
+        "rows": result.rows,
+        "created": result.created,
+        "skipped_duplicate": result.skipped_duplicate,
+        "refused": [f.model_dump(mode="json") for f in result.refused],
+        "created_invoice_ids": list(result.created_invoice_ids),
+    }
+    _emit_envelope(
+        ctx,
+        command="ledger.invoice.catalogue.import",
+        result=CatalogueInvoiceImportResult.model_validate(payload),
+        lines=lines,
+        notices=notices,
+    )
+    if notices:
+        raise typer.Exit(code=1)
 
 
 @catalogue_app.command(

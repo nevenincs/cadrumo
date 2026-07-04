@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#codebase-solidification'
-date: '2026-06-15'
-modified: '2026-07-03'
+date: '2026-07-04'
+modified: '2026-07-04'
 related:
   - '[[2026-05-28-codebase-solidification-W01-P01-S01]]'
   - '[[2026-05-28-codebase-solidification-W01-P01-S02]]'
@@ -326,6 +326,9 @@ related:
   - '[[2026-05-28-codebase-solidification-W26-P58-S667]]'
   - '[[2026-05-28-codebase-solidification-W29-P63-S801]]'
   - '[[2026-05-28-codebase-solidification-W29-P63-S802]]'
+  - '[[2026-05-28-codebase-solidification-W30-P64-S806]]'
+  - '[[2026-05-28-codebase-solidification-W30-P64-S807]]'
+  - '[[2026-05-28-codebase-solidification-W30-P64-S808]]'
   - '[[2026-05-28-codebase-solidification-adr]]'
   - '[[2026-05-28-codebase-solidification-exec]]'
   - '[[2026-05-28-codebase-solidification-plan]]'
@@ -429,6 +432,7 @@ related:
   - '[[2026-06-01-codebase-solidification-w26-p57-s659-s662-exec]]'
   - '[[2026-06-01-codebase-solidification-w26-p59-s668-s671-exec]]'
   - '[[2026-06-04-codebase-solidification-research]]'
+  - '[[2026-07-04-codebase-solidification-audit]]'
 ---
 
 # `codebase-solidification` feature index
@@ -445,6 +449,7 @@ Auto-generated index of all documents tagged with `#codebase-solidification`.
 
 - `2026-05-30-codebase-solidification-audit` - `codebase-solidification` audit: `Wave 2 swarm re-audit`
 - `2026-05-31-codebase-solidification-audit` - `codebase-solidification` audit: type-ignore paydown classification — 99-site inventory (W26.P56)
+- `2026-07-04-codebase-solidification-audit` - codebase-solidification audit: W30.P64.S804 module-scope infeasibility and S809 precondition
 
 ### exec
 
@@ -866,6 +871,9 @@ Auto-generated index of all documents tagged with `#codebase-solidification`.
 - `2026-06-01-codebase-solidification-w26-p59-s668-s671-exec` - codebase-solidification W26.P59 — S668–S671 execution record
 - `2026-05-28-codebase-solidification-W29-P63-S801` - Introduce StandardPeriodCode StrEnum covering the standard period codes (1T through 4T, 1P through 4P, 0A, 01 through 12) at canonical home `src/aeat/core/_period.py`. Refactor PeriodCode in `src/aeat/domain/calculations/registry/_schema.py` to validate via StandardPeriodCode plus extended/ad-hoc/event regex patterns. Sweep all consumer sites in one atomic commit per atomic-relocation-coordination ADR. Tag commit subject relocation:StandardPeriodCode
 - `2026-05-28-codebase-solidification-W29-P63-S802` - Introduce OutputLanguage StrEnum with members ES, EN, CA, HU at canonical home `src/aeat/core/external_constants.py`. Rebase SUPPORTED_OUTPUT_LANGUAGES to frozenset of OutputLanguage
+- `2026-05-28-codebase-solidification-W30-P64-S806` - Promote inline ReportLab Canvas constructions to module-scoped fixtures
+- `2026-05-28-codebase-solidification-W30-P64-S807` - Add session-scoped source_tree_ast fixture and migrate the ratchets to consume it
+- `2026-05-28-codebase-solidification-W30-P64-S808` - Migrate ValidatedRegistryAuthority.load call sites to the session authority fixture
 
 ### plan
 
