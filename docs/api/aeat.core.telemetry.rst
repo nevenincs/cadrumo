@@ -16,6 +16,7 @@ Submodules
    aeat.core.telemetry._consent
    aeat.core.telemetry._emit
    aeat.core.telemetry._errors
+   aeat.core.telemetry._http_sink
    aeat.core.telemetry._producers
    aeat.core.telemetry._schema
    aeat.core.telemetry._tier
