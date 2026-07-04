@@ -33,7 +33,7 @@ _MODELOS = [
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
-def test_validator_accepts_committed_definition(mid, rev, approval, plazo, doc, has_windows) -> None:
+def test_validator_accepts_committed_definition(mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool) -> None:
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert rev in modelo.revisions
@@ -41,7 +41,7 @@ def test_validator_accepts_committed_definition(mid, rev, approval, plazo, doc, 
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(mid, rev, approval, plazo, doc, has_windows) -> None:
+def test_approval_and_plazo_resolve_as_legal_authority(mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool) -> None:
     _, catalogues = _committed_modelo(mid)
     for ref in (approval, plazo):
         entry = catalogues.legal[ref]
@@ -50,7 +50,7 @@ def test_approval_and_plazo_resolve_as_legal_authority(mid, rev, approval, plazo
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
-def test_deadline_window_shape_matches_bundled_grounding(mid, rev, approval, plazo, doc, has_windows) -> None:
+def test_deadline_window_shape_matches_bundled_grounding(mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool) -> None:
     """Annual modelos carry January windows citing the plazo; 234/238 carry none.
 
     234's event-driven plazo (RGAT 46.3) and 238's delegated annual plazo (RGAT
