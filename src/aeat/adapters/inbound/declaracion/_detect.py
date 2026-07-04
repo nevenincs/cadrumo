@@ -7,11 +7,11 @@ AEAT prints the form code + año + period in a header / footer stamp.
 revision tag selects the registry ``declaracion_pdf`` extraction profile
 for the matched modelo and ejercicio.
 
-The detector returns :class:`~aeat.adapters.inbound.declaracion.TemplateRevision`
+The detector returns :class:`~adapters.inbound.declaracion.TemplateRevision`
 records; it does not load
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot` data or choose an
+:class:`~domain.calculations.registry.RegistrySnapshot` data or choose an
 extraction profile. Registry validation happens in
-:func:`~aeat.adapters.inbound.declaracion.parse_declaracion`.
+:func:`~adapters.inbound.declaracion.parse_declaracion`.
 """
 
 from __future__ import annotations
