@@ -1,10 +1,52 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-reduccion-prevision-social-total"
 target_casilla_id = "0468"
+# Art. 52.1 LIRPF tiered joint limit. Two independent pools, each bounded by
+# 30% of net yields (0432) as the overall global cap:
+#   - aportaciones/contribuciones pool (0463+0465 individual, plus
+#     0426+0427+0438+0499 employer-linked): capped at the general EUR 1.500
+#     sub-limit (art. 52.1.b) PLUS an EUR 8.500 increment (art. 52.1.1º/2º)
+#     that is unlocked only to the extent employer-linked backing is
+#     declared. Expressed algebraically as
+#     min(individual+backing, 1500 + min(backing, 8500)) so the increment
+#     collapses to zero backing capacity when no employer-linked casilla is
+#     populated (purely-individual filers stay bound by EUR 1.500), with no
+#     conditional/if-then-else branch needed.
+#   - dependencia pool (0464+0466): a separate EUR 5.000 ceiling (art. 52.1,
+#     final paragraph), additive to the first pool per the AEAT Renta manual
+#     worked example ("10.000 euros por aportaciones y contribuciones +
+#     5.000 euros por seguros colectivos de dependencia").
 expression = { op = "min", args = [
-    { casilla_id = "0467" },
-    { literal = "10000" },
     { op = "percent", args = [{ casilla_id = "0432" }, { literal = "30" }] },
+    { op = "add", args = [
+        { op = "min", args = [
+            { op = "add", args = [
+                { op = "sum", args = [{ casilla_id = "0463" }, { casilla_id = "0465" }] },
+                { op = "sum", args = [
+                    { casilla_id = "0426" },
+                    { casilla_id = "0427" },
+                    { casilla_id = "0438" },
+                    { casilla_id = "0499" },
+                ] },
+            ] },
+            { op = "add", args = [
+                { literal = "1500" },
+                { op = "min", args = [
+                    { op = "sum", args = [
+                        { casilla_id = "0426" },
+                        { casilla_id = "0427" },
+                        { casilla_id = "0438" },
+                        { casilla_id = "0499" },
+                    ] },
+                    { literal = "8500" },
+                ] },
+            ] },
+        ] },
+        { op = "min", args = [
+            { op = "sum", args = [{ casilla_id = "0464" }, { casilla_id = "0466" }] },
+            { literal = "5000" },
+        ] },
+    ] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-52"]

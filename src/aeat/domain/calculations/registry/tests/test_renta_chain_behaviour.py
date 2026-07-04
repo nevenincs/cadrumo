@@ -49,6 +49,7 @@ _C0433 = _casilla_id("0433")
 _C0435 = _casilla_id("0435")
 _C0461 = _casilla_id("0461")
 _C0463 = _casilla_id("0463")
+_C0466 = _casilla_id("0466")
 _C0467 = _casilla_id("0467")
 _C0468 = _casilla_id("0468")
 _C0500 = _casilla_id("0500")
@@ -505,6 +506,133 @@ def test_plan_de_empleo_reduccion_capped_at_10000() -> None:
             # 0468 = min(15000, 10000, 24000) = 10,000
             _expected_output(target_casilla_id=_C0468, value=Decimal("10000.00")),
             _expected_output(target_casilla_id=_C0500, value=Decimal("70000.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    assert_registry_scenario_matches(report)
+
+
+def test_art52_tiered_purely_individual_aportacion_capped_at_1500() -> None:
+    """0468 tiered formula: a purely-individual aportación is capped at the EUR 1.500
+
+    general sub-limit, NOT the combined EUR 10.000/30% ceiling — the exact
+    art. 52.1.b) boundary the flat formula silently over-granted (issue #574
+    Phase 2b). This is the boundary the art. 52 advisory
+    (``_art52_reduccion_advisory_finding``) flags for the still-MANUAL
+    2021-2023 revisions; here the 2025 formula is asserted to compute the
+    correct capped value directly.
+
+    Oracle derivation (art. 52.1 LIRPF, verbatim: "1.500 euros anuales... Este
+    límite se incrementará... siempre que tal incremento provenga de
+    contribuciones empresariales, o de aportaciones del trabajador al mismo
+    instrumento de previsión social"): a EUR 3.000 individual aportación (no
+    plan-de-empleo, no contribución empresarial, no aportación de empresa por
+    decisión del trabajador, no aportación de autónomo) never unlocks the
+    EUR 8.500 increment, so the pool is bound by the general EUR 1.500 limit.
+      trabajo rendimientos (0003) = 60,000 → 0019 (otros gastos, art. 19.2.f)
+        = min(2000, 60000) = 2,000 → 0432 = 60,000 - 2,000 = 58,000
+      30% cap = 0.30 * 58,000 = 17,400 (not binding)
+      individual aportación (0463) = 3,000 → 0467 = 3,000 (raw sum, unchanged)
+      individual pool = 0463 + 0465 = 3,000; employer-linked backing = 0
+      pool cap = 1,500 + min(0, 8500) = 1,500
+      0468 = min(17400, min(3000, 1500) + min(0, 5000)) = min(17400, 1500) = 1,500
+      0500 = 58,000 - 1,500 = 56,500
+    """
+    scenario = _scenario_2025(
+        "art52-tiered-purely-individual-capped-1500",
+        overrides={
+            _C0003: Decimal("60000.00"),  # trabajo → nets to 0432 = 58,000 after otros gastos
+            _C0463: Decimal("3000.00"),  # purely individual aportación, no employer-linked backing
+        },
+        expected=(
+            _expected_output(target_casilla_id=_C0467, value=Decimal("3000.00")),
+            # Tiered formula caps the purely-individual pool at EUR 1.500, not
+            # the combined EUR 10.000 the flat pre-Phase-2b formula silently
+            # granted (min(3000, 10000, 17400) would have yielded 3,000).
+            _expected_output(target_casilla_id=_C0468, value=Decimal("1500.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("56500.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    assert_registry_scenario_matches(report)
+
+
+def test_art52_tiered_employer_backed_aportacion_unlocks_8500_increment() -> None:
+    """0468 tiered formula: employer-backed contributions unlock the full EUR 10.000
+
+    combined ceiling (EUR 1.500 general + EUR 8.500 increment), even when the
+    individual pool is zero — the increment capacity is not wasted just
+    because no purely-individual aportación exists to consume the base slot.
+
+    Oracle derivation (art. 52.1.1º LIRPF, verbatim: "En 8.500 euros anuales,
+    siempre que tal incremento provenga de contribuciones empresariales"):
+      trabajo rendimientos (0003) = 90,000 → 0019 (otros gastos, art. 19.2.f)
+        = min(2000, 90000) = 2,000 → 0432 = 90,000 - 2,000 = 88,000
+      30% cap = 0.30 * 88,000 = 26,400 (not binding)
+      employer contribution (0427) = 9,200 → 0467 = 9,200
+      individual pool = 0; employer-linked backing = 9,200
+      pool cap = 1,500 + min(9200, 8500) = 1,500 + 8,500 = 10,000
+      0468 = min(26400, min(9200, 10000) + min(0, 5000)) = min(26400, 9200) = 9,200
+      0500 = 88,000 - 9,200 = 78,800
+    """
+    scenario = _scenario_2025(
+        "art52-tiered-employer-backed-unlocks-increment",
+        overrides={
+            _C0003: Decimal("90000.00"),  # trabajo → nets to 0432 = 88,000 after otros gastos
+            _C0427: Decimal("9200.00"),  # contribución empresarial, well within the combined 10k ceiling
+        },
+        expected=(
+            _expected_output(target_casilla_id=_C0467, value=Decimal("9200.00")),
+            # Below the combined EUR 10.000 ceiling (1500 + 8500), so the
+            # full aportación reduces — unlike the purely-individual case
+            # above, which would have been capped at 1,500.
+            _expected_output(target_casilla_id=_C0468, value=Decimal("9200.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("78800.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    assert_registry_scenario_matches(report)
+
+
+def test_art52_tiered_dependencia_uses_separate_5000_ceiling() -> None:
+    """0468 tiered formula: the dependencia pool (0464/0466) has its OWN separate
+
+    EUR 5.000 ceiling, additive to (not sharing) the aportaciones/contribuciones
+    pool's EUR 1.500/10.000 ceiling — confirmed against the AEAT Renta 2025
+    manual worked example (Cap. 13, "Reducciones de la base imponible
+    general"): "Límite de aportaciones y contribuciones: 10.000 euros por
+    aportaciones y contribuciones + 5.000 euros por seguros colectivos de
+    dependencia."
+
+    Oracle derivation (art. 52.1 LIRPF, final paragraph, verbatim: "Además,
+    5.000 euros anuales para las primas a seguros colectivos de dependencia
+    satisfechas por la empresa"):
+      trabajo rendimientos (0003) = 42,000 → 0019 (otros gastos, art. 19.2.f)
+        = min(2000, 42000) = 2,000 → 0432 = 42,000 - 2,000 = 40,000
+      30% cap = 0.30 * 40,000 = 12,000 (not binding)
+      individual aportación (0463) = 1,000 → within its own 1,500 sub-limit
+      contribución seguro colectivo de dependencia (0466) = 6,000 → exceeds
+        its own separate 5,000 ceiling, capped there
+      0467 = 0463 + 0466 = 1,000 + 6,000 = 7,000 (raw sum, unchanged)
+      individual pool = 1,000 (backing = 0) → capped at 1,500 → 1,000
+      dependencia pool = 6,000 → capped at 5,000 → 5,000
+      0468 = min(12000, 1000 + 5000) = min(12000, 6000) = 6,000
+      0500 = 40,000 - 6,000 = 34,000
+    """
+    scenario = _scenario_2025(
+        "art52-tiered-dependencia-separate-5000-ceiling",
+        overrides={
+            _C0003: Decimal("42000.00"),  # trabajo → nets to 0432 = 40,000 after otros gastos
+            _C0463: Decimal("1000.00"),  # individual aportación, within the 1,500 sub-limit
+            _C0466: Decimal("6000.00"),  # dependencia contribution, exceeds its own 5,000 ceiling
+        },
+        expected=(
+            _expected_output(target_casilla_id=_C0467, value=Decimal("7000.00")),
+            # dependencia contribution (6,000) is capped at its own separate
+            # 5,000 ceiling; the individual aportación (1,000) is unaffected
+            # by that cap since it belongs to a different pool.
+            _expected_output(target_casilla_id=_C0468, value=Decimal("6000.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("34000.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
