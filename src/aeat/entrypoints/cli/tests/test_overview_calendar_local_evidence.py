@@ -175,9 +175,13 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
         )
 
     with profile_storage_session("second"):
-        second_evidence = _local_calendar_filing_evidence("second", ())
+        second_evidence, _second_notice = _local_calendar_filing_evidence("second", ())
     with profile_storage_session("operator"):
-        operator_evidence = _local_calendar_filing_evidence("operator", (), expected_tax_id="X1234567L")
+        operator_evidence, _operator_notice = _local_calendar_filing_evidence(
+            "operator",
+            (),
+            expected_tax_id="X1234567L",
+        )
 
     assert second_evidence == ()
     by_period = {row.period: row for row in operator_evidence}
@@ -240,7 +244,7 @@ def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justif
             ),
         )
 
-        evidence = _local_calendar_filing_evidence(
+        evidence, _notice = _local_calendar_filing_evidence(
             "operator",
             (),
             expected_tax_id="00000000T",
@@ -271,7 +275,7 @@ def test_local_calendar_filing_evidence_resolves_persisted_justificante_metadata
         repo.save(upsert_filing_record(repo.load(), _modelo_record_with_external_justificante(csv=csv)))
         JustificanteRepository().save(_justificante_metadata(csv=csv))
 
-        evidence = _local_calendar_filing_evidence(
+        evidence, _notice = _local_calendar_filing_evidence(
             "operator",
             (),
             expected_tax_id="X1234567L",
