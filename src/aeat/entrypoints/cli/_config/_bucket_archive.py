@@ -2,9 +2,9 @@
 
 ``config profile export``/``import`` (registered in :mod:`._profile_bundle`)
 carry a structured-only cleartext bundle and are explicitly NOT a full backup
-(see the not-a-full-backup :class:`~aeat.core.json_contract.Notice` it emits).
+(see the not-a-full-backup :class:`~core.json_contract.Notice` it emits).
 This module wires the sealed, AEAD-encrypted full-custody transport that
-:class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`
+:class:`~application.bucket_maintenance.BucketMaintenanceService`
 already implements as ``export``/``import_``/``inspect`` — it is the true
 backup/restore surface: attachment evidence bytes, the audit trail, and the
 cross-period calculation inputs all ride inside the sealed archive.
