@@ -48,6 +48,7 @@ from ...domain.filing import (
     ModeloValidator,
     derive_validation_status,
 )
+from ...domain.invoices import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import Transaction, TransactionCatalogue
 
@@ -82,6 +83,9 @@ class ModeloApprovalStaleReason(StrEnum):
             machine status changed since approval.
         TRANSACTION_CATALOGUE_CHANGED: Upstream classified
             transactions have been updated since approval.
+        INVOICE_CATALOGUE_CHANGED: Upstream issued/received invoices
+            (a calculation source resolved through the source mesh)
+            have been updated since approval.
         CATEGORY_PROFILES_CHANGED: The fiscal category profile catalog
             has been edited since approval.
         SCHEMA_FORMULA_CHANGED: The registry-backed casilla schema or formula set
@@ -92,6 +96,7 @@ class ModeloApprovalStaleReason(StrEnum):
     DRAFT_PAYLOAD_CHANGED = "BORRADOR_CONTENIDO_CAMBIADO"
     DRAFT_REVIEW_CHANGED = "BORRADOR_REVISION_CAMBIADA"
     TRANSACTION_CATALOGUE_CHANGED = "CATALOGO_TRANSACCIONES_CAMBIADO"
+    INVOICE_CATALOGUE_CHANGED = "CATALOGO_FACTURAS_CAMBIADO"
     CATEGORY_PROFILES_CHANGED = "PERFILES_CATEGORIA_CAMBIADOS"
     SCHEMA_FORMULA_CHANGED = "ESQUEMA_FORMULA_CAMBIADO"
 
@@ -102,25 +107,37 @@ def compute_current_approval_basis(
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
+    invoice_catalogue: InvoiceCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
 ) -> ModeloApprovalBasis:
     """Return the :class:`ModeloApprovalBasis` digests for current upstream state.
 
     The basis hashes the draft identity and validation surface, the supplied or
-    persisted :class:`TransactionCatalogue`, the supplied or bundled
+    persisted :class:`TransactionCatalogue`, the supplied or persisted
+    :class:`~aeat.domain.invoices.InvoiceCatalogue` (a calculation source
+    resolved through the source mesh), the supplied or bundled
     :class:`~aeat.domain.categories.CategoryProfile` mapping, and the active
     registry schema/formula surface exposed by ``schema_provider``.
+
+    The invoice-catalogue digest makes an ``APROBADO`` draft stale when its
+    upstream issued/received invoices change, closing the gap left by fingerprinting
+    only the ledger transaction catalogue. Like the transaction catalogue it is
+    self-loaded from ``bucket_id`` so stale detection is reproducible at refresh
+    time without running the full source mesh in the review layer.
 
     Args:
         draft: The :class:`aeat.domain.filing.ModeloDraft` whose basis
             is being computed.
         bucket_id: Stable bucket identifier; used to load the persisted
-            transaction catalogue when no override is supplied.
+            transaction and invoice catalogues when no override is supplied.
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional :class:`TransactionCatalogue` override.
             When ``None``, the catalogue is loaded from the encrypted
             :class:`~aeat.domain.transactions.TransactionCatalogueRepository`.
+        invoice_catalogue: Optional :class:`~aeat.domain.invoices.InvoiceCatalogue`
+            override. When ``None``, the catalogue is loaded from the encrypted
+            :class:`~aeat.domain.invoices.InvoiceCatalogueRepository`.
         category_profiles: Optional override of the active category
             profile map. Defaults to the bundled 2025 registry.
 
@@ -128,11 +145,13 @@ def compute_current_approval_basis(
         A freshly computed :class:`ModeloApprovalBasis`.
     """
     catalogue = transaction_catalogue if transaction_catalogue is not None else _load_transaction_catalogue(bucket_id)
+    invoices = invoice_catalogue if invoice_catalogue is not None else _load_invoice_catalogue(bucket_id)
     profiles = category_profiles if category_profiles is not None else resolve_category_profiles(2025)
     return ModeloApprovalBasis(
         draft_payload_fingerprint=draft.draft_id,
         draft_review_fingerprint=_draft_review_fingerprint(draft),
         transaction_catalogue_fingerprint=_transaction_catalogue_fingerprint(catalogue),
+        invoice_catalogue_fingerprint=_invoice_catalogue_fingerprint(invoices),
         category_profiles_fingerprint=_category_profiles_fingerprint(profiles),
         schema_formula_fingerprint=_schema_formula_fingerprint(
             draft,
@@ -159,6 +178,7 @@ def approval_stale_reasons(
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
+    invoice_catalogue: InvoiceCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
 ) -> tuple[ModeloApprovalStaleReason, ...]:
     """Return the ordered stale reasons for ``draft``.
@@ -174,6 +194,8 @@ def approval_stale_reasons(
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional :class:`TransactionCatalogue` override.
+        invoice_catalogue: Optional :class:`~aeat.domain.invoices.InvoiceCatalogue`
+            override; forwarded to :func:`compute_current_approval_basis`.
         category_profiles: Optional category profile map override.
 
     Returns:
@@ -188,6 +210,7 @@ def approval_stale_reasons(
         bucket_id=bucket_id,
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
+        invoice_catalogue=invoice_catalogue,
         category_profiles=category_profiles,
     )
     reasons: list[ModeloApprovalStaleReason] = []
@@ -200,6 +223,8 @@ def approval_stale_reasons(
         reasons.append(ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED)
     if stored_basis.transaction_catalogue_fingerprint != current_basis.transaction_catalogue_fingerprint:
         reasons.append(ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED)
+    if stored_basis.invoice_catalogue_fingerprint != current_basis.invoice_catalogue_fingerprint:
+        reasons.append(ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED)
     if stored_basis.category_profiles_fingerprint != current_basis.category_profiles_fingerprint:
         reasons.append(ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED)
     if stored_basis.schema_formula_fingerprint != current_basis.schema_formula_fingerprint:
@@ -214,6 +239,7 @@ def approve_draft(
     approved_by: str,
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
+    invoice_catalogue: InvoiceCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
     approved_at: datetime | None = None,
 ) -> ModeloDraft:
@@ -232,6 +258,8 @@ def approve_draft(
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional catalogue override.
+        invoice_catalogue: Optional :class:`~aeat.domain.invoices.InvoiceCatalogue`
+            override; forwarded to :func:`compute_current_approval_basis`.
         category_profiles: Optional category profile map override.
         approved_at: Optional timestamp; defaults to the canonical clock helper.
 
@@ -260,6 +288,7 @@ def approve_draft(
         bucket_id=bucket_id,
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
+        invoice_catalogue=invoice_catalogue,
         category_profiles=category_profiles,
     )
     updated = draft.model_copy(
@@ -320,6 +349,7 @@ def refresh_review_status(
     bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
+    invoice_catalogue: InvoiceCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
     refreshed_at: datetime | None = None,
 ) -> ModeloDraft:
@@ -339,6 +369,8 @@ def refresh_review_status(
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional :class:`TransactionCatalogue` override used
             when computing the approval basis fingerprint.
+        invoice_catalogue: Optional :class:`~aeat.domain.invoices.InvoiceCatalogue`
+            override; forwarded to :func:`approval_stale_reasons`.
         category_profiles: Optional category profile map override.
         refreshed_at: Optional timestamp; defaults to
             the canonical clock helper.
@@ -387,6 +419,7 @@ def refresh_review_status(
         bucket_id=bucket_id,
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
+        invoice_catalogue=invoice_catalogue,
         category_profiles=category_profiles,
     )
     next_status = ModeloDraftStatus.APROBACION_CADUCADA if reasons else ModeloDraftStatus.APROBADO
@@ -431,6 +464,8 @@ def describe_stale_reason(reason: ModeloApprovalStaleReason) -> str:
             return tr("application.filing.review.stale_reasons.draft_review_changed")
         case ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED:
             return tr("application.filing.review.stale_reasons.transaction_catalogue_changed")
+        case ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED:
+            return tr("application.filing.review.stale_reasons.invoice_catalogue_changed")
         case ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED:
             return tr("application.filing.review.stale_reasons.category_profiles_changed")
         case ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED:
@@ -485,6 +520,13 @@ def _load_transaction_catalogue(bucket_id: str) -> TransactionCatalogue:
     return TransactionCatalogueRepository(bucket_id=bucket_id).load()
 
 
+def _load_invoice_catalogue(bucket_id: str) -> InvoiceCatalogue:
+    """Load the bucket's invoice catalogue from the secure backend."""
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+
+    return InvoiceCatalogueRepository(bucket_id=bucket_id).load()
+
+
 def _draft_review_fingerprint(draft: ModeloDraft) -> str:
     payload = {
         "validation_status": derive_validation_status(draft.findings).value,
@@ -516,6 +558,25 @@ def _transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
         if index > 0:
             hasher.update(b",")
         hasher.update(_canonical_json_bytes(_normalize_transaction(transaction)))
+    hasher.update(b"]")
+    return hasher.hexdigest()
+
+
+def _invoice_catalogue_fingerprint(catalogue: InvoiceCatalogue) -> str:
+    """Order-independent digest of the bucket's invoice catalogue.
+
+    Each :class:`~aeat.domain.invoices.Invoice` is a frozen record with no
+    volatile timestamp fields, so a canonical JSON dump of every invoice (sorted
+    by ``invoice_id``) captures the full calculation-relevant content and changes
+    whenever any invoice is added, removed, or edited. An empty catalogue yields a
+    stable empty-list digest. Mirrors :func:`_transaction_catalogue_fingerprint`.
+    """
+    hasher = hashlib.sha256()
+    hasher.update(b"[")
+    for index, invoice in enumerate(sorted(catalogue.values(), key=lambda item: item.invoice_id)):
+        if index > 0:
+            hasher.update(b",")
+        hasher.update(_canonical_json_bytes(invoice.model_dump(mode="json")))
     hasher.update(b"]")
     return hasher.hexdigest()
 
