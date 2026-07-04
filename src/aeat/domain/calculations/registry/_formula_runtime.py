@@ -1490,7 +1490,14 @@ def _evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressi
     multiplicative factor over the RUNNING rendimiento, not a single-índice
     pick nor a simultaneous product (mirrors the M100 EO-agraria índices
     correctores cascade,
-    :func:`_evaluate_m100_resolve_eo_agraria_indices_correctores`).
+    :func:`_evaluate_m100_resolve_eo_agraria_indices_correctores`). The four
+    steps are applied STRICTLY SEQUENTIALLY in that literal enumeration order
+    — b.1, then b.2, then b.3, then b.4 — each on the running rendimiento left
+    by the previous step; b.3's exceso threshold is non-linear
+    (identity below the tabled cuantía, ``cuantía + índice × exceso`` above),
+    so applying b.4 before b.3 (grouping b.2/b.4 as one step ahead of b.3)
+    yields a materially different, non-commutative result and is a defect,
+    not an equivalent reordering.
 
     Each índice casilla (pequeña dimensión, temporada, inicio de nuevas
     actividades) is an operator/preparer-declared rate: the taxpayer reads the
@@ -1548,40 +1555,53 @@ def _evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressi
     if minorado <= _ZERO:
         return minorado
 
+    # b.1) Índice corrector para empresas de pequeña dimensión — first in the
+    # Orden's literal enumeration order.
     pequena_dimension = _m100_eo_agraria_read_indice(args.pequena_dimension_casilla_id, ctx)
     aplica_pequena_dimension = pequena_dimension > _ZERO and epigrafe not in _M131_EPIGRAFES_INDICE_ESPECIAL
 
     rendimiento = minorado
     if aplica_pequena_dimension:
         rendimiento = rendimiento * pequena_dimension
+        # b.1 excludes b.3 (índice de exceso) outright, and the Orden never
+        # reaches b.2/b.4 once b.1 has been applied for this epígrafe.
+        return rendimiento
 
+    # b.2) Índice corrector de temporada — second in the Orden's literal
+    # enumeration order, applied on the rendimiento rectificado by b.1 (a
+    # no-op here, since b.1 did not apply) and BEFORE b.3's exceso threshold
+    # check.
     temporada = _m100_eo_agraria_read_indice(args.temporada_casilla_id, ctx)
-    inicio_actividad = _m100_eo_agraria_read_indice(args.inicio_actividad_casilla_id, ctx)
     if temporada > _ZERO:
         rendimiento = rendimiento * temporada
-    elif inicio_actividad > _ZERO:
-        rendimiento = rendimiento * inicio_actividad
 
-    if aplica_pequena_dimension:
-        # b.1 excludes b.3 outright — the índice de exceso is not applied.
-        return rendimiento
+    # b.3) Índice corrector de exceso — third in the Orden's literal
+    # enumeration order (b.1 -> b.2 -> b.3 -> b.4), applied on the running
+    # rendimiento (already rectificado by b.2, if declared).
+    if epigrafe:
+        cuantia_parameter = ctx.parameters.get(args.cuantia_parameter)
+        ctx.operand_refs.append(args.cuantia_parameter)
+        if cuantia_parameter is not None and rendimiento > _ZERO:
+            cuantia = _m131_modulos_cuantia_exceso(cuantia_parameter, epigrafe=epigrafe, year=ctx.filing_year)
+            if cuantia is not None and rendimiento > cuantia:
+                ctx.operand_values.append(cuantia)
+                indice = _m100_scalar_parameter_value(
+                    args.indice_exceso_parameter,
+                    ctx,
+                    op="m131_resolve_modulos_indices_generales",
+                )
+                rendimiento = cuantia + indice * (rendimiento - cuantia)
 
-    if not epigrafe:
-        return rendimiento
-    cuantia_parameter = ctx.parameters.get(args.cuantia_parameter)
-    ctx.operand_refs.append(args.cuantia_parameter)
-    if cuantia_parameter is None or rendimiento <= _ZERO:
-        return rendimiento
-    cuantia = _m131_modulos_cuantia_exceso(cuantia_parameter, epigrafe=epigrafe, year=ctx.filing_year)
-    if cuantia is None or rendimiento <= cuantia:
-        return rendimiento
-    ctx.operand_values.append(cuantia)
-    indice = _m100_scalar_parameter_value(
-        args.indice_exceso_parameter,
-        ctx,
-        op="m131_resolve_modulos_indices_generales",
-    )
-    return cuantia + indice * (rendimiento - cuantia)
+    # b.4) Índice corrector por inicio de nuevas actividades — last in the
+    # Orden's literal enumeration order, applied on the b.3-rectificado
+    # figure and only when b.2 (temporada) is absent (the Orden's own
+    # mutual-exclusion rule).
+    if temporada <= _ZERO:
+        inicio_actividad = _m100_eo_agraria_read_indice(args.inicio_actividad_casilla_id, ctx)
+        if inicio_actividad > _ZERO:
+            rendimiento = rendimiento * inicio_actividad
+
+    return rendimiento
 
 
 @dataclass(frozen=True, slots=True)
