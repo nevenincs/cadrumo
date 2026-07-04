@@ -216,7 +216,7 @@ class SubmissionRepositoryProtocol(Protocol):
     concrete repository and injects it into :class:`SubmissionEngine`.
     """
 
-    def load(self, record_id: str) -> ModeloPresentado | None:
+    def load(self, record_id: str, /) -> ModeloPresentado | None:
         """Load a persisted :class:`ModeloPresentado` by id, or return None if absent."""
         ...
 
