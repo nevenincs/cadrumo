@@ -303,6 +303,21 @@ def build_meta_sdk_tools() -> list[object]:
     ]
 
 
+def _tool_arg_limit(value: object, default: int) -> int:
+    """Coerce an MCP JSON-RPC ``limit`` argument to an ``int``, mirroring ``int(value or default)``.
+
+    ``arguments`` is a ``dict[str, object]`` decoded from the client's JSON-RPC
+    call, so a supplied ``limit`` is typed ``object`` even though JSON-RPC only
+    ever carries an ``int``, ``float``, or ``str`` numeric literal here. Narrows
+    to those shapes before calling :func:`int`; a falsy or unrecognised value
+    falls back to ``default``, exactly as the prior ``int(value or default)``
+    expression did.
+    """
+    if isinstance(value, int | float | str) and value:
+        return int(value)
+    return default
+
+
 def _declined_message(*, command_key: str, decision: ConfirmDecision) -> str:
     """The client-relayed, localized text for a not-confirmed call."""
     from ...core.i18n import tr
@@ -463,7 +478,7 @@ def build_server(
             try:
                 corpus_payload = build_corpus_search_payload(
                     str(arguments.get("query", "") or ""),
-                    limit=int(arguments.get("limit", 8) or 8),
+                    limit=_tool_arg_limit(arguments.get("limit", 8), 8),
                 )
             except Exception as exc:
                 return CallToolResult(
@@ -479,7 +494,7 @@ def build_server(
             try:
                 term_payload = build_terminology_search_payload(
                     str(arguments.get("query", "") or ""),
-                    limit=int(arguments.get("limit", 8) or 8),
+                    limit=_tool_arg_limit(arguments.get("limit", 8), 8),
                 )
             except Exception as exc:
                 return CallToolResult(
