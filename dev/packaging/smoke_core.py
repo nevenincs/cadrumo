@@ -683,7 +683,7 @@ finally:
 try:
     LLMClient(settings=Settings(aeat_local_storage_root=root / "llm-state"))._build_adapter(LLMProvider.ANTHROPIC)
 except LLMConfigError as exc:
-    if exc.suggestion != "pip install aeat[anthropic]":
+    if exc.suggestion != "pip install aeat-cli[anthropic]":
         raise SystemExit(f"unexpected Anthropic install hint: {{exc.suggestion!r}}")
 else:
     raise SystemExit("Anthropic adapter unexpectedly built in a core wheel install")
@@ -738,6 +738,11 @@ def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
             "Smoke",
             "--irpf-income-categories",
             "actividad_economica",
+            # Choose a comunidad autónoma explicitly: leaving it unset makes the
+            # create envelope carry a `ccaa_defaulted` warning notice, which
+            # flips the envelope status to "warning" and reds this success probe.
+            "--tax-residence-ccaa",
+            "madrid",
             "--quiet",
             "--accept-defaults",
             "--no-llm-vision",

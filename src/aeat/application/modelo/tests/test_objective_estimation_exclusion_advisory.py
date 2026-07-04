@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -10,6 +11,7 @@ from ....domain.deadlines import IrpfEstimationRegime, IVARegime, TaxpayerProfil
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ModeloCode,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     WorkUnit,
@@ -25,17 +27,19 @@ _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 
 
 def _work_unit(*, modelo: str = "131", filing_year: int = 2024) -> WorkUnit:
-    period = Period.from_year_and_code(filing_year, "4T" if modelo == "131" else "0A")
+    periodo_code = "4T" if modelo == "131" else "0A"
+    modelo_code = ModeloCode(modelo)
+    period = Period.from_year_and_code(filing_year, periodo_code)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id="objective-estimation-advisory",
-            modelo=modelo,
+            modelo=modelo_code,
             filing_year=filing_year,
             period=period,
             revision_id=str(filing_year),
         ),
         bucket_id="objective-estimation-advisory",
-        modelo=modelo,
+        modelo=modelo_code,
         filing_year=filing_year,
         period=period,
         revision_id=str(filing_year),
@@ -45,13 +49,14 @@ def _work_unit(*, modelo: str = "131", filing_year: int = 2024) -> WorkUnit:
     )
 
 
-def _objective_profile(**overrides: object) -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
-        irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
-        **overrides,
-    )
+def _objective_profile(**overrides: Any) -> TaxpayerProfile:
+    base_data: dict[str, Any] = {
+        "tax_id": "X1234567L",
+        "iva_regime": IVARegime.GENERAL,
+        "irpf_estimation_regime": IrpfEstimationRegime.OBJETIVA,
+    }
+    base_data.update(overrides)
+    return TaxpayerProfile(**base_data)
 
 
 def _calculation_revision(work_unit: WorkUnit) -> CalculationRevision:

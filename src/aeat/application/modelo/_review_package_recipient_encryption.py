@@ -76,6 +76,23 @@ review-only/expiry/replay follow-up slice): every envelope carries an
   rather than bare ``bytes``, so a downstream consumer cannot lose the flag
   and mistake a review-only handoff for a filing artefact.
 
+Recipient's own keypair (mint-or-load, symmetric to
+:func:`~aeat.application.modelo.ensure_review_package_signing_keypair`): a
+recipient (the accountant running :func:`decrypt_review_package_for_recipient`
+against a package sealed for them) needs their OWN X25519 private key, matching
+the public key a taxpayer registered via
+:class:`~aeat.application.modelo.RecipientFingerprintRegistryRepository`.
+:func:`ensure_recipient_encryption_keypair` mints one on first use and persists
+it -- private key included -- ONLY as ciphertext through a
+:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`, at
+:class:`SensitivityClass` ``SECRET``
+(:data:`~aeat.adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE`),
+exactly as the Ed25519 signing keypair is minted and stored. It is never
+logged, never written to a plaintext file, and never leaves this module as raw
+bytes except transiently in process memory to decrypt. The exportable public
+half (:func:`recipient_encryption_public_key`) is what a taxpayer registers via
+the fingerprint registry -- never the private key.
+
 See Also:
     :mod:`aeat.application.modelo._review_package_recipient_registry`
         Where a recipient's trusted public key is registered and looked
@@ -86,22 +103,32 @@ See Also:
     :mod:`aeat.application.modelo._review_package`
         Builds and integrity-verifies the review package this module
         encrypts.
+    :func:`aeat.application.modelo.ensure_review_package_signing_keypair`
+        The Ed25519 signing-keypair primitive this module's
+        :func:`ensure_recipient_encryption_keypair` mirrors exactly (mint-once,
+        persist-as-ciphertext, idempotent-reuse), for a distinct purpose
+        (encryption, never signing -- see the ADR's rejection of key reuse
+        across purposes).
 """
 
 from __future__ import annotations
 
 import secrets
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,
     X25519PublicKey,
 )
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
 from ...core.time import now as _utc_now
+
+if TYPE_CHECKING:
+    from ...adapters.persistence.storage import SecureObjectRepository
 
 #: Wire-format version of the recipient-encryption envelope. Bumped when
 #: the envelope schema changes shape.
@@ -137,13 +164,196 @@ class RecipientDecryptionError(RecipientEncryptionError):
     """
 
 
+class RecipientEncryptionKeyNotFoundError(RecipientEncryptionError):
+    """Raised when no encryption keypair has been minted for a bucket yet.
+
+    Callers should mint one via :func:`ensure_recipient_encryption_keypair`
+    before loading it explicitly.
+    """
+
+
+class RecipientEncryptionKeypair(BaseModel):
+    """A bucket's X25519 encryption keypair, private key included.
+
+    This model is the PLAINTEXT in-memory shape used only transiently around
+    generation, persistence, and decryption; :meth:`private_key` /
+    :meth:`public_key` reconstruct live ``cryptography`` key objects from the
+    stored raw hex bytes. The caller (:func:`ensure_recipient_encryption_keypair`)
+    is responsible for persisting it only through
+    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`, mirroring
+    :class:`~aeat.application.modelo.ReviewPackageSigningKeypair` exactly --
+    a distinct keypair, for a distinct purpose (encryption, never signing).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: str = Field(min_length=1)
+    private_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    created_at: datetime
+
+    def private_key(self) -> X25519PrivateKey:
+        """Reconstruct the live :class:`X25519PrivateKey` from stored raw bytes."""
+        return X25519PrivateKey.from_private_bytes(bytes.fromhex(self.private_key_hex))
+
+    def public_key(self) -> X25519PublicKey:
+        """Reconstruct the live :class:`X25519PublicKey` from stored raw bytes."""
+        return X25519PublicKey.from_public_bytes(bytes.fromhex(self.public_key_hex))
+
+
+class RecipientEncryptionPublicKey(BaseModel):
+    """The exportable, non-secret half of a bucket's encryption keypair.
+
+    Safe to hand to a taxpayer so they can register it via
+    :class:`~aeat.application.modelo.RecipientFingerprintRegistryRepository`.
+    Carries no secrecy requirement -- unlike :class:`RecipientEncryptionKeypair`,
+    this model is fine to print, write to a plaintext file, or read aloud for
+    out-of-band fingerprint verification.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: str = Field(min_length=1)
+    public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    created_at: datetime
+
+
+def _recipient_encryption_key_object_key(bucket_id: str) -> str:
+    """Return the natural :class:`SecureObjectRepository` key for ``bucket_id``'s keypair.
+
+    Matches the namespace's declared
+    ``object_key_grammar="review-package-recipient-encryption-key:{bucket_id}"``.
+    """
+    return f"review-package-recipient-encryption-key:{bucket_id.strip()}"
+
+
+def ensure_recipient_encryption_keypair(
+    *,
+    bucket_id: str,
+    repository: SecureObjectRepository,
+    generated_at: datetime | None = None,
+) -> RecipientEncryptionKeypair:
+    """Return the bucket's X25519 encryption keypair, minting one on first use.
+
+    Mirrors :func:`~aeat.application.modelo.ensure_review_package_signing_keypair`
+    exactly: loads the existing keypair from
+    :data:`~aeat.adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE`
+    when present; otherwise generates a fresh keypair via
+    ``X25519PrivateKey.generate()``, persists it (private key included) as
+    ciphertext, and returns it. Idempotent: a second call against the same
+    bucket returns the SAME keypair rather than rotating it, so a package
+    sealed for the recipient's public key today still decrypts next week.
+
+    Args:
+        bucket_id: The bucket this keypair is scoped to (the recipient's own
+            profile bucket, resolved the same way the signing keypair is).
+        repository: The bucket's
+            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+        generated_at: Optional override for the keypair's ``created_at``
+            timestamp (tests only); defaults to the current UTC time.
+    """
+    from ...adapters.persistence.storage import (
+        MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
+    )
+    from ...adapters.persistence.storage import SensitivityClass
+
+    object_key = _recipient_encryption_key_object_key(bucket_id)
+    existing = repository.load(
+        _NAMESPACE.namespace,
+        object_key,
+        expected_class=SensitivityClass.SECRET,
+        max_supported_version=_NAMESPACE.schema_version,
+    )
+    if existing is not None:
+        return RecipientEncryptionKeypair.model_validate_json(existing.payload)
+
+    private_key = X25519PrivateKey.generate()
+    public_key = private_key.public_key()
+    keypair = RecipientEncryptionKeypair(
+        bucket_id=bucket_id,
+        private_key_hex=private_key.private_bytes_raw().hex(),
+        public_key_hex=public_key.public_bytes_raw().hex(),
+        created_at=generated_at or _utc_now(),
+    )
+    repository.save(
+        namespace=_NAMESPACE.namespace,
+        object_key=object_key,
+        classification=SensitivityClass.SECRET,
+        schema_version=_NAMESPACE.schema_version,
+        written_at=keypair.created_at,
+        payload=keypair.model_dump_json().encode("utf-8"),
+        write_provenance="application.modelo.review_package_recipient_encryption.ensure_keypair",
+    )
+    return keypair
+
+
+def load_recipient_encryption_keypair(
+    *,
+    bucket_id: str,
+    repository: SecureObjectRepository,
+) -> RecipientEncryptionKeypair:
+    """Load the bucket's existing X25519 encryption keypair.
+
+    Args:
+        bucket_id: The bucket this keypair is scoped to.
+        repository: The bucket's :class:`SecureObjectRepository`.
+
+    Raises:
+        RecipientEncryptionKeyNotFoundError: If no keypair has been minted yet
+            for ``bucket_id``. Call :func:`ensure_recipient_encryption_keypair`
+            first.
+    """
+    from ...adapters.persistence.storage import (
+        MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
+    )
+    from ...adapters.persistence.storage import SensitivityClass
+
+    object_key = _recipient_encryption_key_object_key(bucket_id)
+    record = repository.load(
+        _NAMESPACE.namespace,
+        object_key,
+        expected_class=SensitivityClass.SECRET,
+        max_supported_version=_NAMESPACE.schema_version,
+    )
+    if record is None:
+        raise RecipientEncryptionKeyNotFoundError(
+            translated_message="application.modelo.errors.recipient_encryption_key_not_found",
+            context={"bucket_id": bucket_id},
+        )
+    return RecipientEncryptionKeypair.model_validate_json(record.payload)
+
+
+def recipient_encryption_public_key(
+    keypair: RecipientEncryptionKeypair,
+) -> RecipientEncryptionPublicKey:
+    """Project the exportable public half out of a full keypair.
+
+    The projection never touches ``private_key_hex``; the returned model is
+    safe to hand to a taxpayer to register via the fingerprint registry.
+    """
+    return RecipientEncryptionPublicKey(
+        bucket_id=keypair.bucket_id,
+        public_key_hex=keypair.public_key_hex,
+        created_at=keypair.created_at,
+    )
+
+
 class RecipientEncryptedPackage(BaseModel):
     """Wire envelope for a review package encrypted for one recipient.
 
     ``ephemeral_public_key_hex`` and ``recipient_public_key_hex`` are
     both raw 32-byte X25519 public keys, hex-encoded. ``ciphertext``
     is the AEAD wire form (``nonce || ciphertext_with_tag``) produced by
-    :func:`~aeat.adapters.persistence.storage.crypto.encrypt_record`.
+    :func:`~aeat.adapters.persistence.storage.crypto.encrypt_record`, held
+    as raw ``bytes`` on the Python object (matching every in-process caller
+    in this module) but hex-encoded on the JSON boundary
+    (:meth:`model_dump_json` / ``model_dump(mode="json")``) -- pydantic's
+    default JSON encoding for ``bytes`` assumes valid UTF-8, which arbitrary
+    AEAD ciphertext is not, so a bare ``bytes`` field would raise
+    ``PydanticSerializationError`` the first time a caller (e.g. the CLI
+    ``encrypt-for-recipient`` verb) writes the envelope to disk as JSON.
+    :meth:`model_validate_json` accepts the hex form it produced; the
+    plain-Python constructor still accepts raw ``bytes`` directly.
 
     ``envelope_nonce_hex`` is a replay-detection token, independent of the
     AEAD nonce embedded in ``ciphertext``: a caller checks it against
@@ -167,6 +377,17 @@ class RecipientEncryptedPackage(BaseModel):
     issued_at: datetime
     valid_until: datetime | None = Field(default=None)
     review_only: bool = Field(default=False)
+
+    @field_validator("ciphertext", mode="before")
+    @classmethod
+    def _ciphertext_accepts_hex_or_raw_bytes(cls, value: object) -> object:
+        if isinstance(value, str):
+            return bytes.fromhex(value)
+        return value
+
+    @field_serializer("ciphertext", when_used="json")
+    def _ciphertext_as_hex_for_json(self, value: bytes) -> str:
+        return value.hex()
 
     @model_validator(mode="after")
     def _valid_until_is_after_issued_at(self) -> RecipientEncryptedPackage:
@@ -397,7 +618,13 @@ __all__ = [
     "RecipientDecryptionError",
     "RecipientEncryptedPackage",
     "RecipientEncryptionError",
+    "RecipientEncryptionKeyNotFoundError",
+    "RecipientEncryptionKeypair",
+    "RecipientEncryptionPublicKey",
     "RecipientPackageExpiredError",
     "decrypt_review_package_for_recipient",
     "encrypt_review_package_for_recipient",
+    "ensure_recipient_encryption_keypair",
+    "load_recipient_encryption_keypair",
+    "recipient_encryption_public_key",
 ]

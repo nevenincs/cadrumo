@@ -38,7 +38,7 @@ def _boom(*_args: object, **_kwargs: object) -> object:
 
 
 def test_live_events_loader_degrades_to_notice(monkeypatch: pytest.MonkeyPatch) -> None:
-    import aeat.application.live as live
+    from ....application import live as live
 
     monkeypatch.setattr(live, "ExpedientesService", _boom)
     events, notice = _local_live_calendar_events("bogus-bucket", _RANGE)
@@ -49,7 +49,7 @@ def test_live_events_loader_degrades_to_notice(monkeypatch: pytest.MonkeyPatch) 
 
 
 def test_modelo_record_events_loader_degrades_to_notice(monkeypatch: pytest.MonkeyPatch) -> None:
-    import aeat.domain.modelos as modelos
+    from ....domain import modelos as modelos
 
     monkeypatch.setattr(modelos, "ModeloRecordCatalogueRepository", _boom, raising=False)
     events, notice = _local_modelo_record_calendar_events("bogus-bucket", _RANGE)
@@ -60,7 +60,7 @@ def test_modelo_record_events_loader_degrades_to_notice(monkeypatch: pytest.Monk
 
 
 def test_filing_evidence_loader_degrades_to_notice(monkeypatch: pytest.MonkeyPatch) -> None:
-    import aeat.domain.modelos as modelos
+    from ....domain import modelos as modelos
 
     monkeypatch.setattr(modelos, "ModeloRecordCatalogueRepository", _boom, raising=False)
     evidence, notice = _local_calendar_filing_evidence("bogus-bucket", ())

@@ -33,6 +33,12 @@ from .. import (
     RetencionObservation,
     RetencionScheme,
     aggregate_per_modelo,
+    aggregate_retenciones_111,
+    aggregate_retenciones_115,
+    aggregate_retenciones_123,
+    aggregate_retenciones_180,
+    aggregate_retenciones_190,
+    aggregate_retenciones_193,
     declarable_asset_classes_720,
     declarable_counterparty_nifs_347,
     get_per_modelo_aggregation_contract,
@@ -51,6 +57,7 @@ from .._foreign_assets import (
     _registry_observations_from_foreign_assets_aggregation,
     aggregate_foreign_assets_720,
 )
+from .._modelo_bindings import RetencionesAggregationSourceResolver
 from .._source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -482,6 +489,144 @@ def test_result_contract_rejects_provider_payload_mismatch() -> None:
                 result_row_count=1,
             ),
         )
+
+
+# --- S19: retenciones double-path collapse is behaviour-preserving (P03) ---------
+#
+# S13 collapsed the two retenciones dispatch tables (the per-modelo service's local
+# 6-entry ``dispatch`` and the mesh resolver's 4-entry ``_RETENCIONES_AGGREGATORS``)
+# onto ONE canonical entry point,
+# :meth:`RetencionesAggregationSourceResolver.aggregate`, shared by the live calculate
+# mesh (``resolve``) and the per-modelo aggregation service (``aggregate_per_modelo``,
+# the CLI ``aggregate`` / pull surface). These gates prove the collapse routes each
+# modelo to the SAME core it did before (``one-aggregation-path-pull-equals-calculate``)
+# with no value shift and the landed distinct-NIF perceptor count unchanged.
+
+# The pre-existing, independently-tested aggregation cores are the oracle: the collapsed
+# path must reproduce them exactly. Deriving expected values from these cores (not from a
+# hand-computed formula) keeps the gate non-tautological — a mis-wired dispatch that
+# routed, say, M180 to the M111 core would break the equality against the M180 core.
+_RETENCIONES_CORE_ORACLE = {
+    "111": aggregate_retenciones_111,
+    "115": aggregate_retenciones_115,
+    "123": aggregate_retenciones_123,
+    "180": aggregate_retenciones_180,
+    "190": aggregate_retenciones_190,
+    "193": aggregate_retenciones_193,
+}
+_RETENCIONES_PERIOD = {
+    "111": _P_2025_Q1,
+    "115": _P_2025_Q1,
+    "123": _P_2025_Q1,
+    "180": _P_2025_ANNUAL,
+    "190": _P_2025_ANNUAL,
+    "193": _P_2025_ANNUAL,
+}
+
+
+def _mixed_scheme_retencion_observations() -> tuple[RetencionObservation, ...]:
+    """One observation per scheme FAMILY (work / urban / capital), distinct perceptors.
+
+    Each retenciones modelo filters by its own scheme catalogue (111/190 = work,
+    115/180 = urban, 123/193 = capital), so this single fixture selects a DISTINCT
+    non-empty subset per modelo — which makes the equality-to-oracle assertions bite:
+    a dispatch that routed a modelo to the wrong core would select the wrong subset.
+    """
+
+    def _obs(*, nif: str, name: str, scheme: RetencionScheme, base: str, ret: str) -> RetencionObservation:
+        return RetencionObservation(
+            source_kind="ledger_transaction",
+            source_object_id=f"ledger_transaction-{nif}",
+            perceptor_nif=nif,
+            perceptor_name=name,
+            scheme=scheme,
+            taxable_base=Decimal(base),
+            retencion_amount=Decimal(ret),
+            accrued_on="2025-03-01",
+        )
+
+    return (
+        _obs(nif="B00000011", name="Trabajo SL", scheme=RetencionScheme.WORK_INCOME, base="1000.00", ret="150.00"),
+        _obs(nif="B00000022", name="Alquiler SL", scheme=RetencionScheme.URBAN_RENTAL, base="2000.00", ret="380.00"),
+        _obs(nif="B00000033", name="Capital SL", scheme=RetencionScheme.CAPITAL_INTEREST, base="3000.00", ret="570.00"),
+    )
+
+
+@pytest.mark.parametrize("modelo", ["111", "115", "123", "180", "190", "193"])
+def test_retenciones_collapse_service_and_mesh_reproduce_prior_core_exactly(modelo: str) -> None:
+    observations = _mixed_scheme_retencion_observations()
+    period = _RETENCIONES_PERIOD[modelo]
+    expected = _RETENCIONES_CORE_ORACLE[modelo](observations, period=period)
+
+    # The one canonical mesh-resolver aggregation entry point (the calculate path uses
+    # this via ``resolve``) and the per-modelo service (which now delegates to it).
+    mesh_value = RetencionesAggregationSourceResolver.aggregate(modelo, observations, period=period)
+    service_value = aggregate_per_modelo(
+        PerModeloAggregationCommand(modelo=modelo, period=period, retencion_observations=observations),
+    ).aggregation
+
+    assert mesh_value == expected
+    assert service_value == expected
+    assert isinstance(service_value, RetencionesAggregation)
+
+
+def test_retenciones_collapse_dispatch_is_not_cross_wired() -> None:
+    # Anti-tautology guard: the shared dispatch routes each modelo to a DISTINCT core,
+    # so the equality-to-oracle assertions above are not trivially satisfiable. The three
+    # quarterly modelos select disjoint scheme families from the same fixture, yielding
+    # distinct non-empty rollups; if the dispatch collapsed two modelos onto one core the
+    # rollup schemes would coincide and this assertion — plus the oracle equality — fail.
+    observations = _mixed_scheme_retencion_observations()
+    m111 = RetencionesAggregationSourceResolver.aggregate("111", observations, period=_P_2025_Q1)
+    m115 = RetencionesAggregationSourceResolver.aggregate("115", observations, period=_P_2025_Q1)
+    m123 = RetencionesAggregationSourceResolver.aggregate("123", observations, period=_P_2025_Q1)
+
+    assert m111.rollups and m115.rollups and m123.rollups
+    schemes_by_modelo = {
+        "111": {row.scheme for row in m111.rollups},
+        "115": {row.scheme for row in m115.rollups},
+        "123": {row.scheme for row in m123.rollups},
+    }
+    assert schemes_by_modelo == {
+        "111": {RetencionScheme.WORK_INCOME},
+        "115": {RetencionScheme.URBAN_RENTAL},
+        "123": {RetencionScheme.CAPITAL_INTEREST},
+    }
+    assert len({m111.total_retencion, m115.total_retencion, m123.total_retencion}) == 3
+
+
+def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count() -> None:
+    # The landed RET-1 perceptor-count result (distinct-NIF count on the annual summary
+    # modelos 180/193) must be unchanged by the collapse. Two urban observations with
+    # distinct NIFs must still count as two perceptors through the one shared path.
+    observations = (
+        RetencionObservation(
+            source_kind="ledger_transaction",
+            source_object_id="ledger_transaction-urban-a",
+            perceptor_nif="B00000041",
+            perceptor_name="Arrendador A",
+            scheme=RetencionScheme.URBAN_RENTAL,
+            taxable_base=Decimal("1200.00"),
+            retencion_amount=Decimal("228.00"),
+            accrued_on="2025-03-01",
+        ),
+        RetencionObservation(
+            source_kind="ledger_transaction",
+            source_object_id="ledger_transaction-urban-b",
+            perceptor_nif="B00000042",
+            perceptor_name="Arrendador B",
+            scheme=RetencionScheme.URBAN_RENTAL,
+            taxable_base=Decimal("800.00"),
+            retencion_amount=Decimal("152.00"),
+            accrued_on="2025-06-01",
+        ),
+    )
+    expected = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL)
+    mesh_value = RetencionesAggregationSourceResolver.aggregate("180", observations, period=_P_2025_ANNUAL)
+
+    assert expected.total_perceptors == 2
+    assert mesh_value == expected
+    assert mesh_value.total_perceptors == 2
 
 
 def test_service_surface_has_no_cli_dependency() -> None:

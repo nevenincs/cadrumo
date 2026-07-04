@@ -76,6 +76,7 @@ class MountedCommandDomain(StrEnum):
     AUTH = "auth"
     DIAGNOSTICS = "diagnostics"
     GOOGLE = "google"
+    COLLAB = "collab"
     OVERVIEW = "overview"
     LEDGER = "ledger"
     LIVE = "live"

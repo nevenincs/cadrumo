@@ -86,8 +86,7 @@ def test_work_unit_load_failure_degrades_to_notice_not_refusal(monkeypatch: pyte
     # must degrade to a schedule-only answer with a WARNING notice, NOT refuse
     # the whole surface — refusing left a behind-but-fresh taxpayer (the
     # regularizar-atrasos persona) unable to answer "what have I missed".
-    import aeat.application.modelo as modelo_app
-
+    from ....application import modelo as modelo_app
     from ....core.json_contract import NoticeSeverity
     from .._overview import _local_modelo_work_units
 
@@ -107,7 +106,7 @@ def test_backlog_renders_despite_work_unit_load_failure(monkeypatch: pytest.Monk
     # End-to-end: with the work-unit load forced to fail, the backlog still
     # renders (exit 0) from the deadline schedule and surfaces the degradation
     # line, rather than exiting non-zero with a "persisted work state" refusal.
-    import aeat.application.modelo as modelo_app
+    from ....application import modelo as modelo_app
 
     def _boom(**_kwargs: object) -> object:
         raise RuntimeError("work-unit catalogue store is corrupt")

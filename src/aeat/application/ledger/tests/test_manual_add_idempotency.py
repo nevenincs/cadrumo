@@ -11,6 +11,8 @@ cross-bucket key reuse, zero-amount, boundary timestamps).
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import pytest
 from pydantic import ValidationError
 
@@ -18,10 +20,12 @@ from ._action_test_support import (
     _BUCKET_ID,
     _OTHER_BUCKET_ID,
     UTC,
+    BucketEventHistoryRepository,
     BucketEventType,
     Decimal,
     ManualLedgerTransactionCommand,
     SecureObjectRepository,
+    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionValidationError,
     _create_manual_row,
@@ -42,7 +46,18 @@ _DEFAULT_BOOKED_DATE = date(2026, 5, 2)
 _DEFAULT_OCCURRED_AT = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 
 
-def _created_event_count(event_repository, *, bucket_id: str = _BUCKET_ID) -> int:
+class _ManualTransactionBaseArgs(TypedDict):
+    """Base arguments for ManualLedgerTransactionCommand construction."""
+
+    bucket_id: str
+    booked_date: date
+    amount: Decimal
+    direction: TransactionDirection
+    description: str
+    idempotency_key: str
+
+
+def _created_event_count(event_repository: BucketEventHistoryRepository, *, bucket_id: str = _BUCKET_ID) -> int:
     return sum(
         1
         for event in event_repository.load().for_bucket(bucket_id)
@@ -51,8 +66,8 @@ def _created_event_count(event_repository, *, bucket_id: str = _BUCKET_ID) -> in
 
 
 def _add(
-    transaction_repository,
-    event_repository,
+    transaction_repository: TransactionCatalogueRepository,
+    event_repository: BucketEventHistoryRepository,
     *,
     description: str = "cash sale",
     amount: Decimal = _DEFAULT_AMOUNT,
@@ -80,7 +95,9 @@ def _add(
 def test_retried_keyed_add_is_guarded_noop(secure_objects: SecureObjectRepository) -> None:
     """Same key + identical content on retry: one row, one event, created_at unchanged, no-op signal."""
     repo, events, first = _create_manual_row(secure_objects, description="cash sale", idempotency_key="k-001")
-    first_created_at = repo.load().get(first.ref.transaction_id).created_at
+    first_tx = repo.load().get(first.ref.transaction_id)
+    assert first_tx is not None
+    first_created_at = first_tx.created_at
 
     second = _add(repo, events, idempotency_key="k-001", occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC))
 
@@ -89,7 +106,9 @@ def test_retried_keyed_add_is_guarded_noop(secure_objects: SecureObjectRepositor
     assert second.ref.transaction_id == first.ref.transaction_id
     assert second.bucket_event_ids == ()
     assert _created_event_count(events) == 1
-    assert catalogue.get(second.ref.transaction_id).created_at == first_created_at
+    second_tx = catalogue.get(second.ref.transaction_id)
+    assert second_tx is not None
+    assert second_tx.created_at == first_created_at
 
 
 def test_keyed_add_three_retries_still_one_row_one_event(secure_objects: SecureObjectRepository) -> None:
@@ -138,7 +157,7 @@ def test_same_key_differing_only_in_recargo_raises_conflict(secure_objects: Secu
     recargo would no-op and drop the new surcharge value.
     """
     repo, events = _repositories(secure_objects)
-    base = {
+    base: _ManualTransactionBaseArgs = {
         "bucket_id": _BUCKET_ID,
         "booked_date": _DEFAULT_BOOKED_DATE,
         "amount": _DEFAULT_AMOUNT,
@@ -168,7 +187,7 @@ def test_same_key_differing_only_in_source_jurisdiction_raises_conflict(
 ) -> None:
     """A same-key add differing ONLY in source_jurisdiction is a conflict, never a silent no-op."""
     repo, events = _repositories(secure_objects)
-    base = {
+    base: _ManualTransactionBaseArgs = {
         "bucket_id": _BUCKET_ID,
         "booked_date": _DEFAULT_BOOKED_DATE,
         "amount": _DEFAULT_AMOUNT,
@@ -258,6 +277,7 @@ def test_manual_row_carries_content_fingerprint_surviving_reload(secure_objects:
     """
     repo, _events, created = _create_manual_row(secure_objects, description="cash sale", idempotency_key="fp-1")
     original = repo.load().get(created.ref.transaction_id)
+    assert original is not None
     assert original.import_fingerprint is not None
     assert len(original.import_fingerprint) == 64
     assert all(char in "0123456789abcdef" for char in original.import_fingerprint)
@@ -266,6 +286,7 @@ def test_manual_row_carries_content_fingerprint_surviving_reload(secure_objects:
     # every field, the non-default import_fingerprint included, roundtrips exactly.
     fresh_repo, _fresh_events = _repositories(secure_objects)
     reloaded = fresh_repo.load().get(created.ref.transaction_id)
+    assert reloaded is not None
     assert reloaded == original
 
     # Anti-tautology: the fingerprint is content-derived, not a constant. A row
@@ -279,6 +300,7 @@ def test_manual_row_carries_content_fingerprint_surviving_reload(secure_objects:
         bucket_id=_OTHER_BUCKET_ID,
     )
     other_row = other_repo.load().get(other.ref.transaction_id)
+    assert other_row is not None
     assert other_row.import_fingerprint is not None
     assert other_row.import_fingerprint != original.import_fingerprint
 

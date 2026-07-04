@@ -22,7 +22,15 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaFieldKind
-from .._export import boe_representable_casilla_ids, export_draft, rendered_casilla_ids
+from ....domain.filing import FilingExportError
+from .._export import (
+    _assert_casilla_metadata_fidelity,
+    _assert_record_order_fidelity,
+    boe_representable_casilla_ids,
+    export_draft,
+    rendered_casilla_ids,
+)
+from ..runtime import CasillaRecordMetadata
 from ._export_support import (
     _approved_modelo_111_registry_draft,
     _approved_modelo_115_registry_draft,
@@ -162,3 +170,139 @@ def test_no_manifest_casilla_is_representable_only_via_binding_rows(modelo: str,
         f"modelo {modelo}: manifest-required casillas representable only via binding rows "
         f"(would false-panic): {sorted(row_field_only_required)}"
     )
+
+
+@pytest.mark.parametrize(("modelo", "build_draft_fn", "headers_fn", "filing_year", "period"), _COVERED)
+def test_structural_fidelity_holds_for_every_covered_modelo(
+    modelo: str, build_draft_fn, headers_fn, filing_year, period
+) -> None:
+    # The parity gate asserts more than casilla presence: the rendered casilla
+    # numbering/segmento must mirror the registry CasillaDefinition, and the
+    # rendered record order must follow the registry export-layout declaration
+    # order. Both must hold for the real shipped structure of every covered
+    # modelo (including the multi-segment M200 and the annual M390), so the
+    # fidelity gate is grounded rather than false-firing on legitimate layouts.
+    provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
+    subview = provider.get_subview(modelo)
+    layout = subview.export_layouts[0]
+    manifest = subview.completeness_manifest
+    assert manifest is not None
+    headers = headers_fn()
+    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+
+    _assert_record_order_fidelity(modelo=modelo, layout=layout, headers=headers)
+    _assert_casilla_metadata_fidelity(
+        modelo=modelo,
+        manifest=manifest,
+        representable=representable,
+        casilla_metadata=subview.casilla_record_metadata,
+    )
+
+    # Non-vacuous: the metadata fidelity check actually cross-checked at least one
+    # representable manifest casilla against the registry declaration.
+    cross_checked = [casilla.casilla_id for casilla in manifest.casillas if casilla.casilla_id in representable]
+    assert cross_checked, f"modelo {modelo}: metadata fidelity check is vacuous (no representable manifest casilla)"
+
+
+def test_rendered_casilla_number_drift_panics() -> None:
+    # Anti-tautology: mutate a rendered casilla's registry-declared number so it
+    # diverges from the manifest copy the gate keys on. The gate must panic,
+    # naming the drifted casilla — proving the numbering fidelity assertion bites.
+    provider = _schema_provider(modelos=("130",))
+    subview = provider.get_subview("130")
+    layout = subview.export_layouts[0]
+    manifest = subview.completeness_manifest
+    assert manifest is not None
+    headers = _modelo_130_export_headers()
+    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+    target = next(casilla.casilla_id for casilla in manifest.casillas if casilla.casilla_id in representable)
+
+    drifted_metadata = tuple(
+        CasillaRecordMetadata(casilla_id=meta.casilla_id, number=f"{meta.number}9", segmento=meta.segmento)
+        if meta.casilla_id == target
+        else meta
+        for meta in subview.casilla_record_metadata
+    )
+
+    with pytest.raises(FilingExportError) as exc_info:
+        _assert_casilla_metadata_fidelity(
+            modelo="130",
+            manifest=manifest,
+            representable=representable,
+            casilla_metadata=drifted_metadata,
+        )
+
+    assert target in str(exc_info.value)
+    assert "structural-fidelity" in str(exc_info.value)
+
+
+def test_rendered_casilla_segmento_drift_panics() -> None:
+    # Anti-tautology: mutate a rendered casilla's registry-declared segmento so it
+    # diverges from the manifest copy. A segmento drift must panic too.
+    provider = _schema_provider(modelos=("130",))
+    subview = provider.get_subview("130")
+    layout = subview.export_layouts[0]
+    manifest = subview.completeness_manifest
+    assert manifest is not None
+    headers = _modelo_130_export_headers()
+    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+    target = next(casilla.casilla_id for casilla in manifest.casillas if casilla.casilla_id in representable)
+
+    drifted_metadata = tuple(
+        CasillaRecordMetadata(casilla_id=meta.casilla_id, number=meta.number, segmento="DP999999")
+        if meta.casilla_id == target
+        else meta
+        for meta in subview.casilla_record_metadata
+    )
+
+    with pytest.raises(FilingExportError) as exc_info:
+        _assert_casilla_metadata_fidelity(
+            modelo="130",
+            manifest=manifest,
+            representable=representable,
+            casilla_metadata=drifted_metadata,
+        )
+
+    assert target in str(exc_info.value)
+    assert "DP999999" in str(exc_info.value)
+
+
+def test_rendered_record_order_permutation_panics() -> None:
+    # Anti-tautology: reverse the records' emit orders so the rendered sequence no
+    # longer follows the registry declaration order. The record-order fidelity
+    # assertion must panic, enumerating the drifted position.
+    provider = _schema_provider(modelos=("130",))
+    layout = provider.get_subview("130").export_layouts[0]
+    headers = _modelo_130_export_headers()
+    reversed_orders = list(reversed([record.order for record in layout.records]))
+    permuted = layout.model_copy(
+        update={
+            "records": tuple(
+                record.model_copy(update={"order": order})
+                for record, order in zip(layout.records, reversed_orders, strict=True)
+            )
+        }
+    )
+
+    with pytest.raises(FilingExportError) as exc_info:
+        _assert_record_order_fidelity(modelo="130", layout=permuted, headers=headers)
+
+    assert "record order" in str(exc_info.value)
+    assert "structural-fidelity" in str(exc_info.value)
+
+
+def test_ambiguous_duplicate_record_order_panics() -> None:
+    # Anti-tautology: collapse every record onto the same emit order so the
+    # rendered sequence is ambiguous. The record-order fidelity assertion must
+    # panic rather than emit a non-deterministic record sequence.
+    provider = _schema_provider(modelos=("130",))
+    layout = provider.get_subview("130").export_layouts[0]
+    headers = _modelo_130_export_headers()
+    collided = layout.model_copy(
+        update={"records": tuple(record.model_copy(update={"order": 0}) for record in layout.records)}
+    )
+
+    with pytest.raises(FilingExportError) as exc_info:
+        _assert_record_order_fidelity(modelo="130", layout=collided, headers=headers)
+
+    assert "ambiguous" in str(exc_info.value)

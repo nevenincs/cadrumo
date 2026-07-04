@@ -189,6 +189,29 @@ class RegistryCasillaCollection:
 
 
 @dataclass(frozen=True, slots=True)
+class CasillaRecordMetadata:
+    """Registry-declared official record-design metadata for one casilla.
+
+    Projected verbatim from the authoritative
+    :class:`~aeat.domain.calculations.registry.CasillaDefinition` — the same
+    authority the calculation engine consumes — so the fichero-BOE export parity
+    gate can re-ground the rendered casilla's number and segmento against the
+    registry declaration at the render choke point rather than trusting the
+    completeness manifest's own copy of that metadata.
+
+    Attributes:
+        casilla_id: Canonical registry casilla identity.
+        number: AEAT record-design casilla number.
+        segmento: AEAT record-segment code for multi-segment modelos, or
+            ``None`` for single-segment modelos.
+    """
+
+    casilla_id: CasillaId
+    number: str
+    segmento: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class RegistryModeloSubview:
     """Snapshot-backed filing details for one modelo revision."""
 
@@ -207,6 +230,7 @@ class RegistryModeloSubview:
     application_link_ids: tuple[str, ...]
     deadline_window_ids: tuple[str, ...]
     completeness_manifest: CalculationCompletenessManifest | None
+    casilla_record_metadata: tuple[CasillaRecordMetadata, ...] = ()
 
     def has_completeness_manifest(self) -> bool:
         """Return whether this revision carries a calculation-completeness manifest.
@@ -621,6 +645,14 @@ def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
         application_link_ids=tuple(sorted(snapshot.application_links)),
         deadline_window_ids=tuple(sorted(snapshot.deadline_windows)),
         completeness_manifest=snapshot.revision.completeness_manifest,
+        casilla_record_metadata=tuple(
+            CasillaRecordMetadata(
+                casilla_id=casilla.id,
+                number=casilla.number,
+                segmento=casilla.segmento,
+            )
+            for casilla in snapshot.revision.casillas
+        ),
     )
 
 
@@ -693,6 +725,7 @@ def registry_value_type(data_type: str) -> str:
 
 
 __all__ = [
+    "CasillaRecordMetadata",
     "ModeloOperatorProfile",
     "RegistryCasillaCollection",
     "RegistryCasillaSchema",

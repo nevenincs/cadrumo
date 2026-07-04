@@ -198,6 +198,18 @@ class BucketEventType(StrEnum):
     LEDGER_RENTAL_INCOME_CORRECTION_APPLIED = "ledger.rental_income.correction.applied"
     LEDGER_RENTAL_EXPENSE_CORRECTION_APPLIED = "ledger.rental_expense.correction.applied"
 
+    # accountant/gestor review-package collaboration surface (recipient
+    # fingerprint registry, encrypt-for-recipient transport, review-only
+    # workspace mode). ``collab_event`` naming distinguishes the trust/
+    # transport-boundary crossing from ``privacy_event`` below, which marks
+    # a distinct disclosure-relevant read of decrypted material.
+    COLLAB_RECIPIENT_REGISTERED = "collab_event.recipient.registered"
+    COLLAB_RECIPIENT_REMOVED = "collab_event.recipient.removed"
+    COLLAB_PACKAGE_ENCRYPTED_FOR_RECIPIENT = "collab_event.package.encrypted_for_recipient"
+    COLLAB_PACKAGE_DECRYPTED = "privacy_event.package.decrypted"
+    COLLAB_REVIEW_ONLY_WORKSPACE_OPENED = "privacy_event.review_only_workspace.opened"
+    COLLAB_PACKAGE_COUNTER_SIGNED = "collab_event.package.counter_signed"
+
 
 class BucketEventObjectType(StrEnum):
     """Closed catalogue of object types a bucket event can reference."""
@@ -217,6 +229,7 @@ class BucketEventObjectType(StrEnum):
     COLLECTIBLE_INVOICE = "collectible_invoice"
     ATTACHMENT = "attachment"
     WORKFLOW_STATE = "workflow_state"
+    RECIPIENT = "recipient"
 
 
 def _canonical_payload(payload: Mapping[str, str]) -> dict[str, str]:

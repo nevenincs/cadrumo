@@ -129,13 +129,11 @@ def test_real_potion_embeddings_recall_the_target_via_hybrid(tmp_path: Path) -> 
     assert response.hits[0].chunk_id == _TARGET
 
 
-def test_ensure_corpus_embeddings_is_none_without_the_extra(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_ensure_corpus_embeddings_is_none_without_the_extra(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     # Bare-core default: no extra -> no build, no download, lexical-only. Forced
     # via a monkeypatched availability check so the assertion holds even in an
     # env where the extra happens to be installed.
-    import aeat.application.corpus_search._runtime as runtime
+    from .. import _runtime as runtime
 
     monkeypatch.setattr(runtime, "search_extra_available", lambda *_a, **_k: False)
     with override_settings(aeat_local_storage_root=tmp_path):
@@ -143,13 +141,11 @@ def test_ensure_corpus_embeddings_is_none_without_the_extra(
         assert not (corpus_search_dir() / "corpus-vectors.npy").exists()
 
 
-def test_ensure_corpus_embeddings_builds_once_behind_the_extra(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_ensure_corpus_embeddings_builds_once_behind_the_extra(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     # The runtime build step: behind the extra, the corpus matrix is built once
     # into the app cache and reused. A small chunk set stands in for the whole
     # bundled corpus so the test does not embed thousands of chunks.
-    import aeat.application.corpus_search._runtime as runtime
+    from .. import _runtime as runtime
 
     monkeypatch.setattr(runtime, "iter_corpus_chunks", lambda *_a, **_k: iter(_CHUNKS))
 

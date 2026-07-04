@@ -37,16 +37,8 @@ from ._counterpart import (
 )
 from ._errors import AggregationConfigError, AggregationUnsupportedModeloError, t
 from ._foreign_assets import ForeignAssetIngestObservation, ForeignAssetsAggregation, aggregate_foreign_assets_720
-from ._retenciones import (
-    RetencionesAggregation,
-    RetencionObservation,
-    aggregate_retenciones_111,
-    aggregate_retenciones_115,
-    aggregate_retenciones_123,
-    aggregate_retenciones_180,
-    aggregate_retenciones_190,
-    aggregate_retenciones_193,
-)
+from ._modelo_bindings import RetencionesAggregationSourceResolver
+from ._retenciones import RetencionesAggregation, RetencionObservation
 
 LOGGER = get_logger(__name__)
 
@@ -383,15 +375,12 @@ def _aggregate_retenciones(
     period: Period,
     observations: tuple[RetencionObservation, ...],
 ) -> RetencionesAggregation:
-    dispatch = {
-        Modelo.M111.value: aggregate_retenciones_111,
-        Modelo.M115.value: aggregate_retenciones_115,
-        Modelo.M123.value: aggregate_retenciones_123,
-        Modelo.M180.value: aggregate_retenciones_180,
-        Modelo.M190.value: aggregate_retenciones_190,
-        Modelo.M193.value: aggregate_retenciones_193,
-    }
-    return dispatch[modelo](observations, period=period)
+    # Delegate to the ONE canonical mesh resolver aggregation entry point so the
+    # per-modelo service (CLI aggregate / pull) and the live calculate mesh share
+    # a single retenciones dispatch and cannot drift
+    # (one-aggregation-path-pull-equals-calculate). ``provider_for_modelo`` has
+    # already confirmed ``modelo`` is one of the retenciones modelos.
+    return RetencionesAggregationSourceResolver.aggregate(modelo, observations, period=period)
 
 
 def _aggregate_counterpart(

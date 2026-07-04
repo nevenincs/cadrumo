@@ -855,6 +855,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._review_package_recipient_encryption.RecipientEncryptionKeyNotFoundError",
+        ErrorCode(
+            code="REFUSED_MODELO_RECIPIENT_ENCRYPTION_KEY_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.recipient_encryption_key_not_found",
+            default_suggestion="aeat app modelo review-package encrypt-for-recipient --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._review_package_recipient_replay_guard.RecipientReplayGuardError",
         ErrorCode(
             code="ERROR_MODELO_RECIPIENT_REPLAY_GUARD",
@@ -872,6 +883,50 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="application.modelo.errors.recipient_decryption_failed",
             default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._review_package_review_only_workspace.ReviewOnlyWorkspaceError",
+        ErrorCode(
+            code="ERROR_MODELO_REVIEW_ONLY_WORKSPACE",
+            category=ErrorCategory.ERROR,
+            message_key="application.modelo.errors.review_only_workspace_no_authority",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._review_package_review_only_workspace.ReviewOnlyWorkspaceAuthorityError",
+        ErrorCode(
+            code="REFUSED_MODELO_REVIEW_ONLY_WORKSPACE_AUTHORITY",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.review_only_workspace_no_authority",
+            default_suggestion="aeat app modelo review-package decrypt --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._review_package_feedback.ReviewPackageFeedbackError",
+        ErrorCode(
+            code="ERROR_MODELO_REVIEW_PACKAGE_FEEDBACK",
+            category=ErrorCategory.ERROR,
+            message_key="application.modelo.errors.review_package_generic",
+            default_suggestion="aeat app modelo review-package build --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._review_package_feedback.FeedbackCounterSignatureInvalidError",
+        ErrorCode(
+            code="REFUSED_MODELO_REVIEW_PACKAGE_FEEDBACK_COUNTERSIGN_INVALID",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.review_package_generic",
+            default_suggestion="aeat app modelo review-package verify-receipt --help",
             retryable=False,
             runbook_id=None,
         ),

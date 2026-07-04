@@ -61,6 +61,7 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     schema_version: ClassVar[int] = 1
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
+        """Bind the repository to a bucket, or to an explicit secure-object store for tests."""
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         if objects is None:
             self._bucket_id = resolve_filing_repository_bucket_id(bucket_id)

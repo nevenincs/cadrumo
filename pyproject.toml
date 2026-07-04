@@ -680,6 +680,19 @@ convention = "google"
 "src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py" = ["S603"]
 "src/aeat/application/user_profile/tests/test_lazy_boundary.py" = ["S603"]
 "src/aeat/domain/user_profile/tests/test_lazy_boundary.py" = ["S603"]
+# ── Group H: advisory-fixture and docstring-reference ignores ─────────────
+# `period_token` is an AEAT period code ("1T"/"2T"/"0A"), not a password:
+# ruff's S106 heuristic false-positives on every fixture that passes it by
+# keyword. The advisory tests also carry long `:func:`/`:class:` Sphinx
+# references in their module docstrings (E501) that cannot wrap without
+# breaking the cross-reference; test-module docstrings are not in the doc
+# build, so the length is harmless.
+"src/aeat/application/modelo/tests/test_bienes_inversion_advisory.py" = ["S101", "S106", "T20", "D", "E501"]
+"src/aeat/application/modelo/tests/test_prorrata_regularizacion_advisory.py" = ["S101", "S106", "T20", "D"]
+"src/aeat/application/filing/tests/test_complementaria_repository.py" = ["S101", "T20", "D", "E501"]
+# Long import-linter diagnostic f-string and the codemod tool's usage example.
+"src/aeat/tests/test_importlinter_ledger.py" = ["S101", "T20", "D", "E501"]
+"dev/import_centralization_codemod.py" = ["E501"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # Lock the project into pytest-only testing.
