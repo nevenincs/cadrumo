@@ -18,6 +18,7 @@ import pytest
 
 from ....application.aggregation import WithholdingSourceResolver, persist_percepcion_observations
 from ....core import Period
+from ....core.aggregation import RetencionClave
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     WithholdingObservation,
@@ -33,7 +34,7 @@ _BUCKET_ID = "36363636-3636-4363-8363-363636363636"
 _TOTAL_PERCEPCIONES = validated_casilla_id("decl.total-percepciones", surface="test")
 
 
-def _obs(nif: str, clave: str) -> WithholdingObservation:
+def _obs(nif: str, clave: RetencionClave) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=f"row-{nif}-{clave}",
         perceptor_tax_id=nif,
@@ -52,7 +53,11 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
             modelo="190",
             filing_year=2024,
             period=period,
-            observations=[_obs("11111111H", "A"), _obs("11111111H", "G"), _obs("22222222J", "A")],
+            observations=[
+                _obs("11111111H", RetencionClave.A),
+                _obs("11111111H", RetencionClave.G),
+                _obs("22222222J", RetencionClave.A),
+            ],
         )
         snapshot = resources().modelos.authority.snapshot("190", filing_year=2024, period="0A")
         resolution = WithholdingSourceResolver().resolve(
