@@ -256,7 +256,6 @@ UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
     Modelo.M121: "comunicacion de cesion del derecho a deducciones por familia numerosa o discapacidad",
     Modelo.M122: "regularizacion de deducciones familia numerosa/discapacidad por no obligados a declarar",
     Modelo.M220: "declaracion anual del Impuesto sobre Sociedades en regimen de consolidacion fiscal (grupos)",
-    Modelo.M216: "IRNR retenciones e ingresos a cuenta for non-resident income, not yet registry-modeled",
 }
 
 
