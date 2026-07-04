@@ -4,16 +4,16 @@ Mounts ``aeat config collab recipient add|list|remove`` on the ``config`` root.
 A taxpayer records a trusted recipient (an accountant/gestor) by the SHA-256
 fingerprint of that recipient's X25519 public key, verified out-of-band (read
 aloud, compared over a separate channel) before it is trusted -- exactly the
-:class:`~aeat.application.modelo.RecipientFingerprintRegistryRepository`
+:class:`~application.modelo.RecipientFingerprintRegistryRepository`
 contract this module wires, never re-implements
 (``composition-service-no-parallel-write-path``). The registered public key is
 what ``aeat app modelo review-package encrypt-for-recipient`` seals a package
-against; see :mod:`~aeat.entrypoints.cli._modelo_review_package_cli`.
+against; see :mod:`~entrypoints.cli._modelo_review_package_cli`.
 
 ``add`` is idempotent-guarded to the extent the underlying repository already
 is: a duplicate ``recipient_id`` refuses instructively (``RecipientAlreadyRegisteredError``
-propagates verbatim through :func:`~aeat.entrypoints.cli._errors.command_error_boundary`,
-which renders every registered :class:`~aeat.core.errors.AeatError` at the CLI
+propagates verbatim through :func:`~entrypoints.cli._errors.command_error_boundary`,
+which renders every registered :class:`~core.errors.AeatError` at the CLI
 boundary) rather than silently overwriting the prior fingerprint -- a
 fingerprint swap must be an explicit ``remove`` followed by ``add``, never an
 implicit clobber, since the whole point of the out-of-band verification is
@@ -69,7 +69,7 @@ def _validated_public_key_hex(public_key: str) -> str:
 
     A malformed hex string is a CLI input-format error (``typer.BadParameter``),
     distinct from the registry's own domain refusals (duplicate/missing id),
-    which propagate as registered :class:`~aeat.core.errors.AeatError`
+    which propagate as registered :class:`~core.errors.AeatError`
     subclasses and render automatically at the command boundary.
     """
     normalized = public_key.strip().lower()
