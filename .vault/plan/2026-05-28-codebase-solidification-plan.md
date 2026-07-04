@@ -11,6 +11,16 @@ related:
   - '[[2026-06-04-codebase-solidification-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `codebase-solidification` `Codebase solidification recurring hardening epic` plan
 
 ## Epic intent
@@ -1196,7 +1206,7 @@ Per 2026-06-01 test-suite-performance audit. Hoist per-test secure-storage runti
 
 Seven steps lifted from the test-suite-performance audit. Step ordering: A through E land cluster fixes; F enables xdist after cluster A is in (module-scoped fixtures are an xdist precondition); G introduces slow + inventory + workbook_parity markers.
 
-- [ ] `W30.P64.S804` - Hoist secure-storage runtime fixture from autouse function-scope to module scope across `application/filing/conftest.py`, `application/ledger/test_*.py`, `adapters/persistence/storage/sql/test_*.py`, `storage/envelope/test_*.py`, `storage/master_key/test_*.py`, `storage/secret_store/test_*.py`. Replace ~440 inline create_engine_from_settings + EphemeralMasterKeyProvider constructions with the module-scoped fixture. Use `Session().begin_nested()` for per-test isolation where roundtrip-anti-tautology tests demand it. Estimated savings 1.5-6 min sequential; `src/aeat/application/filing/conftest.py`.
+- [x] `W30.P64.S804` - Hoist secure-storage runtime fixture from autouse function-scope to module scope across `application/filing/conftest.py`, `application/ledger/test_*.py`, `adapters/persistence/storage/sql/test_*.py`, `storage/envelope/test_*.py`, `storage/master_key/test_*.py`, `storage/secret_store/test_*.py`. Replace ~440 inline create_engine_from_settings + EphemeralMasterKeyProvider constructions with the module-scoped fixture. Use `Session().begin_nested()` for per-test isolation where roundtrip-anti-tautology tests demand it. Estimated savings 1.5-6 min sequential; `src/aeat/application/filing/conftest.py`.
 - [x] `W30.P64.S805` - Add a workbook_parity marker to pyproject.toml markers and to `_AUXILIARY_MARKERS` in `src/aeat/tests/test_marker_integrity.py`. Apply the marker to every test in `src/aeat/domain/calculations/registry/test_workbook_parity.py` (18 tests). Update default addopts to exclude workbook_parity. Add a just target to run only the workbook-parity lane. Estimated savings 60-90 seconds; `src/aeat/domain/calculations/registry/test_workbook_parity.py`.
 - [x] `W30.P64.S806` - Promote inline ReportLab Canvas constructions to module-scoped fixtures in `src/aeat/adapters/inbound/justificante/test_parser.py`, `src/aeat/adapters/outbound/aeat/sede/test_declarations.py`, `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`, `src/aeat/adapters/inbound/borrador/test_modelo_100_summary.py`, `src/aeat/domain/calculations/registry/test_record_design.py`. Each fixture returns a path; `PDFs are deterministic and per-module not per-test. Estimated savings 5-15 seconds; per file scope`.
 - [x] `W30.P64.S807` - Add a session-scoped source_tree_ast fixture under `src/aeat/tests/conftest.py` that lazily reads each `.py` file in `src/aeat/` once and memoises its AST. Migrate the closure ratchet family (`src/aeat/test_w17_p49_closure.py`, `src/aeat/test_w18_p50_closure.py`, ... 16 files) plus the inventory ratchets (`src/aeat/test_*_inventory.py`) to consume the cache. Estimated savings 30-180 seconds; `src/aeat/tests/conftest.py`.
