@@ -16,6 +16,24 @@ the ADC identity's own token directly.
 with one real token refresh so a misconfigured SA fails loudly at resolution
 time rather than deep inside a later Sheets write.
 
+That eager refresh also covers ADC freshness: Google's own impersonated-
+credentials refresh implementation refreshes a stale or invalid SOURCE
+credential internally before minting the impersonated token
+(``google.auth.impersonated_credentials.Credentials._perform_refresh_token``
+calls ``source_credentials.refresh(request)`` whenever
+``source_credentials.token_state`` is ``STALE`` or ``INVALID``), so a
+merely-stale (but still refreshable) ADC user credential is transparently
+renewed with no operator action. :func:`resolve_impersonated_credentials`
+additionally distinguishes the two ways that refresh can still fail: a
+genuinely revoked/expired ADC SOURCE credential (the operator's local
+``gcloud auth application-default login`` grant itself is dead) raises
+:class:`GoogleAuthAdcStaleError` naming the ``gcloud`` re-login remediation,
+while every other refresh failure (a real IAM Token Creator grant problem on
+``target_principal``) raises :class:`GoogleAuthImpersonationRefusedError`
+naming the IAM role-grant remediation instead. Per
+``no-silent-under-declaration``, a stale token is never silently reused or
+misreported as an unrelated IAM refusal.
+
 Unlike :func:`adapters.outbound.storage.build_google_credentials` (the
 existing OAuth-Desktop path), the resolved credential itself persists
 NOTHING: ADC is discovered fresh from the host environment on every call
@@ -81,6 +99,19 @@ class GoogleAuthAdcUnavailableError(GoogleAuthError):
     discovery sources (``GOOGLE_APPLICATION_CREDENTIALS`` env var, the
     ``gcloud auth application-default login`` user credential file, or an
     attached GCE/GKE/Cloud Run workload identity).
+    """
+
+
+class GoogleAuthAdcStaleError(GoogleAuthError):
+    """Raised when a discovered ADC source credential can no longer be refreshed.
+
+    ADC was discovered (unlike :class:`GoogleAuthAdcUnavailableError`, where
+    discovery itself fails), but the source credential's own refresh failed —
+    the common case is a ``gcloud auth application-default login`` grant that
+    was revoked or expired since it was issued. This is distinct from
+    :class:`GoogleAuthImpersonationRefusedError`: here the ADC identity
+    itself is the problem (re-authenticate it), not the IAM grant on
+    ``target_principal`` (grant Token Creator).
     """
 
 
@@ -198,11 +229,20 @@ def describe_impersonation_target(config: GoogleImpersonationConfig) -> str:
 def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Credentials:
     """Resolve ``config`` into a validated, impersonated ``Credentials`` object.
 
-    Two-step resolution:
+    Three-step resolution:
 
     1. Discover Application Default Credentials via ``google.auth.default()``,
        scoped to ``config.target_scopes``.
-    2. Wrap the discovered source credentials in
+    2. Eagerly refresh the discovered SOURCE credential when it is stale or
+       invalid (:func:`_ensure_source_credential_is_fresh`). A merely-stale
+       ADC user credential (past its access-token lifetime but still holding
+       a live refresh token) is silently renewed here — the normal case for
+       a long-running process reusing a ``gcloud auth application-default
+       login`` grant. A genuinely dead grant (revoked, expired refresh
+       token) raises :class:`GoogleAuthAdcStaleError` naming the exact
+       ``gcloud`` re-authentication remediation, distinct from an IAM grant
+       problem on the impersonation target.
+    3. Wrap the (now-fresh) source credentials in
        ``google.auth.impersonated_credentials.Credentials`` targeting
        ``config.target_principal``, then eagerly call ``.refresh()`` once so
        a misconfigured grant (missing Token Creator role, wrong scopes,
@@ -220,6 +260,10 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
     Raises:
         GoogleAuthAdcUnavailableError: When ADC discovery finds no usable
             credential source on this host.
+        GoogleAuthAdcStaleError: When ADC was discovered but its own
+            refresh (renewing an expired access token, or exchanging a
+            long-lived refresh token) fails — the ADC identity itself must
+            be re-authenticated.
         GoogleAuthImpersonationRefusedError: When IAM refuses to mint a
             token for ``target_principal`` (commonly a missing Token
             Creator grant, or a ``subject`` requiring domain-wide
@@ -246,6 +290,11 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
             suggestion="gcloud auth application-default login",
         ) from exc
 
+    _ensure_source_credential_is_fresh(
+        source_credentials,
+        target_principal=config.target_principal,
+    )
+
     impersonated = google.auth.impersonated_credentials.Credentials(
         source_credentials=source_credentials,
         target_principal=config.target_principal,
@@ -267,7 +316,49 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
     return impersonated
 
 
+def _ensure_source_credential_is_fresh(
+    source_credentials: Credentials,
+    *,
+    target_principal: str,
+) -> None:
+    """Eagerly refresh ``source_credentials`` when stale or invalid.
+
+    ``google.auth.impersonated_credentials.Credentials._perform_refresh_token``
+    already refreshes a stale/invalid source credential internally on every
+    impersonated-token mint, so this call is not required for correctness —
+    it exists to fail with an ADC-specific, actionable remediation
+    (``GoogleAuthAdcStaleError``: "re-run ``gcloud auth application-default
+    login``") the moment the SOURCE credential itself cannot be renewed,
+    rather than letting that failure surface, unattributed, as an
+    :class:`GoogleAuthImpersonationRefusedError` naming an unrelated IAM
+    role-grant remedy once it is wrapped for impersonation.
+
+    A credential with no expiry (``token_state`` never ``STALE``/``INVALID``
+    for a non-expiring source, e.g. some workload-identity credentials) is
+    left untouched — there is nothing to refresh.
+    """
+    import google.auth.credentials
+    import google.auth.exceptions
+    import google.auth.transport.requests
+
+    if source_credentials.token_state not in (
+        google.auth.credentials.TokenState.STALE,
+        google.auth.credentials.TokenState.INVALID,
+    ):
+        return
+
+    try:
+        source_credentials.refresh(google.auth.transport.requests.Request())
+    except google.auth.exceptions.RefreshError as exc:
+        raise GoogleAuthAdcStaleError(
+            f"Application Default Credentials could not be refreshed: {exc}",
+            context={"target_principal": target_principal},
+            suggestion="gcloud auth application-default login",
+        ) from exc
+
+
 __all__ = [
+    "GoogleAuthAdcStaleError",
     "GoogleAuthAdcUnavailableError",
     "GoogleAuthImpersonationRefusedError",
     "GoogleCredentialSourceSelection",
