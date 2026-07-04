@@ -29,6 +29,14 @@ _MARKDOWN_SUFFIX = ".md"
 
 if TYPE_CHECKING:
     from ._skill_metadata import SkillMetadata
+    from ._workspace import (
+        MarketplaceManifest,
+        PluginManifest,
+        WorkspaceManifest,
+        materialise_marketplace,
+        materialise_plugin,
+        materialise_workspace,
+    )
 
 
 def harness_root() -> Traversable:
