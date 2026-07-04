@@ -11,6 +11,7 @@ from .....core.resources import bundled_path
 from .. import (
     CasillaId,
     ModeloDefinition,
+    ModeloRevision,
     RegistryCatalogues,
     RegistryValidationError,
     RegistryValidator,
@@ -118,7 +119,7 @@ def _load_modelo_390() -> tuple[ModeloDefinition, RegistryCatalogues]:
     return _committed_modelo("390")
 
 
-def _replace_revision(modelo: ModeloDefinition, revision) -> ModeloDefinition:
+def _replace_revision(modelo: ModeloDefinition, revision: ModeloRevision) -> ModeloDefinition:
     return modelo.model_copy(
         update={
             "revisions": {
