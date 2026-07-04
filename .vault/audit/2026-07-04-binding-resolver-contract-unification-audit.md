@@ -40,4 +40,4 @@ would make the plan appear complete before the resolver/envelope decisions exist
 
 ## Recommendations
 
-Leave S12 and S18 unchecked until the named P03 blockers are resolved or replaced by a coordinator-approved successor decision. Leave the S14 plan checkbox untouched until the non-authored plan-file WIP clears, then re-check that the exec evidence is still current before using `vault plan step check`.
+Leave S12 and S18 unchecked until the named P03 blockers are resolved or replaced by a coordinator-approved successor decision. S14's plan-file blocker has cleared; current focused re-verification still proves the aggregate command is a thin CLI projection. The broader aggregation service suite is red only because unrelated non-authored Modelo 145 registry scaffolding invalidates registry authority before the aggregation assertions run, so it is recorded as gate-health inventory rather than an S14 implementation blocker.
