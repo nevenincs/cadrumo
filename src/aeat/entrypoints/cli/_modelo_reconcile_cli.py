@@ -18,7 +18,7 @@ from typing import Annotated
 
 import typer
 
-from ...application.modelo import ModeloReconciliationReport
+from ...application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationReport
 from ...core.i18n import tr
 from ...domain.modelos import WorkUnit
 from ._common import _emit_envelope
@@ -189,6 +189,20 @@ _PeriodOpt = Annotated[str | None, typer.Option("--period", help=tr("cli.app.mod
 _RevisionOpt = Annotated[str | None, typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help"))]
 _BucketIdOpt = Annotated[str | None, typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help"))]
 _ActorOpt = Annotated[str | None, typer.Option("--by", help=tr("cli.app.modelo.work.actor_help"))]
+_KindOpt = Annotated[
+    ModeloReconciliationEvidenceKind | None,
+    typer.Option(
+        "--kind",
+        help=tr(
+            "cli.app.modelo.reconcile.file_kind_help",
+            default=(
+                "Evidence document kind: `justificante` (AEAT receipt, every modelo) or "
+                "`declaration` (filed declaración PDF, casilla-level reconcile, enrolled modelos only). "
+                "Defaults to `justificante`."
+            ),
+        ),
+    ),
+]
 
 
 @reconcile_app.command(
@@ -259,8 +273,9 @@ def reconcile_file_verb(
     revision: _RevisionOpt = None,
     bucket_id: _BucketIdOpt = None,
     actor: _ActorOpt = None,
+    kind: _KindOpt = None,
 ) -> None:
-    """Reconcile a work unit against a local justificante PDF file."""
+    """Reconcile a work unit against a local justificante or declaración PDF file."""
     from ...application.modelo import (
         ModeloReconciliationCommand,
         ModeloReconciliationEvidenceKind,
@@ -268,6 +283,7 @@ def reconcile_file_verb(
     )
 
     resolved_actor = actor.strip() if actor else _resolve_default_actor_value()
+    resolved_kind = kind if kind is not None else ModeloReconciliationEvidenceKind.JUSTIFICANTE
     _require_profile()
     unit = _resolve_work_unit(
         work_unit_id=work_unit_id,
@@ -280,7 +296,7 @@ def reconcile_file_verb(
     report = modelo_reconcile(
         ModeloReconciliationCommand(
             work_unit_id=unit.work_unit_id,
-            source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
+            source_kind=resolved_kind,
             source_path=file,
             actor=resolved_actor,
         ),

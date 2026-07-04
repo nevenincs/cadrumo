@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from ....tests.fixtures.identity_holder import single_field_model
 from .._ids import VerificationReportId

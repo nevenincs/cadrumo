@@ -187,13 +187,12 @@ def aggregate_renta_income_ledger_from_repositories(
             t("aggregation.renta_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    # Filtering by date range before decrypt is a pure performance optimisation
-    # (issue #408): the cumulative window this aggregation computes internally
-    # is [Jan 1 of the period's year, the declared quarter's end date] (RD
-    # 439/2007 art. 110.2), so pre-filtering to that exact window reproduces
-    # the unfiltered result -- no row the aggregation would admit falls outside it.
-    resolved_period = _resolve_quarterly_period(period)
-    transactions = repository.load_for_date_range(date(resolved_period.year, 1, 1), resolved_period.end_date)
+    # NOT pre-filtered by date range (issue #408): this aggregation's
+    # ``OUTSIDE_PERIOD`` issue is a genuine diagnostic over the FULL persisted
+    # catalogue -- a catalogue transaction outside the cumulative window must
+    # still surface as a reported issue, not silently vanish before the
+    # classifier ever sees it. See ``test_repository_backed_aggregation_emits_casilla_01_sum``.
+    transactions = repository.load()
     return aggregate_renta_income_ledger(transactions, bucket_id=bucket_id, period=period)
 
 
@@ -280,18 +279,12 @@ def aggregate_renta_m100_income_ledger_from_repositories(
             t("aggregation.renta_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    # Filtering by date range before decrypt is a pure performance optimisation
-    # (issue #408): this aggregation's own window is the full ejercicio (Jan 1
-    # to Dec 31 of ``period.year``), the same span ``period.start_date`` /
-    # ``period.end_date`` already resolve to for an annual period, so
-    # pre-filtering reproduces the unfiltered result exactly. A non-annual
-    # period falls back to the unfiltered load; the aggregation's own
-    # ``PeriodKind.ANNUAL`` refusal downstream still fires unchanged.
-    transactions = (
-        repository.load_for_date_range(period.start_date, period.end_date)
-        if period.kind is PeriodKind.ANNUAL
-        else repository.load()
-    )
+    # NOT pre-filtered by date range (issue #408): this aggregation's
+    # ``OUTSIDE_PERIOD`` issue is a genuine diagnostic over the FULL persisted
+    # catalogue -- a catalogue transaction outside the ejercicio must still
+    # surface as a reported issue, not silently vanish before the classifier
+    # ever sees it.
+    transactions = repository.load()
     return aggregate_renta_m100_income_ledger(transactions, bucket_id=bucket_id, period=period)
 
 
