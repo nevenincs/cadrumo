@@ -12,9 +12,11 @@ proof that the natural-key carry re-keys correctly.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import AnyHttpUrl
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.attachment import AttachmentStore
@@ -124,7 +126,7 @@ def _seed_justificante() -> str:
         presented_at=_INSTANT,
         tax_id="12345678Z",
         total_a_ingresar=Decimal("100.00"),
-        verification_url=aeat_url("sede", "/verifica"),
+        verification_url=AnyHttpUrl(aeat_url("sede", "/verifica")),
         source_pdf_path=Path("db://blobs") / ("a" * 64),
         source_pdf_sha256="a" * 64,
         parsed_at=_INSTANT,
