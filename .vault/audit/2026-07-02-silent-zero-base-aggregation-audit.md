@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#silent-zero-base-aggregation'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-04'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-plan]]"
 ---
@@ -21,6 +21,10 @@ structurally complete.
 2026-07-02 refresh: `uv run --no-sync vaultspec-core vault plan status
 2026-06-19-silent-zero-base-aggregation-plan --json` reports 15 of 18 steps
 complete, `next_open_step` = `W01.P02.S03`, and `exec_missing_ids` = `[]`.
+
+2026-07-04 refresh: the same plan status reports 16 of 18 steps complete,
+`next_open_step` = `W01.P02.S03`, and `exec_missing_ids` = `[]`; S06 is now
+checked at HEAD.
 
 ## Findings
 
@@ -55,8 +59,7 @@ linked purchase-invoice evidence, and a neutral IVA wallet decision, then invoke
 public quickfile chain without manual prorrata input. Verification passed:
 `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_app_quickfile.py::test_quickfile_m303_fully_taxable_ledger_reaches_granted_boe_without_prorrata_input`
 reported 1 passed, and the full quickfile module reported 4 passed. The S06 exec
-record exists, but the plan checkbox remains pending because the plan file carried
-pre-existing non-authored WIP before the step-check edit window.
+record exists, and the plan checkbox is now checked at HEAD.
 
 ### s14-code-review | low | no blocking findings in the real CLI M100 evidence change
 
@@ -80,26 +83,22 @@ the cross-period prorrata mechanism: provisional-percentage carry plus Q4
 regularisation over full-year volumes. No bounded registry binding should be landed or
 checked for these two rows in this campaign.
 
-### close-s06 | low | S06 implementation is complete, but the checkbox is blocked by peer plan WIP
+### close-s06 | low | S06 implementation is complete and checked
 
 `W01.P02.S06` now has a dedicated exec record and real CLI verification through
 `aeat app quickfile` for Modelo 303 2026 1T without manual prorrata input. The plan
-row remains unchecked only because `git diff -- .vault/plan/2026-06-19-silent-zero-base-aggregation-plan.md`
-shows pre-existing non-authored WIP in the plan file, so a step-check edit would
-violate the shared-worktree safety rule. The follow-up is mechanical: run
-`vaultspec-core vault plan step check 2026-06-19-silent-zero-base-aggregation-plan S06`
-after that plan-file WIP clears.
+row is checked at HEAD. No S06 follow-up remains.
 
 ## Closure Decision
 
-For Wave 1 D9 purposes, this campaign's remaining tail is honestly drained: every open
-row is either completed with a matching exec record (`S06`) or formally deferred to a
-named mechanism (`S03`/`S04`). The vault plan is not cosmetically closed because a peer
-edit currently blocks the S06 checkbox, but no missing exec alert remains.
+For Wave 1 D9 purposes, this campaign's remaining tail is honestly drained: completed
+rows have matching exec records, and the only open rows (`S03`/`S04`) are formally
+deferred to a named cross-period prorrata mechanism. The vault plan remains open by
+design because those deferred rows are intentionally unchecked; no missing exec alert
+remains.
 
 ## Recommendations
 
-Leave S03/S04 open as ADR-deferred cross-period prorrata work. Check S06 only after
-the non-authored plan-file WIP clears so `vaultspec-core vault plan step check` can
-run without overwriting a peer edit. Do not declare this campaign closed: `vault plan
-status` still reports open steps.
+Leave S03/S04 open as ADR-deferred cross-period prorrata work. Do not declare this
+campaign closed: `vault plan status` still reports open steps by design for the
+deferred prorrata rows.
