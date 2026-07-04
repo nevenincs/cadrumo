@@ -87,7 +87,7 @@ Every command carries its own `--help`. Any MCP client runs the same console wit
 uvx --from "aeat-cli[agent]" aeat-mcp
 ```
 
-If you want to inspect or adapt the harness itself, `aeat app agent materialise` writes it to disk as a Claude-native workspace or plugin tree.
+If you want to inspect or adapt the harness itself, `aeat app agent --output=<dir>` writes it to disk as a Claude-native workspace, and `aeat app agent --output=<dir> --layout=plugin` writes the plugin tree.
 
 ## Documentation
 

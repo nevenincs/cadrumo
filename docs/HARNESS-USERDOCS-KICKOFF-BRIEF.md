@@ -6,7 +6,7 @@ the `aeat` CLI on a taxpayer's behalf.
 **Status:** kickoff. Read fully, then **hold for the operator's instruction**
 (final section) before authoring anything.
 **Companion brief:** `docs/USERDOCS-KICKOFF-BRIEF.md` is the kickoff for the
-*existing CLI* userdocs (the human typing `aeat …` themselves). This brief is its
+*existing CLI* userdocs (the human typing `aeat` commands themselves). This brief is its
 sibling for the *harness* (a human letting an LLM assistant drive `aeat` for
 them). The binding principles, gates, and worktree discipline in that brief apply
 here verbatim; this brief adds the harness-specific corpus, reader, and scope.
@@ -105,7 +105,7 @@ surface; **distil, never transcribe** — they are agent instructions, not prose
 
 **Distribution (updated 2026-07-03, `claude-ecosystem-packaging` ADR):** the
 consumer path is the **Claude plugin** — generated from the harness source by
-`aeat app agent --layout plugin`, served from the marketplace tree under
+`aeat app agent --output=<dir> --layout=plugin`, served from the marketplace tree under
 `packaging/marketplace/`, installable one-click across Claude Cowork / Claude
 Code / Claude Desktop. Its `.mcp.json` launches the server via
 `uvx --from "aeat-cli[agent]==<version>" aeat-mcp` from the published PyPI package (slim
@@ -162,14 +162,14 @@ The rules in `docs/USERDOCS-KICKOFF-BRIEF.md §3–§5` are **binding here too**
   runtime locale keys** (`src/aeat/locales/*.yml`) and **do not transcribe the
   agent-facing corpus** — both are different audiences with their own single
   source. Distil into fresh human prose.
-- **Ground against the live surface.** Verify every `aeat …` verb via its live
+- **Ground against the live surface.** Verify every `aeat` verb via its live
   `--help`; verify MCP behaviour by actually running `aeat-mcp` against a client
   (or the serving-path tests under `src/aeat/entrypoints/mcp/tests/`). Never
   invent a tool name, persona, env var, or flow.
 
 **Gates:** the docs conformance gate
 (`src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` / the
-`docs`-marked educational-docs conformance test) checks every cited `aeat …` verb
+`docs`-marked educational-docs conformance test) checks every cited `aeat` verb
 resolves and every relative link is real — run it on every prose change. The
 `-n -W` Sphinx build (`src/aeat/tests/test_docs_build.py`) is the full gate.
 There is also an operator-harness rule-surface gate
