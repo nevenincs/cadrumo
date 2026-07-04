@@ -768,6 +768,17 @@ MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
+MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="modelo_review_package_recipient_fingerprint_registry",
+    namespace="aeat.application.modelo.review_package_recipient_fingerprint_registry",
+    owner="aeat.application.modelo",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 
 BUCKET_EVENT_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="bucket_event_history",
@@ -1050,6 +1061,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
         AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
         MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
+        MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE,
         *DOMAIN_NAMESPACE_DEFINITIONS,
     ),
     paths=STORAGE_PATH_DEFINITIONS,
@@ -1098,6 +1110,7 @@ __all__ = [
     "LLM_CACHE_NAMESPACE",
     "LLM_RUN_TELEMETRY_NAMESPACE",
     "LLM_USAGE_NAMESPACE",
+    "MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE",
     "PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE",
     "PROFILE_ASSETS_LEDGER_NAMESPACE",

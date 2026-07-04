@@ -71,6 +71,8 @@ Submodules
    aeat.application.modelo._result_summary
    aeat.application.modelo._review_package
    aeat.application.modelo._review_package_counter_sign
+   aeat.application.modelo._review_package_recipient_encryption
+   aeat.application.modelo._review_package_recipient_registry
    aeat.application.modelo._review_package_signing
    aeat.application.modelo._revision_persistence
    aeat.application.modelo._revision_replay_inputs
