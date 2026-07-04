@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import cast
 
 from ....application.wizard import _catalogue as _wizard_catalogue
 from ....application.wizard import _persistence as _wizard_persistence
@@ -31,11 +30,15 @@ def _unwrap_envelope(payload: object) -> dict[str, object]:
     """Return the inner ``result`` payload from a CLI emit envelope."""
     if not isinstance(payload, dict):
         raise AssertionError(f"unexpected JSON shape: {type(payload).__name__}")
-    if "result" not in payload or "schema_version" not in payload:
-        raise AssertionError(f"missing CLI output envelope keys: {sorted(payload)}")
-    result_obj = payload["result"]
+    # ``isinstance(payload, dict)`` only proves *some* dict — this is always
+    # parsed JSON envelope output, so re-keying with ``str(k)`` gives an
+    # honestly-typed ``dict[str, object]`` rather than casting the bare dict.
+    typed_payload = {str(k): v for k, v in payload.items()}
+    if "result" not in typed_payload or "schema_version" not in typed_payload:
+        raise AssertionError(f"missing CLI output envelope keys: {sorted(typed_payload)}")
+    result_obj = typed_payload["result"]
     if isinstance(result_obj, dict):
-        return cast(dict[str, object], result_obj)
+        return {str(k): v for k, v in result_obj.items()}
     raise AssertionError(f"result field is not a dict: {type(result_obj).__name__}")
 
 
