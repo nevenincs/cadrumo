@@ -1,6 +1,6 @@
 """Typed errors for the on-host corpus-search grounding surface.
 
-These are registered :class:`aeat.core.errors.AeatError` subclasses, so a
+These are registered :class:`core.errors.AeatError` subclasses, so a
 corpus-search failure that reaches the CLI boundary renders as its proper
 category envelope (a ``REFUSED`` input/dependency refusal, an ``ERROR`` base)
 rather than collapsing into the generic ``INTERNAL`` unexpected-boundary path.
