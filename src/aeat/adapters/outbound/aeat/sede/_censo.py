@@ -4,7 +4,7 @@ Owns the strict pydantic envelope (:class:`CensoFactSet`) and the pure
 HTML parser (:func:`parse_g313_html`) that lift the AEAT G313 result
 page into a typed boundary value. The live Playwright driver, the raw-
 HTML persistence path, and the
-:class:`aeat.domain.user_profile._values.UserProfileFact` provenance
+:class:`domain.user_profile._values.UserProfileFact` provenance
 wiring are separate concerns that compose with this module; nothing in
 here performs I/O.
 
