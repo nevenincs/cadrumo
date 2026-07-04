@@ -39,11 +39,15 @@ related:
 
 - The live CLI now names the value-bearing binding operation `resolve`, matching what it does: resolve temporary binding overrides against the registry binding surface without mutating state.
 - Focused verification passed:
+  - `uv run --no-sync vaultspec-rag search "modelo bindings resolve no preview command registry binding surface" --type code --port 8766 --max-results 12 --timeout 30`
   - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_modelo_registry_surface.py -k "bindings"` (`2 passed`)
-  - `uv run --no-sync aeat app modelo bindings --help`
+  - `uv run --no-sync aeat app modelo bindings --help` shows `list` and `resolve`, with no `preview` subcommand.
   - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py` (`140 passed`)
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` ran and failed on an unrelated docs citation in `docs/HARNESS-USERDOCS-KICKOFF-BRIEF.md` (`aeat app agent --layout plugin`), not on the bindings command path.
+  - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` (`58 passed`)
+- Blocking evidence:
+  - `src/aeat/entrypoints/cli/_modelo_discovery_cli.py`, one of S21's target files, currently carries non-authored support-matrix WIP. This pass therefore does not mutate or check S21 from that dirty target surface.
+  - `uv run --no-sync pytest --collect-only -q` is currently red because non-authored untracked Modelo 145 registry scaffolding invalidates registry authority before collection completes.
 
 ## Notes
 
-No plan step check was run in this pass. The plan file currently has non-authored WIP that only removes the template link-rule comment block, so mutating the checkbox would violate the shared-worktree abort-on-WIP rule. This record reconciles the missing exec evidence only.
+No plan step check was run in this pass. The plan file is clean, but S21's target module is dirty with non-authored WIP and the mandatory collect-only gate is red due to unrelated non-authored registry WIP. This record reconciles current evidence only.
