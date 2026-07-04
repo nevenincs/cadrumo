@@ -437,12 +437,12 @@ def confirm_invoice_draft_from_evidence(
     )
 
     resolved_counterparty_tax_id = _require_confirmed_field(
-        counterparty_tax_id or draft.supplier_tax_id,
+        counterparty_tax_id if counterparty_tax_id is not None else draft.supplier_tax_id,
         field="counterparty_tax_id",
     )
     assert isinstance(resolved_counterparty_tax_id, str)
     resolved_invoice_number = _require_confirmed_field(
-        invoice_number or draft.invoice_number,
+        invoice_number if invoice_number is not None else draft.invoice_number,
         field="invoice_number",
     )
     assert isinstance(resolved_invoice_number, str)
@@ -455,7 +455,10 @@ def confirm_invoice_draft_from_evidence(
             "override was supplied",
             suggestion="aeat app ledger evidence extract --evidence-id <id>",
         )
-    resolved_taxable_base = _require_confirmed_field(taxable_base or draft.taxable_base, field="taxable_base")
+    resolved_taxable_base = _require_confirmed_field(
+        taxable_base if taxable_base is not None else draft.taxable_base,
+        field="taxable_base",
+    )
     assert isinstance(resolved_taxable_base, Decimal)
     resolved_iva_rate = iva_rate if iva_rate is not None else draft.iva_rate
     resolved_counterparty_name = (counterparty_name or "").strip()

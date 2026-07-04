@@ -364,6 +364,40 @@ class TestConfirmInvoiceDraftFromEvidence:
         assert confirmation.draft.invoice_number == "2026-0142"
         assert confirmation.draft.taxable_base == Decimal("100.00")
 
+    def test_confirm_honours_a_zero_valued_taxable_base_override(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """A ``Decimal("0")`` override must win, not fall back to the extracted value.
+
+        A naive ``override or draft.taxable_base`` merge would treat a falsy
+        zero override as "not supplied" and silently substitute the extracted
+        100.00 -- exactly the kind of silent-under-declaration this confirm
+        step must never produce.
+        """
+        pdf_path = tmp_path / "factura.pdf"
+        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        repo = self._repo(secure_objects)
+
+        confirmation = confirm_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            evidence_id=record.evidence_id,
+            counterparty_name="Acme Suministros SL",
+            taxable_base=Decimal("0"),
+            iva_rate=Decimal("0"),
+            settings=isolated_settings,
+            invoice_repository=repo,
+        )
+
+        assert confirmation.invoice.base_total == Decimal("0")
+        # The extracted draft is unaffected; only the resolved invoice reflects the override.
+        assert confirmation.draft.taxable_base == Decimal("100.00")
+
     def test_confirm_missing_required_field_refuses_not_fabricates(
         self,
         isolated_settings: Settings,
