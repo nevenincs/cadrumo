@@ -1,7 +1,7 @@
 """Ed25519 authenticity signing for offline corpus bundles.
 
-:func:`~aeat.core.corpus_manifest.build_corpus_bundle` and
-:func:`~aeat.core.corpus_manifest.verify_corpus_bundle` give a distributable
+:func:`~core.corpus_manifest.build_corpus_bundle` and
+:func:`~core.corpus_manifest.verify_corpus_bundle` give a distributable
 corpus ``.zip`` an INTEGRITY guarantee: every archived file matches its
 embedded SHA-256 manifest record, and the manifest itself is self-attesting.
 That is deliberately silent on AUTHENTICITY -- a bundle rebuilt by anyone from
@@ -11,12 +11,12 @@ tell "this bundle's checksums are internally consistent" from "this bundle was
 actually published by the project".
 
 This module adds that authenticity layer on top, following the SAME pattern
-:mod:`aeat.application.modelo._review_package_signing` established for
+:mod:`application.modelo._review_package_signing` established for
 review-package signing: sign the bundle's self-attesting
-:attr:`~aeat.core.corpus_manifest.CorpusManifest.manifest_sha256` digest with
+:attr:`~core.corpus_manifest.CorpusManifest.manifest_sha256` digest with
 an Ed25519 keypair (RFC 8032), so the signature transitively covers every
 archived member (a tampered member is already caught by
-:func:`~aeat.core.corpus_manifest.verify_corpus_bundle` before the signature
+:func:`~core.corpus_manifest.verify_corpus_bundle` before the signature
 check is even attempted; see :func:`verify_corpus_bundle_signature`).
 
 Key custody differs from the review-package case by necessity. A review
@@ -25,11 +25,11 @@ receives the public key out of band; a corpus bundle is signed ONCE by the
 project's maintainers (an offline, pre-distribution act, with no profile
 bucket in scope) and verified by every installer, including installers who
 have never provisioned a profile at all. This module therefore has no
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` dependency
+:class:`~adapters.persistence.storage.SecureObjectRepository` dependency
 (this is a ``core`` module; ``core`` may not import ``adapters`` or
 ``application`` -- see the ``core-not-outer`` import-linter contract) and
 persists a maintainer's private key as a hex-encoded file on disk instead,
-hardened with :func:`~aeat.core.file_permissions.restrict_file_permissions`
+hardened with :func:`~core.file_permissions.restrict_file_permissions`
 (the same best-effort POSIX ``chmod 0o600`` / Windows ACL hardening the
 AEAT-session-state writers use). The corresponding public key carries no
 secrecy requirement: it is meant to be embedded in the ``aeat`` distribution
@@ -37,9 +37,9 @@ secrecy requirement: it is meant to be embedded in the ``aeat`` distribution
 against a key they already trust, without contacting anyone.
 
 See Also:
-    :mod:`aeat.core.corpus_manifest`
+    :mod:`core.corpus_manifest`
         Builds and integrity-verifies the bundle this module signs.
-    :mod:`aeat.application.modelo._review_package_signing`
+    :mod:`application.modelo._review_package_signing`
         The sibling implementation of the same signing primitive, scoped to
         one profile bucket's review-package authenticity instead of a
         maintainer-published corpus bundle.
@@ -149,8 +149,8 @@ class SignedCorpusBundle(BaseModel):
     """Signature envelope binding a corpus bundle's manifest digest to a signer.
 
     ``manifest_sha256`` is the bundle's own self-attesting
-    :attr:`~aeat.core.corpus_manifest.CorpusManifest.manifest_sha256` (recovered
-    via :func:`~aeat.core.corpus_manifest.verify_corpus_bundle`), NOT a
+    :attr:`~core.corpus_manifest.CorpusManifest.manifest_sha256` (recovered
+    via :func:`~core.corpus_manifest.verify_corpus_bundle`), NOT a
     re-derived hash of the archive bytes: signing the manifest digest
     transitively covers every archived member because the manifest digest
     already covers every per-file checksum record.
@@ -187,7 +187,7 @@ def generate_corpus_signing_keypair(
 
     Writes the keypair as JSON to ``private_key_path``, then hardens the
     file's permissions via
-    :func:`~aeat.core.file_permissions.restrict_file_permissions`
+    :func:`~core.file_permissions.restrict_file_permissions`
     (best-effort ``chmod 0o600`` on POSIX; an ACL-stripping ``icacls`` call on
     Windows). This is a maintainer-side, offline, one-time act: unlike the
     review-package keypair (minted per profile bucket, on demand), a corpus
@@ -274,7 +274,7 @@ def sign_corpus_bundle(
     """Verify ``bundle_path``'s checksum manifest, then sign its digest.
 
     Delegates the integrity check entirely to
-    :func:`~aeat.core.corpus_manifest.assert_corpus_bundle_verifies` (no
+    :func:`~core.corpus_manifest.assert_corpus_bundle_verifies` (no
     hashing logic is re-derived here): a bundle that is not checksum-clean
     raises before any signature is produced, so a signature can never be
     minted over a bundle this module itself cannot vouch is intact.
@@ -293,7 +293,7 @@ def sign_corpus_bundle(
             digest does not match its body.
         CorpusBundleVerificationError: If the bundle fails checksum-manifest
             verification (propagated from
-            :func:`~aeat.core.corpus_manifest.assert_corpus_bundle_verifies`).
+            :func:`~core.corpus_manifest.assert_corpus_bundle_verifies`).
     """
     from . import assert_corpus_bundle_verifies
 
@@ -318,7 +318,7 @@ def verify_corpus_bundle_signature(
     """Verify ``signed_bundle``'s signature against ``public_key_hex``.
 
     Re-runs the checksum-manifest integrity check (a fresh
-    :func:`~aeat.core.corpus_manifest.verify_corpus_bundle` call, not a trust
+    :func:`~core.corpus_manifest.verify_corpus_bundle` call, not a trust
     of ``signed_bundle.manifest_sha256``) first. This matters because
     ``manifest_sha256`` is a digest over the embedded manifest's OWN recorded
     per-file hashes -- it does NOT change if an archived member's bytes are
