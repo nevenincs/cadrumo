@@ -592,6 +592,12 @@ def _evaluate_expression(
         return _evaluate_m131_resolve_modulos_minoracion_empleo(expression, ctx)
     if op == "m131_resolve_modulos_indice_exceso":
         return _evaluate_m131_resolve_modulos_indice_exceso(expression, ctx)
+    if op == "m131_resolve_modulos_indices_generales":
+        return _evaluate_m131_resolve_modulos_indices_generales(expression, ctx)
+    if op == "m131_resolve_modulos_pequena_dimension_ignorado_flag":
+        return _evaluate_m131_resolve_modulos_pequena_dimension_ignorado_flag(expression, ctx)
+    if op == "m131_resolve_modulos_temporada_inicio_conflicto_flag":
+        return _evaluate_m131_resolve_modulos_temporada_inicio_conflicto_flag(expression, ctx)
     if op == "m100_resolve_eo_agraria_indices_correctores":
         return _evaluate_m100_resolve_eo_agraria_indices_correctores(expression, ctx)
     if op == "m303_resolve_modulos_iva_cuota_devengada":
@@ -1378,6 +1384,330 @@ def _evaluate_m131_resolve_modulos_indice_exceso(expression: FormulaExpression, 
         op="m131_resolve_modulos_indice_exceso",
     )
     return cuantia + indice * (minorado - cuantia)
+
+
+#: Epígrafes carrying a documented índice corrector especial (Orden
+#: HAC/1347/2024 Anexo II, instrucción 2.3, letra a) that the
+#: incompatibilidades clause excludes from the índice corrector para
+#: empresas de pequeña dimensión (b.1) — "En ningún caso será aplicable el
+#: índice corrector para empresas de pequeña dimensión (b.1) a las
+#: actividades para las que están previstos los índices correctores
+#: especiales enumerados en las letras a.2), a.3), a.4) y a.5)." Only the two
+#: epígrafes already tabled by the índice-de-exceso dataset carry a
+#: documented especial índice today (721.2 transporte por autotaxis, letra
+#: a.2; 722 transporte de mercancías por carretera, letra a.4) — see the
+#: sibling ``modelo-131-2025-modulos-indice-exceso-incompatible-*`` ADVISORY
+#: predicates, which flag the a.2/a.4-vs-b.3 half of the same
+#: incompatibilidades clause this frozenset structurally enforces for the
+#: a.2/a.3/a.4/a.5-vs-b.1 half.
+_M131_EPIGRAFES_INDICE_ESPECIAL = frozenset({"721.2", "722"})
+
+
+@dataclass(frozen=True, slots=True)
+class _M131ResolveModulosIndicesGeneralesArgs:
+    """Resolved registry ids for the M131 Fase 3ª índices correctores generales dispatcher."""
+
+    epigrafe_casilla_id: CasillaId
+    minorado_casilla_id: CasillaId
+    pequena_dimension_casilla_id: CasillaId
+    temporada_casilla_id: CasillaId
+    inicio_actividad_casilla_id: CasillaId
+    cuantia_parameter: ParameterId
+    indice_exceso_parameter: ParameterId
+
+
+def _m131_resolve_modulos_indices_generales_args(
+    expression: FormulaExpression,
+) -> _M131ResolveModulosIndicesGeneralesArgs:
+    op = "m131_resolve_modulos_indices_generales"
+    if len(expression.args) != 7:
+        raise RegistryValidationError(
+            f"formula op {op!r} expects 7 args, got {len(expression.args)}",
+            translated_message="errors.calc.lookup_dispatch_arg_count",
+            context={"op": op, "expected": "7"},
+        )
+    (
+        epigrafe_arg,
+        minorado_arg,
+        pequena_dimension_arg,
+        temporada_arg,
+        inicio_actividad_arg,
+        cuantia_arg,
+        indice_arg,
+    ) = expression.args
+    casilla_positions = {
+        0: epigrafe_arg,
+        1: minorado_arg,
+        2: pequena_dimension_arg,
+        3: temporada_arg,
+        4: inicio_actividad_arg,
+    }
+    for position, arg in casilla_positions.items():
+        if arg.casilla_id is None:
+            raise RegistryValidationError(
+                f"formula op {op!r} requires args[{position}] to be a casilla leaf",
+                translated_message="errors.calc.lookup_dispatch_arg_kind",
+                context={"op": op, "position": f"args[{position}]", "expected_kind": "casilla"},
+            )
+    if cuantia_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[5] to be a parameter leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[5]", "expected_kind": "parameter"},
+        )
+    if indice_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[6] to be a parameter leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[6]", "expected_kind": "parameter"},
+        )
+    assert epigrafe_arg.casilla_id is not None
+    assert minorado_arg.casilla_id is not None
+    assert pequena_dimension_arg.casilla_id is not None
+    assert temporada_arg.casilla_id is not None
+    assert inicio_actividad_arg.casilla_id is not None
+    return _M131ResolveModulosIndicesGeneralesArgs(
+        epigrafe_casilla_id=epigrafe_arg.casilla_id,
+        minorado_casilla_id=minorado_arg.casilla_id,
+        pequena_dimension_casilla_id=pequena_dimension_arg.casilla_id,
+        temporada_casilla_id=temporada_arg.casilla_id,
+        inicio_actividad_casilla_id=inicio_actividad_arg.casilla_id,
+        cuantia_parameter=cuantia_arg.parameter,
+        indice_exceso_parameter=indice_arg.parameter,
+    )
+
+
+def _evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Resolve the M131 estimación-objetiva Fase 3ª índices correctores generales cascade.
+
+    Orden HAC/1347/2024 Anexo II, instrucción 2.3 fixes both the mechanism and
+    the application order for the índices correctores generales (letra b)):
+    "Los índices correctores se aplicarán según el orden que aparecen
+    enumerados a continuación, siempre que no resulten incompatibles, ... sobre
+    el rendimiento neto minorado o, en su caso, sobre el rectificado por
+    aplicación de los mismos" — b.1) empresas de pequeña dimensión, b.2)
+    temporada, b.3) exceso, b.4) inicio de nuevas actividades, each a
+    multiplicative factor over the RUNNING rendimiento, not a single-índice
+    pick nor a simultaneous product (mirrors the M100 EO-agraria índices
+    correctores cascade,
+    :func:`_evaluate_m100_resolve_eo_agraria_indices_correctores`).
+
+    Each índice casilla (pequeña dimensión, temporada, inicio de nuevas
+    actividades) is an operator/preparer-declared rate: the taxpayer reads the
+    applicable índice off the Anexo II tables (población del municipio /
+    duración de la temporada / ejercicio de inicio, none of which this engine
+    models as taxpayer facts) and enters it directly — the same honest-scalar
+    pattern the índice de exceso (b.3) and the M100 agraria cascade already
+    use. A blank or non-positive índice resolves to "not applied" (factor of
+    1), never a fabricated value.
+
+    **Incompatibilidades (Orden HAC/1347/2024 Anexo II, instrucción 2.3,
+    grounded in ``orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades``),
+    enforced structurally rather than left to an advisory-only guard (per the
+    prior b.3-only code-review HIGH finding on this same engine,
+    commit ``939f3fe010``):
+
+    * "En ningún caso será aplicable el índice corrector para empresas de
+      pequeña dimensión (b.1) a las actividades para las que están previstos
+      los índices correctores especiales" (a.2/a.3/a.4/a.5) — a declared
+      pequeña-dimensión índice is IGNORED (never applied) for the two tabled
+      epígrafes carrying a documented índice especial
+      (:data:`_M131_EPIGRAFES_INDICE_ESPECIAL`: "721.2" transporte por
+      autotaxis letra a.2, "722" transporte de mercancías letra a.4). The
+      ``modelo-131-2025-modulos-pequena-dimension-ignorado-especial`` ADVISORY
+      surfaces this to the operator as a non-blocking prompt (never a silent
+      drop with no signal, per no-silent-under-declaration).
+    * "Cuando resulte aplicable el índice corrector para empresas de pequeña
+      dimensión (b.1) no se aplicará el índice corrector de exceso (b.3)" —
+      when a (non-ignored) pequeña-dimensión índice applies, the índice de
+      exceso is skipped for this activity.
+    * "Cuando resulte aplicable el índice corrector de temporada (b.2) no se
+      aplicará el índice corrector por inicio de nuevas actividades (b.4)" —
+      temporada and inicio de nuevas actividades are mutually exclusive; when
+      both are declared, temporada (the Anexo's own enumeration order, b.2
+      before b.4) takes precedence and inicio de nuevas actividades is
+      skipped. The
+      ``modelo-131-2025-modulos-temporada-inicio-actividad-incompatibles``
+      ADVISORY surfaces the conflicting declaration.
+
+    A non-positive rendimiento neto minorado never receives índices
+    correctores (the general estimación-objetiva principle applied uniformly
+    across this engine — see the M100 agraria and M131 índice-de-exceso
+    guards) and resolves to the minorado figure unchanged. This op feeds the
+    same internal-only ``modulos-rendimiento-neto-modulos`` advisory-support
+    casilla the índice de exceso already fed, never a filed figure standing in
+    for the operator's manual casilla 01.
+    """
+    args = _m131_resolve_modulos_indices_generales_args(expression)
+    minorado = _m210_numeric_casilla_value(args.minorado_casilla_id, ctx)
+    ctx.operand_refs.append(args.minorado_casilla_id)
+    ctx.operand_casilla_refs.append(args.minorado_casilla_id)
+    epigrafe = ctx.text_values.get(args.epigrafe_casilla_id, "").strip()
+    ctx.operand_refs.append(args.epigrafe_casilla_id)
+    ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
+    if minorado <= _ZERO:
+        return minorado
+
+    pequena_dimension = _m100_eo_agraria_read_indice(args.pequena_dimension_casilla_id, ctx)
+    aplica_pequena_dimension = pequena_dimension > _ZERO and epigrafe not in _M131_EPIGRAFES_INDICE_ESPECIAL
+
+    rendimiento = minorado
+    if aplica_pequena_dimension:
+        rendimiento = rendimiento * pequena_dimension
+
+    temporada = _m100_eo_agraria_read_indice(args.temporada_casilla_id, ctx)
+    inicio_actividad = _m100_eo_agraria_read_indice(args.inicio_actividad_casilla_id, ctx)
+    if temporada > _ZERO:
+        rendimiento = rendimiento * temporada
+    elif inicio_actividad > _ZERO:
+        rendimiento = rendimiento * inicio_actividad
+
+    if aplica_pequena_dimension:
+        # b.1 excludes b.3 outright — the índice de exceso is not applied.
+        return rendimiento
+
+    if not epigrafe:
+        return rendimiento
+    cuantia_parameter = ctx.parameters.get(args.cuantia_parameter)
+    ctx.operand_refs.append(args.cuantia_parameter)
+    if cuantia_parameter is None or rendimiento <= _ZERO:
+        return rendimiento
+    cuantia = _m131_modulos_cuantia_exceso(cuantia_parameter, epigrafe=epigrafe, year=ctx.filing_year)
+    if cuantia is None or rendimiento <= cuantia:
+        return rendimiento
+    ctx.operand_values.append(cuantia)
+    indice = _m100_scalar_parameter_value(
+        args.indice_exceso_parameter,
+        ctx,
+        op="m131_resolve_modulos_indices_generales",
+    )
+    return cuantia + indice * (rendimiento - cuantia)
+
+
+@dataclass(frozen=True, slots=True)
+class _M131ResolveModulosPequenaDimensionIgnoradoFlagArgs:
+    """Resolved registry ids for the M131 pequeña-dimensión-ignorado advisory flag."""
+
+    epigrafe_casilla_id: CasillaId
+    pequena_dimension_casilla_id: CasillaId
+
+
+def _m131_resolve_modulos_pequena_dimension_ignorado_flag_args(
+    expression: FormulaExpression,
+) -> _M131ResolveModulosPequenaDimensionIgnoradoFlagArgs:
+    op = "m131_resolve_modulos_pequena_dimension_ignorado_flag"
+    if len(expression.args) != 2:
+        raise RegistryValidationError(
+            f"formula op {op!r} expects 2 args, got {len(expression.args)}",
+            translated_message="errors.calc.lookup_dispatch_arg_count",
+            context={"op": op, "expected": "2"},
+        )
+    epigrafe_arg, pequena_dimension_arg = expression.args
+    if epigrafe_arg.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[0] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[0]", "expected_kind": "casilla"},
+        )
+    if pequena_dimension_arg.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[1] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[1]", "expected_kind": "casilla"},
+        )
+    return _M131ResolveModulosPequenaDimensionIgnoradoFlagArgs(
+        epigrafe_casilla_id=epigrafe_arg.casilla_id,
+        pequena_dimension_casilla_id=pequena_dimension_arg.casilla_id,
+    )
+
+
+def _evaluate_m131_resolve_modulos_pequena_dimension_ignorado_flag(
+    expression: FormulaExpression,
+    ctx: _EvalContext,
+) -> Decimal:
+    """Flag (1/0) whether a declared índice de pequeña dimensión (b.1) was ignored.
+
+    Orden HAC/1347/2024 Anexo II, instrucción 2.3: "En ningún caso será
+    aplicable el índice corrector para empresas de pequeña dimensión (b.1) a
+    las actividades para las que están previstos los índices correctores
+    especiales enumerados en las letras a.2), a.3), a.4) y a.5)." Resolves to
+    ``Decimal('1')`` when the operator declared a positive índice de pequeña
+    dimensión for an epígrafe carrying a documented índice especial
+    (:data:`_M131_EPIGRAFES_INDICE_ESPECIAL`) — the exact condition
+    :func:`_evaluate_m131_resolve_modulos_indices_generales` uses to ignore
+    the índice — never fabricating a value, only signalling the ignored
+    declaration so the paired ADVISORY (via ``advisory_when_positive``) can
+    surface it to the operator (no-silent-under-declaration).
+    """
+    args = _m131_resolve_modulos_pequena_dimension_ignorado_flag_args(expression)
+    epigrafe = ctx.text_values.get(args.epigrafe_casilla_id, "").strip()
+    ctx.operand_refs.append(args.epigrafe_casilla_id)
+    ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
+    pequena_dimension = _m210_numeric_casilla_value(args.pequena_dimension_casilla_id, ctx)
+    if pequena_dimension > _ZERO and epigrafe in _M131_EPIGRAFES_INDICE_ESPECIAL:
+        return Decimal("1")
+    return _ZERO
+
+
+@dataclass(frozen=True, slots=True)
+class _M131ResolveModulosTemporadaInicioConflictoFlagArgs:
+    """Resolved registry ids for the M131 temporada/inicio-actividad conflict advisory flag."""
+
+    temporada_casilla_id: CasillaId
+    inicio_actividad_casilla_id: CasillaId
+
+
+def _m131_resolve_modulos_temporada_inicio_conflicto_flag_args(
+    expression: FormulaExpression,
+) -> _M131ResolveModulosTemporadaInicioConflictoFlagArgs:
+    op = "m131_resolve_modulos_temporada_inicio_conflicto_flag"
+    if len(expression.args) != 2:
+        raise RegistryValidationError(
+            f"formula op {op!r} expects 2 args, got {len(expression.args)}",
+            translated_message="errors.calc.lookup_dispatch_arg_count",
+            context={"op": op, "expected": "2"},
+        )
+    temporada_arg, inicio_actividad_arg = expression.args
+    if temporada_arg.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[0] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[0]", "expected_kind": "casilla"},
+        )
+    if inicio_actividad_arg.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[1] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[1]", "expected_kind": "casilla"},
+        )
+    return _M131ResolveModulosTemporadaInicioConflictoFlagArgs(
+        temporada_casilla_id=temporada_arg.casilla_id,
+        inicio_actividad_casilla_id=inicio_actividad_arg.casilla_id,
+    )
+
+
+def _evaluate_m131_resolve_modulos_temporada_inicio_conflicto_flag(
+    expression: FormulaExpression,
+    ctx: _EvalContext,
+) -> Decimal:
+    """Flag (1/0) whether both índice de temporada (b.2) and índice de inicio (b.4) were declared.
+
+    Orden HAC/1347/2024 Anexo II, instrucción 2.3: "Cuando resulte aplicable
+    el índice corrector de temporada (b.2) no se aplicará el índice corrector
+    por inicio de nuevas actividades (b.4)." Resolves to ``Decimal('1')`` when
+    both índices are positive — the mutually-exclusive declaration
+    :func:`_evaluate_m131_resolve_modulos_indices_generales` resolves by
+    preferring temporada (the Anexo's own enumeration order) and skipping
+    inicio de nuevas actividades — so the paired ADVISORY (via
+    ``advisory_when_positive``) can surface the conflicting declaration to the
+    operator.
+    """
+    args = _m131_resolve_modulos_temporada_inicio_conflicto_flag_args(expression)
+    temporada = _m210_numeric_casilla_value(args.temporada_casilla_id, ctx)
+    inicio_actividad = _m210_numeric_casilla_value(args.inicio_actividad_casilla_id, ctx)
+    if temporada > _ZERO and inicio_actividad > _ZERO:
+        return Decimal("1")
+    return _ZERO
 
 
 #: Índice-corrector casilla count the M100 estimación-objetiva agraria Fase 3ª

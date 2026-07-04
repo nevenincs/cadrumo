@@ -308,12 +308,8 @@ def test_emilio_catalogue_service_invoice_feeds_m349() -> None:
             ),
         )
 
-    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == (
-        Decimal("1")
-    )
-    assert resolution.binding_values[
-        "iva-349-declarante-importe-operaciones"
-    ] == Decimal("4000.00")
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == (Decimal("1"))
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("4000.00")
     assert len(resolution.detail_rows) == 1
     row_obj: Any = resolution.detail_rows[0]
     assert row_obj.codigo_pais == "DE"
