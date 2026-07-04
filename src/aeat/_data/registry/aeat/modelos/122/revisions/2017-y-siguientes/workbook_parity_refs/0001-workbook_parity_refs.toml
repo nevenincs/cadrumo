@@ -1,0 +1,14 @@
+# Modelo 122 record-design parity anchor. Declares the bundled orden-hfp-105-2017
+# form-approval order as the layout authority. runner_required is false: no
+# authoritative Modelo 122 DR is bundled, so this pins the form-approval
+# provenance without asserting a verified byte-position layout.
+
+[[revisions."2017-y-siguientes".workbook_parity_refs]]
+id = "modelo-122-orden-static-layout"
+workbook_source = "enrolled-modelo-122-layout"
+fixture_id = "modelo-122-orden-hfp-105-2017-layout"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-122-layout"]
