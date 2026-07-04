@@ -1,13 +1,13 @@
 """pdfplumber-backed text extraction for justificante PDFs.
 
 Implements the ``PDFPLUMBER`` branch of
-:class:`~aeat.domain.justificante.JustificanteParserBackend` for the
-:mod:`aeat.adapters.inbound.justificante._parsers` dispatch layer.
+:class:`~domain.justificante.JustificanteParserBackend` for the
+:mod:`adapters.inbound.justificante._parsers` dispatch layer.
 Concatenates the ``page.extract_text()`` output of every non-empty page;
 layout-sensitive parsing is left to the regex extractor downstream.
 
 Both path and bytes helpers translate extraction failures into
-:class:`~aeat.domain.justificante.JustificanteParseError`. The bytes helper
+:class:`~domain.justificante.JustificanteParseError`. The bytes helper
 uses the shared inbound PDF bytes primitive so secure-storage captures can be
 parsed without plaintext temporary files.
 """
