@@ -71,10 +71,12 @@ Submodules
    aeat.application.modelo._result_disposition_resolution
    aeat.application.modelo._result_summary
    aeat.application.modelo._review_package
+   aeat.application.modelo._review_package_collab_audit
    aeat.application.modelo._review_package_counter_sign
    aeat.application.modelo._review_package_recipient_encryption
    aeat.application.modelo._review_package_recipient_registry
    aeat.application.modelo._review_package_recipient_replay_guard
+   aeat.application.modelo._review_package_review_only_workspace
    aeat.application.modelo._review_package_signing
    aeat.application.modelo._revision_persistence
    aeat.application.modelo._revision_replay_inputs
