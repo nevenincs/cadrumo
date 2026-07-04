@@ -36,7 +36,7 @@ from ....modelos import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .. import CasillaId, validated_casilla_id
+from .. import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from .._bindings import (
     CasillaObservation,
     OracleModeloObservation,
@@ -68,7 +68,7 @@ class _ModeloDraftCommonKwargs(TypedDict):
     modelo: str
     period: Period
     profile_tax_id: SubjectTaxId
-    snapshot_ref: object
+    snapshot_ref: RegistrySnapshotRef
     status: ModeloDraftStatus
     values: tuple[ModeloValue, ...]
     binding_values: tuple[ModeloBindingValue, ...]
@@ -392,7 +392,18 @@ def test_filing_draft_profile_tax_id_validates_at_boundary() -> None:
     with pytest.raises(ValidationError):
         ModeloDraft(
             subject_tax_id="12345678Z",
-            **(common_kwargs | {"profile_tax_id": "12345678A"}),
+            draft_id=common_kwargs["draft_id"],
+            modelo=common_kwargs["modelo"],
+            period=common_kwargs["period"],
+            profile_tax_id="12345678A",
+            snapshot_ref=common_kwargs["snapshot_ref"],
+            status=common_kwargs["status"],
+            values=common_kwargs["values"],
+            binding_values=common_kwargs["binding_values"],
+            findings=common_kwargs["findings"],
+            created_at=common_kwargs["created_at"],
+            updated_at=common_kwargs["updated_at"],
+            schema_version=common_kwargs["schema_version"],
         )
 
 

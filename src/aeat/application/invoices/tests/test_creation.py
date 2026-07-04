@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -21,6 +22,7 @@ from ....core.resources import bundled_path
 from ....domain.calculations.registry import load_modelo_path
 from ....domain.invoices import InvoiceValidationError, PaymentStatus
 from ....domain.iva import InvoiceKind, IvaCategory
+from ....domain.modelos import Modelo349OperadorRow
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from .. import (
@@ -112,7 +114,7 @@ def test_build_catalogue_invoice_refuses_unsupported_rate() -> None:
     assert "21" in accepted, exc.value.context
 
 
-def test_create_catalogue_invoice_persists_and_refuses_duplicate(tmp_path) -> None:
+def test_create_catalogue_invoice_persists_and_refuses_duplicate(tmp_path: Path) -> None:
     """The service persists the rich invoice and refuses a duplicate identity.
 
     A round-trip through the real encrypted repository confirms the invoice is
@@ -188,7 +190,7 @@ def test_build_catalogue_invoice_carries_intra_community_category() -> None:
     assert domestic.iva_category is None
 
 
-def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path) -> None:
+def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path: Path) -> None:
     """End-to-end: a stamped intra-community invoice reaches the M349 aggregate.
 
     This is the anti-tautology proof that ``iva_category`` is not merely stored
@@ -226,7 +228,7 @@ def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path) -> 
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("2000.00")
 
 
-def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path) -> None:
+def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         issued = create_catalogue_invoice(
@@ -273,7 +275,7 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path) -> None
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("7000.00")
     assert resolution.binding_values["iva-349-declarante-numero-operadores-adquisicion"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones-adquisicion"] == Decimal("3000.00")
-    rows = {(row.codigo_pais, row.clave_operacion): row for row in resolution.detail_rows}
+    rows: dict[tuple[str, str], Modelo349OperadorRow] = {(row.codigo_pais, row.clave_operacion): row for row in resolution.detail_rows if isinstance(row, Modelo349OperadorRow)}
     assert rows[("FR", "S")].nif_comunitario == "FR12345678901"
     assert rows[("FR", "S")].importe == Decimal("4000.00")
     assert rows[("IT", "I")].nif_comunitario == "IT12345678901"

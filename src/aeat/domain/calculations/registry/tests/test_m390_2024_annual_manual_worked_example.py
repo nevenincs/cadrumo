@@ -176,6 +176,7 @@ from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from .. import (
     CasillaId,
     IvaLedgerObservation,
+    RegistryCalculationResult,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
@@ -269,7 +270,7 @@ def _import_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decim
     }
 
 
-def _annual_observations(*, include_recargo: bool) -> tuple[object, ...]:
+def _annual_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservation, ...]:
     """The manual's four trimestres, as net per-quarter category aggregate rows.
 
     ``include_recargo`` toggles ONLY the recargo_amount on the four
@@ -329,7 +330,7 @@ def _annual_observations(*, include_recargo: bool) -> tuple[object, ...]:
     return tuple(IvaLedgerObservation(**row) for row in rows)
 
 
-def _calculate(*, include_recargo: bool) -> object:
+def _calculate(*, include_recargo: bool) -> RegistryCalculationResult:
     snapshot = resources().modelos.authority.snapshot("390", filing_year=_FILING_YEAR, period=_PERIOD)
     binding_values: dict[str, Decimal] = {
         # This scenario grounds only the ledger-derived annual totals against
@@ -422,7 +423,7 @@ def _dr_super_reducido_repercutido(
     }
 
 
-def _calculate_with_super_reducido_recargo(*, include_super_reducido_recargo: bool) -> object:
+def _calculate_with_super_reducido_recargo(*, include_super_reducido_recargo: bool) -> RegistryCalculationResult:
     """The manual's 1T scenario plus one synthetic super-reducido (4pct) sale.
 
     The AEAT manual worked example this module grounds against charges no

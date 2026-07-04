@@ -162,11 +162,64 @@ class ModeloReviewPackageDecryptResult(OutputSchema):
     review_only: bool
 
 
+@register_schema("modelo.review_package.encrypt_feedback")
+class ModeloReviewPackageEncryptFeedbackResult(OutputSchema):
+    """Feedback-package encrypt (recipient side) result.
+
+    The recipient (accountant/gestor) seals structured feedback back to the
+    originator (taxpayer) so only the originator's private key can open it,
+    reusing the same X25519 ECIES construction as the forward direction (see
+    :func:`~aeat.application.modelo.encrypt_feedback_package_for_originator`).
+    Only the exportable originator public key appears here; no private key of
+    either party is ever surfaced. ``has_counter_sign`` reports whether a
+    counter-signed receipt was bundled with the note.
+    """
+
+    operation: str = "modelo.review_package.encrypt_feedback"
+    output_path: str
+    originator_id: str
+    originator_public_key_hex: str
+    work_unit_id: str
+    calculation_revision_id: str
+    has_counter_sign: bool
+    issued_at: str
+    valid_until: str | None = None
+
+
+@register_schema("modelo.review_package.import_feedback")
+class ModeloReviewPackageImportFeedbackResult(OutputSchema):
+    """Feedback-package import (originator side) result.
+
+    The originator mints-or-loads their own X25519 keypair to decrypt the
+    feedback envelope, and -- when the feedback carries a counter-signed
+    receipt -- re-verifies BOTH signature layers against their locally-held
+    review-package archive before accepting it and attaching the verified
+    countersignature to their own approval journal
+    (:func:`~aeat.application.modelo.import_feedback_package`,
+    :func:`~aeat.application.modelo.emit_collab_feedback_countersign_attached_event`).
+    No private key of either party appears in this payload.
+    ``counter_signature_verified`` is ``None`` when the feedback carried no
+    formal sign-off, ``True`` when a bundled receipt verified clean.
+    """
+
+    operation: str = "modelo.review_package.import_feedback"
+    envelope_path: str
+    bucket_id: str
+    work_unit_id: str
+    calculation_revision_id: str
+    note: str
+    submitted_by: str
+    counter_signature_verified: bool | None = None
+    attached_to_journal: bool = False
+
+
 __all__ = [
     "ModeloReviewPackageBuildResult",
     "ModeloReviewPackageCounterSignResult",
     "ModeloReviewPackageDecryptResult",
+    "ModeloReviewPackageEncryptFeedbackResult",
     "ModeloReviewPackageEncryptForRecipientResult",
+    "ModeloReviewPackageImportFeedbackResult",
     "ModeloReviewPackageSignResult",
     "ModeloReviewPackageVerifyReceiptResult",
     "ModeloReviewPackageVerifyResult",

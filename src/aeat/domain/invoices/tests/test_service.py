@@ -44,55 +44,61 @@ _SAMPLE_HEX_64 = "a" * 64
 def test_service_records_accept_64_char_transaction_id() -> None:
     """A SHA-256-shaped 64-character transaction id satisfies the
     catalogue-key contract."""
-    cases: tuple[tuple[type[ReconciliationSuggestion] | type[LinkInconsistency], dict[str, object]], ...] = (
-        (
-            ReconciliationSuggestion,
-            {
-                "invoice_id": "INV-1",
-                "amount_match": True,
-                "counterparty_match": True,
-                "score": Decimal("1"),
-            },
-        ),
-        (LinkInconsistency, {"invoice_id": "INV-1", "direction": "invoice-only"}),
+    # Test ReconciliationSuggestion
+    suggestion = ReconciliationSuggestion(
+        transaction_id=_SAMPLE_HEX_64,
+        invoice_id="INV-1",
+        amount_match=True,
+        counterparty_match=True,
+        score=Decimal("1"),
     )
+    assert suggestion.transaction_id == _SAMPLE_HEX_64
 
-    for record_type, kwargs in cases:
-        record = record_type(transaction_id=_SAMPLE_HEX_64, **kwargs)
-        assert record.transaction_id == _SAMPLE_HEX_64
+    # Test LinkInconsistency
+    inconsistency = LinkInconsistency(
+        transaction_id=_SAMPLE_HEX_64,
+        invoice_id="INV-1",
+        direction="invoice-only",
+    )
+    assert inconsistency.transaction_id == _SAMPLE_HEX_64
 
 
 def test_service_records_reject_noncanonical_transaction_ids() -> None:
-    cases: tuple[tuple[type[ReconciliationSuggestion] | type[LinkInconsistency], dict[str, object], str, str], ...] = (
-        (
-            ReconciliationSuggestion,
-            {"invoice_id": "INV-1", "amount_match": True, "counterparty_match": True, "score": Decimal("1")},
-            "raw-12345",
-            r"transaction_id|hex|length|pattern",
-        ),
-        (
-            ReconciliationSuggestion,
-            {"invoice_id": "INV-1", "amount_match": True, "counterparty_match": True, "score": Decimal("1")},
-            _SAMPLE_HEX_64 + "x",
-            r"transaction_id|length|String should have at most",
-        ),
-        (
-            LinkInconsistency,
-            {"invoice_id": "INV-1", "direction": "invoice-only"},
-            "raw-12345",
-            r"transaction_id|hex|length|pattern",
-        ),
-        (
-            LinkInconsistency,
-            {"invoice_id": "INV-1", "direction": "transaction-only"},
-            _SAMPLE_HEX_64 + "x",
-            r"transaction_id|length|String should have at most",
-        ),
-    )
+    # Test ReconciliationSuggestion with short transaction_id
+    with pytest.raises(ValidationError, match=r"transaction_id|hex|length|pattern"):
+        ReconciliationSuggestion(
+            transaction_id="raw-12345",
+            invoice_id="INV-1",
+            amount_match=True,
+            counterparty_match=True,
+            score=Decimal("1"),
+        )
 
-    for record_type, kwargs, transaction_id, match in cases:
-        with pytest.raises(ValidationError, match=match):
-            record_type(transaction_id=transaction_id, **kwargs)
+    # Test ReconciliationSuggestion with too-long transaction_id
+    with pytest.raises(ValidationError, match=r"transaction_id|length|String should have at most"):
+        ReconciliationSuggestion(
+            transaction_id=_SAMPLE_HEX_64 + "x",
+            invoice_id="INV-1",
+            amount_match=True,
+            counterparty_match=True,
+            score=Decimal("1"),
+        )
+
+    # Test LinkInconsistency with short transaction_id
+    with pytest.raises(ValidationError, match=r"transaction_id|hex|length|pattern"):
+        LinkInconsistency(
+            transaction_id="raw-12345",
+            invoice_id="INV-1",
+            direction="invoice-only",
+        )
+
+    # Test LinkInconsistency with too-long transaction_id
+    with pytest.raises(ValidationError, match=r"transaction_id|length|String should have at most"):
+        LinkInconsistency(
+            transaction_id=_SAMPLE_HEX_64 + "x",
+            invoice_id="INV-1",
+            direction="transaction-only",
+        )
 
 
 def test_link_inconsistency_invoice_id_remains_non_empty_required() -> None:

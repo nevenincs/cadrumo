@@ -44,7 +44,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import RegistrySnapshot, calculate_registry_snapshot, validated_casilla_id
+from .. import CasillaId, RegistrySnapshot, calculate_registry_snapshot, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -87,7 +87,7 @@ def _escala(amount: Decimal, year: int) -> Decimal:
     raise AssertionError(f"amount {amount!r} outside escala range for {year}")
 
 
-def _c(value: str) -> object:
+def _c(value: str) -> CasillaId:
     return validated_casilla_id(value, surface="test_m100_anualidades_multiyear")
 
 
@@ -96,7 +96,7 @@ _ANUALIDADES = Decimal("3000")
 _ANUALIDADES_ABOVE_BASE = Decimal("25000")
 
 
-def _anualidades_casilla(year: int) -> object:
+def _anualidades_casilla(year: int) -> CasillaId:
     # 2020 and 2021 carry casilla 0527 (IMPALIM) as a direct manual input — the
     # bundled 2021 AEAT XSD declares it `maxOccurs="1"`, a plain scalar, with
     # no per-child structure (#532 finding #1). 2022-2023 introduce the
@@ -111,8 +111,8 @@ def _run(
     *,
     anualidades: Decimal | None,
     flag: Decimal = Decimal("1"),
-) -> dict[str, Decimal]:
-    inputs: dict[object, Decimal] = {_c("0003"): _TRABAJO_INGRESOS}
+) -> dict[CasillaId, Decimal]:
+    inputs: dict[CasillaId, Decimal] = {_c("0003"): _TRABAJO_INGRESOS}
     if anualidades is not None:
         inputs[_anualidades_casilla(year)] = anualidades
     binding_values = {

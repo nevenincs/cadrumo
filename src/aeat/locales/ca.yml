@@ -2100,6 +2100,7 @@ cli:
           parell de claus X25519 d'aquest bucket (generat en el primer us) i escriu
           el paquet recuperat a --output. Nomes local; mai contacta amb l'AEAT.
         decrypt_output_help: Ruta on escriure el ZIP del paquet de revisio recuperat.
+        encrypt_feedback_help: 'Segella els comentaris de revisió d''un destinatari (una nota i, opcionalment, un rebut contrasignat) de tornada a l''originador perquè només la clau privada de l''originador els pugui obrir, i escriu el sobre a --output. Només local; mai contacta amb l''AEAT.'
         encrypt_for_recipient_help: Segella un paquet de revisio perque nomes la clau
           privada d'un destinatari registrat el pugui obrir, i escriu el sobre xifrat
           a --output. Nomes local; mai contacta amb l'AEAT.
@@ -2110,17 +2111,30 @@ cli:
         errors:
           envelope_not_found: No s'ha trobat el sobre xifrat per al destinatari a
             {envelope_path}.
+          feedback_envelope_not_found: 'No s''ha trobat el sobre de comentaris a {envelope_path}.'
           invalid_valid_for_days: --valid-for-days ha de ser un enter estrictament
             positiu.
           output_required: Indiqueu --output CAMÍ per al ZIP del paquet de revisió.
           package_not_found: No s'ha trobat el paquet de revisió a {package_path}.
           receipt_not_found: No s'ha trobat el rebut a {receipt_path}.
           signature_not_found: No s'ha trobat el sobre de signatura a {signature_path}.
+        feedback_counter_signer_public_key_help: 'La clau pública de signatura Ed25519 del revisor contra la qual s''ha de verificar la contrasignatura (obligatòria quan els comentaris inclouen un rebut).'
+        feedback_envelope_path_help: 'Ruta al JSON del sobre de comentaris xifrat per a l''originador produït per `encrypt-feedback`.'
+        feedback_note_help: 'Veredicte o nota de text lliure (p. ex. `revisat, sense canvis`).'
+        feedback_operator_public_key_help: 'La teva pròpia clau pública de signatura Ed25519 contra la qual s''ha de verificar la signatura original.'
+        feedback_output_help: 'Ruta on escriure el JSON del sobre de comentaris xifrat per a l''originador.'
+        feedback_package_help: 'Ruta al teu paquet de revisió original desat localment contra el qual es verifica un rebut contrasignat.'
+        feedback_receipt_help: 'Rebut contrasignat opcional en JSON (de `counter-sign`) per incloure com a aprovació formal.'
+        feedback_revision_id_help: 'Id de la revisió de càlcul a què es refereixen els comentaris (del descriptor del paquet revisat).'
+        feedback_submitted_by_help: 'Etiqueta de l''actor revisor (p. ex. el nom per mostrar de l''assessor).'
+        feedback_work_unit_id_help: 'Id de la unitat de treball a què es refereixen els comentaris (del descriptor del paquet revisat).'
         group_help: Construeix un paquet de revisió compartible i verifica'n la integritat.
+        import_feedback_help: 'Obre un sobre de comentaris amb el parell de claus X25519 d''aquest bucket, verifica qualsevol rebut contrasignat contra el teu paquet de revisió desat localment i adjunta la contrasignatura verificada al teu registre d''aprovació. Només local; mai contacta amb l''AEAT.'
         notes_help: Nota de text lliure inclosa al descriptor del paquet (p. ex. el
           motiu de l'enviament).
         operator_public_key_help: Clau pública de l'operador (signant original), en
           64 caràcters hexadecimals en minúscula.
+        originator_id_help: 'Id d''originador registrat la clau pública del qual segella els comentaris (vegeu `aeat config collab recipient add`).'
         output_help: Camí on escriure el ZIP del paquet de revisió.
         package_path_help: Camí del ZIP del paquet de revisió a verificar.
         public_key_help: Clau pública del signant, en 64 caràcters hexadecimals en
@@ -2719,19 +2733,32 @@ cli:
     google:
       client_json_help: Ruta al fitxer JSON del client OAuth Desktop de Cloud Console
       credential_source:
-        delegate_help: 'Correu de compte de servei delegat en una suplantació encadenada (repetible)'
+        delegate_help: Correu de compte de servei delegat en una suplantació encadenada
+          (repetible)
         detail:
-          impersonation_config_invalid: 'la configuració de suplantació no és vàlida: {detail}'
-          oauth_desktop_rejects_impersonation_options: '--kind oauth_desktop no accepta --target-principal, --scope, --delegate, --subject ni --lifetime-seconds'
-          target_principal_required: '--target-principal és obligatori quan --kind és service_account_impersonation'
-        help: 'Selecciona quina font de credencials de Google fa servir el perfil actiu (OAuth interactiu d''escriptori, o una suplantació compartida de compte de servei)'
-        kind_help: 'Font de credencials: oauth_desktop (per defecte, consentiment interactiu) o service_account_impersonation (compte de servei compartit mitjançant ADC + IAM)'
-        lifetime_help: 'Durada sol·licitada del testimoni suplantat en segons (per defecte el límit de 3600s de Google)'
-        scope_help: 'Abast OAuth sol·licitat per al testimoni suplantat (repetible; per defecte els abasts d''accés a dades de Sheets/Drive)'
-        set_help: 'Desa la selecció de font de credencials de Google del perfil actiu'
-        show_help: 'Mostra la selecció de font de credencials de Google desada per al perfil actiu'
-        subject_help: 'Correu de l''usuari de Workspace a suplantar mitjançant delegació a tot el domini (opcional)'
-        target_principal_help: 'Correu del compte de servei a suplantar (obligatori amb --kind service_account_impersonation)'
+          impersonation_config_invalid: 'la configuració de suplantació no és vàlida:
+            {detail}'
+          oauth_desktop_rejects_impersonation_options: --kind oauth_desktop no accepta
+            --target-principal, --scope, --delegate, --subject ni --lifetime-seconds
+          target_principal_required: --target-principal és obligatori quan --kind
+            és service_account_impersonation
+        help: Selecciona quina font de credencials de Google fa servir el perfil actiu
+          (OAuth interactiu d'escriptori, o una suplantació compartida de compte de
+          servei)
+        kind_help: 'Font de credencials: oauth_desktop (per defecte, consentiment
+          interactiu) o service_account_impersonation (compte de servei compartit
+          mitjançant ADC + IAM)'
+        lifetime_help: Durada sol·licitada del testimoni suplantat en segons (per
+          defecte el límit de 3600s de Google)
+        scope_help: Abast OAuth sol·licitat per al testimoni suplantat (repetible;
+          per defecte els abasts d'accés a dades de Sheets/Drive)
+        set_help: Desa la selecció de font de credencials de Google del perfil actiu
+        show_help: Mostra la selecció de font de credencials de Google desada per
+          al perfil actiu
+        subject_help: Correu de l'usuari de Workspace a suplantar mitjançant delegació
+          a tot el domini (opcional)
+        target_principal_help: Correu del compte de servei a suplantar (obligatori
+          amb --kind service_account_impersonation)
       detail:
         client_json_bad_wrapper: el JSON de client a {path} té un embolcall "installed"
           que no és un objecte
@@ -2749,8 +2776,10 @@ cli:
           usar --limit llevat que --dry-run estigui activat, perque una execucio real
           acotada crearia un manifest remot parcial.
       errors:
-        adc_stale: 'No s''han pogut renovar les Credencials Predeterminades de l''Aplicació (ADC): {detail}'
-        adc_unavailable: 'Les Credencials Predeterminades de l''Aplicació (ADC) no estan disponibles en aquest equip: {detail}'
+        adc_stale: 'No s''han pogut renovar les Credencials Predeterminades de l''Aplicació
+          (ADC): {detail}'
+        adc_unavailable: 'Les Credencials Predeterminades de l''Aplicació (ADC) no
+          estan disponibles en aquest equip: {detail}'
         auth_failed: 'L''autenticació amb Google ha fallat: {detail}'
         browser_open: 'No s''ha pogut obrir un navegador per autoritzar l''accés a
           Google: {detail}'
@@ -2759,7 +2788,8 @@ cli:
           <ruta>`.
         client_revoked: El client OAuth de Google registrat ha estat revocat. Torna
           a registrar-lo amb `aeat config google register`.
-        impersonation_refused: 'S''ha rebutjat la suplantació del compte de servei: {detail}'
+        impersonation_refused: 'S''ha rebutjat la suplantació del compte de servei:
+          {detail}'
         keychain_locked: El clauer del sistema que desa les credencials de Google
           està blocat o no disponible.
         loopback_bind: 'No s''ha pogut obrir un port local per completar l''inici
@@ -3370,6 +3400,43 @@ cli:
         llegible.
       venv_in_sync: L'entorn virtual esta sincronitzat.
       venv_stale: L'entorn virtual esta desactualitzat.
+    telemetry:
+      app_help: Inspecciona i controla el nivell de telemetria remota, desactivat
+        per defecte i opcional.
+      bad_tier: '--tier ha de ser un de: %{accepted}; s''ha rebut %{value!r}.'
+      endpoint_help: Previsualitza/envia com si AEAT_TELEMETRY_ENDPOINT fos aquesta
+        URL només per aquesta execució; omet-ho per usar l'endpoint configurat realment
+        al desplegament.
+      flush:
+        acknowledge_help: Confirma aquest enviament concret de telemetria remota.
+          Requerit (a més de l'opt-in i d'un nivell diferent d'off) perquè --no-dry-run
+          transmeti de veritat; mai queda desat, cal reafirmar-ho a cada execució.
+        consent_refused_notice: 'No s''ha enviat res: la telemetria remota està desactivada
+          per defecte (l''opt-in, el nivell, el mode gestor o la confirmació d''aquesta
+          execució ho han rebutjat).'
+        dry_run_help: Previsualitza la càrrega útil que s'enviaria sense transmetre
+          res (per defecte). Passa --no-dry-run per enviar-la realment quan el filtre
+          de consentiment ho permeti.
+        dry_run_notice: 'Simulacre: aquesta càrrega útil s''ha construït però no s''ha
+          transmès res.'
+        header: 'Càrrega útil de telemetria (simulacre, no s''ha enviat res):'
+        help: Construeix la càrrega útil agregada de telemetria local i, llevat de
+          --dry-run, l'envia.
+        no_endpoint_notice: 'No s''ha enviat res: no hi ha cap AEAT_TELEMETRY_ENDPOINT
+          configurat.'
+      opt_in_help: Previsualitza/envia com si AEAT_TELEMETRY_OPT_IN tingués aquest
+        valor només per aquesta execució; omet-ho per usar l'ajust configurat realment
+        al desplegament.
+      status:
+        header: 'Postura de telemetria remota:'
+        help: Informa de la postura de consentiment de telemetria remota. Mai emet
+          res.
+        off_hint: La telemetria roman totalment local per defecte. Per activar-la,
+          defineix AEAT_TELEMETRY_OPT_IN=true i AEAT_TELEMETRY_TIER a crash_only o
+          full a env/.env.
+      tier_help: Previsualitza/envia com si AEAT_TELEMETRY_TIER tingués aquest valor
+        (off / crash_only / full) només per aquesta execució; omet-ho per usar el
+        nivell configurat realment.
     version:
       no_revisions: No hi ha revisions del registre disponibles.
       registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} caselles,
