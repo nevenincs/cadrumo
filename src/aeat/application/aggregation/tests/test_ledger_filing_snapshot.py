@@ -219,6 +219,8 @@ def test_evidence_capture_preserves_rent_paid_net_of_withholding_substrate() -> 
     assert row.amount == Decimal("1020.00")
     assert row.taxable_base == Decimal("1000.00")
     assert row.iva_amount == Decimal("210.00")
+    assert row.taxable_base is not None
+    assert row.iva_amount is not None
     assert row.taxable_base + row.iva_amount == Decimal("1210.00")
     assert row.amount != row.taxable_base + row.iva_amount
     assert row.category_id == "arrendamiento_local"
