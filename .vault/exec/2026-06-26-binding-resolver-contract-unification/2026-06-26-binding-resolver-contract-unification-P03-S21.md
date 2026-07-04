@@ -37,3 +37,20 @@ related:
 
 - No P03.S21 plan check was run. This record is evidence plus formal deferral inventory, not closure.
 - No registry, resolver-enrollment, or `_calculation_actions.py` edit was made.
+
+## Current worktree follow-up check (2026-07-04)
+
+- Non-authored WIP now exists for the M347 counterpart-source modelling follow-up:
+  `src/aeat/_data/registry/aeat/modelos/347/revisions/2008-y-siguientes/bindings/0001-counterpart-summary.toml`,
+  a construct reference in `constructs/0001-informative.toml`, and
+  `src/aeat/domain/calculations/registry/tests/test_modelo_347_registry_bindings.py`.
+- The WIP's domain-level registry-binding proof passes:
+  `uv run --no-sync pytest -q -n 0 src/aeat/domain/calculations/registry/tests/test_modelo_347_registry_bindings.py`
+  (`2 passed`).
+- The P03.S21 service-level proof remains blocked in the current shared worktree:
+  `uv run --no-sync pytest -q -n 0 src/aeat/application/aggregation/tests/test_per_modelo_service.py::test_counterpart_m347_mesh_resolution_matches_prior_aggregate_exactly`
+  fails before reaching the 347 assertion because non-authored untracked Modelo 145
+  scaffolding invalidates registry authority (`revision must declare official workbook
+  parity coverage`; `revision must declare at least one casilla`).
+- P03.S21 remains unchecked until the 347 modelling is landed/owned and the service
+  proof can run against a valid registry authority.
