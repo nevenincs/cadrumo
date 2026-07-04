@@ -25,6 +25,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import BindingSourceKind
 from .._retencion_rate_advisory import (
     ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND,
     administrador_retencion_rate_advisory_observations,
@@ -36,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _administrador(base: str, withheld: str, *, nif: str = "87654321X") -> RetencionObservation:
     return RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id=f"administrador-{nif}-{withheld}",
         perceptor_nif=nif,
         perceptor_name="Administrador Ejemplo",
@@ -49,7 +50,7 @@ def _administrador(base: str, withheld: str, *, nif: str = "87654321X") -> Reten
 
 def _empleado(base: str, withheld: str) -> RetencionObservation:
     return RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id="empleado-001",
         perceptor_nif="12345678Z",
         perceptor_name="Empleado Ejemplo",
