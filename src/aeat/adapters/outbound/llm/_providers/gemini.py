@@ -2,7 +2,7 @@
 
 Speaks the Gemini ``v1beta/models/{model}:generateContent`` HTTP API and
 adapts its response shape to the
-:class:`~aeat.adapters.outbound.llm._providers.base.ProviderCompletion`
+:class:`~adapters.outbound.llm._providers.base.ProviderCompletion`
 contract. Internal pydantic models mirror the upstream JSON schema and are kept
 private.
 """
