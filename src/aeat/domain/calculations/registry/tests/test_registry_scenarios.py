@@ -214,9 +214,7 @@ def test_registry_scenario_expected_output_requires_grounding() -> None:
             revision="2025",
             filing_year=2025,
             period="0A",
-            expected_outputs=(
-                RegistryScenarioExpectedOutput.model_validate(output_dict),
-            ),
+            expected_outputs=(RegistryScenarioExpectedOutput.model_validate(output_dict),),
         )
 
     with pytest.raises(ValidationError, match="legal_refs"):
@@ -232,9 +230,7 @@ def test_registry_scenario_expected_output_requires_grounding() -> None:
             revision="2025",
             filing_year=2025,
             period="0A",
-            expected_outputs=(
-                RegistryScenarioExpectedOutput.model_validate(output_dict),
-            ),
+            expected_outputs=(RegistryScenarioExpectedOutput.model_validate(output_dict),),
         )
 
     with pytest.raises(ValidationError, match="source_refs"):
@@ -250,9 +246,7 @@ def test_registry_scenario_expected_output_requires_grounding() -> None:
             revision="2025",
             filing_year=2025,
             period="0A",
-            expected_outputs=(
-                RegistryScenarioExpectedOutput.model_validate(output_dict),
-            ),
+            expected_outputs=(RegistryScenarioExpectedOutput.model_validate(output_dict),),
         )
 
 
