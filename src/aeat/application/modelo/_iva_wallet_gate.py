@@ -510,8 +510,8 @@ def _save_iva_compensation_decision(
 def _require_first_period_zero_decision_grounded(
     work_unit: WorkUnit,
     snapshot: RegistrySnapshot,
-    decision: object,
-) -> object:
+    decision: IvaCompensationReconciliationDecision,
+) -> IvaCompensationReconciliationDecision:
     """Fail closed unless a first-period-zero decision is profile/registry-grounded."""
     if not _decision_is_first_period_zero(decision):
         return decision
