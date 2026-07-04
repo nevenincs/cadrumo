@@ -116,6 +116,15 @@ def _emit_envelope(
     severities. Text mode keeps the existing line iterator unchanged so
     terminal output is unaffected.
 
+    When the active profile bucket is a sandbox
+    (:func:`~aeat.application.bucket_maintenance.is_sandbox_label`), a
+    persistent info :class:`Notice` naming the sandbox is prepended to
+    ``notices`` (JSON mode) and a matching banner line is prepended ahead
+    of ``lines`` (text mode), so an operator can never mistake a sandbox
+    run for a run against the real profile. The indicator is added here,
+    once, rather than by each of the ~100 command handlers that call this
+    helper — see :func:`_active_sandbox_notice`.
+
     Args:
         ctx: Typer context (used to discover the requested output format).
         command: Stable command path string (matches the
@@ -135,17 +144,67 @@ def _emit_envelope(
     """
     from ...core.json_contract import emit_json_success
 
+    sandbox_notice = _active_sandbox_notice()
+    resolved_notices: tuple[Notice, ...]
+    if sandbox_notice is None:
+        resolved_notices = tuple(notices) if notices is not None else ()
+    else:
+        resolved_notices = (sandbox_notice, *notices) if notices is not None else (sandbox_notice,)
+
     format_name = _format_of(ctx)
     if format_name == _FORMAT_JSON:
-        emit_json_success(command, result, notices=notices)
+        emit_json_success(command, result, notices=resolved_notices)
         return
     # Route non-JSON paths through render_command_output so unsupported
     # ``--format`` values (e.g. ``xml``) raise the same refusal contract
     # that the bare ``_emit`` path enforces. ``render_command_output``
     # ignores ``payload`` outside JSON mode and emits the line iterator.
-    rendered = render_command_output(format_name=format_name, payload=result, lines=lines)
+    rendered_lines = lines if sandbox_notice is None else (f"SANDBOX\t{sandbox_notice.message}", *lines)
+    rendered = render_command_output(format_name=format_name, payload=result, lines=rendered_lines)
     if rendered.text:
         typer.echo(rendered.text)
+
+
+def _active_sandbox_notice() -> Notice | None:
+    """Return the persistent sandbox-active :class:`Notice`, or ``None``.
+
+    Resolves the active bucket id through the same core precedence chain
+    every command uses (:func:`~aeat.core.resolve_active_bucket_id`), then
+    reads its plaintext manifest label
+    (:func:`~aeat.application.workflow.read_profile_bucket_by_id`) — never
+    opening the encrypted per-bucket database — and checks it against the
+    reserved sandbox label prefix
+    (:func:`~aeat.application.bucket_maintenance.is_sandbox_label`). Returns
+    ``None`` when no profile is active, the active bucket's manifest cannot
+    be read, or the active profile is not a sandbox, so a real profile's
+    output is never annotated. The manifest is deliberately re-read on every
+    call (no caching) so a mid-process ``switch``/``sandbox use`` is
+    reflected on the very next command.
+    """
+    from ...application.bucket_maintenance import is_sandbox_label
+    from ...application.workflow import read_profile_bucket_by_id
+    from ...core import resolve_active_bucket_id
+    from ...core.json_contract import Notice, NoticeSeverity
+
+    bucket_id = resolve_active_bucket_id()
+    if bucket_id is None:
+        return None
+    pointer = read_profile_bucket_by_id(bucket_id)
+    if pointer is None or not is_sandbox_label(pointer.label):
+        return None
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="config.profile.sandbox.active_indicator",
+        message=tr(
+            "cli.config.profile.sandbox.active_indicator_info",
+            default=(
+                "You are operating inside the sandbox %{label}, not a real profile; "
+                "every command runs against this isolated, discardable bucket."
+            ),
+            label=pointer.label,
+        ),
+        suggestion="aeat config profile sandbox discard",
+    )
 
 
 def _bad(message: str) -> typer.BadParameter:

@@ -963,9 +963,7 @@ application:
           to claim the applicable Convenio rate, or wait for the baseline corpus to
           incorporate this row.'
       m210_convenio_rate_missing:
-        next_action: Author Convenio España-{cc} rate row in m210-convenio-rates for
-          tipo_renta={tipo_renta}, or unset profile.convenio_doble_imposicion_country
-          to fall back to the TRLIRNR Art 25 baseline.
+        next_action: 'Author a Convenio España-{cc} treaty override row for tipo_renta={tipo_renta} under registry/aeat/treaties/, or unset profile.country_of_fiscal_residence to fall back to the TRLIRNR Art 25 baseline.'
       missing_required_casilla: Required casilla %{casilla_id} is not present in the
         calculation revision inputs.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: The
@@ -1041,6 +1039,8 @@ application:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
+      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: the Convenio Espana-%{cc} (%{document_id}) treaty rate has been applied for tipo_renta=%{tipo_renta}. Treaty relief is available only to a genuine beneficial owner resident in that state who satisfies the treaty''s limitation-of-benefits conditions; confirm eligibility before relying on this rate.'
+      m210_convenio_lob_advisory_next_action: 'Confirm the taxpayer satisfies the beneficial-ownership and limitation-of-benefits conditions of Convenio Espana-%{cc} (%{document_id}) before relying on the treaty rate; review the treaty''s specific LOB / beneficiario efectivo article, not only the general OECD Model Convention framework.'
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
@@ -2828,6 +2828,7 @@ cli:
         usage_name_help: Sandbox name (without the prefix); omit to report every sandbox.
         use_help: Switch the active profile to an existing sandbox.
         use_name_help: Sandbox name (without the prefix).
+        active_indicator_info: 'You are operating inside the sandbox %{label}, not a real profile; every command runs against this isolated, discardable bucket.'
       sar_catalogue_info: 'This archive holds every personal-data category kept for
         the profile: identity and profile facts, modelo work units, ledger transactions,
         calculation revisions, and filing records. Attachment evidence bytes and AEAT

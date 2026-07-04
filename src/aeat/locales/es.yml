@@ -1058,9 +1058,7 @@ application:
           profile.country_of_fiscal_residence para reclamar la tarifa Convenio aplicable,
           o espere a que el corpus baseline incorpore esta fila.'
       m210_convenio_rate_missing:
-        next_action: Autorice la fila Convenio España-{cc} en m210-convenio-rates
-          para tipo_renta={tipo_renta}, o desestablezca profile.convenio_doble_imposicion_country
-          para usar el baseline TRLIRNR Art 25.
+        next_action: 'Autorice una fila de Convenio España-{cc} para tipo_renta={tipo_renta} en registry/aeat/treaties/, o desestablezca profile.country_of_fiscal_residence para usar el baseline TRLIRNR Art 25.'
       missing_required_casilla: La casilla requerida %{casilla_id} no está presente
         en los datos de entrada del cálculo.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La
@@ -1140,6 +1138,8 @@ application:
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
+      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: se ha aplicado el tipo de Convenio Espana-%{cc} (%{document_id}) para tipo_renta=%{tipo_renta}. El beneficio del convenio solo esta disponible para el beneficiario efectivo residente en ese Estado que cumpla las condiciones de limitacion de beneficios del convenio; confirme la elegibilidad antes de aplicar este tipo.'
+      m210_convenio_lob_advisory_next_action: 'Confirme que el contribuyente cumple las condiciones de beneficiario efectivo y de limitacion de beneficios del Convenio Espana-%{cc} (%{document_id}) antes de aplicar el tipo del convenio; revise el articulo especifico del convenio, no solo el marco general del Modelo de Convenio de la OCDE.'
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
@@ -3045,6 +3045,7 @@ cli:
           de todos.
         use_help: Cambia el perfil activo a un sandbox existente.
         use_name_help: Nombre del sandbox (sin el prefijo).
+        active_indicator_info: 'Estás operando dentro del sandbox %{label}, no en un perfil real; todos los comandos se ejecutan contra este bucket aislado y descartable.'
       sar_catalogue_info: 'Este archivo contiene todas las categorías de datos personales
         del perfil: identidad y datos del perfil, unidades de trabajo de modelos,
         movimientos del libro, revisiones de cálculo y registros de presentación.
