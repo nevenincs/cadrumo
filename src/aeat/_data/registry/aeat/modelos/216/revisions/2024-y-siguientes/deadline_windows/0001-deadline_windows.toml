@@ -1,0 +1,86 @@
+# Modelo 216 trimestral deadline windows, grounded in Orden EHA/3290/2008 art 4:
+# "la presentación del modelo 216 ... se efectuará en los veinte primeros días
+# naturales de los meses de abril, julio, octubre y enero" por el trimestre
+# natural inmediato anterior. Closes on the 20th natural day of the month
+# following each natural quarter. The monthly grandes-empresas modality of
+# art 4 is out of this revision's scope.
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-216-2025-1t"
+filing_year = 2025
+period = "2025 1T"
+period_kind = "quarterly"
+opens_on = 2025-04-01
+closes_on = 2025-04-20
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-216-2025-2t"
+filing_year = 2025
+period = "2025 2T"
+period_kind = "quarterly"
+opens_on = 2025-07-01
+closes_on = 2025-07-20
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-216-2025-3t"
+filing_year = 2025
+period = "2025 3T"
+period_kind = "quarterly"
+opens_on = 2025-10-01
+closes_on = 2025-10-20
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-216-2025-4t"
+filing_year = 2025
+period = "2025 4T"
+period_kind = "quarterly"
+opens_on = 2026-01-01
+closes_on = 2026-01-20
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-216-2026-1t"
+filing_year = 2026
+period = "2026 1T"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-20
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-216-2026-2t"
+filing_year = 2026
+period = "2026 2T"
+period_kind = "quarterly"
+opens_on = 2026-07-01
+closes_on = 2026-07-20
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-216-2026-3t"
+filing_year = 2026
+period = "2026 3T"
+period_kind = "quarterly"
+opens_on = 2026-10-01
+closes_on = 2026-10-20
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-216-2026-4t"
+filing_year = 2026
+period = "2026 4T"
+period_kind = "quarterly"
+opens_on = 2027-01-01
+closes_on = 2027-01-20
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
