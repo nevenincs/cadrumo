@@ -27,7 +27,7 @@ related:
 ## Steps
 
 - [x] `S01` - Harden authenticate-with-aeat.md; `docs/how-to/authenticate-with-aeat.md`.
-- [ ] `S02` - Harden censo-update.md; `docs/how-to/censo-update.md`.
+- [x] `S02` - Harden censo-update.md; `docs/how-to/censo-update.md`.
 - [x] `S03` - Harden check-aeat-notifications.md; `docs/how-to/check-aeat-notifications.md`.
 - [x] `S04` - Harden choose-modelo.md; `docs/how-to/choose-modelo.md`.
 - [x] `S05` - Harden classify-transactions.md; `docs/how-to/classify-transactions.md`.
@@ -41,7 +41,7 @@ related:
 - [ ] `S13` - Harden filing-spine.md; `docs/how-to/filing-spine.md`.
 - [x] `S14` - Harden import-bank-statements.md; `docs/how-to/import-bank-statements.md`.
 - [ ] `S15` - Harden index.md; `docs/how-to/index.md`.
-- [ ] `S16` - Harden justificante-receipts.md; `docs/how-to/justificante-receipts.md`.
+- [x] `S16` - Harden justificante-receipts.md; `docs/how-to/justificante-receipts.md`.
 - [ ] `S17` - Harden ledger-evidence.md; `docs/how-to/ledger-evidence.md`.
 - [ ] `S18` - Harden modelo-036.md; `docs/how-to/modelo-036.md`.
 - [x] `S19` - Harden modelo-303.md; `docs/how-to/modelo-303.md`.
@@ -51,7 +51,7 @@ related:
 - [ ] `S23` - Harden protect-data-access.md; `docs/how-to/protect-data-access.md`.
 - [x] `S24` - Harden quickstart.md; `docs/how-to/quickstart.md`.
 - [x] `S25` - Harden read-live-aeat-data.md; `docs/how-to/read-live-aeat-data.md`.
-- [ ] `S26` - Harden reconcile.md; `docs/how-to/reconcile.md`.
+- [x] `S26` - Harden reconcile.md; `docs/how-to/reconcile.md`.
 - [x] `S27` - Harden review-calculation-values.md; `docs/how-to/review-calculation-values.md`.
 - [ ] `S28` - Harden review-queue.md; `docs/how-to/review-queue.md`.
 - [ ] `S29` - Harden review-with-google-sheets.md; `docs/how-to/review-with-google-sheets.md`.
