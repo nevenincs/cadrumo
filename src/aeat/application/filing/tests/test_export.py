@@ -46,6 +46,7 @@ from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor
 from ._export_support import (
     _EXPORT_PATH,
     _EXPORT_VERIFY_MATCH_CASES,
+    _ExportVerifyMatchCase,
     _HEX_DIGEST,
     _M111_RESULTADO_CASILLA,
     _M111_RETENCIONES_TOTAL_CASILLA,
@@ -137,7 +138,7 @@ def _export_and_parse_registry_layout(
     draft: ModeloDraft,
     output_path: Path,
     *,
-    headers: Mapping[str, str],
+    headers: dict[str, str],
     schema_provider: RegistrySchemaAccessor,
 ) -> tuple[DeclaracionExportResult, bytes, ExportLayoutDefinition, _ParsedCasillaValues]:
     receipt = export_draft(
@@ -552,6 +553,7 @@ def _official_modelo_100_2024_xsd_versions() -> set[str]:
         "29-100-esquema-xsd-ejercicio-2024-actualizado-19-01-2026-747-kb-ejecutable.xsd",
     )
     root = DefusedElementTree.parse(xsd).getroot()
+    assert root is not None
     versions: set[str] = set()
     for simple_type in root.iter("{http://www.w3.org/2001/XMLSchema}simpleType"):
         if simple_type.attrib.get("name") != "tipo_VersionXSD":
@@ -966,7 +968,9 @@ def test_verify_reports_unchecked_reserved_or_derived_casillas(tmp_path: Path) -
 
 def test_verify_matches_exported_registry_layouts(tmp_path: Path) -> None:
     for parameter in _EXPORT_VERIFY_MATCH_CASES:
-        case = parameter.values[0]
+        raw_case = parameter.values[0]
+        assert isinstance(raw_case, _ExportVerifyMatchCase)
+        case = raw_case
         draft = case.draft_factory()
         exported = tmp_path / case.output_name
         provider = _schema_provider(filing_year=case.filing_year, period=case.period, modelos=case.modelos)
