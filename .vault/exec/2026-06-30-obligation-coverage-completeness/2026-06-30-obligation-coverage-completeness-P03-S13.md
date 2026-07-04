@@ -26,6 +26,8 @@ M216 is PROMOTED. It is removed from `UNMODELED_OBLIGATIONS`, is now a registry-
 
 Batch 1 (2026-07-04): M222 and M220 are PROMOTED, dropping the residual 25 -> 23 and growing `CANONICAL_MODELO_FLEET` 47 -> 49. See the "Batch 1" section below.
 
+Batch 2 (2026-07-04): six M182-template informativas (165, 233, 156, 038, 185, 186) are PROMOTED, dropping the residual 23 -> 17 and growing `CANONICAL_MODELO_FLEET` 49 -> 55. See the "Batch 2" section below.
+
 The corpus gap that blocked the prior pass is now closed. The binding deadline provision (Orden EHA/3290/2008 art 4) was fetched verbatim from the BOE consolidated text (BOE-A-2008-18497) and added to the bundled corpus, so the deadline window is grounded in the establishing provision rather than in guidance-tier instructions.
 
 Corpus and legal catalogue authored:
@@ -79,9 +81,33 @@ Batch 1 gate evidence:
 - Pre-existing, not owned: `entrypoints/mcp/tests/test_client_handshake.py` + `test_serving_gates.py` fail collection with `ModuleNotFoundError: pywintypes` (pywin32/MCP env gap, unrelated to this registry change).
 - RAG grounding queries this batch: `vaultspec-rag` code search "M202 IS pago fraccionado registry modelo deadline window" and "registry legal catalogue corpus_ref required_text evidence gate plazo"; vault `--doc-type adr,research` "UNMODELED_OBLIGATIONS ratchet promote registry modelo grounded"; followed by targeted grep confirmation of the M202/M200 sibling structure, the M347 minimal-modelo shape, the HFP/227/2017 art-2/art-5 corpus anchors, and the deadline-window source-tier gate.
 
+## Batch 2 (2026-07-04): six M182-template informativas (165 / 233 / 156 / 038 / 185 / 186)
+
+All six are PROMOTED from `UNMODELED_OBLIGATIONS`, dropping the residual 23 -> 17 and growing `CANONICAL_MODELO_FLEET` 49 -> 55 (auth-gate fleet-count test bumped 49 -> 55, name + docstring). Every one is GOLD-tier grounded against corpus that was ALREADY bundled (transcribed under prior operator-authorized fetch); no new fetch was needed and nothing was fabricated. Each bundled orden carries BOTH an approval article (art 1, anchor `#a1`) and a plazo article with pinnable verbatim text — confirmed by reading all six corpus files before grounding.
+
+Per-form grounding (each: a new `legal/modelo-<n>.toml` with the approval entry, the plazo entry, and the two per-modelo sources — `enrolled-modelo-<n>-procedure` official_source_guidance + `enrolled-modelo-<n>-layout` layout_authority — mirroring `modelo-182.toml`; plus a registry tree mirroring the Batch-1 declaration-header shape):
+
+- 165 (certificaciones a socios de entidades de nueva/reciente creación, ANNUAL) — Orden HAP/2455/2013 (BOE-A-2013-13798); approval art 1 `#a1`, plazo art 4 `#a4` ("se realizará en el mes de enero de cada año"). 3 annual January windows (2024-2026).
+- 233 (gastos en guarderías / educación infantil, ANNUAL) — Orden HAC/1400/2018 (BOE-A-2018-17772); art 1 + art 4 (enero). 3 annual windows.
+- 156 (cotizaciones afiliados/mutualistas deducción maternidad, ANNUAL) — Orden HAC/3580/2003 (BOE-A-2003-23509); art 1 + art 4 ("entre los días 1 y 31 de enero del año siguiente"). 3 annual windows.
+- 038 (operaciones de entidades en registros públicos, MENSUAL) — Orden HAC/66/2002 (BOE-A-2002-1041); art 1 + plazo art 6 `#a6` ("durante cada mes natural respecto de las inscripciones autorizadas en el mes inmediato anterior"). 12 monthly windows (2025), each closing the last natural day of the following month.
+- 185 (informativa mensual cotizaciones afiliados/mutualistas, MENSUAL) — Orden HAC/1197/2025 (BOE-A-2025-21726); art 1 + art 4 ("diez días naturales siguientes a la finalización del mes"). 12 monthly windows (2025), each closing the 10th of the following month.
+- 186 (nacimientos y defunciones, Registro Civil, MENSUAL) — Orden HAC/539/2003 (BOE-A-2003-5304); art 1 + art 4 ("el del mes natural siguiente ... con una periodicidad mensual"). 12 monthly windows (2025), last natural day of the following month.
+
+Grade: all six are scheduling/applicability-grade — declaration-header casillas (`decl.ejercicio` filing_year, `decl.tipo-declaracion`) only, no formulas, no detail-row bindings. No authoritative diseño de registro is bundled for any of the six, so no numbered form casilla is fabricated (the M182 detail-row donor bindings were NOT copied — that schema is 182-specific and grounded in its own DR). The two header casillas reuse M347/M182's proven `filing_year` / `tipo_declaracion` roles.
+
+Batch 2 gate evidence:
+
+- `bundled_authority().validate_registry()` passes with all six present (full-registry validation incl. legal-catalogue required_text cross-check of the 12 new legal entries against the six bundled corpus files, and the source sha256 match).
+- Deadline windows resolve: `deadline_windows(2024,("165"/"233"/"156",))` = 1 Jan -> 31 Jan 2025; `deadline_windows(2025,("038"/"186",))` = 12 monthly windows each opening the 1st and closing the last natural day of the following month; `("185",)` = 12 windows closing the 10th of the following month.
+- New parametrized durable test `test_modelo_informativas_batch2_registry.py` (6 modelos x validator-accept + approval/plazo grounding + deadline-cadence + annual/monthly window resolution + out-of-UNMODELED) — 45 passed together with test_modelo.py, test_modelo_authorization_gate.py (fleet 55), test_obligation_coverage.py, test_deadline_window_source_tiers.py.
+- Touched-surface collect-only clean (registry/core/overview: 3966 collected, 0 errors). Pre-existing/unowned: `entrypoints/mcp` tests still fail collection on `ModuleNotFoundError: pywintypes` (env gap, unrelated).
+- Committed as a single atomic commit (all six together): splitting per-form would leave a broken intermediate state, because the enum removal of a modelo from `UNMODELED_OBLIGATIONS` without its committed registry tree breaks the `registry_modelo_codes == enum - NON_REGISTRY` parity gate. All six were built and green together, so one atomic commit is the correct clean state.
+- RAG grounding queries this batch: `vaultspec-rag` code "M182 informativa registry modelo deadline window enrolled procedure source" and "monthly deadline window period_kind monthly period token format"; then grep-confirmed the M182 template (legal file + two per-modelo sources + minimal tree), the M111 monthly window period format ("2025 01"), and read all six bundled corpus files verbatim to pin approval + plazo required_text.
+
 ## Notes
 
-- Ratchet remains OPEN: after Batch 1, 23 recognized-unmodeled obligations remain; S13 stays unchecked as a recurring ratchet step.
+- Ratchet remains OPEN: after Batch 2, 17 recognized-unmodeled obligations remain; S13 stays unchecked as a recurring ratchet step.
 - Locale leaves DEFERRED: the four locale catalogues (`ca.yml`, `en.yml`, `es.yml`, `hu.yml`) are peer-staged (`MM`) in the shared index, so the M216 locale labels were not authored this pass to avoid clobbering peer WIP. Follow-up: `python -m aeat.locales modelo scaffold <locale> 216 2024-y-siguientes` once the locale WIP lands.
 - Out-of-scope pre-existing failure observed and NOT owned by this surface: `test_catalogue_verification_normatives.py::test_orden_hac_242_2025_art_8_deadline_links_to_full_boe_corpus` asserts a stale sha256 for the `orden-hac-242-2025` corpus (committed-HEAD drift last touched by peer commit `2479085a8e`, unrelated to M216).
 - RAG grounding queries this pass: code search "M210 IRNR registry modelo definition deadline window"; "legal catalogue corpus_ref required_text evidence gate legal grounding"; "deadline window trimestral quarterly opens closes first twenty natural days"; followed by targeted grep confirmation of the M296 IRNR sibling structure, the deadline-window source-tier gate, the `cuota_a_ingresar` canonical role, and the existing M216 source_refs.
