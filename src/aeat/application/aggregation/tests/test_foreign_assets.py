@@ -38,15 +38,21 @@ def _obs(
     held: bool = True,
     acquisition: str = "2023-01-15",
 ) -> ForeignAssetIngestObservation:
-    return ForeignAssetIngestObservation(
-        source_kind=source_kind,
-        source_object_id=source_id,
-        asset_class=asset_class,
-        asset_external_id=asset_external_id,
-        country=country,
-        valuation_eur=Decimal(valuation),
-        acquisition_date=acquisition,
-        held_at_year_end=held,
+    # source_kind is deliberately BindingSourceKind | str: TestObservationContract
+    # exercises both a raw-string coercion (kind.value) and a genuinely-invalid raw
+    # string ("invoice") that the field's before-validator must reject. model_validate
+    # (not the constructor) keeps that runtime-only distinction static-type-clean.
+    return ForeignAssetIngestObservation.model_validate(
+        {
+            "source_kind": source_kind,
+            "source_object_id": source_id,
+            "asset_class": asset_class,
+            "asset_external_id": asset_external_id,
+            "country": country,
+            "valuation_eur": Decimal(valuation),
+            "acquisition_date": acquisition,
+            "held_at_year_end": held,
+        },
     )
 
 
