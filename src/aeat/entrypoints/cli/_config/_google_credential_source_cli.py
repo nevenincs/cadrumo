@@ -125,11 +125,11 @@ def google_credential_source_set(
     """Persist the active profile's Google credential-source selection.
 
     ``--kind service-account-impersonation`` requires ``--target-principal``
-    and stores a :class:`~aeat.adapters.outbound.google.GoogleImpersonationConfig`;
+    and stores a :class:`~adapters.outbound.google.GoogleImpersonationConfig`;
     ``--kind oauth-desktop`` restores the interactive-consent default and
     rejects every impersonation-only option. Neither branch performs a live
     ADC discovery or IAM token exchange — that happens lazily the next time
-    :func:`~aeat.adapters.outbound.storage.build_google_credentials` builds
+    :func:`~adapters.outbound.storage.build_google_credentials` builds
     credentials for this profile.
     """
     try:
@@ -211,8 +211,8 @@ def google_credential_source_show(
     """Report the active profile's persisted Google credential-source selection.
 
     A profile with no persisted selection reports the
-    :attr:`~aeat.core.GoogleCredentialSourceKind.OAUTH_DESKTOP` default the
-    factory dispatch (:func:`~aeat.adapters.outbound.storage.build_google_credentials`)
+    :attr:`~core.GoogleCredentialSourceKind.OAUTH_DESKTOP` default the
+    factory dispatch (:func:`~adapters.outbound.storage.build_google_credentials`)
     applies — a missing record is a valid, expected state, never an error.
     """
     try:
