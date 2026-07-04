@@ -11,15 +11,6 @@ related:
   - '[[2026-05-21-calculation-source-connectivity-reference]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `calculation-source-connectivity` `source mesh implementation` plan
 
@@ -150,7 +141,7 @@ Re-run source discovery during implementation and extend this plan whenever a re
 - [x] `W05.P10.S56` - Extend plan rows for newly discovered unenrolled source surfaces; `.vault/plan/2026-05-20-calculation-source-connectivity-plan.md`.
 - [x] `W05.P10.S57` - Document discovered source surfaces in execution records; `.vault/exec/2026-05-20-calculation-source-connectivity`.
 - [x] `W05.P10.S62` - Follow-up: extend the approval-basis source fingerprint beyond the invoice catalogue to the remaining self-loadable mesh sources (profile, previous_filing, relations) without coupling the review layer to the full source mesh; `src/aeat/application/filing/_review.py`.
-- [ ] `W05.P10.S63` - Follow-up: fingerprint the profile-activity relation-scoping inputs (activity_start_date, m111_no_retenciones_periods, not_applicable_source_modelos from ProfileRepository) in the approval basis, so a relation-scoping profile change invalidates an approval even when the observation store is unchanged; `src/aeat/application/filing/_review.py`.
+- [x] `W05.P10.S63` - Follow-up: fingerprint the profile-activity relation-scoping inputs (activity_start_date, m111_no_retenciones_periods, not_applicable_source_modelos from ProfileRepository) in the approval basis, so a relation-scoping profile change invalidates an approval even when the observation store is unchanged; `src/aeat/application/filing/_review.py`.
 
 ### Phase `W05.P11` - review audit and hardening
 
