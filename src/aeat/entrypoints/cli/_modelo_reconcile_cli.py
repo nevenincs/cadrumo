@@ -9,7 +9,7 @@
   contacts AEAT. ``--kind`` selects the evidence document's KIND, orthogonal to
   the pull/file transport axis: ``justificante`` (the default, every modelo) or
   ``declaration`` (a filed declaración PDF, casilla-level reconcile, enrolled
-  modelos only -- see :data:`aeat.application.modelo._reconcile._DECLARATION_CASILLA_RECONCILE_MODELOS`).
+  modelos only -- see :data:`application.modelo._reconcile._DECLARATION_CASILLA_RECONCILE_MODELOS`).
 * ``reconcile history`` lists past reconciliations.
 """
 
@@ -109,7 +109,7 @@ def _render_reconciliation_report(
     *,
     command: str,
 ) -> None:
-    """Render a :class:`~aeat.application.modelo.ModeloReconciliationReport` through the typed envelope.
+    """Render a :class:`~application.modelo.ModeloReconciliationReport` through the typed envelope.
 
     ``command`` is the registered leaf id (``modelo.reconcile.pull`` /
     ``modelo.reconcile.file``); reconciliation advisories ride the typed
