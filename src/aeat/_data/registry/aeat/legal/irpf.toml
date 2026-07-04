@@ -820,11 +820,72 @@ effective_to = 2025-12-31
 review_status = "reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
-notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3). El motor de modulos M131/M100 (0293/0003-modulos-engine.toml) modela unicamente el indice de exceso (b.3) en este primer slice, sin cruzar la incompatibilidad con los indices especiales a.2/a.4 de las actividades tabuladas que los llevan asignados (721.2 transporte por autotaxis, 722/757 transporte de mercancias y mudanzas); esta entrada fundamenta el advisory no bloqueante que senala esa brecha al operador, per orden-hac-1347-2024-Anexo-II-instruccion-2-3 y no-silent-under-declaration."
+notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si. El motor de modulos M131 (0003-modulos-engine.toml, m131_resolve_modulos_indices_generales) aplica ahora los cuatro indices generales (b.1, b.2, b.4, b.3) en el orden de la propia Orden y hace cumplir estructuralmente las tres incompatibilidades: el indice b.1 declarado se ignora para las dos actividades tabuladas con indice especial (721.2 transporte por autotaxis, 722 transporte de mercancias); cuando b.1 se aplica, b.3 se omite; cuando ambos b.2 y b.4 se declaran, prevalece la temporada (orden de enumeracion de la Orden) y se ignora el inicio de nuevas actividades. Dos indicadores internos (modulos-pequena-dimension-ignorado-flag, modulos-temporada-inicio-actividad-conflicto-flag) fundamentan los advisories no bloqueantes que senalan al operador cuando una de sus declaraciones fue ignorada, per no-silent-under-declaration. El motor M100 (0293-...-rendimiento-base.toml) sigue modelando unicamente su propio cascade agrario (indices 1-8, Anexo I instruccion 2.3), sin relacion con este Anexo II."
 required_text = [
     "Incompatibilidades entre los índices correctores:",
     "En ningún caso será aplicable el índice corrector para empresas de pequeña dimensión (b.1) a las actividades para las que están previstos los índices correctores especiales enumerados en las letras a.2), a.3), a.4) y a.5).",
     "Cuando resulte aplicable el índice corrector para empresas de pequeña dimensión (b.1) no se aplicará el índice corrector de exceso (b.3).",
+]
+
+[legal."orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-ii-instruccion-2-3-b-1"
+document_id = "BOE-A-2024-24949"
+section = "Anexo II, instrucción 2.3.b.1) Índice corrector para empresas de pequeña dimensión"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+notes = "Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 segun la poblacion del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). Cross-checked byte-identical against the bundled orden-hac-1347-2024.html (Anexo II, instruccion 2.3.b.1)."
+required_text = [
+    "b.1) Índice corrector para empresas de pequeña dimensión:",
+    "Titular persona física.",
+    "Sin personal asalariado.",
+]
+
+[legal."orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-ii-instruccion-2-3-b-2"
+document_id = "BOE-A-2024-24949"
+section = "Anexo II, instrucción 2.3.b.2) Índice corrector de temporada"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideracion de actividad de temporada (se desarrolla habitualmente solo ciertos dias del ano, continuos o alternos, sin exceder de 180 dias por ano) se aplica el indice 1,50 (hasta 60 dias), 1,35 (de 61 a 120 dias) o 1,25 (de 121 a 180 dias). Incompatible con el indice corrector por inicio de nuevas actividades (b.4). Cross-checked byte-identical against the bundled orden-hac-1347-2024.html (Anexo II, instruccion 2.3.b.2)."
+required_text = [
+    "b.2) Índice corrector de temporada:",
+    "Tendrán la consideración de actividades de temporada las que habitualmente sólo se desarrollen durante ciertos días del año",
+]
+
+[legal."orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-ii-instruccion-2-3-b-4"
+document_id = "BOE-A-2024-24949"
+section = "Anexo II, instrucción 2.3.b.4) Índice corrector por inicio de nuevas actividades"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+notes = "Fase 3a: indice corrector por inicio de nuevas actividades. El contribuyente que inicie una nueva actividad a partir del 1 de enero de 2024, que no sea de temporada, no ejercida previamente bajo otra titularidad, y realizada en local exclusivo, aplica el indice 0,80 (primer ejercicio) / 0,90 (segundo ejercicio), o 0,60 / 0,70 si el contribuyente tiene una discapacidad de grado igual o superior al 33 por ciento. Incompatible con el indice corrector de temporada (b.2). Cross-checked byte-identical against the bundled orden-hac-1347-2024.html (Anexo II, instruccion 2.3.b.4)."
+required_text = [
+    "b.4) Índice corrector por inicio de nuevas actividades.",
+    "Que se trate de nuevas actividades cuyo ejercicio se inicie a partir del 1 de enero de 2024.",
 ]
 
 [legal."orden-hac-1347-2024:anexo-i-instruccion-2-1"]
