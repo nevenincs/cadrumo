@@ -8,6 +8,13 @@ options, use the [command-line reference](../cli/index.rst).
 ::::{grid} 1 2 2 3
 :gutter: 3
 
+:::{grid-item-card} Get Started
+:link: onboarding
+:link-type: doc
+
+Map the whole journey from bank records to a filed modelo, stage by stage.
+:::
+
 :::{grid-item-card} Quickstart
 :link: quickstart
 :link-type: doc

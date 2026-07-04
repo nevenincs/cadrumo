@@ -26,6 +26,7 @@ related:
   - '[[2026-06-16-aeat-user-docs-hardening-S18]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S19]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S20]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S21]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S22]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S23]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S24]]'
@@ -78,6 +79,7 @@ Auto-generated index of all documents tagged with `#aeat-user-docs-hardening`.
 - `2026-06-16-aeat-user-docs-hardening-S18` - Harden modelo-036.md
 - `2026-06-16-aeat-user-docs-hardening-S19` - Harden modelo-303.md
 - `2026-06-16-aeat-user-docs-hardening-S20` - Harden modelo-390.md
+- `2026-06-16-aeat-user-docs-hardening-S21` - Harden onboarding.md
 - `2026-06-16-aeat-user-docs-hardening-S22` - Harden profile-setup.md
 - `2026-06-16-aeat-user-docs-hardening-S23` - Harden protect-data-access.md
 - `2026-06-16-aeat-user-docs-hardening-S24` - Harden quickstart.md
