@@ -38,6 +38,7 @@ from . import (
     build_draft,
     build_runtime_schema_provider,
     empty_prior_filing_observations_fingerprint,
+    empty_profile_activity_fingerprint,
 )
 
 _REGISTRY_TEST_BUCKET_ID = "registry-test"
@@ -117,6 +118,7 @@ def build_registry_filing_draft(
             transaction_catalogue=TransactionCatalogue(),
             invoice_catalogue=InvoiceCatalogue(),
             prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
+            profile_activity_fingerprint=empty_profile_activity_fingerprint(),
         )
     return draft.model_copy(
         update={

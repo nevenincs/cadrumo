@@ -41,6 +41,7 @@ from .. import (
     compute_current_approval_basis,
     compute_modelo_draft_id,
     empty_prior_filing_observations_fingerprint,
+    empty_profile_activity_fingerprint,
     iter_findings,
     refresh_review_status,
     validate_draft,
@@ -555,6 +556,7 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
         transaction_catalogue=TransactionCatalogue(),
         invoice_catalogue=InvoiceCatalogue(),
         prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
+        profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
 
     assert approved.status is ModeloDraftStatus.APROBADO
@@ -672,6 +674,7 @@ def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
         transaction_catalogue=TransactionCatalogue(),
         invoice_catalogue=InvoiceCatalogue(),
         prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
+        profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
 
     assert approved.status is ModeloDraftStatus.APROBADO
@@ -702,6 +705,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
         transaction_catalogue=TransactionCatalogue(),
         invoice_catalogue=InvoiceCatalogue(),
         prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
+        profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
 
     assert approved.status is ModeloDraftStatus.APROBADO
@@ -739,6 +743,7 @@ def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
         transaction_catalogue=TransactionCatalogue(),
         invoice_catalogue=InvoiceCatalogue(),
         prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
+        profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
 
     assert approved.status is ModeloDraftStatus.APROBADO
