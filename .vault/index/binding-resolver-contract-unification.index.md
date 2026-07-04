@@ -17,6 +17,7 @@ related:
   - '[[2026-06-26-binding-resolver-contract-unification-P02-S09]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P03-S10]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P03-S11]]'
+  - '[[2026-06-26-binding-resolver-contract-unification-P03-S12]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P03-S13]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P03-S14]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P03-S19]]'
@@ -25,6 +26,7 @@ related:
   - '[[2026-06-26-binding-resolver-contract-unification-P04-S15]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P04-S16]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P04-S17]]'
+  - '[[2026-06-26-binding-resolver-contract-unification-P05-S18]]'
   - '[[2026-06-26-binding-resolver-contract-unification-adr]]'
   - '[[2026-06-26-binding-resolver-contract-unification-plan]]'
   - '[[2026-06-26-binding-resolver-contract-unification-research]]'
@@ -45,7 +47,7 @@ Auto-generated index of all documents tagged with `#binding-resolver-contract-un
 ### audit
 
 - `2026-07-02-binding-resolver-contract-unification-audit` - `binding-resolver-contract-unification` audit: `Wave 1 D9 close-blocker audit`
-- `2026-07-04-binding-resolver-contract-unification-audit` - `binding-resolver-contract-unification` audit: `S14 code review`
+- `2026-07-04-binding-resolver-contract-unification-audit` - `binding-resolver-contract-unification` audit: `S12/S14/S18 evidence review`
 
 ### exec
 
@@ -65,9 +67,11 @@ Auto-generated index of all documents tagged with `#binding-resolver-contract-un
 - `2026-06-26-binding-resolver-contract-unification-P03-S11` - Author a foreign-assets 720 ModeloSourceResolver returning CalculationSourceResolution that delegates to aggregate_foreign_assets_720, behaviour-preserving against the existing 720 suites
 - `2026-06-26-binding-resolver-contract-unification-P03-S20` - Foreign-assets 720 correctness gate follow-up
 - `2026-06-26-binding-resolver-contract-unification-P03-S21` - Counterpart 347/349 correctness gate follow-up
+- `2026-06-26-binding-resolver-contract-unification-P03-S12` - Enroll the counterpart and foreign-assets resolvers in merge_source_resolutions and remove FOREIGN_ASSET from DEFERRED_SOURCE_KINDS now that it has a live resolver, applying the apply-cached-on-collision drive against the live peer WIP
 - `2026-06-26-binding-resolver-contract-unification-P03-S13` - Collapse the retenciones double-path so the per-modelo service retenciones branch delegates to the same mesh RetencionesAggregationSourceResolver, retiring the duplicate retenciones service result type without changing the landed perceptor-count result
 - `2026-06-26-binding-resolver-contract-unification-P03-S14` - Keep the CLI aggregate verb as a thin delegating projection whose aggregation delegates to the ONE mesh resolver with no re-implemented aggregation in the verb and whose persist-retencion-observations side-effect delegates to the existing single-writer observation repository with no bespoke parallel write path per composition-service-no-parallel-write-path, retiring the verb ONLY if proven to have no distinct operator purpose beyond calculate/pull and then only with the full documented-command-conformance plus how-to plus suggestion/next_action/help sweep
 - `2026-06-26-binding-resolver-contract-unification-P03-S19` - Prove the retenciones collapse is behaviour-preserving by asserting the single mesh RetencionesAggregationSourceResolver reproduces the prior per-modelo-service aggregation value exactly against a 111/115/123/180/190/193 fixture, with the landed perceptor-count result unchanged and no casilla value shift
+- `2026-06-26-binding-resolver-contract-unification-P05-S18` - Run the full bindings, calculate, and roundtrip test surface plus the extended disposition parity gate and confirm green with zero vestigial envelope definitions remaining and no casilla value shifted, then owner-triage the full collect-only tree
 
 ### plan
 
