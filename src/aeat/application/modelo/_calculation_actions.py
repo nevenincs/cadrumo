@@ -639,13 +639,23 @@ class _MemoizedTransactionCatalogueRepository:
     caller. ``save`` is not memoized (it is never called during source-mesh
     resolution; see the module docstring) and delegates straight through so
     the wrapper stays a strict read-through cache, not a write cache.
+
+    :meth:`load_for_date_range` is ALSO memoized, keyed by the exact
+    ``(start, end)`` window: the M130 income and gasto resolvers both request
+    the identical ``[Jan 1 of the period's year, quarter-end]`` cumulative
+    window in one calculate invocation (issue #408), so without a per-window
+    cache the index-backed pre-filter optimisation would trade one shared
+    full scan for two independent targeted scans. A resolver requesting a
+    distinct window (e.g. a different modelo's annual span) still gets its own
+    cache entry rather than colliding with an unrelated window.
     """
 
-    __slots__ = ("_catalogue", "_repository")
+    __slots__ = ("_catalogue", "_date_range_catalogues", "_repository")
 
     def __init__(self, repository: TransactionCatalogueRepository) -> None:
         self._repository = repository
         self._catalogue: TransactionCatalogue | None = None
+        self._date_range_catalogues: dict[tuple[date, date], TransactionCatalogue] = {}
 
     @property
     def bucket_id(self) -> str:
@@ -663,8 +673,13 @@ class _MemoizedTransactionCatalogueRepository:
         return self._catalogue
 
     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
-        """Delegate straight through; not memoized (distinct resolvers request distinct windows)."""
-        return self._repository.load_for_date_range(start, end)
+        """Return the cached window catalogue, loading it from storage at most once per exact window."""
+        key = (start, end)
+        cached = self._date_range_catalogues.get(key)
+        if cached is None:
+            cached = self._repository.load_for_date_range(start, end)
+            self._date_range_catalogues[key] = cached
+        return cached
 
     def save(self, catalogue: TransactionCatalogue) -> None:
         """Delegate to the wrapped repository; never called during mesh resolution."""
