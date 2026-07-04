@@ -11,6 +11,15 @@ related:
   - '[[2026-05-21-calculation-source-connectivity-reference]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `calculation-source-connectivity` `source mesh implementation` plan
 
@@ -87,12 +96,12 @@ Prepare region-aware Renta, fincas, and inventory source enrollment without bypa
 
 Make deductible expense context region-aware only where the data model and category profiles support it.
 
-- [ ] `W03.P06.S33` - Add region field to Renta deductibility context when category profiles require it; `src/aeat/domain/renta/_ledger_expenses.py`.
-- [ ] `W03.P06.S34` - Extend category profile lookup to accept filing year and CCAA key; `src/aeat/core/resources/_repos/category_profiles.py`.
-- [ ] `W03.P06.S35` - Represent region scoped category profiles in registry resources; `src/aeat/_data/registry/aeat/categories/profiles`.
+- [x] `W03.P06.S33` - Add region field to Renta deductibility context when category profiles require it; `src/aeat/domain/renta/_ledger_expenses.py`.
+- [x] `W03.P06.S34` - Extend category profile lookup to accept filing year and CCAA key; `src/aeat/core/resources/_repos/category_profiles.py`.
+- [x] `W03.P06.S35` - Represent region scoped category profiles in registry resources; `src/aeat/_data/registry/aeat/categories/profiles`.
 - [ ] `W03.P06.S36` - Derive Renta source region from TaxResidenceProfile CCAA; `src/aeat/application/aggregation/_renta_ledger.py`.
-- [ ] `W03.P06.S37` - Test non regional category profiles preserve existing Renta results; `src/aeat/application/aggregation/test_renta_ledger.py`.
-- [ ] `W03.P06.S38` - Test region scoped category profiles select by profile CCAA; `src/aeat/application/aggregation/test_renta_ledger_region.py`.
+- [x] `W03.P06.S37` - Test non regional category profiles preserve existing Renta results; `src/aeat/application/aggregation/test_renta_ledger.py`.
+- [x] `W03.P06.S38` - Test region scoped category profiles select by profile CCAA; `src/aeat/application/aggregation/test_renta_ledger_region.py`.
 
 ### Phase `W03.P07` - fincas and inventory readiness
 
