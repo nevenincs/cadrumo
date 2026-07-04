@@ -9,9 +9,8 @@ for the LLM client. The live-model persona measurement observed exactly this in 
 ``registry citations view`` error. ``_run_subprocess_tool`` must pin
 ``encoding="utf-8"`` so the relayed text is faithful on every host.
 
-These tests substitute only the OS process boundary (``subprocess.run``) — the
-decode-kwarg wiring and the JSON-envelope round-trip are the real behaviour under
-test.
+These tests inject only the OS process runner — the decode-kwarg wiring and the
+JSON-envelope round-trip are the real behaviour under test.
 """
 
 from __future__ import annotations
@@ -21,7 +20,6 @@ import sys
 
 import pytest
 
-from .. import _server
 from .._server import _run_subprocess_tool
 from .._tools import build_tool_descriptors
 
@@ -36,17 +34,15 @@ def _any_descriptor() -> object:
     return build_tool_descriptors()[0]
 
 
-def test_subprocess_is_decoded_as_utf8_not_platform_default(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_subprocess_is_decoded_as_utf8_not_platform_default() -> None:
     captured: dict[str, object] = {}
 
-    def _spy(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def _capturing_run(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
         captured.update(kwargs)
         captured["argv0"] = argv[0]
         return subprocess.CompletedProcess(argv, returncode=1, stdout=_SPANISH_ENVELOPE, stderr="")
 
-    monkeypatch.setattr(_server.subprocess, "run", _spy)
-
-    envelope, is_error = _run_subprocess_tool(_any_descriptor(), {})
+    envelope, is_error = _run_subprocess_tool(_any_descriptor(), {}, run_process=_capturing_run)
 
     # The decode contract: UTF-8, degrade rather than raise on a stray byte.
     assert captured["encoding"] == "utf-8"

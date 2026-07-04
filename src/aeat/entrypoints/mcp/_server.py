@@ -39,6 +39,7 @@ import subprocess
 import sys
 import time
 import uuid
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ._corpus_tools import (
@@ -223,6 +224,8 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
 def _run_subprocess_tool(
     descriptor: McpToolDescriptor,
     arguments: dict[str, object],
+    *,
+    run_process: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> tuple[dict[str, object], bool]:
     """Run one tool's CLI command in a subprocess and return (envelope, is_error).
 
@@ -249,7 +252,7 @@ def _run_subprocess_tool(
     # matches the CLI's own emit-side fallback so a stray non-UTF-8 byte degrades
     # to the replacement character rather than raising.
     argv = ["aeat", *cli_argv_for(descriptor.verb_schema, arguments)]
-    completed = subprocess.run(  # noqa: S603
+    completed = run_process(
         argv,
         capture_output=True,
         text=True,
