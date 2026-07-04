@@ -30,7 +30,7 @@ PLAYWRIGHT_TIMEOUT_SHORT_MS: Final[int] = 2_000
 
 #: Character encoding used by the AEAT sede for legacy fixed-width response bodies
 #: (e.g. Modelo 303 page-03 records).  Alias of the canonical
-#: :data:`~aeat.core.external_constants.LATIN_1_ENCODING` constant; kept under
+#: :data:`~core.external_constants.LATIN_1_ENCODING` constant; kept under
 #: this adapter-local name so existing callers do not need to reach into
 #: ``external_constants`` directly.
 SEDE_BODY_ENCODING: Final[str] = LATIN_1_ENCODING

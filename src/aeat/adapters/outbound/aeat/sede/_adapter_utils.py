@@ -71,10 +71,10 @@ class _SedeCheckerModel(BaseModel):
 def assert_query_browser_action_for(policy: RemoteStateGuardPolicy, action: str) -> None:
     """Assert that ``action`` is permitted under ``policy``.
 
-    Raises :class:`~aeat.domain.calculations.registry.RegistryValidationError`
-    via :func:`~aeat.domain.calculations.registry.assert_remote_operation_allowed`
+    Raises :class:`~domain.calculations.registry.RegistryValidationError`
+    via :func:`~domain.calculations.registry.assert_remote_operation_allowed`
     if the action pattern is not allowed. Both the GROI and NIF-IVA drivers close
-    over their own :class:`~aeat.domain.calculations.registry.RemoteStateGuardPolicy`
+    over their own :class:`~domain.calculations.registry.RemoteStateGuardPolicy`
     objects; this shared helper removes the duplicate ``_assert_query_browser_action``
     bodies they used to carry.
 

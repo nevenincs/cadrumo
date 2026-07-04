@@ -354,15 +354,17 @@ class TestModelo349RectificacionRow:
         assert row.base_anterior == Decimal("1000.00")
 
     def test_periodo_is_uppercased_before_closed_set_validation(self) -> None:
-        row = Modelo349RectificacionRow(
-            codigo_pais="DE",
-            nif_comunitario="DE123456789",
-            razon_social="Deutschland GmbH",
-            clave_operacion="E",
-            ejercicio="2025",
-            periodo="2t",
-            base_rectificada=Decimal("1100.00"),
-            base_anterior=Decimal("1000.00"),
+        row = Modelo349RectificacionRow.model_validate(
+            {
+                "codigo_pais": "DE",
+                "nif_comunitario": "DE123456789",
+                "razon_social": "Deutschland GmbH",
+                "clave_operacion": "E",
+                "ejercicio": "2025",
+                "periodo": "2t",
+                "base_rectificada": Decimal("1100.00"),
+                "base_anterior": Decimal("1000.00"),
+            },
         )
 
         assert row.periodo == "2T"

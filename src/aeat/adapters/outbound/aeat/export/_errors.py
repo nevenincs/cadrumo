@@ -2,8 +2,8 @@
 
 The classes here cover fichero-BOE serialisation and layout failures in
 the outbound export adapter. They are separate from the local submission
-lifecycle errors in :mod:`aeat.domain.submission` and from the permanent
-live-write refusal raised by :mod:`aeat.core.access_gate`.
+lifecycle errors in :mod:`domain.submission` and from the permanent
+live-write refusal raised by :mod:`core.access_gate`.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ class ExportError(AeatError):
 
     Catch this root for failures emitted by registry-backed fichero-BOE
     serialisation helpers. Submission lifecycle failures remain under
-    :class:`~aeat.domain.submission.SubmissionError`.
+    :class:`~domain.submission.SubmissionError`.
     """
 
 
@@ -28,10 +28,10 @@ class AeatExportFormatError(ExportError, ValueError):
     value-related failures.
 
     See Also:
-        :mod:`aeat.adapters.outbound.aeat.export._formats`
+        :mod:`adapters.outbound.aeat.export._formats`
             Fixed-width record-spec, serialisation, and deserialisation
             helpers that raise this error for layout or value violations.
-        :class:`~aeat.domain.submission.SubmissionPreflightError`
+        :class:`~domain.submission.SubmissionPreflightError`
             Domain-level refusal raised before a local submission
             lifecycle transition is allowed.
     """

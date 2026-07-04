@@ -13,20 +13,20 @@ caller-supplied layout represented as a validated tuple of
 The caller passes casilla values plus a ``headers`` mapping for metadata
 fields (identity, year, period, and so on). CRLF terminator ownership
 stays with this function; the per-field encoders in
-:mod:`aeat.adapters.outbound.aeat.export._formats._record_spec` do
+:mod:`adapters.outbound.aeat.export._formats._record_spec` do
 not emit line endings.
 
 The active application export path renders
-:class:`aeat.domain.calculations.registry.ExportLayoutDefinition`
-records through :func:`aeat.application.filing.export_draft`; this module
+:class:`domain.calculations.registry.ExportLayoutDefinition`
+records through :func:`application.filing.export_draft`; this module
 is the lower-level explicit-spec serialiser paired with
-:func:`aeat.adapters.outbound.aeat.export._formats._deserialise.deserialise`.
+:func:`adapters.outbound.aeat.export._formats._deserialise.deserialise`.
 
 See Also:
-    :class:`aeat.domain.calculations.registry.ExportRecordDefinition`
+    :class:`domain.calculations.registry.ExportRecordDefinition`
         Canonical registry record declaration consumed by the application
         export renderer.
-    :class:`aeat.adapters.outbound.aeat.export.AeatExportFormatError`
+    :class:`adapters.outbound.aeat.export.AeatExportFormatError`
         Error raised for fixed-width layout and value violations.
 """
 
@@ -76,7 +76,7 @@ def serialise(
             Dates must be :class:`datetime.date` instances; other
             scalar text and numeric fields are strings.
         specs: Ordered tuple of
-            :class:`aeat.adapters.outbound.aeat.export._formats._record_spec.RecordFieldSpec`
+            :class:`adapters.outbound.aeat.export._formats._record_spec.RecordFieldSpec`
             entries.
         encoding: Wire encoding for the payload (typically
             ``"cp1252"``).
@@ -225,7 +225,7 @@ def serialise_envelope(
             Individual segments reference whichever headers they
             declare; unused headers are ignored per-segment.
         segments: Ordered tuple of
-            :class:`aeat.adapters.outbound.aeat.export._formats._record_spec.SegmentSpec`
+            :class:`adapters.outbound.aeat.export._formats._record_spec.SegmentSpec`
             to emit. Callers supplying the envelope decide which
             optional segments are present.
         encoding: Wire encoding shared across segments.

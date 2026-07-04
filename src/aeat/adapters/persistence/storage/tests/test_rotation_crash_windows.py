@@ -31,6 +31,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict
 
 from .. import (
+    BlobReference,
     EncryptedBlobStore,
     Envelope,
     EphemeralMasterKeyProvider,
@@ -108,7 +109,7 @@ def _envelope_loads_under(target: Path, provider: EphemeralMasterKeyProvider) ->
     return True
 
 
-def _blob_loads_under(root: Path, ref: str, provider: EphemeralMasterKeyProvider) -> bool:
+def _blob_loads_under(root: Path, ref: BlobReference, provider: EphemeralMasterKeyProvider) -> bool:
     """Return True if the blob's wrapped DEK unwraps under ``provider``'s key."""
     try:
         EncryptedBlobStore(root_dir=root, master_key_provider=provider).get(ref)
@@ -162,7 +163,7 @@ def _rewrap_keystore_dek_probe_skip(
 def seeded_three_stores(
     tmp_path: Path,
     old_key: EphemeralMasterKeyProvider,
-) -> Iterator[tuple[Path, Path, str, Path, bytes]]:
+) -> Iterator[tuple[Path, Path, BlobReference, Path, bytes]]:
     """Seed all three rotation stores under the old key and yield their handles.
 
     Returns ``(envelope_store_dir, blob_root, blob_ref, keystore_path,
@@ -192,7 +193,7 @@ def seeded_three_stores(
 class TestMixedKeyRotationCrashWindow:
     def test_crash_after_envelope_rotation_leaves_recoverable_mixed_state(
         self,
-        seeded_three_stores: tuple[Path, Path, str, Path, bytes],
+        seeded_three_stores: tuple[Path, Path, BlobReference, Path, bytes],
         old_key: EphemeralMasterKeyProvider,
         new_key: EphemeralMasterKeyProvider,
     ) -> None:
@@ -268,7 +269,7 @@ class TestMixedKeyRotationCrashWindow:
 
     def test_full_rerun_after_convergence_is_a_clean_no_op(
         self,
-        seeded_three_stores: tuple[Path, Path, str, Path, bytes],
+        seeded_three_stores: tuple[Path, Path, BlobReference, Path, bytes],
         old_key: EphemeralMasterKeyProvider,
         new_key: EphemeralMasterKeyProvider,
     ) -> None:
@@ -302,7 +303,7 @@ class TestMixedKeyRotationCrashWindow:
 
     def test_crash_between_blob_and_keystore_recovers_the_keystore_only(
         self,
-        seeded_three_stores: tuple[Path, Path, str, Path, bytes],
+        seeded_three_stores: tuple[Path, Path, BlobReference, Path, bytes],
         old_key: EphemeralMasterKeyProvider,
         new_key: EphemeralMasterKeyProvider,
     ) -> None:

@@ -159,8 +159,7 @@ def test_checkout_markers_beat_a_present_platform_env(tmp_path: Path) -> None:
     assert platform_user_data_root(inputs) not in resolution.storage_root.parents
 
 
-@pytest.mark.parametrize("platform", ["win32", "linux", "darwin"])
-def test_installed_resolution_lands_off_project_root(tmp_path: Path, platform: str) -> None:
+def test_installed_resolution_lands_off_project_root(tmp_path: Path) -> None:
     """Every platform's installed run resolves under ``<base>/aeat/storage``.
 
     A marker-free candidate under a fake ``site-packages`` classifies installed
@@ -168,14 +167,22 @@ def test_installed_resolution_lands_off_project_root(tmp_path: Path, platform: s
     the project-root candidate it was detected from and never under the repo
     ``PROJECT_ROOT``.
     """
-    inputs = _installed_inputs_under(tmp_path, platform=platform)
-    resolution = resolve_state_root(inputs)
+    failures: list[str] = []
+    for platform in ("win32", "linux", "darwin"):
+        inputs = _installed_inputs_under(tmp_path / platform, platform=platform)
+        resolution = resolve_state_root(inputs)
+        if resolution.run_mode is not RunMode.INSTALLED:
+            failures.append(f"{platform}: run_mode={resolution.run_mode!r}")
+        if resolution.platform_user_data_root.name != "aeat":
+            failures.append(f"{platform}: user_data_root={resolution.platform_user_data_root}")
+        if resolution.storage_root != resolution.platform_user_data_root / "storage":
+            failures.append(f"{platform}: storage_root={resolution.storage_root}")
+        if PROJECT_ROOT in resolution.storage_root.parents:
+            failures.append(f"{platform}: storage root landed under PROJECT_ROOT")
+        if inputs.project_root_candidate in resolution.storage_root.parents:
+            failures.append(f"{platform}: storage root landed under detected project candidate")
 
-    assert resolution.run_mode is RunMode.INSTALLED
-    assert resolution.platform_user_data_root.name == "aeat"
-    assert resolution.storage_root == resolution.platform_user_data_root / "storage"
-    assert PROJECT_ROOT not in resolution.storage_root.parents
-    assert inputs.project_root_candidate not in resolution.storage_root.parents
+    assert not failures, "\n".join(failures)
 
 
 def test_windows_localappdata_falls_back_to_appdata_local_when_unset(tmp_path: Path) -> None:

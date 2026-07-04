@@ -17,7 +17,8 @@ _Holder = single_field_model("attachment_id", AttachmentId)
 
 def test_accepts_canonical_sha256_hex_digest() -> None:
     digest = hashlib.sha256(b"attachment-bytes").hexdigest()
-    assert _Holder(attachment_id=digest).attachment_id == digest
+    holder = _Holder(attachment_id=digest)
+    assert holder.model_dump()["attachment_id"] == digest
 
 
 def test_rejects_uppercase_hex() -> None:

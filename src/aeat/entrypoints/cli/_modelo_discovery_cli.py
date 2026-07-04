@@ -37,6 +37,7 @@ from ...core.i18n import output_language, tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import (
     InputKind,
+    ModeloEntry,
     ModeloListRow,
     RegistrySnapshotError,
     RegistryValidationError,
@@ -1127,7 +1128,7 @@ def _mark(value: bool) -> str:
     return "Y" if value else "-"
 
 
-def _support_matrix_entry_payload(entry) -> ModeloSupportMatrixEntryPayload:
+def _support_matrix_entry_payload(entry: ModeloEntry) -> ModeloSupportMatrixEntryPayload:
     return ModeloSupportMatrixEntryPayload(
         modelo_id=entry.modelo_id,
         title=entry.title,

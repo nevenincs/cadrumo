@@ -1,21 +1,21 @@
 """Profile defaults for Playwright browser sessions.
 
 :class:`Profile` is the small browser-runtime record consumed by
-:class:`aeat.adapters.outbound.aeat.browser.BrowserSession`,
-:func:`aeat.adapters.outbound.aeat.browser.default_browser_session_factory`, and
+:class:`adapters.outbound.aeat.browser.BrowserSession`,
+:func:`adapters.outbound.aeat.browser.default_browser_session_factory`, and
 Sede helpers that open Playwright pages. It carries the profile name, fallback
 storage-state JSON path, optional user agent, and the locale/timezone values
 forwarded into ``browser.new_context(...)``.
 
 The locale and timezone defaults are resolved lazily from
-:class:`aeat.core.config.Settings` when a ``Profile`` is instantiated. Importing
+:class:`core.config.Settings` when a ``Profile`` is instantiated. Importing
 this module therefore does not construct settings or validate external
 constants for commands that never touch the browser adapter.
 
 See Also:
-    :meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.create_context`
+    :meth:`adapters.outbound.aeat.browser.BrowserSession.create_context`
         Consumes :class:`Profile` to build Playwright context kwargs.
-    :func:`aeat.adapters.outbound.aeat.browser.opened_browser_page`
+    :func:`adapters.outbound.aeat.browser.opened_browser_page`
         Uses :class:`Profile` for short-lived Sede browser contexts.
 """
 
@@ -54,9 +54,9 @@ class Profile:
 
     ``storage_state_path`` is a fallback path: auth providers and Sede readers
     may pass an explicit storage-state path or in-memory state to
-    :meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.create_context`,
+    :meth:`adapters.outbound.aeat.browser.BrowserSession.create_context`,
     which takes precedence. ``locale`` and ``timezone_id`` default from
-    :class:`aeat.core.config.Settings` at construction time unless supplied
+    :class:`core.config.Settings` at construction time unless supplied
     explicitly.
 
     Attributes:
@@ -77,7 +77,7 @@ class Profile:
     def ensure_storage_dir(self) -> None:
         """Create the parent directory for ``storage_state_path`` only.
 
-        :meth:`BrowserSession.create_context <aeat.adapters.outbound.aeat.browser.BrowserSession.create_context>`
+        :meth:`BrowserSession.create_context <adapters.outbound.aeat.browser.BrowserSession.create_context>`
         calls this before deciding whether the fallback storage-state file
         exists. The method creates directories but never creates or mutates the
         storage-state JSON file itself.

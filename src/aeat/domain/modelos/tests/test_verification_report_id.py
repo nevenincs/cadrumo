@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ....tests.fixtures.identity_holder import single_field_model
 from .._ids import VerificationReportId
@@ -17,7 +17,8 @@ _Holder = single_field_model("verification_report_id", VerificationReportId)
 
 def test_accepts_canonical_sha256_hex_digest() -> None:
     digest = hashlib.sha256(b"verification-report-payload").hexdigest()
-    assert _Holder(verification_report_id=digest).verification_report_id == digest
+    holder = _Holder(verification_report_id=digest)
+    assert getattr(holder, "verification_report_id") == digest
 
 
 def test_rejects_invalid_sha256_digest() -> None:

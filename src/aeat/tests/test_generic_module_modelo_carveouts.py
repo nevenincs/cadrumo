@@ -79,19 +79,24 @@ def _per_modelo_tokens(source: str) -> set[str]:
     return tokens
 
 
-@pytest.mark.parametrize("relative_path", sorted(_RATCHET_BASELINE))
-def test_per_modelo_token_count_does_not_exceed_baseline(relative_path: str) -> None:
+def test_per_modelo_token_count_does_not_exceed_baseline() -> None:
     """Each named generic module carries no more distinct per-modelo tokens than its baseline."""
-    module_path = _SRC_ROOT / relative_path
-    assert module_path.is_file(), f"named ratchet module missing: {relative_path}"
-    count = len(_per_modelo_tokens(module_path.read_text(encoding="utf-8")))
-    baseline = _RATCHET_BASELINE[relative_path]
-    assert count <= baseline, (
-        f"{relative_path} now references {count} distinct per-modelo tokens, above the "
-        f"ratchet baseline of {baseline}. A new per-modelo carve-out in a generic module "
-        f"must move to a named `_m<id>_*` module or registry data; if this is a conscious, "
-        f"reviewed addition, lower nothing — the baseline only ratchets DOWN."
-    )
+    violations: list[str] = []
+    for relative_path, baseline in sorted(_RATCHET_BASELINE.items()):
+        module_path = _SRC_ROOT / relative_path
+        if not module_path.is_file():
+            violations.append(f"named ratchet module missing: {relative_path}")
+            continue
+        count = len(_per_modelo_tokens(module_path.read_text(encoding="utf-8")))
+        if count > baseline:
+            violations.append(
+                f"{relative_path} now references {count} distinct per-modelo tokens, above the "
+                f"ratchet baseline of {baseline}. A new per-modelo carve-out in a generic module "
+                f"must move to a named `_m<id>_*` module or registry data; if this is a conscious, "
+                f"reviewed addition, lower nothing - the baseline only ratchets DOWN.",
+            )
+
+    assert not violations, "\n".join(violations)
 
 
 def test_gate_detects_an_injected_per_modelo_token_probe() -> None:
