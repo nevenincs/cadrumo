@@ -77,6 +77,7 @@ from ._calculation_revision import (
     CalculationRevisionAmendmentKind,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
+    CalculationSourceRef,
     assert_revision_snapshot_evidence_coverage,
     derive_calculation_revision_id,
 )
@@ -169,6 +170,7 @@ __all__ = (
     "CalculationRevisionId",
     "CalculationRevisionPersistenceError",
     "CalculationRevisionState",
+    "CalculationSourceRef",
     "Dt12WindowEligibility",
     "ExternalEvidence",
     "ExternalEvidenceKind",

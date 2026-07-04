@@ -557,6 +557,7 @@ application:
         schema_formula_changed: schema or formula provenance changed
         transaction_catalogue_changed: transaction catalogue changed
         unknown: '%{reason}'
+        invoice_catalogue_changed: 'invoice catalogue changed'
     runtime:
       errors:
         active_profile_load_failed: 'The active filing profile could not be loaded:

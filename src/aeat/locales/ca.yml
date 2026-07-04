@@ -614,6 +614,7 @@ application:
         schema_formula_changed: la procedencia de l'esquema o la formula ha canviat
         transaction_catalogue_changed: el cataleg de transaccions ha canviat
         unknown: '%{reason}'
+        invoice_catalogue_changed: 'el cataleg de factures ha canviat'
     runtime:
       errors:
         active_profile_load_failed: 'No s ha pogut carregar el perfil actiu de presentacio:

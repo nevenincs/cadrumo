@@ -48,6 +48,7 @@ from typing import Annotated, override
 from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, ValidationError, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.aggregation import BindingSourceKind
 from ...core.hashing import content_hash_hex
 from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry import (
@@ -268,6 +269,44 @@ def _outputs_for_hash_from_observations(
     return _outputs_for_hash_from_mapping({obs.casilla_id: obs.value for obs in observations})
 
 
+class CalculationSourceRef(BaseModel):
+    """One resolver-level source-object trace persisted on a calculation revision.
+
+    The calculation source mesh (``aeat.application.aggregation``) resolves each
+    registry binding source through an enrolled resolver and produces a typed
+    ``CalculationSourceProvenance`` row per contributing source object. This is
+    the DOMAIN-side, persistence-shaped projection of that provenance: it carries
+    exactly the resolver→source-object→fingerprint trace that lets an audit reader
+    reconstruct which resolver mesh and which upstream source objects produced a
+    revision, and whether those objects have since drifted.
+
+    It deliberately does NOT carry ``legal_refs`` / ``source_refs`` — those are the
+    per-casilla regulatory grounding already carried by
+    :class:`~aeat.domain.calculations.registry.CasillaObservation` on the same
+    revision; duplicating them here would fragment the grounding across two
+    surfaces.
+
+    Attributes:
+        source_kind: Free-form resolver source token (e.g. ``collectible_invoice``).
+            Always the token the resolver declared for the contributing source.
+        binding_source: The canonical :class:`BindingSourceKind` when
+            ``source_kind`` names a registry binding source; ``None`` for advisory
+            or non-binding provenance rows.
+        source_ref: Stable reference to the contributing source object
+            (e.g. ``collectible_invoice:{invoice_id}``).
+        fingerprint: Data-dependent digest of the contributing source object when
+            the resolver produced one; ``None`` when the resolver emits a
+            reference without a content digest.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_kind: str = Field(min_length=1, max_length=64)
+    binding_source: BindingSourceKind | None = None
+    source_ref: str = Field(min_length=1, max_length=256)
+    fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
+
+
 class CalculationRevision(BaseModel):
     """One calculation attempt attached to a work unit.
 
@@ -361,6 +400,18 @@ class CalculationRevision(BaseModel):
     # verify/file time; ``None`` for revisions without ledger evidence. Deliberately
     # NOT threaded into ``derive_calculation_revision_id``.
     ledger_filing_evidence: LedgerFilingEvidence | None = None
+    # Resolver-level source-mesh provenance (per the calculation-source-connectivity
+    # ADR, Phase 9): the typed resolver→source-object→fingerprint trace projected
+    # from the mesh resolution's ``CalculationSourceProvenance`` rows at persist
+    # time. Where ``observations`` carry the per-casilla legal/source grounding,
+    # this carries WHICH resolver mesh and WHICH upstream source objects produced
+    # the revision, and their content fingerprints, so an audit can trace source
+    # connectivity and detect upstream drift. Defaults to () so existing persisted
+    # revisions load without migration. Deliberately NOT threaded into
+    # ``derive_calculation_revision_id`` (it is derived from the same inputs the id
+    # already content-addresses, not an independent identity axis) — mirroring
+    # ``ledger_filing_snapshot`` / ``ledger_filing_evidence``.
+    source_provenance: tuple[CalculationSourceRef, ...] = Field(default_factory=tuple)
     # Operator-supplied detail rows for informational modelos whose
     # content is a list of repeating records rather than scalar casilla
     # values (M184 atribución members, M232 operaciones vinculadas,
@@ -601,6 +652,7 @@ __all__ = [
     "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",
     "CalculationRevisionState",
+    "CalculationSourceRef",
     "LedgerFilingCoverageError",
     "assert_revision_snapshot_evidence_coverage",
     "derive_calculation_revision_id",

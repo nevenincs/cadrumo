@@ -58,6 +58,7 @@ from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
+    CalculationSourceRef,
     ModeloDetailRow,
     ModeloRecord,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -126,6 +127,21 @@ def emit_bucket_event(
     return event
 
 
+def _source_provenance_trace_sha256(source_provenance: tuple[CalculationSourceRef, ...]) -> str:
+    """Deterministic digest of the persisted source-mesh provenance trace.
+
+    Emitted on the ``modelo.calculation.created`` bucket event so an audit reader
+    can detect a source-connectivity change without decrypting the calculation
+    revision. The digest folds each provenance row's stable
+    ``source_kind``/``source_ref``/``fingerprint`` triple in a sort-canonical
+    order so the value is order-independent, mirroring the existing
+    ``borrador_bindings_trace_sha256`` join-record pattern. An empty provenance
+    tuple yields the digest of the empty string.
+    """
+    lines = sorted(f"{ref.source_kind}\x1f{ref.source_ref}\x1f{ref.fingerprint or ''}" for ref in source_provenance)
+    return sha256_hex("\n".join(lines).encode("utf-8"))
+
+
 def persist_calculation_revision(
     *,
     work_unit_id: str,
@@ -140,6 +156,7 @@ def persist_calculation_revision(
     bindings_sourced_from_borrador: tuple[BindingId, ...],
     observations: tuple[CasillaObservation, ...],
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = (),
+    source_provenance: tuple[CalculationSourceRef, ...] = (),
     detail_rows: tuple[ModeloDetailRow, ...],
     formula_count: int,
     actor: str,
@@ -157,11 +174,19 @@ def persist_calculation_revision(
     :class:`CasillaObservation` rows carry the legal and source provenance
     persisted with a new calculation revision.
 
+    The ``source_provenance`` tuple carries the resolver-level source-mesh trace
+    (:class:`~aeat.domain.modelos.CalculationSourceRef` rows projected from the
+    calculation source mesh) so the persisted revision records which resolver
+    mesh and which upstream source objects produced it. It is additive and does
+    NOT participate in ``derive_calculation_revision_id``.
+
     The emitted :class:`BucketEvent` uses the revision id as ``object_id`` and
-    includes a ``has_provenance`` payload flag. Audit readers can therefore use
-    the event as a compact pointer back to the persisted
-    :class:`CalculationRevision` instead of treating bucket history as the
-    standalone provenance store.
+    includes a ``has_provenance`` payload flag plus a ``source_provenance_count``
+    and an order-independent ``source_provenance_trace_sha256`` digest of the
+    source-mesh trace. Audit readers can therefore use the event as a compact
+    pointer back to the persisted :class:`CalculationRevision`, and detect a
+    source-connectivity change from the digest without decrypting the revision,
+    instead of treating bucket history as the standalone provenance store.
     """
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -207,6 +232,7 @@ def persist_calculation_revision(
         casilla_values=casilla_values,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,
+        source_provenance=source_provenance,
         detail_rows=detail_rows,
         created_at=now,
         updated_at=now,
@@ -248,6 +274,8 @@ def persist_calculation_revision(
                 "\n".join(bindings_sourced_from_borrador).encode("utf-8"),
             ),
             "has_provenance": "true" if observations else "false",
+            "source_provenance_count": str(len(source_provenance)),
+            "source_provenance_trace_sha256": _source_provenance_trace_sha256(source_provenance),
         },
     )
     return revision
