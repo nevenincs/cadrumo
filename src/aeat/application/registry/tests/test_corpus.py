@@ -123,7 +123,7 @@ def test_citation_show_projects_article_and_related_topics_from_current_legal_ca
 
 def test_citation_show_command_rejects_retired_normative_id_field() -> None:
     with pytest.raises(ValidationError):
-        RegistryCitationShowCommand(normative_id="ley-35-2006", articulo="32")
+        RegistryCitationShowCommand.model_validate({"normative_id": "ley-35-2006", "articulo": "32"})
 
 
 def test_citation_show_preserves_current_legislative_decree_kind_for_trlirnr() -> None:
@@ -591,11 +591,11 @@ def test_registry_topic_projection_is_strict_and_frozen() -> None:
         )
 
     with pytest.raises(ValidationError, match=r"legal_refs"):
-        RegistryTopicProjection(
-            slug="iva-regime",
-            title="IVA",
-            body="IVA regime",
-        )
+        RegistryTopicProjection.model_validate({
+            "slug": "iva-regime",
+            "title": "IVA",
+            "body": "IVA regime",
+        })
 
     with pytest.raises(ValidationError, match=r"title"):
         RegistryTopicProjection(
