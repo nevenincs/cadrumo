@@ -454,6 +454,66 @@ db-upgrade:
 
 # ── Release ──────────────────────────────────────────────────────────────────
 
+# Audit-state readiness gate: version-surface parity, changelog sanity, the
+# most recent packaging-smoke evidence, and (best-effort, via `gh`) no open
+# priority:P0-blocker issue. Read-only — no outward action, ever. Exits 1 on
+# a blocking failure; advisory failures (e.g. no packaging-smoke run yet,
+# `gh` unavailable) are reported but do not fail the gate. Run this before
+# trusting `just release-apply`. See docs/_release_checklist.yaml.
+release-readiness:
+    uv run --no-sync python -m dev.release.readiness
+
+# Same gate, machine-readable.
+release-readiness-json:
+    uv run --no-sync python -m dev.release.readiness --json
+
+# Print the rollback procedure for a released version that must be pulled.
+# Read-only — never runs a destructive action; every step below is printed
+# for a human to run deliberately. See RELEASING.md#rollback-procedure.
+[unix]
+release-rollback version:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Rollback procedure for aeat-cli v{{version}} (RELEASING.md#rollback-procedure):"
+    echo ""
+    echo "1. Confirm the rollback trigger (data loss/corruption, security disclosure,"
+    echo "   widespread regression, or a compatibility mis-computation) — see"
+    echo "   docs/_release_checklist.yaml 'rollback.triggers'."
+    echo "2. Revert the release commit and tag on main (human-run, never automated):"
+    echo "     git revert --no-commit <release-commit-sha>"
+    echo "     git commit -m 'revert: roll back v{{version}}'"
+    echo "     git tag -a v{{version}}-rollback -m 'marks the rollback of v{{version}}'"
+    echo "     git push origin main --tags"
+    echo "3. Yank the bad version from PyPI so pip/uv skip it by default (this does"
+    echo "   NOT delete the artifact; it only stops new installs from resolving it):"
+    echo "     https://pypi.org/manage/project/aeat-cli/release/{{version}}/  -> Options -> Yank release"
+    echo "4. Publish a corrected patch release following the emergency hotfix cycle"
+    echo "   time for the trigger category (docs/_release_checklist.yaml 'hotfix')."
+    echo "5. Update docs/updates.md per its critical-updates contract and note the"
+    echo "   rollback + corrected version in the GitHub Release notes for v{{version}}."
+
+[windows]
+release-rollback version:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    Write-Host "Rollback procedure for aeat-cli v{{version}} (RELEASING.md#rollback-procedure):"
+    Write-Host ""
+    Write-Host "1. Confirm the rollback trigger (data loss/corruption, security disclosure,"
+    Write-Host "   widespread regression, or a compatibility mis-computation) - see"
+    Write-Host "   docs/_release_checklist.yaml 'rollback.triggers'."
+    Write-Host "2. Revert the release commit and tag on main (human-run, never automated):"
+    Write-Host "     git revert --no-commit <release-commit-sha>"
+    Write-Host "     git commit -m 'revert: roll back v{{version}}'"
+    Write-Host "     git tag -a v{{version}}-rollback -m 'marks the rollback of v{{version}}'"
+    Write-Host "     git push origin main --tags"
+    Write-Host "3. Yank the bad version from PyPI so pip/uv skip it by default (this does"
+    Write-Host "   NOT delete the artifact; it only stops new installs from resolving it):"
+    Write-Host "     https://pypi.org/manage/project/aeat-cli/release/{{version}}/  -> Options -> Yank release"
+    Write-Host "4. Publish a corrected patch release following the emergency hotfix cycle"
+    Write-Host "   time for the trigger category (docs/_release_checklist.yaml 'hotfix')."
+    Write-Host "5. Update docs/updates.md per its critical-updates contract and note the"
+    Write-Host "   rollback + corrected version in the GitHub Release notes for v{{version}}."
+
 # Preview the next version release via dry-run.
 [unix]
 release:
@@ -521,6 +581,10 @@ release:
 release-apply:
     #!/usr/bin/env bash
     set -euo pipefail
+    if ! uv run --no-sync python -m dev.release.readiness; then
+        echo "audit-state gate blocked — resolve the failures above before 'just release-apply'." >&2
+        exit 1
+    fi
     if [ ! -f var/release/release-please.log ]; then
         echo "var/release/release-please.log missing — run 'just release' first." >&2
         exit 1
@@ -553,6 +617,11 @@ release-apply:
 release-apply:
     #!pwsh
     $ErrorActionPreference = 'Stop'
+    & uv run --no-sync python -m dev.release.readiness
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "audit-state gate blocked - resolve the failures above before 'just release-apply'."
+        exit 1
+    }
     if (-not (Test-Path 'var/release/release-please.log')) {
         Write-Error "var/release/release-please.log missing - run 'just release' first."
         exit 1
