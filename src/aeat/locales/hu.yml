@@ -2008,9 +2008,8 @@ cli:
         app_help: 'Egyeztet egy modelo munkaegyseget az AEAT igazolasaval: a pull
           letolti az igazolast az AEAT-tol es egyeztet; a file egy helyi PDF-et egyeztet;
           a history a korabbi futtatasokat listazza.'
-        file_help: Egyeztet egy munkaegyseget egy helyi igazolas PDF ellen. Csak helyi;
-          soha nem lep kapcsolatba az AEAT-tal.
-        file_path_help: Az AEAT igazolas PDF utvonala, amellyel egyeztetni kell.
+        file_help: 'Egyeztet egy munkaegyseget egy helyi igazolas vagy bevallas PDF ellen. Csak helyi; soha nem lep kapcsolatba az AEAT-tal.'
+        file_path_help: 'A helyi igazolas vagy bevallas PDF utvonala, amellyel egyeztetni kell.'
         history_empty: Meg nincsenek rogzitett egyeztesek.
         history_help: Listazza az aktiv profilhoz rogzitett egyeztteseket.
         history_work_unit_id_help: Opcionalis munkaegyseg-azonosito a tortenet egy
@@ -2018,6 +2017,7 @@ cli:
         pull_help: Letolti egy munkaegyseg igazolasat az AEAT-tol, es egyeztet ellene.
           Kapcsolatba lep az AEAT-tal (csak olvasas).
         work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).
+        file_kind_help: 'Bizonyitek dokumentum tipusa: justificante (AEAT igazolas, minden modelo) vagy declaration (benyujtott bevallas PDF, rovat szintu egyeztetes, csak engedelyezett modelok). Alapertelmezetten justificante.'
       requires:
         help: 'Megjeleníti az egy adott modelo-hoz és időszakhoz szükséges adatok
           ellenőrzőlistáját: mely mezőket kell kézzel kitölteni, melyek opcionálisak,
