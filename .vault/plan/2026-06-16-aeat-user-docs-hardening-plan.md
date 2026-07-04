@@ -33,7 +33,7 @@ related:
 - [x] `S05` - Harden classify-transactions.md; `docs/how-to/classify-transactions.md`.
 - [x] `S06` - Harden classify-with-llm-evidence.md; `docs/how-to/classify-with-llm-evidence.md`.
 - [x] `S07` - Harden classify-with-llm.md; `docs/how-to/classify-with-llm.md`.
-- [ ] `S08` - Harden correct-ledger-entries.md; `docs/how-to/correct-ledger-entries.md`.
+- [x] `S08` - Harden correct-ledger-entries.md; `docs/how-to/correct-ledger-entries.md`.
 - [x] `S09` - Harden file-at-aeat.md; `docs/how-to/file-at-aeat.md`.
 - [ ] `S10` - Harden filing-calendar.md; `docs/how-to/filing-calendar.md`.
 - [ ] `S11` - Harden filing-periods.md; `docs/how-to/filing-periods.md`.
@@ -42,7 +42,7 @@ related:
 - [x] `S14` - Harden import-bank-statements.md; `docs/how-to/import-bank-statements.md`.
 - [ ] `S15` - Harden index.md; `docs/how-to/index.md`.
 - [x] `S16` - Harden justificante-receipts.md; `docs/how-to/justificante-receipts.md`.
-- [ ] `S17` - Harden ledger-evidence.md; `docs/how-to/ledger-evidence.md`.
+- [x] `S17` - Harden ledger-evidence.md; `docs/how-to/ledger-evidence.md`.
 - [ ] `S18` - Harden modelo-036.md; `docs/how-to/modelo-036.md`.
 - [x] `S19` - Harden modelo-303.md; `docs/how-to/modelo-303.md`.
 - [ ] `S20` - Harden modelo-390.md; `docs/how-to/modelo-390.md`.
@@ -53,8 +53,8 @@ related:
 - [x] `S25` - Harden read-live-aeat-data.md; `docs/how-to/read-live-aeat-data.md`.
 - [x] `S26` - Harden reconcile.md; `docs/how-to/reconcile.md`.
 - [x] `S27` - Harden review-calculation-values.md; `docs/how-to/review-calculation-values.md`.
-- [ ] `S28` - Harden review-queue.md; `docs/how-to/review-queue.md`.
-- [ ] `S29` - Harden review-with-google-sheets.md; `docs/how-to/review-with-google-sheets.md`.
+- [x] `S28` - Harden review-queue.md; `docs/how-to/review-queue.md`.
+- [x] `S29` - Harden review-with-google-sheets.md; `docs/how-to/review-with-google-sheets.md`.
 - [x] `S30` - Harden setup-llm-classification.md; `docs/how-to/setup-llm-classification.md`.
 - [ ] `S31` - Harden troubleshooting.md; `docs/how-to/troubleshooting.md`.
 - [x] `S32` - Harden verification-reports.md; `docs/how-to/verification-reports.md`.
