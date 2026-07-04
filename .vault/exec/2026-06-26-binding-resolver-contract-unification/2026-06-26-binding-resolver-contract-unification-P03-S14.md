@@ -28,16 +28,23 @@ Prove the retained aggregate command is a thin projection over the application s
 
 S14 evidence is complete at HEAD. The aggregate command remains a single CLI projection over `aggregate_per_modelo`; retenciones persistence is a call to the existing repository-facing `persist_retencion_observations`; and the boundary gate proves there is no second CLI aggregation surface or CLI-local family aggregation implementation.
 
-Focused verification passed:
+Focused verification passed in the original evidence pass:
 
 - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_backend_boundary.py::test_per_modelo_aggregation_duplicate_cli_surfaces_stay_absent` -> `1 passed`.
 - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_modelo_190_clave_breakdown.py` -> `2 passed`.
 - `uv run --no-sync pytest -q src/aeat/application/aggregation/tests/test_per_modelo_service.py` -> `23 passed`.
 
-The plan checkbox was not changed in this pass because the plan file carries non-authored WIP; checking it would violate the shared-worktree abort-on-WIP rule.
+Current follow-up verification (2026-07-04) re-ran the S14-specific gates after the plan-file WIP cleared:
+
+- `uv run --no-sync vaultspec-rag search "aggregate CLI thin projection aggregate_per_modelo persist_retencion_observations" --type code --port 8766 --max-results 12 --timeout 30`
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_backend_boundary.py::test_per_modelo_aggregation_duplicate_cli_surfaces_stay_absent` -> `1 passed`.
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_modelo_190_clave_breakdown.py` -> `2 passed`.
+- `uv run --no-sync aeat app modelo aggregate --help` confirms the retained operator-visible aggregate command and accepted observation flags.
+
+The broader `src/aeat/application/aggregation/tests/test_per_modelo_service.py` suite is currently red in the shared worktree because non-authored untracked Modelo 145 registry scaffolding invalidates registry authority before the aggregation assertions run. That registry WIP is outside the S14 CLI projection target and is recorded separately as gate-health inventory; it does not show a duplicate aggregate CLI surface or a CLI-local family aggregation implementation.
 
 ## Notes
 
 RAG discovery was attempted first but remained blocked: the service on port 8766 was unreachable, and `vaultspec-rag server start --port 8766` refused to start because a resident Python process owned the machine singleton. This pass used targeted source, CLI help, and test evidence after recording that blocker.
 
-`uv run --no-sync aeat app modelo aggregate --help` confirms the command remains operator-visible for modelos 111, 115, 123, 180, 190, 193, 347, 349, and 720 with typed observation flags. The generated scope row still names `_modelo.py`; the live registration has been split into `_modelo_aggregate_cli.py`, so the evidence follows the current entrypoint.
+`uv run --no-sync aeat app modelo aggregate --help` confirms the command remains operator-visible for modelos 111, 115, 123, 180, 190, 193, 347, 349, and 720 with typed observation flags. The generated scope row still names `_modelo.py`; the live registration has been split into `_modelo_aggregate_cli.py`, so the evidence follows the current entrypoint. The S14 target files and the plan file were clean before the follow-up checkbox reconciliation.
