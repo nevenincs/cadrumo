@@ -8,6 +8,8 @@ modified: '2026-07-04'
 related:
   - '[[2026-06-16-aeat-user-docs-hardening-S04]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S05]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S06]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S07]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S09]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S12]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S14]]'
@@ -15,6 +17,7 @@ related:
   - '[[2026-06-16-aeat-user-docs-hardening-S22]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S24]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S27]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S30]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S32]]'
   - '[[2026-06-16-aeat-user-docs-hardening-plan]]'
   - '[[2026-06-18-aeat-user-docs-hardening-audit]]'
@@ -39,6 +42,8 @@ Auto-generated index of all documents tagged with `#aeat-user-docs-hardening`.
 
 - `2026-06-16-aeat-user-docs-hardening-S04` - Harden choose-modelo.md
 - `2026-06-16-aeat-user-docs-hardening-S05` - Harden classify-transactions.md
+- `2026-06-16-aeat-user-docs-hardening-S06` - Harden classify-with-llm-evidence.md
+- `2026-06-16-aeat-user-docs-hardening-S07` - Harden classify-with-llm.md
 - `2026-06-16-aeat-user-docs-hardening-S09` - Harden file-at-aeat.md
 - `2026-06-16-aeat-user-docs-hardening-S12` - Harden filing-readiness.md
 - `2026-06-16-aeat-user-docs-hardening-S14` - Harden import-bank-statements.md
@@ -46,6 +51,7 @@ Auto-generated index of all documents tagged with `#aeat-user-docs-hardening`.
 - `2026-06-16-aeat-user-docs-hardening-S22` - Harden profile-setup.md
 - `2026-06-16-aeat-user-docs-hardening-S24` - Harden quickstart.md
 - `2026-06-16-aeat-user-docs-hardening-S27` - Harden review-calculation-values.md
+- `2026-06-16-aeat-user-docs-hardening-S30` - Harden setup-llm-classification.md
 - `2026-06-16-aeat-user-docs-hardening-S32` - Harden verification-reports.md
 
 ### plan
