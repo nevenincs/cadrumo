@@ -28,11 +28,11 @@ The S23 evidence is enough to avoid redoing the operator-surface rename work. Fo
 
 ### s24-blocker-record | low | verification blockers are recorded without claiming closure
 
-The S24 record correctly separates green binding-vocabulary evidence from non-D9 blockers. JSON schema conformance is green, help-language parity and help-honesty are green under the integration marker, documented-command conformance is green, and source-only stale-command searches do not show stale `bindings preview` or `modelo.bindings.preview` command identifiers. Full `uv run --no-sync pytest --collect-only -q` now completes (`12338/15045 tests collected`, `2707 deselected`) after the local pywin32 import issue was repaired. The remaining closure caveat is that locale audit is green only in the current shared worktree, where `src/aeat/locales/{ca,en,es,hu}.yml` carry non-authored uncommitted additions. This audit still does not check the plan row or claim W04.P07 closure.
+The S24 record correctly separates green binding-vocabulary evidence from non-D9 blockers. JSON schema conformance is green, help-language parity and help-honesty are green under the integration marker, documented-command conformance is green, and source-only stale-command searches do not show stale `bindings preview` or `modelo.bindings.preview` command identifiers. Full `uv run --no-sync pytest --collect-only -q` is red again in the current shared worktree (`12182/14891 tests collected`, `2709 deselected`, `8 errors`) because non-authored untracked Modelo 145 registry scaffolding has no casilla files and no official workbook parity coverage. The remaining locale caveat also still stands: locale audit is green only where `src/aeat/locales/{ca,en,es,hu}.yml` carry non-authored uncommitted additions. This audit still does not check the plan row or claim W04.P07 closure.
 
 ## Recommendations
 
-- Keep S24 as an evidence/blocker record until the locale-gate evidence is landed or can be rerun without depending on non-authored WIP, then run `vaultspec-core vault plan step check` only for rows whose blockers have been resolved or formally accepted.
+- Keep S24 as an evidence/blocker record until collect-only and locale-gate evidence can be rerun without depending on non-authored WIP, then run `vaultspec-core vault plan step check` only for rows whose blockers have been resolved or formally accepted.
 - Do not rename `work calculate`; it is already the canonical calculation verb and renaming it would broaden the operator-facing blast radius without satisfying a current mismatch.
 - Treat the unrelated `aeat app agent` documented-command failures as resolved by `d2dad2d789`.
-- Leave the locale-gate ownership issue to the owning track unless the coordinator moves those locale files into D9 scope.
+- Leave the locale-gate and Modelo 145 registry WIP ownership issues to their owning tracks unless the coordinator moves those files into D9 scope.
