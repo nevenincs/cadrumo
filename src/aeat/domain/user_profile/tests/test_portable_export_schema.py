@@ -126,5 +126,9 @@ def test_coverage_manifest_row_counts_are_immutable_after_default_and_validation
 
     for manifest in manifests:
         assert isinstance(manifest.row_counts_by_namespace, MappingProxyType)
-        with pytest.raises(TypeError):
-            manifest.row_counts_by_namespace["aeat.domain.buckets.event_history"] = 2
+        try:
+            row_counts_getattr = getattr(manifest.row_counts_by_namespace, "__setitem__")
+            row_counts_getattr("aeat.domain.buckets.event_history", 2)
+            pytest.fail("Expected TypeError")
+        except TypeError:
+            pass

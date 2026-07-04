@@ -250,18 +250,15 @@ def aggregate_iva_ledger_observations_from_repositories(
             t("aggregation.iva_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    # Filtering by date range before decrypt is a pure performance optimisation
-    # (issue #408): the aggregation's own filter is ``period.contains(date)``
-    # unchanged (no cumulative widening), so pre-filtering to the period's own
-    # inclusive span reproduces the exact same admitted row set -- the
-    # ``OUTSIDE_PERIOD`` gate downstream simply never has a candidate to fire
-    # on. A period with no calendar span falls back to the unfiltered load.
-    transactions = (
-        repository.load_for_date_range(period.start_date, period.end_date)
-        if period.has_date_span()
-        else repository.load()
-    )
-    return aggregate_iva_ledger_observations(transactions, period=period)
+    # NOT pre-filtered by date range (issue #408): unlike the annual-only
+    # ``_renta_ledger`` first-slice path, this aggregation's ``OUTSIDE_PERIOD``
+    # issue is a genuine diagnostic over the FULL persisted catalogue -- an
+    # operator querying one quarter needs to see that a catalogue transaction
+    # from a different period exists and was excluded, not have it silently
+    # vanish before the classifier ever runs. Pre-filtering with
+    # ``load_for_date_range`` would make that diagnostic unreachable, which is
+    # an observable behaviour change, not a no-op.
+    return aggregate_iva_ledger_observations(repository.load(), period=period)
 
 
 def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerObservation:

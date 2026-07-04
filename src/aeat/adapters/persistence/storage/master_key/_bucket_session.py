@@ -191,9 +191,9 @@ class BucketSession:
         already-registered handle.
 
         Args:
-            settings: The :class:`~aeat.core.config.Settings` routing to
+            settings: The :class:`~core.config.Settings` routing to
                 this bucket's database, passed through to
-                :func:`~aeat.adapters.persistence.storage.sql.engine.get_engine`.
+                :func:`~adapters.persistence.storage.sql.engine.get_engine`.
 
         Returns:
             The :class:`~sqlalchemy.engine.Engine` bound to this session.
@@ -219,7 +219,7 @@ class BucketSession:
         session-level cache too, or the next :meth:`acquire_engine` call
         returns the stale handle bound to a directory that no longer
         exists. This is the session-scoped counterpart of
-        :func:`~aeat.adapters.persistence.storage.sql.engine.dispose_engines_for_bucket`,
+        :func:`~adapters.persistence.storage.sql.engine.dispose_engines_for_bucket`,
         which only evicts the process-wide engine cache; callers that
         remove a bucket directory while its session may still be active
         must call both. A no-op when no engine has been acquired yet or

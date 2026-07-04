@@ -58,6 +58,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
+from ....core.aggregation import BindingSourceKind
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -210,7 +211,7 @@ def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[C
 
 def _retencion_observation(nif: str) -> RetencionObservation:
     return RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id=f"retencion-{nif}",
         perceptor_nif=nif,
         perceptor_name="Arrendador Ejemplo SL",

@@ -7,7 +7,7 @@ import hashlib
 import pytest
 from pydantic import ValidationError
 
-from ....tests.fixtures.identity_holder import single_field_model
+from ....tests.fixtures.identity_holder import single_field_model, single_field_value
 from .._ids import InvoiceId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -17,7 +17,8 @@ _Holder = single_field_model("invoice_id", InvoiceId)
 
 def test_accepts_canonical_sha256_hex_digest() -> None:
     digest = hashlib.sha256(b"invoice-payload").hexdigest()
-    assert _Holder(invoice_id=digest).invoice_id == digest
+    holder = _Holder(invoice_id=digest)
+    assert single_field_value(holder, "invoice_id") == digest
 
 
 def test_rejects_noncanonical_digest_shapes() -> None:

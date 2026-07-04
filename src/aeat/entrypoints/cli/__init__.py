@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     # re-export (below, via `__getattr__`) its real signature without paying the
     # eager registry-parse import cost at runtime -- this line never executes.
     from ._app_contract import command_schema_refs as command_schema_refs
+    from ._config._google import OAuthClientPayload as OAuthClientPayload
 from typer._types import TyperChoice as _TyperChoice
 
 from ._stdio import _ensure_help_render_width as _ensure_help_render_width

@@ -67,9 +67,9 @@ def test_load_is_memoized_across_repeated_calls() -> None:
 def test_load_for_date_range_is_memoized_for_the_identical_window() -> None:
     """Repeated calls with the SAME window must hit the wrapped repository once.
 
-    This is the M130 income+gasto scenario (issue #408): both resolvers
-    request the identical [Jan 1, quarter-end] cumulative window in one
-    calculate invocation.
+    Guards against a future resolver pair that requests the identical window
+    in one calculate invocation (issue #408) re-scanning independently
+    instead of sharing one targeted decrypt.
     """
 
     counting = _CountingTransactionCatalogueRepository()

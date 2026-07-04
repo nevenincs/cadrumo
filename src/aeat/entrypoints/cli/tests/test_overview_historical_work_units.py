@@ -105,11 +105,18 @@ def _entries_by_target(entries: list[dict[str, object]]) -> dict[tuple[str, int,
 
 
 def _get_nested_dict_value(obj: object, key: str) -> dict[str, object] | None:
-    """Safely access a nested dict value from an object-typed dict."""
+    """Safely access a nested dict value from an object-typed dict.
+
+    ``isinstance(value, dict)`` only proves ``value`` is *some* dict, not
+    that it matches ``dict[str, object]`` — this data always originates from
+    parsed JSON envelope output, so every key is already a ``str``; the
+    comprehension re-keys with ``str(k)`` to give the type checker a real,
+    honestly-typed ``dict[str, object]`` rather than asserting the shape.
+    """
     if isinstance(obj, dict):
         value = obj.get(key)
         if isinstance(value, dict):
-            return value
+            return {str(k): v for k, v in value.items()}
     return None
 
 

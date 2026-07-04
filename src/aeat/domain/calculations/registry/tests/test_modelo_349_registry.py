@@ -100,6 +100,13 @@ def test_committed_modelo_349_is_informative_static_documentation_only() -> None
     decision = snapshot.live_cross_references["modelo-349-static-documentation"]
     construct = snapshot.constructs["modelo-349-informative"]
 
+    # Modelo 349 must NOT be reclassified to calculation_class="informative": its
+    # declarante summary totals (numero-operadores / importe-operaciones / ...) are
+    # ledger-derived BOUND casillas, and the informative-class invariant
+    # (validate_informative_class_invariant) forbids any input_kind outside
+    # {INFORMATIONAL, MANUAL} for an informative modelo. Reclassifying would be
+    # rejected at registry-build time; the schema default ("filing") is correct here.
+    assert modelo.calculation_class == "filing"
     assert snapshot.revision.formulas == ()
     assert snapshot.revision.relations == ()
     assert {casilla.input_kind for casilla in snapshot.revision.casillas} == {InputKind.MANUAL, InputKind.BOUND}
@@ -253,8 +260,8 @@ def test_committed_modelo_349_gb_xi_country_prefix_rules_are_cited_to_aeat_instr
     assert layout_source.evidence_tier == "layout_authority"
     assert source.kind == "instructions"
     assert source.corpus_path == "corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.txt"
-    assert source.sha256 == "da88207bffeb21d0ea94a28229f8657cec0d88769d132d10ecdb74b66ce9e5e8"
-    assert source.bytes == 70701
+    assert source.sha256 == "735dc0b1be1bed8997bd77a97fb0cb54e54d77a083082f5b72cf6aa236717adf"
+    assert source.bytes == 69284
     assert source.source_url.endswith("/GI28/instr_mod_349.pdf")
     verify_source_file(PROJECT_ROOT, source)
 

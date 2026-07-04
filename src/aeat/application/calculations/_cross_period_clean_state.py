@@ -4,10 +4,10 @@
 :class:`RegistrySnapshot`, then joins filed
 :class:`ModeloRecord` rows, calculation revisions, verification reports, and
 justificante evidence into a
-:class:`~aeat.application.calculations._cross_period_models.CrossPeriodCleanStateVerdict`.
+:class:`~application.calculations._cross_period_models.CrossPeriodCleanStateVerdict`.
 
 The same verdict feeds modelo verification, filing, and export gates. See also
-:class:`~aeat.application.calculations._cross_period_models.CrossPeriodDependencyEvidence`
+:class:`~application.calculations._cross_period_models.CrossPeriodDependencyEvidence`
 for per-dependency blocker/advisory rows
 and :class:`ValidatedRegistryAuthority` for
 the authority surface that produces the snapshots evaluated here.
@@ -87,11 +87,11 @@ def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[Cr
     """Return the dependency records for ``snapshot``.
 
     Derives
-    :class:`~aeat.application.calculations._cross_period_models.CrossPeriodDependencyRequirement`
+    :class:`~application.calculations._cross_period_models.CrossPeriodDependencyRequirement`
     records from :class:`RegistrySnapshot` through
-    :func:`~aeat.domain.calculations.registry.previous_filing_observation_requirements`
+    :func:`~domain.calculations.registry.previous_filing_observation_requirements`
     and
-    :func:`~aeat.domain.calculations.registry.relation_source_requirements`.
+    :func:`~domain.calculations.registry.relation_source_requirements`.
     """
     requirements: dict[
         tuple[str, int, str, CrossPeriodDependencyOrigin, tuple[str, ...]],
@@ -166,7 +166,7 @@ def cross_period_dependency_inventory(
     """Return snapshots with cross-period dependencies.
 
     The
-    :class:`~aeat.application.calculations._cross_period_models.CrossPeriodDependencyInventory`
+    :class:`~application.calculations._cross_period_models.CrossPeriodDependencyInventory`
     is a backend coverage surface. It lets callers prove which modelos and
     periods are in scope for the clean-state guard before they wire
     model-specific workflow tests or operator diagnostics.
@@ -417,7 +417,7 @@ def evaluate_cross_period_clean_state(
     """Evaluate cross-period dependencies and return a clean-state verdict.
 
     Returns a
-    :class:`~aeat.application.calculations._cross_period_models.CrossPeriodCleanStateVerdict`.
+    :class:`~application.calculations._cross_period_models.CrossPeriodCleanStateVerdict`.
 
     The supplied :class:`RegistrySnapshot` is
     the authority for target revision, filing period, and dependency
@@ -433,7 +433,7 @@ def evaluate_cross_period_clean_state(
     caller decides whether a missing declared date should fail closed.
 
     ``modelo_202_modality`` is the derived Modelo 202 pago-fraccionado modality
-    (:func:`~aeat.domain.calculations.registry.derive_modelo_202_modality`). When it
+    (:func:`~domain.calculations.registry.derive_modelo_202_modality`). When it
     is ``ART_40_2_OPTIONAL`` (modalidad cuota) AND the recorded
     ``activity_start_date`` places the taxpayer's first IS year at or after the
     target filing year, the Modelo 202 cross-period dependency is scoped out as a
@@ -678,7 +678,7 @@ def _revision_carry_check(
     """Return blockers for a carry-read revision check.
 
     Thin adapter over the single shared
-    :func:`~aeat.application.calculations._revision_carry_gate.revision_carry_outcome`
+    :func:`~application.calculations._revision_carry_gate.revision_carry_outcome`
     gate: it maps the shared refusal decision onto this site's
     blocker shape. A divergent or unreconfirmable stamp becomes a
     ``REGISTRY_REVISION_DIVERGENCE`` blocker so the cross-period clean-state,

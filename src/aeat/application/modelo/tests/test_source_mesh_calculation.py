@@ -226,7 +226,9 @@ def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
     assert exc_info.value.context["modelo"] == "349"
     assert exc_info.value.context["period"] == "1T"
     assert exc_info.value.context["transaction_count"] == 1
-    assert intracom_sale.transaction_id in exc_info.value.context["sample_transaction_ids"]
+    sample_transaction_ids = exc_info.value.context["sample_transaction_ids"]
+    assert isinstance(sample_transaction_ids, tuple)
+    assert intracom_sale.transaction_id in sample_transaction_ids
     assert exc_info.value.suggestion == "aeat app ledger invoice add --help"
     assert cr_repo.load().revisions == {}
 

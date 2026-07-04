@@ -1,30 +1,30 @@
 """Profile-scoped IVA compensation history built from filed Modelo 303s.
 
 Records are stored at
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``AUDIT`` under
+:class:`~adapters.persistence.storage.SensitivityClass` ``AUDIT`` under
 the
-:data:`aeat.adapters.persistence.storage.IVA_COMPENSATION_HISTORY_NAMESPACE`.
+:data:`adapters.persistence.storage.IVA_COMPENSATION_HISTORY_NAMESPACE`.
 The repository exposes typed
-:class:`~aeat.domain.iva_compensation._carry_forward.IvaCompensationPeriodState`
+:class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`
 objects; carry-forward projection is produced by
-:func:`~aeat.domain.iva_compensation._carry_forward.build_iva_compensation_carry_forward_report`.
+:func:`~domain.iva_compensation._carry_forward.build_iva_compensation_carry_forward_report`.
 Rows are written through
-:class:`~aeat.adapters.persistence.storage.SecureBoundRepository`, so
+:class:`~adapters.persistence.storage.SecureBoundRepository`, so
 the namespace, schema version, and sensitivity declared by the storage registry
 remain the persistence authority.
 
 This module uses
-:class:`~aeat.application.calculations._iva_compensation_history.IvaCompensationAnnualSummary`
+:class:`~application.calculations._iva_compensation_history.IvaCompensationAnnualSummary`
 and
-:class:`~aeat.application.calculations._iva_compensation_history.IvaCompensationAnnualCrossCheck`
+:class:`~application.calculations._iva_compensation_history.IvaCompensationAnnualCrossCheck`
 for Modelo 303-to-Modelo 390 annual cross-checking.
 
 See Also:
-    :mod:`aeat.domain.iva_compensation._carry_forward`
+    :mod:`domain.iva_compensation._carry_forward`
         Pure FIFO lot projection and four-year review policy.
-    :mod:`aeat.application.calculations._iva_wallet_balance`
+    :mod:`application.calculations._iva_wallet_balance`
         Offline balance query built from this repository.
-    :mod:`aeat.application.calculations._iva_wallet_reconciliation`
+    :mod:`application.calculations._iva_wallet_reconciliation`
         Wallet/local-history reconciliation consumer for Modelo 303 prior
         compensation.
 """
@@ -96,7 +96,7 @@ class IvaCompensationAnnualSummary(BaseModel):
     """Filed Modelo 390 annual IVA compensation summary for cross-checking.
 
     Compared against the
-    :class:`~aeat.domain.iva_compensation._carry_forward.IvaCompensationCarryForwardReport`
+    :class:`~domain.iva_compensation._carry_forward.IvaCompensationCarryForwardReport`
     built from Modelo 303 period states by
     :func:`cross_check_iva_compensation_annual_summary`.
     """
@@ -119,7 +119,7 @@ class IvaCompensationAnnualCrossCheck(BaseModel):
     """Comparison between Modelo 303 carry-forward lots and a filed Modelo 390 summary.
 
     Carries the expected Modelo 390 annual carry fields derived by
-    :func:`~aeat.domain.iva_compensation._carry_forward.derive_iva_compensation_year_end_carry_partition`
+    :func:`~domain.iva_compensation._carry_forward.derive_iva_compensation_year_end_carry_partition`
     plus any mismatched
     ``CasillaId`` values.
     """
@@ -156,11 +156,11 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
     """Encrypted profile-local store of Modelo 303 IVA compensation history.
 
     Persists
-    :class:`~aeat.domain.iva_compensation._carry_forward.IvaCompensationPeriodState`
+    :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`
     rows in
-    :data:`aeat.adapters.persistence.storage.IVA_COMPENSATION_HISTORY_NAMESPACE`
+    :data:`adapters.persistence.storage.IVA_COMPENSATION_HISTORY_NAMESPACE`
     for later carry-forward, balance, and reconciliation reads. The
-    :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    :class:`~adapters.persistence.storage.SecureBoundRepository` base
     writes those rows as encrypted AUDIT-class envelopes for active-bucket
     lookup.
     """
@@ -178,7 +178,7 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         """Return latest stored state for one period.
 
         Returns an
-        :class:`~aeat.domain.iva_compensation._carry_forward.IvaCompensationPeriodState`
+        :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`
         when a record exists, or ``None`` when none has been persisted for the
         given period.
         """
@@ -189,7 +189,7 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         self.save(state)
 
     def list_periods(self) -> tuple[IvaCompensationPeriodState, ...]:
-        """Return stored :class:`~aeat.domain.iva_compensation._carry_forward.IvaCompensationPeriodState` rows.
+        """Return stored :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState` rows.
 
         The returned tuple is sorted in chronological filing order using the
         same period sort key consumed by the domain carry-forward projection.
@@ -219,7 +219,7 @@ def seed_iva_compensation_period(
     """Persist a manually declared carry-forward balance for one Modelo 303 period.
 
     Returns an
-    :class:`~aeat.domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
+    :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
 
     Intended for first-time users whose historical M303 carry-forward pre-dates
     the local compensation history. The seeded state is structurally identical
@@ -273,13 +273,13 @@ def correct_iva_compensation_period(
     """Overwrite a manually-seeded carry-forward balance for one Modelo 303 period.
 
     Returns the corrected
-    :class:`~aeat.domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
+    :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
 
     The single-writer companion of :func:`seed_iva_compensation_period`: where
     seeding refuses if a record already exists, correction is the deliberate
     re-write path for a wrong opening compensation balance whose period
     pre-dates local history. It writes through the same
-    :class:`~aeat.application.calculations._iva_compensation_history.IvaCompensationHistoryRepository`
+    :class:`~application.calculations._iva_compensation_history.IvaCompensationHistoryRepository`
     (no parallel write path), so the corrected state replaces the stored record
     at the same period key.
 
@@ -324,10 +324,10 @@ def correct_iva_compensation_period(
 def iva_compensation_state_from_filed_observation(
     observation: FiledDeclaracionObservationProtocol,
 ) -> IvaCompensationPeriodState:
-    """Build an :class:`~aeat.domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
+    """Build an :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
 
     The source is a filed Modelo 303
-    :class:`~aeat.application.calculations._ports.FiledDeclaracionObservationProtocol`
+    :class:`~application.calculations._ports.FiledDeclaracionObservationProtocol`
     captured from live or imported filed-declaration evidence.
     """
     if observation.modelo != Modelo.M303.value:
@@ -365,10 +365,10 @@ def iva_compensation_state_from_registry_observation(
     source_observation_key: str | None = None,
     source_artefact_sha256: str | None = None,
 ) -> IvaCompensationPeriodState:
-    """Build an :class:`~aeat.domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
+    """Build an :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
 
     The source is a registry-grounded Modelo 303
-    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`, usually
+    :class:`~domain.calculations.registry.RegistryModeloObservation`, usually
     promoted from local calculation evidence or filed-observation conversion.
     """
     if observation.modelo != Modelo.M303.value:
@@ -395,10 +395,10 @@ def iva_compensation_state_from_registry_observation(
 def iva_compensation_annual_summary_from_filed_observation(
     observation: FiledDeclaracionObservationProtocol,
 ) -> IvaCompensationAnnualSummary:
-    """Build an :class:`~aeat.application.calculations._iva_compensation_history.IvaCompensationAnnualSummary`.
+    """Build an :class:`~application.calculations._iva_compensation_history.IvaCompensationAnnualSummary`.
 
     The source is a filed Modelo 390
-    :class:`~aeat.application.calculations._ports.FiledDeclaracionObservationProtocol`.
+    :class:`~application.calculations._ports.FiledDeclaracionObservationProtocol`.
 
     ``iva.anual.compensacion-ultimo-periodo-97`` carries the final-period amount
     to compensate. ``iva.anual.compensacion-generada-ejercicio-no-97`` carries
@@ -447,12 +447,12 @@ def cross_check_iva_compensation_annual_summary(
     """Compare projections with filed evidence.
 
     Returns an
-    :class:`~aeat.application.calculations._iva_compensation_history.IvaCompensationAnnualCrossCheck`.
+    :class:`~application.calculations._iva_compensation_history.IvaCompensationAnnualCrossCheck`.
 
     The expected ``iva.anual.compensacion-ultimo-periodo-97`` and
     ``iva.anual.compensacion-generada-ejercicio-no-97`` figures are derived
     through the SAME FIFO carry partition that drives the Modelo 390 calculation
-    (:func:`~aeat.domain.iva_compensation._carry_forward.derive_iva_compensation_year_end_carry_partition`),
+    (:func:`~domain.iva_compensation._carry_forward.derive_iva_compensation_year_end_carry_partition`),
     so the
     cross-check and both annual carry bindings cannot diverge: all three read
     one partition of the year's pending credit. ``period_states`` is the same

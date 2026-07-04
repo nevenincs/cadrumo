@@ -112,6 +112,7 @@ def test_create_calculate_status_verify_agree_on_modelo_202_pago_fraccionado_per
         # Supply prior-period payments as 0; this checks period-token wiring, not amounts.
         calc_payload = _calculate_202_work_unit(work_unit_id)
         calculation_revision_id = calc_payload["calculation_revision_id"]
+        assert isinstance(calculation_revision_id, str)
 
         status_result = invoke_cached_cli(
             ["--format", "json", "app", "modelo", "work", "status", work_unit_id],

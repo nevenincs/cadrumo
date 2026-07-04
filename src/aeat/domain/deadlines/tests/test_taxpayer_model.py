@@ -147,10 +147,12 @@ class TestObjectiveEstimationRegimeAxis:
         """The retired objective-estimation boolean is no longer a profile input."""
 
         with pytest.raises(ValidationError, match=r"uses_objective_estimation_irpf"):
-            TaxpayerProfile(
-                tax_id="X1234567L",
-                iva_regime=IVARegime.GENERAL,
-                uses_objective_estimation_irpf=True,
+            TaxpayerProfile.model_validate(
+                {
+                    "tax_id": "X1234567L",
+                    "iva_regime": IVARegime.GENERAL,
+                    "uses_objective_estimation_irpf": True,
+                },
             )
 
 

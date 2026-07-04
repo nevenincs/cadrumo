@@ -25,8 +25,12 @@ def _modelo_row(payload: dict[str, object], code: str) -> dict[str, object]:
     assert isinstance(rows, list)
     for row in rows:
         assert isinstance(row, dict)
-        if row.get("code") == code:
-            return row
+        # ``isinstance(row, dict)`` only proves *some* dict, not that its keys
+        # are ``str`` — this data is always parsed JSON envelope output, so
+        # re-keying with ``str(k)`` gives an honestly-typed ``dict[str, object]``.
+        typed_row = {str(k): v for k, v in row.items()}
+        if typed_row.get("code") == code:
+            return typed_row
     raise AssertionError(f"modelo {code!r} was not listed in payload: {payload!r}")
 
 

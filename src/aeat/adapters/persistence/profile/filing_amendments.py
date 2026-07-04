@@ -2,29 +2,29 @@
 
 Filing amendments carry corrected casilla deltas and original
 submission references. They are stored as encrypted byte objects via
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
-``AUDIT`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+:class:`~adapters.persistence.storage.SecureObjectRepository` at
+``AUDIT`` :class:`~adapters.persistence.storage.SensitivityClass`
 sensitivity; no plaintext amendment JSON or envelope file lands on disk. Each
 record is wrapped in an
-:class:`~aeat.adapters.persistence.storage.Envelope` before serialisation.
+:class:`~adapters.persistence.storage.Envelope` before serialisation.
 
 This concrete repository is the persistence adapter behind the
-:class:`~aeat.domain.filing.ModeloAmendmentRepositoryProtocol` port. It lives
-in the persistence adapter (not in :mod:`aeat.domain.filing`) because its
+:class:`~domain.filing.ModeloAmendmentRepositoryProtocol` port. It lives
+in the persistence adapter (not in :mod:`domain.filing`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
-typed :class:`~aeat.domain.filing.BaseAmendment` payload shapes.
+typed :class:`~domain.filing.BaseAmendment` payload shapes.
 
 See Also:
-    :class:`~aeat.domain.filing.BaseAmendment`
+    :class:`~domain.filing.BaseAmendment`
         Shared typed payload shape saved by this repository.
-    :class:`~aeat.domain.filing.ModeloComplementaria`
+    :class:`~domain.filing.ModeloComplementaria`
         LGT Art. 122.2 amendment variant for additional self-assessment.
-    :class:`~aeat.domain.filing.ModeloSustitutiva`
+    :class:`~domain.filing.ModeloSustitutiva`
         LGT Art. 122.1 amendment variant for full replacement.
-    :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`
+    :data:`adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`
         Namespace, sensitivity, schema-version, object-key, and custody
         contract for amendment secure objects.
-    :func:`aeat.application.filing.build_complementaria`
+    :func:`application.filing.build_complementaria`
         Application orchestration entry point that can produce and persist an
         amendment.
 """
@@ -57,17 +57,17 @@ _AMENDMENT_NAMESPACE = "aeat.domain.filing.amendments"
 
 
 class ModeloAmendmentRepository:
-    """Encrypted AUDIT repository for :class:`~aeat.domain.filing.BaseAmendment` records.
+    """Encrypted AUDIT repository for :class:`~domain.filing.BaseAmendment` records.
 
-    Persists :class:`~aeat.domain.filing.ModeloComplementaria` and
-    :class:`~aeat.domain.filing.ModeloSustitutiva` payloads under
-    :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`. The
+    Persists :class:`~domain.filing.ModeloComplementaria` and
+    :class:`~domain.filing.ModeloSustitutiva` payloads under
+    :data:`adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`. The
     repository wraps the amendment union in an
-    :class:`~aeat.adapters.persistence.storage.Envelope` before writing through
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`; the
+    :class:`~adapters.persistence.storage.Envelope` before writing through
+    :class:`~adapters.persistence.storage.SecureObjectRepository`; the
     amendment id is the natural key used for load, delete, and ordered
     iteration. The namespace definition supplies the ``AUDIT``
-    :class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema
+    :class:`~adapters.persistence.storage.SensitivityClass`, schema
     version, object-key grammar, and custody contract.
     """
 
@@ -140,7 +140,7 @@ class ModeloAmendmentRepository:
         """Persist ``amendment`` in the encrypted database object store.
 
         The row is stored under
-        :data:`aeat.adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`.
+        :data:`adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`.
         """
         from ..storage import Envelope, SensitivityClass, safe_repository_id
 

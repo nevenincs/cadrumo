@@ -5,6 +5,7 @@ official_name = "Modelo 347. Declaración anual de operaciones con terceras pers
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
+calculation_class = "informative"
 output_sensitivity = "financial"
 legal_refs = [
     "orden-eha-3012-2008:art-1",

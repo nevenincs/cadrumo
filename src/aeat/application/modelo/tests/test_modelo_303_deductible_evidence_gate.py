@@ -24,6 +24,7 @@ from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ModeloCode,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
@@ -430,7 +431,7 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
 def _work_unit() -> WorkUnit:
     period = Period.from_year_and_code(_YEAR, _PERIOD)
     revision_id = "2023-y-siguientes"
-    modelo: str = "303"  # Widen literal type to str for ModeloCode validator
+    modelo = ModeloCode("303")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,

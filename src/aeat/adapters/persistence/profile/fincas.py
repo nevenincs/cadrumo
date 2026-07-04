@@ -1,13 +1,13 @@
 """ORM-backed repositories for the rental-register record types.
 
 These concrete repositories are the persistence adapter behind the
-read-side ports declared in :mod:`aeat.domain.fincas._repository_ports`.
-They bridge the public :mod:`aeat.domain.fincas._models` records and the
-internal :mod:`aeat.adapters.persistence.storage.sql._orm` mapper rows;
+read-side ports declared in :mod:`domain.fincas._repository_ports`.
+They bridge the public :mod:`domain.fincas._models` records and the
+internal :mod:`adapters.persistence.storage.sql._orm` mapper rows;
 every method routes through ``_flush_or_wrap`` so DB integrity violations
 surface as :class:`RepositoryError`.
 
-Living in the persistence adapter (not in :mod:`aeat.domain.fincas`) keeps
+Living in the persistence adapter (not in :mod:`domain.fincas`) keeps
 the SQLAlchemy and ORM-row coupling out of the domain layer: the domain
 aggregation functions depend only on the structural ``*`` reader ports,
 never on this module. Storage imports remain deferred behind the methods

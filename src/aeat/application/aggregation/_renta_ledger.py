@@ -37,7 +37,12 @@ from ...core import Modelo, Period, PeriodKind
 from ...core.resources import resources
 from ...domain.calculations.registry import CasillaId
 from ...domain.categories import CategoryProfile, SpendingCategory
-from ...domain.contribuyente import CCAA
+from ...domain.contribuyente import (
+    CCAA,
+    ForalRegimeError,
+    TaxResidenceProfileError,
+    parse_tax_region,
+)
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
 from ...domain.renta import (
@@ -61,6 +66,7 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ...domain.user_profile import UserProfileRecord
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
@@ -191,6 +197,48 @@ class RentaLedgerExpenseAggregation(BaseModel):
         return tuple(value)
 
 
+def _resolve_residence_ccaa(
+    *,
+    bucket_id: str,
+    profile_record: UserProfileRecord | None = None,
+) -> CCAA | None:
+    """Derive the ordinary-residence comunidad autonoma from the bucket's profile.
+
+    Reads the ``tax_residence.ccaa`` fact from the bucket's user profile and
+    parses it to the closed :class:`CCAA` enum. Returns ``None`` -- the D4
+    fail-closed outcome that falls the aggregation through to the state year
+    profile -- when no profile is selected, the fact is absent, or the recorded
+    region is a foral regime or otherwise unparseable. The value is inert while
+    :func:`resolve_region_category_profiles` returns an empty mapping (general
+    expense deductibility is state base-imponible law, invariant across
+    comunidades); it is derived here so a future territorial-regime override
+    selects by residence with no further caller wiring.
+
+    Args:
+        bucket_id: Stable bucket identifier used to load the user profile.
+        profile_record: Optional :class:`UserProfileRecord` override for testing;
+            when ``None`` the record is loaded from the bucket.
+    """
+    record = profile_record
+    if record is None:
+        from ...domain.user_profile import ProfileNotFoundError
+        from ..user_profile import UserProfileLifecycleRepository
+
+        try:
+            record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        except ProfileNotFoundError:
+            return None
+    from ..user_profile import fact_value
+
+    raw = fact_value(record, "tax_residence.ccaa")
+    if raw is None:
+        return None
+    try:
+        return parse_tax_region(raw)
+    except (ForalRegimeError, TaxResidenceProfileError):
+        return None
+
+
 def aggregate_renta_ledger_expenses_from_repositories(
     *,
     bucket_id: str,
@@ -201,8 +249,21 @@ def aggregate_renta_ledger_expenses_from_repositories(
     usage_ratios: Mapping[SpendingCategory, Decimal] | None = None,
     activity_key: str = "default",
     modelo: str = Modelo.M100.value,
+    profile_record: UserProfileRecord | None = None,
+    region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses.
+
+    Derives the ordinary-residence comunidad autonoma from the bucket's active
+    profile (``tax_residence.ccaa``) and threads it into the aggregation so a
+    territorial-regime deductibility override selects by residence; the axis is
+    fail-closed (an undeclared or unparseable region resolves to the state year
+    profile) and byte-identical while the override layer is empty. Pass
+    ``profile_record`` to supply the :class:`UserProfileRecord` directly (the
+    residence is otherwise loaded from the bucket), and ``region_category_overrides``
+    to supply the per-:class:`CCAA` override layer forwarded to
+    :func:`aggregate_renta_ledger_expenses` (defaulting to the empty
+    registry-provisioned layer, :func:`resolve_region_category_profiles`).
 
     Returns a :class:`RentaLedgerExpenseAggregation`.
     """
@@ -232,6 +293,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
             context={"bucket_id": bucket_id, "repository_bucket_id": invoices_repository.bucket_id},
         )
     invoices = invoices_repository.load()
+    residence_ccaa = _resolve_residence_ccaa(bucket_id=bucket_id, profile_record=profile_record)
     return aggregate_renta_ledger_expenses(
         transactions,
         invoices,
@@ -241,6 +303,8 @@ def aggregate_renta_ledger_expenses_from_repositories(
         usage_ratios=usage_ratios,
         activity_key=activity_key,
         modelo=modelo,
+        residence_ccaa=residence_ccaa,
+        region_category_overrides=region_category_overrides,
     )
 
 

@@ -5,6 +5,7 @@ official_name = "Modelo 840. Declaración del Impuesto sobre Actividades Económ
 tax_domain = "iae"
 cadence = "ad_hoc"
 jurisdiction = "ES-AEAT"
+calculation_class = "informative"
 output_sensitivity = "identity"
 legal_refs = [
     "rdl-2-2004:art-78",

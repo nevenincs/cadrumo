@@ -1,10 +1,10 @@
 """Async-first public LLM client.
 
-Coordinates :class:`~aeat.adapters.outbound.llm.LLMRequest` inputs,
-:class:`~aeat.adapters.outbound.llm.LLMCache` lookup/write-through,
-:class:`~aeat.adapters.outbound.llm.UsageRecorder` accounting, and concrete
-:class:`~aeat.adapters.outbound.llm.LLMProvider` adapters before returning an
-:class:`~aeat.adapters.outbound.llm.LLMResponse`.
+Coordinates :class:`~adapters.outbound.llm.LLMRequest` inputs,
+:class:`~adapters.outbound.llm.LLMCache` lookup/write-through,
+:class:`~adapters.outbound.llm.UsageRecorder` accounting, and concrete
+:class:`~adapters.outbound.llm.LLMProvider` adapters before returning an
+:class:`~adapters.outbound.llm.LLMResponse`.
 """
 
 from __future__ import annotations
@@ -49,20 +49,20 @@ class LLMClient:
     """Public async-first LLM completion entry point.
 
     Args:
-        settings: Optional :class:`~aeat.core.config.Settings` override used
+        settings: Optional :class:`~core.config.Settings` override used
             for provider selection and defaults.
-        cache: Optional :class:`~aeat.adapters.outbound.llm.LLMCache`
+        cache: Optional :class:`~adapters.outbound.llm.LLMCache`
             implementation override.
         usage_recorder: Optional
-            :class:`~aeat.adapters.outbound.llm.UsageRecorder` override.
+            :class:`~adapters.outbound.llm.UsageRecorder` override.
         run_telemetry_recorder: Optional
-            :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder` override.
+            :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder` override.
         prompt_registry: Optional
-            :class:`~aeat.adapters.outbound.llm.PromptRegistry` override.
+            :class:`~adapters.outbound.llm.PromptRegistry` override.
         caller: Stable caller identifier recorded in usage logs.
         prompt_id: Stable prompt identifier recorded in usage logs.
         adapter_override: Optional
-            :class:`~aeat.adapters.outbound.llm._providers.base._ProviderAdapter`
+            :class:`~adapters.outbound.llm._providers.base._ProviderAdapter`
             override for tests and controlled flows.
     """
 
@@ -93,10 +93,10 @@ class LLMClient:
         """Complete a prompt request.
 
         Args:
-            request: Structured :class:`~aeat.adapters.outbound.llm.LLMRequest`.
+            request: Structured :class:`~adapters.outbound.llm.LLMRequest`.
 
         Returns:
-            A :class:`~aeat.adapters.outbound.llm.LLMResponse` enriched with
+            A :class:`~adapters.outbound.llm.LLMResponse` enriched with
             cache and cost metadata.
 
         Raises:
@@ -194,7 +194,7 @@ class LLMClient:
 
         A run-telemetry write failure must never mask the real completion
         result or a real provider error, so this swallows
-        :exc:`~aeat.adapters.outbound.llm.LLMCacheError` (the recorder's only
+        :exc:`~adapters.outbound.llm.LLMCacheError` (the recorder's only
         declared failure mode) after a debug log; the completion call's own
         return or exception always wins.
         """

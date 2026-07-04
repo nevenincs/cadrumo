@@ -38,6 +38,7 @@ revision that spans a range of filing years (the M303-style
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -49,8 +50,8 @@ from .._loader import load_registry_tree
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
 
-def _as_list(value: object) -> list[Any]:
-    return list(value.values()) if isinstance(value, dict) else list(value)
+def _as_list[T](value: Iterable[T]) -> list[T]:
+    return list(value)
 
 
 def _casilla_ids_by_modelo_year_from_dir(directory: Path) -> dict[tuple[str, int], set[str]]:
@@ -127,7 +128,7 @@ def _external_oracle_grounded_casilla_ids_by_modelo_year() -> dict[tuple[str, in
 def _all_modelo_revisions() -> dict[str, list[Any]]:
     """Every modelo's revisions, keyed by modelo id, from the non-validating loader."""
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return {modelo.id: _as_list(modelo.revisions) for modelo in modelos}
+    return {modelo.id: _as_list(modelo.revisions.values()) for modelo in modelos}
 
 
 def _revision_covers_year(revision: Any, year: int) -> bool:

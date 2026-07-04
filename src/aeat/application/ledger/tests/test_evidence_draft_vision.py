@@ -36,7 +36,7 @@ _SUPPLIER_CIF = "B12345674"
 
 
 def _extraction_json(**overrides: str | None) -> str:
-    payload = {
+    payload: dict[str, str | None] = {
         "supplier_tax_id": _SUPPLIER_CIF,
         "invoice_number": "2026-0142",
         "invoice_date": "10/03/2026",

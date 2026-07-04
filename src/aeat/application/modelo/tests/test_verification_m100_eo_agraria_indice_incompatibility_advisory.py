@@ -200,10 +200,6 @@ def test_other_letra_alone_holds_for_every_pairing() -> None:
         predicate = _predicate(predicate_id)
         # Recover the "other" casilla id from the predicate expression to build a
         # single-casilla-positive case for exactly that pairing.
-        other_id = next(
-            cid
-            for cid in _FORESTAL_OTHER_LETRA_CASILLAS
-            if cid in predicate.expression
-        )
+        other_id = next(cid for cid in _FORESTAL_OTHER_LETRA_CASILLAS if cid in predicate.expression)
         casilla_values: dict[CasillaId, Decimal] = {other_id: Decimal("0.75")}
         assert evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile()) == [], predicate_id

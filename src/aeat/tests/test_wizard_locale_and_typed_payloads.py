@@ -159,7 +159,7 @@ def test_oauth_client_payload_typeddict_importable() -> None:
     from ..entrypoints.cli import OAuthClientPayload
 
     assert hasattr(OAuthClientPayload, "__annotations__")
-    assert "installed" in OAuthClientPayload.__annotations__
+    assert "installed" in OAuthClientPayload.__required_keys__
 
 
 def test_oauth_client_wrapper_accepts_valid_desktop_payload() -> None:

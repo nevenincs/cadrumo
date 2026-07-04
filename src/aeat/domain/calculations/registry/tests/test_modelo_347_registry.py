@@ -63,6 +63,9 @@ def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int)
 
 def test_committed_modelo_347_is_informative_only() -> None:
     modelo, _ = _load_modelo_347()
+    assert modelo.calculation_class == "informative", (
+        "Modelo 347 must be declared calculation_class='informative' in its manifest"
+    )
     for revision in modelo.revisions.values():
         assert revision.formulas == (), revision.id
         assert revision.relations == (), revision.id

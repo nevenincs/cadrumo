@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
@@ -24,7 +25,7 @@ _LOCAL_OBSERVATION_PROFILE_ID = "24242424-2424-4424-8424-242424242424"
 
 
 @pytest.fixture
-def runtime_profile(tmp_path: Path) -> TestRuntimeProfile:
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     """Real active encrypted profile storage for local-observation CLI tests."""
 
     with isolated_cli_runtime_profile(

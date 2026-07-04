@@ -307,11 +307,11 @@ class BucketMaintenanceService:
     def archive(self, command: ArchiveBucketCommand) -> ArchiveBucketResult:
         """Move the bucket identified by ``command.bucket_id`` into reversible dormancy.
 
-        Composes :func:`~aeat.application.user_profile.reactivate_profile_with_lifecycle_span`'s
-        counterpart, :func:`~aeat.application.user_profile.delete_profile_with_lifecycle_span`
+        Composes :func:`~application.user_profile.reactivate_profile_with_lifecycle_span`'s
+        counterpart, :func:`~application.user_profile.delete_profile_with_lifecycle_span`
         — the SAME soft-tombstone primitive :meth:`delete` composes — but
         deliberately stops there: the hard directory removal
-        (:func:`~aeat.application.user_profile.remove_profile_bucket_directory`)
+        (:func:`~application.user_profile.remove_profile_bucket_directory`)
         that :meth:`delete` performs afterward never runs, so the bucket
         directory, manifest, and encrypted record all survive intact and
         :meth:`restore` can bring the same bucket back.
@@ -385,11 +385,11 @@ class BucketMaintenanceService:
     def restore(self, command: RestoreBucketCommand) -> RestoreBucketResult:
         """Bring the archived bucket identified by ``command.bucket_id`` back to active.
 
-        Composes :func:`~aeat.application.user_profile.reactivate_profile_with_lifecycle_span`
+        Composes :func:`~application.user_profile.reactivate_profile_with_lifecycle_span`
         — the symmetric inverse of the soft tombstone :meth:`archive` composes.
         Refuses when the target is not currently tombstoned (i.e. was never
         archived, or is already active), surfaced by
-        :class:`~aeat.domain.user_profile.ProfileNotFoundError` from the
+        :class:`~domain.user_profile.ProfileNotFoundError` from the
         underlying lifecycle service.
 
         The ``BUCKET_RESTORED`` event lands in the restored bucket's OWN
@@ -526,11 +526,11 @@ class BucketMaintenanceService:
         """Measure ``command.bucket_id``'s on-disk footprint and return a :class:`DiskUsageBucketResult`.
 
         Walks the bucket's fixed directory layout
-        (:func:`~aeat.adapters.persistence.storage.bucket.bucket_paths`) and
+        (:func:`~adapters.persistence.storage.bucket.bucket_paths`) and
         sums regular-file byte sizes via ``os.stat`` — plain filesystem
         metadata, never decrypted content. This is the same non-active-safe
         posture :meth:`browse` and
-        :func:`~aeat.application.bucket_maintenance.preview_discard_sandbox`
+        :func:`~application.bucket_maintenance.preview_discard_sandbox`
         already rely on: no master key or active-bucket session is opened, so
         a non-active (even archived) bucket can be measured. Read-only; emits
         no bucket event.

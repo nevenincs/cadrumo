@@ -296,6 +296,18 @@ KENT_WALL_CATALOGUE: tuple[KentWallEntry, ...] = (
         test_module="src/aeat/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py",
         test_function="test_work_calculate_modelo_100_routes_marta_auto_ledger_expenses",
     ),
+    KentWallEntry(
+        issue=326,
+        kent_perspective=(
+            "Kent has his Modelo 303 declaración PDF and reconciles a work unit "
+            "against it via `aeat app modelo reconcile file --kind declaration`: "
+            "the tool re-derives every printed casilla against the computed "
+            "revision and reports a real casilla-level divergence, not a "
+            "header-only compare."
+        ),
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
+        test_function="test_reconcile_file_kind_declaration_catches_casilla_divergence",
+    ),
 )
 """The enrolled representative subset of closed Kent walls.
 

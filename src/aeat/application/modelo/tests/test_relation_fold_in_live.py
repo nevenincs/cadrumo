@@ -196,7 +196,7 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[Ca
 
 def _retencion_observation(nif: str) -> RetencionObservation:
     return RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id=f"retencion-{nif}",
         perceptor_nif=nif,
         perceptor_name="Arrendador Ejemplo SL",

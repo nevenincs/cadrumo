@@ -111,7 +111,6 @@ def _seed_attachment_manifest(sha: str) -> None:
 
 
 def _seed_justificante() -> str:
-    from decimal import Decimal
 
     from ....adapters.persistence.profile.justificante import JustificanteRepository
     from ....core import Period

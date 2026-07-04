@@ -194,21 +194,20 @@ def test_invalid_language_value_is_refused_with_accepted_set(tmp_path: Path) -> 
     assert _CREATE_HELP_EN not in result.stdout, combined
 
 
-@pytest.mark.parametrize(
-    ("argv", "expected"),
-    [
-        (["--language", "en", "config", "profile", "create", "--help"], "en"),
-        (["--lang", "ca", "app", "ledger", "import"], "ca"),
-        (["--language=hu", "config", "profile", "list"], "hu"),
-        (["--lang=es"], "es"),
-        (["config", "profile", "create"], None),
-        (["--language", "xx", "config"], None),
-        (["--language"], None),
-        (["--profile", "alice", "config", "profile", "list"], None),
-        (["--language", "EN", "config"], "en"),
-    ],
+_LANGUAGE_ARGV_CASES = (
+    (["--language", "en", "config", "profile", "create", "--help"], "en"),
+    (["--lang", "ca", "app", "ledger", "import"], "ca"),
+    (["--language=hu", "config", "profile", "list"], "hu"),
+    (["--lang=es"], "es"),
+    (["config", "profile", "create"], None),
+    (["--language", "xx", "config"], None),
+    (["--language"], None),
+    (["--profile", "alice", "config", "profile", "list"], None),
+    (["--language", "EN", "config"], "en"),
 )
-def test_language_from_argv_extracts_supported_value(argv: list[str], expected: str | None) -> None:
+
+
+def test_language_from_argv_extracts_supported_value() -> None:
     """The pure argv parser extracts the supported language or ``None``.
 
     Unit-isolated pure logic: no external dependency, so a direct assertion on
@@ -216,4 +215,10 @@ def test_language_from_argv_extracts_supported_value(argv: list[str], expected: 
     unrelated flags (``--profile``) all yield ``None`` so the canonical Typer
     validation stays the single refusal authority.
     """
-    assert _language_from_argv(argv) == expected
+    failures: list[str] = []
+    for argv, expected in _LANGUAGE_ARGV_CASES:
+        actual = _language_from_argv(argv)
+        if actual != expected:
+            failures.append(f"{argv!r}: expected {expected!r}, got {actual!r}")
+
+    assert not failures, "\n".join(failures)
