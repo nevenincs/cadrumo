@@ -5,16 +5,16 @@ when automated extraction (``ledger evidence extract`` / vision OCR) is
 unavailable or insufficient: the operator (an autonomous LLM agent that cannot
 answer an interactive prompt) supplies every invoice field as CLI options in
 one call. This module validates each field independently -- reusing the same
-grounded heuristics :func:`aeat.core.identity.validate_spanish_tax_id` and the
+grounded heuristics :func:`~core.identity.validate_spanish_tax_id` and the
 ISO-8601 / canonical-decimal parsers already enforce on the extract/confirm
 path -- and accumulates every failing field into one refusal
 (``no-silent-under-declaration``: a malformed field is named, never silently
 dropped or reported one-at-a-time when several are wrong).
 
-The write itself delegates to :func:`aeat.application.invoices.create_catalogue_invoice`
+The write itself delegates to :func:`~application.invoices.create_catalogue_invoice`
 -- the sole sanctioned :class:`Invoice` writer
 (``composition-service-no-parallel-write-path``); this module never persists a
-row itself. Because :class:`~aeat.domain.invoices.Invoice` identity is a
+row itself. Because :class:`~domain.invoices.Invoice` identity is a
 content-derived hash, a retry that resolves to an already-catalogued identity
 is a guarded no-op (``single-subject-mutation-is-idempotent-guarded``): the
 existing record is returned, not re-written or raised as an error, mirroring
@@ -53,7 +53,7 @@ __all__ = [
 class InvoiceWizardFieldError(BaseModel):
     """One field that failed the wizard's guided validation.
 
-    Mirrors :class:`~aeat.application.invoices.BulkInvoiceImportRowFailure`'s
+    Mirrors :class:`~application.invoices.BulkInvoiceImportRowFailure`'s
     ``field``/``reason`` shape so a manual-entry refusal reads consistently
     with the bulk-import refusal surface, minus the row number a single-invoice
     wizard has no use for.
