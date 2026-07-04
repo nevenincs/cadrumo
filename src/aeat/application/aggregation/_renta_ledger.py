@@ -26,7 +26,7 @@ from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Self
+from typing import Self, overload
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
@@ -533,6 +533,10 @@ def _renta_direction_for(
     return None
 
 
+@overload
+def _business_fact_amount(amount: None, proportion: Decimal) -> None: ...
+@overload
+def _business_fact_amount(amount: Decimal, proportion: Decimal) -> Decimal: ...
 def _business_fact_amount(amount: Decimal | None, proportion: Decimal) -> Decimal | None:
     if amount is None:
         return None
