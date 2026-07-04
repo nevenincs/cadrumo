@@ -19,19 +19,21 @@ from ....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_M036_VERBS = ("alta", "modificacion", "baja")
+
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
 
 
-@pytest.mark.parametrize("verb", ["alta", "modificacion", "baja"])
-def test_m036_verb_advertises_flag_set(verb: str) -> None:
+def test_m036_verb_advertises_flag_set() -> None:
     """Each verb's --help surfaces --declared-on / --sede-justificante / --note."""
-    result = _invoke(["app", "modelo", "m036", verb, "--help"])
-    assert result.exit_code == 0, result.output
-    assert "--declared-on" in result.output
-    assert "--sede-justificante" in result.output
-    assert "--note" in result.output
+    for verb in _M036_VERBS:
+        result = _invoke(["app", "modelo", "m036", verb, "--help"])
+        assert result.exit_code == 0, result.output
+        assert "--declared-on" in result.output, verb
+        assert "--sede-justificante" in result.output, verb
+        assert "--note" in result.output, verb
 
 
 def test_m036_group_lists_three_verbs() -> None:
@@ -43,25 +45,25 @@ def test_m036_group_lists_three_verbs() -> None:
     assert "baja" in result.output
 
 
-@pytest.mark.parametrize("verb", ["alta", "modificacion", "baja"])
-def test_m036_rejects_invalid_declared_on(verb: str) -> None:
+def test_m036_rejects_invalid_declared_on() -> None:
     """An unparseable --declared-on fails cleanly with a non-zero exit."""
-    result = _invoke(
-        ["app", "modelo", "m036", verb, "--declared-on", "not-a-date"],
-    )
-    assert result.exit_code != 0
+    for verb in _M036_VERBS:
+        result = _invoke(
+            ["app", "modelo", "m036", verb, "--declared-on", "not-a-date"],
+        )
+        assert result.exit_code != 0, verb
 
 
-@pytest.mark.parametrize("verb", ["alta", "modificacion", "baja"])
-def test_m036_refuses_without_active_profile(verb: str) -> None:
+def test_m036_refuses_without_active_profile() -> None:
     """No active profile -> the cold-start guard refuses with a translated message."""
-    result = _invoke(
-        ["app", "modelo", "m036", verb, "--declared-on", "2026-06-04"],
-    )
-    assert result.exit_code != 0
-    # The translated guard message is locale-dependent; the assertion
-    # checks the verb did not silently proceed (non-zero exit) and the
-    # output reaches the operator surface. Active-profile presence is
-    # required for any actual record write; tests of the service body
-    # itself live in ``application/modelo/test_m036_lifecycle_service.py``.
-    assert result.output != ""
+    for verb in _M036_VERBS:
+        result = _invoke(
+            ["app", "modelo", "m036", verb, "--declared-on", "2026-06-04"],
+        )
+        assert result.exit_code != 0, verb
+        # The translated guard message is locale-dependent; the assertion
+        # checks the verb did not silently proceed (non-zero exit) and the
+        # output reaches the operator surface. Active-profile presence is
+        # required for any actual record write; tests of the service body
+        # itself live in ``application/modelo/test_m036_lifecycle_service.py``.
+        assert result.output != "", verb
