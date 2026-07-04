@@ -290,6 +290,8 @@ def _parse_declaracion_pages(
         registry_snapshot_ref=snapshot_ref,
         values=values,
         warnings=(),
+        extraction_profile_id=profile.id,
+        extraction_profile_provisional=profile.provisional_pending_specimen,
         source_pdf_path=source_pdf_path,
         source_pdf_sha256=source_pdf_sha256,
         parsed_at=now(),
