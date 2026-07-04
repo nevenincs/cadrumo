@@ -202,6 +202,48 @@ def load_attachment(store: AttachmentStoreProtocol, attachment_id: str) -> Attac
     return store.load_manifest(attachment_id)
 
 
+def link_attachment_invoice(
+    store: AttachmentStoreProtocol,
+    *,
+    attachment_id: str,
+    invoice_id: str,
+) -> Attachment:
+    """Append ``invoice_id`` to an already-persisted attachment's ``linked_invoice_ids``.
+
+    Closes the provenance loop the other direction from ``add_attachment(_bytes)``'s
+    ``link_invoice_ids`` parameter: that parameter can only be populated for an
+    invoice that already exists *before* the evidence is captured, but the
+    evidence-confirmation flow mints the :class:`~aeat.domain.invoices.Invoice`
+    *after* the attachment is already stored. This helper re-persists the same
+    manifest (attachment id and bytes unchanged) through the same
+    :meth:`AttachmentStoreProtocol.write_manifest` write path
+    (``composition-service-no-parallel-write-path``), with ``invoice_id`` appended.
+
+    Idempotent by construction: :class:`Attachment`'s
+    ``linked_invoice_ids`` validator deduplicates and preserves first-seen
+    order, so calling this twice with the same ``invoice_id`` is a no-op --
+    the manifest's byte content after the second call is identical to after
+    the first (a real re-confirm safely re-links without growing the tuple).
+
+    Args:
+        store: Backing :class:`AttachmentStoreProtocol`.
+        attachment_id: SHA-256 of the attachment bytes to update.
+        invoice_id: Stable :class:`~aeat.domain.invoices.Invoice` identifier
+            to record as evidenced by this attachment.
+
+    Returns:
+        The re-persisted :class:`Attachment` manifest carrying ``invoice_id``
+        in :attr:`Attachment.linked_invoice_ids`.
+    """
+    attachment = store.load_manifest(attachment_id)
+    if invoice_id in attachment.linked_invoice_ids:
+        return attachment
+    updated = attachment.model_copy(update={"linked_invoice_ids": (*attachment.linked_invoice_ids, invoice_id)})
+    store.write_manifest(updated)
+    _logger.info("linked attachment %s to invoice %s", attachment_id, invoice_id)
+    return updated
+
+
 def list_attachments(
     store: AttachmentStoreProtocol,
     *,
