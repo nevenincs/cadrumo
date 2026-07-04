@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#binding-resolver-contract-unification'
-date: '2026-07-02'
-modified: '2026-07-02'
+date: '2026-07-04'
+modified: '2026-07-04'
 related:
   - '[[2026-06-26-binding-resolver-contract-unification-P01-S01]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P01-S02]]'
@@ -17,6 +17,8 @@ related:
   - '[[2026-06-26-binding-resolver-contract-unification-P02-S09]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P03-S10]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P03-S11]]'
+  - '[[2026-06-26-binding-resolver-contract-unification-P03-S13]]'
+  - '[[2026-06-26-binding-resolver-contract-unification-P03-S19]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P03-S20]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P03-S21]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P04-S15]]'
@@ -60,6 +62,8 @@ Auto-generated index of all documents tagged with `#binding-resolver-contract-un
 - `2026-06-26-binding-resolver-contract-unification-P03-S11` - Author a foreign-assets 720 ModeloSourceResolver returning CalculationSourceResolution that delegates to aggregate_foreign_assets_720, behaviour-preserving against the existing 720 suites
 - `2026-06-26-binding-resolver-contract-unification-P03-S20` - Foreign-assets 720 correctness gate follow-up
 - `2026-06-26-binding-resolver-contract-unification-P03-S21` - Counterpart 347/349 correctness gate follow-up
+- `2026-06-26-binding-resolver-contract-unification-P03-S13` - Collapse the retenciones double-path so the per-modelo service retenciones branch delegates to the same mesh RetencionesAggregationSourceResolver, retiring the duplicate retenciones service result type without changing the landed perceptor-count result
+- `2026-06-26-binding-resolver-contract-unification-P03-S19` - Prove the retenciones collapse is behaviour-preserving by asserting the single mesh RetencionesAggregationSourceResolver reproduces the prior per-modelo-service aggregation value exactly against a 111/115/123/180/190/193 fixture, with the landed perceptor-count result unchanged and no casilla value shift
 
 ### plan
 
