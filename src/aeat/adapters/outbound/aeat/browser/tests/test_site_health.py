@@ -95,52 +95,52 @@ class TestFixtureCorpusShape:
         assert len(_OK_FILES) >= 5
 
 
-@pytest.mark.parametrize("path", _MANTENIMIENTO_FILES, ids=lambda p: p.name)
-def test_mantenimiento_fixtures_classify(path: Path) -> None:
-    http_status, headers, body = _load_case(path, default_status=200)
-    status = evaluate_response(
-        _PROBE_URL,
-        http_status,
-        headers,
-        body,
-        rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
-    )
-    assert status is not None, f"mantenimiento fixture {path.name} did not classify"
-    assert status.state is SiteHealthState.MANTENIMIENTO
-    assert status.evidence.detected_markers
-    single = parse_mantenimiento_banner(
-        _PROBE_URL,
-        http_status,
-        headers,
-        body,
-        rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
-    )
-    assert single is not None
-    assert single.state is SiteHealthState.MANTENIMIENTO
+def test_mantenimiento_fixtures_classify() -> None:
+    for path in _MANTENIMIENTO_FILES:
+        http_status, headers, body = _load_case(path, default_status=200)
+        status = evaluate_response(
+            _PROBE_URL,
+            http_status,
+            headers,
+            body,
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+        )
+        assert status is not None, f"mantenimiento fixture {path.name} did not classify"
+        assert status.state is SiteHealthState.MANTENIMIENTO, path.name
+        assert status.evidence.detected_markers, path.name
+        single = parse_mantenimiento_banner(
+            _PROBE_URL,
+            http_status,
+            headers,
+            body,
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+        )
+        assert single is not None, path.name
+        assert single.state is SiteHealthState.MANTENIMIENTO, path.name
 
 
-@pytest.mark.parametrize("path", _WAF_FILES, ids=lambda p: p.name)
-def test_waf_fixtures_classify(path: Path) -> None:
-    http_status, headers, body = _load_case(path, default_status=403)
-    status = evaluate_response(
-        _PROBE_URL,
-        http_status,
-        headers,
-        body,
-        rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
-    )
-    assert status is not None, f"waf fixture {path.name} did not classify"
-    assert status.state is SiteHealthState.WAF_CHALLENGE
-    assert status.evidence.detected_markers
-    single = parse_waf_challenge(
-        _PROBE_URL,
-        http_status,
-        headers,
-        body,
-        rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
-    )
-    assert single is not None
-    assert single.state is SiteHealthState.WAF_CHALLENGE
+def test_waf_fixtures_classify() -> None:
+    for path in _WAF_FILES:
+        http_status, headers, body = _load_case(path, default_status=403)
+        status = evaluate_response(
+            _PROBE_URL,
+            http_status,
+            headers,
+            body,
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+        )
+        assert status is not None, f"waf fixture {path.name} did not classify"
+        assert status.state is SiteHealthState.WAF_CHALLENGE, path.name
+        assert status.evidence.detected_markers, path.name
+        single = parse_waf_challenge(
+            _PROBE_URL,
+            http_status,
+            headers,
+            body,
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+        )
+        assert single is not None, path.name
+        assert single.state is SiteHealthState.WAF_CHALLENGE, path.name
 
 
 def test_waf_evidence_fragment_is_centrally_redacted() -> None:
@@ -174,43 +174,43 @@ def test_waf_evidence_fragment_is_centrally_redacted() -> None:
     assert "token:sha256:" in fragment
 
 
-@pytest.mark.parametrize("path", _RATE_LIMITED_FILES, ids=lambda p: p.name)
-def test_rate_limited_fixtures_classify(path: Path) -> None:
-    http_status, headers, body = _load_case(path, default_status=429)
-    status = evaluate_response(
-        _PROBE_URL,
-        http_status,
-        headers,
-        body,
-        rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
-    )
-    assert status is not None, f"rate-limited fixture {path.name} did not classify"
-    assert status.state is SiteHealthState.RATE_LIMITED
-    assert status.retry_after_seconds is not None
-    assert status.retry_after_seconds >= 1
-    # The single parser must produce the same verdict.
-    single = parse_rate_limit_response(
-        _PROBE_URL,
-        http_status,
-        headers,
-        body,
-        rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
-    )
-    assert single is not None
-    assert single.state is SiteHealthState.RATE_LIMITED
+def test_rate_limited_fixtures_classify() -> None:
+    for path in _RATE_LIMITED_FILES:
+        http_status, headers, body = _load_case(path, default_status=429)
+        status = evaluate_response(
+            _PROBE_URL,
+            http_status,
+            headers,
+            body,
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+        )
+        assert status is not None, f"rate-limited fixture {path.name} did not classify"
+        assert status.state is SiteHealthState.RATE_LIMITED, path.name
+        assert status.retry_after_seconds is not None, path.name
+        assert status.retry_after_seconds >= 1, path.name
+        # The single parser must produce the same verdict.
+        single = parse_rate_limit_response(
+            _PROBE_URL,
+            http_status,
+            headers,
+            body,
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+        )
+        assert single is not None, path.name
+        assert single.state is SiteHealthState.RATE_LIMITED, path.name
 
 
-@pytest.mark.parametrize("path", _OK_FILES, ids=lambda p: p.name)
-def test_ok_fixtures_do_not_classify(path: Path) -> None:
-    http_status, headers, body = _load_case(path, default_status=200)
-    status = evaluate_response(
-        _PROBE_URL,
-        http_status,
-        headers,
-        body,
-        rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
-    )
-    assert status is None, f"ok fixture {path.name} unexpectedly classified as {status}"
+def test_ok_fixtures_do_not_classify() -> None:
+    for path in _OK_FILES:
+        http_status, headers, body = _load_case(path, default_status=200)
+        status = evaluate_response(
+            _PROBE_URL,
+            http_status,
+            headers,
+            body,
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+        )
+        assert status is None, f"ok fixture {path.name} unexpectedly classified as {status}"
 
 
 class TestMantenimientoTitleOnlyGuard:

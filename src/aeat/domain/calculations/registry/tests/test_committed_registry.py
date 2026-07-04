@@ -261,6 +261,15 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
             "modulos-rendimiento-neto-modulos",
             "modulos-rendimiento-neto-actividad",
         }
+    if revision_id == "2025":
+        # 2025 additionally carries the Fase 3ª índices correctores generales
+        # (b.1, b.2, b.4) advisory-support flags, which never fire with no
+        # blank/zero declared índices (see
+        # test_modelo_131_modulos_engine.TestModulosIndicesGeneralesAdvisoryFlags).
+        expected_entries |= {
+            "modulos-pequena-dimension-ignorado-flag",
+            "modulos-temporada-inicio-actividad-conflicto-flag",
+        }
     assert set(entries) == expected_entries
     assert entries["04"].operand_refs == ("03", "irpf.objective_no_base_fractional_payment_rate")
     assert entries["06"].operand_refs == ("05", "irpf.objective_agriculture_fractional_payment_rate")

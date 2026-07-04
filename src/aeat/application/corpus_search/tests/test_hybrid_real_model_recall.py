@@ -129,33 +129,26 @@ def test_real_potion_embeddings_recall_the_target_via_hybrid(tmp_path: Path) -> 
     assert response.hits[0].chunk_id == _TARGET
 
 
-def test_ensure_corpus_embeddings_is_none_without_the_extra(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    # Bare-core default: no extra -> no build, no download, lexical-only. Forced
-    # via a monkeypatched availability check so the assertion holds even in an
-    # env where the extra happens to be installed.
-    from .. import _runtime as runtime
-
-    monkeypatch.setattr(runtime, "search_extra_available", lambda *_a, **_k: False)
+def test_ensure_corpus_embeddings_is_none_without_the_extra(tmp_path: Path) -> None:
+    # Bare-core default: no extra -> no build, no download, lexical-only. The
+    # explicit runtime input keeps this assertion stable even in an env where
+    # the extra happens to be installed.
     with override_settings(aeat_local_storage_root=tmp_path):
-        assert ensure_corpus_embeddings() is None
+        assert ensure_corpus_embeddings(semantic_available=False) is None
         assert not (corpus_search_dir() / "corpus-vectors.npy").exists()
 
 
-def test_ensure_corpus_embeddings_builds_once_behind_the_extra(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_ensure_corpus_embeddings_builds_once_behind_the_extra(tmp_path: Path) -> None:
     # The runtime build step: behind the extra, the corpus matrix is built once
     # into the app cache and reused. A small chunk set stands in for the whole
     # bundled corpus so the test does not embed thousands of chunks.
-    from .. import _runtime as runtime
-
-    monkeypatch.setattr(runtime, "iter_corpus_chunks", lambda *_a, **_k: iter(_CHUNKS))
-
     if not search_extra_available():
         with override_settings(aeat_local_storage_root=tmp_path):
-            assert ensure_corpus_embeddings() is None
+            assert ensure_corpus_embeddings(corpus_chunks=_CHUNKS) is None
         return
 
     with override_settings(aeat_local_storage_root=tmp_path):
-        first = ensure_corpus_embeddings()
+        first = ensure_corpus_embeddings(corpus_chunks=_CHUNKS)
         assert first is not None
         matrix, chunk_ids = first
         assert matrix.shape[0] == len(_CHUNKS)
@@ -165,6 +158,6 @@ def test_ensure_corpus_embeddings_builds_once_behind_the_extra(tmp_path: Path, m
         first_mtime = vector_file.stat().st_mtime_ns
 
         # Second call reuses the cached matrix (no rebuild).
-        second = ensure_corpus_embeddings()
+        second = ensure_corpus_embeddings(corpus_chunks=_CHUNKS)
         assert second is not None
         assert vector_file.stat().st_mtime_ns == first_mtime

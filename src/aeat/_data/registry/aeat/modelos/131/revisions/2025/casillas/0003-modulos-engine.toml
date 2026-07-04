@@ -162,6 +162,73 @@ legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-2-b"]
 source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
+id = "modulos-indice-pequena-dimension"
+number = "modulos-indice-pequena-dimension"
+label = "Índice corrector para empresas de pequeña dimensión (letra b.1 — municipio, local único, sin personal o hasta 2 trabajadores). Índice declarado por el operador (0,70/0,75/0,80/0,90, Orden HAC/1347/2024 Anexo II, instrucción 2.3.b.1); el motor no modela hechos del contribuyente. Nunca se aplica a las actividades con índice especial (721.2, 722)."
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_indice_pequena_dimension"
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1"], source_refs = ["aeat-renta-2025-manual-parte1"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "modulos-indice-temporada"
+number = "modulos-indice-temporada"
+label = "Índice corrector de temporada (letra b.2 — actividad de temporada, hasta 180 días/año). Índice declarado por el operador (1,50/1,35/1,25 según duración, Orden HAC/1347/2024 Anexo II, instrucción 2.3.b.2); el motor no modela la duración como hecho del contribuyente. Incompatible con el índice de inicio de nuevas actividades (b.4): si ambos se declaran, prevalece este."
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_indice_temporada"
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2"], source_refs = ["aeat-renta-2025-manual-parte1"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "modulos-indice-inicio-actividad"
+number = "modulos-indice-inicio-actividad"
+label = "Índice corrector por inicio de nuevas actividades (letra b.4, actividad iniciada desde el 1-1-2024 en local exclusivo). Índice declarado por el operador (0,80/0,90; 0,60/0,70 con discapacidad ≥33%, Orden HAC/1347/2024 Anexo II, instrucción 2.3.b.4); el motor no modela el ejercicio de inicio ni la discapacidad. Incompatible con el índice de temporada (b.2): si ambos se declaran, prevalece la temporada."
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_indice_inicio_actividad"
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4"], source_refs = ["aeat-renta-2025-manual-parte1"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "modulos-pequena-dimension-ignorado-flag"
+number = "modulos-pequena-dimension-ignorado-flag"
+label = "Indicador interno (1/0): el índice corrector para empresas de pequeña dimensión (b.1) declarado fue ignorado por incompatibilidad con el índice corrector especial de la actividad (Orden HAC/1347/2024 Anexo II, instrucción 2.3.a/b.1)."
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_pequena_dimension_ignorado_flag"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2025-modulos-pequena-dimension-ignorado-flag"
+internal_only = true
+legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "modulos-temporada-inicio-actividad-conflicto-flag"
+number = "modulos-temporada-inicio-actividad-conflicto-flag"
+label = "Indicador interno (1/0): se declararon simultáneamente el índice corrector de temporada (b.2) y el índice corrector por inicio de nuevas actividades (b.4), incompatibles entre sí (Orden HAC/1347/2024 Anexo II, instrucción 2.3)."
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_temporada_inicio_actividad_conflicto_flag"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2025-modulos-temporada-inicio-actividad-conflicto-flag"
+internal_only = true
+legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
 id = "modulos-rendimiento-neto-previo"
 number = "modulos-rendimiento-neto-previo"
 label = "Rendimiento neto previo (Fase 1ª: Σ unidades módulo × rendimiento anual por unidad)"
@@ -193,7 +260,7 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 [[revisions."2025".casillas]]
 id = "modulos-rendimiento-neto-modulos"
 number = "modulos-rendimiento-neto-modulos"
-label = "Rendimiento neto de módulos (Fase 3ª: minorado ajustado por el índice corrector de exceso)"
+label = "Rendimiento neto de módulos (Fase 3ª: minorado ajustado por los índices correctores generales — pequeña dimensión, temporada/inicio de nuevas actividades, exceso — en el orden y con las incompatibilidades de la Orden HAC/1347/2024 Anexo II, instrucción 2.3)"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"
 semantic_role = "irpf_pf_modulos_rendimiento_neto_modulos"
@@ -201,7 +268,14 @@ required = false
 input_kind = "computed"
 formula = "modelo-131-2025-modulos-rendimiento-neto-modulos"
 internal_only = true
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-3-b-3"]
+legal_refs = [
+    "ley-35-2006:art-31",
+    "orden-hac-1347-2024:instruccion-2-3-b-3",
+    "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1",
+    "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2",
+    "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4",
+    "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades",
+]
 source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]

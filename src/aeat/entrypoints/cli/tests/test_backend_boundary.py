@@ -424,7 +424,7 @@ def test_per_modelo_aggregation_placeholder_paths_stay_removed() -> None:
 def test_per_modelo_aggregation_duplicate_cli_surfaces_stay_absent() -> None:
     """The CLI may expose aggregation only through the central service command."""
 
-    canonical_cli = _CLI_ROOT / "_modelo.py"
+    canonical_cli = _CLI_ROOT / "_modelo_aggregate_cli.py"
     forbidden_family_calls = (
         "aggregate_retenciones_",
         "aggregate_counterpart_",

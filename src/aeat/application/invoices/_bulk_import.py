@@ -2,13 +2,13 @@
 
 The accountant/gestor batch case: a spreadsheet of invoice rows (counterparty
 NIF, invoice number, date, taxable base, IVA rate) is turned into one
-:class:`~aeat.domain.invoices.Invoice` per row. This module is a typed transport
-over :func:`aeat.application.invoices.create_catalogue_invoice` -- the sole
+:class:`~domain.invoices.Invoice` per row. This module is a typed transport
+over :func:`~application.invoices.create_catalogue_invoice` -- the sole
 sanctioned :class:`Invoice` writer (``composition-service-no-parallel-write-path``);
 it never persists a row itself.
 
 Each row's identity is the same content-derived
-:attr:`~aeat.domain.invoices.Invoice.invoice_id` hash the single-invoice
+:attr:`~domain.invoices.Invoice.invoice_id` hash the single-invoice
 ``catalogue create`` verb and the evidence-confirm slice use, so a re-import of
 an unchanged file is a guarded no-op per row
 (``single-subject-mutation-is-idempotent-guarded``): an already-catalogued
@@ -79,7 +79,7 @@ class BulkInvoiceImportRow(BaseModel):
     accepts one at a time; ``taxable_base`` and ``iva_rate`` synthesise the
     single line item exactly as :func:`build_catalogue_invoice` does for the
     single-invoice verb, so a bulk row produces an identical
-    :class:`~aeat.domain.invoices.Invoice` shape.
+    :class:`~domain.invoices.Invoice` shape.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -306,10 +306,10 @@ def import_invoices_from_rows(
     """Create one catalogue :class:`Invoice` per valid row in *rows*.
 
     Every accepted row is handed to
-    :func:`aeat.application.invoices.create_catalogue_invoice` -- this
+    :func:`~application.invoices.create_catalogue_invoice` -- this
     function never persists a row itself
     (``composition-service-no-parallel-write-path``). Because
-    :class:`~aeat.domain.invoices.Invoice` identity is a content-derived hash of
+    :class:`~domain.invoices.Invoice` identity is a content-derived hash of
     ``(kind, invoice_number, issued_at, counterparty_tax_id, currency,
     grand_total)``, re-importing the identical file a second time resolves
     every row to its already-catalogued ``invoice_id`` and reports it in

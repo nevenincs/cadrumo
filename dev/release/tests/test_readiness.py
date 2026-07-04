@@ -1,9 +1,8 @@
 """Real-behavior tests for the release audit-state readiness gate.
 
-Every check is exercised against real files on a real ``tmp_path`` tree (no
-mocks, no monkeypatching of the check functions themselves); the
+Every check is exercised against real files on a real ``tmp_path`` tree; the
 network-dependent check (`check_no_open_release_blockers`) is exercised via
-a real `subprocess.run` call against a real, explicit-path stub `gh` script
+a real `subprocess.run` call against a real, explicit-path probe `gh` script
 (no PATH/PATHEXT resolution games), so the process-boundary behavior under
 test is genuine.
 """
@@ -18,6 +17,8 @@ import sys
 from pathlib import Path
 
 import pytest
+
+from aeat.tests.env_scope import scoped_env_var
 
 from .. import readiness
 
@@ -156,8 +157,8 @@ def test_packaging_smoke_evidence_reads_the_most_recent_real_manifest(tmp_path: 
     assert "core-20260702T000000Z" in check.detail
 
 
-def _write_stub_gh(bin_dir: Path, *, issues_json: str, exit_code: int = 0) -> Path:
-    """Write a real executable stub `gh` script that emits fixed real process output."""
+def _write_probe_gh(bin_dir: Path, *, issues_json: str, exit_code: int = 0) -> Path:
+    """Write a real executable `gh` script that emits fixed real process output."""
     bin_dir.mkdir(parents=True, exist_ok=True)
     if sys.platform.startswith("win"):
         script = bin_dir / "gh.bat"
@@ -170,9 +171,9 @@ def _write_stub_gh(bin_dir: Path, *, issues_json: str, exit_code: int = 0) -> Pa
 
 
 def test_no_open_release_blockers_passes_with_empty_issue_list(tmp_path: Path) -> None:
-    """A real subprocess call to a stub `gh` returning `[]` passes as advisory-clean."""
+    """A real subprocess call to a probe `gh` returning `[]` passes as advisory-clean."""
     bin_dir = tmp_path / "bin"
-    script = _write_stub_gh(bin_dir, issues_json="[]")
+    script = _write_probe_gh(bin_dir, issues_json="[]")
 
     check = readiness.check_no_open_release_blockers(gh_executable=str(script))
 
@@ -181,10 +182,10 @@ def test_no_open_release_blockers_passes_with_empty_issue_list(tmp_path: Path) -
 
 
 def test_no_open_release_blockers_blocks_on_real_open_blocker(tmp_path: Path) -> None:
-    """A real subprocess call to a stub `gh` returning an open blocker issue is a hard release blocker."""
+    """A real subprocess call to a probe `gh` returning an open blocker issue is a hard release blocker."""
     bin_dir = tmp_path / "bin"
     payload = json.dumps([{"number": 999, "title": "data loss on export"}])
-    script = _write_stub_gh(bin_dir, issues_json=payload)
+    script = _write_probe_gh(bin_dir, issues_json=payload)
 
     check = readiness.check_no_open_release_blockers(gh_executable=str(script))
 
@@ -204,11 +205,13 @@ def test_no_open_release_blockers_is_advisory_when_gh_unresolvable(tmp_path: Pat
     assert "gh unavailable" in check.detail
 
 
-def test_no_open_release_blockers_is_advisory_when_gh_not_installed(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_no_open_release_blockers_is_advisory_when_gh_not_installed(tmp_path: Path) -> None:
     """When `shutil.which("gh")` genuinely returns None, the check reports a non-blocking advisory."""
-    monkeypatch.setattr(readiness.shutil, "which", lambda name: None)
+    empty_path = tmp_path / "empty-path"
+    empty_path.mkdir()
 
-    check = readiness.check_no_open_release_blockers()
+    with scoped_env_var("PATH", str(empty_path)):
+        check = readiness.check_no_open_release_blockers()
 
     assert check.passed is False
     assert check.severity == "advisory"

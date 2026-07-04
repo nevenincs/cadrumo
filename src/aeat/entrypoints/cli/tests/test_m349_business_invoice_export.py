@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from click.testing import Result
@@ -12,7 +13,10 @@ from click.testing import Result
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....application.aggregation import CalculationSourceContext
 from ....application.invoices import InvoiceCatalogueSourceResolver
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import (
+    profile_create_storage_span,
+    register_minimal_profile,
+)
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.resources import bundled_path
@@ -304,12 +308,12 @@ def test_emilio_catalogue_service_invoice_feeds_m349() -> None:
             ),
         )
 
-    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == (Decimal("1"))
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("4000.00")
     assert len(resolution.detail_rows) == 1
-    row = resolution.detail_rows[0]
-    assert row.codigo_pais == "DE"
-    assert row.nif_comunitario == "DE123456789"
-    assert row.razon_social == "DE Kunde GmbH"
-    assert row.clave_operacion == "S"
-    assert row.importe == Decimal("4000.00")
+    row_obj: Any = resolution.detail_rows[0]
+    assert row_obj.codigo_pais == "DE"
+    assert row_obj.nif_comunitario == "DE123456789"
+    assert row_obj.razon_social == "DE Kunde GmbH"
+    assert row_obj.clave_operacion == "S"
+    assert row_obj.importe == Decimal("4000.00")

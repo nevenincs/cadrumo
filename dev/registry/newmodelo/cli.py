@@ -65,6 +65,13 @@ def scaffold(
             ),
         ),
     ] = False,
+    registry_modelos_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--registry-modelos-root",
+            help="Override the registry modelos root; intended for isolated developer/test runs.",
+        ),
+    ] = None,
 ) -> None:
     """Scaffold (or check) the skeleton registry tree for MODELO_ID / REVISION_ID.
 
@@ -77,7 +84,11 @@ def scaffold(
     fills in the 12-item checklist (``python -m dev.registry.newmodelo
     checklist``), printed again below after a successful scaffold.
     """
-    manager = _default_manager()
+    manager = (
+        NewModeloScaffoldManager(registry_modelos_root=registry_modelos_root)
+        if registry_modelos_root is not None
+        else _default_manager()
+    )
     try:
         if check:
             result = manager.check(modelo_id, revision_id, title=title)

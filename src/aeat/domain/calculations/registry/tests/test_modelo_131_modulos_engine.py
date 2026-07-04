@@ -478,6 +478,46 @@ def _expected_modulos(minorado: Decimal, *, epigrafe: str) -> Decimal:
     return _money_round(cuantia + _INDICE_EXCESO * (minorado - cuantia))
 
 
+#: Epígrafes carrying a documented índice corrector especial (Orden
+#: HAC/1347/2024 Anexo II, instrucción 2.3, letra a) that exclude the índice
+#: corrector para empresas de pequeña dimensión (b.1) — mirrors the
+#: registry's ``_M131_EPIGRAFES_INDICE_ESPECIAL`` frozenset (transcribed
+#: independently for cross-check, not imported from the module under test).
+_EPIGRAFES_INDICE_ESPECIAL = frozenset({"721.2", "722"})
+
+
+def _expected_modulos_generales(
+    minorado: Decimal,
+    *,
+    epigrafe: str,
+    pequena_dimension: Decimal = Decimal("0"),
+    temporada: Decimal = Decimal("0"),
+    inicio_actividad: Decimal = Decimal("0"),
+) -> Decimal:
+    """Reproduce the full Fase 3ª índices correctores generales cascade (b.1, b.2/b.4, b.3).
+
+    Independently transcribed from Orden HAC/1347/2024 Anexo II, instrucción
+    2.3's own enumeration order and incompatibilidades, not re-derived from
+    the ``m131_resolve_modulos_indices_generales`` op under test.
+    """
+    if minorado <= Decimal("0"):
+        return minorado
+    aplica_pequena_dimension = pequena_dimension > Decimal("0") and epigrafe not in _EPIGRAFES_INDICE_ESPECIAL
+    rendimiento = minorado
+    if aplica_pequena_dimension:
+        rendimiento = rendimiento * pequena_dimension
+    if temporada > Decimal("0"):
+        rendimiento = rendimiento * temporada
+    elif inicio_actividad > Decimal("0"):
+        rendimiento = rendimiento * inicio_actividad
+    if aplica_pequena_dimension:
+        return _money_round(rendimiento)
+    cuantia = _CUANTIA_EXCESO.get(epigrafe)
+    if cuantia is None or rendimiento <= cuantia:
+        return _money_round(rendimiento)
+    return _money_round(cuantia + _INDICE_EXCESO * (rendimiento - cuantia))
+
+
 def _run_modulos_engine(
     epigrafe: str | None,
     *,
@@ -490,6 +530,9 @@ def _run_modulos_engine(
     modulo_7: Decimal = Decimal("0"),
     modulo_1_anterior: Decimal = Decimal("0"),
     minoracion_inversion: Decimal = Decimal("0"),
+    indice_pequena_dimension: Decimal = Decimal("0"),
+    indice_temporada: Decimal = Decimal("0"),
+    indice_inicio_actividad: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
     snapshot = _committed_snapshot("131", 2025, "1T")
     text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
@@ -505,6 +548,9 @@ def _run_modulos_engine(
             "modulos-7-unidades": modulo_7,
             "modulos-1-unidades-anterior": modulo_1_anterior,
             "modulos-minoracion-inversion": minoracion_inversion,
+            "modulos-indice-pequena-dimension": indice_pequena_dimension,
+            "modulos-indice-temporada": indice_temporada,
+            "modulos-indice-inicio-actividad": indice_inicio_actividad,
         },
         text_inputs=text_inputs,
         date_context={"filing_period": snapshot.filing_period.end_date},
@@ -2118,3 +2164,184 @@ class TestModulosEngineNoSilentFabrication:
         assert minorado == Decimal("0")
         assert modulos == Decimal("0")
         assert actividad == Decimal("0")
+
+
+class TestModulosIndicesCorrectoresGenerales:
+    """Fase 3ª índices correctores generales cascade (b.1, b.2, b.3, b.4).
+
+    Grounded in Orden HAC/1347/2024 Anexo II, instrucción 2.3 (bundled
+    ``orden-hac-1347-2024.html`` corpus) and cross-checked against the AEAT
+    Manual práctico de Renta 2025, Parte 1, Capítulo 8 (same índice values
+    and the same three incompatibilidades quoted verbatim). Uses the same
+    673.1 base as ``TestCafesEspecial6731EstimacionObjetiva``'s full manual
+    worked example so the b.1/b.2/b.4 additions can be verified against a
+    figure (Fase 1ª/2ª) already independently proven correct.
+    """
+
+    def _run_673_1(self, **kwargs: Decimal) -> tuple[Decimal, Decimal, Decimal, Decimal]:
+        return _run_modulos_engine(
+            "673.1",
+            modulo_1=Decimal("3.66"),
+            modulo_2=Decimal("1.00"),
+            modulo_3=Decimal("35.00"),
+            modulo_4=Decimal("8.00"),
+            modulo_5=Decimal("10.00"),
+            modulo_7=Decimal("1.00"),
+            modulo_1_anterior=Decimal("3.00"),
+            minoracion_inversion=Decimal("6050.00"),
+            **kwargs,
+        )
+
+    def test_no_indices_generales_declared_matches_b3_only_baseline(self) -> None:
+        """No b.1/b.2/b.4 declared reproduces the pre-existing b.3-only manual figure exactly."""
+        _previo, minorado, modulos, _actividad = self._run_673_1()
+        assert minorado == Decimal("41368.57")
+        assert modulos == Decimal("44603.33")
+        expected = _expected_modulos_generales(minorado, epigrafe="673.1")
+        assert modulos == expected
+
+    def test_pequena_dimension_applies_multiplicatively_and_excludes_indice_exceso(self) -> None:
+        """b.1 (0,80) applies to minorado; b.3 (índice de exceso) is then excluded outright."""
+        _previo, minorado, modulos, _actividad = self._run_673_1(
+            indice_pequena_dimension=Decimal("0.80"),
+        )
+        expected = _expected_modulos_generales(minorado, epigrafe="673.1", pequena_dimension=Decimal("0.80"))
+        assert modulos == expected == Decimal("33094.86")
+        # Confirms b.3 was skipped: a naive product with the manual's own
+        # índice-exceso figure would be far higher than the plain 0,80 product.
+        assert modulos == _money_round(minorado * Decimal("0.80"))
+
+    def test_pequena_dimension_ignored_for_autotaxi_especial_epigrafe(self) -> None:
+        """b.1 is IGNORED (never applied) for an epígrafe carrying a documented índice especial (721.2)."""
+        previo, minorado, modulos, _actividad = _run_modulos_engine(
+            "721.2",
+            modulo_2=Decimal("1"),
+            modulo_3=Decimal("900"),
+            indice_pequena_dimension=Decimal("0.80"),
+        )
+        expected_previo = _quantize(Decimal("1") * _AUTOTAXI_721_2[2] + Decimal("900") * _AUTOTAXI_721_2[3])
+        assert previo == expected_previo
+        # b.1 ignored -> b.3 índice de exceso still applies to the plain minorado.
+        expected = _expected_modulos_generales(minorado, epigrafe="721.2", pequena_dimension=Decimal("0.80"))
+        assert modulos == expected == _expected_modulos(minorado, epigrafe="721.2")
+
+    def test_pequena_dimension_ignored_for_mercancias_especial_epigrafe(self) -> None:
+        """b.1 is IGNORED (never applied) for an epígrafe carrying a documented índice especial (722)."""
+        _previo, minorado, modulos, _actividad = _run_modulos_engine(
+            "722",
+            modulo_1=Decimal("1"),
+            modulo_3=Decimal("800"),
+            indice_pequena_dimension=Decimal("0.75"),
+        )
+        expected = _expected_modulos_generales(minorado, epigrafe="722", pequena_dimension=Decimal("0.75"))
+        assert modulos == expected == _expected_modulos(minorado, epigrafe="722")
+
+    def test_temporada_applies_multiplicatively_before_indice_exceso(self) -> None:
+        """b.2 (temporada) applies to minorado before b.3 evaluates the (adjusted) excess."""
+        _previo, minorado, modulos, _actividad = self._run_673_1(indice_temporada=Decimal("1.50"))
+        expected = _expected_modulos_generales(minorado, epigrafe="673.1", temporada=Decimal("1.50"))
+        assert modulos == expected
+
+    def test_inicio_actividad_applies_when_temporada_absent(self) -> None:
+        """b.4 (inicio de nuevas actividades) applies when temporada is not declared."""
+        _previo, minorado, modulos, _actividad = self._run_673_1(indice_inicio_actividad=Decimal("0.80"))
+        expected = _expected_modulos_generales(minorado, epigrafe="673.1", inicio_actividad=Decimal("0.80"))
+        assert modulos == expected
+
+    def test_temporada_and_inicio_actividad_declared_together_temporada_wins(self) -> None:
+        """b.2 and b.4 are mutually exclusive; temporada (enumeration order) wins, inicio is ignored."""
+        _previo, minorado, modulos_both, _actividad = self._run_673_1(
+            indice_temporada=Decimal("1.50"),
+            indice_inicio_actividad=Decimal("0.80"),
+        )
+        _previo2, minorado2, modulos_temporada_only, _actividad2 = self._run_673_1(
+            indice_temporada=Decimal("1.50"),
+        )
+        assert minorado == minorado2
+        assert modulos_both == modulos_temporada_only
+        expected = _expected_modulos_generales(minorado, epigrafe="673.1", temporada=Decimal("1.50"))
+        assert modulos_both == expected
+
+    def test_blank_indices_generales_never_fabricate_a_factor(self) -> None:
+        """A blank/zero b.1/b.2/b.4 input never fabricates a factor (baseline unchanged)."""
+        _previo, minorado, modulos, _actividad = self._run_673_1(
+            indice_pequena_dimension=Decimal("0"),
+            indice_temporada=Decimal("0"),
+            indice_inicio_actividad=Decimal("0"),
+        )
+        assert modulos == _expected_modulos(minorado, epigrafe="673.1") == Decimal("44603.33")
+
+    def test_non_positive_minorado_never_receives_indices_generales(self) -> None:
+        """A non-positive rendimiento neto minorado skips the whole cascade (mirrors the b.3-only guard)."""
+        _previo, minorado, modulos, _actividad = _run_modulos_engine(
+            "972.1",
+            indice_pequena_dimension=Decimal("0.80"),
+            indice_temporada=Decimal("1.50"),
+        )
+        assert minorado == Decimal("0")
+        assert modulos == Decimal("0")
+
+
+class TestModulosIndicesGeneralesAdvisoryFlags:
+    """The pequeña-dimensión-ignorado and temporada/inicio-conflicto advisory-support flags."""
+
+    def test_pequena_dimension_ignorado_flag_fires_on_especial_epigrafe(self) -> None:
+        snapshot = _committed_snapshot("131", 2025, "1T")
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs={
+                "modulos-2-unidades": Decimal("1"),
+                "modulos-3-unidades": Decimal("900"),
+                "modulos-indice-pequena-dimension": Decimal("0.80"),
+            },
+            text_inputs={"modulos-epigrafe": "721.2"},
+            date_context={"filing_period": snapshot.filing_period.end_date},
+        )
+        assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("1")
+
+    def test_pequena_dimension_ignorado_flag_stays_zero_on_ordinary_epigrafe(self) -> None:
+        snapshot = _committed_snapshot("131", 2025, "1T")
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs={
+                "modulos-1-unidades": Decimal("2"),
+                "modulos-indice-pequena-dimension": Decimal("0.80"),
+            },
+            text_inputs={"modulos-epigrafe": "972.1"},
+            date_context={"filing_period": snapshot.filing_period.end_date},
+        )
+        assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("0")
+
+    def test_pequena_dimension_ignorado_flag_stays_zero_when_not_declared(self) -> None:
+        snapshot = _committed_snapshot("131", 2025, "1T")
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs={"modulos-2-unidades": Decimal("1"), "modulos-3-unidades": Decimal("900")},
+            text_inputs={"modulos-epigrafe": "721.2"},
+            date_context={"filing_period": snapshot.filing_period.end_date},
+        )
+        assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("0")
+
+    def test_temporada_inicio_conflicto_flag_fires_when_both_declared(self) -> None:
+        snapshot = _committed_snapshot("131", 2025, "1T")
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs={
+                "modulos-1-unidades": Decimal("1"),
+                "modulos-indice-temporada": Decimal("1.50"),
+                "modulos-indice-inicio-actividad": Decimal("0.80"),
+            },
+            text_inputs={"modulos-epigrafe": "673.1"},
+            date_context={"filing_period": snapshot.filing_period.end_date},
+        )
+        assert result.values["modulos-temporada-inicio-actividad-conflicto-flag"] == Decimal("1")
+
+    def test_temporada_inicio_conflicto_flag_stays_zero_when_only_one_declared(self) -> None:
+        snapshot = _committed_snapshot("131", 2025, "1T")
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs={"modulos-1-unidades": Decimal("1"), "modulos-indice-temporada": Decimal("1.50")},
+            text_inputs={"modulos-epigrafe": "673.1"},
+            date_context={"filing_period": snapshot.filing_period.end_date},
+        )
+        assert result.values["modulos-temporada-inicio-actividad-conflicto-flag"] == Decimal("0")

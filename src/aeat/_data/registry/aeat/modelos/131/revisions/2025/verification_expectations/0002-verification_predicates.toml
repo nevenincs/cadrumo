@@ -112,3 +112,28 @@ predicate_id = "modelo-131-2025-modulos-indice-exceso-incompatible-mercancias"
 expression = 'casilla_equals_implies_diverges(["modulos-epigrafe", "722", "modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos"])'
 finding_kind = "ADVISORY"
 legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+# Índices correctores generales incompatibility ADVISORY guards
+# (Fase 3ª, m131_resolve_modulos_indices_generales,
+# 0003-modulos-engine.toml). Orden HAC/1347/2024 Anexo II, instrucción 2.3
+# declares two further binding exclusivity rules the cascade formula
+# structurally enforces (never silently applies both sides): the índice de
+# pequeña dimensión (b.1) is IGNORED for the two tabled epígrafes carrying a
+# documented índice especial (721.2, 722), and the índice de temporada (b.2)
+# and el índice de inicio de nuevas actividades (b.4) are mutually exclusive
+# (temporada wins per the Orden's own enumeration order). Both non-blocking
+# ADVISORY findings surface the ignored declaration to the operator — the
+# engine already applies the correct (non-ignored) índice, so these are
+# review prompts confirming the operator's declaration was not silently
+# dropped, per no-silent-under-declaration.
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-131-2025-modulos-pequena-dimension-ignorado-especial"
+expression = 'advisory_when_positive(["modulos-pequena-dimension-ignorado-flag"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-131-2025-modulos-temporada-inicio-actividad-incompatibles"
+expression = 'advisory_when_positive(["modulos-temporada-inicio-actividad-conflicto-flag"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]

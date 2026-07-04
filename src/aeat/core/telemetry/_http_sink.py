@@ -1,36 +1,36 @@
-"""The real network-transmitting :class:`~aeat.core.telemetry.TelemetrySink`.
+"""The real network-transmitting :class:`~core.telemetry.TelemetrySink`.
 
 :class:`HttpTelemetrySink` is the transport slice deferred by
 ``2026-07-04-remote-telemetry-adr``: every prior piece (the consent gate, the
-closed allowlisted :class:`~aeat.core.telemetry.TelemetryEventPayload`, and
-:class:`~aeat.core.telemetry.LocalNoopTelemetrySink`) proved the pipeline
+closed allowlisted :class:`~core.telemetry.TelemetryEventPayload`, and
+:class:`~core.telemetry.LocalNoopTelemetrySink`) proved the pipeline
 end-to-end without ever touching the network. This module adds the one sink
 that actually POSTs a payload off the operator's host, and it is
 **structurally inert by default**: :func:`emit_telemetry_event` never
 constructs a sink on its own, so an ``HttpTelemetrySink`` only ever exists (and
 therefore only ever sends) when a call site both explicitly builds one AND
 already passed the four-way consent gate
-(:func:`~aeat.core.telemetry.telemetry_emit_permitted`).
+(:func:`~core.telemetry.telemetry_emit_permitted`).
 
 Two additional invariants beyond the consent gate keep this sink safe:
 
 1. **No configured endpoint means no send, unconditionally.** A sink built
-   without :attr:`~aeat.core.config.Settings.aeat_telemetry_endpoint` set (the
+   without :attr:`~core.config.Settings.aeat_telemetry_endpoint` set (the
    ADR's documented default -- ``None``, scaffolded but read by no transport
    in the prior slice) is a no-op, mirroring
-   :class:`~aeat.core.telemetry.LocalNoopTelemetrySink`'s inertness. This
+   :class:`~core.telemetry.LocalNoopTelemetrySink`'s inertness. This
    protects a deployment that flips ``aeat_telemetry_opt_in`` and a tier on
    without ever configuring where to send data.
 2. **A transport failure never escapes.** Telemetry is best-effort diagnostic
    signal, never a load-bearing part of any command's outcome; a connection
    refusal, timeout, or non-2xx response is logged at debug level and
    swallowed. The payload itself -- already the allowlisted, non-sensitive
-   :class:`~aeat.core.telemetry.TelemetryEventPayload` shape -- is never
+   :class:`~core.telemetry.TelemetryEventPayload` shape -- is never
    logged, so a failure cannot leak transmission content into local logs.
 
 The HTTP transport reuses :mod:`httpx`, the project's single outbound HTTP
 client dependency (the same library the
-:class:`~aeat.adapters.outbound.llm._providers.gemini.GeminiAdapter` and
+:class:`~adapters.outbound.llm._providers.gemini.GeminiAdapter` and
 sibling LLM provider adapters use), rather than introducing a second HTTP
 client dependency.
 """

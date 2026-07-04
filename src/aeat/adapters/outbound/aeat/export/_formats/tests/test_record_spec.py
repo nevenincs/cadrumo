@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import Required, TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -17,6 +18,7 @@ from .......core.external_constants import ISO_8859_1_ENCODING
 from .......domain.calculations.registry import CasillaId, validated_casilla_id
 from .._record_spec import (
     DateFmt,
+    FicheroBoeEncoding,
     FieldKind,
     Justification,
     RecordFieldSpec,
@@ -63,7 +65,17 @@ _INLINE_SIGN_CASES = (
     (Decimal("-5.00"), True, b"N000000500"),
 )
 
-_TEXT_ENCODING_CASES = (
+class _TextEncodingOptions(TypedDict, total=False):
+    """Keyword arguments for :func:`encode_text`, matching its real signature."""
+
+    length: Required[int]
+    encoding: Required[FicheroBoeEncoding]
+    justification: Justification
+    pad_char: str
+    truncate: bool
+
+
+_TEXT_ENCODING_CASES: tuple[tuple[str, _TextEncodingOptions, bytes], ...] = (
     ("ACME", {"length": 10, "encoding": "cp1252"}, b"ACME      "),
     (
         "42",

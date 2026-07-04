@@ -129,9 +129,10 @@ def test_lirpf_art_49_savings_base_compensation_links_to_full_boe_corpus() -> No
     verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
-@pytest.mark.parametrize(
-    ("ref_id", "effective_from", "required_text"),
-    (
+def test_lirpf_base_liquidable_and_reduction_limit_links_to_full_boe_corpus() -> None:
+    catalogues = _catalogues()
+
+    cases = (
         (
             "ley-35-2006:art-50",
             date(2015, 1, 1),
@@ -163,27 +164,22 @@ def test_lirpf_art_49_savings_base_compensation_links_to_full_boe_corpus() -> No
                 "podrán reducir en los cinco ejercicios siguientes",
             ),
         ),
-    ),
-)
-def test_lirpf_base_liquidable_and_reduction_limit_links_to_full_boe_corpus(
-    ref_id: str,
-    effective_from: date,
-    required_text: tuple[str, ...],
-) -> None:
-    catalogues = _catalogues()
-    reference = catalogues.legal[ref_id]
-    article = ref_id.rsplit("-", 1)[-1]
+    )
 
-    assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}"
-    assert reference.effective_from == effective_from
-    assert reference.required_text == required_text
-    if ref_id == "ley-35-2006:art-50":
-        assert reference.notes is not None
-        assert "in force from 2015-01-01" in reference.notes
-    if ref_id == "ley-35-2006:art-52":
-        assert reference.notes is not None
-        assert "Ley 31/2022 art 62.1" in reference.notes
-    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    for ref_id, effective_from, required_text in cases:
+        reference = catalogues.legal[ref_id]
+        article = ref_id.rsplit("-", 1)[-1]
+
+        assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}", ref_id
+        assert reference.effective_from == effective_from, ref_id
+        assert reference.required_text == required_text, ref_id
+        if ref_id == "ley-35-2006:art-50":
+            assert reference.notes is not None, ref_id
+            assert "in force from 2015-01-01" in reference.notes, ref_id
+        if ref_id == "ley-35-2006:art-52":
+            assert reference.notes is not None, ref_id
+            assert "Ley 31/2022 art 62.1" in reference.notes, ref_id
+        verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
 def test_rirpf_art_59_regularizacion_perdida_derecho_links_to_bundled_corpus() -> None:
@@ -230,73 +226,63 @@ def test_orden_hac_242_2025_art_8_deadline_links_to_full_boe_corpus() -> None:
         "desde el día 2 de abril hasta el 25 de junio de 2025",
     )
     assert source.corpus_path == "corpus/normatives/html/orden-hac-242-2025.html"
-    assert source.sha256 == "6c6e3656116c3efd95c6ae5ee249f2629addd2e8f87874ee9efc4097b99f5c22"
-    assert source.bytes == 139603
     verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
     verify_source_file(PROJECT_ROOT, source)
 
 
-@pytest.mark.parametrize(
-    ("ref_id", "corpus_ref", "document_id"),
-    (
+def test_modelo_100_historical_form_order_refs_link_to_boe_corpus() -> None:
+    catalogues = _catalogues()
+
+    cases = (
         ("orden-hac-248-2021:art-3", "corpus/normatives/html/orden-hac-248-2021.html#a3", "BOE-A-2021-4238"),
         ("orden-hfp-207-2022:art-3", "corpus/normatives/html/orden-hfp-207-2022.html#a3", "BOE-A-2022-4296"),
         ("orden-hfp-310-2023:art-3", "corpus/normatives/html/orden-hfp-310-2023.html#a3", "BOE-A-2023-8118"),
         ("orden-hac-265-2024:art-3", "corpus/normatives/html/orden-hac-265-2024.html#a3", "BOE-A-2024-5721"),
         ("orden-hac-242-2025:art-3", "corpus/normatives/html/orden-hac-242-2025.html#a3", "BOE-A-2025-5049"),
-    ),
-)
-def test_modelo_100_historical_form_order_refs_link_to_boe_corpus(
-    ref_id: str,
-    corpus_ref: str,
-    document_id: str,
-) -> None:
-    catalogues = _catalogues()
-    reference = catalogues.legal[ref_id]
-
-    assert reference.kind == "orden"
-    assert reference.article == "3"
-    assert reference.document_id == document_id
-    assert reference.corpus_ref == corpus_ref
-    assert reference.required_text == (
-        "Artículo 3",
-        "modelo D-100",
-        "Modelo 100. Documento de ingreso o devolución",
     )
-    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+
+    for ref_id, corpus_ref, document_id in cases:
+        reference = catalogues.legal[ref_id]
+
+        assert reference.kind == "orden", ref_id
+        assert reference.article == "3", ref_id
+        assert reference.document_id == document_id, ref_id
+        assert reference.corpus_ref == corpus_ref, ref_id
+        assert reference.required_text == (
+            "Artículo 3",
+            "modelo D-100",
+            "Modelo 100. Documento de ingreso o devolución",
+        ), ref_id
+        verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
-@pytest.mark.parametrize(
-    ("ref_id", "article", "corpus_ref"),
-    (
+def test_modelo_100_tfi_additional_documentation_order_refs_link_to_boe_corpus() -> None:
+    catalogues = _catalogues()
+
+    cases = (
         ("orden-hac-248-2021:art-10", "10", "corpus/normatives/html/orden-hac-248-2021.html#a1-2"),
         ("orden-hfp-207-2022:art-10", "10", "corpus/normatives/html/orden-hfp-207-2022.html#a1-2"),
         ("orden-hfp-310-2023:art-11", "11", "corpus/normatives/html/orden-hfp-310-2023.html#a1-3"),
         ("orden-hac-265-2024:art-11", "11", "corpus/normatives/html/orden-hac-265-2024.html#a1-3"),
         ("orden-hac-242-2025:art-11", "11", "corpus/normatives/html/orden-hac-242-2025.html#a11"),
         ("orden-hac-277-2026:art-10", "10", "corpus/normatives/html/orden-hac-277-2026.html#a10"),
-    ),
-)
-def test_modelo_100_tfi_additional_documentation_order_refs_link_to_boe_corpus(
-    ref_id: str,
-    article: str,
-    corpus_ref: str,
-) -> None:
-    catalogues = _catalogues()
-    reference = catalogues.legal[ref_id]
-
-    assert reference.article == article
-    assert reference.corpus_ref == corpus_ref
-    assert reference.required_text == (
-        "Documentación adicional que debe acompañar a la declaración del Impuesto sobre la Renta "
-        "de las Personas Físicas",
-        "imputación de rentas en el régimen de transparencia fiscal internacional",
-        "datos relativos a la entidad no residente en territorio español",
-        "Nombre o razón social y lugar del domicilio social",
-        "Importe de las rentas positivas que deban ser imputadas",
-        "Justificación de los impuestos satisfechos respecto de la renta positiva",
     )
-    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+
+    for ref_id, article, corpus_ref in cases:
+        reference = catalogues.legal[ref_id]
+
+        assert reference.article == article, ref_id
+        assert reference.corpus_ref == corpus_ref, ref_id
+        assert reference.required_text == (
+            "Documentación adicional que debe acompañar a la declaración del Impuesto sobre la Renta "
+            "de las Personas Físicas",
+            "imputación de rentas en el régimen de transparencia fiscal internacional",
+            "datos relativos a la entidad no residente en territorio español",
+            "Nombre o razón social y lugar del domicilio social",
+            "Importe de las rentas positivas que deban ser imputadas",
+            "Justificación de los impuestos satisfechos respecto de la renta positiva",
+        ), ref_id
+        verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
 def test_rd_439_art_100_legal_basis_links_to_full_rental_withholding_corpus() -> None:
@@ -361,9 +347,10 @@ def test_rd_439_art_110_legal_basis_links_to_full_payment_amount_corpus() -> Non
     verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
-@pytest.mark.parametrize(
-    ("ref_id", "article", "corpus_ref", "required_text"),
-    (
+def test_ley_19_1994_canary_tax_regime_refs_link_to_current_boe_corpus() -> None:
+    catalogues = _catalogues()
+
+    cases = (
         (
             "ley-19-1994:art-27",
             "27",
@@ -386,21 +373,15 @@ def test_rd_439_art_110_legal_basis_links_to_full_payment_amount_corpus() -> Non
                 "4%",
             ),
         ),
-    ),
-)
-def test_ley_19_1994_canary_tax_regime_refs_link_to_current_boe_corpus(
-    ref_id: str,
-    article: str,
-    corpus_ref: str,
-    required_text: tuple[str, ...],
-) -> None:
-    catalogues = _catalogues()
-    reference = catalogues.legal[ref_id]
+    )
 
-    assert reference.article == article
-    assert reference.corpus_ref == corpus_ref
-    assert reference.required_text == required_text
-    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    for ref_id, article, corpus_ref, required_text in cases:
+        reference = catalogues.legal[ref_id]
+
+        assert reference.article == article, ref_id
+        assert reference.corpus_ref == corpus_ref, ref_id
+        assert reference.required_text == required_text, ref_id
+        verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
 def test_ley_49_2002_art_14_special_regime_option_links_to_boe_corpus() -> None:

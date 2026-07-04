@@ -65,7 +65,10 @@ class SchemaModuleLoadFailure(BaseModel):
     error: str = Field(min_length=1)
 
 
-def _ensure_result_schemas_registered() -> tuple[SchemaModuleLoadFailure, ...]:
+def _ensure_result_schemas_registered(
+    *,
+    payload_packages: tuple[str, ...] | None = None,
+) -> tuple[SchemaModuleLoadFailure, ...]:
     """Import every ``*_payloads`` module so ``SCHEMA_REGISTRY`` is complete.
 
     The CLI registers result schemas through module-level
@@ -90,7 +93,7 @@ def _ensure_result_schemas_registered() -> tuple[SchemaModuleLoadFailure, ...]:
         The load failures, empty when every payload module imported cleanly.
     """
     failures: list[SchemaModuleLoadFailure] = []
-    for package_name in _PAYLOAD_PACKAGES:
+    for package_name in payload_packages or _PAYLOAD_PACKAGES:
         try:
             package = importlib.import_module(package_name)
         except Exception as exc:
@@ -114,7 +117,7 @@ def _project_registry() -> tuple[CommandSchemaRef, ...]:
     )
 
 
-def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
+def command_schema_refs(*, payload_packages: tuple[str, ...] | None = None) -> tuple[CommandSchemaRef, ...]:
     """Populate the registry (resiliently) and project it into manifest references.
 
     Discards the per-module load failures - the consumers that need only the
@@ -127,7 +130,7 @@ def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
         One :class:`CommandSchemaRef` per registered command, sorted by
         command name.
     """
-    _ensure_result_schemas_registered()
+    _ensure_result_schemas_registered(payload_packages=payload_packages)
     return _project_registry()
 
 
