@@ -591,3 +591,168 @@ def test_sandbox_usage_measures_an_archived_sandbox_without_reactivating_it() ->
     assert read_profile_bucket("sandbox:dormant") is None
     assert read_profile_bucket("sandbox:dormant", include_tombstoned=True) is not None
     assert read_profile_bucket("sandbox:one-way") is None
+
+
+def _add_ledger_transaction(*, description: str, amount: str = "42.00") -> str:
+    added = _invoke(
+        (
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-03-10",
+            "--amount",
+            amount,
+            "--direction",
+            "OUTGOING",
+            "--description",
+            description,
+        ),
+    )
+    assert added.exit_code == 0, added.output
+    payload = unwrap_schema_envelope(added.output)
+    return str(payload["transaction"]["transaction_id"])
+
+
+def test_sandbox_merge_ledger_promotes_rows_from_sandbox_into_main() -> None:
+    """``sandbox merge --scope ledger`` copies sandbox ledger rows into the target profile.
+
+    Real encrypted per-bucket storage: the sandbox and main profile each
+    hold their own ``TransactionCatalogueRepository``, and the merge must
+    make the sandbox row appear in main's catalogue without disturbing
+    main's own pre-existing row.
+    """
+    create_profile_via_cli("main")
+    main_transaction_id = _add_ledger_transaction(description="Main office rent")
+
+    created = _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main"))
+    assert created.exit_code == 0, created.output
+    sandbox_transaction_id = _add_ledger_transaction(description="Sandbox experiment purchase")
+
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    merged = _invoke(
+        (
+            "--format",
+            "json",
+            "config",
+            "profile",
+            "sandbox",
+            "merge",
+            "bakeoff",
+            "--into",
+            "main",
+            "--scope",
+            "ledger",
+            "--yes",
+        ),
+    )
+    assert merged.exit_code == 0, merged.output
+    payload = unwrap_schema_envelope(merged.output)
+    assert payload["scope"] == "ledger"
+    assert payload["source_label"] == "sandbox:bakeoff"
+    assert payload["target_label"] == "main"
+    assert payload["merged_counts"]["ledger_transactions"] == 1
+
+    listed = _invoke(("--format", "json", "app", "ledger", "list"))
+    assert listed.exit_code == 0, listed.output
+    listed_ids = {row["transaction_id"] for row in unwrap_schema_envelope(listed.output)["rows"]}
+    assert main_transaction_id in listed_ids
+    assert sandbox_transaction_id in listed_ids
+
+    # The merge stamps a BUCKET_MERGED audit event into the target (main)
+    # bucket's own event history, mirroring every other maintenance verb.
+    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ....application.user_profile import profile_storage_session
+    from ....application.workflow import read_profile_bucket
+    from ....domain.buckets import BucketEventType
+
+    main_pointer = read_profile_bucket("main")
+    assert main_pointer is not None
+    with profile_storage_session(main_pointer.bucket_id):
+        catalogue = BucketEventHistoryRepository().load()
+    merge_events = [event for event in catalogue.events.values() if event.event_type is BucketEventType.BUCKET_MERGED]
+    assert len(merge_events) == 1
+    assert merge_events[0].payload["scope"] == "ledger"
+    assert merge_events[0].payload["source_label"] == "sandbox:bakeoff"
+
+
+def test_sandbox_merge_ledger_is_idempotent_on_rerun() -> None:
+    """Re-running the same merge does not duplicate the promoted rows.
+
+    ``merge_sandbox`` upserts by the sandbox transaction's own
+    content-addressed id, so promoting the same unchanged sandbox content
+    twice must leave the target catalogue with the same row count.
+    """
+    create_profile_via_cli("main")
+    _add_ledger_transaction(description="Main baseline row")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+    _add_ledger_transaction(description="Sandbox row one")
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    merge_args = (
+        "config",
+        "profile",
+        "sandbox",
+        "merge",
+        "bakeoff",
+        "--into",
+        "main",
+        "--scope",
+        "ledger",
+        "--yes",
+    )
+    first = _invoke(merge_args)
+    assert first.exit_code == 0, first.output
+    second = _invoke(merge_args)
+    assert second.exit_code == 0, second.output
+
+    listed = _invoke(("--format", "json", "app", "ledger", "list"))
+    assert listed.exit_code == 0, listed.output
+    rows = unwrap_schema_envelope(listed.output)["rows"]
+    # Main's own row plus exactly one promoted sandbox row, never a duplicate
+    # from the second merge run.
+    assert len(rows) == 2
+
+
+def test_sandbox_merge_refuses_without_yes() -> None:
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    result = _invoke(("config", "profile", "sandbox", "merge", "bakeoff", "--into", "main", "--scope", "ledger"))
+    assert result.exit_code != 0
+    assert "--yes" in result.output
+
+
+def test_sandbox_merge_unknown_sandbox_name_refuses() -> None:
+    create_profile_via_cli("main")
+
+    result = _invoke(
+        ("config", "profile", "sandbox", "merge", "does-not-exist", "--into", "main", "--scope", "ledger", "--yes"),
+    )
+    assert result.exit_code != 0
+
+
+def test_sandbox_merge_unknown_target_profile_refuses() -> None:
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    result = _invoke(
+        (
+            "config",
+            "profile",
+            "sandbox",
+            "merge",
+            "bakeoff",
+            "--into",
+            "no-such-profile",
+            "--scope",
+            "ledger",
+            "--yes",
+        ),
+    )
+    assert result.exit_code != 0

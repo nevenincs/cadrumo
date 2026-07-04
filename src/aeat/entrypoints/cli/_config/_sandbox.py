@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import typer
 
+from ....application.bucket_maintenance import SandboxMergeScope
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -54,6 +55,7 @@ def register_sandbox_commands(profile_app: typer.Typer) -> None:
     _register_sandbox_archive_command(sandbox_app)
     _register_sandbox_restore_command(sandbox_app)
     _register_sandbox_usage_command(sandbox_app)
+    _register_sandbox_merge_command(sandbox_app)
     profile_app.add_typer(sandbox_app, name="sandbox")
 
 
@@ -771,6 +773,145 @@ def _register_sandbox_usage_command(app: typer.Typer) -> None:
                 for sub in row.subdirs:
                     lines.append(f"  {row.label}/{sub.subdir}\t{sub.total_bytes} bytes ({sub.file_count} files)")
         _emit_envelope(ctx, command="config.profile.sandbox.usage", result=result, lines=lines)
+
+
+def _register_sandbox_merge_command(app: typer.Typer) -> None:
+    @app.command(
+        "merge",
+        help=tr(
+            "cli.config.profile.sandbox.merge_help",
+            default="Promote a sandbox's ledger and/or modelo records into another profile.",
+        ),
+    )
+    def config_profile_sandbox_merge(
+        ctx: typer.Context,
+        name: str = typer.Argument(
+            ...,
+            help=tr("cli.config.profile.sandbox.merge_name_help", default="Sandbox name (without the prefix)."),
+        ),
+        into: str = typer.Option(
+            ...,
+            "--into",
+            help=tr(
+                "cli.config.profile.sandbox.merge_into_help",
+                default="Target profile name the sandbox's records are promoted into.",
+            ),
+        ),
+        scope: SandboxMergeScope = typer.Option(
+            SandboxMergeScope.LEDGER,
+            "--scope",
+            help=tr(
+                "cli.config.profile.sandbox.merge_scope_help",
+                default="Data category to promote: ledger, modelo, or all.",
+            ),
+        ),
+        confirmed: bool = typer.Option(
+            False,
+            "--yes",
+            help=tr("cli.config.profile.sandbox.merge_yes_help", default="Confirm promoting sandbox data."),
+        ),
+        output_language: OutputLanguage | None = typer.Option(
+            None,
+            "--output-language",
+            "--language",
+            help=tr("cli.config.auth.output_language_help"),
+        ),
+    ) -> None:
+        """Promote ``scope`` from a sandbox into another live profile through ``merge_sandbox``.
+
+        The sandbox (``name``) is the source; ``--into`` names the target
+        profile the records are promoted into — ordinarily the operator's
+        main profile. Neither bucket needs to be the currently active
+        profile: both are resolved by label and the merge runs through
+        scoped storage sessions per source/target.
+        """
+        _activate_subcommand_output_language(ctx, output_language)
+        from ....application.bucket_maintenance import (
+            MergeSandboxCommand,
+            SandboxMergeRefusedError,
+            SandboxNotFoundError,
+            merge_sandbox,
+            sandbox_label,
+        )
+        from ....application.workflow import ProfileLabelAmbiguousError, read_profile_bucket
+        from .._config_payloads import ConfigProfileSandboxMergeResult
+
+        label = sandbox_label(name)
+        source_pointer = read_profile_bucket(label)
+        if source_pointer is None:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.sandbox.unknown_sandbox",
+                context={"name": name},
+            )
+        try:
+            target_pointer = read_profile_bucket(into)
+        except ProfileLabelAmbiguousError as exc:
+            raise _CliRefusedBoundaryError(
+                message=f"profile name {into!r} is ambiguous; use its bucket id instead",
+                context={"into": into},
+            ) from exc
+        if target_pointer is None:
+            raise _CliRefusedBoundaryError(
+                message=f"no live profile named {into!r} to merge into",
+                context={"into": into},
+            )
+        if not confirmed:
+            raise _CliRefusedBoundaryError(
+                message=(
+                    f"promoting sandbox {name!r} into {into!r} is a state-mutating operation. "
+                    f"Re-run 'aeat config profile sandbox merge {name} --into {into} "
+                    f"--scope {scope.value} --yes' to confirm."
+                ),
+                context={"name": name, "into": into, "scope": scope.value},
+            )
+
+        try:
+            outcome = merge_sandbox(
+                MergeSandboxCommand(
+                    source_bucket_id=source_pointer.bucket_id,
+                    target_bucket_id=target_pointer.bucket_id,
+                    scope=scope,
+                    confirmed=confirmed,
+                ),
+            )
+        except SandboxNotFoundError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.sandbox.unknown_sandbox",
+                context={"name": name},
+            ) from exc
+        except SandboxMergeRefusedError as exc:
+            raise _CliRefusedBoundaryError(message=str(exc), context={"name": name, "into": into}) from exc
+
+        result = ConfigProfileSandboxMergeResult(
+            scope=outcome.scope.value,
+            source_label=source_pointer.label,
+            target_label=target_pointer.label,
+            merged_counts=outcome.merged_counts,
+        )
+        lines = [
+            f"scope\t{outcome.scope.value}",
+            f"source\t{source_pointer.label}",
+            f"target\t{target_pointer.label}",
+            *(f"merged:{category}\t{count}" for category, count in outcome.merged_counts.items()),
+        ]
+        merge_notice = Notice(
+            severity=NoticeSeverity.INFO,
+            code="config.profile.sandbox.merge.promoted",
+            message=tr(
+                "cli.config.profile.sandbox.merge_promoted_info",
+                default="Promoted %{scope} from %{source} into %{target}.",
+                scope=outcome.scope.value,
+                source=source_pointer.label,
+                target=target_pointer.label,
+            ),
+        )
+        _emit_envelope(
+            ctx,
+            command="config.profile.sandbox.merge",
+            result=result,
+            lines=(*lines, f"INFO\t{merge_notice.message}"),
+            notices=(merge_notice,),
+        )
 
 
 __all__ = ["register_sandbox_commands", "sandbox_app"]

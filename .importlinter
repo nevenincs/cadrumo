@@ -657,6 +657,7 @@ ignore_imports =
     aeat.application.auth._sessions -> aeat.adapters.**
     aeat.application.bienes_inversion -> aeat.adapters.**
     aeat.application.bucket_maintenance._manifest_digest -> aeat.adapters.**
+    aeat.application.bucket_maintenance._sandbox -> aeat.adapters.**
     aeat.application.bucket_maintenance._service -> aeat.adapters.**
     aeat.application.calculations._iva_compensation_annual_partition -> aeat.adapters.**
     aeat.application.calculations._iva_compensation_history -> aeat.adapters.**

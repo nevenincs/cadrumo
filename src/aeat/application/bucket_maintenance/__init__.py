@@ -60,7 +60,13 @@ such as ``sandbox prune``. :func:`archive_sandbox` and
 :func:`restore_sandbox` expose a reversible-dormancy alternative to
 discard: :meth:`BucketMaintenanceService.archive` soft-tombstones the
 sandbox without removing its directory, and
-:meth:`BucketMaintenanceService.restore` reactivates it.
+:meth:`BucketMaintenanceService.restore` reactivates it. :func:`merge_sandbox`
+promotes a :class:`SandboxMergeScope` (``ledger``, ``modelo``, or ``all``)
+from a sandbox into a target profile bucket by composing the same typed
+catalogue repositories and domain upsert primitives (``upsert_work_unit``,
+``upsert_calculation_revision``, ``upsert_filing_record``) the
+portable-bundle import path already uses for those categories, so a
+repeated merge of unchanged sandbox content is an idempotent no-op write.
 
 See Also:
     :mod:`application.user_profile`
@@ -114,12 +120,16 @@ from ._sandbox import (
     CreateSandboxResult,
     DiscardSandboxCommand,
     DiscardSandboxResult,
+    MergeSandboxCommand,
+    MergeSandboxResult,
     PreviewDiscardSandboxCommand,
     PreviewDiscardSandboxResult,
     RestoreSandboxCommand,
     RestoreSandboxResult,
     SandboxAlreadyExistsError,
     SandboxDiscardRefusedError,
+    SandboxMergeRefusedError,
+    SandboxMergeScope,
     SandboxNamespaceInventoryRow,
     SandboxNotArchivedError,
     SandboxNotFoundError,
@@ -129,6 +139,7 @@ from ._sandbox import (
     discard_sandbox,
     is_sandbox_label,
     list_sandboxes,
+    merge_sandbox,
     preview_discard_sandbox,
     restore_sandbox,
     sandbox_label,
@@ -160,6 +171,8 @@ __all__ = [
     "ImportBucketResult",
     "InspectBucketArchiveCommand",
     "InspectBucketArchiveResult",
+    "MergeSandboxCommand",
+    "MergeSandboxResult",
     "PreviewDiscardSandboxCommand",
     "PreviewDiscardSandboxResult",
     "RenameBucketCommand",
@@ -170,6 +183,8 @@ __all__ = [
     "RestoreSandboxResult",
     "SandboxAlreadyExistsError",
     "SandboxDiscardRefusedError",
+    "SandboxMergeRefusedError",
+    "SandboxMergeScope",
     "SandboxNamespaceInventoryRow",
     "SandboxNotArchivedError",
     "SandboxNotFoundError",
@@ -180,6 +195,7 @@ __all__ = [
     "discard_sandbox",
     "is_sandbox_label",
     "list_sandboxes",
+    "merge_sandbox",
     "preview_discard_sandbox",
     "restore_sandbox",
     "sandbox_label",

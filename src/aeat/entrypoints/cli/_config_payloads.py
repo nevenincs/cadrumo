@@ -1270,3 +1270,20 @@ class ConfigProfileSandboxUsageResult(OutputSchema):
 
     total_bytes: int
     sandboxes: list[SandboxDiskUsagePayload]
+
+
+@register_schema("config.profile.sandbox.merge")
+class ConfigProfileSandboxMergeResult(OutputSchema):
+    """JSON envelope for ``aeat config profile sandbox merge``.
+
+    Reports the promoted scope, the source sandbox and target profile
+    labels, and the per-category row counts merged via
+    :func:`~aeat.application.bucket_maintenance.merge_sandbox`. A re-run
+    against unchanged sandbox content reports the same counts (an
+    idempotent no-op write into the target, never a duplicate row).
+    """
+
+    scope: str
+    source_label: str
+    target_label: str
+    merged_counts: dict[str, int]
