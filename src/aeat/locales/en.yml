@@ -589,6 +589,12 @@ application:
         invalid_valuation_method: 'The inventory valuation method is not supported:
           %{valuation_method}.'
   invoices:
+    bulk_import:
+      errors:
+        file_read_failed: 'The bulk invoice import file could not be read.'
+        missing_columns: 'The bulk invoice import file is missing required columns: {missing_columns}'
+        unknown_columns: 'The bulk invoice import file contains unknown columns: {unknown_columns}'
+        unsupported_extension: 'The bulk invoice import file must be .csv or .xlsx (got {extension}).'
     creation:
       errors:
         duplicate_invoice: 'An invoice with the same identity already exists in the
@@ -1363,16 +1369,21 @@ cli:
         unknown_disposal_regime: 'Unknown disposal regime {regime!r}; accepted: {accepted}'
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
-        confirm_already_exists_message: 'An invoice with this identity already exists; returning it unchanged rather than creating a duplicate.'
-        confirm_counterparty_name_help: 'Counterparty display name (no extraction heuristic yet; normally required).'
-        confirm_counterparty_nif_help: 'Override the extracted supplier tax id.'
-        confirm_currency_help: 'ISO-4217 currency code.'
-        confirm_help: 'Re-extract evidence on-host and confirm it into a real catalogue Invoice.'
-        confirm_invoice_date_help: 'Override the extracted invoice date (YYYY-MM-DD).'
-        confirm_invoice_number_help: 'Override the extracted invoice number.'
-        confirm_iva_rate_help: 'Override the extracted IVA rate (omit to keep the extracted value).'
-        confirm_link_hint_message: 'Link this invoice to a ledger transaction with `aeat app ledger link`.'
-        confirm_taxable_base_help: 'Override the extracted taxable base.'
+        confirm_already_exists_message: An invoice with this identity already exists;
+          returning it unchanged rather than creating a duplicate.
+        confirm_counterparty_name_help: Counterparty display name (no extraction heuristic
+          yet; normally required).
+        confirm_counterparty_nif_help: Override the extracted supplier tax id.
+        confirm_currency_help: ISO-4217 currency code.
+        confirm_help: Re-extract evidence on-host and confirm it into a real catalogue
+          Invoice.
+        confirm_invoice_date_help: Override the extracted invoice date (YYYY-MM-DD).
+        confirm_invoice_number_help: Override the extracted invoice number.
+        confirm_iva_rate_help: Override the extracted IVA rate (omit to keep the extracted
+          value).
+        confirm_link_hint_message: Link this invoice to a ledger transaction with
+          `aeat app ledger link`.
+        confirm_taxable_base_help: Override the extracted taxable base.
         evidence_id_help: Evidence id (exact match)
         extract_attachment_id_help: Linked attachment id to extract from (alternative
           to --evidence-id).
@@ -1423,6 +1434,13 @@ cli:
             to ES).
           create_help: Create a linkable reconciliation invoice in the catalogue.
           group_help: Reconciliation catalogue invoices that link to transactions.
+          import_all_refused: 'bulk invoice import failed: every row was refused;
+            no invoices were created'
+          import_file_help: Path to a CSV or XLSX file of invoice rows (counterparty_nif,
+            counterparty_name, invoice_number, invoice_date, taxable_base, and optional
+            iva_rate/currency/country_code/notes).
+          import_file_not_found: 'File not found: {path}'
+          import_help: Bulk-create catalogue invoices from a CSV or XLSX file.
           invoice_id_help: Catalogue invoice id (or unambiguous prefix).
           list_help: List reconciliation catalogue invoices.
           remove_help: Delete one reconciliation catalogue invoice.

@@ -103,8 +103,39 @@ class CatalogueInvoiceListResult(OutputSchema):
     count: int
 
 
+class BulkInvoiceImportRowFailurePayload(OutputSchema):
+    """One refused row from a bulk invoice import, naming its row and field."""
+
+    row_number: int
+    field: str
+    reason: str
+
+
+@register_schema("ledger.invoice.catalogue.import")
+class CatalogueInvoiceImportResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger invoice catalogue import``.
+
+    Mirrors the application-layer
+    :class:`~aeat.application.invoices.BulkInvoiceImportResult`: ``created``
+    rows were persisted through
+    :func:`~aeat.application.invoices.create_catalogue_invoice`;
+    ``skipped_duplicate`` rows already existed under an identical
+    content-derived identity (a guarded idempotent re-import no-op); ``refused``
+    rows failed validation and were not persisted.
+    """
+
+    bucket_id: str
+    rows: int
+    created: int
+    skipped_duplicate: int
+    refused: list[BulkInvoiceImportRowFailurePayload] = []
+    created_invoice_ids: list[str] = []
+
+
 __all__ = [
+    "BulkInvoiceImportRowFailurePayload",
     "CatalogueInvoiceCreateResult",
+    "CatalogueInvoiceImportResult",
     "CatalogueInvoiceListResult",
     "CatalogueInvoiceRecordPayload",
     "CatalogueInvoiceRemoveResult",
