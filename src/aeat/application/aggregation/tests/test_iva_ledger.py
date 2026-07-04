@@ -533,6 +533,36 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_ob
     assert result.observations[0].ledger_id == transaction.transaction_id
 
 
+def test_repository_backed_projection_reports_out_of_period_catalogue_transactions(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A catalogue transaction outside the requested quarter must surface as an issue.
+
+    Regression test (issue #408): the repository-backed entry point must NOT
+    pre-filter the loaded catalogue by date range. ``OUTSIDE_PERIOD`` is a
+    genuine no-silent-under-declaration-class diagnostic -- an operator
+    querying Q2 needs to see that a Q3-dated catalogue transaction exists and
+    was excluded, not have it silently vanish before the classifier ever runs
+    (a pre-filtering optimisation would make this issue structurally
+    unreachable).
+    """
+    in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
+    out_of_period = _transaction("row-out-of-period", value_date=date(2026, 7, 10))
+    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    repository.save(TransactionCatalogue.from_transactions((in_period, out_of_period)))
+
+    result = aggregate_iva_ledger_observations_from_repositories(
+        bucket_id=_BUCKET_ID,
+        period=_Q2_2026,
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+    )
+
+    assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
+    assert len(result.issues) == 1
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert result.issues[0].transaction_id == out_of_period.transaction_id
+
+
 def test_internal_transfer_is_reported_as_unsupported_direction() -> None:
     transaction = _transaction(
         "row-transfer",
