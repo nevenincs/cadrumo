@@ -437,6 +437,7 @@ def _registry_observation_from_counterpart_rollup(
         country_code=rollup.counterparty_country,
         transaction_date=_period_representative_date(aggregation.period),
         base_amount=rollup.total_taxable_base,
+        invoice_total_amount=rollup.total_invoice_total,
         intracommunity_clave=_m349_clave_for_operation_kind(rollup.operation_kind),
         party_legal_name=rollup.counterparty_name or None,
     )

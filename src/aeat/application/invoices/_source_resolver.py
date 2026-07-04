@@ -39,6 +39,7 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
+    selector_as_dict,
 )
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind, IvaCategory
@@ -73,6 +74,7 @@ _M349_OPERADOR_ROW_BINDINGS: dict[BindingId, str] = {
     "iva-349-operador-row-clave": "clave_operacion",
     "iva-349-operador-row-base": "importe",
 }
+_M347_DECLARANTE_SUMMARY_RECORD = "m347_declarante_summary"
 _COLLECTIBLE_M349_OPERATION_TYPES: frozenset[IntracomOperationType] = frozenset(
     {
         IntracomOperationType.E,
@@ -202,8 +204,21 @@ class InvoiceCatalogueSourceResolver:
         )
 
 
-def _invoice_sources_for_revision(context: CalculationSourceContext) -> frozenset[str]:
-    return frozenset(binding.source for binding in context.revision.bindings if binding.source in _OWNED_SOURCES)
+def _invoice_sources_for_revision(context: CalculationSourceContext) -> frozenset[BindingSourceKind]:
+    declared_sources = frozenset(
+        binding.source for binding in context.revision.bindings if binding.source in _OWNED_SOURCES
+    )
+    if any(_is_m347_declarante_summary_binding(binding) for binding in context.revision.bindings):
+        return frozenset(_OWNED_SOURCES)
+    return declared_sources
+
+
+def _is_m347_declarante_summary_binding(binding: object) -> bool:
+    if not hasattr(binding, "source") or not hasattr(binding, "selector"):
+        return False
+    if binding.source not in _OWNED_SOURCES:
+        return False
+    return selector_as_dict(binding).get("record") == _M347_DECLARANTE_SUMMARY_RECORD
 
 
 def _invoice_in_context(invoice: Invoice, context: CalculationSourceContext) -> bool:
@@ -225,6 +240,8 @@ def _business_invoice_source_kind(invoice: BusinessOperationInvoice) -> str:
 
 
 def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:
+    if context.modelo == Modelo.M347.value:
+        return _m347_invoice_observation(invoice)
     clave = _intracommunity_clave(invoice)
     if clave is None:
         return None
@@ -242,7 +259,24 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
         country_code=invoice.counterparty_country,
         transaction_date=invoice.issued_at,
         base_amount=invoice.base_total,
+        invoice_total_amount=invoice.grand_total,
         intracommunity_clave=clave,
+        party_legal_name=invoice.counterparty_name,
+    )
+
+
+def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
+    if invoice.counterparty_country != "ES":
+        return None
+    return InvoiceObservation(
+        invoice_id=invoice.invoice_id,
+        source_kind=BindingSourceKind(_invoice_source_kind(invoice)),
+        party_tax_id=invoice.counterparty_tax_id,
+        country_code=invoice.counterparty_country,
+        transaction_date=invoice.issued_at,
+        base_amount=invoice.base_total,
+        invoice_total_amount=invoice.grand_total,
+        intracommunity_clave=None,
         party_legal_name=invoice.counterparty_name,
     )
 
@@ -385,6 +419,8 @@ def _business_invoice_observation(
     *,
     context: CalculationSourceContext,
 ) -> InvoiceObservation | None:
+    if context.modelo == Modelo.M347.value:
+        return _m347_business_invoice_observation(invoice)
     clave = _business_invoice_clave(invoice)
     if clave is None:
         return None
@@ -404,7 +440,28 @@ def _business_invoice_observation(
         country_code=country_code,
         transaction_date=_business_invoice_date(invoice),
         base_amount=invoice.taxable_base,
+        invoice_total_amount=invoice.total_amount,
         intracommunity_clave=clave,
+        party_legal_name=invoice.counterparty_name or None,
+    )
+
+
+def _m347_business_invoice_observation(invoice: BusinessOperationInvoice) -> InvoiceObservation | None:
+    country_code = (invoice.country_code or "ES").strip().upper()
+    if country_code != "ES" or invoice.operation_type is not None:
+        return None
+    party_tax_id = invoice.counterparty_nif.strip().upper()
+    if not party_tax_id:
+        raise RegistryValidationError(f"business invoice {invoice.invoice_id!r} has no counterparty tax id")
+    return InvoiceObservation(
+        invoice_id=invoice.invoice_id,
+        source_kind=BindingSourceKind(invoice.source_kind.value),
+        party_tax_id=party_tax_id,
+        country_code=country_code,
+        transaction_date=_business_invoice_date(invoice),
+        base_amount=invoice.taxable_base,
+        invoice_total_amount=invoice.total_amount,
+        intracommunity_clave=None,
         party_legal_name=invoice.counterparty_name or None,
     )
 

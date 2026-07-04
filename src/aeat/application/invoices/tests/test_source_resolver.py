@@ -19,6 +19,7 @@ from ....application.ledger import (
 )
 from ....core import BindingSourceKind, IntracomOperationType, Period
 from ....core.errors import AeatError, get_registered_error_code, resolve_error_message
+from ....core.external_constants import M347_THRESHOLD_EUR
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistryValidationError
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
@@ -248,6 +249,83 @@ def test_invoice_catalogue_source_resolver_folds_slim_received_service_acquisiti
     assert row.clave_operacion == "I"
     assert row.importe == Decimal("3000.00")
     assert {item.source_ref for item in resolution.provenance} == {f"payable_invoice:{added.record.invoice_id}"}
+
+
+def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_invoice_totals(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    collectible = CollectibleInvoiceService(settings=secure_profile.settings).add(
+        bucket_id=secure_profile.bucket_id,
+        counterparty_nif="B12345674",
+        counterparty_name="Cliente M347 SL",
+        invoice_number="M347-C-2025-001",
+        invoice_date="2025-02-10",
+        taxable_base=Decimal("1500.00"),
+        iva_amount=Decimal("315.00"),
+        total_amount=Decimal("1815.00"),
+    )
+    payable = PayableInvoiceService(settings=secure_profile.settings).add(
+        bucket_id=secure_profile.bucket_id,
+        counterparty_nif="B12345674",
+        counterparty_name="Cliente M347 SL",
+        invoice_number="M347-P-2025-001",
+        invoice_date="2025-03-10",
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("190.07"),
+        total_amount=Decimal("1190.07"),
+    )
+    floor_control = CollectibleInvoiceService(settings=secure_profile.settings).add(
+        bucket_id=secure_profile.bucket_id,
+        counterparty_nif="B87654321",
+        counterparty_name="At Floor SL",
+        invoice_number="M347-C-2025-002",
+        invoice_date="2025-03-15",
+        taxable_base=Decimal("2483.52"),
+        iva_amount=Decimal("521.54"),
+        total_amount=M347_THRESHOLD_EUR,
+    )
+    resolver = InvoiceCatalogueSourceResolver(
+        invoice_repository=InvoiceCatalogueRepository(objects=secure_profile.repository),
+        business_invoice_repository=BusinessOperationInvoiceRepository(objects=secure_profile.repository),
+    )
+    m347_snapshot = resources().modelos.authority.snapshot("347", filing_year=2025, period="0A")
+
+    m347_resolution = resolver.resolve(
+        CalculationSourceContext(
+            bucket_id=secure_profile.bucket_id,
+            modelo="347",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=m347_snapshot.revision,
+        ),
+    )
+
+    assert m347_resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    assert m347_resolution.binding_values[
+        "modelo-347-declarante-importe-total-anual-operaciones"
+    ] == M347_THRESHOLD_EUR + Decimal("0.01")
+    assert m347_resolution.detail_rows == ()
+    assert {item.source_ref for item in m347_resolution.provenance} == {
+        f"collectible_invoice:{collectible.record.invoice_id}",
+        f"payable_invoice:{payable.record.invoice_id}",
+        f"collectible_invoice:{floor_control.record.invoice_id}",
+    }
+
+    m349_snapshot = resources().modelos.authority.snapshot("349", filing_year=2025, period="1T")
+    m349_resolution = resolver.resolve(
+        CalculationSourceContext(
+            bucket_id=secure_profile.bucket_id,
+            modelo="349",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "1T"),
+            revision=m349_snapshot.revision,
+        ),
+    )
+
+    assert m349_resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("0")
+    assert m349_resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("0")
+    assert m349_resolution.detail_rows == ()
+    assert m349_resolution.provenance == ()
 
 
 def test_invoice_catalogue_source_resolver_folds_slim_consignment_transfer_for_m349(
