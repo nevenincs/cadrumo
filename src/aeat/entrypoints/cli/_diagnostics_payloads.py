@@ -221,3 +221,58 @@ class LlmUsageResult(OutputSchema):
     total_failed: int
     overall_success_rate: str
     has_run_data: bool
+
+
+@register_schema("diagnostics.telemetry.status")
+class TelemetryStatusResult(OutputSchema):
+    """JSON envelope for ``aeat app diagnostics telemetry status``.
+
+    Mirrors :class:`~aeat.application.diagnostics_telemetry.TelemetryStatusReport`.
+    Default-off, consent-gated remote telemetry posture
+    (``2026-07-04-remote-telemetry-adr``); this verb never emits anything, it
+    only reports the currently-effective :class:`~aeat.core.config.Settings`
+    fields plus the derived verdict a fully-acknowledged invocation would
+    currently receive.
+    """
+
+    opt_in: bool
+    tier: str
+    gestor_mode: bool
+    endpoint: str | None = None
+    would_emit_if_acknowledged: bool
+
+
+class TelemetryPayloadPreviewPayload(OutputSchema):
+    """The exact allowlisted event a flush would transmit.
+
+    Mirrors :class:`~aeat.core.telemetry.TelemetryEventPayload` field-for-field.
+    This IS the whole transmission allowlist: there is no other field a flush
+    could send.
+    """
+
+    schema_version: int
+    workspace_hash: str
+    command: str
+    counters: dict[str, int]
+    timings_ms: dict[str, int]
+    succeeded: bool
+    error_kind: str | None = None
+    captured_at: str
+
+
+@register_schema("diagnostics.telemetry.flush")
+class TelemetryFlushResult(OutputSchema):
+    """JSON envelope for ``aeat app diagnostics telemetry flush``.
+
+    Mirrors :class:`~aeat.application.diagnostics_telemetry.TelemetryFlushPreview`.
+    ``dry_run=True`` never performs a network call regardless of ``sent``;
+    ``sent`` reports whether a real (non-dry-run) invocation actually handed
+    the payload to the HTTP sink (``gate_permits and endpoint_configured``).
+    """
+
+    dry_run: bool
+    payload: TelemetryPayloadPreviewPayload
+    gate_permits: bool
+    endpoint_configured: bool
+    would_send: bool
+    sent: bool
