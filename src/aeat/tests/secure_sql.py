@@ -9,6 +9,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar
 
+from sqlalchemy import inspect as sa_inspect
+from sqlalchemy import text as sa_text
+
 from ..adapters.persistence.storage import EphemeralMasterKeyProvider
 from ..adapters.persistence.storage.bucket import (
     BucketKeySchedule,
@@ -144,6 +147,40 @@ def read_db_at_rest_bytes(db_path: Path) -> bytes:
     if wal_path.exists():
         data += wal_path.read_bytes()
     return data
+
+
+def reset_secure_object_store(repository: SecureObjectRepository) -> None:
+    """Truncate every per-test row from a shared bucket's secure-object store.
+
+    This is the load-bearing teardown that lets a MODULE-scoped
+    :func:`isolated_runtime_profile` be reused across the tests in a module
+    without on-disk state bleed. The expensive bucket provisioning — Argon2id
+    key-encryption-key derivation, wrapped-DEK mint, session open, engine and
+    table create — is paid once per module; this cheap whole-table DELETE
+    restores a clean ``secure_objects`` table before each test.
+
+    Only the SQLite catalogue rows accumulate per test: the bucket directory,
+    plaintext manifest, and separated wrapped DEK are provisioned-once static
+    artefacts that carry no per-test mutable state, so they are deliberately left
+    intact (clearing the keystore would strand the module-shared session's DEK).
+    Every domain catalogue the ledger and filing tests persist — transactions,
+    bucket-event history, invoices, work units, calculation revisions, and
+    attachment evidence bytes — lands as ``secure_objects`` rows keyed by
+    namespace and object-key digest, so a single whole-table DELETE resets the
+    entire persisted surface, including rows a test wrote under a second
+    ``bucket_id`` sharing the same store.
+
+    A naive module-scope fixture flip WITHOUT this reset ships a false-green: the
+    row accumulation makes idempotency and anti-tautology assertions stop biting
+    (a prior test's persisted row makes a fresh add resolve to an existing-row
+    no-op). Calling this before each test restores per-test isolation so those
+    assertions bite again.
+    """
+    engine = repository._engine
+    with engine.begin() as connection:
+        connection.execute(sa_text("DELETE FROM secure_objects"))
+        if sa_inspect(engine).has_table("secure_objects_quarantine"):
+            connection.execute(sa_text("DELETE FROM secure_objects_quarantine"))
 
 
 @contextmanager
@@ -457,4 +494,5 @@ __all__ = [
     "isolated_runtime_profile",
     "isolated_sessionless_storage_root",
     "isolated_two_bucket_runtime",
+    "reset_secure_object_store",
 ]

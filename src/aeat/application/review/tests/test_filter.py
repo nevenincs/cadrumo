@@ -271,14 +271,17 @@ def test_ledger_spec_is_frozen() -> None:
 
 def test_specs_reject_inconsistent_construction() -> None:
     """Direct construction with mismatched clauses / typed fields fails."""
-    cases = (
-        (LedgerReviewFilterSpec, {"status": LedgerReviewStatus.PENDING}, r"clauses|status|inconsistent"),
-        (InvoiceReviewFilterSpec, {"kind": InvoiceKind.ISSUED}, r"clauses|kind|inconsistent"),
-        (DeclaracionReviewFilterSpec, {"status": DeclaracionReviewStatus.PENDING}, r"clauses|status|inconsistent"),
-    )
-    for spec_type, kwargs, match in cases:
-        with pytest.raises(ValueError, match=match):
-            spec_type(clauses=(), **kwargs)
+    # Test LedgerReviewFilterSpec with inconsistent status
+    with pytest.raises(ValueError, match=r"clauses|status|inconsistent"):
+        LedgerReviewFilterSpec(clauses=(), status=LedgerReviewStatus.PENDING)
+
+    # Test InvoiceReviewFilterSpec with inconsistent kind
+    with pytest.raises(ValueError, match=r"clauses|kind|inconsistent"):
+        InvoiceReviewFilterSpec(clauses=(), kind=InvoiceKind.ISSUED)
+
+    # Test DeclaracionReviewFilterSpec with inconsistent status
+    with pytest.raises(ValueError, match=r"clauses|status|inconsistent"):
+        DeclaracionReviewFilterSpec(clauses=(), status=DeclaracionReviewStatus.PENDING)
 
     clauses = parse_filter_clauses(["period=2T", "year=2026"])
 
