@@ -182,6 +182,7 @@ def test_verification_finding_requires_legal_refs() -> None:
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
             message="cross-casilla predicate failed",
+            legal_refs=(),
         )
 
     assert "legal_refs" in str(raised.value)
