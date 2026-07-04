@@ -28,6 +28,8 @@ Batch 1 (2026-07-04): M222 and M220 are PROMOTED, dropping the residual 25 -> 23
 
 Batch 2 (2026-07-04): six M182-template informativas (165, 233, 156, 038, 185, 186) are PROMOTED, dropping the residual 23 -> 17 and growing `CANONICAL_MODELO_FLEET` 49 -> 55. See the "Batch 2" section below.
 
+Batch 3 (2026-07-04): five further informativas (179, 181, 270, 234, 238) are PROMOTED, dropping the residual 17 -> 12 and growing `CANONICAL_MODELO_FLEET` 55 -> 60. See the "Batch 3" section below.
+
 The corpus gap that blocked the prior pass is now closed. The binding deadline provision (Orden EHA/3290/2008 art 4) was fetched verbatim from the BOE consolidated text (BOE-A-2008-18497) and added to the bundled corpus, so the deadline window is grounded in the establishing provision rather than in guidance-tier instructions.
 
 Corpus and legal catalogue authored:
@@ -105,9 +107,37 @@ Batch 2 gate evidence:
 - Committed as a single atomic commit (all six together): splitting per-form would leave a broken intermediate state, because the enum removal of a modelo from `UNMODELED_OBLIGATIONS` without its committed registry tree breaks the `registry_modelo_codes == enum - NON_REGISTRY` parity gate. All six were built and green together, so one atomic commit is the correct clean state.
 - RAG grounding queries this batch: `vaultspec-rag` code "M182 informativa registry modelo deadline window enrolled procedure source" and "monthly deadline window period_kind monthly period token format"; then grep-confirmed the M182 template (legal file + two per-modelo sources + minimal tree), the M111 monthly window period format ("2025 01"), and read all six bundled corpus files verbatim to pin approval + plazo required_text.
 
+## Batch 3 (2026-07-04): five informativas (179 / 181 / 270 annual, 234 / 238 event-driven or RGAT-delegated)
+
+All five are PROMOTED from `UNMODELED_OBLIGATIONS`, dropping the residual 17 -> 12 and growing `CANONICAL_MODELO_FLEET` 55 -> 60 (auth-gate fleet-count test bumped 55 -> 60). Every one is grounded against corpus already bundled; every orden was pre-verified bundled AND every corpus file read before grounding, confirming each carries an approval article (art 1, `#a1`) and a plazo article with pinnable verbatim text. Nothing was fabricated.
+
+Three are clean annual-January (full calendar deadline windows, exactly the Batch-2 shape):
+
+- 179 (cesión de viviendas con fines turísticos, ANNUAL) — Orden HAC/612/2021 (BOE-A-2021-10163); art 1 + art 4 "entre el 1 y el 31 de enero de cada año". 3 annual January windows (2024-2026).
+- 181 (préstamos/créditos y operaciones financieras sobre inmuebles, ANNUAL) — Orden EHA/3514/2009 (BOE-A-2009-21165); art 1 + art 6 "entre el día 1 y el 31 del mes de enero de cada año". 3 annual windows.
+- 270 (resumen anual retenciones premios de loterías, ANNUAL) — Orden HAP/2368/2013 (BOE-A-2013-13228); art 1 + art 3 "en el mes de enero de cada año". 3 annual windows.
+
+Two carry NO calendar deadline windows — a deliberate, non-fabricated deadline-shape decision (the lead flagged this and endorsed "note the deadline-shape"):
+
+- 234 (DAC6 mecanismos transfronterizos, EVENT-DRIVEN) — Orden HAC/342/2021 (BOE-A-2021-5780); art 1 approval + art 4 plazo "en el plazo de los treinta días naturales siguientes al nacimiento de la obligación" (per RGAT art 46.3, RD 1065/2007). This is a per-event 30-día deadline, NOT a calendar window; RGAT art 46 is not bundled, so NO deadline_windows and no deadline application link are authored — a fixed date is not fabricated. cadence = `profile_based`.
+- 238 (DAC7 operadores de plataformas, ANNUAL) — Orden HAC/72/2024 (BOE-A-2024-2092); art 1 approval + art 9 plazo "tendrá carácter anual y su plazo de presentación será el establecido en el apartado 6 del artículo 54 del Reglamento General" (RD 1065/2007). The orden delegates the specific window to RGAT art 54.6, which is not bundled and does not state the month verbatim; rather than fabricate the January dates, NO deadline_windows and no deadline link are authored. The annual periodicity and the plazo article are grounded verbatim. cadence = `annual`.
+
+Both windowless modelos validate: the registry validator requires a revision to declare at least one casilla and official workbook-parity coverage (both satisfied), and only enforces "deadline_windows require a deadline application link" (vacuously true when there are none) — it does NOT require a revision to carry deadline windows. RGAT confirmation: `rg` found only `rd-1065-2007` arts 3/10/11/18/54-bis bundled — arts 46 and 54.6 are absent, so the event/delegated windows are genuinely ungroundable from the bundled corpus.
+
+Per modelo: a new `legal/modelo-<n>.toml` (approval + plazo legal_authority entries with corpus_ref + required_text, and two per-modelo sources mirroring modelo-182.toml) + a declaration-header registry tree (manifest, revision, two header casillas, application_links, construct, workbook_parity_ref; plus deadline_windows only for 179/181/270). No detail casillas, no bindings — no bundled DR, so no form casilla fabricated.
+
+Batch 3 gate evidence:
+
+- `bundled_authority().validate_registry()` passes with all five present (incl. legal-catalogue required_text cross-check of the 10 new legal entries and source sha256 match).
+- `deadline_windows(2024, ("179"/"181"/"270",))` = 1 Jan -> 31 Jan 2025; `deadline_windows(2025, ("234"/"238",))` = [] (windowless, by design).
+- New parametrized test `test_modelo_informativas_batch3_registry.py` (validator accept, approval/plazo grounding, window-shape per modelo, annual resolution, event/delegated windowlessness, out-of-UNMODELED) — 42 passed together with test_modelo.py, test_modelo_authorization_gate.py (fleet 60), test_obligation_coverage.py, test_deadline_window_source_tiers.py.
+- Touched-surface collect-only clean (registry/core/overview: 3984 collected, 0 errors). Pre-existing/unowned: `entrypoints/mcp` `pywintypes` collection error (env gap).
+- Committed atomically (all five together) — same parity-gate reasoning as Batch 2.
+- RAG grounding queries this batch: `vaultspec-rag` code "informativa registry modelo event-driven deadline window RGAT 30 días" and "registry validator revision requires deadline windows or casilla workbook parity"; then grep-confirmed the bundled RGAT article set (arts 46/54.6 absent), the validator's per-revision requirements (`_validate_revision_sections.py`, `_validate_application_links.py`), and read all five bundled corpus files verbatim.
+
 ## Notes
 
-- Ratchet remains OPEN: after Batch 2, 17 recognized-unmodeled obligations remain; S13 stays unchecked as a recurring ratchet step.
+- Ratchet remains OPEN: after Batch 3, 12 recognized-unmodeled obligations remain; S13 stays unchecked as a recurring ratchet step.
 - Locale leaves DEFERRED: the four locale catalogues (`ca.yml`, `en.yml`, `es.yml`, `hu.yml`) are peer-staged (`MM`) in the shared index, so the M216 locale labels were not authored this pass to avoid clobbering peer WIP. Follow-up: `python -m aeat.locales modelo scaffold <locale> 216 2024-y-siguientes` once the locale WIP lands.
 - Out-of-scope pre-existing failure observed and NOT owned by this surface: `test_catalogue_verification_normatives.py::test_orden_hac_242_2025_art_8_deadline_links_to_full_boe_corpus` asserts a stale sha256 for the `orden-hac-242-2025` corpus (committed-HEAD drift last touched by peer commit `2479085a8e`, unrelated to M216).
 - RAG grounding queries this pass: code search "M210 IRNR registry modelo definition deadline window"; "legal catalogue corpus_ref required_text evidence gate legal grounding"; "deadline window trimestral quarterly opens closes first twenty natural days"; followed by targeted grep confirmation of the M296 IRNR sibling structure, the deadline-window source-tier gate, the `cuota_a_ingresar` canonical role, and the existing M216 source_refs.

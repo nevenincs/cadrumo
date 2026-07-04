@@ -231,11 +231,6 @@ class Modelo(StrEnum):
 #: declaraciones informativas and retención forms; it is not yet AEAT's full
 #: ~200-form set.
 UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
-    Modelo.M234: "mecanismos transfronterizos de planificacion fiscal DAC6 (informativa)",
-    Modelo.M179: "cesion de uso de viviendas con fines turisticos (informativa anual)",
-    Modelo.M181: "prestamos, creditos y operaciones financieras sobre inmuebles (informativa anual)",
-    Modelo.M238: "operadores de plataformas DAC7 (informativa anual)",
-    Modelo.M270: "resumen anual de retenciones del gravamen especial sobre premios de loterias",
     Modelo.M140: "IRPF deduccion por maternidad, solicitud de abono anticipado",
     Modelo.M341: "reintegro de compensaciones del regimen especial de agricultura, ganaderia y pesca del IVA",
     Modelo.M380: "IVA operaciones asimiladas a las importaciones (declaracion-liquidacion)",

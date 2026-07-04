@@ -1,0 +1,66 @@
+[legal."orden-hac-612-2021:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-612-2021.html#a1"
+document_id = "BOE-A-2021-10163"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10163#a1"
+published_at = 2021-06-16
+effective_from = 2021-06-17
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-10163 art 1; pending operator re-stamp)"
+notes = "Orden HAC/612/2021 art 1: aprueba el modelo 179, declaración informativa anual de la cesión de uso de viviendas con fines turísticos. Orden habilitante del modelo 179."
+required_text = [
+    "Se aprueba el modelo 179",
+    "Declaración informativa anual de la cesión de uso de viviendas con fines turísticos",
+]
+
+[legal."orden-hac-612-2021:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-612-2021.html#a4"
+document_id = "BOE-A-2021-10163"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10163#a4"
+published_at = 2021-06-16
+effective_from = 2021-06-17
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-10163 art 4; pending operator re-stamp)"
+notes = "Orden HAC/612/2021 art 4: plazo de presentación del modelo 179. Entre el 1 y el 31 de enero de cada año, en relación con las operaciones del año natural inmediato anterior."
+required_text = [
+    "El plazo de presentación del modelo 179 será el comprendido entre el 1 y el 31 de enero de cada año",
+    "información de las operaciones del año natural inmediato anterior",
+]
+
+[sources."enrolled-modelo-179-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-612-2021.html"
+sha256 = "2287eb1b8d7069a0ec3d7a84f27feedb0a6c521ace9447d89e34930a4579dc16"
+bytes = 1023
+retrieved_at = 2026-07-04
+published_at = 2021-06-16
+applies_from = 2021-06-17
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10163"
+review_status = "reviewed"
+
+# Same bundled orden HTML under layout_authority tier for the per-revision
+# workbook-parity-coverage gate. NOT the authoritative AEAT Diseño de Registros
+# (not bundled); grounds only the static form-approval layout.
+[sources."enrolled-modelo-179-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-612-2021.html"
+sha256 = "2287eb1b8d7069a0ec3d7a84f27feedb0a6c521ace9447d89e34930a4579dc16"
+bytes = 1023
+retrieved_at = 2026-07-04
+published_at = 2021-06-16
+applies_from = 2021-06-17
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10163"
+review_status = "reviewed"
