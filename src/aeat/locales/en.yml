@@ -869,6 +869,9 @@ application:
         %{filing_year} %{period}, but a refund is only available in the year's last
         filing period. Carry the credit forward (compensar), or make the election
         in the last period.
+      review_only_workspace_no_authority: This review-only workspace carries no filing
+        authority; it may be read and verified but must never be treated as evidence
+        that calculation revision %{calculation_revision_id} has been or will be filed.
       review_package_generic: An error occurred while building the review package.
       review_package_integrity: 'Review package %{package_path} failed checksum verification:
         %{detail}.'
@@ -2543,6 +2546,20 @@ cli:
       key_help: Key to read (e.g. tax.id, iva.regime)
     google:
       client_json_help: Path to a Cloud Console Desktop OAuth client JSON file
+      credential_source:
+        delegate_help: 'Chained impersonation delegate service-account email (repeatable)'
+        detail:
+          impersonation_config_invalid: 'the impersonation configuration is invalid: {detail}'
+          oauth_desktop_rejects_impersonation_options: '--kind oauth_desktop does not accept --target-principal, --scope, --delegate, --subject, or --lifetime-seconds'
+          target_principal_required: '--target-principal is required when --kind is service_account_impersonation'
+        help: 'Select which Google credential source the active profile uses (interactive OAuth Desktop, or a shared service-account impersonation grant)'
+        kind_help: 'Credential source: oauth_desktop (default, interactive consent) or service_account_impersonation (shared SA via ADC + IAM)'
+        lifetime_help: 'Requested impersonated token lifetime in seconds (defaults to Google''s 3600s ceiling)'
+        scope_help: 'OAuth scope requested for the impersonated token (repeatable; defaults to the Sheets/Drive data-access scopes)'
+        set_help: 'Persist the active profile''s Google credential-source selection'
+        show_help: 'Show the active profile''s persisted Google credential-source selection'
+        subject_help: 'Workspace user email to impersonate via domain-wide delegation (optional)'
+        target_principal_help: 'Service-account email to impersonate (required for --kind service_account_impersonation)'
       detail:
         client_json_bad_wrapper: client JSON at {path} has a non-object "installed"
           wrapper
@@ -2559,12 +2576,15 @@ cli:
           --dry-run is set, because a bounded non-dry-run would create a partial remote
           mirror manifest.
       errors:
+        adc_stale: 'Application Default Credentials could not be refreshed: {detail}'
+        adc_unavailable: 'Application Default Credentials are not available on this host: {detail}'
         auth_failed: 'Google authentication failed: {detail}'
         browser_open: 'Could not open a browser to authorise Google access: {detail}'
         client_not_registered: No Google OAuth client is registered for this profile.
           Run `aeat config google register --client-json <path>` first.
         client_revoked: The registered Google OAuth client has been revoked. Re-register
           it with `aeat config google register`.
+        impersonation_refused: 'The service-account impersonation grant was refused: {detail}'
         keychain_locked: The system keychain that stores the Google credentials is
           locked or unavailable.
         loopback_bind: 'Could not open a local port to complete Google sign-in: {detail}'
@@ -4710,7 +4730,8 @@ errors:
       or used.
     fail_financial_usage_ratios_usage_ratio_persistence: The usage-ratio profile could
       not be read or written.
-    fail_google_adc_stale: 'Application Default Credentials could not be refreshed. Run gcloud auth application-default login.'
+    fail_google_adc_stale: Application Default Credentials could not be refreshed.
+      Run gcloud auth application-default login.
     fail_google_adc_unavailable: Application Default Credentials could not be found
       on this host. Run gcloud auth application-default login.
     fail_google_browser_open: The browser could not be opened to show the Google consent

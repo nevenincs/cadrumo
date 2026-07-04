@@ -941,6 +941,10 @@ application:
       refund_election_not_eligible: S'ha triat tornar per al Model %{modelo} %{filing_year}
         %{period}, pero la devolucio nomes esta disponible en l'ultim periode de declaracio
         de l'any. Arrossega el credit (compensar) o tria la devolucio en l'ultim periode.
+      review_only_workspace_no_authority: Aquest espai de treball de només revisió
+        no té autoritat de presentació; es pot llegir i verificar, però mai s'ha de
+        tractar com a prova que la revisió de càlcul %{calculation_revision_id} ha
+        estat o serà presentada.
       review_package_generic: S'ha produït un error en construir el paquet de revisió.
       review_package_integrity: 'El paquet de revisió %{package_path} no ha superat
         la verificació d''integritat: %{detail}.'
@@ -2714,6 +2718,20 @@ cli:
       key_help: Clau a llegir (ex. tax.id, iva.regime)
     google:
       client_json_help: Ruta al fitxer JSON del client OAuth Desktop de Cloud Console
+      credential_source:
+        delegate_help: 'Correu de compte de servei delegat en una suplantació encadenada (repetible)'
+        detail:
+          impersonation_config_invalid: 'la configuració de suplantació no és vàlida: {detail}'
+          oauth_desktop_rejects_impersonation_options: '--kind oauth_desktop no accepta --target-principal, --scope, --delegate, --subject ni --lifetime-seconds'
+          target_principal_required: '--target-principal és obligatori quan --kind és service_account_impersonation'
+        help: 'Selecciona quina font de credencials de Google fa servir el perfil actiu (OAuth interactiu d''escriptori, o una suplantació compartida de compte de servei)'
+        kind_help: 'Font de credencials: oauth_desktop (per defecte, consentiment interactiu) o service_account_impersonation (compte de servei compartit mitjançant ADC + IAM)'
+        lifetime_help: 'Durada sol·licitada del testimoni suplantat en segons (per defecte el límit de 3600s de Google)'
+        scope_help: 'Abast OAuth sol·licitat per al testimoni suplantat (repetible; per defecte els abasts d''accés a dades de Sheets/Drive)'
+        set_help: 'Desa la selecció de font de credencials de Google del perfil actiu'
+        show_help: 'Mostra la selecció de font de credencials de Google desada per al perfil actiu'
+        subject_help: 'Correu de l''usuari de Workspace a suplantar mitjançant delegació a tot el domini (opcional)'
+        target_principal_help: 'Correu del compte de servei a suplantar (obligatori amb --kind service_account_impersonation)'
       detail:
         client_json_bad_wrapper: el JSON de client a {path} té un embolcall "installed"
           que no és un objecte
@@ -2731,6 +2749,8 @@ cli:
           usar --limit llevat que --dry-run estigui activat, perque una execucio real
           acotada crearia un manifest remot parcial.
       errors:
+        adc_stale: 'No s''han pogut renovar les Credencials Predeterminades de l''Aplicació (ADC): {detail}'
+        adc_unavailable: 'Les Credencials Predeterminades de l''Aplicació (ADC) no estan disponibles en aquest equip: {detail}'
         auth_failed: 'L''autenticació amb Google ha fallat: {detail}'
         browser_open: 'No s''ha pogut obrir un navegador per autoritzar l''accés a
           Google: {detail}'
@@ -2739,6 +2759,7 @@ cli:
           <ruta>`.
         client_revoked: El client OAuth de Google registrat ha estat revocat. Torna
           a registrar-lo amb `aeat config google register`.
+        impersonation_refused: 'S''ha rebutjat la suplantació del compte de servei: {detail}'
         keychain_locked: El clauer del sistema que desa les credencials de Google
           està blocat o no disponible.
         loopback_bind: 'No s''ha pogut obrir un port local per completar l''inici
@@ -5010,7 +5031,8 @@ errors:
       del llibre del bucket.
     fail_financial_usage_ratios_usage_ratio_persistence: No s'ha pogut llegir o escriure
       el perfil de percentatges d'ús.
-    fail_google_adc_stale: 'No s''han pogut renovar les credencials predeterminades d''aplicació (ADC). Executeu gcloud auth application-default login.'
+    fail_google_adc_stale: No s'han pogut renovar les credencials predeterminades
+      d'aplicació (ADC). Executeu gcloud auth application-default login.
     fail_google_adc_unavailable: No s'han trobat credencials predeterminades d'aplicació
       (ADC) en aquest equip. Executeu gcloud auth application-default login.
     fail_google_browser_open: No s'ha pogut obrir el navegador per mostrar la pàgina

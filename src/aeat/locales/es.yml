@@ -954,6 +954,10 @@ application:
         %{period}, pero la devolucion solo esta disponible en el ultimo periodo de
         declaracion del ano. Arrastra el credito (compensar) o elige la devolucion
         en el ultimo periodo.
+      review_only_workspace_no_authority: Este espacio de trabajo de solo revisión
+        no tiene autoridad de presentación; puede leerse y verificarse, pero nunca
+        debe tratarse como prueba de que la revisión de cálculo %{calculation_revision_id}
+        ha sido o será presentada.
       review_package_generic: Se produjo un error al generar el paquete de revisión.
       review_package_integrity: 'El paquete de revisión %{package_path} no superó
         la verificación de la suma de comprobación: %{detail}.'
@@ -2745,6 +2749,20 @@ cli:
       key_help: Clave a leer (ej. tax.id, iva.regime)
     google:
       client_json_help: Ruta al archivo JSON del cliente OAuth Desktop de Cloud Console
+      credential_source:
+        delegate_help: 'Correo de cuenta de servicio delegada en una suplantación encadenada (repetible)'
+        detail:
+          impersonation_config_invalid: 'la configuración de suplantación no es válida: {detail}'
+          oauth_desktop_rejects_impersonation_options: '--kind oauth_desktop no acepta --target-principal, --scope, --delegate, --subject ni --lifetime-seconds'
+          target_principal_required: '--target-principal es obligatorio cuando --kind es service_account_impersonation'
+        help: 'Selecciona qué fuente de credenciales de Google usa el perfil activo (OAuth interactivo de escritorio, o una suplantación compartida de cuenta de servicio)'
+        kind_help: 'Fuente de credenciales: oauth_desktop (por defecto, consentimiento interactivo) o service_account_impersonation (cuenta de servicio compartida mediante ADC + IAM)'
+        lifetime_help: 'Duración solicitada del token suplantado en segundos (por defecto el límite de 3600s de Google)'
+        scope_help: 'Alcance OAuth solicitado para el token suplantado (repetible; por defecto los alcances de acceso a datos de Sheets/Drive)'
+        set_help: 'Guarda la selección de fuente de credenciales de Google del perfil activo'
+        show_help: 'Muestra la selección de fuente de credenciales de Google guardada para el perfil activo'
+        subject_help: 'Correo del usuario de Workspace a suplantar mediante delegación en todo el dominio (opcional)'
+        target_principal_help: 'Correo de la cuenta de servicio a suplantar (obligatorio con --kind service_account_impersonation)'
       detail:
         client_json_bad_wrapper: el JSON de cliente en {path} tiene un envoltorio
           "installed" que no es un objeto
@@ -2762,6 +2780,8 @@ cli:
           usar --limit salvo que --dry-run este activado, porque una ejecucion real
           acotada crearia un manifiesto remoto parcial.
       errors:
+        adc_stale: 'No se pudieron renovar las Credenciales Predeterminadas de la Aplicación (ADC): {detail}'
+        adc_unavailable: 'Las Credenciales Predeterminadas de la Aplicación (ADC) no están disponibles en este equipo: {detail}'
         auth_failed: 'La autenticación con Google falló: {detail}'
         browser_open: 'No se pudo abrir un navegador para autorizar el acceso a Google:
           {detail}'
@@ -2770,6 +2790,7 @@ cli:
           <ruta>`.
         client_revoked: El cliente OAuth de Google registrado ha sido revocado. Vuelve
           a registrarlo con `aeat config google register`.
+        impersonation_refused: 'Se rechazó la suplantación de la cuenta de servicio: {detail}'
         keychain_locked: El llavero del sistema que guarda las credenciales de Google
           está bloqueado o no disponible.
         loopback_bind: 'No se pudo abrir un puerto local para completar el inicio
@@ -5060,7 +5081,8 @@ errors:
       libro del bucket.
     fail_financial_usage_ratios_usage_ratio_persistence: No se pudo leer o escribir
       el perfil de porcentajes de uso.
-    fail_google_adc_stale: 'No se han podido renovar las credenciales predeterminadas de aplicación (ADC). Ejecute gcloud auth application-default login.'
+    fail_google_adc_stale: No se han podido renovar las credenciales predeterminadas
+      de aplicación (ADC). Ejecute gcloud auth application-default login.
     fail_google_adc_unavailable: No se han encontrado credenciales predeterminadas
       de aplicación (ADC) en este equipo. Ejecute gcloud auth application-default
       login.
