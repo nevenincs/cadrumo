@@ -173,7 +173,7 @@ class NifIvaCheckSedeDriver:
         """Construct a driver bound to ``settings``.
 
         Args:
-            settings: Optional :class:`~aeat.core.config.Settings` instance.
+            settings: Optional :class:`~core.config.Settings` instance.
                 When ``None`` a default ``Settings()`` instance is created at
                 ``collect_async`` / ``collect`` call time so callers that
                 only inspect :attr:`mode` or call :meth:`planned_operations`
@@ -200,7 +200,7 @@ class NifIvaCheckSedeDriver:
         per NIF in ``expected`` (sorted alphabetically), and finally a
         ``discard-session`` action. The sequence is used by the remote-state
         guard pre-flight to validate that all planned operations are within the
-        driver's declared :class:`~aeat.domain.calculations.registry.RemoteStateGuardPolicy`.
+        driver's declared :class:`~domain.calculations.registry.RemoteStateGuardPolicy`.
 
         Args:
             payload: Raw oracle payload bytes. Not read by this driver; the
@@ -209,7 +209,7 @@ class NifIvaCheckSedeDriver:
                 VIES validity is to be checked. At least one entry is required.
 
         Returns:
-            An immutable tuple of :class:`~aeat.domain.calculations.registry.RemoteOperation`
+            An immutable tuple of :class:`~domain.calculations.registry.RemoteOperation`
             records in execution order.
 
         Raises:
@@ -275,7 +275,7 @@ class NifIvaCheckSedeDriver:
         *,
         expected: Mapping[str, object],
     ) -> AeatNifIvaObservation:
-        """Collect results and return a typed :class:`~aeat.domain.calculations.registry.AeatNifIvaObservation`.
+        """Collect results and return a typed :class:`~domain.calculations.registry.AeatNifIvaObservation`.
 
         Calls :meth:`collect` and projects the observations into the
         ``AeatNifIvaObservation`` shape the registry oracle expects: a
@@ -289,7 +289,7 @@ class NifIvaCheckSedeDriver:
             expected: Mapping keyed by NIF whose VIES validity is to be checked.
 
         Returns:
-            An :class:`~aeat.domain.calculations.registry.AeatNifIvaObservation`
+            An :class:`~domain.calculations.registry.AeatNifIvaObservation`
             with the collected verdicts and evidence locator.
         """
         result = self.collect(payload, expected=expected)
