@@ -10,6 +10,9 @@ folder selected for the profile and is read by
 :func:`adapters.outbound.storage.get_storage_provider` when building the
 Drive backend. :class:`adapters.outbound.google.DriveAppProperties`
 captures the typed ``appProperties`` commit-log schema at the storage boundary.
+See :mod:`adapters.outbound.google._impersonation` for
+:class:`adapters.outbound.google.GoogleCredentialSourceSelection`, the
+per-profile persisted choice of :class:`core.GoogleCredentialSourceKind`.
 
 The OAuth scope constants come from :class:`core.config.Settings` and are
 bundled as :data:`adapters.outbound.google.REQUIRED_SCOPES` for login,

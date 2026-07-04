@@ -8,11 +8,15 @@ active profile. :class:`core.config.Settings` drives the choice:
 - ``aeat_storage_provider_kind`` selects the backend.
 - ``aeat_local_storage_root`` chooses the root directory for the local
   backend.
-- ``aeat_google_drive_root_folder_id`` + the per-profile
-  :class:`adapters.outbound.google.OAuthClient` and
-  :class:`adapters.outbound.google.OAuthToken` records (loaded via
-  :mod:`adapters.outbound.google._session_store`)
-  parameterise the Drive backend.
+- ``aeat_google_drive_root_folder_id`` plus the per-profile persisted
+  :class:`core.GoogleCredentialSourceKind` selection
+  (:class:`adapters.outbound.google.GoogleCredentialSourceSelection`,
+  loaded via :mod:`adapters.outbound.google._session_store`) parameterise
+  the Drive backend's credentials — either the default per-profile
+  :class:`adapters.outbound.google.OAuthClient` /
+  :class:`adapters.outbound.google.OAuthToken` records, or a
+  service-account impersonation grant resolved via
+  :func:`adapters.outbound.google.resolve_impersonated_credentials`.
 
 Composition order:
 
@@ -21,12 +25,17 @@ Composition order:
 2. Read settings via :func:`core.config.load_settings`.
 3. Dispatch on :class:`ProviderKind`. ``LOCAL_FILESYSTEM`` builds a
    :class:`adapters.outbound.storage._local.LocalFileSystemProvider`
-   rooted at ``aeat_local_storage_root / profile``; ``GOOGLE_DRIVE`` loads the
-   per-profile ``oauth-client`` and ``oauth-token``, builds ``Credentials``,
-   and instantiates
+   rooted at ``aeat_local_storage_root / profile``; ``GOOGLE_DRIVE`` calls
+   :func:`build_google_credentials`, which reads the profile's persisted
+   :class:`adapters.outbound.google.GoogleCredentialSourceSelection` (a
+   missing selection defaults to
+   :attr:`core.GoogleCredentialSourceKind.OAUTH_DESKTOP`, preserving the
+   existing default byte-for-byte) and dispatches to either the
+   OAuth-Desktop hydration or
+   :func:`adapters.outbound.google.resolve_impersonated_credentials`, then
+   instantiates
    :class:`adapters.outbound.storage._google_drive.GoogleDriveProvider`
-   keyed on
-   ``aeat_google_drive_root_folder_id``.
+   keyed on ``aeat_google_drive_root_folder_id``.
 4. Refuse unknown kinds with :class:`OutboundStorageValidationError`.
 """
 
@@ -35,8 +44,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from google.oauth2.credentials import Credentials
+    from google.auth.credentials import Credentials
 
+from ....core import GoogleCredentialSourceKind
 from ....core.config import Settings, load_settings
 from ._errors import OutboundStorageError, OutboundStorageValidationError
 from ._protocol import StorageProvider
@@ -63,6 +73,48 @@ def _parse_kind(raw: str) -> ProviderKind:
 
 
 def build_google_credentials(*, profile: str) -> Credentials:
+    """Resolve Google ``Credentials`` for the profile's chosen credential source.
+
+    Reads the profile's persisted
+    :class:`adapters.outbound.google.GoogleCredentialSourceSelection`
+    (:func:`adapters.outbound.google.load_credential_source_selection`). A
+    missing selection defaults to
+    :attr:`core.GoogleCredentialSourceKind.OAUTH_DESKTOP`, so a profile that
+    has never opted into service-account impersonation gets byte-for-byte
+    the same behaviour as before this dispatch existed.
+
+    - ``OAUTH_DESKTOP`` (the default): hydrates ``Credentials`` from the
+      per-profile :class:`adapters.outbound.google.OAuthClient` and
+      :class:`adapters.outbound.google.OAuthToken` records via
+      :func:`_build_oauth_desktop_credentials`.
+    - ``SERVICE_ACCOUNT_IMPERSONATION``: delegates to
+      :func:`adapters.outbound.google.resolve_impersonated_credentials`
+      with the persisted
+      :class:`adapters.outbound.google.GoogleImpersonationConfig`
+      (per ``composition-service-no-parallel-write-path``: this factory
+      never re-implements ADC discovery or impersonation wrapping).
+
+    Imports the upstream Google libraries lazily so unit tests for the
+    local backend do not pay the cost.
+    """
+    from ..google import load_credential_source_selection
+
+    selection = load_credential_source_selection(profile)
+    kind = selection.kind if selection is not None else GoogleCredentialSourceKind.OAUTH_DESKTOP
+
+    if kind is GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION:
+        # The selection validator (`GoogleCredentialSourceSelection`)
+        # guarantees `impersonation` is populated whenever `kind` is
+        # `SERVICE_ACCOUNT_IMPERSONATION`.
+        assert selection is not None and selection.impersonation is not None
+        from ..google import resolve_impersonated_credentials
+
+        return resolve_impersonated_credentials(selection.impersonation)
+
+    return _build_oauth_desktop_credentials(profile=profile)
+
+
+def _build_oauth_desktop_credentials(*, profile: str) -> Credentials:
     """Hydrate Google ``Credentials`` from the per-profile OAuth records.
 
     Loads :class:`adapters.outbound.google.OAuthClient` and
