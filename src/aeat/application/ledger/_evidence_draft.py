@@ -23,13 +23,24 @@ LLM (``sensitive-financial-data-secure-storage-only``,
 ``2026-06-10-llm-evidence-classification-adr``). This module makes no network
 call and performs no filesystem write.
 
+A scan-only PDF (no embedded text layer) or an image attachment has nothing for
+:func:`extract_invoice_fields` to read, so
+:func:`extract_invoice_draft_from_evidence` falls back to the on-host LOCAL vision
+reader (:mod:`._evidence_draft_vision`) -- the same rasterise-then-read-with-Ollama
+transport :class:`aeat.application.ledger.LocalVisionLLMClassifier` already uses for
+classification, gated by :attr:`aeat.core.ServiceCapability.LLM_VISION` and never a
+cloud call. When on-host vision reading is disabled for the profile, or the local
+Ollama runtime is unreachable, the caller gets a typed, instructive refusal --
+never a silent empty draft.
+
 :func:`extract_invoice_draft_from_evidence` is the CLI-facing wiring layer: it
 resolves an already-stored ``purchase_invoice_evidence`` record or a linked
 ``attachment_id`` to its in-memory bytes (through
 :func:`._evidence_input.resolve_purchase_invoice_evidence_input` /
 :func:`._evidence_input.resolve_attachment_evidence_input`) and runs
-:func:`extract_invoice_fields` over them, so ``aeat app ledger evidence extract``
-needs only a bucket id plus one of the two reference ids.
+:func:`extract_invoice_fields` over them, falling back to the on-host vision reader
+for scan-only PDFs and images, so ``aeat app ledger evidence extract`` needs only a
+bucket id plus one of the two reference ids.
 
 :func:`confirm_invoice_draft_from_evidence` is the non-interactive CONFIRM step
 that closes the review loop: it re-runs the on-host extraction, applies any
@@ -62,7 +73,7 @@ from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.parsing import parse_date
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
-from ._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
+from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from ._evidence_input import (
     EvidenceInput,
     resolve_attachment_evidence_input,
@@ -284,9 +295,10 @@ def extract_invoice_draft_from_evidence(
     Raises:
         PurchaseInvoiceEvidenceInputError: When neither or both of
             *evidence_id* / *attachment_id* are supplied, when the resolved
-            evidence is not a PDF, or when the PDF has no usable text layer
-            (scan-only / XFA) -- the caller should fall back to the on-host
-            vision reader in that case.
+            evidence's media type is unsupported, or when a scan-only PDF /
+            image falls back to the on-host vision reader and that reader is
+            disabled for the profile or the local Ollama runtime is
+            unreachable.
         PurchaseInvoiceEvidenceNotFoundError: When *evidence_id* names no
             record in *bucket_id*.
     """
@@ -310,7 +322,58 @@ def extract_invoice_draft_from_evidence(
     else:
         assert attachment_id is not None  # narrowed by the exactly-one guard above
         evidence_input = resolve_attachment_evidence_input(attachment_id, store=store)
-    return extract_invoice_fields(evidence_input)
+
+    if evidence_input.media_kind is MediaKind.PDF:
+        try:
+            return extract_invoice_fields(evidence_input)
+        except PurchaseInvoiceEvidenceInputError:
+            # No usable text layer (scan-only / XFA) -> on-host vision fallback below.
+            pass
+    return _extract_invoice_fields_via_vision(evidence_input, settings=resolved_settings)
+
+
+def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Settings) -> InvoiceDraft:
+    """Rasterise/encode *evidence* and read it with the on-host local vision model.
+
+    Gated by :attr:`aeat.core.ServiceCapability.LLM_VISION` -- an operator who has
+    opted out gets a typed refusal naming the capability toggle, never a silent
+    empty draft. A missing/unreachable local Ollama runtime, or an unrasterisable
+    PDF, is converted to the same instructive refusal the classification vision
+    path uses (:func:`aeat.application.provisioning.probe_ollama_vision`).
+    """
+    import httpx
+
+    from ...adapters.outbound.llm import LLMPdfRasterisationError, LLMProviderError
+    from ...core import ServiceCapability
+    from ..provisioning import probe_ollama_vision
+    from ..user_profile import resolve_active_capability
+    from ._evidence_draft_vision import extract_invoice_fields_from_images
+
+    if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
+        raise PurchaseInvoiceEvidenceInputError(
+            "on-host LLM vision reading is disabled for this profile; enable it to read a scan-only "
+            "PDF or image evidence",
+            suggestion="aeat config profile capabilities set llm_vision on",
+        )
+
+    try:
+        if evidence.media_kind is MediaKind.PDF:
+            from ...adapters.outbound.llm import rasterise_pdf_pages_to_base64_png
+
+            images = rasterise_pdf_pages_to_base64_png(evidence.data)
+        else:
+            import base64
+
+            images = (base64.b64encode(evidence.data).decode("ascii"),)
+        return extract_invoice_fields_from_images(images, settings=settings)
+    except (httpx.HTTPError, LLMProviderError, LLMPdfRasterisationError) as exc:
+        status = probe_ollama_vision(settings)
+        fix = status.remediation or "ensure the local Ollama vision model is reachable"
+        detail = status.detail if not status.available else str(exc)
+        raise PurchaseInvoiceEvidenceInputError(
+            f"on-host vision reading failed: {detail}. Fix: {fix}",
+            suggestion=fix,
+        ) from exc
 
 
 class InvoiceConfirmationResult(BaseModel):

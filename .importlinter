@@ -677,6 +677,7 @@ ignore_imports =
     aeat.application.ledger._business_operation_invoice -> aeat.adapters.**
     aeat.application.ledger._evidence -> aeat.adapters.**
     aeat.application.ledger._evidence_draft -> aeat.adapters.**
+    aeat.application.ledger._evidence_draft_vision -> aeat.adapters.**
     aeat.application.ledger._evidence_textlayer -> aeat.adapters.**
     aeat.application.ledger._llm_classification -> aeat.adapters.**
     aeat.application.ledger._llm_diagnostics -> aeat.adapters.**

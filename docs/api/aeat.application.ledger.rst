@@ -23,6 +23,8 @@ Submodules
    aeat.application.ledger._business_operation_invoice
    aeat.application.ledger._evidence
    aeat.application.ledger._evidence_advisory
+   aeat.application.ledger._evidence_draft
+   aeat.application.ledger._evidence_draft_vision
    aeat.application.ledger._evidence_input
    aeat.application.ledger._evidence_split
    aeat.application.ledger._evidence_textlayer
