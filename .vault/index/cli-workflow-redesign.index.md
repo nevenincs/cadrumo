@@ -309,6 +309,7 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-P02-S09]]'
   - '[[2026-05-14-cli-workflow-redesign-P03-S11]]'
   - '[[2026-05-14-cli-workflow-redesign-P03-S12]]'
+  - '[[2026-05-14-cli-workflow-redesign-P03-S13]]'
   - '[[2026-05-14-cli-workflow-redesign-P03-S14]]'
   - '[[2026-05-14-cli-workflow-redesign-P03-S15]]'
   - '[[2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr]]'
@@ -430,6 +431,7 @@ related:
   - '[[2026-06-12-cli-workflow-redesign-W77-P374-S2152]]'
   - '[[2026-06-12-cli-workflow-redesign-W77-P374-S2153]]'
   - '[[2026-07-04-cli-workflow-redesign-audit]]'
+  - '[[2026-07-04-cli-workflow-redesign-reference]]'
 ---
 
 # `cli-workflow-redesign` feature index
@@ -823,6 +825,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-P02-S09` - Add non-filing communication validation rules for rejected filing, deadline, live-read, and portal surfaces
 - `2026-05-14-cli-workflow-redesign-P03-S11` - Add Modelo 145 registry TOML using only source-backed communication, validation, and export authority
 - `2026-05-14-cli-workflow-redesign-P03-S12` - Model Modelo 145 lifecycle as local payer communication rather than AEAT filing
+- `2026-05-14-cli-workflow-redesign-P03-S13` - Add export layout metadata grounded in the official record design
 - `2026-05-14-cli-workflow-redesign-P03-S14` - Exclude filing schedules, deadline windows, live cross references, filing application links, and portal read or write links from Modelo 145
 - `2026-05-14-cli-workflow-redesign-P03-S15` - Verify Modelo 145 registry load, source grounding, export metadata, and rejected filing surfaces
 
@@ -833,6 +836,10 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan` - `cli-workflow-redesign` `modelo-145-local-payer-communication-reopening` plan
 - `2026-05-21-state-architecture-plan` - `cli-workflow-redesign` plan: profile state-management architecture
 - `2026-05-21-taxpayer-type-applicability-plan` - `cli-workflow-redesign` plan: taxpayer entity-type / regime / enrolment model
+
+### reference
+
+- `2026-07-04-cli-workflow-redesign-reference` - `cli-workflow-redesign` reference: `Modelo 145 fixed-width export layout ground-truth (dr145 v2.0)`
 
 ### research
 
