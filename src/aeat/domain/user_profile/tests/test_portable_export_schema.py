@@ -126,9 +126,7 @@ def test_coverage_manifest_row_counts_are_immutable_after_default_and_validation
 
     for manifest in manifests:
         assert isinstance(manifest.row_counts_by_namespace, MappingProxyType)
-        try:
-            row_counts_getattr = manifest.row_counts_by_namespace.__setitem__
-            row_counts_getattr("aeat.domain.buckets.event_history", 2)
-            pytest.fail("Expected TypeError")
-        except TypeError:
-            pass
+        # Immutability is the absence of a mutation method, not a raised exception
+        # from one: mappingproxy exposes no `__setitem__` at all, so item
+        # assignment (`obj[key] = value`) has no dispatch target to reach.
+        assert not hasattr(manifest.row_counts_by_namespace, "__setitem__")
