@@ -13,12 +13,26 @@ from pathlib import Path
 
 import pytest
 
+from .....core import GoogleCredentialSourceKind
 from .....core.config import override_settings
 from .....core.errors import resolve_error_message
 from .....core.i18n import tr
 from .....tests.secure_sql import isolated_runtime_profile
-from ...google import OAuthClient, save_client
-from .. import OutboundStorageValidationError, ProviderKind, StorageProvider, get_storage_provider
+from ...google import (
+    GoogleAuthAdcUnavailableError,
+    GoogleCredentialSourceSelection,
+    GoogleImpersonationConfig,
+    OAuthClient,
+    save_client,
+    save_credential_source_selection,
+)
+from .. import (
+    OutboundStorageValidationError,
+    ProviderKind,
+    StorageProvider,
+    build_google_credentials,
+    get_storage_provider,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -157,3 +171,110 @@ def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) ->
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_token_missing"
     assert exc.context == {"profile": "factory-drive-missing-token"}
     assert exc.suggestion == "aeat config google login"
+
+
+# ---------------------------------------------------------------------------
+# build_google_credentials — GoogleCredentialSourceKind dispatch (#591 slice)
+# ---------------------------------------------------------------------------
+
+_TARGET_PRINCIPAL = "aeat-export@example-project.iam.gserviceaccount.com"
+
+
+def test_build_google_credentials_with_no_persisted_selection_defaults_to_oauth(tmp_path: Path) -> None:
+    """A profile that never opted into impersonation gets the pre-existing OAuth-Desktop behaviour.
+
+    Proves the dispatch preserves the default path byte-for-byte: no
+    persisted `GoogleCredentialSourceSelection` still resolves through
+    `_build_oauth_desktop_credentials`, so the existing
+    `google_client_missing` refusal (unchanged translated_message and
+    context) still fires when no OAuth client is registered.
+    """
+    profile = "factory-dispatch-default-oauth"
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-dispatch-default-oauth"),
+        pytest.raises(OutboundStorageValidationError) as raised,
+    ):
+        build_google_credentials(profile=profile)
+
+    exc = raised.value
+    assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_client_missing"
+    assert exc.context == {"profile": profile}
+
+
+def test_build_google_credentials_with_oauth_desktop_selection_uses_oauth_path(tmp_path: Path) -> None:
+    """An explicitly-persisted OAUTH_DESKTOP selection also dispatches to the OAuth path."""
+    profile = "factory-dispatch-explicit-oauth"
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-dispatch-explicit-oauth"),
+        pytest.raises(OutboundStorageValidationError) as raised,
+    ):
+        save_credential_source_selection(profile, GoogleCredentialSourceSelection())
+        build_google_credentials(profile=profile)
+
+    exc = raised.value
+    assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_client_missing"
+
+
+def test_build_google_credentials_with_impersonation_selection_dispatches_to_impersonation_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A persisted SERVICE_ACCOUNT_IMPERSONATION selection reaches the real impersonation resolver.
+
+    Proves genuine dispatch (not a stub): pointing
+    `GOOGLE_APPLICATION_CREDENTIALS` at a nonexistent path makes the real,
+    unmocked `google.auth.default()` call inside
+    `resolve_impersonated_credentials` raise `GoogleAuthAdcUnavailableError`
+    naming the persisted `target_principal` — a failure mode that could
+    only be reached if the factory actually dispatched to the
+    impersonation resolver rather than the OAuth-Desktop path (which would
+    instead raise `google_client_missing`).
+    """
+    monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json")
+    profile = "factory-dispatch-impersonation"
+    selection = GoogleCredentialSourceSelection(
+        kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
+        impersonation=GoogleImpersonationConfig(target_principal=_TARGET_PRINCIPAL),
+    )
+
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-dispatch-impersonation"),
+        pytest.raises(GoogleAuthAdcUnavailableError) as raised,
+    ):
+        save_credential_source_selection(profile, selection)
+        build_google_credentials(profile=profile)
+
+    assert raised.value.context == {"target_principal": _TARGET_PRINCIPAL}
+    assert raised.value.suggestion == "gcloud auth application-default login"
+
+
+def test_get_storage_provider_google_drive_dispatches_impersonation_selection_through_full_factory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The end-to-end `get_storage_provider` path (not just `build_google_credentials`) dispatches correctly.
+
+    Confirms `get_storage_provider` -> `build_google_credentials` -> the
+    impersonation resolver chain holds for the full public entry point
+    real CLI/application callers use, not only the narrower unit under
+    test above.
+    """
+    monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json")
+    profile = "factory-full-dispatch-impersonation"
+    selection = GoogleCredentialSourceSelection(
+        kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
+        impersonation=GoogleImpersonationConfig(target_principal=_TARGET_PRINCIPAL),
+    )
+
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-full-dispatch-impersonation"),
+        override_settings(
+            aeat_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
+            aeat_google_drive_root_folder_id="drive-root",
+        ) as settings,
+        pytest.raises(GoogleAuthAdcUnavailableError) as raised,
+    ):
+        save_credential_source_selection(profile, selection)
+        get_storage_provider(settings=settings)
+
+    assert raised.value.context == {"target_principal": _TARGET_PRINCIPAL}

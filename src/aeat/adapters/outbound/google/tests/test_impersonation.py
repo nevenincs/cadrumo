@@ -24,6 +24,7 @@ from .._errors import GoogleAuthError
 from .._impersonation import (
     GoogleAuthAdcUnavailableError,
     GoogleAuthImpersonationRefusedError,
+    GoogleCredentialSourceSelection,
     GoogleImpersonationConfig,
     describe_impersonation_target,
     resolve_impersonated_credentials,
@@ -204,3 +205,65 @@ def test_impersonation_errors_carry_distinct_bound_error_codes() -> None:
     assert adc_error.code.code == "FAIL_GOOGLE_ADC_UNAVAILABLE"
     assert refusal_error.code.code == "REFUSED_GOOGLE_IMPERSONATION"
     assert adc_error.code.code != refusal_error.code.code
+
+
+# ---------------------------------------------------------------------------
+# GoogleCredentialSourceSelection — the per-profile persisted dispatch choice
+# ---------------------------------------------------------------------------
+
+
+def test_selection_defaults_to_oauth_desktop_with_no_impersonation_config() -> None:
+    selection = GoogleCredentialSourceSelection()
+    assert selection.kind is GoogleCredentialSourceKind.OAUTH_DESKTOP
+    assert selection.impersonation is None
+
+
+def test_selection_accepts_impersonation_kind_with_a_config() -> None:
+    config = GoogleImpersonationConfig(target_principal=_TARGET_PRINCIPAL)
+    selection = GoogleCredentialSourceSelection(
+        kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
+        impersonation=config,
+    )
+    assert selection.kind is GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION
+    assert selection.impersonation == config
+
+
+def test_selection_rejects_impersonation_kind_without_a_config() -> None:
+    with pytest.raises(ValidationError, match="impersonation must be set"):
+        GoogleCredentialSourceSelection(kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION)
+
+
+def test_selection_rejects_oauth_desktop_kind_with_a_config() -> None:
+    config = GoogleImpersonationConfig(target_principal=_TARGET_PRINCIPAL)
+    with pytest.raises(ValidationError, match="impersonation must be unset"):
+        GoogleCredentialSourceSelection(
+            kind=GoogleCredentialSourceKind.OAUTH_DESKTOP,
+            impersonation=config,
+        )
+
+
+def test_selection_is_frozen() -> None:
+    selection = GoogleCredentialSourceSelection()
+    with pytest.raises(ValidationError, match="frozen"):
+        selection.kind = GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION
+
+
+def test_selection_forbids_extra_fields() -> None:
+    with pytest.raises(ValidationError, match="Extra"):
+        GoogleCredentialSourceSelection.model_validate({"kind": "oauth_desktop", "unexpected_field": "x"})
+
+
+def test_selection_json_roundtrip_preserves_impersonation_config() -> None:
+    """A JSON roundtrip (as persisted/loaded by the session store) preserves every field."""
+    config = GoogleImpersonationConfig(
+        target_principal=_TARGET_PRINCIPAL,
+        delegates=("delegate-a@example-project.iam.gserviceaccount.com",),
+        subject="taxpayer@example-workspace-domain.com",
+        lifetime_s=1800,
+    )
+    selection = GoogleCredentialSourceSelection(
+        kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
+        impersonation=config,
+    )
+    reloaded = GoogleCredentialSourceSelection.model_validate_json(selection.model_dump_json())
+    assert reloaded == selection
