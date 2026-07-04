@@ -48,7 +48,7 @@ Bind the coverage invariant to the AEAT obligation universe so recognized-but-un
 - [x] `P03.S10` - Bind the reconciliation to the AEAT universe (registry union unmodeled) and advise unmodeled obligations with the REGISTRY_UNMODELED reason.; `src/aeat/application/overview/_coverage.py`.
 - [x] `P03.S11` - Harden the out-of-scope hatch with a gate asserting it cannot silence an applicability-decidable modelo.; `src/aeat/application/overview/tests/test_obligation_coverage.py`.
 - [x] `P03.S12` - Emit per-profile coverage advisories on the calendar --all-profiles surface.; `src/aeat/entrypoints/cli/_overview.py`.
-- [ ] `P03.S13` - Ratchet UNMODELED_OBLIGATIONS toward AEATs full form set and promote each to a grounded registry definition.; `src/aeat/_data/registry/aeat/modelos`.
+- [x] `P03.S13` - Ratchet UNMODELED_OBLIGATIONS toward AEATs full form set and promote each to a grounded registry definition.; `src/aeat/_data/registry/aeat/modelos`.
 - [x] `P03.S14` - Wire coverage onto overview status, explain, and the undeclared-profile path.; `src/aeat/entrypoints/cli/_overview.py`.
 - [x] `P03.S15` - Wire coverage onto the undeclared-profile path so it reconciles the full universe instead of returning empty.; `src/aeat/application/overview/_calendar.py`.
 
