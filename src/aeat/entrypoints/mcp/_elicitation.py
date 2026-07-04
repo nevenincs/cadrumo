@@ -48,9 +48,9 @@ class ConfirmRoute(StrEnum):
     CLIENT_HINT = "client_hint"
     """Proceed; the client's ``destructiveHint`` confirmation UI carries the ask."""
     REFUSE_NO_CHANNEL = "refuse_no_channel"
-    """Refuse: a handoff-tier verb with no elicitation channel to a human."""
+    """Refuse a handoff-tier verb that has no elicitation channel to a human."""
     REFUSE_BLOCKED = "refuse_blocked"
-    """Refuse: the permanent live-write block."""
+    """Refuse the call under the permanent live-write block."""
 
 
 class ConfirmDecision(StrEnum):
