@@ -13,6 +13,11 @@ related:
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S30]]'
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S31]]'
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S32]]'
+  - '[[2026-05-20-calculation-source-connectivity-W04-P08-S44]]'
+  - '[[2026-05-20-calculation-source-connectivity-W04-P08-S45]]'
+  - '[[2026-05-20-calculation-source-connectivity-W04-P08-S46]]'
+  - '[[2026-05-20-calculation-source-connectivity-W04-P08-S47]]'
+  - '[[2026-05-20-calculation-source-connectivity-W04-P08-S48]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'
   - '[[2026-05-20-calculation-source-connectivity-plan]]'
   - '[[2026-05-20-calculation-source-connectivity-research]]'
@@ -63,6 +68,11 @@ Auto-generated index of all documents tagged with `#calculation-source-connectiv
 - `2026-05-20-calculation-source-connectivity-W02-P05-S30` - Enroll retenciones aggregation through repository backed source resolution
 - `2026-05-20-calculation-source-connectivity-W02-P05-S31` - Test invoice ledger cross references produce stable source refs
 - `2026-05-20-calculation-source-connectivity-W02-P05-S32` - Test retenciones source observations are period and source kind filtered
+- `2026-05-20-calculation-source-connectivity-W04-P08-S44` - Add registry source enrollment report for every committed modelo revision
+- `2026-05-20-calculation-source-connectivity-W04-P08-S45` - Validate every source backed binding is resolved manual or explicitly blocked
+- `2026-05-20-calculation-source-connectivity-W04-P08-S46` - Expose missing source diagnostics in modelo calculation errors
+- `2026-05-20-calculation-source-connectivity-W04-P08-S47` - Test committed modelo source inventory against enrolled resolvers
+- `2026-05-20-calculation-source-connectivity-W04-P08-S48` - Test missing source backed bindings cannot silently calculate zero
 
 ### plan
 
