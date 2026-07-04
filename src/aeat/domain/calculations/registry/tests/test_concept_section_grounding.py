@@ -92,9 +92,10 @@ def test_concept_section_grounds_in_its_article_not_actividades() -> None:
         assert not actividades, f"M100 {year} {section_tag}: boxes still cite the actividades chapter: {actividades}"
         missing = []
         for casilla in casillas:
+            semantic_role = casilla.semantic_role or ""
             expected = set(
                 _SECTION_ROLE_GROUNDING_OVERRIDES.get(
-                    (section_tag, year, casilla.semantic_role),
+                    (section_tag, year, semantic_role),
                     articles,
                 )
             )
