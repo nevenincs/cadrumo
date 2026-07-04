@@ -25,6 +25,7 @@ rather than refusing the draft.
 from __future__ import annotations
 
 from decimal import Decimal
+from functools import cache
 
 import pytest
 
@@ -88,16 +89,46 @@ _FORESTAL_PREDICATE_IDS = (
 )
 
 _ALL_PREDICATE_IDS = (_AB_PREDICATE_ID, *_FORESTAL_PREDICATE_IDS)
+_AB_SINGLE_LETRA_CASES: tuple[tuple[str, dict[CasillaId, Decimal]], ...] = (
+    (
+        "a-only",
+        {_CASILLA_1540_MEDIOS_AJENOS: Decimal("0.75"), _CASILLA_1541_PERSONAL_ASALARIADO: Decimal("0")},
+    ),
+    (
+        "b-only",
+        {_CASILLA_1540_MEDIOS_AJENOS: Decimal("0"), _CASILLA_1541_PERSONAL_ASALARIADO: Decimal("0.90")},
+    ),
+    (
+        "neither-declared-zero",
+        {_CASILLA_1540_MEDIOS_AJENOS: Decimal("0"), _CASILLA_1541_PERSONAL_ASALARIADO: Decimal("0")},
+    ),
+    ("neither-declared-absent", {}),
+)
+_FORESTAL_OTHER_LETRA_CASILLAS = (
+    _CASILLA_1540_MEDIOS_AJENOS,
+    _CASILLA_1541_PERSONAL_ASALARIADO,
+    _CASILLA_1542_TIERRAS_ARRENDADAS,
+    _CASILLA_1544_ECOLOGICA,
+    _CASILLA_1545_REGADIO_ELECTRICO,
+    _CASILLA_1546_PEQUENA_EMPRESA,
+)
 
 
+@cache
 def _m100_2025_revision():
     modelo = load_modelo_path(bundled_path("registry", "aeat", "modelos", "100"))
     return modelo.revisions["2025"]
 
 
+@cache
 def _predicate(predicate_id: str) -> VerificationPredicateDefinition:
     revision = _m100_2025_revision()
     return next(p for p in revision.verification_predicates if p.predicate_id == predicate_id)
+
+
+def _forestal_predicate_for(other_letra_casilla: CasillaId) -> VerificationPredicateDefinition:
+    predicate_id = next(pid for pid in _FORESTAL_PREDICATE_IDS if other_letra_casilla in _predicate(pid).expression)
+    return _predicate(predicate_id)
 
 
 def test_incompatibility_predicates_ship_on_2025_revision() -> None:
@@ -131,48 +162,28 @@ def test_medios_ajenos_personal_asalariado_both_positive_fires_advisory() -> Non
     assert findings[0].message  # a non-empty operator-facing message is rendered
 
 
-@pytest.mark.parametrize(
-    "casilla_values",
-    (
-        {_CASILLA_1540_MEDIOS_AJENOS: Decimal("0.75"), _CASILLA_1541_PERSONAL_ASALARIADO: Decimal("0")},
-        {_CASILLA_1540_MEDIOS_AJENOS: Decimal("0"), _CASILLA_1541_PERSONAL_ASALARIADO: Decimal("0.90")},
-        {_CASILLA_1540_MEDIOS_AJENOS: Decimal("0"), _CASILLA_1541_PERSONAL_ASALARIADO: Decimal("0")},
-        {},
-    ),
-    ids=("a-only", "b-only", "neither-declared-zero", "neither-declared-absent"),
-)
-def test_medios_ajenos_personal_asalariado_single_letra_holds(casilla_values: dict[CasillaId, Decimal]) -> None:
+def test_medios_ajenos_personal_asalariado_single_letra_holds() -> None:
     """Declaring only letra a), only letra b), or neither, never fires the advisory."""
     predicate = _predicate(_AB_PREDICATE_ID)
-    assert evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile()) == []
+    for case_label, casilla_values in _AB_SINGLE_LETRA_CASES:
+        assert evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile()) == [], case_label
 
 
-@pytest.mark.parametrize(
-    "other_letra_casilla",
-    (
-        _CASILLA_1540_MEDIOS_AJENOS,
-        _CASILLA_1541_PERSONAL_ASALARIADO,
-        _CASILLA_1542_TIERRAS_ARRENDADAS,
-        _CASILLA_1544_ECOLOGICA,
-        _CASILLA_1545_REGADIO_ELECTRICO,
-        _CASILLA_1546_PEQUENA_EMPRESA,
-    ),
-)
-def test_forestal_and_any_other_letra_both_positive_fires_advisory(other_letra_casilla: CasillaId) -> None:
+def test_forestal_and_any_other_letra_both_positive_fires_advisory() -> None:
     """Letra h) (forestal) excludes every other declared letra (a-c, e-g): both positive fires an advisory."""
-    predicate_id = next(pid for pid in _FORESTAL_PREDICATE_IDS if other_letra_casilla in _predicate(pid).expression)
-    predicate = _predicate(predicate_id)
-    casilla_values: dict[CasillaId, Decimal] = {
-        _CASILLA_1547_FORESTAL: Decimal("0.80"),
-        other_letra_casilla: Decimal("0.75"),
-    }
+    for other_letra_casilla in _FORESTAL_OTHER_LETRA_CASILLAS:
+        predicate = _forestal_predicate_for(other_letra_casilla)
+        casilla_values: dict[CasillaId, Decimal] = {
+            _CASILLA_1547_FORESTAL: Decimal("0.80"),
+            other_letra_casilla: Decimal("0.75"),
+        }
 
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
 
-    assert len(findings) == 1
-    assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
-    assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
-    assert "orden-hac-1347-2024:anexo-i-instruccion-2-3" in findings[0].legal_refs
+        assert len(findings) == 1, other_letra_casilla
+        assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY, other_letra_casilla
+        assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING, other_letra_casilla
+        assert "orden-hac-1347-2024:anexo-i-instruccion-2-3" in findings[0].legal_refs, other_letra_casilla
 
 
 def test_forestal_alone_holds_for_every_pairing() -> None:
@@ -191,14 +202,7 @@ def test_other_letra_alone_holds_for_every_pairing() -> None:
         # single-casilla-positive case for exactly that pairing.
         other_id = next(
             cid
-            for cid in (
-                _CASILLA_1540_MEDIOS_AJENOS,
-                _CASILLA_1541_PERSONAL_ASALARIADO,
-                _CASILLA_1542_TIERRAS_ARRENDADAS,
-                _CASILLA_1544_ECOLOGICA,
-                _CASILLA_1545_REGADIO_ELECTRICO,
-                _CASILLA_1546_PEQUENA_EMPRESA,
-            )
+            for cid in _FORESTAL_OTHER_LETRA_CASILLAS
             if cid in predicate.expression
         )
         casilla_values: dict[CasillaId, Decimal] = {other_id: Decimal("0.75")}
