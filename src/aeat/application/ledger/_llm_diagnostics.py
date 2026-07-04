@@ -4,13 +4,13 @@ Folds the two metric stores the system already persists into one typed,
 operator-facing report:
 
 * the encrypted LLM usage log written by
-  :class:`~aeat.adapters.outbound.llm.UsageRecorder` (per call: provider,
+  :class:`~adapters.outbound.llm.UsageRecorder` (per call: provider,
   model, input/output tokens, estimated cost, cache-hit flag); and
 * the classification confidence stamped on each ledger
-  :class:`~aeat.domain.transactions.Transaction` whose active decision came
+  :class:`~domain.transactions.Transaction` whose active decision came
   from an LLM classifier (``classified_by`` shaped ``llm:<provider>:<model>``
   with a ``classification_confidence`` in ``[0, 1]``), loaded from the active
-  bucket's :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
+  bucket's :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`
   when callers do not inject transactions directly.
 
 No new tracking is introduced here: every figure is aggregated from records
@@ -26,9 +26,9 @@ financial content, honouring ``sensitive-financial-data-secure-storage-only``.
 See Also:
     :func:`build_llm_diagnostics_report`:
         Public aggregator that folds the usage log and ledger confidence rows.
-    :class:`~aeat.adapters.outbound.llm.UsageRecorder`:
+    :class:`~adapters.outbound.llm.UsageRecorder`:
         Storage boundary for provider/token/cost accounting records.
-    :class:`~aeat.domain.transactions.TransactionCatalogueRepository`:
+    :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`:
         Bucket-scoped ledger catalogue reader used for confidence diagnostics.
 """
 
@@ -73,7 +73,7 @@ _MEAN_QUANTUM = Decimal("0.0001")
 class LlmUsageProviderMetrics(BaseModel):
     """Per-provider aggregate of the LLM usage/cost log.
 
-    Aggregated from :class:`~aeat.adapters.outbound.llm.UsageRecord` rows for a
+    Aggregated from :class:`~adapters.outbound.llm.UsageRecord` rows for a
     single :attr:`provider`. ``calls`` counts every recorded call (cache hits
     included); ``cache_hits`` counts the subset served from the local cache.
     """
@@ -161,9 +161,9 @@ def build_llm_diagnostics_report(
         low_confidence_threshold: Confidence floor below which a classification
             counts as low-confidence.
         usage_recorder: Injected recorder; defaults to the active-bucket
-            :class:`~aeat.adapters.outbound.llm.UsageRecorder`.
+            :class:`~adapters.outbound.llm.UsageRecorder`.
         bucket_id: Ledger bucket whose
-            :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
+            :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`
             supplies confidence rows; defaults to the active bucket. Ignored
             when ``transactions`` is supplied.
         transactions: Injected transaction iterable; when ``None`` the active
