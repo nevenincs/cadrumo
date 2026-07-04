@@ -82,7 +82,8 @@ browser = [
     { name = "playwright-stealth" },
 ]
 corpus-sources = [
-    { name = "aeat-data" },
+    { name = "aeat-data-manuals" },
+    { name = "aeat-data-official" },
 ]
 google = [
     { name = "google-api-python-client" },
@@ -163,7 +164,8 @@ requires-dist = [
     { name = "aeat-cli", extras = ["browser"], marker = "extra == 'all'" },
     { name = "aeat-cli", extras = ["google"], marker = "extra == 'all'" },
     { name = "aeat-cli", extras = ["search"], marker = "extra == 'all'" },
-    { name = "aeat-data", marker = "extra == 'corpus-sources'", directory = "packaging/aeat_data" },
+    { name = "aeat-data-manuals", marker = "extra == 'corpus-sources'", directory = "packaging/aeat_data_manuals" },
+    { name = "aeat-data-official", marker = "extra == 'corpus-sources'", directory = "packaging/aeat_data_official" },
     { name = "anthropic", marker = "extra == 'anthropic'", specifier = ">=0.74.1,<1" },
     { name = "anyio", marker = "extra == 'agent'", specifier = ">=4.5,<5" },
     { name = "argon2-cffi", specifier = ">=23.1.0,<26" },
@@ -262,9 +264,14 @@ dev = [
 ]
 
 [[package]]
-name = "aeat-data"
+name = "aeat-data-manuals"
 version = "0.1.0"
-source = { directory = "packaging/aeat_data" }
+source = { directory = "packaging/aeat_data_manuals" }
+
+[[package]]
+name = "aeat-data-official"
+version = "0.1.0"
+source = { directory = "packaging/aeat_data_official" }
 
 [[package]]
 name = "alabaster"
