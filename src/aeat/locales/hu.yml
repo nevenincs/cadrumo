@@ -865,6 +865,8 @@ application:
         megfejteni; a kulcs nem megfelelo, vagy a csomagot modositottak.
       recipient_encryption_invalid_key: A cimzett nyilvanos kulcsa nem egy ervenyes
         X25519 nyilvanos kulcs.
+      recipient_encryption_key_not_found: Ehhez a bucket-hez meg nem keszult cimzetti
+        titkositasi kulcspar.
       recipient_registry_already_exists: A(z) %{recipient_id} cimzett mar regisztralva
         van.
       recipient_registry_generic: Hiba tortent a cimzetti ujjlenyomat-nyilvantartasban.
@@ -2034,7 +2036,22 @@ cli:
           formátumban írja.
         counter_signer_public_key_help: A könyvelő (ellenjegyző) nyilvános kulcsa,
           64 kisbetűs hexadecimális karakterként.
+        decrypt_help: Egy cimzett szamara titkositott ellenorzo csomag megnyitasa
+          ennek a bucket-nek az X25519 titkositasi kulcsparjaval (elso hasznalatkor
+          letrehozva), es a visszaallitott csomag ZIP kiirasa a --output helyre. Csak
+          helyi; soha nem lep kapcsolatba az AEAT-tal.
+        decrypt_output_help: A visszaallitott ellenorzo csomag ZIP kiirasi utvonala.
+        encrypt_for_recipient_help: Egy ellenorzo csomag lezarasa ugy, hogy csak a
+          regisztralt cimzett privat kulcsa nyithassa meg, es a titkositott boritek
+          kiirasa a --output helyre. Csak helyi; soha nem lep kapcsolatba az AEAT-tal.
+        encrypt_output_help: A cimzett szamara titkositott JSON boritek kiirasi utvonala.
+        envelope_path_help: A(z) `encrypt-for-recipient` altal letrehozott, cimzett
+          szamara titkositott JSON boritek utvonala.
         errors:
+          envelope_not_found: 'Nem talalhato cimzett szamara titkositott boritek itt:
+            {envelope_path}.'
+          invalid_valid_for_days: A --valid-for-days erteknek szigoruan pozitiv egesz
+            szamnak kell lennie.
           output_required: Adja meg a --output ÚTVONAL kapcsolót az áttekintő csomag
             ZIP fájljához.
           package_not_found: 'Nem található áttekintő csomag itt: {package_path}.'
@@ -2051,6 +2068,11 @@ cli:
         public_key_help: Az aláíró nyilvános kulcsa, 64 kisbetűs hexadecimális karakterként.
         receipt_path_help: A `counter-sign` által létrehozott ellenjegyzett nyugta
           JSON elérési útja.
+        recipient_id_help: Regisztralt cimzett azonositoja (lasd `aeat config collab
+          recipient add`).
+        review_only_help: A lezart csomag megjelolese ugy, hogy nem rendelkezik benyujtasi
+          jogosultsaggal (a cimzett elolvashatja es ellenorizheti, de ez nem bizonyitek
+          arra, hogy az alapul szolgalo revizio be lett vagy be lesz nyujtva).
         revision_help: A csomagolandó számítási revízió azonosítója; alapértelmezés
           szerint a munkaegység legutóbbi ellenőrzött-teljes vagy benyújtott revíziója.
         sign_help: Aláírja egy felülvizsgálati csomag ellenőrző manifesztjét a bucket
@@ -2060,6 +2082,8 @@ cli:
           írja.
         signature_path_help: A `sign` által létrehozott aláírás-boríték JSON elérési
           útja.
+        valid_for_days_help: Opcionalis ervenyessegi ablak napokban; hagyja ki egy
+          soha le nem jaro csomaghoz.
         verify_help: Egy áttekintő csomag checksum-manifestjének ellenőrzése (csak
           integritás; nem igazolja, ki állította össze). Csak helyi; soha nem kapcsolódik
           az AEAT-hoz.
@@ -2595,6 +2619,21 @@ cli:
       issue_label: probléma
       missing: hiányzik
       profile_label: profil
+    collab:
+      help: Bizalmi cimzettek kezelese az ellenorzo csomag egyuttmukodeshez.
+      recipient:
+        add_help: Egy bizalmi cimzett X25519 nyilvanos kulcsanak rogzitese ujjlenyomat
+          alapjan.
+        errors:
+          invalid_public_key: A --public-key erteknek pontosan 64 kisbetus hexadecimalis
+            karakterbol kell allnia (egy nyers 32 bajtos X25519 nyilvanos kulcs).
+        help: Bizalmi ellenorzocsomag-cimzettek rogzitese, listazasa es torlese.
+        label_help: Opcionalis, szabad szoveges megjelenitett nev a cimzetthez.
+        list_help: Az aktiv profilon regisztralt osszes bizalmi cimzett listazasa.
+        public_key_help: A cimzett nyers X25519 nyilvanos kulcsa, 64 kisbetus hexadecimalis
+          karakterkent.
+        recipient_id_help: Stabil, kezelo altal valasztott cimke (pl. 'kent-konyveloje').
+        remove_help: Egy bizalmi cimzett eltavolitasa azonosito alapjan az aktiv profilbol.
     custody:
       confirm_new_passphrase_help: Ismetelje meg az uj titkos tar passphrase erteket.
       confirm_new_passphrase_prompt: 'Uj AEAT titkos tar passphrase megerositese: '
@@ -4894,7 +4933,9 @@ errors:
       feloldani vagy használni.
     fail_financial_usage_ratios_usage_ratio_persistence: A használati arány profilt
       nem sikerült olvasni vagy írni.
-    fail_google_adc_unavailable: 'Nem található Application Default Credentials (ADC) ezen a gépen. Futtassa a gcloud auth application-default login parancsot.'
+    fail_google_adc_stale: 'Nem sikerült megújítani az Application Default Credentials (ADC) hitelesítő adatokat. Futtassa a gcloud auth application-default login parancsot.'
+    fail_google_adc_unavailable: Nem található Application Default Credentials (ADC)
+      ezen a gépen. Futtassa a gcloud auth application-default login parancsot.
     fail_google_browser_open: A böngészőt nem sikerült megnyitni a Google hozzájárulási
       oldalhoz. Nyissa meg manuálisan a hivatkozást.
     fail_google_loopback_bind: A helyi HTTP-vevő nem tudott porthoz kötni. Zárja be
@@ -5279,7 +5320,9 @@ errors:
       vagy összeg) nem ment át az érvényesítésen.
     refused_financial_usage_ratios_censo_mismatch: Egy mentett otthoni irodahasználati
       arány eltér a censotól, amely a kötelező jogi forrás. Igazítsa a censo értékéhez.
-    refused_google_impersonation: 'Az IAM megtagadta a megszemélyesített token kiállítását a cél szolgáltatásfiók számára. Adja meg neki a roles/iam.serviceAccountTokenCreator szerepkört.'
+    refused_google_impersonation: Az IAM megtagadta a megszemélyesített token kiállítását
+      a cél szolgáltatásfiók számára. Adja meg neki a roles/iam.serviceAccountTokenCreator
+      szerepkört.
     refused_google_non_interactive: A Google bejelentkezéshez interaktív terminál
       és böngésző szükséges; futtassa interaktív shellből.
     refused_google_profile_unbound: Nincs aktív profil kötve. Válasszon profilt, vagy

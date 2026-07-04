@@ -316,6 +316,30 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "_write",
         "write_text",
     ): "agent-harness workspace materialiser writes shipped static rules/personas/skills markdown only, no user data",
+    (
+        "src/aeat/entrypoints/cli/_modelo_review_package_cli.py",
+        "review_package_sign",
+        "output.write_text",
+    ): "explicit operator-directed signature-envelope export to a caller-chosen path; "
+    "public key only, no secret material",
+    (
+        "src/aeat/entrypoints/cli/_modelo_review_package_cli.py",
+        "review_package_counter_sign",
+        "output.write_text",
+    ): "explicit operator-directed counter-sign receipt export to a caller-chosen path; "
+    "public key only, no secret material",
+    (
+        "src/aeat/entrypoints/cli/_modelo_review_package_cli.py",
+        "review_package_encrypt_for_recipient",
+        "output.write_text",
+    ): "explicit operator-directed recipient-encrypted envelope export to a caller-chosen path; AEAD ciphertext only, "
+    "never the plaintext review package",
+    (
+        "src/aeat/entrypoints/cli/_modelo_review_package_cli.py",
+        "review_package_decrypt",
+        "output.write_bytes",
+    ): "explicit operator-directed recovered review-package export to a caller-chosen path, mirroring the existing "
+    "review-package build/export write pattern",
 }
 
 

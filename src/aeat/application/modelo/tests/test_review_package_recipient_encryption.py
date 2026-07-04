@@ -507,4 +507,116 @@ def test_envelope_rejects_valid_until_at_or_before_issued_at() -> None:
         )
 
 
+def test_envelope_json_round_trip_preserves_ciphertext_bytes(tmp_path: Path) -> None:
+    """Anti-regression: ``model_dump_json`` must not raise on arbitrary AEAD bytes.
+
+    A bare ``bytes`` field's default pydantic JSON encoding assumes valid
+    UTF-8, which AEAD ciphertext is not (it is uniformly-random bytes). This
+    proves the hex-on-JSON-boundary serializer round-trips real ciphertext
+    -- including non-UTF-8 byte sequences -- through a genuine
+    ``model_dump_json`` / ``model_validate_json`` cycle, the exact path the
+    CLI ``encrypt-for-recipient`` / ``decrypt`` verbs exercise when they
+    write and read the envelope as a JSON file on disk.
+    """
+    package_bytes = _build_package_bytes(tmp_path, bucket_id="recip-enc-json-roundtrip")
+    recipient_private_key = X25519PrivateKey.generate()
+    recipient_public_key_hex = public_key_hex_from_raw_bytes(
+        recipient_private_key.public_key().public_bytes_raw(),
+    )
+
+    envelope = encrypt_review_package_for_recipient(
+        package_bytes,
+        recipient_public_key_hex=recipient_public_key_hex,
+    )
+
+    # AEAD ciphertext is high-entropy bytes; assert it genuinely is not valid
+    # UTF-8 so this test cannot pass vacuously on a lucky all-ASCII draw.
+    with pytest.raises(UnicodeDecodeError):
+        envelope.ciphertext.decode("utf-8")
+
+    envelope_json = envelope.model_dump_json()
+    reloaded = envelope.model_validate_json(envelope_json)
+    assert reloaded.ciphertext == envelope.ciphertext
+    assert reloaded == envelope
+
+    recovered = decrypt_review_package_for_recipient(reloaded, recipient_private_key=recipient_private_key)
+    assert recovered.package_bytes == package_bytes
+
+
+def test_ensure_recipient_encryption_keypair_mints_once_and_reuses(tmp_path: Path) -> None:
+    """``ensure_recipient_encryption_keypair`` mirrors the signing keypair's idempotent-reuse contract."""
+    from .._review_package_recipient_encryption import (
+        ensure_recipient_encryption_keypair,
+        load_recipient_encryption_keypair,
+        recipient_encryption_public_key,
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-keypair-mint") as profile:
+        minted = ensure_recipient_encryption_keypair(bucket_id="recip-enc-keypair-mint", repository=profile.repository)
+        reused = ensure_recipient_encryption_keypair(bucket_id="recip-enc-keypair-mint", repository=profile.repository)
+        assert reused.private_key_hex == minted.private_key_hex
+        assert reused.public_key_hex == minted.public_key_hex
+
+        loaded = load_recipient_encryption_keypair(
+            bucket_id="recip-enc-keypair-mint",
+            repository=profile.repository,
+        )
+        assert loaded.private_key_hex == minted.private_key_hex
+
+        public = recipient_encryption_public_key(minted)
+        assert public.public_key_hex == minted.public_key_hex
+        # The public projection never carries the private key.
+        assert not hasattr(public, "private_key_hex")
+
+
+def test_load_recipient_encryption_keypair_refuses_before_mint(tmp_path: Path) -> None:
+    from .._review_package_recipient_encryption import (
+        RecipientEncryptionKeyNotFoundError,
+        load_recipient_encryption_keypair,
+    )
+
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-keypair-unminted") as profile,
+        pytest.raises(RecipientEncryptionKeyNotFoundError),
+    ):
+        load_recipient_encryption_keypair(
+            bucket_id="recip-enc-keypair-unminted",
+            repository=profile.repository,
+        )
+
+
+def test_recipient_encryption_key_is_stored_only_as_ciphertext_at_rest(tmp_path: Path) -> None:
+    """The minted private key never appears as a plaintext substring at rest.
+
+    Mirrors :func:`test_private_key_is_never_stored_as_plaintext` in
+    ``test_review_package_signing.py`` exactly: read the raw SQL row
+    ciphertext directly (bypassing the repository's decrypt step) and confirm
+    the plaintext private-key hex does NOT appear in it.
+    """
+    from .._review_package_recipient_encryption import ensure_recipient_encryption_keypair
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-keypair-custody") as profile:
+        keypair = ensure_recipient_encryption_keypair(
+            bucket_id="recip-enc-keypair-custody",
+            repository=profile.repository,
+        )
+
+        from sqlalchemy import select
+
+        from ....adapters.persistence.storage import (
+            MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
+        )
+        from ....adapters.persistence.storage.sql import SecureObjectRow
+        from ....adapters.persistence.storage.sql.session import session_scope
+
+        with session_scope(profile.repository._engine) as session:
+            row = session.execute(
+                select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
+            ).scalar_one()
+            ciphertext_bytes = bytes(row.payload)
+
+        assert keypair.private_key_hex.encode("utf-8") not in ciphertext_bytes
+        assert bytes.fromhex(keypair.private_key_hex) not in ciphertext_bytes
+
+
 __all__: list[str] = []

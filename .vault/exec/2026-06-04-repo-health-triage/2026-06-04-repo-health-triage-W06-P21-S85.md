@@ -10,9 +10,6 @@ related:
   - "[[2026-07-03-repo-health-triage-audit]]"
 ---
 
-
-
-
 # Complete mandatory code review and close all-green campaign state
 
 ## Scope

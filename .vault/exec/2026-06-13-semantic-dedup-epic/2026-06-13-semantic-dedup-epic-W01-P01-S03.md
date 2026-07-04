@@ -9,9 +9,6 @@ related:
   - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
 
-
-
-
 # Migrate the dual-module consumer to a single import site and run the identity validation test suite green
 
 ## Scope

@@ -23,6 +23,23 @@ profile by default, or an explicit ``--bucket-id``); only the PUBLIC half of
 a keypair is ever surfaced in CLI output. ``verify`` remains an INTEGRITY
 check only (did every member arrive byte-for-byte); ``verify-signature`` and
 ``verify-receipt`` are AUTHENTICITY checks (who signed it).
+
+``encrypt-for-recipient`` / ``decrypt`` wire the X25519 CONFIDENTIALITY layer
+(:mod:`~aeat.application.modelo._review_package_recipient_encryption`) onto
+the CLI: a package sealed with ``encrypt-for-recipient`` can be opened only by
+the holder of the matching X25519 private key, unlike ``sign``/``counter-sign``,
+which leave the archive itself in plaintext ZIP form.
+``encrypt-for-recipient`` looks up the recipient's registered public key via
+:class:`~aeat.application.modelo.RecipientFingerprintRegistryRepository`
+(populated by ``aeat config collab recipient add``); ``decrypt`` mints-or-loads
+the running bucket's OWN X25519 keypair (mirroring the signing keypair's
+mint-once-persist-as-ciphertext contract exactly, via
+:func:`~aeat.application.modelo.ensure_recipient_encryption_keypair`) and
+composes :class:`~aeat.application.modelo.RecipientReplayGuardRepository`
+around the pure decrypt primitive to refuse a captured package presented twice.
+Both verbs operate entirely on in-memory bytes; the plaintext package bytes are
+never written to disk except as the final recovered archive the operator
+explicitly requests via ``--output``.
 """
 
 from __future__ import annotations
@@ -49,6 +66,13 @@ from ...application.modelo import (
     ModeloRefundElectionNotEligibleError,
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
+    RecipientDecryptionError,
+    RecipientEncryptedPackage,
+    RecipientEncryptionError,
+    RecipientFingerprintRegistryRepository,
+    RecipientNotRegisteredError,
+    RecipientPackageReplayedError,
+    RecipientReplayGuardRepository,
     ReviewPackageCounterSigningError,
     ReviewPackageError,
     ReviewPackageIntegrityError,
@@ -58,6 +82,9 @@ from ...application.modelo import (
     WorkUnitNotFoundError,
     build_review_package,
     counter_sign_review_package,
+    decrypt_review_package_for_recipient,
+    encrypt_review_package_for_recipient,
+    ensure_recipient_encryption_keypair,
     ensure_review_package_signing_keypair,
     export_modelo_revision,
     get_work_unit,
@@ -81,6 +108,8 @@ from ._modelo_cli_support import (
 from ._modelo_review_package_payloads import (
     ModeloReviewPackageBuildResult,
     ModeloReviewPackageCounterSignResult,
+    ModeloReviewPackageDecryptResult,
+    ModeloReviewPackageEncryptForRecipientResult,
     ModeloReviewPackageSignResult,
     ModeloReviewPackageVerifyReceiptResult,
     ModeloReviewPackageVerifyResult,
@@ -762,6 +791,231 @@ def review_package_verify_receipt(
         f"is_valid\t{is_valid}",
     ]
     _emit_envelope(ctx, command="modelo.review_package.verify_receipt", result=result, lines=lines)
+
+
+@review_package_app.command(
+    "encrypt-for-recipient",
+    help=tr(
+        "cli.app.modelo.review_package.encrypt_for_recipient_help",
+        default=(
+            "Seal a review package so only a registered recipient's private key can "
+            "open it, and write the encrypted envelope to --output. Local-only; "
+            "never contacts AEAT."
+        ),
+    ),
+)
+def review_package_encrypt_for_recipient(
+    ctx: typer.Context,
+    package: Annotated[
+        Path,
+        typer.Argument(
+            help=tr(
+                "cli.app.modelo.review_package.package_path_help",
+                default="Path to the review package ZIP to verify.",
+            ),
+        ),
+    ],
+    recipient_id: Annotated[
+        str,
+        typer.Option(
+            "--recipient",
+            help=tr(
+                "cli.app.modelo.review_package.recipient_id_help",
+                default="Registered recipient id (see `aeat config collab recipient add`).",
+            ),
+        ),
+    ],
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            help=tr(
+                "cli.app.modelo.review_package.encrypt_output_help",
+                default="Path to write the recipient-encrypted envelope JSON to.",
+            ),
+        ),
+    ],
+    review_only: Annotated[
+        bool,
+        typer.Option(
+            "--review-only/--filing-grade",
+            help=tr(
+                "cli.app.modelo.review_package.review_only_help",
+                default=(
+                    "Mark the sealed package as carrying no filing authority "
+                    "(the recipient may read and verify it, but it is not evidence "
+                    "the underlying revision has been or will be filed)."
+                ),
+            ),
+        ),
+    ] = False,
+    valid_for_days: Annotated[
+        int | None,
+        typer.Option(
+            "--valid-for-days",
+            help=tr(
+                "cli.app.modelo.review_package.valid_for_days_help",
+                default="Optional validity window in days; omit for a package that never expires.",
+            ),
+        ),
+    ] = None,
+    bucket_id: Annotated[
+        str | None,
+        typer.Option("--bucket-id", help=_BUCKET_ID_HELP),
+    ] = None,
+) -> None:
+    """Seal a review package for one registered recipient's public key."""
+    from ._modelo_cli_support import bad_parameter_from_error
+
+    if not package.exists():
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.review_package.errors.package_not_found",
+                package_path=str(package),
+                default="Review package not found at {package_path}.",
+            ),
+        )
+
+    resolved_bucket_id = _resolve_signing_bucket_id(bucket_id)
+    registry = RecipientFingerprintRegistryRepository(bucket_id=resolved_bucket_id)
+    try:
+        recipient = registry.get(recipient_id)
+    except RecipientNotRegisteredError as exc:
+        raise bad_parameter_from_error(exc) from exc
+
+    if valid_for_days is not None and valid_for_days <= 0:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.review_package.errors.invalid_valid_for_days",
+                default="--valid-for-days must be a strictly positive integer.",
+            ),
+        )
+
+    from datetime import timedelta
+
+    try:
+        envelope = encrypt_review_package_for_recipient(
+            package.read_bytes(),
+            recipient_public_key_hex=recipient.public_key_hex,
+            review_only=review_only,
+            valid_for=timedelta(days=valid_for_days) if valid_for_days is not None else None,
+        )
+    except RecipientEncryptionError as exc:
+        raise bad_parameter_from_error(exc) from exc
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+
+    result = ModeloReviewPackageEncryptForRecipientResult(
+        package_path=str(package),
+        output_path=str(output),
+        recipient_id=recipient_id,
+        recipient_public_key_hex=recipient.public_key_hex,
+        review_only=envelope.review_only,
+        issued_at=envelope.issued_at.isoformat(),
+        valid_until=envelope.valid_until.isoformat() if envelope.valid_until is not None else None,
+    )
+    lines = [
+        "operation\tmodelo.review_package.encrypt_for_recipient",
+        f"package_path\t{package}",
+        f"output_path\t{output}",
+        f"recipient_id\t{recipient_id}",
+        f"recipient_public_key_hex\t{recipient.public_key_hex}",
+        f"review_only\t{envelope.review_only}",
+        f"valid_until\t{result.valid_until or 'never'}",
+    ]
+    _emit_envelope(ctx, command="modelo.review_package.encrypt_for_recipient", result=result, lines=lines)
+
+
+@review_package_app.command(
+    "decrypt",
+    help=tr(
+        "cli.app.modelo.review_package.decrypt_help",
+        default=(
+            "Open a recipient-encrypted review package with this bucket's X25519 "
+            "encryption keypair (minted on first use) and write the recovered "
+            "package ZIP to --output. Local-only; never contacts AEAT."
+        ),
+    ),
+)
+def review_package_decrypt(
+    ctx: typer.Context,
+    envelope_path: Annotated[
+        Path,
+        typer.Argument(
+            help=tr(
+                "cli.app.modelo.review_package.envelope_path_help",
+                default="Path to the recipient-encrypted envelope JSON produced by `encrypt-for-recipient`.",
+            ),
+        ),
+    ],
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            help=tr(
+                "cli.app.modelo.review_package.decrypt_output_help",
+                default="Path to write the recovered review package ZIP to.",
+            ),
+        ),
+    ],
+    bucket_id: Annotated[
+        str | None,
+        typer.Option("--bucket-id", help=_BUCKET_ID_HELP),
+    ] = None,
+) -> None:
+    """Decrypt a recipient-encrypted review package with this bucket's own keypair."""
+    from ._modelo_cli_support import bad_parameter_from_error
+
+    if not envelope_path.exists():
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.review_package.errors.envelope_not_found",
+                envelope_path=str(envelope_path),
+                default="Recipient-encrypted envelope not found at {envelope_path}.",
+            ),
+        )
+
+    try:
+        envelope = RecipientEncryptedPackage.model_validate_json(envelope_path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise bad_parameter_from_error(RecipientEncryptionError(str(exc))) from exc
+
+    resolved_bucket_id = _resolve_signing_bucket_id(bucket_id)
+
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+
+    repository = secure_object_repository_for_bucket(resolved_bucket_id)
+    keypair = ensure_recipient_encryption_keypair(bucket_id=resolved_bucket_id, repository=repository)
+
+    try:
+        decrypted = decrypt_review_package_for_recipient(envelope, recipient_private_key=keypair.private_key())
+    except RecipientDecryptionError as exc:
+        raise bad_parameter_from_error(exc) from exc
+
+    replay_guard = RecipientReplayGuardRepository(bucket_id=resolved_bucket_id)
+    try:
+        replay_guard.mark_consumed(envelope.envelope_nonce_hex)
+    except RecipientPackageReplayedError as exc:
+        raise bad_parameter_from_error(exc) from exc
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_bytes(decrypted.package_bytes)
+
+    result = ModeloReviewPackageDecryptResult(
+        envelope_path=str(envelope_path),
+        output_path=str(output),
+        bucket_id=resolved_bucket_id,
+        review_only=decrypted.review_only,
+    )
+    lines = [
+        "operation\tmodelo.review_package.decrypt",
+        f"envelope_path\t{envelope_path}",
+        f"output_path\t{output}",
+        f"bucket\t{resolved_bucket_id}",
+        f"review_only\t{decrypted.review_only}",
+    ]
+    _emit_envelope(ctx, command="modelo.review_package.decrypt", result=result, lines=lines)
 
 
 def _resolve_optional_cli_period(*, year: int | None, period: str | None) -> Period | None:

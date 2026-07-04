@@ -102,9 +102,7 @@ def test_build_is_honestly_unsigned_without_a_signing_identity(
     assert "UNSIGNED" in capsys.readouterr().out
 
 
-def test_sign_invokes_the_mcpb_cli_when_a_signer_is_available(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_sign_invokes_the_mcpb_cli_when_a_signer_is_available(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """With a signer available, the build invokes `mcpb sign <bundle>` — the sign path is wired."""
     # Simulate a present signer + a successful sign, and assert the build invokes
     # `mcpb sign <bundle>` — proving the sign path runs when an identity exists.

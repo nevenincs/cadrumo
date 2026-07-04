@@ -9,9 +9,6 @@ related:
   - "[[2026-05-21-fichero-boe-export-layouts-plan]]"
 ---
 
-
-
-
 # Author the M390 fixed-width export layout grounded in the bundled AEAT Diseno de Registros, wire export_refs on the manifest casillas and computed totals, add the export application_link, and cover with the completeness-parity, thin-draft anti-tautology, and export-parse roundtrip gates
 
 ## Scope

@@ -11,16 +11,6 @@ related:
   - '[[2026-06-01-domain-boundary-audit-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `domain-boundary-audit` `Domain boundary remediation` plan
 
 ## Wave `W01` - Registry public surface (D3)
