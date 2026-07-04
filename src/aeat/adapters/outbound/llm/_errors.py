@@ -1,12 +1,12 @@
 """Error hierarchy for the LLM subpackage.
 
 All public LLM exceptions inherit from
-:class:`~aeat.adapters.outbound.llm.LLMError`, which extends
-:class:`~aeat.core.errors.AeatError`. Provider adapters surface
-:exc:`~aeat.adapters.outbound.llm.LLMProviderError` and
-:exc:`~aeat.adapters.outbound.llm.LLMRateLimitError`, cache and usage storage
-surface :exc:`~aeat.adapters.outbound.llm.LLMCacheError`, and strict model
-validators surface :exc:`~aeat.adapters.outbound.llm.LLMValidationError`.
+:class:`~adapters.outbound.llm.LLMError`, which extends
+:class:`~core.errors.AeatError`. Provider adapters surface
+:exc:`~adapters.outbound.llm.LLMProviderError` and
+:exc:`~adapters.outbound.llm.LLMRateLimitError`, cache and usage storage
+surface :exc:`~adapters.outbound.llm.LLMCacheError`, and strict model
+validators surface :exc:`~adapters.outbound.llm.LLMValidationError`.
 """
 
 from __future__ import annotations
@@ -23,17 +23,17 @@ class LLMProviderError(LLMError):
 
 
 class LLMPdfRasterisationError(LLMError):
-    """Raised when :func:`~aeat.adapters.outbound.llm.rasterise_pdf_pages_to_base64_png` fails."""
+    """Raised when :func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png` fails."""
 
 
 class LLMCacheError(LLMError):
-    """Raised when :class:`~aeat.adapters.outbound.llm.LLMCache` storage fails."""
+    """Raised when :class:`~adapters.outbound.llm.LLMCache` storage fails."""
 
 
 class LLMRateLimitError(LLMProviderError):
     """Raised when a provider rejects a request because of rate limits.
 
-    Inherits from :exc:`~aeat.adapters.outbound.llm.LLMProviderError` so
+    Inherits from :exc:`~adapters.outbound.llm.LLMProviderError` so
     callers can catch all provider-boundary failures together.
 
     Args:
@@ -47,15 +47,15 @@ class LLMRateLimitError(LLMProviderError):
 
 
 class LLMConfigError(LLMError):
-    """Raised when :class:`~aeat.adapters.outbound.llm.LLMClient` configuration is invalid."""
+    """Raised when :class:`~adapters.outbound.llm.LLMClient` configuration is invalid."""
 
 
 class LLMValidationError(LLMError, ValueError):
     """Raised when an LLM-related object fails validation.
 
-    Inherits from both :class:`~aeat.adapters.outbound.llm.LLMError` and
+    Inherits from both :class:`~adapters.outbound.llm.LLMError` and
     :class:`ValueError` to remain compatible with Pydantic's validator-failure
     contract while allowing catch-all
-    :class:`~aeat.adapters.outbound.llm.LLMError` handlers to detect integrity
+    :class:`~adapters.outbound.llm.LLMError` handlers to detect integrity
     failures.
     """
