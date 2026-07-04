@@ -47,18 +47,30 @@ _IVA_REPERCUTIDO_GENERAL_CASILLA: CasillaId = _casilla_id("iva.repercutido.gener
 
 
 def _run_engine(inputs: dict[CasillaId, Decimal], year: int, period: str) -> dict[CasillaId, Decimal]:
-    """Calculate the registry snapshot with ``inputs`` and return engine values."""
+    """Calculate the registry snapshot with ``inputs`` and return engine values.
+
+    ``_calculate_m303_engine_values_from_inputs`` is declared
+    ``dict[CasillaId, object]`` (the shared support module serves modelos
+    whose computed values are not always Decimal); every M303 engine casilla
+    is a numeric amount, so this asserts each value is a real ``Decimal``
+    rather than declaring a return type the callee cannot honestly promise.
+    """
     binding_values: dict[BindingId, Decimal] = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
-    return _calculate_m303_engine_values_from_inputs(
+    raw_values = _calculate_m303_engine_values_from_inputs(
         inputs=inputs,
         year=year,
         period=period,
         binding_values=binding_values,
         label="M303 anti-tautology",
     )
+    engine_values: dict[CasillaId, Decimal] = {}
+    for casilla_id, value in raw_values.items():
+        assert isinstance(value, Decimal), f"engine casilla {casilla_id!r} = {value!r} is not a Decimal"
+        engine_values[casilla_id] = value
+    return engine_values
 
 
 def test_m303_engine_sums_extracted_primitives_not_printed_total() -> None:
