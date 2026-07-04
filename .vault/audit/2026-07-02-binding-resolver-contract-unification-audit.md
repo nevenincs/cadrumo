@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#binding-resolver-contract-unification'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-04'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-plan]]"
 ---
@@ -158,24 +158,73 @@ the CLI aggregate verb remains a pure preview over explicit observations, become
 store-backed mesh projection, or is retired; only then update the retenciones service
 rows and author the parity gate against the chosen contract.
 
+## 2026-07-04 D9 Status Refresh
+
+Current `vault plan status 2026-06-26-binding-resolver-contract-unification-plan
+--json` reports 16 of 21 steps complete, `next_open_step` = `P03.S21`, and
+`exec_missing_ids` = `[]`. The open rows at HEAD are `P03.S21`, `P03.S20`,
+`P03.S12`, `P03.S14`, and `P05.S18`.
+
+The prior retenciones blocker is superseded by landed work. `P03.S13` and
+`P03.S19` now have 2026-07-04 exec records and are checked in the plan. Current
+code confirms the intended shape: `aggregate_per_modelo` delegates retenciones
+aggregation to `RetencionesAggregationSourceResolver.aggregate`, and the CLI
+aggregate command delegates aggregation to `aggregate_per_modelo` while
+retenciones persistence goes through `persist_retencion_observations`.
+
+`P03.S21` remains a formal deferral, not a coding gap. Modelo 347 still has no
+declared counterpart-source registry bindings under its current revision, so the
+counterpart resolver's registry-driven activation path is empty for 347. The
+M349 half has evidence in the existing S21 exec record. The named blocker remains
+`DFR-D9-P03-S21-M347-COUNTERPART-SOURCE-MODELLING`; the follow-up is M347
+counterpart-source registry modelling or a coordinator-approved activation change,
+then a real 347 oracle fixture.
+
+`P03.S20` also remains formally deferred. Modelo 720 has `foreign_asset`
+bindings and the existing S20 exec record proves aggregate-to-registry-row
+projection, but `ForeignAssetsAggregationSourceResolver` still validates the
+row-indexed binding values and discards them because the live
+`CalculationSourceResolution` envelope has no row-indexed value channel. The named
+blocker remains `DFR-D9-P03-S20-M720-ROW-INDEXED-ENVELOPE`; the follow-up is a
+coordinator-approved M720 row carrier strategy before exposing those rows through
+the mesh.
+
+`P03.S12` remains ordered behind S20 and S21. It must not enroll counterpart or
+foreign-assets resolvers, and must not remove `FOREIGN_ASSET` from
+`DEFERRED_SOURCE_KINDS`, while the source-kind deferrals ADR continues to
+re-ratify `foreign_asset` with no promotion date and a requirement for its own
+grounded design ADR.
+
+`P03.S14` is still open. The retenciones portion of the CLI aggregate command is
+now a thin projection over the service and the shared retenciones dispatch, but the
+verb still covers the unresolved counterpart/foreign-assets shape-C preview surface
+and still carries the Modelo 190 clave-breakdown projection. It needs a focused
+S14 execution record and command-conformance evidence before it can be checked.
+
+RAG discovery could not be refreshed during this pass because the singleton
+`vaultspec-rag` service on port 8766 was crashed while still owned by a live
+resident Python process. The pass therefore records the failed RAG attempt and
+uses targeted registry/file/API confirmation only; no source edit was made from
+semantic-search-only evidence.
+
 ## Closure Decision
 
 The original close-blocker decision above records the pre-follow-up state. Current
-D9 follow-up state: `P03.S10` and `P03.S11` are landed and checked; `P03.S21` has an
-exec record with completed M349 exactness evidence and a formal M347 blocker
-(`DFR-D9-P03-S21-M347-COUNTERPART-SOURCE-MODELLING`); `P03.S20` has an exec record
-with completed M720 aggregate-to-registry-row evidence and a formal row-envelope
-blocker (`DFR-D9-P03-S20-M720-ROW-INDEXED-ENVELOPE`). The vault plan remains open;
-`P03.S12` is ordered behind those blocked gates, and the retenciones/CLI rows
-(`P03.S13`, `P03.S19`, `P03.S14`) require contract adjudication before execution.
-The bindings freeze is not liftable from this campaign.
+D9 follow-up state: `P03.S10`, `P03.S11`, `P03.S13`, and `P03.S19` are landed and
+checked; `P03.S21` has an exec record with completed M349 exactness evidence and a
+formal M347 blocker (`DFR-D9-P03-S21-M347-COUNTERPART-SOURCE-MODELLING`); `P03.S20`
+has an exec record with completed M720 aggregate-to-registry-row evidence and a
+formal row-envelope blocker (`DFR-D9-P03-S20-M720-ROW-INDEXED-ENVELOPE`). The vault
+plan remains open; `P03.S12` is ordered behind those blocked gates, `P03.S14` still
+needs focused CLI projection evidence, and `P05.S18` cannot run until the P03
+remainder is reconciled. The bindings freeze is not liftable from this campaign.
 
 ## Recommendations
 
 Do not check `P03.S21` until a real M347 counterpart-source model exists and a 347
 fixture proves exact resolver-vs-aggregate parity. Do not check `P03.S20` until the
 M720 row projection is returned through the live mesh rather than only validated
-internally. Continue executing the remaining open plan rows only from
-`vault plan status` at HEAD, but do not implement S13/S19/S14 until their
-retenciones service-vs-mesh contract is adjudicated. Do not lift the bindings freeze
-from this campaign: `vault plan status` still reports open steps.
+internally. Do not run `P03.S12` while those gates remain deferred. Execute `P03.S14`
+only as a focused CLI projection/conformance pass, without expanding counterpart or
+foreign-assets resolver semantics. Do not lift the bindings freeze from this
+campaign: `vault plan status` still reports open steps.
