@@ -1,21 +1,21 @@
 """Default Playwright browser-session factory for auth providers.
 
 Auth providers accept a
-:class:`aeat.adapters.outbound.aeat.auth.BrowserSessionFactory`: an async
+:class:`adapters.outbound.aeat.auth.BrowserSessionFactory`: an async
 callable that returns a
-:class:`aeat.adapters.outbound.aeat.auth.BrowserSessionLike`. The default
+:class:`adapters.outbound.aeat.auth.BrowserSessionLike`. The default
 factory supplies that protocol with a Playwright-backed :class:`BrowserSession`,
-while :func:`aeat.adapters.outbound.aeat.auth.select_provider` still accepts
+while :func:`adapters.outbound.aeat.auth.select_provider` still accepts
 ``browser_session_factory=None`` so tests and callers can inject their own
 in-process implementations.
 
 This module provides:
 
 * :class:`DefaultBrowserSession`, the
-  :class:`~aeat.adapters.outbound.aeat.auth.BrowserSessionLike` wrapper that
+  :class:`~adapters.outbound.aeat.auth.BrowserSessionLike` wrapper that
   owns a ``Playwright`` runtime and :class:`BrowserSession` pair.
 * :func:`default_browser_session_factory`, the production
-  :class:`~aeat.adapters.outbound.aeat.auth.BrowserSessionFactory` entry point
+  :class:`~adapters.outbound.aeat.auth.BrowserSessionFactory` entry point
   used by auth providers and diagnostics.
 * :func:`shared_playwright_runtime` and :func:`opened_browser_page`, the
   lower-level helpers used by bulk Sede readers that need to reuse one
@@ -64,7 +64,7 @@ def _log_teardown_failure(
 
 
 class DefaultBrowserSession:
-    """Concrete :class:`~aeat.adapters.outbound.aeat.auth.BrowserSessionLike`.
+    """Concrete :class:`~adapters.outbound.aeat.auth.BrowserSessionLike`.
 
     Auth providers depend on the protocol rather than on :class:`BrowserSession`
     or Playwright directly. ``DefaultBrowserSession`` is the production adapter
@@ -155,7 +155,7 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     """Start Playwright and return a wrapped :class:`DefaultBrowserSession`.
 
     The returned object satisfies
-    :class:`aeat.adapters.outbound.aeat.auth.BrowserSessionLike` and owns its
+    :class:`adapters.outbound.aeat.auth.BrowserSessionLike` and owns its
     Playwright runtime for the full lifetime. The :class:`Profile` name follows
     the active bucket when one exists and falls back to a diagnostic sentinel so
     browser connectivity probes can run before profile setup is complete.
