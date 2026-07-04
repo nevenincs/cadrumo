@@ -93,13 +93,21 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
             f"FORMULA-MISMATCH [{pdf_stem}]: casilla '19' absent from engine result "
             f"- formula evaluation order issue or casilla missing from revision."
         )
+        # ``engine_values`` is declared ``dict[CasillaId, object]`` (the shared
+        # support module serves modelos whose computed values are not always
+        # Decimal), so ``is not None`` narrows only to ``object``; casilla 19
+        # is a numeric resultado, so assert its real type before subtracting.
+        assert isinstance(engine_19, Decimal), (
+            f"FORMULA-MISMATCH [{pdf_stem}]: casilla '19' engine value {engine_19!r} is not a Decimal"
+        )
+        diff = engine_19 - closure_extracted
         formula_chain_values = " ".join(
             f"{casilla_id}={engine_values.get(casilla_id)!r}" for casilla_id in _M130_FORMULA_CHAIN_CASILLAS
         )
         assert engine_19 == closure_extracted, (
             f"FORMULA-MISMATCH [{pdf_stem}]: engine recomputed casilla '19' as "
             f"{engine_19!r} but AEAT-printed form shows {closure_extracted!r}.\n"
-            f"  diff: {engine_19 - closure_extracted!r}\n"
+            f"  diff: {diff!r}\n"
             f"  extracted inputs: {dict((k, v) for k, v in extracted.items() if k not in _COMPUTED_CASILLAS_M130)}\n"
             f"  engine values for formula chain: {formula_chain_values}"
         )
