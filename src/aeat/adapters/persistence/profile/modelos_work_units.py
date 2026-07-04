@@ -2,16 +2,16 @@
 
 :class:`WorkUnitCatalogueRepository` persists :class:`WorkUnit` records in a
 :class:`WorkUnitCatalogue` at ``FINANCIAL``
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` through
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`. The
+:class:`~adapters.persistence.storage.SensitivityClass` through
+:class:`~adapters.persistence.storage.SecureObjectRepository`. The
 catalogue is serialised as a single
-:class:`~aeat.adapters.persistence.storage.Envelope`-wrapped JSON payload keyed
+:class:`~adapters.persistence.storage.Envelope`-wrapped JSON payload keyed
 by a stable namespace and object key; the underlying column is encrypted so no
 plaintext work-unit metadata lands on disk.
 
 This concrete repository is the persistence adapter behind the read-side
-:class:`~aeat.domain.modelos.WorkUnitCatalogueRepositoryProtocol`. It lives in
-the persistence adapter (not in :mod:`aeat.domain.modelos`) because its
+:class:`~domain.modelos.WorkUnitCatalogueRepositoryProtocol`. It lives in
+the persistence adapter (not in :mod:`domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`WorkUnitCatalogue` model and its pure catalogue mutators.
 """
@@ -47,10 +47,10 @@ class WorkUnitCatalogueRepository:
     return an empty catalogue when no object has been persisted yet (no
     separate "fresh install" path is needed). The
     :class:`WorkUnitCatalogue` payload is wrapped in
-    :class:`~aeat.adapters.persistence.storage.Envelope` before the
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.Envelope` before the
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
     persists it; this class is the concrete implementation behind
-    :class:`~aeat.domain.modelos.WorkUnitCatalogueRepositoryProtocol`.
+    :class:`~domain.modelos.WorkUnitCatalogueRepositoryProtocol`.
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
@@ -157,8 +157,8 @@ class WorkUnitCatalogueRepository:
         """Persist ``catalogue`` as the encrypted singleton object.
 
         The on-disk database value is an encrypted
-        :class:`~aeat.adapters.persistence.storage.Envelope` BLOB at the
-        :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+        :class:`~adapters.persistence.storage.Envelope` BLOB at the
+        :class:`~adapters.persistence.storage.SensitivityClass`
         ``FINANCIAL`` classification.
 
         Args:
