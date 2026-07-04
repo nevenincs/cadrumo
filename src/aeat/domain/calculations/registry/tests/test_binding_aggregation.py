@@ -137,22 +137,22 @@ def test_rows_default_source_kinds_derive_from_canonical_row_set_source_map() ->
     assert all(isinstance(source, BindingSourceKind) for source in _ROWS_DEFAULT_SOURCE_KINDS)
 
 
-@pytest.mark.parametrize("op_value", _REGISTRY_DECLARED_OPS)
-def test_binding_aggregation_round_trips_through_strict_model(op_value: str) -> None:
+def test_binding_aggregation_round_trips_through_strict_model() -> None:
     """A raw TOML ``{op = "<value>"}`` mapping hydrates to the typed member.
 
     Exercises the same ``model_validate`` boundary the registry loader uses:
     the plain string is coerced to its :class:`BindingAggregationOp` member,
     and a re-dump round-trips back to the canonical string value.
     """
-    aggregation = BindingAggregation.model_validate({"op": op_value})
+    for op_value in _REGISTRY_DECLARED_OPS:
+        aggregation = BindingAggregation.model_validate({"op": op_value})
 
-    assert isinstance(aggregation.op, BindingAggregationOp)
-    assert aggregation.op == op_value
-    assert aggregation.op.value == op_value
-    assert aggregation.model_dump()["op"] == op_value
-    # Constructed directly with the typed member round-trips identically.
-    assert aggregation == BindingAggregation(op=BindingAggregationOp(op_value))
+        assert isinstance(aggregation.op, BindingAggregationOp), op_value
+        assert aggregation.op == op_value, op_value
+        assert aggregation.op.value == op_value, op_value
+        assert aggregation.model_dump()["op"] == op_value, op_value
+        # Constructed directly with the typed member round-trips identically.
+        assert aggregation == BindingAggregation(op=BindingAggregationOp(op_value)), op_value
 
 
 # The per-family default contract: detail-record families emit one row per
@@ -179,25 +179,25 @@ _SUM_DEFAULT_SOURCES: tuple[str, ...] = (
 )
 
 
-@pytest.mark.parametrize("source", _ROWS_DEFAULT_SOURCES)
-def test_detail_record_family_defaults_to_rows(source: str) -> None:
+def test_detail_record_family_defaults_to_rows() -> None:
     """A detail-record binding with no explicit op defaults to ``rows``."""
-    assert default_binding_aggregation_op(source) is BindingAggregationOp.ROWS
-    assert binding_aggregation_op(_binding(source=source, op=None)) is BindingAggregationOp.ROWS
+    for source in _ROWS_DEFAULT_SOURCES:
+        assert default_binding_aggregation_op(source) is BindingAggregationOp.ROWS, source
+        assert binding_aggregation_op(_binding(source=source, op=None)) is BindingAggregationOp.ROWS, source
 
 
-@pytest.mark.parametrize("source", _SUM_DEFAULT_SOURCES)
-def test_scalar_folding_family_defaults_to_sum(source: str) -> None:
+def test_scalar_folding_family_defaults_to_sum() -> None:
     """A scalar-folding binding with no explicit op defaults to ``sum``."""
-    assert default_binding_aggregation_op(source) is BindingAggregationOp.SUM
-    assert binding_aggregation_op(_binding(source=source, op=None)) is BindingAggregationOp.SUM
+    for source in _SUM_DEFAULT_SOURCES:
+        assert default_binding_aggregation_op(source) is BindingAggregationOp.SUM, source
+        assert binding_aggregation_op(_binding(source=source, op=None)) is BindingAggregationOp.SUM, source
 
 
-@pytest.mark.parametrize("source", (*_ROWS_DEFAULT_SOURCES, *_SUM_DEFAULT_SOURCES))
-def test_explicit_op_overrides_family_default(source: str) -> None:
+def test_explicit_op_overrides_family_default() -> None:
     """An explicit typed op is returned verbatim regardless of the family default."""
-    binding = _binding(source=source, op=BindingAggregationOp.COPY)
-    assert binding_aggregation_op(binding) is BindingAggregationOp.COPY
+    for source in (*_ROWS_DEFAULT_SOURCES, *_SUM_DEFAULT_SOURCES):
+        binding = _binding(source=source, op=BindingAggregationOp.COPY)
+        assert binding_aggregation_op(binding) is BindingAggregationOp.COPY, source
 
 
 def test_unknown_op_string_is_rejected_at_model_validation() -> None:
