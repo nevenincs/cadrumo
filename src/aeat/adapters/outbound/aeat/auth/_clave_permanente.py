@@ -28,13 +28,13 @@ Design summary:
   certificate and Cl@ve Móvil sessions.
 * AEAT/Cl@ve IdP form selectors are the least stable part of this surface —
   they track the Cl@ve frontend rather than a published AEAT contract — and
-  are declared centrally in :class:`aeat.core.external_constants.AeatClavePermanenteSurface`
+  are declared centrally in :class:`core.external_constants.AeatClavePermanenteSurface`
   so a frontend change is a one-file update.
 
 See Also:
     :class:`ClavePermanenteSessionMetadata` for the encrypted persistence
     contract, :class:`ClavePermanenteSessionDetail` for the public session
-    payload, and :func:`aeat.adapters.outbound.aeat.auth._clave_permanente_support.clave_permanente_login_error`
+    payload, and :func:`adapters.outbound.aeat.auth._clave_permanente_support.clave_permanente_login_error`
     for operator-reportable live-flow failures.
 """
 
@@ -95,7 +95,7 @@ _CLAVE_PERMANENTE_PASSWORD_ENV: Final[str] = "AEAT_CLAVE_PERMANENTE_PASSWORD"
 class ClavePermanenteAuthProvider:
     """Cl@ve Permanente implementation of the :class:`AuthProvider` protocol.
 
-    Constructed by :func:`aeat.adapters.outbound.aeat.auth.select_provider`
+    Constructed by :func:`adapters.outbound.aeat.auth.select_provider`
     when ``kind == AuthProviderKind.CLAVE_PERMANENTE``. Both fresh login and
     resume run headlessly: the DNI/NIE + password form requires no
     operator-mediated approval step for AEAT read paths.
