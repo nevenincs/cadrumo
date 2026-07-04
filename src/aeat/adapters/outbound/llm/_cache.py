@@ -1,8 +1,8 @@
 """Encrypted content-addressed cache for LLM responses.
 
-Each :class:`~aeat.adapters.outbound.llm.CachedEntry` is stored under
-:data:`~aeat.adapters.persistence.storage.LLM_CACHE_NAMESPACE` as an encrypted
-secure object with :class:`~aeat.core.classification.SensitivityClass`
+Each :class:`~adapters.outbound.llm.CachedEntry` is stored under
+:data:`~adapters.persistence.storage.LLM_CACHE_NAMESPACE` as an encrypted
+secure object with :class:`~core.classification.SensitivityClass`
 ``DIAGNOSTIC`` classification so operator-identifying inputs are redacted
 before persistence.
 """
@@ -40,10 +40,10 @@ _CACHE_VERSION = 1
 class LLMCache:
     """Persist LLM responses through encrypted secure objects.
 
-    The cache derives :class:`~aeat.adapters.outbound.llm.CacheKey` values from
-    :class:`~aeat.adapters.outbound.llm.LLMRequest` content and persists
-    :class:`~aeat.adapters.outbound.llm.LLMResponse` payloads through
-    :func:`~aeat.adapters.persistence.storage.secure_object_repository_for_active_bucket`.
+    The cache derives :class:`~adapters.outbound.llm.CacheKey` values from
+    :class:`~adapters.outbound.llm.LLMRequest` content and persists
+    :class:`~adapters.outbound.llm.LLMResponse` payloads through
+    :func:`~adapters.persistence.storage.secure_object_repository_for_active_bucket`.
 
     Args:
         root_dir: Optional logical cache partition override.
@@ -53,15 +53,15 @@ class LLMCache:
         self.root_dir = root_dir or load_settings().aeat_llm_cache_dir
 
     def build_key(self, request: LLMRequest, provider: LLMProvider, model: str) -> CacheKey:
-        """Derive a :class:`~aeat.adapters.outbound.llm.CacheKey` from the request.
+        """Derive a :class:`~adapters.outbound.llm.CacheKey` from the request.
 
         Args:
-            request: Structured :class:`~aeat.adapters.outbound.llm.LLMRequest`.
-            provider: Effective :class:`~aeat.adapters.outbound.llm.LLMProvider`.
+            request: Structured :class:`~adapters.outbound.llm.LLMRequest`.
+            provider: Effective :class:`~adapters.outbound.llm.LLMProvider`.
             model: Effective model for the request.
 
         Returns:
-            Deterministic :class:`~aeat.adapters.outbound.llm.CacheKey`
+            Deterministic :class:`~adapters.outbound.llm.CacheKey`
             components.
         """
         prompt_material = "\n".join([request.system or "", request.prompt])
@@ -88,16 +88,16 @@ class LLMCache:
         """Read a cached response, if present.
 
         Args:
-            request: Structured :class:`~aeat.adapters.outbound.llm.LLMRequest`.
-            provider: Effective :class:`~aeat.adapters.outbound.llm.LLMProvider`.
+            request: Structured :class:`~adapters.outbound.llm.LLMRequest`.
+            provider: Effective :class:`~adapters.outbound.llm.LLMProvider`.
             model: Effective model for the request.
 
         Returns:
-            Cached :class:`~aeat.adapters.outbound.llm.LLMResponse` when
+            Cached :class:`~adapters.outbound.llm.LLMResponse` when
             present, otherwise ``None``.
 
         Raises:
-            :exc:`~aeat.adapters.outbound.llm.LLMCacheError`: When the cached
+            :exc:`~adapters.outbound.llm.LLMCacheError`: When the cached
             payload is present but cannot be parsed.
         """
         from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
@@ -130,8 +130,8 @@ class LLMCache:
         """Write a response to the cache and return the stored entry.
 
         The serialised payload is routed through the substrate's
-        :func:`~aeat.core.redaction.redact_structured` helper at
-        :class:`~aeat.core.classification.SensitivityClass` ``DIAGNOSTIC``
+        :func:`~core.redaction.redact_structured` helper at
+        :class:`~core.classification.SensitivityClass` ``DIAGNOSTIC``
         class before persistence (the CACHE-class default policy has an empty
         rule set because most caches are public reference data; the LLM cache
         carries identity-bearing inputs and therefore adopts the DIAGNOSTIC
@@ -144,15 +144,15 @@ class LLMCache:
         discovery into CLI commands that never touch the cache.
 
         Args:
-            request: Structured :class:`~aeat.adapters.outbound.llm.LLMRequest`.
-            response: Public :class:`~aeat.adapters.outbound.llm.LLMResponse`
+            request: Structured :class:`~adapters.outbound.llm.LLMRequest`.
+            response: Public :class:`~adapters.outbound.llm.LLMResponse`
                 to persist.
 
         Returns:
-            Persisted :class:`~aeat.adapters.outbound.llm.CachedEntry` model.
+            Persisted :class:`~adapters.outbound.llm.CachedEntry` model.
 
         Raises:
-            :exc:`~aeat.adapters.outbound.llm.LLMCacheError`: When redaction
+            :exc:`~adapters.outbound.llm.LLMCacheError`: When redaction
             produces a non-dict result or the storage write fails with an
             OS-level error.
         """
@@ -197,10 +197,10 @@ class LLMCache:
         return entry
 
     def stats(self) -> CacheStats:
-        """Return encrypted cache counts as a :class:`~aeat.adapters.outbound.llm.CacheStats`.
+        """Return encrypted cache counts as a :class:`~adapters.outbound.llm.CacheStats`.
 
         Returns:
-            :class:`~aeat.adapters.outbound.llm.CacheStats` with aggregate
+            :class:`~adapters.outbound.llm.CacheStats` with aggregate
             entry count and total decrypted JSON byte size for this logical
             cache partition.
         """
@@ -225,7 +225,7 @@ class LLMCache:
             Number of removed cache objects.
 
         Raises:
-            :exc:`~aeat.adapters.outbound.llm.LLMCacheError`: When a cache
+            :exc:`~adapters.outbound.llm.LLMCacheError`: When a cache
             entry cannot be parsed during iteration.
         """
         from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
