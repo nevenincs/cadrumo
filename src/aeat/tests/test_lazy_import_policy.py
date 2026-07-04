@@ -52,7 +52,7 @@ from __future__ import annotations
 import ast
 from enum import StrEnum
 from functools import cache
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 import pytest
 
@@ -896,7 +896,7 @@ class _ScopeWalker(ast.NodeVisitor):
         self._getattr_depth = 0
         self.sites: list[tuple[int, ImportEdge, bool]] = []
 
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+    def _visit_function_like(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
         is_getattr = self._is_package_init and node.name == "__getattr__"
         self._func_depth += 1
         if is_getattr:
@@ -906,8 +906,15 @@ class _ScopeWalker(ast.NodeVisitor):
             self._getattr_depth -= 1
         self._func_depth -= 1
 
-    visit_AsyncFunctionDef = visit_FunctionDef  # type: ignore[assignment]  # noqa: N815  (ast.NodeVisitor API name)
+    @override
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self._visit_function_like(node)
 
+    @override
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self._visit_function_like(node)
+
+    @override
     def visit_If(self, node: ast.If) -> None:
         is_type_checking = node.test is not None and "TYPE_CHECKING" in ast.unparse(node.test)
         if is_type_checking:
@@ -919,6 +926,7 @@ class _ScopeWalker(ast.NodeVisitor):
         for child in node.orelse:
             self.visit(child)
 
+    @override
     def visit_Try(self, node: ast.Try) -> None:
         guards_import = any(
             handler.type is not None
@@ -935,9 +943,11 @@ class _ScopeWalker(ast.NodeVisitor):
             for child in group:
                 self.visit(child)
 
+    @override
     def visit_Import(self, node: ast.Import) -> None:
         self._record(node)
 
+    @override
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         self._record(node)
 
