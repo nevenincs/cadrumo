@@ -399,17 +399,14 @@ def test_reconcile_file_kind_declaration_catches_casilla_divergence(
 
 # --- Modelo 130 (pagos fraccionados IRPF): printed AEAT box numbers --------
 #
-# Modelo 111's committed declaración fixture (`fixtures/justificantes/111/`)
-# and Modelo 190's and Modelo 390's do NOT carry an "Ejercicio: YYYY" header
-# stamp `parse_declaracion`'s auto-detector requires, and `modelo_reconcile`'s
-# declaración branch (`application/modelo/_reconcile.py`) calls
-# `parse_declaracion(command.source_path)` with NO override parameters -- a
-# pre-existing gap independent of this CLI `--kind` change: the work unit's
-# own modelo/year/period are already known at reconcile time but are never
-# forwarded into the parse call as overrides. M111/M190/M390 are therefore
-# NOT enrollable as real CLI-level walls right now; this is a genuine parser
-# integration gap (not this ticket's scope) tracked as a note in #598. M130's
-# fixture, like M303's, self-detects cleanly.
+# M130's fixture, like M303's, self-detects its own modelo/año/período header
+# cleanly with no overrides needed. Modelo 111's, 190's, and 390's real-corpus
+# declaración fixtures do NOT carry a detectable "Ejercicio: YYYY" header
+# stamp (a real AEAT filing can print the field label as a blank
+# dots-placeholder template on the receipt copy, not a filled value); those
+# three modelos are enrolled further below in this file, unblocked by the
+# work-unit-context override forwarding now landed in `modelo_reconcile`'s
+# declaración branch (`application/modelo/_reconcile.py`).
 
 MODELO_130_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "130" / "2024-1T.pdf"
 """Synthetic-generated M130 declaración PDF for ejercicio 2024, 1T. Extraction
