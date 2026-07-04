@@ -1,0 +1,54 @@
+---
+tags:
+  - '#audit'
+  - '#calculation-source-connectivity'
+date: '2026-07-04'
+modified: '2026-07-04'
+related:
+  - "[[2026-05-20-calculation-source-connectivity-plan]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #audit) and one feature tag.
+     Replace calculation-source-connectivity with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+# `calculation-source-connectivity` audit: `campaign closeout`
+
+## Scope
+
+The calculation-source-connectivity campaign closeout honesty-review (Wave W05 P11 axes plus the P10 governance inventory), run single-owner. Three axes are covered here in one consolidated closeout document: the source-enrollment inventory (S55), the persistence-boundary review of the W05.P10 approval-fingerprint and source-provenance work (S58), and the source-mesh directionality audit (S59). The grounding audit (S60) and the final registry-gate re-confirmation (S55/S61 green on a settled tree) are deferred to a settle-window because the shared registry is transiently churning under a concurrent modelo-145 fixed-width-export write; that mandatory re-confirm is recorded below, not yet performed.
+
+## Findings
+
+### source-enrollment-inventory | low | every declared binding source is enrolled, deferred, or manual — no dormant surface (verified in a stable window)
+
+A stable-window run of the enrollment gate (`test_source_enrollment.py` plus `test_source_mesh_missing_sources.py`) passed 9/9: every binding `source` kind declared across the committed registry resolves to an enrolled resolver, an explicitly deferred kind, or manual input, upholding the no-dormant-source-resolvers connectivity contract. Modelo 145 (landing under a peer) declares no calculation binding sources — its only `source` token is a `workbook_source` parity reference and it has no `bindings/` fragment directory — so it introduces zero new source kinds to the mesh and the inventory is unaffected by it. A concurrent re-run flipped to 8 failed / 1 passed, but full-traceback isolation showed every failure is `RegistryLoadError: registry directory changed during cache fingerprinting; retry after concurrent registry writes settle` — the transient loader-cache race from the modelo-145 export peer's active writes, distinct from a genuine unenrolled-source assertion (which would name the kind). No calc-source gap; the inventory is clean.
+
+### persistence-boundary-review | low | approval-fingerprint and source-provenance changes uphold roundtrip, no-legacy, provenance, and identity discipline
+
+The W05.P10 persistence-boundary work reviewed against the roundtrip and no-legacy disciplines. Identity discipline holds: neither the revision `source_provenance` field nor the approval `prior_filing_observations_fingerprint` participates in `derive_calculation_revision_id` (both confirmed absent from the derivation), so content-addressing is unchanged. No-legacy holds: the approval-basis version is a single canonical `review-basis-v3` with no migration or read-tolerance shim across the v1 to v3 progression. Provenance is non-duplicated: `CalculationSourceRef` carries only the resolver-to-source-object-to-fingerprint trace (source_kind, binding_source, source_ref, fingerprint) and deliberately omits the per-casilla legal_refs and source_refs that the revision observations already own. The stable projection excludes the volatile `captured_at` so a re-save of identical data does not over-invalidate, and the review layer projects the stored observation structurally through a Protocol without importing the observation repository's private envelope type. The persisted-model changes are exercised by strict save-load-equality roundtrips plus corrupt-payload anti-tautology proofs and registry-free fingerprint unit tests.
+
+### source-mesh-directionality | low | production domain never imports application; mesh resolvers stay application-layer
+
+The `domain-not-application` import-linter contract is KEPT over the full tree (3252 files, 15248 dependencies): no production domain module imports the application layer, so the source mesh's hexagonal direction holds — registry binding resolvers and observation protocols live in the domain while the storage-reading source resolvers and the mesh orchestration live in the application layer. A grimp runtime-graph pass confirms the only domain-to-application edges are test modules and conftests (legitimate cross-layer test wiring), including the three `domain.calculations.registry.tests -> application.aggregation` edges; there is no production directionality violation on the calc-source surface.
+
+## Recommendations
+
+- MANDATORY settle-window re-confirm (campaign honesty-gate is not complete until done): once the modelo-145 export write settles, re-run the enrollment gate (`test_source_enrollment.py` plus `test_source_mesh_missing_sources.py`) and confirm a real 9/9 green with no `RegistryLoadError`, and run the S60 grounding audit against the settled registry. Do not declare the closeout done on churn-contaminated reds or on the stable-Phase-1 evidence alone.
+- No code action required from the three axes above; all findings are low and confirm the campaign's invariants hold.
+- The two open W05.P10 follow-up rows (the profile-activity relation-scoping fingerprint) remain tracked and are out of scope for this closeout.
