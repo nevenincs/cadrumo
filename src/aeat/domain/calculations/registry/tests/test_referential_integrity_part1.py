@@ -6,6 +6,7 @@ import pytest
 
 from .....core import BindingSourceKind
 from .. import CasillaId, validated_casilla_id
+from .._binding_selector_utils import BindingFixedExportSelector
 from .._schema import (
     CasillaAlias,
     CasillaConstraints,
@@ -148,13 +149,7 @@ def test_bound_casilla_dangling_alternate_binding_fails_snapshot_integrity() -> 
     binding = DataBindingDefinition(
         id="test.binding",
         source=BindingSourceKind.MANUAL_INPUT,
-        selector={
-            "record": "DPA",
-            "field": "test",
-            "offset": 1,
-            "length": 1,
-            "data_type": "integer",
-        },
+        selector=BindingFixedExportSelector(record="DPA", field="test", offset=1, length=1, data_type="integer"),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
@@ -380,13 +375,7 @@ def test_dangling_binding_source_refs() -> None:
     binding = DataBindingDefinition(
         id="test.binding",
         source=BindingSourceKind.MANUAL_INPUT,
-        selector={
-            "record": "DPA",
-            "field": "test",
-            "offset": 1,
-            "length": 1,
-            "data_type": "integer",
-        },
+        selector=BindingFixedExportSelector(record="DPA", field="test", offset=1, length=1, data_type="integer"),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID, _extra),
     )
