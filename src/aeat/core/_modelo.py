@@ -231,7 +231,6 @@ class Modelo(StrEnum):
 #: declaraciones informativas and retención forms; it is not yet AEAT's full
 #: ~200-form set.
 UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
-    Modelo.M222: "pago fraccionado del Impuesto sobre Sociedades en regimen de consolidacion fiscal (grupos)",
     Modelo.M234: "mecanismos transfronterizos de planificacion fiscal DAC6 (informativa)",
     Modelo.M165: "certificaciones a socios de entidades de nueva o reciente creacion (informativa anual)",
     Modelo.M179: "cesion de uso de viviendas con fines turisticos (informativa anual)",
@@ -255,7 +254,6 @@ UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
     Modelo.M576: "IEDMT autoliquidacion por matriculacion de determinados medios de transporte",
     Modelo.M121: "comunicacion de cesion del derecho a deducciones por familia numerosa o discapacidad",
     Modelo.M122: "regularizacion de deducciones familia numerosa/discapacidad por no obligados a declarar",
-    Modelo.M220: "declaracion anual del Impuesto sobre Sociedades en regimen de consolidacion fiscal (grupos)",
 }
 
 
