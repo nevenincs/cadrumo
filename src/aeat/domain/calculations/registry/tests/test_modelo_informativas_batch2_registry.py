@@ -34,7 +34,7 @@ _MODELOS = [
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,kind", _MODELOS)
-def test_validator_accepts_committed_definition(mid, rev, approval, plazo, doc, kind) -> None:
+def test_validator_accepts_committed_definition(mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str) -> None:
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert rev in modelo.revisions
@@ -42,7 +42,7 @@ def test_validator_accepts_committed_definition(mid, rev, approval, plazo, doc, 
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,kind", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(mid, rev, approval, plazo, doc, kind) -> None:
+def test_approval_and_plazo_resolve_as_legal_authority(mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str) -> None:
     """Approval (art 1) and plazo (art 4/6) resolve as bundled legal authority.
 
     Both required_text sets are cross-checked against the bundled orden corpus at
@@ -56,7 +56,7 @@ def test_approval_and_plazo_resolve_as_legal_authority(mid, rev, approval, plazo
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,kind", _MODELOS)
-def test_deadline_windows_cite_plazo_and_match_cadence(mid, rev, approval, plazo, doc, kind) -> None:
+def test_deadline_windows_cite_plazo_and_match_cadence(mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str) -> None:
     modelo, _ = _committed_modelo(mid)
     revision = modelo.revisions[rev]
     assert revision.deadline_windows, f"{mid} must declare deadline windows"
