@@ -113,7 +113,7 @@ def _service() -> RegistryQueryService:
     return RegistryQueryService(resources().modelos.authority)
 
 
-def _write_year_ambiguous_registry(tmp_path) -> Path:
+def _write_year_ambiguous_registry(tmp_path: Path) -> Path:
     registry_root = tmp_path / "registry" / "aeat"
     legal_dir = registry_root / "legal"
     modelos_dir = registry_root / "modelos" / "999"
