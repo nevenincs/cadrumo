@@ -13,21 +13,21 @@ catalogue, the purchase-invoice evidence store, the ledger preflight report,
 and the modelo work-unit catalogue for the requested ``(modelo, filing_year,
 period)`` scope. It persists nothing and never contacts AEAT. Every counter it
 reports is already produced by an existing read model
-(:func:`~aeat.application.ledger.preflight_ledger_tax_readiness`,
-:func:`~aeat.application.modelo.list_work_units`) or a direct repository read;
+(:func:`~application.ledger.preflight_ledger_tax_readiness`,
+:func:`~application.modelo.list_work_units`) or a direct repository read;
 this module composes them into one ordered checklist rather than introducing a
 new aggregation.
 
 See Also:
-    :mod:`aeat.application.overview`
+    :mod:`application.overview`
         Sibling read-only overview builders (``status``, ``calendar``,
         ``agenda``, ``backlog``, ``explain``) this module follows the same
         shape as.
-    :mod:`aeat.application.ledger`
-        Owns :func:`~aeat.application.ledger.preflight_ledger_tax_readiness`,
+    :mod:`application.ledger`
+        Owns :func:`~application.ledger.preflight_ledger_tax_readiness`,
         the classification/category/IVA-fact readiness gate this walkthrough's
         "classify" step reuses rather than re-deriving.
-    :class:`aeat.domain.modelos.WorkUnit`
+    :class:`domain.modelos.WorkUnit`
         The modelo work-unit record the final step resolves against.
 """
 
@@ -152,19 +152,19 @@ def build_data_prep_walkthrough(
         bucket_id: Active profile bucket the walkthrough is scoped to.
         modelo: Registry-validated AEAT modelo code (already resolved by the
             caller through the registry describe surface).
-        period: Typed filing :class:`~aeat.core.Period` for the requested scope.
+        period: Typed filing :class:`~core.Period` for the requested scope.
         transaction_repository: Bound
-            :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
+            :class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`
             for ``bucket_id``.
         invoice_catalogue: Loaded
-            :class:`~aeat.domain.invoices.InvoiceCatalogue` for ``bucket_id``.
+            :class:`~domain.invoices.InvoiceCatalogue` for ``bucket_id``.
         evidence_records: Loaded purchase-invoice evidence rows
             (``tuple[PurchaseInvoiceEvidence, ...]``) for ``bucket_id``.
         preflight_report: Loaded
-            :class:`~aeat.application.ledger.LedgerPreflightReport` for
+            :class:`~application.ledger.LedgerPreflightReport` for
             ``(bucket_id, period)``.
         work_units: Active (non-discarded)
-            :class:`~aeat.domain.modelos.WorkUnit` rows for ``bucket_id``.
+            :class:`~domain.modelos.WorkUnit` rows for ``bucket_id``.
 
     Returns:
         A :class:`DataPrepWalkthrough` with one ordered step per data-prep
