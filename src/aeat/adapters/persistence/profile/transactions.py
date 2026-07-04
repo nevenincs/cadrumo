@@ -40,10 +40,11 @@ scan, so an unchanged transaction is never rewritten.
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
+from sqlalchemy import delete, select
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.classification import SensitivityClass
@@ -130,6 +131,17 @@ def _decode_persisted_transaction_row(payload: bytes) -> dict[str, object] | Non
     except (UnicodeDecodeError, json.JSONDecodeError):
         return None
     return decoded if isinstance(decoded, dict) else None
+
+
+def _filing_date(transaction: Transaction) -> date:
+    """Return the date every ledger aggregator filters on: ``value_date`` or ``booked_date``.
+
+    Mirrors the convention already applied independently by every
+    period-scoped ledger aggregator (:mod:`application.aggregation`), so the
+    plaintext date index keys on the SAME date the encrypted-scan aggregation
+    path would have filtered on.
+    """
+    return transaction.raw.value_date or transaction.raw.booked_date
 
 
 def _validate_persisted_transaction_timestamps(decoded: dict[str, object]) -> None:
@@ -285,6 +297,7 @@ class TransactionCatalogueRepository:
         """
         writes, deletions = self._reconcile(catalogue)
         self._objects.apply_batch(writes, deletions)
+        self._sync_date_index(catalogue)
         _log.info(
             "saved transaction catalogue bucket_id=%s entries=%d rewritten=%d deleted=%d",
             self._bucket_id,
@@ -310,6 +323,7 @@ class TransactionCatalogueRepository:
         """
         writes, deletions = self._reconcile(catalogue)
         self._objects.apply_batch((*writes, *extra_writes), deletions)
+        self._sync_date_index(catalogue)
         _log.info(
             "saved transaction catalogue bucket_id=%s entries=%d rewritten=%d deleted=%d extra_writes=%d",
             self._bucket_id,
@@ -318,6 +332,200 @@ class TransactionCatalogueRepository:
             len(deletions),
             len(extra_writes),
         )
+
+    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+        """Return the persisted catalogue filtered to ``[start, end]`` inclusive.
+
+        Reads the plaintext, non-sensitive :class:`~adapters.persistence.storage.sql.TransactionDateIndexRow`
+        routing rows for this bucket to select the candidate transaction ids
+        whose filing date (``value_date`` or ``booked_date``) falls in the
+        window, then decrypts only those rows via a targeted per-id
+        :meth:`~adapters.persistence.storage.SecureObjectRepository.load` --
+        never a full-namespace scan-and-decrypt of every row in the bucket.
+
+        The index is a derived, rebuildable cache: correctness never depends
+        on it being present or complete. When the index has no rows for this
+        bucket, or its row count for this bucket diverges from the encrypted
+        membership index (a staleness signal -- e.g. a row written before this
+        index existed, or a prior crash between the two writes), this method
+        transparently falls back to a full :meth:`load` and filters in memory,
+        exactly reproducing the pre-index result.
+
+        Args:
+            start: Inclusive lower bound of the filing-date window.
+            end: Inclusive upper bound of the filing-date window.
+
+        Returns:
+            The :class:`TransactionCatalogue` containing only transactions
+            whose filing date falls within ``[start, end]``.
+        """
+        index_ids = self._load_index_ids()
+        if not index_ids:
+            return TransactionCatalogue.from_transactions([])
+
+        candidate_ids = self._date_index_candidate_ids(start, end)
+        if candidate_ids is None or not candidate_ids <= index_ids:
+            # Missing, empty-for-a-nonempty-bucket, or drifted relative to the
+            # authoritative membership index: fall back to the full encrypted
+            # scan and filter in memory so correctness never depends on the
+            # plaintext index being present or fresh.
+            full_catalogue = self.load()
+            return TransactionCatalogue.from_transactions(
+                transaction for transaction in full_catalogue.values() if start <= _filing_date(transaction) <= end
+            )
+
+        from ..storage import Envelope, SensitivityClass
+
+        transactions: list[Transaction] = []
+        for transaction_id in sorted(candidate_ids):
+            record = self._objects.load(
+                TX_BUCKET_NAMESPACE,
+                transaction_object_key(self._bucket_id, transaction_id),
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=_TX_CATALOGUE_VERSION,
+            )
+            if record is None:
+                # Index named an id the encrypted store no longer has (a race
+                # between a concurrent delete and this read); skip rather than
+                # fail the whole read -- the membership-index subset check
+                # above already bounds this to a rare edge, not a stale index.
+                continue
+            try:
+                envelope = Envelope[Transaction].model_validate_json(record.payload)
+            except ValidationError as exc:
+                _log.error(
+                    "transaction row schema drift bucket_id=%s (date-range read)",
+                    self._bucket_id,
+                    exc_info=True,
+                )
+                raise StoredTransactionDriftError(self._bucket_id, exc) from exc
+            transactions.append(envelope.payload)
+        _log.debug(
+            "loaded transaction catalogue via date index bucket_id=%s window=%s..%s entries=%d",
+            self._bucket_id,
+            start.isoformat(),
+            end.isoformat(),
+            len(transactions),
+        )
+        return TransactionCatalogue.from_transactions(transactions)
+
+    def rebuild_date_index(self) -> int:
+        """Rebuild this bucket's plaintext date index from the encrypted catalogue.
+
+        The index is derived and rebuildable
+        (``ledger-participation-index-is-derived-rebuildable``): correctness
+        never depends on it, so this is an explicit maintenance/recovery
+        operation, not something callers need on the normal read/write path.
+        Performs a full :meth:`load` (decrypting every row once) and rewrites
+        the index rows for this bucket to exactly match it.
+
+        Returns:
+            The number of index rows written for this bucket.
+        """
+        catalogue = self.load()
+        self._sync_date_index(catalogue)
+        return len(catalogue.transactions)
+
+    def _date_index_candidate_ids(self, start: date, end: date) -> set[str] | None:
+        """Return the candidate transaction ids in ``[start, end]`` per the plaintext index.
+
+        Returns ``None`` when this bucket has no rows in the index at all
+        (distinguishing "index absent" from "index present but window empty",
+        so :meth:`load_for_date_range` can tell a genuinely stale/missing
+        index apart from a real empty result).
+        """
+        from ..storage.sql import _orm
+        from ..storage.sql.session import session_scope
+
+        with session_scope(self._objects.engine) as session:
+            any_row = session.execute(
+                select(_orm.TransactionDateIndexRow.id)
+                .where(_orm.TransactionDateIndexRow.bucket_id == self._bucket_id)
+                .limit(1),
+            ).first()
+            if any_row is None:
+                return None
+            rows = session.execute(
+                select(_orm.TransactionDateIndexRow.transaction_id).where(
+                    _orm.TransactionDateIndexRow.bucket_id == self._bucket_id,
+                    _orm.TransactionDateIndexRow.filing_date >= start,
+                    _orm.TransactionDateIndexRow.filing_date <= end,
+                ),
+            ).scalars()
+            return set(rows)
+
+    def _sync_date_index(self, catalogue: TransactionCatalogue) -> None:
+        """Diff this bucket's plaintext date-index rows against ``catalogue``.
+
+        Runs as a SEPARATE transaction immediately after the encrypted write
+        commits. Only transactions that are new, removed, or whose filing
+        date changed are written -- an unchanged transaction's index row is
+        left untouched, mirroring the diff-based write the encrypted rows
+        already use (see the module docstring: a full-rewrite-per-save would
+        reintroduce the O(n) write-amplification the encrypted per-row store
+        was built to eliminate).
+
+        The index is a derived, rebuildable cache
+        (``ledger-participation-index-is-derived-rebuildable``): a crash
+        between the two writes leaves the index one write behind, which
+        :meth:`load_for_date_range` detects via the membership-index subset
+        check and safely falls back to a full scan for -- never a correctness
+        hazard, only a lost optimisation until the next save re-syncs it.
+
+        Carries ONLY non-sensitive routing keys (bucket id, transaction id,
+        filing date, filing year) -- never an amount, counterparty,
+        description, or any other financial content.
+        """
+        from ..storage.sql import _orm
+        from ..storage.sql.session import session_scope
+
+        incoming: dict[str, date] = {
+            transaction_id: _filing_date(transaction) for transaction_id, transaction in catalogue.transactions.items()
+        }
+
+        with session_scope(self._objects.engine) as session:
+            existing_rows = session.execute(
+                select(
+                    _orm.TransactionDateIndexRow.id,
+                    _orm.TransactionDateIndexRow.transaction_id,
+                    _orm.TransactionDateIndexRow.filing_date,
+                ).where(_orm.TransactionDateIndexRow.bucket_id == self._bucket_id),
+            ).all()
+            existing: dict[str, tuple[int, date]] = {
+                transaction_id: (row_id, filing_date) for row_id, transaction_id, filing_date in existing_rows
+            }
+
+            stale_ids = set(existing) - set(incoming)
+            if stale_ids:
+                session.execute(
+                    delete(_orm.TransactionDateIndexRow).where(
+                        _orm.TransactionDateIndexRow.bucket_id == self._bucket_id,
+                        _orm.TransactionDateIndexRow.transaction_id.in_(stale_ids),
+                    ),
+                )
+
+            new_rows: list[_orm.TransactionDateIndexRow] = []
+            for transaction_id, filing_date in incoming.items():
+                current = existing.get(transaction_id)
+                if current is not None and current[1] == filing_date:
+                    continue  # unchanged: leave the existing row untouched
+                if current is not None:
+                    session.execute(
+                        _orm.TransactionDateIndexRow.__table__.update()
+                        .where(_orm.TransactionDateIndexRow.id == current[0])
+                        .values(filing_date=filing_date, filing_year=filing_date.year),
+                    )
+                    continue
+                new_rows.append(
+                    _orm.TransactionDateIndexRow(
+                        bucket_id=self._bucket_id,
+                        transaction_id=transaction_id,
+                        filing_date=filing_date,
+                        filing_year=filing_date.year,
+                    ),
+                )
+            if new_rows:
+                session.add_all(new_rows)
 
     def _reconcile(
         self,

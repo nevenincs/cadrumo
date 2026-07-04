@@ -14,6 +14,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import (
     resolve_foreign_asset_binding_row_values,
 )
+from ....domain.calculations.registry._counterpart_bindings import resolve_counterpart_binding_values
 from ... import aggregation
 from .. import (
     ACCEPTED_SOURCE_KINDS,
@@ -47,6 +48,8 @@ from .._counterpart import (
     CounterpartSourceKind,
     OperationKind347,
     OperationKind349,
+    _registry_observations_from_counterpart_aggregation,
+    aggregate_counterpart_347,
     aggregate_counterpart_349,
 )
 from .._foreign_assets import (
@@ -302,6 +305,88 @@ def test_counterpart_m349_service_keeps_invoice_observations_outside_reserved_re
     assert resolution.binding_values == {}
     assert resolution.provenance == ()
     assert resolution.source_transaction_ids == ()
+
+
+def test_counterpart_m347_mesh_resolution_matches_prior_aggregate_exactly() -> None:
+    count_binding = "modelo-347-declarante-numero-personas-entidades"
+    amount_binding = "modelo-347-declarante-importe-total-anual-operaciones"
+    observations = (
+        _counterpart_obs(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_id="m347-ledger-delivery",
+            operation_kind=OperationKind347.DELIVERY.value,
+            invoice_total="2000.00",
+        ),
+        _counterpart_obs(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_id="m347-ledger-acquisition",
+            operation_kind=OperationKind347.ACQUISITION.value,
+            invoice_total="1505.07",
+        ),
+        _counterpart_obs(
+            nif="B00000002",
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_id="m347-ledger-threshold-control",
+            operation_kind=OperationKind347.DELIVERY.value,
+            invoice_total="3005.06",
+        ),
+        _counterpart_obs(
+            nif="DE123456789",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+            source_id="m349-control",
+            operation_kind=OperationKind349.INTRA_DELIVERY.value,
+            country="DE",
+            invoice_total="9999.00",
+        ),
+    )
+    expected_aggregation = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
+    service_result = aggregate_per_modelo(
+        PerModeloAggregationCommand(
+            modelo="347",
+            period=_P_2025_ANNUAL,
+            counterpart_observations=observations,
+        ),
+    )
+    snapshot = resources().modelos.authority.snapshot("347", filing_year=2025, period="0A")
+    context = CalculationSourceContext(
+        bucket_id="operator",
+        modelo="347",
+        filing_year=2025,
+        period=_P_2025_ANNUAL,
+        revision=snapshot.revision,
+    )
+    expected_binding_values = resolve_counterpart_binding_values(
+        snapshot.revision,
+        _registry_observations_from_counterpart_aggregation(expected_aggregation),
+    )
+    expected_without_below_threshold = resolve_counterpart_binding_values(
+        snapshot.revision,
+        _registry_observations_from_counterpart_aggregation(
+            aggregate_counterpart_347(observations[:2], period=_P_2025_ANNUAL),
+        ),
+    )
+    below_threshold_values = resolve_counterpart_binding_values(
+        snapshot.revision,
+        _registry_observations_from_counterpart_aggregation(
+            aggregate_counterpart_347((observations[2],), period=_P_2025_ANNUAL),
+        ),
+    )
+
+    resolution = CounterpartAggregationSourceResolver(observations=observations).resolve(context)
+
+    assert service_result.aggregation == expected_aggregation
+    assert declarable_counterparty_nifs_347(expected_aggregation) == frozenset({"B00000001"})
+    assert expected_binding_values == {
+        count_binding: Decimal("1"),
+        amount_binding: Decimal("3505.07"),
+    }
+    assert expected_without_below_threshold == expected_binding_values
+    assert below_threshold_values == {
+        count_binding: Decimal("0"),
+        amount_binding: Decimal("0"),
+    }
+    assert resolution.binding_values == expected_binding_values
+    assert set(resolution.binding_values) == {count_binding, amount_binding}
 
 
 def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics() -> None:

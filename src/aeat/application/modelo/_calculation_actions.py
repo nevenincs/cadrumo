@@ -662,6 +662,10 @@ class _MemoizedTransactionCatalogueRepository:
             self._catalogue = self._repository.load()
         return self._catalogue
 
+    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+        """Delegate straight through; not memoized (distinct resolvers request distinct windows)."""
+        return self._repository.load_for_date_range(start, end)
+
     def save(self, catalogue: TransactionCatalogue) -> None:
         """Delegate to the wrapped repository; never called during mesh resolution."""
         self._repository.save(catalogue)

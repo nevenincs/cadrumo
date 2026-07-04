@@ -19,6 +19,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     LargeBinary,
     Numeric,
@@ -130,6 +131,58 @@ class CorpusArtifactRow(Base):
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     modelo: Mapped[ModeloRow] = relationship("ModeloRow", lazy="joined")
+
+
+class TransactionDateIndexRow(Base):
+    """Plaintext routing row: one ledger transaction's filing date and year.
+
+    This table is a derived, rebuildable read-side cache co-written atomically
+    with :class:`SecureObjectRow` ledger writes (see
+    :class:`~aeat.adapters.persistence.profile.transactions.TransactionCatalogueRepository`).
+    It exists purely to let a period-scoped ledger read select the candidate
+    transaction ids for a date range with a plaintext SQL predicate, so only
+    those rows need to be decrypted -- never the whole per-bucket catalogue.
+
+    The row carries ONLY non-sensitive routing keys: the bucket id, the
+    transaction id, its filing date (``value_date`` or ``booked_date`` --
+    the same field every ledger aggregator already filters on), and the
+    filing year the date falls in. No amount, counterparty, description,
+    NIF, or other financial content may ever be added to this table; it is
+    plaintext by design (:class:`~adapters.persistence.storage.SensitivityClass`
+    ``CACHE``) and correctness never depends on it being present or fresh --
+    a missing or incomplete index falls back to the full encrypted scan.
+
+    Attributes:
+        id: Surrogate integer primary key.
+        bucket_id: Owning profile bucket, so a shared database never mixes
+            two buckets' routing rows.
+        transaction_id: The ledger transaction's stable content-derived id.
+        filing_date: ``value_date`` or ``booked_date`` (whichever the ledger
+            aggregation layer would use) as a plain SQL ``Date``.
+        filing_year: ``filing_date.year``, indexed separately so a
+            year-scoped candidate-id query does not need a date-range
+            predicate at all.
+    """
+
+    __tablename__ = "transaction_date_index"
+    __table_args__ = (
+        UniqueConstraint(
+            "bucket_id",
+            "transaction_id",
+            name="uq_transaction_date_index_identity",
+        ),
+        Index(
+            "ix_transaction_date_index_bucket_date",
+            "bucket_id",
+            "filing_date",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    bucket_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    transaction_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    filing_date: Mapped[date] = mapped_column(Date(), nullable=False)
+    filing_year: Mapped[int] = mapped_column(Integer, nullable=False)
 
 
 class SecureObjectRow(Base):

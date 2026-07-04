@@ -33,6 +33,7 @@ from ._runtime_graph import (
 )
 from ._schema import ModeloDefinition, ModeloRevision, RelationDefinition, filing_period_from_scope
 from ._schema_input_kind import InputKind
+from ._support_matrix import ModeloEntry, build_support_matrix
 
 #: Bare registry period tokens (``0A``, ``1T``-``4T``, ``01``-``12``,
 #: ``1P``-``4P``, ``EXT-1T``-``EXT-4T``, ``AD-HOC``, ``EVENT-N``) carry
@@ -581,6 +582,22 @@ class RegistrySourceInventoryReport(BaseModel):
         return frozenset(row.source_kind for row in self.rows)
 
 
+class ModeloSupportMatrixReport(BaseModel):
+    """Registry-wide support/capability matrix, one :class:`ModeloEntry` per modelo.
+
+    Returned by :meth:`RegistryQueryService.support_matrix`. Every entry is
+    derived directly from the loaded registry authority — this report is never
+    hand-maintained.
+
+    Attributes:
+        entries: Every modelo's :class:`ModeloEntry`, sorted by ``modelo_id``.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    entries: tuple[ModeloEntry, ...]
+
+
 class RegistryQueryService:
     """Stable Python facade over the validated modelo registry authority."""
 
@@ -665,6 +682,23 @@ class RegistryQueryService:
             for source, sites in sites_by_source.items()
         )
         return RegistrySourceInventoryReport(rows=tuple(sorted(rows, key=lambda row: row.source_kind.value)))
+
+    def support_matrix(self) -> ModeloSupportMatrixReport:
+        """Return the registry-wide per-modelo support/capability matrix.
+
+        For every modelo the authority can load, builds a :class:`ModeloEntry`
+        capturing supported revisions, calc/manifest/export/extractor
+        capability flags, declared per-ejercicio casilla renames, declared
+        deprecation (support-removal) decisions, and declared AEAT-portal
+        cross-references — every field read or folded directly from the
+        loaded registry, never hand-maintained (see
+        ``no-dormant-source-resolvers`` / ``no-silent-under-declaration``).
+
+        Returns:
+            A :class:`ModeloSupportMatrixReport` whose entries are sorted by
+            ``modelo_id``.
+        """
+        return ModeloSupportMatrixReport(entries=build_support_matrix(self._authority))
 
     def describe_modelo(
         self,
@@ -1439,5 +1473,6 @@ __all__ = [
     "ModeloFormulasReport",
     "ModeloListReport",
     "ModeloListRow",
+    "ModeloSupportMatrixReport",
     "RegistryQueryService",
 ]
