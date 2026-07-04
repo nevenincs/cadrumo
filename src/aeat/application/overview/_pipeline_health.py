@@ -6,16 +6,16 @@ Kent-observable question "is my pipeline healthy for this period?" by
 composing three already-existing read models for the requested
 ``(filing_year, period)`` scope into one typed report:
 
-* ledger health — :func:`~aeat.application.ledger.summarize_manual_transactions`
+* ledger health — :func:`~application.ledger.summarize_manual_transactions`
   (active/pending-review/reviewed/skipped counts, readiness-issue count).
 * modelo readiness — one :class:`ModeloHealthRow` per :class:`WorkUnit`
   targeting the requested period, derived from its
-  :class:`~aeat.domain.modelos.CalculationRevision` state
-  (:func:`~aeat.application.modelo.get_calculation_revision`) — not-started when
+  :class:`~domain.modelos.CalculationRevision` state
+  (:func:`~application.modelo.get_calculation_revision`) — not-started when
   no work unit exists yet for a modelo the operator would need to file.
 * outstanding findings — every ``BLOCKING`` / ``WARNING``
-  :class:`~aeat.domain.modelos.ModeloVerificationFinding` from the latest
-  :class:`~aeat.domain.modelos.VerificationReport` against each period work
+  :class:`~domain.modelos.ModeloVerificationFinding` from the latest
+  :class:`~domain.modelos.VerificationReport` against each period work
   unit's current revision.
 
 The builder is READ-ONLY: it inspects the transaction catalogue, the modelo
@@ -27,16 +27,16 @@ into one cross-domain dashboard rather than introducing a new aggregation
 (the ``composition-service-no-parallel-write-path`` discipline).
 
 See Also:
-    :mod:`aeat.application.overview`
+    :mod:`application.overview`
         Sibling read-only overview builders (``status``, ``prepare``,
         ``calendar``, ``agenda``, ``backlog``, ``explain``) this module
         follows the same shape as.
-    :func:`aeat.application.ledger.summarize_manual_transactions`
+    :func:`application.ledger.summarize_manual_transactions`
         Owns the ledger status counters this report's ledger section reuses
         rather than re-deriving.
-    :class:`aeat.domain.modelos.WorkUnit`
+    :class:`domain.modelos.WorkUnit`
         The modelo work-unit record the readiness rows resolve against.
-    :class:`aeat.domain.modelos.VerificationReport`
+    :class:`domain.modelos.VerificationReport`
         The findings source each readiness row's outstanding-findings list
         is drawn from.
 """
@@ -64,14 +64,14 @@ class ModeloReadinessState(StrEnum):
     """Closed lifecycle state for one modelo's readiness within a period.
 
     Attributes:
-        NOT_STARTED: No :class:`~aeat.domain.modelos.WorkUnit` exists yet for
+        NOT_STARTED: No :class:`~domain.modelos.WorkUnit` exists yet for
             this ``(modelo, filing_year, period)``.
         CALCULATED: A work unit exists and its current revision has computed
             casilla values but has not been verified.
         VERIFIED: The current revision reached
-            :attr:`~aeat.domain.modelos.CalculationRevisionState.VERIFICADO_COMPLETO`.
+            :attr:`~domain.modelos.CalculationRevisionState.VERIFICADO_COMPLETO`.
         FILED: The work unit's filed revision matches its current revision
-            (:attr:`~aeat.domain.modelos.CalculationRevisionState.PRESENTADO` or
+            (:attr:`~domain.modelos.CalculationRevisionState.PRESENTADO` or
             superseded by a later filed revision of the same unit).
         BLOCKED: The latest verification report against the current revision
             carries at least one ``BLOCKING`` finding.
@@ -89,7 +89,7 @@ class ModeloHealthRow(BaseModel):
 
     Attributes:
         modelo: AEAT modelo code (e.g. ``"130"``, ``"303"``).
-        work_unit_id: The matching :class:`~aeat.domain.modelos.WorkUnit`
+        work_unit_id: The matching :class:`~domain.modelos.WorkUnit`
             id, or ``None`` when :attr:`state` is
             :attr:`ModeloReadinessState.NOT_STARTED`.
         state: Current :class:`ModeloReadinessState` for this modelo/period.
@@ -120,7 +120,7 @@ class PipelineHealthReport(BaseModel):
         bucket_id: Active profile bucket the report is scoped to.
         filing_year: Filing year for the requested scope.
         period: Registry period token for the requested scope (e.g. ``1T``).
-        ledger: The reused :class:`~aeat.application.ledger.LedgerStatusReport`
+        ledger: The reused :class:`~application.ledger.LedgerStatusReport`
             for the same ``(bucket_id, period)`` scope.
         modelos: Ordered :class:`ModeloHealthRow` rows, one per work unit
             found for the period, sorted by modelo code. Empty when no work
@@ -246,22 +246,22 @@ def build_pipeline_health_report(
     Args:
         bucket_id: Active profile bucket the report is scoped to.
         filing_year: Filing year for the requested scope.
-        period: Typed filing :class:`~aeat.core.Period` for the requested scope.
+        period: Typed filing :class:`~core.Period` for the requested scope.
         ledger_report: Already-built
-            :class:`~aeat.application.ledger.LedgerStatusReport` for
+            :class:`~application.ledger.LedgerStatusReport` for
             ``(bucket_id, period)`` (period-scoped, so ``ready`` and
             ``readiness_issue_count`` are populated).
-        work_units: Non-discarded :class:`~aeat.domain.modelos.WorkUnit` rows
+        work_units: Non-discarded :class:`~domain.modelos.WorkUnit` rows
             for ``bucket_id`` matching ``(filing_year, period)``. Callers
             filter to the requested scope; this builder does not re-filter.
         revisions_by_id: Mapping of ``calculation_revision_id`` to the loaded
-            :class:`~aeat.domain.modelos.CalculationRevision`, covering every
+            :class:`~domain.modelos.CalculationRevision`, covering every
             work unit's ``current_calculation_revision_id``. A work unit
             whose id is absent from this mapping is treated as having no
             revision yet.
         reports_by_revision_id: Mapping of ``calculation_revision_id`` to its
-            :class:`~aeat.domain.modelos.VerificationReport` rows, sorted
-            oldest-first (the shape :func:`~aeat.application.modelo.list_verification_reports`
+            :class:`~domain.modelos.VerificationReport` rows, sorted
+            oldest-first (the shape :func:`~application.modelo.list_verification_reports`
             returns). The latest (last) report is used.
 
     Returns:
