@@ -3,7 +3,7 @@
 The Madrid nacimiento/adopción deducción autonómica (casilla 1039, DL 1/2010
 arts. 4 y 18.1) auto-populates on the calculate path only for the determinable
 single/monoparental individual filer
-(:func:`aeat.application.modelo._profile_binding._inject_derived_autonomic_deduccion_facts`);
+(:func:`~application.modelo._profile_binding._inject_derived_autonomic_deduccion_facts`);
 a tributación conjunta declaration or a married/pareja-de-hecho filer is
 fail-closed by design (ADR ``2026-07-01-autonomic-deduccion-auto-trigger-adr``,
 decision D4) because the unidad-familiar 61.860 € límite needs the spouse's
@@ -23,18 +23,18 @@ calculate-path fail-closed default already guards against; this advisory is
 the surface half of that same guard).
 
 The advisory reads the casilla-1039 semantic role and the resolved input value
-off the verify-time :class:`~aeat.domain.calculations.registry.RegistrySnapshot`
+off the verify-time :class:`~domain.calculations.registry.RegistrySnapshot`
 for the target modelo revision, the same authority the calculate path resolves
 its registry formula against.
 
 See Also:
-    :func:`aeat.application.modelo._profile_binding._inject_derived_autonomic_deduccion_facts`
+    :func:`~application.modelo._profile_binding._inject_derived_autonomic_deduccion_facts`
         The calculate-path injector whose fail-closed branch this advisory
         surfaces to the operator.
-    :func:`aeat.application.modelo._profile_binding._madrid_nacimiento_adopcion_candidate_weighted_count`
+    :func:`~application.modelo._profile_binding._madrid_nacimiento_adopcion_candidate_weighted_count`
         Shared candidate-count primitive: evaluates only the per-descendant
         window/cohabitation condition, independent of the unit's determinability.
-    :func:`aeat.application.modelo._verification_actions._collect_revision_verification_findings`
+    :func:`~application.modelo._verification_actions._collect_revision_verification_findings`
         Verification collector that appends this advisory beside the DT 12ª /
         art. 20 / art. 52 / Convenio LOB advisories using the same
         non-blocking mechanism.
@@ -83,11 +83,11 @@ def _madrid_nacimiento_adopcion_eligibility_advisory_finding(
 ) -> ModeloVerificationFinding | None:
     """Warn to confirm Madrid nacimiento/adopción eligibility for an indeterminate unit.
 
-    Loads the bucket's :class:`~aeat.domain.user_profile.UserProfileRecord`
+    Loads the bucket's :class:`~domain.user_profile.UserProfileRecord`
     directly (the same source the calculate-path injector reads) so the verify
     path can see the ``tax_residence.ccaa`` / ``renta_taxpayer.marital_status`` /
     ``filing_export.declaration_type`` / ``renta_family.descendiente.*`` facts
-    that :class:`~aeat.domain.deadlines.TaxpayerProfile` does not carry.
+    that :class:`~domain.deadlines.TaxpayerProfile` does not carry.
 
     Fires only when ALL of the following hold: the revision is the 2025 M100
     filing year the first-slice registry formula covers; the filer is a Madrid
