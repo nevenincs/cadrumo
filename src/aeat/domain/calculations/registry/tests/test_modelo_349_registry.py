@@ -100,6 +100,13 @@ def test_committed_modelo_349_is_informative_static_documentation_only() -> None
     decision = snapshot.live_cross_references["modelo-349-static-documentation"]
     construct = snapshot.constructs["modelo-349-informative"]
 
+    # Modelo 349 must NOT be reclassified to calculation_class="informative": its
+    # declarante summary totals (numero-operadores / importe-operaciones / ...) are
+    # ledger-derived BOUND casillas, and the informative-class invariant
+    # (validate_informative_class_invariant) forbids any input_kind outside
+    # {INFORMATIONAL, MANUAL} for an informative modelo. Reclassifying would be
+    # rejected at registry-build time; the schema default ("filing") is correct here.
+    assert modelo.calculation_class == "filing"
     assert snapshot.revision.formulas == ()
     assert snapshot.revision.relations == ()
     assert {casilla.input_kind for casilla in snapshot.revision.casillas} == {InputKind.MANUAL, InputKind.BOUND}

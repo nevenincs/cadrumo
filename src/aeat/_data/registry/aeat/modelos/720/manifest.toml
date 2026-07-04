@@ -5,6 +5,7 @@ official_name = "Modelo 720. Declaración informativa sobre bienes y derechos si
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
+calculation_class = "informative"
 output_sensitivity = "financial"
 legal_refs = [
     "ley-58-2003:da-18",
