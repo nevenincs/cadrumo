@@ -72,9 +72,9 @@ class TestInssExentaCasillaRegistered:
             casillas_by_id = {c.id: c for c in rev.casillas}
             casilla = casillas_by_id.get(casilla_id)
             assert casilla is not None, f"casilla {casilla_id} must be declared in M100 {filing_year} revision"
-            assert (
-                casilla.semantic_role == "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
-            ), filing_year
+            assert casilla.semantic_role == "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta", (
+                filing_year
+            )
             assert "ley-35-2006:art-7-h" in casilla.legal_refs, filing_year
 
 
