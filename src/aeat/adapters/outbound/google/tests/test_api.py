@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 
@@ -149,7 +149,7 @@ def _make_http_error(status: int, content: bytes = b"error") -> Exception:
     return HttpError(resp=response, content=content)
 
 
-def _request_raising(exc: BaseException) -> Iterator[tuple[HttpRequest, list[str]]]:
+def _request_raising(exc: BaseException) -> AbstractContextManager[tuple[HttpRequest, list[str]]]:
     return _local_google_request((200, _json_body({"ok": True})), postproc=_postproc_raises(exc))
 
 
