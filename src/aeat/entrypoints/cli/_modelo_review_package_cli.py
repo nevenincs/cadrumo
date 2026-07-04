@@ -3,7 +3,7 @@
 Assembles a shareable, checksum-verifiable review package (``build``) and
 verifies one already received (``verify``). All verbs are local-only: they
 never contact AEAT. ``build`` internally reuses
-:func:`~aeat.application.modelo.export_modelo_revision` to obtain the
+:func:`~application.modelo.export_modelo_revision` to obtain the
 fichero-BOE draft bytes it bundles, so it inherits every export-time safety
 gate (evidence completeness, cross-period clean state, IVA wallet
 reconciliation) and also appends the usual ``MODELO_EXPORTED`` bucket event —
@@ -12,12 +12,12 @@ wrap.
 
 ``sign`` / ``verify-signature`` / ``counter-sign`` / ``verify-receipt`` wire
 the Ed25519 authenticity layer
-(:mod:`~aeat.application.modelo._review_package_signing`,
-:mod:`~aeat.application.modelo._review_package_counter_sign`) onto the CLI so
+(:mod:`~application.modelo._review_package_signing`,
+:mod:`~application.modelo._review_package_counter_sign`) onto the CLI so
 the full operator-shares / accountant-receives / accountant-counter-signs /
 operator-verifies workflow is reachable without touching the application
 layer directly. Every signing/counter-signing keypair is minted and persisted
-through :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
+through :class:`~adapters.persistence.storage.SecureObjectRepository` at
 ``SECRET`` sensitivity, scoped to whichever bucket runs the verb (the active
 profile by default, or an explicit ``--bucket-id``); only the PUBLIC half of
 a keypair is ever surfaced in CLI output. ``verify`` remains an INTEGRITY
@@ -25,17 +25,17 @@ check only (did every member arrive byte-for-byte); ``verify-signature`` and
 ``verify-receipt`` are AUTHENTICITY checks (who signed it).
 
 ``encrypt-for-recipient`` / ``decrypt`` wire the X25519 CONFIDENTIALITY layer
-(:mod:`~aeat.application.modelo._review_package_recipient_encryption`) onto
+(:mod:`~application.modelo._review_package_recipient_encryption`) onto
 the CLI: a package sealed with ``encrypt-for-recipient`` can be opened only by
 the holder of the matching X25519 private key, unlike ``sign``/``counter-sign``,
 which leave the archive itself in plaintext ZIP form.
 ``encrypt-for-recipient`` looks up the recipient's registered public key via
-:class:`~aeat.application.modelo.RecipientFingerprintRegistryRepository`
+:class:`~application.modelo.RecipientFingerprintRegistryRepository`
 (populated by ``aeat config collab recipient add``); ``decrypt`` mints-or-loads
 the running bucket's OWN X25519 keypair (mirroring the signing keypair's
 mint-once-persist-as-ciphertext contract exactly, via
-:func:`~aeat.application.modelo.ensure_recipient_encryption_keypair`) and
-composes :class:`~aeat.application.modelo.RecipientReplayGuardRepository`
+:func:`~application.modelo.ensure_recipient_encryption_keypair`) and
+composes :class:`~application.modelo.RecipientReplayGuardRepository`
 around the pure decrypt primitive to refuse a captured package presented twice.
 Both verbs operate entirely on in-memory bytes; the plaintext package bytes are
 never written to disk except as the final recovered archive the operator
