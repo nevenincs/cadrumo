@@ -605,10 +605,13 @@ application:
   invoices:
     bulk_import:
       errors:
-        file_read_failed: 'A számlák tömeges importálási fájlja nem olvasható.'
-        missing_columns: 'A számlák tömeges importálási fájljából hiányoznak kötelező oszlopok: {missing_columns}'
-        unknown_columns: 'A számlák tömeges importálási fájlja ismeretlen oszlopokat tartalmaz: {unknown_columns}'
-        unsupported_extension: 'A számlák tömeges importálási fájljának .csv vagy .xlsx kiterjesztésűnek kell lennie (kapott: {extension}).'
+        file_read_failed: A számlák tömeges importálási fájlja nem olvasható.
+        missing_columns: 'A számlák tömeges importálási fájljából hiányoznak kötelező
+          oszlopok: {missing_columns}'
+        unknown_columns: 'A számlák tömeges importálási fájlja ismeretlen oszlopokat
+          tartalmaz: {unknown_columns}'
+        unsupported_extension: 'A számlák tömeges importálási fájljának .csv vagy
+          .xlsx kiterjesztésűnek kell lennie (kapott: {extension}).'
     creation:
       errors:
         duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
@@ -1466,10 +1469,13 @@ cli:
             ES).'
           create_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
           group_help: Egyeztetési katalógus számlái, amelyek tranzakciókhoz kapcsolhatók.
-          import_all_refused: 'a számlák tömeges importálása sikertelen: minden sor elutasításra került; nem jött létre számla'
-          import_file_help: 'Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat tartalmaz (counterparty_nif, counterparty_name, invoice_number, invoice_date, taxable_base, valamint opcionálisan iva_rate/currency/country_code/notes).'
+          import_all_refused: 'a számlák tömeges importálása sikertelen: minden sor
+            elutasításra került; nem jött létre számla'
+          import_file_help: Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat
+            tartalmaz (counterparty_nif, counterparty_name, invoice_number, invoice_date,
+            taxable_base, valamint opcionálisan iva_rate/currency/country_code/notes).
           import_file_not_found: 'A fájl nem található: {path}'
-          import_help: 'Katalógusszámlák tömeges létrehozása CSV vagy XLSX fájlból.'
+          import_help: Katalógusszámlák tömeges létrehozása CSV vagy XLSX fájlból.
           invoice_id_help: Katalógusbeli számla azonosítója (vagy egyértelmű előtag).
           list_help: Az egyeztetési katalógus számláinak listázása.
           remove_help: Egy egyeztetési katalógusbeli számla törlése.
@@ -2933,6 +2939,12 @@ cli:
         help: Futtass kísérleteket egy elkülönített, eldobható workspace-ben, amely
           soha nem érinti a fő profil állapotát.
         list_help: Minden sandbox listázása.
+        merge_help: 'A sandbox főkönyvi tételeinek és/vagy modelo nyilvántartásainak beemelése egy másik profilba.'
+        merge_into_help: 'A célprofil neve, amelybe a sandbox nyilvántartásait beemeli.'
+        merge_name_help: 'A sandbox neve (előtag nélkül).'
+        merge_promoted_info: '%{scope} beemelve innen: %{source}, ide: %{target}.'
+        merge_scope_help: 'A beemelendő adatkategória: ledger, modelo vagy all.'
+        merge_yes_help: 'A sandbox adatainak beemelését megerősíti.'
         prune_dry_run_help: Elonezet arrol, mely sandboxokat torolne, anelkul, hogy
           torolne oket.
         prune_help: Az osszes sandbox egyszerre torlese.

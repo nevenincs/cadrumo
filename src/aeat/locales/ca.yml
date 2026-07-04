@@ -650,10 +650,13 @@ application:
   invoices:
     bulk_import:
       errors:
-        file_read_failed: 'No s''ha pogut llegir el fitxer d''importació massiva de factures.'
-        missing_columns: 'Al fitxer d''importació massiva de factures li falten columnes obligatòries: {missing_columns}'
-        unknown_columns: 'El fitxer d''importació massiva de factures conté columnes desconegudes: {unknown_columns}'
-        unsupported_extension: 'El fitxer d''importació massiva de factures ha de ser .csv o .xlsx (s''ha rebut {extension}).'
+        file_read_failed: No s'ha pogut llegir el fitxer d'importació massiva de factures.
+        missing_columns: 'Al fitxer d''importació massiva de factures li falten columnes
+          obligatòries: {missing_columns}'
+        unknown_columns: 'El fitxer d''importació massiva de factures conté columnes
+          desconegudes: {unknown_columns}'
+        unsupported_extension: El fitxer d'importació massiva de factures ha de ser
+          .csv o .xlsx (s'ha rebut {extension}).
     creation:
       errors:
         duplicate_invoice: 'Ja existeix una factura amb la mateixa identitat al catàleg:
@@ -1530,10 +1533,13 @@ cli:
             defecte ES).
           create_help: Crea una factura de conciliació vinculable al catàleg.
           group_help: Factures del catàleg de conciliació que es vinculen a transaccions.
-          import_all_refused: 'importació massiva de factures fallida: totes les files van ser rebutjades; no es va crear cap factura'
-          import_file_help: 'Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif, counterparty_name, invoice_number, invoice_date, taxable_base, i opcionalment iva_rate/currency/country_code/notes).'
+          import_all_refused: 'importació massiva de factures fallida: totes les files
+            van ser rebutjades; no es va crear cap factura'
+          import_file_help: Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
+            counterparty_name, invoice_number, invoice_date, taxable_base, i opcionalment
+            iva_rate/currency/country_code/notes).
           import_file_not_found: 'Fitxer no trobat: {path}'
-          import_help: 'Crea factures del catàleg en lot des d''un fitxer CSV o XLSX.'
+          import_help: Crea factures del catàleg en lot des d'un fitxer CSV o XLSX.
           invoice_id_help: Identificador de factura del catàleg (o prefix no ambigu).
           list_help: Llista les factures del catàleg de conciliació.
           remove_help: Elimina una factura del catàleg de conciliació.
@@ -2977,6 +2983,12 @@ cli:
         help: Executa experiments en un bucket aïllat i descartable que mai afecta
           l'estat del perfil principal.
         list_help: Llista tots els sandboxes.
+        merge_help: 'Promou els moviments del llibre o els registres de models d''un sandbox a un altre perfil.'
+        merge_into_help: 'Nom del perfil de destinació al qual es promouen els registres del sandbox.'
+        merge_name_help: 'Nom del sandbox (sense el prefix).'
+        merge_promoted_info: 'S''ha promogut %{scope} de %{source} a %{target}.'
+        merge_scope_help: 'Categoria de dades a promoure: ledger, modelo o all.'
+        merge_yes_help: 'Confirma la promoció de les dades del sandbox.'
         prune_dry_run_help: Mostra una previsualitzacio de quins sandboxes es descartarien
           sense descartar-los.
         prune_help: Descarta tots els sandboxes alhora.
