@@ -82,6 +82,7 @@ Submodules
    aeat.domain.calculations.registry._schema_surfaces
    aeat.domain.calculations.registry._snapshot
    aeat.domain.calculations.registry._source_evidence_fingerprint
+   aeat.domain.calculations.registry._support_matrix
    aeat.domain.calculations.registry._temporal
    aeat.domain.calculations.registry._text
    aeat.domain.calculations.registry._toml_helpers

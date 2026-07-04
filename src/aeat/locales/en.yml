@@ -2059,6 +2059,8 @@ cli:
           against a signer's public key (authenticity check; re-runs the checksum-manifest
           integrity check first). Local-only; never contacts AEAT.
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
+      support_matrix:
+        help: 'Show the registry-wide per-modelo support matrix: calc-grade, completeness manifest, export formats, extractor coverage, declared casilla renames, deprecation decisions, and AEAT-portal cross-references.'
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
