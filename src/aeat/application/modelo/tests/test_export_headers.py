@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....domain.calculations.registry import BindingId, validated_casilla_id
+from ....domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
 from ....domain.deadlines import (
     EntityType,
     IVARegime,
@@ -178,10 +178,10 @@ def test_modelo_202_legal_entity_exports_company_name_in_razon_social_slot(
     # instalment (every manual lane input zero, INCN <= 6M so both LIS art. 40.2
     # and 40.3 modalities are reachable) drives every computed casilla to a real
     # 0.00, which is the grounded state for a company filing an empty 1P instalment.
-    def _c(value: str) -> object:
+    def _c(value: str) -> CasillaId:
         return validated_casilla_id(value, surface="modelo 202 export completeness test")
 
-    inputs: dict[object, object] = {
+    inputs: dict[CasillaId, _Decimal] = {
         # Casilla 01 base (art. 40.2 lane) is a relation_prefill from the prior
         # Modelo 200 cuota liquida; supply it directly as a nil prior cuota.
         "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior": _Decimal("0"),
