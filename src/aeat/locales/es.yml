@@ -693,6 +693,10 @@ application:
           de aplicar el enlace.
         transaction_not_found: No se encontro la transaccion %{transaction_id} en
           el catalogo de transacciones.
+    wizard:
+      errors:
+        build_failed: 'el asistente de facturas rechazó: %{detail}'
+        field_errors: 'el asistente de facturas rechazó %{field_count} campo(s): %{detail}'
   ledger:
     errors:
       evidence_attachment_requires_ids: El adjunto de evidencia del libro mayor requiere
@@ -1597,6 +1601,8 @@ cli:
           remove_help: Elimina una factura del catálogo de conciliación.
           view_help: Muestra una factura del catálogo de conciliación por identificador
             o prefijo no ambiguo.
+          wizard_help: 'Entrada manual guiada y no interactiva cuando la extracción no está disponible.'
+          wizard_idempotent_noop: 'Sin operación idempotente: ya existe una factura con esta identidad (%{invoice_id}); no se creó nada.'
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
           intracomunitarias UE)
         eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
@@ -2129,7 +2135,10 @@ cli:
           el par de claves X25519 de este bucket (generado en el primer uso) y escribe
           el paquete recuperado en --output. Solo local; nunca contacta con la AEAT.
         decrypt_output_help: Ruta donde escribir el ZIP del paquete de revision recuperado.
-        encrypt_feedback_help: 'Sella los comentarios de revisión de un destinatario (una nota y, opcionalmente, un recibo contrafirmado) de vuelta al originador para que solo la clave privada del originador pueda abrirlos, y escribe el sobre en --output. Solo local; nunca contacta con la AEAT.'
+        encrypt_feedback_help: Sella los comentarios de revisión de un destinatario
+          (una nota y, opcionalmente, un recibo contrafirmado) de vuelta al originador
+          para que solo la clave privada del originador pueda abrirlos, y escribe
+          el sobre en --output. Solo local; nunca contacta con la AEAT.
         encrypt_for_recipient_help: Sella un paquete de revision para que solo la
           clave privada de un destinatario registrado pueda abrirlo, y escribe el
           sobre cifrado en --output. Solo local; nunca contacta con la AEAT.
@@ -2140,30 +2149,45 @@ cli:
         errors:
           envelope_not_found: No se encontro el sobre cifrado para el destinatario
             en {envelope_path}.
-          feedback_envelope_not_found: 'No se encontró el sobre de comentarios en {envelope_path}.'
+          feedback_envelope_not_found: No se encontró el sobre de comentarios en {envelope_path}.
           invalid_valid_for_days: --valid-for-days debe ser un entero estrictamente
             positivo.
           output_required: Indique --output RUTA para el ZIP del paquete de revisión.
           package_not_found: No se encontró el paquete de revisión en {package_path}.
           receipt_not_found: No se encontró el recibo en {receipt_path}.
           signature_not_found: No se encontró el sobre de firma en {signature_path}.
-        feedback_counter_signer_public_key_help: 'La clave pública de firma Ed25519 del revisor contra la que debe verificarse la contrafirma (obligatoria cuando los comentarios incluyen un recibo).'
-        feedback_envelope_path_help: 'Ruta al JSON del sobre de comentarios cifrado para el originador producido por `encrypt-feedback`.'
-        feedback_note_help: 'Veredicto o nota de texto libre (p. ej. `revisado, sin cambios`).'
-        feedback_operator_public_key_help: 'Tu propia clave pública de firma Ed25519 contra la que debe verificarse la firma original.'
-        feedback_output_help: 'Ruta donde escribir el JSON del sobre de comentarios cifrado para el originador.'
-        feedback_package_help: 'Ruta a tu paquete de revisión original guardado localmente contra el que se verifica un recibo contrafirmado.'
-        feedback_receipt_help: 'Recibo contrafirmado opcional en JSON (de `counter-sign`) para incluir como aprobación formal.'
-        feedback_revision_id_help: 'Id de la revisión de cálculo a la que se refieren los comentarios (del descriptor del paquete revisado).'
-        feedback_submitted_by_help: 'Etiqueta del actor revisor (p. ej. el nombre para mostrar del asesor).'
-        feedback_work_unit_id_help: 'Id de la unidad de trabajo a la que se refieren los comentarios (del descriptor del paquete revisado).'
+        feedback_counter_signer_public_key_help: La clave pública de firma Ed25519
+          del revisor contra la que debe verificarse la contrafirma (obligatoria cuando
+          los comentarios incluyen un recibo).
+        feedback_envelope_path_help: Ruta al JSON del sobre de comentarios cifrado
+          para el originador producido por `encrypt-feedback`.
+        feedback_note_help: Veredicto o nota de texto libre (p. ej. `revisado, sin
+          cambios`).
+        feedback_operator_public_key_help: Tu propia clave pública de firma Ed25519
+          contra la que debe verificarse la firma original.
+        feedback_output_help: Ruta donde escribir el JSON del sobre de comentarios
+          cifrado para el originador.
+        feedback_package_help: Ruta a tu paquete de revisión original guardado localmente
+          contra el que se verifica un recibo contrafirmado.
+        feedback_receipt_help: Recibo contrafirmado opcional en JSON (de `counter-sign`)
+          para incluir como aprobación formal.
+        feedback_revision_id_help: Id de la revisión de cálculo a la que se refieren
+          los comentarios (del descriptor del paquete revisado).
+        feedback_submitted_by_help: Etiqueta del actor revisor (p. ej. el nombre para
+          mostrar del asesor).
+        feedback_work_unit_id_help: Id de la unidad de trabajo a la que se refieren
+          los comentarios (del descriptor del paquete revisado).
         group_help: Construye un paquete de revisión compartible y verifica su integridad.
-        import_feedback_help: 'Abre un sobre de comentarios con el par de claves X25519 de este bucket, verifica cualquier recibo contrafirmado contra tu paquete de revisión guardado localmente y adjunta la contrafirma verificada a tu registro de aprobación. Solo local; nunca contacta con la AEAT.'
+        import_feedback_help: Abre un sobre de comentarios con el par de claves X25519
+          de este bucket, verifica cualquier recibo contrafirmado contra tu paquete
+          de revisión guardado localmente y adjunta la contrafirma verificada a tu
+          registro de aprobación. Solo local; nunca contacta con la AEAT.
         notes_help: Nota de texto libre incluida en el descriptor del paquete (p.
           ej. el motivo del envío).
         operator_public_key_help: Clave pública del operador (firmante original),
           en 64 caracteres hexadecimales en minúscula.
-        originator_id_help: 'Id de originador registrado cuya clave pública sella los comentarios (véase `aeat config collab recipient add`).'
+        originator_id_help: Id de originador registrado cuya clave pública sella los
+          comentarios (véase `aeat config collab recipient add`).
         output_help: Ruta donde escribir el ZIP del paquete de revisión.
         package_path_help: Ruta del ZIP del paquete de revisión a verificar.
         public_key_help: Clave pública del firmante, en 64 caracteres hexadecimales

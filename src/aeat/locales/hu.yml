@@ -638,6 +638,10 @@ application:
           alkalmazasa utan.
         transaction_not_found: A(z) %{transaction_id} tranzakcio nem talalhato a tranzakcios
           katalogusban.
+    wizard:
+      errors:
+        build_failed: 'a számlavarázsló elutasította: %{detail}'
+        field_errors: 'a számlavarázsló %{field_count} mezőt utasított el: %{detail}'
   ledger:
     errors:
       evidence_attachment_requires_ids: A főkönyvi bizonylat csatolásához vásárlási
@@ -1518,6 +1522,8 @@ cli:
           remove_help: Egy egyeztetési katalógusbeli számla törlése.
           view_help: Egy egyeztetési katalógusbeli számla megjelenítése azonosító
             vagy egyértelmű előtag alapján.
+          wizard_help: 'Irányított, nem interaktív kézi bevitel, ha a kinyerés nem elérhető.'
+          wizard_idempotent_noop: 'Idempotens no-op: már létezik ilyen azonosságú számla (%{invoice_id}); semmi sem jött létre.'
         country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
           műveletek).
         eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
@@ -2045,7 +2051,10 @@ cli:
           letrehozva), es a visszaallitott csomag ZIP kiirasa a --output helyre. Csak
           helyi; soha nem lep kapcsolatba az AEAT-tal.
         decrypt_output_help: A visszaallitott ellenorzo csomag ZIP kiirasi utvonala.
-        encrypt_feedback_help: 'Lezárja egy címzett felülvizsgálati visszajelzését (egy megjegyzést, opcionálisan egy ellenjegyzett elismervényt) vissza a kibocsátónak, hogy csak a kibocsátó privát kulcsa nyithassa meg, és a borítékot a --output helyre írja. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
+        encrypt_feedback_help: Lezárja egy címzett felülvizsgálati visszajelzését
+          (egy megjegyzést, opcionálisan egy ellenjegyzett elismervényt) vissza a
+          kibocsátónak, hogy csak a kibocsátó privát kulcsa nyithassa meg, és a borítékot
+          a --output helyre írja. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
         encrypt_for_recipient_help: Egy ellenorzo csomag lezarasa ugy, hogy csak a
           regisztralt cimzett privat kulcsa nyithassa meg, es a titkositott boritek
           kiirasa a --output helyre. Csak helyi; soha nem lep kapcsolatba az AEAT-tal.
@@ -2055,7 +2064,8 @@ cli:
         errors:
           envelope_not_found: 'Nem talalhato cimzett szamara titkositott boritek itt:
             {envelope_path}.'
-          feedback_envelope_not_found: 'A visszajelzési boríték nem található itt: {envelope_path}.'
+          feedback_envelope_not_found: 'A visszajelzési boríték nem található itt:
+            {envelope_path}.'
           invalid_valid_for_days: A --valid-for-days erteknek szigoruan pozitiv egesz
             szamnak kell lennie.
           output_required: Adja meg a --output ÚTVONAL kapcsolót az áttekintő csomag
@@ -2063,23 +2073,38 @@ cli:
           package_not_found: 'Nem található áttekintő csomag itt: {package_path}.'
           receipt_not_found: 'A nyugta nem található itt: {receipt_path}.'
           signature_not_found: 'Az aláírás-boríték nem található itt: {signature_path}.'
-        feedback_counter_signer_public_key_help: 'A felülvizsgáló Ed25519 aláíró nyilvános kulcsa, amellyel szemben az ellenjegyzést ellenőrizni kell (kötelező, ha a visszajelzés elismervényt tartalmaz).'
-        feedback_envelope_path_help: 'Az `encrypt-feedback` által előállított, kibocsátónak titkosított visszajelzési boríték JSON útvonala.'
-        feedback_note_help: 'Szabad szöveges ítélet vagy megjegyzés (pl. `felülvizsgálva, nincs változás`).'
-        feedback_operator_public_key_help: 'A saját Ed25519 aláíró nyilvános kulcsa, amellyel szemben az eredeti aláírást ellenőrizni kell.'
-        feedback_output_help: 'Az az útvonal, ahová a kibocsátónak titkosított visszajelzési boríték JSON-ját írja.'
-        feedback_package_help: 'A helyben tárolt eredeti felülvizsgálati csomag ZIP útvonala, amellyel szemben az ellenjegyzett elismervényt ellenőrzik.'
-        feedback_receipt_help: 'Opcionális ellenjegyzett elismervény JSON (a `counter-sign`-ból) formális jóváhagyásként való csatoláshoz.'
-        feedback_revision_id_help: 'A számítási revízió azonosítója, amelyre a visszajelzés vonatkozik (a felülvizsgált csomag leírójából).'
-        feedback_submitted_by_help: 'A felülvizsgáló szereplő címkéje (pl. a könyvelő megjelenítendő neve).'
-        feedback_work_unit_id_help: 'A munkaegység azonosítója, amelyre a visszajelzés vonatkozik (a felülvizsgált csomag leírójából).'
+        feedback_counter_signer_public_key_help: A felülvizsgáló Ed25519 aláíró nyilvános
+          kulcsa, amellyel szemben az ellenjegyzést ellenőrizni kell (kötelező, ha
+          a visszajelzés elismervényt tartalmaz).
+        feedback_envelope_path_help: Az `encrypt-feedback` által előállított, kibocsátónak
+          titkosított visszajelzési boríték JSON útvonala.
+        feedback_note_help: Szabad szöveges ítélet vagy megjegyzés (pl. `felülvizsgálva,
+          nincs változás`).
+        feedback_operator_public_key_help: A saját Ed25519 aláíró nyilvános kulcsa,
+          amellyel szemben az eredeti aláírást ellenőrizni kell.
+        feedback_output_help: Az az útvonal, ahová a kibocsátónak titkosított visszajelzési
+          boríték JSON-ját írja.
+        feedback_package_help: A helyben tárolt eredeti felülvizsgálati csomag ZIP
+          útvonala, amellyel szemben az ellenjegyzett elismervényt ellenőrzik.
+        feedback_receipt_help: Opcionális ellenjegyzett elismervény JSON (a `counter-sign`-ból)
+          formális jóváhagyásként való csatoláshoz.
+        feedback_revision_id_help: A számítási revízió azonosítója, amelyre a visszajelzés
+          vonatkozik (a felülvizsgált csomag leírójából).
+        feedback_submitted_by_help: A felülvizsgáló szereplő címkéje (pl. a könyvelő
+          megjelenítendő neve).
+        feedback_work_unit_id_help: A munkaegység azonosítója, amelyre a visszajelzés
+          vonatkozik (a felülvizsgált csomag leírójából).
         group_help: Megosztható áttekintő csomag összeállítása és integritásának ellenőrzése.
-        import_feedback_help: 'Megnyit egy visszajelzési borítékot ennek a bucketnek az X25519 kulcspárjával, ellenőriz minden ellenjegyzett elismervényt a helyben tárolt felülvizsgálati csomaggal szemben, és csatolja az ellenőrzött ellenjegyzést a jóváhagyási naplójához. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
+        import_feedback_help: Megnyit egy visszajelzési borítékot ennek a bucketnek
+          az X25519 kulcspárjával, ellenőriz minden ellenjegyzett elismervényt a helyben
+          tárolt felülvizsgálati csomaggal szemben, és csatolja az ellenőrzött ellenjegyzést
+          a jóváhagyási naplójához. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
         notes_help: A csomag leírójába ágyazott szabad szöveges megjegyzés (pl. a
           megosztás oka).
         operator_public_key_help: Az operátor (eredeti aláíró) nyilvános kulcsa, 64
           kisbetűs hexadecimális karakterként.
-        originator_id_help: 'Regisztrált kibocsátó-azonosító, amelynek nyilvános kulcsa lezárja a visszajelzést (lásd `aeat config collab recipient add`).'
+        originator_id_help: Regisztrált kibocsátó-azonosító, amelynek nyilvános kulcsa
+          lezárja a visszajelzést (lásd `aeat config collab recipient add`).
         output_help: Az elérési út, ahová az áttekintő csomag ZIP fájlját írni kell.
         package_path_help: Az ellenőrizendő áttekintő csomag ZIP fájljának elérési
           útja.
