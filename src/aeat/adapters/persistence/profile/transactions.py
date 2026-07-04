@@ -44,7 +44,7 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.classification import SensitivityClass
@@ -511,7 +511,7 @@ class TransactionCatalogueRepository:
                     continue  # unchanged: leave the existing row untouched
                 if current is not None:
                     session.execute(
-                        _orm.TransactionDateIndexRow.__table__.update()
+                        update(_orm.TransactionDateIndexRow)
                         .where(_orm.TransactionDateIndexRow.id == current[0])
                         .values(filing_date=filing_date, filing_year=filing_date.year),
                     )
