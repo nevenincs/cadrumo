@@ -24,6 +24,7 @@ surfaces a standing advisory rather than a silent blank.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import Literal
@@ -188,6 +189,24 @@ def resolve_donativo_binding_row_values(
     return resolved
 
 
+@dataclass
+class _DonativoRowAccumulator:
+    """Per-donor accumulator carrying each row field's own precise type.
+
+    Replaces an earlier ``dict[str, Decimal | str | bool]`` bucket: conflating
+    the string, Decimal, and bool row fields into one mixed-value-type mapping
+    forced every read site to narrow the union back down (bare ``assert
+    isinstance`` calls) before it could be folded into the ``Decimal | str``
+    row shape :func:`resolve_donativo_binding_row_values` consumes.
+    """
+
+    donor_tax_id: str
+    donor_legal_name: str
+    deduction_percentage: Decimal
+    amount_donated: Decimal = Decimal("0")
+    is_recurrent: bool = False
+
+
 def _build_donativo_rows(
     observations: tuple[DonativoDonorObservation, ...],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
@@ -198,36 +217,30 @@ def _build_donativo_rows(
     recurrencia flag is preserved as ``True`` when any contributing observation
     marked it, per the LIRPF art. 68.3 plurianual loyalty treatment.
     """
-    accum: dict[tuple[str, str], dict[str, Decimal | str | bool]] = {}
+    accum: dict[tuple[str, str], _DonativoRowAccumulator] = {}
     for obs in observations:
         key = (obs.country_code, obs.donor_tax_id)
         bucket = accum.setdefault(
             key,
-            {
-                "donor_tax_id": obs.donor_tax_id,
-                "donor_legal_name": obs.donor_legal_name,
-                "amount_donated": Decimal("0"),
-                "deduction_percentage": obs.deduction_percentage,
-                "is_recurrent": False,
-            },
+            _DonativoRowAccumulator(
+                donor_tax_id=obs.donor_tax_id,
+                donor_legal_name=obs.donor_legal_name,
+                deduction_percentage=obs.deduction_percentage,
+            ),
         )
-        prev_amount = bucket["amount_donated"]
-        assert isinstance(prev_amount, Decimal)
-        bucket["amount_donated"] = prev_amount + obs.amount_donated
+        bucket.amount_donated += obs.amount_donated
         if obs.is_recurrent:
-            bucket["is_recurrent"] = True
+            bucket.is_recurrent = True
     rows: list[Mapping[str, Decimal | str]] = []
     for key in sorted(accum.keys()):
         bucket = accum[key]
-        is_recurrent = bucket["is_recurrent"]
-        assert isinstance(is_recurrent, bool)
         rows.append(
             {
-                "donor_tax_id": bucket["donor_tax_id"],
-                "donor_legal_name": bucket["donor_legal_name"],
-                "amount_donated": bucket["amount_donated"],
-                "deduction_percentage": bucket["deduction_percentage"],
-                "is_recurrent": "1" if is_recurrent else "0",
+                "donor_tax_id": bucket.donor_tax_id,
+                "donor_legal_name": bucket.donor_legal_name,
+                "amount_donated": bucket.amount_donated,
+                "deduction_percentage": bucket.deduction_percentage,
+                "is_recurrent": "1" if bucket.is_recurrent else "0",
             },
         )
     return tuple(rows)
