@@ -162,6 +162,7 @@ def test_full_flow_edit_refuses_branch_change_without_legal_name(_backend: Path)
         )
 
     assert excinfo.value.translated_message == "application.wizard.errors.edit_missing_filing_baseline"
+    assert excinfo.value.context is not None
     assert excinfo.value.context["missing_flags"] == "--legal-name"
 
     with profile_storage_session(pointer.bucket_id):

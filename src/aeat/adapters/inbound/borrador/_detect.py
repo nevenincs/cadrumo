@@ -2,11 +2,11 @@
 
 This module classifies the printed text extracted from a Renta borrador,
 predeclaración, or declaración PDF into an
-:class:`~aeat.adapters.inbound.borrador._schema.ArtefactKind`. It is a local
+:class:`~adapters.inbound.borrador._schema.ArtefactKind`. It is a local
 adapter helper: it reads PDF text through
-:func:`aeat.adapters.inbound.borrador._parsers.extract_pages_text`, applies the
+:func:`adapters.inbound.borrador._parsers.extract_pages_text`, applies the
 documented marker precedence ladder, and returns the artefact kind consumed by
-:func:`~aeat.adapters.inbound.borrador.parse_borrador`.
+:func:`~adapters.inbound.borrador.parse_borrador`.
 """
 
 from __future__ import annotations
@@ -28,9 +28,9 @@ def detect_artefact_kind(pdf_path: Path) -> ArtefactKind:
     """Return the detected Modelo 100 artefact kind for ``pdf_path``.
 
     Precedence when markers overlap is
-    :attr:`~aeat.adapters.inbound.borrador._schema.ArtefactKind.PREDECLARACION`
-    > :attr:`~aeat.adapters.inbound.borrador._schema.ArtefactKind.DECLARACION`
-    > :attr:`~aeat.adapters.inbound.borrador._schema.ArtefactKind.BORRADOR`.
+    :attr:`~adapters.inbound.borrador._schema.ArtefactKind.PREDECLARACION`
+    > :attr:`~adapters.inbound.borrador._schema.ArtefactKind.DECLARACION`
+    > :attr:`~adapters.inbound.borrador._schema.ArtefactKind.BORRADOR`.
     The *VISTA PREVIA* watermark is the strongest signal of non-binding
     status; the CSV stamp trumps the BORRADOR header because a filed
     declaración always ships with a CSV.
@@ -39,7 +39,7 @@ def detect_artefact_kind(pdf_path: Path) -> ArtefactKind:
         pdf_path: Path to the Modelo 100 PDF to inspect.
 
     Returns:
-        The detected :class:`~aeat.adapters.inbound.borrador._schema.ArtefactKind`.
+        The detected :class:`~adapters.inbound.borrador._schema.ArtefactKind`.
 
     Raises:
         ArtefactNotRecognisedError: When none of the three markers

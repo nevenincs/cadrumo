@@ -250,7 +250,18 @@ def aggregate_iva_ledger_observations_from_repositories(
             t("aggregation.iva_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    return aggregate_iva_ledger_observations(repository.load(), period=period)
+    # Filtering by date range before decrypt is a pure performance optimisation
+    # (issue #408): the aggregation's own filter is ``period.contains(date)``
+    # unchanged (no cumulative widening), so pre-filtering to the period's own
+    # inclusive span reproduces the exact same admitted row set -- the
+    # ``OUTSIDE_PERIOD`` gate downstream simply never has a candidate to fire
+    # on. A period with no calendar span falls back to the unfiltered load.
+    transactions = (
+        repository.load_for_date_range(period.start_date, period.end_date)
+        if period.has_date_span()
+        else repository.load()
+    )
+    return aggregate_iva_ledger_observations(transactions, period=period)
 
 
 def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerObservation:

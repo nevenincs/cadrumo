@@ -1,8 +1,8 @@
 """Public :func:`parse_borrador` entry point for Modelo 100 PDFs.
 
 Composes the artefact-kind detector
-(:func:`~aeat.adapters.inbound.borrador._detect.detect_artefact_kind`) with the
-per-año extractor registry (:mod:`aeat.adapters.inbound.borrador._extractors`)
+(:func:`~adapters.inbound.borrador._detect.detect_artefact_kind`) with the
+per-año extractor registry (:mod:`adapters.inbound.borrador._extractors`)
 into the single function callers should depend on. The parser does not infer
 the tax year from the PDF today; callers that need a non-default year must pass
 ``año_override`` explicitly.
@@ -10,7 +10,7 @@ the tax year from the PDF today; callers that need a non-default year must pass
 Unlike the declaración parser, this adapter does not resolve registry snapshots.
 The default parse mode returns observed PDF rows. Registry-profile validation is
 available only when the caller supplies a
-:class:`~aeat.adapters.inbound.borrador._schema.BorradorExtractionProfile`
+:class:`~adapters.inbound.borrador._schema.BorradorExtractionProfile`
 projection explicitly.
 """
 
@@ -45,7 +45,7 @@ def parse_borrador(
     Args:
         pdf_path: Path to the borrador / predeclaración / declaración PDF.
         artefact_kind_override: Skip auto-detection and force the
-            :class:`~aeat.adapters.inbound.borrador._schema.ArtefactKind`.
+            :class:`~adapters.inbound.borrador._schema.ArtefactKind`.
         año_override: Select the year-keyed extractor explicitly. When omitted,
             the parser uses the current default extractor year (``2025``).
         extraction_profile: Optional caller-supplied registry extraction-profile
@@ -55,7 +55,7 @@ def parse_borrador(
             requires ``extraction_profile`` and validates coverage.
 
     Returns:
-        A strict :class:`~aeat.adapters.inbound.borrador._schema.InboundBorradorObservation`
+        A strict :class:`~adapters.inbound.borrador._schema.InboundBorradorObservation`
         with observed casilla rows extracted.
 
     Raises:

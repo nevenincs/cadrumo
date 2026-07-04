@@ -93,7 +93,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-def _numbers_by_section(result: dict) -> dict[str, set[str]]:
+def _numbers_by_section(result: dict[str, list[dict[str, str]]]) -> dict[str, set[str]]:
     return {
         section: {row["number"] for row in result[section]}
         for section in ("required_manual", "optional_manual", "ledger_derivable", "profile_derivable")

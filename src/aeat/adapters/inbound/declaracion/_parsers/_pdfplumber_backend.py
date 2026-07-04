@@ -1,13 +1,13 @@
 """Pdfplumber-backed page text extraction for declaración PDFs.
 
 Wraps :mod:`pdfplumber` behind
-:func:`~aeat.adapters.inbound.declaracion._parsers._pdfplumber_backend.extract_pages_text`
+:func:`~adapters.inbound.declaracion._parsers._pdfplumber_backend.extract_pages_text`
 and
-:func:`~aeat.adapters.inbound.declaracion._parsers._pdfplumber_backend.extract_pages_text_from_bytes`,
+:func:`~adapters.inbound.declaracion._parsers._pdfplumber_backend.extract_pages_text_from_bytes`,
 which return one stripped text string per page. Errors from the underlying
 library and pathological inputs (missing file, scan-only PDF without an OCR
 layer) are translated into
-:class:`~aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`.
+:class:`~adapters.inbound.declaracion._errors.DeclaracionParseError`.
 
 A pypdfium2 fast path is consulted before the canonical pdfplumber primitive.
 The fast path only commits its output when at least one declaration-content

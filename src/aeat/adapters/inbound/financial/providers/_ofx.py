@@ -1,7 +1,7 @@
 """OFX financial provider backed by ``ofxtools``.
 
 Provides :class:`OfxProvider`, an
-:class:`~aeat.adapters.inbound.financial.providers.FinancialProvider`
+:class:`~adapters.inbound.financial.providers.FinancialProvider`
 implementation that wraps ``ofxtools`` to ingest every statement block
 exposed by an OFX or QFX file. The ``_OfxAccountLike``,
 ``_OfxStatementLike`` and ``_OfxTransactionLike`` Protocol surfaces let the
@@ -16,9 +16,9 @@ than silently degrading. Real bank exports are spec-conformant, so the
 strictness is a correctness gain over the previous permissive parser.
 
 Each OFX transaction is projected into a
-:class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow`; the signed
+:class:`~adapters.inbound.financial.providers.ParsedLedgerRow`; the signed
 ``TRNAMT`` value determines
-:class:`~aeat.domain.transactions.TransactionDirection` and the stored raw
+:class:`~domain.transactions.TransactionDirection` and the stored raw
 transaction keeps the absolute magnitude plus OFX-native raw fields.
 """
 

@@ -121,6 +121,7 @@ def test_diff_registry_revisions_refuses_a_year_no_revision_covers() -> None:
         diff_registry_revisions("303", from_year=1999, to_year=_M303_POST_YEAR)
 
     message = str(excinfo.value)
+    assert excinfo.value.context is not None
     assert "1999" in message or excinfo.value.context.get("filing_year") == 1999
 
 

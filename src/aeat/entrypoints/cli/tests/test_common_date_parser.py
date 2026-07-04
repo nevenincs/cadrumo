@@ -41,10 +41,10 @@ def _english_locale() -> object:
     clear_output_language_cache()
 
 
-@pytest.mark.parametrize("raw", _REJECTED)
-def test_parse_iso_date_refuses_non_iso(raw: str) -> None:
-    with pytest.raises(typer.BadParameter):
-        _parse_iso_date(raw, label="invoice-date")
+def test_parse_iso_date_refuses_non_iso() -> None:
+    for raw in _REJECTED:
+        with pytest.raises(typer.BadParameter):
+            _parse_iso_date(raw, label="invoice-date")
 
 
 def test_parse_iso_date_accepts_iso() -> None:
@@ -55,10 +55,10 @@ def test_parse_iso_date_accepts_surrounding_whitespace() -> None:
     assert _parse_iso_date("  2026-01-15  ", label="invoice-date") == date(2026, 1, 15)
 
 
-@pytest.mark.parametrize("raw", _REJECTED)
-def test_parse_iso_date_str_refuses_non_iso(raw: str) -> None:
-    with pytest.raises(typer.BadParameter):
-        _parse_iso_date_str(raw, label="invoice-date")
+def test_parse_iso_date_str_refuses_non_iso() -> None:
+    for raw in _REJECTED:
+        with pytest.raises(typer.BadParameter):
+            _parse_iso_date_str(raw, label="invoice-date")
 
 
 def test_parse_iso_date_str_returns_canonical_string() -> None:

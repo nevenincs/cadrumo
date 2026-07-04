@@ -55,19 +55,19 @@ def _reset_locale_cache() -> Iterator[None]:
     clear_output_language_cache()
 
 
-@pytest.mark.parametrize("locale", _LOCALES, ids=lambda loc: loc.value)
-def test_decimal_refusal_carries_label_raw_and_hint_in_every_locale(locale: OutputLanguage) -> None:
-    message = _render_decimal_refusal(locale, "1.000")
-    assert "taxable-base" in message, f"{locale.value}: label missing -> {message!r}"
-    assert "1.000" in message, f"{locale.value}: raw value missing -> {message!r}"
-    assert _EXPECTED_FORMAT_HINT in message, f"{locale.value}: format hint missing -> {message!r}"
+def test_decimal_refusal_carries_label_raw_and_hint_in_every_locale() -> None:
+    for locale in _LOCALES:
+        message = _render_decimal_refusal(locale, "1.000")
+        assert "taxable-base" in message, f"{locale.value}: label missing -> {message!r}"
+        assert "1.000" in message, f"{locale.value}: raw value missing -> {message!r}"
+        assert _EXPECTED_FORMAT_HINT in message, f"{locale.value}: format hint missing -> {message!r}"
 
 
-@pytest.mark.parametrize("locale", _LOCALES, ids=lambda loc: loc.value)
-def test_date_refusal_carries_label_and_raw_in_every_locale(locale: OutputLanguage) -> None:
-    message = _render_date_refusal(locale, "15/01/2026")
-    assert "invoice-date" in message, f"{locale.value}: label missing -> {message!r}"
-    assert "15/01/2026" in message, f"{locale.value}: raw value missing -> {message!r}"
+def test_date_refusal_carries_label_and_raw_in_every_locale() -> None:
+    for locale in _LOCALES:
+        message = _render_date_refusal(locale, "15/01/2026")
+        assert "invoice-date" in message, f"{locale.value}: label missing -> {message!r}"
+        assert "15/01/2026" in message, f"{locale.value}: raw value missing -> {message!r}"
 
 
 def test_decimal_refusal_text_differs_across_locales() -> None:

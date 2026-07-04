@@ -1,7 +1,7 @@
 """N26 PDF statement provider backed by ``pdfplumber``.
 
 Implements :class:`PdfN26Provider`, an
-:class:`~aeat.adapters.inbound.financial.providers.FinancialProvider`
+:class:`~adapters.inbound.financial.providers.FinancialProvider`
 that parses German-language N26 monthly PDF statements. The parser
 is anchored on the ``Beschreibung Verbuchungsdatum Betrag`` table
 header and a regex matched against each line below it; continuation
@@ -9,8 +9,8 @@ lines (value-date stamps, IBAN annotations, free-form remittance
 text) attach to the most recent header row.
 
 The PDF provider emits
-:class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow` records
-with PDF-backed :class:`~aeat.domain.transactions.RawProvenance`. Its current
+:class:`~adapters.inbound.financial.providers.ParsedLedgerRow` records
+with PDF-backed :class:`~domain.transactions.RawProvenance`. Its current
 fixture corpus is generated from sanitised, published N26 statement text; it
 proves this line-structure family but does not claim exhaustive coverage of
 every N26 current-account or FX statement variant.

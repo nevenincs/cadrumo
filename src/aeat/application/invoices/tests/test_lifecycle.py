@@ -150,7 +150,7 @@ def test_remove_catalogue_invoice_deletes_unlinked_record(tmp_path: Path) -> Non
         assert invoice_id not in reloaded
 
 
-def test_remove_catalogue_invoice_refuses_linked_record(tmp_path) -> None:
+def test_remove_catalogue_invoice_refuses_linked_record(tmp_path: Path) -> None:
     """An invoice still linked to transactions is refused, naming the links.
 
     Deleting it from the catalogue alone would leave the transaction side

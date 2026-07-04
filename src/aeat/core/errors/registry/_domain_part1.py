@@ -1,7 +1,7 @@
-"""Ordered domain :class:`~aeat.core.errors.ErrorCode` registry shard.
+"""Ordered domain :class:`~core.errors.ErrorCode` registry shard.
 
 Rows map domain-layer exception qualnames to stable
-:class:`~aeat.core.errors.ErrorCategory` values and locale message keys.
+:class:`~core.errors.ErrorCategory` values and locale message keys.
 """
 
 from .._registry import ErrorCategory, ErrorCode
@@ -134,7 +134,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_DOMAIN_RETENTION_FLOOR",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_retention_floor",
-            default_suggestion="aeat config profile erase --help",
+            default_suggestion="aeat config profile delete --help",
             retryable=False,
             runbook_id=None,
         ),

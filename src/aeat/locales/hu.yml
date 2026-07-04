@@ -2139,6 +2139,8 @@ cli:
           a manifeszt-integritás ellenőrzését). Csak helyi; soha nem lép kapcsolatba
           az AEAT-tal.
         work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
+      support_matrix:
+        help: 'Megjeleníti a regisztráció szintű, modellenkénti támogatási mátrixot: számítási szint, teljességi jegyzék, exportformátumok, kinyerő lefedettség, deklarált casilla-átnevezések, támogatás-visszavonási döntések és AEAT-portál kereszthivatkozások.'
       verification_report:
         app_help: Rögzített ellenőrzési jelentések vizsgálata.
         list_help: Ellenőrzési jelentések listázása, opcionálisan egy számítási revízióra

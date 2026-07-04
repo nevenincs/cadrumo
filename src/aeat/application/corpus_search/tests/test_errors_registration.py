@@ -33,6 +33,7 @@ def test_input_error_renders_as_refused_not_internal() -> None:
     assert envelope.code == "REFUSED_CORPUS_SEARCH_INPUT"
     # The specific detail rides on context; the localized message comes from the
     # registered message_key (never the generic INTERNAL boundary text).
+    assert envelope.context is not None
     assert envelope.context.get("query") == ""
     assert "INTERNAL" not in envelope.category
 

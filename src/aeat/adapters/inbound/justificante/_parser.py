@@ -1,16 +1,16 @@
 """Inbound ``parse_justificante`` entry points.
 
 This thin orchestration layer pairs a text backend selected by
-:class:`~aeat.domain.justificante.JustificanteParserBackend` with the regex
-extractor in :mod:`aeat.adapters.inbound.justificante._extract`. The extractor
+:class:`~domain.justificante.JustificanteParserBackend` with the regex
+extractor in :mod:`adapters.inbound.justificante._extract`. The extractor
 turns AEAT receipt text into a strict
-:class:`~aeat.domain.justificante.Justificante`; casilla-complete declaration
+:class:`~domain.justificante.Justificante`; casilla-complete declaration
 PDFs are intentionally out of scope for this adapter.
 
 The filesystem route hashes the PDF before extraction. The bytes route is for
 secure-storage or live-capture flows that already hold decrypted bytes and must
 avoid plaintext temporary files. Both routes surface structured
-:class:`~aeat.domain.justificante.JustificanteParseError` attributes for
+:class:`~domain.justificante.JustificanteParseError` attributes for
 missing, malformed, ambiguous, and coverage-related failures.
 """
 
@@ -48,11 +48,11 @@ def parse_justificante(
         pdf_path: Path to the justificante PDF on disk. Must exist and be
             readable.
         backend: Parser backend to use. Defaults to
-            :attr:`aeat.core.config.Settings.aeat_justificante_parser_backend`
+            :attr:`core.config.Settings.aeat_justificante_parser_backend`
             when omitted.
 
     Returns:
-        A fully populated :class:`~aeat.domain.justificante.Justificante`
+        A fully populated :class:`~domain.justificante.Justificante`
         pydantic v2 record.
 
     Raises:
@@ -99,7 +99,7 @@ def parse_justificante_bytes(
     Args:
         pdf_bytes: Raw justificante PDF bytes.
         backend: Parser backend to use. Defaults to
-            :attr:`aeat.core.config.Settings.aeat_justificante_parser_backend`
+            :attr:`core.config.Settings.aeat_justificante_parser_backend`
             when omitted.
 
     Returns:

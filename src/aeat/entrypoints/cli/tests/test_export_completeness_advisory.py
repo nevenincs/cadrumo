@@ -54,6 +54,7 @@ def test_unverified_export_emits_coverage_advisory(tmp_path: Path) -> None:
     advisory = next(notice for notice in notices if notice.code == _ADVISORY_CODE)
     assert advisory.severity is NoticeSeverity.WARNING
     assert "not completeness-verified" in advisory.message.lower()
+    assert advisory.context is not None
     assert advisory.context["reason"] == "no_completeness_manifest"
 
 

@@ -9,7 +9,7 @@ validation time.
 
 These records carry observations, not calculation authority. The parser stamps
 current observations with a
-:class:`~aeat.domain.calculations.registry.RegistrySnapshotRef` so downstream
+:class:`~domain.calculations.registry.RegistrySnapshotRef` so downstream
 flows can re-resolve the registry coordinate that supplied the extraction
 profile.
 """
@@ -32,7 +32,7 @@ class TemplateRevision(BaseModel):
     """Detected or caller-resolved declaration template identity.
 
     Identifies modelo, ejercicio, and revision tag discovered during detection.
-    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` instances
+    :class:`~domain.calculations.registry.RegistrySnapshot` instances
     decide whether that template is usable for extraction and verification.
 
     Attributes:

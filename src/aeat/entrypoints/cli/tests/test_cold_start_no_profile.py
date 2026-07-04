@@ -86,25 +86,24 @@ def _fresh_storage_root(tmp_path: Path) -> Iterator[Path]:
             yield storage_root
 
 
-@pytest.mark.parametrize("verb", _COLD_START_VERBS, ids=lambda v: " ".join(v))
-def test_cold_start_verb_refuses_without_leaking_internals(verb: tuple[str, ...], _fresh_storage_root: Path) -> None:
-    """Each cold-start verb refuses without surfacing a raw config error."""
-
-    result = invoke_cached_cli(list(verb))
-
-    assert result.exit_code != 0, f"{' '.join(verb)} should refuse: {result.output}"
-    for marker in _LEAK_MARKERS:
-        assert marker not in result.output, f"{' '.join(verb)} leaked internal plumbing {marker!r}: {result.output}"
+def _verb_label(verb: tuple[str, ...]) -> str:
+    return " ".join(verb)
 
 
-@pytest.mark.parametrize("verb", _COLD_START_VERBS, ids=lambda v: " ".join(v))
-def test_cold_start_verb_surfaces_profile_create_guidance(verb: tuple[str, ...], _fresh_storage_root: Path) -> None:
-    """Each cold-start verb names ``profile create`` so the operator can recover."""
+def test_cold_start_verbs_refuse_without_leaks_and_surface_profile_guidance(tmp_path: Path) -> None:
+    """Each cold-start verb refuses cleanly and names ``profile create`` recovery guidance."""
 
-    result = invoke_cached_cli(list(verb))
+    for index, verb in enumerate(_COLD_START_VERBS):
+        label = _verb_label(verb)
+        with override_settings(aeat_output_language="en"):
+            with isolated_sessionless_storage_root(tmp_path=tmp_path / f"cold-start-{index}"):
+                result = invoke_cached_cli(list(verb))
 
-    flat = result.output.replace("\n", " ")
-    assert "profile create" in flat, f"{' '.join(verb)} did not point at `profile create`: {result.output}"
+        assert result.exit_code != 0, f"{label} should refuse: {result.output}"
+        for marker in _LEAK_MARKERS:
+            assert marker not in result.output, f"{label} leaked internal plumbing {marker!r}: {result.output}"
+        flat = result.output.replace("\n", " ")
+        assert "profile create" in flat, f"{label} did not point at `profile create`: {result.output}"
 
 
 def test_cold_start_refusal_is_consistent_across_surfaces(_fresh_storage_root: Path) -> None:

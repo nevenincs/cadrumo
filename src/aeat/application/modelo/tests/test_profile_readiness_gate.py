@@ -402,6 +402,7 @@ def test_calculate_service_refuses_existing_nonresident_natural_person_m100(tmp_
 
         assert "NON_RESIDENT_IRNR" in str(excinfo.value)
         assert "Modelo 210" in str(excinfo.value)
+        assert excinfo.value.context is not None
         assert excinfo.value.context["applicability_verdict"] == "not_applicable"
         assert len(calculation_repository.load()) == 0
 

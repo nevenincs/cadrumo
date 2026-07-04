@@ -412,6 +412,7 @@ def test_m303_still_blocks_base_only_rows_missing_iva_facts(
         )
 
     assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "missing_iva_amount"
     assert len(cr_repo.load()) == 0
 

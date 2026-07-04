@@ -2220,6 +2220,8 @@ cli:
           repite la comprobación de integridad del manifiesto). Solo local; nunca
           contacta con la AEAT.
         work_unit_id_help: Id de la unidad de trabajo (SHA-256 o prefijo inequívoco).
+      support_matrix:
+        help: 'Muestra la matriz de soporte por modelo a nivel de registro: grado de cálculo, manifiesto de completitud, formatos de exportación, cobertura de extractores, renombrados de casillas declarados, decisiones de baja de soporte y referencias cruzadas con el portal de la AEAT.'
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por

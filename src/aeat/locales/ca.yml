@@ -2191,6 +2191,8 @@ cli:
           la comprovació d'integritat del manifest). Només local; mai contacta amb
           l'AEAT.
         work_unit_id_help: Id de la unitat de treball (SHA-256 o prefix inequívoc).
+      support_matrix:
+        help: 'Mostra la matriu de suport per model a nivell de registre: grau de càlcul, manifest de completesa, formats d''exportació, cobertura d''extractors, canvis de nom de casella declarats, decisions de baixa de suport i referències creuades amb el portal de l''AEAT.'
       verification_report:
         app_help: Inspeccionar els informes de verificació registrats
         list_help: Llistar els informes de verificació, opcionalment filtrats per

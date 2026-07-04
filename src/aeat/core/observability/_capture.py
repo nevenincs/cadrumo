@@ -1,7 +1,7 @@
 """In-memory capture sink for emitted CLI success envelopes.
 
 The deterministic-output substrate captures the verbatim emitted
-:class:`~aeat.core.json_contract.SchemaEnvelope` document so a recorded
+:class:`~core.json_contract.SchemaEnvelope` document so a recorded
 run can be replayed and asserted byte-identical after masking (ADR
 ``2026-06-30-deterministic-output-replay-substrate``). The sink is a
 context variable holding a list; it is unset (``None``) in production,
@@ -10,11 +10,11 @@ so :func:`record_emitted_envelope` is a no-op unless a
 single ``ContextVar.get`` when capture is off.
 
 This module deliberately has NO dependency on
-:mod:`aeat.core.json_contract`, so the emit path
-(:func:`aeat.core.json_contract.emit_json_success`) can feed it through a
+:mod:`core.json_contract`, so the emit path
+(:func:`core.json_contract.emit_json_success`) can feed it through a
 cheap lazy import without an import cycle. Typed re-validation of a
 captured document against the schema registry lives in
-:mod:`aeat.core.observability._golden`.
+:mod:`core.observability._golden`.
 """
 
 from __future__ import annotations
