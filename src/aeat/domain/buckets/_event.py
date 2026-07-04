@@ -120,6 +120,7 @@ class BucketEventType(StrEnum):
     BUCKET_DELETED = "bucket.deleted"
     BUCKET_ARCHIVED = "bucket.archived"
     BUCKET_RESTORED = "bucket.restored"
+    BUCKET_MERGED = "bucket.merged"
 
     # ledger usage-ratio mutations
     LEDGER_RATIOS_SET = "ledger.ratios.set"
