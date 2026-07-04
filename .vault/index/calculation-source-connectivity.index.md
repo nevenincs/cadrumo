@@ -13,11 +13,27 @@ related:
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S30]]'
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S31]]'
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S32]]'
+  - '[[2026-05-20-calculation-source-connectivity-W03-P06-S33]]'
+  - '[[2026-05-20-calculation-source-connectivity-W03-P06-S34]]'
+  - '[[2026-05-20-calculation-source-connectivity-W03-P06-S35]]'
+  - '[[2026-05-20-calculation-source-connectivity-W03-P06-S37]]'
+  - '[[2026-05-20-calculation-source-connectivity-W03-P06-S38]]'
+  - '[[2026-05-20-calculation-source-connectivity-W03-P07-S39]]'
+  - '[[2026-05-20-calculation-source-connectivity-W03-P07-S40]]'
+  - '[[2026-05-20-calculation-source-connectivity-W03-P07-S41]]'
+  - '[[2026-05-20-calculation-source-connectivity-W03-P07-S42]]'
+  - '[[2026-05-20-calculation-source-connectivity-W03-P07-S43]]'
   - '[[2026-05-20-calculation-source-connectivity-W04-P08-S44]]'
   - '[[2026-05-20-calculation-source-connectivity-W04-P08-S45]]'
   - '[[2026-05-20-calculation-source-connectivity-W04-P08-S46]]'
   - '[[2026-05-20-calculation-source-connectivity-W04-P08-S47]]'
   - '[[2026-05-20-calculation-source-connectivity-W04-P08-S48]]'
+  - '[[2026-05-20-calculation-source-connectivity-W04-P09-S49]]'
+  - '[[2026-05-20-calculation-source-connectivity-W04-P09-S50]]'
+  - '[[2026-05-20-calculation-source-connectivity-W04-P09-S51]]'
+  - '[[2026-05-20-calculation-source-connectivity-W04-P09-S52]]'
+  - '[[2026-05-20-calculation-source-connectivity-W04-P09-S53]]'
+  - '[[2026-05-20-calculation-source-connectivity-W04-P09-S54]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'
   - '[[2026-05-20-calculation-source-connectivity-plan]]'
   - '[[2026-05-20-calculation-source-connectivity-research]]'
@@ -68,11 +84,27 @@ Auto-generated index of all documents tagged with `#calculation-source-connectiv
 - `2026-05-20-calculation-source-connectivity-W02-P05-S30` - Enroll retenciones aggregation through repository backed source resolution
 - `2026-05-20-calculation-source-connectivity-W02-P05-S31` - Test invoice ledger cross references produce stable source refs
 - `2026-05-20-calculation-source-connectivity-W02-P05-S32` - Test retenciones source observations are period and source kind filtered
+- `2026-05-20-calculation-source-connectivity-W03-P06-S33` - Add region field to Renta deductibility context when category profiles require it
+- `2026-05-20-calculation-source-connectivity-W03-P06-S34` - Extend category profile lookup to accept filing year and CCAA key
+- `2026-05-20-calculation-source-connectivity-W03-P06-S35` - Represent region scoped category profiles in registry resources
+- `2026-05-20-calculation-source-connectivity-W03-P06-S37` - Test non regional category profiles preserve existing Renta results
+- `2026-05-20-calculation-source-connectivity-W03-P06-S38` - Test region scoped category profiles select by profile CCAA
+- `2026-05-20-calculation-source-connectivity-W03-P07-S39` - Define fincas calculation source readiness diagnostics
+- `2026-05-20-calculation-source-connectivity-W03-P07-S40` - Define fincas resolver adapter boundaries without enrolling calculations
+- `2026-05-20-calculation-source-connectivity-W03-P07-S41` - Define inventory calculation source readiness diagnostics
+- `2026-05-20-calculation-source-connectivity-W03-P07-S42` - Define inventory resolver adapter boundaries without enrolling calculations
+- `2026-05-20-calculation-source-connectivity-W03-P07-S43` - Test fincas and inventory resolvers emit blocked readiness diagnostics
 - `2026-05-20-calculation-source-connectivity-W04-P08-S44` - Add registry source enrollment report for every committed modelo revision
 - `2026-05-20-calculation-source-connectivity-W04-P08-S45` - Validate every source backed binding is resolved manual or explicitly blocked
 - `2026-05-20-calculation-source-connectivity-W04-P08-S46` - Expose missing source diagnostics in modelo calculation errors
 - `2026-05-20-calculation-source-connectivity-W04-P08-S47` - Test committed modelo source inventory against enrolled resolvers
 - `2026-05-20-calculation-source-connectivity-W04-P08-S48` - Test missing source backed bindings cannot silently calculate zero
+- `2026-05-20-calculation-source-connectivity-W04-P09-S49` - Include resolver fingerprints in approval basis
+- `2026-05-20-calculation-source-connectivity-W04-P09-S50` - Persist source refs and fingerprints on calculation revisions
+- `2026-05-20-calculation-source-connectivity-W04-P09-S51` - Emit bucket events with source mesh diagnostics and fingerprints
+- `2026-05-20-calculation-source-connectivity-W04-P09-S52` - Test approval staleness changes when invoice source data changes
+- `2026-05-20-calculation-source-connectivity-W04-P09-S53` - Test calculation revision roundtrip preserves source refs
+- `2026-05-20-calculation-source-connectivity-W04-P09-S54` - Run feature surface quality gate for source mesh touched files
 
 ### plan
 
