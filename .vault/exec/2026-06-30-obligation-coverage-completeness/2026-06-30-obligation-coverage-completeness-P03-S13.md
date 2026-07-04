@@ -9,9 +9,6 @@ related:
   - "[[2026-06-30-obligation-coverage-completeness-plan]]"
 ---
 
-
-
-
 # Ratchet UNMODELED_OBLIGATIONS toward AEATs full form set and promote each to a grounded registry definition.
 
 ## Scope
@@ -26,6 +23,8 @@ related:
 ## Outcome
 
 M216 is PROMOTED. It is removed from `UNMODELED_OBLIGATIONS`, is now a registry-loadable modelo, and its trimestral deadline windows resolve. The recognized-unmodeled residual drops to 25.
+
+Batch 1 (2026-07-04): M222 and M220 are PROMOTED, dropping the residual 25 -> 23 and growing `CANONICAL_MODELO_FLEET` 47 -> 49. See the "Batch 1" section below.
 
 The corpus gap that blocked the prior pass is now closed. The binding deadline provision (Orden EHA/3290/2008 art 4) was fetched verbatim from the BOE consolidated text (BOE-A-2008-18497) and added to the bundled corpus, so the deadline window is grounded in the establishing provision rather than in guidance-tier instructions.
 
@@ -55,9 +54,34 @@ Enum reconciliation: M216 removed from `UNMODELED_OBLIGATIONS` in `core/_modelo.
 - `test_modelo_authorization_gate.py` - 5 passed after the 47 fleet-count update.
 - Registry collect-only clean (no import/collection errors).
 
+## Batch 1 (2026-07-04): M222 + M220 (IS consolidación fiscal, grupos)
+
+Both are PROMOTED from `UNMODELED_OBLIGATIONS`, dropping the residual 25 -> 23 and growing `CANONICAL_MODELO_FLEET` 47 -> 49 (auth-gate fleet-count test bumped 47 -> 49, name + docstring). Enum members `Modelo.M222`/`Modelo.M220` stay; only the UNMODELED entries were removed. Both are grounded strictly against corpus that was ALREADY bundled (no BOE fetch was needed, none was fabricated).
+
+M222 (pago fraccionado IS en régimen de consolidación fiscal — quarterly) has GOLD-tier self-contained grounding in the bundled Orden HFP/227/2017 (BOE-A-2017-2778), the same orden that approves M202:
+
+- Two new legal-catalogue entries in `legal/is.toml`: `orden-hfp-227-2017:art-2` (M222 approval, anchor `#a2`, required_text pins "Se aprueba el modelo 222" + "Régimen de consolidación fiscal") and `orden-hfp-227-2017:art-5` (the plazo article naming 222, anchor `#a5`, required_text pins "modelo 222, pago fraccionado a cuenta del Impuesto sobre Sociedades para los grupos fiscales" + "primeros veinte días naturales de los meses de abril, octubre y diciembre"). Both `legal_authority`, cross-checked against the bundled corpus at build; `reviewed_by` honest agent-prepared, pending operator re-stamp.
+- Registry `modelos/222/`, revision `2025-y-siguientes`: manifest (tax_domain is, cadence quarterly, legal_refs art-2 + art-5 + `ley-27-2014:art-40`), declaration-header casillas (decl.ejercicio filing_year, decl.tipo-declaracion), construct, 3 application_links (deadline/filing/workflow), workbook_parity_ref (record-design anchor), and 6 trimestral deadline_windows (2025+2026 1P/2P/3P) each `legal_refs = orden-hfp-227-2017:art-5`, opening first-of-month Apr/Oct/Dec and closing on day 20 (derived strictly from the statutory "primeros veinte días naturales", not from engine output).
+
+M220 (declaración anual IS del grupo fiscal — annual) has SILVER-tier grounding: the bundled Orden HAC/657/2025 excerpt (BOE-A-2025-12818) was transcribed for M200 and carries the dedicated "Se aprueba el modelo 220" approval clause only in the untranscribed part of art 1; the bundled text names 220 verbatim once, in art 3 (pago mediante domiciliación bancaria, "Modelos 200 y 220").
+
+- One new legal entry `orden-hac-657-2025:art-3` (anchor `#modelo-200`, required_text pins "Modelos 200 y 220, mediante domiciliación bancaria" + the July domiciliation window) — the bundled provision of the approving orden that names Modelo 220. Its notes state plainly that the dedicated 220-approval clause is not in the bundled excerpt. The binding filing plazo is the general IS declaration plazo of `ley-27-2014:art-124` (already bundled, verbatim "25 días naturales siguientes a los 6 meses posteriores a la conclusión del período impositivo").
+- Registry `modelos/220/`, revision `2024-y-siguientes`: manifest (tax_domain is, cadence annual, legal_refs art-3 + art-124), declaration-header casillas, construct, 3 application_links, workbook_parity_ref, and 2 annual deadline_windows (2024/2025 0A) `legal_refs = ley-27-2014:art-124`, opening 1 July and closing on the 25th natural day (advanced to the next business day at year end), mirroring the sibling M200 windows.
+
+Both revisions are deliberately scheduling/applicability-grade (declaration-header casillas only, no formulas): no authoritative Modelo 222 or 220 diseño de registro is bundled in the corpus, so authoring numbered money-closure casillas would fabricate form structure. That calc surface is deferred until a DR is bundled; no casilla number was invented.
+
+Batch 1 gate evidence:
+
+- `bundled_authority().validate_registry()` passes with M222 + M220 present (full-registry validation incl. legal-catalogue required_text cross-check of the three new entries).
+- `deadline_windows(2025, ("222",))` = 1P/2P/3P Apr 20 / Oct 20 / Dec 20; `(2026,("222",))` likewise. `deadline_windows(2024,("220",))` = 0A 1 Jul -> 25 Jul; `(2025,("220",))` = 1 Jul -> 27 Jul.
+- New durable tests `test_modelo_222_registry.py` (5) + `test_modelo_220_registry.py` (5) pass: validator accept, approval/plazo grounding tier + document_id, deadline-provision citation, statute-derived windows, and registry-backed / out-of-UNMODELED assertions.
+- `test_modelo.py` (enum parity) 5, `test_modelo_authorization_gate.py` 5 (fleet 49), `test_obligation_coverage.py`, `test_deadline_window_source_tiers.py` 4 — all pass. Touched-surface collect-only clean (registry/core/overview: 3950 collected, 0 errors).
+- Pre-existing, not owned: `entrypoints/mcp/tests/test_client_handshake.py` + `test_serving_gates.py` fail collection with `ModuleNotFoundError: pywintypes` (pywin32/MCP env gap, unrelated to this registry change).
+- RAG grounding queries this batch: `vaultspec-rag` code search "M202 IS pago fraccionado registry modelo deadline window" and "registry legal catalogue corpus_ref required_text evidence gate plazo"; vault `--doc-type adr,research` "UNMODELED_OBLIGATIONS ratchet promote registry modelo grounded"; followed by targeted grep confirmation of the M202/M200 sibling structure, the M347 minimal-modelo shape, the HFP/227/2017 art-2/art-5 corpus anchors, and the deadline-window source-tier gate.
+
 ## Notes
 
-- Ratchet remains OPEN: 25 recognized-unmodeled obligations remain; S13 stays unchecked as a recurring ratchet step.
+- Ratchet remains OPEN: after Batch 1, 23 recognized-unmodeled obligations remain; S13 stays unchecked as a recurring ratchet step.
 - Locale leaves DEFERRED: the four locale catalogues (`ca.yml`, `en.yml`, `es.yml`, `hu.yml`) are peer-staged (`MM`) in the shared index, so the M216 locale labels were not authored this pass to avoid clobbering peer WIP. Follow-up: `python -m aeat.locales modelo scaffold <locale> 216 2024-y-siguientes` once the locale WIP lands.
 - Out-of-scope pre-existing failure observed and NOT owned by this surface: `test_catalogue_verification_normatives.py::test_orden_hac_242_2025_art_8_deadline_links_to_full_boe_corpus` asserts a stale sha256 for the `orden-hac-242-2025` corpus (committed-HEAD drift last touched by peer commit `2479085a8e`, unrelated to M216).
 - RAG grounding queries this pass: code search "M210 IRNR registry modelo definition deadline window"; "legal catalogue corpus_ref required_text evidence gate legal grounding"; "deadline window trimestral quarterly opens closes first twenty natural days"; followed by targeted grep confirmation of the M296 IRNR sibling structure, the deadline-window source-tier gate, the `cuota_a_ingresar` canonical role, and the existing M216 source_refs.

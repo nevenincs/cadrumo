@@ -98,10 +98,10 @@ def _authority():
     return resources().modelos.authority
 
 
-def test_canonical_fleet_is_forty_seven_distinct_modelos() -> None:
-    """The canonical fleet — the gate's denominator — is exactly 47 distinct ids.
+def test_canonical_fleet_is_forty_nine_distinct_modelos() -> None:
+    """The canonical fleet — the gate's denominator — is exactly 49 distinct ids.
 
-    47 is the count of registry-loadable modelo directories under
+    49 is the count of registry-loadable modelo directories under
     ``src/aeat/_data/registry/aeat/modelos/`` today (verified against the live
     registry by :func:`test_canonical_fleet_covers_every_loadable_modelo` below,
     which asserts zero drift in either direction). A prior worktree-consolidation
@@ -120,11 +120,16 @@ def test_canonical_fleet_is_forty_seven_distinct_modelos() -> None:
     became 47 when Modelo 216 (IRNR retenciones e ingresos a cuenta, Orden
     EHA/3290/2008 approval + trimestral plazo art 4, current layout Orden
     HAC/56/2024) was likewise promoted from
-    :data:`aeat.core.UNMODELED_OBLIGATIONS` to a real registry definition.
+    :data:`aeat.core.UNMODELED_OBLIGATIONS` to a real registry definition. It
+    became 49 when Modelo 222 (pago fraccionado IS en régimen de consolidación
+    fiscal, Orden HFP/227/2017 art 2 approval + art 5 trimestral plazo) and
+    Modelo 220 (declaración anual IS del grupo fiscal, Orden HAC/657/2025 +
+    art. 124 LIS plazo) were promoted together from
+    :data:`aeat.core.UNMODELED_OBLIGATIONS` to real registry definitions.
     """
     assert len(CANONICAL_MODELO_FLEET) == FLEET_SIZE
     assert len(set(CANONICAL_MODELO_FLEET)) == FLEET_SIZE
-    assert FLEET_SIZE == 47
+    assert FLEET_SIZE == 49
 
 
 def test_canonical_fleet_covers_every_loadable_modelo() -> None:
