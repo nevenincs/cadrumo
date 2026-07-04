@@ -134,6 +134,7 @@ def test_modelo_145_export_layout_is_grounded_in_dr145_record_design() -> None:
     expected_offset = 1
     for field in sorted(fields, key=lambda item: item.offset or 0):
         assert field.offset == expected_offset
+        assert field.offset is not None
         assert field.length is not None
         expected_offset = field.offset + field.length
     assert expected_offset == 611
