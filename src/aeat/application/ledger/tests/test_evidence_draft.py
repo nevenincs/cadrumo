@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
@@ -19,8 +19,10 @@ from PIL import Image
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
+from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
@@ -645,3 +647,105 @@ class TestConfirmInvoiceDraftFromEvidence:
         )
 
         assert list(empty_dir.iterdir()) == []
+
+    def test_confirm_by_evidence_id_auto_links_the_source_attachment_to_the_invoice(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """Confirming from an ``evidence_id`` links the backing attachment to the minted invoice.
+
+        Closes the provenance loop: the invoice is discoverable from the evidence
+        (``Attachment.linked_invoice_ids``), reloaded through a FRESH manifest read
+        so the link is genuinely persisted, not merely returned in-process.
+        """
+        pdf_path = tmp_path / "factura.pdf"
+        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        assert record.attachment_id is not None
+        repo = self._repo(secure_objects)
+
+        confirmation = confirm_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            evidence_id=record.evidence_id,
+            counterparty_name="Acme Suministros SL",
+            settings=isolated_settings,
+            invoice_repository=repo,
+        )
+
+        store = AttachmentStore(objects=secure_objects)
+        reloaded_attachment = load_attachment(store, record.attachment_id)
+        assert reloaded_attachment.linked_invoice_ids == (confirmation.invoice.invoice_id,)
+
+    def test_confirm_by_attachment_id_auto_links_the_attachment_to_the_invoice(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The same auto-link happens on the ``attachment_id`` reference path."""
+        pdf_path = tmp_path / "factura.pdf"
+        pdf_path.write_bytes(_text_pdf_bytes(_PARTIAL_INVOICE_LINES))
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        assert record.attachment_id is not None
+        repo = self._repo(secure_objects)
+
+        confirmation = confirm_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            attachment_id=record.attachment_id,
+            counterparty_name="Acme Suministros SL",
+            counterparty_tax_id=_SUPPLIER_CIF,
+            invoice_number="ATT-0099",
+            invoice_date=date(2026, 3, 15),
+            settings=isolated_settings,
+            invoice_repository=repo,
+        )
+
+        store = AttachmentStore(objects=secure_objects)
+        reloaded_attachment = load_attachment(store, record.attachment_id)
+        assert reloaded_attachment.linked_invoice_ids == (confirmation.invoice.invoice_id,)
+
+    def test_re_confirm_does_not_duplicate_the_evidence_link(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """A guarded idempotent re-confirm re-asserts the same link, never duplicating it."""
+        pdf_path = tmp_path / "factura.pdf"
+        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        assert record.attachment_id is not None
+        repo = self._repo(secure_objects)
+
+        first = confirm_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            evidence_id=record.evidence_id,
+            counterparty_name="Acme Suministros SL",
+            settings=isolated_settings,
+            invoice_repository=repo,
+        )
+        assert first.created is True
+
+        second = confirm_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            evidence_id=record.evidence_id,
+            counterparty_name="Acme Suministros SL",
+            settings=isolated_settings,
+            invoice_repository=repo,
+        )
+        assert second.created is False
+        assert second.invoice.invoice_id == first.invoice.invoice_id
+
+        store = AttachmentStore(objects=secure_objects)
+        reloaded_attachment = load_attachment(store, record.attachment_id)
+        # Exactly one entry -- not duplicated by the second confirm call.
+        assert reloaded_attachment.linked_invoice_ids == (first.invoice.invoice_id,)

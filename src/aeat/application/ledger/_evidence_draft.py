@@ -56,6 +56,16 @@ whose resolved fields genuinely differ from the already-stored invoice mints a
 second, distinct invoice record (a different content-derived
 :attr:`~aeat.domain.invoices.Invoice.invoice_id`) rather than silently
 overwriting one filer's data with another's.
+
+Confirming also auto-links the source evidence to the resulting invoice:
+:func:`aeat.domain.attachments.link_attachment_invoice` appends the invoice's id
+to the backing :class:`~aeat.domain.attachments.Attachment`'s
+:attr:`~aeat.domain.attachments.Attachment.linked_invoice_ids`, closing the
+provenance loop in both directions (the invoice is discoverable from the
+evidence, and the evidence is the invoice's traceable source). The link is
+re-asserted on a guarded no-op confirm too, so a re-confirm never regresses a
+provenance link that was never wired for older evidence, and the append itself
+is idempotent (dedup on the linked-ids tuple).
 """
 
 from __future__ import annotations
@@ -488,11 +498,19 @@ def confirm_invoice_draft_from_evidence(
             validation (e.g. an invalid counterparty tax id or IVA rate).
     """
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
     from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice
     from ...core.config import load_settings as _load_settings
+    from ...domain.attachments import link_attachment_invoice
 
     resolved_settings = settings or _load_settings()
     draft = extract_invoice_draft_from_evidence(
+        bucket_id=bucket_id,
+        evidence_id=evidence_id,
+        attachment_id=attachment_id,
+        settings=resolved_settings,
+    )
+    resolved_attachment_id = _resolve_evidence_attachment_id(
         bucket_id=bucket_id,
         evidence_id=evidence_id,
         attachment_id=attachment_id,
@@ -546,12 +564,17 @@ def confirm_invoice_draft_from_evidence(
         currency=currency,
         notes=notes,
     )
+    attachment_store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, resolved_settings))
     catalogue = repository.load()
     existing = catalogue.get(candidate.invoice_id)
     if existing is not None:
         # Guarded idempotent retry (single-subject-mutation-is-idempotent-guarded):
         # the confirm's resolved identity fields hash to an invoice already in the
-        # catalogue -- return it unchanged rather than raising or re-writing.
+        # catalogue -- return it unchanged rather than raising or re-writing. The
+        # source evidence link is re-asserted (a no-op when already present,
+        # `link_attachment_invoice` dedups) so a re-confirm never regresses the
+        # provenance link even if it was never wired for this evidence before.
+        link_attachment_invoice(attachment_store, attachment_id=resolved_attachment_id, invoice_id=existing.invoice_id)
         return InvoiceConfirmationResult(invoice=existing, draft=draft, created=False)
 
     result = create_catalogue_invoice(
@@ -568,4 +591,42 @@ def confirm_invoice_draft_from_evidence(
         notes=notes,
         repository=repository,
     )
+    # Auto-link the source evidence/attachment to the newly minted invoice, closing
+    # the provenance loop: the invoice is now discoverable from the evidence
+    # (`Attachment.linked_invoice_ids`) and vice versa (`Invoice.invoice_id` is what
+    # was just recorded). `link_attachment_invoice` re-persists through the same
+    # sanctioned `AttachmentStoreProtocol.write_manifest` path
+    # (`composition-service-no-parallel-write-path`); it never re-implements the
+    # attachment write.
+    link_attachment_invoice(
+        attachment_store,
+        attachment_id=resolved_attachment_id,
+        invoice_id=result.invoice.invoice_id,
+    )
     return InvoiceConfirmationResult(invoice=result.invoice, draft=draft, created=True)
+
+
+def _resolve_evidence_attachment_id(
+    *,
+    bucket_id: str,
+    evidence_id: str | None,
+    attachment_id: str | None,
+    settings: Settings,
+) -> str:
+    """Return the in-store ``attachment_id`` backing one evidence reference.
+
+    Mirrors the exactly-one-of resolution :func:`extract_invoice_draft_from_evidence`
+    already enforces (that call already ran, so the invariant holds here too): when
+    *attachment_id* is supplied directly it is returned unchanged; when *evidence_id*
+    is supplied, the linked ``purchase_invoice_evidence`` record's own
+    :attr:`~._evidence.PurchaseInvoiceEvidence.attachment_id` is looked up (guaranteed
+    non-``None`` for any evidence whose bytes were actually read, since
+    :func:`._evidence_input.resolve_purchase_invoice_evidence_input` already refused
+    a record with no in-store attachment).
+    """
+    if attachment_id is not None:
+        return attachment_id
+    assert evidence_id is not None  # narrowed by the caller's exactly-one guard
+    record = PurchaseInvoiceEvidenceService(settings=settings).view(bucket_id=bucket_id, evidence_id=evidence_id)
+    assert record.attachment_id is not None  # guaranteed by resolve_purchase_invoice_evidence_input above
+    return record.attachment_id
