@@ -11,15 +11,6 @@ related:
   - '[[2026-05-21-calculation-source-connectivity-reference]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `calculation-source-connectivity` `source mesh implementation` plan
 
@@ -121,11 +112,11 @@ Add registry connectivity checks, CLI regression coverage, approval staleness fi
 
 Prevent silent all-zero outputs by validating every registry source against resolver enrollment or explicit manual status.
 
-- [ ] `W04.P08.S44` - Add registry source enrollment report for every committed modelo revision; `src/aeat/domain/calculations/registry/_queries.py`.
-- [ ] `W04.P08.S45` - Validate every source backed binding is resolved manual or explicitly blocked; `src/aeat/application/aggregation/_source_mesh.py`.
-- [ ] `W04.P08.S46` - Expose missing source diagnostics in modelo calculation errors; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W04.P08.S47` - Test committed modelo source inventory against enrolled resolvers; `src/aeat/domain/calculations/registry/test_source_enrollment.py`.
-- [ ] `W04.P08.S48` - Test missing source backed bindings cannot silently calculate zero; `src/aeat/application/modelo/test_source_mesh_missing_sources.py`.
+- [x] `W04.P08.S44` - Add registry source enrollment report for every committed modelo revision; `src/aeat/domain/calculations/registry/_queries.py`.
+- [x] `W04.P08.S45` - Validate every source backed binding is resolved manual or explicitly blocked; `src/aeat/application/aggregation/_source_mesh.py`.
+- [x] `W04.P08.S46` - Expose missing source diagnostics in modelo calculation errors; `src/aeat/application/modelo/_actions.py`.
+- [x] `W04.P08.S47` - Test committed modelo source inventory against enrolled resolvers; `src/aeat/domain/calculations/registry/test_source_enrollment.py`.
+- [x] `W04.P08.S48` - Test missing source backed bindings cannot silently calculate zero; `src/aeat/application/modelo/test_source_mesh_missing_sources.py`.
 
 ### Phase `W04.P09` - operator regression and audit
 
