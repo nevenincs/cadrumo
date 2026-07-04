@@ -669,6 +669,71 @@ def test_linked_invoice_issue_date_controls_period_filtering() -> None:
     assert result.issues[0].transaction_id == linked.transaction_id
 
 
+def test_repository_backed_aggregation_misses_a_transaction_whose_invoice_date_is_in_window_but_own_date_is_not(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """KNOWN GAP (issue #408, pre-existing, not introduced by the #408 wiring): a legitimately
+    deductible expense is silently dropped when the transaction's OWN filing date falls
+    outside the requested annual window but its LINKED INVOICE's issue date falls inside it.
+
+    ``aggregate_renta_ledger_expenses_from_repositories`` pre-filters the loaded
+    catalogue via ``TransactionCatalogueRepository.load_for_date_range``, which
+    keys ONLY on the transaction's own ``value_date``/``booked_date`` (the same
+    field the plaintext date index stores). But the aggregation's own
+    ``OUTSIDE_PERIOD`` classification uses ``RentaDeductibleExpenseFact.filing_date``,
+    which PREFERS the linked invoice's ``issue_date`` over the transaction's own
+    date (see ``domain.renta.RentaDeductibleExpenseFact.filing_date``). When a
+    transaction's own date falls OUTSIDE the requested window but its invoice's
+    issue date falls INSIDE it, the pre-filter excludes the row from the loaded
+    catalogue before the aggregation ever runs -- so instead of correctly
+    admitting the expense (by invoice date) or surfacing an explicit
+    OUTSIDE_PERIOD issue, it silently disappears with NO observation and NO
+    issue at all. This reproduces the gap at the repository-backed entry point
+    (not just by reading the code); it does not fix it -- the fix is the #408
+    follow-up this test documents.
+    """
+    # Transaction's own date (2024-12-15) is OUTSIDE the 2025 annual window, so
+    # the plaintext date index excludes it from the pre-filtered load. Its
+    # linked invoice's issue date (2025-01-10) is INSIDE the window -- by the
+    # aggregation's own filing_date rule this expense should be admitted (or at
+    # minimum visibly reported), not silently vanish.
+    own_date_outside_invoice_date_inside = _transaction(
+        "row-own-date-outside",
+        booked_date=date(2024, 12, 15),
+        value_date=date(2024, 12, 15),
+    )
+    invoice = _invoice(
+        own_date_outside_invoice_date_inside.transaction_id,
+        issued_at=date(2025, 1, 10),
+    )
+    linked = _transaction(
+        "row-own-date-outside",
+        booked_date=date(2024, 12, 15),
+        value_date=date(2024, 12, 15),
+        purchase_invoice_evidence_id=invoice.invoice_id,
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
+    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+
+    result = aggregate_renta_ledger_expenses_from_repositories(
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        profile_year=2025,
+    )
+
+    # GAP: the pre-filter drops the row before the invoice-issue-date rule can
+    # admit it or explicitly flag it. If this ever starts asserting an
+    # observation or an OUTSIDE_PERIOD issue, the gap has been fixed --
+    # tighten this test to assert the corrected (non-silent) behaviour instead
+    # of documenting the silent-drop.
+    assert result.observations == ()
+    assert result.issues == ()
+
+
 def test_multi_transaction_invoice_link_is_excluded_from_first_slice() -> None:
     first = _transaction("row-partial-a")
     second = _transaction("row-partial-b", amount=Decimal("60.50"))

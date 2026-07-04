@@ -357,6 +357,12 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
         Decimal("0"),
     )
     assert {o.transaction_id for o in result_q1.observations} == {q1_a.transaction_id, q1_b.transaction_id}
+    # Regression (issue #408): the excluded May row must surface as a visible
+    # OUTSIDE_PERIOD issue, not silently vanish -- the repository-backed entry
+    # point must NOT pre-filter the loaded catalogue by date range.
+    assert len(result_q1.issues) == 1
+    assert result_q1.issues[0].reason is RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert result_q1.issues[0].transaction_id == q2_only.transaction_id
 
     result_q2 = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id="test",
