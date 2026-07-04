@@ -18,7 +18,8 @@ from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "source-jurisdiction-export"
+_PROFILE_ID = "55555555-5555-4555-8555-555555555555"
+_EXPORT_FORMATS = ("csv", "jsonl")
 
 
 @pytest.fixture(autouse=True)
@@ -83,10 +84,8 @@ def _export_rows(tmp_path: Path, export_format: str) -> list[dict[str, str]]:
     return [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
-@pytest.mark.parametrize("export_format", ["csv", "jsonl"])
 def test_non_resident_add_source_jurisdiction_reaches_canonical_exports(
     tmp_path: Path,
-    export_format: str,
 ) -> None:
     """IRNR explicit source jurisdictions survive add through canonical export."""
     expected = {
@@ -101,15 +100,14 @@ def test_non_resident_add_source_jurisdiction_reaches_canonical_exports(
             source_jurisdiction=jurisdiction,
         )
 
-    rows = _export_rows(tmp_path, export_format)
-    by_description = {row["description"]: row["source_jurisdiction"] for row in rows}
-    assert by_description == expected
+    for export_format in _EXPORT_FORMATS:
+        rows = _export_rows(tmp_path, export_format)
+        by_description = {row["description"]: row["source_jurisdiction"] for row in rows}
+        assert by_description == expected, export_format
 
 
-@pytest.mark.parametrize("export_format", ["csv", "jsonl"])
 def test_import_csv_source_jurisdiction_reaches_canonical_exports(
     tmp_path: Path,
-    export_format: str,
 ) -> None:
     """Canonical import rows with source_jurisdiction keep that provenance on export."""
     statement = tmp_path / "with-source-jurisdiction.csv"
@@ -123,9 +121,11 @@ def test_import_csv_source_jurisdiction_reaches_canonical_exports(
     imported = invoke_cached_cli(["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
 
-    rows = _export_rows(tmp_path, export_format)
-    by_description = {row["description"]: row["source_jurisdiction"] for row in rows}
-    assert by_description == {
+    expected = {
         "Spanish consulting": "ES",
         "UK consulting": "GB",
     }
+    for export_format in _EXPORT_FORMATS:
+        rows = _export_rows(tmp_path, export_format)
+        by_description = {row["description"]: row["source_jurisdiction"] for row in rows}
+        assert by_description == expected, export_format
