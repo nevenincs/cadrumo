@@ -21,6 +21,8 @@ from pydantic import ValidationError
 if TYPE_CHECKING:
     from ...domain.transactions import LedgerClassificationRule
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.errors import AeatError
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets import (
@@ -170,8 +172,14 @@ def _apply_bulk_classify_rows(
     bucket_id: str,
     actor: str,
     source_command: str,
-    repository: TransactionCatalogueRepositoryProtocol,
-    event_repo: BucketEventHistoryRepositoryProtocol,
+    # concrete, not Protocol: the accumulated end-of-batch save below calls
+    # ``_save_transaction_catalogue_and_events``, which needs the adapter-only
+    # ``save_with_secure_object_writes`` / ``to_secure_object_write`` methods
+    # absent from the Protocol. The sole caller always passes already-narrowed
+    # concrete repositories (see ``_transaction_repository`` /
+    # ``_bucket_event_repository`` at the call site).
+    repository: TransactionCatalogueRepository,
+    event_repo: BucketEventHistoryRepository,
     parsed_rows: list[_ParsedBulkClassifyRow],
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
