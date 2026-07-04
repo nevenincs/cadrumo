@@ -262,6 +262,7 @@ records.
 ```{toctree}
 :hidden:
 
+onboarding
 quickstart
 profile-setup
 censo-update
