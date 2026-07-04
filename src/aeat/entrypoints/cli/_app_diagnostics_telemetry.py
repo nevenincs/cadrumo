@@ -11,16 +11,16 @@ and even then only when the consent gate permits AND an endpoint is
 configured; otherwise it remains a safe no-op.
 
 Every field this module can ever surface as "would be sent" is drawn from
-:class:`~aeat.core.telemetry.TelemetryEventPayload`, the closed allowlisted
+:class:`~core.telemetry.TelemetryEventPayload`, the closed allowlisted
 payload shape -- there is no other data source, so this transport module
 cannot itself widen what telemetry carries.
 
 This module is the transport adapter over
-:func:`~aeat.application.diagnostics_telemetry.build_telemetry_status_report`,
-:func:`~aeat.application.diagnostics_telemetry.build_telemetry_flush_preview`,
-and :func:`~aeat.application.diagnostics_telemetry.flush_telemetry`. It emits
-:class:`~aeat.entrypoints.cli._diagnostics_payloads.TelemetryStatusResult` and
-:class:`~aeat.entrypoints.cli._diagnostics_payloads.TelemetryFlushResult`
+:func:`~application.diagnostics_telemetry.build_telemetry_status_report`,
+:func:`~application.diagnostics_telemetry.build_telemetry_flush_preview`,
+and :func:`~application.diagnostics_telemetry.flush_telemetry`. It emits
+:class:`~entrypoints.cli._diagnostics_payloads.TelemetryStatusResult` and
+:class:`~entrypoints.cli._diagnostics_payloads.TelemetryFlushResult`
 through :func:`_emit_envelope`.
 """
 
