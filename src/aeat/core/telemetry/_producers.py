@@ -1,15 +1,15 @@
 """Non-sensitive operational telemetry producers.
 
 Each function here projects an already-non-sensitive local signal into an
-allowlisted :class:`~aeat.core.telemetry.TelemetryEventPayload` (via
-:func:`~aeat.core.telemetry.build_telemetry_payload`) and hands it to
-:func:`~aeat.core.telemetry.emit_telemetry_event`. Every producer is a pure
+allowlisted :class:`~core.telemetry.TelemetryEventPayload` (via
+:func:`~core.telemetry.build_telemetry_payload`) and hands it to
+:func:`~core.telemetry.emit_telemetry_event`. Every producer is a pure
 projection: it reads fields that are already accounting/timing metadata (a
 command name, a duration, a success flag, a closed error-kind label) and never
 reads transaction content, profile identity, or file contents.
 
 No producer here performs a network call. When the consent gate refuses (the
-default posture), :func:`~aeat.core.telemetry.emit_telemetry_event` is a pure
+default posture), :func:`~core.telemetry.emit_telemetry_event` is a pure
 no-op and none of these functions have any observable side effect beyond that
 no-op return value.
 """
@@ -43,11 +43,11 @@ def emit_command_invocation_telemetry(
     Carries only an invocation count, a succeeded/failed split, and a
     wall-clock duration -- never the command's arguments, output, or any
     operator-supplied content. Registered under the closed
-    ``"diagnostics.command_invocation"`` :class:`~aeat.core.telemetry.MetricSchema`.
+    ``"diagnostics.command_invocation"`` :class:`~core.telemetry.MetricSchema`.
 
     Args:
         workspace_hash: Stable pseudonymous local-deployment identifier (see
-            :func:`~aeat.core.telemetry.workspace_hash`).
+            :func:`~core.telemetry.workspace_hash`).
         succeeded: Whether the CLI invocation completed without raising.
         duration_ms: Wall-clock invocation duration in milliseconds.
         captured_at: ISO-8601 UTC capture timestamp.
@@ -56,7 +56,7 @@ def emit_command_invocation_telemetry(
         acknowledged: Whether the operator acknowledged remote telemetry for
             this specific invocation. Never sticky.
         sink: Destination sink; defaults to
-            :class:`~aeat.core.telemetry.LocalNoopTelemetrySink`.
+            :class:`~core.telemetry.LocalNoopTelemetrySink`.
 
     Returns:
         ``True`` when the event was handed to the sink; ``False`` when the
@@ -86,11 +86,11 @@ def emit_llm_run_telemetry(
     """Emit a non-sensitive local-LLM-run-completion event.
 
     Projects the same accounting fields
-    :class:`~aeat.adapters.outbound.llm.LLMRunRecord` already carries locally
+    :class:`~adapters.outbound.llm.LLMRunRecord` already carries locally
     (run count, succeeded/failed split, duration) into the remote-eligible
     allowlist -- never the run's prompt text, response text, or provider
     payload. Registered under the closed ``"diagnostics.llm_run"``
-    :class:`~aeat.core.telemetry.MetricSchema`.
+    :class:`~core.telemetry.MetricSchema`.
 
     Args:
         workspace_hash: Stable pseudonymous local-deployment identifier.
@@ -102,7 +102,7 @@ def emit_llm_run_telemetry(
         acknowledged: Whether the operator acknowledged remote telemetry for
             this specific invocation. Never sticky.
         sink: Destination sink; defaults to
-            :class:`~aeat.core.telemetry.LocalNoopTelemetrySink`.
+            :class:`~core.telemetry.LocalNoopTelemetrySink`.
 
     Returns:
         ``True`` when the event was handed to the sink; ``False`` when the
@@ -132,10 +132,10 @@ def emit_error_frequency_telemetry(
 
     ``error_kind`` MUST be a short closed label (an exception class name such
     as ``"LLMClassifierError"``, mirroring
-    :attr:`~aeat.adapters.outbound.llm.LLMRunRecord.error_kind`) -- never raw
+    :attr:`~adapters.outbound.llm.LLMRunRecord.error_kind`) -- never raw
     exception text, a stack trace, or any operator-controlled string.
     Registered under the closed ``"diagnostics.error_frequency"``
-    :class:`~aeat.core.telemetry.MetricSchema`.
+    :class:`~core.telemetry.MetricSchema`.
 
     Args:
         workspace_hash: Stable pseudonymous local-deployment identifier.
@@ -146,7 +146,7 @@ def emit_error_frequency_telemetry(
         acknowledged: Whether the operator acknowledged remote telemetry for
             this specific invocation. Never sticky.
         sink: Destination sink; defaults to
-            :class:`~aeat.core.telemetry.LocalNoopTelemetrySink`.
+            :class:`~core.telemetry.LocalNoopTelemetrySink`.
 
     Returns:
         ``True`` when the event was handed to the sink; ``False`` when the
