@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -86,7 +86,7 @@ _RELATION_VALUES: dict[RelationId, Decimal] = {
 # fixture.
 _CONSISTENT_RETENCION_OBSERVATIONS: tuple[RetencionObservation, ...] = (
     RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id="c-obs-1",
         perceptor_nif="11111111H",
         perceptor_name="Perceptor One",
@@ -96,7 +96,7 @@ _CONSISTENT_RETENCION_OBSERVATIONS: tuple[RetencionObservation, ...] = (
         accrued_on=f"{_FILING_YEAR}-03-15",
     ),
     RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id="c-obs-2",
         perceptor_nif="22222222J",
         perceptor_name="Perceptor Two",
