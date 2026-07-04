@@ -15,6 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 class _KdfParamsArgs(TypedDict, total=False):
     """TypedDict for ManifestKdfParams constructor arguments with optional overrides."""
+
     algorithm: str
     version: int
     memory_cost: int
@@ -26,6 +27,7 @@ class _KdfParamsArgs(TypedDict, total=False):
 
 class _ManifestPayloadArgs(TypedDict, total=False):
     """TypedDict for BucketManifest constructor arguments with optional overrides."""
+
     bucket_id: str
     label: str
     created_at: datetime
@@ -36,6 +38,7 @@ class _ManifestPayloadArgs(TypedDict, total=False):
     status: BucketLifecycleStatus
     idle_lock_minutes: int | None
     key_schedule: Any
+
 
 _VALID_SALT = bytes(range(16))
 _SHORT_SALT = bytes(range(15))
@@ -100,9 +103,10 @@ def _manifest_payload(**overrides: object) -> dict[str, object]:
             payload["label"] = overrides["label"]
         if "created_at" in overrides and isinstance(overrides["created_at"], datetime):
             payload["created_at"] = overrides["created_at"]
-        if "last_unlocked_at" in overrides:
-            if isinstance(overrides["last_unlocked_at"], datetime) or overrides["last_unlocked_at"] is None:
-                payload["last_unlocked_at"] = overrides["last_unlocked_at"]
+        if "last_unlocked_at" in overrides and (
+            isinstance(overrides["last_unlocked_at"], datetime) or overrides["last_unlocked_at"] is None
+        ):
+            payload["last_unlocked_at"] = overrides["last_unlocked_at"]
         if "kdf_params" in overrides and isinstance(overrides["kdf_params"], ManifestKdfParams):
             payload["kdf_params"] = overrides["kdf_params"]
         if "recovery_enrolled" in overrides and isinstance(overrides["recovery_enrolled"], bool):
@@ -111,9 +115,10 @@ def _manifest_payload(**overrides: object) -> dict[str, object]:
             payload["schema_version"] = overrides["schema_version"]
         if "status" in overrides and isinstance(overrides["status"], BucketLifecycleStatus):
             payload["status"] = overrides["status"]
-        if "idle_lock_minutes" in overrides:
-            if isinstance(overrides["idle_lock_minutes"], int) or overrides["idle_lock_minutes"] is None:
-                payload["idle_lock_minutes"] = overrides["idle_lock_minutes"]
+        if "idle_lock_minutes" in overrides and (
+            isinstance(overrides["idle_lock_minutes"], int) or overrides["idle_lock_minutes"] is None
+        ):
+            payload["idle_lock_minutes"] = overrides["idle_lock_minutes"]
         if "key_schedule" in overrides:
             payload["key_schedule"] = overrides["key_schedule"]
 
@@ -148,9 +153,10 @@ def _manifest(**overrides: object) -> BucketManifest:
             payload["label"] = overrides["label"]
         if "created_at" in overrides and isinstance(overrides["created_at"], datetime):
             payload["created_at"] = overrides["created_at"]
-        if "last_unlocked_at" in overrides:
-            if isinstance(overrides["last_unlocked_at"], datetime) or overrides["last_unlocked_at"] is None:
-                payload["last_unlocked_at"] = overrides["last_unlocked_at"]
+        if "last_unlocked_at" in overrides and (
+            isinstance(overrides["last_unlocked_at"], datetime) or overrides["last_unlocked_at"] is None
+        ):
+            payload["last_unlocked_at"] = overrides["last_unlocked_at"]
         if "kdf_params" in overrides and isinstance(overrides["kdf_params"], ManifestKdfParams):
             payload["kdf_params"] = overrides["kdf_params"]
         if "recovery_enrolled" in overrides and isinstance(overrides["recovery_enrolled"], bool):
@@ -159,9 +165,10 @@ def _manifest(**overrides: object) -> BucketManifest:
             payload["schema_version"] = overrides["schema_version"]
         if "status" in overrides and isinstance(overrides["status"], BucketLifecycleStatus):
             payload["status"] = overrides["status"]
-        if "idle_lock_minutes" in overrides:
-            if isinstance(overrides["idle_lock_minutes"], int) or overrides["idle_lock_minutes"] is None:
-                payload["idle_lock_minutes"] = overrides["idle_lock_minutes"]
+        if "idle_lock_minutes" in overrides and (
+            isinstance(overrides["idle_lock_minutes"], int) or overrides["idle_lock_minutes"] is None
+        ):
+            payload["idle_lock_minutes"] = overrides["idle_lock_minutes"]
         if "key_schedule" in overrides:
             payload["key_schedule"] = overrides["key_schedule"]
 

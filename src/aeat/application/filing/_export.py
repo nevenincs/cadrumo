@@ -727,8 +727,7 @@ def _record_render_rows(
         active_fields = tuple(
             field
             for field in binding_fields
-            if field.binding is not None
-            and _is_active_binding_value(binding_values.get((field.binding, row_index)))
+            if field.binding is not None and _is_active_binding_value(binding_values.get((field.binding, row_index)))
         )
         for group in _compatible_binding_field_groups(active_fields):
             rows.append(

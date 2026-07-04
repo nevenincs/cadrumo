@@ -439,7 +439,7 @@ convention = "google"
 # Bundled test modules colocated under src/aeat/. Docstring (D) rules are
 # audience-scoped out of the test surface (tests are excluded from autodoc
 # and interrogate too).
-"src/aeat/**/tests/**/*.py" = ["S101", "T20", "D"]
+"src/aeat/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
 "src/aeat/tests/**/*.py" = ["S101", "T20", "D"]
 "src/aeat/**/conftest.py" = ["D"]
 # Sphinx build configuration is tooling, not the documented package API.
@@ -459,6 +459,15 @@ convention = "google"
 "dev/packaging/smoke_browser.py" = ["S603"]
 "dev/packaging/smoke_core.py" = ["S603"]
 "dev/packaging/smoke_docker.py" = ["S603"]
+# The release audit-state gate resolves `gh` via `shutil.which` (or accepts an
+# explicit resolved path for tests) before invoking it with a fixed argv;
+# ruff's S603 heuristic cannot see the resolved-executable contract.
+"dev/release/readiness.py" = ["S603"]
+# The gate's own tests invoke a real explicit-path stub executable plus
+# `sys.executable` against a controlled, in-test-authored driver script; no
+# untrusted input reaches subprocess. Long CHANGELOG.md/merge-marker fixture
+# literals cannot wrap without breaking their real-content assertions.
+"dev/release/tests/test_readiness.py" = ["S603", "E501"]
 "dev/quality/quiet.py" = ["S603"]
 "dev/quality/suite.py" = ["S603", "S607"]
 "dev/quality/types.py" = ["S603", "S607"]

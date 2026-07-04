@@ -24,17 +24,47 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # (modelo_id, revision, approval_ref, plazo_ref, document_id, period_kind)
 _MODELOS = [
-    ("165", "2013-y-siguientes", "orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "BOE-A-2013-13798", "annual"),
-    ("233", "2018-y-siguientes", "orden-hac-1400-2018:art-1", "orden-hac-1400-2018:art-4", "BOE-A-2018-17772", "annual"),
-    ("156", "2003-y-siguientes", "orden-hac-3580-2003:art-1", "orden-hac-3580-2003:art-4", "BOE-A-2003-23509", "annual"),
+    (
+        "165",
+        "2013-y-siguientes",
+        "orden-hap-2455-2013:art-1",
+        "orden-hap-2455-2013:art-4",
+        "BOE-A-2013-13798",
+        "annual",
+    ),
+    (
+        "233",
+        "2018-y-siguientes",
+        "orden-hac-1400-2018:art-1",
+        "orden-hac-1400-2018:art-4",
+        "BOE-A-2018-17772",
+        "annual",
+    ),
+    (
+        "156",
+        "2003-y-siguientes",
+        "orden-hac-3580-2003:art-1",
+        "orden-hac-3580-2003:art-4",
+        "BOE-A-2003-23509",
+        "annual",
+    ),
     ("038", "2002-y-siguientes", "orden-hac-66-2002:art-1", "orden-hac-66-2002:art-6", "BOE-A-2002-1041", "monthly"),
-    ("185", "2025-y-siguientes", "orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "BOE-A-2025-21726", "monthly"),
+    (
+        "185",
+        "2025-y-siguientes",
+        "orden-hac-1197-2025:art-1",
+        "orden-hac-1197-2025:art-4",
+        "BOE-A-2025-21726",
+        "monthly",
+    ),
     ("186", "2003-y-siguientes", "orden-hac-539-2003:art-1", "orden-hac-539-2003:art-4", "BOE-A-2003-5304", "monthly"),
 ]
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,kind", _MODELOS)
-def test_validator_accepts_committed_definition(mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str) -> None:
+def test_validator_accepts_committed_definition(
+    mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str
+) -> None:
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert rev in modelo.revisions
@@ -42,7 +72,9 @@ def test_validator_accepts_committed_definition(mid: str, rev: str, approval: st
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,kind", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str) -> None:
+def test_approval_and_plazo_resolve_as_legal_authority(
+    mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str
+) -> None:
     """Approval (art 1) and plazo (art 4/6) resolve as bundled legal authority.
 
     Both required_text sets are cross-checked against the bundled orden corpus at
@@ -56,7 +88,9 @@ def test_approval_and_plazo_resolve_as_legal_authority(mid: str, rev: str, appro
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,kind", _MODELOS)
-def test_deadline_windows_cite_plazo_and_match_cadence(mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str) -> None:
+def test_deadline_windows_cite_plazo_and_match_cadence(
+    mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str
+) -> None:
     modelo, _ = _committed_modelo(mid)
     revision = modelo.revisions[rev]
     assert revision.deadline_windows, f"{mid} must declare deadline windows"

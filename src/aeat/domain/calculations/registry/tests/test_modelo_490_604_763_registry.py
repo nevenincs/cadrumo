@@ -25,14 +25,40 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # (modelo_id, revision, approval, plazo, doc, tax_domain, window_count)
 _MODELOS = [
-    ("490", "2021-y-siguientes", "orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "BOE-A-2021-9721", TaxDomain.IDSD, 8),
-    ("604", "2021-y-siguientes", "orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "BOE-A-2021-8878", TaxDomain.ITF, 12),
-    ("763", "2011-y-siguientes", "orden-eha-1881-2011:art-1", "orden-eha-1881-2011:art-4", "BOE-A-2011-11704", TaxDomain.JUEGO, 8),
+    (
+        "490",
+        "2021-y-siguientes",
+        "orden-hac-590-2021:art-1",
+        "orden-hac-590-2021:art-3",
+        "BOE-A-2021-9721",
+        TaxDomain.IDSD,
+        8,
+    ),
+    (
+        "604",
+        "2021-y-siguientes",
+        "orden-hac-510-2021:art-1",
+        "orden-hac-510-2021:art-3",
+        "BOE-A-2021-8878",
+        TaxDomain.ITF,
+        12,
+    ),
+    (
+        "763",
+        "2011-y-siguientes",
+        "orden-eha-1881-2011:art-1",
+        "orden-eha-1881-2011:art-4",
+        "BOE-A-2011-11704",
+        TaxDomain.JUEGO,
+        8,
+    ),
 ]
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain,windows", _MODELOS)
-def test_validator_accepts_committed_definition(mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int) -> None:
+def test_validator_accepts_committed_definition(
+    mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int
+) -> None:
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert modelo.tax_domain is domain
@@ -40,7 +66,9 @@ def test_validator_accepts_committed_definition(mid: str, rev: str, approval: st
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain,windows", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int) -> None:
+def test_approval_and_plazo_resolve_as_legal_authority(
+    mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int
+) -> None:
     _, catalogues = _committed_modelo(mid)
     for ref in (approval, plazo):
         entry = catalogues.legal[ref]
@@ -49,7 +77,9 @@ def test_approval_and_plazo_resolve_as_legal_authority(mid: str, rev: str, appro
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain,windows", _MODELOS)
-def test_deadline_windows_cite_the_plazo(mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int) -> None:
+def test_deadline_windows_cite_the_plazo(
+    mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int
+) -> None:
     """Each window count matches the verbatim plazo cadence and every window cites
     the plazo article — no window is authored without its grounding."""
     modelo, _ = _committed_modelo(mid)

@@ -46,7 +46,9 @@ def test_approval_and_plazo_resolve_as_legal_authority(mid: str, rev: str, appro
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc", _MODELOS)
-def test_on_demand_solicitud_carries_no_fabricated_windows(mid: str, rev: str, approval: str, plazo: str, doc: str) -> None:
+def test_on_demand_solicitud_carries_no_fabricated_windows(
+    mid: str, rev: str, approval: str, plazo: str, doc: str
+) -> None:
     """The plazo is on-demand ("opte por la modalidad de abono anticipado"), so the
     honest state is zero calendar deadline_windows — no fixed date is invented."""
     modelo, _ = _committed_modelo(mid)

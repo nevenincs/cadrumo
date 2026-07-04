@@ -33,14 +33,16 @@ _M190_DR_CLAVES = frozenset("ABCDEFGHIJKL")
 
 
 def _observation(*, clave: RetencionClave | str, subclave: str = "") -> WithholdingObservation:
-    return WithholdingObservation.model_validate({
-        "source_id": "row-1",
-        "perceptor_tax_id": "11111111H",
-        "transaction_date": date(2024, 3, 15),
-        "clave": clave,  # pydantic mode="before" validator coerces str → RetencionClave
-        "subclave": subclave,
-        "percibido_dinerario": Decimal("1000"),
-    })
+    return WithholdingObservation.model_validate(
+        {
+            "source_id": "row-1",
+            "perceptor_tax_id": "11111111H",
+            "transaction_date": date(2024, 3, 15),
+            "clave": clave,  # pydantic mode="before" validator coerces str → RetencionClave
+            "subclave": subclave,
+            "percibido_dinerario": Decimal("1000"),
+        }
+    )
 
 
 def test_retencion_clave_enum_matches_m190_dr_clave_set() -> None:

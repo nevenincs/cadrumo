@@ -54,9 +54,7 @@ _MANIFEST_MODELOS = [
 ]
 
 
-def _manifest_and_casillas(
-    modelo: str, year: int, period: str, on: date
-) -> tuple[Any, dict[str, Any]]:
+def _manifest_and_casillas(modelo: str, year: int, period: str, on: date) -> tuple[Any, dict[str, Any]]:
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
     revision = snapshot.revision
     manifest = revision.completeness_manifest
@@ -75,9 +73,7 @@ def _gate_required_ids(manifest: Any, by_id: dict[str, Any]) -> set[str]:
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _MANIFEST_MODELOS)
-def test_gate_required_set_equals_computed_plus_schema_required(
-    modelo: str, year: int, period: str, on: date
-) -> None:
+def test_gate_required_set_equals_computed_plus_schema_required(modelo: str, year: int, period: str, on: date) -> None:
     manifest, by_id = _manifest_and_casillas(modelo, year, period, on)
     required = _gate_required_ids(manifest, by_id)
 
@@ -95,9 +91,7 @@ def test_gate_required_set_equals_computed_plus_schema_required(
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _MANIFEST_MODELOS)
-def test_no_computed_or_required_casilla_is_excluded(
-    modelo: str, year: int, period: str, on: date
-) -> None:
+def test_no_computed_or_required_casilla_is_excluded(modelo: str, year: int, period: str, on: date) -> None:
     # Under-strict drift guard: no calculation result and no schema-required casilla
     # may fall out of the required set (that would let a real thin file through).
     manifest, by_id = _manifest_and_casillas(modelo, year, period, on)
@@ -114,9 +108,7 @@ def test_no_computed_or_required_casilla_is_excluded(
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _MANIFEST_MODELOS)
-def test_excluded_casillas_are_optional_non_computed(
-    modelo: str, year: int, period: str, on: date
-) -> None:
+def test_excluded_casillas_are_optional_non_computed(modelo: str, year: int, period: str, on: date) -> None:
     # Over-strict drift guard: every EXCLUDED manifest casilla is a non-required,
     # non-computed casilla (an optional BOUND/MANUAL value or a non-required
     # INFORMATIONAL field) -- legitimately blank/zero, so excluding it is correct.
