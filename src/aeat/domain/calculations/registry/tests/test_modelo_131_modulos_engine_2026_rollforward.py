@@ -120,6 +120,7 @@ def _run_modulos_engine_2026(
     modulo_4: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
     snapshot = _committed_snapshot("131", 2026, "1T")
+    assert snapshot.filing_period is not None
     text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
     result = calculate_registry_snapshot(
         snapshot,
@@ -225,6 +226,7 @@ class TestModulos2026PartialTableCoverageDoesNotSilentlyMisattribute:
         (calculation-source-canonical-mechanism).
         """
         snapshot_2025 = _committed_snapshot("131", 2025, "1T")
+        assert snapshot_2025.filing_period is not None
         result_2025 = calculate_registry_snapshot(
             snapshot_2025,
             inputs={
