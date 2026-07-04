@@ -611,10 +611,12 @@ application:
         category_profiles_changed: els perfils de categoria han canviat
         draft_payload_changed: el contingut de l'esborrany ha canviat
         draft_review_changed: la superficie de validacio de l'esborrany ha canviat
+        invoice_catalogue_changed: el cataleg de factures ha canviat
+        prior_filing_observations_changed: les observacions de declaracions anteriors
+          han canviat
         schema_formula_changed: la procedencia de l'esquema o la formula ha canviat
         transaction_catalogue_changed: el cataleg de transaccions ha canviat
         unknown: '%{reason}'
-        invoice_catalogue_changed: 'el cataleg de factures ha canviat'
     runtime:
       errors:
         active_profile_load_failed: 'No s ha pogut carregar el perfil actiu de presentacio:
@@ -691,7 +693,8 @@ application:
     wizard:
       errors:
         build_failed: 'l''assistent de factures ha rebutjat: %{detail}'
-        field_errors: 'l''assistent de factures ha rebutjat %{field_count} camp(s): %{detail}'
+        field_errors: 'l''assistent de factures ha rebutjat %{field_count} camp(s):
+          %{detail}'
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
@@ -1586,8 +1589,10 @@ cli:
           remove_help: Elimina una factura del catàleg de conciliació.
           view_help: Mostra una factura del catàleg de conciliació per identificador
             o prefix no ambigu.
-          wizard_help: 'Entrada manual guiada i no interactiva quan l''extracció no està disponible.'
-          wizard_idempotent_noop: 'Sense operació idempotent: ja existeix una factura amb aquesta identitat (%{invoice_id}); no s''ha creat res.'
+          wizard_help: Entrada manual guiada i no interactiva quan l'extracció no
+            està disponible.
+          wizard_idempotent_noop: 'Sense operació idempotent: ja existeix una factura
+            amb aquesta identitat (%{invoice_id}); no s''ha creat res.'
         country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
           intracomunitàries UE)
         eu_iva_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
@@ -5293,6 +5298,10 @@ errors:
       és incompatible amb el seu repositori.
     integrity_storage_corpus_bundle: El paquet del corpus no s'ha pogut analitzar
       ni verificar.
+    integrity_storage_corpus_bundle_signature: No s'ha pogut verificar la signatura
+      d'autenticitat del paquet de corpus.
+    integrity_storage_corpus_bundle_signing_key_not_found: No s'ha trobat cap parell
+      de claus de signatura del paquet de corpus al camí sol·licitat.
     integrity_storage_corpus_bundle_verification: El paquet del corpus no ha superat
       la verificació de sumes de comprovació respecte al seu manifest incorporat.
     integrity_storage_corpus_manifest: El manifest del corpus no s'ha pogut llegir
@@ -5335,8 +5344,6 @@ errors:
       dades de referència o el motor de càlcul poden estar malmesos.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
-    integrity_storage_corpus_bundle_signature: 'No s''ha pogut verificar la signatura d''autenticitat del paquet de corpus.'
-    integrity_storage_corpus_bundle_signing_key_not_found: 'No s''ha trobat cap parell de claus de signatura del paquet de corpus al camí sol·licitat.'
   internal:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat,
       no per un problema de dades emmagatzemades. Consulteu els registres de diagnòstic

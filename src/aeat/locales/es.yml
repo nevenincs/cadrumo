@@ -617,10 +617,12 @@ application:
         category_profiles_changed: los perfiles de categoria han cambiado
         draft_payload_changed: el contenido del borrador ha cambiado
         draft_review_changed: la superficie de validacion del borrador ha cambiado
+        invoice_catalogue_changed: el catalogo de facturas ha cambiado
+        prior_filing_observations_changed: las observaciones de declaraciones anteriores
+          han cambiado
         schema_formula_changed: la procedencia del esquema o la formula ha cambiado
         transaction_catalogue_changed: el catalogo de transacciones ha cambiado
         unknown: '%{reason}'
-        invoice_catalogue_changed: 'el catalogo de facturas ha cambiado'
     runtime:
       errors:
         active_profile_load_failed: 'No se pudo cargar el perfil activo de presentacion:
@@ -1602,8 +1604,10 @@ cli:
           remove_help: Elimina una factura del catálogo de conciliación.
           view_help: Muestra una factura del catálogo de conciliación por identificador
             o prefijo no ambiguo.
-          wizard_help: 'Entrada manual guiada y no interactiva cuando la extracción no está disponible.'
-          wizard_idempotent_noop: 'Sin operación idempotente: ya existe una factura con esta identidad (%{invoice_id}); no se creó nada.'
+          wizard_help: Entrada manual guiada y no interactiva cuando la extracción
+            no está disponible.
+          wizard_idempotent_noop: 'Sin operación idempotente: ya existe una factura
+            con esta identidad (%{invoice_id}); no se creó nada.'
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
           intracomunitarias UE)
         eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
@@ -5340,6 +5344,10 @@ errors:
     integrity_storage_classification: La clase de sensibilidad declarada de un registro
       es incompatible con su repositorio.
     integrity_storage_corpus_bundle: El paquete del corpus no pudo analizarse ni verificarse.
+    integrity_storage_corpus_bundle_signature: No se pudo verificar la firma de autenticidad
+      del paquete de corpus.
+    integrity_storage_corpus_bundle_signing_key_not_found: No se encontró ningún par
+      de claves de firma del paquete de corpus en la ruta solicitada.
     integrity_storage_corpus_bundle_verification: El paquete del corpus no superó
       la verificación de sumas de comprobación frente a su manifiesto incorporado.
     integrity_storage_corpus_manifest: El manifiesto del corpus no se pudo leer o
@@ -5383,8 +5391,6 @@ errors:
       de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
-    integrity_storage_corpus_bundle_signature: 'No se pudo verificar la firma de autenticidad del paquete de corpus.'
-    integrity_storage_corpus_bundle_signing_key_not_found: 'No se encontró ningún par de claves de firma del paquete de corpus en la ruta solicitada.'
   internal:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado,
       no por un problema de datos almacenados. Consulte los registros de diagnóstico
