@@ -3,7 +3,7 @@
 All parsers take raw HTML strings and return strict pydantic records.
 No Playwright, no I/O. This makes them trivially unit-testable
 against captured fixtures and keeps the navigation (side-effect)
-concerns isolated in :mod:`aeat.adapters.outbound.aeat.sede._walker`.
+concerns isolated in :mod:`adapters.outbound.aeat.sede._walker`.
 
 Public surface: :func:`parse_resumen_tree` (top-level expediente
 listing), :func:`parse_expediente_detail` (per-expediente CSV

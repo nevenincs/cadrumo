@@ -1,11 +1,11 @@
 """Read operator-edited Sheets cells back into structured records.
 
-Pairs with :mod:`~aeat.adapters.outbound.google._calc_sheets_apply`. The export
+Pairs with :mod:`~adapters.outbound.google._calc_sheets_apply`. The export
 side materialises a
-:class:`~aeat.application.storage.calc_sheets.SheetExportPlan` as a real Google
+:class:`~application.storage.calc_sheets.SheetExportPlan` as a real Google
 Sheets workbook; this module reads the operator's edits back out, validates the
 workbook is still bound to the
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot` the engine
+:class:`~domain.calculations.registry.RegistrySnapshot` the engine
 compiled it from, and returns typed records the caller can inspect, compute
 from, or assemble into ledger / filing inputs.
 
@@ -24,18 +24,18 @@ Two safety gates fire before any value is read:
    shifted. The pull is refused with a typed error.
 
 The pull adapter does NOT mutate any local state; it returns a
-:class:`~aeat.adapters.outbound.google.PullResult` and leaves applying the
+:class:`~adapters.outbound.google.PullResult` and leaves applying the
 edits to the caller.
 
 See Also:
-    :func:`~aeat.adapters.outbound.google.pull_operator_edits` reads the
+    :func:`~adapters.outbound.google.pull_operator_edits` reads the
     workbook,
-    :func:`~aeat.adapters.outbound.google.compute_from_pull` maps a matching
+    :func:`~adapters.outbound.google.compute_from_pull` maps a matching
     pull into
-    :class:`~aeat.domain.calculations.registry.RegistryCalculationResult`, and
-    :func:`~aeat.adapters.outbound.google._calc_sheets_pull.verify_pull_coverage`
+    :class:`~domain.calculations.registry.RegistryCalculationResult`, and
+    :func:`~adapters.outbound.google._calc_sheets_pull.verify_pull_coverage`
     compares a pull against its source
-    :class:`~aeat.application.storage.calc_sheets.SheetExportPlan` when the
+    :class:`~application.storage.calc_sheets.SheetExportPlan` when the
     caller still has that plan.
 """
 
@@ -122,19 +122,19 @@ class OperatorEdit(BaseModel):
     ``display_number`` and ``label`` are display-only fields added by the
     pull adapter from the workbook's column metadata. They are not part of
     the canonical
-    :class:`~aeat.application.storage.calc_sheets.OperatorInput` contract; use
-    :meth:`~aeat.adapters.outbound.google._calc_sheets_pull.OperatorEdit.to_operator_input`
+    :class:`~application.storage.calc_sheets.OperatorInput` contract; use
+    :meth:`~adapters.outbound.google._calc_sheets_pull.OperatorEdit.to_operator_input`
     to project this shape onto the canonical one.
 
     ``value`` mirrors the cell's raw shape from Google Sheets. The union
     is intentionally ambiguous between Decimal and numeric-shaped str
     because the wire JSON representation cannot statically distinguish
     them (pydantic serialises Decimal as a JSON string). The runtime
-    path in :func:`~aeat.adapters.outbound.google.compute_from_pull` is what
+    path in :func:`~adapters.outbound.google.compute_from_pull` is what
     disambiguates via
-    :func:`~aeat.adapters.outbound.google._calc_sheets_pull._coerce_edit_value_to_decimal`
+    :func:`~adapters.outbound.google._calc_sheets_pull._coerce_edit_value_to_decimal`
     for numeric input casillas and
-    :func:`~aeat.adapters.outbound.google._calc_sheets_pull._enum_binding_text`
+    :func:`~adapters.outbound.google._calc_sheets_pull._enum_binding_text`
     for enum bindings.
     """
 
@@ -146,7 +146,7 @@ class OperatorEdit(BaseModel):
     value: Decimal | str | bool | None = None
 
     def to_operator_input(self) -> OperatorInput:
-        """Project onto the canonical :class:`~aeat.application.storage.calc_sheets.OperatorInput` shape.
+        """Project onto the canonical :class:`~application.storage.calc_sheets.OperatorInput` shape.
 
         Drops display-only fields.
         """
@@ -157,14 +157,14 @@ class BindingEdit(BaseModel):
     """One operator-edited binding cell value (numeric or enum).
 
     Same union-ambiguity reasoning as
-    :attr:`~aeat.adapters.outbound.google._calc_sheets_pull.OperatorEdit.value`
+    :attr:`~adapters.outbound.google._calc_sheets_pull.OperatorEdit.value`
     — the wire JSON cannot statically distinguish a CCAA-shape ``"04"`` from a
     numeric ``Decimal("4")``. The runtime dispatch in
-    :func:`~aeat.adapters.outbound.google.compute_from_pull` is what routes the
+    :func:`~adapters.outbound.google.compute_from_pull` is what routes the
     value: enum bindings go through
-    :func:`~aeat.adapters.outbound.google._calc_sheets_pull._enum_binding_text`
+    :func:`~adapters.outbound.google._calc_sheets_pull._enum_binding_text`
     and numeric bindings go through
-    :func:`~aeat.adapters.outbound.google._calc_sheets_pull._coerce_edit_value_to_decimal`.
+    :func:`~adapters.outbound.google._calc_sheets_pull._coerce_edit_value_to_decimal`.
     """
 
     model_config = _STRICT_FROZEN
@@ -224,9 +224,9 @@ class PullMetadata(BaseModel):
     This is a loose parsing shape: ``exported_at`` is ``str | None`` because
     the developer-metadata round-trip may yield a raw ISO string or nothing.
     Use
-    :meth:`~aeat.adapters.outbound.google._calc_sheets_pull.PullMetadata.to_sheet_export_metadata`
+    :meth:`~adapters.outbound.google._calc_sheets_pull.PullMetadata.to_sheet_export_metadata`
     to project onto the strict canonical
-    :class:`~aeat.application.storage.calc_sheets.SheetExportMetadata` shape
+    :class:`~application.storage.calc_sheets.SheetExportMetadata` shape
     when the workbook is known to carry a valid export stamp.
     """
 
@@ -241,7 +241,7 @@ class PullMetadata(BaseModel):
     exported_at: str | None = None
 
     def to_sheet_export_metadata(self) -> SheetExportMetadata | None:
-        """Project onto a :class:`~aeat.application.storage.calc_sheets.SheetExportMetadata`.
+        """Project onto a :class:`~application.storage.calc_sheets.SheetExportMetadata`.
 
         Parses ``exported_at`` from an ISO string. Returns ``None`` when the
         stamp is absent or unparseable rather than raising, so callers can
@@ -276,11 +276,11 @@ class PullResult(BaseModel):
     """Outcome of one Google Sheets pull cycle.
 
     Carries the typed edit families read from the workbook, the
-    :class:`~aeat.adapters.outbound.google._calc_sheets_pull.PullMetadata`
+    :class:`~adapters.outbound.google._calc_sheets_pull.PullMetadata`
     stamp recovered from developer metadata, the
-    :class:`~aeat.adapters.outbound.google._calc_sheets_pull.MetadataMatchState`
+    :class:`~adapters.outbound.google._calc_sheets_pull.MetadataMatchState`
     verdict against the caller's
-    :class:`~aeat.domain.calculations.registry.RegistrySnapshot`, and the count
+    :class:`~domain.calculations.registry.RegistrySnapshot`, and the count
     of non-blank cells read.
     ``metadata_match`` may be ``STALE`` or ``MISSING``; callers must treat that
     as a refusal boundary before applying edits to local state.
@@ -480,11 +480,11 @@ def pull_operator_edits(
     pull``. It verifies the Drive ownership marker, reads developer metadata,
     classifies metadata against ``snapshot``, reads operator/binding/relation
     cells plus Detalle row-set blocks, and returns a
-    :class:`~aeat.adapters.outbound.google.PullResult`.
+    :class:`~adapters.outbound.google.PullResult`.
 
     Args:
         snapshot: The
-            :class:`~aeat.domain.calculations.registry.RegistrySnapshot` the
+            :class:`~domain.calculations.registry.RegistrySnapshot` the
             workbook was compiled against. Used to derive the layout (cell
             addresses for every casilla / binding / relation) and to validate
             the workbook's developer-metadata stamps.
@@ -496,7 +496,7 @@ def pull_operator_edits(
             the ``drive.file`` + ``spreadsheets`` scopes.
 
     Returns:
-        A :class:`~aeat.adapters.outbound.google.PullResult` carrying the
+        A :class:`~adapters.outbound.google.PullResult` carrying the
         operator edits, binding edits, relation edits, and the metadata-match
         verdict. A ``metadata_match="stale"`` result still includes the edits
         but signals to the caller that the workbook's identity does not match
@@ -504,9 +504,9 @@ def pull_operator_edits(
         corrupt data.
 
     Raises:
-        :exc:`~aeat.adapters.outbound.storage.OutboundStorageValidationError`:
+        :exc:`~adapters.outbound.storage.OutboundStorageValidationError`:
             When ``spreadsheet_id`` is blank.
-        :exc:`~aeat.adapters.outbound.storage.OutboundStorageError`: When
+        :exc:`~adapters.outbound.storage.OutboundStorageError`: When
             Drive or Sheets rejects the request, the target is missing, quota
             is exhausted, or the workbook fails the app-owned marker gate.
     """
@@ -662,7 +662,7 @@ def _decode_binding_edits(
     """Map the per-binding slice of the batchGet response into typed BindingEdits.
 
     Booleans are stringified because
-    :attr:`~aeat.adapters.outbound.google._calc_sheets_pull.BindingEdit.value`
+    :attr:`~adapters.outbound.google._calc_sheets_pull.BindingEdit.value`
     (``Decimal | str | None``) does not carry a bool path — the runtime
     enum-binding semantics expect a textual representation here.
     """
@@ -964,18 +964,18 @@ class PullCoverageDiscrepancy(BaseModel):
     The apply adapter writes a richly-shaped workbook (tariffs,
     constraints, protected ranges, row-sets); the pull adapter
     materialises a slimmer
-    :class:`~aeat.adapters.outbound.google.PullResult` of operator-editable
+    :class:`~adapters.outbound.google.PullResult` of operator-editable
     surfaces. A corrupted or hand-edited workbook could have structural cells
     stripped or row-set columns removed without surfacing as a load error.
-    :func:`~aeat.adapters.outbound.google._calc_sheets_pull.verify_pull_coverage`
+    :func:`~adapters.outbound.google._calc_sheets_pull.verify_pull_coverage`
     enumerates every coverage mismatch as one of these typed records so callers
     can choose to refuse the merge, log a warning, or surface a diagnostic to
     the operator.
 
     The check is intentionally caller-opt-in: not every consumer of
-    :func:`~aeat.adapters.outbound.google.compute_from_pull` carries the
+    :func:`~adapters.outbound.google.compute_from_pull` carries the
     original
-    :class:`~aeat.application.storage.calc_sheets.SheetExportPlan`
+    :class:`~application.storage.calc_sheets.SheetExportPlan`
     (e.g. a fresh pull from a workbook the operator authored without
     a prior apply). Callers that DO have the plan should run the
     check before consuming the pull.
@@ -1064,19 +1064,19 @@ def compute_from_pull(
     snapshot: RegistrySnapshot,
     pull: PullResult,
 ) -> RegistryCalculationResult:
-    """Run the local Decimal runtime against a :class:`~aeat.adapters.outbound.google.PullResult`.
+    """Run the local Decimal runtime against a :class:`~adapters.outbound.google.PullResult`.
 
     Maps each edit family back to the runtime contract:
 
-    - :attr:`~aeat.adapters.outbound.google._calc_sheets_pull.OperatorEdit.value`
+    - :attr:`~adapters.outbound.google._calc_sheets_pull.OperatorEdit.value`
       flows into runtime ``inputs``, with ``Decimal("0")`` substituted for
       ``None`` so the runtime's "every non-computed casilla has a value"
       precondition holds.
-    - :attr:`~aeat.adapters.outbound.google._calc_sheets_pull.BindingEdit.value`
+    - :attr:`~adapters.outbound.google._calc_sheets_pull.BindingEdit.value`
       is routed by the binding's ``typed_enum`` declaration: numeric bindings
       flow into ``binding_values`` as Decimals; enum bindings flow into
       ``enum_binding_values`` as plain strings.
-    - :attr:`~aeat.adapters.outbound.google._calc_sheets_pull.RelationEdit.value`
+    - :attr:`~adapters.outbound.google._calc_sheets_pull.RelationEdit.value`
       flows into ``relation_values`` as Decimals, with ``Decimal("0")``
       substituted for ``None``.
 
@@ -1087,19 +1087,19 @@ def compute_from_pull(
 
     Args:
         snapshot: The
-            :class:`~aeat.domain.calculations.registry.RegistrySnapshot` the
+            :class:`~domain.calculations.registry.RegistrySnapshot` the
             workbook was compiled against. Used to derive input casilla
             identifiers, active relation periods, and the metadata-match gate.
-        pull: The :class:`~aeat.adapters.outbound.google.PullResult` carrying
+        pull: The :class:`~adapters.outbound.google.PullResult` carrying
             the operator-edited cells to compute from.
 
     Returns:
-        A :class:`~aeat.domain.calculations.registry.RegistryCalculationResult`
+        A :class:`~domain.calculations.registry.RegistryCalculationResult`
         produced by
-        :func:`~aeat.domain.calculations.registry.calculate_registry_snapshot`.
+        :func:`~domain.calculations.registry.calculate_registry_snapshot`.
 
     Raises:
-        :exc:`~aeat.adapters.outbound.storage.OutboundStorageConflictError`:
+        :exc:`~adapters.outbound.storage.OutboundStorageConflictError`:
             When ``pull`` does not bind to ``snapshot`` by metadata verdict and
             registry-SHA stamp.
     """
@@ -1151,7 +1151,7 @@ def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> 
 
 
 def _coerce_edit_value_to_decimal(value: Decimal | str | bool | None) -> Decimal:
-    """Coerce an :attr:`~aeat.adapters.outbound.google._calc_sheets_pull.OperatorEdit.value` shape.
+    """Coerce an :attr:`~adapters.outbound.google._calc_sheets_pull.OperatorEdit.value` shape.
 
     None / unparseable text / unsupported type all collapse to
     ``Decimal("0")`` so the runtime's "every non-computed casilla has a

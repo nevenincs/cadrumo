@@ -15,7 +15,7 @@ import ast
 import decimal
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import NoReturn
+from typing import NoReturn, override
 
 import pytest
 
@@ -56,6 +56,7 @@ def _except_handler_names(module_relative: str, function_name: str) -> tuple[tup
     handlers: list[tuple[str, ...]] = []
 
     class _HandlerVisitor(ast.NodeVisitor):
+        @override
         def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
             handlers.append(_handler_type_names(node.type))
             self.generic_visit(node)
@@ -88,7 +89,12 @@ def _single_handler_type_name(node: ast.expr) -> str:
 class TestNewErrorClassesRegistered:
     """The three new error classes are AeatError subclasses with registry entries."""
 
-    _ERROR_CASES = (
+    # Declared as ``type[AeatError]`` (not inferred from the literal subclasses)
+    # so ``test_envelope_roundtrip``'s fallback construction below type-checks
+    # against the common base constructor rather than each member's own
+    # override — two of the three hardcode a message and take no positional
+    # arg, one inherits ``AeatError``'s optional-message constructor.
+    _ERROR_CASES: tuple[tuple[type[AeatError], str], ...] = (
         (WizardCatalogueNotRegisteredError, "INTERNAL_WIZARD_CATALOGUE_NOT_REGISTERED"),
         (WizardCatalogueAlreadyRegisteredError, "INTERNAL_WIZARD_CATALOGUE_ALREADY_REGISTERED"),
         (ProjectAnswersNotRegisteredError, "INTERNAL_PROFILE_PROJECT_ANSWERS_NOT_REGISTERED"),

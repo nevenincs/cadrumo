@@ -36,5 +36,6 @@ def test_descriptors_adapt_to_sdk_tools_with_annotations() -> None:
     assert contract.outputSchema
 
     remove = by_name["aeat_ledger_remove"]
+    assert remove.annotations is not None
     assert remove.annotations.readOnlyHint is False
     assert remove.annotations.destructiveHint is True

@@ -83,39 +83,38 @@ def test_educational_docs_exist() -> None:
     assert docs, "no educational docs found under docs/{tutorials,explanation,how-to}/"
 
 
-@pytest.mark.parametrize("doc", _edu_docs(), ids=lambda p: str(p.relative_to(PROJECT_ROOT)))
-def test_cited_aeat_verbs_resolve(doc: Path) -> None:
+def test_cited_aeat_verbs_resolve() -> None:
     """Every `aeat ...` command cited in the doc resolves to a live CLI verb."""
-    text = doc.read_text(encoding="utf-8")
     unresolved: list[str] = []
-    for tokens in sorted(_cited_commands(text)):
-        if _longest_resolving_prefix(tokens) is None:
-            unresolved.append("aeat " + " ".join(tokens))
-    assert not unresolved, (
-        f"{doc.relative_to(PROJECT_ROOT)} cites aeat commands whose leading verb "
-        f"does not resolve in the live CLI: {unresolved}"
+    for doc in _edu_docs():
+        text = doc.read_text(encoding="utf-8")
+        for tokens in sorted(_cited_commands(text)):
+            if _longest_resolving_prefix(tokens) is None:
+                unresolved.append(f"{doc.relative_to(PROJECT_ROOT)}: aeat {' '.join(tokens)}")
+    assert not unresolved, "educational docs cite aeat commands whose leading verb does not resolve:\n" + "\n".join(
+        unresolved,
     )
 
 
-@pytest.mark.parametrize("doc", _edu_docs(), ids=lambda p: str(p.relative_to(PROJECT_ROOT)))
-def test_relative_links_resolve(doc: Path) -> None:
+def test_relative_links_resolve() -> None:
     """Every relative markdown link in the doc resolves to an existing file."""
-    text = doc.read_text(encoding="utf-8")
     broken: list[str] = []
-    for m in _LINK_RE.finditer(text):
-        target = m.group(1).strip()
-        if target.startswith(("http://", "https://", "mailto:")):
-            continue
-        path_part, _, anchor = target.partition("#")
-        if not path_part:
-            # pure-anchor link: a real in-page anchor (#section) is fine; an
-            # empty target ("" or "#") is a dead placeholder myst rejects.
-            if not anchor:
-                broken.append(target or "(empty)")
-            continue
-        resolved = (doc.parent / path_part).resolve()
-        # Must resolve to a FILE (a documented page), not a bare directory:
-        # myst cannot cross-reference a directory link such as ``../cli/``.
-        if not resolved.is_file():
-            broken.append(target)
-    assert not broken, f"{doc.relative_to(PROJECT_ROOT)} has unresolved relative links: {broken}"
+    for doc in _edu_docs():
+        text = doc.read_text(encoding="utf-8")
+        for m in _LINK_RE.finditer(text):
+            target = m.group(1).strip()
+            if target.startswith(("http://", "https://", "mailto:")):
+                continue
+            path_part, _, anchor = target.partition("#")
+            if not path_part:
+                # pure-anchor link: a real in-page anchor (#section) is fine; an
+                # empty target ("" or "#") is a dead placeholder myst rejects.
+                if not anchor:
+                    broken.append(f"{doc.relative_to(PROJECT_ROOT)}: {target or '(empty)'}")
+                continue
+            resolved = (doc.parent / path_part).resolve()
+            # Must resolve to a FILE (a documented page), not a bare directory:
+            # myst cannot cross-reference a directory link such as ``../cli/``.
+            if not resolved.is_file():
+                broken.append(f"{doc.relative_to(PROJECT_ROOT)}: {target}")
+    assert not broken, "educational docs have unresolved relative links:\n" + "\n".join(broken)

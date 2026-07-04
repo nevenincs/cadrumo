@@ -21,7 +21,7 @@ import sys
 import pytest
 
 from .._server import _run_subprocess_tool
-from .._tools import build_tool_descriptors
+from .._tools import McpToolDescriptor, build_tool_descriptors
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -30,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _SPANISH_ENVELOPE = '{"status": "error", "message": "No se encontró ninguna cita del registro."}'
 
 
-def _any_descriptor() -> object:
+def _any_descriptor() -> McpToolDescriptor:
     return build_tool_descriptors()[0]
 
 
@@ -49,8 +49,10 @@ def test_subprocess_is_decoded_as_utf8_not_platform_default() -> None:
     assert captured["errors"] == "replace"
     assert captured["argv0"] == "aeat"
     # The accented text round-trips faithfully — no mojibake reaches the client.
-    assert envelope["message"] == "No se encontró ninguna cita del registro."
-    assert "Ã" not in envelope["message"]
+    message = envelope["message"]
+    assert isinstance(message, str)
+    assert message == "No se encontró ninguna cita del registro."
+    assert "Ã" not in message
     assert is_error is True
 
 

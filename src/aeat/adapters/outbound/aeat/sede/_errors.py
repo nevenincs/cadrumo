@@ -1,8 +1,8 @@
-"""Exception hierarchy for :mod:`aeat.adapters.outbound.aeat.sede`.
+"""Exception hierarchy for :mod:`adapters.outbound.aeat.sede`.
 
 Defines the base :exc:`SedeError` plus the narrowly-scoped subclasses
 raised by the sede navigation, parsing, and fetch helpers. Every
-subclass extends :exc:`aeat.core.errors.AeatError` so callers can
+subclass extends :exc:`core.errors.AeatError` so callers can
 trap the whole AEAT integration surface with a single
 ``except AeatError``.
 """
@@ -18,7 +18,7 @@ from .....core.errors import AeatError, CoreError
 class SedeError(AeatError):
     """Base class for post-auth AEAT sede errors.
 
-    Extends :exc:`aeat.core.errors.AeatError` so callers tracking
+    Extends :exc:`core.errors.AeatError` so callers tracking
     cross-package errors can catch the whole AEAT surface uniformly.
     """
 

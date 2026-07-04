@@ -99,7 +99,7 @@ async def test_reauthenticate_happy_path_with_fake_browser_factory(tmp_path, _se
     settings = _settings_factory(bundle_path)
     verifier = _HandshakeVerifier()
 
-    async def factory(_settings: Settings) -> BrowserSessionLike:
+    async def factory(settings: Settings) -> BrowserSessionLike:
         return _RecordingBrowserSession(cert_ok=True)
 
     async with AeatAuthenticator(
@@ -153,7 +153,7 @@ async def test_reauthenticate_second_authenticate_failure_raises_session_expired
     settings = _settings_factory(bundle_path)
     verifier = _HandshakeVerifier()
 
-    async def failing_factory(_settings: Settings) -> BrowserSessionLike:
+    async def failing_factory(settings: Settings) -> BrowserSessionLike:
         return _RecordingBrowserSession(cert_ok=False)
 
     async with AeatAuthenticator(
