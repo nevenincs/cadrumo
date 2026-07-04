@@ -10,6 +10,7 @@ import pytest
 from .....core.resources import resources
 from .. import (
     CasillaId,
+    RegistrySnapshot,
     RegistryValidationError,
     calculate_registry_snapshot,
     casilla_noncanonical_reference_targets,
@@ -38,16 +39,16 @@ _M303_PREVIOUS_COMPENSATION_BINDING = "modelo-303-compensacion-pendiente-anterio
 
 
 @pytest.fixture(scope="module")
-def _m303_2025_1t_snapshot():
+def _m303_2025_1t_snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
 
 
 @pytest.fixture(scope="module")
-def _m200_2024_snapshot():
+def _m200_2024_snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("200", filing_year=2024, period="0A")
 
 
-def test_runtime_accepts_canonical_casilla_id_for_semantic_input(_m303_2025_1t_snapshot) -> None:
+def test_runtime_accepts_canonical_casilla_id_for_semantic_input(_m303_2025_1t_snapshot: RegistrySnapshot) -> None:
     snapshot = _m303_2025_1t_snapshot
     casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M303_SEMANTIC_INPUT_CASILLA)
     assert casilla.number != casilla.id
@@ -62,7 +63,7 @@ def test_runtime_accepts_canonical_casilla_id_for_semantic_input(_m303_2025_1t_s
     assert result.values[casilla.id] == Decimal("1")
 
 
-def test_runtime_rejects_casilla_number_for_semantic_input(_m303_2025_1t_snapshot) -> None:
+def test_runtime_rejects_casilla_number_for_semantic_input(_m303_2025_1t_snapshot: RegistrySnapshot) -> None:
     snapshot = _m303_2025_1t_snapshot
     casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M303_SEMANTIC_INPUT_CASILLA)
     assert casilla.number != casilla.id
@@ -79,7 +80,7 @@ def test_runtime_rejects_casilla_number_for_semantic_input(_m303_2025_1t_snapsho
 
 
 def test_noncanonical_reference_targets_include_export_refs_without_accepting_them_as_ids(
-    _m303_2025_1t_snapshot,
+    _m303_2025_1t_snapshot: RegistrySnapshot,
 ) -> None:
     snapshot = _m303_2025_1t_snapshot
     casilla = next(
@@ -90,7 +91,9 @@ def test_noncanonical_reference_targets_include_export_refs_without_accepting_th
     assert casilla_noncanonical_reference_targets(snapshot.revision, export_ref) == (casilla.id,)
 
 
-def test_noncanonical_reference_targets_expose_ambiguous_reused_printed_number(_m200_2024_snapshot) -> None:
+def test_noncanonical_reference_targets_expose_ambiguous_reused_printed_number(
+    _m200_2024_snapshot: RegistrySnapshot,
+) -> None:
     snapshot = _m200_2024_snapshot
     ecpn_casilla = next(
         casilla for casilla in snapshot.revision.casillas if casilla.id == _M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA
