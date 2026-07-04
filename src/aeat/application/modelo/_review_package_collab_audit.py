@@ -35,6 +35,22 @@ identifiers (recipient id, public-key fingerprint, revision id, bucket id)
 and small disposition flags (``review_only``), matching the existing
 bucket-event payload convention (short strings, no credentials).
 
+This module ALSO closes the "countersign-attach-to-journal" item left open on
+issue #421: :func:`emit_collab_feedback_countersign_attached_event` records,
+on the ORIGINATOR's own bucket, that a recipient's counter-signed receipt
+(recovered from an imported
+:class:`~aeat.application.modelo.FeedbackPackage`, see
+:mod:`aeat.application.modelo._review_package_feedback`) was verified and
+attached to the originator's approval journal -- the mirror image of
+:func:`emit_collab_package_counter_signed_event`, which records the
+counter-signer's OWN act of signing on their bucket. Reuses the same
+``COLLAB_PACKAGE_COUNTER_SIGNED`` event type (no new
+:class:`~aeat.domain.buckets.BucketEventType` member): the enum member names
+the FACT that a counter-signature exists for a package, not which party's
+bucket recorded it, exactly as ``COLLAB_PACKAGE_DECRYPTED`` already serves
+both the forward (accountant decrypts the original package) and reverse (the
+originator decrypts a feedback package) directions.
+
 See Also:
     :mod:`aeat.application.modelo._review_package_recipient_registry`
         Owns the recipient-fingerprint registry this module's
@@ -48,6 +64,10 @@ See Also:
     :mod:`aeat.application.modelo._review_package_counter_sign`
         Owns the counter-sign primitive this module's counter-signed event
         describes.
+    :mod:`aeat.application.modelo._review_package_feedback`
+        Owns the feedback-package round trip whose imported counter-signed
+        receipt :func:`emit_collab_feedback_countersign_attached_event`
+        attaches to the originator's journal.
 """
 
 from __future__ import annotations
@@ -64,6 +84,7 @@ from ._revision_persistence import emit_bucket_event
 if TYPE_CHECKING:
     from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol
     from ._review_package_counter_sign import CounterSignedReceipt
+    from ._review_package_feedback import ImportedFeedback
     from ._review_package_recipient_encryption import RecipientEncryptedPackage
 
 
@@ -300,7 +321,73 @@ def emit_collab_package_counter_signed_event(
     )
 
 
+def emit_collab_feedback_countersign_attached_event(
+    imported: ImportedFeedback,
+    *,
+    bucket_id: str,
+    repository: BucketEventHistoryRepositoryProtocol,
+    actor: str = "operator",
+    occurred_at: datetime | None = None,
+) -> BucketEvent:
+    """Append a ``COLLAB_PACKAGE_COUNTER_SIGNED`` event to the ORIGINATOR's journal.
+
+    Recorded on the originator's OWN bucket after
+    :func:`~aeat.application.modelo.import_feedback_package` has already
+    verified the imported feedback's
+    :class:`~aeat.application.modelo.CounterSignedReceipt` (i.e.
+    ``imported.counter_signature_verified`` is ``True``): the countersigned
+    approval is now attached to the originator's approval journal, closing
+    the collaboration round trip. Reuses ``COLLAB_PACKAGE_COUNTER_SIGNED``
+    (see module docstring) rather than minting a new event type -- the same
+    fact, recorded from the other party's bucket.
+
+    Args:
+        imported: The :class:`~aeat.application.modelo.ImportedFeedback`
+            returned by
+            :func:`~aeat.application.modelo.import_feedback_package`. Must
+            carry a verified counter-signed receipt
+            (``counter_signature_verified is True``); calling this with
+            unverified or absent feedback is a caller error, not a runtime
+            state this function silently tolerates.
+        bucket_id: The originator's own bucket.
+        repository: The bucket's
+            :class:`~aeat.domain.buckets.BucketEventHistoryRepositoryProtocol`.
+        actor: Actor label.
+        occurred_at: Optional override for the event's ``occurred_at``
+            timestamp (tests only); defaults to the current UTC time.
+
+    Raises:
+        ValueError: If ``imported.feedback.counter_signed_receipt`` is
+            ``None`` or ``imported.counter_signature_verified`` is not
+            ``True`` -- attaching an unverified or absent countersignature
+            to the journal would misrepresent the collaboration record.
+    """
+    receipt = imported.feedback.counter_signed_receipt
+    if receipt is None or imported.counter_signature_verified is not True:
+        raise ValueError(
+            "cannot attach an unverified or absent counter-signed receipt to the journal; "
+            "import_feedback_package must report counter_signature_verified=True first",
+        )
+    return emit_bucket_event(
+        repository=repository,
+        bucket_id=bucket_id,
+        event_type=BucketEventType.COLLAB_PACKAGE_COUNTER_SIGNED,
+        occurred_at=occurred_at or _utc_now(),
+        actor=actor,
+        object_type=BucketEventObjectType.RECIPIENT,
+        object_id=receipt.counter_public_key_hex,
+        payload={
+            "counter_public_key_hex": receipt.counter_public_key_hex,
+            "operator_signature_hex": receipt.original_signature.signature_hex,
+            "has_note": "true" if receipt.note else "false",
+            "calculation_revision_id": imported.feedback.calculation_revision_id,
+            "work_unit_id": imported.feedback.work_unit_id,
+        },
+    )
+
+
 __all__ = [
+    "emit_collab_feedback_countersign_attached_event",
     "emit_collab_package_counter_signed_event",
     "emit_collab_package_decrypted_event",
     "emit_collab_package_encrypted_event",
