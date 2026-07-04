@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 # Cowork install proof — aeat plugin
 
 Verification record for the claude-ecosystem-packaging campaign

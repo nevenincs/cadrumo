@@ -40,12 +40,18 @@ class TipoRentaIrnr(StrEnum):
 
     Members:
         GENERAL: Art. 25.1.a general non-resident rate (24%).
+
         UE_RESIDENTE: Art. 25.1.a reduced rate for EU/EEA residents (19%).
+
         PENSION: Art. 25.1.b progressive pension tariff (bracket table).
+
         DIVIDEND: Art. 25.1.f.1º dividends / other income from participation
             in an entity's own funds (19%).
+
         INTEREST: Art. 25.1.f.2º interest / capital-cession income (19%).
+
         GANANCIA_PATRIMONIAL: Art. 25.1.f.3º capital gains (19%).
+
         INMOBILIARIA: Art. 13.1.h imputed urban real-estate income (24% base).
     """
 
@@ -67,13 +73,16 @@ class ConvenioOverrideKind(StrEnum):
 
     Members:
         FLAT: The treaty rate REPLACES the domestic baseline outright.
+
         CEILING: The treaty caps the source-state rate ("may not exceed X%");
             the resolver applies ``min(domestic, treaty)`` so the "más favorable"
             outcome is computed rather than assumed.
+
         ALLOCATION_DOMESTIC_TARIFF: The treaty allocates taxation to Spain but
             fixes no rate; the amount is delegated to the domestic tariff (e.g.
             the Art. 25.1.b progressive pension tariff). Rows of this kind carry
             no ``rate``.
+
         EXEMPT: The source state may not tax the income; the resolver yields a
             zero rate. Rows of this kind carry no ``rate``.
     """
