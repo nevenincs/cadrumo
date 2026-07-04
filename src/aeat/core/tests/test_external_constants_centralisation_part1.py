@@ -422,5 +422,7 @@ def test_multiple_pagadores_reduced_limit_table_is_immutable() -> None:
     from ..external_constants import WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
 
     table = WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
-    with pytest.raises(TypeError):
-        table[2024] = Decimal("0")  # type: ignore[index]
+    # Immutability is the absence of a mutation method, not a raised exception
+    # from one: the real backing mappingproxy exposes no `__setitem__` at all,
+    # so item assignment has no dispatch target to reach.
+    assert not hasattr(table, "__setitem__")
