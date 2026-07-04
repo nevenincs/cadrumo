@@ -64,6 +64,12 @@ Major declarations:
   impersonation credential source
   (:attr:`core.GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION`),
   an alternative to the default OAuth Desktop flow above.
+* :class:`GoogleCredentialSourceSelection`,
+  :func:`save_credential_source_selection`, and
+  :func:`load_credential_source_selection` — per-profile persistence of
+  which :class:`core.GoogleCredentialSourceKind` a profile has chosen,
+  consumed by :func:`adapters.outbound.storage.build_google_credentials`
+  to dispatch between the OAuth-Desktop and impersonation sources.
 
 See Also:
     - :mod:`adapters.outbound.storage` for the Google Drive storage
@@ -108,6 +114,7 @@ from ._errors import (
 from ._impersonation import (
     GoogleAuthAdcUnavailableError,
     GoogleAuthImpersonationRefusedError,
+    GoogleCredentialSourceSelection,
     GoogleImpersonationConfig,
     describe_impersonation_target,
     resolve_impersonated_credentials,
@@ -126,10 +133,12 @@ from ._records import (
 from ._session_store import (
     delete_session,
     load_client,
+    load_credential_source_selection,
     load_drive_config,
     load_metadata,
     load_token,
     save_client,
+    save_credential_source_selection,
     save_drive_config,
     save_metadata,
     save_token,
@@ -161,6 +170,7 @@ __all__ = [
     "GoogleAuthScopeInsufficientError",
     "GoogleAuthUnsecuredModeRefusedError",
     "GoogleAuthValidationError",
+    "GoogleCredentialSourceSelection",
     "GoogleDriveFile",
     "GoogleImpersonationConfig",
     "GoogleSheetsRange",
@@ -177,6 +187,7 @@ __all__ = [
     "describe_impersonation_target",
     "list_drive_folder_documents",
     "load_client",
+    "load_credential_source_selection",
     "load_drive_config",
     "load_metadata",
     "load_token",
@@ -187,6 +198,7 @@ __all__ = [
     "resolve_impersonated_credentials",
     "run_login_flow",
     "save_client",
+    "save_credential_source_selection",
     "save_drive_config",
     "save_metadata",
     "save_token",

@@ -7,8 +7,10 @@ from pathlib import Path
 
 import pytest
 
+from .....core import GoogleCredentialSourceKind
 from .....tests.secure_sql import isolated_runtime_profile
 from .. import _session_store
+from .._impersonation import GoogleCredentialSourceSelection, GoogleImpersonationConfig
 from .._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -55,3 +57,71 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
         assert _session_store.load_metadata(profile) is None
         assert _session_store.load_client(profile) == client
         assert _session_store.load_drive_config(profile) == drive_config
+
+
+def test_credential_source_selection_defaults_to_none_when_never_persisted(tmp_path: Path) -> None:
+    """A profile that has never opted into impersonation has no persisted record.
+
+    The factory dispatch treats ``None`` as the OAuth-Desktop default, so a
+    missing record is a valid, expected state — never an error.
+    """
+    profile = "operator-no-selection"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-session-no-selection"):
+        assert _session_store.load_credential_source_selection(profile) is None
+
+
+def test_credential_source_selection_oauth_desktop_roundtrips(tmp_path: Path) -> None:
+    profile = "operator-oauth-selection"
+    selection = GoogleCredentialSourceSelection()
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-session-oauth-selection"):
+        _session_store.save_credential_source_selection(profile, selection)
+
+        reloaded = _session_store.load_credential_source_selection(profile)
+
+    assert reloaded == selection
+    assert reloaded is not None
+    assert reloaded.kind is GoogleCredentialSourceKind.OAUTH_DESKTOP
+    assert reloaded.impersonation is None
+
+
+def test_credential_source_selection_impersonation_roundtrips_without_a_secret(tmp_path: Path) -> None:
+    """The persisted impersonation selection carries only configuration, never a secret.
+
+    Unlike ``OAuthClient``/``OAuthToken`` (which persist a long-lived
+    ``client_secret``/``refresh_token``), the impersonation selection's
+    serialised payload holds only the target SA email and scopes — there is
+    no field here an operator or auditor should ever expect to be a secret,
+    because the access token is re-derived from ADC on every use.
+    """
+    profile = "operator-impersonation-selection"
+    config = GoogleImpersonationConfig(
+        target_principal="aeat-export@example-project.iam.gserviceaccount.com",
+        delegates=("delegate-a@example-project.iam.gserviceaccount.com",),
+        subject="taxpayer@example-workspace-domain.com",
+        lifetime_s=1800,
+    )
+    selection = GoogleCredentialSourceSelection(
+        kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
+        impersonation=config,
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-session-impersonation-selection"):
+        _session_store.save_credential_source_selection(profile, selection)
+
+        reloaded = _session_store.load_credential_source_selection(profile)
+
+    assert reloaded == selection
+    assert reloaded is not None
+    assert reloaded.kind is GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION
+    assert reloaded.impersonation == config
+    # No SA private key / access token field exists on the model at all —
+    # the only persisted fields are target_principal, target_scopes,
+    # delegates, subject, and lifetime_s (all non-secret configuration).
+    assert set(config.model_dump().keys()) == {
+        "target_principal",
+        "target_scopes",
+        "delegates",
+        "subject",
+        "lifetime_s",
+    }

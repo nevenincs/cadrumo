@@ -17,27 +17,32 @@ with one real token refresh so a misconfigured SA fails loudly at resolution
 time rather than deep inside a later Sheets write.
 
 Unlike :func:`adapters.outbound.storage.build_google_credentials` (the
-existing OAuth-Desktop path), this module persists NOTHING: ADC is
-discovered fresh from the host environment on every call
+existing OAuth-Desktop path), the resolved credential itself persists
+NOTHING: ADC is discovered fresh from the host environment on every call
 (``GOOGLE_APPLICATION_CREDENTIALS``, ``gcloud`` user credentials, or an
 attached workload identity), and the impersonated access token is held only
 in memory for the process lifetime, never written to secure storage or
-workflow state
-(``sensitive-financial-data-secure-storage-only``: there is no
-long-lived secret here to protect because none is stored).
+workflow state (``sensitive-financial-data-secure-storage-only``: there is
+no long-lived secret here to protect because none is stored).
+:class:`GoogleCredentialSourceSelection` persists only the non-secret
+CONFIGURATION (which kind a profile has chosen, and the target SA email /
+scopes) — never a credential.
 
-This module is a core-only slice: no CLI verb, no persisted per-profile
-selection, and no wiring into :func:`adapters.outbound.storage.get_storage_provider`
-exist yet. See ``.vault/adr/2026-07-04-google-sa-impersonation-adr.md``
-(``google-sa-impersonation`` ADR) for the accepted design and the explicitly
-deferred follow-up (GitHub issue #591 remainder).
+The CLI verb and locale strings for configuring this source are still
+deferred (see ``.vault/adr/2026-07-04-google-sa-impersonation-adr.md``,
+``google-sa-impersonation`` ADR, and GitHub issue #591 remainder); the
+per-profile persistence and :func:`adapters.outbound.storage.build_google_credentials`
+dispatch wiring described there are implemented by
+:class:`GoogleCredentialSourceSelection` and its session-store persistence
+functions, consumed by the factory.
 
 See Also:
     :class:`core.GoogleCredentialSourceKind`
         The closed taxonomy this module implements one member of.
     :func:`adapters.outbound.storage.build_google_credentials`
         The existing default (interactive OAuth Desktop) credential source
-        this module is an alternative to, never a replacement for.
+        this module is an alternative to, never a replacement for; also the
+        dispatch point that reads :class:`GoogleCredentialSourceSelection`.
     :data:`adapters.outbound.google.REQUIRED_SCOPES`
         The OAuth-Desktop scope bundle; this module's default
         ``target_scopes`` excludes the identity scopes (``openid``,
@@ -48,9 +53,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, GoogleCredentialSourceKind
 from ._errors import GoogleAuthError
 from ._records import DRIVE_FILE_SCOPE, SHEETS_SCOPE
 
@@ -137,6 +142,44 @@ class GoogleImpersonationConfig(BaseModel):
             if not delegate.strip() or "@" not in delegate:
                 raise ValueError(f"each delegate must be a service-account email; got {delegate!r}")
         return value
+
+
+class GoogleCredentialSourceSelection(BaseModel):
+    """Per-profile persisted choice of :class:`core.GoogleCredentialSourceKind`.
+
+    Persisted via
+    :func:`adapters.outbound.google.save_credential_source_selection` /
+    :func:`adapters.outbound.google.load_credential_source_selection` and
+    read by
+    :func:`adapters.outbound.storage.build_google_credentials` to decide
+    whether to hydrate the default per-profile OAuth-Desktop credential or
+    dispatch to :func:`resolve_impersonated_credentials`.
+
+    Carries no long-lived secret: ``kind = OAUTH_DESKTOP`` needs no
+    additional field (the existing
+    :class:`adapters.outbound.google.OAuthClient` /
+    :class:`adapters.outbound.google.OAuthToken` records already hold that
+    path's credential); ``kind = SERVICE_ACCOUNT_IMPERSONATION`` requires
+    ``impersonation`` to be populated with the target SA email and scopes,
+    which are configuration, not a secret — the actual access token is
+    re-derived from Application Default Credentials on every use and is
+    never written to secure storage.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    kind: GoogleCredentialSourceKind = GoogleCredentialSourceKind.OAUTH_DESKTOP
+    impersonation: GoogleImpersonationConfig | None = None
+
+    @model_validator(mode="after")
+    def _impersonation_config_required_for_impersonation_kind(self) -> GoogleCredentialSourceSelection:
+        if self.kind is GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION and self.impersonation is None:
+            raise ValueError(
+                "impersonation must be set when kind is service_account_impersonation",
+            )
+        if self.kind is GoogleCredentialSourceKind.OAUTH_DESKTOP and self.impersonation is not None:
+            raise ValueError("impersonation must be unset when kind is oauth_desktop")
+        return self
 
 
 def describe_impersonation_target(config: GoogleImpersonationConfig) -> str:
@@ -227,6 +270,7 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
 __all__ = [
     "GoogleAuthAdcUnavailableError",
     "GoogleAuthImpersonationRefusedError",
+    "GoogleCredentialSourceSelection",
     "GoogleImpersonationConfig",
     "describe_impersonation_target",
     "resolve_impersonated_credentials",

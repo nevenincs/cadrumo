@@ -698,6 +698,16 @@ GOOGLE_DRIVE_CONFIG_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
+GOOGLE_CREDENTIAL_SOURCE_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="google_credential_source",
+    namespace="aeat.google.credential.source",
+    owner="aeat.adapters.outbound.google",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{profile}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+)
 LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_cache",
     namespace="aeat.outbound.llm.cache",
@@ -1065,6 +1075,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         GOOGLE_OAUTH_TOKEN_NAMESPACE,
         GOOGLE_OAUTH_METADATA_NAMESPACE,
         GOOGLE_DRIVE_CONFIG_NAMESPACE,
+        GOOGLE_CREDENTIAL_SOURCE_NAMESPACE,
         LLM_CACHE_NAMESPACE,
         LLM_USAGE_NAMESPACE,
         LLM_RUN_TELEMETRY_NAMESPACE,
@@ -1100,6 +1111,7 @@ __all__ = [
     "CALCULATION_OBSERVATIONS_NAMESPACE",
     "CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE",
     "DOMAIN_NAMESPACE_DEFINITIONS",
+    "GOOGLE_CREDENTIAL_SOURCE_NAMESPACE",
     "GOOGLE_DRIVE_CONFIG_NAMESPACE",
     "GOOGLE_OAUTH_CLIENT_NAMESPACE",
     "GOOGLE_OAUTH_METADATA_NAMESPACE",
