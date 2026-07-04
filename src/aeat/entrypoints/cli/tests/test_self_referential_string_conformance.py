@@ -37,13 +37,12 @@ the tree is disproportionate here - many choice sets are validated late against
 dynamic registry data - so this gate pins the explicitly-registered surfaces
 that the audit named plus any future surface enrolled in
 :data:`_ENUM_CHOICE_SURFACES`. Each surface declares the command path, the
-option flag, the advertised member set, and the predicate that decides whether
-the handler accepts a given member; the gate asserts advertised == accepted.
+option flag, the advertised member set, and the independently grounded
+handler-accepted member set; the gate asserts advertised == accepted.
 
 To enrol a new enum-choice surface: append an :class:`_EnumChoiceSurface` row to
 :data:`_ENUM_CHOICE_SURFACES` naming the command path, the option, the advertised
-members, and an ``accepts`` predicate grounded in the handler's real acceptance
-rule (not a copy of the advertised set - that would be tautological).
+members, and the handler's real accepted set.
 
 Real-behavior only: the gate imports the real ``aeat`` app object, walks the
 materialized click tree, and reads the real error registry and locale catalogue.
@@ -54,7 +53,7 @@ handler-refused advertised member.
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from typing import Protocol, TypeGuard
 
@@ -265,14 +264,14 @@ class _EnumChoiceSurface:
     Attributes:
         label: Human-readable identifier (``command --option``) for failures.
         advertised: The set of member values the CLI option advertises.
-        accepts: Predicate returning whether the handler accepts a member value.
-            Grounded in the handler's real acceptance rule so the assertion is
-            not a tautology against ``advertised``.
+        accepted: Member values accepted by the handler, grounded in the
+            handler's real acceptance rule so the assertion is not a tautology
+            against ``advertised``.
     """
 
     label: str
     advertised: frozenset[str]
-    accepts: Callable[[str], bool]
+    accepted: frozenset[str]
 
 
 def _advertised_option_choices(verb_path: tuple[str, ...], option_flag: str) -> frozenset[str]:
@@ -351,12 +350,12 @@ def _enum_choice_surfaces() -> tuple[_EnumChoiceSurface, ...]:
         _EnumChoiceSurface(
             label="aeat app ledger doclink --source",
             advertised=_doclink_source_advertised(),
-            accepts=lambda member: member in _DOCLINK_ACCEPTED_SOURCES,
+            accepted=_DOCLINK_ACCEPTED_SOURCES,
         ),
         _EnumChoiceSurface(
             label="aeat app modelo work verify --select",
             advertised=_verify_select_advertised(),
-            accepts=lambda member: member in _VERIFY_SELECT_ACCEPTED,
+            accepted=_VERIFY_SELECT_ACCEPTED,
         ),
     )
 
@@ -364,7 +363,7 @@ def _enum_choice_surfaces() -> tuple[_EnumChoiceSurface, ...]:
 @pytest.mark.parametrize("surface", _enum_choice_surfaces(), ids=lambda s: s.label)
 def test_advertised_enum_choices_are_handler_accepted(surface: _EnumChoiceSurface) -> None:
     """Every advertised enum member is accepted by its handler (no over-advertisement)."""
-    refused = sorted(member for member in surface.advertised if not surface.accepts(member))
+    refused = sorted(surface.advertised - surface.accepted)
     assert not refused, (
         f"{surface.label} advertises members its handler refuses: {refused}. "
         f"Narrow the advertised choice set to the handler-accepted set, or widen the handler."
@@ -379,12 +378,6 @@ def test_handler_accepted_enum_members_are_advertised(surface: _EnumChoiceSurfac
     member the handler silently accepts but the choice set hides, the sibling
     catches a member advertised but refused.
     """
-    accepted = sorted(member for member in surface.advertised if surface.accepts(member))
-    advertised = sorted(surface.advertised)
-    # The accepted set must be expressible from the advertised set; a handler
-    # that accepts a member outside the advertised universe is a separate defect
-    # the per-surface ``accepts`` predicate cannot see, so we assert the
-    # intersection is non-empty (the surface is live) and that no advertised
-    # member is silently dropped from the operator's choices.
-    assert accepted, f"{surface.label} advertises no handler-accepted member; the surface is dead"
-    assert set(accepted) <= set(advertised)
+    assert surface.accepted, f"{surface.label} declares no handler-accepted members; the surface is dead"
+    hidden = sorted(surface.accepted - surface.advertised)
+    assert not hidden, f"{surface.label} accepts members hidden from the choice set: {hidden}"
