@@ -44,6 +44,7 @@ import subprocess
 import tomllib
 import zipfile
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -98,6 +99,7 @@ class _BuiltWheel:
     size_bytes: int
 
 
+@cache
 def _tracked_corpus_binaries() -> set[str]:
     """Return git-tracked corpus source-binary paths relative to the repo root."""
     result = subprocess.run(
@@ -185,20 +187,21 @@ def _corpus_members(built: _BuiltWheel) -> set[str]:
     return {member for member in built.members if member.startswith(_COMPANION_CORPUS_PREFIX)}
 
 
-@pytest.mark.parametrize("companion", _COMPANIONS, ids=lambda c: c.dist_name)
-def test_companion_packages_exactly_its_owned_subtree(
-    built_wheels: dict[str, _BuiltWheel], companion: _Companion
-) -> None:
+def test_companion_packages_exactly_its_owned_subtree(built_wheels: dict[str, _BuiltWheel]) -> None:
     """Each companion carries every tracked binary under its owned subtree, and no other."""
-    expected = _expected_members(companion)
-    assert expected, f"{companion.dist_name} owns no tracked corpus binaries; the split contract has regressed"
-    shipped = _corpus_members(built_wheels[companion.dist_name])
-    missing = sorted(expected - shipped)
-    extra = sorted(shipped - expected)
-    assert not missing, f"{companion.dist_name} is missing {len(missing)} owned binaries; first ten: {missing[:10]!r}"
-    assert not extra, (
-        f"{companion.dist_name} ships {len(extra)} corpus members outside its owned subtree; first ten: {extra[:10]!r}"
-    )
+    for companion in _COMPANIONS:
+        expected = _expected_members(companion)
+        assert expected, f"{companion.dist_name} owns no tracked corpus binaries; the split contract has regressed"
+        shipped = _corpus_members(built_wheels[companion.dist_name])
+        missing = sorted(expected - shipped)
+        extra = sorted(shipped - expected)
+        assert not missing, (
+            f"{companion.dist_name} is missing {len(missing)} owned binaries; first ten: {missing[:10]!r}"
+        )
+        assert not extra, (
+            f"{companion.dist_name} ships {len(extra)} corpus members outside its owned subtree; first ten: "
+            f"{extra[:10]!r}"
+        )
 
 
 def test_companions_are_disjoint_and_exhaustive(built_wheels: dict[str, _BuiltWheel]) -> None:
@@ -221,52 +224,52 @@ def test_companions_are_disjoint_and_exhaustive(built_wheels: dict[str, _BuiltWh
     )
 
 
-@pytest.mark.parametrize("companion", _COMPANIONS, ids=lambda c: c.dist_name)
-def test_companion_ships_no_init_or_derived_member(built_wheels: dict[str, _BuiltWheel], companion: _Companion) -> None:
+def test_companion_ships_no_init_or_derived_member(built_wheels: dict[str, _BuiltWheel]) -> None:
     """No ``aeat_data/__init__.py`` (namespace invariant), no derived surfaces, nothing foreign."""
-    members = built_wheels[companion.dist_name].members
-    assert "aeat_data/__init__.py" not in members, (
-        f"{companion.dist_name} ships aeat_data/__init__.py; both companions must be PEP 420 namespace "
-        "portions or a joint install collides on that path"
-    )
-    foreign = sorted(
-        member for member in members if not member.startswith(_COMPANION_CORPUS_PREFIX) and ".dist-info/" not in member
-    )
-    assert not foreign, (
-        f"{companion.dist_name} ships {len(foreign)} member(s) outside the corpus binary set: {foreign[:10]!r}"
-    )
-    derived = sorted(
-        member
-        for member in members
-        if member.startswith(_COMPANION_CORPUS_PREFIX) and not member.lower().endswith(_CORPUS_BINARY_SUFFIXES)
-    )
-    assert not derived, (
-        f"{companion.dist_name} ships {len(derived)} corpus DERIVED member(s) that belong in the aeat wheel: "
-        f"{derived[:10]!r}"
-    )
+    for companion in _COMPANIONS:
+        members = built_wheels[companion.dist_name].members
+        assert "aeat_data/__init__.py" not in members, (
+            f"{companion.dist_name} ships aeat_data/__init__.py; both companions must be PEP 420 namespace "
+            "portions or a joint install collides on that path"
+        )
+        foreign = sorted(
+            member
+            for member in members
+            if not member.startswith(_COMPANION_CORPUS_PREFIX) and ".dist-info/" not in member
+        )
+        assert not foreign, (
+            f"{companion.dist_name} ships {len(foreign)} member(s) outside the corpus binary set: {foreign[:10]!r}"
+        )
+        derived = sorted(
+            member
+            for member in members
+            if member.startswith(_COMPANION_CORPUS_PREFIX) and not member.lower().endswith(_CORPUS_BINARY_SUFFIXES)
+        )
+        assert not derived, (
+            f"{companion.dist_name} ships {len(derived)} corpus DERIVED member(s) that belong in the aeat wheel: "
+            f"{derived[:10]!r}"
+        )
 
 
-@pytest.mark.parametrize("companion", _COMPANIONS, ids=lambda c: c.dist_name)
-def test_companion_version_matches_root_distribution(companion: _Companion) -> None:
+def test_companion_version_matches_root_distribution() -> None:
     """Each companion version is locked to the root aeat distribution version."""
-    companion_version = _pyproject_version(_PACKAGING_ROOT / companion.project_dir / "pyproject.toml")
     root_version = _pyproject_version(_REPO_ROOT / "pyproject.toml")
-    assert companion_version == root_version, (
-        f"{companion.dist_name} version {companion_version!r} does not match the root aeat version "
-        f"{root_version!r}; each companion must ship version-locked to the runtime wheel that resolves it — "
-        "bump all together"
-    )
+    for companion in _COMPANIONS:
+        companion_version = _pyproject_version(_PACKAGING_ROOT / companion.project_dir / "pyproject.toml")
+        assert companion_version == root_version, (
+            f"{companion.dist_name} version {companion_version!r} does not match the root aeat version "
+            f"{root_version!r}; each companion must ship version-locked to the runtime wheel that resolves it — "
+            "bump all together"
+        )
 
 
-@pytest.mark.parametrize("companion", _COMPANIONS, ids=lambda c: c.dist_name)
-def test_companion_wheel_is_under_the_pypi_file_cap(
-    built_wheels: dict[str, _BuiltWheel], companion: _Companion
-) -> None:
+def test_companion_wheel_is_under_the_pypi_file_cap(built_wheels: dict[str, _BuiltWheel]) -> None:
     """Each companion wheel stays under PyPI's 100 MB per-file cap — the reason for the split."""
-    size_bytes = built_wheels[companion.dist_name].size_bytes
-    size_mb = size_bytes / 1_000_000
-    assert size_bytes < _PYPI_FILE_CAP_BYTES, (
-        f"{companion.dist_name} wheel is {size_mb:.1f} MB, at or over PyPI's 100 MB per-file cap; the split "
-        "exists precisely to keep each companion sub-cap without a size grant — the corpus seam partition must "
-        "be rebalanced or a third companion carved"
-    )
+    for companion in _COMPANIONS:
+        size_bytes = built_wheels[companion.dist_name].size_bytes
+        size_mb = size_bytes / 1_000_000
+        assert size_bytes < _PYPI_FILE_CAP_BYTES, (
+            f"{companion.dist_name} wheel is {size_mb:.1f} MB, at or over PyPI's 100 MB per-file cap; the split "
+            "exists precisely to keep each companion sub-cap without a size grant — the corpus seam partition must "
+            "be rebalanced or a third companion carved"
+        )
