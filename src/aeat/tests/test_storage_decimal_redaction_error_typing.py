@@ -10,7 +10,7 @@ Verifies:
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TypedDict, cast
 
 import pytest
 from sqlalchemy.engine import Dialect
@@ -190,6 +190,13 @@ def test_censo_sync_error_typing() -> None:
 # ---------------------------------------------------------------------------
 
 
+class _PortalEntryOverrides(TypedDict, total=False):
+    """The two ``build_entry`` keywords these malformed-shape cases vary."""
+
+    url: str
+    path: str
+
+
 def test_portal_validation_error_for_invalid_entry_shapes() -> None:
     """build_entry raises PortalValidationError for mutually exclusive or malformed URL fields."""
     from ..domain.portals import (
@@ -202,7 +209,7 @@ def test_portal_validation_error_for_invalid_entry_shapes() -> None:
         build_entry,
     )
 
-    cases = (
+    cases: tuple[tuple[str, _PortalEntryOverrides], ...] = (
         ("url-and-path", {"url": "https://example.com", "path": "/also-present"}),
         ("path-without-leading-slash", {"path": "no-leading-slash"}),
     )
