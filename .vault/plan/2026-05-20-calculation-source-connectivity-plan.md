@@ -99,7 +99,7 @@ Make deductible expense context region-aware only where the data model and categ
 - [x] `W03.P06.S33` - Add region field to Renta deductibility context when category profiles require it; `src/aeat/domain/renta/_ledger_expenses.py`.
 - [x] `W03.P06.S34` - Extend category profile lookup to accept filing year and CCAA key; `src/aeat/core/resources/_repos/category_profiles.py`.
 - [x] `W03.P06.S35` - Represent region scoped category profiles in registry resources; `src/aeat/_data/registry/aeat/categories/profiles`.
-- [ ] `W03.P06.S36` - Derive Renta source region from TaxResidenceProfile CCAA; `src/aeat/application/aggregation/_renta_ledger.py`.
+- [x] `W03.P06.S36` - Derive Renta source region from TaxResidenceProfile CCAA; `src/aeat/application/aggregation/_renta_ledger.py`.
 - [x] `W03.P06.S37` - Test non regional category profiles preserve existing Renta results; `src/aeat/application/aggregation/test_renta_ledger.py`.
 - [x] `W03.P06.S38` - Test region scoped category profiles select by profile CCAA; `src/aeat/application/aggregation/test_renta_ledger_region.py`.
 

@@ -17,6 +17,7 @@ related:
   - '[[2026-05-20-calculation-source-connectivity-W03-P06-S33]]'
   - '[[2026-05-20-calculation-source-connectivity-W03-P06-S34]]'
   - '[[2026-05-20-calculation-source-connectivity-W03-P06-S35]]'
+  - '[[2026-05-20-calculation-source-connectivity-W03-P06-S36]]'
   - '[[2026-05-20-calculation-source-connectivity-W03-P06-S37]]'
   - '[[2026-05-20-calculation-source-connectivity-W03-P06-S38]]'
   - '[[2026-05-20-calculation-source-connectivity-W03-P07-S39]]'
@@ -97,6 +98,7 @@ Auto-generated index of all documents tagged with `#calculation-source-connectiv
 - `2026-05-20-calculation-source-connectivity-W03-P06-S33` - Add region field to Renta deductibility context when category profiles require it
 - `2026-05-20-calculation-source-connectivity-W03-P06-S34` - Extend category profile lookup to accept filing year and CCAA key
 - `2026-05-20-calculation-source-connectivity-W03-P06-S35` - Represent region scoped category profiles in registry resources
+- `2026-05-20-calculation-source-connectivity-W03-P06-S36` - Derive Renta source region from TaxResidenceProfile CCAA
 - `2026-05-20-calculation-source-connectivity-W03-P06-S37` - Test non regional category profiles preserve existing Renta results
 - `2026-05-20-calculation-source-connectivity-W03-P06-S38` - Test region scoped category profiles select by profile CCAA
 - `2026-05-20-calculation-source-connectivity-W03-P07-S39` - Define fincas calculation source readiness diagnostics
