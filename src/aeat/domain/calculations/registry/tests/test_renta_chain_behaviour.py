@@ -52,6 +52,7 @@ _C0463 = _casilla_id("0463")
 _C0466 = _casilla_id("0466")
 _C0467 = _casilla_id("0467")
 _C0468 = _casilla_id("0468")
+_C0499 = _casilla_id("0499")
 _C0500 = _casilla_id("0500")
 _C0501 = _casilla_id("0501")
 _C0505 = _casilla_id("0505")
@@ -633,6 +634,97 @@ def test_art52_tiered_dependencia_uses_separate_5000_ceiling() -> None:
             # by that cap since it belongs to a different pool.
             _expected_output(target_casilla_id=_C0468, value=Decimal("6000.00")),
             _expected_output(target_casilla_id=_C0500, value=Decimal("34000.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    assert_registry_scenario_matches(report)
+
+
+def test_art52_tiered_autonomo_only_aportacion_capped_at_1500_plus_4250() -> None:
+    """0468 tiered formula: a purely-autónomo aportación (casilla 0499) unlocks
+
+    only the EUR 4.250 art. 52.1.2º increment, NOT the EUR 8.500 art. 52.1.1º
+    increment — the two sub-tiers are grounded on distinct conditions and are
+    not interchangeable. A 0499-only filer with no plan-de-empleo/contribución
+    empresarial backing (0426/0427/0438 = 0) is bound at EUR 1.500 + EUR 4.250
+    = EUR 5.750, not the combined EUR 10.000 (1.500 + 8.500) a formula that
+    pools 0499 with the 1º-eligible casillas would silently grant.
+
+    Oracle derivation (art. 52.1 LIRPF, verbatim: "2.º En 4.250 euros
+    anuales, siempre que tal incremento provenga de... aportaciones...
+    realizadas por trabajadores por cuenta propia o autónomos"; 1.º is
+    conditioned on "contribuciones empresariales, o... aportaciones del
+    trabajador al mismo instrumento de previsión social", which 0499 is not):
+      trabajo rendimientos (0003) = 40,000 → 0019 (otros gastos, art. 19.2.f)
+        = min(2000, 40000) = 2,000 → 0432 = 40,000 - 2,000 = 38,000
+      30% cap = 0.30 * 38,000 = 11,400 (not binding)
+      autónomo aportación (0499) = 6,000 → 0467 = 6,000 (raw sum, unchanged)
+      1º backing (0426+0427+0438) = 0 → 1º increment = min(0, 8500) = 0
+      2º backing (0499) = 6,000 → 2º increment = min(6000, 4250) = 4,250
+      combined increments = min(0 + 4250, 8500) = 4,250
+      pool cap = 1,500 + 4,250 = 5,750
+      0468 = min(11400, min(6000, 5750)) = 5,750   (bound at 1.500+4.250, not
+        the combined EUR 10.000 a uniform employer-linked pool would grant)
+      0500 = 38,000 - 5,750 = 32,250
+    """
+    scenario = _scenario_2025(
+        "art52-tiered-autonomo-only-capped-1500-plus-4250",
+        overrides={
+            _C0003: Decimal("40000.00"),  # trabajo → nets to 0432 = 38,000 after otros gastos
+            _C0499: Decimal("6000.00"),  # purely-autónomo aportación, no 1º-eligible backing
+        },
+        expected=(
+            _expected_output(target_casilla_id=_C0467, value=Decimal("6000.00")),
+            # Bound by 1.500 (general) + 4.250 (art. 52.1.2º autónomo
+            # increment), NOT the combined EUR 10.000 (1.500 + 8.500) a
+            # formula pooling 0499 with 0426/0427/0438 would silently grant.
+            _expected_output(target_casilla_id=_C0468, value=Decimal("5750.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("32250.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    assert_registry_scenario_matches(report)
+
+
+def test_art52_tiered_employer_and_autonomo_increments_jointly_recapped_at_8500() -> None:
+    """0468 tiered formula: the art. 52.1.1º (EUR 8.500) and 2º (EUR 4.250)
+
+    increments are additive but jointly re-capped at EUR 8.500 total — "en
+    todo caso, la cuantía máxima de reducción por aplicación de los
+    incrementos previstos en los números 1.º y 2.º anteriores será de 8.500
+    euros anuales". A filer with BOTH a large contribución empresarial (1º)
+    and an autónomo aportación (2º) does not get 8.500 + 4.250 = 12.750; the
+    joint increment stays capped at 8.500.
+
+    Oracle derivation (art. 52.1 LIRPF, final sentence of the increment
+    schedule, verbatim above):
+      trabajo rendimientos (0003) = 120,000 → 0019 (otros gastos, art. 19.2.f)
+        = min(2000, 120000) = 2,000 → 0432 = 120,000 - 2,000 = 118,000
+      30% cap = 0.30 * 118,000 = 35,400 (not binding)
+      contribución empresarial (0427) = 7,000; autónomo aportación (0499) = 3,000
+      0467 = 7,000 + 3,000 = 10,000 (raw sum, unchanged)
+      1º increment = min(7000, 8500) = 7,000
+      2º increment = min(3000, 4250) = 3,000
+      combined increments = min(7000 + 3000, 8500) = 8,500  (re-capped, not 10,000)
+      pool cap = 1,500 + 8,500 = 10,000
+      0468 = min(35400, min(10000, 10000)) = 10,000
+      0500 = 118,000 - 10,000 = 108,000
+    """
+    scenario = _scenario_2025(
+        "art52-tiered-employer-and-autonomo-jointly-recapped-8500",
+        overrides={
+            _C0003: Decimal("120000.00"),  # trabajo → nets to 0432 = 118,000 after otros gastos
+            _C0427: Decimal("7000.00"),  # contribución empresarial, unlocks the 1º increment
+            _C0499: Decimal("3000.00"),  # autónomo aportación, unlocks the 2º increment
+        },
+        expected=(
+            _expected_output(target_casilla_id=_C0467, value=Decimal("10000.00")),
+            # 1º (7,000) + 2º (3,000) = 10,000 would exceed EUR 8.500 if
+            # uncapped; the joint re-cap binds the increments at 8,500, so
+            # the pool cap is 1,500 + 8,500 = 10,000 and the full aportación
+            # reduces (it happens to equal the pool cap exactly here).
+            _expected_output(target_casilla_id=_C0468, value=Decimal("10000.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("108000.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())

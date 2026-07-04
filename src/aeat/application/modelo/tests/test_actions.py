@@ -102,6 +102,7 @@ _ART20_REDUCCION_CASILLA: CasillaId = _casilla_id("0023")
 _ART52_REDUCCION_CASILLA: CasillaId = _casilla_id("0468")
 _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: CasillaId = _casilla_id("0426")
 _ART52_EMPRESARIAL_CASILLA: CasillaId = _casilla_id("0427")
+_ART52_AUTONOMOS_EMPRESARIOS_CASILLA: CasillaId = _casilla_id("0499")
 _DT12_ANTIQUITY_REDUCCION_CASILLA: CasillaId = _casilla_id("0011")
 _M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
 _M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
@@ -190,6 +191,10 @@ def _art52_revision() -> ModeloRevision:
             _test_casilla_definition(
                 _ART52_EMPRESARIAL_CASILLA,
                 semantic_role="irpf_red_prevision_social_contribuciones_empresariales_excepto_scd",
+            ),
+            _test_casilla_definition(
+                _ART52_AUTONOMOS_EMPRESARIOS_CASILLA,
+                semantic_role="irpf_red_prevision_social_aportaciones_autonomos_empresarios",
             ),
         ),
     )
@@ -554,6 +559,7 @@ def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit() ->
         _ART52_REDUCCION_CASILLA: Decimal("3000"),
         _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("0"),
         _ART52_EMPRESARIAL_CASILLA: Decimal("0"),
+        _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
     }
 
     finding = _art52_reduccion_advisory_finding(revision, casilla_values)
@@ -583,6 +589,7 @@ def test_art52_reduccion_advisory_silent_when_employer_backed() -> None:
         _ART52_REDUCCION_CASILLA: Decimal("3000"),
         _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("0"),
         _ART52_EMPRESARIAL_CASILLA: Decimal("2500"),
+        _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
     }
 
     assert _art52_reduccion_advisory_finding(revision, casilla_values) is None
@@ -595,6 +602,27 @@ def test_art52_reduccion_advisory_silent_when_plan_de_empleo_backed() -> None:
         _ART52_REDUCCION_CASILLA: Decimal("3000"),
         _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("2500"),
         _ART52_EMPRESARIAL_CASILLA: Decimal("0"),
+        _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
+    }
+
+    assert _art52_reduccion_advisory_finding(revision, casilla_values) is None
+
+
+def test_art52_reduccion_advisory_silent_when_autonomo_backed() -> None:
+    """No false positive when an autónomo/empresario-individual aportación (0499) backs it.
+
+    Casilla 0499 legitimately unlocks the art. 52.1.2º EUR 4.250 increment (not the
+    full art. 52.1.1º EUR 8.500 increment 0426/0427 unlock), so a reducción above
+    EUR 1.500 backed solely by 0499 must not be flagged — the advisory only detects
+    the no-backing-at-all case and leaves the exact 1º/2º split to the COMPUTED
+    formula on revisions where 0468 is not a bare MANUAL input.
+    """
+    revision = _art52_revision()
+    casilla_values = {
+        _ART52_REDUCCION_CASILLA: Decimal("3000"),
+        _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("0"),
+        _ART52_EMPRESARIAL_CASILLA: Decimal("0"),
+        _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("2500"),
     }
 
     assert _art52_reduccion_advisory_finding(revision, casilla_values) is None
@@ -607,6 +635,7 @@ def test_art52_reduccion_advisory_silent_when_under_sublimit() -> None:
         _ART52_REDUCCION_CASILLA: Decimal("1500"),
         _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("0"),
         _ART52_EMPRESARIAL_CASILLA: Decimal("0"),
+        _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
     }
 
     assert _art52_reduccion_advisory_finding(revision, casilla_values) is None
