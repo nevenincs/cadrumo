@@ -12,7 +12,7 @@ not pick it up as a test module — this file holds shared constants,
 not tests, and carries no ``pytestmark``.
 
 See Also:
-    :mod:`aeat.adapters.outbound.aeat.auth.certificate`
+    :mod:`adapters.outbound.aeat.auth.certificate`
         Production certificate models and loading helpers exercised by the
         certificate tests.
 """
