@@ -914,8 +914,17 @@ application:
         nulla. Ha a nem munkabol szarmazo egyeb jovedelme a mentes jovedelem nelkul
         nem haladja meg a 6500-at, akkor a 20. cikk LIRPF szerinti munkajovedelem-csokkentes
         alkalmazhato.'
-      art52_reduccion_individual_sublimit_next_action: 'Erositse meg, hogy a hozzajarulast munkavallaloi hozzajarulas fedezi-e foglalkoztatoi nyugdijtervhez (0426 rovat) vagy munkaltatoi hozzajarulas (0427 rovat); ha nem, az 52. cikk LIRPF szerinti csokkentes 1500 EUR-ra korlatozodik, nem a 10000 EUR-s egyuttes hatarra (ley-35-2006:art-52).'
-      art52_reduccion_individual_sublimit_possible: 'ART52_REDUCCION_INDIVIDUAL_SUBLIMIT_POSSIBLE: a(z) %{reduccion_id} rovat (szocialis elolatakarekossagi csokkentes) = %{reduccion_value} meghaladja az 52. cikk szerinti egyeni also hatart, %{sublimit} EUR-t, de nincs bejelentve sem munkavallaloi hozzajarulas foglalkoztatoi nyugdijtervhez, sem munkaltatoi hozzajarulas. Erositse meg, hogy a csokkentest munkaltatohoz kotott hozzajarulas fedezi, amely jogosult a 8500 EUR-s novelesre; kulonben a hatar %{sublimit}.'
+      art52_reduccion_individual_sublimit_next_action: Erositse meg, hogy a hozzajarulast
+        munkavallaloi hozzajarulas fedezi-e foglalkoztatoi nyugdijtervhez (0426 rovat)
+        vagy munkaltatoi hozzajarulas (0427 rovat); ha nem, az 52. cikk LIRPF szerinti
+        csokkentes 1500 EUR-ra korlatozodik, nem a 10000 EUR-s egyuttes hatarra (ley-35-2006:art-52).
+      art52_reduccion_individual_sublimit_possible: 'ART52_REDUCCION_INDIVIDUAL_SUBLIMIT_POSSIBLE:
+        a(z) %{reduccion_id} rovat (szocialis elolatakarekossagi csokkentes) = %{reduccion_value}
+        meghaladja az 52. cikk szerinti egyeni also hatart, %{sublimit} EUR-t, de
+        nincs bejelentve sem munkavallaloi hozzajarulas foglalkoztatoi nyugdijtervhez,
+        sem munkaltatoi hozzajarulas. Erositse meg, hogy a csokkentest munkaltatohoz
+        kotott hozzajarulas fedezi, amely jogosult a 8500 EUR-s novelesre; kulonben
+        a hatar %{sublimit}.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -947,8 +956,14 @@ application:
           app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf
           --evidence-id CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file
           WORK_UNIT_ID --file PATH` parancsot a mar rendelkezesre allo bizonyitekhoz.
-      dt12a_reduccion_antiquity_next_action: 'Erositse meg, hogy tobb mint ket ev telt el a nyugdijtervhez torteno elso befizetes ota, kiveve, ha az ellatas rokkantsag miatt jar (ley-35-2006:dt-12).'
-      dt12a_reduccion_antiquity_possible: 'DT_12A_REDUCCION_ANTIQUITY_POSSIBLE: a(z) %{reduccion_id} rovat (munkajovedelem-csokkentes) = %{reduccion_value} alkalmazott csokkentest tukroz. Ha ez egy DT 12a LIRPF szerinti nyugdijterv toke-visszavaltast tartalmaz, erositse meg, hogy tobb mint ket ev telt el az elso befizetes ota; a ket eves regisegi kovetelmeny csak rokkantsagi ellatasok eseten mentesul.'
+      dt12a_reduccion_antiquity_next_action: Erositse meg, hogy tobb mint ket ev telt
+        el a nyugdijtervhez torteno elso befizetes ota, kiveve, ha az ellatas rokkantsag
+        miatt jar (ley-35-2006:dt-12).
+      dt12a_reduccion_antiquity_possible: 'DT_12A_REDUCCION_ANTIQUITY_POSSIBLE: a(z)
+        %{reduccion_id} rovat (munkajovedelem-csokkentes) = %{reduccion_value} alkalmazott
+        csokkentest tukroz. Ha ez egy DT 12a LIRPF szerinti nyugdijterv toke-visszavaltast
+        tartalmaz, erositse meg, hogy tobb mint ket ev telt el az elso befizetes ota;
+        a ket eves regisegi kovetelmeny csak rokkantsagi ellatasok eseten mentesul.'
       dt12a_reduccion_next_action: Adja meg a --rescate-plan-pensiones-capital ÖSSZEG
         --rescate-plan-pensiones-aportaciones-pre-2007 ÖSSZEG --rescate-plan-pensiones-aportaciones-totales
         ÖSSZEG paramétereket a számításhoz a DT 12a csökkentés automatikus beillesztéséhez
@@ -1377,6 +1392,11 @@ cli:
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
+        extract_attachment_id_help: 'A kapcsolt melléklet azonosítója, amelyből az adatokat ki kell nyerni (a --evidence-id alternatívája).'
+        extract_evidence_id_help: 'A beszerzési számla bizonylat azonosítója, amelyből az adatokat ki kell nyerni.'
+        extract_help: 'A számla PDF mezőinek helyi (on-host) beolvasása áttekinthető piszkozatba.'
+        extract_reference_required: 'Adja meg pontosan az egyiket: --evidence-id vagy --attachment-id.'
+        extract_review_hint_message: 'Ez egy hozzávetőleges piszkozat; minden mezőt erősítsen meg, mielőtt számlát hoz létre belőle.'
         group_help: Vásárlásiszámla-bizonyíték PDF- vagy képformátumban.
         invoice_date_help: A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN),
           pl. 2026-01-15.

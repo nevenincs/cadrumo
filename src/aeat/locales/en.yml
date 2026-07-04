@@ -1364,6 +1364,11 @@ cli:
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
         evidence_id_help: Evidence id (exact match)
+        extract_attachment_id_help: 'Linked attachment id to extract from (alternative to --evidence-id).'
+        extract_evidence_id_help: 'Purchase invoice evidence record id to extract from.'
+        extract_help: 'Read an invoice PDF''s fields on-host into a reviewable draft.'
+        extract_reference_required: 'Supply exactly one of --evidence-id or --attachment-id.'
+        extract_review_hint_message: 'This is a best-effort draft; confirm every field before minting an invoice.'
         group_help: Purchase invoice evidence in PDF or image form
         invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
         invoice_number_help: Supplier invoice number

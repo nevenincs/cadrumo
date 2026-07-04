@@ -8,10 +8,14 @@ import typer
 
 from ...application.ledger import (
     PurchaseInvoiceEvidence,
+    PurchaseInvoiceEvidenceInputError,
+    PurchaseInvoiceEvidenceNotFoundError,
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
+    extract_invoice_draft_from_evidence,
 )
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ._common import (
     _bad,
     _emit_envelope,
@@ -22,6 +26,7 @@ from ._common import (
 )
 from ._ledger_payloads import (
     EvidenceAddResult,
+    EvidenceExtractResult,
     EvidenceListResult,
     EvidenceRemoveResult,
     EvidenceUpdateResult,
@@ -46,6 +51,7 @@ def register_evidence_commands(app: typer.Typer) -> None:
     _register_evidence_list_command()
     _register_evidence_update_command()
     _register_evidence_remove_command()
+    _register_evidence_extract_command()
 
 
 def _register_evidence_add_command() -> None:
@@ -265,6 +271,114 @@ def _register_evidence_remove_command() -> None:
             command="ledger.evidence.remove",
             result=EvidenceRemoveResult.model_validate(payload),
             lines=lines,
+        )
+
+
+def _register_evidence_extract_command() -> None:
+    @evidence_app.command(
+        "extract",
+        help=tr(
+            "cli.app.ledger.evidence.extract_help",
+            default="Read an invoice PDF's fields on-host into a reviewable draft.",
+        ),
+    )
+    def evidence_extract(
+        ctx: typer.Context,
+        evidence_id: str | None = typer.Option(
+            None,
+            "--evidence-id",
+            help=tr(
+                "cli.app.ledger.evidence.extract_evidence_id_help",
+                default="Purchase invoice evidence record id to extract from.",
+            ),
+        ),
+        attachment_id: str | None = typer.Option(
+            None,
+            "--attachment-id",
+            help=tr(
+                "cli.app.ledger.evidence.extract_attachment_id_help",
+                default="Linked attachment id to extract from (alternative to --evidence-id).",
+            ),
+        ),
+    ) -> None:
+        """Run the on-host PDF text-layer extractor over stored evidence bytes.
+
+        Reads the evidence or attachment bytes from secure storage into memory,
+        runs the grounded on-host heuristics (never a cloud call, never a
+        temp file: ``sensitive-financial-data-secure-storage-only``), and
+        prints the best-effort :class:`InvoiceDraft` for operator review.
+        Every field the heuristics could not ground in the extracted text is
+        ``null`` rather than guessed. Extracting never mints or persists an
+        invoice; confirm the fields, then create the record explicitly with
+        ``aeat app ledger invoice add`` or ``aeat app ledger invoice
+        catalogue create``.
+        """
+        if (evidence_id is None) == (attachment_id is None):
+            raise _bad(
+                tr(
+                    "cli.app.ledger.evidence.extract_reference_required",
+                    default="Supply exactly one of --evidence-id or --attachment-id.",
+                ),
+            )
+        transaction_repository = _tx_repo(_state())
+        try:
+            draft = extract_invoice_draft_from_evidence(
+                bucket_id=transaction_repository.bucket_id,
+                evidence_id=evidence_id,
+                attachment_id=attachment_id,
+            )
+        except (PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError) as exc:
+            raise _bad(str(exc)) from exc
+
+        payload = {
+            "bucket_id": transaction_repository.bucket_id,
+            "evidence_id": evidence_id,
+            "attachment_id": attachment_id,
+            **draft.model_dump(mode="json"),
+        }
+        lines = [
+            f"bucket_id\t{transaction_repository.bucket_id}",
+            f"evidence_id\t{evidence_id or '-'}",
+            f"attachment_id\t{attachment_id or '-'}",
+            f"supplier_tax_id\t{draft.supplier_tax_id or '-'}",
+            f"invoice_number\t{draft.invoice_number or '-'}",
+            f"invoice_date\t{draft.invoice_date or '-'}",
+            f"taxable_base\t{draft.taxable_base if draft.taxable_base is not None else '-'}",
+            f"iva_rate\t{draft.iva_rate if draft.iva_rate is not None else '-'}",
+            f"iva_amount\t{draft.iva_amount if draft.iva_amount is not None else '-'}",
+            f"grand_total\t{draft.grand_total if draft.grand_total is not None else '-'}",
+            f"raw_text_length\t{draft.raw_text_length}",
+        ]
+        # `extract_invoice_draft_from_evidence` raises when the resolved PDF has
+        # no usable text layer at all (scan-only / XFA), so a returned draft
+        # always carries `raw_text_length > 0`; the review hint below is
+        # therefore unconditional.
+        reviewed_reference = evidence_id or attachment_id or ""
+        notices: list[Notice] = [
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.evidence.extract.review_hint",
+                message=tr(
+                    "cli.app.ledger.evidence.extract_review_hint_message",
+                    default=("This is a best-effort draft; confirm every field before minting an invoice."),
+                ),
+                suggestion=(
+                    "aeat app ledger invoice catalogue create --kind received "
+                    f"--counterparty-nif {draft.supplier_tax_id or '<nif>'} "
+                    f"--invoice-number {draft.invoice_number or '<number>'} "
+                    f"--invoice-date {draft.invoice_date or '<yyyy-mm-dd>'} "
+                    f"--taxable-base {draft.taxable_base if draft.taxable_base is not None else '<base>'} "
+                    f"--iva-rate {draft.iva_rate if draft.iva_rate is not None else '<rate>'}"
+                ),
+                context={"reference": reviewed_reference},
+            ),
+        ]
+        _emit_envelope(
+            ctx,
+            command="ledger.evidence.extract",
+            result=EvidenceExtractResult.model_validate(payload),
+            lines=lines,
+            notices=notices,
         )
 
 

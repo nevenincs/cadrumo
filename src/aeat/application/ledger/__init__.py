@@ -141,7 +141,7 @@ from ._evidence import (
     PurchaseInvoiceEvidenceRepository,
     PurchaseInvoiceEvidenceService,
 )
-from ._evidence_draft import InvoiceDraft, extract_invoice_fields
+from ._evidence_draft import InvoiceDraft, extract_invoice_draft_from_evidence, extract_invoice_fields
 from ._id_resolution import (
     MINIMUM_DISPLAY_ID_WIDTH,
     compute_display_id_width,
@@ -331,6 +331,7 @@ __all__ = [
     "derive_operator_iva_substrate",
     "eligible_ratio_categories",
     "export_ledger_transactions",
+    "extract_invoice_draft_from_evidence",
     "extract_invoice_fields",
     "get_manual_transaction",
     "get_transaction_participation",
