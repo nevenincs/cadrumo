@@ -24,9 +24,10 @@ con efectos 1-1-2025 tras la disp. final 7.3 de la Ley 7/2024, BOE-A-2024-26694)
 At each breakpoint the cuota equals the bracket's published cumulative cuota
 íntegra; mid-bracket amounts are derived from the published breakpoint plus the
 published marginal rate, exactly the external-oracle arithmetic the law fixes.
-The escala is Beckham-specific: its top marginal rate is 30 % (vs the 28 % of the
-general IRPF savings scale art. 66/76), so the 300.000+ oracle would fail if the
-registry drifted onto the general savings table.
+The escala is Beckham-specific by legal basis (art. 93.2.e).2.º) and structure —
+a single unified table with no autonomic split — not by its top rate: for 2025
+the general IRPF savings top (art. 66+76) is also 30% after Ley 7/2024. The
+oracle pins the art. 93 bracket amounts/thresholds, guarding the table structure.
 """
 
 from __future__ import annotations
@@ -111,10 +112,13 @@ def test_escala_ahorro_mid_bracket_matches_boe_arithmetic(base: Decimal, expecte
     assert _resolve_bracket(_ahorro_table(), base, _AS_OF) == expected.quantize(Decimal("0.01"))
 
 
-def test_escala_ahorro_top_rate_is_beckham_thirty_not_general_twenty_eight() -> None:
-    """A €100.000 slice above 300.000 taxes at 30% (art. 93.2.e.2º), i.e. an
-    extra 30.000 over the 71.880 breakpoint. The general IRPF savings top rate is
-    28% (30.880 delta), so this oracle fails if the registry drifts onto it."""
+def test_escala_ahorro_top_bracket_is_beckham_art93_thirty_percent() -> None:
+    """A €100.000 slice above 300.000 taxes at 30% (art. 93.2.e.2º) — an extra
+    30.000 over the 71.880 breakpoint, pinning the Beckham art. 93.2.e.2º table.
+    The durable distinction from the general savings scale (art. 66+76) is the
+    legal basis and the single unified table with no autonomic split — NOT the
+    marginal rate: for 2025 the general savings top is also 30% after Ley 7/2024,
+    so this oracle guards the art. 93 bracket structure, not a rate difference."""
     at_300k = _resolve_bracket(_ahorro_table(), Decimal("300000"), _AS_OF)
     at_400k = _resolve_bracket(_ahorro_table(), Decimal("400000"), _AS_OF)
     assert at_400k - at_300k == Decimal("30000.00")
