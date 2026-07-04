@@ -10,6 +10,14 @@ and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-07-04
+
+### Fixed
+
+- `corpus-sources` extra now resolves: the published 0.1.0 metadata pinned the
+  never-published single `aeat-data` companion; 0.1.1 pins the two sub-cap
+  companions (`aeat-data-manuals`, `aeat-data-official`) that actually ship.
+
 Run `just release` to preview the next release. Run `just release-apply`
 to land the version bump and CHANGELOG entries on `main` (human-gated,
 no push).

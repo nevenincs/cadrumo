@@ -1,6 +1,6 @@
 [project]
 name = "aeat-cli"
-version = "0.1.0"
+version = "0.1.1"
 description = "A utility that turns your financial records into Spanish tax-form (modelo) data, ready to submit to the AEAT"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -170,8 +170,8 @@ search = [
 # source verification is byte-identical to a full checkout. Reviewed data ships
 # as an artifact — never fetched at install or run time (product-packaging ADR).
 corpus-sources = [
-  "aeat-data-manuals==0.1.0",
-  "aeat-data-official==0.1.0",
+  "aeat-data-manuals==0.1.1",
+  "aeat-data-official==0.1.1",
 ]
 # Convenience aggregate: every optional integration at once. `corpus-sources`
 # is deliberately excluded until the two data companions are published on PyPI
