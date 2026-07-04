@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from functools import cache
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -17,6 +18,7 @@ from ....iva import (
 )
 from .. import (
     CasillaId,
+    IvaLedgerObservation,
     ModeloRevision,
     RegistryCalculationResult,
     calculate_registry_snapshot,
@@ -94,10 +96,16 @@ def test_box_60_binding_selects_export_and_assimilated_export_categories() -> No
     }
     for revision_id in ("2009-y-siguientes", "2023-y-siguientes"):
         revision = _m303_revision(revision_id)
-        binding = next(item for item in revision.bindings if item.id == "modelo-303-casilla-60-exportaciones-base")
-        assert set(selector_as_dict(binding)["categories"]) == expected
-        assert "ley-37-1992:art-21" in binding.legal_refs, f"{revision_id}: binding must cite art-21"
-        assert "ley-37-1992:art-22" in binding.legal_refs, f"{revision_id}: binding must cite art-22"
+        binding = next(item for item in revision.bindings
+                       if item.id == "modelo-303-casilla-60-exportaciones-base")
+        selector_dict: Any = selector_as_dict(binding)
+        assert set(selector_dict["categories"]) == expected
+        assert "ley-37-1992:art-21" in binding.legal_refs, (
+            f"{revision_id}: binding must cite art-21"
+        )
+        assert "ley-37-1992:art-22" in binding.legal_refs, (
+            f"{revision_id}: binding must cite art-22"
+        )
 
 
 def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
@@ -330,7 +338,7 @@ def _calculate_303_2009_from_observations(
     *,
     filing_year: int,
     period: str,
-    observations: tuple[object, ...],
+    observations: tuple[IvaLedgerObservation, ...],
 ) -> RegistryCalculationResult:
     """Calculate helper scoped to the 2009-y-siguientes revision's own binding set.
 
@@ -382,7 +390,9 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
     ``test_casilla_27_anti_tautology_recargo_changes_total_cuota_devengada``.
     """
 
-    def _observations(*, include_recargo: bool) -> tuple[object, ...]:
+    def _observations(
+        *, include_recargo: bool
+    ) -> tuple[IvaLedgerObservation, ...]:
         return (
             _observation(
                 ledger_id="op-ventas-recargo-equivalencia",
@@ -392,7 +402,9 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
                 flow=IvaFlowDirection.REPERCUTIDO,
                 base=Decimal("24000.00"),
                 iva=Decimal("5040.00"),
-                recargo=Decimal("1248.00") if include_recargo else Decimal("0"),
+                recargo=(
+                    Decimal("1248.00") if include_recargo else Decimal("0")
+                ),
             ),
         )
 
