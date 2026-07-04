@@ -58,14 +58,23 @@ def test_bundled_registry_declares_parser_paths() -> None:
     )
 
 
-@pytest.mark.parametrize("dotted_path", _declared_parser_paths())
-def test_extraction_parser_paths_resolve(dotted_path: str) -> None:
+def test_extraction_parser_paths_resolve() -> None:
     """Each registry ``parser =`` path resolves to a callable under a sanctioned authority."""
-    module_name, separator, attribute = dotted_path.rpartition(".")
-    assert separator and module_name and attribute, f"parser {dotted_path!r} is not a dotted callable path"
-    assert module_name.startswith(_ALLOWED_PARSER_AUTHORITY_PREFIXES), (
-        f"parser {dotted_path!r} must resolve under one of {sorted(_ALLOWED_PARSER_AUTHORITY_PREFIXES)!r}"
-    )
-    module = import_module(module_name)
-    resolved = getattr(module, attribute, None)
-    assert callable(resolved), f"parser {dotted_path!r} does not resolve to a callable"
+    failures: list[str] = []
+    for dotted_path in _declared_parser_paths():
+        module_name, separator, attribute = dotted_path.rpartition(".")
+        if not separator or not module_name or not attribute:
+            failures.append(f"parser {dotted_path!r} is not a dotted callable path")
+            continue
+        if not module_name.startswith(_ALLOWED_PARSER_AUTHORITY_PREFIXES):
+            failures.append(
+                f"parser {dotted_path!r} must resolve under one of "
+                f"{sorted(_ALLOWED_PARSER_AUTHORITY_PREFIXES)!r}",
+            )
+            continue
+        module = import_module(module_name)
+        resolved = getattr(module, attribute, None)
+        if not callable(resolved):
+            failures.append(f"parser {dotted_path!r} does not resolve to a callable")
+
+    assert not failures, "\n".join(failures)
