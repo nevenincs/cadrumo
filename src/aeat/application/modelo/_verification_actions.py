@@ -123,6 +123,7 @@ from ._iva_wallet_gate import (
 from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
+from ._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
 from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
 from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
@@ -1716,6 +1717,16 @@ def _collect_revision_verification_findings(
     dt12_antiquity_finding = _dt12_antiquity_advisory_finding(snapshot.revision, target.casilla_values)
     if dt12_antiquity_finding is not None:
         findings.append(dt12_antiquity_finding)
+
+    # Advisory: Convenio doble imposición limitation-of-benefits — warn to confirm
+    # treaty eligibility (beneficial ownership, economic substance) whenever a
+    # Modelo 210 rate actually applies a matched treaty override row. Stays
+    # ADVISORY because the engine cannot verify beneficial-ownership or LOB
+    # substance from country_of_fiscal_residence alone; a genuinely eligible
+    # treaty claim must remain permissible (no-silent-under-declaration).
+    lob_finding = _m210_convenio_lob_advisory_finding(snapshot, profile, target.input_values_by_casilla_id)
+    if lob_finding is not None:
+        findings.append(lob_finding)
 
     findings.extend(_objective_estimation_exclusion_advisory_findings(work_unit=work_unit, profile=profile))
 
