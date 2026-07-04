@@ -79,7 +79,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Final
+from typing import Final, TypedDict
 
 import pytest
 from dev.import_hygiene_scan import (
@@ -115,11 +115,53 @@ class _BaselineSite:
     imported_names: tuple[str, ...]
 
 
-def _load_baseline() -> dict[str, object]:
+class _BaselineSiteEntry(TypedDict):
+    """One JSON ``sites`` entry as checked into the baseline / test-debt files."""
+
+    importer_path: str
+    lineno: int
+    target_mod: str
+    imported_names: list[str]
+
+
+class _Family1Section(TypedDict):
+    sites: list[_BaselineSiteEntry]
+
+
+class _Family2Section(TypedDict):
+    paths: list[str]
+
+
+class _ToleratedSymbolEntry(TypedDict):
+    symbol: str
+    confidence: str
+    reason: str
+
+
+class _Family3Section(TypedDict):
+    retired_symbols_must_not_reappear: list[str]
+    tolerated_multi_sourced_symbols: list[_ToleratedSymbolEntry]
+
+
+class _BaselineDocument(TypedDict):
+    """The checked-in ``dev/import_hygiene_baseline.json`` shape (plus a ``$schema_note`` key)."""
+
+    production_family1_cross_package_private_imports: _Family1Section
+    family2_shim_modules: _Family2Section
+    family3_pinned_duplicate_symbols: _Family3Section
+
+
+class _TestDebtDocument(TypedDict):
+    """The checked-in ``dev/import_hygiene_test_debt.json`` shape (plus a ``$schema_note`` key)."""
+
+    test_only_family1_underscore_reaches: _Family1Section
+
+
+def _load_baseline() -> _BaselineDocument:
     return json.loads(_BASELINE_PATH.read_text(encoding="utf-8"))
 
 
-def _baseline_sites(baseline: dict[str, object]) -> tuple[_BaselineSite, ...]:
+def _baseline_sites(baseline: _BaselineDocument) -> tuple[_BaselineSite, ...]:
     family1 = baseline["production_family1_cross_package_private_imports"]
     return tuple(
         _BaselineSite(
@@ -224,11 +266,11 @@ def test_production_family1_violations_are_exactly_the_named_baseline_set() -> N
     )
 
 
-def _load_test_debt() -> dict[str, object]:
+def _load_test_debt() -> _TestDebtDocument:
     return json.loads(_TEST_DEBT_PATH.read_text(encoding="utf-8"))
 
 
-def _test_debt_sites(test_debt: dict[str, object]) -> tuple[_BaselineSite, ...]:
+def _test_debt_sites(test_debt: _TestDebtDocument) -> tuple[_BaselineSite, ...]:
     family1 = test_debt["test_only_family1_underscore_reaches"]
     return tuple(
         _BaselineSite(
