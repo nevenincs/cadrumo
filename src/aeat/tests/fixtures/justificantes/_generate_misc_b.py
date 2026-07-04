@@ -674,3 +674,98 @@ def _draw_modelo_840(c: canvas.Canvas, fixture: _Modelo840Fixture) -> None:
     c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
     c.drawString(20 * mm, y, _SEDE_ORIGIN)
+
+
+@dataclass(frozen=True)
+class _Modelo202Fixture:
+    """Sanitized M202 pago fraccionado liquidacion fixture.
+
+    Box numbers and labels are taken verbatim from the bundled AEAT Diseno
+    de Registro (per-clave [NN] notation confirmed against
+    src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_202/files/
+    01-202-ejercicio-2025-y-siguientes-actualizado-17-03-26-132-kb-xlsx.xlsx.extracted.md)
+    and the AEAT-published instructions HTML
+    (modelo-202-instrucciones-2023-2024.html), which references "clave 01",
+    "clave 03", "clave 34" for the same casillas.
+
+    No real M202 declaracion-copy PDF specimen is bundled, so the exact
+    on-page label wording and column layout are unconfirmed (mirrors the
+    M131 gap this fixture avoids repeating): this fixture renders each
+    casilla as "<label> ... <box_number> <amount>" on one row so the
+    bbox_anchored strategy (anchor on the box number, read the value
+    immediately to its right) can locate and extract the value regardless
+    of exact label wording.
+    """
+
+    filename: str
+    ejercicio: str
+    periodo: str
+    tax_id: str
+    full_name: str
+    printed_rows: tuple[tuple[str, str, str], ...]  # (box_number, label_text, spanish_amount)
+
+
+_MODELO_202_PRINTED_ROWS: tuple[tuple[str, str, str], ...] = (
+    ("01", "Mod. 40.2 LIS Base del pago fraccionado", "50.000,00"),
+    ("03", "Mod. 40.2 LIS A ingresar", "8.500,00"),
+    ("04", "Mod. 40.3 LIS Resultado contable despues del IS", "140.000,00"),
+    ("34", "Mod. 40.3 LIS Cantidad a ingresar", "29.400,00"),
+)
+
+_MODELO_202_FIXTURES: tuple[_Modelo202Fixture, ...] = (
+    _Modelo202Fixture(
+        filename="202/2025-1P.pdf",
+        ejercicio="2025",
+        periodo="1P",
+        tax_id="B00000001",
+        full_name="DEMO SOCIEDAD SL",
+        printed_rows=_MODELO_202_PRINTED_ROWS,
+    ),
+)
+
+
+def _draw_modelo_202(c: canvas.Canvas, fixture: _Modelo202Fixture) -> None:
+    """Render a sanitized M202 liquidacion page onto ``c``.
+
+    Layout reproduces the printed box-number notation confirmed in the
+    bundled AEAT Diseno de Registro ("... [01]", "... [03]", "... [04]",
+    "... [34]"): each row prints the descriptive label text followed by
+    the box number, then the amount immediately to its right on the same
+    row, so the bbox_anchored ``right_of_number`` strategy can resolve
+    the value regardless of the exact label wording (no real specimen is
+    bundled to confirm on-page wording -- see the fixture docstring).
+    """
+    _, height = A4
+    y = height - 25 * mm
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(20 * mm, y, "Agencia Tributaria")
+    y -= 8 * mm
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(
+        20 * mm,
+        y,
+        "Pago fraccionado Impuesto sobre Sociedades  Modelo 202",
+    )
+    y -= 12 * mm
+    c.setFont("Helvetica", 10)
+    c.drawString(20 * mm, y, f"NIF: {fixture.tax_id}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, f"Denominacion: {fixture.full_name}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, f"Ejercicio: {fixture.ejercicio}   Periodo: {fixture.periodo}")
+    y -= 10 * mm
+    for box_num, label, amount in fixture.printed_rows:
+        dots = "." * max(2, 60 - len(label) - len(box_num))
+        c.drawString(20 * mm, y, f"{label} {dots} {box_num} {amount}")
+        y -= 6 * mm
+    y -= 4 * mm
+    c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    csv_val = f"SANITIZED202{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2025-04-15 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, _SEDE_ORIGIN)
