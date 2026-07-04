@@ -11,7 +11,7 @@ related:
   - '[[2026-06-10-modelo-enum-hardening-adr]]'
 ---
 
-# `tax-domain-taxonomy-extension` adr: `per-tax Spanish-stem TaxDomain members for the new-tax modelos` | (**status:** `proposed`)
+# `tax-domain-taxonomy-extension` adr: `per-tax Spanish-stem TaxDomain members for the new-tax modelos` | (**status:** `accepted`)
 
 ## Problem Statement
 

@@ -13,7 +13,7 @@ related:
   - '[[2026-05-20-calculation-source-connectivity-plan]]'
 ---
 
-# `counterpart-source-provider` adr: `counterpart source provider design and enrollment` | (**status:** `proposed`)
+# `counterpart-source-provider` adr: `counterpart source provider design and enrollment` | (**status:** `accepted`)
 
 ## Problem Statement
 
