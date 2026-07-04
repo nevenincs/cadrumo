@@ -67,9 +67,20 @@ fail loudly at 100 MB.
 
 ## Per-release checklist
 
-Run from a clean `main` checkout, in order. Stop at the first failure.
+Run from a clean `main` checkout, in order. Stop at the first failure. The
+full machine-validated checklist data (soak window, versioning discipline,
+hotfix cycle times, rollback triggers) lives at
+`docs/_release_checklist.yaml`; this section is the human-run sequence.
 
-1. **Version + changelog** — `just release` (dry-run preview), then
+1. **Audit-state gate** — `just release-readiness` (or
+   `just release-readiness-json` for a machine-readable verdict). Checks
+   version-surface parity, `CHANGELOG.md` sanity, the most recent
+   packaging-smoke evidence, and (best-effort via `gh`) that no open GitHub
+   issue carries `priority:P0-blocker`. Read-only; no outward action. A
+   blocking failure must be resolved before continuing — `just
+   release-apply` runs this gate automatically and refuses to proceed on a
+   blocking failure.
+2. **Version + changelog** — `just release` (dry-run preview), then
    `just release-apply` and follow its printed checklist: bump
    `.release-please-manifest.json`, `pyproject.toml`,
    `src/aeat/__init__.py`, prepend `CHANGELOG.md`, commit
@@ -77,28 +88,90 @@ Run from a clean `main` checkout, in order. Stop at the first failure.
    BOTH `packaging/aeat_data_manuals/pyproject.toml` and
    `packaging/aeat_data_official/pyproject.toml` (the parity test fails the
    suite if either drifts).
-2. **Gates** — `just packaging-smoke-dependencies`, `just check-dependencies`,
+3. **Gates** — `just packaging-smoke-dependencies`, `just check-dependencies`,
    `just packaging-smoke` (full lane on Linux/WSL; includes the split-install
    lane proving the companion-absent advisory path and the both-companions
    byte-identical path), and the plugin gate
    `uv run --no-sync python dev/packaging/smoke_plugin_validate.py`.
-3. **Push the release commit + tag** — human decision only:
+4. **RC soak (non-hotfix releases)** — build a local pre-release
+   (`vX.Y.Z-rc.N`), run the full `just packaging-smoke` matrix against it,
+   and install the built wheel into a scratch venv for a 48-72h review
+   window before pushing the real tag. See "Release-candidate soak" below.
+   Skip this step only for an emergency hotfix (see the cycle times in
+   `docs/_release_checklist.yaml`).
+5. **Push the release commit + tag** — human decision only:
    `git push origin main --tags`.
-4. **Publish `aeat-cli`** — `UV_PUBLISH_TOKEN=... just publish
+6. **Publish `aeat-cli`** — `UV_PUBLISH_TOKEN=... just publish
    yes-publish-to-pypi`. Verify the version page renders on pypi.org and
    `uvx --from aeat-cli==X.Y.Z aeat --version` resolves on a machine without the checkout.
-5. **Publish the data companions** — `just publish-data yes-publish-to-pypi`
+7. **Publish the data companions** — `just publish-data yes-publish-to-pypi`
    (builds and uploads both `aeat-data-manuals` and `aeat-data-official` in one
    gated run; no grant needed). Verify `pip install "aeat-cli[corpus-sources]"`
    pulls both and `aeat app registry verify` runs clean.
-6. **Regenerate + push the plugin/marketplace** — materialise the plugin
+8. **Regenerate + push the plugin/marketplace** — materialise the plugin
    tree pinned to the just-published version
    (`uv run --no-sync aeat app agent --layout plugin -o <marketplace
    checkout>/plugins/aeat`), run `claude plugin validate --strict` on it,
    commit and push the marketplace repository. Installed plugins update on
    the version bump.
-7. **Announce** — update `docs/updates.md` per its critical-updates
-   contract if the release changes filing behaviour.
+9. **Announce** — update `docs/updates.md` per its critical-updates
+   contract if the release changes filing behaviour, using
+   `docs/_release_notes_template.md` as the GitHub Release body template.
+
+## Release-candidate soak
+
+Every non-hotfix release soaks for 48-72 hours before the tag is pushed and
+published. `aeat-cli` is pre-1.0 and has not shipped its first PyPI release
+yet, so there is no separate `aeat-cli-beta` PyPI project to soak against
+today; the soak vehicle is a local, tagged pre-release build reviewed before
+the real tag lands:
+
+1. Tag a local pre-release: `git tag -a vX.Y.Z-rc.1 -m "aeat vX.Y.Z-rc.1"`
+   (not pushed).
+2. Run the full packaging-smoke matrix against it (`just packaging-smoke`
+   on Linux/WSL; `just packaging-smoke-docker` for the clean-image lane).
+3. Install the built wheel into a scratch venv
+   (`uv venv /tmp/aeat-rc && uv pip install --python /tmp/aeat-rc/bin/python
+   dist/aeat_cli-*.whl`) and exercise the CLI manually against a scratch
+   profile.
+4. Hold for 48-72 hours. Exit gates: the packaging-smoke matrix stays
+   green, no `priority:P0-blocker` issue is opened against the RC build,
+   and the changelog entry is reviewed against the conventional-commit log
+   since the last tag.
+5. If the soak passes, proceed to step 5 of the per-release checklist
+   (push the real tag). If it fails, fix forward and restart the soak with
+   `vX.Y.Z-rc.2`.
+
+Once the first stable PyPI release ships and there is a real user base to
+protect, promote this to a real `aeat-cli-beta` PyPI project (a genuine
+pre-release channel Kent can opt into) rather than a purely local build.
+
+## Rollback procedure
+
+Trigger a rollback when any of these hold (see `docs/_release_checklist.yaml`
+`rollback.triggers` for the machine-readable list): data loss or corruption,
+a disclosed security vulnerability, a widespread regression, or a
+compatibility mis-computation (a supported Python/OS/dependency combination
+fails after the release).
+
+`just release-rollback X.Y.Z` prints the full step-by-step procedure for the
+given version (read-only — it never runs a destructive action itself). In
+outline:
+
+1. Revert the release commit and tag on `main`
+   (`git revert --no-commit <sha>`, commit, tag `vX.Y.Z-rollback`, push —
+   every step is human-run).
+2. **Yank** the bad version from PyPI
+   (pypi.org project page → the release → Options → Yank release). Yanking
+   does not delete the artifact; it stops `pip`/`uv` from resolving it by
+   default so new installs and unpinned upgrades skip it, while an operator
+   who explicitly pinned the bad version can still reach it if truly needed.
+3. Publish a corrected patch release following the emergency hotfix cycle
+   time for the trigger category (`docs/_release_checklist.yaml` `hotfix`:
+   24h for security/data-loss, 48h for portal-drift, 72h for other
+   critical issues).
+4. Update `docs/updates.md` per its critical-updates contract and note the
+   rollback plus the corrected version in the GitHub Release notes.
 
 ## What is deliberately out of scope
 
@@ -106,3 +179,6 @@ Run from a clean `main` checkout, in order. Stop at the first failure.
   only; tag-push or scheduled publishing stays out.
 - **Live AEAT anything** — releases never touch AEAT services; the
   application never files live.
+- **Automatic rollback execution** — `just release-rollback` only prints
+  the procedure; every revert, tag, push, and PyPI yank is a deliberate
+  human action.
