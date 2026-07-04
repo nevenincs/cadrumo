@@ -297,7 +297,9 @@ def test_0025_anti_tautology_art20_reduccion_change_changes_value() -> None:
     ), "0025 must differ when the art. 20 reducción input (0023) changes"
 
 
-def test_0025_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction() -> None:
+def test_0025_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
     """The manual-oracle grounding of 0012/0017/0022/0025 is enrolled, not just computed.
 
     A companion registry-honesty gate
@@ -316,7 +318,7 @@ def test_0025_manual_grounding_is_enrolled_and_raises_independently_grounded_fra
     the registry's own declared+validated data, never hand-computed or
     asserted from a synthetic fixture.
     """
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    authority = registry_authority
     snapshot = authority.snapshot("100", filing_year=2020, period="0A")
     policy = snapshot.verification_policy()
 
