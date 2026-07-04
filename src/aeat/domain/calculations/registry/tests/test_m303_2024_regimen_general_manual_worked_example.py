@@ -147,6 +147,7 @@ from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from .. import (
     CasillaId,
     IvaLedgerObservation,
+    RegistryCalculationResult,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
@@ -273,7 +274,7 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
     )
 
 
-def _calculate(*, include_recargo: bool) -> object:
+def _calculate(*, include_recargo: bool) -> RegistryCalculationResult:
     snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period=_PERIOD)
     binding_values = {
         # "Cuota a compensar de periodos anteriores: 3.000 euros" (pag. 294).

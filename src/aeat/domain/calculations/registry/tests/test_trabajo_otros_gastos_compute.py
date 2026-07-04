@@ -34,7 +34,7 @@ from decimal import Decimal
 import pytest
 
 from .._formula_runtime import _evaluate_expression
-from .._schema import CasillaId, FormulaExpression
+from .._schema import CasillaId, FormulaDefinition, FormulaExpression, ModeloRevision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -73,11 +73,11 @@ def _revision(year: str):
     return modelo.revisions[year]
 
 
-def _casilla(revision, casilla_id: str):
+def _casilla(revision: ModeloRevision, casilla_id: str):
     return next((c for c in revision.casillas if c.id == casilla_id), None)
 
 
-def _formula_for_target(revision, target: str) -> FormulaExpression:
+def _formula_for_target(revision: ModeloRevision, target: str) -> FormulaDefinition:
     formula = next(f for f in revision.formulas if f.target_casilla_id == target)
     return formula
 
