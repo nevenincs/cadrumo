@@ -37,6 +37,7 @@ from decimal import Decimal
 import typer
 
 from ...core.i18n import tr
+from ._app_diagnostics_telemetry import telemetry_app
 from ._common import _emit_envelope
 from ._diagnostics_payloads import (
     ErrorKindCountPayload,
@@ -616,3 +617,6 @@ def _optional_decimal_text(value: Decimal | None) -> str | None:
     if value is None:
         return None
     return format(value, "f")
+
+
+app.add_typer(telemetry_app, name="telemetry")
