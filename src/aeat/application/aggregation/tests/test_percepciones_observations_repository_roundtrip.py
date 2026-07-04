@@ -25,6 +25,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
+from ....core.aggregation import RetencionClave
 from ....core.external_constants import UTF_8_ENCODING
 from ....domain.calculations.registry import WithholdingObservation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -50,7 +51,7 @@ def _observation(
         perceptor_legal_name="Perceptor Ejemplo SL",
         country_code="ES",
         transaction_date=date(2024, 3, 15),
-        clave=clave,
+        clave=RetencionClave(clave),
         subclave=subclave,
         percibido_dinerario=dinerario,
         percibido_especie=Decimal("50"),
