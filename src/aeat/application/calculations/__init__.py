@@ -65,6 +65,7 @@ See Also:
 from ._bienes_inversion_regularizacion import (
     CASILLA_REGULARIZACION_BIENES_INVERSION,
     build_bienes_inversion_regularizacion_advisory,
+    build_bienes_inversion_transmision_advisory,
 )
 from ._binding_prefill import (
     BindingPrefillReport,
@@ -195,6 +196,7 @@ __all__ = [
     "assemble_withholding_observations",
     "assert_enrollment_matches_manifest",
     "build_bienes_inversion_regularizacion_advisory",
+    "build_bienes_inversion_transmision_advisory",
     "build_prorrata_regularizacion_advisory",
     "correct_iva_compensation_period",
     "cross_check_iva_compensation_annual_summary",
