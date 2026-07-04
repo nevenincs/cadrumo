@@ -64,3 +64,24 @@ related:
   `src/aeat/entrypoints/cli/_modelo_discovery_cli.py`, while the root locale files still carry
   unrelated non-authored WIP for `prior_filing_observations_changed`; this retry therefore does
   not edit locale files or check S24.
+
+## Continuation check (2026-07-04, observed at `e8e59f9b50`)
+
+- Locale drift had cleared in the observed tree:
+  `uv run --no-sync python -m aeat.locales audit` reports `ok` for `ca.yml`, `en.yml`,
+  `es.yml`, and `hu.yml`.
+- W04.P07 focused gates were green in the observed tree:
+  - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`
+    (`58 passed`)
+  - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py`
+    (`140 passed`)
+  - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_output_language_parity.py src/aeat/entrypoints/cli/tests/test_language_flag_help_honesty.py`
+    (`21 passed`)
+- Collect-only remained red in the observed tree:
+  `uv run --no-sync pytest --collect-only -q` wrote full output to
+  `C:\Users\hello\AppData\Local\Temp\aeat-d9-current-collect-20260704.log` and exited `2`
+  (`12127/14834 tests collected`, `2707 deselected`, `8 errors`).
+- The remaining S24 blocker is the non-authored untracked Modelo 145 scaffold:
+  `modelo 145 revision 2012-01-31-y-siguientes: revision must declare official workbook parity coverage`
+  and `revision must declare at least one casilla`.
+- No S24 plan check was run because the row requires clean collect-only evidence.
