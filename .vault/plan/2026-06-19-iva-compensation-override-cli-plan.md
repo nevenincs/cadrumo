@@ -3,11 +3,21 @@ tags:
   - '#plan'
   - '#iva-compensation-override-cli'
 date: '2026-06-19'
-modified: '2026-06-30'
+modified: '2026-07-04'
 tier: L2
 related:
   - '[[2026-06-19-iva-compensation-override-cli-adr]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `iva-compensation-override-cli` plan
 
@@ -15,19 +25,19 @@ related:
 
 Record an explicit taxpayer override as a persisted taxpayer_override IVA-wallet decision so the calculate path applies the cross-period carry, with mandatory provenance and an audit event.
 
-- [ ] `P01.S01` - Add record_iva_compensation_override_for_bucket: resolve NIF, build IvaCompensationOverride(amount, reason, evidence_locator, recorded_at), drive reconcile_modelo_303_iva_compensation with override and persist the taxpayer_override decision; `src/aeat/application/modelo/_iva_wallet_seed.py`.
-- [ ] `P01.S02` - Emit a MODELO_IVA_WALLET override audit event carrying reason and evidence_locator provenance through the single BucketEventHistoryRepository; `src/aeat/application/modelo/_iva_wallet_seed.py`.
-- [ ] `P01.S03` - Add a behaviour test: record override then assert the persisted taxpayer_override decision unblocks calculate and applies the amount to casilla 110 (persona 2T resolves to 525); `src/aeat/application/modelo/tests/test_iva_wallet_engine_integration.py`.
-- [ ] `P01.S08` - Precondition: promote IvaCompensationOverride to the domain.iva_compensation package __all__ re-export so the application recorder consumes it via the top-level facade, not the private submodule; `src/aeat/domain/iva_compensation/__init__.py`.
+- [x] `P01.S01` - Add record_iva_compensation_override_for_bucket: resolve NIF, build IvaCompensationOverride(amount, reason, evidence_locator, recorded_at), drive reconcile_modelo_303_iva_compensation with override and persist the taxpayer_override decision; `src/aeat/application/modelo/_iva_wallet_seed.py`.
+- [x] `P01.S02` - Emit a MODELO_IVA_WALLET override audit event carrying reason and evidence_locator provenance through the single BucketEventHistoryRepository; `src/aeat/application/modelo/_iva_wallet_seed.py`.
+- [x] `P01.S03` - Add a behaviour test: record override then assert the persisted taxpayer_override decision unblocks calculate and applies the amount to casilla 110 (persona 2T resolves to 525); `src/aeat/application/modelo/tests/test_iva_wallet_engine_integration.py`.
+- [x] `P01.S08` - Precondition: promote IvaCompensationOverride to the domain.iva_compensation package __all__ re-export so the application recorder consumes it via the top-level facade, not the private submodule; `src/aeat/domain/iva_compensation/__init__.py`.
 
 ### Phase `P02` - Operator CLI surface + locales + conformance
 
 Expose the recorder as the iva-wallet override verb with localized help/errors and conformance coverage, mirroring the seed/correct verbs.
 
-- [ ] `P02.S04` - Register the iva-wallet override Typer verb with --filing-year --period --amount --reason --evidence-locator and mandatory default-off --confirm, refusing to overrule a fresh AEAT wallet decision; `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py`.
-- [ ] `P02.S05` - Add the IvaWalletOverrideResult output schema and register it for JSON-schema conformance; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `P02.S04` - Register the iva-wallet override Typer verb with --filing-year --period --amount --reason --evidence-locator and mandatory default-off --confirm, refusing to overrule a fresh AEAT wallet decision; `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py`.
+- [x] `P02.S05` - Add the IvaWalletOverrideResult output schema and register it for JSON-schema conformance; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
 - [ ] `P02.S06` - Author override help/confirm/error locale leaves for en es ca hu via python -m aeat.locales set, then scaffold --check clean; `src/aeat/locales`.
-- [ ] `P02.S07` - Add a CLI conformance test exercising the override verb end to end and run the documented-command conformance gate; `src/aeat/entrypoints/cli/tests/test_iva_wallet_inspector.py`.
+- [x] `P02.S07` - Add a CLI conformance test exercising the override verb end to end and run the documented-command conformance gate; `src/aeat/entrypoints/cli/tests/test_iva_wallet_inspector.py`.
 
 ## Description
 
