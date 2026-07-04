@@ -208,12 +208,12 @@ class _RecordingBrowserContext:
         cert: LoadedCertificate,
         recognised: bool = True,
         *,
-        storage_state: dict[str, object] | None = None,
+        storage_state: Mapping[str, object] | None = None,
     ) -> None:
         setattr(self, CERTIFICATE_CONTEXT_MARKER, cert.sha256_thumbprint)
         self._recognised = recognised
         if storage_state is None:
-            self._storage_state: dict[str, object] = {"cookies": [], "origins": []}
+            self._storage_state: Mapping[str, object] = {"cookies": [], "origins": []}
         else:
             self._storage_state = storage_state
         self._pages: list[_RecordingPage] = []
@@ -227,7 +227,7 @@ class _RecordingBrowserContext:
     async def close(self) -> None:
         self.closed = True
 
-    async def storage_state(self) -> dict[str, object]:
+    async def storage_state(self) -> Mapping[str, object]:
         return self._storage_state
 
 
@@ -277,11 +277,11 @@ class _RecordingBrowserSession:
         self,
         cert_ok: bool = True,
         *,
-        storage_state: dict[str, object] | None = None,
+        storage_state: Mapping[str, object] | None = None,
     ) -> None:
         self._cert_ok = cert_ok
         if storage_state is None:
-            self._storage_state: dict[str, object] = {"cookies": [], "origins": []}
+            self._storage_state: Mapping[str, object] = {"cookies": [], "origins": []}
         else:
             self._storage_state = storage_state
         self.created: list[_RecordingBrowserContext] = []
@@ -292,7 +292,7 @@ class _RecordingBrowserSession:
         *,
         provisioner: object | None = None,
         storage_state_path: Path | None = None,
-        storage_state: dict[str, object] | None = None,
+        storage_state: Mapping[str, object] | None = None,
     ) -> _RecordingBrowserContext:
         assert provisioner is not None
         cert = self._resolve_cert(provisioner)
