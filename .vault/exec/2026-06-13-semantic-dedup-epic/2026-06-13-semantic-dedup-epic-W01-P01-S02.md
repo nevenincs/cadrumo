@@ -9,9 +9,6 @@ related:
   - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
 
-
-
-
 # Consolidate the duplicated _validate_nif/_validate_nie/_validate_cif core into one owning module and re-express the other module's validators over it
 
 ## Scope
