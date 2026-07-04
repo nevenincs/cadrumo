@@ -1066,6 +1066,8 @@ application:
           o espere a que el corpus baseline incorpore esta fila.'
       m210_convenio_rate_missing:
         next_action: 'Autorice una fila de Convenio España-{cc} para tipo_renta={tipo_renta} en registry/aeat/treaties/, o desestablezca profile.country_of_fiscal_residence para usar el baseline TRLIRNR Art 25.'
+      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY: la casilla %{casilla_id} es cero pero el contribuyente tiene un descendiente elegible (recuento %{weighted_count}) para la deduccion de Madrid. El disparo automatico esta cerrado para unidades conjunta/casados porque no se puede evaluar el limite de renta familiar; confirme la elegibilidad manualmente.'
+      madrid_nacimiento_adopcion_eligibility_advisory_next_action: 'Confirme que la base imponible de la unidad familiar esta dentro del limite aplicable y, si procede, introduzca la casilla 1039 manualmente (madrid-dl-1-2010:art-4, art-18).'
       missing_required_casilla: La casilla requerida %{casilla_id} no está presente
         en los datos de entrada del cálculo.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La

@@ -996,6 +996,8 @@ application:
           ezt a sort.'
       m210_convenio_rate_missing:
         next_action: 'Hozzon letre egy Convenio Espana-{cc} szerzodesi sort a tipo_renta={tipo_renta} ertekhez a registry/aeat/treaties/ alatt, vagy allitsa vissza a profile.country_of_fiscal_residence erteket a TRLIRNR Art 25 alapertek hasznalatahoz.'
+      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY: a(z) %{casilla_id} rovat nulla, de van jogosult leszarmazottak (sulyozott szam %{weighted_count}) a madridi levonashoz. Az automatikus kivaltas zart egyutt adozo/hazas egysegeknel, mert a csaladi jovedelemhatar nem ertekelheto; erositse meg kezileg a jogosultsagot.'
+      madrid_nacimiento_adopcion_eligibility_advisory_next_action: 'Erositse meg, hogy a csaladi egyseg adoalapja a vonatkozo hataron belul van, es ha jogosult, toltse ki kezzel az 1039 rovatot (madrid-dl-1-2010:art-4, art-18).'
       missing_required_casilla: A kötelező %{casilla_id} casilla hiányzik a számítási
         revízió bemeneti adataiból.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: Az
