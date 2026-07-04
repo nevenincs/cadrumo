@@ -94,6 +94,7 @@ Contributor documentation lives separately from this user guide.
 - The local quality gates are the source of truth: `just check-style`, `just check-types`, `just test-unit`, and `just check-pre-commit`.
 - The [architecture overview](docs/architecture/index.md) explains how the codebase fits together.
 - The agent-driven contribution workflow is documented in [`CLAUDE.md`](CLAUDE.md).
+- Adding a new AEAT modelo to the registry starts with `python -m dev.registry.newmodelo scaffold <modelo-id> <revision-id>`, which writes the skeleton authoring tree and prints the 12-item contributor checklist (`python -m dev.registry.newmodelo checklist` prints it standalone). `python -m dev.registry.matrix` reports each modelo's current support and export coverage.
 
 ## License
 
