@@ -800,6 +800,16 @@ MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE = SecureObjectNamespaceDe
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="modelo_review_package_recipient_encryption_key",
+    namespace="aeat.application.modelo.review_package_recipient_encryption_key",
+    owner="aeat.application.modelo",
+    sensitivity=SensitivityClass.SECRET,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="review-package-recipient-encryption-key:{bucket_id}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+)
 
 BUCKET_EVENT_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="bucket_event_history",
@@ -1085,6 +1095,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
         MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE,
         MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE,
+        MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE,
         *DOMAIN_NAMESPACE_DEFINITIONS,
     ),
     paths=STORAGE_PATH_DEFINITIONS,

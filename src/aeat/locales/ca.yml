@@ -922,6 +922,7 @@ application:
         destinatari; la clau no coincideix o el paquet ha estat manipulat.
       recipient_encryption_invalid_key: La clau publica del destinatari no es una
         clau publica X25519 valida.
+      recipient_encryption_key_not_found: 'Encara no s''ha generat cap parell de claus de xifratge de destinatari per a aquest bucket.'
       recipient_registry_already_exists: El destinatari %{recipient_id} ja esta registrat.
       recipient_registry_generic: S'ha produit un error en el registre d'empremtes
         digitals de destinataris.
@@ -2090,7 +2091,14 @@ cli:
           JSON.
         counter_signer_public_key_help: Clau pública de l'assessor fiscal (contrasignant),
           en 64 caràcters hexadecimals en minúscula.
+        decrypt_help: 'Obre un paquet de revisio xifrat per a un destinatari amb el parell de claus X25519 d''aquest bucket (generat en el primer us) i escriu el paquet recuperat a --output. Nomes local; mai contacta amb l''AEAT.'
+        decrypt_output_help: 'Ruta on escriure el ZIP del paquet de revisio recuperat.'
+        encrypt_for_recipient_help: 'Segella un paquet de revisio perque nomes la clau privada d''un destinatari registrat el pugui obrir, i escriu el sobre xifrat a --output. Nomes local; mai contacta amb l''AEAT.'
+        encrypt_output_help: 'Ruta on escriure el sobre xifrat per al destinatari en format JSON.'
+        envelope_path_help: 'Ruta del sobre xifrat per al destinatari en format JSON generat per `encrypt-for-recipient`.'
         errors:
+          envelope_not_found: 'No s''ha trobat el sobre xifrat per al destinatari a {envelope_path}.'
+          invalid_valid_for_days: '--valid-for-days ha de ser un enter estrictament positiu.'
           output_required: Indiqueu --output CAMÍ per al ZIP del paquet de revisió.
           package_not_found: No s'ha trobat el paquet de revisió a {package_path}.
           receipt_not_found: No s'ha trobat el rebut a {receipt_path}.
@@ -2106,6 +2114,8 @@ cli:
           minúscula.
         receipt_path_help: Camí del rebut contrasignat en format JSON generat per
           `counter-sign`.
+        recipient_id_help: 'Id del destinatari registrat (vegeu `aeat config collab recipient add`).'
+        review_only_help: 'Marca el paquet segellat com a mancat d''autoritat de presentacio (el destinatari el pot llegir i verificar, pero no es prova que la revisio subjacent hagi estat o hagi de ser presentada).'
         revision_help: Id de la revisió de càlcul a empaquetar; per defecte la revisió
           verificada-completa o presentada més recent de la unitat de treball.
         sign_help: Signa el manifest de comprovació d'un paquet de revisió amb el
@@ -2113,6 +2123,7 @@ cli:
           sobre de signatura a --output. Només local; mai contacta amb l'AEAT.
         sign_output_help: Camí on escriure el sobre de signatura en format JSON.
         signature_path_help: Camí del sobre de signatura JSON generat per `sign`.
+        valid_for_days_help: 'Finestra de validesa opcional en dies; ometeu-la per a un paquet que mai caduqui.'
         verify_help: Verifica el manifest de checksum d'un paquet de revisió (només
           integritat; no certifica qui l'ha construït). Només local; mai contacta
           amb l'AEAT.
@@ -2649,6 +2660,18 @@ cli:
       issue_label: problema
       missing: absent
       profile_label: perfil
+    collab:
+      help: 'Gestiona els destinataris de confianca per a la col.laboracio amb paquets de revisio.'
+      recipient:
+        add_help: 'Registra la clau publica X25519 d''un destinatari de confianca per la seva empremta.'
+        errors:
+          invalid_public_key: '--public-key ha de tenir exactament 64 caracters hexadecimals en minuscula (una clau publica X25519 en brut de 32 bytes).'
+        help: 'Registra, llista i elimina destinataris de confianca per a paquets de revisio.'
+        label_help: 'Nom de visualitzacio opcional en text lliure per al destinatari.'
+        list_help: 'Llista tots els destinataris de confianca registrats al perfil actiu.'
+        public_key_help: 'La clau publica X25519 en brut del destinatari, en 64 caracters hexadecimals en minuscula.'
+        recipient_id_help: 'Etiqueta estable triada per l''operador (p. ex. ''gestor-de-kent'').'
+        remove_help: 'Elimina un destinatari de confianca pel seu id del perfil actiu.'
     custody:
       confirm_new_passphrase_help: Repeteix la nova contrasenya del magatzem secret.
       confirm_new_passphrase_prompt: 'Confirma la nova contrasenya del magatzem secret
@@ -4968,7 +4991,8 @@ errors:
       del llibre del bucket.
     fail_financial_usage_ratios_usage_ratio_persistence: No s'ha pogut llegir o escriure
       el perfil de percentatges d'ús.
-    fail_google_adc_unavailable: 'No s''han trobat credencials predeterminades d''aplicació (ADC) en aquest equip. Executeu gcloud auth application-default login.'
+    fail_google_adc_unavailable: No s'han trobat credencials predeterminades d'aplicació
+      (ADC) en aquest equip. Executeu gcloud auth application-default login.
     fail_google_browser_open: No s'ha pogut obrir el navegador per mostrar la pàgina
       de consentiment de Google. Obre l'enllaç manualment.
     fail_google_loopback_bind: El receptor HTTP local no ha pogut obrir un port. Tanca
@@ -5383,7 +5407,8 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un percentatge d'ús d'oficina a
       casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
       amb el valor del cens.
-    refused_google_impersonation: 'IAM ha rebutjat emetre un testimoni de suplantació per al compte de servei de destinació. Concediu-li el rol roles/iam.serviceAccountTokenCreator.'
+    refused_google_impersonation: IAM ha rebutjat emetre un testimoni de suplantació
+      per al compte de servei de destinació. Concediu-li el rol roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
       interactiu amb navegador; executa'l des d'una shell interactiva.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona
