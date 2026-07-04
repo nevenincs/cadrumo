@@ -17,6 +17,7 @@ from ....iva import (
 )
 from .. import (
     CasillaId,
+    ModeloRevision,
     RegistryCalculationResult,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
@@ -39,7 +40,7 @@ from ._registry_schema_support import _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _m303_revision(revision_id: str):
+def _m303_revision(revision_id: str) -> ModeloRevision:
     modelo, _catalogues = _committed_modelo("303")
     return modelo.revisions[revision_id]
 
