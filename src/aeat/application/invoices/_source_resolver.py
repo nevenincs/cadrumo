@@ -35,6 +35,7 @@ from ...core.hashing import sha256_hex
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
     BindingId,
+    DataBindingDefinition,
     InvoiceObservation,
     RegistryValidationError,
     resolve_invoice_binding_row_values,
@@ -213,9 +214,7 @@ def _invoice_sources_for_revision(context: CalculationSourceContext) -> frozense
     return declared_sources
 
 
-def _is_m347_declarante_summary_binding(binding: object) -> bool:
-    if not hasattr(binding, "source") or not hasattr(binding, "selector"):
-        return False
+def _is_m347_declarante_summary_binding(binding: DataBindingDefinition) -> bool:
     if binding.source not in _OWNED_SOURCES:
         return False
     return selector_as_dict(binding).get("record") == _M347_DECLARANTE_SUMMARY_RECORD
