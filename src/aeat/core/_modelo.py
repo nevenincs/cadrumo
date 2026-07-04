@@ -232,10 +232,7 @@ class Modelo(StrEnum):
 #: ~200-form set.
 UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
     Modelo.M140: "IRPF deduccion por maternidad, solicitud de abono anticipado",
-    Modelo.M341: "reintegro de compensaciones del regimen especial de agricultura, ganaderia y pesca del IVA",
-    Modelo.M380: "IVA operaciones asimiladas a las importaciones (declaracion-liquidacion)",
     Modelo.M143: "IRPF deducciones familia numerosa/discapacidad, solicitud de abono anticipado",
-    Modelo.M848: "comunicacion del importe neto de la cifra de negocios a efectos del IAE",
     Modelo.M490: "Impuesto sobre Determinados Servicios Digitales (autoliquidacion trimestral)",
     Modelo.M604: "Impuesto sobre las Transacciones Financieras (autoliquidacion mensual)",
     Modelo.M763: "Impuesto sobre actividades de juego (autoliquidacion trimestral)",
