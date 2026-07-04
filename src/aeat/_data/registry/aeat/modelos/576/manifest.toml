@@ -1,0 +1,16 @@
+[modelo]
+id = "576"
+title = "IEDMT — autoliquidación por matriculación de determinados medios de transporte"
+official_name = "Modelo 576. Impuesto Especial sobre Determinados Medios de Transporte. Autoliquidación."
+tax_domain = "iedmt"
+cadence = "profile_based"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-eha-3851-2007:art-1",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-576-procedure",
+    "enrolled-modelo-576-layout",
+]
