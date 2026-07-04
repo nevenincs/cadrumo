@@ -23,6 +23,7 @@ from ....entrypoints.mcp._hitl import _LIVE_WRITE_LEAVES
 from .. import (
     GoldenScenario,
     LiveNarrationRecord,
+    LiveScenarioScore,
     LiveToolCallRecord,
     LiveTrajectory,
     ScriptedPersonaDriver,
@@ -69,7 +70,7 @@ def _complete_calls() -> list[LiveToolCallRecord]:
     ]
 
 
-def _score(trajectory: LiveTrajectory, scenario: GoldenScenario) -> object:
+def _score(trajectory: LiveTrajectory, scenario: GoldenScenario) -> LiveScenarioScore:
     return score_live_trajectory(
         trajectory,
         scenario=scenario,

@@ -26,6 +26,7 @@ from ....domain.filing import (
     ModeloValueKind,
     compute_modelo_draft_id,
 )
+from ....tests.secure_sql import TestRuntimeProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -90,10 +91,10 @@ def repo() -> ModeloDraftRepository:
     return ModeloDraftRepository()
 
 
-def _database_bytes(tmp_path: Path) -> bytes:
+def _database_bytes(storage_root: Path) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(tmp_path / "aeat-storage" / "buckets" / "filing-test" / "db" / "aeat.db")
+    return read_db_at_rest_bytes(storage_root / "buckets" / "filing-test" / "db" / "aeat.db")
 
 
 class TestEmptyState:
@@ -149,10 +150,14 @@ class TestDelete:
 
 
 class TestClassificationGate:
-    def test_database_payload_is_encrypted_financial_data(self, repo: ModeloDraftRepository, tmp_path: Path) -> None:
+    def test_database_payload_is_encrypted_financial_data(
+        self,
+        repo: ModeloDraftRepository,
+        _active_bucket_runtime: TestRuntimeProfile,
+    ) -> None:
         draft = _make_draft()
         repo.save(draft)
-        raw = _database_bytes(tmp_path)
+        raw = _database_bytes(_active_bucket_runtime.storage_root)
         assert b"secure_objects" in raw
         assert b"00000000T" not in raw
         assert b"2026Q1" not in raw

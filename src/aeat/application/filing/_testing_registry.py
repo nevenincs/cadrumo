@@ -7,8 +7,9 @@ typed :class:`~aeat.core.Period` through
 :func:`aeat.application.filing.approve_draft` when the requested
 :class:`~aeat.domain.submission.ModeloDraftStatus` is
 :attr:`~aeat.domain.submission.ModeloDraftStatus.APROBADO`. The approval path
-receives an empty :class:`TransactionCatalogue` so tests without ledger state
-get a deterministic approval basis.
+receives an empty :class:`TransactionCatalogue` and an empty
+:class:`~aeat.domain.invoices.InvoiceCatalogue` so tests without ledger or
+invoice state get a deterministic approval basis without a bucket self-load.
 
 See Also:
     :mod:`aeat.application.filing.runtime`
@@ -28,6 +29,7 @@ from pydantic import TypeAdapter, ValidationError
 from ...core import Period
 from ...domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
 from ...domain.filing import ModeloDraft, ModeloInputs
+from ...domain.invoices import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import TransactionCatalogue
 from . import ModeloBuilderError, approve_draft, build_draft, build_runtime_schema_provider
@@ -107,6 +109,7 @@ def build_registry_filing_draft(
             approved_by="registry",
             schema_provider=schema_provider,
             transaction_catalogue=TransactionCatalogue(),
+            invoice_catalogue=InvoiceCatalogue(),
         )
     return draft.model_copy(
         update={

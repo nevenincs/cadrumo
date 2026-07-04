@@ -24,12 +24,15 @@ from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path
 from .._binding_selector_utils import (
+    BindingExportDataType,
     BindingFixedExportSelector,
     BindingRowExportSelector,
     binding_export_selector,
 )
 from .._export import (
     _export_fields_overlap,
+    _ExportJustification,
+    _ExportPadding,
     _justification_for_binding_data_type,
     _padding_for_binding_data_type,
 )
@@ -304,7 +307,7 @@ def test_binding_export_selector_rejects_non_integer_offset() -> None:
         pytest.param("boolean", "right_space", id="boolean"),
     ),
 )
-def test_padding_for_binding_data_type(data_type: str, padding: str) -> None:
+def test_padding_for_binding_data_type(data_type: BindingExportDataType, padding: _ExportPadding) -> None:
     """Numeric fixed-width export fields pad with leading zeros so the
     parser can recover the magnitude unambiguously."""
     assert _padding_for_binding_data_type(data_type) == padding
@@ -326,5 +329,8 @@ def test_padding_for_binding_data_type(data_type: str, padding: str) -> None:
         pytest.param("boolean", "left", id="boolean"),
     ),
 )
-def test_justification_for_binding_data_type(data_type: str, justification: str) -> None:
+def test_justification_for_binding_data_type(
+    data_type: BindingExportDataType,
+    justification: _ExportJustification,
+) -> None:
     assert _justification_for_binding_data_type(data_type) == justification

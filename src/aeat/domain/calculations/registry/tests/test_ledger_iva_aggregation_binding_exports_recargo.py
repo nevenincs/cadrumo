@@ -96,16 +96,11 @@ def test_box_60_binding_selects_export_and_assimilated_export_categories() -> No
     }
     for revision_id in ("2009-y-siguientes", "2023-y-siguientes"):
         revision = _m303_revision(revision_id)
-        binding = next(item for item in revision.bindings
-                       if item.id == "modelo-303-casilla-60-exportaciones-base")
+        binding = next(item for item in revision.bindings if item.id == "modelo-303-casilla-60-exportaciones-base")
         selector_dict: Any = selector_as_dict(binding)
         assert set(selector_dict["categories"]) == expected
-        assert "ley-37-1992:art-21" in binding.legal_refs, (
-            f"{revision_id}: binding must cite art-21"
-        )
-        assert "ley-37-1992:art-22" in binding.legal_refs, (
-            f"{revision_id}: binding must cite art-22"
-        )
+        assert "ley-37-1992:art-21" in binding.legal_refs, f"{revision_id}: binding must cite art-21"
+        assert "ley-37-1992:art-22" in binding.legal_refs, f"{revision_id}: binding must cite art-22"
 
 
 def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
@@ -390,9 +385,7 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
     ``test_casilla_27_anti_tautology_recargo_changes_total_cuota_devengada``.
     """
 
-    def _observations(
-        *, include_recargo: bool
-    ) -> tuple[IvaLedgerObservation, ...]:
+    def _observations(*, include_recargo: bool) -> tuple[IvaLedgerObservation, ...]:
         return (
             _observation(
                 ledger_id="op-ventas-recargo-equivalencia",
@@ -402,9 +395,7 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
                 flow=IvaFlowDirection.REPERCUTIDO,
                 base=Decimal("24000.00"),
                 iva=Decimal("5040.00"),
-                recargo=(
-                    Decimal("1248.00") if include_recargo else Decimal("0")
-                ),
+                recargo=(Decimal("1248.00") if include_recargo else Decimal("0")),
             ),
         )
 

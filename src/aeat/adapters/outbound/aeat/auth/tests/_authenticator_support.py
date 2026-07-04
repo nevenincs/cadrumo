@@ -596,8 +596,8 @@ def _load_test_session(path: Path) -> _session_store.PersistedBrowserSession:
 def _store_test_session(
     path: Path,
     *,
-    storage_state: dict[str, object] | None = None,
-    metadata: dict[str, object] | None = None,
+    storage_state: Mapping[str, object] | None = None,
+    metadata: Mapping[str, object] | None = None,
 ) -> None:
     persisted = _load_test_session(path)
     _session_store.save(

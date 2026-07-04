@@ -1,37 +1,37 @@
 """Replay-nonce ledger for recipient-encrypted review packages.
 
-Every :class:`~aeat.application.modelo.RecipientEncryptedPackage` carries a
+Every :class:`~application.modelo.RecipientEncryptedPackage` carries a
 fresh, unique ``envelope_nonce_hex`` minted at encryption time (see
-:mod:`aeat.application.modelo._review_package_recipient_encryption`). This
-module lets the recipient side of :func:`~aeat.application.modelo.decrypt_review_package_for_recipient`
+:mod:`application.modelo._review_package_recipient_encryption`). This
+module lets the recipient side of :func:`~application.modelo.decrypt_review_package_for_recipient`
 record which nonces have already been successfully decrypted, so a captured
 ciphertext replayed a second time against the same recipient bucket is
 refused rather than silently re-accepted.
 
 The nonce ledger is a bucket-scoped append-only consumption record, following
 the exact governed-repository shape of
-:class:`~aeat.application.modelo.RecipientFingerprintRegistryRepository`: one
+:class:`~application.modelo.RecipientFingerprintRegistryRepository`: one
 ``FINANCIAL``-sensitivity secure-object singleton per bucket, an empty ledger
 when absent, and ``mark_consumed`` refuses a nonce already on file. This is
 the ``composition-service-no-parallel-write-path`` companion to that
 registry -- the decrypt primitive itself performs no persistence; a caller
 (the future CLI decrypt verb) composes this ledger's ``check_and_consume``
 around the existing, unmodified
-:func:`~aeat.application.modelo.decrypt_review_package_for_recipient` call.
+:func:`~application.modelo.decrypt_review_package_for_recipient` call.
 
 Nonce identity is clock-free (the nonce is a random 32-byte value minted once
 per encryption, never derived from a timestamp), so replay defence does not
 depend on wall-clock ordering the way the paired expiry check does -- see
-:mod:`aeat.application.modelo._review_package_recipient_encryption` for the
+:mod:`application.modelo._review_package_recipient_encryption` for the
 ``issued_at`` / ``valid_until`` expiry fields, which are a distinct concern
 (a package can be replayed within its validity window, and expiry alone does
 not detect a same-nonce replay before the deadline).
 
 See Also:
-    :mod:`aeat.application.modelo._review_package_recipient_encryption`
+    :mod:`application.modelo._review_package_recipient_encryption`
         Mints the ``envelope_nonce_hex`` this ledger consumes and defines the
         paired expiry fields.
-    :mod:`aeat.application.modelo._review_package_recipient_registry`
+    :mod:`application.modelo._review_package_recipient_registry`
         The structural template this repository mirrors.
 """
 
@@ -90,7 +90,7 @@ class RecipientReplayGuardRepository:
     :data:`adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE`
     and persisted through
     :class:`adapters.persistence.storage.SecureObjectRepository`, mirroring
-    :class:`~aeat.application.modelo.RecipientFingerprintRegistryRepository`.
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`.
     """
 
     def __init__(
@@ -173,7 +173,7 @@ class RecipientReplayGuardRepository:
 
         Args:
             nonce_hex: The envelope's ``envelope_nonce_hex`` (see
-                :class:`~aeat.application.modelo.RecipientEncryptedPackage`).
+                :class:`~application.modelo.RecipientEncryptedPackage`).
             consumed_at: Optional override for the record's ``consumed_at``
                 timestamp (tests only); defaults to the current UTC time.
 

@@ -29,6 +29,7 @@ from ....domain.filing import (
     ModeloValueKind,
     compute_modelo_draft_id,
 )
+from ....tests.secure_sql import TestRuntimeProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _AMENDMENT_CASILLA: CasillaId = validated_casilla_id("01", surface="_AMENDMENT_CASILLA")
@@ -107,10 +108,10 @@ def repo() -> ModeloAmendmentRepository:
     return ModeloAmendmentRepository()
 
 
-def _database_bytes(tmp_path: Path) -> bytes:
+def _database_bytes(storage_root: Path) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(tmp_path / "aeat-storage" / "buckets" / "filing-test" / "db" / "aeat.db")
+    return read_db_at_rest_bytes(storage_root / "buckets" / "filing-test" / "db" / "aeat.db")
 
 
 class TestEmptyState:
@@ -153,11 +154,11 @@ class TestClassificationGate:
     def test_database_payload_is_encrypted_audit_data(
         self,
         repo: ModeloAmendmentRepository,
-        tmp_path: Path,
+        _active_bucket_runtime: TestRuntimeProfile,
     ) -> None:
         amendment = _make_amendment()
         repo.save(amendment)
-        raw = _database_bytes(tmp_path)
+        raw = _database_bytes(_active_bucket_runtime.storage_root)
         assert b"secure_objects" in raw
         assert b"CSV-ORIG-001" not in raw
         assert b"Test correction" not in raw

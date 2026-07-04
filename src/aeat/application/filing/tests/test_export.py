@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -46,7 +45,6 @@ from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor
 from ._export_support import (
     _EXPORT_PATH,
     _EXPORT_VERIFY_MATCH_CASES,
-    _ExportVerifyMatchCase,
     _HEX_DIGEST,
     _M111_RESULTADO_CASILLA,
     _M111_RETENCIONES_TOTAL_CASILLA,
@@ -96,6 +94,7 @@ from ._export_support import (
     _approved_modelo_131_zero_payable_direct_debit_draft,
     _approved_registry_draft,
     _assert_missing_export_layout_refusal,
+    _ExportVerifyMatchCase,
     _field_slice,
     _modelo_111_export_headers,
     _modelo_111_export_payload,

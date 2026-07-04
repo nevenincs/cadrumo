@@ -83,11 +83,14 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
     :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
     encrypts the serialized JSON payload. The namespace definition supplies the
     ``SESSION`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
-    classification and schema version.
+    classification and schema version. ``storage_state``/``metadata`` are
+    validated JSON-safe here (mirroring :func:`_storage_state_sha256`) so the
+    caller-facing boundary stays the wide ``Mapping[str, object]`` shape
+    :class:`~._authenticator_types.BrowserContextLike` exposes.
     """
     payload = PersistedBrowserSession(
-        storage_state=storage_state,
-        metadata=metadata,
+        storage_state=_JSON_OBJECT_ADAPTER.validate_python(storage_state),
+        metadata=_JSON_OBJECT_ADAPTER.validate_python(metadata),
         written_at=now(),
     )
     _repository().save(

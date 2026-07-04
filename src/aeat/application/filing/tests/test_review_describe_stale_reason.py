@@ -28,6 +28,9 @@ _EXPECTED_REASON_KEYS = {
     ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED: (
         "application.filing.review.stale_reasons.transaction_catalogue_changed"
     ),
+    ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED: (
+        "application.filing.review.stale_reasons.invoice_catalogue_changed"
+    ),
     ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED: (
         "application.filing.review.stale_reasons.category_profiles_changed"
     ),

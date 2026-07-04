@@ -27,6 +27,7 @@ from ....core import Period
 from ....domain.invoices import Invoice, InvoiceCatalogue
 from ....domain.iva import InvoiceKind
 from ....domain.submission import ModeloDraftStatus
+from ....tests.secure_sql import TestRuntimeProfile
 from ...invoices import build_catalogue_invoice
 from .. import (
     CasillaSchemaProvider,
@@ -41,7 +42,12 @@ from .._review import _invoice_catalogue_fingerprint
 from ..testing import ModeloTestProfile
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
-_BUCKET_ID = "30330300-0000-4000-8000-000000000701"
+# The filing conftest's module-scope ``_active_bucket_runtime`` activates this
+# bucket; integration tests below route their invoice repository, approval, and
+# staleness checks through it (via ``runtime.bucket_id``) so the self-load lands
+# in the active session. The pure-fingerprint unit tests never touch storage, so
+# they use it only as the invoice-record stamp.
+_RUNTIME_BUCKET_ID = "filing-test"
 _COUNTERPARTY_CIF = "A58818501"
 
 
@@ -64,9 +70,9 @@ def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
     )
 
 
-def _invoice(invoice_number: str, *, taxable_base: Decimal) -> Invoice:
+def _invoice(invoice_number: str, *, taxable_base: Decimal, bucket_id: str = _RUNTIME_BUCKET_ID) -> Invoice:
     return build_catalogue_invoice(
-        bucket_id=_BUCKET_ID,
+        bucket_id=bucket_id,
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Papeleria Sol SL",
         counterparty_tax_id=_COUNTERPARTY_CIF,
@@ -81,15 +87,20 @@ def _invoice(invoice_number: str, *, taxable_base: Decimal) -> Invoice:
 
 @pytest.mark.integration
 @pytest.mark.hex_application
-def test_approval_goes_stale_when_invoice_source_data_changes() -> None:
+def test_approval_goes_stale_when_invoice_source_data_changes(
+    _active_bucket_runtime: TestRuntimeProfile,
+) -> None:
+    bucket_id = _active_bucket_runtime.bucket_id
     schema_provider = _schema_provider()
     draft = _ready_draft(schema_provider)
-    repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
+    repository = InvoiceCatalogueRepository(bucket_id=bucket_id)
 
-    repository.save(InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("100.00"))]))
+    repository.save(
+        InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("100.00"), bucket_id=bucket_id)]),
+    )
     approved = approve_draft(
         draft,
-        bucket_id=_BUCKET_ID,
+        bucket_id=bucket_id,
         approved_by="operator",
         schema_provider=schema_provider,
     )
@@ -99,9 +110,11 @@ def test_approval_goes_stale_when_invoice_source_data_changes() -> None:
 
     # Mutate ONLY the invoice source: a different taxable base yields a different
     # invoice, so the self-loaded catalogue fingerprint must change.
-    repository.save(InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("250.00"))]))
+    repository.save(
+        InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("250.00"), bucket_id=bucket_id)]),
+    )
 
-    reasons = approval_stale_reasons(approved, bucket_id=_BUCKET_ID, schema_provider=schema_provider)
+    reasons = approval_stale_reasons(approved, bucket_id=bucket_id, schema_provider=schema_provider)
 
     # Only the invoice source changed: the draft, transactions, category profiles,
     # and schema are all unchanged, so INVOICE_CATALOGUE_CHANGED is the sole reason.
@@ -110,7 +123,9 @@ def test_approval_goes_stale_when_invoice_source_data_changes() -> None:
 
 @pytest.mark.integration
 @pytest.mark.hex_application
-def test_approval_not_stale_when_invoice_source_unchanged() -> None:
+def test_approval_not_stale_when_invoice_source_unchanged(
+    _active_bucket_runtime: TestRuntimeProfile,
+) -> None:
     """Anti-tautology: an unchanged invoice catalogue produces NO stale reason.
 
     If :func:`approval_stale_reasons` returned INVOICE_CATALOGUE_CHANGED
@@ -118,20 +133,23 @@ def test_approval_not_stale_when_invoice_source_unchanged() -> None:
     meaningless. Approving and then re-checking against the identical catalogue
     must yield an empty reason tuple.
     """
+    bucket_id = _active_bucket_runtime.bucket_id
     schema_provider = _schema_provider()
     draft = _ready_draft(schema_provider)
-    repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
+    repository = InvoiceCatalogueRepository(bucket_id=bucket_id)
 
-    repository.save(InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("100.00"))]))
+    repository.save(
+        InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("100.00"), bucket_id=bucket_id)]),
+    )
     approved = approve_draft(
         draft,
-        bucket_id=_BUCKET_ID,
+        bucket_id=bucket_id,
         approved_by="operator",
         schema_provider=schema_provider,
     )
 
     # No mutation to any source between approval and the staleness check.
-    reasons = approval_stale_reasons(approved, bucket_id=_BUCKET_ID, schema_provider=schema_provider)
+    reasons = approval_stale_reasons(approved, bucket_id=bucket_id, schema_provider=schema_provider)
 
     assert ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED not in reasons
     assert reasons == ()

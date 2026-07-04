@@ -65,6 +65,7 @@ _INLINE_SIGN_CASES = (
     (Decimal("-5.00"), True, b"N000000500"),
 )
 
+
 class _TextEncodingOptions(TypedDict, total=False):
     """Keyword arguments for :func:`encode_text`, matching its real signature."""
 

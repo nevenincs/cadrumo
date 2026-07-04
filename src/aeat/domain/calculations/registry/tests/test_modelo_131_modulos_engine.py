@@ -535,6 +535,7 @@ def _run_modulos_engine(
     indice_inicio_actividad: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
     snapshot = _committed_snapshot("131", 2025, "1T")
+    assert snapshot.filing_period is not None
     text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
     result = calculate_registry_snapshot(
         snapshot,
@@ -2287,6 +2288,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
 
     def test_pequena_dimension_ignorado_flag_fires_on_especial_epigrafe(self) -> None:
         snapshot = _committed_snapshot("131", 2025, "1T")
+        assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
             inputs={
@@ -2301,6 +2303,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
 
     def test_pequena_dimension_ignorado_flag_stays_zero_on_ordinary_epigrafe(self) -> None:
         snapshot = _committed_snapshot("131", 2025, "1T")
+        assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
             inputs={
@@ -2314,6 +2317,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
 
     def test_pequena_dimension_ignorado_flag_stays_zero_when_not_declared(self) -> None:
         snapshot = _committed_snapshot("131", 2025, "1T")
+        assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
             inputs={"modulos-2-unidades": Decimal("1"), "modulos-3-unidades": Decimal("900")},
@@ -2324,6 +2328,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
 
     def test_temporada_inicio_conflicto_flag_fires_when_both_declared(self) -> None:
         snapshot = _committed_snapshot("131", 2025, "1T")
+        assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
             inputs={
@@ -2338,6 +2343,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
 
     def test_temporada_inicio_conflicto_flag_stays_zero_when_only_one_declared(self) -> None:
         snapshot = _committed_snapshot("131", 2025, "1T")
+        assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
             inputs={"modulos-1-unidades": Decimal("1"), "modulos-indice-temporada": Decimal("1.50")},
