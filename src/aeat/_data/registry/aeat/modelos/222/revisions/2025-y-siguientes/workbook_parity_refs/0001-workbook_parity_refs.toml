@@ -1,0 +1,15 @@
+# Modelo 222 record-design parity anchor. Declares the official layout authority
+# (the BOE Orden HFP/227/2017 form spec that approves the Anexo II record design)
+# as the parity source. This scheduling/applicability-grade revision carries no
+# calc formulas, so runner_required is false: the anchor pins the official layout
+# provenance without asserting a numeric parity run.
+
+[[revisions."2025-y-siguientes".workbook_parity_refs]]
+id = "modelo-222-record-design"
+workbook_source = "boe-modelo-202-base-order"
+fixture_id = "modelo-222-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hfp-227-2017:art-2"]
+source_refs = ["boe-modelo-202-base-order"]

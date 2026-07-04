@@ -38,6 +38,8 @@ credential resolution).
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import typer
 
 from ....adapters.outbound.google import (
@@ -62,6 +64,22 @@ credential_source_app = typer.Typer(
     help=tr("cli.config.google.credential_source.help"),
     no_args_is_help=True,
 )
+
+
+class _ImpersonationKwargs(TypedDict, total=False):
+    """Optional-key constructor kwargs for :class:`GoogleImpersonationConfig`.
+
+    Every key is conditionally populated below; omitted keys fall through to
+    the model's own field defaults. A plain ``dict[str, object]`` would erase
+    each field's real type at the ``**`` splat, so this mirrors the
+    constructor's keyword types one-for-one instead.
+    """
+
+    target_principal: str
+    target_scopes: tuple[str, ...]
+    delegates: tuple[str, ...]
+    subject: str | None
+    lifetime_s: int
 
 
 def _default_scopes(selection: GoogleCredentialSourceSelection) -> list[str]:
@@ -128,7 +146,7 @@ def google_credential_source_set(
                     context={"kind": kind.value},
                 ),
             )
-        impersonation_kwargs: dict[str, object] = {"target_principal": target_principal.strip()}
+        impersonation_kwargs: _ImpersonationKwargs = {"target_principal": target_principal.strip()}
         if scopes:
             impersonation_kwargs["target_scopes"] = tuple(scopes)
         if delegates:

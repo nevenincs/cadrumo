@@ -15,9 +15,19 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
+from ....core.i18n import Translatable as tr
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
-from ....domain.categories import SpendingCategory
+from ....domain.categories import (
+    CategoryCitation,
+    CategoryCitationSource,
+    CategoryProfile,
+    ProportionalityKind,
+    ProportionalityRule,
+    SpendingCategory,
+    parse_http_url,
+)
+from ....domain.contribuyente import CCAA
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
 from ....domain.renta import RentaExpenseDirection
@@ -819,3 +829,108 @@ def test_zero_business_amount_is_reported_as_invalid_fact_issue() -> None:
 
     assert result.observations == ()
     assert result.issues[0].reason is RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT
+
+
+# ---------------------------------------------------------------------------
+# Territorial-regime region-scoped deductibility (region-Renta D1/D2/D4)
+# ---------------------------------------------------------------------------
+
+
+def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
+    """A SYNTHETIC per-comunidad override profile for wiring tests only.
+
+    Fixed 50% deductibility, distinct from the GASTOS_BANCARIOS state profile
+    (full deductible), so a selection is observable. This is a test double for
+    the SELECTION MECHANISM, never a real territorial-regime figure.
+    """
+    return CategoryProfile(
+        category=category,
+        display_label=tr("Override territorial de prueba"),
+        proportionality=ProportionalityRule(
+            kind=ProportionalityKind.FIXED_PERCENTAGE,
+            fixed_pct=Decimal("0.50"),
+            citations=(
+                CategoryCitation(
+                    source=CategoryCitationSource.MANUAL_RENTA,
+                    reference="Regla de prueba territorial",
+                    locator="test",
+                    url=parse_http_url("https://example.com/regimen"),
+                    quote=tr("Texto de prueba para override territorial."),
+                ),
+            ),
+            notes=tr("Override territorial de prueba."),
+        ),
+    )
+
+
+def test_non_regional_category_profile_preserves_result_across_region() -> None:
+    """S37: with the (empty) override layer, the residence CCAA is inert.
+
+    A category with no territorial-regime override produces byte-identical
+    observations whether the residence comunidad is declared or not.
+    """
+    row = _transaction("row-region-inert", amount=Decimal("100.00"), category=SpendingCategory.GASTOS_BANCARIOS)
+    catalogue = TransactionCatalogue.from_transactions((row,))
+
+    without_region = aggregate_renta_ledger_expenses(
+        catalogue, InvoiceCatalogue(), bucket_id="test", period=_ANNUAL_2025, profile_year=2025
+    )
+    with_region = aggregate_renta_ledger_expenses(
+        catalogue,
+        InvoiceCatalogue(),
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        profile_year=2025,
+        residence_ccaa=CCAA.MADRID,
+    )
+
+    assert with_region.observations == without_region.observations
+    assert with_region.casilla_values == without_region.casilla_values
+    assert with_region.issues == without_region.issues == ()
+
+
+def test_region_override_selected_when_residence_matches() -> None:
+    """S38: a declared residence with a territorial override selects the override.
+
+    The synthetic 50% override for the residence comunidad halves the deductible
+    versus the full-deductible state profile, proving selection by CCAA.
+    """
+    row = _transaction("row-region-hit", amount=Decimal("100.00"), category=SpendingCategory.GASTOS_BANCARIOS)
+    overrides = {
+        CCAA.CANARIAS: {SpendingCategory.GASTOS_BANCARIOS: _region_override_profile(SpendingCategory.GASTOS_BANCARIOS)}
+    }
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((row,)),
+        InvoiceCatalogue(),
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        profile_year=2025,
+        residence_ccaa=CCAA.CANARIAS,
+        region_category_overrides=overrides,
+    )
+
+    assert result.issues == ()
+    assert result.observations[0].proportionality_kind is ProportionalityKind.FIXED_PERCENTAGE
+    assert result.observations[0].deductible_amount == Decimal("50.0000")
+
+
+def test_region_override_undeclared_residence_fails_closed() -> None:
+    """S38/D4: a category carrying an override with no declared residence fails closed."""
+    row = _transaction("row-region-undeclared", amount=Decimal("100.00"), category=SpendingCategory.GASTOS_BANCARIOS)
+    overrides = {
+        CCAA.CANARIAS: {SpendingCategory.GASTOS_BANCARIOS: _region_override_profile(SpendingCategory.GASTOS_BANCARIOS)}
+    }
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((row,)),
+        InvoiceCatalogue(),
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        profile_year=2025,
+        residence_ccaa=None,
+        region_category_overrides=overrides,
+    )
+
+    assert result.observations == ()
+    assert result.issues[0].reason is RentaLedgerAggregationIssueReason.REGION_UNDECLARED_FOR_OVERRIDE

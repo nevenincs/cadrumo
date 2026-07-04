@@ -64,8 +64,18 @@ manuals_app = typer.Typer(
 )
 
 
+def refuse_when_corpus_companion_absent(*, capability: str, missing_advisories: tuple[str, ...]) -> None:
+    """Refuse instructively when a verification verb needs absent companion binaries."""
+    if not missing_advisories:
+        return
+    raise CliRefusedBoundaryError(
+        translated_message="cli.registry.errors.corpus_companion_absent",
+        context={"capability": capability, "install": CORPUS_SOURCES_INSTALL_HINT},
+    )
+
+
 def guard_corpus_companion(*, capability: str, registry_root: Path, source_root: Path) -> None:
-    """Refuse instructively when a verification verb needs absent companion binaries.
+    """Scan the corpus source catalogue and refuse when companion binaries are absent.
 
     The ``aeat app registry`` verification verbs read the bundled corpus source
     binaries. In a split install without the ``aeat_data`` companion those
@@ -75,11 +85,9 @@ def guard_corpus_companion(*, capability: str, registry_root: Path, source_root:
     command, per the CLI-gate-is-instructive rule. When the binaries are present
     (full checkout or companion installed) the guard is a no-op.
     """
-    if not absent_corpus_companion_binaries(registry_root, source_root=source_root):
-        return
-    raise CliRefusedBoundaryError(
-        translated_message="cli.registry.errors.corpus_companion_absent",
-        context={"capability": capability, "install": CORPUS_SOURCES_INSTALL_HINT},
+    refuse_when_corpus_companion_absent(
+        capability=capability,
+        missing_advisories=absent_corpus_companion_binaries(registry_root, source_root=source_root),
     )
 
 
@@ -350,4 +358,4 @@ def _manual_verification_lines(report: RegistryManualVerificationReport) -> list
     return lines
 
 
-__all__ = ["citations_app", "guard_corpus_companion", "manuals_app"]
+__all__ = ["citations_app", "guard_corpus_companion", "manuals_app", "refuse_when_corpus_companion_absent"]

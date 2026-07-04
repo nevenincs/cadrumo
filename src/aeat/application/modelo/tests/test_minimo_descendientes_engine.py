@@ -32,6 +32,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -128,7 +129,8 @@ def test_estatal_and_autonomico_casillas_are_computed(year: int) -> None:
 def test_no_descendientes_facts_injects_legally_correct_zero() -> None:
     snapshot = _snapshot(2024)
     fact_index: dict[str, object] = {}
-    inject_derived_minimo_descendientes_facts(fact_index, snapshot)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
     assert fact_index[_aggregate_key(2024)] == Decimal("0")
 
 
@@ -139,7 +141,8 @@ def test_one_eligible_descendant_uses_first_tranche_plus_menor_tres() -> None:
         "renta_family.descendiente.0.birth_date": "2023-01-15",
         "renta_family.descendiente.0.convivencia": "true",
     }
-    inject_derived_minimo_descendientes_facts(fact_index, snapshot)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
     assert fact_index[_aggregate_key(2024)] == tranches[0] + menor_tres
 
 
@@ -149,7 +152,8 @@ def test_ineligible_descendant_over_25_contributes_nothing() -> None:
         "renta_family.descendiente.0.birth_date": "1990-01-01",
         "renta_family.descendiente.0.convivencia": "true",
     }
-    inject_derived_minimo_descendientes_facts(fact_index, snapshot)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
     assert fact_index[_aggregate_key(2024)] == Decimal("0")
 
 
@@ -161,7 +165,8 @@ def test_custodia_compartida_halves_the_contribution() -> None:
         "renta_family.descendiente.0.convivencia": "true",
         "renta_family.descendiente.0.custodia_compartida": "true",
     }
-    inject_derived_minimo_descendientes_facts(fact_index, snapshot)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
     assert fact_index[_aggregate_key(2024)] == tranches[0] * Decimal("0.5")
 
 
@@ -174,14 +179,16 @@ def test_two_descendientes_stack_first_and_second_tranche() -> None:
         "renta_family.descendiente.1.birth_date": "2015-01-01",
         "renta_family.descendiente.1.convivencia": "true",
     }
-    inject_derived_minimo_descendientes_facts(fact_index, snapshot)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
     assert fact_index[_aggregate_key(2024)] == tranches[0] + tranches[1]
 
 
 def test_idempotent_explicit_fact_preserved() -> None:
     snapshot = _snapshot(2024)
     fact_index: dict[str, object] = {_aggregate_key(2024): Decimal("999")}
-    inject_derived_minimo_descendientes_facts(fact_index, snapshot)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
     assert fact_index[_aggregate_key(2024)] == Decimal("999")
 
 
@@ -193,7 +200,8 @@ def test_one_eligible_descendant_matches_registry_first_tranche_across_all_years
         "renta_family.descendiente.0.birth_date": "2015-01-01",
         "renta_family.descendiente.0.convivencia": "true",
     }
-    inject_derived_minimo_descendientes_facts(fact_index, snapshot)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
     assert fact_index[_aggregate_key(year)] == tranches[0]
 
 
@@ -269,7 +277,8 @@ def test_non_madrid_ccaa_autonomico_mirrors_estatal_for_two_descendants(year: in
         "renta_family.descendiente.1.birth_date": "2015-06-01",
         "renta_family.descendiente.1.convivencia": "true",
     }
-    inject_derived_minimo_descendientes_facts(fact_index, snapshot)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
     assert fact_index[_aggregate_key(year)] == fact_index[_autonomico_aggregate_key(year)]
 
 
@@ -330,7 +339,8 @@ def test_madrid_resident_three_descendants_autonomico_exceeds_estatal(year: int)
         "renta_family.descendiente.2.birth_date": "2012-01-01",
         "renta_family.descendiente.2.convivencia": "true",
     }
-    inject_derived_minimo_descendientes_facts(fact_index, snapshot)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
 
     estatal_value = fact_index[_aggregate_key(year)]
     autonomico_value = fact_index[_autonomico_aggregate_key(year)]

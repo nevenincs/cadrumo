@@ -1,0 +1,17 @@
+[modelo]
+id = "380"
+title = "IVA operaciones asimiladas a las importaciones (declaración-liquidación)"
+official_name = "Modelo 380. Declaración-liquidación. Operaciones asimiladas a las importaciones del Impuesto sobre el Valor Añadido."
+tax_domain = "iva"
+cadence = "profile_based"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-eha-1308-2005:art-1",
+    "orden-eha-1308-2005:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-380-procedure",
+    "enrolled-modelo-380-layout",
+]

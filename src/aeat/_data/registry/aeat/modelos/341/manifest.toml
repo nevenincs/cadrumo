@@ -1,0 +1,17 @@
+[modelo]
+id = "341"
+title = "Reintegro de compensaciones del régimen especial de agricultura, ganadería y pesca del IVA"
+official_name = "Modelo 341. Solicitud de reintegro de compensaciones en el régimen especial de la agricultura, ganadería y pesca."
+tax_domain = "iva"
+cadence = "quarterly"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-min-2000-12-15-m341:art-1",
+    "orden-min-2000-12-15-m341:art-2",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-341-procedure",
+    "enrolled-modelo-341-layout",
+]

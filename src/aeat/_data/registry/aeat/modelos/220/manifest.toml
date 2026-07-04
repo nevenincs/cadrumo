@@ -1,0 +1,16 @@
+[modelo]
+id = "220"
+title = "IS autoliquidación anual régimen de consolidación fiscal (grupos)"
+official_name = "Modelo 220. Impuesto sobre Sociedades. Régimen de consolidación fiscal. Declaración."
+tax_domain = "is"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-hac-657-2025:art-3",
+    "ley-27-2014:art-124",
+]
+source_refs = [
+    "aeat-modelo-200-manual-2024",
+    "boe-modelo-200-2025-form",
+]

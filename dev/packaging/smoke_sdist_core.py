@@ -29,7 +29,8 @@ def _build_sdist(repo_root: Path, work_dir: Path, uv: str) -> Path:
     _run([uv, "build", "--sdist", "--out-dir", str(sdist_dir)], cwd=repo_root)
     sdists = sorted(sdist_dir.glob("aeat_cli-*.tar.gz"))
     if len(sdists) != 1:
-        raise SystemExit(f"expected exactly one aeat_cli sdist in {sdist_dir}; got {[sdist.name for sdist in sdists]!r}")
+        names = [sdist.name for sdist in sdists]
+        raise SystemExit(f"expected exactly one aeat_cli sdist in {sdist_dir}; got {names!r}")
     return sdists[0]
 
 

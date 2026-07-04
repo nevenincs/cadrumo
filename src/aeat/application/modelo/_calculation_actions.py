@@ -77,6 +77,7 @@ from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
+    CalculationSourceRef,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloDetailRow,
@@ -395,6 +396,7 @@ def calculate_modelo_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
+    source_provenance: tuple[CalculationSourceRef, ...] = (),
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Run the registry formula engine, persist a draft revision, and return a :class:`CalculationRevision`.
@@ -532,6 +534,7 @@ def calculate_modelo_revision(
         bindings_sourced_from_borrador=prepared.channels.bindings_sourced_from_borrador,
         observations=typed_observations,
         unresolved_outcomes=engine_result.unresolved_outcomes,
+        source_provenance=source_provenance,
         detail_rows=detail_rows,
         formula_count=len(engine_result.entries),
         actor=actor,
@@ -792,6 +795,32 @@ def _resolve_bucket_source_mesh(
     return source_resolution
 
 
+def _source_provenance_refs(
+    source_resolution: CalculationSourceResolution,
+) -> tuple[CalculationSourceRef, ...]:
+    """Project the mesh resolution's application provenance into persisted domain refs.
+
+    Maps each :class:`~aeat.application.aggregation.CalculationSourceProvenance`
+    row (the resolver→source-object→fingerprint trace) into the domain-side
+    :class:`~aeat.domain.modelos.CalculationSourceRef` that
+    :func:`~aeat.application.modelo._revision_persistence.persist_calculation_revision`
+    persists on the :class:`~aeat.domain.modelos.CalculationRevision`. This is the
+    application→domain boundary map: the domain never imports the application
+    provenance model, and the compact ref deliberately drops the per-casilla
+    ``legal_refs`` / ``source_refs`` (carried by the revision's ``observations``)
+    to avoid duplicating that grounding.
+    """
+    return tuple(
+        CalculationSourceRef(
+            source_kind=provenance.source_kind,
+            binding_source=provenance.binding_source,
+            source_ref=provenance.source_ref,
+            fingerprint=provenance.fingerprint,
+        )
+        for provenance in source_resolution.provenance
+    )
+
+
 # Binding sources whose unresolved slot is ALREADY handled non-silently elsewhere
 # and must NOT be re-flagged as an expected-but-missing silent zero:
 #   - previous_filing / relation_prefill: the initial-value path treats an
@@ -1014,6 +1043,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
         source_transaction_ids=tuple(source_resolution.source_transaction_ids),
+        source_provenance=_source_provenance_refs(source_resolution),
         filing_period_date=filing_period_date,
         work_unit_repository=wu_repo,
         calculation_repository=calculation_repository,

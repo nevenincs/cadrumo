@@ -15,23 +15,38 @@ envelope. Network I/O is async; all SDK exceptions are mapped to
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from .._errors import LLMConfigError, LLMProviderError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
 
+if TYPE_CHECKING:
+    # Typing-only: the Anthropic SDK is an optional runtime dependency (the
+    # ``anthropic`` extra); the real import stays deferred to
+    # :func:`_load_anthropic_sdk` below, gated on ``require_optional_extra``.
+    from anthropic import (
+        APIConnectionError,
+        APIStatusError,
+        APITimeoutError,
+        AsyncAnthropic,
+        AuthenticationError,
+        BadRequestError,
+        RateLimitError,
+    )
+    from anthropic.types import MessageParam, MetadataParam, TextBlock
+
 
 @dataclass(frozen=True)
 class _AnthropicSdk:
-    APIConnectionError: type[BaseException]
-    APIStatusError: type[BaseException]
-    APITimeoutError: type[BaseException]
-    AuthenticationError: type[BaseException]
-    BadRequestError: type[BaseException]
-    RateLimitError: type[BaseException]
-    AsyncAnthropic: type[Any]
-    TextBlock: type[Any]
+    APIConnectionError: type[APIConnectionError]
+    APIStatusError: type[APIStatusError]
+    APITimeoutError: type[APITimeoutError]
+    AuthenticationError: type[AuthenticationError]
+    BadRequestError: type[BadRequestError]
+    RateLimitError: type[RateLimitError]
+    AsyncAnthropic: type[AsyncAnthropic]
+    TextBlock: type[TextBlock]
 
 
 def _load_anthropic_sdk() -> _AnthropicSdk:
@@ -120,9 +135,9 @@ class AnthropicAdapter(_ProviderAdapter):
                 or timeout failures, and non-2xx API status codes.
         """
         sdk = self._sdk
-        user_message: dict[str, Any] = {"role": "user", "content": request.prompt}
+        user_message: MessageParam = {"role": "user", "content": request.prompt}
         messages = (user_message,)
-        metadata = {"user_id": request.request_id}
+        metadata: MetadataParam = {"user_id": request.request_id}
         response: Any = None
         try:
             if request.system is None:

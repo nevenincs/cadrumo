@@ -1,0 +1,63 @@
+[legal."orden-hap-2486-2014:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2486-2014.html#a1"
+document_id = "BOE-A-2014-13675"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-13675#a1"
+published_at = 2014-12-30
+effective_from = 2014-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2014-13675 art 1; pending operator re-stamp)"
+notes = "Orden HAP/2486/2014 art 1: aprueba el modelo 143, IRPF deducciones por familia numerosa, por ascendiente con dos hijos o por personas con discapacidad a cargo, solicitud de abono anticipado. Orden habilitante del modelo 143."
+required_text = [
+    "Se aprueba el modelo 143",
+    "Solicitud de abono anticipado",
+]
+
+[legal."orden-hap-2486-2014:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2486-2014.html#a5"
+document_id = "BOE-A-2014-13675"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-13675#a5"
+published_at = 2014-12-30
+effective_from = 2014-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2014-13675 art 5; pending operator re-stamp)"
+notes = "Orden HAP/2486/2014 art 5: plazo de presentación del modelo 143. La solicitud del abono mensual anticipado se realiza a partir del momento en que el contribuyente opte por la modalidad de abono anticipado, cumpliéndose los requisitos — presentación bajo demanda, sin ventana natural fija."
+required_text = [
+    "podrá realizarse a partir del momento en que",
+    "opte por la modalidad de abono anticipado",
+]
+
+[sources."enrolled-modelo-143-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-2486-2014.html"
+sha256 = "888b178d775325ea6025435716887699542b7b2acbf7fa584984a3a0502184c3"
+bytes = 1392
+retrieved_at = 2026-07-04
+published_at = 2014-12-30
+applies_from = 2014-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-13675"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-143-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-2486-2014.html"
+sha256 = "888b178d775325ea6025435716887699542b7b2acbf7fa584984a3a0502184c3"
+bytes = 1392
+retrieved_at = 2026-07-04
+published_at = 2014-12-30
+applies_from = 2014-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-13675"
+review_status = "reviewed"

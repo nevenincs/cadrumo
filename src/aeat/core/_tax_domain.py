@@ -56,5 +56,20 @@ class TaxDomain(StrEnum):
     CROSS_TAX = "cross_tax"
     """Retentions / pagos a cuenta that feed both IRPF and IS."""
 
+    IDSD = "idsd"
+    """Impuesto sobre Determinados Servicios Digitales (modelo 490)."""
+
+    ITF = "itf"
+    """Impuesto sobre las Transacciones Financieras (modelo 604)."""
+
+    JUEGO = "juego"
+    """Impuesto sobre actividades de juego (modelo 763)."""
+
+    PLASTICO = "plastico"
+    """Impuesto especial sobre envases de plástico no reutilizables (modelo 592)."""
+
+    IEDMT = "iedmt"
+    """Impuesto Especial sobre Determinados Medios de Transporte (modelo 576)."""
+
 
 __all__ = ["TaxDomain"]

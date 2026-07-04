@@ -13,6 +13,7 @@ without the full calculation harness.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -27,7 +28,8 @@ def _key(year: int) -> str:
 
 def test_default_eligible_when_no_descendants() -> None:
     fact_index: dict[str, object] = {}
-    inject_derived_anualidades_eligibility_facts(fact_index, 2024)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, 2024)
     assert fact_index[_key(2024)] == Decimal("1")
 
 
@@ -36,7 +38,8 @@ def test_flag_off_when_custody_shared() -> None:
         "renta_family.descendiente.0.birth_date": "2015-05-01",
         "renta_family.descendiente.0.custodia_compartida": "true",
     }
-    inject_derived_anualidades_eligibility_facts(fact_index, 2024)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, 2024)
     assert fact_index[_key(2024)] == Decimal("0")
 
 
@@ -45,7 +48,8 @@ def test_flag_eligible_when_custody_not_shared() -> None:
         "renta_family.descendiente.0.birth_date": "2015-05-01",
         "renta_family.descendiente.0.custodia_compartida": "false",
     }
-    inject_derived_anualidades_eligibility_facts(fact_index, 2024)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, 2024)
     assert fact_index[_key(2024)] == Decimal("1")
 
 
@@ -57,24 +61,28 @@ def test_shared_custody_ignored_when_descendant_not_eligible_ordinary() -> None:
         "renta_family.descendiente.0.custodia_compartida": "true",
         "renta_family.descendiente.0.convivencia": "false",
     }
-    inject_derived_anualidades_eligibility_facts(fact_index, 2024)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, 2024)
     assert fact_index[_key(2024)] == Decimal("1")
 
 
 def test_untouched_for_out_of_scope_year() -> None:
     fact_index: dict[str, object] = {}
-    inject_derived_anualidades_eligibility_facts(fact_index, 2019)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, 2019)
     assert _key(2019) not in fact_index
 
 
 def test_idempotent_explicit_fact_preserved() -> None:
     fact_index: dict[str, object] = {_key(2024): Decimal("0")}
-    inject_derived_anualidades_eligibility_facts(fact_index, 2024)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, 2024)
     assert fact_index[_key(2024)] == Decimal("0")
 
 
 @pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
 def test_all_in_scope_years_default_eligible(year: int) -> None:
     fact_index: dict[str, object] = {}
-    inject_derived_anualidades_eligibility_facts(fact_index, year)  # type: ignore[arg-type]
+    fact_index_narrowed: Any = fact_index
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, year)
     assert fact_index[_key(year)] == Decimal("1")

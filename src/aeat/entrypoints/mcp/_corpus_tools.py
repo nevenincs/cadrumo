@@ -19,9 +19,16 @@ consumed through the package facade per ``service-imports-via-top-level-reexport
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...application.corpus_search import RetrievalMode, RetrievalResponse, search_corpus
+
+if TYPE_CHECKING:
+    # Typing-only: the MCP SDK is an optional runtime dependency (``aeat[agent]``);
+    # the real import stays deferred to inside the function body below.
+    from mcp.types import Tool
 
 #: The grounding tool's MCP name (the ``corpus.search`` verb, per the
 #: ``aeat_<key>`` convention).
@@ -155,7 +162,7 @@ def render_corpus_search_text(payload: CorpusSearchPayload) -> str:
     return "\n".join(lines)
 
 
-def build_corpus_search_tool() -> object:
+def build_corpus_search_tool() -> Tool:
     """Build the SDK ``Tool`` for the grounding search tool.
 
     Lazily imports the SDK types so the module imports without the

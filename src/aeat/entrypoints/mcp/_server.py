@@ -39,6 +39,8 @@ import subprocess
 import sys
 import time
 import uuid
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from ._corpus_tools import (
     CORPUS_SEARCH_TOOL,
@@ -92,6 +94,16 @@ from ._terminology_tools import (
     render_terminology_search_text,
 )
 from ._tools import McpToolDescriptor, build_tool_descriptors
+
+if TYPE_CHECKING:
+    # Typing-only: the MCP SDK is an optional runtime dependency (``aeat[agent]``),
+    # so every real import of it is deferred to inside a function body (see the
+    # module docstring). These names are never evaluated at runtime (deferred
+    # annotations, `from __future__ import annotations`); they exist solely so
+    # the standalone (non-nested) functions below can declare their true SDK
+    # return/parameter types instead of the placeholder ``object``.
+    from mcp.server import Server
+    from mcp.types import ContentBlock, Tool
 
 _INSTALL_HINT = "the MCP server requires the agent extra: pip install 'aeat[agent]'"
 _SERVER_NAME = "aeat"
@@ -171,7 +183,7 @@ def persona_scope_refusal(*, persona: AgentPersona | None, command_key: str) -> 
     return f"refused: {command_key!r} is outside the active persona {persona.value!r}'s tool scope"
 
 
-def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[object]:
+def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
     """Adapt the SDK-independent descriptors into MCP SDK ``Tool`` objects.
 
     Lazily imports the SDK types so the module still imports (and ``serve`` still
@@ -181,7 +193,7 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[object]:
     """
     from mcp.types import Tool, ToolAnnotations
 
-    tools: list[object] = []
+    tools: list[Tool] = []
     for descriptor in descriptors:
         annotations = descriptor.annotations
         # Advertise the CONFIRM tier to the client as the Anthropic-namespaced
@@ -212,6 +224,8 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[object]:
 def _run_subprocess_tool(
     descriptor: McpToolDescriptor,
     arguments: dict[str, object],
+    *,
+    run_process: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> tuple[dict[str, object], bool]:
     """Run one tool's CLI command in a subprocess and return (envelope, is_error).
 
@@ -238,7 +252,7 @@ def _run_subprocess_tool(
     # matches the CLI's own emit-side fallback so a stray non-UTF-8 byte degrades
     # to the replacement character rather than raising.
     argv = ["aeat", *cli_argv_for(descriptor.verb_schema, arguments)]
-    completed = subprocess.run(  # noqa: S603
+    completed = run_process(
         argv,
         capture_output=True,
         text=True,
@@ -256,7 +270,7 @@ def _run_subprocess_tool(
     return (envelope, is_error)
 
 
-def build_meta_sdk_tools() -> list[object]:
+def build_meta_sdk_tools() -> list[Tool]:
     """Build the SDK ``Tool`` objects for the ``search`` and ``execute`` meta-tools.
 
     Lazily imports the SDK ``Tool`` type so the module still imports when the
@@ -303,6 +317,21 @@ def build_meta_sdk_tools() -> list[object]:
     ]
 
 
+def _tool_arg_limit(value: object, default: int) -> int:
+    """Coerce an MCP JSON-RPC ``limit`` argument to an ``int``, mirroring ``int(value or default)``.
+
+    ``arguments`` is a ``dict[str, object]`` decoded from the client's JSON-RPC
+    call, so a supplied ``limit`` is typed ``object`` even though JSON-RPC only
+    ever carries an ``int``, ``float``, or ``str`` numeric literal here. Narrows
+    to those shapes before calling :func:`int`; a falsy or unrecognised value
+    falls back to ``default``, exactly as the prior ``int(value or default)``
+    expression did.
+    """
+    if isinstance(value, int | float | str) and value:
+        return int(value)
+    return default
+
+
 def _declined_message(*, command_key: str, decision: ConfirmDecision) -> str:
     """The client-relayed, localized text for a not-confirmed call."""
     from ...core.i18n import tr
@@ -315,7 +344,7 @@ def _declined_message(*, command_key: str, decision: ConfirmDecision) -> str:
     )
 
 
-def _client_supports_elicitation(server: object) -> bool:
+def _client_supports_elicitation(server: Server) -> bool:
     """Read the negotiated client capabilities for elicitation support (fail-closed).
 
     Inside a request handler the lowlevel server exposes the session through
@@ -324,7 +353,7 @@ def _client_supports_elicitation(server: object) -> bool:
     to the safe routes.
     """
     try:
-        context = server.request_context  # type: ignore[attr-defined]  # TYPE-IGNORE-RATIONALE-SDK-CONTEXT: build_server types the server as object so the module imports without the SDK; the real Server carries request_context.
+        context = server.request_context
         params = context.session.client_params
     except (LookupError, AttributeError):
         return False
@@ -337,7 +366,7 @@ def build_server(
     *,
     persona: AgentPersona | None = None,
     telemetry: SessionTelemetryWriter | None = None,
-) -> object:
+) -> Server:
     """Build the MCP ``Server`` with the tool, prompt, and resource handlers.
 
     Registers the persona-scoped per-verb tools plus the ``search`` / ``execute``
@@ -364,7 +393,6 @@ def build_server(
         ResourceTemplate,
         TextContent,
         TextResourceContents,
-        Tool,
     )
     from pydantic import AnyUrl
 
@@ -389,9 +417,27 @@ def build_server(
     # builds) records payload-free per-call rows.
     window = SessionGroundingWindow()
 
-    def _telemetry_record(**kwargs: object) -> None:
+    def _telemetry_record(
+        *,
+        tool_name: str,
+        command_key: str = "",
+        route: str = "",
+        is_error: bool = False,
+        duration_ms: int = 0,
+        arguments_text: str = "",
+        result_text: str = "",
+    ) -> None:
+        """Thin optional-sink forward onto ``telemetry.record``, mirroring its signature exactly."""
         if telemetry is not None:
-            telemetry.record(**kwargs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-KWARGS-PASSTHROUGH: thin optional-sink forwarding; the writer validates via its typed record model.
+            telemetry.record(
+                tool_name=tool_name,
+                command_key=command_key,
+                route=route,
+                is_error=is_error,
+                duration_ms=duration_ms,
+                arguments_text=arguments_text,
+                result_text=result_text,
+            )
 
     def _gated_subprocess_run(
         descriptor: McpToolDescriptor,
@@ -441,14 +487,11 @@ def build_server(
 
     @server.list_tools()
     async def _list_tools() -> list[Tool]:
-        # TYPE-IGNORE-RATIONALE-SDK-TOOL-LIST: build_sdk_tools / build_meta_sdk_tools /
-        # build_harness_floor_tool return the MCP SDK's real Tool type; the stub
-        # package this module type-checks against declares a narrower parameter type.
         # The harness.load floor tool is advertised first and is never persona-scoped
         # away: per ADR R4 it is the universal operating-layer channel that must reach
         # any client, including a minimal tools-only one. The grounding tools follow
         # for the same always-available reason (ADR R3).
-        return [floor_tool, *grounding_tools, *sdk_tools, *meta_tools]  # type: ignore[list-item]  # TYPE-IGNORE-RATIONALE-sdk: MCP SDK tool-list is heterogeneous across tool subtypes
+        return [floor_tool, *grounding_tools, *sdk_tools, *meta_tools]
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict[str, object]) -> CallToolResult:
@@ -463,7 +506,7 @@ def build_server(
             try:
                 corpus_payload = build_corpus_search_payload(
                     str(arguments.get("query", "") or ""),
-                    limit=int(arguments.get("limit", 8) or 8),
+                    limit=_tool_arg_limit(arguments.get("limit", 8), 8),
                 )
             except Exception as exc:
                 return CallToolResult(
@@ -479,7 +522,7 @@ def build_server(
             try:
                 term_payload = build_terminology_search_payload(
                     str(arguments.get("query", "") or ""),
-                    limit=int(arguments.get("limit", 8) or 8),
+                    limit=_tool_arg_limit(arguments.get("limit", 8), 8),
                 )
             except Exception as exc:
                 return CallToolResult(
@@ -593,7 +636,7 @@ def build_server(
             arguments_text=arguments_json,
             result_text=envelope_json,
         )
-        content: list[TextContent] = []
+        content: list[ContentBlock] = []
         if not faith.faithful:
             content.append(TextContent(type="text", text=advisory_line(faith)))
         content.append(TextContent(type="text", text=json.dumps(envelope, indent=2)))
@@ -687,11 +730,10 @@ def _run_server(
     unit-tested without the stdio transport via :func:`build_server`.
     """
     import anyio
-    from mcp.server import Server
     from mcp.server.stdio import stdio_server
 
     telemetry = SessionTelemetryWriter(session_id=f"mcp-{uuid.uuid4().hex[:12]}")
-    server: Server = build_server(descriptors, persona=persona, telemetry=telemetry)  # type: ignore[assignment]  # TYPE-IGNORE-RATIONALE-sdk: MCP SDK Server subtype assignment the checker cannot narrow
+    server: Server = build_server(descriptors, persona=persona, telemetry=telemetry)
 
     async def _amain() -> None:
         async with stdio_server() as (read_stream, write_stream):

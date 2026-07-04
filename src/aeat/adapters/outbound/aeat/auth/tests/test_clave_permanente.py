@@ -355,7 +355,7 @@ class TestVerify:
             from .._authenticator_types import AeatSession
 
             attempted_at = now()
-            dummy = AeatSession(
+            session_without_context = AeatSession(
                 provider_kind=AuthProviderKind.CLAVE_PERMANENTE,
                 authenticated_at=attempted_at,
                 idle_deadline=attempted_at,
@@ -364,6 +364,6 @@ class TestVerify:
                 provider_detail=ClavePermanenteSessionDetail(dni_nie="12345678Z"),
             )
             with pytest.raises(AeatLoginAssertionError, match="active browser context"):
-                await provider.verify(dummy)
+                await provider.verify(session_without_context)
 
         _run(run())

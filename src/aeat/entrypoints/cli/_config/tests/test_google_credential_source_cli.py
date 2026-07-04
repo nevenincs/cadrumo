@@ -2,7 +2,7 @@
 
 Drives the full CLI surface (Typer callback, envelope emission, error
 boundary) through :func:`invoke_cached_cli` against a real provisioned
-profile — no mocks. Confirms:
+profile. Confirms:
 
 1. ``set --kind service-account-impersonation`` persists a
    :class:`GoogleCredentialSourceSelection` and ``show`` reflects it back.
@@ -10,7 +10,7 @@ profile — no mocks. Confirms:
    :func:`build_google_credentials` (the real factory dispatch), proven the
    same way :mod:`adapters.outbound.storage.tests.test_factory` proves it:
    pointing ``GOOGLE_APPLICATION_CREDENTIALS`` at a nonexistent path makes
-   the real, unmocked ``google.auth.default()`` call raise
+   the real ``google.auth.default()`` call raise
    ``GoogleAuthAdcUnavailableError`` naming the persisted
    ``target_principal`` — reachable only if the CLI-persisted selection
    actually drove the impersonation resolver, not the OAuth-Desktop path.
@@ -49,6 +49,7 @@ from .....adapters.outbound.storage import build_google_credentials
 from .....core import GoogleCredentialSourceKind
 from .....core.config import override_settings
 from .....tests.cli_runner import invoke_cached_cli
+from .....tests.env_scope import scoped_env_var
 from .....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -183,19 +184,20 @@ def test_set_impersonation_persists_no_secret_field(tmp_path: Path) -> None:
     }
 
 
-def test_factory_dispatches_to_impersonation_after_cli_set(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_factory_dispatches_to_impersonation_after_cli_set(tmp_path: Path) -> None:
     """The CLI-persisted selection genuinely drives `build_google_credentials`.
 
     Pointing `GOOGLE_APPLICATION_CREDENTIALS` at a nonexistent path makes the
-    real, unmocked `google.auth.default()` call inside
+    real `google.auth.default()` call inside
     `resolve_impersonated_credentials` raise `GoogleAuthAdcUnavailableError`
     naming the persisted `target_principal` — a failure mode only reachable
     if the factory actually dispatched to the impersonation resolver (the
     OAuth-Desktop path would instead raise a client-not-registered error).
     """
-    monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json")
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-dispatch-credential-source") as profile:
+    with (
+        scoped_env_var("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json"),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-dispatch-credential-source") as profile,
+    ):
         result = invoke_cached_cli(
             [
                 "config",

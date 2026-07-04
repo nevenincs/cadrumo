@@ -190,7 +190,7 @@ def test_structural_fidelity_holds_for_every_covered_modelo(
     build_draft_fn: Callable[[], Any],
     headers_fn: Callable[[], dict[str, str]],
     filing_year: int | None,
-    period: str | None
+    period: str | None,
 ) -> None:
     # The parity gate asserts more than casilla presence: the rendered casilla
     # numbering/segmento must mirror the registry CasillaDefinition, and the

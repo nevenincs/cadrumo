@@ -64,6 +64,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -154,7 +155,7 @@ def test_m353_2024_grupo_omega_delta_manual_worked_example() -> None:
     (3.000) matches the manual's own printed "Resultado autoliquidacion:
     3.000" for the aggregated Modelo 353 exactly.
     """
-    result = _calculate()
+    result: Any = _calculate()
 
     assert result.values[_CASILLA_DEVENGADA] == Decimal("7000.00")
     assert result.values[_CASILLA_DEDUCIBLE] == Decimal("4000.00")

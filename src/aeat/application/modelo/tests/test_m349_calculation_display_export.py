@@ -127,13 +127,15 @@ def _calculated_revision(
 ) -> tuple[RegistrySnapshot, WorkUnit, CalculationRevision]:
     snapshot = _m349_snapshot(period=period)
     work_unit = _work_unit(period=period, snapshot=snapshot)
-    row = Modelo349OperadorRow.model_validate({
-        "codigo_pais": country,
-        "nif_comunitario": vat_id,
-        "razon_social": name,
-        "clave_operacion": clave,
-        "importe": amount,
-    })
+    row = Modelo349OperadorRow.model_validate(
+        {
+            "codigo_pais": country,
+            "nif_comunitario": vat_id,
+            "razon_social": name,
+            "clave_operacion": clave,
+            "importe": amount,
+        }
+    )
     binding_values = {
         "iva-349-declarante-numero-operadores": Decimal("1"),
         "iva-349-declarante-importe-operaciones": amount,

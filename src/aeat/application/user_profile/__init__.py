@@ -178,6 +178,7 @@ if TYPE_CHECKING:
         logout_active_profile,
         profile_create_storage_span,
         profile_storage_session,
+        reactivate_profile_with_lifecycle_span,
         read_active_profile,
         refuse_duplicate_label,
         register_active_profile,

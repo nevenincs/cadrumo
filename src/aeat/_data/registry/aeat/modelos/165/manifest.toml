@@ -1,0 +1,17 @@
+[modelo]
+id = "165"
+title = "Certificaciones a socios de entidades de nueva o reciente creación (informativa anual)"
+official_name = "Modelo 165. Declaración informativa de certificaciones individuales emitidas a los socios o partícipes de entidades de nueva o reciente creación."
+tax_domain = "informative"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-hap-2455-2013:art-1",
+    "orden-hap-2455-2013:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-165-procedure",
+    "enrolled-modelo-165-layout",
+]

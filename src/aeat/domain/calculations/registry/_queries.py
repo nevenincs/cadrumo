@@ -31,7 +31,7 @@ from ._runtime_graph import (
     expression_parameter_refs,
     expression_relation_refs,
 )
-from ._schema import ModeloDefinition, ModeloRevision, filing_period_from_scope
+from ._schema import ModeloDefinition, ModeloRevision, RelationDefinition, filing_period_from_scope
 from ._schema_input_kind import InputKind
 
 #: Bare registry period tokens (``0A``, ``1T``-``4T``, ``01``-``12``,
@@ -1351,7 +1351,7 @@ def _operator_input_required_by_binding(
     required = {binding.id: True for binding in revision.bindings}
     if modelo != Modelo.M202.value or period is None:
         return required
-    relations_by_target: dict[BindingId, list] = {}
+    relations_by_target: dict[BindingId, list[RelationDefinition]] = {}
     for relation in revision.relations:
         relations_by_target.setdefault(relation.target_binding, []).append(relation)
     for binding in revision.bindings:

@@ -193,12 +193,12 @@ def withholding_binding_requirements(
     The :class:`ModeloRevision` is introspected for withholding bindings and
     grouped by the clave filters their selectors declare.
     """
-    grouped: dict[tuple[str, ...], set[BindingId]] = {}
+    grouped: dict[tuple[RetencionClave, ...], set[BindingId]] = {}
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.WITHHOLDING:
             continue
         selector = _validated_withholding_selector(binding)
-        key = tuple(sorted(selector.claves))
+        key = tuple(sorted(RetencionClave(clave) for clave in selector.claves))
         grouped.setdefault(key, set()).add(binding.id)
     return tuple(
         WithholdingObservationRequirement(

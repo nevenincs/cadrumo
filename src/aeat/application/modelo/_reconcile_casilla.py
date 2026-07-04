@@ -76,7 +76,7 @@ def detect_casilla_divergences(
     *,
     computed: Mapping[CasillaId, Decimal],
     filed: Mapping[CasillaId, Decimal],
-    scope: Mapping[CasillaId, Decimal] | None = None,
+    scope: Mapping[CasillaId, object] | None = None,
     tolerance: Decimal = Decimal("0.01"),
 ) -> tuple[CasillaDivergence, ...]:
     """Classify every casilla-level disagreement between ``computed`` and ``filed``.

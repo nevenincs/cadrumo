@@ -214,6 +214,15 @@ KENT_WALL_CATALOGUE: tuple[KentWallEntry, ...] = (
         test_module="src/aeat/entrypoints/cli/tests/test_overview_post_filing_notices.py",
         test_function="test_actionable_events_emit_single_warning_notice",
     ),
+    KentWallEntry(
+        issue=259,
+        kent_perspective=(
+            "Kent sets his own home-office/mileage/phone usage ratio once via "
+            "`aeat app ledger ratios set`, and it sticks -- he never re-enters it."
+        ),
+        test_module="src/aeat/entrypoints/cli/tests/test_ratios_verbs.py",
+        test_function="test_ratios_set_persists_and_list_reflects",
+    ),
 )
 """The enrolled representative subset of closed Kent walls.
 

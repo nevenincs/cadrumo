@@ -572,6 +572,7 @@ application:
         schema_formula_changed: a sema vagy keplet eredete megvaltozott
         transaction_catalogue_changed: a tranzakcios katalogus megvaltozott
         unknown: '%{reason}'
+        invoice_catalogue_changed: 'a szamlakatalogus megvaltozott'
     runtime:
       errors:
         active_profile_load_failed: 'Az aktiv bevallasi profil nem toltheto be: %{reason}.'

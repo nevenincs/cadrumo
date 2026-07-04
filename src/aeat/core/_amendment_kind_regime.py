@@ -73,6 +73,8 @@ if TYPE_CHECKING:
     # initialization ``ImportError`` the facade's ordering otherwise avoids.
     # ``Period`` is used only as a type annotation here, so the deferred import
     # is sufficient and the module needs no runtime binding of the name.
+    from _typeshed import SupportsAllComparisons
+
     from ._period import Period
 
 
@@ -210,7 +212,11 @@ def permitted_amendment_kind_values(modelo: str, period: Period) -> frozenset[st
     return resolve_amendment_kind_regime(modelo, period).permitted_kinds
 
 
-def classify_amendment_liability_direction(*, baseline_result: object, corrected_result: object) -> str:
+def classify_amendment_liability_direction(
+    *,
+    baseline_result: SupportsAllComparisons,
+    corrected_result: SupportsAllComparisons,
+) -> str:
     """Classify whether a correction increases, decreases, or leaves liability unchanged.
 
     ``baseline_result`` and ``corrected_result`` are the modelo's signed final
@@ -227,9 +233,9 @@ def classify_amendment_liability_direction(*, baseline_result: object, corrected
     Accepts any ``Decimal``-comparable numeric type so callers do not need to
     import :mod:`decimal` solely to call this classifier.
     """
-    if corrected_result > baseline_result:  # type: ignore[operator]
+    if corrected_result > baseline_result:
         return AmendmentLiabilityDirection.INCREASE
-    if corrected_result < baseline_result:  # type: ignore[operator]
+    if corrected_result < baseline_result:
         return AmendmentLiabilityDirection.DECREASE
     return AmendmentLiabilityDirection.UNCHANGED
 

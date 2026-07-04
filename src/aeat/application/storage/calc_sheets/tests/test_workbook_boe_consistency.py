@@ -79,7 +79,9 @@ def _boe_representable_ids(modelo: str, year: int, period: str) -> set[str]:
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
-def test_fichero_boe_files_no_casilla_the_workbook_does_not_compute(modelo: str, year: int, period: str, on: date) -> None:
+def test_fichero_boe_files_no_casilla_the_workbook_does_not_compute(
+    modelo: str, year: int, period: str, on: date
+) -> None:
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
     workbook = _workbook_emitted_ids(snapshot)
     boe = _boe_representable_ids(modelo, year, period)

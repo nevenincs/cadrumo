@@ -19,9 +19,16 @@ consumed through the package facade per ``service-imports-via-top-level-reexport
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...application.corpus_search import TerminologyHit, search_terminology
+
+if TYPE_CHECKING:
+    # Typing-only: the MCP SDK is an optional runtime dependency (``aeat[agent]``);
+    # the real import stays deferred to inside the function body below.
+    from mcp.types import Tool
 
 #: The terminology tool's MCP name (the ``terminology.search`` verb).
 TERMINOLOGY_SEARCH_TOOL = "aeat_terminology_search"
@@ -97,7 +104,7 @@ def render_terminology_search_text(payload: TerminologySearchPayload) -> str:
     return "\n".join(lines)
 
 
-def build_terminology_search_tool() -> object:
+def build_terminology_search_tool() -> Tool:
     """Build the SDK ``Tool`` for the terminology search tool.
 
     Lazily imports the SDK types so the module imports without the

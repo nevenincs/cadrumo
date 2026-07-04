@@ -18,7 +18,7 @@ See Also:
 from __future__ import annotations
 
 import json
-from typing import Any, Protocol, TypedDict
+from typing import TYPE_CHECKING, Any, Protocol, TypedDict
 
 from ..storage import (
     OutboundStorageError,
@@ -27,6 +27,10 @@ from ..storage import (
     OutboundStoragePermissionError,
     OutboundStorageQuotaError,
 )
+
+if TYPE_CHECKING:
+    import httplib2
+    from googleapiclient.http import HttpMock
 
 _GOOGLE_API_NUM_RETRIES = 3
 _RATE_LIMIT_MARKERS = {
@@ -44,10 +48,17 @@ class _ExecutableRequest(Protocol):
     This protocol captures the part
     :func:`~aeat.adapters.outbound.google._api.execute_request` needs: the
     ``execute()`` method with optional ``http`` and ``num_retries`` parameters
-    for Google client retry handling.
+    for Google client retry handling. ``http`` mirrors ``HttpRequest.execute``'s
+    own stub type (``httplib2.Http | HttpMock | None``) rather than a bare
+    ``object`` so the real ``HttpRequest`` the production callers and tests
+    construct satisfies this protocol structurally.
     """
 
-    def execute(self, http: object = ..., num_retries: int = ...) -> GoogleApiResponseBody: ...
+    def execute(
+        self,
+        http: httplib2.Http | HttpMock | None = ...,
+        num_retries: int = ...,
+    ) -> GoogleApiResponseBody: ...
 
 
 # The google-api-python-client wire protocol returns JSON-decoded dicts whose

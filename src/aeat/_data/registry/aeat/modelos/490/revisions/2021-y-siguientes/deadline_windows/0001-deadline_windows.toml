@@ -1,0 +1,85 @@
+# Modelo 490 trimestral deadline windows, grounded in orden-hac-590-2021 art 3:
+# "el modelo 490 deberá presentarse e ingresarse durante el mes siguiente al
+# correspondiente periodo trimestral natural". Each window opens the 1st and
+# closes the last natural day of the month following the reference quarter (1T
+# closes 30 Apr, 2T 31 Jul, 3T 31 Oct, 4T 31 Jan del año siguiente).
+
+[[revisions."2021-y-siguientes".deadline_windows]]
+id = "modelo-490-2025-1t"
+filing_year = 2025
+period = "2025 1T"
+period_kind = "quarterly"
+opens_on = 2025-04-01
+closes_on = 2025-04-30
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2021-y-siguientes".deadline_windows]]
+id = "modelo-490-2025-2t"
+filing_year = 2025
+period = "2025 2T"
+period_kind = "quarterly"
+opens_on = 2025-07-01
+closes_on = 2025-07-31
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2021-y-siguientes".deadline_windows]]
+id = "modelo-490-2025-3t"
+filing_year = 2025
+period = "2025 3T"
+period_kind = "quarterly"
+opens_on = 2025-10-01
+closes_on = 2025-10-31
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2021-y-siguientes".deadline_windows]]
+id = "modelo-490-2025-4t"
+filing_year = 2025
+period = "2025 4T"
+period_kind = "quarterly"
+opens_on = 2026-01-01
+closes_on = 2026-01-31
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2021-y-siguientes".deadline_windows]]
+id = "modelo-490-2026-1t"
+filing_year = 2026
+period = "2026 1T"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-30
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2021-y-siguientes".deadline_windows]]
+id = "modelo-490-2026-2t"
+filing_year = 2026
+period = "2026 2T"
+period_kind = "quarterly"
+opens_on = 2026-07-01
+closes_on = 2026-07-31
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2021-y-siguientes".deadline_windows]]
+id = "modelo-490-2026-3t"
+filing_year = 2026
+period = "2026 3T"
+period_kind = "quarterly"
+opens_on = 2026-10-01
+closes_on = 2026-10-31
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions."2021-y-siguientes".deadline_windows]]
+id = "modelo-490-2026-4t"
+filing_year = 2026
+period = "2026 4T"
+period_kind = "quarterly"
+opens_on = 2027-01-01
+closes_on = 2027-01-31
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]

@@ -29,7 +29,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 from ....core import ConvenioOverrideKind, TipoRentaIrnr
 from ...contribuyente import UE_EEA_COUNTRY_CODES
@@ -171,7 +171,7 @@ def _raise_m210_unresolved_outcome(
     args: _IrnrResolveTipoGravamenArgs,
     tipo_renta: str,
     country: str,
-) -> None:
+) -> NoReturn:
     raise UnresolvedFormulaOutcomeError(
         reason,
         context={

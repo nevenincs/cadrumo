@@ -25,7 +25,7 @@ from decimal import Decimal
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import Modelo
-from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision, RelationId
+from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision, RegistrySnapshot, RelationId
 from ...domain.deadlines import IVARegime
 from ...domain.modelos import (
     WorkUnit,
@@ -68,7 +68,7 @@ class PreparedCalculation:
 
     work_units: WorkUnitCatalogue
     work_unit: WorkUnit
-    snapshot: object
+    snapshot: RegistrySnapshot
     casilla_inputs: Mapping[CasillaId, Decimal]
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None
     period_date: date

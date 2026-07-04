@@ -115,6 +115,7 @@ def _populated_draft() -> ModeloDraft:
             draft_payload_fingerprint="b" * 64,
             draft_review_fingerprint="c" * 64,
             transaction_catalogue_fingerprint="d" * 64,
+            invoice_catalogue_fingerprint="1" * 64,
             category_profiles_fingerprint="e" * 64,
             schema_formula_fingerprint="f" * 64,
         ),

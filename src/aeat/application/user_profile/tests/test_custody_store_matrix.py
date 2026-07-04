@@ -19,8 +19,13 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from ....adapters.outbound.aeat.sede import FiledDeclaracionArtefact, FiledDeclaracionObservationStore
+    from ....domain.filing import ModeloDraft
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core.hashing import sha256_hex
@@ -235,7 +240,7 @@ def _verify_usage_ratios(bucket_id: str) -> None:
 
 def _seed_invoice_catalogue(bucket_id: str) -> None:
     from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-    from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
+    from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
     from ....domain.iva import InvoiceKind
 
     line = InvoiceLine(
@@ -246,17 +251,31 @@ def _seed_invoice_catalogue(bucket_id: str) -> None:
         iva_rate=IvaRate.RATE_0,
         iva_amount=Decimal("0"),
     )
+    kind = InvoiceKind.RECEIVED
+    invoice_number = "F-2026-001"
+    issued_at = date(2026, 1, 15)
+    counterparty_tax_id = "12345678Z"
+    currency = "EUR"
+    grand_total = Decimal("100.00")
     invoice = Invoice(
-        kind=InvoiceKind.RECEIVED,
-        invoice_number="F-2026-001",
-        issued_at=date(2026, 1, 15),
+        invoice_id=derive_invoice_id(
+            kind=kind,
+            invoice_number=invoice_number,
+            issued_at=issued_at,
+            counterparty_tax_id=counterparty_tax_id,
+            currency=currency,
+            grand_total=grand_total,
+        ),
+        kind=kind,
+        invoice_number=invoice_number,
+        issued_at=issued_at,
         counterparty_name="Proveedor SL",
-        counterparty_tax_id="12345678Z",
+        counterparty_tax_id=counterparty_tax_id,
         counterparty_country="ES",
         base_total=Decimal("100.00"),
         iva_total=Decimal("0"),
-        grand_total=Decimal("100.00"),
-        currency="EUR",
+        grand_total=grand_total,
+        currency=currency,
         lines=(line,),
         payment_status=PaymentStatus.PAID,
     )
@@ -469,7 +488,7 @@ def _verify_apoderado(bucket_id: str) -> None:
     assert _ApoderadoConfigRepository(bucket_id=bucket_id).load(bucket_id) is not None, "apoderado config lost"
 
 
-def _build_modelo_draft() -> object:
+def _build_modelo_draft() -> ModeloDraft:
     from ....core import Period
     from ....domain.calculations.registry import RegistrySnapshotRef
     from ....domain.filing import ModeloDraft
@@ -795,7 +814,9 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> None:
 def _verify_purchase_invoice_evidence(bucket_id: str) -> None:
     from ...ledger import PurchaseInvoiceEvidenceRepository
 
-    assert PurchaseInvoiceEvidenceRepository().load(bucket_id).records, "purchase invoice evidence lost"
+    document = PurchaseInvoiceEvidenceRepository().load(bucket_id)
+    assert document is not None, "purchase invoice evidence lost"
+    assert document.records, "purchase invoice evidence lost"
 
 
 def _seed_business_operation_invoice(bucket_id: str) -> None:
@@ -831,24 +852,26 @@ def _seed_business_operation_invoice(bucket_id: str) -> None:
 def _verify_business_operation_invoice(bucket_id: str) -> None:
     from ...ledger import BusinessOperationInvoiceRepository
 
-    assert BusinessOperationInvoiceRepository().load(f"{bucket_id}:payable_invoice").records, (
-        "business operation invoice lost"
-    )
+    document = BusinessOperationInvoiceRepository().load(f"{bucket_id}:payable_invoice")
+    assert document is not None, "business operation invoice lost"
+    assert document.records, "business operation invoice lost"
 
 
-def _filed_declaration_store() -> object:
+def _filed_declaration_store() -> FiledDeclaracionObservationStore:
     from ....adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
     from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 
     return FiledDeclaracionObservationStore(Path("unused"), objects=secure_object_repository_for_active_bucket())
 
 
-def _filed_artefact(body: bytes) -> object:
+def _filed_artefact(body: bytes) -> FiledDeclaracionArtefact:
+    from pydantic import AnyHttpUrl
+
     from ....adapters.outbound.aeat.sede import FiledDeclaracionArtefact
 
     return FiledDeclaracionArtefact(
         kind="register_row",
-        source_url=aeat_url("sede", "/x"),
+        source_url=AnyHttpUrl(aeat_url("sede", "/x")),
         content_type="text/html",
         byte_count=len(body),
         sha256=sha256_hex(body),
@@ -870,18 +893,18 @@ def _seed_filed_observation(bucket_id: str) -> None:
         authenticated_identity="12345678Z",
         artefacts=(_filed_artefact(b"<row/>"),),
     )
-    _filed_declaration_store().persist_observation(fobs)  # type: ignore[attr-defined]
+    _filed_declaration_store().persist_observation(fobs)
 
 
 def _verify_filed_observation(bucket_id: str) -> None:
-    assert _filed_declaration_store().list_observations(), "filed declaration observation lost"  # type: ignore[attr-defined]
+    assert _filed_declaration_store().list_observations(), "filed declaration observation lost"
 
 
 def _seed_filed_artefact(bucket_id: str) -> None:
     from ....core import Period
 
     body = b"<row/>"
-    _filed_declaration_store().persist_artefact(  # type: ignore[attr-defined]
+    _filed_declaration_store().persist_artefact(
         ("303", 2024, Period.from_year_and_code(2024, "1T"), "202300000001T"),
         _filed_artefact(body),
         body,
@@ -896,6 +919,8 @@ def _verify_filed_artefact(bucket_id: str) -> None:
 
 
 def _seed_iva_wallet_observation(bucket_id: str) -> None:
+    from pydantic import AnyHttpUrl
+
     from ....adapters.outbound.aeat.sede import (
         IvaCompensationWalletObservation,
         IvaCompensationWalletRow,
@@ -915,14 +940,14 @@ def _seed_iva_wallet_observation(bucket_id: str) -> None:
             ),
         ),
         total_pending=Decimal("50.00"),
-        source_url=aeat_url("sede", "/cartera"),
+        source_url=AnyHttpUrl(aeat_url("sede", "/cartera")),
         captured_at=_NOW,
     )
-    _filed_declaration_store().persist_iva_wallet_observation(wobs)  # type: ignore[attr-defined]
+    _filed_declaration_store().persist_iva_wallet_observation(wobs)
 
 
 def _verify_iva_wallet_observation(bucket_id: str) -> None:
-    assert _filed_declaration_store().list_iva_wallet_observations(), "iva wallet observation lost"  # type: ignore[attr-defined]
+    assert _filed_declaration_store().list_iva_wallet_observations(), "iva wallet observation lost"
 
 
 _CASES: tuple[StoreCase, ...] = (

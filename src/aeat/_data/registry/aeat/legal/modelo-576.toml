@@ -1,0 +1,44 @@
+[legal."orden-eha-3851-2007:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3851-2007.html#a1"
+document_id = "BOE-A-2007-22442"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-22442#a1"
+published_at = 2007-12-31
+effective_from = 2008-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the fetched BOE-A-2007-22442 art 1; pending operator re-verification)"
+notes = "Orden EHA/3851/2007 art 1: aprueba el modelo 576, autoliquidación del Impuesto Especial sobre Determinados Medios de Transporte. El lugar, plazo y forma se rigen por la Orden EHA/1981/2005: la autoliquidación se presenta con carácter previo a la matriculación definitiva, no en una ventana natural fija."
+required_text = [
+    "Se aprueba el modelo 576",
+    "Impuesto Especial sobre Determinados Medios de Transporte",
+]
+
+[sources."enrolled-modelo-576-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3851-2007.html"
+sha256 = "67573ebf484f8428a7275d9dc2ba6c95f1f85a82c9ddafd4a715df22ea479d28"
+bytes = 959
+retrieved_at = 2026-07-04
+published_at = 2007-12-31
+applies_from = 2008-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-22442"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-576-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3851-2007.html"
+sha256 = "67573ebf484f8428a7275d9dc2ba6c95f1f85a82c9ddafd4a715df22ea479d28"
+bytes = 959
+retrieved_at = 2026-07-04
+published_at = 2007-12-31
+applies_from = 2008-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-22442"
+review_status = "reviewed"

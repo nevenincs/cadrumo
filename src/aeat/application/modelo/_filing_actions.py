@@ -53,6 +53,7 @@ from ...domain.buckets import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import derive_modelo_202_modality
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
+    CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     ModeloCode,
@@ -63,6 +64,7 @@ from ...domain.modelos import (
     ModeloRecordStatus,
     VerificationReport,
     VerificationReportCatalogueRepositoryProtocol,
+    WorkUnit,
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ..calculations import CalculationObservationRepository, CrossPeriodExpectedMemberSet
@@ -327,8 +329,8 @@ def file_modelo_revision(
 
 def _filed_revision_refunded(
     *,
-    work_unit,
-    target,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
     workflow_profile: TaxpayerProfile,
     refund_election: RefundElection,
 ) -> bool:
@@ -347,8 +349,8 @@ def _filed_revision_refunded(
 
 def _require_filing_preconditions(
     *,
-    work_unit,
-    target,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
     workflow_profile: TaxpayerProfile,
     observation_repository: CalculationObservationRepository,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,

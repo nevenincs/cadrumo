@@ -13,7 +13,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
@@ -34,7 +34,7 @@ _T1 = datetime(2026, 2, 1, 10, 0, tzinfo=UTC)
 
 def _professional_observation() -> RetencionObservation:
     return RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id="professional-payment-001",
         perceptor_nif="12345678Z",
         perceptor_name="Profesional Ejemplo",
@@ -48,7 +48,7 @@ def _professional_observation() -> RetencionObservation:
 def _administrador_observation() -> RetencionObservation:
     """An administrador/consejero retención at the LIRPF art. 101.2 fixed rate (35 %)."""
     return RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id="administrador-payment-001",
         perceptor_nif="87654321X",
         perceptor_name="Administrador Ejemplo",
@@ -62,7 +62,7 @@ def _administrador_observation() -> RetencionObservation:
 def _administrador_wrong_rate_observation() -> RetencionObservation:
     """An administrador retención withheld at 25 % — neither the 35 % nor the 19 % art. 101.2 rate."""
     return RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id="administrador-payment-002",
         perceptor_nif="87654321X",
         perceptor_name="Administrador Ejemplo",

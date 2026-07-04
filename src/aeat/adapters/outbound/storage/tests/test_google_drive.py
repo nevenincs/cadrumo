@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -50,7 +51,8 @@ def test_google_drive_provider_rejects_blank_constructor_values_with_localized_m
 
     for provider_kwargs, message, context in cases:
         with pytest.raises(OutboundStorageValidationError) as raised:
-            GoogleDriveProvider(**provider_kwargs)
+            kwargs: Any = provider_kwargs
+            GoogleDriveProvider(**kwargs)
 
         exc = raised.value
         assert exc.translated_message == message
@@ -89,7 +91,8 @@ def test_google_drive_provider_rejects_blank_put_values_before_service_construct
 
     for put_kwargs, message in cases:
         with pytest.raises(OutboundStorageValidationError) as raised:
-            _provider().put(**put_kwargs)
+            kwargs: Any = put_kwargs
+            _provider().put(**kwargs)
 
         exc = raised.value
         assert exc.translated_message == message

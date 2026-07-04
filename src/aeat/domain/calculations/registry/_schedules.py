@@ -99,13 +99,15 @@ def _resolve_profile_fact(profile_facts: object, field: str) -> object:
         observed = getattr(profile_facts, _attr)
         return getattr(observed, "value", observed)
     if field == _IRPF_ESTIMATION_REGIME_PATH and hasattr(profile_facts, "irpf_estimation_regime"):
-        observed = profile_facts.irpf_estimation_regime
+        _attr = "irpf_estimation_regime"
+        observed = getattr(profile_facts, _attr)
         return getattr(observed, "value", observed)
     # Schema predicate path "taxpayer.entity_type" maps to
     # TaxpayerProfile.entity_type.  The "taxpayer." prefix is the namespace used
     # in the registry TOML; the attribute is a flat field on the profile object.
     if field == _TAXPAYER_ENTITY_TYPE_PATH and hasattr(profile_facts, "entity_type"):
-        return profile_facts.entity_type
+        _attr = "entity_type"
+        return getattr(profile_facts, _attr)
     current: object = profile_facts
     for part in field.split("."):
         if isinstance(current, Mapping):

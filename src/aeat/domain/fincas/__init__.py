@@ -90,6 +90,7 @@ from ._repository_ports import (
     FincaReader,
     FincaRendimientoReader,
 )
+from ._source_readiness import FINCAS_SOURCE_KIND, FincasSourceReadiness, fincas_source_readiness
 from ._tier_resolver import (
     DEFAULT_EJERCICIO_AMENDMENT_YEAR,
     LEY_12_2023_IN_FORCE_DATE,
@@ -102,6 +103,7 @@ __all__ = [
     "CAPPED_CATEGORIES",
     "CARRY_FORWARD_MAX_YEARS",
     "DEFAULT_EJERCICIO_AMENDMENT_YEAR",
+    "FINCAS_SOURCE_KIND",
     "LEY_12_2023_IN_FORCE_DATE",
     "AmortizationComputation",
     "AmortizationLedgerCapExceededError",
@@ -124,6 +126,7 @@ __all__ = [
     "FincaRegisterError",
     "FincaRendimientoReader",
     "FincaRendimientoRecord",
+    "FincasSourceReadiness",
     "GastosForYear",
     "LirpfArt85ImputacionParameters",
     "ReduccionTier",
@@ -134,6 +137,7 @@ __all__ = [
     "compute_amortization_for_year",
     "compute_finca_aggregates",
     "compute_gastos_for_year",
+    "fincas_source_readiness",
     "load_imputacion_parameters",
     "resolve_reduccion",
 ]

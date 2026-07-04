@@ -67,7 +67,8 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import BindingSourceKind, Period
+from ....core.aggregation import RetencionClave
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -328,7 +329,7 @@ _M180_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
 
 def _retencion_observation(nif: str, *, scheme: RetencionScheme, source_prefix: str) -> RetencionObservation:
     return RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id=f"{source_prefix}-{nif}",
         perceptor_nif=nif,
         perceptor_name="Perceptor Ejemplo",
@@ -449,7 +450,7 @@ def _seed_m190_withholding_detail() -> None:
                 perceptor_tax_id="12345678Z",
                 perceptor_legal_name="Profesional Ejemplo",
                 transaction_date=date(_YEAR, 3, 15),
-                clave="G",
+                clave=RetencionClave.G,
                 subclave="01",
                 percibido_dinerario=Decimal("1000.00"),
                 retencion_practicada=Decimal("150.00"),
@@ -501,7 +502,7 @@ def _seed_and_file_m111_1t(secure_objects: SecureObjectRepository) -> BucketAggr
         period=Period.from_year_and_code(_YEAR, "1T"),
         observations=[
             RetencionObservation(
-                source_kind="ledger_transaction",
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                 source_object_id="m111-1t-payroll-001",
                 perceptor_nif="12345678Z",
                 perceptor_name="Empleado Ejemplo",
