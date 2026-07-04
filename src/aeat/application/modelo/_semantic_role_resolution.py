@@ -21,9 +21,22 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Protocol, runtime_checkable
 
 from ...domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
 from ...domain.modelos import ModeloError
+
+
+@runtime_checkable
+class _CasillaLike(Protocol):
+    """Structural shape a casilla-carrying object must expose to resolve an id.
+
+    Mirrors the ``id`` attribute the registry :class:`CasillaDefinition` shape
+    carries, without importing the concrete registry type for this ``object``
+    -typed structural walk.
+    """
+
+    id: object
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,7 +138,7 @@ def _casilla_ids_for_semantic_role(casillas: Iterable[object], semantic_role: st
     for casilla in casillas:
         if getattr(casilla, "semantic_role", None) != semantic_role:
             continue
-        if not hasattr(casilla, "id"):
+        if not isinstance(casilla, _CasillaLike):
             raise ValueError(f"semantic_role={semantic_role!r} matched a casilla without canonical casilla.id")
         resolved.append(
             validated_casilla_id(
