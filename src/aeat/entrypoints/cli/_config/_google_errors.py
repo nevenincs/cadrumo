@@ -27,6 +27,9 @@ _GOOGLE_ERROR_KEY_SUFFIX: dict[str, str] = {
     "GoogleAuthUnsecuredModeRefusedError": "unsecured_mode",
     "GoogleAuthKeychainLockedError": "keychain_locked",
     "GoogleAuthProfileUnboundError": "profile_unbound",
+    "GoogleAuthAdcUnavailableError": "adc_unavailable",
+    "GoogleAuthAdcStaleError": "adc_stale",
+    "GoogleAuthImpersonationRefusedError": "impersonation_refused",
     "OutboundStorageError": "storage",
 }
 
