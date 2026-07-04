@@ -8,11 +8,14 @@ grounded fields with no file written and no field fabricated. No mocks.
 from __future__ import annotations
 
 import hashlib
+import json
+from datetime import UTC, datetime
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
 
 import pytest
+from PIL import Image
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -20,8 +23,11 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ...user_profile import UserProfileLifecycleRepository
 from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
 from .._evidence_draft import (
+    InvoiceDraft,
     confirm_invoice_draft_from_evidence,
     extract_invoice_draft_from_evidence,
     extract_invoice_fields,
@@ -31,6 +37,7 @@ from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import isolated_settings as isolated_settings
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import secure_objects as secure_objects
+from ._llm_vision_evidence_support import _json_array, _json_object, _run_against_loopback_ollama
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
@@ -247,6 +254,162 @@ class TestExtractInvoiceDraftFromEvidence:
         )
 
         assert list(empty_dir.iterdir()) == []
+
+
+def _scan_only_pdf_bytes() -> bytes:
+    """A one-page raster, text-layer-free PDF (mirrors the vision-evidence fixture)."""
+    buffer = BytesIO()
+    Image.new("RGB", (260, 160), "white").save(buffer, format="PDF")
+    return buffer.getvalue()
+
+
+def _png_bytes() -> bytes:
+    buffer = BytesIO()
+    Image.new("RGB", (120, 80), "white").save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+class TestExtractInvoiceDraftFromEvidenceVisionFallback:
+    """Real-behaviour tests: a scan-only PDF / image falls back to on-host vision.
+
+    ``extract_invoice_fields`` (the text-layer primitive) still refuses on a
+    scan-only PDF or an image (see ``test_image_evidence_has_no_text_layer_and_refuses``
+    above); this class covers the wiring layer
+    (``extract_invoice_draft_from_evidence``) that catches that refusal and falls
+    back to the on-host local-vision reader -- driven against a real loopback
+    Ollama HTTP server, never a mock. No file is written and no byte leaves the
+    host at any point in the fallback.
+    """
+
+    def _extraction_json(self) -> str:
+        return json.dumps(
+            {
+                "supplier_tax_id": _SUPPLIER_CIF,
+                "invoice_number": "2026-0142",
+                "invoice_date": "10/03/2026",
+                "taxable_base": "100,00",
+                "iva_rate": "21",
+                "iva_amount": "21,00",
+                "grand_total": "121,00",
+            },
+        )
+
+    def test_scan_only_pdf_falls_back_to_vision_and_grounds_fields(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        pdf_path = tmp_path / "scan.pdf"
+        pdf_path.write_bytes(_scan_only_pdf_bytes())
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        assert record.media_kind is MediaKind.PDF
+
+        def _call() -> InvoiceDraft:
+            return extract_invoice_draft_from_evidence(
+                bucket_id=_BUCKET_ID,
+                evidence_id=record.evidence_id,
+                settings=isolated_settings,
+            )
+
+        observed, draft = _run_against_loopback_ollama(self._extraction_json(), _call)
+
+        assert draft.supplier_tax_id == _SUPPLIER_CIF
+        assert draft.invoice_number == "2026-0142"
+        assert draft.invoice_date == "2026-03-10"
+        assert draft.taxable_base == Decimal("100.00")
+        assert draft.iva_rate == 21
+        assert draft.iva_amount == Decimal("21.00")
+        assert draft.grand_total == Decimal("121.00")
+
+        # The request genuinely carried a rasterised image, not inlined text.
+        body = _json_object(observed["body"])
+        messages = _json_array(body["messages"])
+        user_message = _json_object(messages[-1])
+        assert user_message.get("images")
+
+    def test_image_attachment_falls_back_to_vision_and_grounds_fields(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        image_path = tmp_path / "receipt.png"
+        image_path.write_bytes(_png_bytes())
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=image_path).record
+        assert record.media_kind is MediaKind.IMAGE
+
+        def _call() -> InvoiceDraft:
+            return extract_invoice_draft_from_evidence(
+                bucket_id=_BUCKET_ID,
+                attachment_id=record.attachment_id,
+                settings=isolated_settings,
+            )
+
+        _observed, draft = _run_against_loopback_ollama(self._extraction_json(), _call)
+        assert draft.taxable_base == Decimal("100.00")
+        assert draft.grand_total == Decimal("121.00")
+
+    def test_scan_only_pdf_never_writes_a_file(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+        tmp_path_factory: pytest.TempPathFactory,
+    ) -> None:
+        pdf_path = tmp_path / "scan.pdf"
+        pdf_path.write_bytes(_scan_only_pdf_bytes())
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+
+        empty_dir = tmp_path_factory.mktemp("no-write-expected-vision-fallback")
+
+        def _call() -> InvoiceDraft:
+            return extract_invoice_draft_from_evidence(
+                bucket_id=_BUCKET_ID,
+                evidence_id=record.evidence_id,
+                settings=isolated_settings,
+            )
+
+        _run_against_loopback_ollama(self._extraction_json(), _call)
+        assert list(empty_dir.iterdir()) == []
+
+    def test_llm_vision_disabled_refuses_instructively_not_silently(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """An operator who opted out of on-host vision gets a typed refusal, not an empty draft."""
+        pdf_path = tmp_path / "scan.pdf"
+        pdf_path.write_bytes(_scan_only_pdf_bytes())
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+
+        clock = datetime(2026, 1, 1, tzinfo=UTC)
+        UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
+            UserProfileRecord(
+                profile_id=_BUCKET_ID,
+                display_name="Vision opted out",
+                facts=(
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="capabilities.llm_vision", value=False),
+                ),
+                created_at=clock,
+                updated_at=clock,
+            ),
+        )
+
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+            extract_invoice_draft_from_evidence(
+                bucket_id=_BUCKET_ID,
+                evidence_id=record.evidence_id,
+                settings=isolated_settings,
+            )
+        assert "vision" in str(raised.value).lower()
+        assert "llm_vision on" in (raised.value.suggestion or "")
 
 
 class TestConfirmInvoiceDraftFromEvidence:
