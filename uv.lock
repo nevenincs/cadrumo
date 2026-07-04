@@ -27,7 +27,7 @@ wheels = [
 
 [[package]]
 name = "aeat-cli"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "argon2-cffi" },
@@ -265,12 +265,12 @@ dev = [
 
 [[package]]
 name = "aeat-data-manuals"
-version = "0.1.0"
+version = "0.1.1"
 source = { directory = "packaging/aeat_data_manuals" }
 
 [[package]]
 name = "aeat-data-official"
-version = "0.1.0"
+version = "0.1.1"
 source = { directory = "packaging/aeat_data_official" }
 
 [[package]]
