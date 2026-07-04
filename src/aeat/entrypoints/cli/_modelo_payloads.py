@@ -865,7 +865,7 @@ class ModeloCasillasResult(OutputSchema):
 class DataInventoryCasillaPayload(OutputSchema):
     """One casilla entry on the ``modelo requires`` data-inventory checklist.
 
-    Projects :class:`~aeat.application.modelo.DataInventoryCasilla`. ``binding_id``
+    Projects :class:`~application.modelo.DataInventoryCasilla`. ``binding_id``
     and ``binding_source`` are populated only for ``ledger_derivable`` and
     ``profile_derivable`` rows; required and optional manual entries carry no
     binding (they are hand-entered).
