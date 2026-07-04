@@ -33,7 +33,7 @@ class CorpusSearchError(AeatError):
         # Preserve the surface's always-a-dict ``context`` contract (AeatError's
         # own base leaves it None when unset); consumers read ``.context`` as a
         # mapping.
-        self.context: dict[str, object] = dict(context or {})
+        self.context = dict(context or {})
         self.suggestion = suggestion
 
 
