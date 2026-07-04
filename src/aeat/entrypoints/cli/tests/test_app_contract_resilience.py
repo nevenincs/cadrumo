@@ -55,7 +55,7 @@ def test_load_failure_becomes_a_warning_notice() -> None:
         payload_packages=_payload_packages_with_missing_probe(),
     )
     notices = _app_contract._schema_load_notices(failures)
-    matching = [n for n in notices if n.context.get("module") == _MISSING_PAYLOAD_PACKAGE]
+    matching = [n for n in notices if (n.context or {}).get("module") == _MISSING_PAYLOAD_PACKAGE]
     assert len(matching) == 1
     notice = matching[0]
     assert notice.severity is NoticeSeverity.WARNING
