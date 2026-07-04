@@ -616,6 +616,8 @@ def _latest_xml_dictionary_xsd_version(source: SourceReference, *, source_root: 
         root = DefusedElementTree.parse(source_root / source.corpus_path).getroot()
     except (DefusedElementTree.ParseError, OSError) as exc:
         raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed") from exc
+    if root is None:
+        raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed")
     versions: list[str] = []
     for simple_type in root.iter("{http://www.w3.org/2001/XMLSchema}simpleType"):
         if simple_type.attrib.get("name") != "tipo_VersionXSD":
@@ -725,7 +727,8 @@ def _record_render_rows(
         active_fields = tuple(
             field
             for field in binding_fields
-            if _is_active_binding_value(binding_values.get((field.binding, row_index)))
+            if field.binding is not None
+            and _is_active_binding_value(binding_values.get((field.binding, row_index)))
         )
         for group in _compatible_binding_field_groups(active_fields):
             rows.append(
