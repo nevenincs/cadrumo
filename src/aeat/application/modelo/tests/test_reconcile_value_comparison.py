@@ -27,6 +27,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import validated_casilla_id
+from ....domain.justificante import Justificante
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -163,7 +164,7 @@ def _receipt_for_m131(*, total_ingresar: Decimal):
     )
 
 
-def _reconcile(work_unit: WorkUnit, justificante):
+def _reconcile(work_unit: WorkUnit, justificante: Justificante):
     return _reconcile_parsed_justificante(
         work_unit_id=work_unit.work_unit_id,
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
