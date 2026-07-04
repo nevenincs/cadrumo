@@ -591,10 +591,12 @@ application:
   invoices:
     bulk_import:
       errors:
-        file_read_failed: 'The bulk invoice import file could not be read.'
-        missing_columns: 'The bulk invoice import file is missing required columns: {missing_columns}'
+        file_read_failed: The bulk invoice import file could not be read.
+        missing_columns: 'The bulk invoice import file is missing required columns:
+          {missing_columns}'
         unknown_columns: 'The bulk invoice import file contains unknown columns: {unknown_columns}'
-        unsupported_extension: 'The bulk invoice import file must be .csv or .xlsx (got {extension}).'
+        unsupported_extension: The bulk invoice import file must be .csv or .xlsx
+          (got {extension}).
     creation:
       errors:
         duplicate_invoice: 'An invoice with the same identity already exists in the
@@ -2800,6 +2802,12 @@ cli:
         help: Run experiments in an isolated, discardable bucket that never touches
           main profile state.
         list_help: List every sandbox bucket.
+        merge_help: 'Promote a sandbox''s ledger and/or modelo records into another profile.'
+        merge_into_help: 'Target profile name the sandbox''s records are promoted into.'
+        merge_name_help: 'Sandbox name (without the prefix).'
+        merge_promoted_info: 'Promoted %{scope} from %{source} into %{target}.'
+        merge_scope_help: 'Data category to promote: ledger, modelo, or all.'
+        merge_yes_help: 'Confirm promoting sandbox data.'
         prune_dry_run_help: Preview which sandboxes would be discarded without discarding
           them.
         prune_help: Discard every sandbox bucket at once.
