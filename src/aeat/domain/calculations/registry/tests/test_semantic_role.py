@@ -17,7 +17,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Iterable
 from datetime import date
-from typing import Any
+from typing import Any, TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -113,6 +113,14 @@ def _bundled_modelo(modelo_id: str) -> Any:
     return load_modelo_path(path.with_suffix(".toml"))
 
 
+class _PartialCasillaUpdate(TypedDict, total=False):
+    """Partial kwargs update for _casilla fixture in parametrize tests."""
+
+    semantic_role: str
+    semantic_role_cardinality: str
+    semantic_role_cardinality_reason: str
+
+
 class TestSemanticRoleFieldShape:
     def test_default_role_is_none(self) -> None:
         c = _casilla()
@@ -149,7 +157,7 @@ class TestSemanticRoleFieldShape:
             "reason-without-singleton",
         ),
     )
-    def test_invalid_semantic_role_shape_rejected(self, updates: dict[str, object]) -> None:
+    def test_invalid_semantic_role_shape_rejected(self, updates: _PartialCasillaUpdate) -> None:
         with pytest.raises(ValidationError):
             _casilla(**updates)
 
