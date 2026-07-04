@@ -231,8 +231,6 @@ class Modelo(StrEnum):
 #: declaraciones informativas and retención forms; it is not yet AEAT's full
 #: ~200-form set.
 UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
-    Modelo.M140: "IRPF deduccion por maternidad, solicitud de abono anticipado",
-    Modelo.M143: "IRPF deducciones familia numerosa/discapacidad, solicitud de abono anticipado",
     Modelo.M490: "Impuesto sobre Determinados Servicios Digitales (autoliquidacion trimestral)",
     Modelo.M604: "Impuesto sobre las Transacciones Financieras (autoliquidacion mensual)",
     Modelo.M763: "Impuesto sobre actividades de juego (autoliquidacion trimestral)",
