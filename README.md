@@ -1,10 +1,14 @@
 # aeat
 
-`aeat` prepares Spanish tax filings from your own financial records. It's for autónomos, small businesses, and the people who help them file. It keeps a ledger and calculates the figures each modelo asks for. It checks them against the form's rules, then exports a file ready to upload to the Agencia Estatal de Administración Tributaria (AEAT). You file that export yourself, through AEAT's official channels.
+A Spanish tax-filing assistant, driven by a deterministic engine and an agent harness.
 
-It's built for an AI assistant to operate, not for you to memorise. You install it as a Claude plugin, or use the `aeat-cli` command line directly. You describe your situation in plain language. The assistant drives the toolkit; a deterministic engine computes every figure and cites the legal rule behind it.
+At the core of `aeat` is a comprehensive command line that you and your agent operate together. It's for autónomos, small businesses, and the people who help them file. It ingests your financial records, calculates each modelo's figures, and prepares the filing: checked against the form's rules, grounded in the regulation that defines each casilla, and exported ready to upload. Your responsibility is to verify the result and to file it yourself, through the official channels of the Agencia Estatal de Administración Tributaria (AEAT).
 
-> **Status: pre-alpha.** Expect breaking changes between versions. The web home at `aeat.neve.md` is under construction; until it lands, this repository is the canonical source.
+You run it as a Claude plugin, through any Model Context Protocol (MCP) client, or directly at the terminal. Describe your situation in plain language; the assistant drives the toolkit, and the deterministic engine computes every figure and cites the legal rule behind it.
+
+> **Verify everything.** `aeat` works to ground every figure in current regulation and cites its sources, but it can make mistakes. Never accept a result blindly. You remain responsible for every declaration you file, and the authors accept no liability for incorrect output.
+>
+> **Status: beta.** Expect breaking changes between versions. The web home at `aeat.neve.md` is under construction; until it lands, this repository is the canonical source.
 
 ## What you use it for
 
@@ -42,7 +46,7 @@ The harness is the operating layer the assistant loads before touching your reco
 - **Operator rules** - the always-on contract: read the typed result envelopes, preserve provenance, never guess a figure, stop at the filing boundary.
 - **Personas** - seven scoped roles (coordinator, onboarding, ledger groomer, classifier, modelo preparer, verifier, reconciler), each limited to the tools its job needs.
 - **Skills** - situation-keyed playbooks selected by who you are (an autónomo in estimación directa, a sociedad, an arrendador), what's happening (a quarter closes, an activity starts), or which modelo is due (such as 130, 303, and 390).
-- **The operating console** - one Model Context Protocol (MCP) server, `aeat-mcp`, exposes the toolkit to any MCP client. It carries grounded search over the bundled BOE and AEAT legal corpus, a Spanish tax terminology lookup, a capability contract, and gated command execution.
+- **The operating console** - one MCP server, `aeat-mcp`, exposes the toolkit to any MCP client. It carries grounded search over the bundled BOE and AEAT legal corpus, a Spanish tax terminology lookup, a capability contract, and gated command execution.
 
 Consequential actions pass a human-in-the-loop gate: reads run freely, local changes ask for confirmation where it matters, and anything that would write to AEAT is refused outright.
 
