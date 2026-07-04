@@ -3,12 +3,22 @@ tags:
   - '#plan'
   - '#fichero-boe-parity-gate'
 date: '2026-07-01'
-modified: '2026-07-02'
+modified: '2026-07-04'
 tier: L2
 related:
   - '[[2026-07-01-fichero-boe-parity-gate-adr]]'
   - '[[2026-07-01-fichero-boe-parity-gate-research]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `fichero-boe-parity-gate` plan
 
@@ -34,8 +44,8 @@ Derive the on-disk rendered casilla set across all casilla-bearing field kinds a
 Assert required-applicable subset of rendered before any bytes are written, hard-failing on a shortfall, and surface a non-blocking coverage advisory when the manifest is absent or partial.
 
 - [x] `P03.S08` - Insert a pre-write presence assertion in export_draft that required-applicable casillas are a subset of the on-disk rendered set, raising a hard FilingExportError before write_bytes; `src/aeat/application/filing/_export.py`.
-- [ ] `P03.S09` - Add a pre-write structural-fidelity assertion that every rendered casilla number and segmento matches the registry-declared metadata with zero drift; `src/aeat/application/filing/_export.py`.
-- [ ] `P03.S10` - Add a pre-write record and section-order assertion that the rendered record order follows the registry declaration order; `src/aeat/application/filing/_export.py`.
+- [x] `P03.S09` - Add a pre-write structural-fidelity assertion that every rendered casilla number and segmento matches the registry-declared metadata with zero drift; `src/aeat/application/filing/_export.py`.
+- [x] `P03.S10` - Add a pre-write record and section-order assertion that the rendered record order follows the registry declaration order; `src/aeat/application/filing/_export.py`.
 - [x] `P03.S11` - Make the panic loud and explicit by enumerating every drifted casilla with expected-versus-actual number, segmento, order and presence in the error; `src/aeat/application/filing/_export.py`.
 - [x] `P03.S12` - Emit a non-blocking loud coverage advisory Notice when the completeness manifest is absent or manual_extraction; `src/aeat/application/filing/_export.py`.
 - [x] `P03.S13` - Surface the coverage advisory and propagate the hard parity error on the export_modelo_revision envelope; `src/aeat/application/modelo/_export.py`.
@@ -46,7 +56,7 @@ Assert required-applicable subset of rendered before any bytes are written, hard
 Lock the runtime assertion with an offline fichero-BOE parity test mirroring the workbook gate, including a disposition-suppressed case.
 
 - [x] `P04.S15` - Add an offline fichero-BOE parity test asserting required-applicable casillas reach disk across export-capable covered modelos; `src/aeat/application/filing/tests/test_fichero_boe_completeness_parity.py`.
-- [ ] `P04.S16` - Assert rendered numbering, segmento and record order fidelity in the fichero-BOE parity test; `src/aeat/application/filing/tests/test_fichero_boe_completeness_parity.py`.
+- [x] `P04.S16` - Assert rendered numbering, segmento and record order fidelity in the fichero-BOE parity test; `src/aeat/application/filing/tests/test_fichero_boe_completeness_parity.py`.
 - [x] `P04.S17` - Add a disposition-suppressed case proving the applicable restriction prevents a false panic on a non-refund draft; `src/aeat/application/filing/tests/test_fichero_boe_completeness_parity.py`.
 - [x] `P04.S18` - Add an anti-tautology drift case mutating a rendered field number or order and asserting the gate panics; `src/aeat/application/filing/tests/test_fichero_boe_completeness_parity.py`.
 
