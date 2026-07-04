@@ -584,7 +584,7 @@ nitpick_ignore_regex = [
     # are ignored here to keep the gate hermetic.
     (
         r"py:.*",
-        r"^(pydantic|pydantic_core|pydantic_settings|httpx|typer|click|"
+        r"^(pydantic|pydantic_core|pydantic_settings|httpx|typer|click|mcp|"
         r"rich|yaml|tomllib|tomli|cryptography|jinja2|markupsafe|"
         r"prompt_toolkit|google|typing_extensions|asyncio|contextvars|"
         r"_pytest|playwright|_schema|_orm|annotated_types)(\..*)?$",

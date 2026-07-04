@@ -51,6 +51,7 @@ Submodules
    aeat.application.config_reset
    aeat.application.diagnostics
    aeat.application.diagnostics_run_health
+   aeat.application.diagnostics_telemetry
    aeat.application.preflight
    aeat.application.provisioning
    aeat.application.repair_integrity
