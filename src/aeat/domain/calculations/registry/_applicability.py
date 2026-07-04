@@ -884,6 +884,32 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "rd-1624-1992:art-71",
         ),
     ),
+    # Modelo 369 — autoliquidación de los regímenes especiales de ventanilla
+    # única (OSS/IOSS) del IVA. Filed by a taxable person enrolled in the
+    # one-stop-shop Union / non-Union / import regime whose Member State of
+    # identification is Spain. Enrolment-gated profile state (iva.oss_enrolled),
+    # not a generic IVA-regime flag: OSS enrolment is an explicit opt-in.
+    Modelo.M369: ModeloApplicabilityRule(
+        modelo=Modelo.M369,
+        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
+        required_payer_fact=PayerFact.OSS_ENROLLED,
+        applicable_reason=(
+            "Modelo 369 (ventanilla única OSS/IOSS): el contribuyente esta "
+            "inscrito en un regimen especial de ventanilla unica del IVA con "
+            "Estado miembro de identificacion España y presenta la "
+            "autoliquidacion periodica de las operaciones acogidas al regimen."
+        ),
+        not_applicable_reason=(
+            "Modelo 369 no aplica: solo corresponde a quien esta inscrito en "
+            "un regimen especial de ventanilla unica (OSS/IOSS) del IVA con "
+            "Estado miembro de identificacion España."
+        ),
+        legal_refs=(
+            "orden-hac-610-2021:art-1",
+            "orden-hac-610-2021:art-2",
+            "ley-37-1992:art-163-quinvicies",
+        ),
+    ),
     # Modelo 194 — resumen anual de retenciones e ingresos a cuenta sobre
     # rendimientos del capital mobiliario y transmisión/amortización de activos.
     # Payer's obligation, gated on the capital-income withholding payer fact.

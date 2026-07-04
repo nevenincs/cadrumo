@@ -3,12 +3,22 @@ tags:
   - '#plan'
   - '#obligation-coverage-completeness'
 date: '2026-06-30'
-modified: '2026-07-01'
+modified: '2026-07-04'
 tier: L2
 related:
   - '[[2026-06-30-obligation-coverage-completeness-adr]]'
   - '[[2026-06-30-obligation-coverage-completeness-research]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `obligation-coverage-completeness` plan
 
@@ -26,8 +36,8 @@ Reconcile the full registry modelo set against the surfaced obligations and surf
 
 Upgrade advised obligations to surfaced by authoring windows and seed rules with legal grounding, and complete the locale catalogue entry.
 
-- [ ] `P02.S06` - Author the Modelo 190 annual deadline window with legal grounding verified against the bundled corpus.; `src/aeat/_data/registry/aeat/modelos/190`.
-- [ ] `P02.S07` - Disposition the class-C window-but-no-seed modelos as seed rules or advisories.; `src/aeat/domain/calculations/registry/_applicability.py`.
+- [x] `P02.S06` - Author the Modelo 190 annual deadline window with legal grounding verified against the bundled corpus.; `src/aeat/_data/registry/aeat/modelos/190`.
+- [x] `P02.S07` - Disposition the class-C window-but-no-seed modelos as seed rules or advisories.; `src/aeat/domain/calculations/registry/_applicability.py`.
 - [x] `P02.S08` - Scaffold the cli.overview.coverage.investigate locale key across the four catalogues once the peer duplicate key clears.; `src/aeat/locales`.
 
 ### Phase `P03` - external universe gate and enrollment ratchet

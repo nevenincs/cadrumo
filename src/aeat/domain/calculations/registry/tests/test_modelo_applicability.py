@@ -70,6 +70,7 @@ def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
         "347",
         "349",
         "353",
+        "369",
         "390",
         "720",
         "721",
