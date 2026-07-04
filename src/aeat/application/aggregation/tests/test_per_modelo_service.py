@@ -14,7 +14,6 @@ from ....core.resources import resources
 from ....domain.calculations.registry import (
     resolve_foreign_asset_binding_row_values,
 )
-from ....domain.calculations.registry._counterpart_bindings import resolve_counterpart_binding_values
 from ... import aggregation
 from .. import (
     ACCEPTED_SOURCE_KINDS,
@@ -48,7 +47,6 @@ from .._counterpart import (
     CounterpartSourceKind,
     OperationKind347,
     OperationKind349,
-    _registry_observations_from_counterpart_aggregation,
     aggregate_counterpart_347,
     aggregate_counterpart_349,
 )
@@ -307,9 +305,7 @@ def test_counterpart_m349_service_keeps_invoice_observations_outside_reserved_re
     assert resolution.source_transaction_ids == ()
 
 
-def test_counterpart_m347_mesh_resolution_matches_prior_aggregate_exactly() -> None:
-    count_binding = "modelo-347-declarante-numero-personas-entidades"
-    amount_binding = "modelo-347-declarante-importe-total-anual-operaciones"
+def test_counterpart_m347_service_does_not_claim_invoice_owned_registry_bindings() -> None:
     observations = (
         _counterpart_obs(
             source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -355,38 +351,23 @@ def test_counterpart_m347_mesh_resolution_matches_prior_aggregate_exactly() -> N
         period=_P_2025_ANNUAL,
         revision=snapshot.revision,
     )
-    expected_binding_values = resolve_counterpart_binding_values(
-        snapshot.revision,
-        _registry_observations_from_counterpart_aggregation(expected_aggregation),
-    )
-    expected_without_below_threshold = resolve_counterpart_binding_values(
-        snapshot.revision,
-        _registry_observations_from_counterpart_aggregation(
-            aggregate_counterpart_347(observations[:2], period=_P_2025_ANNUAL),
-        ),
-    )
-    below_threshold_values = resolve_counterpart_binding_values(
-        snapshot.revision,
-        _registry_observations_from_counterpart_aggregation(
-            aggregate_counterpart_347((observations[2],), period=_P_2025_ANNUAL),
-        ),
-    )
 
     resolution = CounterpartAggregationSourceResolver(observations=observations).resolve(context)
 
     assert service_result.aggregation == expected_aggregation
     assert declarable_counterparty_nifs_347(expected_aggregation) == frozenset({"B00000001"})
-    assert expected_binding_values == {
-        count_binding: Decimal("1"),
-        amount_binding: Decimal("3505.07"),
-    }
-    assert expected_without_below_threshold == expected_binding_values
-    assert below_threshold_values == {
-        count_binding: Decimal("0"),
-        amount_binding: Decimal("0"),
-    }
-    assert resolution.binding_values == expected_binding_values
-    assert set(resolution.binding_values) == {count_binding, amount_binding}
+    assert any(
+        binding.id == "modelo-347-declarante-numero-personas-entidades"
+        and binding.source is BindingSourceKind.COLLECTIBLE_INVOICE
+        for binding in snapshot.revision.bindings
+    )
+    assert not any(
+        binding.source in {BindingSourceKind.LEDGER_TRANSACTION, BindingSourceKind.PURCHASE_INVOICE_EVIDENCE}
+        for binding in snapshot.revision.bindings
+    )
+    assert resolution.binding_values == {}
+    assert resolution.provenance == ()
+    assert resolution.source_transaction_ids == ()
 
 
 def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics() -> None:

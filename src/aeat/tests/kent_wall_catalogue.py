@@ -23,20 +23,23 @@ walks this catalogue and proves, by real pytest collection, that every
 enrolled wall's guarding test still exists and still collects.
 
 This is a representative subset, not the full closed-wall set (~30+ closed
-``kent-journey``-labelled issues at time of writing). A follow-up enrollment
-pass added the batch of closed issues that (a) name a concrete, still-current
+``kent-journey``-labelled issues at time of writing). Follow-up enrollment
+passes added closed issues that (a) name a concrete, still-current
 Kent-observable capability and (b) resolve to a real, collectible,
 ``integration``-marked guarding test at time of enrollment. Several closed
 ``kent-journey`` issues are deliberately NOT enrolled because they were closed
 as duplicate, obsolete, or superseded-by-a-later-architecture (the pre-registry
 ``aeat.formulas`` ruleset issues, the pre-restructure top-level CLI surfaces,
-and the Google Cloud bootstrap issues), and therefore name no guarding test that
-still exists; enrolling those would require fabricating a test binding, which
-the gate's subprocess-run mechanism would then fail on for reasons unrelated to
-a real regression. Enrolling the remainder is scoped as an ongoing follow-up;
-the mechanism (this catalogue + the gate + the CI wiring) is what issue
-``#406`` asks for, and it generalises to any number of future entries with no
-further catalogue-format change.
+the Google Cloud bootstrap issues, and the per-modelo
+"calc-verify-roundtrip"/Tier-R/Tier-S PDF-extraction family whose cited tests
+either no longer exist or are ``unit``-marked parser-boundary tests that the
+gate's ``-m integration`` subprocess mechanism would silently deselect --
+enrolling those would require fabricating a test binding or accepting a
+tautological "0 tests ran" pass, either of which the gate's subprocess-run
+mechanism would then treat as unrelated to a real regression. Enrolling the
+remainder is scoped as an ongoing follow-up; the mechanism (this catalogue +
+the gate + the CI wiring) is what issue ``#406`` asks for, and it generalises
+to any number of future entries with no further catalogue-format change.
 """
 
 from __future__ import annotations
@@ -222,6 +225,65 @@ KENT_WALL_CATALOGUE: tuple[KentWallEntry, ...] = (
         ),
         test_module="src/aeat/entrypoints/cli/tests/test_ratios_verbs.py",
         test_function="test_ratios_set_persists_and_list_reflects",
+    ),
+    KentWallEntry(
+        issue=271,
+        kent_perspective=(
+            "Kent has the justificante PDF of a filing he already made on the AEAT "
+            "portal and reconciles a local work unit against it without any AEAT "
+            "certificate authentication -- `aeat app modelo reconcile file --file`."
+        ),
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
+        test_function="test_reconcile_file_happy_path",
+    ),
+    KentWallEntry(
+        issue=273,
+        kent_perspective=(
+            "Kent imports a past filing's casilla values from a spreadsheet "
+            "(CSV/XLSX) with no AEAT certificate, and those values feed the "
+            "cross-period `previous_filing` prefill for a later calculation."
+        ),
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_local_observation_spreadsheet_cli.py",
+        test_function="test_observe_local_from_csv_spreadsheet_persists_non_official_observation",
+    ),
+    KentWallEntry(
+        issue=253,
+        kent_perspective=(
+            "Kent assigns a spending category to a transaction when he classifies "
+            "it, and the category persists on the transaction record."
+        ),
+        test_module="src/aeat/entrypoints/cli/tests/test_ledger_validation_paths.py",
+        test_function="test_ledger_classify_persists_professional_service_paid_net_of_irpf_withholding",
+    ),
+    KentWallEntry(
+        issue=218,
+        kent_perspective=(
+            "Kent sees how much he owes for Modelo 130 this quarter: his classified "
+            "ledger income and expenses aggregate into the registry-computed "
+            "resultado parcial casilla, not a hand-maintained spreadsheet."
+        ),
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py",
+        test_function="test_modelo_130_resultado_apartado_i_direct_estimation",
+    ),
+    KentWallEntry(
+        issue=324,
+        kent_perspective=(
+            "Kent's Modelo 200 (Impuesto sobre Sociedades) micro-empresa cuota "
+            "integra computes correctly against the AEAT Manual Practico rate, "
+            "not just a formula that happens to run."
+        ),
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py",
+        test_function="test_modelo_200_micro_empresa_pyme_cuota_2024",
+    ),
+    KentWallEntry(
+        issue=325,
+        kent_perspective=(
+            "Kent's Modelo 202 pago fraccionado (Art. 40.2 LIS lane) computes the "
+            "18% cuota against his prior period's base correctly for a taxpayer "
+            "below the INCN threshold."
+        ),
+        test_module="src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py",
+        test_function="test_modelo_202_art_40_2_cuota_incn_below_threshold",
     ),
 )
 """The enrolled representative subset of closed Kent walls.

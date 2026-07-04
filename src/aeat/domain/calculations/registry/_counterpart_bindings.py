@@ -63,6 +63,7 @@ class CounterpartAggregationObservation(BaseModel):
     country_code: str = Field(min_length=2, max_length=2)
     transaction_date: date
     base_amount: Decimal
+    invoice_total_amount: Decimal | None = None
     intracommunity_clave: str | None = Field(default=None, max_length=2)
     is_rectification: bool = False
     rectified_year: int | None = Field(default=None, ge=2000, le=2099)
@@ -73,7 +74,7 @@ class CounterpartAggregationObservation(BaseModel):
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
 
-    @field_validator("base_amount", "rectified_base_previous")
+    @field_validator("base_amount", "invoice_total_amount", "rectified_base_previous")
     @classmethod
     def _decimal_amount(cls, value: Decimal | None) -> Decimal | None:
         if value is None:
@@ -143,6 +144,7 @@ def _counterpart_to_invoice(observation: CounterpartAggregationObservation) -> I
         country_code=observation.country_code,
         transaction_date=observation.transaction_date,
         base_amount=observation.base_amount,
+        invoice_total_amount=observation.invoice_total_amount,
         iva_regime=None,
         intracommunity_clave=observation.intracommunity_clave,
         is_rectification=observation.is_rectification,
@@ -286,7 +288,11 @@ def _m347_declarable_party_ids(
 
 
 def _m347_summary_amount(observation: CounterpartAggregationObservation) -> Decimal:
-    return observation.base_amount
+    if observation.invoice_total_amount is None:
+        raise RegistryValidationError(
+            f"M347 counterpart summary requires invoice_total_amount on observation {observation.source_id!r}",
+        )
+    return observation.invoice_total_amount
 
 
 def resolve_counterpart_binding_row_values(

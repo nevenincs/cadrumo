@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
+from ....core.external_constants import M347_THRESHOLD_EUR
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
     intracommunity_clave_validator,
@@ -72,9 +73,12 @@ class InvoiceObservation(BaseModel):
     """One factual line from the user's invoice ledger.
 
     The fields are scoped to the facts every IVA modelo needs to classify a
-    transaction. ``intracommunity_clave`` follows the AEAT clave-de-operacion
-    enum (E, M, H, A, T, S, I, R, D, C). ``iva_regime`` is open-ended so
-    domestic-IVA modelos can carry their regime classification alongside.
+    transaction. ``base_amount`` carries the taxable base; ``invoice_total_amount``
+    carries the gross invoice total for modelos such as M347 whose declaration
+    floor is not the taxable-base amount. ``intracommunity_clave`` follows the
+    AEAT clave-de-operacion enum (E, M, H, A, T, S, I, R, D, C).
+    ``iva_regime`` is open-ended so domestic-IVA modelos can carry their regime
+    classification alongside.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -85,6 +89,7 @@ class InvoiceObservation(BaseModel):
     country_code: str = Field(min_length=2, max_length=2)
     transaction_date: date
     base_amount: Decimal
+    invoice_total_amount: Decimal | None = None
     iva_regime: str | None = Field(default=None, max_length=64)
     intracommunity_clave: str | None = Field(default=None, max_length=2)
     is_rectification: bool = False
@@ -113,7 +118,7 @@ class InvoiceObservation(BaseModel):
             raise RegistryValidationError(f"invoice source_kind {value!r} is not an invoice binding source")
         return value
 
-    @field_validator("base_amount", "rectified_base_previous", mode="before")
+    @field_validator("base_amount", "invoice_total_amount", "rectified_base_previous", mode="before")
     @classmethod
     def _decimal_amount(cls, value: object) -> object:
         if value is None:
@@ -217,10 +222,11 @@ def invoice_binding_requirements(
     return tuple(requirements)
 
 
-_InvoiceFact = Literal["operator_count", "base_sum", "rectified_base_delta_sum", "row_field"]
+_InvoiceFact = Literal["operator_count", "base_sum", "invoice_total_sum", "rectified_base_delta_sum", "row_field"]
 _INVOICE_FACTS: frozenset[_InvoiceFact] = frozenset(
-    {"operator_count", "base_sum", "rectified_base_delta_sum", "row_field"},
+    {"operator_count", "base_sum", "invoice_total_sum", "rectified_base_delta_sum", "row_field"},
 )
+_M347_DECLARANTE_SUMMARY_RECORD = "m347_declarante_summary"
 
 _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
     {"rectified_year", "rectified_period", "rectified_base_previous"},
@@ -288,6 +294,13 @@ def validate_invoice_family_fact_and_aggregation(
         )
     op = binding_aggregation_op(binding)
     _validate_scalar_invoice_fact_op(binding, selector, op)
+    if selector.record == _M347_DECLARANTE_SUMMARY_RECORD and selector.fact not in {
+        "operator_count",
+        "invoice_total_sum",
+    }:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} M347 declarant summary must use operator_count or invoice_total_sum",
+        )
     if selector.fact == "row_field":
         _validate_row_field_invoice_fact(binding, selector, op)
     elif strict_scalar_shape and (selector.row_field is not None or selector.grouping is not None):
@@ -311,7 +324,10 @@ def _validate_scalar_invoice_fact_op(
         raise RegistryValidationError(
             f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'",
         )
-    if selector.fact in {"base_sum", "rectified_base_delta_sum"} and op != BindingAggregationOp.SUM:
+    if (
+        selector.fact in {"base_sum", "invoice_total_sum", "rectified_base_delta_sum"}
+        and op != BindingAggregationOp.SUM
+    ):
         raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
     if selector.fact == "rectified_base_delta_sum" and selector.rectification_scope != "only_rectifications":
         raise RegistryValidationError(
@@ -459,12 +475,14 @@ def resolve_invoice_binding_values(
         observations: Invoice ledger lines to aggregate over.
     """
     available = tuple(observations)
-    return resolve_invoice_family_scalar_values(
-        revision,
+    m347_summary_values, invoice_family_revision = _resolve_m347_declarante_summary_values(revision, available)
+    invoice_family_values = resolve_invoice_family_scalar_values(
+        invoice_family_revision,
         source_kinds=INVOICE_BINDING_SOURCE_KINDS,
         validate_selector=_validated_invoice_selector,
         observations_for_binding=lambda binding: _observations_for_binding_source(available, binding),
     )
+    return {**invoice_family_values, **m347_summary_values}
 
 
 def resolve_invoice_binding_row_values(
@@ -502,6 +520,55 @@ def _observations_for_binding_source(
     binding: DataBindingDefinition,
 ) -> tuple[InvoiceObservation, ...]:
     return tuple(observation for observation in observations if observation.source_kind == binding.source)
+
+
+def _resolve_m347_declarante_summary_values(
+    revision: ModeloRevision,
+    available: tuple[InvoiceObservation, ...],
+) -> tuple[dict[BindingId, Decimal], ModeloRevision]:
+    summary_bindings: list[DataBindingDefinition] = []
+    invoice_family_bindings: list[DataBindingDefinition] = []
+    for binding in revision.bindings:
+        if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
+            invoice_family_bindings.append(binding)
+            continue
+        selector = _validated_invoice_selector(binding)
+        if selector.record == _M347_DECLARANTE_SUMMARY_RECORD:
+            summary_bindings.append(binding)
+            continue
+        invoice_family_bindings.append(binding)
+
+    if not summary_bindings:
+        return {}, revision
+
+    declarable_party_ids = _m347_declarable_party_ids(available)
+    thresholded = tuple(observation for observation in available if observation.party_tax_id in declarable_party_ids)
+    resolved: dict[BindingId, Decimal] = {}
+    for binding in summary_bindings:
+        selector = _validated_invoice_selector(binding)
+        resolved[binding.id] = _aggregate_invoice_binding(
+            binding,
+            selector,
+            tuple(_filter_invoice_observations(thresholded, selector)),
+        )
+    return resolved, revision.model_copy(update={"bindings": tuple(invoice_family_bindings)})
+
+
+def _m347_declarable_party_ids(observations: tuple[InvoiceObservation, ...]) -> frozenset[str]:
+    totals: dict[str, Decimal] = {}
+    for observation in observations:
+        totals[observation.party_tax_id] = totals.get(observation.party_tax_id, Decimal("0")) + _invoice_total_amount(
+            observation,
+        )
+    return frozenset(party_tax_id for party_tax_id, total in totals.items() if total > M347_THRESHOLD_EUR)
+
+
+def _invoice_total_amount(observation: InvoiceObservation) -> Decimal:
+    if observation.invoice_total_amount is None:
+        raise RegistryValidationError(
+            f"invoice_total_sum binding requires invoice_total_amount on observation {observation.invoice_id!r}",
+        )
+    return observation.invoice_total_amount
 
 
 _M349_EXPORT_NIF_COUNTRY_BINDINGS: dict[BindingId, BindingId] = {
@@ -914,6 +981,8 @@ def _aggregate_invoice_binding(
             raise RegistryValidationError(
                 f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'",
             )
+        if selector.record == _M347_DECLARANTE_SUMMARY_RECORD:
+            return Decimal(len({observation.party_tax_id for observation in observations}))
         # AEAT defines this count as the number of Tipo 2 records (one per
         # (operator, clave) pair for the operador grouping; one per (operator,
         # clave, ejercicio, periodo) for the rectificacion grouping). Per
@@ -951,6 +1020,12 @@ def _aggregate_invoice_binding(
         if op != BindingAggregationOp.SUM:
             raise RegistryValidationError(f"binding {binding.id!r} fact 'base_sum' requires aggregation op 'sum'")
         return sum((observation.base_amount for observation in observations), Decimal("0"))
+    if selector.fact == "invoice_total_sum":
+        if op != BindingAggregationOp.SUM:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'invoice_total_sum' requires aggregation op 'sum'",
+            )
+        return sum((_invoice_total_amount(observation) for observation in observations), Decimal("0"))
     if selector.fact == "rectified_base_delta_sum":
         if op != BindingAggregationOp.SUM:
             raise RegistryValidationError(
