@@ -764,6 +764,7 @@ def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(
         _calculate_m100_annual(secure_objects)
 
     assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
+    assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "missing_taxable_base"
 
 
