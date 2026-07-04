@@ -67,11 +67,17 @@ from ._generate_misc_b import (
     _Modelo347Fixture,
     _Modelo840Fixture,
 )
+from ._generate_modelo_100_current import (
+    _MODELO_100_CURRENT_YEAR_FIXTURES,
+    _draw_modelo_100_current_year,
+    _Modelo100CurrentYearFixture,
+)
 
 __all__ = [
     "_FIXTURES",
     "_Fixture",
     "_Modelo036Fixture",
+    "_Modelo100CurrentYearFixture",
     "_Modelo115Fixture",
     "_Modelo123Fixture",
     "_Modelo130CorpusFixture",
@@ -333,6 +339,21 @@ def main() -> None:
         c.save()
         print(f"wrote {target}")
         _write_sidecar(target, "303", fixture.ejercicio, fixture.tax_id)
+
+    for fixture in _MODELO_100_CURRENT_YEAR_FIXTURES:
+        target = out_dir / fixture.filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        c = canvas.Canvas(str(target), pagesize=A4, invariant=True)
+        c.setTitle(f"Declaracion Modelo 100 {fixture.ejercicio} 0A")
+        c.setAuthor("aeat test fixtures")
+        c.setSubject("synthetic declaracion fixture m100 current year")
+        c.setCreator("aeat fixture generator")
+        c.setProducer("aeat-test-fixture-generator")
+        _draw_modelo_100_current_year(c, fixture)
+        c.showPage()
+        c.save()
+        print(f"wrote {target}")
+        _write_sidecar(target, "100", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_390_CORPUS_FIXTURES:
         target = out_dir / fixture.filename
