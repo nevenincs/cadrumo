@@ -174,7 +174,16 @@ class RecipientFingerprintRegistryRepository:
 
         Raises:
             RecipientFingerprintRegistryError: When the envelope exists
-                but cannot be loaded or decrypted.
+                but the filesystem I/O itself fails.
+            DecryptionError: When the envelope exists but its ciphertext
+                fails AEAD authentication (tampered or corrupted at
+                rest) -- propagated verbatim rather than re-wrapped, so
+                a caller can distinguish "this register was tampered
+                with" from a generic I/O failure. This is the anti-
+                tautology proof this repository's roundtrip tests
+                require: a corrupted on-disk payload must be refused
+                loudly, not silently coerced into a plausible-looking
+                empty register.
         """
         from ...adapters.persistence.storage import (
             MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
