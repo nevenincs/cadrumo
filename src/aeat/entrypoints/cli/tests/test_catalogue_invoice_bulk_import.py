@@ -59,21 +59,26 @@ def _json_result(output: str) -> dict[str, object]:
     envelope: dict[str, object] = json.loads(output)
     result = envelope["result"]
     assert isinstance(result, dict), f"Expected dict, got {type(result)}"
-    return result
+    # A decoded JSON object always has str keys; the isinstance check above narrows the
+    # runtime class but (correctly) cannot verify the key type, so key/value pairs are
+    # re-keyed through str() to prove the dict[str, object] shape to the type checker.
+    return {str(key): value for key, value in result.items()}
 
 
 def _get_list_value(payload: dict[str, object], key: str) -> list[object]:
     """Safely extract a list value from a JSON payload dict."""
     value = payload[key]
     assert isinstance(value, list), f"Expected list for {key}, got {type(value)}"
-    return value
+    return list[object](value)
 
 
 def _get_dict_value(payload: dict[str, object], key: str) -> dict[str, object]:
     """Safely extract a dict value from a JSON payload dict."""
     value = payload[key]
     assert isinstance(value, dict), f"Expected dict for {key}, got {type(value)}"
-    return value
+    # A decoded JSON object always has str keys; see _json_result for why the
+    # re-keyed comprehension (not a bare return) proves the shape to the checker.
+    return {str(item_key): item_value for item_key, item_value in value.items()}
 
 
 def _get_int_value(payload: dict[str, object], key: str) -> int:
@@ -127,7 +132,7 @@ def test_bulk_import_creates_one_invoice_per_valid_row(tmp_path: Path) -> None:
     assert listed.exit_code == 0, listed.output
     listed_payload = _json_result(listed.output)
     rows = _get_list_value(listed_payload, "rows")
-    numbers = {row["invoice_number"] for row in rows if isinstance(row, dict) and "invoice_number" in row}
+    numbers = {row.get("invoice_number") for row in rows if isinstance(row, dict) and "invoice_number" in row}
     assert {"2026-BULK-001", "2026-BULK-002", "2026-BULK-003"}.issubset(numbers)
     exempt_row = next(
         (row for row in rows if isinstance(row, dict) and row.get("invoice_number") == "2026-BULK-003"),
