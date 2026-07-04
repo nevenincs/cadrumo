@@ -170,12 +170,13 @@ def test_setup_answers_string_enum_coercion() -> None:
     )
     from ..setup_answers import SetupAnswers
 
-    for field, token, expected_member in (
-        ("iva_regime", "GENERAL", IVARegime.GENERAL),
-        ("entity_type", "natural_person", EntityType.NATURAL_PERSON),
-    ):
-        sa = SetupAnswers(tax_id="12345678A", **{field: token})
-        assert getattr(sa, field) == expected_member
+    # Test iva_regime coercion
+    sa_iva = SetupAnswers(tax_id="12345678A", iva_regime="GENERAL")
+    assert sa_iva.iva_regime == IVARegime.GENERAL
+
+    # Test entity_type coercion
+    sa_entity = SetupAnswers(tax_id="12345678A", entity_type="natural_person")
+    assert sa_entity.entity_type == EntityType.NATURAL_PERSON
 
 
 def test_setup_answers_invalid_fields_raise() -> None:
@@ -184,12 +185,13 @@ def test_setup_answers_invalid_fields_raise() -> None:
 
     from ..setup_answers import SetupAnswers
 
-    for invalid_field in (
-        {"iva_regime": "NOT_A_REGIME"},
-        {"activity_start_date": "31-12-2024"},
-    ):
-        with pytest.raises(pydantic.ValidationError):
-            SetupAnswers(tax_id="12345678A", **invalid_field)
+    # Test invalid iva_regime token
+    with pytest.raises(pydantic.ValidationError):
+        SetupAnswers(tax_id="12345678A", iva_regime="NOT_A_REGIME")
+
+    # Test invalid activity_start_date format
+    with pytest.raises(pydantic.ValidationError):
+        SetupAnswers(tax_id="12345678A", activity_start_date="31-12-2024")
 
 
 def test_setup_answers_valid_date_accepted() -> None:
