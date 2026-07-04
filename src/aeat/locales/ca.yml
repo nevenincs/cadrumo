@@ -648,6 +648,12 @@ application:
         invalid_valuation_method: 'El metode de valoracio d inventari no esta admes:
           %{valuation_method}.'
   invoices:
+    bulk_import:
+      errors:
+        file_read_failed: 'No s''ha pogut llegir el fitxer d''importació massiva de factures.'
+        missing_columns: 'Al fitxer d''importació massiva de factures li falten columnes obligatòries: {missing_columns}'
+        unknown_columns: 'El fitxer d''importació massiva de factures conté columnes desconegudes: {unknown_columns}'
+        unsupported_extension: 'El fitxer d''importació massiva de factures ha de ser .csv o .xlsx (s''ha rebut {extension}).'
     creation:
       errors:
         duplicate_invoice: 'Ja existeix una factura amb la mateixa identitat al catàleg:
@@ -1456,16 +1462,21 @@ cli:
           {accepted}'
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
-        confirm_already_exists_message: 'Ja existeix una factura amb aquesta identitat; es retorna sense canvis en lloc de crear-ne un duplicat.'
-        confirm_counterparty_name_help: 'Nom de la contrapart (sense heuristica d''extraccio encara; normalment obligatori).'
-        confirm_counterparty_nif_help: 'Sobreescriu el NIF del proveidor extret.'
-        confirm_currency_help: 'Codi de moneda ISO-4217.'
-        confirm_help: 'Torna a extreure el justificant en local i confirma''l com a factura real del cataleg.'
-        confirm_invoice_date_help: 'Sobreescriu la data de factura extreta (AAAA-MM-DD).'
-        confirm_invoice_number_help: 'Sobreescriu el numero de factura extret.'
-        confirm_iva_rate_help: 'Sobreescriu el tipus d''IVA extret (ometre per mantenir el valor extret).'
-        confirm_link_hint_message: 'Vincula aquesta factura a un moviment del llibre amb `aeat app ledger link`.'
-        confirm_taxable_base_help: 'Sobreescriu la base imposable extreta.'
+        confirm_already_exists_message: Ja existeix una factura amb aquesta identitat;
+          es retorna sense canvis en lloc de crear-ne un duplicat.
+        confirm_counterparty_name_help: Nom de la contrapart (sense heuristica d'extraccio
+          encara; normalment obligatori).
+        confirm_counterparty_nif_help: Sobreescriu el NIF del proveidor extret.
+        confirm_currency_help: Codi de moneda ISO-4217.
+        confirm_help: Torna a extreure el justificant en local i confirma'l com a
+          factura real del cataleg.
+        confirm_invoice_date_help: Sobreescriu la data de factura extreta (AAAA-MM-DD).
+        confirm_invoice_number_help: Sobreescriu el numero de factura extret.
+        confirm_iva_rate_help: Sobreescriu el tipus d'IVA extret (ometre per mantenir
+          el valor extret).
+        confirm_link_hint_message: Vincula aquesta factura a un moviment del llibre
+          amb `aeat app ledger link`.
+        confirm_taxable_base_help: Sobreescriu la base imposable extreta.
         evidence_id_help: Identificador del justificant (coincidencia exacta)
         extract_attachment_id_help: Identificador de l'adjunt vinculat del qual extreure
           les dades (alternativa a --evidence-id).
@@ -1519,6 +1530,10 @@ cli:
             defecte ES).
           create_help: Crea una factura de conciliació vinculable al catàleg.
           group_help: Factures del catàleg de conciliació que es vinculen a transaccions.
+          import_all_refused: 'importació massiva de factures fallida: totes les files van ser rebutjades; no es va crear cap factura'
+          import_file_help: 'Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif, counterparty_name, invoice_number, invoice_date, taxable_base, i opcionalment iva_rate/currency/country_code/notes).'
+          import_file_not_found: 'Fitxer no trobat: {path}'
+          import_help: 'Crea factures del catàleg en lot des d''un fitxer CSV o XLSX.'
           invoice_id_help: Identificador de factura del catàleg (o prefix no ambigu).
           list_help: Llista les factures del catàleg de conciliació.
           remove_help: Elimina una factura del catàleg de conciliació.

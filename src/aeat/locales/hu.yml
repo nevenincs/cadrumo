@@ -603,6 +603,12 @@ application:
           mozgast.
         invalid_valuation_method: 'A keszlet ertekelesi mod nem tamogatott: %{valuation_method}.'
   invoices:
+    bulk_import:
+      errors:
+        file_read_failed: 'A számlák tömeges importálási fájlja nem olvasható.'
+        missing_columns: 'A számlák tömeges importálási fájljából hiányoznak kötelező oszlopok: {missing_columns}'
+        unknown_columns: 'A számlák tömeges importálási fájlja ismeretlen oszlopokat tartalmaz: {unknown_columns}'
+        unsupported_extension: 'A számlák tömeges importálási fájljának .csv vagy .xlsx kiterjesztésűnek kell lennie (kapott: {extension}).'
     creation:
       errors:
         duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
@@ -1391,16 +1397,20 @@ cli:
           {accepted}'
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
-        confirm_already_exists_message: 'Mar letezik szamla ezzel az azonossaggal; valtozatlanul visszaadva, nem pedig duplikaciot letrehozva.'
-        confirm_counterparty_name_help: 'A partner megjelenitett neve (meg nincs kinyerest segito heurisztika; altalaban kotelezo).'
-        confirm_counterparty_nif_help: 'Felulirja a kinyert szallitoi adoazonositot.'
-        confirm_currency_help: 'ISO-4217 penznemkod.'
-        confirm_help: 'Ujra kinyeri a bizonylatot helyben, es megerositi valodi katalogus-szamlakent.'
-        confirm_invoice_date_help: 'Felulirja a kinyert szamla datumat (EEEE-HH-NN).'
-        confirm_invoice_number_help: 'Felulirja a kinyert szamlaszamot.'
-        confirm_iva_rate_help: 'Felulirja a kinyert AFA-kulcsot (hagyja ki a kinyert ertek megtartasahoz).'
-        confirm_link_hint_message: 'Kapcsold ossze ezt a szamlat egy konyvelesi tetellel az `aeat app ledger link` paranccsal.'
-        confirm_taxable_base_help: 'Felulirja a kinyert adoalapot.'
+        confirm_already_exists_message: Mar letezik szamla ezzel az azonossaggal;
+          valtozatlanul visszaadva, nem pedig duplikaciot letrehozva.
+        confirm_counterparty_name_help: A partner megjelenitett neve (meg nincs kinyerest
+          segito heurisztika; altalaban kotelezo).
+        confirm_counterparty_nif_help: Felulirja a kinyert szallitoi adoazonositot.
+        confirm_currency_help: ISO-4217 penznemkod.
+        confirm_help: Ujra kinyeri a bizonylatot helyben, es megerositi valodi katalogus-szamlakent.
+        confirm_invoice_date_help: Felulirja a kinyert szamla datumat (EEEE-HH-NN).
+        confirm_invoice_number_help: Felulirja a kinyert szamlaszamot.
+        confirm_iva_rate_help: Felulirja a kinyert AFA-kulcsot (hagyja ki a kinyert
+          ertek megtartasahoz).
+        confirm_link_hint_message: Kapcsold ossze ezt a szamlat egy konyvelesi tetellel
+          az `aeat app ledger link` paranccsal.
+        confirm_taxable_base_help: Felulirja a kinyert adoalapot.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
         extract_attachment_id_help: A kapcsolt melléklet azonosítója, amelyből az
           adatokat ki kell nyerni (a --evidence-id alternatívája).
@@ -1456,6 +1466,10 @@ cli:
             ES).'
           create_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
           group_help: Egyeztetési katalógus számlái, amelyek tranzakciókhoz kapcsolhatók.
+          import_all_refused: 'a számlák tömeges importálása sikertelen: minden sor elutasításra került; nem jött létre számla'
+          import_file_help: 'Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat tartalmaz (counterparty_nif, counterparty_name, invoice_number, invoice_date, taxable_base, valamint opcionálisan iva_rate/currency/country_code/notes).'
+          import_file_not_found: 'A fájl nem található: {path}'
+          import_help: 'Katalógusszámlák tömeges létrehozása CSV vagy XLSX fájlból.'
           invoice_id_help: Katalógusbeli számla azonosítója (vagy egyértelmű előtag).
           list_help: Az egyeztetési katalógus számláinak listázása.
           remove_help: Egy egyeztetési katalógusbeli számla törlése.
