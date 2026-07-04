@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-workflow-redesign'
-date: '2026-06-15'
-modified: '2026-07-03'
+date: '2026-07-04'
+modified: '2026-07-04'
 related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr]]'
@@ -301,6 +301,16 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-w62-p308-s1840-s1841-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w62-p308-s1842-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w62-summary-exec]]'
+  - '[[2026-05-14-cli-workflow-redesign-P01-S01]]'
+  - '[[2026-05-14-cli-workflow-redesign-P01-S02]]'
+  - '[[2026-05-14-cli-workflow-redesign-P01-S03]]'
+  - '[[2026-05-14-cli-workflow-redesign-P01-S04]]'
+  - '[[2026-05-14-cli-workflow-redesign-P01-S05]]'
+  - '[[2026-05-14-cli-workflow-redesign-P02-S09]]'
+  - '[[2026-05-14-cli-workflow-redesign-P03-S11]]'
+  - '[[2026-05-14-cli-workflow-redesign-P03-S12]]'
+  - '[[2026-05-14-cli-workflow-redesign-P03-S14]]'
+  - '[[2026-05-14-cli-workflow-redesign-P03-S15]]'
   - '[[2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-exec]]'
@@ -419,6 +429,7 @@ related:
   - '[[2026-06-12-cli-workflow-redesign-W77-P374-S2150]]'
   - '[[2026-06-12-cli-workflow-redesign-W77-P374-S2152]]'
   - '[[2026-06-12-cli-workflow-redesign-W77-P374-S2153]]'
+  - '[[2026-07-04-cli-workflow-redesign-audit]]'
 ---
 
 # `cli-workflow-redesign` feature index
@@ -569,6 +580,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-22-w03-s12-deadline-review-audit` - `w03-s12-deadline` Code Review
 - `2026-05-22-w03-s13-rate-schedules-review-audit` - `cli-workflow-redesign` W03.S13 Rate Schedules Review
 - `2026-06-03-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `W83.P400.S2281 setup-event emission inventory`
+- `2026-07-04-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `Modelo 145 registry foundation review`
 
 ### exec
 
@@ -803,6 +815,16 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-06-12-cli-workflow-redesign-W77-P374-S2150` - W77.P374.S2150 - retired config bucket mount reconciliation
 - `2026-06-12-cli-workflow-redesign-W77-P374-S2152` - W77.P374.S2152 - apex R08 closeout reconciliation
 - `2026-06-12-cli-workflow-redesign-W77-P374-S2153` - W77.P374.S2153 - child ADR amendment verification
+- `2026-05-14-cli-workflow-redesign-P01-S01` - Add local corpus copy and catalogue authority for AEAT G603 Modelo 145 payer communication
+- `2026-05-14-cli-workflow-redesign-P01-S02` - Add local corpus copy and catalogue authority for AEAT Modelo 145 non-electronic payer processing obligations
+- `2026-05-14-cli-workflow-redesign-P01-S03` - Add local corpus copy and catalogue authority for the current Modelo 145 form
+- `2026-05-14-cli-workflow-redesign-P01-S04` - Add local corpus copy and catalogue authority for the Modelo 145 record design
+- `2026-05-14-cli-workflow-redesign-P01-S05` - Add current BOE legal authority and relevant amendments for Modelo 145, with derogated historical authority only as historical context if retained
+- `2026-05-14-cli-workflow-redesign-P02-S09` - Add non-filing communication validation rules for rejected filing, deadline, live-read, and portal surfaces
+- `2026-05-14-cli-workflow-redesign-P03-S11` - Add Modelo 145 registry TOML using only source-backed communication, validation, and export authority
+- `2026-05-14-cli-workflow-redesign-P03-S12` - Model Modelo 145 lifecycle as local payer communication rather than AEAT filing
+- `2026-05-14-cli-workflow-redesign-P03-S14` - Exclude filing schedules, deadline windows, live cross references, filing application links, and portal read or write links from Modelo 145
+- `2026-05-14-cli-workflow-redesign-P03-S15` - Verify Modelo 145 registry load, source grounding, export metadata, and rejected filing surfaces
 
 ### plan
 
