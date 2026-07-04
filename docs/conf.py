@@ -755,17 +755,8 @@ def _build_py_suffix_index(env):
         ``["aeat.adapters.inbound.borrador._schema.InboundBorradorObservation"]``).
     """
     index: dict[str, list[str]] = {}
-    py_domain = env.get_domain("py")
-    for fullname in py_domain.objects:
+    for fullname in env.get_domain("py").objects:
         index.setdefault(fullname.rsplit(".", 1)[-1], []).append(fullname)
-    # Also index documented modules so a bare ``:mod:`domain.iva``` short
-    # reference resolves to its ``aeat.``-prefixed documented module, mirroring
-    # the class / function / data handling above. Modules live in the Python
-    # domain's separate ``modules`` registry, not ``objects``; only documented
-    # (autodoc-emitted) project modules appear there, so an external / stdlib
-    # ``:mod:`` reference never false-resolves through this index.
-    for module_name in py_domain.modules:
-        index.setdefault(module_name.rsplit(".", 1)[-1], []).append(module_name)
     return index
 
 
@@ -822,12 +813,7 @@ def _resolve_short_reference(app, env, node, contnode):
         return None
 
     fullname = candidates[0]
-    py_domain = env.get_domain("py")
-    # ``fullname`` may name a class / function / data object (``objects``) or a
-    # module (``modules``); both entry kinds expose ``docname`` / ``node_id``.
-    entry = py_domain.objects.get(fullname) or py_domain.modules.get(fullname)
-    if entry is None:
-        return None
+    entry = env.get_domain("py").objects[fullname]
     return make_refnode(app.builder, node.get("refdoc", env.docname), entry.docname, entry.node_id, contnode, fullname)
 
 
