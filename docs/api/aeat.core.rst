@@ -47,6 +47,7 @@ Submodules
    aeat.core._config_support
    aeat.core._config_timeouts
    aeat.core._foreign_asset_obligation
+   aeat.core._google_credential_source
    aeat.core._iban
    aeat.core._irnr
    aeat.core._ledger_sort

@@ -29,6 +29,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_document_link_resolver.py",  # follow-up contract: scope-compatible Drive doclink resolution
         "_drive_media_server.py",  # contract: real local Drive media endpoint for resolver roundtrips
         "_errors.py",
+        "_impersonation.py",  # google-sa-impersonation ADR: service-account impersonation credential source
         "_oauth_flow.py",
         "_active_profile.py",
         "_records.py",
@@ -48,6 +49,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_drive_folder_listing.py",  # contract (#262): Drive-folder bulk listing/filter/pagination/refusal
         "test_drive_folder_bulk_fetch_roundtrip.py",  # contract (#262): folder sweep fetch-and-encrypt-or-refuse
         "test_grid_resize.py",
+        "test_impersonation.py",  # google-sa-impersonation ADR: ADC discovery + IAM refusal + config validation
         "test_oauth_flow.py",  # contract: OAuth local-server failures stay inside GoogleAuthError
         "test_oauth_live.py",
         "test_package_module_allowlist.py",
