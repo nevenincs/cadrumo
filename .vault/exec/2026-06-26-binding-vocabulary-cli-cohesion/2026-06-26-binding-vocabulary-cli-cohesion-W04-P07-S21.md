@@ -1,0 +1,49 @@
+---
+tags:
+  - '#exec'
+  - '#binding-vocabulary-cli-cohesion'
+date: '2026-07-04'
+modified: '2026-07-04'
+step_id: 'S21'
+related:
+  - "[[2026-06-26-binding-vocabulary-cli-cohesion-plan]]"
+---
+
+# OPERATOR-VISIBLE: rename the bindings preview verb (G1) to a value-bearing name that says what it sources rather than the UI gesture, under aeat-cli-pull-and-file-standard, as one atomic commit
+
+## Scope
+
+- `author the rename through the locale CLI (python -m aeat.locales modelo / set for cli.app.modelo.bindings.preview_help and list_help) and sweep the runtime write-policy allowlist`
+- `the error-registry default_suggestion fields`
+- `the cross-period next_action builders`
+- `the curated operator help`
+- `and the envelope command= identifiers`
+- `regen docs-scaffold + locale scaffold in the same commit`
+- `collect-only clean and test_documented_command_conformance + test_json_schema_conformance green before commit`
+- `apply-cached own-only`
+- `abort-on-WIP`
+- `src/aeat/entrypoints/cli/_modelo_discovery_cli.py`
+- `src/aeat/application/storage_write_policy.py`
+- `src/aeat/core/errors/_registry.py`
+- `src/aeat/application/operator_surface/_help.py`
+
+## Description
+
+- Reconcile the landed G1 implementation from commit `c9d4cc09b0`, which renames the operator command from `app modelo bindings preview` to `app modelo bindings resolve`.
+- Confirm the live command group exposes `list` and `resolve`, with no `preview` subcommand.
+- Confirm the envelope command identifier is now `modelo.bindings.resolve` and the text operation line is `registry.modelo.bindings.resolve`.
+- Confirm locale help uses `cli.app.modelo.bindings.resolve_help` across the four locale catalogues.
+- Re-run focused G1 evidence at HEAD.
+
+## Outcome
+
+- The live CLI now names the value-bearing binding operation `resolve`, matching what it does: resolve temporary binding overrides against the registry binding surface without mutating state.
+- Focused verification passed:
+  - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_modelo_registry_surface.py -k "bindings"` (`2 passed`)
+  - `uv run --no-sync aeat app modelo bindings --help`
+  - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py` (`140 passed`)
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` ran and failed on an unrelated docs citation in `docs/HARNESS-USERDOCS-KICKOFF-BRIEF.md` (`aeat app agent --layout plugin`), not on the bindings command path.
+
+## Notes
+
+No plan step check was run in this pass. The plan file currently has non-authored WIP that only removes the template link-rule comment block, so mutating the checkbox would violate the shared-worktree abort-on-WIP rule. This record reconciles the missing exec evidence only.
