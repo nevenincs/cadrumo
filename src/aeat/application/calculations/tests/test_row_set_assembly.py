@@ -20,6 +20,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import RegistryValidationError
 from .._row_set_assembly import (
     assemble_atribucion_observations,
+    assemble_donativo_observations,
     assemble_foreign_asset_observations,
     assemble_observations_for_grouping,
     assemble_refund_observations,
@@ -190,6 +191,57 @@ def test_assemble_refund_parses_iso_operation_date() -> None:
     assert obs.member_state_code == "FR"
     assert obs.operation_date == date(2025, 6, 15)
     assert obs.refund_amount == Decimal("500")
+
+
+def test_assemble_donativo_groups_two_donors_into_two_observations() -> None:
+    revision = _modelo("182", "2007-y-siguientes")
+    cells = (
+        RowSetCellEdit(binding="modelo-182-donor-row-nif", row_index=1, value="11111111A"),
+        RowSetCellEdit(binding="modelo-182-donor-row-name", row_index=1, value="Donor One"),
+        RowSetCellEdit(binding="modelo-182-donor-row-amount", row_index=1, value=Decimal("100")),
+        RowSetCellEdit(binding="modelo-182-donor-row-deduction-percentage", row_index=1, value=Decimal("80")),
+        RowSetCellEdit(binding="modelo-182-donor-row-recurrencia", row_index=1, value="1"),
+        RowSetCellEdit(binding="modelo-182-donor-row-nif", row_index=2, value="22222222B"),
+        RowSetCellEdit(binding="modelo-182-donor-row-name", row_index=2, value="Donor Two"),
+        RowSetCellEdit(binding="modelo-182-donor-row-amount", row_index=2, value=Decimal("250")),
+        RowSetCellEdit(binding="modelo-182-donor-row-deduction-percentage", row_index=2, value=Decimal("35")),
+        RowSetCellEdit(binding="modelo-182-donor-row-recurrencia", row_index=2, value="0"),
+    )
+
+    observations = assemble_donativo_observations(cells, revision, filing_year=2025)
+
+    assert len(observations) == 2
+    by_nif = {obs.donor_tax_id: obs for obs in observations}
+    assert by_nif["11111111A"].donor_legal_name == "Donor One"
+    assert by_nif["11111111A"].amount_donated == Decimal("100")
+    assert by_nif["11111111A"].deduction_percentage == Decimal("80")
+    assert by_nif["11111111A"].is_recurrent is True
+    assert by_nif["11111111A"].transaction_date == date(2025, 12, 31)
+    assert by_nif["22222222B"].amount_donated == Decimal("250")
+    assert by_nif["22222222B"].is_recurrent is False
+
+
+def test_assemble_observations_for_grouping_dispatches_per_donativo_donor() -> None:
+    from ....domain.calculations.registry import DonativoDonorObservation
+
+    revision = _modelo("182", "2007-y-siguientes")
+    cells = (
+        RowSetCellEdit(binding="modelo-182-donor-row-nif", row_index=1, value="11111111A"),
+        RowSetCellEdit(binding="modelo-182-donor-row-amount", row_index=1, value=Decimal("100")),
+    )
+
+    source_kind, observations = assemble_observations_for_grouping(
+        "per_donativo_donor",
+        cells,
+        revision,
+        filing_year=2025,
+    )
+
+    assert source_kind == "donativo"
+    assert len(observations) == 1
+    obs = observations[0]
+    assert isinstance(obs, DonativoDonorObservation)
+    assert obs.donor_tax_id == "11111111A"
 
 
 def test_assemble_returns_empty_for_empty_cells() -> None:
