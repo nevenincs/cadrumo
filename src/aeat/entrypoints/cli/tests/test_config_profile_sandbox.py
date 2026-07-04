@@ -836,3 +836,61 @@ def test_sandbox_active_indicator_names_the_currently_active_sandbox_after_switc
     shown_after_use = _invoke(("config", "profile", "show"))
     assert shown_after_use.exit_code == 0, shown_after_use.output
     assert "sandbox:zeta" in shown_after_use.output
+
+
+def test_sandbox_active_indicator_helper_degrades_silently_on_a_corrupt_active_manifest() -> None:
+    """The indicator helper itself must never raise on a corrupt active manifest.
+
+    Exercises :func:`~aeat.entrypoints.cli._common._active_sandbox_notice`
+    directly against a bucket whose manifest is torn/corrupt AND is the
+    currently active bucket (``AEAT_ACTIVE_PROFILE`` points at it). This
+    isolates the indicator's own defensive handling: the helper must
+    return ``None`` rather than propagate the storage-validation failure,
+    independent of how any particular CLI command's *other* pre-existing
+    active-profile plumbing (the root callback's label normalisation,
+    which is unrelated to this feature) happens to react to the same
+    corruption.
+    """
+    from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
+    from ....application.workflow import read_profile_bucket
+    from ....core.config import load_settings, override_settings
+    from .._common import _active_sandbox_notice
+
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "torn", "--from-profile", "main")).exit_code == 0
+
+    live_pointer = read_profile_bucket("sandbox:torn")
+    assert live_pointer is not None
+    paths = bucket_paths(load_settings().aeat_local_storage_root, live_pointer.bucket_id)
+    manifest_file = manifest_path(paths)
+    manifest_file.write_text("not = [valid toml", encoding="utf-8")
+
+    with override_settings(aeat_active_profile=live_pointer.bucket_id):
+        assert _active_sandbox_notice() is None
+
+
+def test_sandbox_active_indicator_absent_when_a_non_active_sandbox_manifest_is_corrupt() -> None:
+    """A corrupt manifest on a non-active sandbox never breaks an unrelated command.
+
+    ``config profile list`` tolerates a per-bucket manifest read failure by
+    construction (``list_profile_buckets`` skips unreadable manifests); this
+    proves the corruption of a bucket that is NOT the active profile never
+    surfaces the sandbox indicator and never breaks the command.
+    """
+    from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
+    from ....application.workflow import read_profile_bucket
+    from ....core.config import load_settings
+
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "torn", "--from-profile", "main")).exit_code == 0
+    live_pointer = read_profile_bucket("sandbox:torn")
+    assert live_pointer is not None
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    paths = bucket_paths(load_settings().aeat_local_storage_root, live_pointer.bucket_id)
+    manifest_file = manifest_path(paths)
+    manifest_file.write_text("not = [valid toml", encoding="utf-8")
+
+    listed = _invoke(("config", "profile", "list"))
+    assert listed.exit_code == 0, listed.output
+    assert "SANDBOX\t" not in listed.output
