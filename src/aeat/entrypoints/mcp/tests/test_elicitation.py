@@ -98,8 +98,12 @@ def test_request_payload_is_argument_free_and_interpolates_the_command() -> None
     # values, figures, or taxpayer data (the MCP-spec sensitive-data constraint).
     properties = request.requested_schema["properties"]
     assert isinstance(properties, dict)
-    assert set(properties) == {"confirm"}
-    assert properties["confirm"]["type"] == "boolean"
+    typed_properties: dict[str, object] = {str(key): value for key, value in properties.items()}
+    assert set(typed_properties) == {"confirm"}
+    confirm_property = typed_properties["confirm"]
+    assert isinstance(confirm_property, dict)
+    typed_confirm_property: dict[str, object] = {str(key): value for key, value in confirm_property.items()}
+    assert typed_confirm_property["type"] == "boolean"
     assert request.requested_schema["required"] == ["confirm"]
     # The command is interpolated into the localized message (not hardcoded prose).
     assert _HANDOFF in request.message
