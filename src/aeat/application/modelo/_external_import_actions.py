@@ -54,11 +54,13 @@ from ...domain.calculations.registry import BindingId, CasillaId, RelationId
 from ...domain.justificante import Justificante
 from ...domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
+    ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloRecordStatus,
     WorkUnit,
@@ -293,12 +295,12 @@ def import_external_filing_evidence[CasillaKey](
 
 def _supersede_prior_current_external_filing(
     *,
-    filing_catalogue,
+    filing_catalogue: ModeloRecordCatalogue,
     prior_current: ModeloRecord | None,
-    revisions,
+    revisions: CalculationRevisionCatalogue,
     new_filing_id: str,
     now: datetime,
-):
+) -> tuple[ModeloRecordCatalogue, CalculationRevisionCatalogue]:
     updated_filing_catalogue = filing_catalogue
     if prior_current is None:
         return updated_filing_catalogue, revisions
