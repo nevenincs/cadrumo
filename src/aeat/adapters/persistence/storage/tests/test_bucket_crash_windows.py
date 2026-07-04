@@ -148,6 +148,7 @@ class TestRenameProfileCrashWindow:
         # naming the label-drift stores — never serving the stale label.
         with profile_storage_session(_RENAME_PROFILE_ID), pytest.raises(ProfileIntegrityError) as excinfo:
             ProfileRepository().load(_RENAME_PROFILE_ID)
+        assert excinfo.value.context is not None
         assert "label" in str(excinfo.value.context["mismatches"])
 
     def test_synced_rename_loads_cleanly(self, backend: Path) -> None:

@@ -192,6 +192,7 @@ def test_full_custody_coverage_gate_refuses_unclassified_namespace() -> None:
             populated_namespaces=("aeat.domain.buckets.event_history", "aeat.surprise.new_store"),
             covered_namespaces=frozenset({"aeat.domain.buckets.event_history"}),
         )
+    assert excinfo.value.context is not None
     assert "aeat.surprise.new_store" in str(excinfo.value.context["unclassified_namespaces"])
 
 

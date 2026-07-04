@@ -61,6 +61,7 @@ def test_load_failure_becomes_a_warning_notice() -> None:
     assert notice.severity is NoticeSeverity.WARNING
     assert notice.code == "contract.schema_module_load_failed"
     assert _MISSING_PAYLOAD_PACKAGE in notice.message
+    assert notice.context is not None
     assert "ModuleNotFoundError" in notice.context["error"]
 
 
