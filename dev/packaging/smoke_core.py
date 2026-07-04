@@ -683,7 +683,7 @@ finally:
 try:
     LLMClient(settings=Settings(aeat_local_storage_root=root / "llm-state"))._build_adapter(LLMProvider.ANTHROPIC)
 except LLMConfigError as exc:
-    if exc.suggestion != "pip install aeat[anthropic]":
+    if exc.suggestion != "pip install aeat-cli[anthropic]":
         raise SystemExit(f"unexpected Anthropic install hint: {{exc.suggestion!r}}")
 else:
     raise SystemExit("Anthropic adapter unexpectedly built in a core wheel install")

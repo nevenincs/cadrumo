@@ -23,8 +23,6 @@ from pathlib import Path
 
 import pytest
 
-import aeat
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 # Sanctioned parser authorities: the two inbound-PDF parser packages, plus the
@@ -35,7 +33,7 @@ _ALLOWED_PARSER_AUTHORITY_PREFIXES: tuple[str, ...] = (
     "aeat.domain.calculations.registry",
 )
 
-_REGISTRY_ROOT = Path(aeat.__file__).parent / "_data" / "registry"
+_REGISTRY_ROOT = Path(__file__).parents[3] / "_data" / "registry"
 _PARSER_LINE_RE = re.compile(r'^\s*parser\s*=\s*"([^"]+)"', re.MULTILINE)
 
 

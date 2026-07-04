@@ -78,9 +78,13 @@ from ._renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from ._retencion_observations_repository import RetencionObservationRepository
 from ._retencion_rate_advisory import administrador_retencion_rate_advisory_observations
 from ._retenciones import (
+    RetencionesAggregation,
+    RetencionObservation,
     aggregate_retenciones_111,
     aggregate_retenciones_115,
+    aggregate_retenciones_123,
     aggregate_retenciones_180,
+    aggregate_retenciones_190,
     aggregate_retenciones_193,
 )
 from ._source_mesh import (
@@ -740,17 +744,30 @@ def _empty_source_resolution(
     return CalculationSourceResolution(resolver_id=resolver_id, owned_sources=owned_sources)
 
 
-#: Retenciones modelos whose registry declares ``retenciones_aggregation`` bindings,
-#: mapped to their validated per-perceptor aggregator. Modelo 115 uses the quarterly
-#: URBAN_RENTAL aggregate for casillas 01/02. Modelos 180/193 use the annual
-#: aggregate for the distinct-NIF perceptor count; their monetary totals remain on
-#: relation-prefill. Modelo 190 is not included: its annual count is
+#: The ONE canonical retenciones aggregation dispatch: every retenciones modelo
+#: mapped to its validated per-perceptor aggregator. This single table is shared by
+#: BOTH the live calculate mesh (:meth:`RetencionesAggregationSourceResolver.resolve`)
+#: and the per-modelo aggregation service (:func:`~._service.aggregate_per_modelo`,
+#: the CLI ``aggregate`` / pull surface), so the two paths cannot drift
+#: (``one-aggregation-path-pull-equals-calculate``).
+#:
+#: The calculate path is scoped to the modelos whose registry declares a
+#: ``retenciones_aggregation`` binding (111/115/180/193 today) by the resolver's
+#: binding-guard (:func:`_revision_has_binding_source`), NOT by membership of this
+#: table — so the scoping tracks the registry, not a hand-maintained sub-list.
+#: Modelo 115 uses the quarterly URBAN_RENTAL aggregate for casillas 01/02; modelos
+#: 180/193 use the annual aggregate for the distinct-NIF perceptor count (their
+#: monetary totals remain on relation-prefill). Modelos 123 and 190 declare no
+#: ``retenciones_aggregation`` binding, so they never resolve on the calculate path;
+#: they are pull/service-only here. Modelo 190's calculate-path count is
 #: "percepciones", a distinct perceptor/clave/subclave figure handled by
 #: :class:`~._withholding_source.WithholdingSourceResolver`.
 _RETENCIONES_AGGREGATORS = {
     Modelo.M111.value: aggregate_retenciones_111,
     Modelo.M115.value: aggregate_retenciones_115,
+    Modelo.M123.value: aggregate_retenciones_123,
     Modelo.M180.value: aggregate_retenciones_180,
+    Modelo.M190.value: aggregate_retenciones_190,
     Modelo.M193.value: aggregate_retenciones_193,
 }
 
@@ -773,11 +790,30 @@ class RetencionesAggregationSourceResolver:
     def __init__(self, *, retencion_repository: RetencionObservationRepository | None = None) -> None:
         self._retencion_repository = retencion_repository
 
+    @staticmethod
+    def aggregate(
+        modelo: str,
+        observations: tuple[RetencionObservation, ...],
+        *,
+        period: Period,
+    ) -> RetencionesAggregation:
+        """Aggregate per-perceptor retención observations for ``modelo``.
+
+        The ONE canonical retenciones aggregation entry point. Both this
+        resolver's live calculate path (:meth:`resolve`) and the per-modelo
+        aggregation service (:func:`~._service.aggregate_per_modelo`, the CLI
+        ``aggregate`` / pull surface) route through this single method over the
+        shared :data:`_RETENCIONES_AGGREGATORS` dispatch, so the calculate and
+        pull surfaces produce byte-identical aggregation and cannot drift
+        (``one-aggregation-path-pull-equals-calculate``). Raises ``KeyError``
+        for a non-retenciones modelo, matching the prior service dispatch.
+        """
+        return _RETENCIONES_AGGREGATORS[modelo](tuple(observations), period=period)
+
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if not _revision_has_binding_source(context.revision, "retenciones_aggregation"):
             return _empty_source_resolution(self.resolver_id, self.owned_sources)
-        aggregator = _RETENCIONES_AGGREGATORS.get(str(context.modelo))
-        if aggregator is None:
+        if str(context.modelo) not in _RETENCIONES_AGGREGATORS:
             # Defensive: a revision declares the source for a modelo with no
             # retenciones aggregator. Resolve empty rather than guess values.
             return _empty_source_resolution(self.resolver_id, self.owned_sources)
@@ -815,7 +851,7 @@ class RetencionesAggregationSourceResolver:
                 },
                 suggestion=suggestion,
             )
-        aggregation = aggregator(tuple(observations), period=context.period)
+        aggregation = self.aggregate(str(context.modelo), tuple(observations), period=context.period)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,

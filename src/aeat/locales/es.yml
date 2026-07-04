@@ -933,7 +933,8 @@ application:
         el destinatario; la clave no coincide o el paquete ha sido manipulado.
       recipient_encryption_invalid_key: La clave publica del destinatario no es una
         clave publica X25519 valida.
-      recipient_encryption_key_not_found: 'Aun no se ha generado ningun par de claves de cifrado de destinatario para este bucket.'
+      recipient_encryption_key_not_found: Aun no se ha generado ningun par de claves
+        de cifrado de destinatario para este bucket.
       recipient_registry_already_exists: El destinatario %{recipient_id} ya esta registrado.
       recipient_registry_generic: Se ha producido un error en el registro de huellas
         digitales de destinatarios.
@@ -2120,14 +2121,22 @@ cli:
           JSON.
         counter_signer_public_key_help: Clave pública del asesor fiscal (contrafirmante),
           en 64 caracteres hexadecimales en minúscula.
-        decrypt_help: 'Abre un paquete de revision cifrado para un destinatario con el par de claves X25519 de este bucket (generado en el primer uso) y escribe el paquete recuperado en --output. Solo local; nunca contacta con la AEAT.'
-        decrypt_output_help: 'Ruta donde escribir el ZIP del paquete de revision recuperado.'
-        encrypt_for_recipient_help: 'Sella un paquete de revision para que solo la clave privada de un destinatario registrado pueda abrirlo, y escribe el sobre cifrado en --output. Solo local; nunca contacta con la AEAT.'
-        encrypt_output_help: 'Ruta donde escribir el sobre cifrado para el destinatario en formato JSON.'
-        envelope_path_help: 'Ruta del sobre cifrado para el destinatario en formato JSON generado por `encrypt-for-recipient`.'
+        decrypt_help: Abre un paquete de revision cifrado para un destinatario con
+          el par de claves X25519 de este bucket (generado en el primer uso) y escribe
+          el paquete recuperado en --output. Solo local; nunca contacta con la AEAT.
+        decrypt_output_help: Ruta donde escribir el ZIP del paquete de revision recuperado.
+        encrypt_for_recipient_help: Sella un paquete de revision para que solo la
+          clave privada de un destinatario registrado pueda abrirlo, y escribe el
+          sobre cifrado en --output. Solo local; nunca contacta con la AEAT.
+        encrypt_output_help: Ruta donde escribir el sobre cifrado para el destinatario
+          en formato JSON.
+        envelope_path_help: Ruta del sobre cifrado para el destinatario en formato
+          JSON generado por `encrypt-for-recipient`.
         errors:
-          envelope_not_found: 'No se encontro el sobre cifrado para el destinatario en {envelope_path}.'
-          invalid_valid_for_days: '--valid-for-days debe ser un entero estrictamente positivo.'
+          envelope_not_found: No se encontro el sobre cifrado para el destinatario
+            en {envelope_path}.
+          invalid_valid_for_days: --valid-for-days debe ser un entero estrictamente
+            positivo.
           output_required: Indique --output RUTA para el ZIP del paquete de revisión.
           package_not_found: No se encontró el paquete de revisión en {package_path}.
           receipt_not_found: No se encontró el recibo en {receipt_path}.
@@ -2143,8 +2152,11 @@ cli:
           en minúscula.
         receipt_path_help: Ruta del recibo contrafirmado en formato JSON generado
           por `counter-sign`.
-        recipient_id_help: 'Id del destinatario registrado (vease `aeat config collab recipient add`).'
-        review_only_help: 'Marca el paquete sellado como carente de autoridad de presentacion (el destinatario puede leerlo y verificarlo, pero no es prueba de que la revision subyacente haya sido o vaya a ser presentada).'
+        recipient_id_help: Id del destinatario registrado (vease `aeat config collab
+          recipient add`).
+        review_only_help: Marca el paquete sellado como carente de autoridad de presentacion
+          (el destinatario puede leerlo y verificarlo, pero no es prueba de que la
+          revision subyacente haya sido o vaya a ser presentada).
         revision_help: Id de la revisión de cálculo a empaquetar; por defecto la revisión
           verificada-completa o presentada más reciente de la unidad de trabajo.
         sign_help: Firma el manifiesto de comprobación de un paquete de revisión con
@@ -2152,7 +2164,8 @@ cli:
           el sobre de firma en --output. Solo local; nunca contacta con la AEAT.
         sign_output_help: Ruta donde escribir el sobre de firma en formato JSON.
         signature_path_help: Ruta del sobre de firma JSON generado por `sign`.
-        valid_for_days_help: 'Ventana de validez opcional en dias; omitela para un paquete que nunca caduque.'
+        valid_for_days_help: Ventana de validez opcional en dias; omitela para un
+          paquete que nunca caduque.
         verify_help: Verifica el manifiesto de checksum de un paquete de revisión
           (solo integridad; no certifica quién lo construyó). Solo local; nunca contacta
           con la AEAT.
@@ -2692,17 +2705,23 @@ cli:
       missing: ausente
       profile_label: perfil
     collab:
-      help: 'Gestiona los destinatarios de confianza para la colaboracion con paquetes de revision.'
+      help: Gestiona los destinatarios de confianza para la colaboracion con paquetes
+        de revision.
       recipient:
-        add_help: 'Registra la clave publica X25519 de un destinatario de confianza por su huella digital.'
+        add_help: Registra la clave publica X25519 de un destinatario de confianza
+          por su huella digital.
         errors:
-          invalid_public_key: '--public-key debe tener exactamente 64 caracteres hexadecimales en minuscula (una clave publica X25519 en bruto de 32 bytes).'
-        help: 'Registra, lista y elimina destinatarios de confianza para paquetes de revision.'
-        label_help: 'Nombre de visualizacion opcional en texto libre para el destinatario.'
-        list_help: 'Lista todos los destinatarios de confianza registrados en el perfil activo.'
-        public_key_help: 'La clave publica X25519 en bruto del destinatario, en 64 caracteres hexadecimales en minuscula.'
-        recipient_id_help: 'Etiqueta estable elegida por el operador (p. ej. ''gestor-de-kent'').'
-        remove_help: 'Elimina un destinatario de confianza por su id del perfil activo.'
+          invalid_public_key: --public-key debe tener exactamente 64 caracteres hexadecimales
+            en minuscula (una clave publica X25519 en bruto de 32 bytes).
+        help: Registra, lista y elimina destinatarios de confianza para paquetes de
+          revision.
+        label_help: Nombre de visualizacion opcional en texto libre para el destinatario.
+        list_help: Lista todos los destinatarios de confianza registrados en el perfil
+          activo.
+        public_key_help: La clave publica X25519 en bruto del destinatario, en 64
+          caracteres hexadecimales en minuscula.
+        recipient_id_help: Etiqueta estable elegida por el operador (p. ej. 'gestor-de-kent').
+        remove_help: Elimina un destinatario de confianza por su id del perfil activo.
     custody:
       confirm_new_passphrase_help: Repite la nueva contrasena del almacen secreto.
       confirm_new_passphrase_prompt: 'Confirma la nueva contrasena del almacen secreto
@@ -5041,6 +5060,7 @@ errors:
       libro del bucket.
     fail_financial_usage_ratios_usage_ratio_persistence: No se pudo leer o escribir
       el perfil de porcentajes de uso.
+    fail_google_adc_stale: 'No se han podido renovar las credenciales predeterminadas de aplicación (ADC). Ejecute gcloud auth application-default login.'
     fail_google_adc_unavailable: No se han encontrado credenciales predeterminadas
       de aplicación (ADC) en este equipo. Ejecute gcloud auth application-default
       login.
