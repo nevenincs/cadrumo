@@ -152,6 +152,7 @@ def test_modelo_100_casilla_0581_role_tracks_year_specific_state_autonomic_colum
         assert casilla.number == "0581"
         assert casilla.section[-1] == "gravamenes_res"
         assert casilla.semantic_role == expected_role, filing_year
+        assert casilla.semantic_role is not None
         assert not casilla.semantic_role.endswith("_2")
         assert expected_label_snippet in casilla.label, filing_year
         assert f"aeat-dr-100-{filing_year}-dictionary" in casilla.source_refs
