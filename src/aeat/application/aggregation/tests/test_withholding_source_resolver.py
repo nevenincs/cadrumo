@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.resources import resources
 from ....domain.calculations.registry import DataBindingDefinition, ModeloRevision, WithholdingObservation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -60,7 +60,7 @@ def _context(revision: ModeloRevision) -> CalculationSourceContext:
     )
 
 
-def _obs(nif: str, clave: str) -> WithholdingObservation:
+def _obs(nif: str, clave: RetencionClave) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=f"row-{nif}-{clave}",
         perceptor_tax_id=nif,
@@ -80,7 +80,11 @@ def test_resolver_materialises_distinct_percepcion_count(tmp_path: Path) -> None
             modelo="190",
             filing_year=2024,
             period=period,
-            observations=[_obs("11111111H", "A"), _obs("11111111H", "G"), _obs("22222222J", "A")],
+            observations=[
+                _obs("11111111H", RetencionClave.A),
+                _obs("11111111H", RetencionClave.G),
+                _obs("22222222J", RetencionClave.A),
+            ],
             source_kind="aggregate_pull",
         )
         resolution = WithholdingSourceResolver().resolve(_context(_revision_with(binding)))
