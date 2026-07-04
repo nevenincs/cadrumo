@@ -22,6 +22,14 @@ extracted text never touch disk and are never sent to a cloud provider or an
 LLM (``sensitive-financial-data-secure-storage-only``,
 ``2026-06-10-llm-evidence-classification-adr``). This module makes no network
 call and performs no filesystem write.
+
+:func:`extract_invoice_draft_from_evidence` is the CLI-facing wiring layer: it
+resolves an already-stored ``purchase_invoice_evidence`` record or a linked
+``attachment_id`` to its in-memory bytes (through
+:func:`._evidence_input.resolve_purchase_invoice_evidence_input` /
+:func:`._evidence_input.resolve_attachment_evidence_input`) and runs
+:func:`extract_invoice_fields` over them, so ``aeat app ledger evidence extract``
+needs only a bucket id plus one of the two reference ids.
 """
 
 from __future__ import annotations
@@ -32,13 +40,19 @@ from decimal import Decimal, InvalidOperation
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.config import Settings
 from ...core.decimal import normalize_decimal_separators
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.parsing import parse_date
-from ._evidence_input import EvidenceInput
+from ._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
+from ._evidence_input import (
+    EvidenceInput,
+    resolve_attachment_evidence_input,
+    resolve_purchase_invoice_evidence_input,
+)
 from ._evidence_textlayer import extract_evidence_text
 
-__all__ = ["InvoiceDraft", "extract_invoice_fields"]
+__all__ = ["InvoiceDraft", "extract_invoice_draft_from_evidence", "extract_invoice_fields"]
 
 # A Spanish NIF / NIE / CIF token: 8 digits + letter, or a leading letter
 # (K/L/M for NIF, X/Y/Z for NIE, A-H/J/N/P-S/U/V/W for CIF) + 7 digits + a
@@ -208,3 +222,68 @@ def extract_invoice_fields(evidence: EvidenceInput) -> InvoiceDraft:
         grand_total=_parse_labelled_amount(_TOTAL_LABEL_RE, text),
         raw_text_length=len(text),
     )
+
+
+def extract_invoice_draft_from_evidence(
+    *,
+    bucket_id: str,
+    evidence_id: str | None = None,
+    attachment_id: str | None = None,
+    settings: Settings | None = None,
+) -> InvoiceDraft:
+    """Resolve one stored evidence reference to bytes and extract its :class:`InvoiceDraft`.
+
+    The CLI-facing wiring layer over :func:`extract_invoice_fields`: given
+    either a ``purchase_invoice_evidence`` id (looked up through
+    :class:`PurchaseInvoiceEvidenceService`) or a linked ``attachment_id``,
+    reads the evidence's bytes from secure storage into memory
+    (:func:`._evidence_input.resolve_purchase_invoice_evidence_input` /
+    :func:`._evidence_input.resolve_attachment_evidence_input`) and runs the
+    on-host extractor over them. Exactly one of *evidence_id* /
+    *attachment_id* must be supplied.
+
+    Nothing is written to disk and nothing leaves the host: the resolved
+    bytes and the extracted text stay in process memory for the duration of
+    this call (``sensitive-financial-data-secure-storage-only``).
+
+    Args:
+        bucket_id: Active ledger bucket the evidence or attachment belongs to.
+        evidence_id: A ``purchase_invoice_evidence`` record id, or ``None``.
+        attachment_id: A linked attachment id, or ``None``.
+        settings: Resolved ``Settings``. When ``None``, ``load_settings()`` is
+            used so test overrides via ``override_settings()`` are honoured.
+
+    Returns:
+        :class:`InvoiceDraft`: The best-effort extracted fields, for operator
+        review. Never itself persisted as an :class:`aeat.domain.invoices.Invoice`.
+
+    Raises:
+        PurchaseInvoiceEvidenceInputError: When neither or both of
+            *evidence_id* / *attachment_id* are supplied, when the resolved
+            evidence is not a PDF, or when the PDF has no usable text layer
+            (scan-only / XFA) -- the caller should fall back to the on-host
+            vision reader in that case.
+        PurchaseInvoiceEvidenceNotFoundError: When *evidence_id* names no
+            record in *bucket_id*.
+    """
+    from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
+    from ...core.config import load_settings as _load_settings
+
+    if (evidence_id is None) == (attachment_id is None):
+        raise PurchaseInvoiceEvidenceInputError(
+            "exactly one of evidence_id or attachment_id must be supplied",
+            suggestion="aeat app ledger evidence list",
+        )
+
+    resolved_settings = settings or _load_settings()
+    store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, resolved_settings))
+    if evidence_id is not None:
+        record = PurchaseInvoiceEvidenceService(settings=resolved_settings).view(
+            bucket_id=bucket_id,
+            evidence_id=evidence_id,
+        )
+        evidence_input = resolve_purchase_invoice_evidence_input(record, store=store)
+    else:
+        assert attachment_id is not None  # narrowed by the exactly-one guard above
+        evidence_input = resolve_attachment_evidence_input(attachment_id, store=store)
+    return extract_invoice_fields(evidence_input)
