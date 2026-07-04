@@ -3,7 +3,7 @@
 Persists one :class:`LLMRunRecord` per completed (or failed) LLM
 classification/completion invocation to encrypted secure-object storage under
 :data:`adapters.persistence.storage.LLM_RUN_TELEMETRY_NAMESPACE`, mirroring
-:class:`~aeat.adapters.outbound.llm.UsageRecorder`'s persistence shape. Every
+:class:`~adapters.outbound.llm.UsageRecorder`'s persistence shape. Every
 record is written at :class:`core.classification.SensitivityClass`
 ``DIAGNOSTIC`` and carries ONLY timing and outcome metadata (provider label,
 duration, success flag, optional error-kind string) -- never prompt text,
@@ -18,10 +18,10 @@ classification run is otherwise invisible until an operator notices a stuck
 CLI invocation.
 
 :meth:`LLMRunTelemetryRecorder.prune` bounds this store's growth with a
-retention window (:attr:`~aeat.core.config.Settings.aeat_llm_run_telemetry_retention_days`)
+retention window (:attr:`~core.config.Settings.aeat_llm_run_telemetry_retention_days`)
 and a maximum record count
-(:attr:`~aeat.core.config.Settings.aeat_llm_run_telemetry_max_records`),
-mirroring :meth:`~aeat.adapters.outbound.llm.LLMCache.prune`'s
+(:attr:`~core.config.Settings.aeat_llm_run_telemetry_max_records`),
+mirroring :meth:`~adapters.outbound.llm.LLMCache.prune`'s
 list-then-delete-by-reconstructed-key shape. The object key each record was
 saved under embeds a random UUID4 suffix (so two runs starting in the same
 microsecond never collide); that suffix is persisted inside the record's own
@@ -88,7 +88,7 @@ class LLMRunTelemetrySummary(BaseModel):
 class LLMRunTelemetryRecorder:
     """Append local LLM run-timing records to encrypted secure-object storage.
 
-    Mirrors :class:`~aeat.adapters.outbound.llm.UsageRecorder`'s persistence
+    Mirrors :class:`~adapters.outbound.llm.UsageRecorder`'s persistence
     shape: each :meth:`record` call appends one redacted-free
     :class:`LLMRunRecord` (there is no free text to redact -- the model
     carries only accounting metadata) through
@@ -243,13 +243,13 @@ class LLMRunTelemetryRecorder:
         """Delete records older than the retention window or beyond the count cap.
 
         Applies a two-stage bound, mirroring
-        :meth:`~aeat.adapters.outbound.llm.LLMCache.prune`'s
+        :meth:`~adapters.outbound.llm.LLMCache.prune`'s
         list-then-delete-by-reconstructed-key shape: first every record
         older than ``retention_days`` (measured against the current time) is
         removed, then -- if more than ``max_records`` remain -- the oldest
         excess records beyond the cap are removed too. Both bounds default to
-        the centralized :attr:`~aeat.core.config.Settings.aeat_llm_run_telemetry_retention_days`
-        and :attr:`~aeat.core.config.Settings.aeat_llm_run_telemetry_max_records`
+        the centralized :attr:`~core.config.Settings.aeat_llm_run_telemetry_retention_days`
+        and :attr:`~core.config.Settings.aeat_llm_run_telemetry_max_records`
         settings.
 
         Args:
