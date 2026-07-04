@@ -1,6 +1,6 @@
 """Playwright-driven sede walker: session → expedientes → PDF bytes.
 
-The walker is the only side-effectful layer in :mod:`aeat.adapters.outbound.aeat.sede`. It
+The walker is the only side-effectful layer in :mod:`adapters.outbound.aeat.sede`. It
 takes an :class:`AeatSession` whose encrypted browser state carries
 valid AEAT cookies, drives a read-only Playwright session over the
 sede, and exposes three operations to callers:
@@ -125,7 +125,7 @@ async def walk_expedientes_tree(
             references this modelo code (e.g. ``"100"`` for IRPF).
             Saves DOM expansion work on large corpora.
         settings: Optional :class:`Settings` override. Defaults to
-            :func:`aeat.core.config.load_settings`.
+            :func:`core.config.load_settings`.
 
     Returns:
         Tuple of :class:`Expediente` records, ordered as AEAT renders
