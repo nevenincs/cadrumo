@@ -15,12 +15,19 @@ related:
   - '[[2026-06-16-aeat-user-docs-hardening-S07]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S08]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S09]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S10]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S11]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S12]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S13]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S14]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S15]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S16]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S17]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S18]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S19]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S20]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S22]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S23]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S24]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S25]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S26]]'
@@ -28,6 +35,7 @@ related:
   - '[[2026-06-16-aeat-user-docs-hardening-S28]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S29]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S30]]'
+  - '[[2026-06-16-aeat-user-docs-hardening-S31]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S32]]'
   - '[[2026-06-16-aeat-user-docs-hardening-plan]]'
   - '[[2026-06-18-aeat-user-docs-hardening-audit]]'
@@ -59,12 +67,19 @@ Auto-generated index of all documents tagged with `#aeat-user-docs-hardening`.
 - `2026-06-16-aeat-user-docs-hardening-S07` - Harden classify-with-llm.md
 - `2026-06-16-aeat-user-docs-hardening-S08` - Harden correct-ledger-entries.md
 - `2026-06-16-aeat-user-docs-hardening-S09` - Harden file-at-aeat.md
+- `2026-06-16-aeat-user-docs-hardening-S10` - Harden filing-calendar.md
+- `2026-06-16-aeat-user-docs-hardening-S11` - Harden filing-periods.md
 - `2026-06-16-aeat-user-docs-hardening-S12` - Harden filing-readiness.md
+- `2026-06-16-aeat-user-docs-hardening-S13` - Harden filing-spine.md
 - `2026-06-16-aeat-user-docs-hardening-S14` - Harden import-bank-statements.md
+- `2026-06-16-aeat-user-docs-hardening-S15` - Harden index.md
 - `2026-06-16-aeat-user-docs-hardening-S16` - Harden justificante-receipts.md
 - `2026-06-16-aeat-user-docs-hardening-S17` - Harden ledger-evidence.md
+- `2026-06-16-aeat-user-docs-hardening-S18` - Harden modelo-036.md
 - `2026-06-16-aeat-user-docs-hardening-S19` - Harden modelo-303.md
+- `2026-06-16-aeat-user-docs-hardening-S20` - Harden modelo-390.md
 - `2026-06-16-aeat-user-docs-hardening-S22` - Harden profile-setup.md
+- `2026-06-16-aeat-user-docs-hardening-S23` - Harden protect-data-access.md
 - `2026-06-16-aeat-user-docs-hardening-S24` - Harden quickstart.md
 - `2026-06-16-aeat-user-docs-hardening-S25` - Harden read-live-aeat-data.md
 - `2026-06-16-aeat-user-docs-hardening-S26` - Harden reconcile.md
@@ -72,6 +87,7 @@ Auto-generated index of all documents tagged with `#aeat-user-docs-hardening`.
 - `2026-06-16-aeat-user-docs-hardening-S28` - Harden review-queue.md
 - `2026-06-16-aeat-user-docs-hardening-S29` - Harden review-with-google-sheets.md
 - `2026-06-16-aeat-user-docs-hardening-S30` - Harden setup-llm-classification.md
+- `2026-06-16-aeat-user-docs-hardening-S31` - Harden troubleshooting.md
 - `2026-06-16-aeat-user-docs-hardening-S32` - Harden verification-reports.md
 
 ### plan
