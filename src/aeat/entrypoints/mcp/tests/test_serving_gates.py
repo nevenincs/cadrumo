@@ -18,11 +18,12 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import Awaitable, Mapping
+from collections.abc import Coroutine, Mapping
 from pathlib import Path
 
 import mcp.types as mcp_types
 import pytest
+from mcp.client.session import ElicitationFnT
 from mcp.shared.memory import create_connected_server_and_client_session as connect
 
 from .._dispatch import tool_name_for_command
@@ -40,8 +41,8 @@ _FILE_TOOL = tool_name_for_command("modelo.work.file")
 _DESCRIBE_TOOL = tool_name_for_command("modelo.describe")
 
 
-def _run[T](coro: Awaitable[T]) -> T:
-    return asyncio.run(coro)  # type: ignore[arg-type]
+def _run[T](coro: Coroutine[object, object, T]) -> T:
+    return asyncio.run(coro)
 
 
 async def _accept_confirmation(
@@ -86,11 +87,11 @@ async def _call(
     name: str,
     arguments: Mapping[str, object],
     *,
-    elicit: object = None,
+    elicit: ElicitationFnT | None = None,
     telemetry: SessionTelemetryWriter | None = None,
 ) -> mcp_types.CallToolResult:
     server = build_server(build_tool_descriptors(), persona=persona, telemetry=telemetry)
-    async with connect(server, elicitation_callback=elicit) as session:  # type: ignore[arg-type]
+    async with connect(server, elicitation_callback=elicit) as session:
         return await session.call_tool(name, dict(arguments))
 
 
@@ -199,7 +200,7 @@ def test_telemetry_records_payload_free_rows(tmp_path: Path) -> None:
     ],
 )
 def test_confirm_elicitation_refuses_over_the_wire_when_not_confirmed(
-    elicit: object,
+    elicit: ElicitationFnT,
     outcome_token: str,
 ) -> None:
     # e2e over the memory-transport wire: a handoff verb (leaf ``export``) routes
