@@ -46,3 +46,21 @@ related:
 - Reopened/current blocker: `DFR-D9-W04-P07-S24-PYWINTYPES-COLLECT` is no longer a pywin32 import issue, but the collect-only gate is red again due to non-authored Modelo 145 registry WIP (`DFR-D9-W04-P07-S24-M145-REGISTRY-WIP-COLLECT`).
 - Remaining blocker: landed, owner-attributed locale-gate evidence for the current shared locale WIP (`DFR-D9-W04-P07-S24-SUPPORT-MATRIX-LOCALE-WIP` plus the earlier root-locale WIP lineage).
 - The binding vocabulary source surface itself appears reconciled; the remaining blockers are gate-health ownership issues outside the S21/S22/S23 command vocabulary implementation.
+
+## Retry check (2026-07-04, observed at `f4ed27f35a`)
+
+- Authoritative plan status remains open at `W04.P07.S21`: `23/27` complete, `exec_missing_ids=[]`.
+- Current collect-only gate is still red:
+  `uv run --no-sync pytest --collect-only -q` wrote full output to
+  `C:\Users\hello\AppData\Local\Temp\aeat-d9-retry-collect-20260704.log` and exited `2`
+  (`12148/14851 tests collected`, `2703 deselected`, `8 errors`).
+- The collect blocker is still the non-authored untracked Modelo 145 scaffold:
+  `modelo 145 revision 2012-01-31-y-siguientes: revision must declare official workbook parity coverage`
+  and `revision must declare at least one casilla`.
+- Current locale audit is still red:
+  `uv run --no-sync python -m aeat.locales audit` reports
+  `missing cli.app.modelo.support_matrix.help` in `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
+- The support-matrix CLI command is now visible in the current source tree at
+  `src/aeat/entrypoints/cli/_modelo_discovery_cli.py`, while the root locale files still carry
+  unrelated non-authored WIP for `prior_filing_observations_changed`; this retry therefore does
+  not edit locale files or check S24.

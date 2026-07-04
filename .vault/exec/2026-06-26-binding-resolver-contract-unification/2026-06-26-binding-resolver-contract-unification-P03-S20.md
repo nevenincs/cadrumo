@@ -38,3 +38,16 @@ related:
 
 - No P03.S20 plan check was run. This record is evidence plus formal deferral inventory, not closure.
 - No resolver-envelope, registry, resolver-enrollment, or `_calculation_actions.py` edit was made.
+
+## Retry check (2026-07-04, observed at `f4ed27f35a`)
+
+- Authoritative plan status remains open; P03.S20 is still unchecked behind P03.S21.
+- Current focused M720 service run remains red:
+  `uv run --no-sync pytest -q -n 0 src/aeat/application/aggregation/tests/test_per_modelo_service.py -k "foreign_asset or foreign_assets or m720 or 720"`
+  wrote full output to
+  `C:\Users\hello\AppData\Local\Temp\aeat-d9-retry-foreign-assets-20260704.log`
+  and exited `1` (`1 failed`, `1 passed`, `22 deselected`).
+- The exact M720 row-projection test now fails before reaching its equality assertions because
+  registry authority load still sees the non-authored untracked Modelo 145 scaffold, which lacks
+  official workbook parity coverage and any casilla.
+- No P03.S20 plan check was run.

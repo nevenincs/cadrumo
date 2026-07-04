@@ -54,3 +54,20 @@ related:
   parity coverage`; `revision must declare at least one casilla`).
 - P03.S21 remains unchecked until the 347 modelling is landed/owned and the service
   proof can run against a valid registry authority.
+
+## Retry check (2026-07-04, observed at `f4ed27f35a`)
+
+- Authoritative plan status remains open at `P03.S21`: `17/21` complete,
+  `exec_missing_ids=[]`.
+- Current focused counterpart service run remains red:
+  `uv run --no-sync pytest -q -n 0 src/aeat/application/aggregation/tests/test_per_modelo_service.py -k "counterpart"`
+  wrote full output to
+  `C:\Users\hello\AppData\Local\Temp\aeat-d9-retry-counterpart-20260704.log`
+  and exited `1` (`1 failed`, `2 passed`, `21 deselected`).
+- The failing M349 proof still stops at registry authority load because the non-authored
+  untracked Modelo 145 scaffold lacks official workbook parity coverage and any casilla.
+- The current non-authored `test_per_modelo_service.py` WIP also weakens the M347 service check
+  to `test_counterpart_m347_service_does_not_claim_invoice_owned_registry_bindings`; that checks
+  non-claim behavior for invoice-owned bindings, not the plan row's exact equality between
+  live-mesh resolution and the prior `aggregate_counterpart_347` output.
+- No P03.S21 plan check was run.
