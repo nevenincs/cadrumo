@@ -554,10 +554,11 @@ application:
         category_profiles_changed: category profiles changed
         draft_payload_changed: draft payload changed
         draft_review_changed: draft validation surface changed
+        invoice_catalogue_changed: invoice catalogue changed
+        prior_filing_observations_changed: prior filing observations changed
         schema_formula_changed: schema or formula provenance changed
         transaction_catalogue_changed: transaction catalogue changed
         unknown: '%{reason}'
-        invoice_catalogue_changed: 'invoice catalogue changed'
     runtime:
       errors:
         active_profile_load_failed: 'The active filing profile could not be loaded:
@@ -1486,8 +1487,9 @@ cli:
           remove_help: Delete one reconciliation catalogue invoice.
           view_help: Show one reconciliation catalogue invoice by id or unambiguous
             prefix.
-          wizard_help: 'Guided, non-interactive manual entry when extraction is unavailable.'
-          wizard_idempotent_noop: 'Idempotent no-op: an invoice with this identity already exists (%{invoice_id}); nothing was created.'
+          wizard_help: Guided, non-interactive manual entry when extraction is unavailable.
+          wizard_idempotent_noop: 'Idempotent no-op: an invoice with this identity
+            already exists (%{invoice_id}); nothing was created.'
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
         eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
@@ -4962,6 +4964,10 @@ errors:
     integrity_storage_classification: A record's declared sensitivity class is incompatible
       with its repository.
     integrity_storage_corpus_bundle: The corpus bundle could not be parsed or verified.
+    integrity_storage_corpus_bundle_signature: The corpus bundle's authenticity signature
+      could not be verified.
+    integrity_storage_corpus_bundle_signing_key_not_found: No corpus-bundle signing
+      keypair was found at the requested path.
     integrity_storage_corpus_bundle_verification: The corpus bundle failed checksum
       verification against its embedded manifest.
     integrity_storage_corpus_manifest: The corpus manifest could not be parsed or
@@ -5002,8 +5008,6 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
-    integrity_storage_corpus_bundle_signature: 'The corpus bundle''s authenticity signature could not be verified.'
-    integrity_storage_corpus_bundle_signing_key_not_found: 'No corpus-bundle signing keypair was found at the requested path.'
   internal:
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error, not a stored-data problem. Inspect the diagnostic logs to see what failed.
