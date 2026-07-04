@@ -1,0 +1,175 @@
+# Core Modelo 145 payer-communication fields grounded in the current AEAT form
+# and DR145 v2.0 fixed-width record design. The numbers below are DR row
+# ordinals, not AEAT filing casilla boxes; Modelo 145 is not an AEAT filing.
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "perceptor.nif"
+number = "dr-03"
+label = "1. NIF del perceptor"
+section = ["perceptor"]
+data_type = "nif"
+semantic_role = "modelo_145_perceptor_nif"
+required = true
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "perceptor.primer-apellido"
+number = "dr-04"
+label = "1. Primer apellido del perceptor"
+section = ["perceptor"]
+data_type = "text"
+semantic_role = "modelo_145_perceptor_primer_apellido"
+required = true
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "perceptor.segundo-apellido"
+number = "dr-05"
+label = "1. Segundo apellido del perceptor"
+section = ["perceptor"]
+data_type = "text"
+semantic_role = "modelo_145_perceptor_segundo_apellido"
+required = true
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "perceptor.nombre"
+number = "dr-06"
+label = "1. Nombre del perceptor"
+section = ["perceptor"]
+data_type = "text"
+semantic_role = "modelo_145_perceptor_nombre"
+required = true
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "perceptor.anio-nacimiento"
+number = "dr-07"
+label = "1. Anio de nacimiento del perceptor"
+section = ["perceptor"]
+data_type = "year"
+semantic_role = "modelo_145_perceptor_anio_nacimiento"
+required = true
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "perceptor.situacion-familiar"
+number = "dr-08"
+label = "1. Situacion familiar del perceptor"
+section = ["perceptor"]
+data_type = "text"
+semantic_role = "modelo_145_perceptor_situacion_familiar"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "perceptor.conyuge-nif"
+number = "dr-09"
+label = "1. NIF del conyuge cuando la situacion familiar es 2"
+section = ["perceptor"]
+data_type = "nif"
+semantic_role = "modelo_145_perceptor_conyuge_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "perceptor.discapacidad-grado"
+number = "dr-10"
+label = "1. Discapacidad del perceptor, grado reconocido"
+section = ["perceptor"]
+data_type = "text"
+semantic_role = "modelo_145_perceptor_discapacidad_grado"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 145 records the perceptor disability grade once in DR145 row 10."
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "perceptor.discapacidad-ayuda"
+number = "dr-11"
+label = "1. Discapacidad del perceptor, ayuda de terceras personas o movilidad reducida"
+section = ["perceptor"]
+data_type = "boolean"
+semantic_role = "modelo_145_perceptor_discapacidad_ayuda"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 145 records the perceptor third-party help or reduced-mobility flag once in DR145 row 11."
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "pension-compensatoria.importe-anual"
+number = "dr-44"
+label = "4. Pension compensatoria en favor del conyuge, importe anual"
+section = ["pensiones"]
+data_type = "money"
+semantic_role = "modelo_145_pension_compensatoria_importe_anual"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "anualidades-alimentos.importe-anual"
+number = "dr-45"
+label = "4. Anualidades por alimentos en favor de los hijos, importe anual"
+section = ["pensiones"]
+data_type = "money"
+semantic_role = "modelo_145_anualidades_alimentos_importe_anual"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "vivienda-habitual.financiacion-ajena"
+number = "dr-46"
+label = "5. Pagos por adquisicion o rehabilitacion de vivienda habitual con financiacion ajena"
+section = ["vivienda-habitual"]
+data_type = "boolean"
+semantic_role = "modelo_145_vivienda_habitual_financiacion_ajena"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "comunicacion.firma-lugar"
+number = "dr-47"
+label = "6. Fecha y firma de la comunicacion, lugar"
+section = ["comunicacion"]
+data_type = "text"
+semantic_role = "modelo_145_comunicacion_firma_lugar"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "acuse-recibo.empresa-entidad"
+number = "dr-52"
+label = "7. Acuse de recibo, empresa o entidad pagadora"
+section = ["acuse-recibo"]
+data_type = "text"
+semantic_role = "modelo_145_acuse_recibo_empresa_entidad"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
