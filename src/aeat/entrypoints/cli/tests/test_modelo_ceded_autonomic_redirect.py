@@ -49,26 +49,27 @@ def _discovery_args(verb: str, modelo: str) -> list[str]:
 _DISCOVERY_VERBS = ("describe", "casillas", "casilla", "formulas")
 
 
-@pytest.mark.parametrize("verb", _DISCOVERY_VERBS)
-@pytest.mark.parametrize("case", _CEDED_CASES, ids=[case.modelo for case in _CEDED_CASES])
-def test_discovery_lookup_of_ceded_modelo_redirects_to_autonomic_authority(
-    verb: str,
-    case: CededRedirectCase,
-) -> None:
+def test_discovery_lookup_of_ceded_modelo_redirects_to_autonomic_authority() -> None:
     """Every discovery verb refuses a ceded modelo with the autonomic redirect."""
+    violations: list[str] = []
+    for case in _CEDED_CASES:
+        for verb in _DISCOVERY_VERBS:
+            label = f"{verb} {case.modelo}"
+            result = invoke_cached_cli(_discovery_args(verb, case.modelo))
+            output = result.output or ""
+            if result.exit_code == 0:
+                violations.append(f"{label}: unexpectedly exited 0: {output!r}")
+            if "Traceback" in output:
+                violations.append(f"{label}: leaked Traceback: {output!r}")
+            if "not present in the calculation registry" in output:
+                violations.append(f"{label}: leaked generic registry lookup error: {output!r}")
+            if "Modelo desconocido" in output:
+                violations.append(f"{label}: leaked generic unknown-modelo error: {output!r}")
+            for required_group in case.required_groups:
+                if not any(token in output for token in required_group):
+                    violations.append(f"{label}: missing any of {required_group!r}: {output!r}")
 
-    result = invoke_cached_cli(_discovery_args(verb, case.modelo))
-    output = result.output or ""
-
-    assert result.exit_code != 0, output
-    assert "Traceback" not in output
-    # The generic registry-lookup error must not leak for a known ceded tax.
-    assert "not present in the calculation registry" not in output
-    assert "Modelo desconocido" not in output
-    for required_group in case.required_groups:
-        assert any(token in output for token in required_group), (
-            f"{verb} {case.modelo} output did not contain any of {required_group!r}: {output!r}"
-        )
+    assert not violations, "\n".join(violations)
 
 
 def test_guard_raises_typed_refusal_with_modelo_context_for_ceded_family() -> None:
