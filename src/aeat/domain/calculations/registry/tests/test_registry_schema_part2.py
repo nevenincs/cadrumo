@@ -110,13 +110,24 @@ def test_calculation_completeness_manifest_rejects_duplicate_casilla_id() -> Non
         )
 
 
-def test_validator_rejects_extraction_profile_parser_that_does_not_resolve() -> None:
+def test_validator_rejects_extraction_profile_parser_that_is_not_a_dotted_callable_path() -> None:
+    """The domain registry validator checks structural shape only.
+
+    Since the ports-inversion honesty-review fix (commit 034c9e84e6), the domain
+    validator no longer names or imports adapter parser modules to confirm a
+    ``parser =`` path resolves — that resolution check (allowed-authority prefix,
+    importability, callability) moved to the adapter-legal CI gate
+    ``aeat.adapters.inbound.tests.test_extraction_parser_paths_resolve``, where
+    importing ``aeat.adapters.inbound`` parsers is legal. What remains at the
+    domain layer is a pure structural-shape check: the string must have the
+    ``module.attribute`` dotted-callable shape.
+    """
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
-    profile = revision.extraction_profiles[0].model_copy(update={"parser": "aeat.missing_registry_parser"})
+    profile = revision.extraction_profiles[0].model_copy(update={"parser": "not_a_dotted_path"})
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
 
-    with pytest.raises(RegistryValidationError, match=r"must resolve under one of .*aeat.adapters.inbound.declaracion"):
+    with pytest.raises(RegistryValidationError, match=r"must be a dotted callable path"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
