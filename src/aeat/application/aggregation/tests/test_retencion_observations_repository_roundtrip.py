@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.external_constants import UTF_8_ENCODING
 from ....tests.secure_sql import isolated_runtime_profile
 from .._retencion_observations_repository import (
@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _observation(*, nif: str, scheme: RetencionScheme, retencion: Decimal) -> RetencionObservation:
     return RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id=f"tx-{nif}-{scheme.value}",
         perceptor_nif=nif,
         perceptor_name="Arrendador Ejemplo SL",
@@ -58,7 +58,7 @@ def test_retencion_observation_survives_encrypted_storage_roundtrip(tmp_path: Pa
             filing_year=2024,
             period=Period.from_year_and_code(2024, "0A"),
             observation=original,
-            source_kind="ledger_transaction",
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
             captured_at=captured_at,
             source_metadata={"origin": "pull"},
         )
@@ -84,7 +84,7 @@ def test_distinct_nifs_and_schemes_persist_as_distinct_rows(tmp_path: Path) -> N
                 filing_year=2024,
                 period=period,
                 observation=record,
-                source_kind="ledger_transaction",
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
             )
         loaded = repo.load_observations("180", period)
         # All three rows survive (no key collision); the two 11111111H rows are
@@ -124,7 +124,7 @@ def test_period_scoping_excludes_other_windows(tmp_path: Path) -> None:
             filing_year=2023,
             period=Period.from_year_and_code(2023, "0A"),
             observation=obs,
-            source_kind="ledger_transaction",
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         )
         # A different year window must not see the 2023 row.
         assert repo.load_observations("180", Period.from_year_and_code(2024, "0A")) == ()

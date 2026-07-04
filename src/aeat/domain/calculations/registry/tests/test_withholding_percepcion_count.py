@@ -18,7 +18,7 @@ from functools import cache
 
 import pytest
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, RetencionClave
 from .....core.resources import resources
 from .._schema import DataBindingDefinition, ModeloRevision
 from .._withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
@@ -56,7 +56,7 @@ def _obs(nif: str, clave: str, subclave: str = "") -> WithholdingObservation:
         source_id=f"{nif}:{clave}:{subclave or '-'}",
         perceptor_tax_id=nif,
         transaction_date=date(2024, 6, 1),
-        clave=clave,
+        clave=RetencionClave(clave),
         subclave=subclave,
         percibido_dinerario=Decimal("1000"),
         retencion_practicada=Decimal("190"),
