@@ -9,9 +9,6 @@ related:
   - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
 
-
-
-
 # Delegate _compute_nif_check_letter to the canonical nif_check_letter single source and remove the duplicate _NIF_LETTERS control-letter table
 
 ## Scope

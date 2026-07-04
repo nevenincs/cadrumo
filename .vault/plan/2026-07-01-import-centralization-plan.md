@@ -10,16 +10,6 @@ related:
   - '[[2026-07-01-import-centralization-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: P01, S365, S366, S367, S370, S371, S372, S373, S374, S375, S376, S380, S381, S385, S386 -->
 
 # `import-centralization` plan

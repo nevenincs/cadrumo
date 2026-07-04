@@ -13,7 +13,6 @@ related:
   - '[[2026-06-04-fichero-boe-export-layouts-research]]'
 ---
 
-
 # `fichero-boe-export-layouts` plan
 
 ### Phase `P01` - ADR amendment and corpus discovery
