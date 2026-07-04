@@ -19,6 +19,7 @@ from .. import (
     CensoModeloFoundationLogFields,
     CensoModeloFoundationResult,
     CensoModeloRole,
+    RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
     censo_modelo_ownership,
@@ -69,7 +70,7 @@ def test_modelo_036_is_active_event_triggered_foundation() -> None:
     assert is_active_censo_modelo("036") is True
 
 
-def test_modelo_036_foundation_event_kinds_are_registry_backed(_m036_2025_alta_snapshot) -> None:
+def test_modelo_036_foundation_event_kinds_are_registry_backed(_m036_2025_alta_snapshot: RegistrySnapshot) -> None:
     record = censo_modelo_ownership("036")
     snapshot = _m036_2025_alta_snapshot
 
@@ -77,7 +78,9 @@ def test_modelo_036_foundation_event_kinds_are_registry_backed(_m036_2025_alta_s
     assert snapshot.filing_schedules["modelo-036-event-triggered"].periods == record.event_kinds
 
 
-def test_active_036_work_unit_periods_resolve_from_committed_registry_revision(_m036_2025_alta_snapshot) -> None:
+def test_active_036_work_unit_periods_resolve_from_committed_registry_revision(
+    _m036_2025_alta_snapshot: RegistrySnapshot,
+) -> None:
     snapshot = _m036_2025_alta_snapshot
 
     for period in snapshot.revision.period_selector.periods:
