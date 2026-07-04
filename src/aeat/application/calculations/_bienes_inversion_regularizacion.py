@@ -17,7 +17,7 @@ Both are pure functions over the register; neither is yet wired into the live
 calculate MESH BINDING (that promotion is gated on the prorrata-definitiva source,
 per ADR ``2026-07-01-iva-bienes-inversion-regularizacion``) — they are wired into
 the calculate-path ADVISORY collector
-(:mod:`aeat.application.modelo._bienes_inversion_advisory`).
+(:mod:`application.modelo._bienes_inversion_advisory`).
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ def build_bienes_inversion_regularizacion_advisory(
     """Project the register and build the deferred-source advisory diagnostic.
 
     Returns the register projection plus a non-blocking
-    :class:`~aeat.core.aggregation.CalculationSourceDiagnostic` when the register
+    :class:`~application.aggregation.CalculationSourceDiagnostic` when the register
     holds in-window, art-108-eligible, non-disposed goods for
     ``regularizacion_year`` — so a taxpayer who owns capital goods in their
     regularisation window is alerted that casilla 43 may be due, rather than
@@ -112,7 +112,7 @@ def build_bienes_inversion_transmision_advisory(
     """Project the register's art-110 disposals and build the advisory diagnostic.
 
     Returns the register-wide transmisión projection plus a non-blocking
-    :class:`~aeat.core.aggregation.CalculationSourceDiagnostic` when the register
+    :class:`~application.aggregation.CalculationSourceDiagnostic` when the register
     holds a good disposed of in ``disposal_year`` with window time remaining — so
     a taxpayer who sold, transmitted, or otherwise disposed of a tracked capital
     good is alerted that the art-110 single regularización is due on casilla 43,
