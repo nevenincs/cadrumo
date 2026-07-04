@@ -34,7 +34,7 @@ _MODELOS = [
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain", _MODELOS)
-def test_validator_accepts_committed_definition(mid, rev, approval, plazo, doc, domain) -> None:
+def test_validator_accepts_committed_definition(mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain) -> None:
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert modelo.tax_domain is domain
@@ -42,7 +42,7 @@ def test_validator_accepts_committed_definition(mid, rev, approval, plazo, doc, 
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(mid, rev, approval, plazo, doc, domain) -> None:
+def test_approval_and_plazo_resolve_as_legal_authority(mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain) -> None:
     _, catalogues = _committed_modelo(mid)
     for ref in {approval, plazo}:
         entry = catalogues.legal[ref]
@@ -51,7 +51,7 @@ def test_approval_and_plazo_resolve_as_legal_authority(mid, rev, approval, plazo
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain", _MODELOS)
-def test_cadence_dependent_plazo_carries_no_fabricated_windows(mid, rev, approval, plazo, doc, domain) -> None:
+def test_cadence_dependent_plazo_carries_no_fabricated_windows(mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain) -> None:
     """Each plazo is cadence-dependent / delegated / campaign-remitted, so the
     honest state is zero calendar deadline_windows — no fixed date is invented."""
     modelo, _ = _committed_modelo(mid)
