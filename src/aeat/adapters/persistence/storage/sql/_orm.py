@@ -138,7 +138,7 @@ class TransactionDateIndexRow(Base):
 
     This table is a derived, rebuildable read-side cache co-written atomically
     with :class:`SecureObjectRow` ledger writes (see
-    :class:`~aeat.adapters.persistence.profile.transactions.TransactionCatalogueRepository`).
+    :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`).
     It exists purely to let a period-scoped ledger read select the candidate
     transaction ids for a date range with a plaintext SQL predicate, so only
     those rows need to be decrypted -- never the whole per-bucket catalogue.
