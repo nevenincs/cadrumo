@@ -77,6 +77,7 @@ from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from .. import (
     CasillaId,
     IvaLedgerObservation,
+    RegistryCalculationResult,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
@@ -104,7 +105,7 @@ _FILING_YEAR = 2024
 _PERIOD = "03"
 
 
-def _calculate(*, devengado: Decimal, deducible: Decimal) -> object:
+def _calculate(*, devengado: Decimal, deducible: Decimal) -> RegistryCalculationResult:
     snapshot = resources().modelos.authority.snapshot("322", filing_year=_FILING_YEAR, period=_PERIOD)
     observations = (
         IvaLedgerObservation(
