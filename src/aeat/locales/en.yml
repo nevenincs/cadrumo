@@ -516,8 +516,10 @@ application:
           before reading AEAT data.
   bucket_maintenance:
     errors:
-      archive_active_bucket: 'The active bucket cannot be archived; switch to another profile first.'
-      archive_not_confirmed: 'Archiving is a reversible state transition, but it still requires explicit confirmation.'
+      archive_active_bucket: The active bucket cannot be archived; switch to another
+        profile first.
+      archive_not_confirmed: Archiving is a reversible state transition, but it still
+        requires explicit confirmation.
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -528,7 +530,8 @@ application:
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
-      restore_not_archived: 'The bucket is not archived (tombstoned); there is nothing to restore.'
+      restore_not_archived: The bucket is not archived (tombstoned); there is nothing
+        to restore.
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
   calculations:
     iva_compensation:
@@ -586,6 +589,14 @@ application:
         invalid_valuation_method: 'The inventory valuation method is not supported:
           %{valuation_method}.'
   invoices:
+    bulk_import:
+      errors:
+        file_read_failed: The bulk invoice import file could not be read.
+        missing_columns: 'The bulk invoice import file is missing required columns:
+          {missing_columns}'
+        unknown_columns: 'The bulk invoice import file contains unknown columns: {unknown_columns}'
+        unsupported_extension: The bulk invoice import file must be .csv or .xlsx
+          (got {extension}).
     creation:
       errors:
         duplicate_invoice: 'An invoice with the same identity already exists in the
@@ -836,6 +847,17 @@ application:
         %{period}; complete these profile facts first: %{missing}.'
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
+      recipient_decryption_failed: The recipient-encrypted package could not be decrypted;
+        the key does not match or the package was tampered with.
+      recipient_encryption_invalid_key: The recipient's public key is not a well-formed
+        X25519 public key.
+      recipient_registry_already_exists: Recipient %{recipient_id} is already registered.
+      recipient_registry_generic: An error occurred with the recipient fingerprint
+        registry.
+      recipient_registry_invalid_public_key: The supplied public key is not a valid
+        32-byte X25519 key (got %{length} bytes).
+      recipient_registry_load_failed: Unable to load the recipient fingerprint registry.
+      recipient_registry_not_found: No recipient is registered under id %{recipient_id}.
       reconcile_declaration_unsupported: Declaration-PDF casilla-level reconcile is
         not yet enrolled for this modelo; reconcile a downloaded justificante via
         aeat app modelo reconcile file, or wait for this modelo to be enrolled.
@@ -890,6 +912,16 @@ application:
         19747,50) but casilla %{reduccion_id} (general work-income reduction) is zero.
         If your other non-work income excluding exempt income does not exceed 6500,
         the article 20 LIRPF work-income reduction may apply.'
+      art52_reduccion_individual_sublimit_next_action: Confirm whether the aportacion
+        is backed by a plan-de-empleo worker contribution (casilla 0426) or a contribucion
+        empresarial (casilla 0427); if not, the article 52 LIRPF reduccion is limited
+        to EUR 1500, not the combined EUR 10000 ceiling (ley-35-2006:art-52).
+      art52_reduccion_individual_sublimit_possible: 'ART52_REDUCCION_INDIVIDUAL_SUBLIMIT_POSSIBLE:
+        casilla %{reduccion_id} (prevision-social reduccion) = %{reduccion_value}
+        exceeds the article 52 individual sub-limit of %{sublimit} EUR, but no plan-de-empleo
+        worker contribution or contribucion empresarial is declared. Confirm this
+        reduccion is backed by an employer-linked contribution eligible for the EUR
+        8500 increment; otherwise it is capped at %{sublimit}.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -918,6 +950,14 @@ application:
           WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id CSV --set
           CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
           for evidence you already hold.
+      dt12a_reduccion_antiquity_next_action: Confirm more than two years have passed
+        since the first aportacion to the plan de pensiones, unless the prestacion
+        is by invalidez (ley-35-2006:dt-12).
+      dt12a_reduccion_antiquity_possible: 'DT_12A_REDUCCION_ANTIQUITY_POSSIBLE: casilla
+        %{reduccion_id} (reduccion trabajo) = %{reduccion_value} reflects an applied
+        reduccion. If this includes a DT 12a LIRPF plan-de-pensiones capital rescate,
+        confirm more than two years have passed since the first aportacion; the two-year
+        antiquity requirement is waived only for prestaciones por invalidez.'
       dt12a_reduccion_next_action: Supply --rescate-plan-pensiones-capital IMPORTE
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
         IMPORTE to aeat app modelo work calculate to auto-inject the DT 12a reduccion
@@ -933,10 +973,27 @@ application:
           a future Phase under task #229 (BOE corpus pending). Set profile.country_of_fiscal_residence
           to claim the applicable Convenio rate, or wait for the baseline corpus to
           incorporate this row.'
+      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: the Convenio Espana-%{cc}
+        (%{document_id}) treaty rate has been applied for tipo_renta=%{tipo_renta}.
+        Treaty relief is available only to a genuine beneficial owner resident in
+        that state who satisfies the treaty''s limitation-of-benefits conditions;
+        confirm eligibility before relying on this rate.'
+      m210_convenio_lob_advisory_next_action: Confirm the taxpayer satisfies the beneficial-ownership
+        and limitation-of-benefits conditions of Convenio Espana-%{cc} (%{document_id})
+        before relying on the treaty rate; review the treaty's specific LOB / beneficiario
+        efectivo article, not only the general OECD Model Convention framework.
       m210_convenio_rate_missing:
-        next_action: Author Convenio España-{cc} rate row in m210-convenio-rates for
-          tipo_renta={tipo_renta}, or unset profile.convenio_doble_imposicion_country
+        next_action: Author a Convenio España-{cc} treaty override row for tipo_renta={tipo_renta}
+          under registry/aeat/treaties/, or unset profile.country_of_fiscal_residence
           to fall back to the TRLIRNR Art 25 baseline.
+      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
+        casilla %{casilla_id} is zero but the filer has a Madrid nacimiento/adopcion-eligible
+        descendant (weighted count %{weighted_count}). Auto-trigger is fail-closed
+        for conjunta/married units since the unidad-familiar income limit cannot be
+        evaluated; confirm eligibility manually.'
+      madrid_nacimiento_adopcion_eligibility_advisory_next_action: Confirm the unidad-familiar
+        base imponible is within the applicable limit and, if eligible, enter casilla
+        1039 manually (madrid-dl-1-2010:art-4, art-18).
       missing_required_casilla: Required casilla %{casilla_id} is not present in the
         calculation revision inputs.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: The
@@ -988,6 +1045,10 @@ application:
       modelo_210_2025_rendimientos_integros_implica_base_imponible: Gross income (rendimientos
         íntegros) is positive but the base imponible is zero; review the base imponible
         determination.
+      modelo_210_2025_ue_residente_requiere_residencia_ue_eee: Tipo de renta is declared
+        as ue_residente (the EU/EEA reduced rate) but the taxpayer's country of fiscal
+        residence is not an EU/EEA member state; confirm eligibility for the reduced
+        19 percent rate before filing, or select the general 24 percent rate.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: Total
         IVA deducible (cuota-deducible-total) is positive, but every official numbered
         box on the Diseño de Registros (29 interiores corrientes, 33 importaciones,
@@ -1151,7 +1212,8 @@ application:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
         one taxpayer must have one profile.
       lifecycle_profile_already_exists: A profile already exists in the active bucket.
-      lifecycle_profile_not_tombstoned: 'The profile is not tombstoned; reactivate refuses a live profile.'
+      lifecycle_profile_not_tombstoned: The profile is not tombstoned; reactivate
+        refuses a live profile.
       lifecycle_profile_tombstoned_duplicate: A removed profile cannot be duplicated.
       lifecycle_profile_tombstoned_rename: A removed profile cannot be renamed.
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
@@ -1288,7 +1350,9 @@ auth:
     clave_movil_description: Push-approval authentication via the holder's phone registered
       with Cl@ve. Requires DNI/NIE, Cl@ve enrolment, and a paired device.
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: Reserved closed provider slot for Cl@ve Permanente.
+    clave_permanente_description: DNI/NIE and password authentication via the Cl@ve
+      Permanente identity provider. Headless-automatable for AEAT read paths; requires
+      DNI/NIE and password.
     clave_permanente_label: Cl@ve Permanente
     clave_pin_description: Reserved closed provider slot for Cl@ve PIN.
     clave_pin_label: Cl@ve PIN
@@ -1335,7 +1399,29 @@ cli:
         unknown_disposal_regime: 'Unknown disposal regime {regime!r}; accepted: {accepted}'
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
+        confirm_already_exists_message: An invoice with this identity already exists;
+          returning it unchanged rather than creating a duplicate.
+        confirm_counterparty_name_help: Counterparty display name (no extraction heuristic
+          yet; normally required).
+        confirm_counterparty_nif_help: Override the extracted supplier tax id.
+        confirm_currency_help: ISO-4217 currency code.
+        confirm_help: Re-extract evidence on-host and confirm it into a real catalogue
+          Invoice.
+        confirm_invoice_date_help: Override the extracted invoice date (YYYY-MM-DD).
+        confirm_invoice_number_help: Override the extracted invoice number.
+        confirm_iva_rate_help: Override the extracted IVA rate (omit to keep the extracted
+          value).
+        confirm_link_hint_message: Link this invoice to a ledger transaction with
+          `aeat app ledger link`.
+        confirm_taxable_base_help: Override the extracted taxable base.
         evidence_id_help: Evidence id (exact match)
+        extract_attachment_id_help: Linked attachment id to extract from (alternative
+          to --evidence-id).
+        extract_evidence_id_help: Purchase invoice evidence record id to extract from.
+        extract_help: Read an invoice PDF's fields on-host into a reviewable draft.
+        extract_reference_required: Supply exactly one of --evidence-id or --attachment-id.
+        extract_review_hint_message: This is a best-effort draft; confirm every field
+          before minting an invoice.
         group_help: Purchase invoice evidence in PDF or image form
         invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
         invoice_number_help: Supplier invoice number
@@ -1378,6 +1464,13 @@ cli:
             to ES).
           create_help: Create a linkable reconciliation invoice in the catalogue.
           group_help: Reconciliation catalogue invoices that link to transactions.
+          import_all_refused: 'bulk invoice import failed: every row was refused;
+            no invoices were created'
+          import_file_help: Path to a CSV or XLSX file of invoice rows (counterparty_nif,
+            counterparty_name, invoice_number, invoice_date, taxable_base, and optional
+            iva_rate/currency/country_code/notes).
+          import_file_not_found: 'File not found: {path}'
+          import_help: Bulk-create catalogue invoices from a CSV or XLSX file.
           invoice_id_help: Catalogue invoice id (or unambiguous prefix).
           list_help: List reconciliation catalogue invoices.
           remove_help: Delete one reconciliation catalogue invoice.
@@ -1866,18 +1959,43 @@ cli:
         build_help: Assemble a shareable, checksum-verifiable review package (fichero-BOE
           draft, revision provenance, and bundled ledger evidence) for accountant
           handoff. Local-only; never contacts AEAT.
+        counter_sign_help: Counter-sign an operator-signed review package on behalf
+          of the receiving accountant and write the receipt envelope to --output.
+          Local-only; never contacts AEAT.
+        counter_sign_note_help: Free-text counter-signer note or verdict (e.g. 'reviewed,
+          no changes').
+        counter_sign_output_help: Path to write the counter-signed receipt JSON to.
+        counter_signer_public_key_help: The accountant's (counter-signer's) public
+          key, as 64 lowercase hex characters.
         errors:
           output_required: Supply --output PATH for the review package ZIP.
           package_not_found: Review package not found at {package_path}.
+          receipt_not_found: Receipt envelope not found at {receipt_path}.
+          signature_not_found: Signature envelope not found at {signature_path}.
         group_help: Build a shareable review package and verify its integrity.
         notes_help: Free-text note embedded in the package descriptor (e.g. why it
           was shared).
+        operator_public_key_help: The operator's (original signer's) public key, as
+          64 lowercase hex characters.
         output_help: Path to write the review package ZIP to.
         package_path_help: Path to the review package ZIP to verify.
+        public_key_help: Signer's public key, as 64 lowercase hex characters.
+        receipt_path_help: Path to the counter-signed receipt JSON produced by `counter-sign`.
         revision_help: Calculation revision id to package; defaults to the work unit's
           most recent verified-complete or filed revision.
+        sign_help: Sign a review package's checksum manifest with the bucket's Ed25519
+          signing keypair (minted on first use) and write the signature envelope to
+          --output. Local-only; never contacts AEAT.
+        sign_output_help: Path to write the signature envelope JSON to.
+        signature_path_help: Path to the signature envelope JSON produced by `sign`.
         verify_help: Verify a review package's checksum manifest (integrity only;
           does not assert who built it). Local-only; never contacts AEAT.
+        verify_receipt_help: 'Verify both signature layers of a counter-signed review-package
+          receipt: the operator''s original signature and the accountant''s counter-signature.
+          Local-only; never contacts AEAT.'
+        verify_signature_help: Verify a review package's Ed25519 signature envelope
+          against a signer's public key (authenticity check; re-runs the checksum-manifest
+          integrity check first). Local-only; never contacts AEAT.
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       verification_report:
         app_help: Inspect recorded verification reports
@@ -2311,6 +2429,17 @@ cli:
         remove:
           name_help: cli.config.auth.certificate.remove.name_help
         remove_help: cli.config.auth.certificate.remove_help
+        secret:
+          help: Manage the passphrase bound to a named certificate source
+          remove:
+            name_help: Registered certificate source whose passphrase should be removed
+          remove_help: Remove the passphrase bound to a registered certificate source
+          set:
+            backend_help: 'Secret backend: secure_storage (default, encrypted at rest)
+              or keyring (OS keychain)'
+            name_help: Registered certificate source the passphrase is bound to
+            secret_help: The PKCS#12 passphrase (prompted, hidden, never echoed)
+          set_help: Set (or rotate) the passphrase for a registered certificate source
         select:
           name_help: cli.config.auth.certificate.select.name_help
         select_help: cli.config.auth.certificate.select_help
@@ -2668,15 +2797,21 @@ cli:
       rename_source_help: Existing profile name
       rename_target_help: New profile name
       sandbox:
+        active_indicator_info: You are operating inside the sandbox %{label}, not
+          a real profile; every command runs against this isolated, discardable bucket.
         already_exists: A sandbox named %{label} already exists. Pick a different
           name or discard the existing one first.
-        archive_active_profile: 'Sandbox %{name} is the active profile; switch to another profile before archiving it.'
-        archive_dry_run_help: 'Preview the archive without moving the sandbox out of the live surface.'
-        archive_help: 'Move a sandbox into reversible dormancy without erasing it.'
-        archive_name_help: 'Sandbox name (without the prefix).'
-        archive_requires_yes: 'Archiving a sandbox is a state transition. Re-run ''aeat config profile sandbox archive %{name} --yes'' to confirm.'
-        archive_restorable_info: 'The sandbox is now dormant; run ''aeat config profile sandbox restore %{name}'' to bring it back.'
-        archive_yes_help: 'Confirm the archive.'
+        archive_active_profile: Sandbox %{name} is the active profile; switch to another
+          profile before archiving it.
+        archive_dry_run_help: Preview the archive without moving the sandbox out of
+          the live surface.
+        archive_help: Move a sandbox into reversible dormancy without erasing it.
+        archive_name_help: Sandbox name (without the prefix).
+        archive_requires_yes: Archiving a sandbox is a state transition. Re-run 'aeat
+          config profile sandbox archive %{name} --yes' to confirm.
+        archive_restorable_info: The sandbox is now dormant; run 'aeat config profile
+          sandbox restore %{name}' to bring it back.
+        archive_yes_help: Confirm the archive.
         create_active_info: The sandbox is now the ACTIVE profile; every command runs
           against it until you switch away or discard it.
         create_from_profile_help: Seed the sandbox with an existing profile's facts
@@ -2697,6 +2832,13 @@ cli:
         help: Run experiments in an isolated, discardable bucket that never touches
           main profile state.
         list_help: List every sandbox bucket.
+        merge_help: Promote a sandbox's ledger and/or modelo records into another
+          profile.
+        merge_into_help: Target profile name the sandbox's records are promoted into.
+        merge_name_help: Sandbox name (without the prefix).
+        merge_promoted_info: Promoted %{scope} from %{source} into %{target}.
+        merge_scope_help: 'Data category to promote: ledger, modelo, or all.'
+        merge_yes_help: Confirm promoting sandbox data.
         prune_dry_run_help: Preview which sandboxes would be discarded without discarding
           them.
         prune_help: Discard every sandbox bucket at once.
@@ -2706,12 +2848,15 @@ cli:
           another profile and re-run 'aeat config profile sandbox prune --yes' to
           discard it.
         prune_yes_help: Confirm discarding every sandbox.
-        restore_help: 'Bring an archived sandbox back to active status.'
-        restore_name_help: 'Sandbox name (without the prefix).'
+        restore_help: Bring an archived sandbox back to active status.
+        restore_name_help: Sandbox name (without the prefix).
         restore_not_archived: '%{name} is not archived; there is nothing to restore.'
         source_not_found: No live profile named %{name} to seed the sandbox from.
         unknown_sandbox: 'Unknown sandbox: %{name}. Run ''aeat config profile sandbox
           list'' to see registered sandboxes.'
+        usage_help: Report the on-disk footprint of one sandbox, or every sandbox
+          at once.
+        usage_name_help: Sandbox name (without the prefix); omit to report every sandbox.
         use_help: Switch the active profile to an existing sandbox.
         use_name_help: Sandbox name (without the prefix).
       sar_catalogue_info: 'This archive holds every personal-data category kept for
@@ -4475,6 +4620,8 @@ errors:
       MAX_PATH limit. Move AEAT_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled
       (see `aeat config check`).
     error_submission_validation: A submission model failed validation.
+    error_telemetry_schema: A telemetry metric key was not registered in the closed
+      metric schema for its command.
     error_transaction_catalogue: The transaction catalogue is invalid or inconsistent.
     error_transaction_classification_rule: A ledger classification rule is invalid.
     error_transaction_llm_classifier: The transaction classification by the language
@@ -4528,6 +4675,7 @@ errors:
       or used.
     fail_financial_usage_ratios_usage_ratio_persistence: The usage-ratio profile could
       not be read or written.
+    fail_google_adc_unavailable: 'Application Default Credentials could not be found on this host. Run gcloud auth application-default login.'
     fail_google_browser_open: The browser could not be opened to show the Google consent
       page. Open the link manually.
     fail_google_loopback_bind: The local HTTP receiver could not bind a port. Close
@@ -4910,6 +5058,7 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: A saved home-office usage ratio
       disagrees with the censo, which is the binding legal source. Align it with the
       censo value.
+    refused_google_impersonation: 'IAM refused to mint an impersonated token for the target service account. Grant it roles/iam.serviceAccountTokenCreator.'
     refused_google_non_interactive: Google login needs an interactive terminal with
       a browser; run it from an interactive shell.
     refused_google_profile_unbound: No active profile is bound. Select a profile or

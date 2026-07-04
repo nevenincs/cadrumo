@@ -95,6 +95,14 @@ class InboundDeclaracionObservation(BaseModel):
         values: Tuple of observed :class:`ExtractedCasilla` records.
         warnings: Tuple of advisories — unresolved casillas, ambiguous
             labels, bbox fallbacks, etc.
+        extraction_profile_id: Registry ``declaracion_pdf`` extraction profile
+            id that supplied ``values``.
+        extraction_profile_provisional: Stamped from the selected profile's
+            ``provisional_pending_specimen`` flag. ``True`` means no real AEAT
+            specimen has confirmed this modelo's printed layout, so the
+            ``bbox_anchored`` anchor positions are unverified guesses;
+            downstream consumers MUST disclose this to the operator rather
+            than presenting the extracted values as confirmed.
         source_pdf_path: Privacy-preserving source reference derived from
             the source PDF digest.
         source_pdf_sha256: Lowercase hex SHA-256 of the source PDF bytes.
@@ -120,6 +128,8 @@ class InboundDeclaracionObservation(BaseModel):
     """
     values: tuple[ExtractedCasilla, ...]
     warnings: tuple[ExtractionWarning, ...] = ()
+    extraction_profile_id: str = Field(min_length=1, max_length=128)
+    extraction_profile_provisional: bool = False
     source_pdf_path: Path
     source_pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     parsed_at: datetime

@@ -24,7 +24,12 @@ from ....adapters.persistence.profile.bienes_inversion import (
     BienesInversionIvaRegisterRepository,
 )
 from ....core import BindingSourceKind
-from ....domain.bienes_inversion import BienInversionIvaRecord, BienInversionKind
+from ....domain.bienes_inversion import (
+    BienInversionDisposal,
+    BienInversionDisposalRegime,
+    BienInversionIvaRecord,
+    BienInversionKind,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 
@@ -41,6 +46,18 @@ def _record(identifier: str = "bi-2022-maquina") -> BienInversionIvaRecord:
         cuota_soportada=Decimal("5000.00"),
         prorrata_inicial_pct=Decimal("80"),
         kind=BienInversionKind.MUEBLE,
+    )
+
+
+def _disposed_record(identifier: str = "bi-2022-furgoneta", disposal_year: int = 2024) -> BienInversionIvaRecord:
+    return BienInversionIvaRecord(
+        identifier=identifier,
+        description="Furgoneta transmitida",
+        acquisition_year=2022,
+        cuota_soportada=Decimal("10000.00"),
+        prorrata_inicial_pct=Decimal("60"),
+        kind=BienInversionKind.MUEBLE,
+        disposal=BienInversionDisposal(year=disposal_year, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
     )
 
 
@@ -139,4 +156,66 @@ def test_no_advisory_when_good_is_out_of_window(tmp_path: Path) -> None:
             bucket_id=_BUCKET,
         )
 
+    assert diagnostics == ()
+
+
+def test_disposal_advisory_fires_on_m303_settlement_period(tmp_path: Path) -> None:
+    """A good disposed of during the filing year raises the art-110 disposal advisory.
+
+    Unlike the annual advisory, the disposal advisory always names a concrete
+    figure (no pending state): mueble acquired 2022, disposed 2024 under regla
+    1.ª, 3 remaining years, cuota 10.000, prorrata inicial 60% → −2.400,00.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        BienesInversionIvaRegisterRepository(objects=profile.repository).add(_disposed_record())
+
+        diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            modelo="303",
+            period_token="4T",
+            filing_year=2024,
+            bucket_id=_BUCKET,
+        )
+
+    assert len(diagnostics) == 1
+    diagnostic = diagnostics[0]
+    assert diagnostic.source_kind == "bienes_inversion_regularizacion_transmision"
+    assert "43" in diagnostic.message
+    assert "-2400.00" in diagnostic.message
+
+
+def test_both_advisories_fire_when_the_register_holds_both_kinds(tmp_path: Path) -> None:
+    """A register with a non-disposed in-window good AND a disposed good fires both advisories."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        repo = BienesInversionIvaRegisterRepository(objects=profile.repository)
+        repo.add(_record())
+        repo.add(_disposed_record())
+
+        diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            modelo="303",
+            period_token="4T",
+            filing_year=2024,
+            bucket_id=_BUCKET,
+        )
+
+    assert len(diagnostics) == 2
+    source_kinds = {diagnostic.source_kind for diagnostic in diagnostics}
+    assert BindingSourceKind.BIENES_INVERSION_REGULARIZACION.value in source_kinds
+    assert "bienes_inversion_regularizacion_transmision" in source_kinds
+
+
+def test_no_disposal_advisory_when_disposal_year_differs_from_filing_year(tmp_path: Path) -> None:
+    """A disposal recorded for a different year does not fire the disposal advisory."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        BienesInversionIvaRegisterRepository(objects=profile.repository).add(_disposed_record(disposal_year=2023))
+
+        diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            modelo="303",
+            period_token="4T",
+            filing_year=2024,
+            bucket_id=_BUCKET,
+        )
+
+    # 2024 is in-window for the (now excluded-from-annual) disposed good's original
+    # window, but the good is disposed of in 2023 (before 2024), so in_window_records
+    # excludes it from the annual path too — nothing fires.
     assert diagnostics == ()

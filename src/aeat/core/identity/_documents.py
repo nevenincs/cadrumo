@@ -91,16 +91,22 @@ class IdentityError(AeatError, ValueError):
     """
 
 
-def _compute_nif_check_letter(numeric: int) -> str:
-    """Return the AEAT NIF check letter for a numeric body.
+def nif_check_letter(number: int) -> str:
+    """Return the AEAT NIF / NIE check letter for a numeric body.
 
-    The check letter is :data:`_NIF_LETTERS` indexed by ``numeric % 23``.
+    Implements the AEAT control-letter table :data:`_NIF_LETTERS`
+    (``TRWAGMYFPDXBNJZSQVHLCKE``) indexed by ``number % 23``. This is the
+    single source of the check-letter computation for the whole
+    :mod:`aeat.core.identity` package; the sibling
+    :mod:`aeat.core.identity._tax_id` re-exports it rather than
+    re-declaring the ``% 23`` expression, and every enum-returning
+    validator in this module computes its expected letter through it.
     """
-    return _NIF_LETTERS[numeric % 23]
+    return _NIF_LETTERS[number % 23]
 
 
-def _compute_cif_check(kind: str, digits: str) -> str:
-    """Compute the CIF check character per AEAT's Luhn-style algorithm.
+def _cif_check_value(digits: str) -> int:
+    """Return the AEAT CIF Luhn-style check value (0-9) for a 7-digit body.
 
     For each digit position ``i`` (1-indexed) the running sum is built as:
 
@@ -108,16 +114,18 @@ def _compute_cif_check(kind: str, digits: str) -> str:
       its decimal digits (i.e. ``divmod(2*digit, 10)``).
     * even positions: ``digit`` directly.
 
-    The check value is ``(10 - (sum mod 10)) mod 10``. Whether it is
-    rendered as a digit or as :data:`_CIF_LETTER_TABLE` indexed by the
-    check value depends on the leading ``kind`` letter.
+    The check value is ``(10 - (sum mod 10)) mod 10``. This kernel returns
+    the raw integer and leaves the digit-vs-letter rendering and the
+    per-kind acceptance policy to the caller, because the two identity
+    surfaces (:func:`_compute_cif_check` here and
+    :func:`aeat.core.identity._tax_id.validate_spanish_tax_id`) apply
+    deliberately divergent CIF leader-set policies over the same arithmetic.
 
     Args:
-        kind: The CIF leading kind letter.
         digits: The 7-digit body of the CIF.
 
     Returns:
-        The expected check character as a one-character string.
+        The check value as an integer in ``range(10)``.
     """
     total = 0
     for index, raw in enumerate(digits, start=1):
@@ -127,7 +135,24 @@ def _compute_cif_check(kind: str, digits: str) -> str:
             total += doubled // 10 + doubled % 10
         else:
             total += digit
-    check_int = (10 - (total % 10)) % 10
+    return (10 - (total % 10)) % 10
+
+
+def _compute_cif_check(kind: str, digits: str) -> str:
+    """Compute the CIF check character per AEAT's Luhn-style algorithm.
+
+    Delegates the arithmetic to :func:`_cif_check_value` and renders the
+    result as a digit or as :data:`_CIF_LETTER_TABLE` indexed by the
+    check value depending on the leading ``kind`` letter.
+
+    Args:
+        kind: The CIF leading kind letter.
+        digits: The 7-digit body of the CIF.
+
+    Returns:
+        The expected check character as a one-character string.
+    """
+    check_int = _cif_check_value(digits)
     if kind in _CIF_KIND_DIGIT_ONLY:
         return str(check_int)
     if kind in _CIF_KIND_LETTER_ONLY:
@@ -145,7 +170,7 @@ def _validate_nif(candidate: str) -> IdentityDocument:
             context={"candidate": candidate},
         )
     digits, letter = match.group(1), match.group(2)
-    expected = _compute_nif_check_letter(int(digits))
+    expected = nif_check_letter(int(digits))
     if letter != expected:
         raise IdentityError(
             translated_message="errors.identity.nif_check_letter_mismatch",
@@ -163,7 +188,7 @@ def _validate_prefixed_nif(candidate: str) -> IdentityDocument:
             context={"candidate": candidate},
         )
     prefix, digits, letter = match.group(1), match.group(2), match.group(3)
-    expected = _compute_nif_check_letter(int(digits))
+    expected = nif_check_letter(int(digits))
     if letter != expected:
         raise IdentityError(
             translated_message="errors.identity.nif_check_letter_mismatch",
@@ -182,7 +207,7 @@ def _validate_nie(candidate: str) -> IdentityDocument:
         )
     prefix, digits, letter = match.group(1), match.group(2), match.group(3)
     numeric_str = _NIE_PREFIX_MAP[prefix] + digits
-    expected = _compute_nif_check_letter(int(numeric_str))
+    expected = nif_check_letter(int(numeric_str))
     if letter != expected:
         raise IdentityError(
             translated_message="errors.identity.nie_check_letter_mismatch",

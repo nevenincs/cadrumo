@@ -75,6 +75,7 @@ def _build_filing(
         ),
         values=extracted,
         warnings=warnings,
+        extraction_profile_id=f"modelo-{modelo}-declaracion-pdf",
         source_pdf_path=Path(f"modelo-{modelo}-declaracion.pdf"),
         source_pdf_sha256="0" * 64,
         parsed_at=datetime.now(tz=UTC),

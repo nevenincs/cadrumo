@@ -247,12 +247,14 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
         "15",
         "saldo-negativo-fin-periodo",
     }
-    if revision_id == "2025":
-        # 2025 additionally carries the estimación-objetiva módulos engine
-        # (fase 1ª rendimiento neto previo, fase 2ª rendimiento neto
+    if revision_id in ("2025", "2026"):
+        # 2025 and 2026 additionally carry the estimación-objetiva módulos
+        # engine (fase 1ª rendimiento neto previo, fase 2ª rendimiento neto
         # minorado, fase 3ª rendimiento neto de módulos, fase 4ª reducción
         # general), a bounded first-slice computed reference figure that
-        # never substitutes for the manual casilla 01.
+        # never substitutes for the manual casilla 01. The 2026 revision
+        # replicates the 2025 engine per-year roll-forward (Orden
+        # HAC/1425/2025 reproduces the same tabled coefficients).
         expected_entries |= {
             "modulos-rendimiento-neto-previo",
             "modulos-rendimiento-neto-minorado",

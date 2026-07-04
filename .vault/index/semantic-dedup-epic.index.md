@@ -3,10 +3,14 @@ generated: true
 tags:
   - '#index'
   - '#semantic-dedup-epic'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-04'
+modified: '2026-07-04'
 related:
+  - '[[2026-06-13-semantic-dedup-epic-W01-P01-S01]]'
+  - '[[2026-06-13-semantic-dedup-epic-W01-P01-S02]]'
+  - '[[2026-06-13-semantic-dedup-epic-W01-P01-S03]]'
   - '[[2026-06-13-semantic-dedup-epic-W01-P02-S04]]'
+  - '[[2026-06-13-semantic-dedup-epic-W01-P02-S05]]'
   - '[[2026-06-13-semantic-dedup-epic-W01-P03-S06]]'
   - '[[2026-06-13-semantic-dedup-epic-W01-P03-S07]]'
   - '[[2026-06-13-semantic-dedup-epic-W03-P05-S15]]'
@@ -92,6 +96,10 @@ Auto-generated index of all documents tagged with `#semantic-dedup-epic`.
 - `2026-06-13-semantic-dedup-epic-W06-P19-S40` - B2 Migrate the borrador/censo/justificante hand-rolled snapshot repos onto SecureSnapshotRepository
 - `2026-06-13-semantic-dedup-epic-W06-P19-S41` - C3 Extract a single-catalogue secure repository base and route the four substitutable catalogue repos through it
 - `2026-06-13-semantic-dedup-epic-W06-P19-S42` - C4 Extract a shared ledger catalogue load/save helper for the evidence and business-invoice modules
+- `2026-06-13-semantic-dedup-epic-W01-P01-S01` - Delegate _compute_nif_check_letter to the canonical nif_check_letter single source and remove the duplicate _NIF_LETTERS control-letter table
+- `2026-06-13-semantic-dedup-epic-W01-P01-S02` - Consolidate the duplicated _validate_nif/_validate_nie/_validate_cif core into one owning module and re-express the other module's validators over it
+- `2026-06-13-semantic-dedup-epic-W01-P01-S03` - Migrate the dual-module consumer to a single import site and run the identity validation test suite green
+- `2026-06-13-semantic-dedup-epic-W01-P02-S05` - Delete the dormant _formats currency encode/serialise/deserialise path and its tests, or record an explicit retention rationale if a near-term consumer is planned
 
 ### plan
 

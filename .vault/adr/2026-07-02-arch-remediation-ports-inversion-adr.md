@@ -161,9 +161,13 @@ precisions are recorded so the claim is not overstated:
   public-facade string target to confirm registry `parser =` dotted paths
   resolve — sanctioned per `dynamic-import-targets-the-public-facade`, and
   targeting `adapters.inbound` rather than the `adapters.persistence` D2 seam.
-  Inverting it via a domain-owned parser-resolver injection point (the
-  `register_cross_domain_snapshot_check` Protocol pattern already used for the
-  snapshot cross-check) is a candidate follow-up, not a D2 blocker.
+  This was subsequently INVERTED to true zero: the domain validator
+  (`validate_dotted_callable`) now performs STRUCTURAL-shape validation only and
+  names no adapter module, even by string; the allowed-authority prefix +
+  importability + callability resolution moved to the adapter-legal CI gate
+  `adapters/inbound/tests/test_extraction_parser_paths_resolve.py` (which scans
+  every bundled-registry `parser =` path and is anti-tautological). The registry
+  is bundled shipped data, so a CI gate is the authoritative resolution check.
 - F2 (deferred, peer-owned): the shared `test_importlinter_ledger.py`
   application→adapters ratchet is red at HEAD from an unrelated `#407` commit
   that added an `application.diagnostics_run_health → aeat.adapters.**` wildcard
@@ -171,6 +175,7 @@ precisions are recorded so the claim is not overstated:
   `full-tree-gate-must-distinguish-owner`; handed to the `#407` owner to
   de-wildcard the pin and bump the baseline.
 
-The literal-purity follow-up (relocating the `SecureObjectWrite` boundary DTO to
-`core.secure_object_write`) closed the last STATIC TYPE_CHECKING
-`domain → adapters` edge; grimp production `domain → adapters` edges are now zero.
+With the `SecureObjectWrite` relocation (the last static TYPE_CHECKING edge) and
+the extraction-parser inversion (the last dynamic edge) both landed, grimp
+production `domain → adapters` edges are now zero of EVERY kind — static and
+dynamic. The domain tree is fully independent of the adapter tree.

@@ -33,9 +33,10 @@ _TRACKED_DATA_ROOTS = (
 _SOURCE_DATA_PREFIX = "src/aeat/_data/"
 _WHEEL_DATA_PREFIX = "aeat/_data"
 # Corpus source binaries excluded from the slim ``aeat`` wheel by the wheel-split
-# build config; they ship in the ``aeat-data`` companion distribution. A tracked
-# source path is one of these when it lives under ``_data/corpus`` and carries a
-# binary suffix, so the wheel-bundling parity check must not expect it in the
+# build config; they ship in the two ``aeat-data-*`` companion distributions. A
+# tracked source path is one of these when it lives under ``_data/corpus`` and
+# carries a binary suffix, so the wheel-bundling parity check must not expect it
+# in the
 # ``aeat`` archive.
 _CORPUS_SOURCE_PREFIX = "src/aeat/_data/corpus/"
 _CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
@@ -393,7 +394,8 @@ def _expected_wheel_data_paths(repo_root: Path) -> set[str]:
 
     Corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``) are excluded:
     the wheel-split build config sheds them from this wheel and ships them in the
-    ``aeat-data`` companion, so they are legitimately absent from the archive.
+    two ``aeat-data-*`` companions, so they are legitimately absent from the
+    archive.
     Test modules under a ``_data`` ``tests/`` folder are excluded by the
     data-budget wheel boundary (tests serve no installed consumer) and are
     likewise legitimately absent.
@@ -447,9 +449,9 @@ def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
     """Return normalized package names from a requirements export.
 
     A dependency resolved through a ``[tool.uv.sources]`` path source (the
-    not-yet-published ``aeat-data`` companion) exports as a bare local path
-    row (``./packaging/aeat_data``) rather than a requirement string; resolve
-    such a row to the referenced project's own ``[project].name`` so the
+    not-yet-published ``aeat-data-*`` companions) exports as a bare local path
+    row (``./packaging/aeat_data_manuals``) rather than a requirement string;
+    resolve such a row to the referenced project's own ``[project].name`` so the
     surface checks see the real package name.
     """
     names: set[str] = set()

@@ -322,6 +322,26 @@ class CertificateSourceCheckReport(BaseModel):
     has_warnings: bool = False
 
 
+class CertificateSourceSecretMutationResult(BaseModel):
+    """Result of setting, rotating, or removing a named certificate source's secret.
+
+    Never carries the secret value itself — only whether one is now
+    registered, which backend holds it, and whether the call rotated an
+    existing secret (``rotated``) or set one for the first time. Mirrors
+    the ``sensitive-financial-data-secure-storage-only`` and
+    ``no-silent-under-declaration`` disciplines: the secret's *presence*
+    is observable, its *value* never is.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    name: str
+    backend: str = ""
+    has_secret: bool = False
+    rotated: bool = False
+    removed: bool = False
+
+
 __all__ = [
     "AuthClearResult",
     "AuthConfigureDanglingActiveProfileError",
@@ -340,5 +360,6 @@ __all__ = [
     "CertificateSourceMutationResult",
     "CertificateSourceNotFoundError",
     "CertificateSourcePayload",
+    "CertificateSourceSecretMutationResult",
     "LiveAuthPreflightReport",
 ]

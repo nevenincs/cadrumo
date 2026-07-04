@@ -118,8 +118,8 @@ effective_from = 2004-03-13
 review_status = "reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "wgergely"
-notes = "TRLIRNR art 25.1.f: tipo de gravamen del 19 por ciento aplicable por clase de renta a dividendos, intereses y otros rendimientos de capitales propios, y ganancias patrimoniales por transmision de elementos patrimoniales. No contiene condicion de residencia UE/EEE; esa condicion pertenece al tipo general reducido de art 25.1.a. Soporte legal de las filas tipo_renta=interest y tipo_renta=ganancia_patrimonial del parametro registry m210-tipo-gravamen-2025."
-required_text = ["El 19 por ciento cuando se trate de", "Intereses y otros rendimientos obtenidos por la cesion a terceros de capitales propios", "Ganancias patrimoniales que se pongan de manifiesto con ocasion de transmisiones de elementos patrimoniales"]
+notes = "TRLIRNR art 25.1.f: tipo de gravamen del 19 por ciento aplicable por clase de renta a dividendos, intereses y otros rendimientos de capitales propios, y ganancias patrimoniales por transmision de elementos patrimoniales. No contiene condicion de residencia UE/EEE; esa condicion pertenece al tipo general reducido de art 25.1.a. Soporte legal de las filas tipo_renta=dividend, tipo_renta=interest y tipo_renta=ganancia_patrimonial del parametro registry m210-tipo-gravamen-2025."
+required_text = ["El 19 por ciento cuando se trate de", "Dividendos y otros rendimientos derivados de la participacion en los fondos propios de una entidad", "Intereses y otros rendimientos obtenidos por la cesion a terceros de capitales propios", "Ganancias patrimoniales que se pongan de manifiesto con ocasion de transmisiones de elementos patrimoniales"]
 
 [legal."convenio-es-gb-2013:art-6"]
 evidence_tier = "legal_authority"

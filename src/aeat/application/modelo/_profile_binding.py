@@ -481,6 +481,53 @@ _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY = "renta_family.unidad_familiar_otros_m
 _MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR = 2025
 
 
+def _is_madrid_resident(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
+    """Return whether ``tax_residence.ccaa`` names the Comunidad de Madrid."""
+    ccaa = fact_index.get("tax_residence.ccaa")
+    return isinstance(ccaa, str) and ccaa.strip().lower() == _MADRID_CCAA_CODE
+
+
+def _is_indeterminate_unidad_familiar(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
+    """Return whether the filer's unit is a tributación-conjunta or partnered case.
+
+    This is exactly the condition that makes the Madrid nacimiento/adopción
+    over-claim guard fail-closed in :func:`_inject_derived_autonomic_deduccion_facts`
+    (research F9 — no persisted spouse base imponible to evaluate the
+    unidad-familiar 61.860 € límite). Shared with the verify-path D4 eligibility
+    advisory so both surfaces agree on exactly which units are indeterminate.
+    """
+    declaration_type = str(fact_index.get("filing_export.declaration_type", "")).strip()
+    if declaration_type == _CONJUNTA_DECLARATION_TYPE:
+        return True
+    marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
+    return marital_status in _PARTNERED_STATUS_TOKENS
+
+
+def _madrid_nacimiento_adopcion_candidate_weighted_count(
+    fact_index: Mapping[str, UserProfileFactValue],
+    filing_year: int,
+) -> Decimal:
+    """Return the prorrateo-weighted Madrid nacimiento/adopción eligible count.
+
+    Evaluates only the per-descendant window/cohabitation condition (DL 1/2010
+    arts. 4 y 18.1); it does NOT gate on CCAA, declaration type, or marital
+    status — those over-claim guards are the caller's responsibility. This is
+    the shared candidate-count primitive: the injector uses it to populate the
+    casilla-1039 binding for the determinable single/monoparental case, and the
+    verify-path D4 advisory uses it to detect a would-be-eligible but
+    indeterminate (conjunta/married) unit that should not silently resolve to
+    zero.
+    """
+    descendant_facts = {
+        key: str(value) for key, value in fact_index.items() if key.startswith("renta_family.descendiente.")
+    }
+    weighted_count = Decimal("0")
+    for descendant in descendant_list_from_facts(descendant_facts):
+        if descendant.is_nacimiento_adopcion_eligible(filing_year):
+            weighted_count += descendant.nacimiento_adopcion_prorrateo_share()
+    return weighted_count
+
+
 def _inject_derived_autonomic_deduccion_facts(
     fact_index: dict[str, UserProfileFactValue],
     filing_year: int,
@@ -520,23 +567,12 @@ def _inject_derived_autonomic_deduccion_facts(
     fact_index.setdefault(_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY, Decimal("0"))
     fact_index.setdefault(_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY, Decimal("0"))
 
-    ccaa = fact_index.get("tax_residence.ccaa")
-    if not isinstance(ccaa, str) or ccaa.strip().lower() != _MADRID_CCAA_CODE:
+    if not _is_madrid_resident(fact_index):
         return
-    declaration_type = str(fact_index.get("filing_export.declaration_type", "")).strip()
-    if declaration_type == _CONJUNTA_DECLARATION_TYPE:
-        return
-    marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
-    if marital_status in _PARTNERED_STATUS_TOKENS:
+    if _is_indeterminate_unidad_familiar(fact_index):
         return
 
-    descendant_facts = {
-        key: str(value) for key, value in fact_index.items() if key.startswith("renta_family.descendiente.")
-    }
-    weighted_count = Decimal("0")
-    for descendant in descendant_list_from_facts(descendant_facts):
-        if descendant.is_nacimiento_adopcion_eligible(filing_year):
-            weighted_count += descendant.nacimiento_adopcion_prorrateo_share()
+    weighted_count = _madrid_nacimiento_adopcion_candidate_weighted_count(fact_index, filing_year)
     if weighted_count <= 0:
         return
 
@@ -821,6 +857,9 @@ inject_derived_anualidades_eligibility_facts = _inject_derived_anualidades_eligi
 inject_derived_minimo_descendientes_facts = _inject_derived_minimo_descendientes_facts
 profile_fact_index = _profile_fact_index
 resolve_profile_binding_value = _resolve_one
+is_madrid_resident = _is_madrid_resident
+is_indeterminate_unidad_familiar = _is_indeterminate_unidad_familiar
+madrid_nacimiento_adopcion_candidate_weighted_count = _madrid_nacimiento_adopcion_candidate_weighted_count
 
 
 __all__ = [

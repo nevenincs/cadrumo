@@ -33,3 +33,29 @@ Following the `2026-04-18-auth-provider-abstraction-adr.md`, the AEAT authentica
 - **Positive**: Certificate authentication will be completely decoupled from the core session management, fulfilling the prerequisite for adding Cl@ve providers.
 - **Negative**: A large structural diff impacting imports and test paths.
 - **Neutral**: The execution purely reorganizes existing logic without changing external behavior.
+
+## Status
+
+**Reverted — 2026-07-01 (issue #353).** This ADR's decision never landed as
+described. The code review `2026-04-18-cert-provider-migration-review-audit`
+(findings AUTH-001, AUTH-002) recorded that the extracted
+`CertificateAuthProvider` shipped as a hollow shell — `authenticate()` and
+`verify()` both raised `NotImplementedError` — and `AeatAuthenticator` was
+never decoupled from the certificate path as Step 4 required. That hollow
+shell was subsequently removed; at HEAD there are zero source references to
+`CertificateAuthProvider` anywhere under `src/`.
+
+The certificate `AuthProvider` implementation that actually shipped and lives
+at HEAD is `AeatAuthenticator`
+(`src/aeat/adapters/outbound/aeat/auth/_authenticator.py`, with
+`kind = AuthProviderKind.CERTIFICATE`), landed via PR #295
+(`refactor(auth): decouple AEAT auth provider protocol`) and PR #297
+(`feat(auth): refactor cert auth into AuthProvider protocol (#282)`) — not via
+this ADR's proposed `CertificateAuthProvider` extraction. The reconciliation
+was first recorded on the sibling
+`2026-04-21-live-cert-auth-supersession-adr` (Reconciliation section, issue
+#353, commit `66b593290a`); this Status section extends the same
+reconciliation to this ADR, the decision record the reverted extraction
+actually originates from. Read every `CertificateAuthProvider` mention above
+against `AeatAuthenticator`: no consumer should attempt to complete, resume,
+or re-propose this extraction under the `CertificateAuthProvider` name.

@@ -58,6 +58,12 @@ Major declarations:
   :func:`pull_operator_edits`, and
   :func:`compute_from_pull` — the operator-edit
   pull surface.
+* :class:`GoogleImpersonationConfig`,
+  :func:`resolve_impersonated_credentials`, and
+  :func:`describe_impersonation_target` — the service-account
+  impersonation credential source
+  (:attr:`core.GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION`),
+  an alternative to the default OAuth Desktop flow above.
 
 See Also:
     - :mod:`adapters.outbound.storage` for the Google Drive storage
@@ -99,6 +105,13 @@ from ._errors import (
     GoogleAuthUnsecuredModeRefusedError,
     GoogleAuthValidationError,
 )
+from ._impersonation import (
+    GoogleAuthAdcUnavailableError,
+    GoogleAuthImpersonationRefusedError,
+    GoogleImpersonationConfig,
+    describe_impersonation_target,
+    resolve_impersonated_credentials,
+)
 from ._oauth_flow import run_login_flow
 from ._records import (
     DRIVE_FILE_SCOPE,
@@ -132,11 +145,13 @@ __all__ = [
     "DriveFolderDocument",
     "DriveFolderListing",
     "GoogleApiResponseBody",
+    "GoogleAuthAdcUnavailableError",
     "GoogleAuthBrowserOpenError",
     "GoogleAuthClientNotRegisteredError",
     "GoogleAuthClientRevokedError",
     "GoogleAuthError",
     "GoogleAuthExpiredError",
+    "GoogleAuthImpersonationRefusedError",
     "GoogleAuthKeychainLockedError",
     "GoogleAuthLoopbackBindError",
     "GoogleAuthNetworkError",
@@ -147,6 +162,7 @@ __all__ = [
     "GoogleAuthUnsecuredModeRefusedError",
     "GoogleAuthValidationError",
     "GoogleDriveFile",
+    "GoogleImpersonationConfig",
     "GoogleSheetsRange",
     "GoogleSpreadsheet",
     "OAuthClient",
@@ -158,6 +174,7 @@ __all__ = [
     "apply_export_plan",
     "compute_from_pull",
     "delete_session",
+    "describe_impersonation_target",
     "list_drive_folder_documents",
     "load_client",
     "load_drive_config",
@@ -167,6 +184,7 @@ __all__ = [
     "pull_operator_edits",
     "resolve_active_profile",
     "resolve_document_link",
+    "resolve_impersonated_credentials",
     "run_login_flow",
     "save_client",
     "save_drive_config",

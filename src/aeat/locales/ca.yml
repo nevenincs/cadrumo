@@ -570,8 +570,10 @@ application:
           auth test` abans de llegir dades AEAT.
   bucket_maintenance:
     errors:
-      archive_active_bucket: 'El bucket actiu no es pot arxivar; canvia primer a un altre perfil.'
-      archive_not_confirmed: 'Arxivar és una transició d''estat reversible, però requereix confirmació explícita.'
+      archive_active_bucket: El bucket actiu no es pot arxivar; canvia primer a un
+        altre perfil.
+      archive_not_confirmed: Arxivar és una transició d'estat reversible, però requereix
+        confirmació explícita.
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -582,7 +584,8 @@ application:
       import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
-      restore_not_archived: 'El bucket no està arxivat (donat de baixa); no hi ha res a recuperar.'
+      restore_not_archived: El bucket no està arxivat (donat de baixa); no hi ha res
+        a recuperar.
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
   calculations:
     iva_compensation:
@@ -645,6 +648,15 @@ application:
         invalid_valuation_method: 'El metode de valoracio d inventari no esta admes:
           %{valuation_method}.'
   invoices:
+    bulk_import:
+      errors:
+        file_read_failed: No s'ha pogut llegir el fitxer d'importació massiva de factures.
+        missing_columns: 'Al fitxer d''importació massiva de factures li falten columnes
+          obligatòries: {missing_columns}'
+        unknown_columns: 'El fitxer d''importació massiva de factures conté columnes
+          desconegudes: {unknown_columns}'
+        unsupported_extension: El fitxer d'importació massiva de factures ha de ser
+          .csv o .xlsx (s'ha rebut {extension}).
     creation:
       errors:
         duplicate_invoice: 'Ja existeix una factura amb la mateixa identitat al catàleg:
@@ -906,6 +918,18 @@ application:
         %{period}; completa abans aquestes dades de perfil: %{missing}.'
       profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
         a aquest treball de model; crea o repara el perfil abans de continuar.
+      recipient_decryption_failed: No s'ha pogut desxifrar el paquet xifrat per al
+        destinatari; la clau no coincideix o el paquet ha estat manipulat.
+      recipient_encryption_invalid_key: La clau publica del destinatari no es una
+        clau publica X25519 valida.
+      recipient_registry_already_exists: El destinatari %{recipient_id} ja esta registrat.
+      recipient_registry_generic: S'ha produit un error en el registre d'empremtes
+        digitals de destinataris.
+      recipient_registry_invalid_public_key: La clau publica proporcionada no es una
+        clau X25519 valida de 32 bytes (s'han rebut %{length} bytes).
+      recipient_registry_load_failed: No s'ha pogut carregar el registre d'empremtes
+        digitals de destinataris.
+      recipient_registry_not_found: No hi ha cap destinatari registrat amb l'id %{recipient_id}.
       reconcile_declaration_unsupported: La reconciliació per casella des de PDF de
         declaració encara no està habilitada per a aquest model; reconcilia un justificant
         descarregat amb aeat app modelo reconcile file, o espera que aquest model
@@ -965,6 +989,18 @@ application:
         per rendiments del treball) es zero. Si les vostres altres rendes diferents
         de les del treball excloses les exemptes no superen 6500, podeu aplicar la
         reduccio per rendiments del treball de l''article 20 LIRPF.'
+      art52_reduccion_individual_sublimit_next_action: Confirmeu si l'aportacio esta
+        recolzada per una aportacio del treballador a un pla d'ocupacio (casella 0426)
+        o per una contribucio empresarial (casella 0427); si no ho esta, la reduccio
+        de l'article 52 LIRPF es limita a 1500 EUR, no al limit conjunt de 10000 EUR
+        (ley-35-2006:art-52).
+      art52_reduccion_individual_sublimit_possible: 'ART52_REDUCCION_INDIVIDUAL_SUBLIMIT_POSSIBLE:
+        la casella %{reduccion_id} (reduccio per previsio social) = %{reduccion_value}
+        supera el limit individual de l''article 52 de %{sublimit} EUR, pero no s''ha
+        declarat cap aportacio del treballador a un pla d''ocupacio ni contribucio
+        empresarial. Confirmeu que la reduccio esta recolzada per una contribucio
+        vinculada a l''ocupador que doni dret a l''increment de 8500 EUR; en cas contrari,
+        el limit aplicable es %{sublimit}.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -995,6 +1031,15 @@ application:
           import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id
           CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
           --file PATH` per a evidencia que ja tingueu.
+      dt12a_reduccion_antiquity_next_action: Confirmeu que han transcorregut mes de
+        dos anys des de la primera aportacio al pla de pensions, llevat que la prestacio
+        sigui per invalidesa (ley-35-2006:dt-12).
+      dt12a_reduccion_antiquity_possible: 'DT_12A_REDUCCION_ANTIQUITY_POSSIBLE: la
+        casella %{reduccion_id} (reduccio treball) = %{reduccion_value} reflecteix
+        una reduccio aplicada. Si inclou un rescat en capital d''un pla de pensions
+        DT 12a LIRPF, confirmeu que han transcorregut mes de dos anys des de la primera
+        aportacio; el requisit d''antiguitat de dos anys nomes es dispensa en les
+        prestacions per invalidesa.'
       dt12a_reduccion_next_action: Proporcioneu --rescate-plan-pensiones-capital IMPORT
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORT --rescate-plan-pensiones-aportaciones-totales
         IMPORT per injectar automàticament la reducció DT 12a a la casella corresponent
@@ -1008,10 +1053,28 @@ application:
           a una Fase futura sota la task #229 (corpus BOE pendent). Establiu profile.country_of_fiscal_residence
           per reclamar la tarifa Convenio aplicable, o espereu que el corpus baseline
           incorpori aquesta fila.'
+      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: s''ha aplicat el tipus
+        de Convenio Espanya-%{cc} (%{document_id}) per a tipo_renta=%{tipo_renta}.
+        El benefici del conveni nomes esta disponible per al beneficiari efectiu resident
+        en aquest Estat que compleixi les condicions de limitacio de beneficis del
+        conveni; confirmi l''elegibilitat abans d''aplicar aquest tipus.'
+      m210_convenio_lob_advisory_next_action: Confirmi que el contribuent compleix
+        les condicions de beneficiari efectiu i de limitacio de beneficis del Convenio
+        Espanya-%{cc} (%{document_id}) abans d'aplicar el tipus del conveni; revisi
+        l'article especific del conveni, no nomes el marc general del Model de Conveni
+        de l'OCDE.
       m210_convenio_rate_missing:
-        next_action: Autoritzeu la fila Convenio España-{cc} a m210-convenio-rates
-          per a tipo_renta={tipo_renta}, o desestableixi profile.convenio_doble_imposicion_country
+        next_action: Autoritzeu una fila de Convenio España-{cc} per a tipo_renta={tipo_renta}
+          a registry/aeat/treaties/, o desestableixi profile.country_of_fiscal_residence
           per usar el baseline TRLIRNR Art 25.
+      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
+        la casella %{casilla_id} es zero pero el contribuent te un descendent elegible
+        (recompte %{weighted_count}) per a la deduccio de Madrid. El disparador automatic
+        queda tancat per a unitats conjunta/casats perque no es pot avaluar el limit
+        de renda familiar; confirmeu l''elegibilitat manualment.'
+      madrid_nacimiento_adopcion_eligibility_advisory_next_action: Confirmeu que la
+        base imposable de la unitat familiar esta dins del limit aplicable i, si escau,
+        introduiu la casella 1039 manualment (madrid-dl-1-2010:art-4, art-18).
       missing_required_casilla: La casella obligatòria %{casilla_id} no és present
         a les dades d'entrada del càlcul.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La
@@ -1064,6 +1127,11 @@ application:
       modelo_210_2025_rendimientos_integros_implica_base_imponible: Els rendiments
         íntegres són positius però la base imposable és zero; reviseu la determinació
         de la base imposable.
+      modelo_210_2025_ue_residente_requiere_residencia_ue_eee: El tipus de renda declarat
+        és ue_residente (tipus reduït UE/EEE) però el país de residència fiscal del
+        contribuent no és un Estat membre de la Unió Europea ni de l'Espai Econòmic
+        Europeu; confirmeu l'elegibilitat per al tipus reduït del 19 per cent abans
+        de presentar, o seleccioneu el tipus general del 24 per cent.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: L'IVA
         deduible total (cuota-deducible-total) es positiu, pero totes les caselles
         oficials del Disseny de Registres (29 interiors corrents, 33 importacions,
@@ -1232,7 +1300,8 @@ application:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
         contribuent ha de tenir un sol perfil.
       lifecycle_profile_already_exists: Ja existeix un perfil al bucket actiu.
-      lifecycle_profile_not_tombstoned: 'El perfil no està donat de baixa; la reactivació rebutja un perfil actiu.'
+      lifecycle_profile_not_tombstoned: El perfil no està donat de baixa; la reactivació
+        rebutja un perfil actiu.
       lifecycle_profile_tombstoned_duplicate: No es pot duplicar un perfil eliminat.
       lifecycle_profile_tombstoned_rename: No es pot canviar el nom d'un perfil eliminat.
       lifecycle_schema_validation_failed: Les dades del perfil no coincideixen amb
@@ -1376,7 +1445,9 @@ auth:
     clave_movil_description: Autenticació amb aprovació push al mòbil del titular
       registrat a Cl@ve. Requereix DNI/NIE, registre a Cl@ve i el dispositiu vinculat.
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: Slot reservat i tancat per a Cl@ve Permanente.
+    clave_permanente_description: Autenticació amb DNI/NIE i contrasenya mitjançant
+      el proveïdor d'identitat Cl@ve Permanente. Automatitzable sense intervenció
+      per als fluxos de lectura de l'AEAT; requereix DNI/NIE i contrasenya.
     clave_permanente_label: Cl@ve Permanente
     clave_pin_description: Slot reservat i tancat per a Cl@ve PIN.
     clave_pin_label: Cl@ve PIN
@@ -1424,7 +1495,31 @@ cli:
           {accepted}'
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
+        confirm_already_exists_message: Ja existeix una factura amb aquesta identitat;
+          es retorna sense canvis en lloc de crear-ne un duplicat.
+        confirm_counterparty_name_help: Nom de la contrapart (sense heuristica d'extraccio
+          encara; normalment obligatori).
+        confirm_counterparty_nif_help: Sobreescriu el NIF del proveidor extret.
+        confirm_currency_help: Codi de moneda ISO-4217.
+        confirm_help: Torna a extreure el justificant en local i confirma'l com a
+          factura real del cataleg.
+        confirm_invoice_date_help: Sobreescriu la data de factura extreta (AAAA-MM-DD).
+        confirm_invoice_number_help: Sobreescriu el numero de factura extret.
+        confirm_iva_rate_help: Sobreescriu el tipus d'IVA extret (ometre per mantenir
+          el valor extret).
+        confirm_link_hint_message: Vincula aquesta factura a un moviment del llibre
+          amb `aeat app ledger link`.
+        confirm_taxable_base_help: Sobreescriu la base imposable extreta.
         evidence_id_help: Identificador del justificant (coincidencia exacta)
+        extract_attachment_id_help: Identificador de l'adjunt vinculat del qual extreure
+          les dades (alternativa a --evidence-id).
+        extract_evidence_id_help: Identificador del justificant de factura de compra
+          del qual extreure les dades.
+        extract_help: Llegeix els camps d'una factura en PDF al mateix equip i genera
+          un esborrany per revisar.
+        extract_reference_required: Indiqueu exactament un de --evidence-id o --attachment-id.
+        extract_review_hint_message: Aquest és un esborrany aproximat; confirmeu cada
+          camp abans de crear una factura.
         group_help: Justificants de factures de compra en PDF o imatge
         invoice_date_help: Data d'emissió de la factura en ISO 8601 (AAAA-MM-DD),
           p. ex. 2026-01-15.
@@ -1468,6 +1563,13 @@ cli:
             defecte ES).
           create_help: Crea una factura de conciliació vinculable al catàleg.
           group_help: Factures del catàleg de conciliació que es vinculen a transaccions.
+          import_all_refused: 'importació massiva de factures fallida: totes les files
+            van ser rebutjades; no es va crear cap factura'
+          import_file_help: Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
+            counterparty_name, invoice_number, invoice_date, taxable_base, i opcionalment
+            iva_rate/currency/country_code/notes).
+          import_file_not_found: 'Fitxer no trobat: {path}'
+          import_help: Crea factures del catàleg en lot des d'un fitxer CSV o XLSX.
           invoice_id_help: Identificador de factura del catàleg (o prefix no ambigu).
           list_help: Llista les factures del catàleg de conciliació.
           remove_help: Elimina una factura del catàleg de conciliació.
@@ -1979,19 +2081,48 @@ cli:
         build_help: Assembla un paquet de revisió compartible i verificable per checksum
           (esborrany fichero-BOE, procedència de la revisió i evidència comptable
           inclosa) per lliurar a l'assessor. Només local; mai contacta amb l'AEAT.
+        counter_sign_help: Contrasigna un paquet de revisió ja signat per l'operador
+          en nom de l'assessor fiscal que el rep i escriu el sobre del rebut a --output.
+          Només local; mai contacta amb l'AEAT.
+        counter_sign_note_help: Nota o veredicte lliure del contrasignant (per exemple,
+          'revisat, sense canvis').
+        counter_sign_output_help: Camí on escriure el rebut contrasignat en format
+          JSON.
+        counter_signer_public_key_help: Clau pública de l'assessor fiscal (contrasignant),
+          en 64 caràcters hexadecimals en minúscula.
         errors:
           output_required: Indiqueu --output CAMÍ per al ZIP del paquet de revisió.
           package_not_found: No s'ha trobat el paquet de revisió a {package_path}.
+          receipt_not_found: No s'ha trobat el rebut a {receipt_path}.
+          signature_not_found: No s'ha trobat el sobre de signatura a {signature_path}.
         group_help: Construeix un paquet de revisió compartible i verifica'n la integritat.
         notes_help: Nota de text lliure inclosa al descriptor del paquet (p. ex. el
           motiu de l'enviament).
+        operator_public_key_help: Clau pública de l'operador (signant original), en
+          64 caràcters hexadecimals en minúscula.
         output_help: Camí on escriure el ZIP del paquet de revisió.
         package_path_help: Camí del ZIP del paquet de revisió a verificar.
+        public_key_help: Clau pública del signant, en 64 caràcters hexadecimals en
+          minúscula.
+        receipt_path_help: Camí del rebut contrasignat en format JSON generat per
+          `counter-sign`.
         revision_help: Id de la revisió de càlcul a empaquetar; per defecte la revisió
           verificada-completa o presentada més recent de la unitat de treball.
+        sign_help: Signa el manifest de comprovació d'un paquet de revisió amb el
+          parell de claus Ed25519 del bucket (generat en el primer ús) i escriu el
+          sobre de signatura a --output. Només local; mai contacta amb l'AEAT.
+        sign_output_help: Camí on escriure el sobre de signatura en format JSON.
+        signature_path_help: Camí del sobre de signatura JSON generat per `sign`.
         verify_help: Verifica el manifest de checksum d'un paquet de revisió (només
           integritat; no certifica qui l'ha construït). Només local; mai contacta
           amb l'AEAT.
+        verify_receipt_help: 'Verifica les dues capes de signatura d''un rebut contrasignat
+          d''un paquet de revisió: la signatura original de l''operador i la contrasignatura
+          de l''assessor fiscal. Només local; mai contacta amb l''AEAT.'
+        verify_signature_help: Verifica la signatura Ed25519 d'un paquet de revisió
+          contra la clau pública del signant (comprovació d'autenticitat; primer repeteix
+          la comprovació d'integritat del manifest). Només local; mai contacta amb
+          l'AEAT.
         work_unit_id_help: Id de la unitat de treball (SHA-256 o prefix inequívoc).
       verification_report:
         app_help: Inspeccionar els informes de verificació registrats
@@ -2456,6 +2587,18 @@ cli:
         remove:
           name_help: Origen de certificat registrat que s'eliminarà
         remove_help: Eliminar un origen de certificat registrat
+        secret:
+          help: Gestiona la contrasenya vinculada a una font de certificat amb nom
+          remove:
+            name_help: Font de certificat registrada la contrasenya de la qual s'ha
+              d'eliminar
+          remove_help: Elimina la contrasenya vinculada a una font de certificat registrada
+          set:
+            backend_help: 'Backend del secret: secure_storage (per defecte, xifrat
+              en repos) o keyring (clauer del sistema operatiu)'
+            name_help: Font de certificat registrada a la qual es vincula la contrasenya
+            secret_help: La contrasenya del PKCS#12 (es demana, oculta, mai es mostra)
+          set_help: Estableix (o rota) la contrasenya d'una font de certificat registrada
         select:
           name_help: Origen de certificat registrat que s'activarà
         select_help: Seleccionar l'origen de certificat actiu
@@ -2837,15 +2980,21 @@ cli:
       rename_source_help: Nom actual del perfil
       rename_target_help: Nou nom del perfil
       sandbox:
+        active_indicator_info: Estàs operant dins del sandbox %{label}, no en un perfil
+          real; totes les ordres s'executen contra aquest bucket aïllat i descartable.
         already_exists: Ja existeix un sandbox anomenat %{label}. Trieu un altre nom
           o descarteu primer l'existent.
-        archive_active_profile: 'El sandbox %{name} és el perfil actiu; canvia a un altre perfil abans d''arxivar-lo.'
-        archive_dry_run_help: 'Previsualitza l''arxivat sense treure el sandbox de la superfície activa.'
-        archive_help: 'Converteix un sandbox en un estat latent reversible sense eliminar-lo.'
-        archive_name_help: 'Nom del sandbox (sense el prefix).'
-        archive_requires_yes: 'Arxivar un sandbox és una transició d''estat. Torna a executar ''aeat config profile sandbox archive %{name} --yes'' per confirmar.'
-        archive_restorable_info: 'El sandbox ara està latent; executa ''aeat config profile sandbox restore %{name}'' per recuperar-lo.'
-        archive_yes_help: 'Confirma l''arxivat.'
+        archive_active_profile: El sandbox %{name} és el perfil actiu; canvia a un
+          altre perfil abans d'arxivar-lo.
+        archive_dry_run_help: Previsualitza l'arxivat sense treure el sandbox de la
+          superfície activa.
+        archive_help: Converteix un sandbox en un estat latent reversible sense eliminar-lo.
+        archive_name_help: Nom del sandbox (sense el prefix).
+        archive_requires_yes: Arxivar un sandbox és una transició d'estat. Torna a
+          executar 'aeat config profile sandbox archive %{name} --yes' per confirmar.
+        archive_restorable_info: El sandbox ara està latent; executa 'aeat config
+          profile sandbox restore %{name}' per recuperar-lo.
+        archive_yes_help: Confirma l'arxivat.
         create_active_info: El sandbox és ara el perfil ACTIU; tots els comandaments
           s'executen sobre ell fins que canviï de perfil o el descarti.
         create_from_profile_help: Copia les dades d'un perfil existent al sandbox
@@ -2866,6 +3015,14 @@ cli:
         help: Executa experiments en un bucket aïllat i descartable que mai afecta
           l'estat del perfil principal.
         list_help: Llista tots els sandboxes.
+        merge_help: Promou els moviments del llibre o els registres de models d'un
+          sandbox a un altre perfil.
+        merge_into_help: Nom del perfil de destinació al qual es promouen els registres
+          del sandbox.
+        merge_name_help: Nom del sandbox (sense el prefix).
+        merge_promoted_info: S'ha promogut %{scope} de %{source} a %{target}.
+        merge_scope_help: 'Categoria de dades a promoure: ledger, modelo o all.'
+        merge_yes_help: Confirma la promoció de les dades del sandbox.
         prune_dry_run_help: Mostra una previsualitzacio de quins sandboxes es descartarien
           sense descartar-los.
         prune_help: Descarta tots els sandboxes alhora.
@@ -2875,13 +3032,16 @@ cli:
           altre perfil i torna a executar 'aeat config profile sandbox prune --yes'
           per descartar-lo.
         prune_yes_help: Confirma el descart de tots els sandboxes.
-        restore_help: 'Recupera un sandbox arxivat i el torna a l''estat actiu.'
-        restore_name_help: 'Nom del sandbox (sense el prefix).'
+        restore_help: Recupera un sandbox arxivat i el torna a l'estat actiu.
+        restore_name_help: Nom del sandbox (sense el prefix).
         restore_not_archived: '%{name} no està arxivat; no hi ha res a recuperar.'
         source_not_found: No existeix cap perfil actiu anomenat %{name} per copiar
           al sandbox.
         unknown_sandbox: 'Sandbox desconegut: %{name}. Executeu ''aeat config profile
           sandbox list'' per veure els sandboxes registrats.'
+        usage_help: Informar de l'espai en disc d'un sandbox, o de tots alhora.
+        usage_name_help: Nom del sandbox (sense el prefix); ometre per informar de
+          tots.
         use_help: Canvia el perfil actiu a un sandbox existent.
         use_name_help: Nom del sandbox (sense el prefix).
       sar_catalogue_info: 'Aquest arxiu conté totes les categories de dades personals
@@ -4746,6 +4906,8 @@ errors:
       límit MAX_PATH de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt
       o activa LongPathsEnabled (vegeu `aeat config check`).
     error_submission_validation: Un model d'enviament no ha superat la validació.
+    error_telemetry_schema: Una clau de mètrica de telemetria no està registrada a
+      l'esquema tancat de mètriques de la seva ordre.
     error_transaction_catalogue: El catàleg de transaccions no és vàlid o és inconsistent.
     error_transaction_classification_rule: Una regla de classificació del llibre major
       no és vàlida.
@@ -4806,6 +4968,7 @@ errors:
       del llibre del bucket.
     fail_financial_usage_ratios_usage_ratio_persistence: No s'ha pogut llegir o escriure
       el perfil de percentatges d'ús.
+    fail_google_adc_unavailable: 'No s''han trobat credencials predeterminades d''aplicació (ADC) en aquest equip. Executeu gcloud auth application-default login.'
     fail_google_browser_open: No s'ha pogut obrir el navegador per mostrar la pàgina
       de consentiment de Google. Obre l'enllaç manualment.
     fail_google_loopback_bind: El receptor HTTP local no ha pogut obrir un port. Tanca
@@ -5220,6 +5383,7 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un percentatge d'ús d'oficina a
       casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
       amb el valor del cens.
+    refused_google_impersonation: 'IAM ha rebutjat emetre un testimoni de suplantació per al compte de servei de destinació. Concediu-li el rol roles/iam.serviceAccountTokenCreator.'
     refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
       interactiu amb navegador; executa'l des d'una shell interactiva.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona

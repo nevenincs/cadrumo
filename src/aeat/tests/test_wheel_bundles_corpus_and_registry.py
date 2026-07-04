@@ -6,8 +6,8 @@ relocates both data trees under ``src/aeat/_data/`` so the existing
 the wheel without any force-include declaration. The terminology tree
 uses the same shipped-data contract. The wheel-split packaging decision
 then excludes the corpus SOURCE binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``)
-from this slim ``aeat`` wheel — they ship in the separate ``aeat-data``
-companion distribution — while every derived surface the runtime reads
+from this slim ``aeat`` wheel — they ship in the two separate ``aeat-data-*``
+companion distributions — while every derived surface the runtime reads
 (extracted text, normative html, registry, terminology, agent data) stays.
 This test verifies that contract end-to-end by driving the real build pipeline:
 
@@ -17,8 +17,8 @@ This test verifies that contract end-to-end by driving the real build pipeline:
    subtrees, EXCEPT the excluded corpus source binaries, is asserted to
    appear in the archive at the corresponding ``aeat/_data/<relative-path>``
    prefix.
-4. The corpus source binaries are asserted ABSENT from the slim wheel; the
-   companion ``aeat-data`` distribution is what carries them
+4. The corpus source binaries are asserted ABSENT from the slim wheel; the two
+   ``aeat-data-*`` companion distributions are what carry them
    (``test_aeat_data_distribution`` proves that side).
 
 No mocks, fakes, or skips. If the worktree is missing the ``uv``
@@ -44,8 +44,8 @@ _DATA_ROOT = SRC_AEAT / "_data"
 _WHEEL_DATA_PREFIX = "aeat/_data"
 
 # Corpus source binaries excluded from the slim ``aeat`` wheel (they ship in the
-# ``aeat-data`` companion). A path is an excluded corpus source binary when it
-# lives under ``_data/corpus/`` and carries one of these suffixes.
+# two ``aeat-data-*`` companions). A path is an excluded corpus source binary
+# when it lives under ``_data/corpus/`` and carries one of these suffixes.
 _CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
 
 
@@ -95,8 +95,8 @@ def _expected_archive_paths(tracked: list[str]) -> set[str]:
     pool to appear in the archive.
 
     Also excludes the corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``):
-    the wheel-split decision moves them to the ``aeat-data`` companion, so they
-    are legitimately absent from this slim wheel and must not be expected here.
+    the wheel-split decision moves them to the two ``aeat-data-*`` companions, so
+    they are legitimately absent from this slim wheel and must not be expected here.
     """
 
     prefix = "src/aeat/_data/"
@@ -143,9 +143,14 @@ def test_data_root_exists_in_worktree() -> None:
 
 
 def test_wheel_filename_matches_distribution(built_wheel: Path) -> None:
-    """The built wheel follows the expected ``aeat-<version>-py3-none-any.whl`` shape."""
+    """The built wheel follows the expected ``aeat_cli-<version>-py3-none-any.whl`` shape.
 
-    assert re.match(r"^aeat-[0-9.]+(\.[a-z0-9]+)?-py3-none-any\.whl$", built_wheel.name), (
+    The PyPI distribution is ``aeat-cli`` (the import package stays ``aeat``), so
+    the wheel filename normalises the distribution name to ``aeat_cli`` — matching
+    the ``aeat_cli-*.whl`` glob the ``built_wheel`` fixture already uses.
+    """
+
+    assert re.match(r"^aeat_cli-[0-9.]+(\.[a-z0-9]+)?-py3-none-any\.whl$", built_wheel.name), (
         f"unexpected wheel filename: {built_wheel.name}"
     )
 
@@ -164,9 +169,10 @@ def test_wheel_archive_contains_every_tracked_data_file(built_wheel: Path) -> No
 def test_wheel_excludes_renta_source_pdfs(built_wheel: Path) -> None:
     """The Renta ``source.pdf`` corpus binaries are absent from the slim wheel.
 
-    They are corpus source binaries and ship in the ``aeat-data`` companion, not
-    this wheel; asserting their absence pins the wheel-split boundary at exactly
-    the highest-value binaries the prior contract force-shipped.
+    They are corpus source binaries under ``corpus/manuals`` and ship in the
+    ``aeat-data-manuals`` companion, not this wheel; asserting their absence pins
+    the wheel-split boundary at exactly the highest-value binaries the prior
+    contract force-shipped.
     """
 
     renta_pdfs = {
@@ -179,7 +185,7 @@ def test_wheel_excludes_renta_source_pdfs(built_wheel: Path) -> None:
     leaked = sorted(renta_pdfs & names)
     assert not leaked, (
         f"the slim wheel still ships Renta corpus source PDFs the wheel-split excludes: {leaked!r}; "
-        "they belong in the aeat-data companion distribution"
+        "they belong in the aeat-data-manuals companion distribution"
     )
 
 

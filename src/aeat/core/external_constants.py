@@ -599,6 +599,23 @@ MODELO_202_ART_40_3_INCN_THRESHOLD_EUR: Final[Decimal] = Decimal("6000000")
 #: (BOE-A-2024-12944).
 MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR: Final[Decimal] = Decimal("19747.50")
 
+#: Art. 52.1 LIRPF (Ley 35/2006) individual-contribution sub-limit for the
+#: reducción por aportaciones y contribuciones a sistemas de previsión social.
+#: The joint reducción (casilla 0468) is capped at the lesser of 30% of net
+#: yields and EUR 10.000, but a taxpayer whose aportaciones are PURELY
+#: individual — no plan-de-empleo worker contribution (casilla 0426) and no
+#: contribución empresarial (casilla 0427) backing the EUR 8.500 increment —
+#: is bound by the lower EUR 1.500 general limit; the EUR 8.500 increment
+#: "siempre que tal incremento provenga de contribuciones empresariales, o de
+#: aportaciones del trabajador al mismo instrumento de previsión social".
+#: Used by the Modelo 100 art. 52 advisory to flag a possible over-reduction
+#: (a granted reducción above this sub-limit with no employer-linked backing)
+#: — a ``no-silent-under-declaration`` safeguard pending the full individual/
+#: employer contribution-split compute (Phase 2b,
+#: ``2026-07-01-modelo-100-trabajo-casilla-compute-adr``). Binding provision:
+#: Ley 35/2006 art. 52.1.
+MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR: Final[Decimal] = Decimal("1500")
+
 #: Default IVA general-rate percentage for input/pre-fill purposes.
 #: This is the LIVA art. 90 Uno general rate (Ley 37/1992, BOE-A-1992-28740)
 #: currently in force for Spain (ES).

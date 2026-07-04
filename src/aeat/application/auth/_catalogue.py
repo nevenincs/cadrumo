@@ -57,7 +57,6 @@ AUTH_PROVIDER_CATALOGUE: tuple[AuthProviderListing, ...] = (
         id="clave_permanente",
         label=tr("auth.catalogue.clave_permanente_label"),
         description=tr("auth.catalogue.clave_permanente_description"),
-        implemented=False,
     ),
     AuthProviderListing(
         id="dnie_pkcs",

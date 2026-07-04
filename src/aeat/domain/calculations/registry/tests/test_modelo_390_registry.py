@@ -288,6 +288,7 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
         "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
         "modelo-390-iva-recargo-equivalencia-general-cuota",
         "modelo-390-iva-recargo-equivalencia-reducido-cuota",
+        "modelo-390-iva-recargo-equivalencia-super-reducido-cuota",
     }
 
 
