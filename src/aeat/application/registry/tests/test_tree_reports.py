@@ -45,6 +45,18 @@ class _RevisionDetailPayload(TypedDict, total=False):
     support_removal_decision_count: int
 
 
+_REVISION_INVALID_REF_CASES: tuple[_RevisionDetailPayload, ...] = (
+    {"legal_refs": ("",)},
+    {"source_refs": ("",)},
+    {"export_layout_ids": ("bad id",)},
+)
+
+_WORKBOOK_PARITY_INVALID_REF_CASES: tuple[_WorkbookParityPayload, ...] = (
+    {"id": ""},
+    {"workbook_source": "bad source"},
+)
+
+
 def _workbook_parity_report(**updates: object) -> RegistryWorkbookParityDetailReport:
     base: _WorkbookParityPayload = {
         "id": "workbook-parity-1",
@@ -82,26 +94,15 @@ def _revision_detail_report(**updates: object) -> RegistryRevisionDetailReport:
     return RegistryRevisionDetailReport(**payload)
 
 
-@pytest.mark.parametrize(
-    "field_update",
-    (
-        {"legal_refs": ("",)},
-        {"source_refs": ("",)},
-        {"export_layout_ids": ("bad id",)},
-    ),
-)
-def test_revision_detail_report_rejects_invalid_registry_ref_ids(field_update: _RevisionDetailPayload) -> None:
-    with pytest.raises(ValidationError, match=next(iter(field_update))):
-        _revision_detail_report(**field_update)
+def test_revision_detail_report_rejects_invalid_registry_ref_ids() -> None:
+    for field_update in _REVISION_INVALID_REF_CASES:
+        field_name = next(iter(field_update))
+        with pytest.raises(ValidationError, match=field_name):
+            _revision_detail_report(**field_update)
 
 
-@pytest.mark.parametrize(
-    "field_update",
-    (
-        {"id": ""},
-        {"workbook_source": "bad source"},
-    ),
-)
-def test_workbook_parity_detail_report_rejects_invalid_registry_ref_ids(field_update: _WorkbookParityPayload) -> None:
-    with pytest.raises(ValidationError, match=next(iter(field_update))):
-        _workbook_parity_report(**field_update)
+def test_workbook_parity_detail_report_rejects_invalid_registry_ref_ids() -> None:
+    for field_update in _WORKBOOK_PARITY_INVALID_REF_CASES:
+        field_name = next(iter(field_update))
+        with pytest.raises(ValidationError, match=field_name):
+            _workbook_parity_report(**field_update)

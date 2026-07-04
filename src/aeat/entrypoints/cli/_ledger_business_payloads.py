@@ -1,6 +1,6 @@
 """Typed ``--json`` payload schemas for the ledger invoice/inventory/evidence sub-apps.
 
-Extracted from :mod:`aeat.entrypoints.cli._ledger_payloads` to keep that
+Extracted from :mod:`entrypoints.cli._ledger_payloads` to keep that
 module under its size budget (`aeat-architecture-boundaries`,
 `registry-resolver-family-extraction`); follows the same split pattern the
 module's own docstring documents for :mod:`_ledger_rule_payloads`,
@@ -13,8 +13,8 @@ Covers three CLI sub-app payload families:
 * P07 -- the ``inventory`` sub-app.
 * P08 -- the purchase-invoice ``evidence`` sub-app.
 
-Each class is a strict :class:`~aeat.entrypoints.cli._schemas.OutputSchema`
-subclass, decorated with :func:`~aeat.entrypoints.cli._schemas.register_schema`
+Each class is a strict :class:`~entrypoints.cli._schemas.OutputSchema`
+subclass, decorated with :func:`~entrypoints.cli._schemas.register_schema`
 so the JSON-contract test suite can enumerate the surface. Re-imported into
 :mod:`_ledger_payloads` so existing ``from ._ledger_payloads import
 BusinessInvoiceRecordPayload`` (etc.) call sites keep resolving unchanged.
@@ -307,7 +307,7 @@ class EvidenceConfirmResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence extract --confirm``.
 
     Reports the persisted (or already-existing, on a guarded no-op) rich
-    catalogue :class:`~aeat.domain.invoices.Invoice` -- mirroring
+    catalogue :class:`~domain.invoices.Invoice` -- mirroring
     ``CatalogueInvoiceRecordPayload`` -- plus the resolved evidence reference
     and a ``created`` flag distinguishing a fresh write
     (``single-subject-mutation-is-idempotent-guarded``) from a same-identity

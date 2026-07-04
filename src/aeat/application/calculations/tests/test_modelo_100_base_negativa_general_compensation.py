@@ -49,6 +49,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
     CasillaId,
+    RegistrySnapshot,
     RelationId,
     validated_casilla_id,
 )
@@ -160,7 +161,7 @@ def _seed_prior_negative_base(*, saldo: Decimal, obs_repo: CalculationObservatio
     )
 
 
-def _zeroed_channels(snapshot) -> tuple[dict[BindingId, Decimal], dict[RelationId, Decimal]]:
+def _zeroed_channels(snapshot: RegistrySnapshot) -> tuple[dict[BindingId, Decimal], dict[RelationId, Decimal]]:
     binding_values = {binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"}
     relation_values = {relation.id: Decimal("0") for relation in snapshot.revision.relations}
     return binding_values, relation_values
@@ -205,7 +206,7 @@ def _snapshot():
     return resources().modelos.authority.snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD)
 
 
-def _v(revision, casilla: CasillaId) -> Decimal:
+def _v(revision: CalculationRevision, casilla: CasillaId) -> Decimal:
     return Decimal(revision.casilla_values[casilla])
 
 

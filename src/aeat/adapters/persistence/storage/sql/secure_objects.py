@@ -115,6 +115,18 @@ class SecureObjectRepository:
         """Return the :class:`~adapters.persistence.storage.StorageHierarchyRegistry` bound here, if any."""
         return self._namespace_registry
 
+    @property
+    def engine(self) -> Engine:
+        """Return the bound SQLAlchemy :class:`~sqlalchemy.engine.Engine`.
+
+        Exposed so a sibling plaintext ORM table (e.g. a derived, non-sensitive
+        routing index) can be written in the SAME database file and, where the
+        driver supports it, the same transaction as this repository's encrypted
+        rows -- without duplicating the bucket-to-engine routing this repository
+        already resolved at construction.
+        """
+        return self._engine
+
     def _registered_namespace_definition(self, namespace: str) -> SecureObjectNamespaceDefinition | None:
         """Return the registry contract for ``namespace`` when policy is bound."""
         if self._namespace_registry is None:

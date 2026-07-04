@@ -16,63 +16,64 @@ from ._fichero_boe_roundtrip_support import _AMOUNT_CASILLA, _currency_specs, _w
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_CurrencyInlineSignCase = tuple[str, Decimal, bytes]
+_DateFieldCase = tuple[str, str, DateFmt, bytes]
 
-@pytest.mark.parametrize(
-    ("amount", "expected_marker"),
-    (
-        (Decimal("-12345.67"), b"N"),
-        (Decimal("42.00"), b" "),
-    ),
-    ids=("negative-marker", "positive-marker"),
+
+_CURRENCY_INLINE_SIGN_CASES: tuple[_CurrencyInlineSignCase, ...] = (
+    ("negative-marker", Decimal("-12345.67"), b"N"),
+    ("positive-marker", Decimal("42.00"), b" "),
 )
-def test_currency_inline_sign_round_trips_value(amount: Decimal, expected_marker: bytes) -> None:
-    specs = _currency_specs(signed_mode=SignedMode.INLINE_SIGN)
 
-    payload = serialise(
-        casilla_values={_AMOUNT_CASILLA: amount},
-        headers={},
-        specs=specs,
-        encoding=ISO_8859_1_ENCODING,
-        total_length=12,
-    )
-
-    assert _wire_body(payload)[0:1] == expected_marker
-
-    parsed = deserialise(payload, specs=specs, encoding=ISO_8859_1_ENCODING, total_length=12)
-    assert parsed.casilla_values[_AMOUNT_CASILLA] == amount
-
-
-@pytest.mark.parametrize(
-    ("field_id", "date_fmt", "expected_body"),
-    (
-        ("DEVENGO", DateFmt.YYYYMMDD, b"20250420"),
-        ("FECHA", DateFmt.DDMMYYYY, b"20042025"),
-    ),
+_DATE_FIELD_CASES: tuple[_DateFieldCase, ...] = (
+    ("DEVENGO-yyyymmdd-20250420", "DEVENGO", DateFmt.YYYYMMDD, b"20250420"),
+    ("FECHA-ddmmyyyy-20042025", "FECHA", DateFmt.DDMMYYYY, b"20042025"),
 )
-def test_date_field_round_trips(field_id: str, date_fmt: DateFmt, expected_body: bytes) -> None:
-    specs = (
-        record_field(
-            offset=1,
-            length=8,
-            field_id=field_id,
-            kind=FieldKind.DATE,
-            date_fmt=date_fmt,
-        ),
-    )
-    validate_record_specs(specs, total_length=specs[-1].offset - 1 + specs[-1].length)
 
-    target = date(2025, 4, 20)
-    payload = serialise(
-        casilla_values={},
-        headers={field_id: target},
-        specs=specs,
-        encoding=ISO_8859_1_ENCODING,
-        total_length=8,
-    )
-    assert _wire_body(payload) == expected_body
 
-    parsed = deserialise(payload, specs=specs, encoding=ISO_8859_1_ENCODING, total_length=8)
-    assert parsed.field_values[field_id] == target
+def test_currency_inline_sign_round_trips_value() -> None:
+    for case_label, amount, expected_marker in _CURRENCY_INLINE_SIGN_CASES:
+        specs = _currency_specs(signed_mode=SignedMode.INLINE_SIGN)
+
+        payload = serialise(
+            casilla_values={_AMOUNT_CASILLA: amount},
+            headers={},
+            specs=specs,
+            encoding=ISO_8859_1_ENCODING,
+            total_length=12,
+        )
+
+        assert _wire_body(payload)[0:1] == expected_marker, case_label
+
+        parsed = deserialise(payload, specs=specs, encoding=ISO_8859_1_ENCODING, total_length=12)
+        assert parsed.casilla_values[_AMOUNT_CASILLA] == amount, case_label
+
+
+def test_date_field_round_trips() -> None:
+    for case_label, field_id, date_fmt, expected_body in _DATE_FIELD_CASES:
+        specs = (
+            record_field(
+                offset=1,
+                length=8,
+                field_id=field_id,
+                kind=FieldKind.DATE,
+                date_fmt=date_fmt,
+            ),
+        )
+        validate_record_specs(specs, total_length=specs[-1].offset - 1 + specs[-1].length)
+
+        target = date(2025, 4, 20)
+        payload = serialise(
+            casilla_values={},
+            headers={field_id: target},
+            specs=specs,
+            encoding=ISO_8859_1_ENCODING,
+            total_length=8,
+        )
+        assert _wire_body(payload) == expected_body, case_label
+
+        parsed = deserialise(payload, specs=specs, encoding=ISO_8859_1_ENCODING, total_length=8)
+        assert parsed.field_values[field_id] == target, case_label
 
 
 def test_alphanumeric_zero_padded_field_round_trips() -> None:

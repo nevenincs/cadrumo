@@ -36,6 +36,7 @@ import pytest
 
 from .....core.config import SecretStoreBackend
 from .....tests.secure_sql import dev_test_database_password
+from .. import FormulaDefinition
 from .._temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
@@ -48,7 +49,7 @@ def _m100_revision(filing_year: int):
     return select_revision(modelo, filing_year=filing_year, period="0A")
 
 
-def _negated_casillas(formula) -> set[str]:
+def _negated_casillas(formula: FormulaDefinition) -> set[str]:
     expr = formula.expression.model_dump(exclude_none=True)
     assert expr.get("op") == "sum", "top-level op must be sum"
     args = expr.get("args", [])

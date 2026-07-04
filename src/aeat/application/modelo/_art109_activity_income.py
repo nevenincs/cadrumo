@@ -2,8 +2,8 @@
 
 The coverage helper derives the RIRPF Art. 109 70 percent withholding fact from
 current-period ledger rows in a
-:class:`~aeat.domain.transactions.TransactionCatalogue`. Work-unit consumers use
-a bucket-scoped :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
+:class:`~domain.transactions.TransactionCatalogue`. Work-unit consumers use
+a bucket-scoped :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`
 to load that catalogue before applying the same pure calculation.
 
 The result is intentionally evidence-scoped: the denominator and withholding
@@ -15,7 +15,7 @@ See Also:
         Pure catalogue-level derivation for already-loaded ledger rows.
     :func:`derive_art109_activity_income_coverage_for_work_unit`
         Work-unit adapter that resolves the matching bucket repository.
-    :mod:`aeat.application.modelo._verification_actions`
+    :mod:`application.modelo._verification_actions`
         Verification path that folds a proven coverage fact into the workflow
         profile used for M130 verification.
 """
@@ -109,7 +109,7 @@ def derive_art109_activity_income_coverage(
     """Derive Art. 109 current-period coverage from a transaction catalogue.
 
     Args:
-        catalogue: :class:`~aeat.domain.transactions.TransactionCatalogue`
+        catalogue: :class:`~domain.transactions.TransactionCatalogue`
             containing the ledger rows to classify for the target period.
         period: Filing period whose date span selects the current-payment rows.
 

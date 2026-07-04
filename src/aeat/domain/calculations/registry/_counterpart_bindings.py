@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind, CounterpartSourceKind
+from ....core.external_constants import M347_THRESHOLD_EUR
 from ._binding_selector_utils import (
     intracommunity_clave_validator,
     invariant_diagnostics,
@@ -42,6 +43,7 @@ __all__ = [
 ]
 
 COUNTERPART_BINDING_SOURCE_KINDS: frozenset[CounterpartSourceKind] = COUNTERPART_SOURCE_KINDS
+_M347_DECLARANTE_SUMMARY_RECORD = "m347_declarante_summary"
 
 
 class CounterpartAggregationObservation(BaseModel):
@@ -61,6 +63,7 @@ class CounterpartAggregationObservation(BaseModel):
     country_code: str = Field(min_length=2, max_length=2)
     transaction_date: date
     base_amount: Decimal
+    invoice_total_amount: Decimal | None = None
     intracommunity_clave: str | None = Field(default=None, max_length=2)
     is_rectification: bool = False
     rectified_year: int | None = Field(default=None, ge=2000, le=2099)
@@ -71,7 +74,7 @@ class CounterpartAggregationObservation(BaseModel):
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
 
-    @field_validator("base_amount", "rectified_base_previous")
+    @field_validator("base_amount", "invoice_total_amount", "rectified_base_previous")
     @classmethod
     def _decimal_amount(cls, value: Decimal | None) -> Decimal | None:
         if value is None:
@@ -141,6 +144,7 @@ def _counterpart_to_invoice(observation: CounterpartAggregationObservation) -> I
         country_code=observation.country_code,
         transaction_date=observation.transaction_date,
         base_amount=observation.base_amount,
+        invoice_total_amount=observation.invoice_total_amount,
         iva_regime=None,
         intracommunity_clave=observation.intracommunity_clave,
         is_rectification=observation.is_rectification,
@@ -221,12 +225,74 @@ def resolve_counterpart_binding_values(
             filter by selector and aggregate into scalar Decimal values.
     """
     available = tuple(observations)
-    return resolve_invoice_family_scalar_values(
-        revision,
+    m347_summary_values, invoice_family_revision = _resolve_m347_declarante_summary_values(revision, available)
+    invoice_family_values = resolve_invoice_family_scalar_values(
+        invoice_family_revision,
         source_kinds=COUNTERPART_BINDING_SOURCE_KINDS,
         validate_selector=_validated_counterpart_selector,
         observations_for_binding=_counterpart_observations_for_binding(available),
     )
+    return {**invoice_family_values, **m347_summary_values}
+
+
+def _resolve_m347_declarante_summary_values(
+    revision: ModeloRevision,
+    available: tuple[CounterpartAggregationObservation, ...],
+) -> tuple[dict[BindingId, Decimal], ModeloRevision]:
+    """Resolve M347 declarant summary bindings after applying the declaration floor.
+
+    These scalar bindings summarize the Tipo 1 declarant totals for counterparties
+    whose annual M347 amount exceeds the declaration threshold. They are not M349
+    invoice-family clave rows, so thresholding happens before delegating the final
+    count/sum operation to the shared scalar core.
+    """
+    summary_bindings: list[DataBindingDefinition] = []
+    invoice_family_bindings: list[DataBindingDefinition] = []
+    for binding in revision.bindings:
+        if binding.source not in COUNTERPART_BINDING_SOURCE_KINDS:
+            invoice_family_bindings.append(binding)
+            continue
+        selector = _validated_counterpart_selector(binding)
+        if selector.record == _M347_DECLARANTE_SUMMARY_RECORD:
+            summary_bindings.append(binding)
+            continue
+        invoice_family_bindings.append(binding)
+
+    if not summary_bindings:
+        return {}, revision
+
+    declarable_party_ids = _m347_declarable_party_ids(available)
+    thresholded = tuple(observation for observation in available if observation.party_tax_id in declarable_party_ids)
+    summary_revision = revision.model_copy(update={"bindings": tuple(summary_bindings)})
+    invoice_family_revision = revision.model_copy(update={"bindings": tuple(invoice_family_bindings)})
+    return (
+        resolve_invoice_family_scalar_values(
+            summary_revision,
+            source_kinds=COUNTERPART_BINDING_SOURCE_KINDS,
+            validate_selector=_validated_counterpart_selector,
+            observations_for_binding=_counterpart_observations_for_binding(thresholded),
+        ),
+        invoice_family_revision,
+    )
+
+
+def _m347_declarable_party_ids(
+    observations: tuple[CounterpartAggregationObservation, ...],
+) -> frozenset[str]:
+    totals: dict[str, Decimal] = {}
+    for observation in observations:
+        totals[observation.party_tax_id] = totals.get(observation.party_tax_id, Decimal("0")) + _m347_summary_amount(
+            observation,
+        )
+    return frozenset(party_tax_id for party_tax_id, total in totals.items() if total > M347_THRESHOLD_EUR)
+
+
+def _m347_summary_amount(observation: CounterpartAggregationObservation) -> Decimal:
+    if observation.invoice_total_amount is None:
+        raise RegistryValidationError(
+            f"M347 counterpart summary requires invoice_total_amount on observation {observation.source_id!r}",
+        )
+    return observation.invoice_total_amount
 
 
 def resolve_counterpart_binding_row_values(

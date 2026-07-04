@@ -27,7 +27,7 @@ this package facade only re-exports the SQL storage API.
 
 from __future__ import annotations
 
-from ._orm import Base, FincaRow, SecureObjectRow
+from ._orm import Base, FincaRow, SecureObjectRow, TransactionDateIndexRow
 from .engine import (
     create_engine_from_settings,
     dispose_engine,
@@ -72,6 +72,7 @@ __all__ = [
     "SecureObjectRow",
     "SecureObjectWrite",
     "SqlRecordRepository",
+    "TransactionDateIndexRow",
     "create_engine_from_settings",
     "dispose_engine",
     "dispose_engine_handle",

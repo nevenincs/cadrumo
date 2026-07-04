@@ -9,7 +9,7 @@ percentage (LIRPF art. 68.3 / LIS art. 20), and whether the donation is
 recurrent (donativo plurianual a la misma entidad receptora).
 
 The family follows the established detail-record shape (
-:mod:`aeat.domain.calculations.registry._detail_record_bindings`): a typed
+:mod:`domain.calculations.registry._detail_record_bindings`): a typed
 per-row observation model, a strict frozen selector model requiring the
 ``row_field`` fact with the ``rows`` aggregation op, a build-time validator
 registered in the binding validator dispatch table, and a
@@ -55,7 +55,7 @@ def _validate_donativo_row_field(
     """Op/fact invariant for the donativo detail-record family.
 
     Mirrors the shared invariant the four sibling detail-record families
-    enforce (:func:`aeat.domain.calculations.registry._detail_record_bindings._validate_detail_record_row_field`):
+    enforce (:func:`domain.calculations.registry._detail_record_bindings._validate_detail_record_row_field`):
     the donativo family declares exactly the ``row_field`` fact, requires the
     ``rows`` aggregation op, and must name a ``row_field`` selector key.
     """

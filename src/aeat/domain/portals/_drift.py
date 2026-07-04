@@ -2,7 +2,7 @@
 
 A :class:`PortalDriftEvent` captures a single detected divergence between a
 *registered* portal assumption (the canonical URL / host declared on the
-frozen :class:`~aeat.domain.portals.PortalMetadata` entry) and an *observed*
+frozen :class:`~domain.portals.PortalMetadata` entry) and an *observed*
 live state. Detection is advisory and read-only: :func:`evaluate_portal_drift`
 compares an already-observed value the caller supplies against the registry
 entry and, when they diverge, materialises the typed record. This module never
@@ -11,9 +11,9 @@ live-read access gate, and handed in as a plain value. The catalogue package as
 a whole performs no live AEAT access (see the package docstring); this module
 only *describes* a divergence someone else observed.
 
-The record carries the entry's :class:`~aeat.domain.portals.UrlStability` tier
+The record carries the entry's :class:`~domain.portals.UrlStability` tier
 so downstream health reporting (the ``portal-registry:health`` doctor row in
-:mod:`aeat.application.preflight`) can grade a drift by how stable the URL was
+:mod:`application.preflight`) can grade a drift by how stable the URL was
 promised to be: a drift on a BOE-referenced ``STABLE_PROTOCOL_GRADE`` URL is a
 real integrity concern, whereas a drift on a ``VOLATILE_APP_PATH`` shell URL is
 an expected rotation.
@@ -47,7 +47,7 @@ class PortalDriftField(StrEnum):
     ``URL`` — the observed canonical URL differs from the registered URL
     (same host, different path or query). ``SUBDOMAIN`` — the observed URL
     is hosted on a different AEAT-family host than the registered
-    :class:`~aeat.domain.portals.PortalHost`. ``AVAILABILITY`` — the portal
+    :class:`~domain.portals.PortalHost`. ``AVAILABILITY`` — the portal
     did not answer as reachable when the registered assumption is that it is
     a live surface.
     """
@@ -65,12 +65,12 @@ class PortalDriftEvent(BaseModel):
     so a :class:`PortalDriftEvent` can only exist for a genuine drift.
 
     Attributes:
-        portal: The :class:`~aeat.domain.portals.Portal` whose assumption drifted.
+        portal: The :class:`~domain.portals.Portal` whose assumption drifted.
         field: The :class:`PortalDriftField` that diverged.
         expected: The registered assumption value (the registry's truth).
         observed: The observed live-state value the caller supplied.
         url_stability: The registered
-            :class:`~aeat.domain.portals.UrlStability` tier of the entry,
+            :class:`~domain.portals.UrlStability` tier of the entry,
             carried so health reporting can grade the drift.
         detected_at: UTC-aware instant the divergence was observed.
         note: Optional free-text operator note describing the observation.
@@ -115,10 +115,10 @@ def evaluate_portal_drift(
     :attr:`PortalDriftField.URL` record.
 
     Args:
-        metadata: The registered :class:`~aeat.domain.portals.PortalMetadata`.
+        metadata: The registered :class:`~domain.portals.PortalMetadata`.
         observed_url: The URL observed for the portal in live state.
         detected_at: The UTC-aware observation instant. Defaults to the
-            clock-seam :func:`aeat.core.time.now` reading when omitted.
+            clock-seam :func:`core.time.now` reading when omitted.
 
     Returns:
         A :class:`PortalDriftEvent` when the observed URL diverges from the

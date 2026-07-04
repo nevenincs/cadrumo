@@ -27,6 +27,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _WORKSPACE_HASH = "a" * 64
 _CAPTURED_AT = "2026-07-04T00:00:00+00:00"
+_FORBIDDEN_METRIC_KEY_SUBSTRINGS = ("nif", "amount", "iban", "name", "description", "message", "path", "profile_id")
+_FORBIDDEN_PAYLOAD_FIELDS = (
+    "message",
+    "context",
+    "description",
+    "path",
+    "transaction_description",
+    "profile_id",
+    "amount",
+    "raw_payload",
+)
 
 
 def test_registry_declares_only_the_wired_non_sensitive_operational_commands() -> None:
@@ -43,18 +54,16 @@ def test_registry_declares_only_the_wired_non_sensitive_operational_commands() -
     }
 
 
-@pytest.mark.parametrize("command", list(TELEMETRY_METRIC_REGISTRY))
-def test_every_registered_metric_key_is_remote_allowed_and_non_sensitive(command: str) -> None:
+def test_every_registered_metric_key_is_remote_allowed_and_non_sensitive() -> None:
     """Every declared counter/timing on every registered command is a plain
     operational count or duration -- never a field shaped like financial or
     identity content.
     """
-    schema = TELEMETRY_METRIC_REGISTRY[command]
-    forbidden_substrings = ("nif", "amount", "iban", "name", "description", "message", "path", "profile_id")
-    for key, spec in {**schema.counters, **schema.timings_ms}.items():
-        assert spec.remote_allowed is True
-        lowered = key.lower()
-        assert not any(bad in lowered for bad in forbidden_substrings), key
+    for command, schema in TELEMETRY_METRIC_REGISTRY.items():
+        for key, spec in {**schema.counters, **schema.timings_ms}.items():
+            assert spec.remote_allowed is True, f"{command}:{key}"
+            lowered = key.lower()
+            assert not any(bad in lowered for bad in _FORBIDDEN_METRIC_KEY_SUBSTRINGS), f"{command}:{key}"
 
 
 def test_payload_rejects_an_unknown_field_structurally() -> None:
@@ -73,34 +82,22 @@ def test_payload_rejects_an_unknown_field_structurally() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    "forbidden_field",
-    [
-        "message",
-        "context",
-        "description",
-        "path",
-        "transaction_description",
-        "profile_id",
-        "amount",
-        "raw_payload",
-    ],
-)
-def test_payload_has_no_free_text_or_identity_field(forbidden_field: str) -> None:
+def test_payload_has_no_free_text_or_identity_field() -> None:
     """None of the classic sensitive-content field names exist on the model.
 
     Enumerates the exact field names a naive telemetry payload would carry
     (free text, an amount, a profile identifier) and proves each one is
     rejected by the strict, ``extra=\"forbid\"`` schema.
     """
-    with pytest.raises(ValidationError):
-        TelemetryEventPayload(
-            workspace_hash=_WORKSPACE_HASH,
-            command="diagnostics.run_health",
-            succeeded=True,
-            captured_at=_CAPTURED_AT,
-            **{forbidden_field: "sensitive-value"},  # type: ignore
-        )
+    for forbidden_field in _FORBIDDEN_PAYLOAD_FIELDS:
+        with pytest.raises(ValidationError):
+            TelemetryEventPayload(
+                workspace_hash=_WORKSPACE_HASH,
+                command="diagnostics.run_health",
+                succeeded=True,
+                captured_at=_CAPTURED_AT,
+                **{forbidden_field: "sensitive-value"},  # type: ignore
+            )
 
 
 def test_payload_carries_only_the_declared_allowlisted_fields() -> None:

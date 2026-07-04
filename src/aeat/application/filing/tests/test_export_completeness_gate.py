@@ -16,9 +16,10 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.calculations.registry import CasillaId
 from ....domain.filing import FilingExportError, ModeloDraft, ModeloValueKind
 from .._export import boe_representable_casilla_ids, export_draft
-from ..runtime import RegistrySchemaAccessor
+from ..runtime import ExportLayoutDefinition, RegistrySchemaAccessor
 from ._export_support import (
     _approved_modelo_390_registry_draft,
     _approved_registry_draft,
@@ -65,7 +66,9 @@ _COMPLETENESS_GATE_CASES = (
 )
 
 
-def _required_applicable(modelo: str, provider: RegistrySchemaAccessor, layout, headers: dict[str, str]) -> set:
+def _required_applicable(
+    modelo: str, provider: RegistrySchemaAccessor, layout: ExportLayoutDefinition, headers: dict[str, str]
+) -> set[CasillaId]:
     # Mirror the gate's required set: calculation RESULTS (formula) and
     # schema-required casillas that are representable. Optional inputs are excluded.
     subview = provider.get_subview(modelo)

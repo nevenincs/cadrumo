@@ -30,6 +30,7 @@ import pytest
 from ....adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ....core.config import override_settings
 from ....core.locks_errors import LockAcquisitionError
+from ....domain.categories import SpendingCategory
 from ....domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     usage_ratio_bucket_lock,
@@ -44,7 +45,7 @@ _RATIO = Decimal("0.37")
 _JOIN_TIMEOUT_S = 60.0
 
 
-def _eligible_subset(count: int) -> tuple:
+def _eligible_subset(count: int) -> tuple[SpendingCategory, ...]:
     """Return ``count`` eligible categories in a stable, deterministic order."""
     ordered = sorted(ELIGIBLE_USAGE_RATIO_CATEGORIES, key=lambda c: c.value)
     # The no-skip rule: assert the production catalogue is large enough rather
@@ -68,7 +69,7 @@ def test_concurrent_distinct_category_sets_do_not_lose_updates(tmp_path: Path) -
         # overlap that the lock must serialise.
         gate = threading.Barrier(len(categories))
 
-        def writer(category) -> None:
+        def writer(category: SpendingCategory) -> None:
             try:
                 gate.wait()
                 set_usage_ratio(bucket_id=bucket_id, category=category, ratio=_RATIO)

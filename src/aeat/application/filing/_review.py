@@ -2,27 +2,27 @@
 
 Provides the :func:`approve_draft` / :func:`unapprove_draft` /
 :func:`refresh_review_status` lifecycle on top of
-:class:`aeat.domain.filing.ModeloDraft` and
-:class:`aeat.domain.submission.ModeloDraftStatus`, plus the deterministic
-:class:`aeat.domain.filing.ModeloApprovalBasis` fingerprint pipeline that lets
+:class:`domain.filing.ModeloDraft` and
+:class:`domain.submission.ModeloDraftStatus`, plus the deterministic
+:class:`domain.filing.ModeloApprovalBasis` fingerprint pipeline that lets
 :func:`approval_stale_reasons` detect when a
-:attr:`~aeat.domain.submission.ModeloDraftStatus.APROBADO` draft has been
+:attr:`~domain.submission.ModeloDraftStatus.APROBADO` draft has been
 invalidated by upstream changes.
 
 The :func:`compute_current_approval_basis` helper accepts optional
-:class:`aeat.domain.transactions.TransactionCatalogue` and category-profile
+:class:`domain.transactions.TransactionCatalogue` and category-profile
 overrides. When the catalogue override is omitted, it loads the
-:class:`~aeat.domain.transactions.TransactionCatalogue` from the encrypted
+:class:`~domain.transactions.TransactionCatalogue` from the encrypted
 secure-object backend through
-:class:`aeat.domain.transactions.TransactionCatalogueRepository`.
+:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
 
 See Also:
-    :func:`aeat.application.filing.build_runtime_schema_provider`
+    :func:`application.filing.build_runtime_schema_provider`
         Builds the registry-backed schema provider whose casilla and formula
         surface participates in the approval basis.
-    :func:`aeat.application.review.drafts_pending`
+    :func:`application.review.drafts_pending`
         Emits stale filing approvals as high-severity review queue items.
-    :class:`aeat.domain.filing.ModeloApprovalBasis`
+    :class:`domain.filing.ModeloApprovalBasis`
         Persisted digest bundle compared during stale detection.
 """
 
@@ -30,15 +30,17 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import datetime
 from enum import StrEnum
+from typing import Protocol
 
 from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain import canonical_decimal_string
+from ...domain.calculations.registry import RegistryModeloObservation
 from ...domain.categories import CategoryProfile, SpendingCategory, resolve_category_profiles
 from ...domain.filing import (
     CasillaSchemaProvider,
@@ -51,6 +53,26 @@ from ...domain.filing import (
 from ...domain.invoices import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import Transaction, TransactionCatalogue
+
+
+class _StoredPriorObservation(Protocol):
+    """Structural shape of one persisted prior-filing observation payload.
+
+    Matches the observation repository's stored envelope structurally so the
+    fingerprint helper can project it without importing that repository's private
+    envelope type. ``captured_at`` is deliberately absent from this shape — it is
+    the volatile field the digest must ignore.
+    """
+
+    @property
+    def observation(self) -> RegistryModeloObservation: ...
+    @property
+    def source_kind(self) -> str: ...
+    @property
+    def member_nif(self) -> str | None: ...
+    @property
+    def stamped_revision_id(self) -> str: ...
+
 
 _logger = get_logger(__name__)
 _REVIEW_STATUSES = frozenset(
@@ -75,7 +97,7 @@ class ModeloApprovalStaleReason(StrEnum):
 
     Attributes:
         APPROVAL_BASIS_VERSION_CHANGED: The
-            :class:`aeat.domain.filing.ModeloApprovalBasis` schema
+            :class:`domain.filing.ModeloApprovalBasis` schema
             version has been bumped since approval.
         DRAFT_PAYLOAD_CHANGED: The draft's payload fingerprint
             (``draft_id``) no longer matches the stored basis.
@@ -85,6 +107,9 @@ class ModeloApprovalStaleReason(StrEnum):
             transactions have been updated since approval.
         INVOICE_CATALOGUE_CHANGED: Upstream issued/received invoices
             (a calculation source resolved through the source mesh)
+            have been updated since approval.
+        PRIOR_FILING_OBSERVATIONS_CHANGED: Prior filed observations in the
+            bucket (the previous_filing carry and relation fold-in source)
             have been updated since approval.
         CATEGORY_PROFILES_CHANGED: The fiscal category profile catalog
             has been edited since approval.
@@ -97,6 +122,7 @@ class ModeloApprovalStaleReason(StrEnum):
     DRAFT_REVIEW_CHANGED = "BORRADOR_REVISION_CAMBIADA"
     TRANSACTION_CATALOGUE_CHANGED = "CATALOGO_TRANSACCIONES_CAMBIADO"
     INVOICE_CATALOGUE_CHANGED = "CATALOGO_FACTURAS_CAMBIADO"
+    PRIOR_FILING_OBSERVATIONS_CHANGED = "OBSERVACIONES_DECLARACIONES_ANTERIORES_CAMBIADAS"
     CATEGORY_PROFILES_CHANGED = "PERFILES_CATEGORIA_CAMBIADOS"
     SCHEMA_FORMULA_CHANGED = "ESQUEMA_FORMULA_CAMBIADO"
 
@@ -108,36 +134,48 @@ def compute_current_approval_basis(
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     invoice_catalogue: InvoiceCatalogue | None = None,
+    prior_filing_observations_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
 ) -> ModeloApprovalBasis:
     """Return the :class:`ModeloApprovalBasis` digests for current upstream state.
 
     The basis hashes the draft identity and validation surface, the supplied or
     persisted :class:`TransactionCatalogue`, the supplied or persisted
-    :class:`~aeat.domain.invoices.InvoiceCatalogue` (a calculation source
-    resolved through the source mesh), the supplied or bundled
-    :class:`~aeat.domain.categories.CategoryProfile` mapping, and the active
+    :class:`~domain.invoices.InvoiceCatalogue` (a calculation source
+    resolved through the source mesh), the bucket's prior filed observations (the
+    ``previous_filing`` carry and relation fold-in source), the supplied or bundled
+    :class:`~domain.categories.CategoryProfile` mapping, and the active
     registry schema/formula surface exposed by ``schema_provider``.
 
-    The invoice-catalogue digest makes an ``APROBADO`` draft stale when its
-    upstream issued/received invoices change, closing the gap left by fingerprinting
-    only the ledger transaction catalogue. Like the transaction catalogue it is
-    self-loaded from ``bucket_id`` so stale detection is reproducible at refresh
-    time without running the full source mesh in the review layer.
+    The invoice-catalogue and prior-filing-observations digests make an
+    ``APROBADO`` draft stale when its upstream invoices or prior filed values
+    change, closing the gap left by fingerprinting only the ledger transaction
+    catalogue. Like the transaction catalogue they are self-loaded from
+    ``bucket_id`` so stale detection is reproducible at refresh time without
+    running the source mesh in the review layer.
 
     Args:
-        draft: The :class:`aeat.domain.filing.ModeloDraft` whose basis
+        draft: The :class:`domain.filing.ModeloDraft` whose basis
             is being computed.
         bucket_id: Stable bucket identifier; used to load the persisted
-            transaction and invoice catalogues when no override is supplied.
+            transaction and invoice catalogues and prior observations when no
+            override is supplied.
         schema_provider: The active
-            :class:`aeat.domain.filing.CasillaSchemaProvider`.
+            :class:`domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional :class:`TransactionCatalogue` override.
             When ``None``, the catalogue is loaded from the encrypted
-            :class:`~aeat.domain.transactions.TransactionCatalogueRepository`.
-        invoice_catalogue: Optional :class:`~aeat.domain.invoices.InvoiceCatalogue`
+            :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+        invoice_catalogue: Optional :class:`~domain.invoices.InvoiceCatalogue`
             override. When ``None``, the catalogue is loaded from the encrypted
-            :class:`~aeat.domain.invoices.InvoiceCatalogueRepository`.
+            :class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`.
+        prior_filing_observations_fingerprint: Optional precomputed prior-filing
+            digest. When ``None``, the digest is self-loaded from the bucket's
+            :class:`~application.calculations.CalculationObservationRepository`.
+            A precomputed override (typically
+            :func:`empty_prior_filing_observations_fingerprint`) lets a caller
+            skip the bucket self-load for a deterministic basis without exposing
+            the private stored-observation envelope type or routing to a
+            non-active bucket.
         category_profiles: Optional override of the active category
             profile map. Defaults to the bundled 2025 registry.
 
@@ -146,12 +184,18 @@ def compute_current_approval_basis(
     """
     catalogue = transaction_catalogue if transaction_catalogue is not None else _load_transaction_catalogue(bucket_id)
     invoices = invoice_catalogue if invoice_catalogue is not None else _load_invoice_catalogue(bucket_id)
+    prior_observations_fingerprint = (
+        prior_filing_observations_fingerprint
+        if prior_filing_observations_fingerprint is not None
+        else _load_prior_filing_observations_fingerprint(bucket_id)
+    )
     profiles = category_profiles if category_profiles is not None else resolve_category_profiles(2025)
     return ModeloApprovalBasis(
         draft_payload_fingerprint=draft.draft_id,
         draft_review_fingerprint=_draft_review_fingerprint(draft),
         transaction_catalogue_fingerprint=_transaction_catalogue_fingerprint(catalogue),
         invoice_catalogue_fingerprint=_invoice_catalogue_fingerprint(invoices),
+        prior_filing_observations_fingerprint=prior_observations_fingerprint,
         category_profiles_fingerprint=_category_profiles_fingerprint(profiles),
         schema_formula_fingerprint=_schema_formula_fingerprint(
             draft,
@@ -179,6 +223,7 @@ def approval_stale_reasons(
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     invoice_catalogue: InvoiceCatalogue | None = None,
+    prior_filing_observations_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
 ) -> tuple[ModeloApprovalStaleReason, ...]:
     """Return the ordered stale reasons for ``draft``.
@@ -188,14 +233,16 @@ def approval_stale_reasons(
     recomputed basis.
 
     Args:
-        draft: The :class:`aeat.domain.filing.ModeloDraft` to inspect.
+        draft: The :class:`domain.filing.ModeloDraft` to inspect.
         bucket_id: Stable bucket identifier; forwarded to
             :func:`compute_current_approval_basis`.
         schema_provider: The active
-            :class:`aeat.domain.filing.CasillaSchemaProvider`.
+            :class:`domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional :class:`TransactionCatalogue` override.
-        invoice_catalogue: Optional :class:`~aeat.domain.invoices.InvoiceCatalogue`
+        invoice_catalogue: Optional :class:`~domain.invoices.InvoiceCatalogue`
             override; forwarded to :func:`compute_current_approval_basis`.
+        prior_filing_observations_fingerprint: Optional precomputed prior-filing
+            digest override; forwarded to :func:`compute_current_approval_basis`.
         category_profiles: Optional category profile map override.
 
     Returns:
@@ -211,6 +258,7 @@ def approval_stale_reasons(
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
         invoice_catalogue=invoice_catalogue,
+        prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         category_profiles=category_profiles,
     )
     reasons: list[ModeloApprovalStaleReason] = []
@@ -225,6 +273,8 @@ def approval_stale_reasons(
         reasons.append(ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED)
     if stored_basis.invoice_catalogue_fingerprint != current_basis.invoice_catalogue_fingerprint:
         reasons.append(ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED)
+    if stored_basis.prior_filing_observations_fingerprint != current_basis.prior_filing_observations_fingerprint:
+        reasons.append(ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED)
     if stored_basis.category_profiles_fingerprint != current_basis.category_profiles_fingerprint:
         reasons.append(ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED)
     if stored_basis.schema_formula_fingerprint != current_basis.schema_formula_fingerprint:
@@ -240,6 +290,7 @@ def approve_draft(
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     invoice_catalogue: InvoiceCatalogue | None = None,
+    prior_filing_observations_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
     approved_at: datetime | None = None,
 ) -> ModeloDraft:
@@ -256,10 +307,12 @@ def approve_draft(
         approved_by: Operator identifier; rejected when blank after
             stripping.
         schema_provider: The active
-            :class:`aeat.domain.filing.CasillaSchemaProvider`.
+            :class:`domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional catalogue override.
-        invoice_catalogue: Optional :class:`~aeat.domain.invoices.InvoiceCatalogue`
+        invoice_catalogue: Optional :class:`~domain.invoices.InvoiceCatalogue`
             override; forwarded to :func:`compute_current_approval_basis`.
+        prior_filing_observations_fingerprint: Optional precomputed prior-filing
+            digest override; forwarded to :func:`compute_current_approval_basis`.
         category_profiles: Optional category profile map override.
         approved_at: Optional timestamp; defaults to the canonical clock helper.
 
@@ -289,6 +342,7 @@ def approve_draft(
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
         invoice_catalogue=invoice_catalogue,
+        prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         category_profiles=category_profiles,
     )
     updated = draft.model_copy(
@@ -350,6 +404,7 @@ def refresh_review_status(
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     invoice_catalogue: InvoiceCatalogue | None = None,
+    prior_filing_observations_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
     refreshed_at: datetime | None = None,
 ) -> ModeloDraft:
@@ -366,11 +421,13 @@ def refresh_review_status(
         bucket_id: Stable bucket identifier; forwarded to
             :func:`approval_stale_reasons`.
         schema_provider: The active
-            :class:`aeat.domain.filing.CasillaSchemaProvider`.
+            :class:`domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional :class:`TransactionCatalogue` override used
             when computing the approval basis fingerprint.
-        invoice_catalogue: Optional :class:`~aeat.domain.invoices.InvoiceCatalogue`
+        invoice_catalogue: Optional :class:`~domain.invoices.InvoiceCatalogue`
             override; forwarded to :func:`approval_stale_reasons`.
+        prior_filing_observations_fingerprint: Optional precomputed prior-filing
+            digest override; forwarded to :func:`approval_stale_reasons`.
         category_profiles: Optional category profile map override.
         refreshed_at: Optional timestamp; defaults to
             the canonical clock helper.
@@ -420,6 +477,7 @@ def refresh_review_status(
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
         invoice_catalogue=invoice_catalogue,
+        prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         category_profiles=category_profiles,
     )
     next_status = ModeloDraftStatus.APROBACION_CADUCADA if reasons else ModeloDraftStatus.APROBADO
@@ -466,6 +524,8 @@ def describe_stale_reason(reason: ModeloApprovalStaleReason) -> str:
             return tr("application.filing.review.stale_reasons.transaction_catalogue_changed")
         case ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED:
             return tr("application.filing.review.stale_reasons.invoice_catalogue_changed")
+        case ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED:
+            return tr("application.filing.review.stale_reasons.prior_filing_observations_changed")
         case ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED:
             return tr("application.filing.review.stale_reasons.category_profiles_changed")
         case ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED:
@@ -527,6 +587,65 @@ def _load_invoice_catalogue(bucket_id: str) -> InvoiceCatalogue:
     return InvoiceCatalogueRepository(bucket_id=bucket_id).load()
 
 
+def _load_prior_filing_observations_fingerprint(bucket_id: str) -> str:
+    """Digest the bucket's stored prior-filing observations from the secure backend.
+
+    Self-loads the bucket-scoped
+    :class:`~application.calculations.CalculationObservationRepository` and
+    fingerprints every persisted observation. This is the ``previous_filing``
+    carry and relation fold-in SOURCE store, so the digest changes whenever a
+    prior filed value in the bucket changes — reproducibly, from ``bucket_id``
+    alone, without running the source mesh or resolving any relation.
+    """
+    from ..calculations import CalculationObservationRepository
+
+    return _prior_filing_observations_fingerprint(CalculationObservationRepository(bucket_id=bucket_id).iter_records())
+
+
+def _prior_filing_observations_fingerprint(payloads: Iterable[_StoredPriorObservation]) -> str:
+    """Order-independent digest over a set of stored observation payloads.
+
+    Each payload is projected to a STABLE shape that captures the calculation-
+    relevant identity and value of the filed observation — the source modelo,
+    filing year, period token, source kind, grupo-member NIF, the stamped
+    registry revision, and every casilla id/value — and deliberately EXCLUDES the
+    volatile ``captured_at`` timestamp so re-saving identical data does not
+    over-invalidate an approval. Consumes the repository's ``iter_records()``
+    stream structurally (the stored envelope type is private to the observation
+    repository); an empty stream yields the stable empty-set digest.
+    """
+    projected = sorted(_normalize_prior_filing_observation(payload) for payload in payloads)
+    return _sha256_payload(projected)
+
+
+def _normalize_prior_filing_observation(payload: _StoredPriorObservation) -> list[object]:
+    observation = payload.observation
+    casilla_values = sorted(
+        [entry.casilla_id, canonical_decimal_string(entry.value)] for entry in observation.observations
+    )
+    return [
+        str(observation.modelo),
+        str(observation.filing_year),
+        str(observation.period),
+        payload.source_kind,
+        payload.member_nif or "",
+        payload.stamped_revision_id,
+        casilla_values,
+    ]
+
+
+def empty_prior_filing_observations_fingerprint() -> str:
+    """Return the digest of an empty prior-filing observation set.
+
+    A caller passes this to :func:`compute_current_approval_basis` /
+    :func:`approve_draft` to stamp a deterministic prior-filing digest without a
+    bucket self-load (e.g. a test approving against a non-active/sentinel bucket
+    with no prior observations), mirroring the empty-``InvoiceCatalogue`` override
+    the invoice fingerprint accepts.
+    """
+    return _prior_filing_observations_fingerprint(())
+
+
 def _draft_review_fingerprint(draft: ModeloDraft) -> str:
     payload = {
         "validation_status": derive_validation_status(draft.findings).value,
@@ -565,7 +684,7 @@ def _transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
 def _invoice_catalogue_fingerprint(catalogue: InvoiceCatalogue) -> str:
     """Order-independent digest of the bucket's invoice catalogue.
 
-    Each :class:`~aeat.domain.invoices.Invoice` is a frozen record with no
+    Each :class:`~domain.invoices.Invoice` is a frozen record with no
     volatile timestamp fields, so a canonical JSON dump of every invoice (sorted
     by ``invoice_id``) captures the full calculation-relevant content and changes
     whenever any invoice is added, removed, or edited. An empty catalogue yields a

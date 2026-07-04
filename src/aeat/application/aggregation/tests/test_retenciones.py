@@ -33,7 +33,7 @@ def _obs(
     base: str,
     retencion: str,
     name: str = "",
-    source_kind: BindingSourceKind | str = BindingSourceKind.LEDGER_TRANSACTION,
+    source_kind: BindingSourceKind = BindingSourceKind.LEDGER_TRANSACTION,
     source_id: str = "tx-001",
     accrued: str = "2025-03-15",
 ) -> RetencionObservation:
@@ -54,14 +54,16 @@ class TestObservationContract:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError, match="source_kind"):
-            RetencionObservation(
-                source_kind="invoice",
-                source_object_id="x",
-                perceptor_nif="A1",
-                scheme=RetencionScheme.WORK_INCOME,
-                taxable_base=Decimal("0"),
-                retencion_amount=Decimal("0"),
-                accrued_on="2025-01-01",
+            RetencionObservation.model_validate(
+                {
+                    "source_kind": "invoice",
+                    "source_object_id": "x",
+                    "perceptor_nif": "A1",
+                    "scheme": RetencionScheme.WORK_INCOME,
+                    "taxable_base": Decimal("0"),
+                    "retencion_amount": Decimal("0"),
+                    "accrued_on": "2025-01-01",
+                },
             )
 
     def test_observation_rejects_non_retenciones_source_kind_member(self) -> None:
@@ -94,7 +96,7 @@ class TestObservationContract:
                 scheme=RetencionScheme.WORK_INCOME,
                 base="0",
                 retencion="0",
-                source_kind=kind.value,
+                source_kind=kind,
             )
             assert from_string.source_kind is kind
         assert observed == expected

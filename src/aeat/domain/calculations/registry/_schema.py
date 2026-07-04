@@ -810,7 +810,7 @@ class DependencyClassificationDefinition(RegistryModel):
 
 
 def _parse_deadline_window_period(value: object) -> Period:
-    """Hydrate a deadline-window period through :class:`~aeat.core.Period`."""
+    """Hydrate a deadline-window period through :class:`~core.Period`."""
     if isinstance(value, Period):
         return value
     if isinstance(value, Mapping):
@@ -888,7 +888,7 @@ class DataBindingDefinition(RegistryModel):
     """Closed-set enum class name a consumer routes the binding value through.
 
     LIVE field (do NOT remove). Typed as the closed
-    :class:`~aeat.core.aggregation.BindingTypedEnumKind` reference (F8 — was a
+    :class:`~core.aggregation.BindingTypedEnumKind` reference (F8 — was a
     bare ``str``); declared in registry TOML for the bindings that bridge a
     closed-membership substrate axis — ``"censo_event_kind"`` (M036), ``"CCAA"``
     and ``"EstimacionDirectaModalidad"`` (M100), ``"LegalEntityForm"`` (M200) —
@@ -920,13 +920,13 @@ class DataBindingDefinition(RegistryModel):
 
         The authoring tree declares ``source`` as a plain string (``"profile"``,
         ``"ledger_iva_aggregation"``, ...). Under the strict model config a
-        :class:`~aeat.core.BindingSourceKind` field requires the actual member,
+        :class:`~core.BindingSourceKind` field requires the actual member,
         not its value, so the raw string from ``model_validate`` would be
         rejected. Coercing the known closed-set string to its member at the
         boundary keeps the TOML plain while preserving strict rejection of an
-        unknown source (:class:`~aeat.core.BindingSourceKind` raises on an
+        unknown source (:class:`~core.BindingSourceKind` raises on an
         invalid value). This is the source-kind sibling of
-        :meth:`~aeat.core.aggregation.BindingAggregation._coerce_op`.
+        :meth:`~core.aggregation.BindingAggregation._coerce_op`.
         """
         if isinstance(value, str) and not isinstance(value, BindingSourceKind):
             return BindingSourceKind(value)
@@ -986,12 +986,12 @@ class DataBindingDefinition(RegistryModel):
         The authoring tree declares ``typed_enum`` as a plain string (the name
         of the substrate enum class — ``"censo_event_kind"``, ``"CCAA"``,
         ``"EstimacionDirectaModalidad"``, ``"LegalEntityForm"``). Under the
-        strict model config a :class:`~aeat.core.aggregation.BindingTypedEnumKind`
+        strict model config a :class:`~core.aggregation.BindingTypedEnumKind`
         field requires the actual member, not its value, so the raw string from
         ``model_validate`` would be rejected. Coercing the known closed-set token
         to its member at the boundary keeps the TOML plain while preserving
         strict rejection of an unknown annotation
-        (:class:`~aeat.core.aggregation.BindingTypedEnumKind` raises on an invalid
+        (:class:`~core.aggregation.BindingTypedEnumKind` raises on an invalid
         value). This is the ``typed_enum`` sibling of :meth:`_coerce_source`.
         """
         if isinstance(value, str) and not isinstance(value, BindingTypedEnumKind):

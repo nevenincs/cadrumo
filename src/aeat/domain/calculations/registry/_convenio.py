@@ -3,14 +3,14 @@
 A dedicated registry authoring surface — ``registry/aeat/treaties/`` — sibling to
 the cross-cutting ``legal/`` tree. One TOML file per bilateral double-taxation
 treaty declares the counterpart country, the treaty BOE ``document_id``, and a
-list of per-income-type override rows keyed by :class:`~aeat.core.TipoRentaIrnr`.
+list of per-income-type override rows keyed by :class:`~core.TipoRentaIrnr`.
 The loader compiles the tree into a :class:`ConvenioAuthority` projection that any
 IRNR rate formula consumes through the
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot` — so a second consumer
+:class:`~domain.calculations.registry.RegistrySnapshot` — so a second consumer
 (M216 retenciones a no residentes) reads treaty data without reaching across a
 modelo boundary.
 
-Each override row carries a typed :class:`~aeat.core.ConvenioOverrideKind` so the
+Each override row carries a typed :class:`~core.ConvenioOverrideKind` so the
 "más favorable" / limitation-of-benefits decision is computed rather than
 coincidental: ``flat`` replaces the domestic rate, ``ceiling`` applies
 ``min(domestic, treaty)``, ``allocation_domestic_tariff`` delegates the amount to
@@ -36,9 +36,9 @@ _ONE = Decimal("1")
 
 
 class ConvenioOverrideRow(RegistryModel):
-    """One per-income-type treaty override keyed by :class:`~aeat.core.TipoRentaIrnr`.
+    """One per-income-type treaty override keyed by :class:`~core.TipoRentaIrnr`.
 
-    The typed :class:`~aeat.core.ConvenioOverrideKind` decides how the row acts on
+    The typed :class:`~core.ConvenioOverrideKind` decides how the row acts on
     the domestic IRNR rate. ``flat`` and ``ceiling`` rows MUST declare a ``rate``
     in ``[0, 1]``; ``allocation_domestic_tariff`` and ``exempt`` rows MUST NOT (the
     amount is delegated to the domestic tariff or driven to zero). The
@@ -58,7 +58,7 @@ class ConvenioOverrideRow(RegistryModel):
     @field_validator("tipo_renta", mode="before")
     @classmethod
     def _coerce_tipo_renta(cls, value: object) -> object:
-        """Hydrate the TOML ``tipo_renta`` string into its :class:`~aeat.core.TipoRentaIrnr` member."""
+        """Hydrate the TOML ``tipo_renta`` string into its :class:`~core.TipoRentaIrnr` member."""
         if isinstance(value, str) and not isinstance(value, TipoRentaIrnr):
             return TipoRentaIrnr(value)
         return value
@@ -66,7 +66,7 @@ class ConvenioOverrideRow(RegistryModel):
     @field_validator("kind", mode="before")
     @classmethod
     def _coerce_kind(cls, value: object) -> object:
-        """Hydrate the TOML ``kind`` string into its :class:`~aeat.core.ConvenioOverrideKind` member."""
+        """Hydrate the TOML ``kind`` string into its :class:`~core.ConvenioOverrideKind` member."""
         if isinstance(value, str) and not isinstance(value, ConvenioOverrideKind):
             return ConvenioOverrideKind(value)
         return value
@@ -157,7 +157,7 @@ class ConvenioAuthority(RegistryModel):
 
     Owns the ``{country_code: ConvenioTreaty}`` map and the single
     :meth:`resolve` lookup any IRNR rate formula consumes. Projected onto the
-    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` the same way the
+    :class:`~domain.calculations.registry.RegistrySnapshot` the same way the
     shared ``legal/`` catalogue is, so the treaty override is one branch of the
     single tipo-de-gravamen resolution path, never a parallel rate mechanism.
     """

@@ -297,6 +297,7 @@ from ._registry_discovery import (
     registry_formulas_for_scope,
     registry_list_modelos,
     registry_modelo_codes,
+    registry_support_matrix,
 )
 from ._result_summary import (
     CalculationResultSummary,
@@ -789,6 +790,7 @@ __all__ = [
     "registry_formulas_for_scope",
     "registry_list_modelos",
     "registry_modelo_codes",
+    "registry_support_matrix",
     "rename_work_unit",
     "require_existing_profile_baseline_ready_for_modelo_work",
     "require_persisted_iva_compensation_decision_matches_revision",

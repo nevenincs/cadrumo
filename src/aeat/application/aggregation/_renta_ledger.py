@@ -212,7 +212,19 @@ def aggregate_renta_ledger_expenses_from_repositories(
             t("aggregation.renta_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    transactions = repository.load()
+    # Filtering by date range before decrypt is a pure performance optimisation
+    # (issue #408): only annual periods have a calendar span
+    # (``Period.has_date_span``), and this aggregation only ever accepts an
+    # annual period (``_resolve_annual_period`` below refuses anything else),
+    # so an annual period's own inclusive span IS the exact filing-date window
+    # every row in this aggregation is filtered against. A non-annual period
+    # falls back to the unfiltered full load; the row-level
+    # ``_resolve_annual_period`` refusal downstream still fires unchanged.
+    transactions = (
+        repository.load_for_date_range(period.start_date, period.end_date)
+        if period.has_date_span()
+        else repository.load()
+    )
     invoices_repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     if invoices_repository.bucket_id != bucket_id:
         raise AggregationValidationError(

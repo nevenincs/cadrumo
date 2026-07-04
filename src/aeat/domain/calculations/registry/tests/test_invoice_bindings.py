@@ -61,6 +61,7 @@ def _observation(
     party: str,
     country: str,
     base: str,
+    invoice_total: str | None = None,
     clave: str | None,
     is_rectification: bool = False,
     previous: str | None = None,
@@ -73,6 +74,7 @@ def _observation(
         country_code=country,
         transaction_date=date(2026, 3, 15),
         base_amount=Decimal(base),
+        invoice_total_amount=Decimal(invoice_total) if invoice_total is not None else None,
         intracommunity_clave=clave,
         is_rectification=is_rectification,
         rectified_base_previous=Decimal(previous) if previous is not None else None,
@@ -201,6 +203,25 @@ def test_resolve_invoice_binding_values_sums_base_amounts_within_selector_scope(
     resolved = resolve_invoice_binding_values(revision, observations)
 
     assert resolved == {"iva-349-declarante-importe-operaciones": Decimal("1500.75")}
+
+
+def test_resolve_invoice_binding_values_sums_invoice_total_amounts_separately_from_base() -> None:
+    revision = _revision(
+        _with_selector(
+            _binding("iva-349-declarante-importe-operaciones"),
+            fact="invoice_total_sum",
+            claves=(),
+            rectification_scope="any",
+        ),
+    )
+    observations = (
+        _observation(party="B00000001", country="ES", base="100.00", invoice_total="121.00", clave=None),
+        _observation(party="B00000002", country="ES", base="200.00", invoice_total="242.00", clave=None),
+    )
+
+    resolved = resolve_invoice_binding_values(revision, observations)
+
+    assert resolved == {"iva-349-declarante-importe-operaciones": Decimal("363.00")}
 
 
 def test_resolve_invoice_binding_values_computes_rectification_delta_sum() -> None:

@@ -33,34 +33,41 @@ from ._cross_period_clean_state_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_TaxpayerIdentityEvidenceCase = tuple[str, str, str | None, bool]
+_PluralJustificanteCsvCase = tuple[str, str, bool]
 
-@pytest.mark.parametrize(
-    ("csv", "expected_tax_id", "mismatch_expected"),
-    (
-        pytest.param("LIVECAP130MATCH01", "X1234567L", False, id="matching-taxpayer"),
-        pytest.param("LIVECAP130NOIDENT", None, True, id="missing-expected-taxpayer"),
-        pytest.param("LIVECAP130CASE01", "x1234567l", False, id="case-insensitive-taxpayer"),
-    ),
+
+_TAXPAYER_IDENTITY_EVIDENCE_CASES: tuple[_TaxpayerIdentityEvidenceCase, ...] = (
+    ("matching-taxpayer", "LIVECAP130MATCH01", "X1234567L", False),
+    ("missing-expected-taxpayer", "LIVECAP130NOIDENT", None, True),
+    ("case-insensitive-taxpayer", "LIVECAP130CASE01", "x1234567l", False),
 )
+
+_PLURAL_JUSTIFICANTE_CSV_CASES: tuple[_PluralJustificanteCsvCase, ...] = (
+    ("plural-includes-filing-csv", "OTHER,{csv}", False),
+    ("plural-excludes-filing-csv", "OTHER-ONE,OTHER-TWO", True),
+)
+
+
 def test_live_capture_evidence_reconciles_taxpayer_identity(
     tmp_path: Path,
-    csv: str,
-    expected_tax_id: str | None,
-    mismatch_expected: bool,
 ) -> None:
     """Live-capture receipt reconciliation requires the expected taxpayer axis."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
-        filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
+    for case_label, csv, expected_tax_id, mismatch_expected in _TAXPAYER_IDENTITY_EVIDENCE_CASES:
+        case_tmp_path = tmp_path / case_label
+        case_tmp_path.mkdir()
+        with isolated_runtime_profile(tmp_path=case_tmp_path, bucket_id=_BUCKET_ID):
+            _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
+            filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
-        blockers = _external_evidence_blockers(filing, "app_filing", expected_tax_id)
+            blockers = _external_evidence_blockers(filing, "app_filing", expected_tax_id)
 
-    assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION not in blockers
-    assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD not in blockers
-    if mismatch_expected:
-        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
-    else:
-        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
+        assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION not in blockers, case_label
+        assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD not in blockers, case_label
+        if mismatch_expected:
+            assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers, case_label
+        else:
+            assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers, case_label
 
 
 def test_live_capture_evidence_rejects_mismatched_typed_justificante_period(tmp_path: Path) -> None:
@@ -114,38 +121,32 @@ def test_live_capture_evidence_rejects_mismatched_filed_history_justificante_csv
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
 
 
-@pytest.mark.parametrize(
-    ("csvs_metadata", "mismatch_expected"),
-    (
-        pytest.param("OTHER,{csv}", False, id="plural-includes-filing-csv"),
-        pytest.param("OTHER-ONE,OTHER-TWO", True, id="plural-excludes-filing-csv"),
-    ),
-)
 def test_live_capture_evidence_reconciles_plural_filed_history_justificante_csv(
     tmp_path: Path,
-    csvs_metadata: str,
-    mismatch_expected: bool,
 ) -> None:
     """Plural filed-history CSV metadata must not bypass reference reconciliation."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        csv = "LIVECAP130CSVSET"
-        _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
-        filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
+    for case_label, csvs_metadata, mismatch_expected in _PLURAL_JUSTIFICANTE_CSV_CASES:
+        case_tmp_path = tmp_path / case_label
+        case_tmp_path.mkdir()
+        with isolated_runtime_profile(tmp_path=case_tmp_path, bucket_id=_BUCKET_ID):
+            csv = "LIVECAP130CSVSET"
+            _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
+            filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
-        blockers = _external_evidence_blockers(
-            filing,
-            "aeat_sede_justificante",
-            source_metadata={
-                "aeat_register_status": "ALTA",
-                "authenticated_identity": "X1234567L",
-                "aeat_justificante_csvs": csvs_metadata.format(csv=csv),
-            },
-        )
+            blockers = _external_evidence_blockers(
+                filing,
+                "aeat_sede_justificante",
+                source_metadata={
+                    "aeat_register_status": "ALTA",
+                    "authenticated_identity": "X1234567L",
+                    "aeat_justificante_csvs": csvs_metadata.format(csv=csv),
+                },
+            )
 
-    if mismatch_expected:
-        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
-    else:
-        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
+        if mismatch_expected:
+            assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers, case_label
+        else:
+            assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers, case_label
 
 
 def test_live_capture_evidence_rejects_mismatched_filed_history_presentation_id(

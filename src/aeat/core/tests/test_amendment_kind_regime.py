@@ -41,47 +41,53 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _COMPLEMENTARIA = "complementaria"
 _SUSTITUTIVA = "sustitutiva"
 _RECTIFICATIVA = "rectificativa"
+_RectificativaBoundaryCase = tuple[str, str, int, str, bool]
+_LiabilityDirectionCase = tuple[str, Decimal, Decimal, AmendmentLiabilityDirection]
 
-
-@pytest.mark.parametrize(
-    ("case_id", "modelo", "year", "code", "expect_rectificativa_effective"),
-    (
-        # M303: 2T 2024 predates the diseño's rectificativa fichero fields.
-        ("m303-2t-2024-pre-boundary", Modelo.M303, 2024, "2T", False),
-        # M303: period 08 (August, monthly) is the last pre-boundary month.
-        ("m303-08-2024-pre-boundary", Modelo.M303, 2024, "08", False),
-        # M303: 3T 2024 is the diseño's stated boundary quarter.
-        ("m303-3t-2024-post-boundary", Modelo.M303, 2024, "3T", True),
-        # M303: period 09 (September, monthly) is the diseño's stated boundary month.
-        ("m303-09-2024-post-boundary", Modelo.M303, 2024, "09", True),
-        # M303: every later period stays post-boundary.
-        ("m303-1t-2026-post-boundary", Modelo.M303, 2026, "1T", True),
-        # M303: an earlier filing year is pre-boundary.
-        ("m303-4t-2023-pre-boundary", Modelo.M303, 2023, "4T", False),
-        # M100: annual period; 2023 is pre-boundary, 2024 onward is post.
-        ("m100-0a-2023-pre-boundary", Modelo.M100, 2023, "0A", False),
-        ("m100-0a-2024-post-boundary", Modelo.M100, 2024, "0A", True),
-        ("m100-0a-2026-post-boundary", Modelo.M100, 2026, "0A", True),
-        # M200: annual period; 2023 is pre-boundary, 2024 onward is post.
-        ("m200-0a-2023-pre-boundary", Modelo.M200, 2023, "0A", False),
-        ("m200-0a-2024-post-boundary", Modelo.M200, 2024, "0A", True),
-        # M130: no bundled rectificativa grounding at any period.
-        ("m130-1t-2026-no-codified-regime", Modelo.M130, 2026, "1T", False),
-        ("m130-4t-2030-no-codified-regime", Modelo.M130, 2030, "4T", False),
-        # M131: same conservative scoping as M130.
-        ("m131-1t-2026-no-codified-regime", Modelo.M131, 2026, "1T", False),
-    ),
+_RECTIFICATIVA_BOUNDARY_CASES: tuple[_RectificativaBoundaryCase, ...] = (
+    # M303: 2T 2024 predates the diseño's rectificativa fichero fields.
+    ("m303-2t-2024-pre-boundary", Modelo.M303, 2024, "2T", False),
+    # M303: period 08 (August, monthly) is the last pre-boundary month.
+    ("m303-08-2024-pre-boundary", Modelo.M303, 2024, "08", False),
+    # M303: 3T 2024 is the diseño's stated boundary quarter.
+    ("m303-3t-2024-post-boundary", Modelo.M303, 2024, "3T", True),
+    # M303: period 09 (September, monthly) is the diseño's stated boundary month.
+    ("m303-09-2024-post-boundary", Modelo.M303, 2024, "09", True),
+    # M303: every later period stays post-boundary.
+    ("m303-1t-2026-post-boundary", Modelo.M303, 2026, "1T", True),
+    # M303: an earlier filing year is pre-boundary.
+    ("m303-4t-2023-pre-boundary", Modelo.M303, 2023, "4T", False),
+    # M100: annual period; 2023 is pre-boundary, 2024 onward is post.
+    ("m100-0a-2023-pre-boundary", Modelo.M100, 2023, "0A", False),
+    ("m100-0a-2024-post-boundary", Modelo.M100, 2024, "0A", True),
+    ("m100-0a-2026-post-boundary", Modelo.M100, 2026, "0A", True),
+    # M200: annual period; 2023 is pre-boundary, 2024 onward is post.
+    ("m200-0a-2023-pre-boundary", Modelo.M200, 2023, "0A", False),
+    ("m200-0a-2024-post-boundary", Modelo.M200, 2024, "0A", True),
+    # M130: no bundled rectificativa grounding at any period.
+    ("m130-1t-2026-no-codified-regime", Modelo.M130, 2026, "1T", False),
+    ("m130-4t-2030-no-codified-regime", Modelo.M130, 2030, "4T", False),
+    # M131: same conservative scoping as M130.
+    ("m131-1t-2026-no-codified-regime", Modelo.M131, 2026, "1T", False),
 )
-def test_rectificativa_effective_boundary(
-    case_id: str,
-    modelo: str,
-    year: int,
-    code: str,
-    expect_rectificativa_effective: bool,
-) -> None:
-    period = Period.from_year_and_code(year, code)
-    regime = resolve_amendment_kind_regime(modelo, period)
-    assert regime.rectificativa_effective is expect_rectificativa_effective, case_id
+
+_LIABILITY_DIRECTION_CASES: tuple[_LiabilityDirectionCase, ...] = (
+    ("increase", Decimal("100.00"), Decimal("150.00"), AmendmentLiabilityDirection.INCREASE),
+    ("decrease", Decimal("100.00"), Decimal("50.00"), AmendmentLiabilityDirection.DECREASE),
+    ("unchanged", Decimal("100.00"), Decimal("100.00"), AmendmentLiabilityDirection.UNCHANGED),
+    # A more negative credit position raises the taxpayer's declared
+    # liability under the signed-result convention (a bigger credit
+    # position filed as a smaller credit raises what is due).
+    ("credit-shrinks-is-increase", Decimal("-200.00"), Decimal("-50.00"), AmendmentLiabilityDirection.INCREASE),
+    ("credit-grows-is-decrease", Decimal("-50.00"), Decimal("-200.00"), AmendmentLiabilityDirection.DECREASE),
+)
+
+
+def test_rectificativa_effective_boundary() -> None:
+    for case_id, modelo, year, code, expect_rectificativa_effective in _RECTIFICATIVA_BOUNDARY_CASES:
+        period = Period.from_year_and_code(year, code)
+        regime = resolve_amendment_kind_regime(modelo, period)
+        assert regime.rectificativa_effective is expect_rectificativa_effective, case_id
 
 
 def test_pre_rectificativa_permits_only_complementaria_and_sustitutiva() -> None:
@@ -121,24 +127,7 @@ def test_uncodified_modelo_defaults_to_pre_rectificativa_never_asserted() -> Non
     assert regime.permitted_kinds == frozenset({_COMPLEMENTARIA, _SUSTITUTIVA})
 
 
-@pytest.mark.parametrize(
-    ("case_id", "baseline", "corrected", "expected"),
-    (
-        ("increase", Decimal("100.00"), Decimal("150.00"), AmendmentLiabilityDirection.INCREASE),
-        ("decrease", Decimal("100.00"), Decimal("50.00"), AmendmentLiabilityDirection.DECREASE),
-        ("unchanged", Decimal("100.00"), Decimal("100.00"), AmendmentLiabilityDirection.UNCHANGED),
-        # A more negative credit position raises the taxpayer's declared
-        # liability under the signed-result convention (a bigger credit
-        # position filed as a smaller credit raises what is due).
-        ("credit-shrinks-is-increase", Decimal("-200.00"), Decimal("-50.00"), AmendmentLiabilityDirection.INCREASE),
-        ("credit-grows-is-decrease", Decimal("-50.00"), Decimal("-200.00"), AmendmentLiabilityDirection.DECREASE),
-    ),
-)
-def test_classify_amendment_liability_direction(
-    case_id: str,
-    baseline: Decimal,
-    corrected: Decimal,
-    expected: AmendmentLiabilityDirection,
-) -> None:
-    result = classify_amendment_liability_direction(baseline_result=baseline, corrected_result=corrected)
-    assert result == expected, case_id
+def test_classify_amendment_liability_direction() -> None:
+    for case_id, baseline, corrected, expected in _LIABILITY_DIRECTION_CASES:
+        result = classify_amendment_liability_direction(baseline_result=baseline, corrected_result=corrected)
+        assert result == expected, case_id

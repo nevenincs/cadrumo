@@ -110,9 +110,7 @@ def _workflow_profile() -> TaxpayerProfile:
     )
 
 
-def _seed_ready_profile(
-    bucket_id: str, objects: SecureObjectRepository | None = None, *, modelo: str = "390"
-) -> None:
+def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None = None, *, modelo: str = "390") -> None:
     is_legal_entity = modelo in {"200", "202", "353"}
     facts = [
         UserProfileFact(path="identity.tax_id", value="B12345674" if is_legal_entity else "X1234567L"),

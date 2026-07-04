@@ -10,8 +10,9 @@ from pydantic import ValidationError
 
 from ....core import BindingSourceKind, Period
 from ....core.errors import get_registered_error_code
-from ....core.resources import resources
+from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
+    load_modelo_directory,
     resolve_foreign_asset_binding_row_values,
 )
 from ... import aggregation
@@ -47,6 +48,7 @@ from .._counterpart import (
     CounterpartSourceKind,
     OperationKind347,
     OperationKind349,
+    aggregate_counterpart_347,
     aggregate_counterpart_349,
 )
 from .._foreign_assets import (
@@ -61,6 +63,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _P_2025_Q1 = Period.from_year_and_code(2025, "1T")
 _P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
+
+
+def _modelo_revision(modelo_id: str, revision_id: str):
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", modelo_id))
+    return modelo.revisions[revision_id]
 
 
 def _retencion_obs(*, source_kind: BindingSourceKind = BindingSourceKind.LEDGER_TRANSACTION) -> RetencionObservation:
@@ -298,6 +305,71 @@ def test_counterpart_m349_service_keeps_invoice_observations_outside_reserved_re
     assert resolution.owned_sources == (
         BindingSourceKind.LEDGER_TRANSACTION,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    )
+    assert resolution.binding_values == {}
+    assert resolution.provenance == ()
+    assert resolution.source_transaction_ids == ()
+
+
+def test_counterpart_m347_service_does_not_claim_invoice_owned_registry_bindings() -> None:
+    observations = (
+        _counterpart_obs(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_id="m347-ledger-delivery",
+            operation_kind=OperationKind347.DELIVERY.value,
+            invoice_total="2000.00",
+        ),
+        _counterpart_obs(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_id="m347-ledger-acquisition",
+            operation_kind=OperationKind347.ACQUISITION.value,
+            invoice_total="1505.07",
+        ),
+        _counterpart_obs(
+            nif="B00000002",
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_id="m347-ledger-threshold-control",
+            operation_kind=OperationKind347.DELIVERY.value,
+            invoice_total="3005.06",
+        ),
+        _counterpart_obs(
+            nif="DE123456789",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+            source_id="m349-control",
+            operation_kind=OperationKind349.INTRA_DELIVERY.value,
+            country="DE",
+            invoice_total="9999.00",
+        ),
+    )
+    expected_aggregation = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
+    service_result = aggregate_per_modelo(
+        PerModeloAggregationCommand(
+            modelo="347",
+            period=_P_2025_ANNUAL,
+            counterpart_observations=observations,
+        ),
+    )
+    revision = _modelo_revision("347", "2008-y-siguientes")
+    context = CalculationSourceContext(
+        bucket_id="operator",
+        modelo="347",
+        filing_year=2025,
+        period=_P_2025_ANNUAL,
+        revision=revision,
+    )
+
+    resolution = CounterpartAggregationSourceResolver(observations=observations).resolve(context)
+
+    assert service_result.aggregation == expected_aggregation
+    assert declarable_counterparty_nifs_347(expected_aggregation) == frozenset({"B00000001"})
+    assert any(
+        binding.id == "modelo-347-declarante-numero-personas-entidades"
+        and binding.source is BindingSourceKind.COLLECTIBLE_INVOICE
+        for binding in revision.bindings
+    )
+    assert not any(
+        binding.source in {BindingSourceKind.LEDGER_TRANSACTION, BindingSourceKind.PURCHASE_INVOICE_EVIDENCE}
+        for binding in revision.bindings
     )
     assert resolution.binding_values == {}
     assert resolution.provenance == ()

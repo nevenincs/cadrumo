@@ -162,7 +162,7 @@ def test_site5_command_rejects_cross_family_observations() -> None:
     from .._service import PerModeloAggregationCommand
 
     obs = ForeignAssetIngestObservation(
-        source_kind="purchase_invoice_evidence",
+        source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
         source_object_id="test-asset-1",
         asset_class=ForeignAssetClass.ACCOUNT,
         asset_external_id="test-account",
@@ -314,7 +314,7 @@ def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
     from .._service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id="ret-2",
         perceptor_nif="B00000001",
         perceptor_name="Proveedor",

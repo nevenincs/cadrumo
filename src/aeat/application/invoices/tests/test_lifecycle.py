@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -119,7 +120,7 @@ def _two_invoices_sharing_a_prefix() -> tuple[str, list[Invoice]]:
     raise AssertionError("could not generate two invoices sharing a leading hex character")
 
 
-def test_remove_catalogue_invoice_deletes_unlinked_record(tmp_path) -> None:
+def test_remove_catalogue_invoice_deletes_unlinked_record(tmp_path: Path) -> None:
     """An unlinked invoice is removed and the updated catalogue persists."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         created = create_catalogue_invoice(
