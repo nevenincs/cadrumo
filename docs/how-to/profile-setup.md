@@ -112,9 +112,9 @@ the command again: --tax-id.
 Add `--accept-defaults` when you intentionally want `aeat` to fill the questions
 you omit from its built-in defaults.
 
-### Worked example: an individual freelancer
+### Worked example: a natural person with an activity
 
-This example creates a minimal natural-person profile for a freelancer with an
+This example creates a minimal natural-person profile for an individual with an
 economic activity:
 
 ```bash
