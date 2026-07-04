@@ -3,7 +3,7 @@
 The index is the lexical half of the R3 hybrid grounding surface. It is
 built from the already-bundled ``*.extracted.json`` corpus triples (the
 same triples the registry legal catalogue grounds against, read through
-the :mod:`aeat.core.resources` boundary) into a caller-supplied SQLite
+the :mod:`core.resources` boundary) into a caller-supplied SQLite
 path. No dependency beyond the standard library ``sqlite3`` (FTS5 is
 present in every standard CPython build) and ``snowballstemmer`` (a
 pure-Python Spanish Snowball stemmer) is required, so this module is
