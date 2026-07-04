@@ -10,8 +10,9 @@ from pydantic import ValidationError
 
 from ....core import BindingSourceKind, Period
 from ....core.errors import get_registered_error_code
-from ....core.resources import resources
+from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
+    load_modelo_directory,
     resolve_foreign_asset_binding_row_values,
 )
 from ... import aggregation
@@ -62,6 +63,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _P_2025_Q1 = Period.from_year_and_code(2025, "1T")
 _P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
+
+
+def _modelo_revision(modelo_id: str, revision_id: str):
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", modelo_id))
+    return modelo.revisions[revision_id]
 
 
 def _retencion_obs(*, source_kind: BindingSourceKind = BindingSourceKind.LEDGER_TRANSACTION) -> RetencionObservation:
@@ -343,13 +349,13 @@ def test_counterpart_m347_service_does_not_claim_invoice_owned_registry_bindings
             counterpart_observations=observations,
         ),
     )
-    snapshot = resources().modelos.authority.snapshot("347", filing_year=2025, period="0A")
+    revision = _modelo_revision("347", "2008-y-siguientes")
     context = CalculationSourceContext(
         bucket_id="operator",
         modelo="347",
         filing_year=2025,
         period=_P_2025_ANNUAL,
-        revision=snapshot.revision,
+        revision=revision,
     )
 
     resolution = CounterpartAggregationSourceResolver(observations=observations).resolve(context)
@@ -359,11 +365,11 @@ def test_counterpart_m347_service_does_not_claim_invoice_owned_registry_bindings
     assert any(
         binding.id == "modelo-347-declarante-numero-personas-entidades"
         and binding.source is BindingSourceKind.COLLECTIBLE_INVOICE
-        for binding in snapshot.revision.bindings
+        for binding in revision.bindings
     )
     assert not any(
         binding.source in {BindingSourceKind.LEDGER_TRANSACTION, BindingSourceKind.PURCHASE_INVOICE_EVIDENCE}
-        for binding in snapshot.revision.bindings
+        for binding in revision.bindings
     )
     assert resolution.binding_values == {}
     assert resolution.provenance == ()
