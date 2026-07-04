@@ -31,8 +31,8 @@ related:
 - [ ] `S03` - Harden check-aeat-notifications.md; `docs/how-to/check-aeat-notifications.md`.
 - [x] `S04` - Harden choose-modelo.md; `docs/how-to/choose-modelo.md`.
 - [x] `S05` - Harden classify-transactions.md; `docs/how-to/classify-transactions.md`.
-- [ ] `S06` - Harden classify-with-llm-evidence.md; `docs/how-to/classify-with-llm-evidence.md`.
-- [ ] `S07` - Harden classify-with-llm.md; `docs/how-to/classify-with-llm.md`.
+- [x] `S06` - Harden classify-with-llm-evidence.md; `docs/how-to/classify-with-llm-evidence.md`.
+- [x] `S07` - Harden classify-with-llm.md; `docs/how-to/classify-with-llm.md`.
 - [ ] `S08` - Harden correct-ledger-entries.md; `docs/how-to/correct-ledger-entries.md`.
 - [x] `S09` - Harden file-at-aeat.md; `docs/how-to/file-at-aeat.md`.
 - [ ] `S10` - Harden filing-calendar.md; `docs/how-to/filing-calendar.md`.
@@ -55,7 +55,7 @@ related:
 - [x] `S27` - Harden review-calculation-values.md; `docs/how-to/review-calculation-values.md`.
 - [ ] `S28` - Harden review-queue.md; `docs/how-to/review-queue.md`.
 - [ ] `S29` - Harden review-with-google-sheets.md; `docs/how-to/review-with-google-sheets.md`.
-- [ ] `S30` - Harden setup-llm-classification.md; `docs/how-to/setup-llm-classification.md`.
+- [x] `S30` - Harden setup-llm-classification.md; `docs/how-to/setup-llm-classification.md`.
 - [ ] `S31` - Harden troubleshooting.md; `docs/how-to/troubleshooting.md`.
 - [x] `S32` - Harden verification-reports.md; `docs/how-to/verification-reports.md`.
 ## Parallelization
