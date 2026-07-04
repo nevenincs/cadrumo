@@ -230,8 +230,7 @@ class Modelo(StrEnum):
 #: or an entity may owe, grounded against AEAT's published catalogue of
 #: declaraciones informativas and retención forms; it is not yet AEAT's full
 #: ~200-form set.
-UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
-}
+UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {}
 
 
 #: Registry modelos (with a TOML definition) deliberately out of scope of the

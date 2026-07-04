@@ -27,13 +27,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # (modelo_id, revision, approval_ref, plazo_ref, document_id, has_windows)
 _MODELOS = [
-    ("341", "2000-y-siguientes", "orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2", "BOE-A-2000-22794", True),
+    (
+        "341",
+        "2000-y-siguientes",
+        "orden-min-2000-12-15-m341:art-1",
+        "orden-min-2000-12-15-m341:art-2",
+        "BOE-A-2000-22794",
+        True,
+    ),
     ("380", "2005-y-siguientes", "orden-eha-1308-2005:art-1", "orden-eha-1308-2005:art-4", "BOE-A-2005-7775", False),
 ]
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
-def test_validator_accepts_committed_definition(mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool) -> None:
+def test_validator_accepts_committed_definition(
+    mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool
+) -> None:
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert rev in modelo.revisions
@@ -42,7 +51,9 @@ def test_validator_accepts_committed_definition(mid: str, rev: str, approval: st
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool) -> None:
+def test_approval_and_plazo_resolve_as_legal_authority(
+    mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool
+) -> None:
     _, catalogues = _committed_modelo(mid)
     for ref in (approval, plazo):
         entry = catalogues.legal[ref]

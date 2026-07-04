@@ -275,7 +275,11 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path: Path) -
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("7000.00")
     assert resolution.binding_values["iva-349-declarante-numero-operadores-adquisicion"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones-adquisicion"] == Decimal("3000.00")
-    rows: dict[tuple[str, str], Modelo349OperadorRow] = {(row.codigo_pais, row.clave_operacion): row for row in resolution.detail_rows if isinstance(row, Modelo349OperadorRow)}
+    rows: dict[tuple[str, str], Modelo349OperadorRow] = {
+        (row.codigo_pais, row.clave_operacion): row
+        for row in resolution.detail_rows
+        if isinstance(row, Modelo349OperadorRow)
+    }
     assert rows[("FR", "S")].nif_comunitario == "FR12345678901"
     assert rows[("FR", "S")].importe == Decimal("4000.00")
     assert rows[("IT", "I")].nif_comunitario == "IT12345678901"

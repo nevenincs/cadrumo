@@ -96,9 +96,7 @@ def test_modelo_216_resultado_is_retenciones_total_minus_anteriores() -> None:
     total rows.
     """
     modelo, catalogues = _load_modelo_216()
-    snapshot = build_snapshot(
-        modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T"
-    )
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={

@@ -53,12 +53,14 @@ def test_binding_derived_export_fields_preserve_enum_kind() -> None:
     """The binding-derived export path emits CasillaFieldKind members."""
     from .._withholding_bindings import _WithholdingSelector
 
-    selector = _WithholdingSelector.model_validate({
-        "fact": "row_field",
-        "record": "perceptor",
-        "row_field": "retencion_practicada",
-        "grouping": "per_perceptor",
-    })
+    selector = _WithholdingSelector.model_validate(
+        {
+            "fact": "row_field",
+            "record": "perceptor",
+            "row_field": "retencion_practicada",
+            "grouping": "per_perceptor",
+        }
+    )
     binding = DataBindingDefinition(
         id="binding.rows",
         source=BindingSourceKind.WITHHOLDING,
@@ -119,12 +121,14 @@ def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_autho
     public_binding = DataBindingDefinition(
         id="binding.rows.public",
         source=BindingSourceKind.WITHHOLDING,
-        selector=_WithholdingSelector.model_validate({
-            "fact": "row_field",
-            "record": "perceptor",
-            "row_field": "retencion_practicada",
-            "grouping": "per_perceptor",
-        }),
+        selector=_WithholdingSelector.model_validate(
+            {
+                "fact": "row_field",
+                "record": "perceptor",
+                "row_field": "retencion_practicada",
+                "grouping": "per_perceptor",
+            }
+        ),
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
@@ -132,12 +136,14 @@ def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_autho
     mirror_binding = DataBindingDefinition(
         id="binding.rows.mirror",
         source=BindingSourceKind.WITHHOLDING,
-        selector=_WithholdingSelector.model_validate({
-            "fact": "row_field",
-            "record": "perceptor",
-            "row_field": "retencion_practicada",
-            "grouping": "per_perceptor",
-        }),
+        selector=_WithholdingSelector.model_validate(
+            {
+                "fact": "row_field",
+                "record": "perceptor",
+                "row_field": "retencion_practicada",
+                "grouping": "per_perceptor",
+            }
+        ),
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
@@ -193,12 +199,14 @@ def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> 
     public_binding = DataBindingDefinition(
         id="binding.rows.public",
         source=BindingSourceKind.WITHHOLDING,
-        selector=_WithholdingSelector.model_validate({
-            "fact": "row_field",
-            "record": "perceptor",
-            "row_field": "retencion_practicada",
-            "grouping": "per_perceptor",
-        }),
+        selector=_WithholdingSelector.model_validate(
+            {
+                "fact": "row_field",
+                "record": "perceptor",
+                "row_field": "retencion_practicada",
+                "grouping": "per_perceptor",
+            }
+        ),
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
@@ -206,12 +214,14 @@ def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> 
     mirror_binding = DataBindingDefinition(
         id="binding.rows.mirror",
         source=BindingSourceKind.WITHHOLDING,
-        selector=_WithholdingSelector.model_validate({
-            "fact": "row_field",
-            "record": "perceptor",
-            "row_field": "retencion_practicada",
-            "grouping": "per_perceptor",
-        }),
+        selector=_WithholdingSelector.model_validate(
+            {
+                "fact": "row_field",
+                "record": "perceptor",
+                "row_field": "retencion_practicada",
+                "grouping": "per_perceptor",
+            }
+        ),
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
