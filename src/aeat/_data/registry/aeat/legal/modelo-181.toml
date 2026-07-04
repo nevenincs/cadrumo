@@ -1,0 +1,65 @@
+[legal."orden-eha-3514-2009:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3514-2009.html#a1"
+document_id = "BOE-A-2009-21165"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165#a1"
+published_at = 2009-12-29
+effective_from = 2009-12-30
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2009-21165 art 1; pending operator re-stamp)"
+notes = "Orden EHA/3514/2009 art 1: aprueba el modelo 181, declaración informativa de préstamos y créditos, y operaciones financieras relacionadas con bienes inmuebles. Orden habilitante del modelo 181."
+required_text = [
+    "Se aprueba el modelo 181",
+    "Declaración informativa de préstamos y créditos, y operaciones financieras relacionadas con bienes inmuebles",
+]
+
+[legal."orden-eha-3514-2009:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3514-2009.html#a6"
+document_id = "BOE-A-2009-21165"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165#a6"
+published_at = 2009-12-29
+effective_from = 2009-12-30
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2009-21165 art 6; pending operator re-stamp)"
+notes = "Orden EHA/3514/2009 art 6: plazo de presentación del modelo 181. Entre el día 1 y el 31 del mes de enero de cada año."
+required_text = [
+    "se realizará en el plazo comprendido entre el día 1 y el 31 del mes de enero de cada año",
+]
+
+[sources."enrolled-modelo-181-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3514-2009.html"
+sha256 = "d26527410b67a4c071af17d8238da371dd22039af58484fe4e48b8683c16db4b"
+bytes = 1105
+retrieved_at = 2026-07-04
+published_at = 2009-12-29
+applies_from = 2009-12-30
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165"
+review_status = "reviewed"
+
+# Same bundled orden HTML under layout_authority tier for the per-revision
+# workbook-parity-coverage gate. NOT the authoritative AEAT Diseño de Registros
+# (not bundled); grounds only the static form-approval layout.
+[sources."enrolled-modelo-181-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3514-2009.html"
+sha256 = "d26527410b67a4c071af17d8238da371dd22039af58484fe4e48b8683c16db4b"
+bytes = 1105
+retrieved_at = 2026-07-04
+published_at = 2009-12-29
+applies_from = 2009-12-30
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165"
+review_status = "reviewed"
