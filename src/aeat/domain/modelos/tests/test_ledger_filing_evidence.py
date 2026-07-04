@@ -113,24 +113,31 @@ def test_ledger_filing_evidence_records_are_frozen_and_strict() -> None:
 
 
 def test_ledger_filing_evidence_rejects_ungrounded_rows_and_manual_entries() -> None:
+    # Deliberately omits the required legal_refs / source_refs grounding field to prove
+    # pydantic's own validation refuses it; model_validate (not the constructor) is used
+    # so the omission is a runtime ValidationError, not a static missing-argument error.
     with pytest.raises(ValidationError, match="legal_refs"):
-        LedgerEvidenceRow(
-            transaction_id="tx-1",
-            fingerprint="a" * 64,
-            booked_date="2026-01-31",
-            amount=Decimal("1.00"),
-            currency="EUR",
-            direction="incoming",
-            business_classification="business",
-            lifecycle_state="active",
-            source_refs=_SOURCE_REFS,
+        LedgerEvidenceRow.model_validate(
+            {
+                "transaction_id": "tx-1",
+                "fingerprint": "a" * 64,
+                "booked_date": "2026-01-31",
+                "amount": Decimal("1.00"),
+                "currency": "EUR",
+                "direction": "incoming",
+                "business_classification": "business",
+                "lifecycle_state": "active",
+                "source_refs": _SOURCE_REFS,
+            },
         )
 
     with pytest.raises(ValidationError, match="source_refs"):
-        ManualFactBasisEntry(
-            casilla_id=_EVIDENCE_CASILLA,
-            value="140000.00",
-            legal_refs=_LEGAL_REFS,
+        ManualFactBasisEntry.model_validate(
+            {
+                "casilla_id": _EVIDENCE_CASILLA,
+                "value": "140000.00",
+                "legal_refs": _LEGAL_REFS,
+            },
         )
 
 
