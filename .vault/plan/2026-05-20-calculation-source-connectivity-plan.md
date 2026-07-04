@@ -146,9 +146,9 @@ Keep the plan open to newly discovered calculation source surfaces and require c
 
 Re-run source discovery during implementation and extend this plan whenever a relevant unenrolled surface is found.
 
-- [ ] `W05.P10.S55` - Re-run registry source inventory after each implementation wave; `src/aeat/_data/registry/aeat/modelos`.
-- [ ] `W05.P10.S56` - Extend plan rows for newly discovered unenrolled source surfaces; `.vault/plan/2026-05-20-calculation-source-connectivity-plan.md`.
-- [ ] `W05.P10.S57` - Document discovered source surfaces in execution records; `.vault/exec/2026-05-20-calculation-source-connectivity`.
+- [x] `W05.P10.S55` - Re-run registry source inventory after each implementation wave; `src/aeat/_data/registry/aeat/modelos`.
+- [x] `W05.P10.S56` - Extend plan rows for newly discovered unenrolled source surfaces; `.vault/plan/2026-05-20-calculation-source-connectivity-plan.md`.
+- [x] `W05.P10.S57` - Document discovered source surfaces in execution records; `.vault/exec/2026-05-20-calculation-source-connectivity`.
 - [x] `W05.P10.S62` - Follow-up: extend the approval-basis source fingerprint beyond the invoice catalogue to the remaining self-loadable mesh sources (profile, previous_filing, relations) without coupling the review layer to the full source mesh; `src/aeat/application/filing/_review.py`.
 - [ ] `W05.P10.S63` - Follow-up: fingerprint the profile-activity relation-scoping inputs (activity_start_date, m111_no_retenciones_periods, not_applicable_source_modelos from ProfileRepository) in the approval basis, so a relation-scoping profile change invalidates an approval even when the observation store is unchanged; `src/aeat/application/filing/_review.py`.
 
@@ -156,7 +156,7 @@ Re-run source discovery during implementation and extend this plan whenever a re
 
 Review each implemented wave for architectural drift missing provenance stale fingerprints and unsafe silent calculation behavior.
 
-- [ ] `W05.P11.S58` - Run code review after each completed implementation wave; `.agents/skills/vaultspec-code-review/SKILL.md`.
-- [ ] `W05.P11.S59` - Run architecture boundary audit for source mesh directionality; `src/aeat/application/aggregation`.
+- [x] `W05.P11.S58` - Run code review after each completed implementation wave; `.agents/skills/vaultspec-code-review/SKILL.md`.
+- [x] `W05.P11.S59` - Run architecture boundary audit for source mesh directionality; `src/aeat/application/aggregation`.
 - [ ] `W05.P11.S60` - Run calculation grounding audit for provenance and legal refs; `src/aeat/application/modelo`.
 - [ ] `W05.P11.S61` - Run hardening pass for silent zero and missing source diagnostics; `src/aeat/domain/calculations/registry`.

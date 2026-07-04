@@ -35,7 +35,12 @@ related:
   - '[[2026-05-20-calculation-source-connectivity-W04-P09-S52]]'
   - '[[2026-05-20-calculation-source-connectivity-W04-P09-S53]]'
   - '[[2026-05-20-calculation-source-connectivity-W04-P09-S54]]'
+  - '[[2026-05-20-calculation-source-connectivity-W05-P10-S55]]'
+  - '[[2026-05-20-calculation-source-connectivity-W05-P10-S56]]'
+  - '[[2026-05-20-calculation-source-connectivity-W05-P10-S57]]'
   - '[[2026-05-20-calculation-source-connectivity-W05-P10-S62]]'
+  - '[[2026-05-20-calculation-source-connectivity-W05-P11-S58]]'
+  - '[[2026-05-20-calculation-source-connectivity-W05-P11-S59]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'
   - '[[2026-05-20-calculation-source-connectivity-plan]]'
   - '[[2026-05-20-calculation-source-connectivity-research]]'
@@ -51,6 +56,7 @@ related:
   - '[[2026-05-21-calculation-source-connectivity-w01-p01-s01-s06-exec]]'
   - '[[2026-05-21-calculation-source-connectivity-w01-p02-s07-s12-exec]]'
   - '[[2026-05-21-calculation-source-connectivity-w01-p03-s13-s17-exec]]'
+  - '[[2026-07-04-calculation-source-connectivity-audit]]'
 ---
 
 # `calculation-source-connectivity` feature index
@@ -66,6 +72,7 @@ Auto-generated index of all documents tagged with `#calculation-source-connectiv
 ### audit
 
 - `2026-05-21-calculation-source-connectivity-code-review-audit` - `calculation-source-connectivity` Code Review
+- `2026-07-04-calculation-source-connectivity-audit` - `calculation-source-connectivity` audit: `campaign closeout`
 
 ### exec
 
@@ -108,7 +115,12 @@ Auto-generated index of all documents tagged with `#calculation-source-connectiv
 - `2026-05-20-calculation-source-connectivity-W04-P09-S52` - Test approval staleness changes when invoice source data changes
 - `2026-05-20-calculation-source-connectivity-W04-P09-S53` - Test calculation revision roundtrip preserves source refs
 - `2026-05-20-calculation-source-connectivity-W04-P09-S54` - Run feature surface quality gate for source mesh touched files
+- `2026-05-20-calculation-source-connectivity-W05-P10-S55` - Re-run registry source inventory after each implementation wave
+- `2026-05-20-calculation-source-connectivity-W05-P10-S56` - Extend plan rows for newly discovered unenrolled source surfaces
+- `2026-05-20-calculation-source-connectivity-W05-P10-S57` - Document discovered source surfaces in execution records
 - `2026-05-20-calculation-source-connectivity-W05-P10-S62` - Follow-up: extend the approval-basis source fingerprint beyond the invoice catalogue to the remaining self-loadable mesh sources (profile, previous_filing, relations) without coupling the review layer to the full source mesh
+- `2026-05-20-calculation-source-connectivity-W05-P11-S58` - Run code review after each completed implementation wave
+- `2026-05-20-calculation-source-connectivity-W05-P11-S59` - Run architecture boundary audit for source mesh directionality
 
 ### plan
 
