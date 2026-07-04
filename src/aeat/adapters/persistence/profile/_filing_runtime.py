@@ -1,10 +1,10 @@
 """Runtime-backed repository helpers shared by the filing persistence adapters.
 
 Shared private helpers for the sibling filing repositories
-(:mod:`aeat.adapters.persistence.profile.filing_drafts` and
+(:mod:`adapters.persistence.profile.filing_drafts` and
 ``filing_amendments``): a bucket-id resolver and a runtime factory that
 returns a
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` bound to
+:class:`~adapters.persistence.storage.SecureObjectRepository` bound to
 the active profile bucket. Both live in the persistence adapter alongside the
 repositories they serve, so the secure-object coupling is a same-layer
 ``adapters -> adapters.persistence.storage`` import rather than a
@@ -32,7 +32,7 @@ def secure_objects_for_filing_bucket(bucket_id: str) -> SecureObjectRepository:
     """Return runtime-created secure-object storage for ``bucket_id``.
 
     Returns:
-        A :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+        A :class:`~adapters.persistence.storage.SecureObjectRepository`
         scoped to the given filing bucket.
     """
     return secure_object_repository_for_bucket(bucket_id)
