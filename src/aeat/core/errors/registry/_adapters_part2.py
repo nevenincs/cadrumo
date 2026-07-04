@@ -404,6 +404,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.outbound.google._impersonation.GoogleAuthAdcStaleError",
+        ErrorCode(
+            code="FAIL_GOOGLE_ADC_STALE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_google_adc_stale",
+            default_suggestion="gcloud auth application-default login",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.outbound.google._impersonation.GoogleAuthImpersonationRefusedError",
         ErrorCode(
             code="REFUSED_GOOGLE_IMPERSONATION",

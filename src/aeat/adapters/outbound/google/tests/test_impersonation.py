@@ -16,19 +16,27 @@ the default test run, per the project's live-external-call safety posture.
 
 from __future__ import annotations
 
+import datetime
+from typing import TYPE_CHECKING
+
 import pytest
 from pydantic import ValidationError
 
 from .....core import GoogleCredentialSourceKind
 from .._errors import GoogleAuthError
 from .._impersonation import (
+    GoogleAuthAdcStaleError,
     GoogleAuthAdcUnavailableError,
     GoogleAuthImpersonationRefusedError,
     GoogleCredentialSourceSelection,
     GoogleImpersonationConfig,
+    _ensure_source_credential_is_fresh,
     describe_impersonation_target,
     resolve_impersonated_credentials,
 )
+
+if TYPE_CHECKING:
+    from google.oauth2.credentials import Credentials
 from .._records import DRIVE_FILE_SCOPE, SHEETS_SCOPE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -184,12 +192,131 @@ def test_resolve_refusal_names_the_exact_target_principal_for_a_different_config
 
 
 # ---------------------------------------------------------------------------
+# _ensure_source_credential_is_fresh — ADC freshness auto-remediation
+#
+# Every credential built below is a real, unmocked
+# ``google.oauth2.credentials.Credentials`` instance; ``token_state`` and
+# ``.refresh()`` are the real google-auth implementations. The "genuinely
+# stale/unrefreshable" case reproduces a real, hermetic (no-network)
+# ``RefreshError``: google-auth's own ``_perform_refresh_token`` raises it
+# synchronously, before any HTTP request, when the credential lacks the
+# fields (``refresh_token``/``token_uri``/``client_id``/``client_secret``)
+# needed to even attempt a refresh — the exact shape of a dead/never-
+# completed ADC grant. The "fresh" case is a real credential whose
+# ``expiry`` is in the future, so ``token_state`` is ``FRESH`` and no
+# refresh is attempted at all.
+# ---------------------------------------------------------------------------
+
+_TARGET_PRINCIPAL_FOR_FRESHNESS = "aeat-export@example-project.iam.gserviceaccount.com"
+
+_A_REFRESH_TOKEN = "a-refresh-token"
+_A_TOKEN_URI = "https://oauth2.googleapis.com/token"
+_A_CLIENT_ID = "a-client-id"
+_A_CLIENT_SECRET = "a-client-secret"
+_A_TOKEN = "a-token"
+
+
+def _build_real_oauth2_credential(
+    *,
+    expiry: datetime.datetime | None,
+    refresh_token: str | None,
+    token_uri: str | None,
+    client_id: str | None,
+    client_secret: str | None,
+    token: str | None,
+) -> Credentials:
+    import google.oauth2.credentials
+
+    return google.oauth2.credentials.Credentials(
+        token=token,
+        refresh_token=refresh_token,
+        token_uri=token_uri,
+        client_id=client_id,
+        client_secret=client_secret,
+        scopes=[DRIVE_FILE_SCOPE, SHEETS_SCOPE],
+        expiry=expiry,
+    )
+
+
+def test_ensure_source_credential_is_fresh_leaves_a_fresh_credential_untouched() -> None:
+    """A credential whose access token has not yet expired is not refreshed at all."""
+    future = datetime.datetime.now(datetime.UTC).replace(tzinfo=None) + datetime.timedelta(hours=1)
+    credential = _build_real_oauth2_credential(
+        expiry=future,
+        refresh_token=_A_REFRESH_TOKEN,
+        token_uri=_A_TOKEN_URI,
+        client_id=_A_CLIENT_ID,
+        client_secret=_A_CLIENT_SECRET,
+        token=_A_TOKEN,
+    )
+
+    import google.auth.credentials
+
+    assert credential.token_state is google.auth.credentials.TokenState.FRESH
+
+    _ensure_source_credential_is_fresh(credential, target_principal=_TARGET_PRINCIPAL_FOR_FRESHNESS)
+
+    # Untouched: still the same token, no refresh side effect occurred.
+    assert credential.token == _A_TOKEN
+
+
+def test_ensure_source_credential_is_fresh_raises_adc_stale_when_refresh_cannot_succeed() -> None:
+    """A stale credential missing the fields needed to refresh raises GoogleAuthAdcStaleError.
+
+    Reproduces the real, hermetic google-auth ``RefreshError`` raised by
+    ``_perform_refresh_token`` when ``client_secret`` is absent — no network
+    call occurs; the failure is synchronous field validation inside
+    google-auth itself.
+    """
+    past = datetime.datetime.now(datetime.UTC).replace(tzinfo=None) - datetime.timedelta(hours=2)
+    credential = _build_real_oauth2_credential(
+        expiry=past,
+        refresh_token=_A_REFRESH_TOKEN,
+        token_uri=_A_TOKEN_URI,
+        client_id=_A_CLIENT_ID,
+        client_secret=None,
+        token=_A_TOKEN,
+    )
+
+    import google.auth.credentials
+
+    assert credential.token_state is google.auth.credentials.TokenState.INVALID
+
+    with pytest.raises(GoogleAuthAdcStaleError) as raised:
+        _ensure_source_credential_is_fresh(credential, target_principal=_TARGET_PRINCIPAL_FOR_FRESHNESS)
+
+    assert isinstance(raised.value, GoogleAuthError)
+    assert raised.value.context == {"target_principal": _TARGET_PRINCIPAL_FOR_FRESHNESS}
+    assert raised.value.suggestion == "gcloud auth application-default login"
+
+
+def test_ensure_source_credential_is_fresh_names_the_exact_target_principal() -> None:
+    """The stale-ADC refusal always names the specific SA the caller was resolving for."""
+    past = datetime.datetime.now(datetime.UTC).replace(tzinfo=None) - datetime.timedelta(hours=2)
+    credential = _build_real_oauth2_credential(
+        expiry=past,
+        refresh_token=_A_REFRESH_TOKEN,
+        token_uri=_A_TOKEN_URI,
+        client_id=_A_CLIENT_ID,
+        client_secret=None,
+        token=_A_TOKEN,
+    )
+    other_principal = "another-sa@other-project.iam.gserviceaccount.com"
+
+    with pytest.raises(GoogleAuthAdcStaleError) as raised:
+        _ensure_source_credential_is_fresh(credential, target_principal=other_principal)
+
+    assert raised.value.context == {"target_principal": other_principal}
+
+
+# ---------------------------------------------------------------------------
 # Error taxonomy — bound error codes (registration contract)
 # ---------------------------------------------------------------------------
 
 
 def test_impersonation_errors_subclass_google_auth_error() -> None:
     assert issubclass(GoogleAuthAdcUnavailableError, GoogleAuthError)
+    assert issubclass(GoogleAuthAdcStaleError, GoogleAuthError)
     assert issubclass(GoogleAuthImpersonationRefusedError, GoogleAuthError)
 
 
@@ -201,10 +328,12 @@ def test_impersonation_errors_carry_distinct_bound_error_codes() -> None:
     `.code` would raise or collide.
     """
     adc_error = GoogleAuthAdcUnavailableError("adc missing")
+    stale_error = GoogleAuthAdcStaleError("adc stale")
     refusal_error = GoogleAuthImpersonationRefusedError("iam refused")
     assert adc_error.code.code == "FAIL_GOOGLE_ADC_UNAVAILABLE"
+    assert stale_error.code.code == "FAIL_GOOGLE_ADC_STALE"
     assert refusal_error.code.code == "REFUSED_GOOGLE_IMPERSONATION"
-    assert adc_error.code.code != refusal_error.code.code
+    assert len({adc_error.code.code, stale_error.code.code, refusal_error.code.code}) == 3
 
 
 # ---------------------------------------------------------------------------
