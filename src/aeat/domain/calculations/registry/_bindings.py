@@ -831,6 +831,8 @@ def selector_model_for_source(source: object) -> type[BaseModel] | None:
     without re-deriving the table; the op/fact cross-invariants stay owned by
     :func:`validate_binding_selector_shape` at snapshot build.
     """
+    if not isinstance(source, BindingSourceKind):
+        return None
     return _BINDING_SELECTOR_REGISTRY.get(source)
 
 
