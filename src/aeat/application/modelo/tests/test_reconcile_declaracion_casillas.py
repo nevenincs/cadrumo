@@ -166,6 +166,7 @@ def _synthetic_declaracion(
     modelo: str | None = None,
     ejercicio: str | None = None,
     period: Period | None = None,
+    extraction_profile_provisional: bool = False,
 ) -> InboundDeclaracionObservation:
     """Build a synthetic, in-memory declaración observation for Modelo 130.
 
@@ -208,6 +209,8 @@ def _synthetic_declaracion(
             for casilla_id, value in values.items()
         ),
         warnings=(),
+        extraction_profile_id=f"modelo-{modelo or str(work_unit.modelo)}-declaracion-pdf",
+        extraction_profile_provisional=extraction_profile_provisional,
         source_pdf_path=Path("synthetic/declaracion-130.pdf"),
         source_pdf_sha256="0" * 64,
         parsed_at=now(),
@@ -235,6 +238,32 @@ def test_filed_declaracion_matching_computed_revision_reconciles_clean() -> None
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
     assert not report.diffs
+    assert "extraction_profile_provisional" not in {a.code for a in report.advisories}
+
+
+def test_provisional_extraction_profile_surfaces_non_blocking_advisory() -> None:
+    """A declaración parsed through a ``provisional_pending_specimen`` profile
+    discloses that its layout is unconfirmed rather than silently presenting
+    bbox-anchored values as verified (no-silent-under-declaration)."""
+    work_unit = _seed_work_unit()
+    _persist_filed_revision(work_unit, casilla_values={"03": Decimal("5000.00"), "19": Decimal("900.00")})
+
+    report = _reconcile(
+        work_unit,
+        _synthetic_declaracion(
+            work_unit,
+            values={"03": Decimal("5000.00"), "19": Decimal("900.00")},
+            extraction_profile_provisional=True,
+        ),
+    )
+
+    # The advisory is non-blocking: identity and casillas still match.
+    assert report.verdict is ModeloReconciliationVerdict.MATCHES
+    provisional_advisories = [a for a in report.advisories if a.code == "extraction_profile_provisional"]
+    assert len(provisional_advisories) == 1
+    advisory = provisional_advisories[0]
+    assert advisory.context["modelo"] == str(work_unit.modelo)
+    assert advisory.context["extraction_profile_id"]
 
 
 def test_filed_declaracion_value_mismatch_is_caught_as_typed_casilla_diff() -> None:

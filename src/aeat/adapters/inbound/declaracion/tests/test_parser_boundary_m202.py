@@ -26,6 +26,7 @@ from decimal import Decimal
 
 import pytest
 
+from .._errors import DeclaracionParseError
 from ._parser_boundary_support import (
     _MODELO_202_SYNTHETIC_FIXTURE,
     CasillaId,
@@ -104,3 +105,54 @@ def test_parser_extracts_modelo_202_casillas_from_synthetic_fixture() -> None:
     assert extracted == _M202_EXPECTED_VALUES, (
         f"unexpected extracted values.\n  got: {extracted}\n  expected: {_M202_EXPECTED_VALUES}"
     )
+
+    # provisional_pending_specimen=true is stamped onto the observation so
+    # downstream consumers (modelo reconcile, live sede pull) can disclose
+    # that the M202 layout has not been confirmed against a real specimen.
+    assert filing.extraction_profile_id == "modelo-202-declaracion-pdf"
+    assert filing.extraction_profile_provisional is True
+
+
+def test_bbox_anchor_miss_fails_coverage_rather_than_mis_extracting() -> None:
+    """A ``bbox_anchored`` target whose printed box number is absent from the
+    page yields NO hit -- never a value read from an unrelated position.
+
+    This is the safety property that makes a provisional (unconfirmed)
+    ``bbox_anchored`` profile tolerable on a real PDF with a diverging layout:
+    the anchor search only matches an exact ``box_number_pattern`` occurrence,
+    so a real M202 filing whose printed box numbering differs from the
+    registry's guessed layout raises a hard, enumerated
+    ``DeclaracionParseError`` (``no-silent-under-declaration``) instead of
+    silently extracting a value from the wrong printed position.
+    """
+    snapshot = _modelo_snapshot("202", filing_year=2025, period="1P")
+    profile = snapshot.extraction_profiles["modelo-202-declaracion-pdf"]
+
+    # Mutate one target's anchor pattern to a box number that is never printed
+    # on the committed synthetic fixture, forcing a genuine anchor miss.
+    mutated_targets = tuple(
+        target.model_copy(
+            update={"bbox_anchor": target.bbox_anchor.model_copy(update={"box_number_pattern": "^999$"})},
+        )
+        if target.casilla_id == _casilla_id("01")
+        else target
+        for target in profile.target_casillas
+    )
+    mutated_profile = profile.model_copy(update={"target_casillas": mutated_targets})
+    profiles = dict(snapshot.extraction_profiles)
+    profiles[profile.id] = mutated_profile
+    mutated_snapshot = snapshot.model_copy(update={"extraction_profiles": profiles})
+
+    with pytest.raises(DeclaracionParseError) as excinfo:
+        parse_declaracion(
+            _MODELO_202_SYNTHETIC_FIXTURE,
+            modelo_override="202",
+            template_revision_override="2025-y-siguientes",
+            año_override=2025,
+            period_override="1P",
+            registry_snapshot=mutated_snapshot,
+        )
+
+    assert excinfo.value.translated_message == "adapters.inbound.declaracion.errors.extraction_failed"
+    assert excinfo.value.missing is not None
+    assert _casilla_id("01") in excinfo.value.missing
