@@ -13,6 +13,7 @@ import secrets
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -73,8 +74,28 @@ def _make_record(
     )
 
 
+class _SecretRecordKwargs(TypedDict, total=False):
+    """The :class:`SecretRecord` constructor keywords this parametrize overrides.
+
+    A plain ``dict[str, object]`` cannot be ``**``-unpacked against
+    ``SecretRecord``'s heterogeneously-typed fields (``key: str``,
+    ``value: bytes``, ``classification: SensitivityClass``, ``metadata:
+    dict[str, str]``, ``created_at``/``expires_at: datetime | None``): the
+    checker cannot prove the dict carries only correctly-typed values per
+    key. This TypedDict names every field so the ``**`` unpack matches
+    per-key against the real constructor.
+    """
+
+    key: str
+    value: bytes
+    classification: SensitivityClass
+    metadata: dict[str, str]
+    created_at: datetime
+    expires_at: datetime | None
+
+
 def test_secret_record_validation_rejects_invalid_fields() -> None:
-    cases = (
+    cases: tuple[tuple[str, _SecretRecordKwargs], ...] = (
         (
             "naive-created-at",
             {
@@ -91,7 +112,7 @@ def test_secret_record_validation_rejects_invalid_fields() -> None:
         ),
     )
     for case_id, overrides in cases:
-        record_kwargs: dict[str, object] = {
+        record_kwargs: _SecretRecordKwargs = {
             "key": "x",
             "value": b"y",
             "classification": SensitivityClass.SECRET,
