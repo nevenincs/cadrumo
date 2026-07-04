@@ -11,7 +11,7 @@ from .....core.resources import bundled_path
 from .._formula_runtime import calculate_registry_snapshot
 from .._ids import CasillaId, validated_casilla_id
 from .._legal import verify_legal_catalogue
-from .._schema import ModeloDefinition, RegistryCatalogues
+from .._schema import CasillaDefinition, ModeloDefinition, RegistryCatalogues
 from .._schema_input_kind import InputKind
 from .._snapshot import build_snapshot
 from .._validate import RegistryValidator
@@ -292,7 +292,7 @@ def test_modelo_714_carries_cuota_integra_under_declaration_advisory() -> None:
     assert "ley-19-1991:art-30" in {str(ref) for ref in guard.legal_refs}
 
 
-def _load_714_snapshot_and_casillas() -> tuple[frozenset[str], dict[CasillaId, object]]:
+def _load_714_snapshot_and_casillas() -> tuple[frozenset[str], dict[CasillaId, CasillaDefinition]]:
     modelo, catalogues = _load_modelo_714()
     snapshot = build_snapshot(
         modelo,
@@ -302,7 +302,7 @@ def _load_714_snapshot_and_casillas() -> tuple[frozenset[str], dict[CasillaId, o
         period="0A",
     )
     predicate_ids = frozenset(p.predicate_id for p in snapshot.revision.verification_predicates)
-    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    casillas_by_id: dict[CasillaId, CasillaDefinition] = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     return predicate_ids, casillas_by_id
 
 
