@@ -67,6 +67,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "FiledDeclaracionArtefactSink",
+    "_declaration_pdf_extraction_profile_provisional",
     "_is_modelo_303_page_03_fallback",
     "_observed_casillas_from_declaration_pdf",
     "_read_guard_policy_from_snapshot",
@@ -380,6 +381,27 @@ def _parse_modelo_303_money(raw: str, *, field_ref: str) -> Decimal:
     if not digits.isdigit():
         raise SedeParseError(f"submitted Modelo 303 field {field_ref} is not numeric: {raw!r}")
     return sign * (Decimal(digits) / Decimal("100"))
+
+
+def _declaration_pdf_extraction_profile_provisional(snapshot: RegistrySnapshot) -> bool:
+    """Report whether any ``declaracion_pdf`` profile in ``snapshot`` is unconfirmed.
+
+    A profile with ``provisional_pending_specimen = true`` has its
+    ``bbox_anchored`` anchor positions guessed from the bundled AEAT-published
+    Diseño de Registro rather than confirmed against a real filed PDF (see
+    ``fixture-provenance-declared-in-sidecar``). The parser's coverage gate
+    (``min_coverage``) still fails hard when the anchor pattern matches nowhere
+    on a real PDF's page, but a real PDF whose layout coincidentally matches the
+    guessed anchor position at the wrong casilla would extract silently with no
+    disclosure that the layout itself is unconfirmed. Callers stamp this signal
+    into observation metadata (never silently) so an operator inspecting a live
+    filed-declaration capture can see the extraction is not yet specimen-backed.
+    """
+    return any(
+        profile.provisional_pending_specimen
+        for profile in snapshot.extraction_profiles.values()
+        if profile.surface == "declaracion_pdf"
+    )
 
 
 def _observed_casillas_from_declaration_pdf(

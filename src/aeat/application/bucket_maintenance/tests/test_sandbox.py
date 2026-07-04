@@ -29,14 +29,19 @@ from .. import (
     SANDBOX_LABEL_PREFIX,
     ArchiveSandboxCommand,
     DiscardSandboxCommand,
+    MergeSandboxCommand,
     PreviewDiscardSandboxCommand,
     RestoreSandboxCommand,
     SandboxDiscardRefusedError,
+    SandboxMergeRefusedError,
+    SandboxMergeScope,
     SandboxNotArchivedError,
+    SandboxNotFoundError,
     archive_sandbox,
     discard_sandbox,
     is_sandbox_label,
     list_sandboxes,
+    merge_sandbox,
     preview_discard_sandbox,
     restore_sandbox,
     sandbox_label,
@@ -157,3 +162,76 @@ def test_restore_refuses_a_sandbox_that_is_not_archived(tmp_path: Path) -> None:
         pytest.raises(SandboxNotArchivedError),
     ):
         restore_sandbox(RestoreSandboxCommand(bucket_id=profile.bucket_id))
+
+
+def test_merge_refuses_without_confirmation(runtime: TestRuntimeProfile) -> None:
+    """``merge_sandbox`` refuses a merge that has not been explicitly confirmed.
+
+    Mirrors ``discard``/``archive``'s ``confirmed=True`` boundary contract:
+    a programmatic caller must observe the same guarantee the CLI ``--yes``
+    flag provides, before any typed-catalogue write runs.
+    """
+    with pytest.raises(SandboxMergeRefusedError):
+        merge_sandbox(
+            MergeSandboxCommand(
+                source_bucket_id=sandbox_label("bakeoff"),
+                target_bucket_id=runtime.bucket_id,
+                scope=SandboxMergeScope.LEDGER,
+                confirmed=False,
+            ),
+        )
+
+
+def test_merge_refuses_when_source_and_target_are_identical(runtime: TestRuntimeProfile) -> None:
+    """``merge_sandbox`` refuses when the source and target bucket ids are the same.
+
+    Merging a bucket into itself is a no-op that would only waste a write
+    cycle; the guard fires before any repository session opens.
+    """
+    with pytest.raises(SandboxMergeRefusedError):
+        merge_sandbox(
+            MergeSandboxCommand(
+                source_bucket_id=runtime.bucket_id,
+                target_bucket_id=runtime.bucket_id,
+                scope=SandboxMergeScope.LEDGER,
+                confirmed=True,
+            ),
+        )
+
+
+def test_merge_refuses_a_non_sandbox_labelled_source_by_default(runtime: TestRuntimeProfile) -> None:
+    """``merge_sandbox`` refuses to promote FROM a bucket that is not sandbox-labelled.
+
+    Mirrors ``discard``/``archive``'s non-sandbox guard: an operator (or an
+    LLM agent) invoking the merge verb against a real profile as the source
+    by mistake must be refused before any catalogue is read.
+    """
+    with pytest.raises(SandboxDiscardRefusedError):
+        merge_sandbox(
+            MergeSandboxCommand(
+                source_bucket_id=runtime.bucket_id,
+                target_bucket_id="88888888-8888-4888-8888-888888888888",
+                scope=SandboxMergeScope.LEDGER,
+                confirmed=True,
+            ),
+        )
+
+
+def test_merge_refuses_an_unknown_target_bucket(tmp_path: Path) -> None:
+    """``merge_sandbox`` refuses when the target bucket has no registered pointer."""
+    with (
+        isolated_runtime_profile(
+            tmp_path=tmp_path,
+            bucket_id="99999999-9999-4999-8999-999999999999",
+            label=sandbox_label("live-two"),
+        ) as profile,
+        pytest.raises(SandboxNotFoundError),
+    ):
+        merge_sandbox(
+            MergeSandboxCommand(
+                source_bucket_id=profile.bucket_id,
+                target_bucket_id="00000000-0000-4000-8000-000000000000",
+                scope=SandboxMergeScope.LEDGER,
+                confirmed=True,
+            ),
+        )

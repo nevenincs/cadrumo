@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.application.invoices._bulk_import
    aeat.application.invoices._creation
    aeat.application.invoices._importing
    aeat.application.invoices._lifecycle

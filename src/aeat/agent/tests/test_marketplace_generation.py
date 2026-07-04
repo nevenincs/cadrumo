@@ -32,10 +32,10 @@ _SCAFFOLD_MANIFEST = _REPO_ROOT / "packaging" / "marketplace" / ".claude-plugin"
 
 def test_marketplace_manifest_is_schema_shaped_and_resolves_to_the_plugin(tmp_path: Path) -> None:
     manifest = materialise_marketplace(tmp_path)
-    assert manifest.marketplace_name == "aeat-marketplace"
+    assert manifest.marketplace_name == "neve"
 
     document = json.loads((tmp_path / ".claude-plugin" / "marketplace.json").read_text(encoding=_UTF_8))
-    assert document["name"] == "aeat-marketplace"
+    assert document["name"] == "neve"
     assert isinstance(document["owner"], dict) and document["owner"]["name"]
     assert document["description"]
     (entry,) = document["plugins"]

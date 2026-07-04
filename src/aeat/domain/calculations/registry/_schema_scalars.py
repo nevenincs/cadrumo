@@ -55,10 +55,10 @@ DecimalValue = Annotated[Decimal, BeforeValidator(_coerce_decimal)]
 def _validate_nif_string(value: object) -> object:
     """Validate a Spanish NIF / NIE / CIF identifier and return its canonical form.
 
-    Delegates to the shared `validate_spanish_tax_id` algorithm in
-    `aeat.core.identity._tax_id` and re-raises domain `IdentityError`
-    as `RegistryValidationError` so the schema boundary surfaces
-    identifier-format problems through its established error type.
+    Delegates to the shared `validate_spanish_tax_id` algorithm exposed by
+    the single `aeat.core.identity` facade and re-raises domain
+    `IdentityError` as `RegistryValidationError` so the schema boundary
+    surfaces identifier-format problems through its established error type.
     """
     if not isinstance(value, str):
         raise RegistryValidationError(f"NIF value must be a string, got {type(value).__name__}")

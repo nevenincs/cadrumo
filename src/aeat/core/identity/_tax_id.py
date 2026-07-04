@@ -17,24 +17,18 @@ table directly.
 
 from __future__ import annotations
 
-from ._documents import _CIF_KIND_LETTERS, _NIF_LETTERS, IdentityError
+from ._documents import (
+    _CIF_KIND_LETTERS,
+    _CIF_LETTER_TABLE,
+    IdentityError,
+    _cif_check_value,
+    nif_check_letter,
+)
 
 _NIE_LEADERS = {"X": "0", "Y": "1", "Z": "2"}
 _PREFIXED_NIF_LEADERS = {"K", "L", "M"}
 _CIF_LEADERS = _CIF_KIND_LETTERS
 _CIF_LETTER_CONTROL_LEADERS = set("PQRSNW")
-_CIF_CONTROL_LETTERS = "JABCDEFGHI"
-
-
-def nif_check_letter(number: int) -> str:
-    """Return the NIF/NIE checksum letter for ``number``.
-
-    Implements the AEAT control-letter table ``TRWAGMYFPDXBNJZSQVHLCKE``
-    indexed by ``number % 23``. This is the single source of the table;
-    callers generating or validating Spanish identifiers use it rather
-    than re-declaring the literal.
-    """
-    return _NIF_LETTERS[number % 23]
 
 
 def validate_spanish_tax_id(value: str) -> str:
@@ -128,14 +122,8 @@ def _validate_cif(value: str) -> str:
     if not digits.isdigit():
         raise IdentityError("CIF body must be 7 digits")
 
-    even_sum = sum(int(digits[i]) for i in (1, 3, 5))
-    odd_sum_doubled = 0
-    for i in (0, 2, 4, 6):
-        doubled = int(digits[i]) * 2
-        odd_sum_doubled += (doubled // 10) + (doubled % 10)
-    total = even_sum + odd_sum_doubled
-    digit_control = (10 - (total % 10)) % 10
-    letter_control = _CIF_CONTROL_LETTERS[digit_control]
+    digit_control = _cif_check_value(digits)
+    letter_control = _CIF_LETTER_TABLE[digit_control]
 
     if leader in _CIF_LETTER_CONTROL_LEADERS:
         if not control.isalpha() or control != letter_control:

@@ -2,7 +2,21 @@
 id = "modelo-303-iva-cuota-devengada-total"
 target_casilla_id = "iva.cuota-devengada-total"
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+# Casilla 27 = suma de [03]+[06]+[09]+[11]+[13]+[15]+[18]+[21]+[24]+[26] (Orden
+# EHA/3786/2008, instrucciones casilla 27). The recargo de equivalencia cuota
+# tiers (casillas 18/21/24, LIVA art. 161) are bound from the ledger
+# (modelo-303-recargo-equivalencia-{super-reducido,reducido,general}-cuota) but
+# were omitted from this aggregate on the 2009-y-siguientes revision (filing
+# years 2009-2022), so a supplier that charges recargo to a recargo-de-
+# equivalencia customer had its recargo cuota silently excluded from "Total
+# cuota devengada" (casilla 27) and therefore from the resultado chain —
+# mirroring the identical defect fixed on the 2023-y-siguientes revision (see
+# the comment on modelo-303-iva-cuota-devengada-total in that revision's
+# formulas/0000-formulas.toml). Casillas 25/26 (modificacion bases y cuotas
+# recargo) and casilla 158 (recargo super-reducido 0.5pct) have no ledger
+# binding wired into this aggregate on either revision and remain out of scope
+# of this fix, matching the 2023-y-siguientes template exactly.
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.formulas.source_citations]]
@@ -26,6 +40,15 @@ casilla_id = "iva.autorepercutido.intracomunitaria"
 
 [[revisions.2009-y-siguientes.formulas.expression.args]]
 casilla_id = "iva.autorepercutido.interior.devengado"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "18"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "21"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla_id = "24"
 
 [[revisions.2009-y-siguientes.formulas]]
 id = "modelo-303-iva-cuota-deducible-total"

@@ -9,12 +9,15 @@ import pytest
 from ....core import BindingSourceKind
 from ....domain.bienes_inversion import (
     BienesInversionIvaRegister,
+    BienInversionDisposal,
+    BienInversionDisposalRegime,
     BienInversionIvaRecord,
     BienInversionKind,
 )
 from .._bienes_inversion_regularizacion import (
     CASILLA_REGULARIZACION_BIENES_INVERSION,
     build_bienes_inversion_regularizacion_advisory,
+    build_bienes_inversion_transmision_advisory,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -78,6 +81,62 @@ def test_no_advisory_when_no_in_window_goods() -> None:
         _register(),
         regularizacion_year=2030,  # outside the 2023-2026 mueble window
         prorrata_definitiva_by_identifier={},
+    )
+    assert projection.rows == ()
+    assert diagnostic is None
+
+
+def _disposed_register() -> BienesInversionIvaRegister:
+    return BienesInversionIvaRegister(
+        records=(
+            BienInversionIvaRecord(
+                identifier="bi-2022-furgoneta",
+                description="Furgoneta de reparto afecta",
+                acquisition_year=2022,
+                cuota_soportada=Decimal("10000.00"),
+                prorrata_inicial_pct=Decimal("60"),
+                kind=BienInversionKind.MUEBLE,
+                disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
+            ),
+        )
+    )
+
+
+def test_transmision_advisory_surfaces_proposed_casilla_43_for_disposed_good() -> None:
+    """A disposed good always produces a concrete advisory, never a pending state.
+
+    Mueble acquired 2022 (window 2023-2026), disposed 2024 under regla 1.ª: 3
+    remaining years, cuota 10.000, prorrata inicial 60% → efectuada 6.000,00 −
+    imputada (100%) 10.000,00 = −4.000,00 × 3 ÷ 5 = −2.400,00.
+    """
+    projection, diagnostic = build_bienes_inversion_transmision_advisory(
+        _disposed_register(),
+        disposal_year=2024,
+    )
+    assert projection.proposed_casilla_43 == Decimal("-2400.00")
+    assert diagnostic is not None
+    assert diagnostic.source_kind == "bienes_inversion_regularizacion_transmision"
+    assert CASILLA_REGULARIZACION_BIENES_INVERSION in diagnostic.message
+    assert "-2400.00" in diagnostic.message
+
+
+def test_transmision_advisory_applies_supplied_cap() -> None:
+    """The regla-1.ª cap is passed through when the caller supplies the cuota devengada."""
+    projection, diagnostic = build_bienes_inversion_transmision_advisory(
+        _disposed_register(),
+        disposal_year=2024,
+        cuota_devengada_entrega_by_identifier={"bi-2022-furgoneta": Decimal("1500.00")},
+    )
+    assert projection.proposed_casilla_43 == Decimal("-1500.00")
+    assert diagnostic is not None
+    assert "-1500.00" in diagnostic.message
+
+
+def test_no_transmision_advisory_when_no_disposal_in_year() -> None:
+    """A register with no disposal recorded for the year produces no diagnostic."""
+    projection, diagnostic = build_bienes_inversion_transmision_advisory(
+        _disposed_register(),
+        disposal_year=2023,  # the recorded disposal is 2024
     )
     assert projection.rows == ()
     assert diagnostic is None

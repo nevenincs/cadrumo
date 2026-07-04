@@ -191,6 +191,56 @@ class BrowseBucketResult(BaseModel):
     rows: tuple[BucketNamespaceInventoryRow, ...]
 
 
+class DiskUsageBucketCommand(BaseModel):
+    """Operator request to measure a bucket's on-disk footprint.
+
+    Reads only filesystem metadata (``os.stat`` sizes) under
+    ``<aeat_local_storage_root>/buckets/<bucket_id>/``; it never opens the
+    encrypted SQLite database or decrypts a secure-object payload, so no
+    master key or active-bucket session is required. This makes the
+    measurement safe to run against a non-active, even archived, bucket —
+    the same non-active-safe posture :func:`~._sandbox.preview_discard_sandbox`
+    already relies on for its namespace preview.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+
+
+class BucketDiskUsageSubdirRow(BaseModel):
+    """One on-disk subdirectory's byte total in a disk-usage report.
+
+    ``subdir`` names one of the bucket layout's fixed subdirectories
+    (``db``, ``blobs``, ``audit``); the row is emitted even when the
+    subdirectory is empty (``total_bytes=0``, ``file_count=0``) so a
+    caller can rely on exactly the layout's three rows always being
+    present.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    subdir: str = Field(min_length=1)
+    total_bytes: int = Field(ge=0)
+    file_count: int = Field(ge=0)
+
+
+class DiskUsageBucketResult(BaseModel):
+    """Bucket on-disk footprint outcome.
+
+    ``total_bytes`` is the sum of every regular file under the bucket's
+    directory tree (``db`` + ``blobs`` + ``audit``, plus the bucket's own
+    manifest file); ``subdirs`` breaks that total down per fixed
+    subdirectory. Read-only; emits no bucket event.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    total_bytes: int = Field(ge=0)
+    subdirs: tuple[BucketDiskUsageSubdirRow, ...]
+
+
 class ExportBucketCommand(BaseModel):
     """Operator request to export a bucket as a sealed archive.
 

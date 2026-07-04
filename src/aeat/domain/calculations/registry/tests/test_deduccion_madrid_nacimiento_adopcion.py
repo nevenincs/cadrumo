@@ -31,7 +31,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaId, validated_casilla_id
+from .. import CasillaId, ValidatedRegistryAuthority, validated_casilla_id
 from .._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -203,16 +203,16 @@ def test_1039_non_madrid_resident_yields_zero() -> None:
     )
 
 
-def test_cuantia_parameter_is_721_70_grounded_in_the_madrid_law() -> None:
+def test_cuantia_parameter_is_721_70_grounded_in_the_madrid_law(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
     """The per-child cuantía is 721,70 € grounded to art-77 + Madrid DL 1/2010 art. 4.
 
     Not hand-computed: the figure is the bundled AEAT manual value and the legal
     catalogue entry's corpus cross-check (enforced at registry load) resolves
     against that bundled authoritative manual.
     """
-    from .._authority import ValidatedRegistryAuthority
-
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    authority = registry_authority
     snapshot = authority.snapshot("100", filing_year=2025, period="0A")
     revision = snapshot.revision
 

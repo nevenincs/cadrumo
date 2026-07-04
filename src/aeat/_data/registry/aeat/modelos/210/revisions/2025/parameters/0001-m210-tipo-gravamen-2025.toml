@@ -23,6 +23,16 @@
 #                                  con el 25.1.f incondicional. Verified vs BOE
 #                                  RDLeg 5/2004 art.25.1.f + AEAT manual no
 #                                  residentes (2026-06-14 grounding pass).)
+# - dividend                → 19% (TRLIRNR Art 25.1.f.1º: "Dividendos y otros
+#                                  rendimientos derivados de la participación
+#                                  en los fondos propios de una entidad"
+#                                  tributan al 19% para TODO no residente sin
+#                                  EP, SIN condición de residencia UE/EEE —
+#                                  la misma letra f) incondicional que rige
+#                                  interest (25.1.f.2º) y ganancia_patrimonial
+#                                  (25.1.f.3º). Verified vs BOE RDLeg 5/2004
+#                                  art.25.1.f (2026-07-04 grounding pass,
+#                                  closing the missing 25.1.f.1º category).)
 #
 # Pension is intentionally absent from this flat-rate table because
 # TRLIRNR Art 25.1.b is a progressive bracket tariff. The live branch
@@ -74,6 +84,12 @@ valid_from = 2025-01-01
 
 [[revisions."2025".parameters.keyed_brackets]]
 key = "interest"
+value = "0.19"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "dividend"
 value = "0.19"
 valid_from = 2025-01-01
 # valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).

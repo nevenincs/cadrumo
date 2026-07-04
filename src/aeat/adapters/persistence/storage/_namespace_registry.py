@@ -698,6 +698,16 @@ GOOGLE_DRIVE_CONFIG_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
+GOOGLE_CREDENTIAL_SOURCE_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="google_credential_source",
+    namespace="aeat.google.credential.source",
+    owner="aeat.adapters.outbound.google",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{profile}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+)
 LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_cache",
     namespace="aeat.outbound.llm.cache",
@@ -767,6 +777,28 @@ MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="review-package-signing-key:{bucket_id}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+)
+MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="modelo_review_package_recipient_fingerprint_registry",
+    namespace="aeat.application.modelo.review_package_recipient_fingerprint_registry",
+    owner="aeat.application.modelo",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
+MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="modelo_review_package_recipient_replay_guard",
+    namespace="aeat.application.modelo.review_package_recipient_replay_guard",
+    owner="aeat.application.modelo",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
 
 BUCKET_EVENT_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
@@ -1043,6 +1075,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         GOOGLE_OAUTH_TOKEN_NAMESPACE,
         GOOGLE_OAUTH_METADATA_NAMESPACE,
         GOOGLE_DRIVE_CONFIG_NAMESPACE,
+        GOOGLE_CREDENTIAL_SOURCE_NAMESPACE,
         LLM_CACHE_NAMESPACE,
         LLM_USAGE_NAMESPACE,
         LLM_RUN_TELEMETRY_NAMESPACE,
@@ -1050,6 +1083,8 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
         AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
         MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
+        MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE,
+        MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE,
         *DOMAIN_NAMESPACE_DEFINITIONS,
     ),
     paths=STORAGE_PATH_DEFINITIONS,
@@ -1076,6 +1111,7 @@ __all__ = [
     "CALCULATION_OBSERVATIONS_NAMESPACE",
     "CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE",
     "DOMAIN_NAMESPACE_DEFINITIONS",
+    "GOOGLE_CREDENTIAL_SOURCE_NAMESPACE",
     "GOOGLE_DRIVE_CONFIG_NAMESPACE",
     "GOOGLE_OAUTH_CLIENT_NAMESPACE",
     "GOOGLE_OAUTH_METADATA_NAMESPACE",
@@ -1098,6 +1134,8 @@ __all__ = [
     "LLM_CACHE_NAMESPACE",
     "LLM_RUN_TELEMETRY_NAMESPACE",
     "LLM_USAGE_NAMESPACE",
+    "MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE",
+    "MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE",
     "PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE",
     "PROFILE_ASSETS_LEDGER_NAMESPACE",

@@ -301,6 +301,67 @@ def _casilla_equals_implies_nonzero_predicate_failures(
     return failures
 
 
+# casilla_equals_implies_profile_flag(["antecedent_casilla_id", "literal",
+# "profile_field"]) — categorical-antecedent / profile-state-consequent
+# conditional advisory. Unlike casilla_equals_implies_nonzero, the third
+# token is a TaxpayerProfile field/property name, not a casilla id, so it
+# cannot route through the generic casilla-list validators. Mirrors
+# profile_flag_enabled's allowlist check (KNOWN_PROFILE_FLAG_ADVISORY_FIELDS)
+# combined with casilla_equals_implies_nonzero's antecedent shape: this
+# authoring-time gate rejects a malformed arity, an unknown/non-text
+# antecedent casilla, an empty literal, or an unsupported profile field at
+# registry load, rather than letting the runtime evaluator's defensive
+# bad-arity / unsupported-field branch (returns False — never fires)
+# silently mask a typo.
+_CASILLA_EQUALS_IMPLIES_PROFILE_FLAG_PREDICATE = _re.compile(
+    r"^casilla_equals_implies_profile_flag\(\[(?P<ids>[^\]]*)\]\)$",
+)
+
+
+def _casilla_equals_implies_profile_flag_predicate_failures(
+    prefix: str,
+    owner: str,
+    expression: str,
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> list[str]:
+    """Return failures for a malformed ``casilla_equals_implies_profile_flag`` predicate."""
+    match = _CASILLA_EQUALS_IMPLIES_PROFILE_FLAG_PREDICATE.match(expression.strip())
+    if match is None:
+        return [
+            f"{prefix}: {owner} casilla_equals_implies_profile_flag expression {expression!r} is malformed; "
+            'expected casilla_equals_implies_profile_flag(["antecedent_casilla_id", "literal", "profile_field"])',
+        ]
+    tokens = _parse_predicate_casilla_id_tokens(match.group("ids"))
+    failures: list[str] = []
+    if len(tokens) != 3:
+        failures.append(
+            f"{prefix}: {owner} casilla_equals_implies_profile_flag must name exactly three tokens "
+            f"(antecedent casilla id, literal, profile field), got {len(tokens)}: {tokens!r}",
+        )
+        return failures
+    antecedent_id, literal, field = tokens
+    antecedent = casilla_by_id.get(antecedent_id)
+    if antecedent_id not in casillas:
+        failures.append(
+            f"{prefix}: {owner} casilla_equals_implies_profile_flag references unknown "
+            f"antecedent casilla {antecedent_id!r}",
+        )
+    elif antecedent is not None and antecedent.data_type != "text":
+        failures.append(
+            f"{prefix}: {owner} casilla_equals_implies_profile_flag antecedent casilla {antecedent_id!r} "
+            "must have data_type 'text'",
+        )
+    if not literal:
+        failures.append(f"{prefix}: {owner} casilla_equals_implies_profile_flag literal must be non-empty")
+    if field not in KNOWN_PROFILE_FLAG_ADVISORY_FIELDS:
+        failures.append(
+            f"{prefix}: {owner} casilla_equals_implies_profile_flag references unsupported profile field "
+            f"{field!r}; supported fields: {sorted(KNOWN_PROFILE_FLAG_ADVISORY_FIELDS)!r}",
+        )
+    return failures
+
+
 # casilla_equals_implies_diverges(["antecedent_casilla_id", "literal",
 # "casilla_a_id", "casilla_b_id"]) — categorical-conditional divergence
 # check. Unlike the other casilla-list operators, the second token is a
@@ -541,6 +602,21 @@ def validate_verification_expectation_section(
             # casilla, or an empty literal at authoring time.
             failures.extend(
                 _casilla_equals_implies_nonzero_predicate_failures(
+                    prefix,
+                    owner,
+                    predicate.expression,
+                    casillas,
+                    casilla_by_id,
+                ),
+            )
+        elif op_name == "casilla_equals_implies_profile_flag":
+            # casilla_equals_implies_profile_flag(["antecedent_id", "literal",
+            # "profile_field"]) mixes a casilla id, a literal, and a
+            # TaxpayerProfile field/property name; reject a malformed arity,
+            # an unknown/non-text antecedent casilla, an empty literal, or an
+            # unsupported profile field at authoring time.
+            failures.extend(
+                _casilla_equals_implies_profile_flag_predicate_failures(
                     prefix,
                     owner,
                     predicate.expression,

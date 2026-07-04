@@ -213,6 +213,26 @@ def test_khadija_ma_interest_anti_tautology_mutation_pair(
     assert findings == []
 
 
+def test_dividend_baseline_resolves_unconditional_art_25_1_f_rate(
+    m210_snapshot: RegistrySnapshot,
+) -> None:
+    """Art. 25.1.f.1º dividends resolve the 19% baseline with no treaty country declared.
+
+    Before the ``dividend`` tipo_renta category was added to the registry
+    baseline table, this lookup returned ``(None, [])`` (deferred baseline
+    coverage), and the application verification layer converted a matching
+    unresolved outcome into a BLOCKING finding rather than a rate. This
+    proves the resolver now returns the unconditional 19% Art 25.1.f rate
+    directly, with no findings.
+    """
+
+    profile = _resident_profile()
+    rate, findings = _resolve_m210_rate(profile, "dividend", 2025, m210_snapshot)
+
+    assert rate == Decimal("0.19")
+    assert findings == []
+
+
 def test_felipe_ar_pension_uses_domestic_tariff_without_blocking(
     m210_snapshot: RegistrySnapshot,
 ) -> None:

@@ -108,3 +108,33 @@ def test_irnr_resolve_tipo_gravamen_reports_unresolved_rate_as_typed_outcome() -
     assert outcome.source_refs
     assert outcome.context["tipo_renta"] == "general"
     assert outcome.context["country"] == "ZW"
+
+
+def test_irnr_resolve_tipo_gravamen_resolves_dividend_baseline_rate() -> None:
+    """Art. 25.1.f.1º dividends resolve the unconditional 19% baseline, not a blocking refusal.
+
+    Before the ``dividend`` tipo_renta category was added to the registry
+    baseline table, a non-resident with Spanish-source dividend income (a
+    routine M210 category) had no matching bracket row and hit the
+    fail-closed ``m210-baseline-tipo-deferred`` unresolved outcome. This
+    proves the engine now computes the rate directly with no treaty
+    country declared (the baseline branch), producing a real
+    ``tipo_gravamen`` value rather than an ``unresolved_outcomes`` entry.
+    """
+    snapshot = _current_m210_snapshot()
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            _M210_RENDIMIENTOS_INTEGROS_CASILLA: Decimal("1000"),
+            _M210_GASTOS_DEDUCIBLES_CASILLA: Decimal("0"),
+            _M210_RETENCION_PRACTICADA_CASILLA: Decimal("0"),
+        },
+        enum_binding_values={},
+        text_inputs={_M210_TIPO_RENTA_CASILLA: "dividend"},
+        date_context={"filing_period": date(2025, 12, 31)},
+    )
+
+    assert result.unresolved_outcomes == ()
+    assert result.values[_M210_TIPO_GRAVAMEN_CASILLA] == Decimal("0.19")
+    assert result.values["cuota_integra"] == Decimal("190.00")

@@ -28,6 +28,8 @@ See Also:
         Emits structural settlement-completeness advisories for partially modelled revisions.
     :func:`~aeat.application.modelo._bienes_inversion_advisory.collect_bienes_inversion_regularizacion_diagnostics`:
         Emits the Modelo 303 capital-goods IVA regularización proposed-casilla-43 advisory.
+    :func:`~aeat.application.modelo._prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`:
+        Emits the Modelo 303 annual prorrata-general regularización proposed-casilla-44 advisory.
 """
 
 from __future__ import annotations
@@ -45,6 +47,7 @@ from ._prior_payment_advisory import (
     collect_prior_payment_minoracion_not_captured_diagnostics,
     collect_prior_payment_not_deducted_diagnostics,
 )
+from ._prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 from ._settlement_grade_advisory import collect_settlement_not_computed_diagnostics
 
 __all__ = ["collect_bucket_aggregation_advisory_diagnostics"]
@@ -64,9 +67,11 @@ def collect_bucket_aggregation_advisory_diagnostics(
     Runs the calculate-path advisory collectors in tuple order:
     official-box transcription, Modelo 130 prior-payment under-deduction, Modelo
     130 prior-payment minoracion capture, settlement-not-computed structure, the
-    Modelo 100 mínimo-por-descendientes undeclared-facts advisory, and the Modelo
+    Modelo 100 mínimo-por-descendientes undeclared-facts advisory, the Modelo
     303 capital-goods IVA regularización (LIVA arts. 107-110) proposed-casilla-43
-    advisory. These diagnostics are informational and non-blocking; the
+    advisory, and the Modelo 303 annual prorrata-general regularización (LIVA
+    arts. 104-105) proposed-casilla-44 advisory. These diagnostics are
+    informational and non-blocking; the
     calculation result already exists, and the caller merely appends these rows
     to the source mesh's existing
     :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
@@ -139,5 +144,13 @@ def collect_bucket_aggregation_advisory_diagnostics(
             period_token=period_token,
             filing_year=filing_year,
             bucket_id=bucket_id,
+        )
+        + collect_prorrata_regularizacion_diagnostics(
+            revision,
+            casilla_values,
+            modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
+            observation_repository=observation_repository,
         )
     )

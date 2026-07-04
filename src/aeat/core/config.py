@@ -55,6 +55,7 @@ from .errors import ActiveProfilePointerError, CoreValidationError
 from .external_constants import DEFAULT_CURRENCY, DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
 from .resources import bundled_path
+from .telemetry import TelemetryTier
 
 if TYPE_CHECKING:
     from .external_constants import ExternalConstants
@@ -766,6 +767,48 @@ class Settings(AeatRuntimeSettings):
         description=(
             "Gestor/professional deployment flag. When True, cloud evidence upload is categorically "
             "refused regardless of aeat_evidence_cloud_upload_permitted or per-invocation consent."
+        ),
+    )
+
+    # ── Remote telemetry: opt-in consent posture ────────────────────────────
+    # Default and only-acceptable-for-serious-use posture is fully local: every
+    # existing telemetry primitive (LLM run-timing, MCP session trajectory) is
+    # written to encrypted secure storage or a local JSONL file and never
+    # contacts a network endpoint. Remote telemetry is a deliberate, narrow,
+    # opt-in exception governed by the same off-host consent shape as
+    # aeat_evidence_cloud_upload_permitted / aeat_evidence_gestor_mode
+    # (sensitive-financial-data-secure-storage-only; see
+    # 2026-07-04-remote-telemetry-adr). No transport reads these fields yet in
+    # this slice; the gate and the allowlisted payload schema are built first.
+    aeat_telemetry_opt_in: bool = Field(
+        default=False,
+        description=(
+            "Whether this deployment permits transmitting remote telemetry at all. Default off: all "
+            "telemetry stays local. When True, a per-invocation operator consent acknowledgement is "
+            "still required for each emit, and aeat_telemetry_tier must not be 'off'."
+        ),
+    )
+    aeat_telemetry_tier: TelemetryTier = Field(
+        default=TelemetryTier.OFF,
+        description=(
+            "Remote telemetry tier: 'off' (no remote emission regardless of opt-in), 'crash_only' "
+            "(error/outcome counters only), or 'full' (counters plus timing percentiles). Only "
+            "remote_allowed=True metric keys are ever eligible for transmission at any tier."
+        ),
+    )
+    aeat_telemetry_gestor_mode: bool = Field(
+        default=False,
+        description=(
+            "Gestor/professional deployment flag. When True, remote telemetry emission is "
+            "categorically refused regardless of aeat_telemetry_opt_in, aeat_telemetry_tier, or "
+            "per-invocation consent."
+        ),
+    )
+    aeat_telemetry_endpoint: str | None = Field(
+        default=None,
+        description=(
+            "Remote telemetry collector URL. Scaffolded for a future transport slice; no code in the "
+            "current telemetry package reads or dials this field."
         ),
     )
 

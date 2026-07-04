@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import zipfile
 from collections.abc import Iterator, Sequence
 from datetime import UTC, datetime
@@ -328,6 +329,357 @@ def test_review_package_build_refuses_draft_revision(tmp_path: Path) -> None:
     )
     assert result.exit_code != 0, result.output
     assert not package_path.exists()
+
+
+def _build_package(tmp_path: Path, *, name: str = "review-package.zip") -> Path:
+    _set_export_profile_name()
+    work_unit_id, _ = _seed_exportable_modelo_111_revision()
+    package_path = tmp_path / name
+    build_result = _invoke(
+        ["app", "modelo", "review-package", "build", work_unit_id, "--output", str(package_path)],
+    )
+    assert build_result.exit_code == 0, build_result.output
+    return package_path
+
+
+def test_review_package_sign_then_verify_signature_end_to_end(tmp_path: Path) -> None:
+    package_path = _build_package(tmp_path)
+    signature_path = tmp_path / "signature.json"
+
+    sign_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "review-package",
+            "sign",
+            str(package_path),
+            "--output",
+            str(signature_path),
+        ],
+    )
+    assert sign_result.exit_code == 0, sign_result.output
+    sign_payload = _payload(sign_result.output)
+    assert signature_path.exists()
+    public_key_hex = sign_payload["signer_public_key_hex"]
+    assert len(public_key_hex) == 64
+    bytes.fromhex(public_key_hex)  # is valid hex
+
+    # The private key must never appear anywhere in the CLI output.
+    signature_envelope = signature_path.read_text(encoding="utf-8")
+    assert "private_key" not in sign_result.output
+    assert public_key_hex in signature_envelope
+
+    verify_signature_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "review-package",
+            "verify-signature",
+            str(package_path),
+            str(signature_path),
+            "--public-key",
+            public_key_hex,
+        ],
+    )
+    assert verify_signature_result.exit_code == 0, verify_signature_result.output
+    verify_payload = _payload(verify_signature_result.output)
+    assert verify_payload["is_valid"] is True
+
+
+def test_review_package_verify_signature_fails_on_tampered_package(tmp_path: Path) -> None:
+    package_path = _build_package(tmp_path)
+    signature_path = tmp_path / "signature.json"
+
+    sign_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "review-package",
+            "sign",
+            str(package_path),
+            "--output",
+            str(signature_path),
+        ],
+    )
+    assert sign_result.exit_code == 0, sign_result.output
+    public_key_hex = _payload(sign_result.output)["signer_public_key_hex"]
+
+    rewritten = package_path.with_suffix(".rewritten")
+    with zipfile.ZipFile(package_path, "r") as src, zipfile.ZipFile(rewritten, "w") as dst:
+        for item in src.infolist():
+            data = b"TAMPERED" if item.filename == "draft.fichero-boe" else src.read(item.filename)
+            dst.writestr(item, data)
+    rewritten.replace(package_path)
+
+    verify_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "review-package",
+            "verify-signature",
+            str(package_path),
+            str(signature_path),
+            "--public-key",
+            public_key_hex,
+        ],
+    )
+    assert verify_result.exit_code == 0, verify_result.output
+    assert _payload(verify_result.output)["is_valid"] is False
+
+
+def test_review_package_verify_signature_fails_on_wrong_public_key(tmp_path: Path) -> None:
+    package_path = _build_package(tmp_path)
+    signature_path = tmp_path / "signature.json"
+    _invoke(
+        ["app", "modelo", "review-package", "sign", str(package_path), "--output", str(signature_path)],
+    )
+
+    wrong_public_key = "0" * 64
+    verify_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "review-package",
+            "verify-signature",
+            str(package_path),
+            str(signature_path),
+            "--public-key",
+            wrong_public_key,
+        ],
+    )
+    assert verify_result.exit_code == 0, verify_result.output
+    assert _payload(verify_result.output)["is_valid"] is False
+
+
+def test_review_package_counter_sign_then_verify_receipt_end_to_end(tmp_path: Path) -> None:
+    package_path = _build_package(tmp_path)
+    signature_path = tmp_path / "signature.json"
+
+    sign_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "review-package",
+            "sign",
+            str(package_path),
+            "--output",
+            str(signature_path),
+        ],
+    )
+    assert sign_result.exit_code == 0, sign_result.output
+    operator_public_key_hex = _payload(sign_result.output)["signer_public_key_hex"]
+
+    receipt_path = tmp_path / "receipt.json"
+    counter_sign_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "review-package",
+            "counter-sign",
+            str(package_path),
+            str(signature_path),
+            "--output",
+            str(receipt_path),
+            "--note",
+            "reviewed, no changes",
+        ],
+    )
+    assert counter_sign_result.exit_code == 0, counter_sign_result.output
+    counter_sign_payload = _payload(counter_sign_result.output)
+    assert receipt_path.exists()
+    counter_signer_public_key_hex = counter_sign_payload["counter_signer_public_key_hex"]
+    assert len(counter_signer_public_key_hex) == 64
+    assert counter_sign_payload["note"] == "reviewed, no changes"
+
+    # The counter-signer's own bucket is the same active bucket in this single-profile
+    # test harness, so the operator and the counter-signer public keys are identical
+    # here; verify-receipt still exercises both signature layers independently.
+    receipt_envelope = receipt_path.read_text(encoding="utf-8")
+    assert "private_key" not in counter_sign_result.output
+    assert counter_signer_public_key_hex in receipt_envelope
+
+    verify_receipt_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "review-package",
+            "verify-receipt",
+            str(package_path),
+            str(receipt_path),
+            "--operator-public-key",
+            operator_public_key_hex,
+            "--counter-signer-public-key",
+            counter_signer_public_key_hex,
+        ],
+    )
+    assert verify_receipt_result.exit_code == 0, verify_receipt_result.output
+    assert _payload(verify_receipt_result.output)["is_valid"] is True
+
+
+def test_review_package_verify_receipt_fails_when_note_edited(tmp_path: Path) -> None:
+    package_path = _build_package(tmp_path)
+    signature_path = tmp_path / "signature.json"
+    sign_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "review-package",
+            "sign",
+            str(package_path),
+            "--output",
+            str(signature_path),
+        ],
+    )
+    operator_public_key_hex = _payload(sign_result.output)["signer_public_key_hex"]
+
+    receipt_path = tmp_path / "receipt.json"
+    counter_sign_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "review-package",
+            "counter-sign",
+            str(package_path),
+            str(signature_path),
+            "--output",
+            str(receipt_path),
+            "--note",
+            "approved as filed",
+        ],
+    )
+    counter_signer_public_key_hex = _payload(counter_sign_result.output)["counter_signer_public_key_hex"]
+
+    receipt_json = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt_json["note"] = "approved WITH CHANGES"
+    receipt_path.write_text(json.dumps(receipt_json), encoding="utf-8")
+
+    verify_receipt_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "review-package",
+            "verify-receipt",
+            str(package_path),
+            str(receipt_path),
+            "--operator-public-key",
+            operator_public_key_hex,
+            "--counter-signer-public-key",
+            counter_signer_public_key_hex,
+        ],
+    )
+    assert verify_receipt_result.exit_code == 0, verify_receipt_result.output
+    assert _payload(verify_receipt_result.output)["is_valid"] is False
+
+
+def test_review_package_sign_refuses_missing_package(tmp_path: Path) -> None:
+    _set_export_profile_name()
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "sign",
+            str(tmp_path / "does-not-exist.zip"),
+            "--output",
+            str(tmp_path / "signature.json"),
+        ],
+    )
+    assert result.exit_code != 0, result.output
+
+
+def test_review_package_verify_signature_refuses_missing_signature_file(tmp_path: Path) -> None:
+    package_path = _build_package(tmp_path)
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "verify-signature",
+            str(package_path),
+            str(tmp_path / "does-not-exist-signature.json"),
+            "--public-key",
+            "0" * 64,
+        ],
+    )
+    assert result.exit_code != 0, result.output
+
+
+def test_review_package_verify_signature_refuses_malformed_signature_file(tmp_path: Path) -> None:
+    package_path = _build_package(tmp_path)
+    signature_path = tmp_path / "signature.json"
+    signature_path.write_text("not valid json at all", encoding="utf-8")
+
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "verify-signature",
+            str(package_path),
+            str(signature_path),
+            "--public-key",
+            "0" * 64,
+        ],
+    )
+    assert result.exit_code != 0, result.output
+
+
+def test_review_package_counter_sign_refuses_missing_signature_file(tmp_path: Path) -> None:
+    package_path = _build_package(tmp_path)
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "counter-sign",
+            str(package_path),
+            str(tmp_path / "does-not-exist-signature.json"),
+            "--output",
+            str(tmp_path / "receipt.json"),
+        ],
+    )
+    assert result.exit_code != 0, result.output
+
+
+def test_review_package_verify_receipt_refuses_missing_receipt_file(tmp_path: Path) -> None:
+    package_path = _build_package(tmp_path)
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "review-package",
+            "verify-receipt",
+            str(package_path),
+            str(tmp_path / "does-not-exist-receipt.json"),
+            "--operator-public-key",
+            "0" * 64,
+            "--counter-signer-public-key",
+            "1" * 64,
+        ],
+    )
+    assert result.exit_code != 0, result.output
 
 
 __all__: list[str] = []

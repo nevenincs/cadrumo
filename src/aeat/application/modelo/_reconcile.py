@@ -551,6 +551,13 @@ def _reconcile_parsed_declaracion(
 
     diffs: list[ModeloReconciliationDiff] = []
     advisories: list[ModeloReconciliationAdvisory] = []
+    if declaracion.extraction_profile_provisional:
+        advisories.append(
+            _extraction_profile_provisional_advisory(
+                modelo=str(work_unit.modelo),
+                extraction_profile_id=declaracion.extraction_profile_id,
+            ),
+        )
     diffs.extend(
         _identity_header_diffs(
             work_unit=work_unit,
@@ -726,6 +733,39 @@ def _finalise_reconciliation(
     catalogue_repo.save(next_catalogue)
 
     return report
+
+
+def _extraction_profile_provisional_advisory(
+    *,
+    modelo: str,
+    extraction_profile_id: str,
+) -> ModeloReconciliationAdvisory:
+    """Advisory: the declaración extraction profile is unconfirmed against a real specimen.
+
+    A ``declaracion_pdf`` registry profile with ``provisional_pending_specimen =
+    true`` has its ``bbox_anchored`` anchor positions guessed from the bundled
+    AEAT-published Diseño de Registro rather than confirmed against a real
+    filed PDF (see ``fixture-provenance-declared-in-sidecar`` and the profile's
+    ``verification_source``). Extraction still fails hard on a real PDF whose
+    layout diverges enough that the anchor pattern matches nowhere on the page
+    (``no-silent-under-declaration`` is upheld by the parser's coverage gate),
+    but a real PDF whose layout coincidentally matches the guessed anchor
+    position at the wrong casilla would extract a value with no signal that the
+    layout itself is unconfirmed. This advisory discloses that risk on every
+    reconcile against a provisional profile so the operator manually verifies
+    the extracted values against the printed PDF rather than trusting them as
+    confirmed.
+    """
+    return ModeloReconciliationAdvisory(
+        code="extraction_profile_provisional",
+        message=(
+            f"modelo {modelo} declaración extraction profile {extraction_profile_id!r} "
+            "has no real AEAT specimen confirming its printed layout "
+            "(provisional_pending_specimen=true); manually verify the extracted "
+            "casilla values against the printed PDF before relying on them"
+        ),
+        context={"modelo": modelo, "extraction_profile_id": extraction_profile_id},
+    )
 
 
 def _identity_anchor_unverified(anchor: str, *, modelo: str) -> ModeloReconciliationAdvisory:

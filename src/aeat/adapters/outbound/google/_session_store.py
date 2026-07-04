@@ -3,7 +3,7 @@
 This module writes Google records through
 :class:`adapters.persistence.storage.SecureObjectRepository`.
 
-Four per-profile record families back Google configuration and session state,
+Five per-profile record families back Google configuration and session state,
 each under the namespace and
 :class:`adapters.persistence.storage.SensitivityClass` declared by the
 storage registry:
@@ -25,16 +25,22 @@ storage registry:
   selection used by
   :func:`adapters.outbound.storage.get_storage_provider` at
   ``FINANCIAL`` sensitivity.
+- :data:`adapters.persistence.storage.GOOGLE_CREDENTIAL_SOURCE_NAMESPACE`
+  stores the :class:`adapters.outbound.google.GoogleCredentialSourceSelection`
+  choice of :class:`core.GoogleCredentialSourceKind` (and, for
+  service-account impersonation, the target SA email/scopes) at
+  ``FINANCIAL`` sensitivity — configuration only, never a credential.
 
 The public helpers use the profile identifier resolved by
 :func:`adapters.outbound.google.resolve_active_profile` as the storage
-object key, matching the ``{profile}`` grammar on all four namespace
+object key, matching the ``{profile}`` grammar on all five namespace
 definitions.
 """
 
 from __future__ import annotations
 
 from ....adapters.persistence.storage import (
+    GOOGLE_CREDENTIAL_SOURCE_NAMESPACE,
     GOOGLE_DRIVE_CONFIG_NAMESPACE,
     GOOGLE_OAUTH_CLIENT_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
@@ -45,12 +51,14 @@ from ....adapters.persistence.storage import (
 from ....core.classification import SensitivityClass
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.time import now
+from ._impersonation import GoogleCredentialSourceSelection
 from ._records import DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
 _NAMESPACE_CLIENT = GOOGLE_OAUTH_CLIENT_NAMESPACE.namespace
 _NAMESPACE_TOKEN = GOOGLE_OAUTH_TOKEN_NAMESPACE.namespace
 _NAMESPACE_METADATA = GOOGLE_OAUTH_METADATA_NAMESPACE.namespace
 _NAMESPACE_DRIVE_CONFIG = GOOGLE_DRIVE_CONFIG_NAMESPACE.namespace
+_NAMESPACE_CREDENTIAL_SOURCE = GOOGLE_CREDENTIAL_SOURCE_NAMESPACE.namespace
 _RECORD_VERSION = 1
 
 
@@ -205,6 +213,50 @@ def load_drive_config(profile: str) -> DriveConfig | None:
     return DriveConfig.model_validate_json(record.payload.decode(UTF_8_ENCODING))
 
 
+def save_credential_source_selection(profile: str, selection: GoogleCredentialSourceSelection) -> None:
+    """Persist the per-profile :class:`adapters.outbound.google.GoogleCredentialSourceSelection`.
+
+    The record is written under
+    :data:`adapters.persistence.storage.GOOGLE_CREDENTIAL_SOURCE_NAMESPACE`
+    with :class:`adapters.persistence.storage.SensitivityClass`
+    ``FINANCIAL`` so
+    :func:`adapters.outbound.storage.build_google_credentials` can dispatch
+    to the chosen :class:`core.GoogleCredentialSourceKind` without
+    re-reading environment-only configuration. No long-lived secret rides
+    on this record: the impersonated access token is re-derived from
+    Application Default Credentials on every use and is never persisted.
+    """
+    _repository().save(
+        namespace=_NAMESPACE_CREDENTIAL_SOURCE,
+        object_key=profile,
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=_RECORD_VERSION,
+        written_at=now(),
+        payload=selection.model_dump_json().encode(UTF_8_ENCODING),
+    )
+
+
+def load_credential_source_selection(profile: str) -> GoogleCredentialSourceSelection | None:
+    """Load the per-profile :class:`adapters.outbound.google.GoogleCredentialSourceSelection`.
+
+    Returns:
+        The stored :class:`adapters.outbound.google.GoogleCredentialSourceSelection`,
+        or ``None`` when the profile has no persisted selection. A ``None``
+        result means the default
+        :attr:`core.GoogleCredentialSourceKind.OAUTH_DESKTOP` path applies —
+        callers must not treat a missing record as an error.
+    """
+    record = _repository().load(
+        _NAMESPACE_CREDENTIAL_SOURCE,
+        profile,
+        expected_class=SensitivityClass.FINANCIAL,
+        max_supported_version=_RECORD_VERSION,
+    )
+    if record is None:
+        return None
+    return GoogleCredentialSourceSelection.model_validate_json(record.payload.decode(UTF_8_ENCODING))
+
+
 def delete_session(profile: str) -> tuple[bool, bool]:
     """Delete the login session while preserving registration and Drive config.
 
@@ -233,10 +285,12 @@ def delete_session(profile: str) -> tuple[bool, bool]:
 __all__ = [
     "delete_session",
     "load_client",
+    "load_credential_source_selection",
     "load_drive_config",
     "load_metadata",
     "load_token",
     "save_client",
+    "save_credential_source_selection",
     "save_drive_config",
     "save_metadata",
     "save_token",

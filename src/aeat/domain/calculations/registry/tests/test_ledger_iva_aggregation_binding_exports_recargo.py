@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from functools import cache
 
@@ -15,8 +16,12 @@ from ....iva import (
     IvaRateKind,
 )
 from .. import (
+    CasillaId,
+    RegistryCalculationResult,
+    calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
+    validated_casilla_id,
 )
 from .._binding_selector_utils import selector_as_dict
 from ._ledger_iva_aggregation_support import (
@@ -308,3 +313,104 @@ def test_modelo_303_2009_revision_recargo_and_intracom_export_aggregate_from_led
     # Intra-community / export base now aggregate (0 before the back-fill).
     assert values["modelo-303-casilla-59-entregas-intracomunitarias-base"] == Decimal("2000")
     assert values["modelo-303-casilla-60-exportaciones-base"] == Decimal("3000")
+
+
+_CASILLA_CUOTA_DEVENGADA_TOTAL: CasillaId = validated_casilla_id(
+    "iva.cuota-devengada-total",
+    surface="_CASILLA_CUOTA_DEVENGADA_TOTAL",
+)
+_CASILLA_RESULTADO_REGIMEN_GENERAL: CasillaId = validated_casilla_id(
+    "iva.resultado-regimen-general",
+    surface="_CASILLA_RESULTADO_REGIMEN_GENERAL",
+)
+
+
+def _calculate_303_2009_from_observations(
+    *,
+    filing_year: int,
+    period: str,
+    observations: tuple[object, ...],
+) -> RegistryCalculationResult:
+    """Calculate helper scoped to the 2009-y-siguientes revision's own binding set.
+
+    Unlike :func:`_calculate_303_from_observations` (which seeds the
+    2023-y-siguientes-only ``modelo-303-autoconsumo-promotor-base`` /
+    ``modelo-303-profile-state-attribution-ratio`` bindings), the
+    2009-y-siguientes revision declares only
+    ``modelo-303-compensacion-pendiente-anteriores`` as a manual binding fact.
+    """
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
+    binding_values = {
+        "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+        **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
+    }
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    return calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": observations[-1].transaction_date},
+    )
+
+
+def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_changes_total() -> None:
+    """The 2009-y-siguientes casilla-27 total now includes recargo de equivalencia.
+
+    Backport of the 2023-y-siguientes casilla-27 grounding (see the comment on
+    ``modelo-303-iva-cuota-devengada-total`` in this revision's
+    formulas/0001-formulas.toml): the 2009-y-siguientes revision (filing years
+    2009-2022) summed only the five non-recargo devengado components, silently
+    excluding the recargo cuota tiers (casillas 18/21/24, LIVA art. 161) a
+    ledger-driven filer's supplier may have charged. filing_year=2022 resolves
+    to the 2009-y-siguientes revision. This test grades the formula's own
+    target casilla ``iva.cuota-devengada-total`` (the semantic casilla "27"
+    projects onto in the export layout); the 2009 revision's literal-number
+    casilla 27 remains a separate ``input_kind = manual`` casilla with no
+    projection formula wired from the computed total on this revision
+    (unlike 2023-y-siguientes' ``modelo-303-dr303-27-projection``) — a
+    pre-existing, separate structural gap out of scope of this recargo fix.
+
+    Anti-tautology: this does not hand-compute the with-recargo absolute
+    figure from the registry's own formula under test. It runs the full
+    :func:`calculate_registry_snapshot` engine twice — once with a recargo
+    general (5.2pct) ledger observation, once with the identical scenario but
+    recargo zeroed — and asserts the delta in the devengada total equals
+    exactly the dropped recargo_amount. A formula that ignored the recargo
+    terms, or always returned a constant, would fail this check — mirroring
+    the 2023-y-siguientes pattern in
+    ``test_casilla_27_anti_tautology_recargo_changes_total_cuota_devengada``.
+    """
+
+    def _observations(*, include_recargo: bool) -> tuple[object, ...]:
+        return (
+            _observation(
+                ledger_id="op-ventas-recargo-equivalencia",
+                txn_date=date(2022, 5, 15),
+                category=IvaCategory.DOMESTIC_GENERAL_21,
+                rate_kind=IvaRateKind.GENERAL,
+                flow=IvaFlowDirection.REPERCUTIDO,
+                base=Decimal("24000.00"),
+                iva=Decimal("5040.00"),
+                recargo=Decimal("1248.00") if include_recargo else Decimal("0"),
+            ),
+        )
+
+    with_recargo = _calculate_303_2009_from_observations(
+        filing_year=2022,
+        period="2T",
+        observations=_observations(include_recargo=True),
+    )
+    without_recargo = _calculate_303_2009_from_observations(
+        filing_year=2022,
+        period="2T",
+        observations=_observations(include_recargo=False),
+    )
+
+    assert with_recargo.values[_CASILLA_CUOTA_DEVENGADA_TOTAL] - without_recargo.values[
+        _CASILLA_CUOTA_DEVENGADA_TOTAL
+    ] == Decimal("1248.00")
+    # Recargo is devengado-only (no matching deducible leg), so the resultado
+    # side must shift by exactly the same 1.248,00 EUR.
+    assert with_recargo.values[_CASILLA_RESULTADO_REGIMEN_GENERAL] - without_recargo.values[
+        _CASILLA_RESULTADO_REGIMEN_GENERAL
+    ] == Decimal("1248.00")

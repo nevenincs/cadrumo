@@ -205,6 +205,8 @@ def _synthetic_declaracion(
             for casilla_id, value in values.items()
         ),
         warnings=(),
+        extraction_profile_id=f"modelo-{work_unit.modelo}-declaracion-pdf",
+        extraction_profile_provisional=False,
         source_pdf_path=Path(f"synthetic/declaracion-{work_unit.modelo}.pdf"),
         source_pdf_sha256="0" * 64,
         parsed_at=now(),

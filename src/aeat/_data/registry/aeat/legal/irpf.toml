@@ -952,6 +952,111 @@ required_text = [
     "aplicables durante el año\u00a02026",
 ]
 
+[legal."orden-hac-1425-2025:da-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1425-2025.html#disposicion-adicional-primera"
+document_id = "BOE-A-2025-25272"
+section = "disposición adicional primera"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
+published_at = 2025-12-11
+effective_from = 2026-01-01
+effective_to = 2026-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp)"
+notes = "Reduccion general del 5 por ciento del rendimiento neto de modulos para 2026, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2026 (apartado 3). Cross-checked byte-identical against the 2025 disposicion (orden-hac-1347-2024:da-1): same 5 por ciento figure."
+required_text = [
+    "Reducción en 2026 del rendimiento neto calculado por el método de estimación objetiva",
+    "podrán reducir el rendimiento neto de módulos obtenido en 2026 en un 5 por ciento",
+    "Esta reducción se tendrá en cuenta para cuantificar el rendimiento neto a efectos de los pagos fraccionados correspondientes a 2026",
+]
+
+[legal."orden-hac-1425-2025:instruccion-2-2-a"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1425-2025.html#anexo-ii-instruccion-2-2-a"
+document_id = "BOE-A-2025-25272"
+section = "Anexo II, instrucción 2.2.a) Minoración por incentivos al empleo"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
+published_at = 2025-12-11
+effective_from = 2026-01-01
+effective_to = 2026-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp)"
+notes = "Fase 2a: minoracion por incentivos al empleo. El rendimiento neto previo se minora en el coeficiente de minoracion (incremento del modulo personal asalariado x 0,40, mas el coeficiente por tramos del numero de unidades restante) multiplicado por el rendimiento anual por unidad del modulo personal asalariado. Cross-checked byte-identical against the 2025 instruccion (orden-hac-1347-2024:instruccion-2-2-a): same coeficiente 0,40 and tramos schedule (0,10/0,15/0,20/0,25/0,30)."
+required_text = [
+    "2.2 Fase 2: Rendimiento neto minorado.",
+    "El rendimiento neto previo se minorará en el importe de los incentivos al empleo y la inversión",
+    "a) Minoración por incentivos al empleo.",
+    "Si la diferencia resultase positiva, a ésta se aplicará el coeficiente 0,40",
+]
+
+[legal."orden-hac-1425-2025:instruccion-2-2-b"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1425-2025.html#anexo-ii-instruccion-2-2-b"
+document_id = "BOE-A-2025-25272"
+section = "Anexo II, instrucción 2.2.b) Minoración por incentivos a la inversión"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
+published_at = 2025-12-11
+effective_from = 2026-01-01
+effective_to = 2026-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp)"
+notes = "Fase 2a: minoracion por incentivos a la inversion. Son deducibles las cantidades que, en concepto de amortizacion del inmovilizado material o intangible afecto a la actividad, correspondan a la depreciacion efectiva, calculada segun la tabla de amortizacion de la propia orden (coeficiente lineal maximo, minimo derivado del periodo maximo, o cualquier coeficiente intermedio). El primer slice del motor no modela un registro de bienes de inversion por elemento; la minoracion se recoge como un importe declarado por el operador, grounded en esta instruccion, y se resta del rendimiento neto previo junto con la minoracion por incentivos al empleo."
+required_text = [
+    "b) Minoración por incentivos a la inversión.",
+    "Serán deducibles las cantidades que, en concepto de amortización del inmovilizado, material o intangible, correspondan a la depreciación efectiva",
+    "El coeficiente de amortización lineal máximo.",
+]
+
+[legal."orden-hac-1425-2025:instruccion-2-3-b-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1425-2025.html#anexo-ii-instruccion-2-3-b-3"
+document_id = "BOE-A-2025-25272"
+section = "Anexo II, instrucción 2.3.b.3) Índice corrector de exceso"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
+published_at = 2025-12-11
+effective_from = 2026-01-01
+effective_to = 2026-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp)"
+notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantia tabulada para la actividad, al exceso sobre dicha cuantia se le aplica el indice 1,30. Cross-checked byte-identical against the 2025 instruccion (orden-hac-1347-2024:instruccion-2-3-b-3): same indice 1,30 and per-actividad cuantias for every currently tabled epigrafe (972.1, 721.2, 722, 671.4, 671.5, 672.1, 673.1, 673.2)."
+required_text = [
+    "b.3) Índice corrector de exceso:",
+    "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
+]
+
+[legal."orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1425-2025.html#anexo-ii-instruccion-2-3-incompatibilidades"
+document_id = "BOE-A-2025-25272"
+section = "Anexo II, instrucción 2.3 Fase 3: Rendimiento neto de módulos — Incompatibilidades entre los índices correctores"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
+published_at = 2025-12-11
+effective_from = 2026-01-01
+effective_to = 2026-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp)"
+notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3). El motor de modulos M131 (0003-modulos-engine.toml) modela unicamente el indice de exceso (b.3) en este primer slice para 2026, sin cruzar la incompatibilidad con los indices especiales a.2/a.4 de las actividades tabuladas que los llevan asignados (721.2 transporte por autotaxis, 722 transporte de mercancias por carretera); esta entrada fundamenta el advisory no bloqueante que senala esa brecha al operador, per orden-hac-1425-2025-Anexo-II-instruccion-2-3 y no-silent-under-declaration. Cross-checked byte-identical against the 2025 instruccion (orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades)."
+required_text = [
+    "Incompatibilidades entre los índices correctores:",
+    "En ningún caso será aplicable el índice corrector para empresas de pequeña dimensión (b.1) a las actividades para las que están previstos los índices correctores especiales enumerados en las letras a.2), a.3), a.4) y a.5).",
+    "Cuando resulte aplicable el índice corrector para empresas de pequeña dimensión (b.1) no se aplicará el índice corrector de exceso (b.3).",
+]
+
 [legal."ley-35-2006:art-99"]
 evidence_tier = "legal_authority"
 authority = "boe"

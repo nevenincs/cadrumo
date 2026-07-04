@@ -1,18 +1,22 @@
-"""Prove the split install: slim wheel degrades loudly, companion restores byte-parity.
+"""Prove the split install: slim wheel degrades loudly, companions restore byte-parity.
 
-The two-distribution split (ADR "Wheel split") ships the runtime as a slim
-``aeat`` wheel with the corpus source binaries excluded, plus an ``aeat-data``
-companion carrying exactly those binaries. This lane proves both halves of the
-contract in a fresh stdlib venv:
+The split ships the runtime as a slim ``aeat`` wheel with the corpus source
+binaries excluded, plus TWO sub-cap companion distributions carrying exactly
+those binaries between them: ``aeat-data-manuals`` (``corpus/manuals``) and
+``aeat-data-official`` (``corpus/aeat_official`` + ``corpus/normatives``). Both
+contribute subtrees to the SAME ``aeat_data`` implicit namespace package, so the
+corpus seam resolves a binary from either portion. This lane proves both halves
+of the contract in a fresh stdlib venv:
 
 - **Core alone (advisory path):** the registry authority loads and validates
   non-fatally while emitting the loud :class:`CorpusCompanionAdvisory` naming
   the missing set and the ``aeat-cli[corpus-sources]`` install hint, and the
   companion-guarded ``aeat app registry verify`` verb refuses instructively.
-- **With the companion (byte-identical path):** the same venv, after
-  installing the ``aeat-data`` wheel, resolves the binaries through the corpus
-  seam, the advisory disappears, and full byte-exact source verification runs
-  clean — behaviour identical to a full checkout.
+- **With both companions (byte-identical path):** the same venv, after
+  installing the two ``aeat-data-*`` wheels, resolves the binaries through the
+  corpus seam over the joined namespace, the advisory disappears, and full
+  byte-exact source verification runs clean — behaviour identical to a full
+  checkout.
 """
 
 from __future__ import annotations
@@ -109,17 +113,43 @@ def _build_slim_wheel(build_root: Path, work_dir: Path, uv: str) -> Path:
     return wheels[0]
 
 
-def _build_data_wheel(build_root: Path, work_dir: Path, uv: str) -> Path:
-    """Build the ``aeat-data`` companion wheel from its in-repo project."""
+# The two corpus companions and the wheel glob each emits, in install order.
+_DATA_COMPANIONS = (
+    ("aeat_data_manuals", "aeat_data_manuals-*.whl"),
+    ("aeat_data_official", "aeat_data_official-*.whl"),
+)
+
+# PyPI's default per-file size cap, in the decimal-MB convention the publish and
+# CI artifact guards use. The split exists to keep each companion sub-cap.
+_PYPI_FILE_CAP_BYTES = 100 * 1_000_000
+
+
+def _build_data_wheels(build_root: Path, work_dir: Path, uv: str) -> list[Path]:
+    """Build both ``aeat-data-*`` companion wheels from their in-repo projects.
+
+    Each companion wheel is asserted sub-cap here too: a companion that crossed
+    PyPI's 100 MB per-file limit would defeat the entire reason for the split.
+    """
     out_dir = work_dir / "dist-data"
-    _run(
-        [uv, "build", "--project", str(build_root / "packaging" / "aeat_data"), "--out-dir", str(out_dir)],
-        cwd=build_root,
-    )
-    wheels = sorted(out_dir.glob("aeat_data-*.whl"))
-    if len(wheels) != 1:
-        raise SystemExit(f"expected exactly one aeat-data wheel in {out_dir}, found {wheels!r}")
-    return wheels[0]
+    wheels: list[Path] = []
+    for project_dir, wheel_glob in _DATA_COMPANIONS:
+        _run(
+            [uv, "build", "--project", str(build_root / "packaging" / project_dir), "--out-dir", str(out_dir)],
+            cwd=build_root,
+        )
+        built = sorted(out_dir.glob(wheel_glob))
+        if len(built) != 1:
+            raise SystemExit(f"expected exactly one {wheel_glob} in {out_dir}, found {built!r}")
+        wheel = built[0]
+        size_mb = wheel.stat().st_size / 1_000_000
+        print(f"  {wheel.name}: {size_mb:.1f} MB", flush=True)
+        if wheel.stat().st_size >= _PYPI_FILE_CAP_BYTES:
+            raise SystemExit(
+                f"{wheel.name} is {size_mb:.1f} MB, at or over PyPI's 100 MB per-file cap; the split must keep "
+                "each companion sub-cap"
+            )
+        wheels.append(wheel)
+    return wheels
 
 
 def _assert_registry_verify_refuses(work_dir: Path, venv_path: Path) -> None:
@@ -162,9 +192,9 @@ def main(argv: list[str] | None = None) -> int:
     print("extracting pristine HEAD tree for owner-clean wheel builds", flush=True)
     build_root = _head_extract(repo_root, work_dir)
 
-    print("building slim aeat wheel and aeat-data companion wheel", flush=True)
+    print("building slim aeat wheel and both aeat-data-* companion wheels", flush=True)
     wheel = _build_slim_wheel(build_root, work_dir, uv)
-    data_wheel = _build_data_wheel(build_root, work_dir, uv)
+    data_wheels = _build_data_wheels(build_root, work_dir, uv)
 
     print("creating stdlib venv and installing the slim wheel ALONE", flush=True)
     venv_path = _create_pip_venv(work_dir, args.python)
@@ -174,8 +204,9 @@ def main(argv: list[str] | None = None) -> int:
     _run([str(_venv_python(venv_path)), "-c", _ADVISORY_PROBE], cwd=work_dir)
     _assert_registry_verify_refuses(work_dir, venv_path)
 
-    print("installing the aeat-data companion into the same venv", flush=True)
-    _install_target_with_pip(work_dir, str(data_wheel.resolve()), venv_path)
+    print("installing BOTH aeat-data-* companions into the same venv", flush=True)
+    for data_wheel in data_wheels:
+        _install_target_with_pip(work_dir, str(data_wheel.resolve()), venv_path)
 
     print("byte-identical path: advisory gone; full source verification runs clean", flush=True)
     _run([str(_venv_python(venv_path)), "-c", _CLEAN_PROBE], cwd=work_dir)
@@ -186,25 +217,27 @@ def main(argv: list[str] | None = None) -> int:
         lane="split-install",
         artifacts={
             "wheel": _manifest_path(work_dir, wheel),
-            "data_wheel": _manifest_path(work_dir, data_wheel),
+            "data_wheel_manuals": _manifest_path(work_dir, data_wheels[0]),
+            "data_wheel_official": _manifest_path(work_dir, data_wheels[1]),
             "venv": _manifest_path(work_dir, venv_path),
         },
         checks=(
             "pristine HEAD extract",
             "slim wheel build sheds every corpus binary",
-            "aeat-data companion wheel build",
+            "both aeat-data-* companion wheels build sub-cap (< 100 MB each)",
             "stdlib venv creation",
             "slim-wheel-only pip install",
             "companion-less registry load emits the loud advisory",
             "companion-less registry verify refuses with the install hint",
-            "companion pip install",
+            "both companions pip install into one venv (joined namespace)",
             "companion registry load is advisory-free",
             "companion registry verify runs byte-exact clean",
         ),
         details={"python": args.python},
     )
 
-    print(f"split-install packaging smoke passed: {wheel} + {data_wheel}", flush=True)
+    joined = " + ".join(str(w) for w in (wheel, *data_wheels))
+    print(f"split-install packaging smoke passed: {joined}", flush=True)
     print(f"packaging smoke manifest: {manifest}", flush=True)
     return 0
 

@@ -518,54 +518,6 @@ class TestRepresentanteFiscalAxis:
             TaxpayerProfile.model_validate_json(json.dumps(payload))
 
 
-class TestConvenioAplicable:
-    """IRNR-003: convenio_aplicable derived property.
-
-    The property performs a static lookup against the known double-taxation
-    treaty table. Values are authoritative BOE identifiers; this class
-    asserts known treaties and the None-fallback for unsupported countries.
-    """
-
-    def _profile(self, country: str) -> TaxpayerProfile:
-        return TaxpayerProfile(
-            tax_id="X1234567L",
-            iva_regime=IVARegime.GENERAL,
-            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
-            country_of_fiscal_residence=country,
-            # EU countries (DE, FR, NL) don't need representante; non-EU countries do.
-            representante_fiscal_nif=("12345678Z" if country in {"GB", "US", "MA"} else None),
-            representante_fiscal_nombre=("Test Rep" if country in {"GB", "US", "MA"} else None),
-        )
-
-    def test_known_country_maps_to_convenio(self) -> None:
-        cases = (
-            ("GB", "BOE-A-2014-5171 España-UK"),
-            ("DE", "BOE-A-2012-3669 España-Alemania"),
-            ("FR", "BOE-A-1997-21331 España-Francia"),
-            ("US", "BOE-A-1990-28246 España-EE.UU."),
-            ("NL", "BOE-A-1972-674 España-Países Bajos"),
-            ("MA", "BOE-A-1985-9280 España-Marruecos"),
-        )
-        for country, expected in cases:
-            assert self._profile(country).convenio_aplicable == expected, country
-
-    def test_unknown_country_returns_none(self) -> None:
-        # ZZ is not a real ISO code and has no convenio entry.
-        profile = TaxpayerProfile(
-            tax_id="X1234567L",
-            iva_regime=IVARegime.GENERAL,
-            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
-            country_of_fiscal_residence="ZZ",
-            representante_fiscal_nif="12345678Z",
-            representante_fiscal_nombre="Rep Desconocido",
-        )
-        assert profile.convenio_aplicable is None
-
-    def test_resident_irpf_returns_none(self) -> None:
-        profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
-        assert profile.convenio_aplicable is None
-
-
 class TestMultiplePagadoresObligation:
     """Art. 96.3 LIRPF filing obligation: >= 2 pagadores AND secondary income > 1500.
 

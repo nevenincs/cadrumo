@@ -51,19 +51,21 @@ _OBSERVED_VALUES: dict[CasillaId, str] = {
 }
 
 
-def _generate_pdf(
-    tmp_path: Path,
+def _render_borrador_pdf_bytes(
     *,
     artefact_kind: str = "BORRADOR",
     csv: str | None = None,
     casilla_values: Mapping[CasillaId, str] | None = None,
-) -> Path:
+) -> bytes:
+    """Render one Modelo 100 borrador PDF to bytes via a single ReportLab Canvas."""
+    from io import BytesIO
+
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas
 
     values = casilla_values if casilla_values is not None else _OBSERVED_VALUES
-    path = tmp_path / f"modelo_100_2025_{artefact_kind.lower()}.pdf"
-    page = canvas.Canvas(str(path), pagesize=A4)
+    buffer = BytesIO()
+    page = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
     y = height - 60
     page.drawString(50, y, "AGENCIA TRIBUTARIA")
@@ -86,7 +88,42 @@ def _generate_pdf(
     if csv is not None:
         page.drawString(50, 40, f"Codigo Seguro de Verificacion: {csv}")
     page.save()
+    return buffer.getvalue()
+
+
+def _write_borrador_pdf(tmp_path: Path, payload: bytes, *, artefact_kind: str = "BORRADOR") -> Path:
+    """Write pre-rendered borrador PDF bytes into a per-test ``tmp_path`` file."""
+    path = tmp_path / f"modelo_100_2025_{artefact_kind.lower()}.pdf"
+    path.write_bytes(payload)
     return path
+
+
+def _generate_pdf(
+    tmp_path: Path,
+    *,
+    artefact_kind: str = "BORRADOR",
+    csv: str | None = None,
+    casilla_values: Mapping[CasillaId, str] | None = None,
+) -> Path:
+    payload = _render_borrador_pdf_bytes(
+        artefact_kind=artefact_kind,
+        csv=csv,
+        casilla_values=casilla_values,
+    )
+    return _write_borrador_pdf(tmp_path, payload, artefact_kind=artefact_kind)
+
+
+@pytest.fixture(scope="module")
+def default_borrador_pdf_bytes() -> bytes:
+    """Render the default-content BORRADOR Modelo 100 PDF once per module.
+
+    Several tests share the identical default artefact (``_OBSERVED_VALUES``,
+    ``artefact_kind='BORRADOR'``, no CSV). Building the ReportLab Canvas once
+    and re-writing the cached bytes into each test's own ``tmp_path`` keeps
+    per-test filesystem isolation intact (the rename tests still mutate only
+    their own copy) while paying the Canvas-construction cost a single time.
+    """
+    return _render_borrador_pdf_bytes(artefact_kind="BORRADOR", csv=None, casilla_values=None)
 
 
 def _profile(
@@ -131,8 +168,8 @@ def _spanish_amount(value: Decimal) -> str:
 class TestArtefactKindDetection:
     """Detect the correct :class:`ArtefactKind` per artefact marker."""
 
-    def test_detects_borrador(self, tmp_path: Path) -> None:
-        pdf = _generate_pdf(tmp_path, artefact_kind="BORRADOR")
+    def test_detects_borrador(self, tmp_path: Path, default_borrador_pdf_bytes: bytes) -> None:
+        pdf = _write_borrador_pdf(tmp_path, default_borrador_pdf_bytes)
         filing = parse_borrador(pdf)
         assert filing.artefact_kind is ArtefactKind.BORRADOR
         assert filing.csv is None
@@ -182,8 +219,8 @@ class TestArtefactKindDetection:
 class TestObservedValues:
     """Extract printed casilla rows without claiming Modelo 100 completeness."""
 
-    def test_extracts_observed_casilla_rows(self, tmp_path: Path) -> None:
-        pdf = _generate_pdf(tmp_path)
+    def test_extracts_observed_casilla_rows(self, tmp_path: Path, default_borrador_pdf_bytes: bytes) -> None:
+        pdf = _write_borrador_pdf(tmp_path, default_borrador_pdf_bytes)
         filing: InboundBorradorObservation = parse_borrador(pdf)
         assert filing.modelo == "100"
         assert filing.ejercicio == "2025"
@@ -199,8 +236,9 @@ class TestObservedValues:
         self,
         tmp_path: Path,
         caplog: pytest.LogCaptureFixture,
+        default_borrador_pdf_bytes: bytes,
     ) -> None:
-        pdf = _generate_pdf(tmp_path)
+        pdf = _write_borrador_pdf(tmp_path, default_borrador_pdf_bytes)
         sensitive_pdf = tmp_path / "12345678Z-renta-borrador.pdf"
         pdf.rename(sensitive_pdf)
 
@@ -211,8 +249,12 @@ class TestObservedValues:
         assert "12345678Z-renta-borrador.pdf" not in rendered_logs
         assert "source=<input-pdf>" in rendered_logs
 
-    def test_registry_profile_filters_targets_and_records_coverage(self, tmp_path: Path) -> None:
-        pdf = _generate_pdf(tmp_path)
+    def test_registry_profile_filters_targets_and_records_coverage(
+        self,
+        tmp_path: Path,
+        default_borrador_pdf_bytes: bytes,
+    ) -> None:
+        pdf = _write_borrador_pdf(tmp_path, default_borrador_pdf_bytes)
         profile = _profile()
 
         filing = parse_borrador(
@@ -239,8 +281,8 @@ class TestObservedValues:
                 parse_mode=BorradorParseMode.REGISTRY_PROFILE,
             )
 
-    def test_registry_profile_mode_requires_profile(self, tmp_path: Path) -> None:
-        pdf = _generate_pdf(tmp_path)
+    def test_registry_profile_mode_requires_profile(self, tmp_path: Path, default_borrador_pdf_bytes: bytes) -> None:
+        pdf = _write_borrador_pdf(tmp_path, default_borrador_pdf_bytes)
 
         with pytest.raises(BorradorParseError, match="requires a registry extraction profile"):
             parse_borrador(pdf, parse_mode=BorradorParseMode.REGISTRY_PROFILE)
@@ -285,8 +327,8 @@ class TestSparseExtraction:
 class TestOverrides:
     """Verify the explicit ``artefact_kind_override`` entry-point arg."""
 
-    def test_artefact_kind_override_skips_detection(self, tmp_path: Path) -> None:
-        pdf = _generate_pdf(tmp_path, artefact_kind="BORRADOR")
+    def test_artefact_kind_override_skips_detection(self, tmp_path: Path, default_borrador_pdf_bytes: bytes) -> None:
+        pdf = _write_borrador_pdf(tmp_path, default_borrador_pdf_bytes)
         with pytest.raises(BorradorParseError, match=r"BORRADOR|DECLARACION|artefact|kind"):
             parse_borrador(pdf, artefact_kind_override=ArtefactKind.DECLARACION)
 

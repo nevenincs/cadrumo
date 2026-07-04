@@ -43,6 +43,10 @@ Major declarations:
   ledger transactions, and :func:`extract_invoice_fields` with
   :class:`InvoiceDraft` - the on-host field-extraction primitive an operator
   reviews before minting a :class:`domain.invoices.Invoice` from a PDF.
+* :func:`confirm_invoice_draft_from_evidence` with
+  :class:`InvoiceConfirmationResult` - the non-interactive confirm step that
+  re-extracts a draft, layers operator overrides on top, and delegates the
+  actual write to :func:`application.invoices.create_catalogue_invoice`.
 * :class:`PayableInvoiceService`,
   :class:`CollectibleInvoiceService`, and
   :class:`BusinessOperationInvoiceRepository` - the
@@ -141,7 +145,13 @@ from ._evidence import (
     PurchaseInvoiceEvidenceRepository,
     PurchaseInvoiceEvidenceService,
 )
-from ._evidence_draft import InvoiceDraft, extract_invoice_fields
+from ._evidence_draft import (
+    InvoiceConfirmationResult,
+    InvoiceDraft,
+    confirm_invoice_draft_from_evidence,
+    extract_invoice_draft_from_evidence,
+    extract_invoice_fields,
+)
 from ._id_resolution import (
     MINIMUM_DISPLAY_ID_WIDTH,
     compute_display_id_width,
@@ -257,6 +267,7 @@ __all__ = [
     "CollectibleInvoiceService",
     "EligibleCategoryRow",
     "ExportSerializationFormat",
+    "InvoiceConfirmationResult",
     "InvoiceDraft",
     "LLMClassificationSuggestion",
     "LLMProvider",
@@ -327,10 +338,12 @@ __all__ = [
     "censo_business_pct_for",
     "censo_override_warning",
     "compute_display_id_width",
+    "confirm_invoice_draft_from_evidence",
     "create_manual_transaction",
     "derive_operator_iva_substrate",
     "eligible_ratio_categories",
     "export_ledger_transactions",
+    "extract_invoice_draft_from_evidence",
     "extract_invoice_fields",
     "get_manual_transaction",
     "get_transaction_participation",

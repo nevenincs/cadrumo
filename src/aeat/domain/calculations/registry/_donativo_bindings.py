@@ -1,6 +1,6 @@
 """Donativo (donor) detail-record registry binding helpers.
 
-Modelo 182 (Ley 49/2002, art. 24; Orden EHA/3021/2007) is the annual
+Modelo 182 (Orden EHA/3021/2007; Ley 49/2002 de mecenazgo) is the annual
 informativa an entity that receives donativos, donaciones, or aportaciones
 files to declare, per donor, the amounts it received during the year. This is
 the "registro tipo 2" per-donor detail row: the entity enrolls one row per

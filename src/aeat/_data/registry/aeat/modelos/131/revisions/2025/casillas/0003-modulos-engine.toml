@@ -51,8 +51,6 @@ label = "Módulo 1 (Personal asalariado): número de unidades"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_1_unidades"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "First-slice módulos engine: módulo 1 (personal asalariado) unit-count support casilla, distinct per módulo slot; not a typo of a sibling role."
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-renta-2025-manual-parte1"] }
 required = false
 input_kind = "manual"
@@ -79,8 +77,6 @@ label = "Módulo 2 (Personal no asalariado): número de unidades"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_2_unidades"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "First-slice módulos engine: módulo 2 (personal no asalariado) unit-count support casilla, distinct per módulo slot; not a typo of a sibling role."
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-renta-2025-manual-parte1"] }
 required = false
 input_kind = "manual"
@@ -94,8 +90,6 @@ label = "Módulo 3 (unidad activity-específica: superficie, distancia recorrida
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_3_unidades"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "First-slice módulos engine: módulo 3 (activity-specific unit — superficie/distancia/carga) unit-count support casilla, distinct per módulo slot; not a typo of a sibling role."
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-renta-2025-manual-parte1"] }
 required = false
 input_kind = "manual"
@@ -109,8 +103,6 @@ label = "Módulo 4 (unidad activity-específica: consumo de energía eléctrica 
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_4_unidades"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "First-slice módulos engine: módulo 4 (activity-specific unit — consumo de energía eléctrica) unit-count support casilla, distinct per módulo slot; not a typo of a sibling role."
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-renta-2025-manual-parte1"] }
 required = false
 input_kind = "manual"
@@ -124,8 +116,6 @@ label = "Módulo 5 (unidad activity-específica, p.ej. resto de superficie del l
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_5_unidades"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "Phase-2 módulos engine: módulo 5 (activity-specific unit — e.g. resto superficie local independiente) unit-count support casilla, distinct per módulo slot; not a typo of a sibling role."
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-renta-2025-manual-parte1"] }
 required = false
 input_kind = "manual"
@@ -139,8 +129,6 @@ label = "Módulo 6 (unidad activity-específica, p.ej. resto de superficie del l
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_6_unidades"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "Phase-2 módulos engine: módulo 6 (activity-specific unit — e.g. resto superficie local no independiente) unit-count support casilla, distinct per módulo slot; not a typo of a sibling role."
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-renta-2025-manual-parte1"] }
 required = false
 input_kind = "manual"
@@ -154,8 +142,6 @@ label = "Módulo 7 (unidad activity-específica, p.ej. superficie del horno o m�
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_7_unidades"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "Phase-2 módulos engine: módulo 7 (activity-specific unit — e.g. superficie del horno) unit-count support casilla, distinct per módulo slot; not a typo of a sibling role."
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-renta-2025-manual-parte1"] }
 required = false
 input_kind = "manual"

@@ -40,6 +40,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR as M347_THRESHOLD_EUR  # re-export
+from ...core.identity import nif_iva_format_for_country
 
 # ---------------------------------------------------------------------------
 # Shared type aliases
@@ -217,39 +218,22 @@ class Modelo232VinculadaRow(BaseModel):
 # Council Directive 2006/112/EC Annex XI (the VIES registry format rules).
 # ---------------------------------------------------------------------------
 
-# Country-specific NIF-IVA format patterns from the bundled Modelo 349 AEAT
-# instructions. Pattern values are anchored regexes applied to the full NIF
-# string including the two-letter country prefix.
-_M349_NIF_PATTERNS: dict[str, re.Pattern[str]] = {
-    "DE": re.compile(r"^DE\d{9}$"),
-    "FR": re.compile(r"^FR[0-9A-Z]{2}\d{9}$"),
-    "IT": re.compile(r"^IT\d{11}$"),
-    "PT": re.compile(r"^PT\d{9}$"),
-    "NL": re.compile(r"^NL\d{9}B\d{2}$"),
-    "BE": re.compile(r"^BE0\d{9}$"),
-    "AT": re.compile(r"^ATU\d{8}$"),
-    "IE": re.compile(r"^IE(\d{7}[A-W]|\d[A-Z]\d{5}[A-W])$"),
-    "PL": re.compile(r"^PL\d{10}$"),
-    "SE": re.compile(r"^SE\d{12}$"),
-    "DK": re.compile(r"^DK\d{8}$"),
-    "FI": re.compile(r"^FI\d{8}$"),
-    "LU": re.compile(r"^LU\d{8}$"),
-    "GB": re.compile(r"^GB(\d{9}|\d{12}|GD\d{3}|HA\d{3})$"),
-    "BG": re.compile(r"^BG\d{9,10}$"),
-    "CY": re.compile(r"^CY[0-9A-Z]{9}$"),
-    "HR": re.compile(r"^HR\d{11}$"),
-    "SI": re.compile(r"^SI\d{8}$"),
-    "EE": re.compile(r"^EE\d{9}$"),
-    "EL": re.compile(r"^EL\d{9}$"),
-    "XI": re.compile(r"^XI[0-9A-Z]{5}$|^XI[0-9A-Z]{9}$|^XI[0-9A-Z]{12}$"),
-    "HU": re.compile(r"^HU\d{8}$"),
-    "LV": re.compile(r"^LV\d{11}$"),
-    "LT": re.compile(r"^LT(\d{9}|\d{12})$"),
-    "MT": re.compile(r"^MT\d{8}$"),
-    "CZ": re.compile(r"^CZ\d{8,10}$"),
-    "SK": re.compile(r"^SK\d{10}$"),
-    "RO": re.compile(r"^RO\d{2,10}$"),
-}
+# Country-specific NIF-IVA format patterns for Modelo 349. Every current EU
+# Member State (plus post-Brexit Northern Ireland ``XI``) routes through the
+# canonical :data:`aeat.core.identity.NIF_IVA_FORMATS` authority so the
+# structural pattern lives in exactly one place (per the
+# binding-source-kind-single-taxonomy discipline: a per-family collection is
+# derived from the core table, never hand-maintained as a parallel literal
+# set). ``GB`` is the sole deliberate exception: post-Brexit UK is not an EU
+# Member State, so the general IVA/invoice counterparty boundary
+# (:mod:`aeat.domain.invoices`) correctly carries no GB structural pattern and
+# falls back to its generic non-EU shape check. Modelo 349's Brexit-transition
+# filing rules (:func:`validate_m349_country_prefix_context`) still permit a
+# historical ``GB`` prefix for pre-2021 rectifications and the 2021 1M/1T
+# transition period, so the exact GB VAT structural shape (9 or 12 digits, or
+# the ``GD``/``HA`` government/health-authority forms) is retained here only,
+# scoped to Modelo 349's own transition-period need.
+_M349_GB_NIF_PATTERN: re.Pattern[str] = re.compile(r"^GB(\d{9}|\d{12}|GD\d{3}|HA\d{3})$")
 
 # Valid clave de operación codes per Orden HAC/174/2020 Anexo II.
 _M349_CLAVE_OPERACION = Literal["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"]
@@ -423,18 +407,24 @@ class Modelo349RectificacionRow(BaseModel):
 def validate_m349_nif_format(nif: str, pais: str) -> bool:
     """Return True when ``nif`` matches the expected NIF-IVA format for ``pais``.
 
-    Uses the country-code catalogue and NIF composition table in the bundled
-    Modelo 349 AEAT instructions. Unsupported country prefixes fail closed.
-    The NIF string must include the same two-letter country prefix.
+    Every current EU Member State (plus ``XI``) resolves its structural
+    pattern from the canonical :func:`aeat.core.identity.nif_iva_format_for_country`
+    authority. ``GB`` is validated against Modelo 349's own Brexit-transition
+    pattern (see :data:`_M349_GB_NIF_PATTERN`), since post-Brexit UK carries no
+    entry in the general EU NIF-IVA authority. Unsupported country prefixes
+    fail closed. The NIF string must include the same two-letter country
+    prefix.
     """
     normalized_pais = pais.upper()
     normalized_nif = nif.upper()
     if not normalized_nif.startswith(normalized_pais):
         return False
-    pattern = _M349_NIF_PATTERNS.get(normalized_pais)
-    if pattern is None:
+    if normalized_pais == "GB":
+        return bool(_M349_GB_NIF_PATTERN.match(normalized_nif))
+    spec = nif_iva_format_for_country(normalized_pais)
+    if spec is None:
         return False
-    return bool(pattern.match(normalized_nif))
+    return bool(spec.pattern.match(normalized_nif))
 
 
 def validate_m349_country_prefix_context(

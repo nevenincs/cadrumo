@@ -1,10 +1,11 @@
-"""Capital-goods IVA deduction-regularización register and annual compute.
+"""Capital-goods IVA deduction-regularización register and annual/disposal computes.
 
 Models the LIVA arts. 107-110 regularización de deducciones por bienes de
 inversión: a durable, cross-year :class:`BienesInversionIvaRegister`, one
-:class:`BienInversionIvaRecord` per capital good, and the pure art-109
-:class:`RegularizacionAnualResult` computed for each supplied definitive
-prorrata percentage.
+:class:`BienInversionIvaRecord` per capital good, the pure art-109
+:class:`RegularizacionAnualResult` computed for each supplied definitive prorrata
+percentage, and the pure art-110 :class:`RegularizacionTransmisionResult` computed
+for a good disposed of during its regularisation window.
 
 The register is a taxpayer-fact store (owned goods, acquisition year, cuota
 soportada, initial definitive prorrata percentage), sibling to
@@ -13,16 +14,18 @@ soportada, initial definitive prorrata percentage), sibling to
 central authoring surface :mod:`core.external_constants`, grounded verbatim
 in the bundled consolidated LIVA corpus.
 
-Register-wide projection returns :class:`RegistroRegularizacionResult`: each
-art-108-eligible in-window good is either computed into the proposed Modelo 303
-casilla 43 / Modelo 390 regularización value, or reported as pending the
-separately deferred current-year prorrata-definitiva input. This domain module
-does not read the secure-object store or derive prorrata; application and
-persistence layers supply those facts.
-
-The art-110 disposal (transmisión) compute is deliberately deferred; the
-disposal fields are carried on :class:`BienInversionIvaRecord` so no schema
-migration is needed when it lands.
+Register-wide projection returns :class:`RegistroRegularizacionResult` for the
+ordinary annual art-109 path: each art-108-eligible in-window good (not yet
+disposed of) is either computed into the proposed Modelo 303 casilla 43 / Modelo
+390 regularización value, or reported as pending the separately deferred
+current-year prorrata-definitiva input. A good recorded as disposed of in the
+projected year routes instead through :func:`compute_registro_transmisiones`,
+which folds the art-110 single ("única") regularización for every remaining
+window year into the same casilla-43 total; art-110 carries no pending state —
+the disposal regime and acquisition-year facts are already on the record, so
+every disposed good is always computed. This domain module does not read the
+secure-object store or derive prorrata; application and persistence layers
+supply those facts.
 
 See Also:
     :mod:`application.bienes_inversion`
@@ -162,8 +165,10 @@ class BienInversionIvaRecord(BaseModel):
         asset_record_ref: Optional identifier of the sibling
             :class:`domain.contribuyente.assets.AssetRecord`. Cross-reference
             only; this register — not the assets ledger — is the LIVA authority.
-        disposal: Optional :class:`BienInversionDisposal` (art-110), carried for
-            forward-stability; its compute is deferred.
+        disposal: Optional :class:`BienInversionDisposal` (art-110). When present,
+            the good is routed through the art-110 single ("única")
+            regularización (:func:`compute_registro_transmisiones`) in its
+            disposal year instead of the ordinary annual art-109 comparison.
         schema_version: Forward-compatible schema version. ``"1"``.
     """
 
@@ -210,6 +215,19 @@ class BienInversionIvaRecord(BaseModel):
         """
         last_year = self.acquisition_year + self.kind.ventana_anos
         return self.acquisition_year < regularization_year <= last_year
+
+    def remaining_regularization_years(self, disposal_year: int) -> int:
+        """Count of art-110 "años que resten" from ``disposal_year`` to window end.
+
+        Art. 110.Uno: "se efectuará una regularización única por el tiempo de dicho
+        período que quede por transcurrir", counting the disposal year itself and
+        every later year through the last window year (inclusive). A disposal in
+        the acquisition year itself counts the full window (the deduction was never
+        regularised, so every following window year remains to transcur).
+        """
+        last_year = self.acquisition_year + self.kind.ventana_anos
+        first_pending_year = max(disposal_year, self.acquisition_year + 1)
+        return max(0, last_year - first_pending_year + 1)
 
 
 class RegularizacionDireccion(StrEnum):
@@ -329,6 +347,155 @@ def compute_regularizacion_anual(
     )
 
 
+class RegularizacionTransmisionResult(BaseModel):
+    """Outcome of the art-110 single-final ("única") disposal regularización.
+
+    Attributes:
+        regime: :class:`BienInversionDisposalRegime` applied.
+        anos_restantes: Count of window years — the disposal year plus every later
+            year through window expiry — the single regularización covers
+            (art. 110.Uno "el tiempo de dicho período que quede por transcurrir").
+        divisor: Art-109 divisor applied (5 mueble / 10 inmueble), carried into the
+            art-110 single computation per art. 110.Uno's cross-reference to the
+            art-109 procedure.
+        importe_sin_limite: The signed quotient before the regla-1ª cap, i.e.
+            ``(deducción efectuada − deducción imputada) × años_restantes ÷ divisor``.
+        importe: ``importe_sin_limite`` after applying the regla-1ª cap — a
+            negative (DEDUCCION / additional-deduction) result never exceeds
+            ``-cuota_devengada_entrega`` in magnitude, when supplied; equals
+            ``importe_sin_limite`` unqualified for regla 2ª (no cap applies there)
+            and for a non-negative regla-1ª result.
+        direccion: :class:`RegularizacionDireccion` describing ``importe``'s sign.
+        capped: Whether the regla-1ª cap reduced ``importe_sin_limite``'s magnitude.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    regime: BienInversionDisposalRegime
+    anos_restantes: int
+    divisor: Decimal
+    importe_sin_limite: Decimal
+    importe: Decimal
+    direccion: RegularizacionDireccion
+    capped: bool
+
+
+def compute_regularizacion_transmision(
+    *,
+    cuota_soportada: Decimal,
+    prorrata_inicial_pct: Decimal,
+    anos_restantes: int,
+    kind: BienInversionKind,
+    regime: BienInversionDisposalRegime,
+    cuota_devengada_entrega: Decimal | None = None,
+) -> RegularizacionTransmisionResult:
+    """Compute the LIVA art-110 single ("única") disposal regularización.
+
+    Art. 110.Uno: on a disposal (entrega) during the regularisation window, a
+    SINGLE regularización is practised for the window time remaining (the disposal
+    year plus every later window year), applying the art-109 procedure once over
+    that whole remaining span rather than year by year:
+
+    Regla 1.ª (entrega sujeta y no exenta — or an exempt/non-subject entrega that
+    itself originates a deduction right, e.g. exports / intra-EU supplies, per the
+    art. 110.Uno final paragraph): the good is deemed used 100% in
+    deduction-generating operations for every remaining year, which typically
+    yields a negative (additional-deduction) quotient since the imputed 100%
+    usually exceeds the acquisition-year percentage. Art. 110.Uno caps the
+    MAGNITUDE of that additional deduction at the cuota devengada on the disposal
+    itself ("no será deducible la diferencia ... y el importe de la cuota
+    devengada por la entrega del bien") — applied via ``cuota_devengada_entrega``
+    when supplied.
+
+    Regla 2.ª (entrega exenta o no sujeta, without its own deduction right — the
+    ordinary case): the good is deemed used 0% for every remaining year. No cap
+    applies (the result is a repayment of previously-taken deduction, never an
+    additional one).
+
+    Both reglas apply the SAME art-109 quotient — (deducción efectuada − deducción
+    imputada) ÷ divisor — but multiply the per-year difference by
+    ``anos_restantes`` before dividing, since art. 110.Uno folds every remaining
+    window year into one regularización rather than repeating art-109 per year.
+    Unlike :func:`compute_regularizacion_anual`, art. 110 carries no
+    diferencia-de-puntos gate: a disposal always triggers the single
+    regularización regardless of how close the imputed percentage is to the
+    acquisition-year one (the disposal itself, not a percentage drift, is what
+    obliges it).
+
+    Args:
+        cuota_soportada: Total input IVA borne on acquisition (strictly positive).
+        prorrata_inicial_pct: Definitive deduction percentage of the acquisition
+            year (0-100).
+        anos_restantes: Count of remaining window years the single regularización
+            covers; see :meth:`BienInversionIvaRecord.remaining_regularization_years`.
+            Must be strictly positive (a disposal outside the window has nothing
+            left to regularise and is a caller-level concern, not this function's).
+        kind: :class:`BienInversionKind` selecting the divisor.
+        regime: :class:`BienInversionDisposalRegime` selecting regla 1ª (100%
+            imputation, capped) or regla 2ª (0% imputation, uncapped).
+        cuota_devengada_entrega: The cuota devengada on the disposal itself,
+            applied as the regla-1ª cap. ``None`` leaves regla 1ª uncapped (the
+            caller has not supplied the disposal's own cuota devengada yet).
+
+    Returns:
+        A :class:`RegularizacionTransmisionResult`.
+
+    Raises:
+        BienInversionValidationError: On a non-positive cuota, an out-of-range
+            percentage, a non-positive ``anos_restantes``, or a negative
+            ``cuota_devengada_entrega``.
+    """
+    if cuota_soportada <= Decimal("0"):
+        raise BienInversionValidationError("cuota_soportada must be strictly positive")
+    if prorrata_inicial_pct < Decimal("0") or prorrata_inicial_pct > _HUNDRED:
+        raise BienInversionValidationError("prorrata_inicial_pct must be between 0 and 100")
+    if anos_restantes <= 0:
+        raise BienInversionValidationError("anos_restantes must be strictly positive")
+    if cuota_devengada_entrega is not None and cuota_devengada_entrega < Decimal("0"):
+        raise BienInversionValidationError("cuota_devengada_entrega must not be negative")
+
+    prorrata_imputada_pct = _HUNDRED if regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA else Decimal("0")
+    divisor = kind.divisor
+    deduccion_efectuada = cuota_soportada * prorrata_inicial_pct / _HUNDRED
+    deduccion_imputada = cuota_soportada * prorrata_imputada_pct / _HUNDRED
+    importe_sin_limite = _quantize((deduccion_efectuada - deduccion_imputada) * anos_restantes / divisor)
+
+    # Regla 1.ª (sujeta y no exenta) imputes 100% usage, so `importe_sin_limite`
+    # is typically negative (deducción complementaria — additional deduction
+    # claimed). Art. 110.Uno caps that ADDITIONAL DEDUCTION at the cuota devengada
+    # on the disposal itself ("no será deducible la diferencia entre la cantidad
+    # que resulte ... y el importe de la cuota devengada por la entrega del bien").
+    # The cap therefore bounds the MAGNITUDE of a negative (DEDUCCION) result;
+    # regla 2.ª and a non-negative regla-1.ª result are never capped.
+    importe = importe_sin_limite
+    capped = False
+    if (
+        regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA
+        and cuota_devengada_entrega is not None
+        and importe_sin_limite < Decimal("0")
+        and -importe_sin_limite > cuota_devengada_entrega
+    ):
+        importe = -cuota_devengada_entrega
+        capped = True
+
+    if importe > Decimal("0"):
+        direccion = RegularizacionDireccion.INGRESO
+    elif importe < Decimal("0"):
+        direccion = RegularizacionDireccion.DEDUCCION
+    else:
+        direccion = RegularizacionDireccion.NINGUNA
+
+    return RegularizacionTransmisionResult(
+        regime=regime,
+        anos_restantes=anos_restantes,
+        divisor=divisor,
+        importe_sin_limite=importe_sin_limite,
+        importe=importe,
+        direccion=direccion,
+        capped=capped,
+    )
+
+
 class BienesInversionIvaRegister(BaseModel):
     """Encrypted JSON document holding the per-good IVA regularización register.
 
@@ -359,11 +526,37 @@ class BienesInversionIvaRegister(BaseModel):
         return self
 
     def in_window_records(self, regularization_year: int) -> tuple[BienInversionIvaRecord, ...]:
-        """Return each art-108-eligible :class:`BienInversionIvaRecord` in-window for the year."""
+        """Return each art-108-eligible :class:`BienInversionIvaRecord` in-window for the year.
+
+        A good disposed of AT OR BEFORE ``regularization_year`` is excluded: art.
+        110.Uno's single ("única") regularización supersedes the ordinary annual
+        art-109 comparison from the disposal year onward — see
+        :meth:`disposed_records` and :func:`compute_registro_transmisiones` for the
+        disposal path.
+        """
         return tuple(
             record
             for record in self.records
-            if record.art108_elegible and record.is_within_regularization_window(regularization_year)
+            if record.art108_elegible
+            and record.is_within_regularization_window(regularization_year)
+            and (record.disposal is None or record.disposal.year > regularization_year)
+        )
+
+    def disposed_records(self, disposal_year: int) -> tuple[BienInversionIvaRecord, ...]:
+        """Return each art-108-eligible good whose art-110 disposal falls in ``disposal_year``.
+
+        Only a disposal that still leaves window time to regularise is included
+        (:meth:`BienInversionIvaRecord.remaining_regularization_years` strictly
+        positive); a disposal recorded outside the window has nothing left to
+        regularise under art. 110.
+        """
+        return tuple(
+            record
+            for record in self.records
+            if record.art108_elegible
+            and record.disposal is not None
+            and record.disposal.year == disposal_year
+            and record.remaining_regularization_years(disposal_year) > 0
         )
 
 
@@ -483,6 +676,108 @@ def compute_registro_regularizacion(
     )
 
 
+class RegistroTransmisionRow(BaseModel):
+    """One disposed good's contribution to the art-110 single regularización.
+
+    Attributes:
+        identifier: The record identifier.
+        kind: :class:`BienInversionKind` of the good.
+        disposal_year: The recorded art-110 disposal year.
+        result: The :class:`RegularizacionTransmisionResult`.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    identifier: str
+    kind: BienInversionKind
+    disposal_year: int
+    result: RegularizacionTransmisionResult
+
+
+class RegistroTransmisionesResult(BaseModel):
+    """Register-wide art-110 single-regularización projection for one disposal year.
+
+    Attributes:
+        disposal_year: The year every included disposal occurred in.
+        rows: Per-good :class:`RegistroTransmisionRow` entries for every
+            art-108-eligible good disposed of in ``disposal_year`` with window time
+            remaining.
+        proposed_casilla_43: The signed sum of every row's ``importe`` — the value
+            proposed for Modelo 303 casilla 43 / the Modelo 390 regularización
+            field for the disposals in this year. Positive = net ingreso, negative
+            = net deducción complementaria.
+        computed_count: Number of disposed goods included in the projection.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    disposal_year: int
+    rows: tuple[RegistroTransmisionRow, ...]
+    proposed_casilla_43: Decimal
+    computed_count: int
+
+
+def compute_registro_transmisiones(
+    register: BienesInversionIvaRegister,
+    *,
+    disposal_year: int,
+    cuota_devengada_entrega_by_identifier: Mapping[str, Decimal] | None = None,
+) -> RegistroTransmisionesResult:
+    """Project the register onto its art-110 single ("única") regularización for a year.
+
+    Iterates every art-108-eligible good recorded as disposed of in
+    ``disposal_year`` with window time remaining
+    (:meth:`BienesInversionIvaRegister.disposed_records`); for each, computes
+    :func:`compute_regularizacion_transmision` over the remaining window years and
+    folds the signed importe into the proposed casilla-43 total.
+
+    Unlike :func:`compute_registro_regularizacion`, a disposal has no pending
+    state analogous to the deferred prorrata-definitiva input: every disposal
+    fact the register carries (acquisition-year percentage, cuota soportada,
+    disposal regime) is already on the record, so every disposed good is always
+    computed.
+
+    Args:
+        register: The persisted :class:`BienesInversionIvaRegister`.
+        disposal_year: The year to project disposals for.
+        cuota_devengada_entrega_by_identifier: Optional per-good cuota devengada on
+            the disposal itself, applied as the regla-1ª cap
+            (:func:`compute_regularizacion_transmision`). Absent keys leave regla 1ª
+            uncapped for that good.
+
+    Returns:
+        A :class:`RegistroTransmisionesResult`.
+    """
+    cap_by_identifier = cuota_devengada_entrega_by_identifier or {}
+    rows: list[RegistroTransmisionRow] = []
+    proposed = Decimal("0.00")
+    for record in register.disposed_records(disposal_year):
+        assert record.disposal is not None  # guaranteed by disposed_records's filter
+        result = compute_regularizacion_transmision(
+            cuota_soportada=record.cuota_soportada,
+            prorrata_inicial_pct=record.prorrata_inicial_pct,
+            anos_restantes=record.remaining_regularization_years(disposal_year),
+            kind=record.kind,
+            regime=record.disposal.regime,
+            cuota_devengada_entrega=cap_by_identifier.get(record.identifier),
+        )
+        proposed += result.importe
+        rows.append(
+            RegistroTransmisionRow(
+                identifier=record.identifier,
+                kind=record.kind,
+                disposal_year=disposal_year,
+                result=result,
+            )
+        )
+    return RegistroTransmisionesResult(
+        disposal_year=disposal_year,
+        rows=tuple(rows),
+        proposed_casilla_43=proposed,
+        computed_count=len(rows),
+    )
+
+
 __all__ = [
     "BIENES_INVERSION_SCHEMA_VERSION",
     "BienInversionDisposal",
@@ -494,8 +789,13 @@ __all__ = [
     "BienesInversionIvaRegister",
     "RegistroRegularizacionResult",
     "RegistroRegularizacionRow",
+    "RegistroTransmisionRow",
+    "RegistroTransmisionesResult",
     "RegularizacionAnualResult",
     "RegularizacionDireccion",
+    "RegularizacionTransmisionResult",
     "compute_registro_regularizacion",
+    "compute_registro_transmisiones",
     "compute_regularizacion_anual",
+    "compute_regularizacion_transmision",
 ]

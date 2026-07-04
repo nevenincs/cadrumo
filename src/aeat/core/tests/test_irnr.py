@@ -21,6 +21,7 @@ def test_tipo_renta_irnr_tokens_match_registry_vocabulary() -> None:
         ("general", TipoRentaIrnr.GENERAL),
         ("ue_residente", TipoRentaIrnr.UE_RESIDENTE),
         ("pension", TipoRentaIrnr.PENSION),
+        ("dividend", TipoRentaIrnr.DIVIDEND),
         ("interest", TipoRentaIrnr.INTEREST),
         ("ganancia_patrimonial", TipoRentaIrnr.GANANCIA_PATRIMONIAL),
         ("inmobiliaria", TipoRentaIrnr.INMOBILIARIA),

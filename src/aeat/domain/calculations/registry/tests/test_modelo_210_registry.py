@@ -240,6 +240,38 @@ def test_modelo_210_interest_rate_is_grounded_in_unconditional_art_25_1_f() -> N
     assert "Espacio Economico Europeo" not in corpus_paragraph
 
 
+def test_modelo_210_dividend_rate_is_grounded_in_unconditional_art_25_1_f() -> None:
+    """Art. 25.1.f.1º dividends: the same unconditional 19% as interest / ganancia_patrimonial.
+
+    TRLIRNR art. 25.1.f enumerates three income classes at 19 percent: 1º
+    dividendos, 2º intereses, 3º ganancias patrimoniales. Before this test the
+    registry's baseline rate table wired the 2º and 3º rows but had no
+    ``tipo_renta="dividend"`` row at all, so a non-resident with Spanish-source
+    dividend income (a routine M210 category with its own EUR 1,500 exemption
+    per the AEAT instructions) had no correct-rate path and fell to the
+    fail-closed baseline-deferred BLOCKING refusal.
+    """
+    modelo, catalogues = _load_modelo_210()
+    revision = modelo.revisions["2025"]
+    parameter = next(param for param in revision.parameters if param.id == "m210-tipo-gravamen-2025")
+    rates = {row.key: row.value for row in parameter.keyed_brackets}
+
+    assert rates["dividend"] == Decimal("0.19")
+    assert TipoRentaIrnr("dividend") is TipoRentaIrnr.DIVIDEND
+
+    art_25_1_f = catalogues.legal["trlirnr-rdleg-5-2004:art-25.1.f"]
+    assert any(
+        "Dividendos y otros rendimientos derivados de la participacion en los fondos propios de una entidad" in text
+        for text in art_25_1_f.required_text
+    )
+    assert "condicion de residencia UE/EEE" in (art_25_1_f.notes or "")
+
+    corpus_paragraph = _trlirnr_corpus_paragraph("a25-1-f")
+    assert "Dividendos y otros rendimientos derivados de la participacion en los fondos propios" in corpus_paragraph
+    assert "Union Europea" not in corpus_paragraph
+    assert "Espacio Economico Europeo" not in corpus_paragraph
+
+
 def test_modelo_210_searchable_extract_preserves_unconditional_art_25_1_f() -> None:
     corpus_paragraph = _trlirnr_corpus_paragraph("a25-1-f")
     extracted_lines = _trlirnr_extracted_markdown().splitlines()
@@ -412,6 +444,7 @@ def test_modelo_210_2025_inmobiliaria_branch_carries_categorical_conditional_adv
         "m210-representante-fiscal-required",
         "modelo-210-2025-rendimientos-integros-implica-base-imponible",
         "modelo-210-2025-inmobiliaria-implica-base-imponible",
+        "modelo-210-2025-ue-residente-requiere-residencia-ue-eee",
     }
 
     inmobiliaria_guard = predicates["modelo-210-2025-inmobiliaria-implica-base-imponible"]

@@ -158,6 +158,28 @@ _M349_NIF_FORMAT_CASES = (
     _BooleanCase("unknown-country-badvat", "BADVAT", "ZZ", False),
     _BooleanCase("supported-country-too-short", "EL1", "EL", False),
     _BooleanCase("de-rejects-fr-shape", "FR12345678901", "DE", False),
+    # Belgium accepts both the historical '0' lead digit and the '1' lead digit
+    # used for newer registrations since 2007 (VIES structure rule), routed
+    # through the canonical core NIF_IVA_FORMATS authority.
+    _BooleanCase("valid-be-legacy-zero-lead", "BE0123456789", "BE", True),
+    _BooleanCase("valid-be-modern-one-lead", "BE1234567890", "BE", True),
+    _BooleanCase("be-rejects-other-lead-digit", "BE9123456789", "BE", False),
+    # Ireland accepts the two-letter suffix form and the '+'/'*' second-block
+    # variants documented by VIES, routed through the core authority.
+    _BooleanCase("valid-ie-two-letter-suffix", "IE1234567TW", "IE", True),
+    _BooleanCase("valid-ie-plus-block", "IE1+23456W", "IE", True),
+    # Cyprus is 8 digits + 1 trailing letter per the VIES structure rule; the
+    # core authority enforces this exact shape (a bare 9-character alphanumeric
+    # body, as the pre-migration Modelo 349 pattern allowed, is not a valid
+    # Cypriot NIF-IVA and must be rejected).
+    _BooleanCase("valid-cy", "CY12345678L", "CY", True),
+    _BooleanCase("cy-rejects-all-digit-body", "CY123456789", "CY", False),
+    _BooleanCase("cy-rejects-non-terminal-letter", "CY1234567L8", "CY", False),
+    # GB retains its own Modelo 349 Brexit-transition pattern (post-Brexit UK
+    # carries no entry in the general EU NIF-IVA authority).
+    _BooleanCase("valid-gb-nine-digit", "GB123456789", "GB", True),
+    _BooleanCase("valid-gb-government-department", "GBGD001", "GB", True),
+    _BooleanCase("gb-rejects-bad-shape", "GB12345", "GB", False),
 )
 
 _M349_CONTEXT_ALLOWED_CASES = (

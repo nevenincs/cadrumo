@@ -56,6 +56,9 @@ casilla_ids = [
     "iva.prorrata-volumen-total",
     "iva.prorrata-porcentaje",
     "iva.regularizacion-inversiones",
+    "18",
+    "21",
+    "24",
     "decl.ejercicio",
     "decl.periodo",
 ]

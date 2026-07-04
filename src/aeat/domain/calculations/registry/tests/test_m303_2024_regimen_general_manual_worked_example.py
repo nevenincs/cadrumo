@@ -142,7 +142,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import bundled_path, resources
+from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from .. import (
     CasillaId,
@@ -156,8 +156,6 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_SOURCE_ROOT = bundled_path()
 
 _CASILLA_27: CasillaId = validated_casilla_id("27", surface="_CASILLA_27")
 _CASILLA_45: CasillaId = validated_casilla_id("45", surface="_CASILLA_45")
@@ -337,7 +335,9 @@ def test_casilla_27_anti_tautology_recargo_changes_total_cuota_devengada() -> No
     assert with_recargo.values[_CASILLA_71] - without_recargo.values[_CASILLA_71] == Decimal("1248.00")
 
 
-def test_m303_2024_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction() -> None:
+def test_m303_2024_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
     """The manual-oracle grounding of 27/45/69/71 is enrolled, not just computed.
 
     A companion registry-honesty gate
@@ -354,7 +354,7 @@ def test_m303_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     fraction are read from the registry's own declared+validated data, never
     hand-computed or asserted from a synthetic fixture.
     """
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    authority = registry_authority
     snapshot = authority.snapshot("303", filing_year=_FILING_YEAR, period=_PERIOD)
     policy = snapshot.verification_policy()
 

@@ -16,16 +16,23 @@ sibling install-proof documents.
 | Full MCP tool round-trip (harness floor) | PASS (R9 privacy disclosure returned first) | PASS (same runtime measurement) | PASS (same runtime measurement) |
 | Permission gate on unapproved tool calls | PASS (observed live) | PASS (same runtime) | PASS (same runtime) |
 
-## Launch-variant note — RESOLVED (2026-07-03, first publish)
+## Launch-variant note — RESOLVED (2026-07-04, v0.1.1 full release)
 
-`aeat-cli 0.1.0` is live on PyPI (published via the Trusted Publishing
-workflow, run 28675038482; 41 MB wheel, zero corpus binaries). The matrix's
-server rows are re-verified against the PUBLISHED pin: the reinstalled
-plugin's `.mcp.json` launches `uvx --from "aeat-cli[agent]==0.1.0"
-aeat-mcp`, the package cold-resolves from the index (79 packages), and a
-live session completed the harness floor round-trip (R9 privacy disclosure
-returned first) through the published chain. The earlier local-wheel
-variant is retired.
+The complete distribution is live on PyPI with no size grant:
+`aeat-cli 0.1.1` (41.3 MB slim wheel), `aeat-data-manuals 0.1.1` (76.7 MB)
+and `aeat-data-official 0.1.1` (62.4 MB) — the corpus companions split
+along the directory seam so each clears the 100 MB cap. End-to-end proof
+on a fresh venv from the index only: `pip install
+"aeat-cli[corpus-sources,agent]"` resolves all three, and
+`aeat app registry verify` runs byte-exact clean (exit 0; 46 modelos,
+518 application links) with the binaries resolved through the `aeat_data`
+namespace seam. The installed plugin pins
+`uvx --from "aeat-cli[agent]==0.1.1" aeat-mcp`; the harness floor
+round-trip through the published chain was verified live on 0.1.0 and the
+transport is unchanged. Note: 0.1.0's `corpus-sources` extra is
+unresolvable on the index (it pinned the never-published single
+`aeat-data`); 0.1.1 is the first fully-resolvable release — consider
+yanking 0.1.0 on PyPI.
 
 ## Out of scope of this matrix
 

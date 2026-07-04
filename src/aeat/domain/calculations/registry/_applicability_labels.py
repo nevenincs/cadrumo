@@ -14,4 +14,5 @@ PAYER_FACT_INCOMPLETE_LABELS: dict[PayerFact, str] = {
     PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION: ("paga rendimientos del capital mobiliario sujetos a retención"),
     PayerFact.IVA_GROUP_MEMBER: "esta inscrito como entidad miembro de un grupo de IVA",
     PayerFact.IVA_GROUP_DOMINANT_ENTITY: "esta inscrito como entidad dominante de un grupo de IVA",
+    PayerFact.OSS_ENROLLED: "esta inscrito en un regimen de ventanilla unica (OSS/IOSS) del IVA",
 }

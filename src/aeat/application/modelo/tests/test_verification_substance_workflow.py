@@ -183,6 +183,9 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "casilla_equals_implies_nonzero": (
             'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])'
         ),
+        "casilla_equals_implies_profile_flag": (
+            'casilla_equals_implies_profile_flag(["tipo_renta", "ue_residente", "ue_eee_status"])'
+        ),
         "casilla_equals_implies_diverges": (
             'casilla_equals_implies_diverges(["modulos-epigrafe", "721.2", '
             '"modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos"])'
@@ -208,6 +211,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "profile_flag_enabled": "_PREDICATE_PROFILE_FLAG_ENABLED",
         "roll_forward_balances": "_PREDICATE_ROLL_FORWARD_BALANCES",
         "casilla_equals_implies_nonzero": "_PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO",
+        "casilla_equals_implies_profile_flag": "_PREDICATE_CASILLA_EQUALS_IMPLIES_PROFILE_FLAG",
         "casilla_equals_implies_diverges": "_PREDICATE_CASILLA_EQUALS_IMPLIES_DIVERGES",
         "deduccion_requires_adquisicion_before": "_PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE",
         "advisory_when_computed_diverges": "_PREDICATE_ADVISORY_WHEN_COMPUTED_DIVERGES",

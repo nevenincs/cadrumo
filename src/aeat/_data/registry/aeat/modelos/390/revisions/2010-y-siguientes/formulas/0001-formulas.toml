@@ -8,6 +8,7 @@ expression = { op = "add", args = [
     { casilla_id = "iva.anual.autorepercutido.intracomunitaria" },
     { casilla_id = "iva.anual.repercutido.recargo.general" },
     { casilla_id = "iva.anual.repercutido.recargo.reducido" },
+    { casilla_id = "iva.anual.repercutido.recargo.super-reducido" },
 ] }
 rounding = "money-2"
 # The recargo de equivalencia cuota tiers (LIVA art. 161) were omitted from
@@ -26,7 +27,12 @@ rounding = "money-2"
 # DEVENGADA" solucion lines (1T: 23.088, 2T: 21.624, 3T: 22.290, 4T: 21.414 =
 # 88.416 anual), each of which itself sums its own printed "Recargo de
 # equivalencia" line (1T: 1.248, 2T: 624, 3T: 1.248, 4T: 624 = 3.744 anual) —
-# see test_m390_2024_annual_manual_worked_example.py.
+# see test_m390_2024_annual_manual_worked_example.py. The general/reducido
+# tiers fixed the manual worked example (which charges no super-reducido
+# recargo); the super-reducido 0.5pct tier (M303 casilla 158,
+# iva.anual.repercutido.recargo.super-reducido) closes the residual gap the
+# manual example could not surface, structurally proven by
+# test_m390_super_reducido_recargo_delta.
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 

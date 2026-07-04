@@ -757,29 +757,6 @@ class TaxpayerProfile(BaseModel):
         return is_ue_eee_country_code(self.country_of_fiscal_residence)
 
     @property
-    def convenio_aplicable(self) -> str | None:
-        """BOE reference for the applicable double-taxation treaty, or ``None``.
-
-        Derived from ``country_of_fiscal_residence`` via a static lookup
-        of treaties signed by Spain. Returns ``None`` when no treaty is
-        registered for the country or when the country is not set.
-
-        The lookup covers treaties that are most frequently encountered
-        in IRNR practice; it is not exhaustive. The BOE identifiers
-        follow the ``BOE-A-YYYY-NNNNN`` scheme used in the official Boletín
-        Oficial del Estado. References:
-        - España-UK: BOE-A-2014-5171
-        - España-Alemania: BOE-A-2012-3669
-        - España-Francia: BOE-A-1997-21331
-        - España-EE.UU.: BOE-A-1990-28246
-        - España-Países Bajos: BOE-A-1972-674
-        - España-Marruecos: BOE-A-1985-9280
-        """
-        if self.country_of_fiscal_residence is None:
-            return None
-        return _CONVENIO_BY_COUNTRY.get(self.country_of_fiscal_residence.upper())
-
-    @property
     def residency_boundary_near(self) -> bool:
         """True when any declared year's presence count falls in the 150-215 day window.
 
@@ -866,18 +843,6 @@ def evaluate_multiple_pagadores_obligation(
     if total_work_income is None:
         return True
     return total_work_income > resolve_multiple_pagadores_reduced_limit(filing_year)
-
-
-# Static lookup: ISO 3166-1 alpha-2 → BOE reference for double-taxation treaties
-# signed by Spain. Source: AEAT Convenios de doble imposición.
-_CONVENIO_BY_COUNTRY: dict[str, str] = {
-    "GB": "BOE-A-2014-5171 España-UK",
-    "DE": "BOE-A-2012-3669 España-Alemania",
-    "FR": "BOE-A-1997-21331 España-Francia",
-    "US": "BOE-A-1990-28246 España-EE.UU.",
-    "NL": "BOE-A-1972-674 España-Países Bajos",
-    "MA": "BOE-A-1985-9280 España-Marruecos",
-}
 
 
 class RecargoBand(BaseModel):

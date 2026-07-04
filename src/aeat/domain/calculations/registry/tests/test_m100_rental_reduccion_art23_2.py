@@ -7,7 +7,6 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import bundled_path
 from .._authority import ValidatedRegistryAuthority
 from .._errors import RegistryValidationError
 from .._formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
@@ -15,17 +14,14 @@ from .._schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_SOURCE_ROOT = bundled_path()
 _FILING_DATE = date(2024, 12, 31)
 _TIER_BINDING = "renta-2024-rental-reduccion-art-23-2-tier"
 _FORMULA_ID = "renta-2024-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2"
 
 
 @pytest.fixture(scope="module")
-def m100_2024_snapshot() -> RegistrySnapshot:
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
-    return authority.snapshot("100", filing_year=2024, period="0A", revision_id="2024")
+def m100_2024_snapshot(registry_authority: ValidatedRegistryAuthority) -> RegistrySnapshot:
+    return registry_authority.snapshot("100", filing_year=2024, period="0A", revision_id="2024")
 
 
 def _calculate(

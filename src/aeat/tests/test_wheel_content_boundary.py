@@ -4,13 +4,15 @@ The build config excludes
 every ``tests/`` tree from the installed wheel — those modules and fixtures
 serve no installed consumer, since the suites run from the repository tree —
 and the corpus SOURCE binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``), which the
-wheel-split decision moves to the ``aeat-data`` companion. This gate proves the
-boundary end-to-end by building the real wheel and asserting it every way:
+wheel-split decision moves to the two ``aeat-data-*`` companions. This gate
+proves the boundary end-to-end by building the real wheel and asserting it every
+way:
 
 1. No ``tests/`` member ships (the exclude took effect), so the ~11 MB fixture
    payload no longer reaches consumers.
 2. No corpus source binary (``*.pdf``/``*.xls``/``*.xlsx`` under ``_data/corpus``)
-   ships — the 94%-of-weight payload the split sheds to ``aeat-data``.
+   ships — the 94%-of-weight payload the split sheds to the ``aeat-data-*``
+   companions.
 3. The required functional payload still ships — the ``_data`` roots (corpus,
    registry, terminology, agent harness), the ``py.typed`` marker, the BIP-39
    recovery wordlist, and ``external_constants.toml`` — so the exclude cannot
@@ -43,8 +45,8 @@ _WHEEL_PREFIX = "aeat"
 _WHEEL_DATA_PREFIX = "aeat/_data"
 _WHEEL_CORPUS_PREFIX = f"{_WHEEL_DATA_PREFIX}/corpus/"
 
-# Corpus source binaries the wheel-split excludes; they ship in the ``aeat-data``
-# companion, so zero of them may appear in this slim wheel.
+# Corpus source binaries the wheel-split excludes; they ship in the two
+# ``aeat-data-*`` companions, so zero of them may appear in this slim wheel.
 _CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
 
 # Required functional payload that MUST survive the tests exclude. Each entry is
@@ -139,7 +141,7 @@ def test_wheel_ships_no_corpus_source_binaries(wheel_members: frozenset[str]) ->
     )
     assert not offenders, (
         f"the slim wheel ships {len(offenders)} corpus source binary member(s) the wheel-split exclude should have "
-        f"shed to the aeat-data companion; first ten: {offenders[:10]!r}"
+        f"shed to the aeat-data-* companions; first ten: {offenders[:10]!r}"
     )
 
 
@@ -153,12 +155,15 @@ def test_wheel_keeps_corpus_derived_surfaces(wheel_members: frozenset[str]) -> N
     """
 
     surfaces: dict[str, Callable[[str], bool]] = {
-        "corpus extracted text (*.extracted.md)": lambda m: m.startswith(_WHEEL_CORPUS_PREFIX)
-        and m.endswith(".extracted.md"),
-        "corpus extracted data (*.extracted.json)": lambda m: m.startswith(_WHEEL_CORPUS_PREFIX)
-        and m.endswith(".extracted.json"),
-        "corpus normative html": lambda m: m.startswith(f"{_WHEEL_CORPUS_PREFIX}normatives/html/")
-        and m.endswith(".html"),
+        "corpus extracted text (*.extracted.md)": lambda m: (
+            m.startswith(_WHEEL_CORPUS_PREFIX) and m.endswith(".extracted.md")
+        ),
+        "corpus extracted data (*.extracted.json)": lambda m: (
+            m.startswith(_WHEEL_CORPUS_PREFIX) and m.endswith(".extracted.json")
+        ),
+        "corpus normative html": lambda m: (
+            m.startswith(f"{_WHEEL_CORPUS_PREFIX}normatives/html/") and m.endswith(".html")
+        ),
     }
     missing = sorted(name for name, pred in surfaces.items() if not any(pred(member) for member in wheel_members))
     assert not missing, (

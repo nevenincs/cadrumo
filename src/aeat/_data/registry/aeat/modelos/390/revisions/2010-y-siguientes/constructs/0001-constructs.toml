@@ -34,6 +34,7 @@ casilla_ids = [
     "iva.anual.autorepercutido.intracomunitaria",
     "iva.anual.repercutido.recargo.general",
     "iva.anual.repercutido.recargo.reducido",
+    "iva.anual.repercutido.recargo.super-reducido",
     "iva.anual.reconciliacion.devengada-303",
     "iva.anual.reconciliacion.deducible-303",
     "iva.anual.reconciliacion.resultado-303",

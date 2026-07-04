@@ -484,9 +484,10 @@ signed = false
 legal_refs = ["orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
-# Pag. 2 bis: recargo de equivalencia devengado. Box [600] cuota tipo 1,4%
-# (reducido), box [602] cuota tipo 5,2% (general) -- mirrors the M303
-# casillas 21/24 tier split (LIVA art. 161).
+# Pag. 2 bis: recargo de equivalencia devengado. Box [36] cuota tipo 0,5%
+# (super-reducido), box [600] cuota tipo 1,4% (reducido), box [602] cuota
+# tipo 5,2% (general) -- mirrors the M303 casillas 158/21/24 tier split
+# (LIVA art. 161).
 
 [[revisions."2010-y-siguientes".export_layouts.records]]
 id = "modelo-390-page-02b"
@@ -549,6 +550,20 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02b-casilla-recargo-super-reducido"
+offset = 98
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.super-reducido"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".export_layouts.records.fields]]

@@ -1,0 +1,216 @@
+"""Calculate-path advisory wiring for the annual prorrata-general regularización.
+
+Modelo 303 casilla ``44`` (Regularización prorrata por porcentaje definitivo -
+Cuota) is ``input_kind = manual``: LIVA art. 105.Cuatro requires comparing the
+year's DEFINITIVE prorrata percentage (art. 104, computed from the year's
+actual annual con-derecho/sin-derecho volumes) against the PROVISIONAL
+percentage applied across the year's liquidations (art. 105.Uno — normally the
+PRIOR year's definitive percentage). The registry already computes the current
+period's definitive percentage from real operator-entered annual volumes
+(``iva.prorrata-porcentaje``, fed by ``iva.prorrata-volumen-total`` /
+``iva.prorrata-volumen-con-derecho``); what is not yet automatically available
+is the prior-year carry, which the annual regularización mechanism
+(``2026-07-01-iva-complexity-hardening-scope-adr``) will eventually supply
+through a profile-scoped store.
+
+Per that ADR's first-slice decision, the automatic feed stays
+``DEFERRED`` (``BindingSourceKind.PRORRATA_REGULARIZACION``) until the
+provisional-carry store lands. In the meantime this collector closes the
+no-silent-under-declaration gap at the settlement period: it reads the
+CURRENT year's own registry-computed prorrata figures (never a fabricated
+value) and looks up the PRIOR year's persisted ``iva.prorrata-porcentaje``
+observation from the local
+:class:`~aeat.application.calculations.CalculationObservationRepository` — the
+same same-modelo prior-filing lookup pattern
+:mod:`~aeat.application.modelo._prior_payment_advisory` already uses for the
+Modelo 130 casilla-05 carry. When a real prior-year percentage is found, the
+pure :func:`~aeat.application.calculations.build_prorrata_regularizacion_advisory`
+projection runs against real, non-fabricated inputs and its advisory is
+surfaced verbatim (never re-implemented). When no prior-year observation
+exists (a first-filing ejercicio, or the operator has not yet filed the prior
+year through this application), the collector still alerts that a
+regularización may be due once the prior-year percentage is available, rather
+than silently dropping the check.
+
+The register's LIVA art. 105.Cuatro "último período de liquidación del año
+natural" timing means the regularización is due once a year, at the
+settlement period (the fourth quarter or the annual period for Modelo 303
+filers); this collector only inspects the revision on those periods so a
+mid-year quarter does not raise noise for a compute that is not yet due.
+
+See Also:
+    :mod:`~aeat.application.modelo._calculation_diagnostics`:
+        Post-calculation coordinator that calls this collector with the
+        computed casilla values and the shared observation repository.
+    :mod:`~aeat.application.calculations._prorrata_regularizacion`:
+        Pure advisory-projection function this collector wires to the
+        registry-computed annual prorrata figures.
+    :mod:`~aeat.application.modelo._bienes_inversion_advisory`:
+        Sibling deferred-source collector for the capital-goods IVA
+        regularización (LIVA arts. 107-110), whose settlement-period gating
+        this module mirrors.
+    :mod:`~aeat.application.modelo._prior_payment_advisory`:
+        Origin of the same-modelo prior-filing observation lookup pattern
+        this collector reuses for the prior-year definitive-percentage carry.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from decimal import Decimal
+
+from ...core import Modelo
+from ...domain.calculations.registry import CasillaId, ModeloRevision
+from ..aggregation import CalculationSourceDiagnostic
+from ..calculations import CalculationObservationRepository, build_prorrata_regularizacion_advisory
+from ._semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
+
+__all__ = ["collect_prorrata_regularizacion_diagnostics"]
+
+#: Modelo 303 registry period tokens at which the LIVA art. 105.Cuatro annual
+#: regularización settles: the fourth quarter for standard quarterly filers,
+#: and the annual period for filers on an annual-only cadence. A mid-year
+#: quarter (1T/2T/3T) is never a regularisation event, so this collector is
+#: silent on those periods (no noise for a compute that is not yet due).
+_SETTLEMENT_PERIOD_TOKENS: frozenset[str] = frozenset({"4T", "0A"})
+
+_VOLUMEN_TOTAL_SEMANTIC_ROLE = "iva_prorrata_volumen_total"
+_VOLUMEN_CON_DERECHO_SEMANTIC_ROLE = "iva_prorrata_volumen_con_derecho"
+_PORCENTAJE_SEMANTIC_ROLE = "iva_prorrata_porcentaje"
+_CUOTA_DEDUCIBLE_TOTAL_SEMANTIC_ROLE = "iva_cuota_deducible_total"
+
+_PENDING_PROVISIONAL_SOURCE_KIND = "prorrata_regularizacion_provisional_pending"
+
+
+def _casilla_id_for_role(revision: ModeloRevision, semantic_role: str, *, modelo_id: str) -> CasillaId | None:
+    try:
+        return casilla_id_for_unique_revision_semantic_role(revision, semantic_role, modelo_id=modelo_id)
+    except AmbiguousSemanticRoleCasillaError:
+        return None
+
+
+def _prior_year_definitiva_pct(
+    repository: CalculationObservationRepository,
+    *,
+    filing_year: int,
+    porcentaje_id: CasillaId,
+) -> Decimal | None:
+    """Return the prior ejercicio's persisted definitive prorrata percentage.
+
+    Scans the local Modelo 303 observation catalogue (mirroring
+    :mod:`~aeat.application.modelo._prior_payment_advisory`'s same-modelo
+    prior-filing lookup) for a settlement-period observation in
+    ``filing_year - 1`` that carries a value for ``porcentaje_id`` — the same
+    ``iva.prorrata-porcentaje`` canonical casilla id shared by every M303
+    revision that declares the prorrata semantic roles. Returns ``None`` when
+    no such observation exists — the first-ejercicio / not-yet-filed case the
+    caller must surface as a pending advisory rather than a fabricated figure.
+    """
+    prior_year = filing_year - 1
+    for payload in repository.iter_modelo(Modelo.M303.value):
+        observation = payload.observation
+        if observation.filing_year != prior_year or observation.period not in _SETTLEMENT_PERIOD_TOKENS:
+            continue
+        value = observation.casilla_values.get(porcentaje_id)
+        if value is not None:
+            return value
+    return None
+
+
+def collect_prorrata_regularizacion_diagnostics(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    modelo: str,
+    period_token: str,
+    filing_year: int,
+    observation_repository: CalculationObservationRepository,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return the annual prorrata-general regularización advisory for one calculation.
+
+    Reads the CURRENT year's registry-computed annual prorrata figures
+    (``iva.prorrata-volumen-total``, ``iva.prorrata-volumen-con-derecho``,
+    ``iva.prorrata-porcentaje``, ``iva.cuota-deducible-total``) from
+    ``casilla_values`` and looks up the PRIOR year's persisted definitive
+    percentage from ``observation_repository``. When both are available, the
+    pure :func:`~aeat.application.calculations.build_prorrata_regularizacion_advisory`
+    projection runs and its advisory (or silence, when no regularización is
+    due) is returned verbatim. When the prior-year percentage cannot be found,
+    a lighter pending advisory fires whenever the current year shows
+    exempt-without-right operations (prorrata applies), naming casilla 44 as
+    not yet automatically checkable.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose casillas are inspected for
+            the prorrata semantic roles. Only Modelo 303 revisions declare
+            them; every other modelo returns an empty tuple immediately.
+        casilla_values: Computed engine values keyed by :class:`CasillaId`.
+        modelo: The modelo identifier of the filing being calculated.
+        period_token: Bare registry period token for the filing being
+            calculated (e.g. ``"4T"``, ``"1T"``, ``"0A"``).
+        filing_year: The filing year regularised (the year whose prior
+            ejercicio's percentage is looked up).
+        observation_repository: The local
+            :class:`~aeat.application.calculations.CalculationObservationRepository`
+            scanned for the prior-year definitive-percentage carry.
+
+    Returns:
+        A tuple carrying at most one advisory: the pure builder's advisory
+        when a prior-year percentage is available, a pending advisory when it
+        is not, or an empty tuple when no regularización is due or not yet
+        relevant (non-settlement period, no exempt-without-right operations).
+    """
+    if modelo != Modelo.M303.value:
+        return ()
+    if period_token not in _SETTLEMENT_PERIOD_TOKENS:
+        return ()
+
+    volumen_total_id = _casilla_id_for_role(revision, _VOLUMEN_TOTAL_SEMANTIC_ROLE, modelo_id=modelo)
+    volumen_con_derecho_id = _casilla_id_for_role(revision, _VOLUMEN_CON_DERECHO_SEMANTIC_ROLE, modelo_id=modelo)
+    porcentaje_id = _casilla_id_for_role(revision, _PORCENTAJE_SEMANTIC_ROLE, modelo_id=modelo)
+    cuota_deducible_id = _casilla_id_for_role(revision, _CUOTA_DEDUCIBLE_TOTAL_SEMANTIC_ROLE, modelo_id=modelo)
+    if volumen_total_id is None or volumen_con_derecho_id is None:
+        return ()
+    if porcentaje_id is None or cuota_deducible_id is None:
+        return ()
+
+    volumen_total = casilla_values.get(volumen_total_id, Decimal(0))
+    volumen_con_derecho = casilla_values.get(volumen_con_derecho_id, Decimal(0))
+    operaciones_sin_derecho_deduccion = volumen_total - volumen_con_derecho
+    if operaciones_sin_derecho_deduccion <= Decimal(0):
+        return ()
+
+    prorrata_definitiva_pct = casilla_values.get(porcentaje_id, Decimal(0))
+    cuotas_soportadas_deducibles = casilla_values.get(cuota_deducible_id, Decimal(0))
+
+    prorrata_provisional_pct = _prior_year_definitiva_pct(
+        observation_repository,
+        filing_year=filing_year,
+        porcentaje_id=porcentaje_id,
+    )
+    if prorrata_provisional_pct is None:
+        return (
+            CalculationSourceDiagnostic(
+                reason="official_box_unpopulated",
+                source_kind=_PENDING_PROVISIONAL_SOURCE_KIND,
+                message=(
+                    "Operaciones exentas sin derecho a deducción detectadas en el ejercicio "
+                    f"{filing_year} (prorrata general, LIVA arts. 104-105): la regularización de "
+                    "casilla 44 no puede comprobarse automáticamente porque no consta el porcentaje "
+                    f"de prorrata definitivo de {filing_year - 1} en este equipo. Compruebe manualmente "
+                    "si procede una regularización antes de presentar."
+                ),
+                casilla_id=porcentaje_id,
+            ),
+        )
+
+    _result, diagnostic = build_prorrata_regularizacion_advisory(
+        cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
+        prorrata_provisional_pct=prorrata_provisional_pct,
+        prorrata_definitiva_pct=prorrata_definitiva_pct,
+        operaciones_sin_derecho_deduccion=operaciones_sin_derecho_deduccion,
+        regularizacion_year=filing_year,
+    )
+    if diagnostic is None:
+        return ()
+    return (diagnostic,)

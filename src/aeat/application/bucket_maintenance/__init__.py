@@ -37,10 +37,16 @@ digests, so import re-saves them through the recipient bucket's
 :class:`adapters.persistence.storage.SecureObjectRepository` and
 re-encrypts under that bucket's DEK.
 This package exposes the lifecycle composition verbs ``archive``,
-``browse``, ``delete``, ``export``, ``import``, ``inspect``, ``rename``,
-and ``restore``. The ``search`` verb is deferred behind its own ADR
-because it must route through domain repositories instead of decrypting
+``browse``, ``delete``, ``disk_usage``, ``export``, ``import``, ``inspect``,
+``rename``, and ``restore``. The ``search`` verb is deferred behind its own
+ADR because it must route through domain repositories instead of decrypting
 secure-object storage directly.
+
+:meth:`BucketMaintenanceService.disk_usage` measures a bucket's on-disk
+footprint by summing regular-file byte sizes under its fixed directory
+layout (:func:`adapters.persistence.storage.bucket.bucket_paths`); it reads
+only filesystem metadata, never decrypted content, so it can measure a
+non-active (even archived) bucket without opening a storage session.
 
 :func:`create_sandbox` and :func:`discard_sandbox` expose a discardable
 experiment-workspace lifecycle over the same primitives: a sandbox is an
@@ -54,7 +60,13 @@ such as ``sandbox prune``. :func:`archive_sandbox` and
 :func:`restore_sandbox` expose a reversible-dormancy alternative to
 discard: :meth:`BucketMaintenanceService.archive` soft-tombstones the
 sandbox without removing its directory, and
-:meth:`BucketMaintenanceService.restore` reactivates it.
+:meth:`BucketMaintenanceService.restore` reactivates it. :func:`merge_sandbox`
+promotes a :class:`SandboxMergeScope` (``ledger``, ``modelo``, or ``all``)
+from a sandbox into a target profile bucket by composing the same typed
+catalogue repositories and domain upsert primitives (``upsert_work_unit``,
+``upsert_calculation_revision``, ``upsert_filing_record``) the
+portable-bundle import path already uses for those categories, so a
+repeated merge of unchanged sandbox content is an idempotent no-op write.
 
 See Also:
     :mod:`application.user_profile`
@@ -82,9 +94,12 @@ from ._contracts import (
     ArchiveBucketResult,
     BrowseBucketCommand,
     BrowseBucketResult,
+    BucketDiskUsageSubdirRow,
     BucketNamespaceInventoryRow,
     DeleteBucketCommand,
     DeleteBucketResult,
+    DiskUsageBucketCommand,
+    DiskUsageBucketResult,
     ExportBucketCommand,
     ExportBucketResult,
     ImportBucketCommand,
@@ -105,12 +120,16 @@ from ._sandbox import (
     CreateSandboxResult,
     DiscardSandboxCommand,
     DiscardSandboxResult,
+    MergeSandboxCommand,
+    MergeSandboxResult,
     PreviewDiscardSandboxCommand,
     PreviewDiscardSandboxResult,
     RestoreSandboxCommand,
     RestoreSandboxResult,
     SandboxAlreadyExistsError,
     SandboxDiscardRefusedError,
+    SandboxMergeRefusedError,
+    SandboxMergeScope,
     SandboxNamespaceInventoryRow,
     SandboxNotArchivedError,
     SandboxNotFoundError,
@@ -120,6 +139,7 @@ from ._sandbox import (
     discard_sandbox,
     is_sandbox_label,
     list_sandboxes,
+    merge_sandbox,
     preview_discard_sandbox,
     restore_sandbox,
     sandbox_label,
@@ -134,6 +154,7 @@ __all__ = [
     "ArchiveSandboxResult",
     "BrowseBucketCommand",
     "BrowseBucketResult",
+    "BucketDiskUsageSubdirRow",
     "BucketMaintenanceService",
     "BucketNamespaceInventoryRow",
     "CreateSandboxCommand",
@@ -142,12 +163,16 @@ __all__ = [
     "DeleteBucketResult",
     "DiscardSandboxCommand",
     "DiscardSandboxResult",
+    "DiskUsageBucketCommand",
+    "DiskUsageBucketResult",
     "ExportBucketCommand",
     "ExportBucketResult",
     "ImportBucketCommand",
     "ImportBucketResult",
     "InspectBucketArchiveCommand",
     "InspectBucketArchiveResult",
+    "MergeSandboxCommand",
+    "MergeSandboxResult",
     "PreviewDiscardSandboxCommand",
     "PreviewDiscardSandboxResult",
     "RenameBucketCommand",
@@ -158,6 +183,8 @@ __all__ = [
     "RestoreSandboxResult",
     "SandboxAlreadyExistsError",
     "SandboxDiscardRefusedError",
+    "SandboxMergeRefusedError",
+    "SandboxMergeScope",
     "SandboxNamespaceInventoryRow",
     "SandboxNotArchivedError",
     "SandboxNotFoundError",
@@ -168,6 +195,7 @@ __all__ = [
     "discard_sandbox",
     "is_sandbox_label",
     "list_sandboxes",
+    "merge_sandbox",
     "preview_discard_sandbox",
     "restore_sandbox",
     "sandbox_label",

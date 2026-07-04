@@ -18,6 +18,8 @@ Submodules
    aeat.application.modelo._amendment_kind_resolution
    aeat.application.modelo._art109_activity_income
    aeat.application.modelo._art20_advisory
+   aeat.application.modelo._art52_advisory
+   aeat.application.modelo._autonomic_deduccion_advisory
    aeat.application.modelo._bienes_inversion_advisory
    aeat.application.modelo._binding_readiness
    aeat.application.modelo._binding_resolution
@@ -33,6 +35,7 @@ Submodules
    aeat.application.modelo._data_inventory
    aeat.application.modelo._decimal_parsing
    aeat.application.modelo._dt12_advisory
+   aeat.application.modelo._dt12_antiquity_advisory
    aeat.application.modelo._export
    aeat.application.modelo._external_import_actions
    aeat.application.modelo._filed_revision_observation
@@ -44,6 +47,7 @@ Submodules
    aeat.application.modelo._local_observation_actions
    aeat.application.modelo._local_observation_spreadsheet
    aeat.application.modelo._m036_lifecycle
+   aeat.application.modelo._m210_convenio_lob_advisory
    aeat.application.modelo._m210_rate
    aeat.application.modelo._m303_m349_reconcile
    aeat.application.modelo._m349_ledger_guard
@@ -56,6 +60,7 @@ Submodules
    aeat.application.modelo._profile_binding
    aeat.application.modelo._profile_readiness_gate
    aeat.application.modelo._projection
+   aeat.application.modelo._prorrata_regularizacion_advisory
    aeat.application.modelo._quickfile
    aeat.application.modelo._reconcile
    aeat.application.modelo._reconcile_casilla
@@ -67,6 +72,8 @@ Submodules
    aeat.application.modelo._result_summary
    aeat.application.modelo._review_package
    aeat.application.modelo._review_package_counter_sign
+   aeat.application.modelo._review_package_recipient_encryption
+   aeat.application.modelo._review_package_recipient_registry
    aeat.application.modelo._review_package_signing
    aeat.application.modelo._revision_persistence
    aeat.application.modelo._revision_replay_inputs

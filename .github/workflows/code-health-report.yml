@@ -1,0 +1,72 @@
+# Monthly code-health report (issue #416)
+#
+# Runs `just audit-health-report` — the composed shadowing / duplication /
+# layering / complexity dashboard (`dev/audit/report.py`) — on a monthly
+# schedule and publishes the result to the workflow summary and as a build
+# artifact.
+#
+# This is DELIBERATELY NON-BLOCKING. The report currently reports RED against
+# real, standing, peer-owned debt (a broken `.importlinter` layering contract
+# and a stale complexity baseline lagging live-branch churn — see the
+# `dev.audit.report` module docstring and issue #416's delivery comment for
+# the current honest baseline). Wiring the report as a hard-blocking CI gate
+# today would fail every PR on pre-existing debt it did not introduce. Instead
+# the report step uses `continue-on-error: true` so a RED verdict is recorded
+# and visible without failing the run.
+#
+# Promoting this from informational to a blocking gate is tracked as
+# follow-on work once the standing layering + complexity debt is remediated
+# (see the scope note in `dev/audit/report.py` and issue #416).
+
+name: Code health report
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 06:00 UTC on the 1st of every month.
+    - cron: '0 6 1 * *'
+
+permissions:
+  contents: read
+
+jobs:
+  health-report:
+    name: Monthly code-health report (informational)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          python-version: '3.13'
+          enable-cache: true
+
+      - name: Bootstrap
+        run: |
+          uv sync --frozen
+          uv run vaultspec-core install --force
+
+      - name: Run code-health report (text)
+        # Informational only: a RED overall verdict must not fail this job.
+        # See the workflow header and `dev/audit/report.py` for why the
+        # report is expected to be RED today against standing peer debt.
+        run: just audit-health-report
+        continue-on-error: true
+
+      - name: Run code-health report (JSON artifact)
+        run: just audit-health-report-json > code-health-report.json
+        continue-on-error: true
+
+      - name: Upload code-health report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: code-health-report
+          path: code-health-report.json

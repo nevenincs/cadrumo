@@ -1051,6 +1051,12 @@ class FormulaDefinition(RegistryModel):
 KNOWN_PROFILE_FLAG_ADVISORY_FIELDS: frozenset[str] = frozenset(
     {
         "art109_activity_income_withholding_ge_70pct",
+        # ue_eee_status: TaxpayerProfile derived property (True iff
+        # country_of_fiscal_residence is an EU/EEA code, post-Brexit). Consumed
+        # by profile_flag_enabled directly and by
+        # casilla_equals_implies_profile_flag for the M210 IRNR
+        # tipo_renta="ue_residente" residence cross-check.
+        "ue_eee_status",
     },
 )
 
@@ -1100,6 +1106,22 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # _evaluate_advisory_predicate_fires and the
         # m210-categorical-conditional-predicate ADR.
         "casilla_equals_implies_nonzero",
+        # casilla_equals_implies_profile_flag(["antecedent_casilla_id", "literal",
+        # "profile_field"]) — categorical-antecedent / profile-state-consequent
+        # conditional advisory: FIRES (ADVISORY shown) when the operator-entered
+        # raw text value of the named TEXT antecedent casilla equals the literal
+        # AND the named boolean TaxpayerProfile field/property is False.
+        # ADVISORY-only (no BLOCKING_RULE branch is implemented), sibling of
+        # casilla_equals_implies_nonzero (whose consequent reads a Decimal
+        # casilla) and profile_flag_enabled (whose antecedent is
+        # unconditional). Authored for the M210 IRNR
+        # tipo_renta="ue_residente" reduced-rate election (TRLIRNR Art 25.1.a):
+        # the categorical rate choice was not cross-checked against the
+        # declared country_of_fiscal_residence, so a non-EU/EEA filer could
+        # self-declare the reduced 19% rate reserved for EU/EEE residents. See
+        # the casilla_equals_implies_profile_flag branch in
+        # _evaluate_advisory_predicate_fires.
+        "casilla_equals_implies_profile_flag",
         # casilla_equals_implies_diverges(["antecedent_casilla_id", "literal",
         # "casilla_a_id", "casilla_b_id"]) — categorical-conditional
         # divergence check: when the operator-entered raw text value of the

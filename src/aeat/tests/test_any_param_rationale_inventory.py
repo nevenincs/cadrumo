@@ -156,7 +156,7 @@ def _collect_violations(
     return violations
 
 
-def test_no_new_any_param_without_rationale() -> None:
+def test_no_new_any_param_without_rationale(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """New parameter-level ``Any`` annotations must carry an inline rationale marker.
 
     This test uses a ratchet against ``_KNOWN_VIOLATING_LINES``:
@@ -175,7 +175,7 @@ def test_no_new_any_param_without_rationale() -> None:
       ANY-RETURN-RATIONALE-<LABEL>
       ADAPTER-INTERNAL-ALIAS-RATIONALE-<LABEL>
     """
-    all_violations = _collect_violations()
+    all_violations = _collect_violations(source_tree_ast)
     new_violations = [(rel, lineno) for rel, lineno in all_violations if (rel, lineno) not in _KNOWN_VIOLATING_LINES]
 
     if new_violations:

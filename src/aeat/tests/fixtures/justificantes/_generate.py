@@ -51,27 +51,36 @@ from ._generate_misc_b import (
     _MODELO_123_FIXTURES,
     _MODELO_131_FIXTURES,
     _MODELO_184_FIXTURES,
+    _MODELO_202_FIXTURES,
     _MODELO_232_FIXTURES,
     _MODELO_347_FIXTURES,
     _MODELO_840_FIXTURES,
     _draw_modelo_123,
     _draw_modelo_131,
     _draw_modelo_184,
+    _draw_modelo_202,
     _draw_modelo_232,
     _draw_modelo_347,
     _draw_modelo_840,
     _Modelo123Fixture,
     _Modelo131Fixture,
     _Modelo184Fixture,
+    _Modelo202Fixture,
     _Modelo232Fixture,
     _Modelo347Fixture,
     _Modelo840Fixture,
+)
+from ._generate_modelo_100_current import (
+    _MODELO_100_CURRENT_YEAR_FIXTURES,
+    _draw_modelo_100_current_year,
+    _Modelo100CurrentYearFixture,
 )
 
 __all__ = [
     "_FIXTURES",
     "_Fixture",
     "_Modelo036Fixture",
+    "_Modelo100CurrentYearFixture",
     "_Modelo115Fixture",
     "_Modelo123Fixture",
     "_Modelo130CorpusFixture",
@@ -79,6 +88,7 @@ __all__ = [
     "_Modelo180Fixture",
     "_Modelo184Fixture",
     "_Modelo193Fixture",
+    "_Modelo202Fixture",
     "_Modelo232Fixture",
     "_Modelo303CorpusFixture",
     "_Modelo347Fixture",
@@ -319,6 +329,21 @@ def main() -> None:
         print(f"wrote {target}")
         _write_sidecar(target, "131", fixture.ejercicio, fixture.tax_id)
 
+    for fixture in _MODELO_202_FIXTURES:
+        target = out_dir / fixture.filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        c = canvas.Canvas(str(target), pagesize=A4, invariant=True)
+        c.setTitle(f"Declaracion Modelo 202 {fixture.ejercicio} {fixture.periodo}")
+        c.setAuthor("aeat test fixtures")
+        c.setSubject("synthetic declaracion fixture m202")
+        c.setCreator("aeat fixture generator")
+        c.setProducer("aeat-test-fixture-generator")
+        _draw_modelo_202(c, fixture)
+        c.showPage()
+        c.save()
+        print(f"wrote {target}")
+        _write_sidecar(target, "202", fixture.ejercicio, fixture.tax_id)
+
     for fixture in _MODELO_303_CORPUS_FIXTURES:
         target = out_dir / fixture.filename
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -333,6 +358,21 @@ def main() -> None:
         c.save()
         print(f"wrote {target}")
         _write_sidecar(target, "303", fixture.ejercicio, fixture.tax_id)
+
+    for fixture in _MODELO_100_CURRENT_YEAR_FIXTURES:
+        target = out_dir / fixture.filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        c = canvas.Canvas(str(target), pagesize=A4, invariant=True)
+        c.setTitle(f"Declaracion Modelo 100 {fixture.ejercicio} 0A")
+        c.setAuthor("aeat test fixtures")
+        c.setSubject("synthetic declaracion fixture m100 current year")
+        c.setCreator("aeat fixture generator")
+        c.setProducer("aeat-test-fixture-generator")
+        _draw_modelo_100_current_year(c, fixture)
+        c.showPage()
+        c.save()
+        print(f"wrote {target}")
+        _write_sidecar(target, "100", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_390_CORPUS_FIXTURES:
         target = out_dir / fixture.filename

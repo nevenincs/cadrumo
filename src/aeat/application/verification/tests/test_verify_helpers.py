@@ -234,6 +234,7 @@ def _declaracion(casilla_ids: tuple[CasillaId, ...]) -> InboundDeclaracionObserv
             period="0A",
         ),
         values=values,
+        extraction_profile_id="modelo-100-declaracion-pdf",
         source_pdf_path=Path(__file__),
         source_pdf_sha256="a" * 64,
         parsed_at=datetime(2026, 4, 5, 12, 0, tzinfo=UTC),

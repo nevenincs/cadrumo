@@ -275,3 +275,60 @@ class EvidenceListResult(OutputSchema):
     bucket_id: str
     count: int
     rows: list[EvidenceRecordPayload]
+
+
+@register_schema("ledger.evidence.extract")
+class EvidenceExtractResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger evidence extract``.
+
+    Mirrors ``InvoiceDraft.model_dump(mode='json')`` (the on-host best-effort
+    extraction) plus the resolved reference id the operator supplied. This is a
+    reviewable draft only: extracting never mints or persists an
+    ``aeat.domain.invoices.Invoice`` -- the operator confirms the fields (via
+    ``aeat app ledger invoice add`` / ``invoice catalogue create``) before any
+    invoice record is created.
+    """
+
+    bucket_id: str
+    evidence_id: str | None = None
+    attachment_id: str | None = None
+    supplier_tax_id: str | None = None
+    invoice_number: str | None = None
+    invoice_date: str | None = None
+    taxable_base: str | None = None
+    iva_rate: str | None = None
+    iva_amount: str | None = None
+    grand_total: str | None = None
+    raw_text_length: int = 0
+
+
+@register_schema("ledger.evidence.confirm")
+class EvidenceConfirmResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger evidence extract --confirm``.
+
+    Reports the persisted (or already-existing, on a guarded no-op) rich
+    catalogue :class:`~aeat.domain.invoices.Invoice` -- mirroring
+    ``CatalogueInvoiceRecordPayload`` -- plus the resolved evidence reference
+    and a ``created`` flag distinguishing a fresh write
+    (``single-subject-mutation-is-idempotent-guarded``) from a same-identity
+    guarded retry.
+    """
+
+    bucket_id: str
+    evidence_id: str | None = None
+    attachment_id: str | None = None
+    created: bool
+    invoice_id: str
+    kind: str
+    invoice_number: str
+    issued_at: str
+    counterparty_name: str
+    counterparty_tax_id: str
+    counterparty_country: str
+    base_total: str
+    iva_total: str
+    grand_total: str
+    currency: str
+    payment_status: str
+    linked_transaction_ids: list[str] = []
+    notes: str = ""

@@ -51,6 +51,15 @@ See Also:
 from __future__ import annotations
 
 from ...domain.invoices import find_invoice, find_unmatched
+from ._bulk_import import (
+    BULK_INVOICE_IMPORT_ALLOWED_COLUMNS,
+    BULK_INVOICE_IMPORT_REQUIRED_COLUMNS,
+    BulkInvoiceImportResult,
+    BulkInvoiceImportRow,
+    BulkInvoiceImportRowFailure,
+    import_invoices_from_rows,
+    read_bulk_invoice_import_rows,
+)
 from ._creation import (
     CatalogueInvoiceCreateResult,
     build_catalogue_invoice,
@@ -103,6 +112,11 @@ from ._reconciliation import (
 from ._source_resolver import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
 
 __all__ = [
+    "BULK_INVOICE_IMPORT_ALLOWED_COLUMNS",
+    "BULK_INVOICE_IMPORT_REQUIRED_COLUMNS",
+    "BulkInvoiceImportResult",
+    "BulkInvoiceImportRow",
+    "BulkInvoiceImportRowFailure",
     "CatalogueInvoiceCreateResult",
     "CatalogueInvoiceRemoveResult",
     "InvoiceCatalogueSourceResolver",
@@ -122,6 +136,7 @@ __all__ = [
     "find_unmatched",
     "get_invoice_from_repository",
     "import_invoices_from_path",
+    "import_invoices_from_rows",
     "invoice_direction_to_source_kind",
     "invoice_display_amounts",
     "invoice_review_status",
@@ -136,6 +151,7 @@ __all__ = [
     "project_invoice_payment_matches",
     "project_invoice_review",
     "project_invoice_reviews",
+    "read_bulk_invoice_import_rows",
     "reconcile_invoice_catalogues",
     "reconcile_invoice_repositories",
     "remove_catalogue_invoice",

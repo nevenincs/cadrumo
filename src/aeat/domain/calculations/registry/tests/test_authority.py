@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from .....core import Period
-from .....core.resources import bundled_path, resources
+from .....core.resources import resources
 from .. import (
     CasillaId,
     RegistrySnapshotError,
@@ -26,7 +26,6 @@ from ._loader_directory_mode_support import write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _LEGACY_AUTHORITY_CACHE_SCHEMA_VERSION = "casilla-reference-ambiguity-v2"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
@@ -87,8 +86,8 @@ def test_authority_snapshot_runs_real_modelo_calculation(_packaged_authority) ->
     assert casilla_15.absent_by_design is False
 
 
-def test_authority_snapshot_is_authority_owned_revision_projection() -> None:
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=bundled_path())
+def test_authority_snapshot_is_authority_owned_revision_projection(_packaged_authority) -> None:
+    authority = _packaged_authority
 
     snapshot = authority.snapshot("130", filing_year=2026, period="1T")
     modelo = authority.modelo("130")

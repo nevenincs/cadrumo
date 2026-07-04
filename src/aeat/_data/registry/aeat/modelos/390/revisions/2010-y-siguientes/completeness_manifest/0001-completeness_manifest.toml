@@ -77,6 +77,10 @@ casilla_id = "iva.anual.repercutido.recargo.reducido"
 number = "iva.anual.repercutido.recargo.reducido"
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.super-reducido"
+number = "iva.anual.repercutido.recargo.super-reducido"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.resultado-regimen-general"
 number = "iva.anual.resultado-regimen-general"
 

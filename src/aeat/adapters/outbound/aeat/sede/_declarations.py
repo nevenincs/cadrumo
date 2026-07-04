@@ -72,6 +72,7 @@ from ._declarations_diagnostics import (
 from ._declarations_listbox import _parse_listbox, _parse_presented_at
 from ._declarations_observations import (
     FiledDeclaracionArtefactSink,
+    _declaration_pdf_extraction_profile_provisional,
     _observed_casillas_from_declaration_pdf,
     _observed_casillas_from_submitted_file,
     _read_guard_policy_from_snapshot,
@@ -945,6 +946,8 @@ async def _capture_filed_declaration_observation_from_row(
             body=declaration_pdf_body,
         )
         extraction_coverage["declaration_pdf"] = 1.0
+        if _declaration_pdf_extraction_profile_provisional(snapshot):
+            metadata["declaration_pdf_extraction_profile_provisional"] = "true"
     elif not casillas and not declaration.archive_link_text and declaration_pdf_body is None:
         raise SedeParseError(
             f"AEAT declaration {declaration.expediente_id!r} did not expose submitted-file or declaration-copy data",

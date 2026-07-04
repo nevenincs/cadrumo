@@ -58,6 +58,18 @@ Major declarations:
   :func:`pull_operator_edits`, and
   :func:`compute_from_pull` — the operator-edit
   pull surface.
+* :class:`GoogleImpersonationConfig`,
+  :func:`resolve_impersonated_credentials`, and
+  :func:`describe_impersonation_target` — the service-account
+  impersonation credential source
+  (:attr:`core.GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION`),
+  an alternative to the default OAuth Desktop flow above.
+* :class:`GoogleCredentialSourceSelection`,
+  :func:`save_credential_source_selection`, and
+  :func:`load_credential_source_selection` — per-profile persistence of
+  which :class:`core.GoogleCredentialSourceKind` a profile has chosen,
+  consumed by :func:`adapters.outbound.storage.build_google_credentials`
+  to dispatch between the OAuth-Desktop and impersonation sources.
 
 See Also:
     - :mod:`adapters.outbound.storage` for the Google Drive storage
@@ -99,6 +111,15 @@ from ._errors import (
     GoogleAuthUnsecuredModeRefusedError,
     GoogleAuthValidationError,
 )
+from ._impersonation import (
+    GoogleAuthAdcStaleError,
+    GoogleAuthAdcUnavailableError,
+    GoogleAuthImpersonationRefusedError,
+    GoogleCredentialSourceSelection,
+    GoogleImpersonationConfig,
+    describe_impersonation_target,
+    resolve_impersonated_credentials,
+)
 from ._oauth_flow import run_login_flow
 from ._records import (
     DRIVE_FILE_SCOPE,
@@ -113,10 +134,12 @@ from ._records import (
 from ._session_store import (
     delete_session,
     load_client,
+    load_credential_source_selection,
     load_drive_config,
     load_metadata,
     load_token,
     save_client,
+    save_credential_source_selection,
     save_drive_config,
     save_metadata,
     save_token,
@@ -132,11 +155,14 @@ __all__ = [
     "DriveFolderDocument",
     "DriveFolderListing",
     "GoogleApiResponseBody",
+    "GoogleAuthAdcStaleError",
+    "GoogleAuthAdcUnavailableError",
     "GoogleAuthBrowserOpenError",
     "GoogleAuthClientNotRegisteredError",
     "GoogleAuthClientRevokedError",
     "GoogleAuthError",
     "GoogleAuthExpiredError",
+    "GoogleAuthImpersonationRefusedError",
     "GoogleAuthKeychainLockedError",
     "GoogleAuthLoopbackBindError",
     "GoogleAuthNetworkError",
@@ -146,7 +172,9 @@ __all__ = [
     "GoogleAuthScopeInsufficientError",
     "GoogleAuthUnsecuredModeRefusedError",
     "GoogleAuthValidationError",
+    "GoogleCredentialSourceSelection",
     "GoogleDriveFile",
+    "GoogleImpersonationConfig",
     "GoogleSheetsRange",
     "GoogleSpreadsheet",
     "OAuthClient",
@@ -158,8 +186,10 @@ __all__ = [
     "apply_export_plan",
     "compute_from_pull",
     "delete_session",
+    "describe_impersonation_target",
     "list_drive_folder_documents",
     "load_client",
+    "load_credential_source_selection",
     "load_drive_config",
     "load_metadata",
     "load_token",
@@ -167,8 +197,10 @@ __all__ = [
     "pull_operator_edits",
     "resolve_active_profile",
     "resolve_document_link",
+    "resolve_impersonated_credentials",
     "run_login_flow",
     "save_client",
+    "save_credential_source_selection",
     "save_drive_config",
     "save_metadata",
     "save_token",

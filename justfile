@@ -212,9 +212,9 @@ packaging-smoke-extras: packaging-smoke-source
 packaging-smoke-dev: packaging-smoke-source
     @uv run --no-sync python -m dev.packaging.smoke_dev
 
-# Build the slim aeat wheel plus the aeat-data companion, install the slim
+# Build the slim aeat wheel plus both aeat-data-* companions, install the slim
 # wheel alone (loud advisory path; verification verbs refuse instructively),
-# then add the companion and prove byte-identical source verification.
+# then add both companions and prove byte-identical source verification.
 packaging-smoke-split: packaging-smoke-source
     @uv run --no-sync python -m dev.packaging.smoke_split_install
 
@@ -585,7 +585,7 @@ release-apply:
 # Publish the slim aeat wheel+sdist to PyPI. LOCAL-ONLY and HUMAN-GATED:
 # refuses in CI, needs a scoped token in UV_PUBLISH_TOKEN, and only runs
 # with the literal confirmation argument. See RELEASING.md for the full
-# release sequence (name claim, aeat-data size grant, marketplace push).
+# release sequence (name claim, aeat-data-* companion publish, marketplace push).
 [unix]
 publish confirm="":
     #!/usr/bin/env bash
@@ -652,8 +652,9 @@ publish confirm="":
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Host "✔ published aeat v$version - verify at https://pypi.org/project/aeat-cli/$version/"
 
-# Publish the aeat-data corpus companion to PyPI (same gates as publish).
-# Requires the per-file size grant on the aeat-data project (RELEASING.md).
+# Publish BOTH aeat-data-* corpus companions to PyPI in one gated run (same
+# gates as publish). Both are sub-cap and need no per-file size grant
+# (RELEASING.md); they are version-locked to aeat, so bump all three together.
 [unix]
 publish-data confirm="":
     #!/usr/bin/env bash
@@ -675,10 +676,11 @@ publish-data confirm="":
         exit 1
     fi
     rm -rf var/release/dist-data
-    uv build --project packaging/aeat_data --out-dir var/release/dist-data
-    echo "▶ uv publish (aeat-data)"
+    uv build --project packaging/aeat_data_manuals --out-dir var/release/dist-data
+    uv build --project packaging/aeat_data_official --out-dir var/release/dist-data
+    echo "▶ uv publish (aeat-data-manuals + aeat-data-official)"
     uv publish var/release/dist-data/*
-    echo "✔ published aeat-data — verify at https://pypi.org/project/aeat-data/"
+    echo "✔ published aeat-data-manuals + aeat-data-official — verify at https://pypi.org/project/aeat-data-manuals/ and https://pypi.org/project/aeat-data-official/"
 
 [windows]
 publish-data confirm="":
@@ -702,9 +704,11 @@ publish-data confirm="":
         exit 1
     }
     if (Test-Path var/release/dist-data) { Remove-Item -Recurse -Force var/release/dist-data }
-    & uv build --project packaging/aeat_data --out-dir var/release/dist-data
+    & uv build --project packaging/aeat_data_manuals --out-dir var/release/dist-data
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "▶ uv publish (aeat-data)"
+    & uv build --project packaging/aeat_data_official --out-dir var/release/dist-data
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host "▶ uv publish (aeat-data-manuals + aeat-data-official)"
     & uv publish (Get-ChildItem var/release/dist-data/*)
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ published aeat-data - verify at https://pypi.org/project/aeat-data/"
+    Write-Host "✔ published aeat-data-manuals + aeat-data-official - verify at https://pypi.org/project/aeat-data-manuals/ and https://pypi.org/project/aeat-data-official/"

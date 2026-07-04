@@ -54,6 +54,7 @@ profile through the sandbox verb.
 from __future__ import annotations
 
 from datetime import datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
@@ -118,6 +119,25 @@ class SandboxNotArchivedError(Exception):
     def __init__(self, bucket_id: str) -> None:
         super().__init__(f"bucket {bucket_id!r} is not archived; there is nothing to restore")
         self.bucket_id = bucket_id
+
+
+class SandboxMergeRefusedError(Exception):
+    """Raised when ``merge_sandbox`` is refused (missing confirmation, unknown scope target)."""
+
+
+class SandboxMergeScope(StrEnum):
+    """Closed axis of promotable data categories a sandbox merge may select.
+
+    ``LEDGER`` promotes ledger transactions only (the manual/imported
+    :class:`~aeat.domain.transactions.Transaction` catalogue, which already
+    carries classification decisions on each row). ``MODELO`` promotes the
+    modelo work-unit, calculation-revision, and filing-record catalogues.
+    ``ALL`` promotes every one of the above in one call.
+    """
+
+    LEDGER = "ledger"
+    MODELO = "modelo"
+    ALL = "all"
 
 
 class PreviewDiscardSandboxCommand(BaseModel):
@@ -271,6 +291,45 @@ class RestoreSandboxResult(BaseModel):
 
     bucket_id: BucketId
     label: str
+    occurred_at: datetime
+
+
+class MergeSandboxCommand(BaseModel):
+    """Operator request to promote one data scope from a sandbox into a target profile.
+
+    ``source_bucket_id`` must carry the reserved sandbox label (the
+    ``allow_non_sandbox`` escape hatch mirrors every other sandbox verb's
+    non-sandbox guard). ``target_bucket_id`` names the profile bucket the
+    scope is merged INTO — ordinarily the operator's main profile, resolved
+    by the CLI layer before this command is built, never the sandbox itself.
+    ``confirmed=True`` is required because the merge mutates the target
+    profile's real records.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_bucket_id: BucketId
+    target_bucket_id: BucketId
+    scope: SandboxMergeScope
+    confirmed: bool = False
+    allow_non_sandbox: bool = False
+
+
+class MergeSandboxResult(BaseModel):
+    """Outcome of a successful sandbox merge.
+
+    ``merged_counts`` reports, per merged typed category, how many rows the
+    merge upserted into the target bucket (a re-run against unchanged sandbox
+    content upserts the same content-addressed ids again — an idempotent
+    no-op write, never a duplicate row).
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_bucket_id: BucketId
+    target_bucket_id: BucketId
+    scope: SandboxMergeScope
+    merged_counts: dict[str, int]
     occurred_at: datetime
 
 
@@ -501,6 +560,155 @@ def restore_sandbox(command: RestoreSandboxCommand) -> RestoreSandboxResult:
     return RestoreSandboxResult(bucket_id=outcome.bucket_id, label=outcome.label, occurred_at=outcome.occurred_at)
 
 
+def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
+    """Promote ``command.scope`` from a sandbox bucket into ``command.target_bucket_id``.
+
+    Composes the SAME typed-catalogue repositories and domain upsert
+    primitives the portable-bundle import path
+    (:func:`~aeat.application.user_profile.deserialize_profile_bundle`) uses
+    for ledger/work-unit/calculation-revision/filing-record restore
+    (``composition-service-no-parallel-write-path``): this function does not
+    reimplement a write path, it selects which of those existing upserts to
+    run for the requested scope. Every upsert keys on the row's own
+    content-addressed or natural id, so re-running a merge against unchanged
+    sandbox content is an idempotent no-op write (the target ends up with the
+    identical row it already had, never a duplicate).
+
+    Refuses unless ``command.confirmed`` is ``True``. Refuses when
+    ``command.source_bucket_id`` is not sandbox-labelled unless the caller
+    explicitly sets ``command.allow_non_sandbox``, mirroring every other
+    sandbox verb's non-sandbox guard. Refuses when the source and target
+    buckets are identical (nothing to promote).
+
+    Returns:
+        :class:`MergeSandboxResult` reporting the per-category row counts
+        merged into the target bucket.
+    """
+    from ...core.time import now
+    from ...domain.buckets import (
+        BucketEvent,
+        BucketEventObjectType,
+        BucketEventType,
+        append_bucket_event,
+        derive_bucket_event_id,
+    )
+    from ...domain.modelos import upsert_calculation_revision, upsert_filing_record, upsert_work_unit
+    from ...domain.transactions import Transaction, TransactionCatalogue
+    from ..user_profile import profile_storage_session
+
+    if not command.confirmed:
+        raise SandboxMergeRefusedError(
+            "sandbox merge requires explicit confirmation (confirmed=True); "
+            "pass --yes at the CLI boundary to promote sandbox data into the target profile",
+        )
+    if command.source_bucket_id == command.target_bucket_id:
+        raise SandboxMergeRefusedError(
+            f"source and target bucket are the same ({command.source_bucket_id!r}); nothing to merge",
+        )
+    source_pointer = read_profile_bucket_by_id(command.source_bucket_id)
+    if source_pointer is None:
+        raise SandboxNotFoundError(command.source_bucket_id)
+    if not is_sandbox_label(source_pointer.label) and not command.allow_non_sandbox:
+        raise SandboxDiscardRefusedError(
+            f"bucket {command.source_bucket_id!r} (label {source_pointer.label!r}) is not a sandbox; "
+            "pass allow_non_sandbox=True to merge from a non-sandbox profile",
+        )
+    target_pointer = read_profile_bucket_by_id(command.target_bucket_id)
+    if target_pointer is None:
+        raise SandboxNotFoundError(command.target_bucket_id)
+
+    merged_counts: dict[str, int] = {}
+
+    if command.scope in (SandboxMergeScope.LEDGER, SandboxMergeScope.ALL):
+        from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+
+        with profile_storage_session(command.source_bucket_id):
+            source_transactions = tuple(TransactionCatalogueRepository(bucket_id=command.source_bucket_id).load())
+        if source_transactions:
+            with profile_storage_session(command.target_bucket_id):
+                target_repo = TransactionCatalogueRepository(bucket_id=command.target_bucket_id)
+                existing = target_repo.load()
+                merged: dict[str, Transaction] = dict(existing.transactions)
+                for transaction in source_transactions:
+                    merged[transaction.transaction_id] = transaction
+                target_repo.save(TransactionCatalogue(transactions=merged))
+        merged_counts["ledger_transactions"] = len(source_transactions)
+
+    if command.scope in (SandboxMergeScope.MODELO, SandboxMergeScope.ALL):
+        from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+        from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+        from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+
+        with profile_storage_session(command.source_bucket_id):
+            source_work_units = tuple(WorkUnitCatalogueRepository(bucket_id=command.source_bucket_id).load())
+            source_revisions = tuple(
+                CalculationRevisionCatalogueRepository(bucket_id=command.source_bucket_id).load(),
+            )
+            source_filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=command.source_bucket_id).load())
+
+        with profile_storage_session(command.target_bucket_id):
+            if source_work_units:
+                work_unit_repo = WorkUnitCatalogueRepository(bucket_id=command.target_bucket_id)
+                catalogue = work_unit_repo.load()
+                for unit in source_work_units:
+                    catalogue = upsert_work_unit(catalogue, unit)
+                work_unit_repo.save(catalogue)
+            if source_revisions:
+                revision_repo = CalculationRevisionCatalogueRepository(bucket_id=command.target_bucket_id)
+                revision_catalogue = revision_repo.load()
+                for revision in source_revisions:
+                    revision_catalogue = upsert_calculation_revision(revision_catalogue, revision)
+                revision_repo.save(revision_catalogue)
+            if source_filing_records:
+                filing_repo = ModeloRecordCatalogueRepository(bucket_id=command.target_bucket_id)
+                filing_catalogue = filing_repo.load()
+                for record in source_filing_records:
+                    filing_catalogue = upsert_filing_record(filing_catalogue, record)
+                filing_repo.save(filing_catalogue)
+
+        merged_counts["work_units"] = len(source_work_units)
+        merged_counts["calculation_revisions"] = len(source_revisions)
+        merged_counts["filing_records"] = len(source_filing_records)
+
+    occurred_at = now()
+    payload = {
+        "source_bucket_id": command.source_bucket_id,
+        "source_label": source_pointer.label,
+        "scope": command.scope.value,
+        **{f"merged.{category}": str(count) for category, count in merged_counts.items()},
+    }
+    event = BucketEvent(
+        event_id=derive_bucket_event_id(
+            bucket_id=command.target_bucket_id,
+            event_type=BucketEventType.BUCKET_MERGED,
+            occurred_at=occurred_at,
+            actor="bucket-maintenance",
+            object_type=BucketEventObjectType.BUCKET,
+            object_id=command.target_bucket_id,
+            payload=payload,
+        ),
+        bucket_id=command.target_bucket_id,
+        event_type=BucketEventType.BUCKET_MERGED,
+        occurred_at=occurred_at,
+        actor="bucket-maintenance",
+        object_type=BucketEventObjectType.BUCKET,
+        object_id=command.target_bucket_id,
+        payload_version=1,
+        payload=payload,
+    )
+    with profile_storage_session(command.target_bucket_id):
+        event_repository = BucketMaintenanceService._event_repository_for_bucket(command.target_bucket_id)
+        event_repository.save(append_bucket_event(event_repository.load(), event))
+
+    return MergeSandboxResult(
+        source_bucket_id=command.source_bucket_id,
+        target_bucket_id=command.target_bucket_id,
+        scope=command.scope,
+        merged_counts=merged_counts,
+        occurred_at=occurred_at,
+    )
+
+
 __all__ = [
     "SANDBOX_LABEL_PREFIX",
     "ArchiveSandboxCommand",
@@ -509,12 +717,16 @@ __all__ = [
     "CreateSandboxResult",
     "DiscardSandboxCommand",
     "DiscardSandboxResult",
+    "MergeSandboxCommand",
+    "MergeSandboxResult",
     "PreviewDiscardSandboxCommand",
     "PreviewDiscardSandboxResult",
     "RestoreSandboxCommand",
     "RestoreSandboxResult",
     "SandboxAlreadyExistsError",
     "SandboxDiscardRefusedError",
+    "SandboxMergeRefusedError",
+    "SandboxMergeScope",
     "SandboxNamespaceInventoryRow",
     "SandboxNotArchivedError",
     "SandboxNotFoundError",
@@ -524,6 +736,7 @@ __all__ = [
     "discard_sandbox",
     "is_sandbox_label",
     "list_sandboxes",
+    "merge_sandbox",
     "preview_discard_sandbox",
     "restore_sandbox",
     "sandbox_label",

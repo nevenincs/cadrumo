@@ -112,12 +112,35 @@ label = "Recargo de equivalencia tipo 1.4pct - Cuota devengada anual"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_recargo_equivalencia_reducido"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier (1.4pct) from the super-reducido (0.5pct) tier; a genuine LIVA art. 161 tier split, not a typo twin."
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-recargo-equivalencia-reducido-cuota"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 export_refs = ["modelo-390-page-02b-casilla-recargo-reducido"]
+
+# Recargo de equivalencia tipo 0.5pct - Cuota devengada anual (LIVA art. 161).
+# Mirrors the M303 casilla 158 so the annual devengada total includes the
+# super-reducido recargo tier alongside the general (5.2pct) and reducido
+# (1.4pct) tiers above; see the comment on
+# modelo-390-iva-anual-cuota-devengada-total for the grounding.
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.repercutido.recargo.super-reducido"
+number = "iva.anual.repercutido.recargo.super-reducido"
+label = "Recargo de equivalencia tipo 0.5pct - Cuota devengada anual"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_recargo_equivalencia_super_reducido"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier (0.5pct) from the reducido (1.4pct) tier; a genuine LIVA art. 161 tier split, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-recargo-equivalencia-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02b-casilla-recargo-super-reducido"]
 
 # Reconciliation casillas — pulled from the four 303 quarters via previous_filing.
 

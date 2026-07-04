@@ -1,0 +1,202 @@
+"""Recipient fingerprint registry: encrypted roundtrip and anti-tautology proofs.
+
+Exercises :mod:`aeat.application.modelo._review_package_recipient_registry`
+against a REAL encrypted :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+(:func:`~aeat.tests.secure_sql.isolated_runtime_profile` -- a genuine
+``BUCKET_DEK_V1`` bucket, no mocks or fakes): add a recipient, confirm the
+register roundtrips through the encrypted boundary with strict equality,
+confirm the register is real ciphertext at rest, confirm duplicate/missing-id
+refusal, and confirm a corrupted on-disk payload is refused at load
+(the anti-tautology proof required by ``aeat-roundtrip-discipline``).
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+
+from ....adapters.persistence.storage import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
+)
+from ....adapters.persistence.storage import SensitivityClass
+from ....tests.secure_sql import isolated_runtime_profile
+from .._review_package_recipient_registry import (
+    RecipientAlreadyRegisteredError,
+    RecipientFingerprintRegister,
+    RecipientFingerprintRegistryError,
+    RecipientFingerprintRegistryRepository,
+    RecipientNotRegisteredError,
+    public_key_hex_from_raw_bytes,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
+
+
+def _fresh_public_key_hex() -> str:
+    return public_key_hex_from_raw_bytes(X25519PrivateKey.generate().public_key().public_bytes_raw())
+
+
+def test_load_returns_empty_register_when_absent(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-empty") as profile:
+        repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
+        assert repository.load() == RecipientFingerprintRegister()
+
+
+def test_add_then_load_roundtrips_with_strict_equality(tmp_path: Path) -> None:
+    public_key_hex = _fresh_public_key_hex()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-roundtrip") as profile:
+        repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
+
+        added = repository.add(
+            recipient_id="kents-accountant",
+            public_key_hex=public_key_hex,
+            label="Kent's Accountant",
+            added_at=_NOW,
+        )
+        reloaded = repository.load()
+
+    assert reloaded == added
+    assert len(reloaded.records) == 1
+    record = reloaded.records[0]
+    assert record.recipient_id == "kents-accountant"
+    assert record.label == "Kent's Accountant"
+    assert record.public_key_hex == public_key_hex
+    assert record.added_at == _NOW
+    # fingerprint_sha256 is computed, never a stored independent field --
+    # confirm it is deterministically derivable from the public key alone.
+    import hashlib
+
+    assert record.fingerprint_sha256 == hashlib.sha256(bytes.fromhex(public_key_hex)).hexdigest()
+    # Real behaviour: the reconstructed live public-key object actually
+    # matches the bytes it was minted from, not just an equal hex string.
+    assert record.public_key().public_bytes_raw().hex() == public_key_hex
+
+
+def test_register_is_never_stored_as_plaintext(tmp_path: Path) -> None:
+    public_key_hex = _fresh_public_key_hex()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-ciphertext") as profile:
+        repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
+        repository.add(recipient_id="kents-accountant", public_key_hex=public_key_hex, added_at=_NOW)
+
+        raw_record = profile.repository.load(
+            _NAMESPACE.namespace,
+            _NAMESPACE.require_default_object_key(),
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_NAMESPACE.schema_version,
+        )
+        assert raw_record is not None
+        assert public_key_hex.encode("utf-8") in raw_record.payload
+
+        from sqlalchemy import select
+
+        from ....adapters.persistence.storage.sql import SecureObjectRow
+        from ....adapters.persistence.storage.sql.session import session_scope
+
+        with session_scope(profile.repository._engine) as session:
+            row = session.execute(
+                select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
+            ).scalar_one()
+            ciphertext_bytes = bytes(row.payload)
+
+    assert public_key_hex.encode("utf-8") not in ciphertext_bytes
+    assert b"kents-accountant" not in ciphertext_bytes
+
+
+def test_add_refuses_duplicate_recipient_id(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-dup") as profile:
+        repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
+        repository.add(recipient_id="kents-accountant", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
+
+        with pytest.raises(RecipientAlreadyRegisteredError):
+            repository.add(recipient_id="kents-accountant", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
+
+
+def test_remove_refuses_missing_recipient_id(tmp_path: Path) -> None:
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-missing") as profile,
+        pytest.raises(RecipientNotRegisteredError),
+    ):
+        RecipientFingerprintRegistryRepository(objects=profile.repository).remove("nobody")
+
+
+def test_get_refuses_missing_recipient_id(tmp_path: Path) -> None:
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-get-missing") as profile,
+        pytest.raises(RecipientNotRegisteredError),
+    ):
+        RecipientFingerprintRegistryRepository(objects=profile.repository).get("nobody")
+
+
+def test_add_then_remove_then_list_reflects_removal(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-remove") as profile:
+        repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
+        repository.add(recipient_id="a", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
+        repository.add(recipient_id="b", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
+
+        repository.remove("a")
+        remaining = repository.list()
+
+    assert [record.recipient_id for record in remaining] == ["b"]
+
+
+def test_two_buckets_maintain_independent_registers(tmp_path: Path) -> None:
+    """Two profiles' recipient registries never collide -- per-bucket scoping."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-b1") as profile_one:
+        RecipientFingerprintRegistryRepository(objects=profile_one.repository).add(
+            recipient_id="only-in-one",
+            public_key_hex=_fresh_public_key_hex(),
+            added_at=_NOW,
+        )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-b2") as profile_two:
+        register_two = RecipientFingerprintRegistryRepository(objects=profile_two.repository).load()
+
+    assert register_two.records == ()
+
+
+def test_public_key_hex_from_raw_bytes_refuses_wrong_length() -> None:
+    with pytest.raises(RecipientFingerprintRegistryError):
+        public_key_hex_from_raw_bytes(b"too-short")
+
+
+def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
+    """Anti-tautology proof: a corrupted on-disk payload must not silently deserialise.
+
+    Directly mutates the raw stored ciphertext bytes (bypassing the
+    repository's encrypt path) and confirms ``load`` refuses rather than
+    returning a plausible-looking register -- the failure mode this
+    roundtrip-discipline proof exists to catch.
+    """
+    public_key_hex = _fresh_public_key_hex()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-corrupt") as profile:
+        repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
+        repository.add(recipient_id="kents-accountant", public_key_hex=public_key_hex, added_at=_NOW)
+
+        from sqlalchemy import select, update
+
+        from ....adapters.persistence.storage.sql import SecureObjectRow
+        from ....adapters.persistence.storage.sql.session import session_scope
+
+        with session_scope(profile.repository._engine) as session:
+            row = session.execute(
+                select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
+            ).scalar_one()
+            corrupted_payload = bytes(row.payload)[:-1] + bytes([bytes(row.payload)[-1] ^ 0xFF])
+            session.execute(
+                update(SecureObjectRow)
+                .where(SecureObjectRow.namespace == _NAMESPACE.namespace)
+                .values(payload=corrupted_payload),
+            )
+
+        from ....adapters.persistence.storage import DecryptionError
+
+        with pytest.raises(DecryptionError):
+            repository.load()
+
+
+__all__: list[str] = []

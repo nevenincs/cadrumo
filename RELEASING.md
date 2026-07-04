@@ -11,17 +11,22 @@ packaging smoke lanes (`just packaging-smoke*`), and the publish recipes
 (`just publish` / `just publish-data`) — plus the Claude plugin/marketplace
 push.
 
-The project ships as two PyPI distributions built from the one source tree:
+The project ships as three PyPI distributions built from the one source tree:
 
 - **`aeat-cli`** — the product (import package and CLI stay `aeat`): code, extracted legal text, normative html,
   registry, terminology, and the agent harness. Slim (~40 MB), under PyPI's
   100 MB default file cap; no size grant needed.
-- **`aeat-data`** — the corpus source binaries (official AEAT PDF/XLS/XLSX,
-  ~139 MB), built from `packaging/aeat_data/`, consumed via the
-  `aeat-cli[corpus-sources]` extra. Exceeds the default cap; needs a one-time
-  per-file size grant (below). Without it installed, the registry integrity
-  gate surfaces a loud advisory and the `aeat app registry` verification
-  verbs refuse with the install hint; every other surface is unaffected.
+- **`aeat-data-manuals`** and **`aeat-data-official`** — the corpus source
+  binaries (official AEAT PDF/XLS/XLSX), split along the corpus directory seam
+  into two sub-cap companions so each wheel stays under the 100 MB cap and NO
+  size grant is required: `aeat-data-manuals` ships `corpus/manuals` (~77 MB
+  wheel), `aeat-data-official` ships `corpus/aeat_official` + `corpus/normatives`
+  (~62 MB wheel). Both are built from `packaging/aeat_data_manuals/` and
+  `packaging/aeat_data_official/`, contribute subtrees to the same `aeat_data`
+  namespace package, and are consumed together via the `aeat-cli[corpus-sources]`
+  extra. Without both installed, the registry integrity gate surfaces a loud
+  advisory and the `aeat app registry` verification verbs refuse with the
+  install hint; every other surface is unaffected.
 
 ## One-time setup (first release only)
 
@@ -32,34 +37,33 @@ publish session only — never in a file, never in the repo.
 
 ## Name claim sequencing (first release)
 
-The `aeat-cli` name is claimed by its first upload (the operator registered it as the Trusted Publishing pending project); PyPI grants file-size
-increases only to projects that already have at least one release. The order
-is therefore fixed:
+Each name is claimed by its first upload (the operator registered `aeat-cli` as
+the Trusted Publishing pending project). Because both data companions are sub-cap
+there is no size grant on the critical path, so the order is simply:
 
 1. Publish the slim `aeat-cli` wheel first (`just publish yes-publish-to-pypi`).
    It is under every default limit; this claims the name and creates the
    project.
-2. Publish a small placeholder or dev release of `aeat-data` if its wheel is
-   temporarily reducible below 100 MB, or skip straight to the grant request
-   citing the built artifact's real size.
-3. File the `aeat-data` size grant (next section). Publish the full
-   companion (`just publish-data yes-publish-to-pypi`) when granted.
+2. Publish both data companions (`just publish-data yes-publish-to-pypi`, which
+   builds and uploads `aeat-data-manuals` and `aeat-data-official` in one gated
+   run). Each wheel is under the 100 MB cap, so the first upload of each claims
+   its name and creates its project with no prior placeholder or grant needed.
 
-The plugin delivery is NOT blocked on the grant: the plugin's server runs
-from the slim `aeat-cli` wheel; the companion only feeds the registry
+The plugin delivery is NOT blocked on the data companions: the plugin's server
+runs from the slim `aeat-cli` wheel; the companions only feed the registry
 verification verbs and byte-provenance surfaces.
 
-## `aeat-data` file-size grant
+## No file-size grant needed
 
-File an issue at `github.com/pypi/support` using the `limit-request-file.yml`
-template. Request 200 MB for the `aeat-data` project. Justification to state:
-the package is a reviewed, license-clean (Apache-2.0), integrity-hashed
-corpus of official Spanish tax-authority binaries (PDF/XLS) that the
-application verifies byte-exactly against a registry catalogue; runtime
-fetching is rejected by design (offline-verifiable legal grounding), so the
-bytes must ship as a package. Precedent: `torch` (500 MB/file),
-routine 150 MB grants. There is no published turnaround SLA — file the
-request early and do not schedule anything against it.
+The earlier plan required a PyPI per-file size grant for a single ~139 MB
+`aeat-data` companion. That is retired: the corpus binaries are split along the
+directory seam into two sub-cap companions (`aeat-data-manuals` ≈ 77 MB,
+`aeat-data-official` ≈ 62 MB), each comfortably under PyPI's 100 MB default cap.
+No `github.com/pypi/support` limit-request issue is filed, and nothing in the
+release schedule waits on a grant. If a companion ever approaches the cap
+(corpus growth), rebalance the seam partition or carve a third companion rather
+than requesting a grant — the CI artifact guard and the distribution gate both
+fail loudly at 100 MB.
 
 ## Per-release checklist
 
@@ -70,11 +74,12 @@ Run from a clean `main` checkout, in order. Stop at the first failure.
    `.release-please-manifest.json`, `pyproject.toml`,
    `src/aeat/__init__.py`, prepend `CHANGELOG.md`, commit
    `chore(release): vX.Y.Z`, tag `vX.Y.Z`. Also bump the synced version in
-   `packaging/aeat_data/pyproject.toml` (the parity test fails the suite if
-   they drift).
+   BOTH `packaging/aeat_data_manuals/pyproject.toml` and
+   `packaging/aeat_data_official/pyproject.toml` (the parity test fails the
+   suite if either drifts).
 2. **Gates** — `just packaging-smoke-dependencies`, `just check-dependencies`,
    `just packaging-smoke` (full lane on Linux/WSL; includes the split-install
-   lane proving the companion-absent advisory path and the companion-present
+   lane proving the companion-absent advisory path and the both-companions
    byte-identical path), and the plugin gate
    `uv run --no-sync python dev/packaging/smoke_plugin_validate.py`.
 3. **Push the release commit + tag** — human decision only:
@@ -82,10 +87,10 @@ Run from a clean `main` checkout, in order. Stop at the first failure.
 4. **Publish `aeat-cli`** — `UV_PUBLISH_TOKEN=... just publish
    yes-publish-to-pypi`. Verify the version page renders on pypi.org and
    `uvx --from aeat-cli==X.Y.Z aeat --version` resolves on a machine without the checkout.
-5. **Publish `aeat-data`** (when the grant is in place) —
-   `just publish-data yes-publish-to-pypi`. Verify
-   `pip install "aeat-cli[corpus-sources]"` pulls it and
-   `aeat app registry verify` runs grant-path clean.
+5. **Publish the data companions** — `just publish-data yes-publish-to-pypi`
+   (builds and uploads both `aeat-data-manuals` and `aeat-data-official` in one
+   gated run; no grant needed). Verify `pip install "aeat-cli[corpus-sources]"`
+   pulls both and `aeat app registry verify` runs clean.
 6. **Regenerate + push the plugin/marketplace** — materialise the plugin
    tree pinned to the just-published version
    (`uv run --no-sync aeat app agent --layout plugin -o <marketplace
