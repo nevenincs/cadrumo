@@ -25,6 +25,7 @@ Subpackages
    aeat.core.parsing
    aeat.core.redaction
    aeat.core.resources
+   aeat.core.telemetry
    aeat.core.time
    aeat.core.topics
 
