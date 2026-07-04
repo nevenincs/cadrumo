@@ -1,6 +1,6 @@
 """Typed ``--json`` payload schemas for the modelo ``bindings`` sub-app.
 
-Extracted from :mod:`aeat.entrypoints.cli._modelo_payloads` to keep that
+Extracted from :mod:`entrypoints.cli._modelo_payloads` to keep that
 module under its size budget (`aeat-architecture-boundaries`,
 `registry-resolver-family-extraction`), following the split pattern already
 established by :mod:`_modelo_aux_payloads`,
@@ -18,7 +18,7 @@ casilla-side payloads (``CasillaRowPayload`` in
 :mod:`_modelo_payloads`).
 
 See Also:
-    :mod:`aeat.entrypoints.cli._modelo_payloads`
+    :mod:`entrypoints.cli._modelo_payloads`
         Re-imports every class from this module so existing
         ``from ._modelo_payloads import BindingListRowPayload`` (etc.) call
         sites keep resolving unchanged.
@@ -36,7 +36,7 @@ class BindingEncodedOptionPayload(OutputSchema):
     """One accepted decimal encoding of a boolean-typed decimal-channel binding.
 
     Projection of
-    :class:`BooleanBindingEncodedValue`.
+    :class:`~domain.calculations.registry.BooleanBindingEncodedValue`.
     ``encoded_value`` is the decimal the operator types on ``--binding``,
     ``boolean_meaning`` is the affirmative/negative sense it carries, and
     ``registry_value`` is the underlying casilla token the boolean maps to. The
@@ -57,7 +57,7 @@ class BindingListRowPayload(OutputSchema):
     parity with the casilla half (``CasillaRowPayload``), per the
     operator-boundary provenance-parity decision of the
     bindings-interface-hardening ADR. ``source`` renders the typed
-    :class:`BindingSourceKind` value as a string.
+    :class:`~core.BindingSourceKind` value as a string.
     """
 
     modelo: str
@@ -78,7 +78,7 @@ class BindingListRowPayload(OutputSchema):
     Non-empty only for ``source = "relation_prefill"`` bindings, where the
     operator supplies each value through ``--relation RELATION_ID=VALUE``
     rather than ``--binding``. Derived from the resolved revision's
-    relations (:class:`RelationDefinition`
+    relations (:class:`~domain.calculations.registry.RelationDefinition`
     ``target_binding``), so a relation-fed binding's source is discoverable
     in this listing before a calculation is attempted, for any modelo.
     """
