@@ -130,6 +130,10 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
         provenance_by_relation = {item.relation_id: item for item in source_resolution.provenance}
         assert set(provenance_by_relation) == set(resolved_prefill)
         for relation_id, provenance in provenance_by_relation.items():
+            # Every provenance item here is confirmed relation_prefill-sourced (line
+            # above), which always carries a relation_id; the field is Optional only
+            # for other source kinds' provenance shape.
+            assert relation_id is not None
             prefilled = resolved_prefill[relation_id]
             assert provenance.source_modelo == prefilled.source_modelo
             assert provenance.source_filing_year == prefilled.source_filing_year
