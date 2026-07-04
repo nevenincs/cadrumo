@@ -1,18 +1,18 @@
 """Data binding helpers for registry-backed factual inputs.
 
 This module owns the
-:class:`~aeat.domain.calculations.registry.CasillaObservation` envelope emitted
+:class:`~domain.calculations.registry.CasillaObservation` envelope emitted
 by the formula runtime and the
-:class:`~aeat.domain.calculations.registry.DataBindingDefinition` helper
+:class:`~domain.calculations.registry.DataBindingDefinition` helper
 surface that turns factual binding values into bound casilla inputs.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._formula_runtime`
+    :mod:`domain.calculations.registry._formula_runtime`
         Runtime that emits typed observations and consumes resolved bound
         casilla inputs.
-    :mod:`aeat.domain.calculations.registry._formula_initial_values`
+    :mod:`domain.calculations.registry._formula_initial_values`
         Initial-value assembler that calls the bound-casilla helpers here.
-    :mod:`aeat.domain.calculations.registry._schema`
+    :mod:`domain.calculations.registry._schema`
         Registry schema definitions for casillas, bindings, and revisions.
 """
 
@@ -258,7 +258,7 @@ def _decimal_tuple_from_json_array(value: object) -> object:
 class CasillaObservation(BaseModel):
     """One typed casilla observation emitted by the formula runtime.
 
-    Carries a :class:`~aeat.domain.calculations.registry.CasillaId`, final
+    Carries a :class:`~domain.calculations.registry.CasillaId`, final
     :class:`decimal.Decimal` value, required legal/source provenance, and
     optional formula lineage. When ``formula_id`` is set, the runtime computed
     this casilla and ``operand_refs`` / ``operand_values`` trace its inputs
@@ -267,7 +267,7 @@ class CasillaObservation(BaseModel):
     bound) and the trace fields are empty.
 
     Used as the primary storage for
-    :class:`~aeat.domain.calculations.registry.RegistryCalculationResult`;
+    :class:`~domain.calculations.registry.RegistryCalculationResult`;
     derived ``values`` and ``entries`` views project from it.
     """
 
@@ -334,7 +334,7 @@ class RegistryModeloObservation(BaseModel):
     """Observed casilla values from a filed declaration.
 
     Storage is ``observations``: a typed tuple of
-    :class:`~aeat.domain.calculations.registry.CasillaObservation` carrying full
+    :class:`~domain.calculations.registry.CasillaObservation` carrying full
     formula provenance. The :attr:`casilla_values` property provides a read-only
     mapping view for downstream consumers.
     """
@@ -395,7 +395,7 @@ class OracleModeloObservation(RegistryModeloObservation):
 
     A subtype of :class:`RegistryModeloObservation` that marks the observation
     tuple as oracle-originated rather than locally computed. The
-    :class:`~aeat.domain.calculations.registry.OracleId` field anchors the
+    :class:`~domain.calculations.registry.OracleId` field anchors the
     observation to the
     ``LiveCrossReferenceDecision`` that produced it, so the application
     layer can route oracle-originated values through the
@@ -412,8 +412,8 @@ class OracleModeloObservation(RegistryModeloObservation):
 def bound_casilla_binding_ids(casilla: CasillaDefinition) -> tuple[BindingId, ...]:
     """Return primary plus reviewed equivalent bindings for one bound casilla.
 
-    The :class:`~aeat.domain.calculations.registry.CasillaDefinition` must be a
-    bound casilla; the returned :class:`~aeat.domain.calculations.registry.BindingId`
+    The :class:`~domain.calculations.registry.CasillaDefinition` must be a
+    bound casilla; the returned :class:`~domain.calculations.registry.BindingId`
     tuple drives bound-value resolution and equivalent-source conflict checks.
     """
     if casilla.input_kind != InputKind.BOUND:
@@ -429,7 +429,7 @@ def resolve_bound_casilla_binding_value(
 ) -> tuple[Decimal | None, tuple[BindingId, ...]]:
     """Resolve equivalent binding facts for one casilla, rejecting disagreements.
 
-    A bound :class:`~aeat.domain.calculations.registry.CasillaDefinition` can
+    A bound :class:`~domain.calculations.registry.CasillaDefinition` can
     declare reviewed alternate bindings when multiple registry source paths
     represent the same factual amount. Supplying two equivalent source values is
     legal only if they agree exactly; otherwise accepting either one would
@@ -464,10 +464,10 @@ def resolve_bound_inputs_by_casilla_id(
 
     Args:
         revision: The
-            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            :class:`~domain.calculations.registry.ModeloRevision` whose
             bindings to resolve against.
         facts: Mapping of
-            :class:`~aeat.domain.calculations.registry.BindingId` to the factual
+            :class:`~domain.calculations.registry.BindingId` to the factual
             :class:`decimal.Decimal` value.
     """
     for key, value in facts.items():
@@ -693,7 +693,7 @@ _MANUAL_INPUT_RECORD_SHAPE_KEYS: frozenset[str] = frozenset(("record", "field", 
 
 Single source of truth for both the typed validator in
 :class:`_ManualInputSelector` and the layout-binding predicate at
-:func:`aeat.domain.calculations.registry._validate._is_layout_binding`.
+:func:`domain.calculations.registry._validate_record_sections._is_layout_binding`.
 """
 
 
@@ -819,14 +819,14 @@ def selector_model_for_source(source: object) -> type[BaseModel] | None:
     """Return the strict selector model a binding ``source`` validates against.
 
     Read-only accessor over :data:`_BINDING_SELECTOR_REGISTRY`, the
-    discriminated-union table keyed by :class:`~aeat.core.BindingSourceKind`
+    discriminated-union table keyed by :class:`~core.BindingSourceKind`
     (the canonical ``DataBindingDefinition.source`` axis). Returns the
     per-family selector model when the source is a registry-declared binding
     source, or ``None`` for mesh-only source kinds that are not legal
     ``DataBindingDefinition.source`` values.
 
     The model-level selector validator on
-    :class:`~aeat.domain.calculations.registry.DataBindingDefinition` consumes
+    :class:`~domain.calculations.registry.DataBindingDefinition` consumes
     this accessor to promote selector-shape typing to model-construction time
     without re-deriving the table; the op/fact cross-invariants stay owned by
     :func:`validate_binding_selector_shape` at snapshot build.
@@ -905,7 +905,7 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
 
     Routes the binding through the one per-family ``validate(binding) ->
     list[str]`` validator registered in :data:`_BINDING_VALIDATOR_REGISTRY`,
-    keyed by :class:`~aeat.core.BindingSourceKind`. Each family validator
+    keyed by :class:`~core.BindingSourceKind`. Each family validator
     validates the selector shape (projected through :func:`_selector_as_dict`
     inside :func:`selector_against_model`, so the gate sees the SAME normalised
     mapping the resolve-time helpers see and is never stricter than runtime) and
