@@ -33,8 +33,11 @@ import json
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING
 
+from pydantic import BaseModel
+
 from ...adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
+    SecureBoundRepository,
     SecureObjectNamespaceDefinition,
     StorageCustodyProfile,
 )
@@ -42,8 +45,34 @@ from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.hashing import sha256_hex
 
 if TYPE_CHECKING:
+    from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
+    from ...adapters.persistence.profile.justificante import JustificanteRepository
+    from ...adapters.persistence.profile.submission import SubmissionRepository
     from ...adapters.persistence.storage.sql import SecureObjectRecord
-    from ...domain.user_profile import CarriedSecureObject
+    from ...domain.user_profile import CarriedSecureObject, UserProfileSnapshot
+    from ..aggregation import PercepcionObservationRepository, RetencionObservationRepository
+    from ..calculations import (
+        CalculationObservationRepository,
+        IvaCompensationHistoryRepository,
+        IvaWalletDecisionRepository,
+    )
+    from ..evidence import EvidenceBundleRepository
+    from ..filing import ModeloHistoryRepository
+    from ..ledger import (
+        BusinessOperationInvoiceRepository,
+        LedgerClassificationRuleRepository,
+        PurchaseInvoiceEvidenceRepository,
+    )
+    from ..live import (
+        Borrador100Snapshot,
+        CensoSnapshot,
+        IvaRemoteStateAcquisitionManifestRepository,
+        JustificanteCaptureSnapshot,
+        PersistedExpedientesSnapshot,
+        PersistedNotificationsSnapshot,
+        VerifyObservation,
+    )
+    from ..modelo import M036DeclarationResult
 
 #: Namespaces carried by the typed bundle fields; the generic carry skips them so
 #: they are not double-carried.
@@ -67,28 +96,26 @@ def _canonical_b64(value: bytes) -> str:
     return base64.b64encode(value).decode("ascii")
 
 
-def _envelope_payload(record: SecureObjectRecord, payload_type: type) -> object:
+def _envelope_payload[T: BaseModel](record: SecureObjectRecord, payload_type: type[T]) -> T:
     from ...adapters.persistence.storage.envelope import Envelope
 
     envelope_cls = Envelope.for_payload_type(payload_type)
     return envelope_cls.model_validate_json(record.payload.decode(_UTF_8)).payload
 
 
-def _bound_resolver(repo_factory: Callable[[], object]) -> NaturalKeyResolver:
+def _bound_resolver[T: BaseModel](repo_factory: Callable[[], SecureBoundRepository[T]]) -> NaturalKeyResolver:
     """Resolver for a ``SecureBoundRepository`` store: parse, then extract_identifier."""
 
     def _resolve(record: SecureObjectRecord, _bucket_id: str) -> str:
         repo = repo_factory()
-        # TYPE-IGNORE-RATIONALE-BOUND-REPO-DUCK-TYPE: ``repo_factory`` returns
-        # ``object`` so every ``SecureBoundRepository`` shares one resolver.
-        payload = _envelope_payload(record, repo.payload_model())  # type: ignore[attr-defined]
-        return repo.extract_identifier(payload)  # type: ignore[attr-defined]
+        payload = _envelope_payload(record, repo.payload_model())
+        return repo.extract_identifier(payload)
 
     return _resolve
 
 
-def _snapshot_resolver(
-    payload_type_factory: Callable[[], type],
+def _snapshot_resolver[T: BaseModel](
+    payload_type_factory: Callable[[], type[T]],
     object_key: Callable[[str, str], str],
     snapshot_id_attr: str = "snapshot_id",
 ) -> NaturalKeyResolver:
@@ -159,21 +186,21 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.domain.attachments.manifests"] = _json_field_resolver("sha256")
 
     # --- Cross-period calculation inputs (SecureBoundRepository) --------------
-    def _observations_repo() -> object:
+    def _observations_repo() -> CalculationObservationRepository:
         from ..calculations import CalculationObservationRepository
 
         return CalculationObservationRepository()
 
     resolvers["aeat.calculations.observations"] = _bound_resolver(_observations_repo)
 
-    def _iva_history_repo() -> object:
+    def _iva_history_repo() -> IvaCompensationHistoryRepository:
         from ..calculations import IvaCompensationHistoryRepository
 
         return IvaCompensationHistoryRepository()
 
     resolvers["aeat.calculations.iva_compensation.history"] = _bound_resolver(_iva_history_repo)
 
-    def _iva_wallet_repo() -> object:
+    def _iva_wallet_repo() -> IvaWalletDecisionRepository:
         from ..calculations import IvaWalletDecisionRepository
 
         return IvaWalletDecisionRepository()
@@ -187,10 +214,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         )
 
         payload = _envelope_payload(record, IvaWalletDecisionEnvelopePayload)
-        # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT: ``_envelope_payload``
-        # returns ``object`` at this generic-resolver boundary; ``payload_type``
-        # (passed above) is the real runtime type, so ``.decision`` exists.
-        return iva_wallet_decision_event_key(payload.decision)  # type: ignore[attr-defined]
+        return iva_wallet_decision_event_key(payload.decision)
 
     resolvers["aeat.calculations.iva_wallet.reconciliation_decision_events"] = _iva_wallet_event_key
 
@@ -198,7 +222,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.domain.buckets.event_history"] = _fixed_resolver(SECURE_OBJECT_CATALOGUE_KEY)
 
     # --- Live captures (SecureSnapshotRepository) ----------------------------
-    def _censo_payload() -> type:
+    def _censo_payload() -> type[CensoSnapshot]:
         from ..live import CensoSnapshot
 
         return CensoSnapshot
@@ -210,7 +234,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     resolvers["aeat.application.live.censo_snapshot"] = _snapshot_resolver(_censo_payload, _censo_key)
 
-    def _justificante_payload() -> type:
+    def _justificante_payload() -> type[JustificanteCaptureSnapshot]:
         from ..live import JustificanteCaptureSnapshot
 
         return JustificanteCaptureSnapshot
@@ -225,7 +249,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         _justificante_key,
     )
 
-    def _notifications_payload() -> type:
+    def _notifications_payload() -> type[PersistedNotificationsSnapshot]:
         from ..live import PersistedNotificationsSnapshot
 
         return PersistedNotificationsSnapshot
@@ -240,7 +264,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         _notifications_key,
     )
 
-    def _expedientes_payload() -> type:
+    def _expedientes_payload() -> type[PersistedExpedientesSnapshot]:
         from ..live import PersistedExpedientesSnapshot
 
         return PersistedExpedientesSnapshot
@@ -256,7 +280,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     )
 
     # --- Justificante metadata (SecureBoundRepository) -----------------------
-    def _justificante_metadata_repo() -> object:
+    def _justificante_metadata_repo() -> JustificanteRepository:
         from ...adapters.persistence.profile.justificante import JustificanteRepository
 
         return JustificanteRepository()
@@ -264,14 +288,14 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.domain.justificante.metadata"] = _bound_resolver(_justificante_metadata_repo)
 
     # --- Withholding / retencion observations (SecureBoundRepository) ---------
-    def _retencion_repo() -> object:
+    def _retencion_repo() -> RetencionObservationRepository:
         from ..aggregation import RetencionObservationRepository
 
         return RetencionObservationRepository()
 
     resolvers["aeat.retenciones.observations"] = _bound_resolver(_retencion_repo)
 
-    def _percepciones_repo() -> object:
+    def _percepciones_repo() -> PercepcionObservationRepository:
         from ..aggregation import PercepcionObservationRepository
 
         return PercepcionObservationRepository()
@@ -279,56 +303,56 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.withholding.observations"] = _bound_resolver(_percepciones_repo)
 
     # --- Filing/ledger/submission state (SecureBoundRepository) ---------------
-    def _filing_history_repo() -> object:
+    def _filing_history_repo() -> ModeloHistoryRepository:
         from ..filing import ModeloHistoryRepository
 
         return ModeloHistoryRepository()
 
     resolvers["aeat.application.filing.history"] = _bound_resolver(_filing_history_repo)
 
-    def _iva_remote_state_repo() -> object:
+    def _iva_remote_state_repo() -> IvaRemoteStateAcquisitionManifestRepository:
         from ..live import IvaRemoteStateAcquisitionManifestRepository
 
         return IvaRemoteStateAcquisitionManifestRepository()
 
     resolvers["aeat.application.live.iva_remote_state_acquisitions"] = _bound_resolver(_iva_remote_state_repo)
 
-    def _evidence_bundle_repo() -> object:
+    def _evidence_bundle_repo() -> EvidenceBundleRepository:
         from ..evidence import EvidenceBundleRepository
 
         return EvidenceBundleRepository()
 
     resolvers["aeat.application.evidence.bundles"] = _bound_resolver(_evidence_bundle_repo)
 
-    def _purchase_invoice_evidence_repo() -> object:
+    def _purchase_invoice_evidence_repo() -> PurchaseInvoiceEvidenceRepository:
         from ..ledger import PurchaseInvoiceEvidenceRepository
 
         return PurchaseInvoiceEvidenceRepository()
 
     resolvers["aeat.application.ledger.purchase_invoice_evidence"] = _bound_resolver(_purchase_invoice_evidence_repo)
 
-    def _business_operation_invoice_repo() -> object:
+    def _business_operation_invoice_repo() -> BusinessOperationInvoiceRepository:
         from ..ledger import BusinessOperationInvoiceRepository
 
         return BusinessOperationInvoiceRepository()
 
     resolvers["aeat.application.ledger.business_operation_invoices"] = _bound_resolver(_business_operation_invoice_repo)
 
-    def _classification_rule_repo() -> object:
+    def _classification_rule_repo() -> LedgerClassificationRuleRepository:
         from ..ledger import LedgerClassificationRuleRepository
 
         return LedgerClassificationRuleRepository()
 
     resolvers["aeat.ledger.classification.rules"] = _bound_resolver(_classification_rule_repo)
 
-    def _submission_repo() -> object:
+    def _submission_repo() -> SubmissionRepository:
         from ...adapters.persistence.profile.submission import SubmissionRepository
 
         return SubmissionRepository()
 
     resolvers["aeat.domain.submission.records"] = _bound_resolver(_submission_repo)
 
-    def _draft_repo() -> object:
+    def _draft_repo() -> ModeloDraftRepository:
         from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 
         return ModeloDraftRepository()
@@ -343,7 +367,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.auth.apoderado"] = _bucket_template_resolver("{bucket_id}")
 
     # --- Live snapshot captures (SecureSnapshotRepository) --------------------
-    def _borrador_payload() -> type:
+    def _borrador_payload() -> type[Borrador100Snapshot]:
         from ..live import Borrador100Snapshot
 
         return Borrador100Snapshot
@@ -355,7 +379,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     resolvers["aeat.application.live.borrador_100_snapshot"] = _snapshot_resolver(_borrador_payload, _borrador_key)
 
-    def _m036_payload() -> type:
+    def _m036_payload() -> type[M036DeclarationResult]:
         from ..modelo import M036DeclarationResult
 
         return M036DeclarationResult
@@ -371,7 +395,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         snapshot_id_attr="declaration_id",
     )
 
-    def _verify_payload() -> type:
+    def _verify_payload() -> type[VerifyObservation]:
         from ..live import VerifyObservation
 
         return VerifyObservation
@@ -387,7 +411,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         snapshot_id_attr="observation_id",
     )
 
-    def _profile_snapshot_payload() -> type:
+    def _profile_snapshot_payload() -> type[UserProfileSnapshot]:
         from ...domain.user_profile import UserProfileSnapshot
 
         return UserProfileSnapshot
@@ -410,10 +434,10 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
         obs = _envelope_payload(record, FiledDeclaracionObservation)
         return filed_declaracion_observation_object_key(
-            obs.modelo,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT
-            obs.ejercicio,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT
-            obs.period,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT
-            obs.expediente_id,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT: object-typed generic-resolver payload
+            obs.modelo,
+            obs.ejercicio,
+            obs.period,
+            obs.expediente_id,
         )
 
     resolvers["aeat.outbound.aeat.sede.filed_declaration.observations"] = _filed_observation_key
@@ -426,10 +450,10 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
         obs = _envelope_payload(record, IvaCompensationWalletObservation)
         return iva_compensation_wallet_observation_object_key(
-            obs.taxpayer_nif,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT
-            obs.target_year,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT
-            obs.target_period,  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT
-            obs.captured_at.isoformat(),  # type: ignore[attr-defined] # TYPE-IGNORE-RATIONALE-ENVELOPE-PAYLOAD-OBJECT: object-typed generic-resolver payload
+            obs.taxpayer_nif,
+            obs.target_year,
+            obs.target_period,
+            obs.captured_at.isoformat(),
         )
 
     resolvers["aeat.outbound.aeat.sede.iva_compensation_wallet.observations"] = _iva_wallet_observation_key
