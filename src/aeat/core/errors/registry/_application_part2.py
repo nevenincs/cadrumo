@@ -887,4 +887,26 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.modelo._review_package_review_only_workspace.ReviewOnlyWorkspaceError",
+        ErrorCode(
+            code="ERROR_MODELO_REVIEW_ONLY_WORKSPACE",
+            category=ErrorCategory.ERROR,
+            message_key="application.modelo.errors.review_only_workspace_no_authority",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._review_package_review_only_workspace.ReviewOnlyWorkspaceAuthorityError",
+        ErrorCode(
+            code="REFUSED_MODELO_REVIEW_ONLY_WORKSPACE_AUTHORITY",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.review_only_workspace_no_authority",
+            default_suggestion="aeat app modelo review-package decrypt --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

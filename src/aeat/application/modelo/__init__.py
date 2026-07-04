@@ -314,6 +314,14 @@ from ._review_package import (
     build_review_package,
     verify_review_package,
 )
+from ._review_package_collab_audit import (
+    emit_collab_package_counter_signed_event,
+    emit_collab_package_decrypted_event,
+    emit_collab_package_encrypted_event,
+    emit_collab_recipient_registered_event,
+    emit_collab_recipient_removed_event,
+    emit_collab_review_only_workspace_opened_event,
+)
 from ._review_package_counter_sign import (
     CounterSignedReceipt,
     ReviewPackageCounterSigningError,
@@ -350,6 +358,13 @@ from ._review_package_recipient_replay_guard import (
     RecipientPackageReplayedError,
     RecipientReplayGuardError,
     RecipientReplayGuardRepository,
+)
+from ._review_package_review_only_workspace import (
+    ReviewOnlyWorkspace,
+    ReviewOnlyWorkspaceAuthorityError,
+    ReviewOnlyWorkspaceError,
+    assert_workspace_permits_official_action,
+    open_review_only_workspace,
 )
 from ._review_package_signing import (
     ReviewPackageSigningError,
@@ -622,6 +637,9 @@ __all__ = [
     "ReconciliationDeclaracionSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",
     "ResultSummaryRow",
+    "ReviewOnlyWorkspace",
+    "ReviewOnlyWorkspaceAuthorityError",
+    "ReviewOnlyWorkspaceError",
     "ReviewPackageBuildResult",
     "ReviewPackageCounterSigningError",
     "ReviewPackageError",
@@ -653,6 +671,7 @@ __all__ = [
     "assemble_work_unit_history",
     "assert_no_novel_source_kinds",
     "assert_review_package_verifies",
+    "assert_workspace_permits_official_action",
     "authorization_advisory_for_modelo",
     "build_review_package",
     "build_work_calculate_input_bundle",
@@ -677,6 +696,12 @@ __all__ = [
     "derive_taxpayer_files_economic_activity",
     "detect_casilla_divergences",
     "discard_work_unit",
+    "emit_collab_package_counter_signed_event",
+    "emit_collab_package_decrypted_event",
+    "emit_collab_package_encrypted_event",
+    "emit_collab_recipient_registered_event",
+    "emit_collab_recipient_removed_event",
+    "emit_collab_review_only_workspace_opened_event",
     "encrypt_review_package_for_recipient",
     "ensure_modelo_work_unit_for_visible_target",
     "ensure_recipient_encryption_keypair",
@@ -712,6 +737,7 @@ __all__ = [
     "modelo_work_profile_baseline_missing_paths",
     "modelo_work_profile_baseline_validation_issues",
     "modelo_work_profile_preflight_report",
+    "open_review_only_workspace",
     "parse_casilla_value_spreadsheet",
     "persist_filed_revision_observation",
     "pre_activity_period_refusal",

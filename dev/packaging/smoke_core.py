@@ -738,6 +738,11 @@ def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
             "Smoke",
             "--irpf-income-categories",
             "actividad_economica",
+            # Choose a comunidad autónoma explicitly: leaving it unset makes the
+            # create envelope carry a `ccaa_defaulted` warning notice, which
+            # flips the envelope status to "warning" and reds this success probe.
+            "--tax-residence-ccaa",
+            "madrid",
             "--quiet",
             "--accept-defaults",
             "--no-llm-vision",

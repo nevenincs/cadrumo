@@ -885,6 +885,10 @@ application:
         visszariteres (devolver) lett kivalasztva, de visszateritites csak az ev utolso
         bevallasi idoszakaban kerheto. Vigye at a jovairast (compensar), vagy valassza
         a visszateritest az utolso idoszakban.
+      review_only_workspace_no_authority: Ez a csak áttekintésre szolgáló munkaterület
+        nem rendelkezik bevallási felhatalmazással; elolvasható és ellenőrizhető,
+        de soha nem tekinthető bizonyítéknak arra, hogy a(z) %{calculation_revision_id}
+        számítási revíziót benyújtották vagy be fogják nyújtani.
       review_package_generic: Hiba történt az áttekintő csomag összeállítása közben.
       review_package_integrity: 'A(z) %{package_path} áttekintő csomag nem felelt
         meg az integritás-ellenőrzésnek: %{detail}.'
@@ -2657,6 +2661,20 @@ cli:
     google:
       client_json_help: Egy Cloud Console asztali OAuth ügyfél JSON-fájljának elérési
         útja.
+      credential_source:
+        delegate_help: 'Láncolt megszemélyesítés delegnált szolgáltatási fiók e-mail címe (ismételhető)'
+        detail:
+          impersonation_config_invalid: 'a megszemélyesítési konfiguráció érvénytelen: {detail}'
+          oauth_desktop_rejects_impersonation_options: 'a --kind oauth_desktop nem fogadja el a --target-principal, --scope, --delegate, --subject vagy --lifetime-seconds paramétereket'
+          target_principal_required: 'a --target-principal kötelező, ha a --kind értéke service_account_impersonation'
+        help: 'Válassza ki, hogy az aktív profil melyik Google hitelesítőadat-forrást használja (interaktív OAuth asztali beállítás, vagy megosztott szolgáltatási fiók megszemélyesítése)'
+        kind_help: 'Hitelesítőadat-forrás: oauth_desktop (alapértelmezett, interaktív hozzájárulás) vagy service_account_impersonation (megosztott szolgáltatási fiók ADC + IAM révén)'
+        lifetime_help: 'A megszemélyesített token kért élettartama másodpercben (alapértelmezetten a Google 3600 másodperces felső határa)'
+        scope_help: 'A megszemélyesített tokenhez kért OAuth hatókör (ismételhető; alapértelmezetten a Sheets/Drive adathozzáférési hatókörök)'
+        set_help: 'Mentése az aktív profil Google hitelesítőadat-forrás kiválasztásának'
+        show_help: 'Az aktív profil mentétt Google hitelesítőadat-forrás kiválasztásának megjelenítése'
+        subject_help: 'A domainre kiterjedő delegalással megszemélyesítendő Workspace felhasználói e-mail cím (nem kötelező)'
+        target_principal_help: 'A megszemélyesítendő szolgáltatási fiók e-mail címe (kötelező --kind service_account_impersonation esetén)'
       detail:
         client_json_bad_wrapper: A(z) {path} elérési útján lévő ügyfél JSON-ja nem
           rendelkezik megfelelő "installed" wrapper objektummal.
@@ -2675,6 +2693,8 @@ cli:
           hasznalhat --limit kapcsolot, mert egy korlatozott eles futas reszleges
           tavoli tukor manifestet hozna letre.
       errors:
+        adc_stale: 'Az alapértelmezett alkalmazás-hitelesítő adatok (ADC) frissítése nem sikerült: {detail}'
+        adc_unavailable: 'Az alapértelmezett alkalmazás-hitelesítő adatok (ADC) nem érhetők el ezen a gépen: {detail}'
         auth_failed: 'Google-hitelesítés sikertelen: {detail}'
         browser_open: 'Nem sikerült megnyitni a böngészőt a Google-hozzáférés engedélyezéséhez:
           {detail}'
@@ -2682,6 +2702,7 @@ cli:
           Futtassa: `aeat config google register --client-json <elérési_út>`.'
         client_revoked: 'A regisztrált Google OAuth-ügyfél visszavonásra került. Regisztrálja
           újra: `aeat config google register`.'
+        impersonation_refused: 'A szolgáltatási fiók megszemélyesítését elutasították: {detail}'
         keychain_locked: A Google-hitelesítő adatokat tároló rendszerkulcstartó zárolt
           vagy nem elérhető.
         loopback_bind: 'Nem sikerült helyi portot megnyitni a Google-bejelentkezés
@@ -4933,7 +4954,9 @@ errors:
       feloldani vagy használni.
     fail_financial_usage_ratios_usage_ratio_persistence: A használati arány profilt
       nem sikerült olvasni vagy írni.
-    fail_google_adc_stale: 'Nem sikerült megújítani az Application Default Credentials (ADC) hitelesítő adatokat. Futtassa a gcloud auth application-default login parancsot.'
+    fail_google_adc_stale: Nem sikerült megújítani az Application Default Credentials
+      (ADC) hitelesítő adatokat. Futtassa a gcloud auth application-default login
+      parancsot.
     fail_google_adc_unavailable: Nem található Application Default Credentials (ADC)
       ezen a gépen. Futtassa a gcloud auth application-default login parancsot.
     fail_google_browser_open: A böngészőt nem sikerült megnyitni a Google hozzájárulási

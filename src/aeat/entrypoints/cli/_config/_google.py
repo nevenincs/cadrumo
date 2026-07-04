@@ -16,6 +16,15 @@ Four commands wire the Google OAuth Desktop backend
   preserve the registered `oauth-client` so a subsequent `login` works
   without re-importing the JSON.
 
+`credential-source set|show` (registered by
+`_google_credential_source_cli.register_google_credential_source_commands`)
+selects which `core.GoogleCredentialSourceKind` a profile uses to build Google
+credentials — the default per-profile OAuth Desktop flow above, or a shared
+service-account impersonation grant
+(`adapters.outbound.google.GoogleImpersonationConfig`) — persisted via
+`adapters.outbound.google.save_credential_source_selection` and dispatched by
+`adapters.outbound.storage.build_google_credentials`.
+
 Every command resolves the active profile via
 `_active_profile.resolve_active_profile(--profile)` and surfaces
 `GoogleAuthError` subclasses with the project's standard exit-code +
@@ -76,6 +85,7 @@ from ....core.hashing import sha256_hex
 from ....core.i18n import tr
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
+from ._google_credential_source_cli import register_google_credential_source_commands
 from ._google_errors import _google_refusal
 from ._google_folder import register_google_folder_commands
 from ._google_payloads import (
@@ -368,6 +378,7 @@ def google_logout(
 
 
 register_google_folder_commands(google_app, google_refusal=_google_refusal)
+register_google_credential_source_commands(google_app)
 
 
 sync_app = typer.Typer(
