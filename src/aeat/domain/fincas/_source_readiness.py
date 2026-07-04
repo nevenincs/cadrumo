@@ -2,7 +2,7 @@
 
 Declares whether the fincas domain may act as a calculation source that feeds
 registry bindings. The fincas rendimiento and amortization aggregates are computed
-in-domain (:mod:`aeat.domain.fincas`), but they are not yet persisted through the
+in-domain (:mod:`domain.fincas`), but they are not yet persisted through the
 canonical secure-storage revision boundary, so enrolling fincas as a live
 calculation source would resolve bindings against non-canonical state. Until that
 persistence is hardened, fincas readiness is NOT ready and the aggregation resolver
