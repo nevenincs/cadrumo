@@ -3,9 +3,9 @@
 Provider-agnostic abstractions (:class:`AuthProviderKind`,
 :class:`AuthProviderDescription`, :class:`AuthProvider`, and
 :func:`describe_provider_operator_impact`) live in
-:mod:`aeat.application.auth`. This module owns the provider-specific payloads
-used by :class:`aeat.adapters.outbound.aeat.auth.AeatSession` and
-:class:`aeat.adapters.outbound.aeat.auth.AeatLoginAssertion`, plus the
+:mod:`application.auth`. This module owns the provider-specific payloads
+used by :class:`adapters.outbound.aeat.auth.AeatSession` and
+:class:`adapters.outbound.aeat.auth.AeatLoginAssertion`, plus the
 certificate browser-context provisioner that wires PKCS#12 credentials into
 Playwright contexts.
 """
@@ -43,8 +43,8 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 class CertificateSessionDetail(BaseModel):
     """Certificate-specific detail embedded in an authenticated AEAT session.
 
-    :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` populates this
-    detail for certificate-backed :class:`aeat.adapters.outbound.aeat.auth.AeatSession`
+    :class:`adapters.outbound.aeat.auth.AeatAuthenticator` populates this
+    detail for certificate-backed :class:`adapters.outbound.aeat.auth.AeatSession`
     records. The thumbprint and subject bind the live session to the loaded
     certificate, while :class:`HandshakeResult` records the mTLS probe evidence.
     """
@@ -60,10 +60,10 @@ class CertificateSessionDetail(BaseModel):
 class ClaveMovilSessionDetail(BaseModel):
     """Detail shape for a Cl@ve Móvil-authenticated AEAT session.
 
-    :class:`aeat.adapters.outbound.aeat.auth.ClaveMovilAuthProvider` projects
-    :class:`aeat.adapters.outbound.aeat.auth._clave_movil_metadata.ClaveMovilSessionMetadata`
+    :class:`adapters.outbound.aeat.auth.ClaveMovilAuthProvider` projects
+    :class:`adapters.outbound.aeat.auth._clave_movil_metadata.ClaveMovilSessionMetadata`
     into this detail when fresh or persisted Cl@ve sessions become
-    :class:`aeat.adapters.outbound.aeat.auth.AeatSession` records. The session
+    :class:`adapters.outbound.aeat.auth.AeatSession` records. The session
     does not carry long-lived credential material; the cookie set in encrypted
     browser storage remains the authority for reuse.
     """
@@ -99,7 +99,7 @@ class ClaveMovilSessionDetail(BaseModel):
 class ClavePermanenteSessionDetail(BaseModel):
     """Detail shape for a Cl@ve Permanente-authenticated AEAT session.
 
-    :class:`aeat.adapters.outbound.aeat.auth.ClavePermanenteAuthProvider`
+    :class:`adapters.outbound.aeat.auth.ClavePermanenteAuthProvider`
     populates this detail for DNI/NIE + password logins. Unlike Cl@ve Móvil,
     the flow carries no verification code and no phone-approval state — the
     login form is fully headless-automatable for AEAT read paths.
@@ -126,7 +126,7 @@ class CertificateLoginAssertionDetail(BaseModel):
     """Login-assertion detail for certificate-backed AEAT verification.
 
     Carries the three signals
-    :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` collects during
+    :class:`adapters.outbound.aeat.auth.AeatAuthenticator` collects during
     a post-auth navigation probe: whether the mTLS handshake leg succeeded,
     whether AEAT returned a non-challenge HTTP response, and the RFC-4514
     subject DN of the presented certificate.
@@ -146,7 +146,7 @@ class ClaveMovilLoginAssertionDetail(BaseModel):
     After a successful Cl@ve Móvil login, the provider probes an AEAT Sede page
     to confirm that the session cookies are still live. This detail records the
     cookie and landing-URL signals carried by
-    :class:`aeat.adapters.outbound.aeat.auth.AeatLoginAssertion`.
+    :class:`adapters.outbound.aeat.auth.AeatLoginAssertion`.
     """
 
     model_config = _STRICT_FROZEN
@@ -171,7 +171,7 @@ class ClavePermanenteLoginAssertionDetail(BaseModel):
     After a successful Cl@ve Permanente login, the provider probes an AEAT
     Sede page to confirm the session cookies are still live. This detail
     records the cookie and landing-URL signals carried by
-    :class:`aeat.adapters.outbound.aeat.auth.AeatLoginAssertion`.
+    :class:`adapters.outbound.aeat.auth.AeatLoginAssertion`.
     """
 
     model_config = _STRICT_FROZEN
@@ -239,7 +239,7 @@ class CertificateContextProvisioner:
         """Bind ``cert`` to ``origin`` for context provisioning.
 
         Args:
-            cert: The :class:`~aeat.adapters.outbound.aeat.auth.certificate.LoadedCertificate`
+            cert: The :class:`~adapters.outbound.aeat.auth.certificate.LoadedCertificate`
                 whose PKCS#12 bytes will be presented to the AEAT origin.
             origin: URL origin (scheme + host) the certificate is valid for,
                 passed to Playwright's ``client_certificates`` list as the
@@ -270,7 +270,7 @@ class CertificateContextProvisioner:
         that the context was provisioned with the expected certificate.
 
         Args:
-            context: The newly created :class:`~aeat.adapters.outbound.aeat.auth._authenticator.BrowserContextLike`
+            context: The newly created :class:`~adapters.outbound.aeat.auth._authenticator.BrowserContextLike`
                 to annotate.
         """
         setattr(context, CERTIFICATE_CONTEXT_MARKER, self._cert.sha256_thumbprint)
@@ -285,7 +285,7 @@ def describe_certificate_provider(
     """Build an :class:`AuthProviderDescription` from a loaded certificate.
 
     The returned description carries the parsed identity NIF when available and
-    the :class:`~aeat.adapters.outbound.aeat.auth.certificate.CertificateHealth`
+    the :class:`~adapters.outbound.aeat.auth.certificate.CertificateHealth`
     severity used by operator-facing auth status commands.
     """
     health = evaluate_loaded_certificate_health(

@@ -44,7 +44,7 @@ def build_client_certificates_kwarg(
     Materialises the passphrase from :class:`pydantic.SecretStr` at
     the exact call site and nowhere else. The returned list is wired
     directly into ``browser.new_context(client_certificates=...)`` by
-    :mod:`aeat.adapters.outbound.aeat.browser`.
+    :mod:`adapters.outbound.aeat.browser`.
 
     Args:
         cert: The loaded PKCS#12 certificate.
@@ -89,7 +89,7 @@ class PlaywrightContextBackend(_CertBackend):
         :class:`playwright.async_api.BrowserContext` with an attribute
         named :data:`CERTIFICATE_CONTEXT_MARKER` matching ``cert.sha256_thumbprint``.
         If the marker is absent, raises
-        :class:`aeat.adapters.outbound.aeat.auth.certificate.CertificateError`
+        :class:`adapters.outbound.aeat.auth.certificate.CertificateError`
         pointing the operator at :func:`build_client_certificates_kwarg`.
 
         Args:

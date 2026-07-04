@@ -2,10 +2,10 @@
 
 This module is the public surface for certificate-based authentication
 against the Spanish tax authority's Sede Electrónica. Callers import
-exclusively from :mod:`aeat.adapters.outbound.aeat.auth`; the backend implementations live in
-the private :mod:`aeat.adapters.outbound.aeat.auth._certificate_backends` package.
+exclusively from :mod:`adapters.outbound.aeat.auth`; the backend implementations live in
+the private :mod:`adapters.outbound.aeat.auth._certificate_backends` package.
 
-:class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` consumes this
+:class:`adapters.outbound.aeat.auth.AeatAuthenticator` consumes this
 surface by loading a :class:`CertificateBundle` into a :class:`LoadedCertificate`,
 recording :class:`CertificateHealth`, deriving the taxpayer NIF/NIE through
 :func:`extract_nif_from_subject`, and storing :class:`HandshakeResult` evidence
@@ -21,13 +21,13 @@ Design constraints:
 * Parsed private-key material and the raw PKCS#12 bytes live in
   :class:`pydantic.PrivateAttr` fields on :class:`LoadedCertificate`,
   so they can never be leaked via ``model_dump`` or ``repr``.
-* All errors inherit from :class:`aeat.core.errors.AeatError` via
+* All errors inherit from :class:`core.errors.AeatError` via
   :class:`CertificateError`.
 
 See Also:
-    :class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner`
+    :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`
     for wiring :class:`LoadedCertificate` into browser contexts, and
-    :func:`aeat.adapters.outbound.aeat.auth.describe_certificate_provider`
+    :func:`adapters.outbound.aeat.auth.describe_certificate_provider`
     for the provider summary built from :class:`CertificateHealth`.
 """
 
@@ -131,7 +131,7 @@ class CertificateHealthSeverity(StrEnum):
     Mapping from ``days_until_expiry`` to severity is driven by the
     ``warn_threshold_days`` / ``critical_threshold_days`` fields on the
     :class:`CertificateHealth` record and the sourced values in
-    :class:`aeat.core.config.Settings`.
+    :class:`core.config.Settings`.
 
     Attributes:
         OK: Certificate has more than ``warn_threshold_days`` remaining.
@@ -180,7 +180,7 @@ class CertificateBundle(BaseModel):
 class LoadedCertificate(BaseModel):
     """A parsed, validated, in-memory PKCS#12 certificate.
 
-    :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` uses this
+    :class:`adapters.outbound.aeat.auth.AeatAuthenticator` uses this
     record for NIF/NIE extraction, :class:`CertificateHealth` evaluation,
     :class:`HandshakeResult` creation, and browser-context provisioning.
 
@@ -249,7 +249,7 @@ class CertificateHealth(BaseModel):
     Computed from a loaded certificate's ``not_after`` against a
     reference ``evaluated_at`` timestamp and a pair of warning /
     critical thresholds sourced from
-    :class:`aeat.core.config.Settings`. The record never carries any
+    :class:`core.config.Settings`. The record never carries any
     secret material; it is safe to log, persist, or surface to the
     CLI. :func:`evaluate_loaded_certificate_health` computes this from an
     existing :class:`LoadedCertificate`; :func:`health` computes it from a
@@ -289,7 +289,7 @@ class HandshakeResult(BaseModel):
     """Structured outcome of a :func:`verify_handshake` attempt.
 
     Successful certificate sessions persist this result inside
-    :class:`aeat.adapters.outbound.aeat.auth._authenticator_persistence.PersistedSessionMetadata`
+    :class:`adapters.outbound.aeat.auth._authenticator_persistence.PersistedSessionMetadata`
     so resumed sessions can preserve the original mTLS probe evidence.
 
     Attributes:
@@ -335,7 +335,7 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
     """Load and validate a PKCS#12 bundle from disk.
 
     This is the canonical decode path for certificate auth. It feeds
-    :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator`, operator
+    :class:`adapters.outbound.aeat.auth.AeatAuthenticator`, operator
     probes, and backend provisioning surfaces with the same
     :class:`LoadedCertificate` contract.
 
@@ -468,7 +468,7 @@ def evaluate_loaded_certificate_health(
     """Compute a :class:`CertificateHealth` from an already-loaded cert.
 
     The helper exists so callers that have already paid the PKCS#12
-    decode cost, such as :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator`
+    decode cost, such as :class:`adapters.outbound.aeat.auth.AeatAuthenticator`
     or operator probes, can reuse the parsed record rather than re-reading the
     bundle from disk.
 
@@ -726,7 +726,7 @@ def preload_into_browser_context(
     there is no post-hoc injection hook. This function therefore
     **validates** the contract rather than mutating ``context``. It is
     the integration hook used by
-    :class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner`
+    :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`
     after it passes a :class:`CertificateBundle`-derived certificate through
     to ``new_context``.
 
@@ -742,7 +742,7 @@ def preload_into_browser_context(
 def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
     """Perform an opt-in TLS handshake smoke test.
 
-    :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` calls this
+    :class:`adapters.outbound.aeat.auth.AeatAuthenticator` calls this
     before constructing a certificate-backed :class:`AeatSession`. Backend
     implementations own the actual transport behavior.
 

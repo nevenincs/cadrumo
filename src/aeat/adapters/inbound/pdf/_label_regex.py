@@ -1,7 +1,7 @@
 """Shared label-anchored regex extraction primitive.
 
-Every casilla-complete extractor under :mod:`aeat.adapters.inbound.declaracion`
-and :mod:`aeat.adapters.inbound.borrador` runs essentially the same primitive:
+Every casilla-complete extractor under :mod:`adapters.inbound.declaracion`
+and :mod:`adapters.inbound.borrador` runs essentially the same primitive:
 for a mapping of ``casilla_id`` to compiled pattern, search the PDF's text
 stream and return the first match per casilla. This module is the single
 authoritative implementation; the caller still decides which casillas are in

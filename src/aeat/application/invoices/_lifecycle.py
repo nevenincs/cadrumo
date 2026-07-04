@@ -81,7 +81,7 @@ def resolve_catalogue_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> I
             translated_message="application.invoices.lifecycle.errors.ambiguous_invoice_prefix",
             context={"invoice_id": trimmed, "candidates": candidates},
         )
-    return matches[0]
+    return next(iter(matches))
 
 
 def resolve_catalogue_invoice_from_repository(

@@ -24,6 +24,7 @@ endpoints (mirroring the single-document
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -54,7 +55,7 @@ _CAPTURED_AT = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 def _pull_folder(
     store: AttachmentStore,
     *,
-    listing_pages: list[dict[str, object]],
+    listing_pages: Sequence[Mapping[str, object]],
     file_payloads: dict[str, bytes],
     refused_file_ids: frozenset[str] = frozenset(),
 ) -> tuple[list[str], list[str]]:

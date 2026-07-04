@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.aggregation import RetencionClave
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_observations import registry_grounded_modelo_observation
@@ -59,7 +60,7 @@ def _withholding_observation(source_id: str, nif: str, clave: str) -> Withholdin
         source_id=source_id,
         perceptor_tax_id=nif,
         transaction_date=date(2025, 6, 1),
-        clave=clave,
+        clave=RetencionClave(clave),
         percibido_dinerario=Decimal("1000"),
         retencion_practicada=Decimal("190"),
     )

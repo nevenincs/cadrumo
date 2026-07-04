@@ -1,14 +1,14 @@
 """Cl@ve Móvil persisted-session metadata records.
 
-:class:`aeat.adapters.outbound.aeat.auth.ClaveMovilAuthProvider` stores
+:class:`adapters.outbound.aeat.auth.ClaveMovilAuthProvider` stores
 :class:`ClaveMovilSessionMetadata` inside the encrypted
-:class:`aeat.adapters.outbound.aeat.auth._session_store.PersistedBrowserSession`
+:class:`adapters.outbound.aeat.auth._session_store.PersistedBrowserSession`
 metadata mapping. The record binds the Playwright storage state to the
 operator identity, post-auth landing URL, verification code, and resume
 deadline observed during the human-in-the-loop login flow.
 
 Application callers later narrow this provider-owned shape to the common
-:class:`aeat.application.auth.PersistedAuthSession` reuse contract.
+:class:`application.auth.PersistedAuthSession` reuse contract.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ class ClaveMovilSessionMetadata(BaseModel):
     stale or mismatched browser state, while ``landing_url`` lets live probes
     verify an already-authenticated page without re-entering AEAT's Cl@ve
     selector. The same operational fields are projected into
-    :class:`aeat.adapters.outbound.aeat.auth.ClaveMovilSessionDetail` when a
+    :class:`adapters.outbound.aeat.auth.ClaveMovilSessionDetail` when a
     session is rebuilt.
     """
 

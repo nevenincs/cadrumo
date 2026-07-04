@@ -28,22 +28,26 @@ _DESCRIBE_LABEL_KEYS: tuple[str, ...] = (
 )
 
 
-@pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
-@pytest.mark.parametrize("key", _DESCRIBE_LABEL_KEYS)
-def test_describe_label_key_exists_per_locale(locale: str, key: str) -> None:
+def test_describe_label_keys_exist_per_locale() -> None:
     """Every ``describe`` label key renders to non-empty text in every locale.
 
     The ``tr()`` call must not return the bare key, which would
     indicate a missing catalogue entry.  Each label must also be
     non-empty so the tab-separated rows remain operator-readable.
     """
-    rendered = tr(key, locale=locale)
+    violations: list[str] = []
+    for key in _DESCRIBE_LABEL_KEYS:
+        for locale in SUPPORTED_OUTPUT_LANGUAGES:
+            rendered = tr(key, locale=locale)
+            if not rendered:
+                violations.append(f"locale={locale!r} key={key!r}: rendered empty string")
+            if rendered == key:
+                violations.append(
+                    f"locale={locale!r} key={key!r}: tr() returned the key itself; "
+                    f"the entry is missing from the {locale} catalogue.",
+                )
 
-    assert rendered, f"locale={locale!r} key={key!r}: rendered empty string"
-    assert rendered != key, (
-        f"locale={locale!r} key={key!r}: tr() returned the key itself — "
-        f"the entry is missing from the {locale} catalogue."
-    )
+    assert not violations, "\n".join(violations)
 
 
 def test_describe_label_keys_distinguish_locales() -> None:
@@ -54,18 +58,16 @@ def test_describe_label_keys_distinguish_locales() -> None:
     terms like 'Modelo' and 'Casillas' that are legitimately identical
     in Spanish and Catalan).
     """
-    # Collect all rendered values for each key across locales.
-    at_least_one_distinct = False
+    violations: list[str] = []
     for key in _DESCRIBE_LABEL_KEYS:
         rendered_per_locale = {locale: tr(key, locale=locale) for locale in SUPPORTED_OUTPUT_LANGUAGES}
         unique_renderings = set(rendered_per_locale.values())
-        if len(unique_renderings) > 1:
-            at_least_one_distinct = True
-            break
+        if len(unique_renderings) <= 1:
+            violations.append(f"{key}: {rendered_per_locale!r}")
 
-    assert at_least_one_distinct, (
-        "Every describe label key rendered identically across all locales — "
-        "the translations may all be copy-pasted English."
+    assert not violations, (
+        "Describe label keys rendered identically across all locales; "
+        "the translations may all be copy-pasted English:\n" + "\n".join(violations)
     )
 
 

@@ -1,8 +1,8 @@
 """Certificate-auth persisted-session metadata and redacted diagnostics.
 
-:class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` writes
+:class:`adapters.outbound.aeat.auth.AeatAuthenticator` writes
 :class:`PersistedSessionMetadata` into the encrypted
-:class:`aeat.adapters.outbound.aeat.auth._session_store.PersistedBrowserSession`
+:class:`adapters.outbound.aeat.auth._session_store.PersistedBrowserSession`
 metadata mapping after capturing Playwright storage state. Resume paths use
 the metadata to validate the storage-state fingerprint, idle deadline,
 certificate thumbprint, and certificate subject before rebuilding the session.

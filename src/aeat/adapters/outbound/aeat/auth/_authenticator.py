@@ -1,14 +1,14 @@
 """Certificate-backed live-AEAT authenticator.
 
 This module implements the certificate concrete for the application
-:class:`aeat.application.auth.AuthProvider` contract. It composes
+:class:`application.auth.AuthProvider` contract. It composes
 :class:`CertificateBundle` loading, mTLS handshake checks, a
 :class:`CertificateContextProvisioner`-backed browser context, and a
 post-auth login probe into a narrow async provider surface.
 
 The provider returns the imported :class:`AeatSession` and
 :class:`AeatLoginAssertion` records owned by
-:mod:`aeat.adapters.outbound.aeat.auth._authenticator_types`. Captured
+:mod:`adapters.outbound.aeat.auth._authenticator_types`. Captured
 Playwright storage state is written through the encrypted session store
 with :class:`PersistedSessionMetadata`, then resumed only after hash,
 idle-deadline, certificate thumbprint, certificate subject, and live
@@ -166,13 +166,13 @@ class AeatAuthenticator:
         """Construct an authenticator bound to ``settings``.
 
         Args:
-            settings: The :class:`aeat.core.config.Settings` instance the
+            settings: The :class:`core.config.Settings` instance the
                 authenticator reads its certificate path,
                 passphrase env var, backend, and verify URL from.
             browser_session_factory: Optional async callable
                 returning a :class:`BrowserSessionLike`. When
                 omitted, the authenticator constructs a real
-                :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` lazily at
+                :class:`adapters.outbound.aeat.browser.BrowserSession` lazily at
                 :meth:`authenticate` time. Tests pass an in-process implementation here
                 to avoid the Playwright import path.
             handshake_verifier: Optional callable used to confirm the
@@ -1171,7 +1171,7 @@ class AeatAuthenticator:
         """Best-effort teardown of a :class:`BrowserSessionLike`.
 
         The Protocol does not mandate a ``close()`` coroutine; real
-        :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` wraps a Playwright
+        :class:`adapters.outbound.aeat.browser.BrowserSession` wraps a Playwright
         ``Browser`` which owns a Chromium OS process. Tests supply
         lightweight implementations that may not. We probe for the method and call it when
         present; failure to close is logged but never raised.

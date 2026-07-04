@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
+from typing import override
 from urllib.parse import urlparse
 
 from googleapiclient.discovery import build_from_document
@@ -35,6 +36,7 @@ def drive_media_endpoint(*, payload: bytes, status: int = 200) -> Iterator[Drive
             self.end_headers()
             self.wfile.write(payload)
 
+        @override
         def log_message(self, format: str, *args: object) -> None:
             return
 
@@ -62,7 +64,7 @@ class DriveFilesListEndpoint:
 @contextmanager
 def drive_files_list_endpoint(
     *,
-    pages: list[dict[str, object]],
+    pages: Sequence[Mapping[str, object]],
     status: int = 200,
 ) -> Iterator[DriveFilesListEndpoint]:
     """Serve ``files.list`` responses (optionally paginated) through a real client resource.
@@ -85,6 +87,7 @@ def drive_files_list_endpoint(
             self.end_headers()
             self.wfile.write(body)
 
+        @override
         def log_message(self, format: str, *args: object) -> None:
             return
 

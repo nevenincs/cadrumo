@@ -1,11 +1,11 @@
 """Abstract contract for certificate backend implementations.
 
 Defines :class:`_CertBackend`, the interface every concrete backend under
-:mod:`aeat.adapters.outbound.aeat.auth._certificate_backends` must implement.
+:mod:`adapters.outbound.aeat.auth._certificate_backends` must implement.
 Backends are selected from :class:`CertificateBackend` by
-:func:`aeat.adapters.outbound.aeat.auth.certificate._select_backend` and feed
-the public :func:`aeat.adapters.outbound.aeat.auth.certificate.preload_into_browser_context`
-and :func:`aeat.adapters.outbound.aeat.auth.certificate.verify_handshake`
+:func:`adapters.outbound.aeat.auth.certificate._select_backend` and feed
+the public :func:`adapters.outbound.aeat.auth.certificate.preload_into_browser_context`
+and :func:`adapters.outbound.aeat.auth.certificate.verify_handshake`
 helpers.
 """
 
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 CERTIFICATE_CONTEXT_MARKER = "_aeat_certificate_thumbprint"
 """Attribute name a Playwright context carries after certificate provisioning.
 
-The :class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner`
+The :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`
 stamps the context with this attribute set to the
 :class:`LoadedCertificate` thumbprint. The Playwright backend reads it during
 ``preload`` to verify that the context was provisioned correctly. Both
@@ -63,7 +63,7 @@ class _CertBackend(ABC):
             url: HTTPS endpoint to probe with the client certificate.
 
         Returns:
-            A :class:`aeat.adapters.outbound.aeat.auth.certificate.HandshakeResult`
+            A :class:`adapters.outbound.aeat.auth.certificate.HandshakeResult`
             describing whether the handshake succeeded along with the
             observed status code, elapsed time, and any error message.
         """
