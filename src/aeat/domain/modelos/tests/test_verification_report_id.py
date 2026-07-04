@@ -18,7 +18,7 @@ _Holder = single_field_model("verification_report_id", VerificationReportId)
 def test_accepts_canonical_sha256_hex_digest() -> None:
     digest = hashlib.sha256(b"verification-report-payload").hexdigest()
     holder = _Holder(verification_report_id=digest)
-    assert getattr(holder, "verification_report_id") == digest
+    assert holder.verification_report_id == digest
 
 
 def test_rejects_invalid_sha256_digest() -> None:

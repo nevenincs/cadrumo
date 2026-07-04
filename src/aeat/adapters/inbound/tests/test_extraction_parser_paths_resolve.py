@@ -68,8 +68,7 @@ def test_extraction_parser_paths_resolve() -> None:
             continue
         if not module_name.startswith(_ALLOWED_PARSER_AUTHORITY_PREFIXES):
             failures.append(
-                f"parser {dotted_path!r} must resolve under one of "
-                f"{sorted(_ALLOWED_PARSER_AUTHORITY_PREFIXES)!r}",
+                f"parser {dotted_path!r} must resolve under one of {sorted(_ALLOWED_PARSER_AUTHORITY_PREFIXES)!r}",
             )
             continue
         module = import_module(module_name)
