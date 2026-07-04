@@ -971,6 +971,8 @@ application:
           incorporate this row.'
       m210_convenio_rate_missing:
         next_action: 'Author a Convenio España-{cc} treaty override row for tipo_renta={tipo_renta} under registry/aeat/treaties/, or unset profile.country_of_fiscal_residence to fall back to the TRLIRNR Art 25 baseline.'
+      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY: casilla %{casilla_id} is zero but the filer has a Madrid nacimiento/adopcion-eligible descendant (weighted count %{weighted_count}). Auto-trigger is fail-closed for conjunta/married units since the unidad-familiar income limit cannot be evaluated; confirm eligibility manually.'
+      madrid_nacimiento_adopcion_eligibility_advisory_next_action: 'Confirm the unidad-familiar base imponible is within the applicable limit and, if eligible, enter casilla 1039 manually (madrid-dl-1-2010:art-4, art-18).'
       missing_required_casilla: Required casilla %{casilla_id} is not present in the
         calculation revision inputs.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: The

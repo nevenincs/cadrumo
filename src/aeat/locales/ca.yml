@@ -1050,6 +1050,8 @@ application:
           incorpori aquesta fila.'
       m210_convenio_rate_missing:
         next_action: 'Autoritzeu una fila de Convenio España-{cc} per a tipo_renta={tipo_renta} a registry/aeat/treaties/, o desestableixi profile.country_of_fiscal_residence per usar el baseline TRLIRNR Art 25.'
+      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY: la casella %{casilla_id} es zero pero el contribuent te un descendent elegible (recompte %{weighted_count}) per a la deduccio de Madrid. El disparador automatic queda tancat per a unitats conjunta/casats perque no es pot avaluar el limit de renda familiar; confirmeu l''elegibilitat manualment.'
+      madrid_nacimiento_adopcion_eligibility_advisory_next_action: 'Confirmeu que la base imposable de la unitat familiar esta dins del limit aplicable i, si escau, introduiu la casella 1039 manualment (madrid-dl-1-2010:art-4, art-18).'
       missing_required_casilla: La casella obligatòria %{casilla_id} no és present
         a les dades d'entrada del càlcul.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La

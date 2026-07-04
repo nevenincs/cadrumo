@@ -112,6 +112,7 @@ from ._action_errors import (
 from ._art20_advisory import _art20_reduccion_advisory_finding
 from ._art52_advisory import _art52_reduccion_advisory_finding
 from ._art109_activity_income import derive_art109_activity_income_coverage_for_work_unit as _derive_art109_coverage
+from ._autonomic_deduccion_advisory import _madrid_nacimiento_adopcion_advisory_finding_for_work_unit
 from ._dt12_advisory import _dt12_reduccion_advisory_finding
 from ._dt12_antiquity_advisory import _dt12_antiquity_advisory_finding
 from ._iva_wallet_gate import (
@@ -1717,6 +1718,24 @@ def _collect_revision_verification_findings(
     dt12_antiquity_finding = _dt12_antiquity_advisory_finding(snapshot.revision, target.casilla_values)
     if dt12_antiquity_finding is not None:
         findings.append(dt12_antiquity_finding)
+
+    # Advisory: Madrid nacimiento/adopción D4 indeterminate-eligibility — warn to
+    # confirm eligibility for casilla 1039 when the calculate-path auto-trigger
+    # fail-closed on an indeterminate (tributación conjunta or married/pareja de
+    # hecho) unit that has at least one nacimiento/adopción-eligible descendant.
+    # Stays ADVISORY because the unidad-familiar 61.860 € límite depends on the
+    # spouse's base imponible, which this application does not persist; a
+    # legitimately ineligible or already-confirmed unit must remain permissible
+    # (no-silent-under-declaration is symmetric for a deducción — over-claim,
+    # not silence, is the hazard the fail-closed default already guards
+    # against).
+    madrid_nacimiento_adopcion_finding = _madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
+        snapshot,
+        target.casilla_values,
+        work_unit=work_unit,
+    )
+    if madrid_nacimiento_adopcion_finding is not None:
+        findings.append(madrid_nacimiento_adopcion_finding)
 
     # Advisory: Convenio doble imposición limitation-of-benefits — warn to confirm
     # treaty eligibility (beneficial ownership, economic substance) whenever a
