@@ -3,14 +3,16 @@ generated: true
 tags:
   - '#index'
   - '#obligation-coverage-completeness'
-date: '2026-07-01'
-modified: '2026-07-01'
+date: '2026-07-04'
+modified: '2026-07-04'
 related:
   - '[[2026-06-30-obligation-coverage-completeness-P01-S01]]'
   - '[[2026-06-30-obligation-coverage-completeness-P01-S02]]'
   - '[[2026-06-30-obligation-coverage-completeness-P01-S03]]'
   - '[[2026-06-30-obligation-coverage-completeness-P01-S04]]'
   - '[[2026-06-30-obligation-coverage-completeness-P01-S05]]'
+  - '[[2026-06-30-obligation-coverage-completeness-P02-S06]]'
+  - '[[2026-06-30-obligation-coverage-completeness-P02-S07]]'
   - '[[2026-06-30-obligation-coverage-completeness-P02-S08]]'
   - '[[2026-06-30-obligation-coverage-completeness-P03-S09]]'
   - '[[2026-06-30-obligation-coverage-completeness-P03-S10]]'
@@ -52,6 +54,8 @@ Auto-generated index of all documents tagged with `#obligation-coverage-complete
 - `2026-06-30-obligation-coverage-completeness-P03-S12` - Emit per-profile coverage advisories on the calendar --all-profiles surface.
 - `2026-06-30-obligation-coverage-completeness-P03-S14` - Wire coverage onto overview status, explain, and the undeclared-profile path.
 - `2026-06-30-obligation-coverage-completeness-P03-S15` - Wire coverage onto the undeclared-profile path so it reconciles the full universe instead of returning empty.
+- `2026-06-30-obligation-coverage-completeness-P02-S06` - Author the Modelo 190 annual deadline window with legal grounding verified against the bundled corpus.
+- `2026-06-30-obligation-coverage-completeness-P02-S07` - Disposition the class-C window-but-no-seed modelos as seed rules or advisories.
 
 ### plan
 
