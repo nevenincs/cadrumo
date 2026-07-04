@@ -2,12 +2,12 @@
 
 One substrate, two consumers (ADR
 ``2026-06-30-deterministic-output-replay-substrate``): the observability
-:func:`aeat.core.observability.replay_run` envelope-assertion tier and
+:func:`core.observability.replay_run` envelope-assertion tier and
 the harness operator golden gate both call this primitive; neither
 re-implements capture or compare.
 
 The captured payload is the verbatim emitted
-:class:`~aeat.core.json_contract.SchemaEnvelope` document. On load it is
+:class:`~core.json_contract.SchemaEnvelope` document. On load it is
 re-validated against ``SCHEMA_REGISTRY[command]`` by
 :func:`validate_captured_envelope` so the captured payload is a typed
 envelope around a registered :class:`OutputSchema`, never a
@@ -21,7 +21,7 @@ Masking honesty
 ---------------
 :data:`GOLDEN_MASK_FIELDS` is a declared, narrow allowlist — the two
 opaque surrogate keys that still flap once the clock seam
-(:func:`aeat.core.time.frozen_clock`) is frozen and ``profile_id`` is
+(:func:`core.time.frozen_clock`) is frozen and ``profile_id`` is
 injected: ``snapshot_id`` (its ``profile_id`` prefix and timestamp are
 deterministic, only the trailing ``uuid4().hex`` flaps) and the
 observability ``run_id`` (a minted ``uuid4`` tail). A mask broad enough
@@ -53,7 +53,7 @@ MASK_SENTINEL = "<masked>"
 #: Declared, narrow allowlist of leaf field names whose values are opaque,
 #: non-assertable surrogate keys carrying an unseedable ``uuid4`` tail. These
 #: are the ONLY residual non-deterministic leaves once
-#: :func:`aeat.core.time.frozen_clock` is frozen and ``profile_id`` is injected.
+#: :func:`core.time.frozen_clock` is frozen and ``profile_id`` is injected.
 #: Widening this set is a standing honesty hazard; every addition must be
 #: proven minimal by the anti-tautology gate.
 GOLDEN_MASK_FIELDS: frozenset[str] = frozenset({"snapshot_id", "run_id"})
@@ -219,8 +219,8 @@ def validate_captured_envelope(
     """Re-validate a captured envelope document through its registered schema.
 
     Looks up ``document["command"]`` in ``registry`` (defaulting to the
-    process-global :data:`~aeat.core.json_contract.SCHEMA_REGISTRY`),
-    specialises :class:`~aeat.core.json_contract.SchemaEnvelope` over the
+    process-global :data:`~core.json_contract.SCHEMA_REGISTRY`),
+    specialises :class:`~core.json_contract.SchemaEnvelope` over the
     registered result schema, and strictly validates the document. The
     return value is a typed envelope, never a ``dict[str, Any]`` bag —
     this is the typed boundary the substrate keeps captured payloads
