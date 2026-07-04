@@ -1233,3 +1233,40 @@ class ConfigProfileSandboxRestoreResult(OutputSchema):
 
     bucket_id: str
     label: str
+
+
+class SandboxDiskUsageSubdirPayload(OutputSchema):
+    """One on-disk subdirectory row in a sandbox disk-usage report.
+
+    Mirrors :class:`~aeat.application.bucket_maintenance.BucketDiskUsageSubdirRow`:
+    a fixed-layout subdirectory name (``db``, ``blobs``, ``audit``) plus its
+    summed regular-file byte total and file count.
+    """
+
+    subdir: str
+    total_bytes: int
+    file_count: int
+
+
+class SandboxDiskUsagePayload(OutputSchema):
+    """One sandbox's disk-usage row within a ``sandbox usage`` report."""
+
+    label: str
+    bucket_id: str
+    total_bytes: int
+    subdirs: list[SandboxDiskUsageSubdirPayload]
+
+
+@register_schema("config.profile.sandbox.usage")
+class ConfigProfileSandboxUsageResult(OutputSchema):
+    """JSON envelope for ``aeat config profile sandbox usage``.
+
+    Reports the on-disk footprint of one named sandbox, or of every sandbox
+    at once when no name is given (``total_bytes`` then sums across every
+    listed sandbox). The measurement reads only filesystem metadata — never
+    decrypted secure-object content — via
+    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.disk_usage.
+    """
+
+    total_bytes: int
+    sandboxes: list[SandboxDiskUsagePayload]

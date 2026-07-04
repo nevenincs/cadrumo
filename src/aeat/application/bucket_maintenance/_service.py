@@ -22,6 +22,7 @@ from __future__ import annotations
 import base64
 import json
 import secrets
+from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -59,9 +60,12 @@ from ._contracts import (
     ArchiveBucketResult,
     BrowseBucketCommand,
     BrowseBucketResult,
+    BucketDiskUsageSubdirRow,
     BucketNamespaceInventoryRow,
     DeleteBucketCommand,
     DeleteBucketResult,
+    DiskUsageBucketCommand,
+    DiskUsageBucketResult,
     ExportBucketCommand,
     ExportBucketResult,
     ImportBucketCommand,
@@ -91,6 +95,26 @@ _EXPORT_PAYLOAD_VERSION = 1
 _IMPORT_PAYLOAD_VERSION = 1
 _ARCHIVE_SCHEMA_VERSION = 2
 _RECOVERY_WRAP_SALT_BYTES = 16
+
+
+def _directory_byte_total(directory: Path) -> tuple[int, int]:
+    """Return ``(total_bytes, file_count)`` for every regular file under ``directory``.
+
+    Missing directories (a bucket whose ``blobs``/``audit`` subdirectory was
+    never populated still exists per :func:`provision_bucket_directory`, but
+    the helper tolerates absence defensively) report ``(0, 0)`` rather than
+    raising. Only regular-file sizes are summed via ``os.stat``; no file is
+    opened or decrypted.
+    """
+    if not directory.is_dir():
+        return 0, 0
+    total_bytes = 0
+    file_count = 0
+    for entry in directory.rglob("*"):
+        if entry.is_file():
+            total_bytes += entry.stat().st_size
+            file_count += 1
+    return total_bytes, file_count
 
 
 class BucketMaintenanceService:
@@ -497,6 +521,53 @@ class BucketMaintenanceService:
             BucketNamespaceInventoryRow(namespace=ns, row_count=len(repository.list_keys(ns))) for ns in namespaces
         )
         return BrowseBucketResult(bucket_id=command.bucket_id, rows=rows)
+
+    def disk_usage(self, command: DiskUsageBucketCommand) -> DiskUsageBucketResult:
+        """Measure ``command.bucket_id``'s on-disk footprint and return a :class:`DiskUsageBucketResult`.
+
+        Walks the bucket's fixed directory layout
+        (:func:`~aeat.adapters.persistence.storage.bucket.bucket_paths`) and
+        sums regular-file byte sizes via ``os.stat`` — plain filesystem
+        metadata, never decrypted content. This is the same non-active-safe
+        posture :meth:`browse` and
+        :func:`~aeat.application.bucket_maintenance.preview_discard_sandbox`
+        already rely on: no master key or active-bucket session is opened, so
+        a non-active (even archived) bucket can be measured. Read-only; emits
+        no bucket event.
+
+        Returns:
+            :class:`DiskUsageBucketResult` reporting the total byte count and
+            a per-subdirectory (``db``, ``blobs``, ``audit``) breakdown, plus
+            the bucket's own manifest file folded into the ``db`` row (the
+            manifest sits directly under the bucket directory, not in a
+            fixed subdirectory of its own).
+        """
+        from ...adapters.persistence.storage import (
+            BUCKET_AUDIT_DIRNAME,
+            BUCKET_BLOBS_DIRNAME,
+            BUCKET_DB_DIRNAME,
+        )
+        from ...adapters.persistence.storage.bucket import bucket_paths, manifest_path
+        from ...core.config import load_settings
+
+        paths = bucket_paths(load_settings().aeat_local_storage_root, command.bucket_id)
+        manifest = manifest_path(paths)
+        subdir_specs = (
+            (BUCKET_DB_DIRNAME, paths.db_dir, (manifest,)),
+            (BUCKET_BLOBS_DIRNAME, paths.blobs_dir, ()),
+            (BUCKET_AUDIT_DIRNAME, paths.audit_dir, ()),
+        )
+        rows: list[BucketDiskUsageSubdirRow] = []
+        total_bytes = 0
+        for name, directory, extra_files in subdir_specs:
+            subdir_bytes, subdir_count = _directory_byte_total(directory)
+            for extra in extra_files:
+                if extra.is_file():
+                    subdir_bytes += extra.stat().st_size
+                    subdir_count += 1
+            rows.append(BucketDiskUsageSubdirRow(subdir=name, total_bytes=subdir_bytes, file_count=subdir_count))
+            total_bytes += subdir_bytes
+        return DiskUsageBucketResult(bucket_id=command.bucket_id, total_bytes=total_bytes, subdirs=tuple(rows))
 
     def export(self, command: ExportBucketCommand) -> ExportBucketResult:
         """Write a sealed bucket archive for ``command.bucket_id``.

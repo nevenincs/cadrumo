@@ -2922,6 +2922,8 @@ cli:
           sandbox list'' parancsot a regisztrált sandboxok megtekintéséhez.'
         use_help: Az aktív profil váltása egy meglévő sandboxra.
         use_name_help: A sandbox neve (előtag nélkül).
+        usage_help: 'Egy homokozó (sandbox) lemezterület-használatának jelentése, vagy az összesé egyszerre.'
+        usage_name_help: 'A homokozó neve (előtag nélkül); hagyja üresen az összes jelentéséhez.'
       sar_catalogue_info: 'Ez az archívum a profilhoz tárolt összes személyesadat-kategóriát
         tartalmazza: azonosító és profiladatok, modelo munkaegységek, főkönyvi tételek,
         számítási revíziók és benyújtási nyilvántartások. A csatolt bizonyítékok bájtjai

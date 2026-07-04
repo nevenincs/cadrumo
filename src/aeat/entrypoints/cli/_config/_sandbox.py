@@ -53,6 +53,7 @@ def register_sandbox_commands(profile_app: typer.Typer) -> None:
     _register_sandbox_prune_command(sandbox_app)
     _register_sandbox_archive_command(sandbox_app)
     _register_sandbox_restore_command(sandbox_app)
+    _register_sandbox_usage_command(sandbox_app)
     profile_app.add_typer(sandbox_app, name="sandbox")
 
 
@@ -679,6 +680,97 @@ def _register_sandbox_restore_command(app: typer.Typer) -> None:
                 f"label\t{outcome.label}",
             ),
         )
+
+
+def _register_sandbox_usage_command(app: typer.Typer) -> None:
+    @app.command(
+        "usage",
+        help=tr(
+            "cli.config.profile.sandbox.usage_help",
+            default="Report the on-disk footprint of one sandbox, or every sandbox at once.",
+        ),
+    )
+    def config_profile_sandbox_usage(
+        ctx: typer.Context,
+        name: str | None = typer.Argument(
+            None,
+            help=tr(
+                "cli.config.profile.sandbox.usage_name_help",
+                default="Sandbox name (without the prefix); omit to report every sandbox.",
+            ),
+        ),
+        output_language: OutputLanguage | None = typer.Option(
+            None,
+            "--output-language",
+            "--language",
+            help=tr("cli.config.auth.output_language_help"),
+        ),
+    ) -> None:
+        """Report sandbox disk-envelope usage through ``BucketMaintenanceService.disk_usage``.
+
+        Reads only filesystem metadata (``os.stat`` sizes) under each
+        sandbox's bucket directory — never decrypted secure-object content —
+        so a non-active, even archived, sandbox can be measured without
+        switching into it first.
+        """
+        _activate_subcommand_output_language(ctx, output_language)
+        from ....application.bucket_maintenance import (
+            BucketMaintenanceService,
+            DiskUsageBucketCommand,
+            sandbox_label,
+        )
+        from ....application.workflow import read_profile_bucket
+        from .._config_payloads import (
+            ConfigProfileSandboxUsageResult,
+            SandboxDiskUsagePayload,
+            SandboxDiskUsageSubdirPayload,
+        )
+
+        if name is not None:
+            label = sandbox_label(name)
+            pointer = read_profile_bucket(label, include_tombstoned=True)
+            if pointer is None:
+                raise _CliRefusedBoundaryError(
+                    translated_message="cli.config.profile.sandbox.unknown_sandbox",
+                    context={"name": name},
+                )
+            targets = ((pointer.bucket_id, pointer.label),)
+        else:
+            from ....application.bucket_maintenance import list_sandboxes
+
+            targets = list_sandboxes()
+
+        service = BucketMaintenanceService()
+        rows: list[SandboxDiskUsagePayload] = []
+        for bucket_id, label in targets:
+            usage = service.disk_usage(DiskUsageBucketCommand(bucket_id=bucket_id))
+            rows.append(
+                SandboxDiskUsagePayload(
+                    label=label,
+                    bucket_id=bucket_id,
+                    total_bytes=usage.total_bytes,
+                    subdirs=[
+                        SandboxDiskUsageSubdirPayload(
+                            subdir=row.subdir,
+                            total_bytes=row.total_bytes,
+                            file_count=row.file_count,
+                        )
+                        for row in usage.subdirs
+                    ],
+                ),
+            )
+
+        total_bytes = sum(row.total_bytes for row in rows)
+        result = ConfigProfileSandboxUsageResult(total_bytes=total_bytes, sandboxes=rows)
+        if not rows:
+            lines = ["total_bytes\t0", "sandboxes\t<none>"]
+        else:
+            lines = [f"total_bytes\t{total_bytes}"]
+            for row in rows:
+                lines.append(f"{row.label}\t{row.total_bytes}")
+                for sub in row.subdirs:
+                    lines.append(f"  {row.label}/{sub.subdir}\t{sub.total_bytes} bytes ({sub.file_count} files)")
+        _emit_envelope(ctx, command="config.profile.sandbox.usage", result=result, lines=lines)
 
 
 __all__ = ["register_sandbox_commands", "sandbox_app"]

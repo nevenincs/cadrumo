@@ -3001,6 +3001,8 @@ cli:
           sandbox list'' para ver los sandboxes registrados.'
         use_help: Cambia el perfil activo a un sandbox existente.
         use_name_help: Nombre del sandbox (sin el prefijo).
+        usage_help: 'Informar del espacio en disco de un sandbox, o de todos a la vez.'
+        usage_name_help: 'Nombre del sandbox (sin el prefijo); omitir para informar de todos.'
       sar_catalogue_info: 'Este archivo contiene todas las categorías de datos personales
         del perfil: identidad y datos del perfil, unidades de trabajo de modelos,
         movimientos del libro, revisiones de cálculo y registros de presentación.
