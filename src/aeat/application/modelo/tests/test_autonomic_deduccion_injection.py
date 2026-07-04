@@ -18,6 +18,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....domain.user_profile import UserProfileFactValue
 from .._profile_binding import inject_derived_autonomic_deduccion_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -26,8 +27,8 @@ _COUNT_KEY = "renta_family.madrid_nacimiento_adopcion_eligible_count"
 _OTROS_KEY = "renta_family.unidad_familiar_otros_miembros_base"
 
 
-def _facts(**overrides: object) -> dict[str, object]:
-    base: dict[str, object] = {
+def _facts(**overrides: UserProfileFactValue) -> dict[str, UserProfileFactValue]:
+    base: dict[str, UserProfileFactValue] = {
         "tax_residence.ccaa": "madrid",
         "filing_export.declaration_type": "1",
         "renta_taxpayer.marital_status": "1",
