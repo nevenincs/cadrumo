@@ -232,13 +232,10 @@ class Modelo(StrEnum):
 #: ~200-form set.
 UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
     Modelo.M234: "mecanismos transfronterizos de planificacion fiscal DAC6 (informativa)",
-    Modelo.M165: "certificaciones a socios de entidades de nueva o reciente creacion (informativa anual)",
     Modelo.M179: "cesion de uso de viviendas con fines turisticos (informativa anual)",
     Modelo.M181: "prestamos, creditos y operaciones financieras sobre inmuebles (informativa anual)",
-    Modelo.M233: "gastos en guarderias o centros de educacion infantil autorizados (informativa anual)",
     Modelo.M238: "operadores de plataformas DAC7 (informativa anual)",
     Modelo.M270: "resumen anual de retenciones del gravamen especial sobre premios de loterias",
-    Modelo.M038: "operaciones de entidades inscritas en registros publicos (informativa mensual)",
     Modelo.M140: "IRPF deduccion por maternidad, solicitud de abono anticipado",
     Modelo.M341: "reintegro de compensaciones del regimen especial de agricultura, ganaderia y pesca del IVA",
     Modelo.M380: "IVA operaciones asimiladas a las importaciones (declaracion-liquidacion)",
@@ -247,9 +244,6 @@ UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
     Modelo.M490: "Impuesto sobre Determinados Servicios Digitales (autoliquidacion trimestral)",
     Modelo.M604: "Impuesto sobre las Transacciones Financieras (autoliquidacion mensual)",
     Modelo.M763: "Impuesto sobre actividades de juego (autoliquidacion trimestral)",
-    Modelo.M156: "IRPF cotizaciones de afiliados/mutualistas a efectos de la deduccion por maternidad (anual)",
-    Modelo.M185: "declaracion informativa mensual de cotizaciones de afiliados y mutualistas",
-    Modelo.M186: "declaracion informativa de nacimientos y defunciones (Registro Civil)",
     Modelo.M592: "impuesto especial sobre envases de plastico no reutilizables (fabricantes/adquirentes)",
     Modelo.M576: "IEDMT autoliquidacion por matriculacion de determinados medios de transporte",
     Modelo.M121: "comunicacion de cesion del derecho a deducciones por familia numerosa o discapacidad",
