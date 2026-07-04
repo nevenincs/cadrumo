@@ -71,6 +71,7 @@ CalculationSourceDiagnosticReason = Literal[
     "source_issue",
     "unresolved_binding",
     "storage_degraded",
+    "source_domain_not_ready",
     "unhandled_binding_source",
     "unrouted_observation",
     "oss_no_live_source",
