@@ -1,14 +1,14 @@
 """Default-off, consent-gated remote telemetry.
 
 Every existing telemetry primitive in this codebase (
-:class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`, the MCP
-:class:`~aeat.entrypoints.mcp.ToolCallTelemetryRecord`) is local-only by
+:class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`, the MCP
+:class:`~entrypoints.mcp.ToolCallTelemetryRecord`) is local-only by
 construction: encrypted secure storage or a local JSONL file, never a network
 call. This package is the one deliberate, narrow exception -- a REMOTE
 telemetry tier an operator may opt into to help improve the project.
 
 The consent gate mirrors
-:func:`aeat.application.ledger.cloud_evidence_read_permitted`'s shape
+:func:`application.ledger.cloud_evidence_read_permitted`'s shape
 exactly (gestor-mode absolute bar -> deployment opt-in -> tier -> per-
 invocation acknowledgement, all ANDed, never sticky). The payload contract is
 a closed, code-authored allowlist (:class:`TelemetryEventPayload`): there is
