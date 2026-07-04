@@ -1,8 +1,8 @@
 # aeat
 
-`aeat` prepares Spanish tax filings from your own financial records. It keeps a ledger and calculates the figures each modelo asks for. It checks them against the form's rules, then exports a file ready to upload to the Agencia Estatal de Administración Tributaria (AEAT). You file that export yourself, through AEAT's official channels.
+`aeat` prepares Spanish tax filings from your own financial records. It's for autónomos, small businesses, and the people who help them file. It keeps a ledger and calculates the figures each modelo asks for. It checks them against the form's rules, then exports a file ready to upload to the Agencia Estatal de Administración Tributaria (AEAT). You file that export yourself, through AEAT's official channels.
 
-It's built for an AI assistant to operate, not for you to memorise. You describe your situation in the chat client you already use. The assistant drives the toolkit, and a deterministic engine computes every figure and cites the legal rule behind it.
+It's built for an AI assistant to operate, not for you to memorise. You install it as a Claude plugin, or use the `aeat-cli` command line directly. You describe your situation in plain language. The assistant drives the toolkit; a deterministic engine computes every figure and cites the legal rule behind it.
 
 > **Status: pre-alpha.** Expect breaking changes between versions. The web home at `aeat.neve.md` is under construction; until it lands, this repository is the canonical source.
 
