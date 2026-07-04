@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, Annotated
 
 if TYPE_CHECKING:
     from ...core.errors import AeatError
+    from ..workflow import WorkflowState
 
 import contextlib
 import re
@@ -743,7 +744,7 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     with profile_storage_session(profile_id):
         repository = workflow_state_repository()
 
-        def _persist_if_filing_baseline_survives(state):
+        def _persist_if_filing_baseline_survives(state: WorkflowState) -> WorkflowState:
             nonlocal merged_values
             values = record_to_path_values(read_active_profile(state))
             values.update(patched_values)
@@ -865,7 +866,7 @@ def _run_full_flow(
     span = profile_create_storage_span(profile_id) if mode == "create" else profile_storage_session(profile_id)
     with span as routing_profile_id:
 
-        def _persist_if_filing_baseline_survives(state):
+        def _persist_if_filing_baseline_survives(state: WorkflowState) -> WorkflowState:
             if mode == "edit":
                 values = record_to_path_values(read_active_profile(state))
                 values.update({path: value for path, value in profile_values.items() if value})
