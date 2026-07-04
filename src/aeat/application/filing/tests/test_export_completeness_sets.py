@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry import CasillaFieldKind
+from ....domain.calculations.registry import CasillaFieldKind, CasillaId
 from .._export import _did_page_suppressed, boe_representable_casilla_ids, rendered_casilla_ids
 from ._export_support import (
     _approved_registry_draft,
@@ -90,7 +90,7 @@ def test_representable_set_excludes_disposition_suppressed_did_page() -> None:
     provider = _schema_provider(modelos=("303",), filing_year=2025, period="1T")
     layout = provider.get_subview("303").export_layouts[0]
 
-    did_casillas: set = set()
+    did_casillas: set[CasillaId] = set()
     for record in layout.records:
         if record.record_type != _DID_PAGE_RECORD_TYPE:
             continue
