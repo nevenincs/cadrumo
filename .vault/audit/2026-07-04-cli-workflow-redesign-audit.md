@@ -23,9 +23,17 @@ The current worktree no longer contains `src/aeat/_data/registry/aeat/modelos/14
 
 ### modelo-145-registry-foundation-restored | low | Previous missing-registry blocker is resolved in the repaired state
 
-Re-review found `src/aeat/_data/registry/aeat/modelos/145/manifest.toml` and the expected `revision.toml`, `application_links`, `casillas`, and `workbook_parity_refs` fragments restored, with no `export_layouts` fragment. Focused verification with `uv run --no-sync pytest -q src/aeat/domain/calculations/registry/tests/test_modelo_145_source_catalogue.py src/aeat/domain/calculations/registry/tests/test_modelo_145_registry_foundation.py src/aeat/domain/calculations/registry/tests/test_source_enrollment.py src/aeat/domain/calculations/registry/tests/test_support_matrix.py --tb=short` passed 22 tests, `uv run --no-sync ruff check src/aeat/domain/calculations/registry/tests/test_modelo_145_registry_foundation.py` passed, and a direct authority/support-matrix probe reported 14 casillas, parity `modelo-145-dr-v20`, zero export layouts, and `has_fixed_width_export=False`. The prior high finding is therefore resolved.
+Re-review found `src/aeat/_data/registry/aeat/modelos/145/manifest.toml` and the expected `revision.toml`, `application_links`, `casillas`, and `workbook_parity_refs` fragments restored. At that intermediate point, before the later `P03.S13` retry, focused verification with `uv run --no-sync pytest -q src/aeat/domain/calculations/registry/tests/test_modelo_145_source_catalogue.py src/aeat/domain/calculations/registry/tests/test_modelo_145_registry_foundation.py src/aeat/domain/calculations/registry/tests/test_source_enrollment.py src/aeat/domain/calculations/registry/tests/test_support_matrix.py --tb=short` passed 22 tests, `uv run --no-sync ruff check src/aeat/domain/calculations/registry/tests/test_modelo_145_registry_foundation.py` passed, and a direct authority/support-matrix probe reported 50 casillas with DR145 record-design parity. The prior high finding is therefore resolved.
+
+### modelo-145-dangling-export-refs-transient | low | Transient no-export repair was superseded by the completed layout
+
+A later follow-up caught a transient fixed-width layout attempt that left Modelo 145 casillas pointing at export fields after the layout was removed. That no-export repair was useful while the layout was absent, but it is now superseded by the completed `P03.S13` retry below: the current registry keeps the DR145 export layout and matching casilla `export_refs`.
+
+### modelo-145-fixed-width-layout-registered | low | S13 retry completed the DR145 layout without adding filing semantics
+
+A subsequent retry completed `P03.S13` by registering the `modelo-145-dr-v20-fixed-width` export layout, adding the matching 50 casilla `export_refs`, and verifying DR145 v2.0 byte-span coverage from the bundled extractor output. Focused verification with `uv run --no-sync pytest -q -n 0 src/aeat/domain/calculations/registry/tests/test_modelo_145_registry_foundation.py --tb=short` passed 4 tests, `uv run --no-sync ruff check src/aeat/domain/calculations/registry/tests/test_modelo_145_registry_foundation.py` passed, and the four-file registry/support slice passed 23 tests. Modelo 145 still has no filing schedules, deadline windows, live cross references, portal links, or AEAT submission surface.
 
 ## Recommendations
 
-- Keep `export_layouts` empty until a complete DR145 fixed-width value-field layout is grounded and verified, so `build_support_matrix` does not advertise fixed-width export support prematurely.
-- Leave `P03.S13` open for the future complete export-layout implementation.
+- The earlier `export_layouts`-empty recommendation is retired: `P03.S13` is now closed with extractor-grounded DR145 layout metadata.
+- Continue with `P04.S16`; backend behavior must preserve the same local payer-communication boundary.

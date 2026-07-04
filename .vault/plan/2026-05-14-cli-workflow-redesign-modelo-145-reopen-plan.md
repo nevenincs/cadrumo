@@ -40,7 +40,7 @@ This Phase adds the Modelo 145 registry foundation as a non-filing local payer c
 
 - [x] `P03.S11` - Add Modelo 145 registry TOML using only source-backed communication, validation, and export authority; `registry/aeat/modelos`.
 - [x] `P03.S12` - Model Modelo 145 lifecycle as local payer communication rather than AEAT filing; `registry/aeat/modelos`.
-- [ ] `P03.S13` - Add export layout metadata grounded in the official record design; `registry/aeat/modelos`.
+- [x] `P03.S13` - Add export layout metadata grounded in the official record design; `registry/aeat/modelos`.
 - [x] `P03.S14` - Exclude filing schedules, deadline windows, live cross references, filing application links, and portal read or write links from Modelo 145; `registry/aeat/modelos`.
 - [x] `P03.S15` - Verify Modelo 145 registry load, source grounding, export metadata, and rejected filing surfaces; `tests/domain/calculations/registry`.
 
