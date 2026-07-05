@@ -8,7 +8,6 @@ from typing import Annotated
 import typer
 
 from ...application.modelo import (
-    M145CommunicationCreateCommand,
     M145CommunicationPeriod,
     create_m145_communication_record,
     export_m145_communication_record,
@@ -16,9 +15,9 @@ from ...application.modelo import (
     mark_m145_communication_record_locally_completed,
     validate_m145_communication_record,
 )
-from ...core import CasillaId
 from ...core.i18n import tr
 from ._common import _emit_envelope
+from ._modelo_m145_parsing import ParseCasillaOverride, m145_actor_from_cli, m145_create_command_from_cli
 from ._modelo_payloads_m145 import (
     M145CommunicationExportResultPayload,
     M145CommunicationRecordPayload,
@@ -32,7 +31,7 @@ def register_m145_communication_commands(
     *,
     require_active_profile: Callable[[], None],
     active_bucket_id: Callable[[], str],
-    parse_casilla_override: Callable[[str], tuple[CasillaId, str]],
+    parse_casilla_override: ParseCasillaOverride,
     resolve_default_actor: Callable[[], str],
 ) -> None:
     """Register Modelo 145 local communication commands."""
@@ -50,25 +49,6 @@ def register_m145_communication_commands(
     def _bucket_id() -> str:
         require_active_profile()
         return active_bucket_id()
-
-    def _actor(raw: str | None) -> str:
-        if raw is not None and raw.strip():
-            return raw.strip()
-        return resolve_default_actor()
-
-    def _field_values(casilla_specs: list[str] | None) -> dict[CasillaId, str]:
-        if not casilla_specs:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.m145.errors.casilla_required",
-                    default="Provide at least one --casilla ID=VALUE entry.",
-                ),
-            )
-        values: dict[CasillaId, str] = {}
-        for spec in casilla_specs:
-            casilla_id, value = parse_casilla_override(spec)
-            values[casilla_id] = value
-        return values
 
     def _record_result(operation: str, record) -> M145CommunicationRecordResult:
         return M145CommunicationRecordResult(
@@ -143,13 +123,18 @@ def register_m145_communication_commands(
     ) -> None:
         """Create a bucket-scoped Modelo 145 local communication record."""
         bucket_id = _bucket_id()
-        command = M145CommunicationCreateCommand(
-            communication_year=year,
-            period_token=period,
-            field_values=_field_values(casilla),
+        command = m145_create_command_from_cli(
+            year=year,
+            period=period,
+            casilla_specs=casilla,
             note=note,
+            parse_casilla_override=parse_casilla_override,
         )
-        record = create_m145_communication_record(command, bucket_id=bucket_id, actor=_actor(actor))
+        record = create_m145_communication_record(
+            command,
+            bucket_id=bucket_id,
+            actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
+        )
         operation = "modelo.m145.create"
         _emit_envelope(
             ctx,
@@ -212,7 +197,7 @@ def register_m145_communication_commands(
         result = export_m145_communication_record(
             communication_record_id,
             bucket_id=_bucket_id(),
-            actor=_actor(actor),
+            actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
         )
         payload = M145CommunicationExportResultPayload.from_result(result)
         lines = [
@@ -249,7 +234,7 @@ def register_m145_communication_commands(
         record = mark_m145_communication_record_delivered_to_payer(
             communication_record_id,
             bucket_id=_bucket_id(),
-            actor=_actor(actor),
+            actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
         )
         operation = "modelo.m145.mark_delivered_to_payer"
         _emit_envelope(
@@ -281,7 +266,7 @@ def register_m145_communication_commands(
         record = mark_m145_communication_record_locally_completed(
             communication_record_id,
             bucket_id=_bucket_id(),
-            actor=_actor(actor),
+            actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
         )
         operation = "modelo.m145.mark_locally_completed"
         _emit_envelope(
