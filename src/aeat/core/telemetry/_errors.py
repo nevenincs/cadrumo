@@ -4,6 +4,14 @@ Declared alongside the schema/consent/emit modules per the project's
 error-taxonomy convention: every :class:`~core.errors.AeatError`
 subclass binds to a registered
 :class:`~core.errors.ErrorCode` row (``core/errors/registry/_core.py``).
+
+See Also:
+    :class:`~core.telemetry.TelemetrySchemaError`
+        Public telemetry schema failure exported by the package facade.
+    :data:`~core.telemetry.TELEMETRY_METRIC_REGISTRY`
+        Closed metric allowlist whose integrity violations raise this error.
+    :func:`~core.telemetry.build_telemetry_payload`
+        Payload builder that enforces the registry before emission.
 """
 
 from __future__ import annotations
