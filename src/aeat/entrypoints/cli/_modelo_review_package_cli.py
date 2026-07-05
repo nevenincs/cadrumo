@@ -40,6 +40,20 @@ around the pure decrypt primitive to refuse a captured package presented twice.
 Both verbs operate entirely on in-memory bytes; the plaintext package bytes are
 never written to disk except as the final recovered archive the operator
 explicitly requests via ``--output``.
+
+See Also:
+    :func:`~application.modelo.build_review_package`
+        Application builder for checksum-verifiable review packages.
+    :func:`~application.modelo.sign_review_package`
+        Ed25519 authenticity primitive wired by ``sign``.
+    :func:`~application.modelo.encrypt_review_package_for_recipient`
+        X25519 confidentiality primitive wired by ``encrypt-for-recipient``.
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
+        Trusted-recipient public-key registry used before encryption.
+    :mod:`~entrypoints.cli._modelo_review_package_payloads`
+        Typed JSON payload schemas emitted by this CLI group.
+    :mod:`~entrypoints.cli._config._collab`
+        Configuration surface that registers recipient fingerprints.
 """
 
 from __future__ import annotations
