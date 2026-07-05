@@ -373,6 +373,25 @@ The size gate remains red only on the known peer-owned `_formula_runtime.py`
 and `_modelo_payloads.py` offenders inventoried in
 `var/log/codebase-size-after-m131-modulos-test-split-20260705.log`.
 
+### follow-up-modelo-iva-wallet-payload-size-budget | low | modelo payloads below module budget
+
+Reviewed the 2026-07-05 ratchet follow-up that moved the IVA wallet balance,
+seed, and override JSON-result schemas from `_modelo_payloads.py` into the new
+`_modelo_iva_wallet_payloads.py` module. `_modelo_payloads.py` still imports
+and re-exports `IvaWalletBalanceResult`, `IvaWalletSeedResult`, and
+`IvaWalletOverrideResult`, and the CLI's existing
+`from ._modelo_payloads import ...` call path remains unchanged. The missing
+`IvaWalletOverrideResult` `__all__` export was added while preserving direct
+module imports. `_modelo_payloads.py` dropped from 1353 to 1310 lines, below
+its pinned 1341-line budget; the new IVA wallet payload module is 63 lines.
+Ruff and syntax checks passed, the IVA wallet seed/correct/override CLI suite
+passed with the integration marker enabled (16 tests), JSON schema/module-size
+payload gates passed (2 tests), a re-export identity smoke check passed, and
+the codebase-size rerun no longer reports `_modelo_payloads.py`. The size gate
+remains red only on `_formula_runtime.py` and `calculate_registry_snapshot`,
+inventoried in
+`var/log/codebase-size-after-modelo-iva-wallet-payload-split-20260705.log`.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
