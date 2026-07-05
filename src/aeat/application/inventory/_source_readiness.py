@@ -14,13 +14,13 @@ The readiness is a pure, context-independent fact: inventory is unready regardle
 of the modelo or period being calculated.
 
 See Also:
-    :class:`application.inventory.InventoryService`
+    :class:`~application.inventory.InventoryService`
         Application service whose current persistence boundary keeps inventory
         out of the live calculation-source mesh.
-    :mod:`application.aggregation._source_inventory`
+    :mod:`~application.aggregation._source_inventory`
         Blocked resolver adapter that turns this readiness fact into a
         source-mesh diagnostic.
-    :class:`application.aggregation.CalculationSourceDiagnostic`
+    :class:`~application.aggregation.CalculationSourceDiagnostic`
         Shared diagnostic carrier emitted while the source remains blocked.
 """
 
