@@ -1,11 +1,11 @@
 """IRNR / Modelo 210 formula-op evaluators for the registry runtime.
 
-Extracted from :mod:`domain.calculations.registry._formula_runtime` to
+Extracted from :mod:`~domain.calculations.registry._formula_runtime` to
 keep that module under its size budget (`aeat-architecture-boundaries`,
 `registry-resolver-family-extraction`). Holds the two IRNR-specific formula
 ops -- ``irnr_resolve_tipo_gravamen`` and ``m210_resolve_base_imponible`` --
 and their private argument-resolution and rate-computation helpers. Dispatch
-still lives in :func:`domain.calculations.registry._formula_runtime._evaluate_expression`,
+still lives in :func:`~domain.calculations.registry._formula_runtime._evaluate_expression`,
 which imports this module at package level and calls
 :func:`evaluate_irnr_resolve_tipo_gravamen` /
 :func:`evaluate_m210_resolve_base_imponible` exactly as it calls the sibling
@@ -16,9 +16,9 @@ numeric-casilla-value accessor live in ``_formula_runtime_ops`` (not in
 runtime import cycle back into the dispatcher module.
 
 See Also:
-    :mod:`domain.calculations.registry._formula_runtime`
+    :mod:`~domain.calculations.registry._formula_runtime`
         Owns the dispatcher and :class:`_EvalContext`.
-    :mod:`domain.calculations.registry._formula_runtime_ops`
+    :mod:`~domain.calculations.registry._formula_runtime_ops`
         Owns the shared unresolved-formula error types,
         :class:`RegistryUnresolvedOutcomeReason`, and
         :func:`~domain.calculations.registry._formula_runtime_ops.numeric_casilla_value`.
