@@ -198,8 +198,8 @@ def _build_related_party_rows(
 # Foreign asset source bindings (modelo 720).
 #
 # Legal authority: RD 1065/2007 arts. 42 bis / 42 ter, Orden HAP/72/2013
-# Anexo (modelo 720 diseno de registro). Threshold: 50,000 EUR per asset
-# class (already encoded as a parameter on modelo 720).
+# Anexo (modelo 720 diseno de registro). Threshold: 50,000 EUR per regulatory
+# obligation block (already encoded as a parameter on modelo 720).
 # ---------------------------------------------------------------------------
 
 

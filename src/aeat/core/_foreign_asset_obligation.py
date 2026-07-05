@@ -13,7 +13,7 @@ declaration thresholds: the 50.000 EUR initial declaration floor and the
 
 It is a surfacing layer only. It does not aggregate observations, compute a
 casilla value, apply the declarability gate, or resolve a binding; the M720
-aggregation and its per-class threshold gate live in
+aggregation and its per-obligation-block threshold gate live in
 :mod:`application.aggregation._foreign_assets`. The obligation group is
 the legally load-bearing axis: the 50.000 EUR floor is a per-bloque umbral
 (art. 42 bis/ter/54 bis/quater), so the ``valor``/``seguro`` classes both

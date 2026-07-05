@@ -473,6 +473,80 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
     }
 
 
+def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenance() -> None:
+    observations = (
+        _asset_obs(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_id="tx-security-li",
+            asset_class=ForeignAssetClass.SECURITY,
+            asset_external_id="LI-SECURITY-001",
+            country="LI",
+            valuation="30000.00",
+            acquisition_date="2020-01-15",
+        ),
+        _asset_obs(
+            source_kind=BindingSourceKind.PAYABLE_INVOICE,
+            source_id="payable-insurance-ch",
+            asset_class=ForeignAssetClass.INSURANCE,
+            asset_external_id="CH-INSURANCE-001",
+            country="CH",
+            valuation="25000.00",
+            acquisition_date="2021-02-20",
+        ),
+    )
+    expected_aggregation = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
+    service_result = aggregate_per_modelo(
+        PerModeloAggregationCommand(
+            modelo="720",
+            period=_P_2025_ANNUAL,
+            foreign_asset_observations=observations,
+        ),
+    )
+    snapshot = resources().modelos.authority.snapshot("720", filing_year=2025, period="0A")
+    context = CalculationSourceContext(
+        bucket_id="operator",
+        modelo="720",
+        filing_year=2025,
+        period=_P_2025_ANNUAL,
+        revision=snapshot.revision,
+    )
+    row_observations = _registry_observations_from_foreign_assets_aggregation(
+        expected_aggregation,
+        observations,
+    )
+    expected_row_values = resolve_foreign_asset_binding_row_values(snapshot.revision, row_observations)
+
+    resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(context)
+
+    assert service_result.aggregation == expected_aggregation
+    assert declarable_asset_classes_720(expected_aggregation) == frozenset(
+        {
+            ForeignAssetClass.SECURITY,
+            ForeignAssetClass.INSURANCE,
+        },
+    )
+    assert expected_row_values == {
+        ("modelo-720-asset-row-class", 1): "S",
+        ("modelo-720-asset-row-country", 1): "CH",
+        ("modelo-720-asset-row-currency", 1): "EUR",
+        ("modelo-720-asset-row-identifier", 1): "CH-INSURANCE-001",
+        ("modelo-720-asset-row-valuation", 1): Decimal("25000.00"),
+        ("modelo-720-asset-row-acquisition-date", 1): "2021-02-20",
+        ("modelo-720-asset-row-class", 2): "V",
+        ("modelo-720-asset-row-country", 2): "LI",
+        ("modelo-720-asset-row-currency", 2): "EUR",
+        ("modelo-720-asset-row-identifier", 2): "LI-SECURITY-001",
+        ("modelo-720-asset-row-valuation", 2): Decimal("30000.00"),
+        ("modelo-720-asset-row-acquisition-date", 2): "2020-01-15",
+    }
+    assert resolution.binding_values == {}
+    assert resolution.source_transaction_ids == ("tx-security-li",)
+    assert {item.source_ref for item in resolution.provenance} == {
+        "ledger_transaction:tx-security-li",
+        "payable_invoice:payable-insurance-ch",
+    }
+
+
 def test_command_rejects_observations_from_non_selected_provider_family() -> None:
     with pytest.raises(ValidationError, match="foreign_assets"):
         PerModeloAggregationCommand(
