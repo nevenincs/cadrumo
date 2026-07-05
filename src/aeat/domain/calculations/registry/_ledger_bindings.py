@@ -88,7 +88,6 @@ def _casilla_id_set(surface: str, *values: object) -> frozenset[CasillaId]:
 # binding-definition time; the runtime resolver then consumes
 # :class:`OssIossLedgerObservation` instances (per-line ledger facts already
 # tagged with the substrate classification) and returns the aggregated value.
-# ---------------------------------------------------------------------------
 
 
 class OssIossLedgerObservation(BaseModel):
@@ -288,7 +287,6 @@ def unsupported_ledger_oss_observations(
     return tuple(unsupported)
 
 
-# ---------------------------------------------------------------------------
 # Ledger IVA aggregation source bindings (cross-modelo IVA roll-out).
 #
 # Generic counterpart to :func:`resolve_ledger_oss_aggregation_binding_values`
@@ -303,7 +301,6 @@ def unsupported_ledger_oss_observations(
 # generic source covers domestic IVA, intra-community supplies /
 # acquisitions, exports, imports, recargo de equivalencia, and
 # domestic-reverse-charge operations.
-# ---------------------------------------------------------------------------
 
 
 class IvaLedgerObservation(BaseModel):
@@ -566,7 +563,6 @@ def unsupported_ledger_iva_observations(
     return tuple(unsupported)
 
 
-# ---------------------------------------------------------------------------
 # Ledger Renta deductible-expense aggregation source bindings.
 #
 # These bindings consume first-slice Modelo 100 expense observations produced
@@ -578,7 +574,6 @@ def unsupported_ledger_iva_observations(
 # The registry accesses only four attributes on each observation. A Protocol
 # avoids a cross-domain import (domain.calculations -> domain.renta) that
 # would violate the hexagonal direction.
-# ---------------------------------------------------------------------------
 
 # Casilla IDs covered by the first Renta expense slice (Modelo 100, period 0A).
 # These must stay in sync with the binding selectors in the TOML and with
@@ -982,7 +977,6 @@ def unsupported_ledger_renta_income_observations(
     return tuple(unsupported)
 
 
-# ---------------------------------------------------------------------------
 # Ledger Modelo 151 impatriado (Ley Beckham, art. 93 LIRPF) Spanish-source
 # base aggregation source bindings.
 #
@@ -996,7 +990,6 @@ def unsupported_ledger_renta_income_observations(
 # registry family only needs the ES-scoped observation totals; the source-scope
 # gate is owned by the classifier, so the resolver here simply sums the matched
 # observations per the one-aggregation-path discipline.
-# ---------------------------------------------------------------------------
 
 
 class _ImpatriadoLedgerIncomeSelector(BaseModel):
@@ -1180,7 +1173,6 @@ def unsupported_ledger_impatriado_income_observations(
     return tuple(unsupported)
 
 
-# ---------------------------------------------------------------------------
 # Ledger Renta Modelo 130 deductible-expense (gasto) aggregation source bindings.
 #
 # The OUTGOING sibling of ``ledger_renta_income_aggregation``: M130 casilla 02
@@ -1192,7 +1184,6 @@ def unsupported_ledger_impatriado_income_observations(
 # ``ledger_renta_expense_aggregation`` source, whose annual / invoice-evidence /
 # category-profile machinery is constraint-shape-divergent from this simple
 # cumulative sum.
-# ---------------------------------------------------------------------------
 
 # Casilla IDs that the M130 gasto cumulative aggregation may feed. Validated at
 # registry load time so a binding targeting any other casilla surfaces before
