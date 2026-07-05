@@ -2,14 +2,14 @@
 
 :func:`revision_filing_replay_inputs` converts a filed or verified
 :class:`CalculationRevision` plus its
-:class:`~aeat.domain.modelos._work_unit.WorkUnit` into the flat Modelo-input map
+:class:`~domain.modelos._work_unit.WorkUnit` into the flat Modelo-input map
 the filing runtime accepts. Stored operator inputs, binding overrides, and
 relation overrides are replayed directly; calculated informational casillas are
-recovered from the :class:`~aeat.domain.calculations.registry.RegistrySnapshot`
+recovered from the :class:`~domain.calculations.registry.RegistrySnapshot`
 only when the snapshot is still loadable. When a workflow
 :class:`TaxpayerProfile` is available, profile applicability can also synthesize
 explicit zeroes for relation slots whose source modelo is
-:class:`~aeat.domain.calculations.registry.ApplicabilityVerdict`
+:class:`~domain.calculations.registry.ApplicabilityVerdict`
 ``NOT_APPLICABLE``.
 
 This is not a recalculation path. It rehydrates the persisted replay surface the
