@@ -1,7 +1,7 @@
 """CLI command for ``aeat app contract`` - the operator capability manifest.
 
 Emits the operator-surface capability manifest: the backend-owned
-:class:`~aeat.application.operator_surface.OperatorSurfaceContract` (the two-root
+:class:`~application.operator_surface.OperatorSurfaceContract` (the two-root
 command tree, each command family's intent and mutability, the modelo
 ``CALCULATE -> VERIFY -> FILE`` lifecycle, and the source-kind taxonomy) together
 with the CLI's registered ``--json`` result-schema references. This is the
@@ -13,7 +13,7 @@ The command is a child of ``app`` (the CLI root surface is pinned to ``config``
 and ``app``; this adds no third root). It never contacts AEAT and mutates no
 stored state. The ``command_schemas`` half of the manifest is the CLI's own
 JSON-contract registry, an entrypoint-layer concern enumerated here and injected
-into :func:`~aeat.application.operator_surface.build_operator_surface_manifest`,
+into :func:`~application.operator_surface.build_operator_surface_manifest`,
 so the application layer never depends on this package.
 """
 
@@ -72,7 +72,7 @@ def _ensure_result_schemas_registered(
     """Import every ``*_payloads`` module so ``SCHEMA_REGISTRY`` is complete.
 
     The CLI registers result schemas through module-level
-    :func:`~aeat.entrypoints.cli._schemas.register_schema` decorators that only
+    :func:`~entrypoints.cli._schemas.register_schema` decorators that only
     run when their payload module is imported. The manifest must reflect the
     whole registry, so this imports every payload module under the known payload
     packages before the projection is read. The ``payload`` substring match (not
@@ -167,9 +167,9 @@ def _contract_root(ctx: typer.Context) -> None:
     """Emit the operator-surface capability manifest.
 
     Builds the
-    :class:`~aeat.application.operator_surface.OperatorSurfaceManifest` from the
+    :class:`~application.operator_surface.OperatorSurfaceManifest` from the
     cached contract and the CLI's registered result schemas, then surfaces it
-    through :class:`~aeat.entrypoints.cli._schemas.SchemaEnvelope` under the
+    through :class:`~entrypoints.cli._schemas.SchemaEnvelope` under the
     ``contract`` key. Read-only: no AEAT contact, no state mutation.
     """
     if ctx.invoked_subcommand is not None:
