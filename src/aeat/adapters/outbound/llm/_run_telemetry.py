@@ -2,9 +2,9 @@
 
 Persists one :class:`LLMRunRecord` per completed (or failed) LLM
 classification/completion invocation to encrypted secure-object storage under
-:data:`adapters.persistence.storage.LLM_RUN_TELEMETRY_NAMESPACE`, mirroring
+:data:`~adapters.persistence.storage.LLM_RUN_TELEMETRY_NAMESPACE`, mirroring
 :class:`~adapters.outbound.llm.UsageRecorder`'s persistence shape. Every
-record is written at :class:`core.classification.SensitivityClass`
+record is written at :class:`~core.classification.SensitivityClass`
 ``DIAGNOSTIC`` and carries ONLY timing and outcome metadata (provider label,
 duration, success flag, optional error-kind string) -- never prompt text,
 response text, or any transaction/financial content, honouring
@@ -17,7 +17,7 @@ This is the durable capture half of the local-only run-diagnostics surface
 classification run is otherwise invisible until an operator notices a stuck
 CLI invocation.
 
-:meth:`LLMRunTelemetryRecorder.prune` bounds this store's growth with a
+:meth:`~LLMRunTelemetryRecorder.prune` bounds this store's growth with a
 retention window (:attr:`~core.config.Settings.aeat_llm_run_telemetry_retention_days`)
 and a maximum record count
 (:attr:`~core.config.Settings.aeat_llm_run_telemetry_max_records`),
@@ -92,7 +92,7 @@ class LLMRunTelemetryRecorder:
     shape: each :meth:`record` call appends one redacted-free
     :class:`LLMRunRecord` (there is no free text to redact -- the model
     carries only accounting metadata) through
-    :func:`adapters.persistence.storage.secure_object_repository_for_active_bucket`.
+    :func:`~adapters.persistence.storage.secure_object_repository_for_active_bucket`.
 
     Attributes:
         root_dir: Logical partition used for run-telemetry records.
@@ -121,7 +121,7 @@ class LLMRunTelemetryRecorder:
             Logical daily run-telemetry path for operator display only.
 
         Raises:
-            :exc:`adapters.outbound.llm.LLMCacheError`: When the storage
+            :exc:`~adapters.outbound.llm.LLMCacheError`: When the storage
             write fails.
         """
         from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
