@@ -56,33 +56,20 @@ _MODELOS = [
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain,windows", _MODELOS)
-def test_validator_accepts_committed_definition(
+def test_committed_definition_legal_authority_and_deadline_windows(
     mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int
 ) -> None:
+    """Each new-tax autoliquidacion validates and cites its plazo on every window."""
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert modelo.tax_domain is domain
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain,windows", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(
-    mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int
-) -> None:
-    _, catalogues = _committed_modelo(mid)
     for ref in (approval, plazo):
         entry = catalogues.legal[ref]
         assert entry.evidence_tier == "legal_authority"
         assert entry.document_id == doc
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain,windows", _MODELOS)
-def test_deadline_windows_cite_the_plazo(
-    mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int
-) -> None:
-    """Each window count matches the verbatim plazo cadence and every window cites
-    the plazo article — no window is authored without its grounding."""
-    modelo, _ = _committed_modelo(mid)
     dw = modelo.revisions[rev].deadline_windows
     assert len(dw) == windows
     assert all(plazo in w.legal_refs for w in dw)
