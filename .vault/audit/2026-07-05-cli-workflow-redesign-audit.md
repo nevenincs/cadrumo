@@ -31,7 +31,7 @@ related:
 
 ## Scope
 
-Reviewed the `P04.S16` Modelo 145 service-owner slice, the `P04.S17` create-record slice, the `P04.S18` validation slice, the `P04.S19` export slice, the `P04.S20` local transition slice, the `P04.S21` communication bucket-event slice, the `P04.S22` service error/log slice, the `P05.S23` thin CLI handler slice, the `P05.S24` parser-boundary slice, the `P05.S25` rendering-boundary slice, the `P05.S26` error-boundary slice, and the `P05.S27` help-vocabulary slice for the reopen plan. Scope covered the application/modelo ownership contract, the bucket-local communication record create/read/validate/export/transition/event/error/log surface, central secure-storage namespace registration, facade exports, the `m145` Typer subgroup registration, the five accepted communication command handlers, focused real-runtime tests, parser-only refusal coverage, centralized M145 output emitters, central JSON error-envelope routing for M145 service failures, visible M145 help vocabulary across every command, step exec records, checked plan rows, and regenerated feature index.
+Reviewed the `P04.S16` Modelo 145 service-owner slice, the `P04.S17` create-record slice, the `P04.S18` validation slice, the `P04.S19` export slice, the `P04.S20` local transition slice, the `P04.S21` communication bucket-event slice, the `P04.S22` service error/log slice, the `P05.S23` thin CLI handler slice, the `P05.S24` parser-boundary slice, the `P05.S25` rendering-boundary slice, the `P05.S26` error-boundary slice, the `P05.S27` help-vocabulary slice, and the `P06.S28` real backend service-flow test slice for the reopen plan. Scope covered the application/modelo ownership contract, the bucket-local communication record create/read/validate/export/transition/event/error/log surface, central secure-storage namespace registration, facade exports, the `m145` Typer subgroup registration, the five accepted communication command handlers, focused real-runtime tests, parser-only refusal coverage, centralized M145 output emitters, central JSON error-envelope routing for M145 service failures, visible M145 help vocabulary across every command, composed backend service-flow coverage, step exec records, checked plan rows, and regenerated feature index.
 
 ## Findings
 
@@ -59,6 +59,8 @@ No findings for `P05.S26`.
 
 No findings for `P05.S27`.
 
+No findings for `P06.S28`.
+
 ## Recommendations
 
-Proceed with `P06.S28` as the next open step. Phase `P05` is structurally complete; keep the Phase `P06` verification work limited to real service, CLI, and negative-surface tests without adding new M145 behavior.
+Proceed with `P06.S29` as the next open step. Keep the remaining Phase `P06` verification work limited to real CLI and negative-surface tests without adding new M145 behavior.
