@@ -19,6 +19,18 @@ classes here avoids growing that registry (and its locale surface) as part of
 this slice. A future pass may promote dedicated
 ``ClavePermanenteConfigurationError`` / ``ClavePermanenteLoginError`` classes
 alongside their registry rows and locale strings.
+
+See Also:
+    :class:`~adapters.outbound.aeat.auth.ClavePermanenteAuthProvider`
+        Live provider that uses these helpers to validate identity and report
+        login-flow failures.
+    :class:`~adapters.outbound.aeat.auth.ClavePermanenteFailureMode`
+        Closed failure taxonomy carried in auth error context.
+    :func:`~adapters.outbound.aeat.auth._clave_permanente_support.clave_permanente_auth_browser_action_policy`
+        Remote-state guard policy builder for the headless login form.
+    :class:`~domain.calculations.registry.RemoteStateGuardPolicy`
+        Registry-authoritative policy carrier returned by the browser-action
+        guard helper.
 """
 
 from __future__ import annotations
