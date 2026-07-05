@@ -23,7 +23,7 @@ from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests._application_adapter_exports import AttachmentStore, InvoiceCatalogueRepository, SecureObjectRepository
+from ....tests.application_adapter_exports import AttachmentStore, InvoiceCatalogueRepository, SecureObjectRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
 from .._evidence_draft import (

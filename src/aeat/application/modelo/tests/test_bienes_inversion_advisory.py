@@ -27,7 +27,7 @@ from ....domain.bienes_inversion import (
     BienInversionIvaRecord,
     BienInversionKind,
 )
-from ....tests._application_adapter_exports import BienesInversionIvaRegisterRepository
+from ....tests.application_adapter_exports import BienesInversionIvaRegisterRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 

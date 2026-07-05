@@ -18,10 +18,10 @@ from pathlib import Path
 import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
-from ....tests._review_package_adapters import (
+from ....tests.review_package_adapters import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
 )
-from ....tests._review_package_adapters import (
+from ....tests.review_package_adapters import (
     DecryptionError,
     SecureObjectRow,
     SensitivityClass,

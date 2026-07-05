@@ -137,7 +137,7 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests._application_adapter_exports import (
+from ....tests.application_adapter_exports import (
     CalculationRevisionCatalogueRepository,
     InvoiceCatalogueRepository,
     SecureObjectRepository,

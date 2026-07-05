@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
-from ....tests._application_adapter_exports import BucketEventHistoryRepository
+from ....tests.application_adapter_exports import BucketEventHistoryRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     M145CommunicationCreateCommand,

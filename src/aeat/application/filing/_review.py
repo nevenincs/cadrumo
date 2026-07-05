@@ -55,8 +55,7 @@ from ...domain.invoices import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import Transaction, TransactionCatalogue
 from ...domain.user_profile import ProfileNotFoundError
-from ..user_profile._profile_repository import ProfileRepository
-from ..user_profile._projections import record_to_path_values
+from ..user_profile import ProfileRepository, record_to_path_values
 
 
 class _StoredPriorObservation(Protocol):

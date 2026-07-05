@@ -84,7 +84,7 @@ from ....core import Period
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import BindingId, CasillaId, ValidatedRegistryAuthority, validated_casilla_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests._application_adapter_exports import (
+from ....tests.application_adapter_exports import (
     CalculationRevisionCatalogueRepository,
     InvoiceCatalogueRepository,
     SecureObjectRepository,

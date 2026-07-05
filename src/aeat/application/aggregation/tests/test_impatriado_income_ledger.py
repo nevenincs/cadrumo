@@ -47,7 +47,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ....tests._application_adapter_exports import TransactionCatalogueRepository
+from ....tests.application_adapter_exports import TransactionCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .._impatriado_income_ledger import (
     ImpatriadoIncomeLedgerAggregation,

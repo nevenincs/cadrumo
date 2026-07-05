@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry import undeclared_casilla_ids
-from ....tests._application_adapter_exports import M145_COMMUNICATION_RECORD_NAMESPACE
+from ....tests.application_adapter_exports import M145_COMMUNICATION_RECORD_NAMESPACE
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     M145CommunicationCreateCommand,

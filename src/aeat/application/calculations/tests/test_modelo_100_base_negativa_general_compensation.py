@@ -53,7 +53,7 @@ from ....domain.calculations.registry import (
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import CalculationRevision, ModeloVerificationFindingKind
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests._application_adapter_exports import (
+from ....tests.application_adapter_exports import (
     BucketEventHistoryRepository,
     CalculationRevisionCatalogueRepository,
     WorkUnitCatalogueRepository,

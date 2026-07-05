@@ -26,7 +26,7 @@ import pytest
 from ....core.resources import resources
 from ....domain.buckets import BucketArchiveRefusedError, BucketRestoreRefusedError
 from ....domain.user_profile import ProfileNotFoundError, ProfileSchemaDefinition, UserProfileFact
-from ....tests._application_adapter_exports import BucketEventHistoryRepository
+from ....tests.application_adapter_exports import BucketEventHistoryRepository
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...user_profile import RegisterProfileCommand
 from .. import ArchiveBucketCommand, BucketMaintenanceService, RestoreBucketCommand

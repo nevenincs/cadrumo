@@ -40,7 +40,7 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     derive_work_unit_id,
 )
-from ....tests._application_adapter_exports import BucketEventHistoryRepository
+from ....tests.application_adapter_exports import BucketEventHistoryRepository
 from ....tests.secure_sql import isolated_two_bucket_runtime
 from .._review_package import build_review_package
 from .._review_package_collab_audit import emit_collab_feedback_countersign_attached_event

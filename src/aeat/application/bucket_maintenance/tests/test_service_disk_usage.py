@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests._application_adapter_exports import bucket_paths, manifest_path, provision_bucket_directory
+from ....tests.application_adapter_exports import bucket_paths, manifest_path, provision_bucket_directory
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import BucketMaintenanceService, DiskUsageBucketCommand
 
