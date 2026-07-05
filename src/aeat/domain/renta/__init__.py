@@ -13,8 +13,8 @@ into :class:`RentaDeductibilityResult` values, then materialises binding-ready
 :func:`build_renta_deductible_expense_observation`. The context carries
 resolved usage-ratio, statutory-cap, and exclusive-use facts; profile
 proportionality rules and citations remain in
-:mod:`aeat.domain.categories`, while persisted operator overrides remain in
-:mod:`aeat.domain.usage_ratios`. The
+:mod:`domain.categories`, while persisted operator overrides remain in
+:mod:`domain.usage_ratios`. The
 :data:`RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` table is the single Renta-domain
 mapping from :class:`domain.categories.SpendingCategory` to registry
 casilla ids for the supported first slice; the registry validates those targets
@@ -27,19 +27,19 @@ mandatory-filing completeness gate. Exemption calculations route to
 :class:`domain.calculations.registry.CasillaObservation` records with
 legal and source provenance. This domain surface is pure substrate logic:
 repositories, active-profile reads, CLI transport, and live AEAT access belong
-outside :mod:`aeat.domain.renta`.
+outside :mod:`domain.renta`.
 
 See Also:
-    :mod:`aeat.domain.categories`
+    :mod:`domain.categories`
         Declares the spending-category taxonomy, proportionality rules, and
         legal citations that drive Renta deductibility decisions.
-    :mod:`aeat.domain.usage_ratios`
+    :mod:`domain.usage_ratios`
         Persists operator business-use ratios before application aggregation
         passes them into :class:`RentaDeductibilityContext`.
-    :mod:`aeat.application.aggregation`
+    :mod:`application.aggregation`
         Loads active ledger and invoice evidence, builds Renta observations,
         and returns registry-ready source resolutions.
-    :mod:`aeat.domain.calculations.registry`
+    :mod:`domain.calculations.registry`
         Owns binding declarations, casilla formulas, and the snapshot check
         contract that validates this domain's first-slice routing table.
 """
