@@ -123,6 +123,11 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 )
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...adapters.persistence.storage import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
+)
+from ...adapters.persistence.storage import DecryptionError, SensitivityClass
+from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
 from ...core.time import now as _utc_now
@@ -252,11 +257,6 @@ def ensure_recipient_encryption_keypair(
         generated_at: Optional override for the keypair's ``created_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    from ...adapters.persistence.storage import (
-        MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
-    )
-    from ...adapters.persistence.storage import SensitivityClass
-
     object_key = _recipient_encryption_key_object_key(bucket_id)
     existing = repository.load(
         _NAMESPACE.namespace,
@@ -304,11 +304,6 @@ def load_recipient_encryption_keypair(
             for ``bucket_id``. Call :func:`ensure_recipient_encryption_keypair`
             first.
     """
-    from ...adapters.persistence.storage import (
-        MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
-    )
-    from ...adapters.persistence.storage import SensitivityClass
-
     object_key = _recipient_encryption_key_object_key(bucket_id)
     record = repository.load(
         _NAMESPACE.namespace,
@@ -459,8 +454,6 @@ def encrypt_review_package_for_recipient(
             a well-formed X25519 public key, or if ``valid_for`` is not a
             strictly positive duration.
     """
-    from ...adapters.persistence.storage.crypto import derive_key, encrypt_record
-
     try:
         recipient_public_key = X25519PublicKey.from_public_bytes(bytes.fromhex(recipient_public_key_hex))
     except (ValueError, TypeError) as exc:
@@ -575,9 +568,6 @@ def decrypt_review_package_for_recipient(
             ciphertext fails AEAD authentication for any reason
             (tampering, corruption, wrong key).
     """
-    from ...adapters.persistence.storage import DecryptionError
-    from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, derive_key
-
     evaluated_at = now or _utc_now()
     if envelope.valid_until is not None and evaluated_at >= envelope.valid_until:
         raise RecipientPackageExpiredError(

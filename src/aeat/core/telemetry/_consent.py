@@ -21,6 +21,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ._tier import TelemetryTier
+
 if TYPE_CHECKING:
     from ..config import Settings
 
@@ -56,8 +58,6 @@ def telemetry_emit_permitted(settings: Settings, *, acknowledged: bool) -> bool:
     Returns:
         ``True`` only when all four conditions above hold.
     """
-    from ._tier import TelemetryTier
-
     if settings.aeat_telemetry_gestor_mode:
         return False
     if not settings.aeat_telemetry_opt_in:

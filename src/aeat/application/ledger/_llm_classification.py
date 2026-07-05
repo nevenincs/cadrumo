@@ -299,7 +299,6 @@ def _record_subprocess_run[T](run: Callable[[], T], *, provider: str) -> T:
     import time
 
     from ...adapters.outbound.llm import LLMCacheError, LLMRunRecord, LLMRunTelemetryRecorder
-    from ...core.time import now
 
     started_at = now()
     clock_start = time.monotonic()

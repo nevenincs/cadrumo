@@ -37,7 +37,9 @@ from __future__ import annotations
 
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
+from urllib.parse import urlsplit
 
+from .....domain.calculations.registry import RemoteStateGuardPolicy
 from ._clave_movil_support import classify_identity
 from ._errors import AuthConfigurationError, AuthError
 
@@ -54,10 +56,6 @@ def clave_permanente_auth_browser_action_policy(settings: Settings):
     patterns to the Permanente login form (username fill, password fill,
     submit) since there is no QR/push/representation-gate surface to allow.
     """
-    from urllib.parse import urlsplit
-
-    from .....domain.calculations.registry import RemoteStateGuardPolicy
-
     external = settings.external_constants()
     return RemoteStateGuardPolicy(
         id="aeat-clave-permanente-auth-browser-actions",

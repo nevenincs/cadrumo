@@ -20,6 +20,7 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
+from ...core.resources import resources
 from ...core.time import now
 from ...domain.buckets import (
     BucketEvent,
@@ -38,6 +39,7 @@ from ...domain.calculations.registry import (
     undeclared_casilla_ids,
 )
 from ...domain.modelos import ModeloError
+from ..live import SecureSnapshotRepository
 from ._m145_communication import (
     M145_COMMUNICATION_MODELO,
     M145_COMMUNICATION_SERVICE_OWNER,
@@ -306,8 +308,6 @@ def _m145_communication_record_ambiguous_prefix(
 
 
 def _m145_communication_record_repository(bucket_id: BucketId):
-    from ..live import SecureSnapshotRepository
-
     return SecureSnapshotRepository(
         bucket_id=bucket_id,
         payload_model=M145CommunicationRecord,
@@ -332,7 +332,6 @@ def _snapshot_for_scope(
     period_token: M145CommunicationPeriod,
 ) -> RegistrySnapshot:
     contract = build_m145_communication_service_contract(filing_year=communication_year)
-    from ...core.resources import resources
 
     snapshot = resources().modelos.authority.snapshot(
         M145_COMMUNICATION_MODELO,

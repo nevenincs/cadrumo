@@ -83,7 +83,7 @@ from ...domain.user_profile import (
     UserProfileValidationError,
     new_profile_id,
 )
-from . import RegisterProfileCommand, RemoveProfileCommand, RenameProfileCommand
+from . import ReactivateProfileCommand, RegisterProfileCommand, RemoveProfileCommand, RenameProfileCommand
 from ._aggregate import ProfileAggregate
 from ._integrity import verify_profile_integrity
 from ._repository import UserProfileLifecycleRepository, _refresh_output_language_hint
@@ -608,8 +608,6 @@ class ProfileRepository:
             ProfileNotFoundError: If the profile is not currently tombstoned,
                 or if the bucket directory or manifest is absent.
         """
-        from ._commands import ReactivateProfileCommand
-
         aggregate = self.load(profile_id)
         # Step 1: reactivate the encrypted record first (mirrors delete's
         # step ordering in reverse).

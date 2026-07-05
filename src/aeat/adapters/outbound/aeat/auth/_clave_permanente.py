@@ -55,6 +55,8 @@ from urllib.parse import quote, urlsplit
 
 from pydantic import ValidationError
 
+from .....core import require_active_bucket_id
+from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
 from .....core.logging import get_logger
@@ -467,9 +469,6 @@ class ClavePermanenteAuthProvider:
     # ── Encrypted session state ────────────────────────────────────────────
 
     def _storage_state_path(self) -> Path:
-        from .....core import require_active_bucket_id
-        from .....core.auth_session_keys import aeat_auth_session_storage_state_path
-
         profile = require_active_bucket_id()
         return aeat_auth_session_storage_state_path(profile, "clave-permanente-storage")
 

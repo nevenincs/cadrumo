@@ -74,6 +74,8 @@ from ....domain.transactions import (
     transaction_index_object_key,
     transaction_object_key,
 )
+from ..storage.sql import _orm
+from ..storage.sql.session import session_scope
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import (
@@ -448,9 +450,6 @@ class TransactionCatalogueRepository:
         so :meth:`load_for_date_range` can tell a genuinely stale/missing
         index apart from a real empty result).
         """
-        from ..storage.sql import _orm
-        from ..storage.sql.session import session_scope
-
         with session_scope(self._objects.engine) as session:
             any_row = session.execute(
                 select(_orm.TransactionDateIndexRow.id)
@@ -490,9 +489,6 @@ class TransactionCatalogueRepository:
         filing date, filing year) -- never an amount, counterparty,
         description, or any other financial content.
         """
-        from ..storage.sql import _orm
-        from ..storage.sql.session import session_scope
-
         incoming: dict[str, date] = {
             transaction_id: _filing_date(transaction) for transaction_id, transaction in catalogue.transactions.items()
         }

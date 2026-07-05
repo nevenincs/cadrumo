@@ -35,6 +35,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Protocol
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.i18n import tr
 from ...core.logging import get_logger
@@ -53,6 +54,9 @@ from ...domain.filing import (
 from ...domain.invoices import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import Transaction, TransactionCatalogue
+from ...domain.user_profile import ProfileNotFoundError
+from ..user_profile._profile_repository import ProfileRepository
+from ..user_profile._projections import record_to_path_values
 
 
 class _StoredPriorObservation(Protocol):
@@ -617,8 +621,6 @@ def _load_transaction_catalogue(bucket_id: str) -> TransactionCatalogue:
 
 def _load_invoice_catalogue(bucket_id: str) -> InvoiceCatalogue:
     """Load the bucket's invoice catalogue from the secure backend."""
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-
     return InvoiceCatalogueRepository(bucket_id=bucket_id).load()
 
 
@@ -693,9 +695,6 @@ def _load_profile_activity_fingerprint(bucket_id: str) -> str:
     ``bucket_id`` alone, without running the source mesh. An absent profile yields
     the stable empty-projection digest.
     """
-    from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import ProfileRepository, record_to_path_values
-
     try:
         aggregate = ProfileRepository().load(bucket_id)
     except ProfileNotFoundError:

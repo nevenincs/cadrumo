@@ -24,6 +24,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
 
+from ._consent import telemetry_emit_permitted
+
 if TYPE_CHECKING:
     from ..config import Settings
     from ._schema import TelemetryEventPayload
@@ -87,8 +89,6 @@ def emit_telemetry_event(
         ``True`` when the event was handed to the sink; ``False`` when the
         consent gate refused and emission was a no-op.
     """
-    from ._consent import telemetry_emit_permitted
-
     if not telemetry_emit_permitted(settings, acknowledged=acknowledged):
         return False
     resolved_sink = sink if sink is not None else LocalNoopTelemetrySink()
