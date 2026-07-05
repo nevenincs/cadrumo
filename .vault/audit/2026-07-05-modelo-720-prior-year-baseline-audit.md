@@ -16,6 +16,8 @@ Audited implementation files: `src/aeat/core/aggregation.py`, `src/aeat/core/_fo
 
 Audited W03.P05.S13 source-mesh row-carrier implementation against the row-carrier ADR and the S13 plan row. The review covered the new row-binding carrier, merge ownership rules, JSON serialization shape, source-mesh readiness behavior, and the focused source-mesh tests.
 
+Audited W03.P05.S14 foreign-assets resolver carrier implementation against the S14 plan row and row-carrier ADR. The review covered the resolver's handoff from registry row-value validation to `CalculationSourceResolution.row_binding_values`, the no-scalar-binding invariant, and the focused M720 resolver parity tests.
+
 ## Findings
 
 ### import-boundary | medium | cross-package private import regressed the production import-hygiene gate
@@ -36,3 +38,4 @@ The W03.P05.S13 review found the `CalculationSourceResolution` module summary st
 - Before promoting the full feature to done, resolve or explicitly approve the taxonomy ADR status according to the ADR workflow.
 - Continue to run the import-hygiene gate when changing cross-package imports; the production Family-1 gate is hard-zero.
 - No additional S13 code-review blockers remain; proceed to S14 only through the approved row-binding carrier.
+- No S14 code-review defects were found; proceed to S15 by consuming `row_binding_values` directly rather than recomputing foreign-asset row values downstream.
