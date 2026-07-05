@@ -24,12 +24,12 @@ capability, rename record, deprecation decision, or portal cross-reference
 reports an explicit empty/False value, never a fabricated positive.
 
 See Also:
-    :func:`domain.calculations.registry.build_support_matrix`
+    :func:`~domain.calculations.registry.build_support_matrix`
         Pure builder that folds validated registry authority into typed rows.
-    :class:`domain.calculations.registry.ModeloSupportMatrixReport`
+    :class:`~domain.calculations.registry.ModeloSupportMatrixReport`
         Query-service envelope returned by
-        :meth:`domain.calculations.registry.RegistryQueryService.support_matrix`.
-    :func:`application.modelo.registry_support_matrix`
+        :meth:`~domain.calculations.registry.RegistryQueryService.support_matrix`.
+    :func:`~application.modelo.registry_support_matrix`
         Application facade used by CLI discovery without re-reading registry
         authority directly.
 """
