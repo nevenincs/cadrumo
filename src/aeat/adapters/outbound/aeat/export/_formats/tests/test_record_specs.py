@@ -117,17 +117,12 @@ def test_modelo_303_2025_record_lengths_match_official_workbook() -> None:
 
 
 @pytest.mark.parametrize("case", _fixed_width_layout_cases(), ids=_layout_case_id)
-def test_registry_fixed_width_record_offsets_are_valid(case: _LayoutCase) -> None:
-    """Production record-offset guard accepts every registry fixed-width layout."""
-    _modelo, _revision, layout = case
+def test_registry_fixed_width_layout_offsets_and_casilla_ids_are_valid(case: _LayoutCase) -> None:
+    """Production offset guard accepts each layout and every casilla field is declared."""
+    modelo, revision, layout = case
 
     _verify_record_offsets(layout)
 
-
-@pytest.mark.parametrize("case", _fixed_width_layout_cases(), ids=_layout_case_id)
-def test_registry_fixed_width_casilla_fields_use_declared_canonical_ids(case: _LayoutCase) -> None:
-    """Every fixed-width casilla field references a declared canonical ``casilla.id``."""
-    modelo, revision, layout = case
     declared_ids: frozenset[CasillaId] = frozenset(casillas_by_id(revision))
 
     missing: list[str] = []
