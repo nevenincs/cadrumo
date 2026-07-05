@@ -553,15 +553,7 @@ def confirm_invoice_draft_from_evidence(
         field="invoice_number",
     )
     assert isinstance(resolved_invoice_number, str)
-    resolved_invoice_date = invoice_date
-    if resolved_invoice_date is None and draft.invoice_date is not None:
-        resolved_invoice_date = date.fromisoformat(draft.invoice_date)
-    if resolved_invoice_date is None:
-        raise PurchaseInvoiceEvidenceInputError(
-            "cannot confirm an invoice: invoice_date could not be extracted and no --invoice-date "
-            "override was supplied",
-            suggestion="aeat app ledger evidence extract --evidence-id <id>",
-        )
+    resolved_invoice_date = _resolve_confirmed_invoice_date(invoice_date, draft)
     resolved_taxable_base = _require_confirmed_field(
         taxable_base if taxable_base is not None else draft.taxable_base,
         field="taxable_base",
@@ -630,6 +622,18 @@ def confirm_invoice_draft_from_evidence(
         invoice_id=result.invoice.invoice_id,
     )
     return InvoiceConfirmationResult(invoice=result.invoice, draft=draft, created=True)
+
+
+def _resolve_confirmed_invoice_date(invoice_date: date | None, draft: InvoiceDraft) -> date:
+    if invoice_date is not None:
+        return invoice_date
+    if draft.invoice_date is not None:
+        return date.fromisoformat(draft.invoice_date)
+    raise PurchaseInvoiceEvidenceInputError(
+        "cannot confirm an invoice: invoice_date could not be extracted and no --invoice-date "
+        "override was supplied",
+        suggestion="aeat app ledger evidence extract --evidence-id <id>",
+    )
 
 
 def _resolve_evidence_attachment_id(
