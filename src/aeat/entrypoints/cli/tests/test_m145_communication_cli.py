@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from ....application.modelo import M145CommunicationRecordState, read_m145_communication_record
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from .envelope_helpers import unwrap_schema_envelope
@@ -81,7 +82,7 @@ _FORBIDDEN_HELP_PHRASES = (
 
 
 @pytest.fixture
-def isolated_m145_cli_backend(tmp_path: Path) -> Iterator[None]:
+def isolated_m145_cli_backend(tmp_path: Path) -> Iterator[str]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         env = {
             "AEAT_LOCAL_STORAGE_ROOT": str(runtime.storage_root),
@@ -94,7 +95,7 @@ def isolated_m145_cli_backend(tmp_path: Path) -> Iterator[None]:
         old_env = {key: os.environ.get(key) for key in env}
         try:
             os.environ.update(env)
-            yield
+            yield runtime.bucket_id
         finally:
             for key, value in old_env.items():
                 if value is None:
@@ -140,7 +141,7 @@ def test_m145_group_registers_closed_action_verbs() -> None:
 
 
 def test_m145_create_validate_export_and_transitions_delegate_to_real_service(
-    isolated_m145_cli_backend: None,
+    isolated_m145_cli_backend: str,
 ) -> None:
     communication_record_id = _create_record_id()
 
@@ -170,6 +171,10 @@ def test_m145_create_validate_export_and_transitions_delegate_to_real_service(
     assert completed.exit_code == 0, completed.output
     completed_payload = unwrap_schema_envelope(completed.output)
     assert completed_payload["record"]["state"] == "locally_completed"
+    persisted = read_m145_communication_record(communication_record_id[:12], bucket_id=isolated_m145_cli_backend)
+    assert persisted.state is M145CommunicationRecordState.LOCALLY_COMPLETED
+    assert persisted.delivered_to_payer_at is not None
+    assert persisted.locally_completed_at is not None
 
 
 def test_m145_create_requires_casilla_input(isolated_m145_cli_backend: None) -> None:
