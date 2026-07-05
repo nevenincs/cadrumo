@@ -2,44 +2,45 @@
 
 Before this module, the certificate auth provider's passphrase came from
 exactly one place: the env-only, never-persisted
-:attr:`core.config.Settings.aeat_certificate_password_secret`. That is a
-single global secret shared by whichever certificate happens to be active
-— it cannot express "the personal certificate uses passphrase A, the
-apoderado-acme certificate uses passphrase B" once
-:mod:`application.auth._certificate_sources` lets an operator register
+:attr:`~core.config.Settings.aeat_certificate_password_secret`. That is a single
+global secret shared by whichever certificate happens to be active — it cannot
+express "the personal certificate uses passphrase A, the apoderado-acme
+certificate uses passphrase B" once
+:mod:`~application.auth._certificate_sources` lets an operator register
 several named PKCS#12 sources with potentially different passphrases.
 
-:class:`CertificateSecretBackend` is the typed seam a per-source secret is
-read and written through. Two backends are provided:
+:class:`~application.auth.CertificateSecretBackend` is the typed seam a
+per-source secret is read and written through. Two backends are provided:
 
-- :class:`SecureStorageCertificateSecretBackend` (the default) persists
-  the secret through the profile's own encrypted
+- :class:`~application.auth.SecureStorageCertificateSecretBackend` (the default)
+  persists the secret through the profile's own encrypted
   :class:`~adapters.persistence.storage.SecretStore`, at
   :attr:`~adapters.persistence.storage.SensitivityClass.SECRET`
   sensitivity (ciphertext at rest, per
   ``sensitive-financial-data-secure-storage-only``). It requires no
   optional dependency and is scoped by the natural key to the active
   bucket, so two profiles never see each other's secrets.
-- :class:`KeyringCertificateSecretBackend` persists the secret in the OS
-  keychain via the same :class:`KeyringClient` seam
+- :class:`~application.auth.KeyringCertificateSecretBackend` persists the secret
+  in the OS keychain via the same
+  :class:`~adapters.persistence.storage.master_key.KeyringClient` seam
   :class:`~adapters.persistence.storage.master_key.KeyringMasterKeyProvider`
   already uses, so a keychain-preferring operator keeps the certificate
   passphrase off the encrypted-file substrate entirely. ``keyring`` is
   already a project dependency (see ``pyproject.toml``); this backend is
   therefore available today, not a scoped follow-up.
 
-Never store a resolved secret in :class:`application.auth.AuthState` or
+Never store a resolved secret in :class:`~application.auth.AuthState` or
 any other persisted workflow-state record — the secret lives ONLY inside
 the backend; workflow state at most records which named sources exist,
 never their passphrases (``sensitive-financial-data-secure-storage-only``).
 
 See Also:
-    :mod:`application.auth._certificate_sources`
+    :mod:`~application.auth._certificate_sources`
         Named certificate-source registry (path only, no secret) this
         module's backend complements.
-    :class:`adapters.persistence.storage.SecretStore`
+    :class:`~adapters.persistence.storage.SecretStore`
         Encrypted substrate the default backend persists through.
-    :class:`adapters.persistence.storage.master_key.KeyringClient`
+    :class:`~adapters.persistence.storage.master_key.KeyringClient`
         Injection seam for the OS-keychain operations the keyring backend
         depends on; mirrored here rather than imported directly so this
         module does not reach into the master-key package's internals.
@@ -94,7 +95,7 @@ class CertificateSecretBackend(Protocol):
 
     Every method is keyed by the certificate source's registered
     ``name`` (see
-    :class:`application.auth.CertificateSourceRecord.name`), scoping the
+    :attr:`~application.auth.CertificateSourceRecord.name`), scoping the
     secret to that one source. Implementations MUST scope storage to the
     active profile bucket so two profiles never share a namespace.
     """
@@ -127,7 +128,7 @@ def _secret_store_key(*, bucket_id: str, name: str) -> str:
 
 
 class SecureStorageCertificateSecretBackend:
-    """Default :class:`CertificateSecretBackend` backed by the encrypted :class:`SecretStore`.
+    """Default :class:`~application.auth.CertificateSecretBackend` backed by storage.
 
     Persists each certificate passphrase as a
     :class:`~adapters.persistence.storage.SecretRecord` at
@@ -199,12 +200,12 @@ class SecureStorageCertificateSecretBackend:
 
 
 class KeyringCertificateSecretBackend:
-    """:class:`CertificateSecretBackend` backed by the OS keychain via ``keyring``.
+    """:class:`~application.auth.CertificateSecretBackend` backed by ``keyring``.
 
     Mirrors :class:`~adapters.persistence.storage.master_key.KeyringMasterKeyProvider`:
     the active backend is probed before any read or write so the no-op
     ``fail.Keyring`` / ``null.Keyring`` placeholders raise
-    :class:`CertificateSecretBackendUnavailableError` rather than
+    :class:`~application.auth.CertificateSecretBackendUnavailableError` rather than
     silently dropping the secret. Every account is
     ``f"{bucket_id}:{name}"`` under one service string, so profiles and
     sources never collide in the OS keychain namespace.
@@ -300,12 +301,14 @@ def certificate_secret_backend(
     bucket_id: str,
     kind: CertificateSecretBackendKind = CertificateSecretBackendKind.SECURE_STORAGE,
 ) -> CertificateSecretBackend:
-    """Return the :class:`CertificateSecretBackend` for ``kind``, scoped to ``bucket_id``.
+    """Return the :class:`~application.auth.CertificateSecretBackend` for ``kind``.
 
     ``SECURE_STORAGE`` is the default and requires no optional
     dependency; ``KEYRING`` requires a usable OS keychain backend and
-    raises :class:`CertificateSecretBackendUnavailableError` (via the
-    backend's own probe) when none is available.
+    raises
+    :class:`~application.auth.CertificateSecretBackendUnavailableError` (via the
+    backend's own probe) when none is available. The returned backend is scoped
+    to ``bucket_id``.
     """
     if kind is CertificateSecretBackendKind.KEYRING:
         return KeyringCertificateSecretBackend(bucket_id=bucket_id)
