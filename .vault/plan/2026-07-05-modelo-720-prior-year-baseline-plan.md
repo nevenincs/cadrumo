@@ -64,7 +64,7 @@ Design and implement a row-indexed source-mesh carrier before foreign_asset is p
 
 Decide the row-indexed binding-value carrier for M720 detail rows, comparing a first-class row map with typed detail rows and rejecting scalar synthetic ids.
 
-- [ ] `W03.P04.S12` - Author the M720 row-carrier ADR deciding how row-indexed binding values flow through the source mesh and export draft surfaces; `.vault/adr/`.
+- [x] `W03.P04.S12` - Author the M720 row-carrier ADR deciding how row-indexed binding values flow through the source mesh and export draft surfaces; `.vault/adr/`.
 
 ### Phase `W03.P05` - Source-mesh envelope implementation
 
