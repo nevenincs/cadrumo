@@ -8,6 +8,7 @@ modified: '2026-07-05'
 related:
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-05-arch-remediation-program-audit]]'
+  - '[[2026-07-06-arch-remediation-program-audit]]'
 ---
 
 # `arch-remediation-program` feature index
@@ -23,3 +24,4 @@ Auto-generated index of all documents tagged with `#arch-remediation-program`.
 ### audit
 
 - `2026-07-05-arch-remediation-program-audit` - `arch-remediation-program` audit: `Wave 4 closure honesty review`
+- `2026-07-06-arch-remediation-program-audit` - `arch-remediation-program` audit: `ratchet refresh after import-tail reconciliation`
