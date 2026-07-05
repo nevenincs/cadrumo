@@ -45,14 +45,14 @@ def _modelos_by_id() -> Mapping[str, ModeloDefinition]:
 
 
 @pytest.mark.parametrize(("modelo_id", "revision_id", "source_kind", "expected_cohorts"), _DETAIL_RECORD_MODELOS)
-def test_detail_record_modelo_emits_row_sets(
+def test_detail_record_modelo_emits_row_sets_with_localized_headers(
     _modelos_by_id: Mapping[str, ModeloDefinition],
     modelo_id: str,
     revision_id: str,
     source_kind: str,
     expected_cohorts: int,
 ) -> None:
-    """Each detail-record modelo's row-producer bindings produce row-sets."""
+    """Each detail-record modelo's row-producer bindings produce localized row-sets."""
 
     revision = _modelos_by_id[modelo_id].revisions[revision_id]
     declared = [
@@ -78,26 +78,9 @@ def test_detail_record_modelo_emits_row_sets(
         f"modelo {modelo_id!r} row-set columns include unknown bindings: {sorted(spurious_columns)}"
     )
 
-
-@pytest.mark.parametrize(("modelo_id", "revision_id", "source_kind", "expected_cohorts"), _DETAIL_RECORD_MODELOS)
-def test_detail_record_modelo_row_set_headers_localized(
-    _modelos_by_id: Mapping[str, ModeloDefinition],
-    modelo_id: str,
-    revision_id: str,
-    source_kind: str,
-    expected_cohorts: int,
-) -> None:
-    """Header labels resolve to a non-empty translation, not the binding id fallback.
-
-    `_row_set_column_label` falls back to `binding.id` when the locale
-    catalogue lacks an entry for the row_field. A binding-id label
-    would surface as e.g. `modelo-190-perceptor-row-nif` to the
-    operator instead of `NIF del perceptor`. This test asserts every
-    column ended up with a real label.
-    """
-
-    revision = _modelos_by_id[modelo_id].revisions[revision_id]
-    row_sets = collect_row_sets(revision)
+    # `_row_set_column_label` falls back to `binding.id` when the locale
+    # catalogue lacks an entry for the row_field. A binding-id label would
+    # surface to the operator instead of the translated header.
     for row_set in row_sets:
         for column in row_set.columns:
             assert column.header_label != column.binding, (
