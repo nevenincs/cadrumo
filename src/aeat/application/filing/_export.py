@@ -4,7 +4,7 @@ The CLI exposes two primitives the application layer must back end-to-end:
 
 - modelo export writes an
   AEAT declaration file from a validated registry snapshot for an approved
-  :class:`aeat.domain.filing.ModeloDraft` and reports the byte-level
+  :class:`domain.filing.ModeloDraft` and reports the byte-level
   summary the operator needs to track the artefact (output path, draft
   identity, content hash, format).
 - modelo export verification re-reads a previously
@@ -15,30 +15,30 @@ The CLI exposes two primitives the application layer must back end-to-end:
 
 The records are structured return values for renderers, persistence, and
 JSON round trips. Runtime export requires registry-backed
-:class:`aeat.domain.calculations.registry.ExportLayoutDefinition` records,
+:class:`domain.calculations.registry.ExportLayoutDefinition` records,
 and verification parses payloads through
-:func:`aeat.domain.calculations.registry.parse_export_payload`.
+:func:`domain.calculations.registry.parse_export_payload`.
 
 The records intentionally do not embed the AEAT submission lifecycle
-(:mod:`aeat.domain.submission`) — local export and live submit are
+(:mod:`domain.submission`) — local export and live submit are
 separate concerns and live submit is permanently forbidden.
 
 This module is the draft-level renderer. The work-unit export service in
-:mod:`aeat.application.modelo._export` rebuilds an approved
-:class:`aeat.domain.filing.ModeloDraft` from a
-:class:`aeat.domain.modelos.CalculationRevision`, then delegates here to write
+:mod:`application.modelo._export` rebuilds an approved
+:class:`domain.filing.ModeloDraft` from a
+:class:`domain.modelos.CalculationRevision`, then delegates here to write
 and verify the fichero-BOE bytes.
 
 See Also:
-    :func:`aeat.application.modelo._export.export_modelo_revision`
+    :func:`application.modelo._export.export_modelo_revision`
         Higher-level work-unit export service that replays a calculation
         revision before calling this draft renderer.
-    :mod:`aeat.adapters.outbound.aeat.export`
+    :mod:`adapters.outbound.aeat.export`
         Outbound export-format adapter errors and fixed-width helper
         namespace.
-    :class:`aeat.core.access_gate.LiveSubmitForbiddenError`
+    :class:`core.access_gate.LiveSubmitForbiddenError`
         Core refusal raised for every attempted live AEAT write.
-    :mod:`aeat.domain.submission`
+    :mod:`domain.submission`
         Local-only submitted-state lifecycle, separate from file export.
 """
 
@@ -147,7 +147,7 @@ class DeclaracionExportResult(BaseModel):
     the export event without re-reading the file.
 
     Attributes:
-        draft_id: The :class:`aeat.domain.filing.ModeloDraft` identity
+        draft_id: The :class:`domain.filing.ModeloDraft` identity
             the export was generated from.
         modelo: AEAT modelo identifier.
         period: Typed filing period for the exported draft.
@@ -168,7 +168,7 @@ class DeclaracionExportResult(BaseModel):
         :class:`DeclaracionVerifyResult`
             Verification record that re-reads the exported bytes and
             anchors the comparison by ``file_sha256``.
-        :class:`aeat.domain.calculations.registry.ExportLayoutDefinition`
+        :class:`domain.calculations.registry.ExportLayoutDefinition`
             Registry layout used to render the fixed-width payload.
     """
 
@@ -203,11 +203,11 @@ class DeclaracionVerifyResult(BaseModel):
 
     The verify command re-reads the file the export command wrote and
     compares its casilla payload against the approved
-    :class:`aeat.domain.filing.ModeloDraft`. The verdict is the typed
+    :class:`domain.filing.ModeloDraft`. The verdict is the typed
     return value the CLI renders.
 
     Attributes:
-        draft_id: The :class:`aeat.domain.filing.ModeloDraft` identity
+        draft_id: The :class:`domain.filing.ModeloDraft` identity
             the file was compared against.
         file_path: Absolute path of the file that was verified.
         verdict: Closed :class:`DeclaracionVerifyVerdict`.
@@ -232,7 +232,7 @@ class DeclaracionVerifyResult(BaseModel):
             subset of ``mismatched_casilla_ids``.
 
     See Also:
-        :func:`aeat.domain.calculations.registry.parse_export_payload`
+        :func:`domain.calculations.registry.parse_export_payload`
             Registry parser used to compute parser-covered casillas.
         :class:`DeclaracionVerifyVerdict`
             Closed verdict enum rendered by the CLI.
@@ -291,10 +291,10 @@ def export_draft(
     """Write an approved draft to a local fichero-BOE file and return a receipt.
 
     The function selects the active registry
-    :class:`~aeat.domain.calculations.registry.ExportLayoutDefinition`,
+    :class:`~domain.calculations.registry.ExportLayoutDefinition`,
     renders its fixed-width records, writes only ``output_path``, and
     never contacts AEAT. Live submission is outside this surface and is
-    refused by :class:`aeat.core.access_gate.LiveSubmitForbiddenError`.
+    refused by :class:`core.access_gate.LiveSubmitForbiddenError`.
 
     Args:
         draft: The :class:`ModeloDraft` to export; must be in ``APROBADO`` status.
@@ -310,10 +310,10 @@ def export_draft(
         :func:`verify_export`
             Re-read a local export file and compare parser-covered casillas
             against the approved draft.
-        :func:`aeat.application.modelo._export.export_modelo_revision`
+        :func:`application.modelo._export.export_modelo_revision`
             Work-unit-facing export orchestration that supplies an approved
             draft reconstructed from a calculation revision.
-        :func:`aeat.domain.calculations.registry.parse_export_payload`
+        :func:`domain.calculations.registry.parse_export_payload`
             Registry parser used by the verification path.
     """
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
@@ -417,7 +417,7 @@ def verify_export(
     See Also:
         :func:`export_draft`
             Write the local fichero-BOE artefact being verified.
-        :func:`aeat.domain.calculations.registry.parse_export_payload`
+        :func:`domain.calculations.registry.parse_export_payload`
             Registry parser used to read the file.
     """
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
@@ -1202,7 +1202,7 @@ def assert_export_mirrors_manifest(
     - Casilla numbering/segmento: every manifest casilla the official record files
       a slot for must carry the same ``(number, segmento)`` the registry
       ``CasillaDefinition`` declares -- re-grounded against the projected
-      :class:`~aeat.application.filing.runtime.CasillaRecordMetadata`, not the
+      :class:`~application.filing.runtime.CasillaRecordMetadata`, not the
       manifest's own copy (:func:`_assert_casilla_metadata_fidelity`).
 
     Each dimension is a hard, enumerated :class:`FilingExportError`; a structural
@@ -1310,7 +1310,7 @@ def _assert_casilla_metadata_fidelity(
     The completeness manifest carries its own copy of each casilla's official
     ``(number, segmento)`` -- the metadata this parity gate reports and keys on.
     This assertion re-grounds that copy against the authoritative
-    :class:`~aeat.application.filing.runtime.CasillaRecordMetadata` projected from
+    :class:`~application.filing.runtime.CasillaRecordMetadata` projected from
     the registry ``CasillaDefinition`` (the same authority the calculation engine
     consumes), for every manifest casilla the official record files a slot for
     (``representable``). A divergent ``number`` or ``segmento`` -- or a manifest
