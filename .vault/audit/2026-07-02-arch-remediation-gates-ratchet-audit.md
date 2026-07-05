@@ -150,6 +150,18 @@ serving gates, persona wiring, and client handshake passed with
 `build_server`, but remains red on the other known module and callable
 offenders.
 
+### follow-up-ledger-bindings-module-size-budget | low | ledger bindings below module budget
+
+Reviewed the 2026-07-05 ratchet follow-up that removed standalone decorative
+separator comments from `_ledger_bindings.py` while preserving all section
+headings, explanatory domain comments, public exports, selectors, validators,
+and resolver logic. The module line count dropped from 1404 to 1395, below its
+1400-line budget. Ruff passed, and the focused registry suites covering public
+API boundaries, selector shapes, OSS/IOSS aggregation, IVA aggregation, and
+annual IVA aggregation passed. The codebase-size gate rerun no longer reports
+`_ledger_bindings.py`, but remains red on the other known module and callable
+offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
