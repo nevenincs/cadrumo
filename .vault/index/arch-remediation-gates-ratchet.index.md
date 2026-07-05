@@ -20,6 +20,7 @@ related:
   - '[[2026-07-02-arch-remediation-gates-ratchet-P03-S12]]'
   - '[[2026-07-02-arch-remediation-gates-ratchet-audit]]'
   - '[[2026-07-02-arch-remediation-gates-ratchet-plan]]'
+  - '[[2026-07-06-arch-remediation-gates-ratchet-research]]'
 ---
 
 # `arch-remediation-gates-ratchet` feature index
@@ -50,3 +51,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-gates-ratch
 ### plan
 
 - `2026-07-02-arch-remediation-gates-ratchet-plan` - `arch-remediation-gates-ratchet` plan
+
+### research
+
+- `2026-07-06-arch-remediation-gates-ratchet-research` - `arch-remediation-gates-ratchet` research: `same-feature authority warning closeout grounding`
