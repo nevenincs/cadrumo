@@ -7,6 +7,7 @@ modified: '2026-07-05'
 related:
   - "[[2026-05-19-iva-compensation-chain-plan]]"
   - "[[2026-05-19-live-iva-compensation-wallet-plan]]"
+  - '[[2026-07-05-live-iva-compensation-wallet-audit]]'
 ---
 
 <!-- FRONTMATTER RULES:
@@ -44,12 +45,14 @@ This audit covers the residual `iva-compensation-chain` plan state after the his
 
 `P03.S01` remains the next open row. It requires execution of the linked live IVA wallet plan before local recurrence is treated as final authority. That dependency is not satisfied at HEAD: `vaultspec-core vault plan status 2026-05-19-live-iva-compensation-wallet-plan --json` reports 101 of 102 steps with `W06.P15.S56` still open. Closing `P03.S01` now would falsely declare the live authority dependency complete.
 
+The live-wallet audit now supplies the formal deferral decision for `W06.P15.S56`: the standing live verification path is deferred as an operator-evidence and privacy guard, not treated as implementation-complete. Therefore `P03.S01` is also formally deferred to that same blocker. The follow-up is the next operator-observed read-only live verification run, or a successor campaign that explicitly owns retirement of the standing guard.
+
 ### dependency-and-exec-reconciliation | medium | legacy plan identifiers still fail structural lint
 
 `vaultspec-core vault plan check 2026-05-19-iva-compensation-chain-plan` still reports `PLAN021` duplicate canonical identifiers for `S01`, `S02`, and `S03`, plus `PLAN030` display-path divergence warnings. These are legacy structure defects from the directly authored L2 plan. They did not prevent `vault plan status` from resolving the per-step exec records, and this pass did not hand-edit plan structure.
 
 ## Recommendations
 
-- Keep `P03.S01` open until the live IVA wallet plan closes or a coordinator explicitly accepts a deferral that does not lift the Wave 1 freeze.
-- Follow up by completing live IVA wallet `W06.P15.S56` with operator/live verification evidence, then rerun the chain plan status and check `P03.S01` only through `vaultspec-core vault plan step check`.
+- Keep `P03.S01` open while live IVA wallet `W06.P15.S56` is formally deferred as a standing operator-evidence/privacy guard. This deferral does not permit local recurrence to become final authority.
+- Follow up by completing live IVA wallet `W06.P15.S56` with operator/live verification evidence, or by moving the standing guard to an explicit successor campaign. Only after that should `P03.S01` be checked through `vaultspec-core vault plan step check`.
 - Do not repair the chain plan's duplicate canonical ids by hand in this worktree. If structural lint must be cleaned, route it through a coordinator-owned vault hygiene pass because renaming checked rows changes historical traceability semantics.
