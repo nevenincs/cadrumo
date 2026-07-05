@@ -44,6 +44,17 @@ _M145_HELP_SURFACES = [
     ("mark-delivered-to-payer", ["app", "modelo", "m145", "mark-delivered-to-payer", "--help"]),
     ("mark-locally-completed", ["app", "modelo", "m145", "mark-locally-completed", "--help"]),
 ]
+_FORBIDDEN_COMMAND_SURFACES = (
+    "aeat-electronic-tramite",
+    "deadline",
+    "file",
+    "filing",
+    "live-read",
+    "portal",
+    "receipt",
+    "submit",
+    "tramite",
+)
 _FORBIDDEN_HELP_WORDS = frozenset(
     {
         "deadline",
@@ -211,6 +222,14 @@ def test_m145_transition_failure_uses_central_error_boundary(isolated_m145_cli_b
         "communication_record_id": communication_record_id,
         "state": "created",
     }
+
+
+@pytest.mark.parametrize("surface", _FORBIDDEN_COMMAND_SURFACES)
+def test_m145_cli_rejects_forbidden_filing_like_command_surfaces(surface: str) -> None:
+    result = _invoke(["app", "modelo", "m145", surface, "--help"])
+
+    assert result.exit_code != 0, result.output
+    assert "No such command" in result.output
 
 
 @pytest.mark.parametrize(("surface", "args"), _M145_HELP_SURFACES)

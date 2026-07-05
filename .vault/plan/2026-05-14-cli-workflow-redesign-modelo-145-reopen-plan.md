@@ -82,7 +82,7 @@ This Phase proves the successor behavior is real, local, and free of forbidden s
 
 - [x] `P06.S28` - Add real service tests for create, validate, export, delivered-to-payer, and locally completed behavior; `tests/application/modelo`.
 - [x] `P06.S29` - Add CLI behavior tests exercising Modelo 145 through real backend services; `tests/entrypoints/cli`.
-- [ ] `P06.S30` - Add negative tests proving Modelo 145 has no filing, deadline, live-read, portal, submit, receipt, or AEAT electronic tramite surface; `tests`.
+- [x] `P06.S30` - Add negative tests proving Modelo 145 has no filing, deadline, live-read, portal, submit, receipt, or AEAT electronic tramite surface; `tests`.
 - [ ] `P06.S31` - Add negative tests proving Modelo 145 has no shims, stubs, fake support, deprecated spellings, or compatibility aliases; `tests`.
 - [ ] `P06.S32` - Confirm Modelo 036 and Modelo 037 behavior and metadata remain unaffected by Modelo 145 successor work; `tests/domain/calculations/registry`.
 - [ ] `P06.S33` - Run the targeted registry, application, and CLI test slices without skips, xfails, mocks, stubs, or tautological assertions; `tests`.
