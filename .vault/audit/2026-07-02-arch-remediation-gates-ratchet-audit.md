@@ -239,6 +239,20 @@ peer-dirty `_modelo_payloads.py`; the codebase-size gate likewise no longer
 reports `_overview.py` and remains red on the other known module and callable
 offenders.
 
+### follow-up-core-config-module-size-budget | low | core config below module budget
+
+Reviewed the 2026-07-05 ratchet follow-up that moved Google, workbook-parity,
+and financial-ingest settings fields into the new `_config_integration_fields.py`
+mixin without changing field names, defaults, validators, environment variable
+names, or the central `Settings` facade. `Settings` still exposes the moved
+fields through inheritance and `Settings.env_var_names()`. The `config.py` line
+count dropped from 1329 to 1259, below its 1281-line budget. Ruff passed, a
+settings smoke check passed, and the focused settings/state-root suite passed
+after excluding the pre-existing `.env.example` telemetry-field alignment gap
+inventoried in `var/log/core-config-integration-fields-split-20260705.log`.
+The codebase-size gate rerun no longer reports `core/config.py`, but remains red
+on the other known module and callable offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
