@@ -5,30 +5,30 @@ executes the registry formula engine, and persists the calculated revision. This
 module then fans out advisory-only checks over the loaded
 :class:`ModeloRevision` and the computed :class:`CasillaId` value map, returning
 non-blocking
-:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` rows for the
+:class:`~application.aggregation.CalculationSourceDiagnostic` rows for the
 caller to append to source mesh diagnostics. It does not compute, override, or
 persist casilla values.
 
 The prior-payment collectors need persisted filing observations, so the
 coordinator shares one
-:class:`~aeat.application.calculations.CalculationObservationRepository` instance
+:class:`~application.calculations.CalculationObservationRepository` instance
 across them. The official-box and settlement collectors read only the revision
 structure and calculated casilla values. Together the collectors extend the
 source mesh's no-silent-under-declaration diagnostics with checks whose evidence
 only exists after the revision has been calculated.
 
 See Also:
-    :func:`~aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+    :func:`~application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
         Calls this coordinator after the calculation revision has been created.
-    :func:`~aeat.application.modelo._official_box_advisory.collect_official_box_unpopulated_diagnostics`:
+    :func:`~application.modelo._official_box_advisory.collect_official_box_unpopulated_diagnostics`:
         Mirrors registry-authored ADVISORY predicates as calculate diagnostics.
-    :mod:`~aeat.application.modelo._prior_payment_advisory`:
+    :mod:`~application.modelo._prior_payment_advisory`:
         Emits Modelo 130 prior-payment carry degradation advisories.
-    :func:`~aeat.application.modelo._settlement_grade_advisory.collect_settlement_not_computed_diagnostics`:
+    :func:`~application.modelo._settlement_grade_advisory.collect_settlement_not_computed_diagnostics`:
         Emits structural settlement-completeness advisories for partially modelled revisions.
-    :func:`~aeat.application.modelo._bienes_inversion_advisory.collect_bienes_inversion_regularizacion_diagnostics`:
+    :func:`~application.modelo._bienes_inversion_advisory.collect_bienes_inversion_regularizacion_diagnostics`:
         Emits the Modelo 303 capital-goods IVA regularización proposed-casilla-43 advisory.
-    :func:`~aeat.application.modelo._prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`:
+    :func:`~application.modelo._prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`:
         Emits the Modelo 303 annual prorrata-general regularización proposed-casilla-44 advisory.
 """
 
@@ -74,17 +74,17 @@ def collect_bucket_aggregation_advisory_diagnostics(
     informational and non-blocking; the
     calculation result already exists, and the caller merely appends these rows
     to the source mesh's existing
-    :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+    :class:`~application.aggregation.CalculationSourceDiagnostic`
     sequence.
 
     The Modelo 100 mínimo-por-descendientes casillas (0513/0514) are no longer
     advisory-only for the halving/blank-entry checks the prior interim Option B
     module raised: the ``modelo-100-minimo-descendientes-engine`` ADR's Option A
-    landed a computed engine (:func:`~aeat.application.modelo.inject_derived_minimo_descendientes_facts`)
+    landed a computed engine (:func:`~application.modelo.inject_derived_minimo_descendientes_facts`)
     that derives the Art. 58/61 LIRPF aggregate — including the custodia-compartida
     halving — directly from the active profile, so those two checks are structurally
     unreachable and were retired. A new, narrower advisory
-    (:func:`~aeat.application.modelo._minimo_descendientes_advisory.collect_minimo_descendientes_undeclared_diagnostics`)
+    (:func:`~application.modelo._minimo_descendientes_advisory.collect_minimo_descendientes_undeclared_diagnostics`)
     replaces them: because a genuinely childless profile and a profile that simply
     never declared its descendientes both resolve 0513 to the same zero, this
     collector flags the ambiguous case (0513 = 0 and no descendiente facts declared
@@ -105,14 +105,14 @@ def collect_bucket_aggregation_advisory_diagnostics(
 
     Returns:
         Tuple of
-        :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+        :class:`~application.aggregation.CalculationSourceDiagnostic`
         advisory rows, or an empty tuple when no post-calculation advisory fires.
 
     See Also:
-        :class:`~aeat.application.calculations.CalculationObservationRepository`:
+        :class:`~application.calculations.CalculationObservationRepository`:
             Supplies the prior-filing observation catalogue used by the Modelo
             130 prior-payment advisory collectors.
-        :func:`~aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+        :func:`~application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
             Appends this tuple to the source mesh diagnostics on the returned
             bucket aggregation result.
     """
