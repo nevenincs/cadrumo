@@ -31,7 +31,7 @@ related:
 
 ## Scope
 
-Reviewed the `P04.S16` Modelo 145 service-owner slice, the `P04.S17` create-record slice, the `P04.S18` validation slice, the `P04.S19` export slice, the `P04.S20` local transition slice, the `P04.S21` communication bucket-event slice, and the `P04.S22` service error/log slice for the reopen plan. Scope covered the application/modelo ownership contract, the bucket-local communication record create/read/validate/export/transition/event/error/log surface, central secure-storage namespace registration, facade exports, focused real-runtime tests, step exec records, checked plan rows, and regenerated feature index.
+Reviewed the `P04.S16` Modelo 145 service-owner slice, the `P04.S17` create-record slice, the `P04.S18` validation slice, the `P04.S19` export slice, the `P04.S20` local transition slice, the `P04.S21` communication bucket-event slice, the `P04.S22` service error/log slice, and the `P05.S23` thin CLI handler slice for the reopen plan. Scope covered the application/modelo ownership contract, the bucket-local communication record create/read/validate/export/transition/event/error/log surface, central secure-storage namespace registration, facade exports, the `m145` Typer subgroup registration, the five accepted communication command handlers, focused real-runtime tests, step exec records, checked plan rows, and regenerated feature index.
 
 ## Findings
 
@@ -49,6 +49,8 @@ No findings for `P04.S21`.
 
 No findings for `P04.S22`.
 
+No findings for `P05.S23`.
+
 ## Recommendations
 
-Proceed with `P05.S23` as the next open step. Keep CLI command handlers thin and delegated to the backend communication service, with no filing, deadline, live-read, portal, submit, receipt, or AEAT electronic-tramite terminology for Modelo 145.
+Proceed with `P05.S24` as the next open step. Keep the follow-up argument parsing work narrow: factor and harden the existing `m145` CLI parsing without moving validation, export, transition, or persistence behavior out of the backend communication service.
