@@ -60,6 +60,17 @@ The layered linter rerun no longer reports
 ledger count remains above baseline at 850, so this is another targeted
 boundary cleanup only.
 
+### follow-up-renta-classifier-size-budget | low | Renta expense classifier below callable budget
+
+Reviewed the 2026-07-05 ratchet follow-up that extracted the repeated
+`RentaLedgerAggregationIssue` envelope construction from
+`_classify_renta_transaction` into `_renta_transaction_issue`. The classifier's
+branch ordering, reason codes, and detail strings remain unchanged; the callable
+line count dropped from 190 to 164, below the default 180-line budget. Focused
+Renta aggregation tests and ruff passed. The codebase-size gate rerun no longer
+reports `_classify_renta_transaction`, but it remains red on the other known
+module and callable offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
