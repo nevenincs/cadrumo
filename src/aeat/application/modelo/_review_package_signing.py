@@ -354,7 +354,7 @@ def verify_review_package_signature(
         signed_package: The :class:`SignedReviewPackage` envelope produced by
             :func:`sign_review_package`.
         public_key_hex: The signer's raw public key, as 64 lowercase hex
-            characters (see :meth:`ReviewPackageSigningPublicKey.public_key_hex`).
+            characters (see :attr:`~ReviewPackageSigningPublicKey.public_key_hex`).
             Passed explicitly (never read off ``signed_package``) so a
             verifier must supply the key it actually trusts, rather than
             trusting whatever key the envelope claims.
