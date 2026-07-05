@@ -1,19 +1,19 @@
 """Remote-telemetry consent gate.
 
-Mirrors :func:`application.ledger.cloud_evidence_read_permitted`'s exact
+Mirrors :func:`~application.ledger.cloud_evidence_read_permitted`'s exact
 shape (gestor-mode absolute bar, then the deployment opt-in flag, then the
 tier, then the per-invocation acknowledgement, all ANDed) so the codebase's
 off-host consent gates stay uniform
 (``sensitive-financial-data-secure-storage-only``,
 ``2026-07-04-remote-telemetry-adr``). Settings is imported lazily inside the
 function body to avoid the circular import that would result from
-``core.config`` importing :mod:`core.telemetry` for
+``core.config`` importing :mod:`~core.telemetry` for
 :class:`~core.telemetry.TelemetryTier` at module scope.
 
 See Also:
-    :func:`core.telemetry.emit_telemetry_event`
+    :func:`~core.telemetry.emit_telemetry_event`
         Applies this gate before dispatching any remote-eligible payload.
-    :class:`core.telemetry.TelemetryTier`
+    :class:`~core.telemetry.TelemetryTier`
         Closed tier enum consulted by the gate.
 """
 
