@@ -46,7 +46,7 @@ complementaria/sustitutiva pair for every period, never asserting rectificativa
 support that no bundled source confirms.
 
 See Also:
-    :func:`application.modelo._amendment_kind_resolution.assert_amendment_kind_permitted`:
+    :func:`~application.modelo._amendment_kind_resolution.assert_amendment_kind_permitted`:
         Application-layer guard that binds this table to
         :class:`~domain.modelos.CalculationRevisionAmendmentKind` and
         refuses an operator-requested kind the period does not permit.
@@ -224,11 +224,11 @@ def classify_amendment_liability_direction(
     negative value means a credit or refund position, modelo-dependent) before
     and after the operator's overrides. An increase in the signed result (a
     higher amount to pay, or a lower credit/refund) is
-    :attr:`AmendmentLiabilityDirection.INCREASE` (LGT art. 122.2,
+    :attr:`~core.AmendmentLiabilityDirection.INCREASE` (LGT art. 122.2,
     complementaria territory); a decrease is
-    :attr:`AmendmentLiabilityDirection.DECREASE` (LGT art. 120.3, solicitud de
+    :attr:`~core.AmendmentLiabilityDirection.DECREASE` (LGT art. 120.3, solicitud de
     rectificación territory pre-unification). Equal values are
-    :attr:`AmendmentLiabilityDirection.UNCHANGED`.
+    :attr:`~core.AmendmentLiabilityDirection.UNCHANGED`.
 
     Accepts any ``Decimal``-comparable numeric type so callers do not need to
     import :mod:`decimal` solely to call this classifier.
