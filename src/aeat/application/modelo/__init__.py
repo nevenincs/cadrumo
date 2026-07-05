@@ -228,6 +228,8 @@ from ._m145_communication_records import (
     export_m145_communication_record,
     list_m145_communication_records,
     m145_communication_record_object_key,
+    mark_m145_communication_record_delivered_to_payer,
+    mark_m145_communication_record_locally_completed,
     read_m145_communication_record,
     validate_m145_communication_record,
 )
@@ -790,6 +792,8 @@ __all__ = [
     "m036_declaration_object_key",
     "m145_communication_record_object_key",
     "maritime_facts_from_active_profile",
+    "mark_m145_communication_record_delivered_to_payer",
+    "mark_m145_communication_record_locally_completed",
     "mark_revision_verificado_completo",
     "modelo_202_modality_for_work_unit",
     "modelo_applicability_refusal",

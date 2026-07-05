@@ -10,7 +10,7 @@ from enum import StrEnum
 from hashlib import sha256
 from typing import Annotated
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id_map
@@ -59,6 +59,8 @@ class M145CommunicationRecordState(StrEnum):
     """Creation-state vocabulary for local Modelo 145 communication records."""
 
     CREATED = "created"
+    DELIVERED_TO_PAYER = "delivered_to_payer"
+    LOCALLY_COMPLETED = "locally_completed"
 
 
 class M145CommunicationValidationIssueKind(StrEnum):
@@ -173,11 +175,39 @@ class M145CommunicationRecord(BaseModel):
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
     created_at: datetime
+    delivered_to_payer_at: datetime | None = None
+    locally_completed_at: datetime | None = None
     note: str | None = Field(default=None, max_length=512)
 
     @property
     def snapshot_id(self) -> str:
         return self.communication_record_id
+
+    @model_validator(mode="after")
+    def _validate_local_transition_state(self) -> M145CommunicationRecord:
+        delivered_at = self.delivered_to_payer_at
+        completed_at = self.locally_completed_at
+        if delivered_at is not None and delivered_at < self.created_at:
+            raise ValueError("delivered_to_payer_at must not precede created_at")
+        if completed_at is not None and completed_at < self.created_at:
+            raise ValueError("locally_completed_at must not precede created_at")
+        if delivered_at is not None and completed_at is not None and completed_at < delivered_at:
+            raise ValueError("locally_completed_at must not precede delivered_to_payer_at")
+        match self.state:
+            case M145CommunicationRecordState.CREATED:
+                if delivered_at is not None or completed_at is not None:
+                    raise ValueError("created Modelo 145 communication records cannot carry transition timestamps")
+            case M145CommunicationRecordState.DELIVERED_TO_PAYER:
+                if delivered_at is None:
+                    raise ValueError("delivered Modelo 145 communication records require delivered_to_payer_at")
+                if completed_at is not None:
+                    raise ValueError("delivered Modelo 145 communication records cannot carry locally_completed_at")
+            case M145CommunicationRecordState.LOCALLY_COMPLETED:
+                if delivered_at is None or completed_at is None:
+                    raise ValueError(
+                        "locally completed Modelo 145 communication records require delivery and completion timestamps",
+                    )
+        return self
 
 
 def _period_value(period_token: M145CommunicationPeriod | str) -> str:
@@ -633,6 +663,66 @@ def export_m145_communication_record(
     )
 
 
+def _m145_communication_record_with_updates(
+    record: M145CommunicationRecord,
+    **updates: object,
+) -> M145CommunicationRecord:
+    payload = record.model_dump()
+    payload.update(updates)
+    return M145CommunicationRecord.model_validate(payload)
+
+
+def mark_m145_communication_record_delivered_to_payer(
+    communication_record_id: str,
+    *,
+    bucket_id: BucketId,
+) -> M145CommunicationRecord:
+    """Mark one valid local communication record as delivered to the payer."""
+    repository = _m145_communication_record_repository(bucket_id)
+    record = repository.resolve(communication_record_id)
+    if record.state in {
+        M145CommunicationRecordState.DELIVERED_TO_PAYER,
+        M145CommunicationRecordState.LOCALLY_COMPLETED,
+    }:
+        return record
+    validation = validate_m145_communication_record(record.communication_record_id, bucket_id=bucket_id)
+    if not validation.valid:
+        raise ValueError(
+            "Modelo 145 communication record cannot be marked delivered to payer until validation passes; "
+            f"issues: {_validation_issue_summary(validation)}",
+        )
+    transitioned = _m145_communication_record_with_updates(
+        record,
+        state=M145CommunicationRecordState.DELIVERED_TO_PAYER,
+        delivered_to_payer_at=now(),
+    )
+    repository.save(transitioned)
+    return transitioned
+
+
+def mark_m145_communication_record_locally_completed(
+    communication_record_id: str,
+    *,
+    bucket_id: BucketId,
+) -> M145CommunicationRecord:
+    """Mark one payer-delivered local communication record as locally completed."""
+    repository = _m145_communication_record_repository(bucket_id)
+    record = repository.resolve(communication_record_id)
+    if record.state is M145CommunicationRecordState.LOCALLY_COMPLETED:
+        return record
+    if record.state is not M145CommunicationRecordState.DELIVERED_TO_PAYER:
+        raise ValueError(
+            "Modelo 145 communication record must be delivered to payer before local completion",
+        )
+    transitioned = _m145_communication_record_with_updates(
+        record,
+        state=M145CommunicationRecordState.LOCALLY_COMPLETED,
+        locally_completed_at=now(),
+    )
+    repository.save(transitioned)
+    return transitioned
+
+
 def create_m145_communication_record(
     command: M145CommunicationCreateCommand,
     *,
@@ -695,6 +785,8 @@ __all__ = [
     "export_m145_communication_record",
     "list_m145_communication_records",
     "m145_communication_record_object_key",
+    "mark_m145_communication_record_delivered_to_payer",
+    "mark_m145_communication_record_locally_completed",
     "read_m145_communication_record",
     "validate_m145_communication_record",
 ]
