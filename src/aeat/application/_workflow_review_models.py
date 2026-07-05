@@ -25,6 +25,16 @@ import through the public facades, which keep re-exporting the same names.
 This module is private application-layer plumbing consumed only by
 :mod:`~application.workflow` and :mod:`~application.review`; it is not
 part of the :mod:`~application` public surface and carries no `__all__`.
+
+See Also:
+    :class:`~application.workflow.WorkflowState`
+        Workflow aggregate that embeds review records from this leaf module.
+    :class:`~application.review.InvoiceReviewRecord`
+        Public review facade export for invoice annotations.
+    :class:`~application.review.LedgerReviewRecord`
+        Public review facade export for ledger transaction annotations.
+    :class:`~core.identity.BucketId`
+        Bucket identifier type carried by workflow events.
 """
 
 from __future__ import annotations
