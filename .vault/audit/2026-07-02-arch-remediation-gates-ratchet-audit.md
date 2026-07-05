@@ -269,6 +269,22 @@ gate rerun no longer reports `_llm_classification.py`, but remains red on the
 other known module and callable offenders inventoried in
 `var/log/codebase-size-after-ledger-llm-split-20260705.log`.
 
+### follow-up-filing-export-xml-dictionary-size-budget | low | filing export below module budget
+
+Reviewed the 2026-07-05 ratchet follow-up that moved the XML-dictionary
+declaration renderer from `application.filing._export` into the sibling
+`_export_xml_dictionary.py` module. The draft export dispatcher still routes
+`xml_dictionary` layouts through the same registry-derived dictionary entries,
+official XSD `versionxsd` discovery, Modelo 100 `ECIVIL` code validation, and
+ElementTree serialization; the fixed-width renderer and verify path remain in
+`_export.py`. The module line count dropped from 1369 to 1221, below the
+default 1250-line budget; the new XML renderer module is 174 lines. Ruff
+passed, the real filing export/layout refusal suite passed, and the modelo
+export application suite passed. The codebase-size gate rerun no longer reports
+`application/filing/_export.py`, but remains red on the other known module and
+callable offenders inventoried in
+`var/log/codebase-size-after-filing-export-xml-split-20260705.log`.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
