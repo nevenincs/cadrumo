@@ -6,11 +6,11 @@ import logging
 
 import pytest
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ._action_test_support import (
     _BUCKET_ID,
     LedgerSourceImportCommand,
     Path,
+    SecureObjectRepository,
     TransactionDirection,
     TransactionValidationError,
     _repositories,
