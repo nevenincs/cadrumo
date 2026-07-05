@@ -10,7 +10,7 @@ bucket. Each stored record is wrapped in an
 
 This concrete repository is the persistence adapter behind the read-side
 :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`. It lives in
-the persistence adapter (not in :mod:`domain.buckets`) because its
+the persistence adapter (not in :mod:`~domain.buckets`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`~domain.buckets.BucketEventHistoryCatalogue` model, its
 narrow port, and the
@@ -41,7 +41,7 @@ _CATALOGUE_VERSION = 1
 class BucketEventHistoryRepository:
     """Repository over encrypted SQL-backed event-history catalogue storage.
 
-    :data:`adapters.persistence.storage.BUCKET_EVENT_HISTORY_NAMESPACE`
+    :data:`~adapters.persistence.storage.BUCKET_EVENT_HISTORY_NAMESPACE`
     is the central profile-local namespace, schema-version, sensitivity, and
     singleton-key contract for the encrypted
     :class:`~domain.buckets.BucketEventHistoryCatalogue`. The catalogue

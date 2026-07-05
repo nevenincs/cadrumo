@@ -1,7 +1,7 @@
 """Runtime-backed repository helpers shared by the filing persistence adapters.
 
 Shared private helpers for the sibling filing repositories
-(:mod:`adapters.persistence.profile.filing_drafts` and
+(:mod:`~adapters.persistence.profile.filing_drafts` and
 ``filing_amendments``): a bucket-id resolver and a runtime factory that
 returns a
 :class:`~adapters.persistence.storage.SecureObjectRepository` bound to

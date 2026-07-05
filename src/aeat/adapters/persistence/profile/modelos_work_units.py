@@ -11,7 +11,7 @@ plaintext work-unit metadata lands on disk.
 
 This concrete repository is the persistence adapter behind the read-side
 :class:`~domain.modelos.WorkUnitCatalogueRepositoryProtocol`. It lives in
-the persistence adapter (not in :mod:`domain.modelos`) because its
+the persistence adapter (not in :mod:`~domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`WorkUnitCatalogue` model and its pure catalogue mutators.
 """
