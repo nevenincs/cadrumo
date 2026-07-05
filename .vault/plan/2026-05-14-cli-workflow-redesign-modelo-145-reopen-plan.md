@@ -64,7 +64,7 @@ This Phase implements real backend-owned local communication behavior before any
 - [x] `P04.S19` - Add export behavior backed by the Modelo 145 registry layout; `src/aeat/application/modelo`.
 - [x] `P04.S20` - Add local delivered-to-payer and completed communication state transitions; `src/aeat/application/modelo`.
 - [x] `P04.S21` - Emit communication-specific bucket events without filing or filed-state terminology; `src/aeat/application/modelo`.
-- [ ] `P04.S22` - Add service-level errors and logs using communication vocabulary only; `src/aeat/application/modelo`.
+- [x] `P04.S22` - Add service-level errors and logs using communication vocabulary only; `src/aeat/application/modelo`.
 
 ### Phase `P05` - thin CLI
 
