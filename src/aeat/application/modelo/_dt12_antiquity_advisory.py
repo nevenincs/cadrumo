@@ -21,13 +21,13 @@ antiquity the operator has already confirmed, must remain permissible
 (``no-silent-under-declaration``).
 
 See Also:
-    :func:`application.modelo._dt12_advisory._dt12_reduccion_advisory_finding`
+    :func:`~application.modelo._dt12_advisory._dt12_reduccion_advisory_finding`
         Sibling advisory for the OPPOSITE case: large trabajo income with a zero
         reducción, warning the reducción may be unapplied.
-    :func:`domain.modelos.dt12_regime_window_eligibility`
+    :func:`~domain.modelos.dt12_regime_window_eligibility`
         The apartado-4 time-window predicate this advisory does not duplicate; it
         covers the DISTINCT pre-2007 antiquity-since-first-aportación condition.
-    :func:`application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`
+    :func:`~application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`
         Structural revision semantic-role lookup used to find the reducción
         casilla without hard-coding numbers.
 """
@@ -60,7 +60,7 @@ def _dt12_antiquity_advisory_finding(
     """Warn to confirm the DT 12ª antiquity condition when a reducción is applied.
 
     The ``revision`` is a structural registry revision compatible with
-    :func:`application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`.
+    :func:`~application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`.
     When the trabajo reducción casilla (role ``irpf_rendimiento_trabajo_reduccion``)
     is strictly positive, this returns a warning-severity
     :class:`ModeloVerificationFinding` grounded in ``ley-35-2006:dt-12`` prompting
