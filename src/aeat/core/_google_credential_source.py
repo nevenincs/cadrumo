@@ -1,7 +1,7 @@
-"""Closed taxonomy for how :mod:`adapters.outbound.google` obtains credentials.
+"""Closed taxonomy for how :mod:`~adapters.outbound.google` obtains credentials.
 
 :class:`~core.GoogleCredentialSourceKind` is the accepted-value set governing
-which mechanism :mod:`adapters.outbound.google` uses to produce a
+which mechanism :mod:`~adapters.outbound.google` uses to produce a
 ``google.oauth2.credentials.Credentials``-shaped object for the Sheets/Drive
 export mirror. Declared in ``core`` per ``aeat-architecture-boundaries``
 (closed value sets are ``StrEnum`` in the innermost ring) and

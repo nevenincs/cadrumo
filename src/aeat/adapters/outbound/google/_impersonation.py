@@ -3,7 +3,7 @@
 A gestor operating for several represented entities may want one shared
 Google identity backing the Sheets/Drive export mirror instead of every team
 member running the interactive per-profile OAuth Desktop consent flow
-(:mod:`adapters.outbound.google._oauth_flow`). Google's supported mechanism for
+(:func:`~adapters.outbound.google.run_login_flow`). Google's supported mechanism for
 this is service-account (SA) impersonation: a locally-discoverable identity —
 Application Default Credentials (ADC) — is granted IAM
 ``roles/iam.serviceAccountTokenCreator`` on a target SA, and every API call mints
