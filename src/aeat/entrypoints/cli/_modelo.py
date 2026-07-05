@@ -106,6 +106,7 @@ from ._modelo_discovery_cli import register_discovery_commands
 from ._modelo_export_cli import register_export_commands
 from ._modelo_iva_wallet_cli import register_iva_wallet_commands
 from ._modelo_m036_cli import register_m036_commands
+from ._modelo_m145_cli import register_m145_communication_commands
 from ._modelo_maritime_cli import register_maritime_commands
 from ._modelo_projection_cli import register_projection_commands
 from ._modelo_readiness_cli import register_readiness_commands
@@ -1284,6 +1285,15 @@ register_m036_commands(
     app,
     require_active_profile=_require_active_profile,
     active_bucket_id=_active_bucket_id,
+)
+
+
+register_m145_communication_commands(
+    app,
+    require_active_profile=_require_active_profile,
+    active_bucket_id=_active_bucket_id,
+    parse_casilla_override=_parse_casilla_override,
+    resolve_default_actor=_resolve_default_actor,
 )
 
 
