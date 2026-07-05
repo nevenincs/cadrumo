@@ -222,6 +222,23 @@ passed. The CLI module-size gate rerun no longer reports
 `_overview.py`; the codebase-size gate likewise still has unrelated module and
 callable offenders.
 
+### follow-up-overview-cli-module-size-budget | low | overview CLI below module budget
+
+Reviewed the 2026-07-05 ratchet follow-up that moved overview calendar, agenda,
+backlog, explain, prepare, and pipeline envelope projection into the existing
+`_overview_rendering.py` helper without changing command registration, option
+names, repository reads, application builder calls, or refusal branches. The CLI
+module line count dropped from 1494 to 1181, below the default 1250-line budget.
+Ruff passed, schema conformance and app-contract checks passed, the non-calendar
+overview suite passed, and focused calendar formatter tests passed. A broader
+overview sweep remains red on current profile-storage/session failures and
+pre-existing strict-calendar expectation drift; those failures were inventoried
+in `var/log/overview-cli-rendering-split-explicit-20260705.log`. The CLI
+module-size gate rerun no longer reports `_overview.py`, but remains red on the
+peer-dirty `_modelo_payloads.py`; the codebase-size gate likewise no longer
+reports `_overview.py` and remains red on the other known module and callable
+offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
