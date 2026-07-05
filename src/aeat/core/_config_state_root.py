@@ -38,7 +38,7 @@ from ._models import STRICT_FROZEN_CONFIG
 
 # Project-root candidate: four levels up from this module
 # (file → core/ → aeat/ → src/ → REPO_ROOT), mirroring
-# :data:`core.config.PROJECT_ROOT` exactly so the checkout default is
+# :data:`~core.config.PROJECT_ROOT` exactly so the checkout default is
 # byte-identical to the historical value.
 _MODULE_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -103,7 +103,7 @@ class StateRootResolution(BaseModel):
 def live_state_root_inputs() -> StateRootInputs:
     """Capture the running process's state-root inputs.
 
-    Snapshots the module-derived project-root candidate, :data:`sys.platform`,
+    Snapshots the module-derived project-root candidate, :data:`~sys.platform`,
     a copy of ``os.environ``, and the user's home directory into a frozen
     :class:`StateRootInputs` for :func:`resolve_state_root`.
     """
