@@ -7,6 +7,18 @@ module covers. Field sets mirror :class:`~application.modelo.RecipientFingerprin
 projected to plain JSON; the private key never appears anywhere in this module (the
 registry stores only recipients' PUBLIC keys -- see
 :mod:`~entrypoints.cli._config._collab`).
+
+See Also:
+    :class:`~application.modelo.RecipientFingerprintRecord`
+        Application record shape these output rows project.
+    :class:`~entrypoints.cli._schemas.OutputSchema`
+        Base class for typed CLI JSON result payloads.
+    :func:`~entrypoints.cli._schemas.register_schema`
+        Registry hook that publishes each command envelope schema.
+    :mod:`~entrypoints.cli._config._collab`
+        Command handlers that emit these payloads.
+    :func:`~entrypoints.cli._common._emit_envelope`
+        CLI envelope renderer used after the payloads are populated.
 """
 
 from __future__ import annotations
