@@ -34,11 +34,11 @@ Design summary:
   change is a one-file update.
 
 See Also:
-    :class:`adapters.outbound.aeat.auth._clave_permanente_metadata.ClavePermanenteSessionMetadata`
+    :class:`~adapters.outbound.aeat.auth._clave_permanente_metadata.ClavePermanenteSessionMetadata`
         Provider-owned encrypted persistence contract.
-    :class:`adapters.outbound.aeat.auth.ClavePermanenteSessionDetail`
+    :class:`~adapters.outbound.aeat.auth.ClavePermanenteSessionDetail`
         Public session detail projected from persisted metadata.
-    :func:`adapters.outbound.aeat.auth._clave_permanente_support.clave_permanente_login_error`
+    :func:`~adapters.outbound.aeat.auth._clave_permanente_support.clave_permanente_login_error`
         Builder for operator-reportable live-flow failures.
 """
 
