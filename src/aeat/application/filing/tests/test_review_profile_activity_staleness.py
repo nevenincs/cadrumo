@@ -27,9 +27,15 @@ import pytest
 from ....core import Period, read_pointer
 from ....core.config import load_settings
 from ....domain.submission import ModeloDraftStatus
-from ....entrypoints.cli.tests import create_quiet_profile, edit_quiet_profile
+from ....domain.user_profile import UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import profile_storage_session
+from ...user_profile import (
+    profile_create_storage_span,
+    profile_storage_session,
+    register_minimal_profile,
+    set_active_field,
+)
+from ...workflow import workflow_state_repository
 from .. import (
     CasillaSchemaProvider,
     ModeloApprovalStaleReason,
@@ -43,19 +49,20 @@ from .._review import _profile_activity_fingerprint, empty_profile_activity_fing
 from ..testing import ModeloTestProfile
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
+_PROFILE_ID = "12345678-1234-4234-8234-123456789abc"
 _TAX_ID = "12345678Z"
 
 
 @pytest.fixture
 def _profile_storage(tmp_path: Path) -> Iterator[None]:
-    """Isolate the encrypted profile store so ``config profile`` CRUD is real.
+    """Isolate the encrypted profile store and bootstrap profile creation.
 
     The self-load path (:func:`ProfileRepository.load`) needs a genuinely
-    provisioned profile — bucket directory, plaintext manifest, wrapped DEK, and
-    encrypted record — so these integration tests mint one through the real
-    ``config profile create`` command rather than a partial record write.
+    provisioned profile: bucket directory, plaintext manifest, wrapped DEK, and
+    encrypted record. The tests mint that profile through the same application
+    create span used by the CLI rather than a partial record write.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_PROFILE_ID):
         yield
 
 
@@ -67,6 +74,24 @@ def _active_bucket_id() -> str:
 
 def _schema_provider() -> CasillaSchemaProvider:
     return build_runtime_schema_provider(modelos=("130",), filing_year=_PERIOD.filing_year, period=_PERIOD)
+
+
+def _create_profile_with_activity(activity: str) -> None:
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id=_PROFILE_ID,
+            display_name="auton",
+            overrides={"identity.tax_id": _TAX_ID, "activities.description": activity},
+            enforce_unique_tax_id=False,
+        ),
+    )
+
+
+def _edit_profile_activity(activity: str) -> None:
+    workflow_state_repository().update(
+        lambda state: set_active_field(state, UserProfileFact(path="activities.description", value=activity)),
+    )
 
 
 def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
@@ -87,8 +112,7 @@ def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
 @pytest.mark.integration
 @pytest.mark.hex_application
 def test_approval_goes_stale_when_profile_activity_changes(_profile_storage: None) -> None:
-    result = create_quiet_profile("auton", "--tax-id", _TAX_ID, "--activity", "asesoria")
-    assert result.exit_code == 0, result.output
+    _create_profile_with_activity("asesoria")
     bucket_id = _active_bucket_id()
     schema_provider = _schema_provider()
     draft = _ready_draft(schema_provider)
@@ -105,10 +129,10 @@ def test_approval_goes_stale_when_profile_activity_changes(_profile_storage: Non
     # The real profile was loaded (non-vacuous): the digest is not the empty one.
     assert approved.approval_basis.profile_activity_fingerprint != empty_profile_activity_fingerprint()
 
-    # The taxpayer edits a relation-scoping profile fact through the real CLI;
-    # the self-loaded wizard-free projection digest changes.
-    edited = edit_quiet_profile("auton", "--activity", "comercio")
-    assert edited.exit_code == 0, edited.output
+    # The taxpayer edits a relation-scoping profile fact through the real
+    # application profile primitive; the self-loaded wizard-free projection
+    # digest changes.
+    _edit_profile_activity("comercio")
 
     with profile_storage_session(bucket_id):
         reasons = approval_stale_reasons(approved, bucket_id=bucket_id, schema_provider=schema_provider)
@@ -129,8 +153,7 @@ def test_approval_not_stale_when_profile_unchanged(_profile_storage: None) -> No
     Approving against a genuinely-loaded profile and re-checking without editing
     it must yield an empty reason tuple.
     """
-    result = create_quiet_profile("auton", "--tax-id", _TAX_ID, "--activity", "asesoria")
-    assert result.exit_code == 0, result.output
+    _create_profile_with_activity("asesoria")
     bucket_id = _active_bucket_id()
     schema_provider = _schema_provider()
     draft = _ready_draft(schema_provider)
