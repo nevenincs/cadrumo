@@ -345,115 +345,55 @@ def test_validator_accepts_known_verification_predicate_operators() -> None:
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
-def test_validator_rejects_casilla_equals_implies_nonzero_with_wrong_arity() -> None:
-    """casilla_equals_implies_nonzero must name exactly three tokens.
-
-    The runtime evaluator's bad-arity branch returns ``False`` (never fires,
-    ADVISORY-only), so a malformed categorical-conditional predicate would
-    silently do nothing. The authoring-time validator rejects it at registry
-    load. Uses existing M130 casillas (01/07) so the failure is the arity,
-    not an unknown-casilla reference.
-    """
+def test_validator_rejects_casilla_equals_implies_nonzero_malformed_m130_predicates() -> None:
+    """M130 categorical-conditional predicate authoring errors are rejected."""
 
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
-    bad_arity = VerificationPredicateDefinition(
-        predicate_id="modelo-130-bad-casilla-equals-implies-nonzero",
-        legal_refs=("rd-439-2007:art-110",),
-        expression='casilla_equals_implies_nonzero(["01", "07"])',  # two tokens; needs three
-        finding_kind="ADVISORY",
+    validator = RegistryValidator(catalogues, source_root=bundled_path())
+    cases = (
+        (
+            "bad-arity",
+            'casilla_equals_implies_nonzero(["01", "07"])',
+            "must name exactly three tokens",
+        ),
+        (
+            "unknown-antecedent",
+            'casilla_equals_implies_nonzero(["missing-casilla", "general", "07"])',
+            "unknown antecedent casilla 'missing-casilla'",
+        ),
+        (
+            "unknown-consequent",
+            'casilla_equals_implies_nonzero(["01", "general", "missing-casilla"])',
+            "unknown consequent casilla 'missing-casilla'",
+        ),
+        (
+            "empty-literal",
+            'casilla_equals_implies_nonzero(["01", "", "07"])',
+            "literal must be non-empty",
+        ),
+        (
+            "non-text-antecedent",
+            'casilla_equals_implies_nonzero(["01", "general", "07"])',
+            r"antecedent casilla '01' must have data_type 'text'",
+        ),
     )
-    mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, bad_arity)},
-    )
+    for case_id, expression, match in cases:
+        predicate = VerificationPredicateDefinition(
+            predicate_id=f"modelo-130-casilla-equals-implies-nonzero-{case_id}",
+            legal_refs=("rd-439-2007:art-110",),
+            expression=expression,
+            finding_kind="ADVISORY",
+        )
+        mutated = revision.model_copy(
+            update={"verification_predicates": (*revision.verification_predicates, predicate)},
+        )
 
-    with pytest.raises(RegistryValidationError, match="must name exactly three tokens"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
-
-
-def test_validator_rejects_casilla_equals_implies_nonzero_unknown_antecedent_casilla() -> None:
-    """The antecedent token must resolve against the revision's casilla set."""
-
-    modelo, catalogues = _committed_modelo("130")
-    revision = next(iter(modelo.revisions.values()))
-    predicate = VerificationPredicateDefinition(
-        predicate_id="modelo-130-casilla-equals-implies-nonzero-unknown-antecedent",
-        legal_refs=("rd-439-2007:art-110",),
-        expression='casilla_equals_implies_nonzero(["missing-casilla", "general", "07"])',
-        finding_kind="ADVISORY",
-    )
-    mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, predicate)},
-    )
-
-    with pytest.raises(
-        RegistryValidationError,
-        match="unknown antecedent casilla 'missing-casilla'",
-    ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
-
-
-def test_validator_rejects_casilla_equals_implies_nonzero_unknown_consequent_casilla() -> None:
-    """The consequent token must resolve against the revision's casilla set."""
-
-    modelo, catalogues = _committed_modelo("130")
-    revision = next(iter(modelo.revisions.values()))
-    predicate = VerificationPredicateDefinition(
-        predicate_id="modelo-130-casilla-equals-implies-nonzero-unknown-consequent",
-        legal_refs=("rd-439-2007:art-110",),
-        expression='casilla_equals_implies_nonzero(["01", "general", "missing-casilla"])',
-        finding_kind="ADVISORY",
-    )
-    mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, predicate)},
-    )
-
-    with pytest.raises(
-        RegistryValidationError,
-        match="unknown consequent casilla 'missing-casilla'",
-    ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
-
-
-def test_validator_rejects_casilla_equals_implies_nonzero_empty_literal() -> None:
-    """The middle literal token must be non-empty."""
-
-    modelo, catalogues = _committed_modelo("130")
-    revision = next(iter(modelo.revisions.values()))
-    predicate = VerificationPredicateDefinition(
-        predicate_id="modelo-130-casilla-equals-implies-nonzero-empty-literal",
-        legal_refs=("rd-439-2007:art-110",),
-        expression='casilla_equals_implies_nonzero(["01", "", "07"])',
-        finding_kind="ADVISORY",
-    )
-    mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, predicate)},
-    )
-
-    with pytest.raises(RegistryValidationError, match="literal must be non-empty"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
-
-
-def test_validator_rejects_casilla_equals_implies_nonzero_non_text_antecedent() -> None:
-    """The categorical antecedent must be a text casilla, not a Decimal input."""
-
-    modelo, catalogues = _committed_modelo("130")
-    revision = next(iter(modelo.revisions.values()))
-    predicate = VerificationPredicateDefinition(
-        predicate_id="modelo-130-casilla-equals-implies-nonzero-non-text-antecedent",
-        legal_refs=("rd-439-2007:art-110",),
-        expression='casilla_equals_implies_nonzero(["01", "general", "07"])',
-        finding_kind="ADVISORY",
-    )
-    mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, predicate)},
-    )
-
-    with pytest.raises(
-        RegistryValidationError,
-        match=r"antecedent casilla '01' must have data_type 'text'",
-    ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        try:
+            with pytest.raises(RegistryValidationError, match=match):
+                validator.validate_modelo(_with_revision(modelo, mutated))
+        except AssertionError as exc:
+            raise AssertionError(case_id) from exc
 
 
 def test_validator_rejects_casilla_equals_implies_nonzero_text_consequent() -> None:
@@ -504,89 +444,50 @@ def test_validator_accepts_committed_m210_casilla_equals_implies_nonzero_predica
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
-def test_validator_rejects_deduccion_requires_adquisicion_before_wrong_arity() -> None:
-    """deduccion_requires_adquisicion_before must name exactly four tokens.
-
-    The runtime evaluator's bad-arity branch returns ``False`` (never fires,
-    ADVISORY-only), so a malformed eligibility predicate would silently do
-    nothing. The authoring-time validator rejects it at registry load. Uses
-    M130 so the failure is the arity, not an unknown-casilla reference.
-    """
+def test_validator_rejects_deduccion_requires_adquisicion_before_malformed_m130_predicates() -> None:
+    """M130 vivienda eligibility predicate authoring errors are rejected."""
 
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
-    bad_arity = VerificationPredicateDefinition(
-        predicate_id="modelo-130-bad-deduccion-requires-adquisicion-before",
-        legal_refs=("rd-439-2007:art-110",),
-        expression='deduccion_requires_adquisicion_before(["01", "07", "07"])',  # three tokens; needs four
-        finding_kind="ADVISORY",
+    validator = RegistryValidator(catalogues, source_root=bundled_path())
+    cases = (
+        (
+            "bad-arity",
+            'deduccion_requires_adquisicion_before(["01", "07", "07"])',
+            "must name exactly four tokens",
+        ),
+        (
+            "unknown-amount",
+            'deduccion_requires_adquisicion_before(["missing-casilla", "01", "07", "2013-01-01"])',
+            "unknown amount casilla 'missing-casilla'",
+        ),
+        (
+            "non-text-date",
+            'deduccion_requires_adquisicion_before(["01", "07", "07", "2013-01-01"])',
+            r"acquisition-date casilla '07' must have data_type 'text'",
+        ),
+        (
+            "bad-cutoff",
+            'deduccion_requires_adquisicion_before(["01", "07", "07", "not-a-date"])',
+            "must be an ISO date literal",
+        ),
     )
-    mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, bad_arity)},
-    )
+    for case_id, expression, match in cases:
+        predicate = VerificationPredicateDefinition(
+            predicate_id=f"modelo-130-deduccion-requires-adquisicion-before-{case_id}",
+            legal_refs=("rd-439-2007:art-110",),
+            expression=expression,
+            finding_kind="ADVISORY",
+        )
+        mutated = revision.model_copy(
+            update={"verification_predicates": (*revision.verification_predicates, predicate)},
+        )
 
-    with pytest.raises(RegistryValidationError, match="must name exactly four tokens"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
-
-
-def test_validator_rejects_deduccion_requires_adquisicion_before_unknown_amount_casilla() -> None:
-    """The amount token must resolve against the revision's casilla set."""
-
-    modelo, catalogues = _committed_modelo("130")
-    revision = next(iter(modelo.revisions.values()))
-    predicate = VerificationPredicateDefinition(
-        predicate_id="modelo-130-deduccion-requires-adquisicion-before-unknown-amount",
-        legal_refs=("rd-439-2007:art-110",),
-        expression='deduccion_requires_adquisicion_before(["missing-casilla", "01", "07", "2013-01-01"])',
-        finding_kind="ADVISORY",
-    )
-    mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, predicate)},
-    )
-
-    with pytest.raises(RegistryValidationError, match="unknown amount casilla 'missing-casilla'"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
-
-
-def test_validator_rejects_deduccion_requires_adquisicion_before_non_text_date_casilla() -> None:
-    """The acquisition/construction date casillas must have data_type 'text'."""
-
-    modelo, catalogues = _committed_modelo("130")
-    revision = next(iter(modelo.revisions.values()))
-    predicate = VerificationPredicateDefinition(
-        predicate_id="modelo-130-deduccion-requires-adquisicion-before-non-text-date",
-        legal_refs=("rd-439-2007:art-110",),
-        expression='deduccion_requires_adquisicion_before(["01", "07", "07", "2013-01-01"])',
-        finding_kind="ADVISORY",
-    )
-    mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, predicate)},
-    )
-
-    with pytest.raises(
-        RegistryValidationError,
-        match=r"acquisition-date casilla '07' must have data_type 'text'",
-    ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
-
-
-def test_validator_rejects_deduccion_requires_adquisicion_before_bad_cutoff_literal() -> None:
-    """The cutoff token must be an ISO date literal (YYYY-MM-DD)."""
-
-    modelo, catalogues = _committed_modelo("130")
-    revision = next(iter(modelo.revisions.values()))
-    predicate = VerificationPredicateDefinition(
-        predicate_id="modelo-130-deduccion-requires-adquisicion-before-bad-cutoff",
-        legal_refs=("rd-439-2007:art-110",),
-        expression='deduccion_requires_adquisicion_before(["01", "07", "07", "not-a-date"])',
-        finding_kind="ADVISORY",
-    )
-    mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, predicate)},
-    )
-
-    with pytest.raises(RegistryValidationError, match="must be an ISO date literal"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        try:
+            with pytest.raises(RegistryValidationError, match=match):
+                validator.validate_modelo(_with_revision(modelo, mutated))
+        except AssertionError as exc:
+            raise AssertionError(case_id) from exc
 
 
 def test_validator_accepts_committed_m100_deduccion_requires_adquisicion_before_predicate() -> None:
@@ -612,49 +513,36 @@ def test_validator_accepts_committed_m100_deduccion_requires_adquisicion_before_
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
-def test_validator_rejects_advisory_when_positive_wrong_arity() -> None:
-    """advisory_when_positive must name exactly one casilla id.
-
-    The single-casilla positive advisory routes through the generic
-    casilla-list validation with exact arity 1; a two-id expression is a
-    malformed authoring, rejected at registry load rather than silently never
-    firing (the runtime bad-arity branch returns False). Uses M130 so the
-    failure is the arity, not an unknown-casilla reference.
-    """
+def test_validator_rejects_advisory_when_positive_malformed_m130_predicates() -> None:
+    """M130 single-casilla positive advisory authoring errors are rejected."""
 
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
-    bad_arity = VerificationPredicateDefinition(
-        predicate_id="modelo-130-bad-advisory-when-positive-arity",
-        legal_refs=("rd-439-2007:art-110",),
-        expression='advisory_when_positive(["01", "07"])',  # two ids; needs exactly one
-        finding_kind="ADVISORY",
+    validator = RegistryValidator(catalogues, source_root=bundled_path())
+    cases = (
+        ("bad-arity", 'advisory_when_positive(["01", "07"])', "must name exactly 1 casilla ids"),
+        (
+            "unknown-casilla",
+            'advisory_when_positive(["missing-casilla"])',
+            "references unknown casilla 'missing-casilla'",
+        ),
     )
-    mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, bad_arity)},
-    )
+    for case_id, expression, match in cases:
+        predicate = VerificationPredicateDefinition(
+            predicate_id=f"modelo-130-advisory-when-positive-{case_id}",
+            legal_refs=("rd-439-2007:art-110",),
+            expression=expression,
+            finding_kind="ADVISORY",
+        )
+        mutated = revision.model_copy(
+            update={"verification_predicates": (*revision.verification_predicates, predicate)},
+        )
 
-    with pytest.raises(RegistryValidationError, match="must name exactly 1 casilla ids"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
-
-
-def test_validator_rejects_advisory_when_positive_unknown_casilla() -> None:
-    """The single advisory_when_positive token must resolve against the casilla set."""
-
-    modelo, catalogues = _committed_modelo("130")
-    revision = next(iter(modelo.revisions.values()))
-    predicate = VerificationPredicateDefinition(
-        predicate_id="modelo-130-advisory-when-positive-unknown-casilla",
-        legal_refs=("rd-439-2007:art-110",),
-        expression='advisory_when_positive(["missing-casilla"])',
-        finding_kind="ADVISORY",
-    )
-    mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, predicate)},
-    )
-
-    with pytest.raises(RegistryValidationError, match="references unknown casilla 'missing-casilla'"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        try:
+            with pytest.raises(RegistryValidationError, match=match):
+                validator.validate_modelo(_with_revision(modelo, mutated))
+        except AssertionError as exc:
+            raise AssertionError(case_id) from exc
 
 
 def test_committed_m100_anualidades_advisory_retired_after_separate_escala_compute() -> None:
