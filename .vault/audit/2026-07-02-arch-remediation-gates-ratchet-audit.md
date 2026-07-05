@@ -285,6 +285,23 @@ export application suite passed. The codebase-size gate rerun no longer reports
 callable offenders inventoried in
 `var/log/codebase-size-after-filing-export-xml-split-20260705.log`.
 
+### follow-up-registry-query-reports-size-budget | low | registry query service below module budget
+
+Reviewed the 2026-07-05 ratchet follow-up that moved the registry query report
+contracts from `_queries.py` into the sibling `_query_reports.py` module.
+`_queries.py` still imports and re-exports the same public report names, and
+the top-level `domain.calculations.registry` facade still resolves them through
+the existing `_queries` import path. The service behavior remains in
+`_queries.py`, including revision resolution, binding row projection, relation
+input discovery, and public selector normalization. The module line count
+dropped from 1478 to 945, below its pinned 1331-line budget; the new report
+contract module is 269 lines. Ruff passed, focused registry query/source/support
+tests passed, cross-module import resolution passed, and the facade identity
+check confirmed `ModeloListRow` still resolves through `_queries`. The
+codebase-size gate rerun no longer reports `_queries.py`, but remains red on
+the other known module and callable offenders inventoried in
+`var/log/codebase-size-after-registry-query-reports-split-20260705.log`.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
