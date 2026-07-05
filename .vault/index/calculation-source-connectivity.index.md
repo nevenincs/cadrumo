@@ -3,9 +3,27 @@ generated: true
 tags:
   - '#index'
   - '#calculation-source-connectivity'
-date: '2026-07-04'
-modified: '2026-07-04'
+date: '2026-07-05'
+modified: '2026-07-05'
 related:
+  - '[[2026-05-20-calculation-source-connectivity-W01-P01-S01]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P01-S02]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P01-S03]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P01-S04]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P01-S05]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P01-S06]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P02-S07]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P02-S08]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P02-S09]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P02-S10]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P02-S11]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P02-S12]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P03-S13]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P03-S14]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P03-S15]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P03-S16]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P03-S17]]'
+  - '[[2026-05-20-calculation-source-connectivity-W01-P03-S18]]'
   - '[[2026-05-20-calculation-source-connectivity-W02-P04-S24]]'
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S26]]'
   - '[[2026-05-20-calculation-source-connectivity-W02-P05-S27]]'
@@ -61,6 +79,7 @@ related:
   - '[[2026-05-21-calculation-source-connectivity-w01-p02-s07-s12-exec]]'
   - '[[2026-05-21-calculation-source-connectivity-w01-p03-s13-s17-exec]]'
   - '[[2026-07-04-calculation-source-connectivity-audit]]'
+  - '[[2026-07-05-calculation-source-connectivity-audit]]'
 ---
 
 # `calculation-source-connectivity` feature index
@@ -77,6 +96,7 @@ Auto-generated index of all documents tagged with `#calculation-source-connectiv
 
 - `2026-05-21-calculation-source-connectivity-code-review-audit` - `calculation-source-connectivity` Code Review
 - `2026-07-04-calculation-source-connectivity-audit` - `calculation-source-connectivity` audit: `campaign closeout`
+- `2026-07-05-calculation-source-connectivity-audit` - `calculation-source-connectivity` audit: `exec record reconciliation review`
 
 ### exec
 
@@ -129,6 +149,24 @@ Auto-generated index of all documents tagged with `#calculation-source-connectiv
 - `2026-05-20-calculation-source-connectivity-W05-P11-S59` - Run architecture boundary audit for source mesh directionality
 - `2026-05-20-calculation-source-connectivity-W05-P11-S60` - Run calculation grounding audit for provenance and legal refs
 - `2026-05-20-calculation-source-connectivity-W05-P11-S61` - Run hardening pass for silent zero and missing source diagnostics
+- `2026-05-20-calculation-source-connectivity-W01-P01-S01` - Define strict source mesh context resolution provenance and diagnostic models
+- `2026-05-20-calculation-source-connectivity-W01-P01-S02` - Define resolver protocol ownership and merge semantics
+- `2026-05-20-calculation-source-connectivity-W01-P01-S03` - Export source mesh contracts from aggregation package
+- `2026-05-20-calculation-source-connectivity-W01-P01-S04` - Test source resolution merge rejects duplicate binding ownership
+- `2026-05-20-calculation-source-connectivity-W01-P01-S05` - Test source resolution merge rejects duplicate bound casilla ownership
+- `2026-05-20-calculation-source-connectivity-W01-P01-S06` - Test unhandled source diagnostics name modelo binding and source kind
+- `2026-05-20-calculation-source-connectivity-W01-P02-S07` - Wrap ledger IVA binding resolution as a source mesh resolver
+- `2026-05-20-calculation-source-connectivity-W01-P02-S08` - Wrap ledger Renta expense binding resolution as a source mesh resolver
+- `2026-05-20-calculation-source-connectivity-W01-P02-S09` - Wrap OSS IOSS ledger binding resolution as a source mesh resolver
+- `2026-05-20-calculation-source-connectivity-W01-P02-S10` - Preserve IVA ledger source transaction and prorrata provenance in resolver output
+- `2026-05-20-calculation-source-connectivity-W01-P02-S11` - Preserve Renta purchase invoice evidence provenance in resolver output
+- `2026-05-20-calculation-source-connectivity-W01-P02-S12` - Test mesh wrapper parity with current bucket ledger aggregation
+- `2026-05-20-calculation-source-connectivity-W01-P03-S13` - Replace hardcoded ledger binding ownership with resolver ownership map
+- `2026-05-20-calculation-source-connectivity-W01-P03-S14` - Route bucket aggregation calculation through source mesh resolution
+- `2026-05-20-calculation-source-connectivity-W01-P03-S15` - Route app modelo work calculate through mesh backed calculation
+- `2026-05-20-calculation-source-connectivity-W01-P03-S16` - Test caller binding override rejection for all resolver owned sources
+- `2026-05-20-calculation-source-connectivity-W01-P03-S17` - Test caller casilla override rejection for all resolver owned sources
+- `2026-05-20-calculation-source-connectivity-W01-P03-S18` - Test CLI calculation persists ledger derived source observations
 
 ### plan
 
