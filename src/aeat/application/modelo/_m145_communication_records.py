@@ -12,6 +12,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id_map
 from ...core.decimal import coerce_decimal_strict
@@ -19,6 +20,12 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, IdentityError, validate_spanish_tax_id
 from ...core.money import round_to_cents
 from ...core.time import now
+from ...domain.buckets import (
+    BucketEvent,
+    BucketEventHistoryRepositoryProtocol,
+    BucketEventObjectType,
+    BucketEventType,
+)
 from ...domain.calculations.registry import (
     CasillaDefinition,
     CasillaFieldKind,
@@ -34,12 +41,14 @@ from ._m145_communication import (
     M145_COMMUNICATION_SERVICE_OWNER,
     build_m145_communication_service_contract,
 )
+from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
 _FOUR_DIGIT_YEAR_PATTERN = re.compile(r"^\d{4}$")
 _ISO_DATE_PATTERN = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")
 _AEAT_DATE_PATTERN = re.compile(r"^(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{4}$")
 _LINE_ENDINGS: Mapping[str, bytes] = {"none": b"", "lf": b"\n", "crlf": b"\r\n"}
+_M145_COMMUNICATION_EVENT_ACTOR = M145_COMMUNICATION_SERVICE_OWNER
 
 M145CommunicationRecordId = Annotated[
     str,
@@ -312,6 +321,45 @@ def read_m145_communication_record(
 ) -> M145CommunicationRecord:
     """Return one Modelo 145 communication record by id or unambiguous prefix."""
     return _m145_communication_record_repository(bucket_id).resolve(communication_record_id)
+
+
+def _m145_communication_event_payload(
+    record: M145CommunicationRecord,
+    extra: Mapping[str, str] | None = None,
+) -> dict[str, str]:
+    payload = {
+        "communication_record_id": record.communication_record_id,
+        "modelo": record.modelo,
+        "communication_year": str(record.communication_year),
+        "period": record.period_token.value,
+        "revision_id": record.revision_id,
+        "state": record.state.value,
+    }
+    if extra is not None:
+        payload.update(extra)
+    return payload
+
+
+def _emit_m145_communication_event(
+    record: M145CommunicationRecord,
+    *,
+    event_type: BucketEventType,
+    occurred_at: datetime,
+    actor: str,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    payload: Mapping[str, str] | None = None,
+) -> BucketEvent:
+    repository = bucket_event_repository or BucketEventHistoryRepository()
+    return _emit_bucket_event(
+        repository=repository,
+        bucket_id=record.bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.COMMUNICATION_RECORD,
+        object_id=record.communication_record_id,
+        payload=_m145_communication_event_payload(record, payload),
+    )
 
 
 def _issue(
@@ -622,6 +670,8 @@ def export_m145_communication_record(
     communication_record_id: str,
     *,
     bucket_id: BucketId,
+    actor: str = _M145_COMMUNICATION_EVENT_ACTOR,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> M145CommunicationExportResult:
     """Render one Modelo 145 communication record through the registry export layout."""
     validation = validate_m145_communication_record(communication_record_id, bucket_id=bucket_id)
@@ -646,7 +696,7 @@ def export_m145_communication_record(
     if len(encodings) != 1:
         raise ValueError(f"Modelo 145 export layout {layout.id!r} declares mixed encodings: {sorted(encodings)!r}")
     payload = b"".join(_render_m145_export_record(record_definition, record) for record_definition in records)
-    return M145CommunicationExportResult(
+    result = M145CommunicationExportResult(
         communication_record_id=record.communication_record_id,
         bucket_id=record.bucket_id,
         communication_year=record.communication_year,
@@ -661,6 +711,20 @@ def export_m145_communication_record(
         legal_refs=tuple(sorted(str(ref) for ref in layout.legal_refs)),
         source_refs=tuple(sorted(str(ref) for ref in layout.source_refs)),
     )
+    _emit_m145_communication_event(
+        record,
+        event_type=BucketEventType.MODELO_145_COMMUNICATION_EXPORTED,
+        occurred_at=now(),
+        actor=actor,
+        bucket_event_repository=bucket_event_repository,
+        payload={
+            "export_layout_id": result.export_layout_id,
+            "payload_sha256": result.payload_sha256,
+            "byte_length": str(result.byte_length),
+            "record_count": str(result.record_count),
+        },
+    )
+    return result
 
 
 def _m145_communication_record_with_updates(
@@ -676,6 +740,8 @@ def mark_m145_communication_record_delivered_to_payer(
     communication_record_id: str,
     *,
     bucket_id: BucketId,
+    actor: str = _M145_COMMUNICATION_EVENT_ACTOR,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> M145CommunicationRecord:
     """Mark one valid local communication record as delivered to the payer."""
     repository = _m145_communication_record_repository(bucket_id)
@@ -691,12 +757,20 @@ def mark_m145_communication_record_delivered_to_payer(
             "Modelo 145 communication record cannot be marked delivered to payer until validation passes; "
             f"issues: {_validation_issue_summary(validation)}",
         )
+    transitioned_at = now()
     transitioned = _m145_communication_record_with_updates(
         record,
         state=M145CommunicationRecordState.DELIVERED_TO_PAYER,
-        delivered_to_payer_at=now(),
+        delivered_to_payer_at=transitioned_at,
     )
     repository.save(transitioned)
+    _emit_m145_communication_event(
+        transitioned,
+        event_type=BucketEventType.MODELO_145_COMMUNICATION_DELIVERED_TO_PAYER,
+        occurred_at=transitioned_at,
+        actor=actor,
+        bucket_event_repository=bucket_event_repository,
+    )
     return transitioned
 
 
@@ -704,6 +778,8 @@ def mark_m145_communication_record_locally_completed(
     communication_record_id: str,
     *,
     bucket_id: BucketId,
+    actor: str = _M145_COMMUNICATION_EVENT_ACTOR,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> M145CommunicationRecord:
     """Mark one payer-delivered local communication record as locally completed."""
     repository = _m145_communication_record_repository(bucket_id)
@@ -714,12 +790,20 @@ def mark_m145_communication_record_locally_completed(
         raise ValueError(
             "Modelo 145 communication record must be delivered to payer before local completion",
         )
+    transitioned_at = now()
     transitioned = _m145_communication_record_with_updates(
         record,
         state=M145CommunicationRecordState.LOCALLY_COMPLETED,
-        locally_completed_at=now(),
+        locally_completed_at=transitioned_at,
     )
     repository.save(transitioned)
+    _emit_m145_communication_event(
+        transitioned,
+        event_type=BucketEventType.MODELO_145_COMMUNICATION_LOCALLY_COMPLETED,
+        occurred_at=transitioned_at,
+        actor=actor,
+        bucket_event_repository=bucket_event_repository,
+    )
     return transitioned
 
 
@@ -727,14 +811,15 @@ def create_m145_communication_record(
     command: M145CommunicationCreateCommand,
     *,
     bucket_id: BucketId,
+    actor: str = _M145_COMMUNICATION_EVENT_ACTOR,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> M145CommunicationRecord:
     """Persist a bucket-local Modelo 145 communication record.
 
     Creation stores the operator-provided registry casilla values as a local
     payer communication record. It validates that every value is keyed by a
-    casilla declared in the active Modelo 145 registry revision, but leaves
-    required-field/type validation, local state transitions, and bucket-event
-    emission to the later plan steps that own those behaviors.
+    casilla declared in the active Modelo 145 registry revision, persists the
+    local record, and emits the communication-created bucket event.
     """
     snapshot = _snapshot_for_command(command)
     field_values = dict(sorted(command.field_values.items()))
@@ -766,6 +851,13 @@ def create_m145_communication_record(
         note=command.note,
     )
     repository.save(record)
+    _emit_m145_communication_event(
+        record,
+        event_type=BucketEventType.MODELO_145_COMMUNICATION_CREATED,
+        occurred_at=record.created_at,
+        actor=actor,
+        bucket_event_repository=bucket_event_repository,
+    )
     return record
 
 

@@ -31,7 +31,7 @@ related:
 
 ## Scope
 
-Reviewed the `P04.S16` Modelo 145 service-owner slice, the `P04.S17` create-record slice, the `P04.S18` validation slice, the `P04.S19` export slice, and the `P04.S20` local transition slice for the reopen plan. Scope covered the application/modelo ownership contract, the bucket-local communication record create/read/validate/export/transition surface, central secure-storage namespace registration, facade exports, focused real-runtime tests, step exec records, checked plan rows, and regenerated feature index.
+Reviewed the `P04.S16` Modelo 145 service-owner slice, the `P04.S17` create-record slice, the `P04.S18` validation slice, the `P04.S19` export slice, the `P04.S20` local transition slice, and the `P04.S21` communication bucket-event slice for the reopen plan. Scope covered the application/modelo ownership contract, the bucket-local communication record create/read/validate/export/transition/event surface, central secure-storage namespace registration, facade exports, focused real-runtime tests, step exec records, checked plan rows, and regenerated feature index.
 
 ## Findings
 
@@ -45,6 +45,8 @@ No findings for `P04.S19`.
 
 No findings for `P04.S20`.
 
+No findings for `P04.S21`.
+
 ## Recommendations
 
-Proceed with `P04.S21` as the next open step. Keep bucket-event emission behind the communication-specific event vocabulary and continue to avoid filing, deadline, live-read, portal, submit, receipt, and AEAT electronic-tramite terminology for Modelo 145.
+Proceed with `P04.S22` as the next open step. Keep service-level errors and logs behind communication vocabulary only, with no filing, deadline, live-read, portal, submit, receipt, or AEAT electronic-tramite terminology for Modelo 145.
