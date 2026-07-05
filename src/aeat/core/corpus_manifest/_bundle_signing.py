@@ -11,7 +11,7 @@ tell "this bundle's checksums are internally consistent" from "this bundle was
 actually published by the project".
 
 This module adds that authenticity layer on top, following the SAME pattern
-:mod:`application.modelo._review_package_signing` established for
+:mod:`~application.modelo._review_package_signing` established for
 review-package signing: sign the bundle's self-attesting
 :attr:`~core.corpus_manifest.CorpusManifest.manifest_sha256` digest with
 an Ed25519 keypair (RFC 8032), so the signature transitively covers every
@@ -38,9 +38,9 @@ secrecy requirement: it is meant to be embedded in the ``aeat`` distribution
 against a key they already trust, without contacting anyone.
 
 See Also:
-    :mod:`core.corpus_manifest`
+    :mod:`~core.corpus_manifest`
         Builds and integrity-verifies the bundle this module signs.
-    :mod:`application.modelo._review_package_signing`
+    :mod:`~application.modelo._review_package_signing`
         The sibling implementation of the same signing primitive, scoped to
         one profile bucket's review-package authenticity instead of a
         maintainer-published corpus bundle.
