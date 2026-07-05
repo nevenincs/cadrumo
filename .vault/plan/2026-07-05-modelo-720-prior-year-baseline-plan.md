@@ -9,6 +9,7 @@ related:
   - '[[2026-06-02-modelo-720-prior-year-baseline-adr]]'
   - '[[2026-06-02-modelo-720-prior-year-baseline-research]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-adr]]'
+  - '[[2026-07-05-modelo-720-row-carrier-adr]]'
 ---
 
 <!-- LINK RULES:
@@ -79,4 +80,4 @@ Implement the approved row carrier in the aggregation source-mesh envelope and m
 
 Promote foreign_asset from deferred to enrolled only after the row carrier proves live mesh parity against the prior aggregation output.
 
-- [ ] `W03.P06.S16` - Enroll the foreign-assets resolver in the live calculate mesh only after row-carrier parity gates pass; `src/aeat/application/modelo/_calculation_actions.py`.
+- [x] `W03.P06.S16` - Enroll the foreign-assets resolver in the live calculate mesh only after row-carrier parity gates pass; `src/aeat/application/modelo/_calculation_actions.py`.

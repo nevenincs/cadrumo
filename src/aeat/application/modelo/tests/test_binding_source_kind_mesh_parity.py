@@ -42,11 +42,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #   PURCHASE_INVOICE_EVIDENCE / LEDGER_TRANSACTION — counterpart/invoice-shaped
 #     reserved-undeclared sources (no registry binding, no resolver yet); the domain
 #     gate's _RESERVED_UNDECLARED_SOURCE_KINDS carve-out tracks them.
-#   WITHHOLDING / FOREIGN_ASSET / RELATED_PARTY_OPERATION / ATRIBUCION_MEMBER /
-#     REFUND_OPERATION — detail-record families. Their bare-string DEFERRED tokens
-#     differ from the enum member VALUE only for the three `_operation` / `_member`
-#     suffixed members (see ROW_SET_GROUPING_FOR_BINDING_SOURCE); the deferred set is
-#     asserted to map onto the enum directly below.
+#   RELATED_PARTY_OPERATION / ATRIBUCION_MEMBER / REFUND_OPERATION — deferred
+#     detail-record families. Their bare-string DEFERRED tokens differ from the
+#     enum member VALUE only for the `_operation` / `_member` suffixed members
+#     (see ROW_SET_GROUPING_FOR_BINDING_SOURCE); the deferred set is asserted to
+#     map onto the enum directly below.
 # The reserved-undeclared carve-out is now the canonical RESERVED_SOURCE_KINDS in
 # the source-mesh module (single declaration); the test consumes it rather than
 # re-listing the members.

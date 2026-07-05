@@ -5,12 +5,13 @@ calculate path so any binding whose source has no enrolled resolver surfaces a
 non-blocking advisory on source_diagnostics instead of silently blanking.
 
 Resolver enrollment: LedgerRentaIncomeAggregationSourceResolver (M130 income),
-OssIossLedgerSourceResolver (M369 OSS/IOSS), and InvoiceCatalogueSourceResolver
-(M349 collectible_invoice) are enrolled in the live merge_source_resolutions tuple
-so they fire on their modelos.
+OssIossLedgerSourceResolver (M369 OSS/IOSS), InvoiceCatalogueSourceResolver
+(M349 collectible_invoice), and ForeignAssetsAggregationSourceResolver (M720
+foreign_asset) are enrolled in the live merge_source_resolutions tuple so they
+fire on their modelos.
 
-Deferred source kinds: the four deferred source kinds (atribucion_member,
-related_party_operation, foreign_asset, refund_operation) produce an
+Deferred source kinds: the remaining deferred source kinds (atribucion_member,
+related_party_operation, refund_operation) produce an
 'unhandled_binding_source' advisory on source_diagnostics rather than a silent blank,
 and are NOT on the manual_sources allowlist.
 
@@ -22,6 +23,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
+from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
@@ -37,7 +39,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import DEFERRED_SOURCE_KINDS
+from ...aggregation import DEFERRED_SOURCE_KINDS, ForeignAssetClass, ForeignAssetIngestObservation
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,
@@ -434,7 +436,6 @@ def test_s10_deferred_source_kinds_are_enumerated_and_non_empty() -> None:
         {
             BindingSourceKind.ATRIBUCION_MEMBER,
             BindingSourceKind.RELATED_PARTY_OPERATION,
-            BindingSourceKind.FOREIGN_ASSET,
             BindingSourceKind.REFUND_OPERATION,
         },
     )
@@ -446,7 +447,6 @@ def test_s10_deferred_source_kinds_are_enumerated_and_non_empty() -> None:
     ("modelo", "period", "revision_id", "deferred_kind"),
     [
         ("184", "0A", "2015-y-siguientes", "atribucion_member"),
-        ("720", "0A", "2013-y-siguientes", "foreign_asset"),
     ],
 )
 def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
@@ -460,8 +460,7 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
 
     Checks that for every deferred kind that appears in some revision's bindings,
     a live calculate on a work unit for that revision surfaces the advisory.
-    We use M184 (atribucion_member) and M720 (foreign_asset) as representatives:
-    both have no formula relations, so a fresh-bucket calculate does not crash on a
+    M184 has no formula relations, so a fresh-bucket calculate does not crash on a
     missing relation operand and the unhandled-source advisory path is isolated cleanly.
     The withholding kind moved out of the deferred set when
     WithholdingSourceResolver was enrolled; M190/M193 empty-store behavior is
@@ -506,6 +505,87 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
         f"'{deferred_kind}' on M{modelo} but got none. "
         f"source_diagnostics: {result.source_diagnostics}"
     )
+
+
+def _foreign_asset_observation(
+    source_kind: BindingSourceKind,
+    source_object_id: str,
+    *,
+    country: str,
+    valuation: str,
+    acquisition_date: str,
+) -> ForeignAssetIngestObservation:
+    return ForeignAssetIngestObservation(
+        source_kind=source_kind,
+        source_object_id=source_object_id,
+        asset_class=ForeignAssetClass.ACCOUNT,
+        asset_external_id=source_object_id.upper(),
+        country=country,
+        issuer_or_institution=f"Bank {country}",
+        valuation_eur=Decimal(valuation),
+        acquisition_date=acquisition_date,
+    )
+
+
+def test_s16_foreign_asset_source_kind_is_enrolled_not_deferred(tmp_path: Path) -> None:
+    """M720 foreign_asset bindings are handled by the enrolled row-carrier resolver."""
+    observations = (
+        _foreign_asset_observation(
+            BindingSourceKind.LEDGER_TRANSACTION,
+            "a" * 64,
+            country="AD",
+            valuation="40000.00",
+            acquisition_date="2020-01-15",
+        ),
+        _foreign_asset_observation(
+            BindingSourceKind.PAYABLE_INVOICE,
+            "asset-ch-002",
+            country="CH",
+            valuation="15000.00",
+            acquisition_date="2021-02-20",
+        ),
+    )
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        _seed_ready_profile(objects)
+        wu_repo, cr_repo, tx_repo, invoice_repo = (
+            WorkUnitCatalogueRepository(objects=objects),
+            CalculationRevisionCatalogueRepository(objects=objects),
+            TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+            InvoiceCatalogueRepository(objects=objects),
+        )
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="720",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision_id="2013-y-siguientes",
+            repository=wu_repo,
+            clock=_T0,
+        )
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+            foreign_asset_observations=observations,
+            clock=_T1,
+        )
+
+    assert BindingSourceKind.FOREIGN_ASSET not in DEFERRED_SOURCE_KINDS
+    assert not [
+        diagnostic
+        for diagnostic in result.source_diagnostics
+        if diagnostic.source_kind == BindingSourceKind.FOREIGN_ASSET.value
+        and diagnostic.reason == "unhandled_binding_source"
+    ]
+    assert result.revision.row_binding_values["modelo-720-asset-row-class"] == {"1": "C", "2": "C"}
+    assert result.revision.row_binding_values["modelo-720-asset-row-country"] == {"1": "AD", "2": "CH"}
+    assert result.revision.row_binding_values["modelo-720-asset-row-valuation"] == {
+        "1": "40000",
+        "2": "15000",
+    }
 
 
 def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
