@@ -34,7 +34,7 @@ See Also:
         selector dictionaries.
     :class:`~core.aggregation.RowSetGroupingKind`
         Closed grouping-axis values consumed by this module's dispatcher.
-    :mod:`domain.calculations.registry`
+    :mod:`~domain.calculations.registry`
         Registry-side row-value resolvers that perform the inverse operation for
         export and sheet population.
 """
