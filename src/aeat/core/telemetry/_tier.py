@@ -1,6 +1,6 @@
 """Closed remote-telemetry tier enum.
 
-Declared standalone (no dependency on :mod:`core.config`) so
+Declared standalone (no dependency on :mod:`~core.config`) so
 :class:`~core.config.Settings` can import it without a circular import, per
 ``aeat-architecture-boundaries``'s closed-value-set discipline (every closed
 axis is a :class:`~enum.StrEnum` declared in ``core/``).
