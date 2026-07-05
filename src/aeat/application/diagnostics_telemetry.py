@@ -35,6 +35,17 @@ No producer here reads transaction content, profile identity, or file
 contents; the aggregate is built from the same accounting/timing-only
 :class:`~adapters.outbound.llm.LLMRunRecord` rows the local-only
 ``run-health`` diagnostics already expose.
+
+See Also:
+    :mod:`~core.telemetry`
+        Consent gate, closed payload schema, workspace hash, and optional HTTP
+        sink reused by this application service.
+    :func:`~application.diagnostics_run_health.build_run_health_report`
+        Local-only LLM run accounting source aggregated by the flush preview.
+    :mod:`~entrypoints.cli._app_diagnostics_telemetry`
+        CLI transport that exposes status and dry-run-safe flush commands.
+    :class:`~core.telemetry.TelemetryEventPayload`
+        Closed allowlisted payload shape built by preview and reused by send.
 """
 
 from __future__ import annotations
