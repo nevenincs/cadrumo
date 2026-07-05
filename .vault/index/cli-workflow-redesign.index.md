@@ -315,6 +315,7 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-P04-S16]]'
   - '[[2026-05-14-cli-workflow-redesign-P04-S17]]'
   - '[[2026-05-14-cli-workflow-redesign-P04-S18]]'
+  - '[[2026-05-14-cli-workflow-redesign-P04-S19]]'
   - '[[2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-exec]]'
@@ -836,6 +837,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-P04-S16` - Add backend service ownership for Modelo 145 local payer communication
 - `2026-05-14-cli-workflow-redesign-P04-S17` - Add create behavior for bucket-scoped Modelo 145 communication records
 - `2026-05-14-cli-workflow-redesign-P04-S18` - Add validate behavior backed by registry and source authority
+- `2026-05-14-cli-workflow-redesign-P04-S19` - Add export behavior backed by the Modelo 145 registry layout
 
 ### plan
 
