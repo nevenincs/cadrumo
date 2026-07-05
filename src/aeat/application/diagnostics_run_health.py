@@ -6,9 +6,9 @@ session is diagnosable without leaving the host:
 
 * :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder` records
   duration/outcome metadata for every LLM classification, split-proposal, and
-  completion run (see :mod:`adapters.outbound.llm._client` and
-  :mod:`application.ledger._llm_classification`); and
-* :func:`application.auth.test_operator_auth` reports whether an
+  completion run (see :class:`~adapters.outbound.llm.LLMClient` and
+  :mod:`~application.ledger._llm_classification`); and
+* :func:`~application.auth.test_operator_auth` reports whether an
   encrypted AEAT session token is present on disk and whether it has passed
   its idle deadline.
 
@@ -40,8 +40,8 @@ backing the ``aeat app diagnostics llm-usage`` verb (also GitHub issue #407).
 outcome metadata -- no token counts are recorded on this store -- so the
 usage summary reports run counts, durations, and success rate rather than
 token/cost figures (those are covered by the separate
-:mod:`application.ledger._llm_diagnostics` usage/cost/confidence
-report, which folds the distinct completion-call
+:func:`~application.ledger.build_llm_diagnostics_report`
+usage/cost/confidence report, which folds the distinct completion-call
 :class:`~adapters.outbound.llm.UsageRecord` log). This report again
 reuses :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
 directly -- there is no parallel capture or storage path here either.
@@ -157,7 +157,7 @@ def build_run_health_report(
             :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`.
         auth_probe: Injected :class:`~application.auth.AuthTestResult`
             (dependency injection for tests); defaults to a fresh call to
-            :func:`application.auth.test_operator_auth` with no provider
+            :func:`~application.auth.test_operator_auth` with no provider
             override, so it reports whatever AEAT auth provider is configured
             in workflow state (or "none configured").
 
