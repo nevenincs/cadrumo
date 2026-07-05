@@ -30,6 +30,7 @@ M100_CURRENT_YEAR_EXPECTED_CASILLAS: frozenset[CasillaId] = frozenset(
         "0586",
         "0587",
         "0595",
+        "0604",
         "0610",
         "0670",
         "0180",
