@@ -1,16 +1,27 @@
 """Inventory calculation-source readiness.
 
 Declares whether inventory may act as a calculation source that feeds registry
-bindings. Inventory is currently an application service (:class:`InventoryService`)
-over the profile inventory; its movements and valuations are not yet persisted
-through the canonical secure-storage revision boundary, so enrolling inventory as a
-live calculation source would resolve bindings against non-canonical state. Until
-that persistence is hardened, inventory readiness is NOT ready and the aggregation
-resolver must refuse visibly (a blocked-readiness diagnostic) rather than resolve a
-silent blank.
+bindings. Inventory is currently an application service
+(:class:`~application.inventory.InventoryService`) over the profile inventory;
+its movements and valuations are not yet persisted through the canonical
+secure-storage revision boundary, so enrolling inventory as a live calculation
+source would resolve bindings against non-canonical state. Until that persistence
+is hardened, inventory readiness is NOT ready and the aggregation resolver must
+refuse visibly (a blocked-readiness diagnostic) rather than resolve a silent
+blank.
 
 The readiness is a pure, context-independent fact: inventory is unready regardless
 of the modelo or period being calculated.
+
+See Also:
+    :class:`application.inventory.InventoryService`
+        Application service whose current persistence boundary keeps inventory
+        out of the live calculation-source mesh.
+    :mod:`application.aggregation._source_inventory`
+        Blocked resolver adapter that turns this readiness fact into a
+        source-mesh diagnostic.
+    :class:`application.aggregation.CalculationSourceDiagnostic`
+        Shared diagnostic carrier emitted while the source remains blocked.
 """
 
 from __future__ import annotations
@@ -42,8 +53,9 @@ def inventory_source_readiness() -> InventorySourceReadiness:
     until inventory persistence is hardened.
 
     Returns:
-        An :class:`InventorySourceReadiness` with ``ready = False`` and the blocking
-        reason, until inventory persistence is canonical.
+        An :class:`~application.inventory.InventorySourceReadiness` with
+        ``ready = False`` and the blocking reason, until inventory persistence is
+        canonical.
     """
     return InventorySourceReadiness(
         ready=False,
