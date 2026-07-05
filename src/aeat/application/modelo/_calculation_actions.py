@@ -382,6 +382,7 @@ def calculate_modelo_revision(
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     backend_binding_values: Mapping[BindingId, Decimal] | None = None,
+    row_binding_values: Mapping[tuple[BindingId, int], Decimal | str] | None = None,
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     iva_compensation_decision: object | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
@@ -505,6 +506,7 @@ def calculate_modelo_revision(
         resolved_enum_bindings=prepared.channels.enum_bindings,
         resolved_date_bindings=prepared.channels.date_bindings,
         resolved_relations=resolved_relations,
+        resolved_row_bindings=row_binding_values or {},
     )
     casilla_values = dict(engine_result.values)
     _raise_if_m390_303_reconciliation_would_save_silent_zero(
@@ -528,6 +530,7 @@ def calculate_modelo_revision(
         work_units=work_units,
         input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **resolved_text_inputs},
         binding_overrides=replay_payloads.binding_overrides,
+        row_binding_values=replay_payloads.row_binding_values,
         relation_overrides=replay_payloads.relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
@@ -1130,6 +1133,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         text_casilla_inputs=text_casilla_inputs,
         binding_values=binding_values or {},
         backend_binding_values=backend_binding_values,
+        row_binding_values=source_resolution.row_binding_values,
         backend_casilla_inputs=backend_inputs,
         iva_compensation_decision=iva_compensation_decision,
         iva_compensation_decision_repository=iva_compensation_decision_repository,

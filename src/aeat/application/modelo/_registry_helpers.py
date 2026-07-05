@@ -454,6 +454,7 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
         work_unit_id=revision.work_unit_id,
         input_values_by_casilla_id=revision.input_values_by_casilla_id,
         binding_overrides=revision.binding_overrides,
+        row_binding_values=revision.row_binding_values,
         relation_overrides=revision.relation_overrides,
         casilla_values=revision.casilla_values,
         source_transaction_ids=revision.source_transaction_ids,

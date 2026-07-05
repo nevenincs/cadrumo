@@ -15,6 +15,9 @@ explicit zeroes for relation slots whose source modelo is
 This is not a recalculation path. It rehydrates the persisted replay surface the
 filing renderer needs: manual casilla inputs, binding channels, relation values,
 calculated informational casillas, and Modelo 349 detail-row bindings.
+Source-mesh row binding values are replayed as nested
+``binding_id -> row-index -> scalar`` maps so repeating-record coordinates
+survive draft/export replay without synthetic binding ids.
 """
 
 from __future__ import annotations
@@ -99,6 +102,7 @@ def revision_filing_replay_inputs(
         ),
         **bound_binding_replay_inputs,
         **dict(revision.binding_overrides),
+        **dict(revision.row_binding_values),
         **_m349_detail_row_replay_inputs(revision=revision, work_unit=work_unit),
         **_not_applicable_relation_zero_inputs(
             snapshot=snapshot,

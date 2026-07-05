@@ -91,40 +91,17 @@ def _calculate_historical_m100(snapshot: RegistrySnapshot, *, year: int) -> Regi
 
 
 @pytest.mark.parametrize("year", _YEARS)
-def test_historical_0604_folds_m130_and_m131_pagos_fraccionados(
+def test_historical_pagos_fraccionados_relation_contract_and_fold(
     registry_authority: ValidatedRegistryAuthority,
     year: int,
 ) -> None:
-    """2020-2023 0604 is computed from the same M130/M131 relation pair as current M100."""
+    """2020-2023 declare the current M130/M131 relation contract and fold it into 0604."""
     snapshot = registry_authority.snapshot("100", filing_year=year, period="0A")
 
     casilla = next(c for c in snapshot.revision.casillas if c.id == _M100_PAGOS_CASILLA)
     assert casilla.input_kind == "computed"
     assert casilla.formula == f"renta-{year}-pagos-fraccionados-ingresados"
 
-    result = _calculate_historical_m100(snapshot, year=year)
-    entries = {entry.target_casilla_id: entry for entry in result.entries}
-    pagos_entry = entries[_M100_PAGOS_CASILLA]
-
-    assert result.values[_M100_PAGOS_CASILLA] == _EXPECTED_0604
-    assert pagos_entry.operand_refs == (
-        f"renta-{year}-rel-130-pagos-fraccionados",
-        f"renta-{year}-rel-131-pagos-fraccionados",
-    )
-    assert pagos_entry.operand_values == (_EXPECTED_M130_TOTAL, _EXPECTED_M131_TOTAL)
-    assert {"ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110"} <= set(pagos_entry.legal_refs)
-    assert {"orden-eha-672-2007:art-1", "orden-eha-672-2007:art-3"} <= set(pagos_entry.legal_refs)
-    assert {f"aeat-renta-{year}-manual-parte1", f"boe-modelo-100-{year}-form"} <= set(pagos_entry.source_refs)
-    assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == _EXPECTED_0604
-
-
-@pytest.mark.parametrize("year", _YEARS)
-def test_historical_pagos_relations_declare_current_source_contract(
-    registry_authority: ValidatedRegistryAuthority,
-    year: int,
-) -> None:
-    """The 130/131 relation-prefill graph is declared coherently for each historical revision."""
-    snapshot = registry_authority.snapshot("100", filing_year=year, period="0A")
     relations = {relation.id: relation for relation in snapshot.revision.relations}
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     constructs = {construct.id: construct for construct in snapshot.revision.constructs}
@@ -158,3 +135,18 @@ def test_historical_pagos_relations_declare_current_source_contract(
     assert rel131.id in construct.relations
     assert dependencies[f"renta-{year}-dep-130"].relation_refs == (rel130.id,)
     assert dependencies[f"renta-{year}-dep-131"].relation_refs == (rel131.id,)
+
+    result = _calculate_historical_m100(snapshot, year=year)
+    entries = {entry.target_casilla_id: entry for entry in result.entries}
+    pagos_entry = entries[_M100_PAGOS_CASILLA]
+
+    assert result.values[_M100_PAGOS_CASILLA] == _EXPECTED_0604
+    assert pagos_entry.operand_refs == (
+        f"renta-{year}-rel-130-pagos-fraccionados",
+        f"renta-{year}-rel-131-pagos-fraccionados",
+    )
+    assert pagos_entry.operand_values == (_EXPECTED_M130_TOTAL, _EXPECTED_M131_TOTAL)
+    assert {"ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110"} <= set(pagos_entry.legal_refs)
+    assert {"orden-eha-672-2007:art-1", "orden-eha-672-2007:art-3"} <= set(pagos_entry.legal_refs)
+    assert {f"aeat-renta-{year}-manual-parte1", f"boe-modelo-100-{year}-form"} <= set(pagos_entry.source_refs)
+    assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == _EXPECTED_0604

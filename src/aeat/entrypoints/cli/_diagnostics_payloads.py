@@ -246,8 +246,8 @@ class TelemetryPayloadPreviewPayload(OutputSchema):
     """The exact allowlisted event a flush would transmit.
 
     Mirrors :class:`~core.telemetry.TelemetryEventPayload` field-for-field.
-    This IS the whole transmission allowlist: there is no other field a flush
-    could send.
+    This IS the whole transmission allowlist: there is no other field
+    :func:`~application.diagnostics_telemetry.flush_telemetry` could send.
     """
 
     schema_version: int

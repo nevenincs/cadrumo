@@ -2,8 +2,9 @@
 
 Projects :class:`~domain.calculations.registry.ModeloEntry` (and its
 nested rename / deprecation / portal-compatibility records) onto the CLI's
-strict :class:`OutputSchema` contract. Every field mirrors the domain report
-unchanged; this module only pins the JSON transport shape.
+strict :class:`~entrypoints.cli._schemas.OutputSchema` contract. Every field
+mirrors the domain report unchanged; this module only pins the JSON transport
+shape.
 """
 
 from __future__ import annotations

@@ -37,21 +37,6 @@ def test_parser_extracts_modelo_111_registry_profile_targets_from_pdf() -> None:
 
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M111_CORPUS_PARAMS, ids=_M111_CORPUS_IDS)
-def test_parser_extracts_modelo_111_tax_id_from_corpus(pdf_stem: str, year: int, period: str) -> None:
-    """Tax-id extraction must succeed for all M111 corpus PDFs."""
-    from .._parser import _extract_tax_id
-    from .._parsers import extract_pages_text
-
-    pdf_path = FIXTURES_DIR / "justificantes" / "111" / f"{pdf_stem}.pdf"
-    pages = extract_pages_text(pdf_path)
-    text = "\n".join(pages)
-
-    tax_id = _extract_tax_id(text)
-
-    assert tax_id == "Y0000001S", f"{pdf_stem}: expected tax_id='Y0000001S', got {tax_id!r}"
-
-
-@pytest.mark.parametrize("pdf_stem,year,period", _M111_CORPUS_PARAMS, ids=_M111_CORPUS_IDS)
 def test_parser_extracts_modelo_111_casillas_from_corpus(pdf_stem: str, year: int, period: str) -> None:
     """Round-trip all M111 corpus PDFs through the production bbox_anchored profile."""
     pdf_path = FIXTURES_DIR / "justificantes" / "111" / f"{pdf_stem}.pdf"

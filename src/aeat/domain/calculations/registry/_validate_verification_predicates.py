@@ -1,19 +1,19 @@
 """Authoring-time validators for the ``verification_predicates`` DSL operators.
 
-Extracted from :mod:`._validate_surfaces` (which stayed the single home for
-every registry surface validator until its own growth pushed it past its
-reviewed complexity baseline). This module owns exactly the per-operator
-arity/shape validators for the verification-predicate expression DSL; the
-public entry point that walks a revision's declared predicates and dispatches
-into these helpers,
-:func:`._validate_surfaces.validate_verification_expectation_section`, stays
-in the parent module and imports from here.
+Extracted from :mod:`~domain.calculations.registry._validate_surfaces` (which
+stayed the single home for every registry surface validator until its own growth
+pushed it past its reviewed complexity baseline). This module owns exactly the
+per-operator arity/shape validators for the verification-predicate expression
+DSL; the public entry point that walks a revision's declared predicates and
+dispatches into these helpers,
+:func:`~domain.calculations.registry._validate_surfaces.validate_verification_expectation_section`,
+stays in the parent module and imports from here.
 
 Each helper rejects a malformed arity, an unknown casilla reference, or an
 unsupported literal at registry-load time rather than letting the runtime
 evaluator's defensive bad-arity branch silently hold (or, for the ADVISORY
 form, silently never fire) — see
-:mod:`application.modelo._verification_actions` for the runtime
+:mod:`~application.modelo._verification_actions` for the runtime
 counterpart these gates keep honest.
 """
 

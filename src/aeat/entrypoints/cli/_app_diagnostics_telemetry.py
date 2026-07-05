@@ -21,7 +21,7 @@ This module is the transport adapter over
 and :func:`~application.diagnostics_telemetry.flush_telemetry`. It emits
 :class:`~entrypoints.cli._diagnostics_payloads.TelemetryStatusResult` and
 :class:`~entrypoints.cli._diagnostics_payloads.TelemetryFlushResult`
-through :func:`_emit_envelope`.
+through :func:`~entrypoints.cli._common._emit_envelope`.
 """
 
 from __future__ import annotations

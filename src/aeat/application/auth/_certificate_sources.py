@@ -4,20 +4,24 @@ A gestor managing several taxpayers typically holds several PKCS#12
 certificates — their own personal certificate plus one apoderado
 certificate per represented entity. Before this module, the certificate
 auth provider carried exactly one certificate path
-(:attr:`application.auth.AuthState.certificate_path`), configured through
+(:attr:`~application.auth.AuthState.certificate_path`), configured through
 ``aeat config auth configure --provider certificate --file PATH``: adopting
 a different certificate meant re-running that command and losing track of
 the previous path.
 
 This module adds a named registry
-(:attr:`application.auth.AuthState.certificate_sources`) on top of the
-existing single-path field: :func:`register_certificate_source` adds or
-re-points a named source, :func:`list_certificate_sources` enumerates them,
-:func:`select_certificate_source` marks one active and mirrors its path
-onto ``certificate_path`` (so every existing consumer — the backend health
-probe, live login preconditions, ``auth status``/``auth test`` — keeps
-reading the one field it already knows about), and
-:func:`remove_certificate_source` retires a registered source.
+(:attr:`~application.auth.AuthState.certificate_sources`) on top of the existing
+single-path field:
+:func:`~application.auth._certificate_sources.register_certificate_source` adds
+or re-points a named source,
+:func:`~application.auth._certificate_sources.list_certificate_sources`
+enumerates them,
+:func:`~application.auth._certificate_sources.select_certificate_source` marks
+one active and mirrors its path onto ``certificate_path`` (so every existing
+consumer — the backend health probe, live login preconditions, ``auth status`` /
+``auth test`` — keeps reading the one field it already knows about), and
+:func:`~application.auth._certificate_sources.remove_certificate_source` retires
+a registered source.
 
 Rotation hooks (invalidating cached state when the active certificate
 changes on disk), a filesystem-fallback loader, external keyring/1Password
@@ -25,11 +29,11 @@ backends, and service-account impersonation UX are explicitly out of scope
 for this module; see GitHub issue #591.
 
 See Also:
-    :class:`application.auth.AuthState`
+    :class:`~application.auth.AuthState`
         Persisted local auth selection embedded in workflow state; carries
         the ``certificate_sources`` registry and ``certificate_path``
         mirror this module maintains.
-    :func:`application.auth.configure_operator_auth`
+    :func:`~application.auth.configure_operator_auth`
         Configures the active auth *provider*; this module manages
         certificate *sources* within the certificate provider.
 """
@@ -79,9 +83,11 @@ def register_certificate_source(
     ``registered_at`` rather than erroring — re-registration is the
     supported way to point an existing name at a renewed certificate
     file. Registering a source never changes which source is active;
-    call :func:`select_certificate_source` explicitly to activate it.
+    call
+    :func:`~application.auth._certificate_sources.select_certificate_source`
+    explicitly to activate it.
 
-    Returns the updated :class:`application.workflow.WorkflowState`.
+    Returns the updated :class:`~application.workflow.WorkflowState`.
     """
     normalized_name = name.strip()
     if not normalized_name:
@@ -99,13 +105,13 @@ def register_certificate_source(
 
 
 def list_certificate_sources(state: WorkflowState) -> tuple[CertificateSourceRecord, ...]:
-    """Return every registered :class:`application.auth.CertificateSourceRecord`, sorted by name."""
+    """Return every registered :class:`~application.auth.CertificateSourceRecord`."""
     auth = _auth_state(state)
     return tuple(sorted(auth.certificate_sources.values(), key=lambda record: record.name))
 
 
 def active_certificate_source(state: WorkflowState) -> CertificateSourceRecord | None:
-    """Return the currently active :class:`application.auth.CertificateSourceRecord`, if any."""
+    """Return the active :class:`~application.auth.CertificateSourceRecord`, if any."""
     auth = _auth_state(state)
     if auth.active_certificate_source is None:
         return None
@@ -124,7 +130,7 @@ def select_certificate_source(state: WorkflowState, *, name: str) -> WorkflowSta
     Raises:
         CertificateSourceNotFoundError: When ``name`` is not registered.
 
-    Returns the updated :class:`application.workflow.WorkflowState`.
+    Returns the updated :class:`~application.workflow.WorkflowState`.
     """
     auth = _auth_state(state)
     normalized_name = name.strip()

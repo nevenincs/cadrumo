@@ -167,6 +167,49 @@ def test_revision_id_changes_when_work_unit_id_changes() -> None:
     assert id_a != id_b
 
 
+def test_revision_id_changes_when_row_binding_value_changes() -> None:
+    """A different row-indexed binding value must produce a different id."""
+    id_a = derive_calculation_revision_id(
+        work_unit_id="a" * 64,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        row_binding_values={"modelo-720-asset-row-valuation": {"1": "60000"}},
+        casilla_values={},
+    )
+    id_b = derive_calculation_revision_id(
+        work_unit_id="a" * 64,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        row_binding_values={"modelo-720-asset-row-valuation": {"1": "65000"}},
+        casilla_values={},
+    )
+    assert id_a != id_b
+
+
+def test_revision_id_normalises_row_binding_order() -> None:
+    id_ordered = derive_calculation_revision_id(
+        work_unit_id="a" * 64,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        row_binding_values={
+            "modelo-720-asset-row-class": {"1": "C", "2": "V"},
+            "modelo-720-asset-row-valuation": {"1": "60000", "2": "55000"},
+        },
+        casilla_values={},
+    )
+    id_reversed = derive_calculation_revision_id(
+        work_unit_id="a" * 64,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        row_binding_values={
+            "modelo-720-asset-row-valuation": {"2": "55000", "1": "60000"},
+            "modelo-720-asset-row-class": {"2": "V", "1": "C"},
+        },
+        casilla_values={},
+    )
+    assert id_ordered == id_reversed
+
+
 def test_revision_id_changes_when_relation_override_changes() -> None:
     """Relation replay values are part of the immutable calculation attempt."""
     id_a = derive_calculation_revision_id(
@@ -245,6 +288,24 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
         )
 
+    with pytest.raises(ModeloValidationError, match="row_binding_values contains non-canonical binding id"):
+        derive_calculation_revision_id(
+            work_unit_id="a" * 64,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            row_binding_values={"Bad Binding": {"1": "C"}},
+            casilla_values={},
+        )
+
+    with pytest.raises(ModeloValidationError, match="non-positive row index"):
+        derive_calculation_revision_id(
+            work_unit_id="a" * 64,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            row_binding_values={"modelo-720-asset-row-class": {"0": "C"}},
+            casilla_values={},
+        )
+
 
 def test_calculation_revision_rejects_persisted_non_canonical_casilla_keys() -> None:
     """A stored revision with malformed casilla keys must not construct."""
@@ -320,6 +381,34 @@ def test_calculation_revision_rejects_persisted_non_canonical_binding_keys() -> 
             created_at=created,
             updated_at=created,
         )
+
+
+def test_calculation_revision_normalises_row_binding_values() -> None:
+    from datetime import UTC, datetime
+
+    created = datetime(2026, 7, 5, 10, 0, 0, tzinfo=UTC)
+    row_binding_values = {"modelo-720-asset-row-class": {2: "V", "1": "C"}}
+    revision_id = derive_calculation_revision_id(
+        work_unit_id="a" * 64,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        row_binding_values=row_binding_values,
+        casilla_values={},
+    )
+
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id="a" * 64,
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        row_binding_values=row_binding_values,
+        casilla_values={},
+        created_at=created,
+        updated_at=created,
+    )
+
+    assert revision.row_binding_values == {"modelo-720-asset-row-class": {"1": "C", "2": "V"}}
 
 
 def test_calculation_revision_rejects_overlapping_binding_and_relation_replay_ids() -> None:

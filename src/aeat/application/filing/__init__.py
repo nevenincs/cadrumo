@@ -717,6 +717,12 @@ _ROW_FIELD_DATA_TYPES: dict[str, str] = {
     "party_tax_id": "text",
     "party_legal_name": "text",
     "clave": "text",
+    "asset_class_code": "text",
+    "currency_code": "text",
+    "asset_identifier": "text",
+    "asset_name": "text",
+    "acquisition_date": "text",
+    "valuation_amount": "money",
 }
 
 

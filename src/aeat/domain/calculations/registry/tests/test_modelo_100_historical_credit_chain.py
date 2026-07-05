@@ -70,9 +70,11 @@ def _m100_revision(year: str):
 
 
 @pytest.mark.parametrize("year", _YEARS)
-def test_0609_is_computed_by_the_total_pagos_formula(year: str) -> None:
-    """0609 is a computed casilla whose formula sums the credit casillas."""
+def test_historical_credit_chain_binds_and_grounds_total_pagos_formula(year: str) -> None:
+    """0596/0597 bind retenciones, and 0609 sums the grounded credit chain."""
     revision = _m100_revision(year)
+    binding_ids = {b.id for b in revision.bindings}
+
     c0609 = next((c for c in revision.casillas if c.id == _C0609), None)
     assert c0609 is not None, f"M100 {year} casilla 0609 missing"
     assert getattr(c0609, "input_kind", None) == "computed", (
@@ -89,13 +91,6 @@ def test_0609_is_computed_by_the_total_pagos_formula(year: str) -> None:
         f"M100 {year} total-pagos formula must sum the credit casillas in order; got {summed!r}"
     )
 
-
-@pytest.mark.parametrize("year", _YEARS)
-def test_credit_casillas_bind_their_retencion_relations(year: str) -> None:
-    """0596/0597 bind the M111/M123 retenciones relations (previously inert)."""
-    revision = _m100_revision(year)
-    binding_ids = {b.id for b in revision.bindings}
-
     c0596 = next((c for c in revision.casillas if c.id == _C0596), None)
     c0597 = next((c for c in revision.casillas if c.id == _C0597), None)
     assert c0596 is not None and c0597 is not None
@@ -108,12 +103,6 @@ def test_credit_casillas_bind_their_retencion_relations(year: str) -> None:
     assert c0597.binding == f"renta-{year}-modelo-123-retenciones-periodicas"
     assert c0597.binding in binding_ids, f"M100 {year} 0597 binds {c0597.binding!r} which is not a declared binding"
 
-
-@pytest.mark.parametrize("year", _YEARS)
-def test_total_pagos_formula_is_legally_grounded(year: str) -> None:
-    """The total-pagos formula cites the withholding/pagos-a-cuenta provisions."""
-    revision = _m100_revision(year)
-    formula = next(f for f in revision.formulas if f.id == f"renta-{year}-total-pagos-a-cuenta")
     # ley-35-2006 art.99 (obligation + pagos a cuenta credit) and the rd-439-2007
     # withholding-procedure articles are the binding grounding for the credit total.
     assert "ley-35-2006:art-99" in formula.legal_refs
