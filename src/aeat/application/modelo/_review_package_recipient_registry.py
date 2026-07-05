@@ -5,7 +5,7 @@ encrypted review package -- an accountant or gestor -- by the SHA-256
 fingerprint of that recipient's X25519 public key, verified out-of-band
 (read aloud, compared over a separate channel) before it is trusted.
 It is the taxpayer-side companion to
-:mod:`application.modelo._review_package_recipient_encryption`,
+:mod:`~application.modelo._review_package_recipient_encryption`,
 which consumes a registered recipient's public key to seal a review
 package so only that recipient's matching private key can open it.
 
@@ -23,10 +23,10 @@ empty register when absent, and duplicate-``recipient_id`` refusal on
 add.
 
 See Also:
-    :mod:`application.modelo._review_package_recipient_encryption`
+    :mod:`~application.modelo._review_package_recipient_encryption`
         Consumes a registered recipient's public key to encrypt a
         review package.
-    :mod:`application.modelo._review_package_signing`
+    :mod:`~application.modelo._review_package_signing`
         Sibling per-profile keypair primitive (Ed25519, signature-only)
         this module's X25519 keypair concept deliberately does not
         share key material with -- signing and encryption keys must
@@ -134,10 +134,10 @@ class RecipientFingerprintRegistryRepository:
     """Governed repository for the encrypted recipient-fingerprint register.
 
     The singleton row is owned by
-    :data:`adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE`
+    :data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE`
     and persisted through
-    :class:`adapters.persistence.storage.SecureObjectRepository`, mirroring
-    :class:`adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`, mirroring
+    :class:`~adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`.
     """
 
     def __init__(
@@ -152,7 +152,9 @@ class RecipientFingerprintRegistryRepository:
             bucket_id: Explicit bucket to bind to, resolved through
                 :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`.
                 Ignored when ``objects`` is supplied.
-            objects: Explicit :class:`SecureObjectRepository` override
+            objects: Explicit
+                :class:`~adapters.persistence.storage.SecureObjectRepository`
+                override
                 (tests). When neither ``objects`` nor ``bucket_id`` is
                 supplied, defaults to the active-bucket secure object
                 store.

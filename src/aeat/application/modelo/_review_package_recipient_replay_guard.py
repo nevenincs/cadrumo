@@ -2,7 +2,7 @@
 
 Every :class:`~application.modelo.RecipientEncryptedPackage` carries a
 fresh, unique ``envelope_nonce_hex`` minted at encryption time (see
-:mod:`application.modelo._review_package_recipient_encryption`). This
+:mod:`~application.modelo._review_package_recipient_encryption`). This
 module lets the recipient side of :func:`~application.modelo.decrypt_review_package_for_recipient`
 record which nonces have already been successfully decrypted, so a captured
 ciphertext replayed a second time against the same recipient bucket is
@@ -22,16 +22,16 @@ around the existing, unmodified
 Nonce identity is clock-free (the nonce is a random 32-byte value minted once
 per encryption, never derived from a timestamp), so replay defence does not
 depend on wall-clock ordering the way the paired expiry check does -- see
-:mod:`application.modelo._review_package_recipient_encryption` for the
+:mod:`~application.modelo._review_package_recipient_encryption` for the
 ``issued_at`` / ``valid_until`` expiry fields, which are a distinct concern
 (a package can be replayed within its validity window, and expiry alone does
 not detect a same-nonce replay before the deadline).
 
 See Also:
-    :mod:`application.modelo._review_package_recipient_encryption`
+    :mod:`~application.modelo._review_package_recipient_encryption`
         Mints the ``envelope_nonce_hex`` this ledger consumes and defines the
         paired expiry fields.
-    :mod:`application.modelo._review_package_recipient_registry`
+    :mod:`~application.modelo._review_package_recipient_registry`
         The structural template this repository mirrors.
 """
 
@@ -87,9 +87,9 @@ class RecipientReplayGuardRepository:
     """Governed repository for the encrypted consumed-nonce ledger.
 
     The singleton row is owned by
-    :data:`adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE`
+    :data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE`
     and persisted through
-    :class:`adapters.persistence.storage.SecureObjectRepository`, mirroring
+    :class:`~adapters.persistence.storage.SecureObjectRepository`, mirroring
     :class:`~application.modelo.RecipientFingerprintRegistryRepository`.
     """
 
@@ -105,7 +105,9 @@ class RecipientReplayGuardRepository:
             bucket_id: Explicit bucket to bind to, resolved through
                 :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`.
                 Ignored when ``objects`` is supplied.
-            objects: Explicit :class:`SecureObjectRepository` override
+            objects: Explicit
+                :class:`~adapters.persistence.storage.SecureObjectRepository`
+                override
                 (tests). When neither ``objects`` nor ``bucket_id`` is
                 supplied, defaults to the active-bucket secure object store.
         """
