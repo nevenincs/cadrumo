@@ -1,9 +1,8 @@
 """Public re-exports for Google outbound adapter primitives.
 
 This package boundary exposes OAuth records and scope constants from
-:mod:`adapters.outbound.google._records`, the Google auth error taxonomy
-from :mod:`adapters.outbound.google._errors`, and scoped document-link
-helpers from
+:mod:`adapters.outbound.google._records`, the Google auth error taxonomy from
+:mod:`adapters.outbound.google._errors`, and scoped document-link helpers from
 :mod:`adapters.outbound.google._document_link_resolver`. Google Sheets
 remains a one-way export mirror here, never an authority.
 
@@ -62,13 +61,13 @@ Major declarations:
   :func:`resolve_impersonated_credentials`, and
   :func:`describe_impersonation_target` — the service-account
   impersonation credential source
-  (:attr:`core.GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION`),
+  (:attr:`~core.GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION`),
   an alternative to the default OAuth Desktop flow above.
 * :class:`GoogleCredentialSourceSelection`,
   :func:`save_credential_source_selection`, and
   :func:`load_credential_source_selection` — per-profile persistence of
-  which :class:`core.GoogleCredentialSourceKind` a profile has chosen,
-  consumed by :func:`adapters.outbound.storage.build_google_credentials`
+  which :class:`~core.GoogleCredentialSourceKind` a profile has chosen,
+  consumed by :func:`~adapters.outbound.storage.build_google_credentials`
   to dispatch between the OAuth-Desktop and impersonation sources.
 
 See Also:
