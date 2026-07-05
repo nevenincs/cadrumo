@@ -1,4 +1,4 @@
-"""Domain exceptions for :mod:`aeat.domain.usage_ratios`.
+"""Domain exceptions for :mod:`domain.usage_ratios`.
 
 The hierarchy roots at :class:`core.errors.AeatError` so callers may catch
 the project-wide base class when treating the substrate as opaque, or the
@@ -19,7 +19,7 @@ __all__ = [
 
 
 class UsageRatioError(AeatError):
-    """Base error for every :mod:`aeat.domain.usage_ratios` failure mode.
+    """Base error for every :mod:`domain.usage_ratios` failure mode.
 
     Subclassed by every concrete error raised by the package so callers can
     catch the broad family with a single ``except`` clause.
