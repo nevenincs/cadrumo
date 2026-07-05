@@ -7,6 +7,7 @@ modified: '2026-07-05'
 related:
   - "[[2026-05-19-live-iva-compensation-wallet-adr]]"
   - "[[2026-06-19-iva-compensation-override-cli-adr]]"
+  - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
 ---
 
 <!-- FRONTMATTER RULES:
@@ -61,6 +62,16 @@ its own wording as an opt-in live read-only path and privacy guard. The status
 checker also reports historical missing exec records for older checked rows; no
 plan checkbox or exec reconciliation was changed in this code-review pass.
 
+### exec-record-reconciliation | low | Historical checked rows now have canonical records
+
+Reviewed the 49 canonical exec records scaffolded for checked rows `S05` through
+`S49`, `S61`, `S62`, and `S69`. The records use `vaultspec-core vault add exec`
+frontmatter, keep the plan and source tree unchanged, and explicitly scope the
+work as traceability repair rather than implementation. `vault plan status`
+now reports no `exec-missing` alert for the live-wallet plan; completion remains
+101 of 102 because the standing live verification row is still intentionally
+open.
+
 ## Recommendations
 
 Keep this follow-up scoped to `first_period_zero` replay refresh. Do not broaden
@@ -69,3 +80,7 @@ approved step, because the override ADR explicitly left that broader behavior as
 follow-up work. Treat the live-wallet plan as not closed until the operator-gated
 standing row and historical exec-record alerts are reconciled under their own
 authority.
+
+For the exec-record reconciliation, keep the new records vault-only. Do not infer
+new implementation completion from them, and do not close `W06.P15.S56` without
+fresh operator-owned live-read evidence or an explicit formal deferral decision.
