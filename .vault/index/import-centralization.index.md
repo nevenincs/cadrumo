@@ -55,18 +55,255 @@ related:
   - '[[2026-07-01-import-centralization-W01-P34-S47]]'
   - '[[2026-07-01-import-centralization-W01-P35-S48]]'
   - '[[2026-07-01-import-centralization-W02-P36-S49]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S50]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S51]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S52]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S53]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S54]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S55]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S56]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S57]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S58]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S59]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S60]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S61]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S62]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S63]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S64]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S65]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S66]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S67]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S68]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S69]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S70]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S71]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S72]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S73]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S74]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S75]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S76]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S77]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S78]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S79]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S80]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S81]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S82]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S83]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S84]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S85]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S86]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S87]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S88]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S89]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S90]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S91]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S92]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S93]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S94]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S95]]'
+  - '[[2026-07-01-import-centralization-W02-P36-S96]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S100]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S101]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S102]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S103]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S104]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S105]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S106]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S107]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S108]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S109]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S110]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S111]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S112]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S113]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S114]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S115]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S116]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S117]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S118]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S119]]'
   - '[[2026-07-01-import-centralization-W02-P37-S97]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S98]]'
+  - '[[2026-07-01-import-centralization-W02-P37-S99]]'
   - '[[2026-07-01-import-centralization-W02-P38-S120]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S121]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S122]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S123]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S124]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S125]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S126]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S127]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S128]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S129]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S130]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S131]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S132]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S133]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S134]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S135]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S136]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S137]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S138]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S139]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S140]]'
+  - '[[2026-07-01-import-centralization-W02-P38-S141]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S142]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S143]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S144]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S145]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S146]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S147]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S148]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S149]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S150]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S151]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S152]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S153]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S154]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S155]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S156]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S157]]'
+  - '[[2026-07-01-import-centralization-W02-P39-S158]]'
   - '[[2026-07-01-import-centralization-W02-P40-S159]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S160]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S161]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S162]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S163]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S164]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S165]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S166]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S167]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S168]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S169]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S170]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S171]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S172]]'
+  - '[[2026-07-01-import-centralization-W02-P40-S173]]'
   - '[[2026-07-01-import-centralization-W02-P41-S174]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S175]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S176]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S177]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S178]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S179]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S180]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S181]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S182]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S183]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S184]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S185]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S186]]'
+  - '[[2026-07-01-import-centralization-W02-P41-S187]]'
+  - '[[2026-07-01-import-centralization-W02-P42-S188]]'
+  - '[[2026-07-01-import-centralization-W02-P42-S189]]'
+  - '[[2026-07-01-import-centralization-W02-P42-S190]]'
+  - '[[2026-07-01-import-centralization-W02-P42-S191]]'
+  - '[[2026-07-01-import-centralization-W02-P42-S192]]'
+  - '[[2026-07-01-import-centralization-W02-P42-S193]]'
+  - '[[2026-07-01-import-centralization-W02-P42-S194]]'
+  - '[[2026-07-01-import-centralization-W02-P42-S195]]'
+  - '[[2026-07-01-import-centralization-W02-P42-S196]]'
+  - '[[2026-07-01-import-centralization-W02-P42-S197]]'
+  - '[[2026-07-01-import-centralization-W02-P42-S198]]'
   - '[[2026-07-01-import-centralization-W02-P43-S199]]'
+  - '[[2026-07-01-import-centralization-W02-P43-S200]]'
+  - '[[2026-07-01-import-centralization-W02-P43-S201]]'
+  - '[[2026-07-01-import-centralization-W02-P43-S202]]'
+  - '[[2026-07-01-import-centralization-W02-P43-S203]]'
+  - '[[2026-07-01-import-centralization-W02-P43-S204]]'
+  - '[[2026-07-01-import-centralization-W02-P43-S205]]'
+  - '[[2026-07-01-import-centralization-W02-P43-S206]]'
+  - '[[2026-07-01-import-centralization-W02-P43-S207]]'
+  - '[[2026-07-01-import-centralization-W02-P43-S208]]'
+  - '[[2026-07-01-import-centralization-W02-P43-S209]]'
+  - '[[2026-07-01-import-centralization-W02-P44-S210]]'
+  - '[[2026-07-01-import-centralization-W02-P44-S211]]'
+  - '[[2026-07-01-import-centralization-W02-P44-S212]]'
+  - '[[2026-07-01-import-centralization-W02-P44-S213]]'
+  - '[[2026-07-01-import-centralization-W02-P44-S214]]'
+  - '[[2026-07-01-import-centralization-W02-P44-S215]]'
+  - '[[2026-07-01-import-centralization-W02-P44-S216]]'
   - '[[2026-07-01-import-centralization-W02-P45-S217]]'
+  - '[[2026-07-01-import-centralization-W02-P45-S218]]'
+  - '[[2026-07-01-import-centralization-W02-P45-S219]]'
+  - '[[2026-07-01-import-centralization-W02-P45-S220]]'
+  - '[[2026-07-01-import-centralization-W02-P45-S221]]'
+  - '[[2026-07-01-import-centralization-W02-P45-S222]]'
+  - '[[2026-07-01-import-centralization-W02-P46-S223]]'
+  - '[[2026-07-01-import-centralization-W02-P46-S224]]'
+  - '[[2026-07-01-import-centralization-W02-P46-S225]]'
+  - '[[2026-07-01-import-centralization-W02-P46-S226]]'
+  - '[[2026-07-01-import-centralization-W02-P46-S227]]'
+  - '[[2026-07-01-import-centralization-W02-P46-S228]]'
+  - '[[2026-07-01-import-centralization-W02-P47-S229]]'
+  - '[[2026-07-01-import-centralization-W02-P47-S230]]'
+  - '[[2026-07-01-import-centralization-W02-P47-S231]]'
+  - '[[2026-07-01-import-centralization-W02-P47-S232]]'
+  - '[[2026-07-01-import-centralization-W02-P47-S233]]'
+  - '[[2026-07-01-import-centralization-W02-P47-S234]]'
+  - '[[2026-07-01-import-centralization-W02-P48-S235]]'
+  - '[[2026-07-01-import-centralization-W02-P48-S236]]'
+  - '[[2026-07-01-import-centralization-W02-P48-S237]]'
+  - '[[2026-07-01-import-centralization-W02-P48-S238]]'
+  - '[[2026-07-01-import-centralization-W02-P48-S239]]'
   - '[[2026-07-01-import-centralization-W02-P49-S240]]'
+  - '[[2026-07-01-import-centralization-W02-P49-S241]]'
+  - '[[2026-07-01-import-centralization-W02-P49-S242]]'
+  - '[[2026-07-01-import-centralization-W02-P49-S243]]'
+  - '[[2026-07-01-import-centralization-W02-P50-S244]]'
+  - '[[2026-07-01-import-centralization-W02-P50-S245]]'
+  - '[[2026-07-01-import-centralization-W02-P50-S246]]'
+  - '[[2026-07-01-import-centralization-W02-P50-S247]]'
   - '[[2026-07-01-import-centralization-W02-P51-S248]]'
+  - '[[2026-07-01-import-centralization-W02-P51-S249]]'
+  - '[[2026-07-01-import-centralization-W02-P51-S250]]'
+  - '[[2026-07-01-import-centralization-W02-P51-S251]]'
   - '[[2026-07-01-import-centralization-W02-P52-S252]]'
+  - '[[2026-07-01-import-centralization-W02-P52-S253]]'
   - '[[2026-07-01-import-centralization-W02-P52-S254]]'
+  - '[[2026-07-01-import-centralization-W02-P53-S255]]'
+  - '[[2026-07-01-import-centralization-W02-P53-S256]]'
+  - '[[2026-07-01-import-centralization-W02-P53-S257]]'
   - '[[2026-07-01-import-centralization-W02-P54-S258]]'
+  - '[[2026-07-01-import-centralization-W02-P54-S259]]'
+  - '[[2026-07-01-import-centralization-W02-P54-S260]]'
+  - '[[2026-07-01-import-centralization-W02-P55-S261]]'
+  - '[[2026-07-01-import-centralization-W02-P55-S262]]'
+  - '[[2026-07-01-import-centralization-W02-P55-S263]]'
+  - '[[2026-07-01-import-centralization-W02-P56-S264]]'
+  - '[[2026-07-01-import-centralization-W02-P56-S265]]'
+  - '[[2026-07-01-import-centralization-W02-P56-S266]]'
+  - '[[2026-07-01-import-centralization-W02-P57-S267]]'
+  - '[[2026-07-01-import-centralization-W02-P57-S268]]'
+  - '[[2026-07-01-import-centralization-W02-P58-S269]]'
+  - '[[2026-07-01-import-centralization-W02-P58-S270]]'
+  - '[[2026-07-01-import-centralization-W02-P59-S271]]'
+  - '[[2026-07-01-import-centralization-W02-P59-S272]]'
+  - '[[2026-07-01-import-centralization-W02-P60-S273]]'
+  - '[[2026-07-01-import-centralization-W02-P60-S274]]'
   - '[[2026-07-01-import-centralization-W02-P61-S275]]'
+  - '[[2026-07-01-import-centralization-W02-P61-S276]]'
+  - '[[2026-07-01-import-centralization-W02-P62-S277]]'
+  - '[[2026-07-01-import-centralization-W02-P62-S278]]'
+  - '[[2026-07-01-import-centralization-W02-P63-S279]]'
+  - '[[2026-07-01-import-centralization-W02-P64-S280]]'
+  - '[[2026-07-01-import-centralization-W02-P65-S281]]'
+  - '[[2026-07-01-import-centralization-W02-P66-S282]]'
+  - '[[2026-07-01-import-centralization-W02-P67-S283]]'
+  - '[[2026-07-01-import-centralization-W02-P68-S284]]'
+  - '[[2026-07-01-import-centralization-W02-P69-S285]]'
+  - '[[2026-07-01-import-centralization-W02-P70-S286]]'
+  - '[[2026-07-01-import-centralization-W02-P71-S287]]'
+  - '[[2026-07-01-import-centralization-W02-P72-S288]]'
+  - '[[2026-07-01-import-centralization-W02-P73-S289]]'
+  - '[[2026-07-01-import-centralization-W02-P74-S290]]'
+  - '[[2026-07-01-import-centralization-W02-P75-S291]]'
+  - '[[2026-07-01-import-centralization-W02-P76-S292]]'
+  - '[[2026-07-01-import-centralization-W02-P77-S293]]'
+  - '[[2026-07-01-import-centralization-W02-P78-S294]]'
+  - '[[2026-07-01-import-centralization-W02-P79-S295]]'
+  - '[[2026-07-01-import-centralization-W02-P80-S296]]'
+  - '[[2026-07-01-import-centralization-W02-P81-S297]]'
+  - '[[2026-07-01-import-centralization-W02-P82-S298]]'
   - '[[2026-07-01-import-centralization-W03-P87-S364]]'
   - '[[2026-07-01-import-centralization-W03-P87-S368]]'
   - '[[2026-07-01-import-centralization-W03-P87-S369]]'
@@ -332,6 +569,243 @@ Auto-generated index of all documents tagged with `#import-centralization`.
 - `2026-07-01-import-centralization-W01-P33-S46` - Promote `clear_output_language_cache` to `aeat.core.i18n.__all__` with eager re-exports so the 5 existing cross-package consumer site(s) can import from the facade
 - `2026-07-01-import-centralization-W01-P34-S47` - Promote `portal_host_name` to `aeat.domain.portals.__all__` with eager re-exports so the 1 existing cross-package consumer site(s) can import from the facade
 - `2026-07-01-import-centralization-W01-P35-S48` - Decide and apply the public-surface disposition for `_command_schema_refs` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.entrypoints.cli._app_contract` and consumed cross-package from `src/aeat/entrypoints/mcp/_tools.py`
+- `2026-07-01-import-centralization-W02-P36-S50` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S51` - Rewire 17 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S52` - Rewire 12 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core`, `aeat.domain.modelos`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P36-S53` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S54` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S55` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S56` - Rewire 32 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`, `aeat.application.user_profile`, `aeat.application.workflow`, `aeat.core`, `aeat.domain.calculations.registry`, `aeat.domain.contribuyente`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S57` - Rewire 33 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`, `aeat.application.calculations`, `aeat.application.live`, `aeat.core`, `aeat.domain.buckets`, `aeat.domain.calculations.registry`, `aeat.domain.invoices`, `aeat.domain.modelos`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P36-S58` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S59` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S60` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.calculations`, `aeat.application.user_profile`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S61` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S62` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`
+- `2026-07-01-import-centralization-W02-P36-S63` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S64` - Rewire 14 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`, `aeat.domain.buckets`, `aeat.domain.iva_compensation`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S65` - Rewire 20 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S66` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S67` - Rewire 17 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.calculations`, `aeat.domain.buckets`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S68` - Rewire 9 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S69` - Rewire 13 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.calculations`, `aeat.application.user_profile`, `aeat.domain.iva_compensation`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S70` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva_compensation`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S71` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S72` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`
+- `2026-07-01-import-centralization-W02-P36-S73` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.calculations`
+- `2026-07-01-import-centralization-W02-P36-S74` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S75` - Rewire 14 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S76` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S77` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S78` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S79` - Rewire 7 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`, `aeat.application.workflow`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S80` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core`, `aeat.domain.calculations.registry`
+- `2026-07-01-import-centralization-W02-P36-S81` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S82` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S83` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S84` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S85` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S86` - Rewire 19 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S87` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S88` - Rewire 13 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S89` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S90` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S91` - Rewire 58 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`, `aeat.application.calculations`, `aeat.application.workflow`, `aeat.core`, `aeat.domain.buckets`, `aeat.domain.calculations.registry`, `aeat.domain.iva_compensation`, `aeat.domain.modelos`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P36-S92` - Rewire 11 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.calculations`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S93` - Rewire 9 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S94` - Rewire 10 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`, `aeat.domain.contribuyente`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S95` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.deadlines`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P36-S96` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P37-S100` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.attachments`
+- `2026-07-01-import-centralization-W02-P37-S101` - Rewire 10 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.crypto`, `aeat.adapters.persistence.storage.envelope`, `aeat.adapters.persistence.storage.master_key`
+- `2026-07-01-import-centralization-W02-P37-S102` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.secret_store`
+- `2026-07-01-import-centralization-W02-P37-S103` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P37-S104` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P37-S105` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.master_key`
+- `2026-07-01-import-centralization-W02-P37-S106` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.crypto`, `aeat.adapters.persistence.storage.master_key`, `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P37-S107` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.crypto`, `aeat.adapters.persistence.storage.sql`
+- `2026-07-01-import-centralization-W02-P37-S108` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.crypto`
+- `2026-07-01-import-centralization-W02-P37-S109` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.crypto`
+- `2026-07-01-import-centralization-W02-P37-S110` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.crypto`
+- `2026-07-01-import-centralization-W02-P37-S111` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.crypto`
+- `2026-07-01-import-centralization-W02-P37-S112` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.crypto`
+- `2026-07-01-import-centralization-W02-P37-S113` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.crypto`
+- `2026-07-01-import-centralization-W02-P37-S114` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P37-S115` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.master_key`
+- `2026-07-01-import-centralization-W02-P37-S116` - Rewire 8 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.blob_store`, `aeat.adapters.persistence.storage.crypto`, `aeat.adapters.persistence.storage.envelope`, `aeat.adapters.persistence.storage.master_key`, `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P37-S117` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.crypto`
+- `2026-07-01-import-centralization-W02-P37-S118` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.crypto`
+- `2026-07-01-import-centralization-W02-P37-S119` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.crypto`, `aeat.adapters.persistence.storage.master_key`
+- `2026-07-01-import-centralization-W02-P37-S98` - Rewire 61 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.blob_store`, `aeat.adapters.persistence.storage.crypto`, `aeat.adapters.persistence.storage.envelope`, `aeat.adapters.persistence.storage.master_key`, `aeat.adapters.persistence.storage.secret_store`
+- `2026-07-01-import-centralization-W02-P37-S99` - Rewire 8 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.blob_store`, `aeat.adapters.persistence.storage.crypto`, `aeat.adapters.persistence.storage.envelope`, `aeat.adapters.persistence.storage.master_key`
+- `2026-07-01-import-centralization-W02-P38-S121` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.portals`
+- `2026-07-01-import-centralization-W02-P38-S122` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.sede`
+- `2026-07-01-import-centralization-W02-P38-S123` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.i18n`
+- `2026-07-01-import-centralization-W02-P38-S124` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.workflow`
+- `2026-07-01-import-centralization-W02-P38-S125` - Rewire 9 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.google`
+- `2026-07-01-import-centralization-W02-P38-S126` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.google`
+- `2026-07-01-import-centralization-W02-P38-S127` - Rewire 11 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.google`, `aeat.adapters.outbound.storage`, `aeat.application.storage.calc_sheets`
+- `2026-07-01-import-centralization-W02-P38-S128` - Rewire 22 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage.master_key`, `aeat.application.user_profile`, `aeat.application.workflow`, `aeat.core`, `aeat.domain.buckets`, `aeat.domain.user_profile`
+- `2026-07-01-import-centralization-W02-P38-S129` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.invoices`, `aeat.domain.iva`
+- `2026-07-01-import-centralization-W02-P38-S130` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.google`, `aeat.adapters.outbound.storage`
+- `2026-07-01-import-centralization-W02-P38-S131` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P38-S132` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P38-S133` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.contribuyente`, `aeat.domain.deadlines`
+- `2026-07-01-import-centralization-W02-P38-S134` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva_compensation`
+- `2026-07-01-import-centralization-W02-P38-S135` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.renta`
+- `2026-07-01-import-centralization-W02-P38-S136` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P38-S137` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P38-S138` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P38-S139` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.calculations`
+- `2026-07-01-import-centralization-W02-P38-S140` - Rewire 30 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.sede`, `aeat.application.calculations`, `aeat.application.live`, `aeat.application.modelo`, `aeat.application.overview`, `aeat.application.user_profile`, `aeat.application.workflow`, `aeat.core`, `aeat.domain.justificante`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P38-S141` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.overview`, `aeat.core`
+- `2026-07-01-import-centralization-W02-P39-S142` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P39-S143` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.user_profile`
+- `2026-07-01-import-centralization-W02-P39-S144` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P39-S145` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P39-S146` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.auth`
+- `2026-07-01-import-centralization-W02-P39-S147` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.auth`
+- `2026-07-01-import-centralization-W02-P39-S148` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.auth`
+- `2026-07-01-import-centralization-W02-P39-S149` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva_compensation`
+- `2026-07-01-import-centralization-W02-P39-S150` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.auth`
+- `2026-07-01-import-centralization-W02-P39-S151` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.auth`, `aeat.core.parsing`
+- `2026-07-01-import-centralization-W02-P39-S152` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.auth`
+- `2026-07-01-import-centralization-W02-P39-S153` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.sede`, `aeat.domain.justificante`
+- `2026-07-01-import-centralization-W02-P39-S154` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.storage`
+- `2026-07-01-import-centralization-W02-P39-S155` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.storage`
+- `2026-07-01-import-centralization-W02-P39-S156` - Rewire 9 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.storage`, `aeat.application.storage.calc_sheets`, `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P39-S157` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.storage`
+- `2026-07-01-import-centralization-W02-P39-S158` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.google`
+- `2026-07-01-import-centralization-W02-P40-S160` - Rewire 10 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`, `aeat.domain.attachments`, `aeat.domain.buckets`, `aeat.domain.invoices`, `aeat.domain.modelos`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P40-S161` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P40-S162` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P40-S163` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`, `aeat.domain.invoices`, `aeat.domain.modelos`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P40-S164` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.attachments`, `aeat.domain.buckets`, `aeat.domain.invoices`, `aeat.domain.modelos`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P40-S165` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`, `aeat.domain.modelos`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P40-S166` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain`, `aeat.domain.buckets`
+- `2026-07-01-import-centralization-W02-P40-S167` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain`, `aeat.domain.buckets`
+- `2026-07-01-import-centralization-W02-P40-S168` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.inbound.pdf`
+- `2026-07-01-import-centralization-W02-P40-S169` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`, `aeat.domain.buckets`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P40-S170` - Rewire 7 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva`, `aeat.domain.modelos`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P40-S171` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P40-S172` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`
+- `2026-07-01-import-centralization-W02-P40-S173` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P41-S175` - Rewire 14 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.modelo`, `aeat.domain.modelos`, `aeat.domain.transactions`, `aeat.domain.user_profile`
+- `2026-07-01-import-centralization-W02-P41-S176` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.workflow`
+- `2026-07-01-import-centralization-W02-P41-S177` - Rewire 8 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.sede`, `aeat.application.live`, `aeat.domain.buckets`, `aeat.domain.user_profile`
+- `2026-07-01-import-centralization-W02-P41-S178` - Rewire 39 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.sede`, `aeat.adapters.persistence.storage.envelope`, `aeat.adapters.persistence.storage.sql`, `aeat.application.aggregation`, `aeat.application.calculations`, `aeat.application.evidence`, `aeat.application.filing`, `aeat.application.ledger`, `aeat.application.live`, `aeat.application.modelo`, `aeat.domain.filing`, `aeat.domain.justificante`, `aeat.domain.submission`, `aeat.domain.user_profile`
+- `2026-07-01-import-centralization-W02-P41-S179` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.contribuyente`
+- `2026-07-01-import-centralization-W02-P41-S180` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.workflow`
+- `2026-07-01-import-centralization-W02-P41-S181` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`, `aeat.domain.user_profile`
+- `2026-07-01-import-centralization-W02-P41-S182` - Rewire 11 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage`, `aeat.adapters.persistence.storage.bucket`, `aeat.adapters.persistence.storage.master_key`, `aeat.application.workflow`, `aeat.domain.user_profile`
+- `2026-07-01-import-centralization-W02-P41-S183` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.workflow`, `aeat.domain.user_profile`
+- `2026-07-01-import-centralization-W02-P41-S184` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.deadlines`
+- `2026-07-01-import-centralization-W02-P41-S185` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.i18n`
+- `2026-07-01-import-centralization-W02-P41-S186` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.workflow`, `aeat.domain.deadlines`
+- `2026-07-01-import-centralization-W02-P41-S187` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.parsing`
+- `2026-07-01-import-centralization-W02-P42-S188` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.inbound.pdf`
+- `2026-07-01-import-centralization-W02-P42-S189` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.inbound.pdf`
+- `2026-07-01-import-centralization-W02-P42-S190` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.inbound.pdf`
+- `2026-07-01-import-centralization-W02-P42-S191` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.inbound.pdf`
+- `2026-07-01-import-centralization-W02-P42-S192` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.inbound.pdf`
+- `2026-07-01-import-centralization-W02-P42-S193` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.inbound.pdf`
+- `2026-07-01-import-centralization-W02-P42-S194` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain`
+- `2026-07-01-import-centralization-W02-P42-S195` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.inbound.pdf`, `aeat.domain.justificante`
+- `2026-07-01-import-centralization-W02-P42-S196` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.justificante`
+- `2026-07-01-import-centralization-W02-P42-S197` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.inbound.pdf`, `aeat.domain.justificante`
+- `2026-07-01-import-centralization-W02-P42-S198` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.inbound.pdf`, `aeat.domain.justificante`
+- `2026-07-01-import-centralization-W02-P43-S200` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`
+- `2026-07-01-import-centralization-W02-P43-S201` - Rewire 8 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva_compensation`
+- `2026-07-01-import-centralization-W02-P43-S202` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva_compensation`
+- `2026-07-01-import-centralization-W02-P43-S203` - Rewire 11 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`, `aeat.domain.iva_compensation`
+- `2026-07-01-import-centralization-W02-P43-S204` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`
+- `2026-07-01-import-centralization-W02-P43-S205` - Rewire 8 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.renta`
+- `2026-07-01-import-centralization-W02-P43-S206` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`
+- `2026-07-01-import-centralization-W02-P43-S207` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva_compensation`
+- `2026-07-01-import-centralization-W02-P43-S208` - Rewire 9 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`, `aeat.application.storage.calc_sheets`, `aeat.application.user_profile`
+- `2026-07-01-import-centralization-W02-P43-S209` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.parsing`
+- `2026-07-01-import-centralization-W02-P44-S210` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`
+- `2026-07-01-import-centralization-W02-P44-S211` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.parsing`
+- `2026-07-01-import-centralization-W02-P44-S212` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P44-S213` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva`
+- `2026-07-01-import-centralization-W02-P44-S214` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core`
+- `2026-07-01-import-centralization-W02-P44-S215` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core`
+- `2026-07-01-import-centralization-W02-P44-S216` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.user_profile`
+- `2026-07-01-import-centralization-W02-P45-S218` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.workflow`
+- `2026-07-01-import-centralization-W02-P45-S219` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`, `aeat.application.workflow`
+- `2026-07-01-import-centralization-W02-P45-S220` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.auth`, `aeat.application.user_profile`, `aeat.application.workflow`
+- `2026-07-01-import-centralization-W02-P45-S221` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`
+- `2026-07-01-import-centralization-W02-P45-S222` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`, `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P46-S223` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.submission`
+- `2026-07-01-import-centralization-W02-P46-S224` - Rewire 17 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core`, `aeat.domain.calculations`, `aeat.domain.calculations.registry`, `aeat.domain.contribuyente`, `aeat.domain.submission`
+- `2026-07-01-import-centralization-W02-P46-S225` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain`
+- `2026-07-01-import-centralization-W02-P46-S226` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain`, `aeat.domain.submission`
+- `2026-07-01-import-centralization-W02-P46-S227` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.filing`
+- `2026-07-01-import-centralization-W02-P46-S228` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.wizard`, `aeat.application.workflow`
+- `2026-07-01-import-centralization-W02-P47-S229` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core`, `aeat.domain.deadlines`
+- `2026-07-01-import-centralization-W02-P47-S230` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core`, `aeat.domain.deadlines`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P47-S231` - Rewire 22 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.sede`, `aeat.application.live`, `aeat.core`, `aeat.domain.calculations.registry`, `aeat.domain.deadlines`, `aeat.domain.justificante`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P47-S232` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core`, `aeat.domain.deadlines`
+- `2026-07-01-import-centralization-W02-P47-S233` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.modelo`, `aeat.core`, `aeat.domain.deadlines`
+- `2026-07-01-import-centralization-W02-P47-S234` - Rewire 8 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core`, `aeat.core.resources`, `aeat.domain.calculations.registry`, `aeat.domain.deadlines`
+- `2026-07-01-import-centralization-W02-P48-S235` - Rewire 8 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.contribuyente`, `aeat.domain.deadlines`
+- `2026-07-01-import-centralization-W02-P48-S236` - Rewire 12 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`, `aeat.application.workflow`, `aeat.domain.contribuyente`, `aeat.domain.deadlines`
+- `2026-07-01-import-centralization-W02-P48-S237` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.contribuyente`
+- `2026-07-01-import-centralization-W02-P48-S238` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`, `aeat.application.workflow`
+- `2026-07-01-import-centralization-W02-P48-S239` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`, `aeat.application.workflow`, `aeat.domain.deadlines`
+- `2026-07-01-import-centralization-W02-P49-S241` - Rewire 11 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P49-S242` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P49-S243` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.modelo`
+- `2026-07-01-import-centralization-W02-P50-S244` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.invoices`
+- `2026-07-01-import-centralization-W02-P50-S245` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.invoices`
+- `2026-07-01-import-centralization-W02-P50-S246` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.invoices`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P50-S247` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`, `aeat.domain.invoices`
+- `2026-07-01-import-centralization-W02-P51-S249` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.i18n`
+- `2026-07-01-import-centralization-W02-P51-S250` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`
+- `2026-07-01-import-centralization-W02-P51-S251` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.submission`
+- `2026-07-01-import-centralization-W02-P52-S253` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`
+- `2026-07-01-import-centralization-W02-P53-S255` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P53-S256` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.google`
+- `2026-07-01-import-centralization-W02-P53-S257` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P54-S259` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva`
+- `2026-07-01-import-centralization-W02-P54-S260` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva`
+- `2026-07-01-import-centralization-W02-P55-S261` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.parsing`
+- `2026-07-01-import-centralization-W02-P55-S262` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.parsing`
+- `2026-07-01-import-centralization-W02-P55-S263` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.parsing`
+- `2026-07-01-import-centralization-W02-P56-S264` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.modelos`, `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P56-S265` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations`
+- `2026-07-01-import-centralization-W02-P56-S266` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.parsing`
+- `2026-07-01-import-centralization-W02-P57-S267` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P57-S268` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`
+- `2026-07-01-import-centralization-W02-P58-S269` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva_compensation`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P58-S270` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`, `aeat.domain.iva_compensation`
+- `2026-07-01-import-centralization-W02-P59-S271` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P59-S272` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P60-S273` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.iva`
+- `2026-07-01-import-centralization-W02-P60-S274` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.parsing`
+- `2026-07-01-import-centralization-W02-P61-S276` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.contribuyente`
+- `2026-07-01-import-centralization-W02-P62-S277` - Rewire 4 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`, `aeat.domain.iva`
+- `2026-07-01-import-centralization-W02-P62-S278` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P63-S279` - Rewire 40 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.persistence.storage`, `aeat.adapters.persistence.storage.bucket`, `aeat.adapters.persistence.storage.crypto`, `aeat.adapters.persistence.storage.master_key`, `aeat.application.user_profile`, `aeat.application.workflow`, `aeat.core`, `aeat.domain.buckets`, `aeat.domain.modelos`, `aeat.domain.user_profile`
+- `2026-07-01-import-centralization-W02-P64-S280` - Rewire 5 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`, `aeat.application.workflow`
+- `2026-07-01-import-centralization-W02-P65-S281` - Rewire 7 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`, `aeat.application.wizard`, `aeat.application.workflow`
+- `2026-07-01-import-centralization-W02-P66-S282` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.buckets`
+- `2026-07-01-import-centralization-W02-P67-S283` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.manuals`
+- `2026-07-01-import-centralization-W02-P68-S284` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`, `aeat.application.workflow`
+- `2026-07-01-import-centralization-W02-P69-S285` - Rewire 9 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.user_profile`, `aeat.application.workflow`, `aeat.domain.modelos`
+- `2026-07-01-import-centralization-W02-P70-S286` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.modelo`
+- `2026-07-01-import-centralization-W02-P71-S287` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.transactions`
+- `2026-07-01-import-centralization-W02-P72-S288` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.i18n`
+- `2026-07-01-import-centralization-W02-P73-S289` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P74-S290` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.observability`
+- `2026-07-01-import-centralization-W02-P75-S291` - Rewire 3 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.observability`
+- `2026-07-01-import-centralization-W02-P76-S292` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.core.time`
+- `2026-07-01-import-centralization-W02-P77-S293` - Rewire 2 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.contribuyente`
+- `2026-07-01-import-centralization-W02-P78-S294` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`
+- `2026-07-01-import-centralization-W02-P79-S295` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`
+- `2026-07-01-import-centralization-W02-P80-S296` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.entrypoints.cli`
+- `2026-07-01-import-centralization-W02-P81-S297` - Rewire 7 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.contribuyente`, `aeat.domain.deadlines`
+- `2026-07-01-import-centralization-W02-P82-S298` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`
 
 ### plan
 
