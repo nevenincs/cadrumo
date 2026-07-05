@@ -231,22 +231,7 @@ def test_modelo_369_revisions_split_exterior_union_importacion_periods() -> None
     )
 
 
-def test_modelo_369_snapshot_selects_scheme_by_period() -> None:
-    modelo, catalogues = _load_modelo_369()
-
-    for period, expected_revision, _expected_legal_refs in _M369_SCHEME_CASES:
-        snapshot = build_snapshot(
-            modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=2025,
-            period=period,
-        )
-
-        assert snapshot.revision.id == expected_revision, period
-
-
-def test_modelo_369_snapshots_carry_scheme_authority() -> None:
+def test_modelo_369_snapshots_select_scheme_and_carry_authority() -> None:
     modelo, catalogues = _load_modelo_369()
 
     for period, revision_id, expected_legal_refs in _M369_SCHEME_CASES:
@@ -259,6 +244,7 @@ def test_modelo_369_snapshots_carry_scheme_authority() -> None:
             revision_id=revision_id,
         )
 
+        assert snapshot.revision.id == revision_id, period
         assert "orden-hac-610-2021:art-1" in snapshot.legal
         assert "orden-hac-610-2021:art-2" in snapshot.legal
         assert "orden-hac-610-2021:art-3" in snapshot.legal
