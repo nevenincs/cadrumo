@@ -13,6 +13,21 @@ tuples on re-validation. ``expression`` fields stay ``dict[str, object]``
 because :class:`~domain.calculations.registry.FormulaExpression` is a
 recursive tree; every other field is a concrete typed projection, not a bare
 mapping.
+
+See Also:
+    :class:`~application.registry.RegistryRevisionDiffReport`
+        Application report shape these JSON payloads project.
+    :func:`~application.registry.diff_registry_revisions`
+        Read-side service that builds the revision diff report.
+    :mod:`~entrypoints.cli.registry`
+        CLI command surface that emits these payload schemas.
+    :class:`~domain.calculations.registry.ModeloRevision`
+        Registry revision type whose casillas, formulas, parameters, bindings,
+        and legal refs are compared.
+    :class:`~entrypoints.cli._schemas.OutputSchema`
+        Strict base class for typed CLI JSON result payloads.
+    :func:`~entrypoints.cli._schemas.register_schema`
+        Schema registry hook used by the JSON-contract tests.
 """
 
 from __future__ import annotations
