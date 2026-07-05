@@ -392,6 +392,25 @@ remains red only on `_formula_runtime.py` and `calculate_registry_snapshot`,
 inventoried in
 `var/log/codebase-size-after-modelo-iva-wallet-payload-split-20260705.log`.
 
+### follow-up-formula-runtime-m131-size-budget | high | formula runtime below module and callable budgets
+
+Reviewed the 2026-07-05 ratchet follow-up that moved the M131
+estimacion-objetiva modulos runtime evaluators from `_formula_runtime.py` into
+the new `_formula_runtime_m131.py` sibling module. `_formula_runtime.py` keeps
+the single dispatcher and routes the six existing M131 op names through
+`_formula_runtime_m131.evaluate_m131_*`; no registry op name, resolver
+convention, source kind, or calculation contract changed. The snapshot entry
+point also moved its external binding/relation id validation block into
+`_validate_external_value_ids`, preserving the same hard-failure checks while
+bringing `calculate_registry_snapshot` below its callable ceiling.
+`_formula_runtime.py` dropped from 2365 to 1587 lines, below its pinned
+1835-line budget; `calculate_registry_snapshot` dropped from 234 to 217 lines,
+below its pinned 228-line budget; the new M131 runtime module is 850 lines.
+Ruff and syntax checks passed, the focused formula-runtime and split M131
+modulos suite passed (110 tests), an import-link smoke check passed, and the
+codebase-size gate passed cleanly (2 tests) in
+`var/log/codebase-size-after-formula-runtime-m131-split-20260705.log`.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
