@@ -45,15 +45,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from enum import StrEnum
 from uuid import uuid4
-
-from pydantic import BaseModel, Field
 
 from ...adapters.outbound.llm import rasterise_pdf_pages_to_base64_png
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware, now
@@ -95,26 +91,23 @@ from ._evidence_input import (
 )
 from ._evidence_split import derive_child_amounts
 from ._evidence_textlayer import extract_evidence_text
+from ._llm_suggestions import (
+    LLMClassificationSuggestion,
+    LLMProvider,
+    LLMProviderAvailability,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitChildSuggestion,
+    LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
+    OperatorIvaDerivationResult,
+)
 from ._models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult, SplitChildCommand
 from ._vision_classifier import LocalVisionLLMClassifier
 
 _logger = get_logger(__name__)
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
-
-
-class LLMProvider(StrEnum):
-    """Subprocess LLM provider names accepted by the classify surface.
-
-    Each value names a local CLI (``claude`` / ``antigravity`` / ``codex``) the
-    :class:`aeat.domain.transactions.SubprocessLLMClassifier` shells out to.
-    ``antigravity`` shells to ``agy``, Google's agentic CLI and the supported
-    successor to the retired standalone ``gemini`` CLI.
-    """
-
-    CLAUDE = "claude"
-    ANTIGRAVITY = "antigravity"
-    CODEX = "codex"
 
 
 # The CLI binary each subprocess provider shells out to. Used by
@@ -125,47 +118,6 @@ _PROVIDER_CLI_BINARY: dict[LLMProvider, str] = {
     LLMProvider.ANTIGRAVITY: "agy",
     LLMProvider.CODEX: "codex",
 }
-
-
-class LLMClassificationSuggestion(BaseModel):
-    """One LLM classification suggestion for a transaction, not yet persisted.
-
-    Carries the decision the model proposed plus the provenance string that
-    will be stamped as ``classified_by`` if the operator applies it. Produced
-    by :func:`suggest_llm_classification`; consumed for review and, on accept,
-    by :func:`apply_llm_classification`.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    transaction_id: str = Field(min_length=1)
-    provider: LLMProvider | None = None
-    provenance: str = Field(min_length=1)
-    classification: BusinessClassification
-    category: SpendingCategory | None = None
-    confidence: Decimal
-    reason: str = Field(min_length=1)
-    evidence_id: str | None = None
-    multiple_components: bool | None = None
-    """Carried from the evidence read: True when the model judged the invoice to
-    carry multiple distinct rate/category lines warranting a split. Drives the
-    non-blocking split recommendation on the CLI; ``None`` when no evidence was read."""
-
-    @property
-    def recommends_split(self) -> bool:
-        """True when the evidence read flagged the invoice as multi-component."""
-        return self.multiple_components is True
-
-
-class LLMProviderAvailability(BaseModel):
-    """Whether one subprocess LLM provider has a usable CLI on ``PATH``."""
-
-    model_config = _STRICT_FROZEN
-
-    provider: LLMProvider
-    cli_binary: str = Field(min_length=1)
-    available: bool
-    resolved_path: str | None = None
 
 
 def available_llm_providers() -> tuple[LLMProviderAvailability, ...]:
@@ -688,55 +640,6 @@ def apply_llm_classification(
 # ── stage-2 saturation: grounded rich tax metadata ────────────────
 
 
-class LLMSaturatedSuggestion(BaseModel):
-    """A saturated LLM suggestion: business decision + grounded tax substrate.
-
-    Extends the stage-1 decision (classification, expense category) with the
-    IVA situation the model SELECTED and the regulated euro figures the system
-    DERIVED from the registry rate — never numbers the model emitted. Each
-    field carries its origin so the operator reviewing the preview can see
-    which values are model selections (``llm:``) and which are system
-    derivations (``derived:``).
-
-    When the selected :attr:`iva_category` has no simple derivable Spanish
-    domestic rate (intra-community, reverse-charge, export, import, recargo,
-    régimen simplificado, not-subject) the numbers are left unset and
-    :attr:`derivation_note` states why the operator must complete them — the
-    system never guesses.
-
-    Produced by :func:`saturate_llm_classification`; consumed for review and,
-    on accept, by :func:`apply_saturated_llm_classification`.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    transaction_id: str = Field(min_length=1)
-    provider: LLMProvider | None = None
-    provenance: str = Field(min_length=1)
-    classification: BusinessClassification
-    category: SpendingCategory | None = None
-    confidence: Decimal
-    reason: str = Field(min_length=1)
-    iva_category: IvaCategory | None = None
-    business_pct: Decimal | None = None
-    iva_rate: Decimal | None = None
-    taxable_base: Decimal | None = None
-    iva_amount: Decimal | None = None
-    rate_derivable: bool = False
-    derivation_note: str = ""
-    evidence_id: str | None = None
-    evidence_advisory: str = ""
-    multiple_components: bool | None = None
-    """Carried from the evidence read: True when the model judged the invoice
-    multi-component (multiple distinct rate/category lines). Drives the non-blocking
-    split recommendation; ``None`` when no evidence was read."""
-
-    @property
-    def recommends_split(self) -> bool:
-        """True when the evidence read flagged the invoice as multi-component."""
-        return self.multiple_components is True
-
-
 def _resolve_saturation_classifier(provider: LLMProvider) -> LLMClassifier:
     """Resolve the production classifier for ``provider`` with the saturation prompt.
 
@@ -1000,29 +903,6 @@ def apply_saturated_llm_classification(
 # ── operator-initiated derivation (no LLM) ────────────────────────
 
 
-class OperatorIvaDerivationResult(BaseModel):
-    """Result of an operator-initiated IVA derivation for one transaction.
-
-    The operator selects the :class:`aeat.domain.iva.IvaCategory`; the system
-    resolves the registry rate and derives the taxable base and IVA amount with
-    a deterministic inverse split — never a guessed number, exactly as the
-    saturating LLM path does, but without the model. ``derivable`` is False for
-    a category with no simple Spanish domestic rate, in which case nothing is
-    persisted and ``note`` explains why the operator must complete the figures.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    transaction_id: str
-    iva_category: IvaCategory
-    derivable: bool
-    iva_rate: Decimal | None = None
-    taxable_base: Decimal | None = None
-    iva_amount: Decimal | None = None
-    note: str = ""
-    result: ManualLedgerTransactionResult | None = None
-
-
 def derive_operator_iva_substrate(
     *,
     bucket_id: str,
@@ -1123,75 +1003,6 @@ def derive_operator_iva_substrate(
 
 
 # ── stage-3b: evidence-driven N-way split ─────────────────────────
-
-
-class LLMSplitChildSuggestion(BaseModel):
-    """One reviewed child of an evidence-driven split, with derived numbers.
-
-    The model proposed a *proportion* of the parent and selected the child's
-    expense :class:`SpendingCategory` and :class:`aeat.domain.iva.IvaCategory`;
-    this record carries the system-DERIVED euro ``amount`` (from the parent gross
-    and the proportion) and the system-DERIVED regulated substrate
-    (``iva_rate`` / ``taxable_base`` / ``iva_amount``) looked up from the registry.
-    The model never emits a euro amount or a regulated number
-    (``llm-selects-system-derives-tax-numbers``).
-    """
-
-    model_config = _STRICT_FROZEN
-
-    proportion: Decimal
-    amount: Decimal
-    description: str = Field(min_length=1)
-    category: SpendingCategory | None = None
-    iva_category: IvaCategory | None = None
-    iva_rate: Decimal | None = None
-    taxable_base: Decimal | None = None
-    iva_amount: Decimal | None = None
-    rate_derivable: bool = False
-    derivation_note: str = ""
-    evidence_citation: str = ""
-
-
-class LLMSplitSuggestion(BaseModel):
-    """An evidence-driven N-way split proposal with derived child amounts.
-
-    Produced by :func:`suggest_evidence_split` (persists nothing); consumed for
-    review and, on accept, by :func:`apply_evidence_split`. The child amounts sum
-    exactly to ``parent_amount`` to the cent.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    transaction_id: str = Field(min_length=1)
-    provider: LLMProvider | None = None
-    provenance: str = Field(min_length=1)
-    reason: str = Field(min_length=1)
-    parent_amount: Decimal
-    children: tuple[LLMSplitChildSuggestion, ...]
-    evidence_id: str | None = None
-
-    @property
-    def recommends_split(self) -> bool:
-        """True when the model proposed more than one child (a genuine split).
-
-        A single-child proposal is the "no split warranted" verdict — the model
-        read the invoice and judged it a single line/rate. The CLI surfaces that
-        verdict for review and never drives :func:`apply_evidence_split` with it.
-        """
-        return len(self.children) > 1
-
-
-class LLMSplitApplyResult(BaseModel):
-    """Outcome of applying a reviewed evidence-driven split."""
-
-    model_config = _STRICT_FROZEN
-
-    bucket_id: str = Field(min_length=1)
-    parent_transaction_id: str = Field(min_length=1)
-    split_group_id: str = Field(min_length=1)
-    child_transaction_ids: tuple[str, ...]
-    provenance: str = Field(min_length=1)
-    classified_child_count: int
 
 
 def _resolve_default_split_proposer(provider: LLMProvider) -> LLMSplitProposer:
@@ -1552,25 +1363,6 @@ def apply_evidence_classification(
 
 
 # ── reject: the fourth decision terminal (audit-trailed) ──────────
-
-
-class LLMSuggestionRejectionResult(BaseModel):
-    """Outcome of explicitly rejecting an LLM suggestion (an audit event only).
-
-    A rejection records the operator's judgement that the model's proposal was
-    wrong; it mutates nothing. The transaction stays unclassified (review status
-    ``pending``) and the rejection rides the bucket-event history as a
-    ``ledger.transaction.llm_suggestion.rejected`` event.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    bucket_id: str = Field(min_length=1)
-    transaction_id: str = Field(min_length=1)
-    bucket_event_id: str = Field(min_length=1)
-    suggestion_kind: str = Field(min_length=1)
-    provenance: str = Field(min_length=1)
-    operator_reason: str = ""
 
 
 def reject_llm_suggestion(
