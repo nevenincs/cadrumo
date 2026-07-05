@@ -22,6 +22,7 @@ related:
   - '[[2026-07-05-modelo-720-prior-year-baseline-W03-P04-S12]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-W03-P05-S13]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-W03-P05-S14]]'
+  - '[[2026-07-05-modelo-720-prior-year-baseline-W03-P05-S15]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-adr]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-audit]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-plan]]'
@@ -60,6 +61,7 @@ Auto-generated index of all documents tagged with `#modelo-720-prior-year-baseli
 - `2026-07-05-modelo-720-prior-year-baseline-W03-P04-S12` - Author the M720 row-carrier ADR deciding how row-indexed binding values flow through the source mesh and export draft surfaces
 - `2026-07-05-modelo-720-prior-year-baseline-W03-P05-S13` - Add the approved row-indexed M720 carrier to the calculation source resolution envelope
 - `2026-07-05-modelo-720-prior-year-baseline-W03-P05-S14` - Return validated M720 row-indexed binding values from the foreign-assets aggregation resolver through the approved carrier
+- `2026-07-05-modelo-720-prior-year-baseline-W03-P05-S15` - Carry row-indexed mesh values into modelo draft and export replay without flattening them into scalar binding ids
 
 ### plan
 

@@ -82,6 +82,7 @@ class CalculationReplayPayloads:
 
     input_values_by_casilla_id: dict[CasillaId, str]
     binding_overrides: dict[BindingId, str]
+    row_binding_values: dict[BindingId, dict[str, str]]
     relation_overrides: dict[RelationId, str]
 
 
@@ -212,15 +213,18 @@ def build_calculation_replay_payloads(
     resolved_enum_bindings: Mapping[BindingId, str],
     resolved_date_bindings: Mapping[BindingId, date],
     resolved_relations: Mapping[RelationId, Decimal],
+    resolved_row_bindings: Mapping[tuple[BindingId, int], Decimal | str] | None = None,
 ) -> CalculationReplayPayloads:
     """Convert resolved engine inputs into persisted :class:`CalculationReplayPayloads`.
 
     Casilla and relation Decimals are canonicalized with the domain decimal
     formatter. Decimal, enum, and date binding channels share the single
-    ``binding_overrides`` replay map because that is the persisted
-    :class:`CalculationRevision` contract. The replay payload is built after
-    source precedence and bound-casilla projection so its values match the
-    engine inputs exactly.
+    ``binding_overrides`` replay map because that is the persisted scalar
+    :class:`CalculationRevision` contract. Row-indexed bindings are carried in
+    ``row_binding_values`` so the row coordinate remains structured for draft
+    and export replay instead of being encoded into a synthetic binding id. The
+    replay payload is built after source precedence and bound-casilla projection
+    so its values match the engine inputs exactly.
     """
     return CalculationReplayPayloads(
         input_values_by_casilla_id=dict(
@@ -239,10 +243,23 @@ def build_calculation_replay_payloads(
                 + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()],
             ),
         ),
+        row_binding_values=_row_binding_replay_values(resolved_row_bindings or {}),
         relation_overrides=dict(
             sorted((k.strip(), _canonical_decimal_str(v)) for k, v in resolved_relations.items()),
         ),
     )
+
+
+def _row_binding_replay_values(
+    resolved_row_bindings: Mapping[tuple[BindingId, int], Decimal | str],
+) -> dict[BindingId, dict[str, str]]:
+    replay_values: dict[BindingId, dict[str, str]] = {}
+    for (binding_id, row_index), value in sorted(resolved_row_bindings.items()):
+        if row_index < 1:
+            raise ValueError(f"row binding {binding_id!r} carries non-positive row index {row_index!r}")
+        row_values = replay_values.setdefault(binding_id.strip(), {})
+        row_values[str(row_index)] = _canonical_decimal_str(value) if isinstance(value, Decimal) else value.strip()
+    return replay_values
 
 
 __all__ = [

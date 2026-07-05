@@ -73,7 +73,7 @@ Implement the approved row carrier in the aggregation source-mesh envelope and m
 
 - [x] `W03.P05.S13` - Add the approved row-indexed M720 carrier to the calculation source resolution envelope; `src/aeat/application/aggregation/_source_mesh.py`.
 - [x] `W03.P05.S14` - Return validated M720 row-indexed binding values from the foreign-assets aggregation resolver through the approved carrier; `src/aeat/application/aggregation/_foreign_assets.py`.
-- [ ] `W03.P05.S15` - Carry row-indexed mesh values into modelo draft and export replay without flattening them into scalar binding ids; `src/aeat/application/modelo/_calculation_resolution.py`.
+- [x] `W03.P05.S15` - Carry row-indexed mesh values into modelo draft and export replay without flattening them into scalar binding ids; `src/aeat/application/modelo/_calculation_resolution.py`.
 
 ### Phase `W03.P06` - Foreign-asset enrollment
 
