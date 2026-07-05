@@ -6,7 +6,7 @@ primitive raises. This module supplies the on-host fallback: rasterise the PDF
 (or use an image directly) into in-memory base64 PNG pages
 (:func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png`) and read them
 with the same LOCAL Ollama vision model the classification path already uses
-(:class:`~application.ledger.LocalVisionLLMClassifier`), fully on-host
+(:class:`~application.ledger._vision_classifier.LocalVisionLLMClassifier`), fully on-host
 (``sensitive-financial-data-secure-storage-only``). Nothing is written to disk and
 nothing leaves the machine; this needs no cloud consent gate.
 
@@ -30,6 +30,18 @@ through the operator review step before anything is minted).
 Gated by :attr:`~core.ServiceCapability.LLM_VISION`: an operator who has opted
 out of on-host vision reading gets a typed refusal naming the capability toggle,
 never a silent empty draft.
+
+See Also:
+    :class:`~application.ledger.InvoiceDraft`
+        Typed draft this vision path returns after grounded re-validation.
+    :func:`~application.ledger.extract_invoice_fields`
+        Text-layer extraction primitive this module complements for scan-only
+        or image-only evidence.
+    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+        Orchestration layer that falls back to this on-host reader.
+    :class:`~application.ledger._vision_classifier.LocalVisionLLMClassifier`
+        Sibling local Ollama vision transport used for classification and
+        split suggestions.
 """
 
 from __future__ import annotations
@@ -206,7 +218,7 @@ def _ground_extracted_fields(fields: _VisionExtractedFields, *, raw_text_length:
 class LocalVisionInvoiceFieldExtractor:
     """Read an invoice image on-host with a local Ollama vision model into an :class:`InvoiceDraft`.
 
-    Mirrors :class:`~application.ledger.LocalVisionLLMClassifier`'s transport
+    Mirrors :class:`~application.ledger._vision_classifier.LocalVisionLLMClassifier`'s transport
     (a local Ollama vision model fed in-memory base64 images) but for field
     transcription instead of category classification. Every returned field is
     re-validated through the grounded heuristics
