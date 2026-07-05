@@ -317,6 +317,7 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-P04-S18]]'
   - '[[2026-05-14-cli-workflow-redesign-P04-S19]]'
   - '[[2026-05-14-cli-workflow-redesign-P04-S20]]'
+  - '[[2026-05-14-cli-workflow-redesign-P04-S21]]'
   - '[[2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-exec]]'
@@ -840,6 +841,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-P04-S18` - Add validate behavior backed by registry and source authority
 - `2026-05-14-cli-workflow-redesign-P04-S19` - Add export behavior backed by the Modelo 145 registry layout
 - `2026-05-14-cli-workflow-redesign-P04-S20` - Add local delivered-to-payer and completed communication state transitions
+- `2026-05-14-cli-workflow-redesign-P04-S21` - Emit communication-specific bucket events without filing or filed-state terminology
 
 ### plan
 
