@@ -313,6 +313,7 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-P03-S14]]'
   - '[[2026-05-14-cli-workflow-redesign-P03-S15]]'
   - '[[2026-05-14-cli-workflow-redesign-P04-S16]]'
+  - '[[2026-05-14-cli-workflow-redesign-P04-S17]]'
   - '[[2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-exec]]'
@@ -832,6 +833,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-P03-S14` - Exclude filing schedules, deadline windows, live cross references, filing application links, and portal read or write links from Modelo 145
 - `2026-05-14-cli-workflow-redesign-P03-S15` - Verify Modelo 145 registry load, source grounding, export metadata, and rejected filing surfaces
 - `2026-05-14-cli-workflow-redesign-P04-S16` - Add backend service ownership for Modelo 145 local payer communication
+- `2026-05-14-cli-workflow-redesign-P04-S17` - Add create behavior for bucket-scoped Modelo 145 communication records
 
 ### plan
 
