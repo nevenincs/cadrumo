@@ -17,7 +17,8 @@ review-package signing: sign the bundle's self-attesting
 an Ed25519 keypair (RFC 8032), so the signature transitively covers every
 archived member (a tampered member is already caught by
 :func:`~core.corpus_manifest.verify_corpus_bundle` before the signature
-check is even attempted; see :func:`verify_corpus_bundle_signature`).
+check is even attempted; see
+:func:`~core.corpus_manifest.verify_corpus_bundle_signature`).
 
 Key custody differs from the review-package case by necessity. A review
 package is signed by one profile's operator and verified by a peer who
@@ -88,8 +89,9 @@ class CorpusBundleSigningError(AeatError):
 class CorpusBundleSigningKeyNotFoundError(CorpusBundleSigningError):
     """Raised when no signing keypair file exists at the requested path.
 
-    Callers should mint one via :func:`generate_corpus_signing_keypair` before
-    signing a bundle for the first time.
+    Callers should mint one via
+    :func:`~core.corpus_manifest.generate_corpus_signing_keypair` before signing
+    a bundle for the first time.
     """
 
 
@@ -97,12 +99,14 @@ class CorpusSigningKeypair(BaseModel):
     """A maintainer's Ed25519 corpus-signing keypair, private key included.
 
     This model is the PLAINTEXT in-memory shape used only transiently around
-    generation, persistence, and signing; :meth:`private_key` /
-    :meth:`public_key` reconstruct live ``cryptography`` key objects from the
-    stored raw hex bytes. The caller (:func:`generate_corpus_signing_keypair` /
-    :func:`load_corpus_signing_keypair`) is responsible for keeping the
-    on-disk file permission-hardened; this model carries no persistence logic
-    of its own.
+    generation, persistence, and signing;
+    :meth:`~core.corpus_manifest.CorpusSigningKeypair.private_key` /
+    :meth:`~core.corpus_manifest.CorpusSigningKeypair.public_key` reconstruct
+    live ``cryptography`` key objects from the stored raw hex bytes. The caller
+    (:func:`~core.corpus_manifest.generate_corpus_signing_keypair` /
+    :func:`~core.corpus_manifest.load_corpus_signing_keypair`) is responsible for
+    keeping the on-disk file permission-hardened; this model carries no
+    persistence logic of its own.
     """
 
     model_config = _STRICT_FROZEN
@@ -130,8 +134,9 @@ class CorpusSigningPublicKey(BaseModel):
 
     Safe to embed in the ``aeat`` distribution, print, or transmit so every
     installer can verify a downloaded bundle's signature independently.
-    Carries no secrecy requirement -- unlike :class:`CorpusSigningKeypair`,
-    this model is fine to write to a plaintext file.
+    Carries no secrecy requirement -- unlike
+    :class:`~core.corpus_manifest.CorpusSigningKeypair`, this model is fine to
+    write to a plaintext file.
     """
 
     model_config = _STRICT_FROZEN
@@ -203,7 +208,8 @@ def generate_corpus_signing_keypair(
             timestamp (tests only); defaults to the current UTC time.
 
     Returns:
-        The freshly minted :class:`CorpusSigningKeypair`.
+        The freshly minted
+        :class:`~core.corpus_manifest.CorpusSigningKeypair`.
     """
     private_key = Ed25519PrivateKey.generate()
     public_key = private_key.public_key()
@@ -231,12 +237,12 @@ def load_corpus_signing_keypair(private_key_path: Path) -> CorpusSigningKeypair:
 
     Args:
         private_key_path: Path to the keypair JSON written by
-            :func:`generate_corpus_signing_keypair`.
+            :func:`~core.corpus_manifest.generate_corpus_signing_keypair`.
 
     Raises:
         CorpusBundleSigningKeyNotFoundError: If no file exists at
-            ``private_key_path``. Call :func:`generate_corpus_signing_keypair`
-            first.
+            ``private_key_path``. Call
+            :func:`~core.corpus_manifest.generate_corpus_signing_keypair` first.
         CorpusBundleSigningError: If the file exists but is not a
             structurally valid keypair record.
     """
@@ -258,6 +264,10 @@ def corpus_signing_public_key(keypair: CorpusSigningKeypair) -> CorpusSigningPub
 
     The projection never touches ``private_key_hex``; the returned model is
     safe to embed in the distribution or hand to an installer.
+
+    Returns:
+        A :class:`~core.corpus_manifest.CorpusSigningPublicKey` carrying only
+        the public verifier material and creation timestamp.
     """
     return CorpusSigningPublicKey(
         public_key_hex=keypair.public_key_hex,
@@ -281,8 +291,9 @@ def sign_corpus_bundle(
 
     Args:
         bundle_path: Path to the corpus bundle ``.zip`` to sign.
-        keypair: The signer's :class:`CorpusSigningKeypair` (see
-            :func:`generate_corpus_signing_keypair`).
+        keypair: The signer's
+            :class:`~core.corpus_manifest.CorpusSigningKeypair` (see
+            :func:`~core.corpus_manifest.generate_corpus_signing_keypair`).
         signed_at: Optional override for the envelope's ``signed_at``
             timestamp (tests only); defaults to the current UTC time.
 
@@ -330,13 +341,15 @@ def verify_corpus_bundle_signature(
 
     Args:
         bundle_path: Path to the corpus bundle ``.zip`` to verify.
-        signed_bundle: The :class:`SignedCorpusBundle` envelope produced by
-            :func:`sign_corpus_bundle`.
+        signed_bundle: The
+            :class:`~core.corpus_manifest.SignedCorpusBundle` envelope produced
+            by :func:`~core.corpus_manifest.sign_corpus_bundle`.
         public_key_hex: The signer's raw public key, as 64 lowercase hex
-            characters (see :attr:`CorpusSigningPublicKey.public_key_hex`).
-            Passed explicitly (never read off ``signed_bundle``) so a
-            verifier must supply the key it actually trusts, rather than
-            trusting whatever key the envelope claims.
+            characters (see
+            :attr:`~core.corpus_manifest.CorpusSigningPublicKey.public_key_hex`).
+            Passed explicitly (never read off ``signed_bundle``) so a verifier
+            must supply the key it actually trusts, rather than trusting
+            whatever key the envelope claims.
 
     Returns:
         ``True`` iff the bundle is currently checksum-clean, its manifest
@@ -344,7 +357,8 @@ def verify_corpus_bundle_signature(
         against ``public_key_hex``. Returns ``False`` (never raises) on any
         mismatch or invalid-signature outcome -- signature verification is an
         authenticity *check*, not an assertion; callers that want a raising
-        assertion should call :func:`assert_corpus_bundle_signature_verifies`.
+        assertion should call
+        :func:`~core.corpus_manifest.assert_corpus_bundle_signature_verifies`.
     """
     from . import CorpusBundleError, CorpusManifestTamperError, verify_corpus_bundle
 
@@ -379,12 +393,13 @@ def assert_corpus_bundle_signature_verifies(
 
     The install-time assertion: call this before extracting or trusting a
     downloaded/copied corpus bundle whose signature you hold. Raises
-    :class:`CorpusBundleSigningError` naming the bundle path on any failure
-    -- a checksum mismatch, a manifest-digest mismatch, or an invalid
-    signature are not distinguished in the error message beyond naming the
-    bundle, matching :func:`verify_corpus_bundle_signature`'s deliberately
-    coarse boolean contract (a tampered bundle and a forged signature must
-    both refuse installation identically).
+    :class:`~core.corpus_manifest.CorpusBundleSigningError` naming the bundle
+    path on any failure -- a checksum mismatch, a manifest-digest mismatch, or
+    an invalid signature are not distinguished in the error message beyond
+    naming the bundle, matching
+    :func:`~core.corpus_manifest.verify_corpus_bundle_signature`'s deliberately
+    coarse boolean contract (a tampered bundle and a forged signature must both
+    refuse installation identically).
     """
     if not verify_corpus_bundle_signature(bundle_path, signed_bundle, public_key_hex=public_key_hex):
         raise CorpusBundleSigningError(
