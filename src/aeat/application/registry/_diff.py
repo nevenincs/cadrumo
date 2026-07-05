@@ -8,16 +8,16 @@ bindings.
 
 Revision resolution reuses the same ``period_selector.includes_year`` primitive
 :meth:`~domain.calculations.registry.RegistryQueryService.bindings_for_year`
-already uses (see :mod:`application.modelo._registry_discovery`): given a
+already uses (see :mod:`~application.modelo._registry_discovery`): given a
 bare filing year, exactly one revision must cover it, or the request is
 refused naming the modelo's declared revisions.
 
 See Also:
-    :class:`domain.calculations.registry.ValidatedRegistryAuthority`
+    :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
         Loads and validates the :class:`~domain.calculations.registry.ModeloDefinition`
         this module diffs two revisions from.
-    :class:`domain.calculations.registry.ModeloRevision`
-        The versioned ruleset compared by :func:`diff_registry_revisions`.
+    :class:`~domain.calculations.registry.ModeloRevision`
+        The versioned ruleset compared by :func:`~application.registry.diff_registry_revisions`.
 """
 
 from __future__ import annotations
@@ -351,7 +351,7 @@ def diff_registry_revisions(
     naming the modelo's declared revision ids.
 
     Returns:
-        A :class:`RegistryRevisionDiffReport` enumerating casilla adds,
+        A :class:`~application.registry.RegistryRevisionDiffReport` enumerating casilla adds,
         removes, and continuidad-tracked renumbers; formula, parameter, and
         binding adds/removes/changes; and revision-level ``legal_refs``
         deltas. Diffing a modelo against itself for two years that resolve to
