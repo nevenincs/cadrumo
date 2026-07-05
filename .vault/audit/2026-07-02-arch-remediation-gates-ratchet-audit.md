@@ -83,6 +83,18 @@ ruff passed. The codebase-size gate rerun no longer reports
 `confirm_invoice_draft_from_evidence`, but remains red on the other known
 module and callable offenders.
 
+### follow-up-m145-cli-size-budget | low | M145 registration callable below budget
+
+Reviewed the 2026-07-05 ratchet follow-up that moved the Modelo 145
+state-transition Typer command closures from `register_m145_communication_commands`
+into `_register_m145_transition_commands`. The command names, help text, actor
+resolution, active-bucket guard, and emitted payload operations remain unchanged.
+The registration callable line count dropped from 185 to 139, below the default
+180-line budget. Ruff passed, and the M145 CLI integration suite passed with
+`-m integration`. The codebase-size gate rerun no longer reports
+`register_m145_communication_commands`, but remains red on the other known
+module and callable offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
