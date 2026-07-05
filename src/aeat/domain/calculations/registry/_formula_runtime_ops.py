@@ -25,6 +25,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
+from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -37,6 +38,7 @@ from ._schema import DatedValue, ModeloRevision, ParameterDefinition
 if TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
 
+    from ._authority import ValidatedRegistryAuthority
     from ._formula_runtime import _EvalContext
 
 _ZERO = Decimal("0")
@@ -343,6 +345,13 @@ def _require_non_empty(op: str, args: list[Decimal]) -> None:
         raise RegistryValidationError(f"formula op {op!r} expects at least one arg")
 
 
+@cache
+def _default_read_parameter_authority(root: Path, source_root: Path) -> ValidatedRegistryAuthority:
+    from ._authority import ValidatedRegistryAuthority
+
+    return ValidatedRegistryAuthority.load(root, source_root=source_root)
+
+
 def read_parameter(
     modelo_id: str,
     revision_id: str,
@@ -361,8 +370,13 @@ def read_parameter(
     from ....core.resources import bundled_path
     from ._authority import ValidatedRegistryAuthority
 
-    root = registry_root if registry_root is not None else bundled_path("registry", "aeat")
-    authority = ValidatedRegistryAuthority.load(root, source_root=bundled_path())
+    source_root = bundled_path()
+    if registry_root is None:
+        root = bundled_path("registry", "aeat")
+        authority = _default_read_parameter_authority(root, source_root)
+    else:
+        root = registry_root
+        authority = ValidatedRegistryAuthority.load(root, source_root=source_root)
     try:
         modelo_match = authority.modelo(modelo_id)
     except RegistrySnapshotError as exc:
