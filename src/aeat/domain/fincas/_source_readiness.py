@@ -11,6 +11,16 @@ blank.
 
 The readiness is deliberately a pure, context-independent domain fact: fincas is
 unready regardless of the modelo or period being calculated.
+
+See Also:
+    :mod:`domain.fincas`
+        Public domain facade for the finca aggregates that are not yet canonical
+        calculation-source state.
+    :mod:`application.aggregation._source_fincas`
+        Blocked resolver adapter that turns this readiness fact into a
+        source-mesh diagnostic.
+    :class:`application.aggregation.CalculationSourceDiagnostic`
+        Shared diagnostic carrier emitted while the source remains blocked.
 """
 
 from __future__ import annotations
@@ -41,8 +51,8 @@ def fincas_source_readiness() -> FincasSourceReadiness:
     surface is provisioned but blocked until fincas persistence is hardened.
 
     Returns:
-        A :class:`FincasSourceReadiness` with ``ready = False`` and the blocking
-        reason, until fincas persistence is canonical.
+        A :class:`~domain.fincas.FincasSourceReadiness` with ``ready = False``
+        and the blocking reason, until fincas persistence is canonical.
     """
     return FincasSourceReadiness(
         ready=False,

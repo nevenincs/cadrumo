@@ -309,6 +309,7 @@ class TestForeignAssetSourceResolver:
         assert row_values[("modelo-720-asset-row-identifier", 2)] == "CH-ACCOUNT-002"
         assert row_values[("modelo-720-asset-row-acquisition-date", 2)] == "2021-02-20"
         assert row_values[("modelo-720-asset-row-valuation", 2)] == Decimal("15000.00")
+        assert dict(resolution.row_binding_values) == row_values
 
     def test_row_projection_uses_official_iic_and_real_estate_codes(self) -> None:
         period = Period.from_year_and_code(2025, "0A")
@@ -378,6 +379,7 @@ class TestForeignAssetSourceResolver:
         )
 
         assert resolution.binding_values == {}
+        assert dict(resolution.row_binding_values) == {}
         assert resolution.diagnostics == ()
         assert resolution.provenance == ()
 

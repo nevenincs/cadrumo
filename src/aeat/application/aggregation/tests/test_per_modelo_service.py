@@ -466,6 +466,7 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
         ("modelo-720-asset-row-acquisition-date", 2): "2021-02-20",
     }
     assert resolution.binding_values == {}
+    assert dict(resolution.row_binding_values) == expected_row_values
     assert resolution.source_transaction_ids == ("tx-account-ad",)
     assert {item.source_ref for item in resolution.provenance} == {
         "ledger_transaction:tx-account-ad",
@@ -540,6 +541,7 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
         ("modelo-720-asset-row-acquisition-date", 2): "2020-01-15",
     }
     assert resolution.binding_values == {}
+    assert dict(resolution.row_binding_values) == expected_row_values
     assert resolution.source_transaction_ids == ("tx-security-li",)
     assert {item.source_ref for item in resolution.provenance} == {
         "ledger_transaction:tx-security-li",

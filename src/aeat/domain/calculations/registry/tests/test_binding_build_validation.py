@@ -72,10 +72,12 @@ def _build_binding(
     source: str,
     selector: dict[str, object],
     op: BindingAggregationOp,
+    base: DataBindingDefinition | None = None,
 ) -> DataBindingDefinition:
     """Build a binding of ``source`` reusing the first M130 binding's id and grounding."""
-    modelo, _catalogues = _committed_modelo_130()
-    base = modelo.revisions["2019-y-siguientes"].bindings[0]
+    if base is None:
+        modelo, _catalogues = _committed_modelo_130()
+        base = modelo.revisions["2019-y-siguientes"].bindings[0]
     return base.model_copy(
         update={
             "source": source,
@@ -221,46 +223,20 @@ _FAMILY_IDS = tuple(case[0] for case in _FAMILY_CASES)
 
 
 @pytest.mark.parametrize("case", _FAMILY_CASES, ids=_FAMILY_IDS)
-def test_well_formed_binding_of_each_family_passes_the_build_gate(
+def test_binding_family_build_gate_contract(
     case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp],
 ) -> None:
-    """Anti-tautology: a well-formed binding of each family passes the dispatch gate."""
-    _label, source, well_formed_selector, well_formed_op, _bad_selector, _bad_op = case
-    binding = _build_binding(source=source, selector=well_formed_selector, op=well_formed_op)
-    assert validate_binding_selector_shape(binding) == [], f"well-formed {source} binding must pass the build gate"
-
-
-@pytest.mark.parametrize("case", _FAMILY_CASES, ids=_FAMILY_IDS)
-def test_malformed_binding_of_each_family_is_constructible(
-    case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp],
-) -> None:
-    """Anti-tautology: the malformed binding is a constructible model.
-
-    pydantic accepts the malformed binding as a :class:`DataBindingDefinition`,
-    so the build rejection below is the GATE's lifted op/fact invariant — not a
-    schema-construction refusal that would fire regardless of the build path.
-    """
-    _label, source, _good_selector, _good_op, malformed_selector, malformed_op = case
-    binding = _build_binding(source=source, selector=malformed_selector, op=malformed_op)
-    assert isinstance(binding, DataBindingDefinition)
-    assert str(binding.source) == source
-
-
-@pytest.mark.parametrize("case", _FAMILY_CASES, ids=_FAMILY_IDS)
-def test_malformed_binding_of_each_family_rejected_at_registry_build(
-    case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp],
-) -> None:
-    """A malformed binding of each family is rejected at registry build, not only resolve.
-
-    The malformed binding is injected into the committed Modelo 130 modelo and
-    run through ``RegistryValidator.validate_modelo`` — the snapshot-construction
-    validation path. Every family (including the four detail-record families and
-    ``previous_filing`` whose op/fact invariants previously ran only at resolve
-    time) surfaces the lifted invariant as a build-time failure.
-    """
-    _label, source, _good_selector, _good_op, malformed_selector, malformed_op = case
+    """Each family accepts a good binding, constructs a bad one, and rejects it at build."""
+    _label, source, well_formed_selector, well_formed_op, malformed_selector, malformed_op = case
     modelo, catalogues = _committed_modelo_130()
-    malformed = _build_binding(source=source, selector=malformed_selector, op=malformed_op)
+    base = modelo.revisions["2019-y-siguientes"].bindings[0]
+
+    well_formed = _build_binding(source=source, selector=well_formed_selector, op=well_formed_op, base=base)
+    assert validate_binding_selector_shape(well_formed) == [], f"well-formed {source} binding must pass the build gate"
+
+    malformed = _build_binding(source=source, selector=malformed_selector, op=malformed_op, base=base)
+    assert isinstance(malformed, DataBindingDefinition)
+    assert str(malformed.source) == source
     mutated = _inject_binding(modelo, malformed)
 
     with pytest.raises(RegistryValidationError) as excinfo:

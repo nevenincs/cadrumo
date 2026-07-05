@@ -261,10 +261,11 @@ class ForeignAssetsAggregationSourceResolver:
             aggregation,
             selected_observations,
         )
-        resolve_foreign_asset_binding_row_values(context.revision, row_observations)
+        row_binding_values = resolve_foreign_asset_binding_row_values(context.revision, row_observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
+            row_binding_values=row_binding_values,
             source_transaction_ids=tuple(
                 sorted(
                     observation.source_object_id
