@@ -71,6 +71,18 @@ Renta aggregation tests and ruff passed. The codebase-size gate rerun no longer
 reports `_classify_renta_transaction`, but it remains red on the other known
 module and callable offenders.
 
+### follow-up-evidence-confirm-size-budget | low | evidence confirm callable below budget
+
+Reviewed the 2026-07-05 ratchet follow-up that extracted invoice-date
+resolution from `confirm_invoice_draft_from_evidence` into
+`_resolve_confirmed_invoice_date`. The confirm flow still reuses the same draft
+value, preserves the same missing-date refusal text and suggestion, and
+delegates the catalogue write unchanged. The callable line count dropped from
+183 to 175, below the default 180-line budget. Focused evidence-draft tests and
+ruff passed. The codebase-size gate rerun no longer reports
+`confirm_invoice_draft_from_evidence`, but remains red on the other known
+module and callable offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
