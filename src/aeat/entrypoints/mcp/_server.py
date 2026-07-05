@@ -361,6 +361,30 @@ def _client_supports_elicitation(server: Server) -> bool:
     return bool(capabilities is not None and getattr(capabilities, "elicitation", None) is not None)
 
 
+def _record_telemetry(
+    telemetry: SessionTelemetryWriter | None,
+    *,
+    tool_name: str,
+    command_key: str = "",
+    route: str = "",
+    is_error: bool = False,
+    duration_ms: int = 0,
+    arguments_text: str = "",
+    result_text: str = "",
+) -> None:
+    """Forward to the optional telemetry sink, mirroring its signature exactly."""
+    if telemetry is not None:
+        telemetry.record(
+            tool_name=tool_name,
+            command_key=command_key,
+            route=route,
+            is_error=is_error,
+            duration_ms=duration_ms,
+            arguments_text=arguments_text,
+            result_text=result_text,
+        )
+
+
 def build_server(
     descriptors: tuple[McpToolDescriptor, ...],
     *,
@@ -417,28 +441,6 @@ def build_server(
     # builds) records payload-free per-call rows.
     window = SessionGroundingWindow()
 
-    def _telemetry_record(
-        *,
-        tool_name: str,
-        command_key: str = "",
-        route: str = "",
-        is_error: bool = False,
-        duration_ms: int = 0,
-        arguments_text: str = "",
-        result_text: str = "",
-    ) -> None:
-        """Thin optional-sink forward onto ``telemetry.record``, mirroring its signature exactly."""
-        if telemetry is not None:
-            telemetry.record(
-                tool_name=tool_name,
-                command_key=command_key,
-                route=route,
-                is_error=is_error,
-                duration_ms=duration_ms,
-                arguments_text=arguments_text,
-                result_text=result_text,
-            )
-
     def _gated_subprocess_run(
         descriptor: McpToolDescriptor,
         arguments: dict[str, object],
@@ -455,12 +457,13 @@ def build_server(
         policy = confirmation_for_tool(command_key=key, annotations=descriptor.annotations)
         route = resolve_confirm_route(policy=policy, command_key=key, client_supports_elicitation=False)
         if route in (ConfirmRoute.REFUSE_BLOCKED, ConfirmRoute.REFUSE_NO_CHANNEL):
-            _telemetry_record(tool_name=descriptor.name, command_key=key, route=route.value, is_error=True)
+            _record_telemetry(telemetry, tool_name=descriptor.name, command_key=key, route=route.value, is_error=True)
             return ({"status": "error", "refusal": refusal_message(route, command_key=key)}, True)
         arguments_json = json.dumps(arguments, ensure_ascii=False, sort_keys=True)
         faith = arguments_faithfulness(arguments_json=arguments_json, window=window, blocking=is_handoff_command(key))
         if faith.blocks:
-            _telemetry_record(
+            _record_telemetry(
+                telemetry,
                 tool_name=descriptor.name,
                 command_key=key,
                 route="faithfulness_block",
@@ -472,7 +475,8 @@ def build_server(
         envelope, is_error = _run_subprocess_tool(descriptor, arguments)
         envelope_json = json.dumps(envelope, ensure_ascii=False, sort_keys=True)
         window.record(envelope_json)
-        _telemetry_record(
+        _record_telemetry(
+            telemetry,
             tool_name=descriptor.name,
             command_key=key,
             route=route.value,
@@ -581,7 +585,7 @@ def build_server(
             client_supports_elicitation=_client_supports_elicitation(server),
         )
         if route in (ConfirmRoute.REFUSE_BLOCKED, ConfirmRoute.REFUSE_NO_CHANNEL):
-            _telemetry_record(tool_name=name, command_key=key, route=route.value, is_error=True)
+            _record_telemetry(telemetry, tool_name=name, command_key=key, route=route.value, is_error=True)
             return CallToolResult(
                 content=[TextContent(type="text", text=refusal_message(route, command_key=key))],
                 isError=True,
@@ -599,7 +603,7 @@ def build_server(
             )
             route_label = f"{route.value}:{decision.value}"
             if decision is not ConfirmDecision.PROCEED:
-                _telemetry_record(tool_name=name, command_key=key, route=route_label, is_error=True)
+                _record_telemetry(telemetry, tool_name=name, command_key=key, route=route_label, is_error=True)
                 return CallToolResult(
                     content=[
                         TextContent(
@@ -612,7 +616,8 @@ def build_server(
         arguments_json = json.dumps(arguments, ensure_ascii=False, sort_keys=True)
         faith = arguments_faithfulness(arguments_json=arguments_json, window=window, blocking=is_handoff_command(key))
         if faith.blocks:
-            _telemetry_record(
+            _record_telemetry(
+                telemetry,
                 tool_name=name,
                 command_key=key,
                 route="faithfulness_block",
@@ -627,7 +632,8 @@ def build_server(
         envelope, is_error = _run_subprocess_tool(descriptor, arguments)
         envelope_json = json.dumps(envelope, ensure_ascii=False, sort_keys=True)
         window.record(envelope_json)
-        _telemetry_record(
+        _record_telemetry(
+            telemetry,
             tool_name=name,
             command_key=key,
             route=route_label,

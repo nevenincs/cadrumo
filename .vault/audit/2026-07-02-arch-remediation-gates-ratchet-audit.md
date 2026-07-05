@@ -136,6 +136,20 @@ rendering module is reachable from existing tests. The codebase-size gate rerun
 no longer reports `review_package_build`, but remains red on the other known
 module and callable offenders.
 
+### follow-up-mcp-build-server-size-budget | low | MCP server builder below pinned budget
+
+Reviewed the 2026-07-05 ratchet follow-up that hoisted the optional telemetry
+forwarder out of `build_server`. The server still constructs the same
+persona-scoped tool list, meta/floor/grounding tools, prompt handlers, resource
+handlers, confirmation routes, faithfulness gate, and telemetry rows; only the
+thin optional sink forwarding helper moved to module scope. The `build_server`
+callable line count dropped from 355 to 337, below its pinned 341-line budget.
+Ruff passed, and the real MCP server integration tests covering meta-tools,
+serving gates, persona wiring, and client handshake passed with
+`-m integration`. The codebase-size gate rerun no longer reports
+`build_server`, but remains red on the other known module and callable
+offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
