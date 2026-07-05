@@ -7,7 +7,7 @@ experiment is worth keeping around for later, move it into reversible
 dormancy instead of erasing it outright. A sandbox is an ordinary profile
 bucket labelled with the reserved
 :data:`~application.bucket_maintenance.SANDBOX_LABEL_PREFIX`; every verb
-here delegates to :mod:`application.bucket_maintenance`
+here delegates to :mod:`~application.bucket_maintenance`
 (``create_sandbox`` / ``discard_sandbox`` / ``archive_sandbox`` /
 ``restore_sandbox`` / ``BucketMaintenanceService``), which in turn delegates
 to the same atomic profile-create span and destructive-erase / soft-tombstone
