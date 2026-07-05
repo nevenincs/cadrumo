@@ -158,6 +158,18 @@ Keep the plan honest by pairing checked rows with exec records and vault health 
 - [x] `W03.P06.S10` - Scaffold step execution records for completed plan rows and attach verification evidence; `.vault/exec/2026-07-05-cpdefix-followup-allgreen/`.
 - [x] `W03.P06.S11` - Regenerate the feature index and run vault checks for the follow-up plan; `.vault/index/`.
 
+## Wave `W04` - Post-Completion M130 Gasto Parity
+
+Reopen the campaign for the current-tree M130 gasto edge where explicit actividad-economica category evidence must not be lost when broader business classification has not yet caught up.
+
+### Phase `W04.P07` - M130 Gasto Category Eligibility
+
+Harden the Modelo 130 casilla 02 gasto path so explicit actividad-economica transaction evidence follows the same eligibility authority as the casilla 01 income path.
+
+- [x] `W04.P07.S12` - Revalidate current M130 gasto actividad-economica eligibility against production aggregation; `src/aeat/application/aggregation/_renta_gasto_ledger.py`.
+- [x] `W04.P07.S13` - Cover unclassified actividad-economica gasto and reviewed exclusion behavior with real aggregation tests; `src/aeat/application/aggregation/tests/test_renta_gasto_aggregation.py`.
+- [x] `W04.P07.S14` - Record focused verification evidence for the post-completion M130 gasto edge; `.vault/exec/2026-07-05-cpdefix-followup-allgreen/`.
+
 ## Description
 
 <!-- Briefly describe the proposed work. Reference `{adr}`s,
