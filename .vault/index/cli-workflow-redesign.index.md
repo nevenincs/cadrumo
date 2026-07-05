@@ -329,6 +329,7 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-P06-S30]]'
   - '[[2026-05-14-cli-workflow-redesign-P06-S31]]'
   - '[[2026-05-14-cli-workflow-redesign-P06-S32]]'
+  - '[[2026-05-14-cli-workflow-redesign-P06-S33]]'
   - '[[2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-exec]]'
@@ -864,6 +865,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-P06-S30` - Add negative tests proving Modelo 145 has no filing, deadline, live-read, portal, submit, receipt, or AEAT electronic tramite surface
 - `2026-05-14-cli-workflow-redesign-P06-S31` - Add negative tests proving Modelo 145 has no shims, stubs, fake support, deprecated spellings, or compatibility aliases
 - `2026-05-14-cli-workflow-redesign-P06-S32` - Confirm Modelo 036 and Modelo 037 behavior and metadata remain unaffected by Modelo 145 successor work
+- `2026-05-14-cli-workflow-redesign-P06-S33` - Run the targeted registry, application, and CLI test slices without skips, xfails, mocks, stubs, or tautological assertions
 
 ### plan
 
