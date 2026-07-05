@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -34,6 +35,49 @@ _CREATE_ARGS = [
     "--casilla",
     "perceptor.anio-nacimiento=1981",
 ]
+_M145_HELP_SURFACES = [
+    ("group", ["app", "modelo", "m145", "--help"]),
+    ("create", ["app", "modelo", "m145", "create", "--help"]),
+    ("validate", ["app", "modelo", "m145", "validate", "--help"]),
+    ("export", ["app", "modelo", "m145", "export", "--help"]),
+    ("mark-delivered-to-payer", ["app", "modelo", "m145", "mark-delivered-to-payer", "--help"]),
+    ("mark-locally-completed", ["app", "modelo", "m145", "mark-locally-completed", "--help"]),
+]
+_FORBIDDEN_HELP_WORDS = frozenset(
+    {
+        "deadline",
+        "file",
+        "filed",
+        "filing",
+        "live-read",
+        "live_read",
+        "portal",
+        "presentacion",
+        "presentación",
+        "presentar",
+        "receipt",
+        "shim",
+        "submit",
+        "submission",
+        "tramite",
+        "trámite",
+    },
+)
+_FORBIDDEN_HELP_PHRASES = (
+    "aeat electronic",
+    "aeat submission",
+    "compatibility alias",
+    "deprecated spelling",
+    "electronic tramite",
+    "electronic trámite",
+    "fake support",
+    "live filing",
+    "live submission",
+    "portal read",
+    "portal write",
+    "send to aeat",
+    "submit to aeat",
+)
 
 
 @pytest.fixture
@@ -78,6 +122,10 @@ def _unwrap_error_envelope(output: str) -> dict[str, object]:
     error = payload["error"]
     assert isinstance(error, dict)
     return error
+
+
+def _help_words(output: str) -> set[str]:
+    return set(re.findall(r"[a-z0-9_]+(?:-[a-z0-9_]+)?", output.casefold()))
 
 
 def test_m145_group_registers_closed_action_verbs() -> None:
@@ -160,10 +208,14 @@ def test_m145_transition_failure_uses_central_error_boundary(isolated_m145_cli_b
     }
 
 
-def test_m145_help_avoids_filing_and_live_vocabulary() -> None:
-    result = _invoke(["app", "modelo", "m145", "--help"])
+@pytest.mark.parametrize(("surface", "args"), _M145_HELP_SURFACES)
+def test_m145_help_surfaces_avoid_filing_and_submission_vocabulary(surface: str, args: list[str]) -> None:
+    result = _invoke(args)
 
-    assert result.exit_code == 0, result.output
-    forbidden = {"filing", "deadline", "live-read", "submit", "receipt"}
-    lowered = result.output.lower()
-    assert forbidden.isdisjoint(lowered.split())
+    assert result.exit_code == 0, f"{surface} help failed:\n{result.output}"
+    words = _help_words(result.output)
+    forbidden_words = sorted(_FORBIDDEN_HELP_WORDS & words)
+    lowered = result.output.casefold()
+    forbidden_phrases = sorted(phrase for phrase in _FORBIDDEN_HELP_PHRASES if phrase in lowered)
+    assert not forbidden_words, f"{surface} help contains forbidden words: {forbidden_words}\n{result.output}"
+    assert not forbidden_phrases, f"{surface} help contains forbidden phrases: {forbidden_phrases}\n{result.output}"
