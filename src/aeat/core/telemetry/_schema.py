@@ -18,9 +18,9 @@ command's schema entry, or flipping a key's ``remote_allowed`` — never an
 implicit consequence of adding a new local metric elsewhere in the codebase.
 
 See Also:
-    :func:`core.telemetry.build_telemetry_payload`
+    :func:`~core.telemetry.build_telemetry_payload`
         Validates producers against this registry before emission.
-    :func:`core.telemetry.emit_telemetry_event`
+    :func:`~core.telemetry.emit_telemetry_event`
         The only remote-eligible dispatch point for a validated payload.
 """
 

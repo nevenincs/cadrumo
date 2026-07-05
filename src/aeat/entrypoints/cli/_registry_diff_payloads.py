@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for ``aeat app registry diff-revisions``.
 
 Each class declared here is a strict
-:class:`OutputSchema` subclass and is decorated
-with :func:`register_schema` so the JSON-contract test suite can enumerate the
+:class:`~entrypoints.cli._schemas.OutputSchema` subclass and is decorated
+with :func:`~entrypoints.cli._schemas.register_schema` so the JSON-contract test suite can enumerate the
 ``registry.diff_revisions`` command surface.
 
 Field sets mirror :class:`~application.registry.RegistryRevisionDiffReport`

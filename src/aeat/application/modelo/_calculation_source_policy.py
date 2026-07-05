@@ -53,6 +53,7 @@ _ENROLLED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.WITHHOLDING,
         BindingSourceKind.COLLECTIBLE_INVOICE,
         BindingSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.FOREIGN_ASSET,
         BindingSourceKind.PREVIOUS_FILING,
         BindingSourceKind.RELATION_PREFILL,
         BindingSourceKind.PROFILE,

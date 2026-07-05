@@ -34,9 +34,10 @@ def test_deferred_detalle_kinds_emit_unhandled_advisory_not_silent_blank(
     Asserted via the ``collect_unhandled_source_diagnostics`` boundary (mirroring
     the source-boundary tests): these revisions carry row-producer relation
     operands and the full calculate path is orthogonal to the advisory contract
-    under test. With atribucion_member / foreign_asset pinned in
-    test_source_boundary_and_enrollment, this covers the remaining deferred
-    DEFERRED_SOURCE_KINDS. Withholding is now enrolled separately.
+    under test. With atribucion_member pinned in
+    test_source_boundary_and_enrollment, this covers the deferred informativa
+    row-producer fixtures owned by these tests. Withholding and foreign_asset
+    are now enrolled separately.
     """
     from ...aggregation import DEFERRED_SOURCE_KINDS, collect_unhandled_source_diagnostics
 

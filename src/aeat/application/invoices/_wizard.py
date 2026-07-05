@@ -1,4 +1,4 @@
-"""Guided, non-blocking manual-entry path for one catalogue :class:`Invoice`.
+"""Guided, non-blocking manual-entry path for one catalogue :class:`~domain.invoices.Invoice`.
 
 ``aeat app ledger invoice catalogue wizard`` is the fallback entry point for
 when automated extraction (``ledger evidence extract`` / vision OCR) is
@@ -12,14 +12,15 @@ path -- and accumulates every failing field into one refusal
 dropped or reported one-at-a-time when several are wrong).
 
 The write itself delegates to :func:`~application.invoices.create_catalogue_invoice`
--- the sole sanctioned :class:`Invoice` writer
+-- the sole sanctioned :class:`~domain.invoices.Invoice` writer
 (``composition-service-no-parallel-write-path``); this module never persists a
 row itself. Because :class:`~domain.invoices.Invoice` identity is a
 content-derived hash, a retry that resolves to an already-catalogued identity
 is a guarded no-op (``single-subject-mutation-is-idempotent-guarded``): the
 existing record is returned, not re-written or raised as an error, mirroring
-the re-import-of-an-unchanged-file semantics :func:`import_invoices_from_rows`
-already implements for the bulk path.
+the re-import-of-an-unchanged-file semantics
+:func:`~application.invoices.import_invoices_from_rows` already implements for
+the bulk path.
 """
 
 from __future__ import annotations

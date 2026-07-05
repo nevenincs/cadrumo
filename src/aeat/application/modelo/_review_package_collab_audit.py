@@ -23,7 +23,7 @@ mirrors the ADR's own vocabulary and lets a future audit query distinguish
 "who was trusted / what was sealed" from "what was actually read".
 
 Every function in this module is a thin, pure composition over
-:func:`application.modelo._revision_persistence.emit_bucket_event`
+:func:`~application.modelo._revision_persistence.emit_bucket_event`
 (``composition-service-no-parallel-write-path``): none of them open a
 :class:`~adapters.persistence.storage.SecureObjectRepository` write path
 of their own for the recipient registry, the encryption primitives, or the
@@ -40,7 +40,7 @@ issue #421: :func:`emit_collab_feedback_countersign_attached_event` records,
 on the ORIGINATOR's own bucket, that a recipient's counter-signed receipt
 (recovered from an imported
 :class:`~application.modelo.FeedbackPackage`, see
-:mod:`application.modelo._review_package_feedback`) was verified and
+:mod:`~application.modelo._review_package_feedback`) was verified and
 attached to the originator's approval journal -- the mirror image of
 :func:`emit_collab_package_counter_signed_event`, which records the
 counter-signer's OWN act of signing on their bucket. Reuses the same
@@ -52,19 +52,19 @@ both the forward (accountant decrypts the original package) and reverse (the
 originator decrypts a feedback package) directions.
 
 See Also:
-    :mod:`application.modelo._review_package_recipient_registry`
+    :mod:`~application.modelo._review_package_recipient_registry`
         Owns the recipient-fingerprint registry this module's
         register/remove events describe.
-    :mod:`application.modelo._review_package_recipient_encryption`
+    :mod:`~application.modelo._review_package_recipient_encryption`
         Owns the encrypt/decrypt primitives this module's package events
         describe.
-    :mod:`application.modelo._review_package_review_only_workspace`
+    :mod:`~application.modelo._review_package_review_only_workspace`
         Owns the review-only workspace this module's workspace-opened event
         describes.
-    :mod:`application.modelo._review_package_counter_sign`
+    :mod:`~application.modelo._review_package_counter_sign`
         Owns the counter-sign primitive this module's counter-signed event
         describes.
-    :mod:`application.modelo._review_package_feedback`
+    :mod:`~application.modelo._review_package_feedback`
         Owns the feedback-package round trip whose imported counter-signed
         receipt :func:`emit_collab_feedback_countersign_attached_event`
         attaches to the originator's journal.

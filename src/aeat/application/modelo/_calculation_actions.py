@@ -142,6 +142,7 @@ if TYPE_CHECKING:
     from ..aggregation import (
         CalculationSourceDiagnostic,
         CalculationSourceResolution,
+        ForeignAssetIngestObservation,
     )
     from ..calculations import IvaWalletDecisionRepository
 
@@ -567,6 +568,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
+    foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = (),
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
     clock: datetime | None = None,
@@ -576,7 +578,9 @@ def calculate_modelo_revision_from_bucket_aggregation(
     ``transaction_repository`` is a :class:`TransactionCatalogueRepository` used to
     load bucket-local ledger transactions for aggregation.
     ``invoice_repository`` is an :class:`InvoiceCatalogueRepository` used by
-    invoice and OSS/IOSS resolvers. The wrapper resolves enrolled source
+    invoice and OSS/IOSS resolvers. ``foreign_asset_observations`` feeds the
+    repository-free M720 foreign-asset resolver when the caller has already
+    supplied typed asset observations. The wrapper resolves enrolled source
     families into backend binding, casilla, relation, detail-row, and provenance
     channels, rejects caller collisions with source-owned bindings, and then
     delegates to :func:`~application.modelo.calculate_modelo_revision`.
@@ -612,6 +616,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         bucket_event_repository=bucket_event_repository,
         transaction_repository=transaction_repository,
         invoice_repository=invoice_repository,
+        foreign_asset_observations=foreign_asset_observations,
         borrador_snapshot_repository=borrador_snapshot_repository,
         detail_rows=detail_rows,
         clock=clock,
@@ -709,6 +714,7 @@ def _resolve_bucket_source_mesh(
     *,
     transaction_repository: TransactionCatalogueRepository | None,
     invoice_repository: InvoiceCatalogueRepository | None,
+    foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
 ) -> CalculationSourceResolution:
     """Resolve the live source mesh for a bucket-aggregation calculation.
 
@@ -731,6 +737,7 @@ def _resolve_bucket_source_mesh(
     from ..aggregation import (
         CalculationSourceContext,
         CalculationSourceDiagnostic,
+        ForeignAssetsAggregationSourceResolver,
         LedgerImpatriadoIncomeAggregationSourceResolver,
         LedgerIvaAggregationSourceResolver,
         LedgerRentaExpenseAggregationSourceResolver,
@@ -803,6 +810,12 @@ def _resolve_bucket_source_mesh(
             # binding values for intra-community transactions in scope.
             InvoiceCatalogueSourceResolver(
                 invoice_repository=invoice_repository,
+            ).resolve(context),
+            # Modelo 720 foreign assets (foreign_asset). This resolver is
+            # repository-free: callers pass typed observations explicitly when a
+            # calculation should include M720 asset rows.
+            ForeignAssetsAggregationSourceResolver(
+                observations=foreign_asset_observations,
             ).resolve(context),
             # Cross-period carry: prior-filing observations flow through the
             # backend-binding channel so an automatically-carried previous_filing
@@ -982,6 +995,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
+    foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = (),
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
     clock: datetime | None = None,
@@ -1001,9 +1015,9 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     The bucket evidence is read from the injected
     :class:`TransactionCatalogueRepository` and
     :class:`InvoiceCatalogueRepository`; the source mesh projects their
-    contributing rows plus previous-filing, relation-prefill, withholding,
-    retenciones, and detail-row sources into the backend channels that feed the
-    revision.
+    contributing rows plus explicitly supplied foreign-asset observations,
+    previous-filing, relation-prefill, withholding, retenciones, and detail-row
+    sources into the backend channels that feed the revision.
     """
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     work_unit, snapshot = _load_bucket_aggregation_context(
@@ -1036,6 +1050,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit,
         transaction_repository=transaction_repository,
         invoice_repository=invoice_repository,
+        foreign_asset_observations=foreign_asset_observations,
     )
     # Precedence ladder step 4 (ADR ruling D2, extended): re-run the guard against
     # the merged owned-sources, but EXCLUDE the caller-overridable CARRY sources

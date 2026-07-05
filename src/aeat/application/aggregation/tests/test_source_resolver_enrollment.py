@@ -46,12 +46,13 @@ _SOURCE_MESH_MEMBERS = ("resolver_id", "owned_sources", "resolve")
 _PROTOCOL_QUALNAME = "aeat.application.aggregation.ModeloSourceResolver"
 
 # Concrete source-mesh resolvers that are live on the production calculate path.
-# Twelve are wired into the ``merge_source_resolutions`` tuple inside
+# Thirteen are wired into the ``merge_source_resolutions`` tuple inside
 # ``_resolve_bucket_source_mesh``; three are pre-mesh resolvers invoked directly
 # on the production calculate path (the iva-wallet gate and the binding-resolution
-# gate). All fifteen are enrolled — none may resolve to a silent blank.
+# gate). All sixteen are enrolled — none may resolve to a silent blank.
 _ENROLLED_SOURCE_MESH_RESOLVERS = frozenset(
     {
+        "aeat.application.aggregation.ForeignAssetsAggregationSourceResolver",
         "aeat.application.aggregation.LedgerImpatriadoIncomeAggregationSourceResolver",
         "aeat.application.aggregation.LedgerIvaAggregationSourceResolver",
         "aeat.application.aggregation.LedgerRentaExpenseAggregationSourceResolver",
@@ -188,7 +189,7 @@ def test_known_non_mesh_resolvers_still_exported() -> None:
 def test_discovery_count_is_pinned() -> None:
     """The exported resolver surface is pinned so a new resolver fails loudly.
 
-    Fifteen concrete source-mesh resolvers (all enrolled) plus the protocol
+    Sixteen concrete source-mesh resolvers (all enrolled) plus the protocol
     contract plus zero known non-mesh resolvers. A new resolver added without
     updating the enrolled or non-mesh set changes this count and fails here.
     """

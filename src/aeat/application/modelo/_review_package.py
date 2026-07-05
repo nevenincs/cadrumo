@@ -8,8 +8,8 @@ present), and a small package-info descriptor binding everything to the
 source work unit / bucket / modelo / period.
 
 This module builds and verifies review packages. It reuses the corpus-bundle
-checksum-manifest primitive (:func:`core.corpus_manifest.build_corpus_bundle`
-/ :func:`core.corpus_manifest.verify_corpus_bundle`) rather than
+checksum-manifest primitive (:func:`~core.corpus_manifest.build_corpus_bundle`
+/ :func:`~core.corpus_manifest.verify_corpus_bundle`) rather than
 re-deriving SHA-256 bundling logic: a review package is, mechanically, a
 :class:`~core.corpus_manifest.CorpusManifest`-checksummed zip whose
 members happen to be filing artefacts instead of corpus reference files.

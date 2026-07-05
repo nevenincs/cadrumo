@@ -197,7 +197,7 @@ def test_committed_modelo_349_casilla_widths_match_official_record_design() -> N
         )
 
 
-def test_committed_modelo_349_authenticated_read_surface_allows_read_only_methods_only() -> None:
+def test_committed_modelo_349_authenticated_read_surface_contract() -> None:
     revision = _modelo_349_revision()
     auth_surface = next(ref for ref in revision.live_cross_references if ref.id == "modelo-349-filed-declarations-read")
 
@@ -206,12 +206,6 @@ def test_committed_modelo_349_authenticated_read_surface_allows_read_only_method
     assert auth_surface.requires_authentication is True
     assert auth_surface.requires_aeat_authorization is True
     assert auth_surface.synthetic_data_allowed is False
-
-
-def test_committed_modelo_349_authenticated_read_surface_forbids_aeat_state_mutations() -> None:
-    revision = _modelo_349_revision()
-    auth_surface = next(ref for ref in revision.live_cross_references if ref.id == "modelo-349-filed-declarations-read")
-
     forbidden = set(auth_surface.forbidden_actions)
     assert {
         "server-side-save",
@@ -223,12 +217,6 @@ def test_committed_modelo_349_authenticated_read_surface_forbids_aeat_state_muta
         "document-submission",
         "declaration-submission",
     } <= forbidden, "missing forbidden actions: required - forbidden"
-
-
-def test_committed_modelo_349_authenticated_read_surface_pins_aeat_hosts() -> None:
-    revision = _modelo_349_revision()
-    auth_surface = next(ref for ref in revision.live_cross_references if ref.id == "modelo-349-filed-declarations-read")
-
     assert _WWW6_HOST in auth_surface.allowed_hosts
     for host in auth_surface.allowed_hosts:
         assert host.endswith(AEAT_HOST_SUFFIX_EXPECTED), f"non-AEAT host allowed: {host!r}"
@@ -412,35 +400,25 @@ def test_committed_modelo_349_export_layout_declares_three_fixed_width_records()
         assert record.line_ending == "none"
 
 
-def test_committed_modelo_349_export_records_open_with_official_record_type_literal() -> None:
+def test_committed_modelo_349_export_records_match_fixed_width_contract() -> None:
     revision = _modelo_349_revision()
     layout = revision.export_layouts[0]
+    casilla_ids = {casilla.id for casilla in revision.casillas}
+    expected_record_type_literals = {
+        "declarante": "1",
+        "operador": "2",
+        "rectificacion": "2",
+    }
 
-    for record_type, expected_record_type_literal in (
-        ("declarante", "1"),
-        ("operador", "2"),
-        ("rectificacion", "2"),
-    ):
-        record = next(item for item in layout.records if item.record_type == record_type)
+    for record in layout.records:
+        record_type = record.record_type
         first_field = record.fields[0]
         assert first_field.offset == 1, record_type
         assert first_field.length == 1, record_type
         assert first_field.kind is CasillaFieldKind.LITERAL, record_type
-        assert first_field.literal == expected_record_type_literal, record_type
-
-
-def test_committed_modelo_349_export_records_total_five_hundred_bytes_each() -> None:
-    revision = _modelo_349_revision()
-    layout = revision.export_layouts[0]
-    for record in layout.records:
+        assert first_field.literal == expected_record_type_literals[record_type], record_type
         total = sum(field.length or 0 for field in record.fields)
         assert total == 500, f"record {record.record_type!r} totals {total} bytes; expected 500"
-
-
-def test_committed_modelo_349_export_records_have_contiguous_non_overlapping_fields() -> None:
-    revision = _modelo_349_revision()
-    layout = revision.export_layouts[0]
-    for record in layout.records:
         cursor = 1
         for field in record.fields:
             assert field.offset == cursor, (
@@ -448,21 +426,12 @@ def test_committed_modelo_349_export_records_have_contiguous_non_overlapping_fie
                 f"breaks contiguity (expected {cursor})"
             )
             assert field.length is not None
+            if field.kind is CasillaFieldKind.CASILLA:
+                assert field.casilla_id in casilla_ids, (
+                    f"export field {field.id!r} references unknown casilla {field.casilla_id!r}"
+                )
             cursor += field.length
         assert cursor == 501, f"record {record.record_type!r} last field ends at {cursor - 1}; expected 500"
-
-
-def test_committed_modelo_349_export_casilla_fields_resolve_to_revision_casillas() -> None:
-    revision = _modelo_349_revision()
-    layout = revision.export_layouts[0]
-    casilla_ids = {casilla.id for casilla in revision.casillas}
-    for record in layout.records:
-        for field in record.fields:
-            if field.kind is not CasillaFieldKind.CASILLA:
-                continue
-            assert field.casilla_id in casilla_ids, (
-                f"export field {field.id!r} references unknown casilla {field.casilla_id!r}"
-            )
 
 
 def test_committed_modelo_349_export_app_link_is_registered() -> None:

@@ -12,11 +12,11 @@ visibly). When inventory persistence is hardened, the readiness flips and this
 adapter is replaced by a real projecting resolver enrolled in the mesh.
 
 See Also:
-    :func:`application.inventory.inventory_source_readiness`
+    :func:`~application.inventory.inventory_source_readiness`
         Application readiness fact that supplies the blocking reason.
-    :class:`application.aggregation.CalculationSourceResolution`
+    :class:`~application.aggregation.CalculationSourceResolution`
         Shared source-mesh envelope returned by this blocked resolver.
-    :mod:`application.aggregation._source_fincas`
+    :mod:`~application.aggregation._source_fincas`
         Sibling readiness adapter for the fincas calculation-source surface.
 """
 
@@ -36,7 +36,7 @@ class InventorySourceReadinessResolver:
 
     Owns no live binding source (``owned_sources = ()``) because inventory is not
     enrolled as a calculation source.
-    :meth:`InventorySourceReadinessResolver.resolve` returns an empty resolution
+    :meth:`~InventorySourceReadinessResolver.resolve` returns an empty resolution
     carrying a blocked-readiness diagnostic whenever inventory is not ready.
     """
 

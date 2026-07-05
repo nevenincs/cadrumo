@@ -185,13 +185,6 @@ DEFERRED_SOURCE_KIND_TARGETS: Mapping[BindingSourceKind, DeferredSourceTarget] =
                 "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
             ),
         ),
-        BindingSourceKind.FOREIGN_ASSET: DeferredSourceTarget(
-            owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
-            trigger=(
-                "No promotion date. Review at M720's next hardening campaign or an operator filing need; "
-                "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
-            ),
-        ),
         BindingSourceKind.REFUND_OPERATION: DeferredSourceTarget(
             owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
             trigger=(
