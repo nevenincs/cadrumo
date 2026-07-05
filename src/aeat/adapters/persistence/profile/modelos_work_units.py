@@ -14,6 +14,24 @@ This concrete repository is the persistence adapter behind the read-side
 the persistence adapter (not in :mod:`~domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`WorkUnitCatalogue` model and its pure catalogue mutators.
+
+See Also:
+    :mod:`~adapters.persistence.profile._modelo_runtime`
+        Bucket-id resolution and runtime secure-object factory shared by modelo
+        persistence adapters.
+    :class:`~domain.modelos.WorkUnitCatalogue`
+        Domain catalogue payload encrypted by this repository.
+    :class:`~domain.modelos.WorkUnitCatalogueRepositoryProtocol`
+        Domain port this concrete persistence adapter implements.
+    :data:`~adapters.persistence.storage.MODELO_WORK_UNIT_CATALOGUE_NAMESPACE`
+        Central namespace, sensitivity, schema-version, and singleton-key
+        contract for these secure objects.
+    :mod:`~adapters.persistence.profile.modelos_calculation`
+        Sibling calculation-revision repository referenced by work-unit current
+        and verification lifecycle state.
+    :mod:`~application.modelo`
+        Application facade that creates, calculates, verifies, files, and
+        exports work units from this catalogue.
 """
 
 from __future__ import annotations
