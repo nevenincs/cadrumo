@@ -3,17 +3,57 @@ generated: true
 tags:
   - '#index'
   - '#import-centralization'
-date: '2026-07-03'
-modified: '2026-07-03'
+date: '2026-07-05'
+modified: '2026-07-05'
 related:
   - '[[2026-07-01-import-centralization-W01-P02-S01]]'
   - '[[2026-07-01-import-centralization-W01-P03-S02]]'
   - '[[2026-07-01-import-centralization-W01-P04-S03]]'
   - '[[2026-07-01-import-centralization-W01-P05-S04]]'
+  - '[[2026-07-01-import-centralization-W01-P06-S05]]'
+  - '[[2026-07-01-import-centralization-W01-P06-S06]]'
+  - '[[2026-07-01-import-centralization-W01-P07-S07]]'
   - '[[2026-07-01-import-centralization-W01-P08-S08]]'
+  - '[[2026-07-01-import-centralization-W01-P09-S09]]'
   - '[[2026-07-01-import-centralization-W01-P10-S10]]'
   - '[[2026-07-01-import-centralization-W01-P10-S11]]'
+  - '[[2026-07-01-import-centralization-W01-P11-S12]]'
+  - '[[2026-07-01-import-centralization-W01-P11-S13]]'
+  - '[[2026-07-01-import-centralization-W01-P11-S14]]'
   - '[[2026-07-01-import-centralization-W01-P12-S15]]'
+  - '[[2026-07-01-import-centralization-W01-P12-S16]]'
+  - '[[2026-07-01-import-centralization-W01-P12-S17]]'
+  - '[[2026-07-01-import-centralization-W01-P12-S18]]'
+  - '[[2026-07-01-import-centralization-W01-P13-S19]]'
+  - '[[2026-07-01-import-centralization-W01-P13-S20]]'
+  - '[[2026-07-01-import-centralization-W01-P14-S21]]'
+  - '[[2026-07-01-import-centralization-W01-P15-S22]]'
+  - '[[2026-07-01-import-centralization-W01-P16-S23]]'
+  - '[[2026-07-01-import-centralization-W01-P16-S24]]'
+  - '[[2026-07-01-import-centralization-W01-P16-S25]]'
+  - '[[2026-07-01-import-centralization-W01-P17-S26]]'
+  - '[[2026-07-01-import-centralization-W01-P17-S27]]'
+  - '[[2026-07-01-import-centralization-W01-P17-S28]]'
+  - '[[2026-07-01-import-centralization-W01-P18-S29]]'
+  - '[[2026-07-01-import-centralization-W01-P19-S30]]'
+  - '[[2026-07-01-import-centralization-W01-P19-S31]]'
+  - '[[2026-07-01-import-centralization-W01-P20-S32]]'
+  - '[[2026-07-01-import-centralization-W01-P21-S33]]'
+  - '[[2026-07-01-import-centralization-W01-P22-S34]]'
+  - '[[2026-07-01-import-centralization-W01-P22-S35]]'
+  - '[[2026-07-01-import-centralization-W01-P23-S36]]'
+  - '[[2026-07-01-import-centralization-W01-P24-S37]]'
+  - '[[2026-07-01-import-centralization-W01-P25-S38]]'
+  - '[[2026-07-01-import-centralization-W01-P26-S39]]'
+  - '[[2026-07-01-import-centralization-W01-P27-S40]]'
+  - '[[2026-07-01-import-centralization-W01-P28-S41]]'
+  - '[[2026-07-01-import-centralization-W01-P29-S42]]'
+  - '[[2026-07-01-import-centralization-W01-P30-S43]]'
+  - '[[2026-07-01-import-centralization-W01-P31-S44]]'
+  - '[[2026-07-01-import-centralization-W01-P32-S45]]'
+  - '[[2026-07-01-import-centralization-W01-P33-S46]]'
+  - '[[2026-07-01-import-centralization-W01-P34-S47]]'
+  - '[[2026-07-01-import-centralization-W01-P35-S48]]'
   - '[[2026-07-01-import-centralization-W02-P36-S49]]'
   - '[[2026-07-01-import-centralization-W02-P37-S97]]'
   - '[[2026-07-01-import-centralization-W02-P38-S120]]'
@@ -252,6 +292,46 @@ Auto-generated index of all documents tagged with `#import-centralization`.
 - `2026-07-01-import-centralization-W06-P90-S384` - Dispatch a vaultspec-code-review structural audit over the full campaign diff, confirming every promoted facade, every rewritten consumer, and the retired umbrella re-exports are behavior-preserving
 - `2026-07-01-import-centralization-W06-P90-S400` - Run a fresh-context honesty review against the campaign closure summary per the campaign-close-honesty-review discipline before declaring the campaign structurally complete, tracking every surfaced item as a new Step or a formally deferred follow-up
 - `2026-07-01-import-centralization-W06-P90-S401` - Persist Step Records for every closed Step and rebuild the feature index, then confirm vaultspec-core vault plan status reports the plan fully closed
+- `2026-07-01-import-centralization-W01-P06-S05` - Promote `DEFAULT_MAX_WALLET_AGE_DAYS`, `IvaCompensationAuthoritySource`, `IvaCompensationReconciliationDecision`, `IvaCompensationWalletObservationProtocol`, `local_recurrence_authority_source`, `reconcile_iva_compensation_wallet`, `validate_wallet_matches_snapshot` to `aeat.domain.iva_compensation.__all__` with eager re-exports so the 13 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P06-S06` - Decide and apply the public-surface disposition for `_period_sort_key` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.domain.iva_compensation._carry_forward` and consumed cross-package from `src/aeat/application/calculations/_iva_compensation_history.py`
+- `2026-07-01-import-centralization-W01-P07-S07` - Promote `TEXT_VALUE_GROUP`, `extract_pages_text_concatenated`, `extract_pages_text_from_bytes`, `extract_pages_text_from_path`, `extract_pages_text_with_fast_path`, `sha256_file`, `source_pdf_reference_path` to `aeat.adapters.inbound.pdf.__all__` with eager re-exports so the 14 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P09-S09` - Promote `BrowserAdapterTypeError`, `GroiSedeDriver`, `NifIvaCheckSedeDriver`, `filed_declaracion_observation_object_key`, `iva_compensation_wallet_observation_object_key` to `aeat.adapters.outbound.aeat.sede.__all__` with eager re-exports so the 5 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P11-S12` - Promote `M111_NO_RETENCIONES_PROFILE_PATH`, `MaritimeExemptionResult`, `m111_no_retenciones_periods_for_bucket` to `aeat.application.calculations.__all__` with eager re-exports so the 4 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P11-S13` - Decide and apply the public-surface disposition for `_IvaWalletDecisionEnvelopePayload` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.application.calculations._observations_repository` and consumed cross-package from `src/aeat/application/user_profile/_custody_carry.py`
+- `2026-07-01-import-centralization-W01-P11-S14` - Decide and apply the public-surface disposition for `_MODELO_303_IVA_COMPENSATION_BINDING_ID` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.application.calculations._binding_prefill` and consumed cross-package from `src/aeat/application/modelo/_calculation_actions.py`
+- `2026-07-01-import-centralization-W01-P12-S16` - Decide and apply the public-surface disposition for `_build_modelo_definition_from_data` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.domain.calculations.registry._loader` and consumed cross-package from `src/aeat/locales/_modelo_manager.py`
+- `2026-07-01-import-centralization-W01-P12-S17` - Decide and apply the public-surface disposition for `_load_modelo_manifest` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.domain.calculations.registry._loader` and consumed cross-package from `src/aeat/locales/_modelo_manager.py`
+- `2026-07-01-import-centralization-W01-P12-S18` - Decide and apply the public-surface disposition for `_load_modelo_revisions` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.domain.calculations.registry._loader` and consumed cross-package from `src/aeat/locales/_modelo_manager.py`
+- `2026-07-01-import-centralization-W01-P13-S19` - Promote `evaluate_idle`, `get_active_master_key`, `has_active_bucket_session` to `aeat.adapters.persistence.storage.master_key.__all__` with eager re-exports so the 8 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P13-S20` - Decide and apply the public-surface disposition for `_active_session` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.adapters.persistence.storage.master_key._active_session` and consumed cross-package from `src/aeat/adapters/persistence/storage/runtime.py, src/aeat/adapters/persistence/storage/sql/secure_objects.py`
+- `2026-07-01-import-centralization-W01-P14-S21` - Promote `decrypt_encrypted_bytes_column`, `decrypt_secure_object_payload`, `encrypt_secure_object_payload`, `secure_object_payload_aad` to `aeat.adapters.persistence.storage.crypto.__all__` with eager re-exports so the 9 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P15-S22` - Promote `WizardStatusError`, `WizardStatusReport`, `build_wizard_status`, `load_active_taxpayer_profile` to `aeat.application.wizard.__all__` with eager re-exports so the 4 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P16-S23` - Promote `list_profile_key_records`, `validate_profile_values` to `aeat.application.user_profile.__all__` with eager re-exports so the 5 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P16-S24` - Decide and apply the public-surface disposition for `_refuse_duplicate_label` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.application.user_profile._orchestration` and consumed cross-package from `src/aeat/application/wizard/_commands.py`
+- `2026-07-01-import-centralization-W01-P16-S25` - Decide and apply the public-surface disposition for `_require_registered_label` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.application.user_profile._orchestration` and consumed cross-package from `src/aeat/application/wizard/_commands.py`
+- `2026-07-01-import-centralization-W01-P17-S26` - Decide and apply the public-surface disposition for `_parse_bool` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.core.parsing._utils` and consumed cross-package from `src/aeat/domain/calculations/registry/_export_parse.py, src/aeat/domain/user_profile/_values.py`
+- `2026-07-01-import-centralization-W01-P17-S27` - Decide and apply the public-surface disposition for `_parse_date` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.core.parsing._dates` and consumed cross-package from `src/aeat/adapters/outbound/aeat/sede/_notifications.py`
+- `2026-07-01-import-centralization-W01-P17-S28` - Decide and apply the public-surface disposition for `_parse_iso8601_date` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.core.parsing._dates` and consumed cross-package from `src/aeat/application/calculations/_row_set_assembly.py, src/aeat/application/user_profile/_validation.py, src/aeat/domain/contribuyente/__init__.py, src/aeat/domain/contribuyente/_descendant_facts.py, src/aeat/domain/contribuyente/family.py, src/aeat/domain/invoices/_models.py, src/aeat/domain/user_profile/_values.py`
+- `2026-07-01-import-centralization-W01-P18-S29` - Promote `MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND`, `compute_ledger_filing_evidence`, `compute_ledger_filing_snapshot` to `aeat.application.aggregation.__all__` with eager re-exports so the 3 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P19-S30` - Decide and apply the public-surface disposition for `_build_aad` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.adapters.persistence.storage.envelope._envelope` and consumed cross-package from `src/aeat/adapters/persistence/storage/_rotation.py`
+- `2026-07-01-import-centralization-W01-P19-S31` - Decide and apply the public-surface disposition for `_derive_envelope_key` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.adapters.persistence.storage.envelope._envelope` and consumed cross-package from `src/aeat/adapters/persistence/storage/_rotation.py`
+- `2026-07-01-import-centralization-W01-P20-S32` - Promote `Base`, `SecureObjectRow` to `aeat.adapters.persistence.storage.sql.__all__` with eager re-exports so the 2 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P21-S33` - Promote `find_invoice`, `find_unmatched` to `aeat.domain.invoices.__all__` with eager re-exports so the 4 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P22-S34` - Decide and apply the public-surface disposition for `_build_google_credentials` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.adapters.outbound.storage._factory` and consumed cross-package from `src/aeat/entrypoints/cli/_config/_google_sync_calc.py, src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`
+- `2026-07-01-import-centralization-W01-P22-S35` - Decide and apply the public-surface disposition for `_resolve_drive_root_folder_id` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.adapters.outbound.storage._factory` and consumed cross-package from `src/aeat/entrypoints/cli/_config/_google_sync_calc.py`
+- `2026-07-01-import-centralization-W01-P23-S36` - Promote `OperatorInputScenario`, `verify_modelo_parity` to `aeat.application.storage.calc_sheets.__all__` with eager re-exports so the 2 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P24-S37` - Promote `canonical_decimal_string` to `aeat.domain.__all__` with eager re-exports so the 6 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P25-S38` - Promote `is_link_only_mime_type` to `aeat.domain.attachments.__all__` with eager re-exports so the 1 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P26-S39` - Decide and apply the public-surface disposition for `_classify_identity` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.adapters.outbound.aeat.auth._clave_movil` and consumed cross-package from `src/aeat/application/auth/_operator_probes.py`
+- `2026-07-01-import-centralization-W01-P27-S40` - Promote `BucketEventHistoryRepositoryProtocol` to `aeat.domain.buckets.__all__` with eager re-exports so the 24 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P28-S41` - Promote `RentaValidationError` to `aeat.domain.renta.__all__` with eager re-exports so the 2 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P29-S42` - Promote `AuthState` to `aeat.application.workflow.__all__` with eager re-exports so the 1 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P30-S43` - Promote `CasillaFieldKind` to `aeat.domain.calculations.__all__` with eager re-exports so the 2 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P31-S44` - Promote `PurchaseInvoiceEvidenceRepository` to `aeat.application.ledger.__all__` with eager re-exports so the 1 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P32-S45` - Decide and apply the public-surface disposition for `_m036_declaration_object_key` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.application.modelo._m036_lifecycle` and consumed cross-package from `src/aeat/application/user_profile/_custody_carry.py`
+- `2026-07-01-import-centralization-W01-P33-S46` - Promote `clear_output_language_cache` to `aeat.core.i18n.__all__` with eager re-exports so the 5 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P34-S47` - Promote `portal_host_name` to `aeat.domain.portals.__all__` with eager re-exports so the 1 existing cross-package consumer site(s) can import from the facade
+- `2026-07-01-import-centralization-W01-P35-S48` - Decide and apply the public-surface disposition for `_command_schema_refs` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.entrypoints.cli._app_contract` and consumed cross-package from `src/aeat/entrypoints/mcp/_tools.py`
 
 ### plan
 
