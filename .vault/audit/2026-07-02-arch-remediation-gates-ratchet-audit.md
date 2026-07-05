@@ -35,6 +35,19 @@ reports an application-to-entrypoints violation. The layered contract remains
 red on the broader application-to-adapters inventory, so this is a boundary
 reduction only, not program closure.
 
+### follow-up-error-class-registration-boundary | low | application test no longer imports AEAT auth adapter
+
+Reviewed the 2026-07-05 ratchet follow-up that rewired
+`test_error_class_registration` away from the outbound AEAT auth adapter. The
+certificate probe still builds a real PKCS#12 bundle and calls the application
+`probe_provider_configuration` surface; the assertion now observes the
+propagated `AeatError` through the registered `AUTH_AUTH_VALIDATION` code
+instead of importing the adapter exception class. Focused pytest and ruff
+passed. The layered linter rerun no longer reports
+`application.tests.test_error_class_registration`, but the importlinter ledger
+count remains above baseline at 850, so this is a targeted boundary cleanup
+only.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
