@@ -48,6 +48,18 @@ passed. The layered linter rerun no longer reports
 count remains above baseline at 850, so this is a targeted boundary cleanup
 only.
 
+### follow-up-ledger-import-errors-boundary | low | application ledger test uses local test support re-export
+
+Reviewed the 2026-07-05 ratchet follow-up that removed the direct SQL storage
+adapter import from `test_actions_import_errors`. The test continues to use
+the real `SecureObjectRepository`, now obtained through the existing
+`application.ledger.tests._action_test_support` support surface that the
+neighboring ledger action tests already use. Focused pytest and ruff passed.
+The layered linter rerun no longer reports
+`application.ledger.tests.test_actions_import_errors`, but the importlinter
+ledger count remains above baseline at 850, so this is another targeted
+boundary cleanup only.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
