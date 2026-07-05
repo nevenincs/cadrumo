@@ -1,7 +1,7 @@
 """Casilla-level divergence detection between a computed revision and a filed declaration.
 
 ``detect_casilla_divergences`` is the typed, pure comparison primitive this
-module contributes to :mod:`application.modelo._reconcile`: given the
+module contributes to :mod:`~application.modelo._reconcile`: given the
 canonical ``revision.casilla_values`` a work unit already persisted (the same
 values the calculate path, the result summary, and the export surface render,
 per ``one-aggregation-path-pull-equals-calculate``) and the per-casilla values a
@@ -14,7 +14,7 @@ casilla the computed revision never resolved a value for). The comparison is
 scoped to the registry's own reconciliation policy
 (:meth:`~domain.calculations.registry.RegistrySnapshot.verification_policy`)
 so the compared set is declared registry data, never an ad hoc casilla list —
-the same scoping :func:`application.verification.verify_declaracion` already
+the same scoping :func:`~application.verification.verify_declaracion` already
 applies to printed-vs-computed comparisons before a filing, kept here for the
 after-filing reconcile use.
 

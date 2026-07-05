@@ -8,7 +8,7 @@ sensitivity; no plaintext metadata JSON or envelope file lands on disk.
 
 This concrete repository is the persistence adapter for the
 :class:`~domain.justificante.Justificante` audit-sink record. It lives in
-the persistence adapter (not in :mod:`domain.justificante`) because its
+the persistence adapter (not in :mod:`~domain.justificante`) because its
 base :class:`~adapters.persistence.storage.SecureBoundRepository` is
 SQL/crypto-coupled; the domain package owns only the pure record and its
 parser. No domain-layer caller consumes the repository, so no domain port is
@@ -16,9 +16,9 @@ declared (the prior zero-consumer ``_protocols.py`` was removed on 2026-06-01);
 the application layer constructs this concrete directly.
 
 See Also:
-    :class:`domain.justificante.Justificante`
+    :class:`~domain.justificante.Justificante`
         Payload model encrypted by this repository.
-    :class:`adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
         SQL object store underlying the bound repository.
 """
 

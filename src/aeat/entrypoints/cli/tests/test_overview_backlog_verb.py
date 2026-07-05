@@ -7,8 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile._modelo_runtime import secure_objects_for_modelo_bucket
-from ....adapters.persistence.storage import SensitivityClass
+from ....adapters.persistence.storage import SensitivityClass, secure_object_repository_for_bucket
 from ....application.user_profile import profile_create_storage_span, register_minimal_profile
 from ....application.workflow import workflow_state_repository
 from ....core.time import now
@@ -87,7 +86,7 @@ _WORK_UNIT_OBJECT_KEY = "catalogue"
 
 
 def _persist_invalid_work_unit_catalogue_payload(bucket_id: str) -> None:
-    secure_objects_for_modelo_bucket(bucket_id).save(
+    secure_object_repository_for_bucket(bucket_id).save(
         namespace=_WORK_UNIT_NAMESPACE,
         object_key=_WORK_UNIT_OBJECT_KEY,
         classification=SensitivityClass.FINANCIAL,

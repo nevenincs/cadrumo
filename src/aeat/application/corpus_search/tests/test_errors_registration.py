@@ -13,8 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import AeatError, build_error_envelope
-from ....core.errors._registry import ErrorCategory
+from ....core.errors import AeatError, ErrorCategory, build_error_envelope
 from .._errors import CorpusSearchDependencyError, CorpusSearchError, CorpusSearchInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

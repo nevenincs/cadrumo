@@ -112,7 +112,7 @@ class DataPrepWalkthrough(BaseModel):
             ``import_transactions``, the final step is always
             ``start_modelo_work``.
         ready_for_calculation: ``True`` only when every step is
-            :attr:`DataPrepStepState.DONE`.
+            :attr:`~application.overview.DataPrepStepState.DONE`.
     """
 
     model_config = _STRICT_FROZEN

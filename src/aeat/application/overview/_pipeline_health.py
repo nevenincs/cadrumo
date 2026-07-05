@@ -92,7 +92,7 @@ class ModeloHealthRow(BaseModel):
         modelo: AEAT modelo code (e.g. ``"130"``, ``"303"``).
         work_unit_id: The matching :class:`~domain.modelos.WorkUnit`
             id, or ``None`` when :attr:`state` is
-            :attr:`ModeloReadinessState.NOT_STARTED`.
+            :attr:`~application.overview.ModeloReadinessState.NOT_STARTED`.
         state: Current :class:`ModeloReadinessState` for this modelo/period.
         blocking_finding_count: Count of ``BLOCKING`` severity findings from
             the latest verification report against the current revision.
@@ -127,16 +127,18 @@ class PipelineHealthReport(BaseModel):
             found for the period, sorted by modelo code. Empty when no work
             unit has been created for this period yet.
         total_blocking_findings: Sum of every row's
-            :attr:`ModeloHealthRow.blocking_finding_count`.
+            :attr:`~application.overview.ModeloHealthRow.blocking_finding_count`.
         total_warning_findings: Sum of every row's
-            :attr:`ModeloHealthRow.warning_finding_count`.
+            :attr:`~application.overview.ModeloHealthRow.warning_finding_count`.
         ready: ``True`` only when the ledger reports no unresolved
             readiness issues (or was not scoped) and every modelo row is
-            :attr:`ModeloReadinessState.FILED` or
-            :attr:`ModeloReadinessState.VERIFIED`, with zero modelos in
-            :attr:`ModeloReadinessState.BLOCKED`. ``False`` when any modelo
-            has not started or is blocked, or the ledger still carries
-            pending-review rows or readiness issues. A pipeline with zero
+            :attr:`~application.overview.ModeloReadinessState.FILED` or
+            :attr:`~application.overview.ModeloReadinessState.VERIFIED`, with
+            zero modelos in
+            :attr:`~application.overview.ModeloReadinessState.BLOCKED`.
+            ``False`` when any modelo has not started or is blocked, or the
+            ledger still carries pending-review rows or readiness issues. A
+            pipeline with zero
             work units for the period is never reported ready — there is
             nothing to be ready about yet.
     """

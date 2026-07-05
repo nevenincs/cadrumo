@@ -174,7 +174,7 @@ def build_harness_floor_tool() -> Tool:
     mutates state.
 
     Returns:
-        The ``harness.load`` :class:`mcp.types.Tool` object.
+        The ``harness.load`` :class:`~mcp.types.Tool` object.
     """
     from mcp.types import Tool, ToolAnnotations
 

@@ -1,13 +1,13 @@
 """Typed ``--json`` payload schemas for the modelo ``bindings`` sub-app.
 
-Extracted from :mod:`entrypoints.cli._modelo_payloads` to keep that
+Extracted from :mod:`~entrypoints.cli._modelo_payloads` to keep that
 module under its size budget (`aeat-architecture-boundaries`,
 `registry-resolver-family-extraction`), following the split pattern already
-established by :mod:`_modelo_aux_payloads`,
-:mod:`_modelo_revision_payload_parts`, and
-:mod:`_modelo_work_revision_payloads`. Covers the ``modelo bindings list``
-and ``modelo bindings resolve`` (preview) command envelopes. Every class
-declared here is a strict
+established by :mod:`~entrypoints.cli._modelo_aux_payloads`,
+:mod:`~entrypoints.cli._modelo_revision_payload_parts`, and
+:mod:`~entrypoints.cli._modelo_work_revision_payloads`. Covers the
+``modelo bindings list`` and ``modelo bindings resolve`` (preview) command
+envelopes. Every class declared here is a strict
 :class:`OutputSchema` subclass registered with
 :func:`register_schema` for the bindings-list and
 bindings-resolve command JSON-contract surface.
@@ -15,10 +15,10 @@ bindings-resolve command JSON-contract surface.
 Per `binding-values-carry-provenance`, every row here carries the binding's
 regulatory grounding (``legal_refs`` / ``source_refs``) at parity with the
 casilla-side payloads (``CasillaRowPayload`` in
-:mod:`_modelo_payloads`).
+:mod:`~entrypoints.cli._modelo_payloads`).
 
 See Also:
-    :mod:`entrypoints.cli._modelo_payloads`
+    :mod:`~entrypoints.cli._modelo_payloads`
         Re-imports every class from this module so existing
         ``from ._modelo_payloads import BindingListRowPayload`` (etc.) call
         sites keep resolving unchanged.

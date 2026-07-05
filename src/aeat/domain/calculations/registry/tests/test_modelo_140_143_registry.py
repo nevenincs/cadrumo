@@ -29,27 +29,18 @@ _MODELOS = [
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc", _MODELOS)
-def test_validator_accepts_committed_definition(mid: str, rev: str, approval: str, plazo: str, doc: str) -> None:
+def test_committed_definition_legal_authority_and_windowless_plazo(
+    mid: str, rev: str, approval: str, plazo: str, doc: str
+) -> None:
+    """Each on-demand solicitud validates without fabricated deadline windows."""
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert rev in modelo.revisions
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(mid: str, rev: str, approval: str, plazo: str, doc: str) -> None:
-    _, catalogues = _committed_modelo(mid)
     for ref in (approval, plazo):
         entry = catalogues.legal[ref]
         assert entry.evidence_tier == "legal_authority"
         assert entry.document_id == doc
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc", _MODELOS)
-def test_on_demand_solicitud_carries_no_fabricated_windows(
-    mid: str, rev: str, approval: str, plazo: str, doc: str
-) -> None:
-    """The plazo is on-demand ("opte por la modalidad de abono anticipado"), so the
-    honest state is zero calendar deadline_windows — no fixed date is invented."""
-    modelo, _ = _committed_modelo(mid)
     assert modelo.revisions[rev].deadline_windows == ()

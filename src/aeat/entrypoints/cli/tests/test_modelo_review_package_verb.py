@@ -24,10 +24,10 @@ from ....domain.modelos import (
     ModeloCode,
     WorkUnit,
     derive_calculation_revision_id,
+    derive_work_unit_id,
     upsert_calculation_revision,
     upsert_work_unit,
 )
-from ....domain.modelos._work_unit import derive_work_unit_id
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root

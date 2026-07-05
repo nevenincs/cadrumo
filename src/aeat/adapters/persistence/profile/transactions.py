@@ -14,7 +14,7 @@ plaintext transaction row, JSON catalogue, or envelope file lands on disk.
 
 This concrete repository is the persistence adapter behind the read-side
 :class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`. It
-lives in the persistence adapter (not in :mod:`domain.transactions`) because
+lives in the persistence adapter (not in :mod:`~domain.transactions`) because
 its secure-object coupling is SQL/crypto-bound; the domain package owns only the
 pure surface — the :class:`~domain.transactions.ImportSummary` record, the
 :func:`~domain.transactions.transaction_object_key` /
@@ -137,7 +137,7 @@ def _filing_date(transaction: Transaction) -> date:
     """Return the date every ledger aggregator filters on: ``value_date`` or ``booked_date``.
 
     Mirrors the convention already applied independently by every
-    period-scoped ledger aggregator (:mod:`application.aggregation`), so the
+    period-scoped ledger aggregator (:mod:`~application.aggregation`), so the
     plaintext date index keys on the SAME date the encrypted-scan aggregation
     path would have filtered on.
     """
@@ -165,7 +165,7 @@ class TransactionCatalogueRepository:
     Every instance is bound to one profile bucket via ``bucket_id``. The
     catalogue is stored as one secure-object row per transaction (keyed
     ``transaction:{bucket_id}:{transaction_id}``) inside the
-    :data:`adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
+    :data:`~adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
     namespace, so two operator profiles never share transaction storage and a
     single-transaction mutation touches a single row. Each
     :class:`~domain.transactions.Transaction` payload and the bucket

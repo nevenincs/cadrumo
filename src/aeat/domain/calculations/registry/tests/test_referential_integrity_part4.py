@@ -123,8 +123,8 @@ def test_modelo_validation_rejects_revision_sourced_only_by_executable_parity() 
         RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
 
 
-def test_dangling_application_link_legal_refs() -> None:
-    """application_link.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
+def test_snapshot_integrity_rejects_dangling_legal_refs_on_revision_surfaces() -> None:
+    """Missing LegalRefId values are rejected across revision-level surfaces."""
     link = ApplicationLinkDefinition(
         id="al.test2",
         surface="workflow",
@@ -133,14 +133,6 @@ def test_dangling_application_link_legal_refs() -> None:
         legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
-    revision = minimal_revision(
-        application_links=(minimal_application_link("filing"), link),
-    )
-    _assert_missing_legal_ref_rejected(revision, r"application_link al.test2.legal_refs")
-
-
-def test_dangling_deadline_window_legal_refs() -> None:
-    """deadline_window.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
     window = DeadlineWindowDefinition(
         id="dw.test",
         filing_year=2024,
@@ -151,14 +143,6 @@ def test_dangling_deadline_window_legal_refs() -> None:
         legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
-    revision = minimal_revision(
-        deadline_windows=(window,),
-    )
-    _assert_missing_legal_ref_rejected(revision, r"deadline_window dw.test.legal_refs")
-
-
-def test_dangling_support_removal_decision_legal_refs() -> None:
-    """support_removal_decision.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
     decision = SupportRemovalDecisionDefinition(
         id="srd.test",
         subject_type="application_link",
@@ -169,8 +153,23 @@ def test_dangling_support_removal_decision_legal_refs() -> None:
         legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
-    revision = minimal_revision(support_removal_decisions=(decision,))
-    _assert_missing_legal_ref_rejected(revision, r"support_removal_decision srd.test.legal_refs")
+    layout = ExportLayoutDefinition(
+        id="el.test",
+        source_refs=(REFERENCE_SOURCE_ID,),
+        legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
+    )
+    cases = (
+        (minimal_revision(application_links=(minimal_application_link("filing"), link)), r"application_link al.test2"),
+        (minimal_revision(deadline_windows=(window,)), r"deadline_window dw.test"),
+        (minimal_revision(support_removal_decisions=(decision,)), r"support_removal_decision srd.test"),
+        (minimal_revision(export_layouts=(layout,)), r"export_layout el.test"),
+        (
+            minimal_revision().model_copy(update={"legal_refs": (REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID)}),
+            r"revision",
+        ),
+    )
+    for revision, surface_match in cases:
+        _assert_missing_legal_ref_rejected(revision, rf"{surface_match}.legal_refs")
 
 
 def test_modelo_validation_rejects_support_removal_sourced_only_by_executable_parity() -> None:
@@ -455,17 +454,6 @@ def test_dangling_dependency_classification_target_construct() -> None:
         build_minimal_snapshot(revision)
 
 
-def test_dangling_export_layout_legal_refs() -> None:
-    """export_layout.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
-    layout = ExportLayoutDefinition(
-        id="el.test",
-        source_refs=(REFERENCE_SOURCE_ID,),
-        legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
-    )
-    revision = minimal_revision(export_layouts=(layout,))
-    _assert_missing_legal_ref_rejected(revision, r"export_layout el.test.legal_refs")
-
-
 def test_dangling_export_field_casilla_ref() -> None:
     """export_field.casilla_id pointing at nonexistent CasillaId raises."""
     casilla = minimal_casilla(_NUMERIC_CASILLA_01)
@@ -547,13 +535,6 @@ def test_export_record_row_field_casilla_refs_must_resolve_in_registry_validatio
         in failure
         for failure in failures
     ), f"row_field_casilla_ids values must be checked against declared casillas; got: {failures}"
-
-
-def test_dangling_revision_legal_refs() -> None:
-    """revision.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
-    revision = minimal_revision()
-    revision = revision.model_copy(update={"legal_refs": (REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID)})
-    _assert_missing_legal_ref_rejected(revision, r"revision.legal_refs")
 
 
 def test_dangling_revision_orden_aplicabilidad_refs() -> None:

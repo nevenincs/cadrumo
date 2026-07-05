@@ -62,31 +62,18 @@ _MODELOS = [
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain", _MODELOS)
-def test_validator_accepts_committed_definition(
+def test_committed_definition_legal_authority_and_windowless_plazo(
     mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain
 ) -> None:
+    """Each cadence-dependent tail modelo validates without fabricated deadline windows."""
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert modelo.tax_domain is domain
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(
-    mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain
-) -> None:
-    _, catalogues = _committed_modelo(mid)
     for ref in {approval, plazo}:
         entry = catalogues.legal[ref]
         assert entry.evidence_tier == "legal_authority"
         assert entry.document_id == doc
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,domain", _MODELOS)
-def test_cadence_dependent_plazo_carries_no_fabricated_windows(
-    mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain
-) -> None:
-    """Each plazo is cadence-dependent / delegated / campaign-remitted, so the
-    honest state is zero calendar deadline_windows — no fixed date is invented."""
-    modelo, _ = _committed_modelo(mid)
     assert modelo.revisions[rev].deadline_windows == ()

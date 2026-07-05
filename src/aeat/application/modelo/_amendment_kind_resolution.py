@@ -1,7 +1,7 @@
 """Period-aware amendment-kind resolution and the liability-increase guard.
 
 AEAT's amendment mechanism for a self-assessment changed over time (see
-:mod:`core._amendment_kind_regime` for the full grounding). Before the
+:mod:`~core._amendment_kind_regime` for the full grounding). Before the
 ``autoliquidación rectificativa`` unification, a correction that raised the
 tax due filed as a ``complementaria`` (LGT art. 122.2) while a correction
 that lowered it required the separate ``solicitud de rectificación``
@@ -24,10 +24,10 @@ that:
 illegal kind can never reach the catalogue.
 
 See Also:
-    :func:`core.resolve_amendment_kind_regime`:
+    :func:`~core.resolve_amendment_kind_regime`:
         Codified per-modelo, period-aware permitted-kind table this module
         binds to :class:`~domain.modelos.CalculationRevisionAmendmentKind`.
-    :func:`application.modelo.amend_modelo_revision`:
+    :func:`~application.modelo.amend_modelo_revision`:
         The composition path that calls this module's guard before building
         the amendment revision.
 """
@@ -114,7 +114,7 @@ def liability_direction_for_amendment(
     ``complementaria`` territory (LGT art. 122.2); ``DECREASE`` is
     ``solicitud de rectificación`` territory (LGT art. 120.3) that a
     self-filed complementaria cannot lawfully carry — see
-    :func:`application.modelo.amend_modelo_revision`'s pre-rectificativa
+    :func:`~application.modelo.amend_modelo_revision`'s pre-rectificativa
     complementaria-direction guard.
     """
     return AmendmentLiabilityDirection(

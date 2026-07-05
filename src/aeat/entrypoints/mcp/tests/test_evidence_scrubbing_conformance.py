@@ -30,7 +30,7 @@ import pytest
 from pydantic import BaseModel
 
 from ....core.json_contract import SCHEMA_REGISTRY
-from ...cli._app_contract import _ensure_result_schemas_registered
+from ...cli import command_schema_refs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -80,7 +80,7 @@ def _resolved_hints(model: type[BaseModel]) -> dict[str, object]:
 
 
 def _all_registered_schemas() -> dict[str, type[BaseModel]]:
-    _ensure_result_schemas_registered()
+    command_schema_refs()
     return dict(SCHEMA_REGISTRY)
 
 

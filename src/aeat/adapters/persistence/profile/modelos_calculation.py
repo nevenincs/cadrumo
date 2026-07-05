@@ -11,7 +11,7 @@ the encrypted BLOB per profile bucket.
 
 This concrete repository is the persistence adapter behind the read-side
 :class:`~domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`. It
-lives in the persistence adapter (not in :mod:`domain.modelos`) because its
+lives in the persistence adapter (not in :mod:`~domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`~domain.modelos.CalculationRevisionCatalogue` model, the pure
 :func:`~domain.modelos.upsert_calculation_revision` mutator, and the
@@ -48,7 +48,7 @@ _CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision
 class CalculationRevisionCatalogueRepository:
     """Repository over encrypted SQL-backed calculation-revision catalogue storage.
 
-    :data:`adapters.persistence.storage.MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE`
+    :data:`~adapters.persistence.storage.MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE`
     is the central namespace, schema-version, sensitivity, and singleton-key
     contract for the encrypted :class:`CalculationRevisionCatalogue` row. The
     catalogue payload is wrapped in

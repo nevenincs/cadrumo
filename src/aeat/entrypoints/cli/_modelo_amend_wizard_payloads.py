@@ -3,9 +3,9 @@
 The amendment wizard walks an operator through correcting an already-filed
 return in plain language, then calls the same
 :func:`~application.modelo.amend_modelo_revision` composition path
-:mod:`_modelo.py`'s ``work amend`` verb uses. This module documents the JSON
+:mod:`~entrypoints.cli._modelo`'s ``work amend`` verb uses. This module documents the JSON
 transport shape only; the wizard's step-by-step prompting and amendment
-delegation live in :mod:`_modelo_amend_wizard_cli`. Every payload here is an
+delegation live in :mod:`~entrypoints.cli._modelo_amend_wizard_cli`. Every payload here is an
 :class:`OutputSchema` subclass registered on the JSON-contract surface.
 """
 

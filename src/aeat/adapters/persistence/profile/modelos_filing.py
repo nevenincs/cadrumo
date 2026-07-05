@@ -9,7 +9,7 @@ catalogue is stored as a single encrypted BLOB per profile bucket.
 
 This concrete repository is the persistence adapter behind the read-side
 :class:`~domain.modelos.ModeloRecordCatalogueRepositoryProtocol`. It lives
-in the persistence adapter (not in :mod:`domain.modelos`) because its
+in the persistence adapter (not in :mod:`~domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`ModeloRecordCatalogue` model and its pure mutators.
 """
@@ -41,7 +41,7 @@ _FILING_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_filing_record_persistence
 class ModeloRecordCatalogueRepository:
     """Repository over encrypted SQL-backed filing-record catalogue storage.
 
-    :data:`adapters.persistence.storage.MODELO_FILING_RECORD_CATALOGUE_NAMESPACE`
+    :data:`~adapters.persistence.storage.MODELO_FILING_RECORD_CATALOGUE_NAMESPACE`
     is the central namespace, schema-version, sensitivity, and singleton-key
     contract for the encrypted :class:`ModeloRecordCatalogue` row. The
     catalogue payload keeps member-scoped current/history lookups in the domain

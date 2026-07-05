@@ -1,7 +1,7 @@
 """Runtime-backed repository helpers shared by the modelo persistence adapters.
 
 Shared private helpers for the sibling modelo catalogue repositories
-(:mod:`adapters.persistence.profile.modelos_calculation`,
+(:mod:`~adapters.persistence.profile.modelos_calculation`,
 ``modelos_filing``, ``modelos_work_units``, ``modelos_verification_reports``,
 and ``participation_index``): a bucket-id resolver and a runtime factory that
 returns a
