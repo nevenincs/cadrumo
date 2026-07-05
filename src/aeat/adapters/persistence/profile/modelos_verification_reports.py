@@ -9,7 +9,7 @@ catalogue is stored as a single encrypted BLOB per profile bucket, wrapped in
 
 This concrete repository is the persistence adapter behind the read-side
 :class:`~domain.modelos.VerificationReportCatalogueRepositoryProtocol`. It
-lives in the persistence adapter (not in :mod:`domain.modelos`) because its
+lives in the persistence adapter (not in :mod:`~domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`VerificationReportCatalogue` model and its pure mutators.
 """

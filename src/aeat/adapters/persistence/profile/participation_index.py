@@ -3,13 +3,13 @@
 The participation index is a derived, rebuildable read-side cache linking one
 ledger transaction id to the finalized modelo revisions, filings, and
 justificantes that consumed it. This concrete repository is the persistence
-adapter behind the pure :mod:`domain.modelos` index model: it stores one
+adapter behind the pure :mod:`~domain.modelos` index model: it stores one
 :class:`~adapters.persistence.storage.Envelope` per transaction at
 :class:`~adapters.persistence.storage.SensitivityClass` FINANCIAL under the
-active profile bucket, mirroring the :class:`domain.modelos.CalculationRevision`
+active profile bucket, mirroring the :class:`~domain.modelos.CalculationRevision`
 catalogue repository.
 
-Living in the persistence adapter (not in :mod:`domain.modelos`) keeps the
+Living in the persistence adapter (not in :mod:`~domain.modelos`) keeps the
 :class:`~adapters.persistence.storage.SecureObjectRepository` /
 :class:`~adapters.persistence.storage.Envelope` coupling out of the domain
 layer; the domain package owns only the typed index model, its derivation, and
@@ -46,7 +46,7 @@ _PARTICIPATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revisi
 class TransactionParticipationIndexRepository:
     """Read / write one transaction's participation index in encrypted storage.
 
-    Mirrors the :class:`domain.modelos.CalculationRevision` catalogue
+    Mirrors the :class:`~domain.modelos.CalculationRevision` catalogue
     repository: persistence is delegated to
     :class:`~adapters.persistence.storage.SecureObjectRepository` at
     :class:`~adapters.persistence.storage.SensitivityClass` FINANCIAL under
