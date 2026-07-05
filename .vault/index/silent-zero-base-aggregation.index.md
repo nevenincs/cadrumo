@@ -3,11 +3,13 @@ generated: true
 tags:
   - '#index'
   - '#silent-zero-base-aggregation'
-date: '2026-07-04'
-modified: '2026-07-04'
+date: '2026-07-05'
+modified: '2026-07-05'
 related:
   - '[[2026-06-19-silent-zero-base-aggregation-W01-P01-S01]]'
   - '[[2026-06-19-silent-zero-base-aggregation-W01-P01-S02]]'
+  - '[[2026-06-19-silent-zero-base-aggregation-W01-P02-S03]]'
+  - '[[2026-06-19-silent-zero-base-aggregation-W01-P02-S04]]'
   - '[[2026-06-19-silent-zero-base-aggregation-W01-P02-S05]]'
   - '[[2026-06-19-silent-zero-base-aggregation-W01-P02-S06]]'
   - '[[2026-06-19-silent-zero-base-aggregation-W01-P03-S07]]'
@@ -28,6 +30,7 @@ related:
   - '[[2026-06-19-silent-zero-base-aggregation-research]]'
   - '[[2026-06-20-silent-zero-base-aggregation-research]]'
   - '[[2026-07-02-silent-zero-base-aggregation-audit]]'
+  - '[[2026-07-05-silent-zero-base-aggregation-audit]]'
 ---
 
 # `silent-zero-base-aggregation` feature index
@@ -44,6 +47,7 @@ Auto-generated index of all documents tagged with `#silent-zero-base-aggregation
 
 - `2026-06-19-silent-zero-base-aggregation-audit` - `silent-zero-base-aggregation` audit: `Adversarial aggregation audit: cuota-side drops, recargo, annual coverage, reverse-charge symmetry`
 - `2026-07-02-silent-zero-base-aggregation-audit` - `silent-zero-base-aggregation` audit: `Wave 1 D9 close-blocker audit`
+- `2026-07-05-silent-zero-base-aggregation-audit` - `silent-zero-base-aggregation` audit: `campaign close honesty review`
 
 ### exec
 
@@ -63,6 +67,8 @@ Auto-generated index of all documents tagged with `#silent-zero-base-aggregation
 - `2026-06-19-silent-zero-base-aggregation-W01-P02-S06` - add a real-CLI end-to-end test that a fully-taxable M303 trader reaches a granted `.boe` with no prorrata-divergence error and no manual prorrata input
 - `2026-06-19-silent-zero-base-aggregation-W02-P05-S14` - add a real-CLI end-to-end test that a sole-trader's M100 casilla 0171 / 0180 / 0224 populate from the ledger unaided
 - `2026-06-19-silent-zero-base-aggregation-W03-P06-S16` - add a reconciliation predicate that flags any divergence between the M390 ledger cuota-deducible-total and the reconciliacion-303 total, covering the import and reverse-charge flows
+- `2026-06-19-silent-zero-base-aggregation-W01-P02-S03` - SUPERSEDED for the common case by the S05 formula default
+- `2026-06-19-silent-zero-base-aggregation-W01-P02-S04` - SUPERSEDED/deferred with S03: volumen-con-derecho per-period binding is not the regulated provisional+regularised prorrata
 
 ### plan
 
