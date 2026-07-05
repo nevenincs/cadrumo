@@ -1,7 +1,7 @@
 """Typed per-modelo support-matrix registry.
 
-:class:`ModeloEntry` is the first-class typed roll-up of "what does modelo X
-actually support", derived entirely from the loaded
+:class:`~domain.calculations.registry.ModeloEntry` is the first-class typed
+roll-up of "what does modelo X actually support", derived entirely from the loaded
 :class:`~domain.calculations.registry.ModeloDefinition` /
 :class:`~domain.calculations.registry.ModeloRevision` records — never
 hand-maintained. It composes existing registry primitives rather than
@@ -22,6 +22,16 @@ re-implementing them:
 Coverage honesty (``no-silent-under-declaration``): a modelo missing a
 capability, rename record, deprecation decision, or portal cross-reference
 reports an explicit empty/False value, never a fabricated positive.
+
+See Also:
+    :func:`domain.calculations.registry.build_support_matrix`
+        Pure builder that folds validated registry authority into typed rows.
+    :class:`domain.calculations.registry.ModeloSupportMatrixReport`
+        Query-service envelope returned by
+        :meth:`domain.calculations.registry.RegistryQueryService.support_matrix`.
+    :func:`application.modelo.registry_support_matrix`
+        Application facade used by CLI discovery without re-reading registry
+        authority directly.
 """
 
 from __future__ import annotations
@@ -48,8 +58,8 @@ def _latest_revision(modelo: ModeloDefinition) -> ModeloRevision:
     """Return the revision with the most recent ``valid_from`` for ``modelo``.
 
     A modelo always declares at least one revision
-    (:meth:`ModeloDefinition._validate_revisions` enforces this at load time),
-    so the max is always well-defined.
+    (:meth:`~domain.calculations.registry.ModeloDefinition._validate_revisions`
+    enforces this at load time), so the max is always well-defined.
     """
     return max(modelo.revisions.values(), key=lambda revision: revision.valid_from)
 
@@ -137,7 +147,8 @@ class ModeloEntry(BaseModel):
 
     Derived entirely from the loaded registry authority — every field is a
     direct read or fold over the modelo's latest revision, never a
-    hand-maintained value. See :func:`build_support_matrix`.
+    hand-maintained value. See
+    :func:`~domain.calculations.registry.build_support_matrix`.
 
     Attributes:
         modelo_id: The AEAT modelo identifier (e.g. ``"303"``).
@@ -254,13 +265,14 @@ def _entry_for_modelo(modelo: ModeloDefinition) -> ModeloEntry:
 
 
 def build_support_matrix(authority: ValidatedRegistryAuthority) -> tuple[ModeloEntry, ...]:
-    """Probe every modelo in ``authority`` and return its :class:`ModeloEntry`.
+    """Probe every modelo in ``authority`` and return its typed support row.
 
     Args:
         authority: The registry authority to probe.
 
     Returns:
-        Every modelo's :class:`ModeloEntry`, sorted by ``modelo_id``.
+        Every modelo's :class:`~domain.calculations.registry.ModeloEntry`,
+        sorted by ``modelo_id``.
     """
     entries = (_entry_for_modelo(modelo) for modelo in authority.modelos)
     return tuple(sorted(entries, key=lambda entry: entry.modelo_id))
