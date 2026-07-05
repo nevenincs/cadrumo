@@ -1,0 +1,71 @@
+---
+tags:
+  - '#audit'
+  - '#live-iva-compensation-wallet'
+date: '2026-07-05'
+modified: '2026-07-05'
+related:
+  - "[[2026-05-19-live-iva-compensation-wallet-adr]]"
+  - "[[2026-06-19-iva-compensation-override-cli-adr]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #audit) and one feature tag.
+     Replace live-iva-compensation-wallet with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+# `live-iva-compensation-wallet` audit: `Sticky decision refresh code review`
+
+## Scope
+
+Reviewed the focused sticky-decision refresh follow-up for the live IVA wallet
+authority path. The review covered the accepted wallet ADR requirement that every
+run reconcile wallet/local evidence when both are available, the override ADR's
+explicit note that general persisted-decision refresh remained a follow-up, the
+change to `resolve_iva_compensation_decision_for_calculation`, and the new
+regression proving a later seeded 2025 4T carry replaces an earlier 2026 1T
+`first_period_zero` replay decision.
+
+## Findings
+
+### sticky-first-period-refresh | low | Narrow refresh matches the accepted wallet authority
+
+The implementation does not introduce a new source kind, resolver convention, or
+authority hierarchy. It refreshes only persisted `first_period_zero` decisions,
+recomputes the local recurrence path without persisting unless the material replay
+basis changes, and then saves the refreshed decision before replay. The new
+regression exercises the real Modelo 303 engine: the first calculation records
+zero, a later seeded prior-period carry appears, the next calculation blocks as
+`filed_history_only`, and the repository now carries the refreshed blocked
+decision with the seeded 2025 4T source period.
+
+### residual-live-plan-state | low | Live-wallet plan remains operator-gated
+
+The code follow-up does not close the standing live verification row in the
+live-wallet plan. Current status remains 101 of 102 with `W06.P15.S56` open by
+its own wording as an opt-in live read-only path and privacy guard. The status
+checker also reports historical missing exec records for older checked rows; no
+plan checkbox or exec reconciliation was changed in this code-review pass.
+
+## Recommendations
+
+Keep this follow-up scoped to `first_period_zero` replay refresh. Do not broaden
+taxpayer override refresh or live-wallet recapture semantics without a separate
+approved step, because the override ADR explicitly left that broader behavior as
+follow-up work. Treat the live-wallet plan as not closed until the operator-gated
+standing row and historical exec-record alerts are reconciled under their own
+authority.

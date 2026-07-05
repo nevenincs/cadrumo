@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-iva-compensation-wallet'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-05'
+modified: '2026-07-05'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-adr]]'
   - '[[2026-05-19-live-iva-compensation-wallet-code-review-audit]]'
@@ -178,6 +178,7 @@ related:
   - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-S93]]'
   - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-S98]]'
   - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-summary]]'
+  - '[[2026-07-05-live-iva-compensation-wallet-audit]]'
 ---
 
 # `live-iva-compensation-wallet` feature index
@@ -220,6 +221,7 @@ Auto-generated index of all documents tagged with `#live-iva-compensation-wallet
 - `2026-06-02-live-iva-persistent-failure-team-brief-audit` - Live IVA Persistent Failure Team Brief
 - `2026-06-02-live-iva-surface-diagnostics-review-audit` - `live-iva-compensation-wallet` Code Review
 - `2026-06-03-live-iva-compensation-wallet-code-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-07-05-live-iva-compensation-wallet-audit` - `live-iva-compensation-wallet` audit: `Sticky decision refresh code review`
 
 ### exec
 
