@@ -144,6 +144,19 @@ items remain formally deferred to the live operator evidence/privacy gate. These
 items are recorded here so they are not mistaken for silently dropped program
 work, but they are not repaired in this Wave 4 audit.
 
+### ratchet-size-tail-cleared-import-policy-remains-red | high | Size ratchet is green; import ratchets still block closure
+
+The 2026-07-05 ratchet follow-up series cleared the codebase-size module and
+callable failures without rebasing ceilings. The final `codebase-size` gate
+passed cleanly after the M131 formula-runtime split, and the gates-ratchet audit
+now records the size-tail closure evidence. Re-running the full Wave 4 ratchet
+bundle afterwards produced 5 failed and 33 passed; the required sequential rerun
+of the failing tests reproduced the same 5 failures. The remaining blockers are
+the import-linter application-to-adapters pin count and the lazy-import policy
+allowlist/site-count gates. Logs:
+`var/log/arch-remediation-program-ratchets-after-followups-20260705.log` and
+`var/log/arch-remediation-program-ratchets-after-followups-sequential-20260705.log`.
+
 ## Recommendations
 
 - Do not declare the architecture-remediation program closed while
@@ -152,7 +165,7 @@ work, but they are not repaired in this Wave 4 audit.
 - Treat the D9 source-kind/resolver freeze as liftable: all three D9 target
   plans are 100% complete with no exec alerts.
 - Open or route a ratchet reconciliation follow-up for the lazy-import policy,
-  import-linter pinned-edge count, and size-budget failures. Closure requires the
-  gates green, or an accepted ADR freezing the new ceilings.
+  and import-linter pinned-edge count. Closure requires those gates green, or an
+  accepted ADR freezing the new ceilings.
 - Do not promote a new commit-sweep rule from this audit; the existing explicit
   pathspec and uncommitted-WIP rules already carry the durable lesson.
