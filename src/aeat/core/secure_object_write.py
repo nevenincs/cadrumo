@@ -2,12 +2,12 @@
 
 :class:`SecureObjectWrite` is the persistence-boundary contract between a domain
 repository port — which declares ``to_secure_object_write(...) -> SecureObjectWrite``
-in :mod:`domain.modelos` — and the storage adapter that persists it. It is a
-pure value object depending only on :mod:`core`
+in :mod:`~domain.modelos` — and the storage adapter that persists it. It is a
+pure value object depending only on :mod:`~core`
 (:data:`~core.STRICT_FROZEN_CONFIG`,
 :class:`~core.classification.SensitivityClass`), so a domain port can name it
 in a method signature without importing the ``aeat.adapters`` layer. The storage
-adapter (:mod:`adapters.persistence.storage`) re-exports it unchanged.
+adapter (:mod:`~adapters.persistence.storage`) re-exports it unchanged.
 """
 
 from __future__ import annotations
