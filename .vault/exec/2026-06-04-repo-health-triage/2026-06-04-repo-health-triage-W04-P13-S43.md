@@ -4,7 +4,7 @@ tags:
   - '#repo-health-triage'
 date: '2026-06-04'
 modified: '2026-06-13'
-step_id: 'W04.P13.S43'
+step_id: 'S43'
 related:
   - '[[2026-06-04-repo-health-triage-plan]]'
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
