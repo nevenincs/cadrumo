@@ -8,7 +8,7 @@ locale catalogues, browser integrations, or storage sessions.
 Entrypoints translate process-level concerns into application-facade calls. They
 own presentation, command parsing, exit-code mapping, and terminal error
 contracts; business decisions stay in :mod:`application` and
-:mod:`aeat.domain`.
+:mod:`domain`.
 
 See Also:
     :mod:`cli`
