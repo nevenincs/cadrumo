@@ -17,6 +17,23 @@ narrow port, and the
 :class:`~domain.buckets.BucketEventHistoryPersistenceError` boundary error.
 The namespace/version constants are redeclared here as the persisted-envelope
 contract; the strings are preserved to avoid orphaning persisted envelopes.
+
+See Also:
+    :mod:`~domain.buckets`
+        Public bucket-event facade that owns the catalogue, event taxonomy, and
+        repository protocol.
+    :class:`~domain.buckets.BucketEventHistoryCatalogue`
+        Domain payload encrypted by this repository.
+    :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`
+        Domain port this concrete persistence adapter implements.
+    :data:`~adapters.persistence.storage.BUCKET_EVENT_HISTORY_NAMESPACE`
+        Central namespace, sensitivity, schema-version, and singleton-key
+        contract for these secure objects.
+    :func:`~adapters.persistence.storage.secure_object_repository_for_active_bucket`
+        Runtime storage factory used when no secure-object repository is injected.
+    :mod:`~application.bucket_maintenance`
+        Application lifecycle surface that records bucket-maintenance events
+        through this repository.
 """
 
 from __future__ import annotations
