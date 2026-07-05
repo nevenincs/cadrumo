@@ -21,6 +21,17 @@ existing record is returned, not re-written or raised as an error, mirroring
 the re-import-of-an-unchanged-file semantics
 :func:`~application.invoices.import_invoices_from_rows` already implements for
 the bulk path.
+
+See Also:
+    :func:`~application.invoices.create_invoice_via_wizard`
+        Public application facade for this guided manual-entry path.
+    :func:`~application.invoices.create_catalogue_invoice`
+        Single catalogue writer used after field validation succeeds.
+    :func:`~application.invoices.import_invoices_from_rows`
+        Spreadsheet-oriented sibling path with matching idempotency semantics.
+    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+        Automated evidence extraction path this non-interactive wizard
+        complements when OCR is unavailable or insufficient.
 """
 
 from __future__ import annotations

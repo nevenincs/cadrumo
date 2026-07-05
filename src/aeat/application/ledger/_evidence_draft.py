@@ -73,6 +73,23 @@ evidence, and the evidence is the invoice's traceable source). The link is
 re-asserted on a guarded no-op confirm too, so a re-confirm never regresses a
 provenance link that was never wired for older evidence, and the append itself
 is idempotent (dedup on the linked-ids tuple).
+
+See Also:
+    :class:`~application.ledger.InvoiceDraft`
+        Public draft record returned before an invoice is persisted.
+    :func:`~application.ledger.extract_invoice_fields`
+        Text-layer extraction primitive used before any evidence reference
+        resolution or confirm write.
+    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+        CLI-facing resolver that loads stored evidence bytes and chooses the
+        text-layer or on-host vision path.
+    :func:`~application.ledger.confirm_invoice_draft_from_evidence`
+        Non-interactive confirm step that re-extracts, applies overrides, and
+        delegates the catalogue write.
+    :mod:`~application.ledger._evidence_draft_vision`
+        On-host vision fallback for scan-only PDFs and image attachments.
+    :func:`~application.invoices.create_catalogue_invoice`
+        Sole sanctioned writer for the resulting catalogue invoice.
 """
 
 from __future__ import annotations

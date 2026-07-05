@@ -19,6 +19,17 @@ CSV row number and the failing field, and the remaining valid rows are still
 applied -- partial-success semantics matching the ledger CSV import and bulk
 classify pattern (``no-silent-under-declaration``: a bad row is reported, never
 silently dropped).
+
+See Also:
+    :func:`~application.invoices.import_invoices_from_rows`
+        Public application facade for applying validated bulk rows.
+    :func:`~application.invoices.create_catalogue_invoice`
+        Single catalogue writer invoked for every accepted row.
+    :func:`~application.invoices.create_invoice_via_wizard`
+        Manual single-invoice path with the same writer and idempotent identity.
+    :func:`~application.ledger.confirm_invoice_draft_from_evidence`
+        Evidence-confirm path that also delegates the final invoice write to
+        the catalogue writer.
 """
 
 from __future__ import annotations
