@@ -100,13 +100,25 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...adapters.outbound.llm import (
+    LLMPdfRasterisationError,
+    LLMProviderError,
+    rasterise_pdf_pages_to_base64_png,
+)
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
+from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice
+from ...core import STRICT_FROZEN_CONFIG, ServiceCapability
 from ...core.config import Settings
+from ...core.config import load_settings as _load_settings
 from ...core.decimal import normalize_decimal_separators
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.parsing import parse_date
+from ...domain.attachments import link_attachment_invoice
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
+from ..provisioning import probe_ollama_vision
+from ..user_profile import resolve_active_capability
 from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from ._evidence_input import (
     EvidenceInput,
@@ -338,9 +350,6 @@ def extract_invoice_draft_from_evidence(
         PurchaseInvoiceEvidenceNotFoundError: When *evidence_id* names no
             record in *bucket_id*.
     """
-    from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-    from ...core.config import load_settings as _load_settings
-
     if (evidence_id is None) == (attachment_id is None):
         raise PurchaseInvoiceEvidenceInputError(
             "exactly one of evidence_id or attachment_id must be supplied",
@@ -379,12 +388,6 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
     """
     import httpx
 
-    from ...adapters.outbound.llm import LLMPdfRasterisationError, LLMProviderError
-    from ...core import ServiceCapability
-    from ..provisioning import probe_ollama_vision
-    from ..user_profile import resolve_active_capability
-    from ._evidence_draft_vision import extract_invoice_fields_from_images
-
     if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
         raise PurchaseInvoiceEvidenceInputError(
             "on-host LLM vision reading is disabled for this profile; enable it to read a scan-only "
@@ -393,9 +396,9 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
         )
 
     try:
-        if evidence.media_kind is MediaKind.PDF:
-            from ...adapters.outbound.llm import rasterise_pdf_pages_to_base64_png
+        from ._evidence_draft_vision import extract_invoice_fields_from_images
 
+        if evidence.media_kind is MediaKind.PDF:
             images = rasterise_pdf_pages_to_base64_png(evidence.data)
         else:
             import base64
@@ -523,12 +526,6 @@ def confirm_invoice_draft_from_evidence(
         InvoiceValidationError: When the resolved fields fail invoice-model
             validation (e.g. an invalid counterparty tax id or IVA rate).
     """
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-    from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-    from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice
-    from ...core.config import load_settings as _load_settings
-    from ...domain.attachments import link_attachment_invoice
-
     resolved_settings = settings or _load_settings()
     draft = extract_invoice_draft_from_evidence(
         bucket_id=bucket_id,

@@ -56,6 +56,7 @@ from __future__ import annotations
 from ...core import Modelo
 from ...domain.bienes_inversion import BienInversionRecordError
 from ..aggregation import CalculationSourceDiagnostic
+from ..bienes_inversion import BienesInversionIvaRegisterRepository
 from ..calculations import (
     build_bienes_inversion_regularizacion_advisory,
     build_bienes_inversion_transmision_advisory,
@@ -114,8 +115,6 @@ def collect_bienes_inversion_regularizacion_diagnostics(
         return ()
     if period_token not in _SETTLEMENT_PERIOD_TOKENS:
         return ()
-
-    from ..bienes_inversion import BienesInversionIvaRegisterRepository
 
     try:
         register = BienesInversionIvaRegisterRepository(bucket_id=bucket_id).load()

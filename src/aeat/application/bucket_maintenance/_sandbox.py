@@ -75,10 +75,39 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
 from ...core.identity import BucketId
-from ..workflow import read_profile_bucket_by_id
-from ._contracts import ArchiveBucketCommand, DeleteBucketCommand, RestoreBucketCommand
+from ...core.time import now
+from ...domain.buckets import (
+    BucketEvent,
+    BucketEventObjectType,
+    BucketEventType,
+    BucketRestoreRefusedError,
+    append_bucket_event,
+    derive_bucket_event_id,
+)
+from ...domain.modelos import upsert_calculation_revision, upsert_filing_record, upsert_work_unit
+from ...domain.transactions import Transaction, TransactionCatalogue
+from ...domain.user_profile import ProfileNotFoundError, UserProfileFact, UserProfileStatus, new_profile_id
+from ..user_profile import (
+    ProfileAlreadyRegisteredError,
+    build_lifecycle_service,
+    profile_create_storage_span,
+    profile_storage_session,
+    register_active_profile,
+)
+from ..workflow import (
+    ProfileLabelAmbiguousError,
+    list_profile_buckets,
+    read_profile_bucket,
+    read_profile_bucket_by_id,
+    workflow_state_repository,
+)
+from ._contracts import ArchiveBucketCommand, BrowseBucketCommand, DeleteBucketCommand, RestoreBucketCommand
 from ._service import BucketMaintenanceService
 
 SANDBOX_LABEL_PREFIX = "sandbox:"
@@ -373,16 +402,6 @@ def create_sandbox(command: CreateSandboxCommand) -> CreateSandboxResult:
         :class:`CreateSandboxResult` describing the new sandbox bucket, which
         is now the active profile.
     """
-    from ...domain.user_profile import ProfileNotFoundError, UserProfileFact, UserProfileStatus, new_profile_id
-    from ..user_profile import (
-        ProfileAlreadyRegisteredError,
-        build_lifecycle_service,
-        profile_create_storage_span,
-        profile_storage_session,
-        register_active_profile,
-    )
-    from ..workflow import ProfileLabelAmbiguousError, read_profile_bucket, workflow_state_repository
-
     label = sandbox_label(command.name)
     if read_profile_bucket(label) is not None:
         raise SandboxAlreadyExistsError(label)
@@ -445,11 +464,6 @@ def preview_discard_sandbox(command: PreviewDiscardSandboxCommand) -> PreviewDis
         :class:`PreviewDiscardSandboxResult` describing the bucket's current
         contents.
     """
-    from ...core import resolve_active_bucket_id
-    from ..user_profile import profile_storage_session
-    from ._contracts import BrowseBucketCommand
-    from ._service import BucketMaintenanceService
-
     pointer = read_profile_bucket_by_id(command.bucket_id)
     if pointer is None:
         raise SandboxNotFoundError(command.bucket_id)
@@ -477,8 +491,6 @@ def list_sandboxes() -> tuple[tuple[BucketId, str], ...]:
 
     Read-only enumeration shared by ``sandbox list`` and ``sandbox prune``.
     """
-    from ..workflow import list_profile_buckets
-
     return tuple(
         sorted(
             (
@@ -573,8 +585,6 @@ def restore_sandbox(command: RestoreSandboxCommand) -> RestoreSandboxResult:
             f"bucket {command.bucket_id!r} (label {pointer.label!r}) is not a sandbox; "
             "pass allow_non_sandbox=True to restore a non-sandbox profile",
         )
-    from ...domain.buckets import BucketRestoreRefusedError
-
     try:
         outcome = BucketMaintenanceService().restore(RestoreBucketCommand(bucket_id=command.bucket_id))
     except BucketRestoreRefusedError as exc:
@@ -606,18 +616,6 @@ def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
         :class:`MergeSandboxResult` reporting the per-category row counts
         merged into the target bucket.
     """
-    from ...core.time import now
-    from ...domain.buckets import (
-        BucketEvent,
-        BucketEventObjectType,
-        BucketEventType,
-        append_bucket_event,
-        derive_bucket_event_id,
-    )
-    from ...domain.modelos import upsert_calculation_revision, upsert_filing_record, upsert_work_unit
-    from ...domain.transactions import Transaction, TransactionCatalogue
-    from ..user_profile import profile_storage_session
-
     if not command.confirmed:
         raise SandboxMergeRefusedError(
             "sandbox merge requires explicit confirmation (confirmed=True); "
@@ -642,8 +640,6 @@ def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
     merged_counts: dict[str, int] = {}
 
     if command.scope in (SandboxMergeScope.LEDGER, SandboxMergeScope.ALL):
-        from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-
         with profile_storage_session(command.source_bucket_id):
             source_transactions = tuple(TransactionCatalogueRepository(bucket_id=command.source_bucket_id).load())
         if source_transactions:
@@ -657,10 +653,6 @@ def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
         merged_counts["ledger_transactions"] = len(source_transactions)
 
     if command.scope in (SandboxMergeScope.MODELO, SandboxMergeScope.ALL):
-        from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-        from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-        from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-
         with profile_storage_session(command.source_bucket_id):
             source_work_units = tuple(WorkUnitCatalogueRepository(bucket_id=command.source_bucket_id).load())
             source_revisions = tuple(

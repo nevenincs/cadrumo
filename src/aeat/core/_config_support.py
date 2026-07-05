@@ -23,7 +23,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, SecretStr
 
 from ._models import STRICT_FROZEN_CONFIG
-from .external_constants import OutputLanguage
+from .external_constants import OutputLanguage, load_external_constants
 
 
 class SecretStoreBackend(StrEnum):
@@ -107,43 +107,31 @@ class StorageRouteClassification(BaseModel):
 
 def default_clave_sede_access_url_template() -> str:
     """Return the configured Cl@ve Movil selector access URL template."""
-    from .external_constants import load_external_constants
-
     return load_external_constants().aeat.clave_movil.selector_access_url_template
 
 
 def default_clave_permanente_sede_access_url_template() -> str:
     """Return the configured Cl@ve Permanente selector access URL template."""
-    from .external_constants import load_external_constants
-
     return load_external_constants().aeat.clave_permanente.selector_access_url_template
 
 
 def default_sede_expedientes_path() -> str:
     """Return the configured AEAT Sede expedientes summary path."""
-    from .external_constants import load_external_constants
-
     return load_external_constants().aeat.sede_paths.expedientes_resumen
 
 
 def default_status_detail_url_template() -> str:
     """Return the configured AEAT expediente status detail URL template."""
-    from .external_constants import load_external_constants
-
     return load_external_constants().aeat.sede_paths.expediente_detail_template
 
 
 def default_status_notificaciones_path() -> str:
     """Return the configured AEAT notifications status path."""
-    from .external_constants import load_external_constants
-
     return load_external_constants().aeat.sede_paths.notificaciones
 
 
 def default_aeat_sede_origin() -> str:
     """Return the configured AEAT Sede origin."""
-    from .external_constants import load_external_constants
-
     return load_external_constants().aeat.domains.sede
 
 

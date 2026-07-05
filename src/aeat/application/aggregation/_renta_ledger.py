@@ -66,7 +66,8 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.user_profile import UserProfileRecord
+from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
+from ..user_profile import UserProfileLifecycleRepository, fact_value
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
@@ -221,14 +222,10 @@ def _resolve_residence_ccaa(
     """
     record = profile_record
     if record is None:
-        from ...domain.user_profile import ProfileNotFoundError
-        from ..user_profile import UserProfileLifecycleRepository
-
         try:
             record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
         except ProfileNotFoundError:
             return None
-    from ..user_profile import fact_value
 
     raw = fact_value(record, "tax_residence.ccaa")
     if raw is None:

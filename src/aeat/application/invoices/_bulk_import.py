@@ -43,6 +43,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceValidationError
@@ -334,8 +335,6 @@ def import_invoices_from_rows(
     number and the failing field name; the remaining valid rows still import
     (partial-success semantics).
     """
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     catalogue = repo.load()
     existing_ids = set(catalogue.invoices)

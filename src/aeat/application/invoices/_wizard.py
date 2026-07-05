@@ -42,6 +42,7 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import IntracomOperationType
 from ...core.errors import CoreValidationError
 from ...core.identity import IdentityError, validate_spanish_tax_id
@@ -299,8 +300,6 @@ def create_invoice_via_wizard(
 
     assert resolved_date is not None
     assert resolved_base is not None
-
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
 

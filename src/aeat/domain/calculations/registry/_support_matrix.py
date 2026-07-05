@@ -44,6 +44,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ._authority import ValidatedRegistryAuthority
 from ._ids import ModeloId, RevisionId
+from ._record_design_coverage import calculation_closure_casilla_ids
 from ._schema import CalculationClass, EvidenceTier, ModeloDefinition, ModeloRevision
 from ._schema_surfaces import CasillaContinuidadEvolutionDefinition
 
@@ -67,11 +68,6 @@ def _latest_revision(modelo: ModeloDefinition) -> ModeloRevision:
 
 
 def _calculation_closure_casilla_ids(revision: ModeloRevision, modelo_id: str):
-    # Deferred import: avoids a module cycle between the record-design
-    # coverage module (which itself imports from ``_queries``-adjacent
-    # surfaces) and this new support-matrix module.
-    from ._record_design_coverage import calculation_closure_casilla_ids
-
     return calculation_closure_casilla_ids(revision, modelo_id)
 
 

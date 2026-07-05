@@ -53,14 +53,18 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from pydantic import SecretStr
 
+from ...adapters.persistence.storage import (
+    SecretNotFoundError,
+    SecretRecord,
+    SecretStore,
+    SensitivityClass,
+    get_secret_store,
+)
 from ...core.time import now
-
-if TYPE_CHECKING:
-    from ...adapters.persistence.storage import SecretStore
 
 _KEYRING_SERVICE_PREFIX = "aeat:certificate-secret"
 _SECRET_ROTATION_HORIZON = timedelta(days=365 * 10)
@@ -158,14 +162,11 @@ class SecureStorageCertificateSecretBackend:
     def _resolved_store(self) -> SecretStore:
         if self._store is not None:
             return self._store
-        from ...adapters.persistence.storage import get_secret_store
 
         return get_secret_store()
 
     def get(self, name: str) -> SecretStr | None:
         """Return the persisted passphrase for ``name``, or ``None`` when absent."""
-        from ...adapters.persistence.storage import SecretNotFoundError
-
         store = self._resolved_store()
         key = _secret_store_key(bucket_id=self._bucket_id, name=name)
         try:
@@ -176,8 +177,6 @@ class SecureStorageCertificateSecretBackend:
 
     def set(self, name: str, secret: SecretStr) -> None:
         """Persist (or rotate) the passphrase for ``name``."""
-        from ...adapters.persistence.storage import SecretRecord, SensitivityClass
-
         store = self._resolved_store()
         key = _secret_store_key(bucket_id=self._bucket_id, name=name)
         record = SecretRecord(
@@ -191,8 +190,6 @@ class SecureStorageCertificateSecretBackend:
 
     def remove(self, name: str) -> bool:
         """Remove the persisted passphrase for ``name``; a no-op when absent."""
-        from ...adapters.persistence.storage import SecretNotFoundError
-
         store = self._resolved_store()
         key = _secret_store_key(bucket_id=self._bucket_id, name=name)
         try:

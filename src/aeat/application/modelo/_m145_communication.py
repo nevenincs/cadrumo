@@ -29,6 +29,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.resources import resources
 
 M145_COMMUNICATION_MODELO = "145"
 M145_COMMUNICATION_PERIOD = "comunicacion"
@@ -90,8 +91,6 @@ def build_m145_communication_service_contract(*, filing_year: int = 2026) -> M14
     other non-local surfaces. The returned record is read-only ownership data;
     it does not create, persist, export, or transition any communication.
     """
-    from ...core.resources import resources
-
     snapshot = resources().modelos.authority.snapshot(
         M145_COMMUNICATION_MODELO,
         filing_year=filing_year,
