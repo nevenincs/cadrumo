@@ -16,7 +16,7 @@ registered in the binding validator dispatch table, and a
 ``resolve_donativo_binding_row_values`` row-value resolver. No live mesh
 resolver is enrolled yet; ``BindingSourceKind.DONATIVO_DONOR`` is registered in
 ``DEFERRED_SOURCE_KINDS`` (Sheets-pull-only, matching the sibling
-``atribucion_member`` / ``foreign_asset`` / ``related_party_operation`` /
+``atribucion_member`` / ``related_party_operation`` /
 ``refund_operation`` families) so a calculate-path binding of this source
 surfaces a standing advisory rather than a silent blank.
 """
