@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Iterator
 from pathlib import Path
@@ -69,6 +70,16 @@ def _create_record_id() -> str:
     return payload["record"]["communication_record_id"]
 
 
+def _unwrap_error_envelope(output: str) -> dict[str, object]:
+    payload = json.loads(output)
+    assert payload["status"] == "error"
+    assert payload["command"] is None
+    assert payload["notices"] == []
+    error = payload["error"]
+    assert isinstance(error, dict)
+    return error
+
+
 def test_m145_group_registers_closed_action_verbs() -> None:
     result = _invoke(["app", "modelo", "m145", "--help"])
 
@@ -118,6 +129,35 @@ def test_m145_create_requires_casilla_input(isolated_m145_cli_backend: None) -> 
 
     assert result.exit_code != 0
     assert "--casilla" in result.output
+
+
+def test_m145_missing_record_failure_uses_central_error_boundary(isolated_m145_cli_backend: None) -> None:
+    result = _invoke(["--format", "json", "app", "modelo", "m145", "validate", "0" * 12])
+
+    assert result.exit_code == 1, result.output
+    assert "Traceback" not in result.output
+    error = _unwrap_error_envelope(result.output)
+    assert error["code"] == "ERROR_M145_COMMUNICATION_RECORD_NOT_FOUND"
+    assert error["category"] == "ERROR"
+    assert error["context"] == {"communication_record_id": "000000000000"}
+
+
+def test_m145_transition_failure_uses_central_error_boundary(isolated_m145_cli_backend: None) -> None:
+    communication_record_id = _create_record_id()
+
+    result = _invoke(
+        ["--format", "json", "app", "modelo", "m145", "mark-locally-completed", communication_record_id[:12]],
+    )
+
+    assert result.exit_code == 2, result.output
+    assert "Traceback" not in result.output
+    error = _unwrap_error_envelope(result.output)
+    assert error["code"] == "REFUSED_M145_COMMUNICATION_RECORD_TRANSITION"
+    assert error["category"] == "REFUSED"
+    assert error["context"] == {
+        "communication_record_id": communication_record_id,
+        "state": "created",
+    }
 
 
 def test_m145_help_avoids_filing_and_live_vocabulary() -> None:
