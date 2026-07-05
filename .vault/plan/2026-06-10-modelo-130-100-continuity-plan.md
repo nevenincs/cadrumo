@@ -3,22 +3,12 @@ tags:
   - '#plan'
   - '#modelo-130-100-continuity'
 date: '2026-06-10'
-modified: '2026-07-04'
+modified: '2026-07-05'
 tier: L2
 related:
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
   - '[[2026-06-10-modelo-130-100-continuity-research]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `modelo-130-100-continuity` `Annual M100 fold-in of quarterly M130 pagos fraccionados` plan
 
@@ -41,14 +31,14 @@ Wire the four filed M130 quarterly results into the M100 annual pagos-fraccionad
 E2E autónoma M130 Q1-Q4 filed -> M100 annual with pagos fraccionados credited correctly; real adapters, anti-tautology
 
 - [x] `P03.S05` - E2E test: autonoma profile files M130 Q1-Q4 (real adapters, isolated store) then the annual M100 credits the summed pagos fraccionados in the correct casilla; `assert exact reconciliation, anti-tautology, no mocks/skips; `application/modelo/tests; entrypoints/cli/tests`.
-- [ ] `P03.S06` - Verify the annual declaration reconciles the year's advance payments and surfaces a non-silent alert on any pagos-fraccionados mismatch; `grounding-confirm the casilla values against an AEAT worked example; `verification; tests`.
+- [x] `P03.S06` - Verify the annual declaration reconciles the year's advance payments and surfaces a non-silent alert on any pagos-fraccionados mismatch; `grounding-confirm the casilla values against an AEAT worked example; `verification; tests`.
 
 ## Description
 
-> **STATUS — PAUSED at P01.S02 (2026-06-10).** This plan is BLOCKED behind two foundational
+> **STATUS - PAUSED at P01.S02 (2026-06-10).** This plan is BLOCKED behind two foundational
 > calculation-engine ADRs decided per operator directive: (1) a binding ADR codifying the
 > calculation **aggregation-mechanism taxonomy** (which mechanism is canonical per calculation
-> type — the relation-vs-previous_filing overlap this plan surfaced is a symptom), and (2) an
+> type - the relation-vs-previous_filing overlap this plan surfaced is a symptom), and (2) an
 > overview ADR for a deterministic **period→revision resolution engine** (revision is fixed by
 > law per (modelo, year, period), never a hardcoded choice). The P01.S02 mechanism/target-revision
 > decision is subsumed by those ADRs and must not be taken here until they land. P01.S01
@@ -57,14 +47,14 @@ E2E autónoma M130 Q1-Q4 filed -> M100 annual with pagos fraccionados credited c
 The annual Modelo 100 (Renta / IRPF) is the operator's actual tax filing; the four
 quarterly Modelo 130 pagos fraccionados are advance payments that the annual declaration
 must credit so the year reconciles. The autónomo E2E pipeline has never driven this
-fold-in — the quarterly M130 results are filed but never folded into the M100 annual
+fold-in - the quarterly M130 results are filed but never folded into the M100 annual
 casilla for pagos fraccionados ingresados, so the most load-bearing leg of the filing is
 unproven. This plan grounds, decides, implements, and end-to-end verifies that fold-in.
 
 A concrete mechanism hypothesis to test in Phase 1: the cross-period carry infrastructure
 landed in the `modelo-iva-routing-carry` Wave C (local `file` now persists each filed
 revision's observations under a non-official `source_kind`, and `PreviousFilingSourceResolver`
-is enrolled in the calculate mesh) may already be the vehicle — the four filed M130 results,
+is enrolled in the calculate mesh) may already be the vehicle - the four filed M130 results,
 persisted as observations, could feed the M100 annual fold-in through `previous_filing`
 without a new write path. Phase 1 confirms whether that carry reuse is correct or a
 dedicated annual aggregation is required, grounds the target M100 casilla against AEAT

@@ -64,7 +64,7 @@ if TYPE_CHECKING:
     from ...domain.modelos import CalculationRevision, WorkUnit
 
 _DECLARATION_CASILLA_RECONCILE_MODELOS: frozenset[Modelo] = frozenset(
-    {Modelo.M111, Modelo.M130, Modelo.M190, Modelo.M303, Modelo.M390}
+    {Modelo.M100, Modelo.M111, Modelo.M130, Modelo.M190, Modelo.M303, Modelo.M390}
 )
 """Modelos enrolled in casilla-level filed-declaration reconciliation.
 
@@ -79,11 +79,14 @@ same casilla-id vocabulary its
 reconciles, whether that vocabulary is the printed AEAT box number or an
 engine-internal compound id such as ``iva.resultado``).
 
-Modelo 130 is the first: its extraction profile targets registry casilla ids
-``"01"``..``"19"`` directly (the printed AEAT box numbers), so no id-mapping
-layer is required between the extractor and the divergence detector. Modelo
-303 (IVA autoliquidación) and Modelo 390 (IVA resumen anual) mix printed box
-numbers with the compound ``iva.*`` primitive/result ids that
+Modelo 100 (Renta) joins the same post-filing reconcile path for the current
+2024/2025 annual declaration profiles, including the M130/M131
+pagos-fraccionados credit casilla ``0604``. Modelo 130 is the first quarterly
+precedent: its extraction profile targets registry casilla ids ``"01"``..``"19"``
+directly (the printed AEAT box numbers), so no id-mapping layer is required
+between the extractor and the divergence detector. Modelo 303 (IVA
+autoliquidación) and Modelo 390 (IVA resumen anual) mix printed box numbers with
+the compound ``iva.*`` ids that
 :func:`adapters.inbound.declaracion.parse_declaracion` already extracts
 and :func:`application.verification.verify_declaracion` already
 reconciles pre-filing — the same casilla-id vocabulary carries through to the
