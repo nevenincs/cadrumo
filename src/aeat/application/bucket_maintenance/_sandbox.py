@@ -49,6 +49,23 @@ additionally refuses to discard any bucket whose label is not sandbox-tagged
 unless the caller explicitly acknowledges bypassing that guard — so an
 operator (or an LLM agent driving the CLI) cannot accidentally erase a real
 profile through the sandbox verb.
+
+See Also:
+    :mod:`~application.bucket_maintenance`
+        Public facade that exports the sandbox lifecycle commands and results.
+    :class:`~application.bucket_maintenance.BucketMaintenanceService`
+        Existing bucket-maintenance service composed for discard, archive,
+        restore, browse, and disk-usage operations.
+    :func:`~application.user_profile.register_active_profile`
+        Profile-create primitive used when a sandbox bucket is provisioned.
+    :func:`~application.user_profile.select_profile_with_lifecycle_span`
+        Profile-switch primitive used when a sandbox becomes active.
+    :mod:`~entrypoints.cli._config._sandbox`
+        CLI command surface that translates operator input into these command
+        models.
+    :class:`~domain.transactions.TransactionCatalogue`
+        Ledger catalogue promoted by sandbox merges when ``ledger`` scope is
+        selected.
 """
 
 from __future__ import annotations

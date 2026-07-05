@@ -8,6 +8,22 @@ pure value object depending only on :mod:`~core`
 :class:`~core.classification.SensitivityClass`), so a domain port can name it
 in a method signature without importing the ``aeat.adapters`` layer. The storage
 adapter (:mod:`~adapters.persistence.storage`) re-exports it unchanged.
+
+See Also:
+    :class:`~core.SecureObjectWrite`
+        Public core facade export for this DTO.
+    :class:`~core.classification.SensitivityClass`
+        Classification carried by every prepared secure-object write.
+    :class:`~domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`
+        Domain repository port that can prepare a calculation catalogue write
+        without importing adapters.
+    :class:`~domain.modelos.ModeloRecordCatalogueRepositoryProtocol`
+        Domain repository port that can co-write filing records through the same
+        DTO.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
+        Storage adapter that consumes these prepared writes.
+    :meth:`~adapters.persistence.storage.SecureObjectRepository.save_many`
+        Unit-of-work API that persists one or more prepared writes atomically.
 """
 
 from __future__ import annotations
