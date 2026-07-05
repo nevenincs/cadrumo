@@ -18,6 +18,8 @@ registry -- the decrypt primitive itself performs no persistence; a caller
 (the future CLI decrypt verb) composes this ledger's ``check_and_consume``
 around the existing, unmodified
 :func:`~application.modelo.decrypt_review_package_for_recipient` call.
+The encrypted row's storage policy is governed by
+:class:`~adapters.persistence.storage.SensitivityClass`.
 
 Nonce identity is clock-free (the nonce is a random 32-byte value minted once
 per encryption, never derived from a timestamp), so replay defence does not

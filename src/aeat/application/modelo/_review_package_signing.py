@@ -36,6 +36,8 @@ See Also:
         Builds and integrity-verifies the review package this module signs.
     :class:`~adapters.persistence.storage.SecureObjectRepository`
         Encrypted substrate the private key is persisted through.
+    :class:`~adapters.persistence.storage.SensitivityClass`
+        Storage classification policy used for the persisted signing keypair.
 """
 
 from __future__ import annotations
@@ -248,6 +250,11 @@ def load_review_package_signing_keypair(
     repository: SecureObjectRepository,
 ) -> ReviewPackageSigningKeypair:
     """Load the profile's existing Ed25519 signing keypair.
+
+    Args:
+        bucket_id: The profile bucket whose signing keypair is loaded.
+        repository: The bucket's
+            :class:`~adapters.persistence.storage.SecureObjectRepository`.
 
     Raises:
         ReviewPackageSigningKeyNotFoundError: If no keypair has been minted
