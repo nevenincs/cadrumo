@@ -2,7 +2,7 @@
 
 Declares whether the fincas domain may act as a calculation source that feeds
 registry bindings. The fincas rendimiento and amortization aggregates are computed
-in-domain (:mod:`domain.fincas`), but they are not yet persisted through the
+in-domain (:mod:`~domain.fincas`), but they are not yet persisted through the
 canonical secure-storage revision boundary, so enrolling fincas as a live
 calculation source would resolve bindings against non-canonical state. Until that
 persistence is hardened, fincas readiness is NOT ready and the aggregation resolver
@@ -13,13 +13,13 @@ The readiness is deliberately a pure, context-independent domain fact: fincas is
 unready regardless of the modelo or period being calculated.
 
 See Also:
-    :mod:`domain.fincas`
+    :mod:`~domain.fincas`
         Public domain facade for the finca aggregates that are not yet canonical
         calculation-source state.
-    :mod:`application.aggregation._source_fincas`
+    :mod:`~application.aggregation._source_fincas`
         Blocked resolver adapter that turns this readiness fact into a
         source-mesh diagnostic.
-    :class:`application.aggregation.CalculationSourceDiagnostic`
+    :class:`~application.aggregation.CalculationSourceDiagnostic`
         Shared diagnostic carrier emitted while the source remains blocked.
 """
 

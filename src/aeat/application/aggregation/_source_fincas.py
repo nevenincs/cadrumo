@@ -12,11 +12,11 @@ visibly). When fincas persistence is hardened, the readiness flips and this
 adapter is replaced by a real projecting resolver enrolled in the mesh.
 
 See Also:
-    :func:`domain.fincas.fincas_source_readiness`
+    :func:`~domain.fincas.fincas_source_readiness`
         Domain readiness fact that supplies the blocking reason.
-    :class:`application.aggregation.CalculationSourceResolution`
+    :class:`~application.aggregation.CalculationSourceResolution`
         Shared source-mesh envelope returned by this blocked resolver.
-    :mod:`application.aggregation._source_inventory`
+    :mod:`~application.aggregation._source_inventory`
         Sibling readiness adapter for the inventory calculation-source surface.
 """
 
@@ -36,7 +36,7 @@ class FincasSourceReadinessResolver:
 
     Owns no live binding source (``owned_sources = ()``) because fincas is not
     enrolled as a calculation source.
-    :meth:`FincasSourceReadinessResolver.resolve` returns an empty resolution
+    :meth:`~FincasSourceReadinessResolver.resolve` returns an empty resolution
     carrying a blocked-readiness diagnostic whenever fincas is not ready.
     """
 
