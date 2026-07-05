@@ -5,24 +5,24 @@ The relation ``aggregation.op`` was re-parsed inline as
 resolve, and M390-partition sites — exactly the untyped re-parse the
 ``binding-aggregation-is-typed`` rule forbids for bindings, on the relation half it
 skipped. ``RelationDefinition.aggregation`` is now the typed
-:class:`~aeat.core.aggregation.RelationAggregation` model (an unknown op is rejected
+:class:`~core.aggregation.RelationAggregation` model (an unknown op is rejected
 at registry-build by its strict ``op`` field). This module centralises the read into
 one :func:`relation_aggregation_op` accessor returning the typed
-:class:`~aeat.core.aggregation.RelationAggregationOp`, applying the per-relation
+:class:`~core.aggregation.RelationAggregationOp`, applying the per-relation
 default in one place.
 
 The relation op axis is deliberately separate from the binding op axis
-(:func:`aeat.domain.calculations.registry.binding_aggregation_op`): relations
+(:func:`domain.calculations.registry.binding_aggregation_op`): relations
 carry only ``copy`` / ``sum``, never the binding-only ``rows`` /
 ``count_distinct`` / ``prior_pagos_fraccionados``.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._relations`
+    :mod:`domain.calculations.registry._relations`
         Requirement and resolve paths that call this accessor.
-    :mod:`aeat.domain.calculations.registry._observation_fold`
+    :mod:`domain.calculations.registry._observation_fold`
         Shared ``copy`` / ``sum`` arithmetic applied after this accessor selects
         the relation op.
-    :mod:`aeat.core.aggregation`
+    :mod:`core.aggregation`
         Core enum/model definitions for relation and binding aggregation axes.
 """
 
@@ -33,12 +33,12 @@ from ._schema import RelationDefinition
 
 
 def relation_aggregation_op(relation: RelationDefinition) -> RelationAggregationOp:
-    """Return the typed :class:`~aeat.core.aggregation.RelationAggregationOp` a relation declares.
+    """Return the typed :class:`~core.aggregation.RelationAggregationOp` a relation declares.
 
     Reads the
-    :class:`~aeat.domain.calculations.registry.RelationDefinition` aggregation
+    :class:`~domain.calculations.registry.RelationDefinition` aggregation
     field. Defaults to
-    :attr:`~aeat.core.aggregation.RelationAggregationOp.COPY` when
+    :attr:`~core.aggregation.RelationAggregationOp.COPY` when
     ``aggregation`` is absent, preserving the conformant single-period carry
     default used by relation source requirements.
     """
