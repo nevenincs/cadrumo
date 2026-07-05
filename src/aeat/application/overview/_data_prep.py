@@ -19,15 +19,15 @@ this module composes them into one ordered checklist rather than introducing a
 new aggregation.
 
 See Also:
-    :mod:`application.overview`
+    :mod:`~application.overview`
         Sibling read-only overview builders (``status``, ``calendar``,
         ``agenda``, ``backlog``, ``explain``) this module follows the same
         shape as.
-    :mod:`application.ledger`
+    :mod:`~application.ledger`
         Owns :func:`~application.ledger.preflight_ledger_tax_readiness`,
         the classification/category/IVA-fact readiness gate this walkthrough's
         "classify" step reuses rather than re-deriving.
-    :class:`domain.modelos.WorkUnit`
+    :class:`~domain.modelos.WorkUnit`
         The modelo work-unit record the final step resolves against.
 """
 

@@ -8,7 +8,8 @@ composing three already-existing read models for the requested
 
 * ledger health — :func:`~application.ledger.summarize_manual_transactions`
   (active/pending-review/reviewed/skipped counts, readiness-issue count).
-* modelo readiness — one :class:`ModeloHealthRow` per :class:`WorkUnit`
+* modelo readiness — one :class:`ModeloHealthRow` per
+  :class:`~domain.modelos.WorkUnit`
   targeting the requested period, derived from its
   :class:`~domain.modelos.CalculationRevision` state
   (:func:`~application.modelo.get_calculation_revision`) — not-started when
@@ -27,16 +28,16 @@ into one cross-domain dashboard rather than introducing a new aggregation
 (the ``composition-service-no-parallel-write-path`` discipline).
 
 See Also:
-    :mod:`application.overview`
+    :mod:`~application.overview`
         Sibling read-only overview builders (``status``, ``prepare``,
         ``calendar``, ``agenda``, ``backlog``, ``explain``) this module
         follows the same shape as.
-    :func:`application.ledger.summarize_manual_transactions`
+    :func:`~application.ledger.summarize_manual_transactions`
         Owns the ledger status counters this report's ledger section reuses
         rather than re-deriving.
-    :class:`domain.modelos.WorkUnit`
+    :class:`~domain.modelos.WorkUnit`
         The modelo work-unit record the readiness rows resolve against.
-    :class:`domain.modelos.VerificationReport`
+    :class:`~domain.modelos.VerificationReport`
         The findings source each readiness row's outstanding-findings list
         is drawn from.
 """
