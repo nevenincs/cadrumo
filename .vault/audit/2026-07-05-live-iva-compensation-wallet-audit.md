@@ -72,6 +72,18 @@ now reports no `exec-missing` alert for the live-wallet plan; completion remains
 101 of 102 because the standing live verification row is still intentionally
 open.
 
+### standing-live-verification | medium | S56 is formally deferred as an operator-evidence guard
+
+`W06.P15.S56` is formally deferred, not silently left open. Its blocker is the
+standing requirement for fresh operator-owned, opt-in, read-only AEAT evidence
+with redacted aggregate diagnostics and no committed private taxpayer values.
+The plan row itself says to "add and keep open" this path and later records that
+the row "remains open as a standing live-verification path and privacy guard."
+Checking the row now would remove the active privacy/evidence guard rather than
+complete missing implementation. Follow-up remains the next operator-observed
+read-only live verification run or an explicit coordinator decision to retire
+the standing guard into a successor campaign.
+
 ## Recommendations
 
 Keep this follow-up scoped to `first_period_zero` replay refresh. Do not broaden
@@ -84,3 +96,9 @@ authority.
 For the exec-record reconciliation, keep the new records vault-only. Do not infer
 new implementation completion from them, and do not close `W06.P15.S56` without
 fresh operator-owned live-read evidence or an explicit formal deferral decision.
+
+This audit supplies the formal deferral decision for `W06.P15.S56`. Keep the row
+unchecked until either the next operator-observed live run records fresh redacted
+aggregate evidence or a successor campaign explicitly owns the standing guard.
+Do not treat local recurrence as final authority merely because this standing
+guard is deferred.
