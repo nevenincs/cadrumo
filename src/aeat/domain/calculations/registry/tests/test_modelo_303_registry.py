@@ -168,26 +168,22 @@ def test_modelo_303_snapshot_carries_legal_authority_and_record_design() -> None
     assert "boe-modelo-303-2008-form" in snapshot.sources
 
 
-@pytest.mark.parametrize(
-    ("revision_id", "expected_refs"),
-    _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION.items(),
-)
-def test_modelo_303_extraction_profile_legal_refs_match_target_casillas(
-    revision_id: str,
-    expected_refs: frozenset[str],
-) -> None:
+def test_modelo_303_extraction_profile_legal_refs_match_target_casillas() -> None:
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions[revision_id]
-    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+    for revision_id, expected_refs in _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION.items():
+        revision = modelo.revisions[revision_id]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
-    assert revision.extraction_profiles, revision_id
-    profile = next(item for item in revision.extraction_profiles if item.id == "modelo-303-declaracion-pdf")
-    target_refs = frozenset(
-        legal_ref for target in profile.target_casillas for legal_ref in casillas_by_id[target.casilla_id].legal_refs
-    )
+        assert revision.extraction_profiles, revision_id
+        profile = next(item for item in revision.extraction_profiles if item.id == "modelo-303-declaracion-pdf")
+        target_refs = frozenset(
+            legal_ref
+            for target in profile.target_casillas
+            for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+        )
 
-    assert target_refs == expected_refs
-    assert set(profile.legal_refs) == expected_refs
+        assert target_refs == expected_refs
+        assert set(profile.legal_refs) == expected_refs
 
 
 def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> None:
