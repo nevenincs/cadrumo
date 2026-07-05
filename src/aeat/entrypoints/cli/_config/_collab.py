@@ -18,6 +18,19 @@ boundary) rather than silently overwriting the prior fingerprint -- a
 fingerprint swap must be an explicit ``remove`` followed by ``add``, never an
 implicit clobber, since the whole point of the out-of-band verification is
 that the operator confirms the exact key on file.
+
+See Also:
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
+        Active-bucket persistence boundary this CLI surface delegates to.
+    :class:`~application.modelo.RecipientFingerprintRecord`
+        Public-key and fingerprint record projected into command results.
+    :func:`~application.modelo.public_key_hex_from_raw_bytes`
+        Public-key validator used before a recipient is registered.
+    :mod:`~entrypoints.cli._config._collab_payloads`
+        Typed JSON payload schemas emitted by these commands.
+    :mod:`~entrypoints.cli._modelo_review_package_cli`
+        Review-package command group that consumes registered recipients for
+        ``encrypt-for-recipient``.
 """
 
 from __future__ import annotations
