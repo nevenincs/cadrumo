@@ -31,7 +31,7 @@ related:
 
 ## Scope
 
-Reviewed the `P04.S16` Modelo 145 service-owner slice and the `P04.S17` create-record slice for the reopen plan. Scope covered the application/modelo ownership contract, the bucket-local communication record create/read surface, central secure-storage namespace registration, facade exports, focused real-runtime tests, step exec records, checked plan rows, and regenerated feature index.
+Reviewed the `P04.S16` Modelo 145 service-owner slice, the `P04.S17` create-record slice, and the `P04.S18` validation slice for the reopen plan. Scope covered the application/modelo ownership contract, the bucket-local communication record create/read/validate surface, central secure-storage namespace registration, facade exports, focused real-runtime tests, step exec records, checked plan rows, and regenerated feature index.
 
 ## Findings
 
@@ -39,6 +39,8 @@ No findings for `P04.S16`.
 
 No findings for `P04.S17`.
 
+No findings for `P04.S18`.
+
 ## Recommendations
 
-Proceed with `P04.S18` as the next open step. Keep validation behind the registry-backed communication record surface and continue to avoid filing, deadline, live-read, portal, submit, receipt, and AEAT electronic-tramite terminology for Modelo 145.
+Proceed with `P04.S19` as the next open step. Keep export behind the registry-backed communication record surface and continue to avoid filing, deadline, live-read, portal, submit, receipt, and AEAT electronic-tramite terminology for Modelo 145.

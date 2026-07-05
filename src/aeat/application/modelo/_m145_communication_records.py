@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from datetime import datetime
+from decimal import InvalidOperation
 from enum import StrEnum
 from typing import Annotated
 
@@ -11,10 +13,16 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id_map
+from ...core.decimal import coerce_decimal_strict
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId
+from ...core.identity import BucketId, IdentityError, validate_spanish_tax_id
 from ...core.time import now
-from ...domain.calculations.registry import undeclared_casilla_ids
+from ...domain.calculations.registry import (
+    CasillaDefinition,
+    RegistrySnapshot,
+    casillas_by_id,
+    undeclared_casilla_ids,
+)
 from ._m145_communication import (
     M145_COMMUNICATION_MODELO,
     M145_COMMUNICATION_SERVICE_OWNER,
@@ -22,6 +30,9 @@ from ._m145_communication import (
 )
 
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
+_FOUR_DIGIT_YEAR_PATTERN = re.compile(r"^\d{4}$")
+_ISO_DATE_PATTERN = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")
+_AEAT_DATE_PATTERN = re.compile(r"^(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{4}$")
 
 M145CommunicationRecordId = Annotated[
     str,
@@ -41,6 +52,54 @@ class M145CommunicationRecordState(StrEnum):
     """Creation-state vocabulary for local Modelo 145 communication records."""
 
     CREATED = "created"
+
+
+class M145CommunicationValidationIssueKind(StrEnum):
+    """Closed issue vocabulary for Modelo 145 local communication validation."""
+
+    REVISION_MISMATCH = "revision_mismatch"
+    SOURCE_AUTHORITY_MISMATCH = "source_authority_mismatch"
+    UNDECLARED_CASILLA = "undeclared_casilla"
+    MISSING_REQUIRED = "missing_required"
+    INVALID_VALUE = "invalid_value"
+    MISSING_SOURCE_AUTHORITY = "missing_source_authority"
+    UNSUPPORTED_DATA_TYPE = "unsupported_data_type"
+
+
+class M145CommunicationValidationIssue(BaseModel):
+    """One registry-backed validation issue for a local communication record."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    kind: M145CommunicationValidationIssueKind
+    casilla_id: CasillaId | None = None
+    data_type: str | None = None
+    message: str = Field(min_length=1, max_length=512)
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
+
+
+class M145CommunicationValidationResult(BaseModel):
+    """Registry-backed validation result for one local communication record."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_version: str = "1"
+    communication_record_id: M145CommunicationRecordId
+    bucket_id: BucketId
+    service_owner: str = Field(
+        default=M145_COMMUNICATION_SERVICE_OWNER,
+        pattern=r"^aeat\.application\.modelo$",
+    )
+    modelo: str = Field(default=M145_COMMUNICATION_MODELO, pattern=r"^145$")
+    communication_year: int = Field(ge=2012, le=2099)
+    period_token: M145CommunicationPeriod
+    revision_id: str = Field(min_length=1)
+    valid: bool
+    issue_count: int = Field(ge=0)
+    issues: tuple[M145CommunicationValidationIssue, ...]
+    legal_refs: tuple[str, ...]
+    source_refs: tuple[str, ...]
 
 
 class M145CommunicationCreateCommand(BaseModel):
@@ -149,13 +208,24 @@ def _m145_communication_record_repository(bucket_id: BucketId):
 
 
 def _snapshot_for_command(command: M145CommunicationCreateCommand):
-    contract = build_m145_communication_service_contract(filing_year=command.communication_year)
+    return _snapshot_for_scope(
+        communication_year=command.communication_year,
+        period_token=command.period_token,
+    )
+
+
+def _snapshot_for_scope(
+    *,
+    communication_year: int,
+    period_token: M145CommunicationPeriod,
+) -> RegistrySnapshot:
+    contract = build_m145_communication_service_contract(filing_year=communication_year)
     from ...core.resources import resources
 
     snapshot = resources().modelos.authority.snapshot(
         M145_COMMUNICATION_MODELO,
-        filing_year=command.communication_year,
-        period=command.period_token.value,
+        filing_year=communication_year,
+        period=period_token.value,
     )
     contract_surfaces = frozenset(contract.surfaces)
     declared_surfaces = frozenset(str(link.surface) for link in snapshot.revision.application_links)
@@ -179,6 +249,189 @@ def read_m145_communication_record(
 ) -> M145CommunicationRecord:
     """Return one Modelo 145 communication record by id or unambiguous prefix."""
     return _m145_communication_record_repository(bucket_id).resolve(communication_record_id)
+
+
+def _issue(
+    kind: M145CommunicationValidationIssueKind,
+    message: str,
+    *,
+    casilla: CasillaDefinition | None = None,
+    casilla_id: CasillaId | None = None,
+    legal_refs: tuple[str, ...] = (),
+    source_refs: tuple[str, ...] = (),
+) -> M145CommunicationValidationIssue:
+    return M145CommunicationValidationIssue(
+        kind=kind,
+        casilla_id=casilla.id if casilla is not None else casilla_id,
+        data_type=casilla.data_type if casilla is not None else None,
+        message=message,
+        legal_refs=tuple(str(ref) for ref in (casilla.legal_refs if casilla is not None else legal_refs)),
+        source_refs=tuple(str(ref) for ref in (casilla.source_refs if casilla is not None else source_refs)),
+    )
+
+
+def _value_shape_issue(casilla: CasillaDefinition, value: str) -> str | None:
+    stripped = value.strip()
+    if not stripped:
+        return "value must not be blank"
+    match casilla.data_type:
+        case "text":
+            return None
+        case "nif":
+            try:
+                validate_spanish_tax_id(stripped)
+            except IdentityError as exc:
+                return str(exc)
+            return None
+        case "year":
+            if not _FOUR_DIGIT_YEAR_PATTERN.fullmatch(stripped):
+                return "value must be a four-digit year"
+            return None
+        case "date":
+            if not (_ISO_DATE_PATTERN.fullmatch(stripped) or _AEAT_DATE_PATTERN.fullmatch(stripped)):
+                return "value must be ISO yyyy-mm-dd or AEAT ddmmaaaa"
+            return None
+        case "integer":
+            if not stripped.isdecimal():
+                return "value must contain only decimal digits"
+            return None
+        case "money":
+            try:
+                coerce_decimal_strict(stripped)
+            except (InvalidOperation, ValueError) as exc:
+                return f"value is not a valid decimal amount: {type(exc).__name__}"
+            return None
+        case _:
+            return None
+
+
+def _constraint_issue(casilla: CasillaDefinition, value: str) -> str | None:
+    if casilla.constraints is None:
+        return None
+    text_issue = casilla.constraints.violates_text(value)
+    if text_issue is not None:
+        return text_issue
+    if casilla.data_type not in {"integer", "money"}:
+        return None
+    try:
+        numeric = coerce_decimal_strict(value)
+    except (InvalidOperation, ValueError):
+        return None
+    return casilla.constraints.violates(numeric)
+
+
+def validate_m145_communication_record(
+    communication_record_id: str,
+    *,
+    bucket_id: BucketId,
+) -> M145CommunicationValidationResult:
+    """Validate one persisted Modelo 145 communication record against registry authority."""
+    record = read_m145_communication_record(communication_record_id, bucket_id=bucket_id)
+    snapshot = _snapshot_for_scope(
+        communication_year=record.communication_year,
+        period_token=record.period_token,
+    )
+    revision = snapshot.revision
+    revision_legal_refs = tuple(sorted(str(ref) for ref in revision.legal_refs))
+    revision_source_refs = tuple(sorted(str(ref) for ref in revision.source_refs))
+    issues: list[M145CommunicationValidationIssue] = []
+
+    if record.revision_id != revision.id:
+        issues.append(
+            _issue(
+                M145CommunicationValidationIssueKind.REVISION_MISMATCH,
+                f"record revision {record.revision_id!r} does not match active registry revision {revision.id!r}",
+                legal_refs=revision_legal_refs,
+                source_refs=revision_source_refs,
+            ),
+        )
+    authority_refs_match = (
+        tuple(sorted(record.legal_refs)) == revision_legal_refs
+        and tuple(sorted(record.source_refs)) == revision_source_refs
+    )
+    if not authority_refs_match:
+        issues.append(
+            _issue(
+                M145CommunicationValidationIssueKind.SOURCE_AUTHORITY_MISMATCH,
+                "record authority refs do not match the active registry revision authority refs",
+                legal_refs=revision_legal_refs,
+                source_refs=revision_source_refs,
+            ),
+        )
+
+    casillas = casillas_by_id(revision)
+    unknown = tuple(sorted(undeclared_casilla_ids(revision, record.field_values)))
+    for casilla_id in unknown:
+        issues.append(
+            _issue(
+                M145CommunicationValidationIssueKind.UNDECLARED_CASILLA,
+                f"casilla {casilla_id!r} is not declared by registry revision {revision.id!r}",
+                casilla_id=casilla_id,
+                legal_refs=revision_legal_refs,
+                source_refs=revision_source_refs,
+            ),
+        )
+
+    for casilla in sorted(casillas.values(), key=lambda item: item.id):
+        value = record.field_values.get(casilla.id)
+        if casilla.required and (value is None or not value.strip()):
+            issues.append(
+                _issue(
+                    M145CommunicationValidationIssueKind.MISSING_REQUIRED,
+                    f"required casilla {casilla.id!r} is missing",
+                    casilla=casilla,
+                ),
+            )
+        if value is None:
+            continue
+        if not casilla.legal_refs or not casilla.source_refs:
+            issues.append(
+                _issue(
+                    M145CommunicationValidationIssueKind.MISSING_SOURCE_AUTHORITY,
+                    f"casilla {casilla.id!r} lacks registry legal/source authority",
+                    casilla=casilla,
+                ),
+            )
+        value_issue = _value_shape_issue(casilla, value)
+        if value_issue is not None:
+            issues.append(
+                _issue(
+                    M145CommunicationValidationIssueKind.INVALID_VALUE,
+                    f"casilla {casilla.id!r} {value_issue}",
+                    casilla=casilla,
+                ),
+            )
+        if value_issue is None and casilla.data_type not in {"date", "integer", "money", "nif", "text", "year"}:
+            issues.append(
+                _issue(
+                    M145CommunicationValidationIssueKind.UNSUPPORTED_DATA_TYPE,
+                    f"casilla {casilla.id!r} uses unsupported data_type {casilla.data_type!r}",
+                    casilla=casilla,
+                ),
+            )
+        constraint_issue = _constraint_issue(casilla, value.strip())
+        if constraint_issue is not None:
+            issues.append(
+                _issue(
+                    M145CommunicationValidationIssueKind.INVALID_VALUE,
+                    f"casilla {casilla.id!r} {constraint_issue}",
+                    casilla=casilla,
+                ),
+            )
+
+    result_issues = tuple(issues)
+    return M145CommunicationValidationResult(
+        communication_record_id=record.communication_record_id,
+        bucket_id=record.bucket_id,
+        communication_year=record.communication_year,
+        period_token=record.period_token,
+        revision_id=revision.id,
+        valid=not result_issues,
+        issue_count=len(result_issues),
+        issues=result_issues,
+        legal_refs=revision_legal_refs,
+        source_refs=revision_source_refs,
+    )
 
 
 def create_m145_communication_record(
@@ -234,9 +487,13 @@ __all__ = [
     "M145CommunicationRecord",
     "M145CommunicationRecordId",
     "M145CommunicationRecordState",
+    "M145CommunicationValidationIssue",
+    "M145CommunicationValidationIssueKind",
+    "M145CommunicationValidationResult",
     "create_m145_communication_record",
     "derive_m145_communication_record_id",
     "list_m145_communication_records",
     "m145_communication_record_object_key",
     "read_m145_communication_record",
+    "validate_m145_communication_record",
 ]
