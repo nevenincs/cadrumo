@@ -321,6 +321,7 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-P04-S22]]'
   - '[[2026-05-14-cli-workflow-redesign-P05-S23]]'
   - '[[2026-05-14-cli-workflow-redesign-P05-S24]]'
+  - '[[2026-05-14-cli-workflow-redesign-P05-S25]]'
   - '[[2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-exec]]'
@@ -848,6 +849,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-P04-S22` - Add service-level errors and logs using communication vocabulary only
 - `2026-05-14-cli-workflow-redesign-P05-S23` - Add Modelo 145 command handlers that delegate to the backend communication service
 - `2026-05-14-cli-workflow-redesign-P05-S24` - Keep Modelo 145 argument parsing separate from business behavior
+- `2026-05-14-cli-workflow-redesign-P05-S25` - Render Modelo 145 command results through centralized output emitters
 
 ### plan
 
