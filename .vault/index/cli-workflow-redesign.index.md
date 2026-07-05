@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-workflow-redesign'
-date: '2026-07-04'
-modified: '2026-07-04'
+date: '2026-07-05'
+modified: '2026-07-05'
 related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr]]'
@@ -312,6 +312,7 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-P03-S13]]'
   - '[[2026-05-14-cli-workflow-redesign-P03-S14]]'
   - '[[2026-05-14-cli-workflow-redesign-P03-S15]]'
+  - '[[2026-05-14-cli-workflow-redesign-P04-S16]]'
   - '[[2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-exec]]'
@@ -432,6 +433,7 @@ related:
   - '[[2026-06-12-cli-workflow-redesign-W77-P374-S2153]]'
   - '[[2026-07-04-cli-workflow-redesign-audit]]'
   - '[[2026-07-04-cli-workflow-redesign-reference]]'
+  - '[[2026-07-05-cli-workflow-redesign-audit]]'
 ---
 
 # `cli-workflow-redesign` feature index
@@ -583,6 +585,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-22-w03-s13-rate-schedules-review-audit` - `cli-workflow-redesign` W03.S13 Rate Schedules Review
 - `2026-06-03-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `W83.P400.S2281 setup-event emission inventory`
 - `2026-07-04-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `Modelo 145 registry foundation review`
+- `2026-07-05-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `m145-service-owner-review`
 
 ### exec
 
@@ -828,6 +831,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-P03-S13` - Add export layout metadata grounded in the official record design
 - `2026-05-14-cli-workflow-redesign-P03-S14` - Exclude filing schedules, deadline windows, live cross references, filing application links, and portal read or write links from Modelo 145
 - `2026-05-14-cli-workflow-redesign-P03-S15` - Verify Modelo 145 registry load, source grounding, export metadata, and rejected filing surfaces
+- `2026-05-14-cli-workflow-redesign-P04-S16` - Add backend service ownership for Modelo 145 local payer communication
 
 ### plan
 
