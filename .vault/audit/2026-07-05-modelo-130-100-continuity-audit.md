@@ -22,7 +22,7 @@ Current official AEAT pages confirm that pagos fraccionados for economic activit
 
 ### p03-s06-review | low | M100 pagos-fraccionados continuity verified on focused gates
 
-The focused gates passed: live fold-in and full ledger-to-M130-to-M100 vertical tests passed 9/9; mismatch and missing-quarter non-silent tests passed 2/2; historical registry pagos-fraccionados wiring passed 4/4; ruff passed for the touched verification surfaces. The mismatch path is non-silent because a filed declaracion with a different 0604 produces a typed casilla mismatch carrying legal and source refs.
+The focused gates passed: live fold-in and full ledger-to-M130-to-M100 vertical tests passed 9/9; mismatch and missing-quarter non-silent tests passed 2/2; historical registry pagos-fraccionados wiring passed 4/4; ruff passed for the touched verification surfaces. After the concurrent declaration-reconcile source slice landed in commit `2b59a9fa06`, the current-year parser/reconcile/fold-in group passed 17/17, the parser-chain group passed 7/7, the ledger/relation/historical group passed 10/10, and ruff passed again. Later concurrent commits `ef6e1e71d8` and `d323fb1558` did not touch the scoped M100 pagos-fraccionados continuity/reconcile surfaces. The mismatch path is non-silent because a filed declaracion with a different 0604 produces a typed casilla mismatch carrying legal and source refs.
 
 ### p03-s06-review | low | Current-year declaration extraction now covers 0604
 
