@@ -17,6 +17,9 @@ related:
   - '[[2026-07-05-cpdefix-followup-allgreen-W03-P05-S09]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-W03-P06-S10]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-W03-P06-S11]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W04-P07-S12]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W04-P07-S13]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W04-P07-S14]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-adr]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-audit]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-plan]]'
@@ -50,6 +53,9 @@ Auto-generated index of all documents tagged with `#cpdefix-followup-allgreen`.
 - `2026-07-05-cpdefix-followup-allgreen-W03-P05-S09` - Run scoped calculation application and registry test gates before making any allgreen claim
 - `2026-07-05-cpdefix-followup-allgreen-W03-P06-S10` - Scaffold step execution records for completed plan rows and attach verification evidence
 - `2026-07-05-cpdefix-followup-allgreen-W03-P06-S11` - Regenerate the feature index and run vault checks for the follow-up plan
+- `2026-07-05-cpdefix-followup-allgreen-W04-P07-S12` - Revalidate current M130 gasto actividad-economica eligibility against production aggregation
+- `2026-07-05-cpdefix-followup-allgreen-W04-P07-S13` - Cover unclassified actividad-economica gasto and reviewed exclusion behavior with real aggregation tests
+- `2026-07-05-cpdefix-followup-allgreen-W04-P07-S14` - Record focused verification evidence for the post-completion M130 gasto edge
 
 ### plan
 

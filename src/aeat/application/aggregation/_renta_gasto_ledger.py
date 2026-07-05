@@ -16,7 +16,8 @@ window; they differ only in flow direction and the casilla they feed.
 Cumulative window rule (RD 439/2007 art. 110.2):
   For period Qn in year Y the window is [Jan 1, Y] through [last day of Qn, Y].
 
-Only ACTIVE, EUR-denominated, OUTGOING transactions whose
+Only ACTIVE, EUR-denominated, OUTGOING transactions whose explicit
+``irpf_category`` marks ``actividad_economica`` or whose
 ``business_classification`` is BUSINESS or MIXED are eligible. The deductible
 amount is the IVA-exclusive base imponible (``taxable_base``). IVA soportado is
 recovered through Modelo 303 and is not a Renta gasto, so a declarable expense
@@ -45,6 +46,8 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, PeriodKind
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.transactions import (
+    IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
+    BusinessClassification,
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepositoryProtocol,
@@ -276,13 +279,18 @@ def _classify_gasto_transaction(
     if transaction.direction is not TransactionDirection.OUTGOING:
         return None
 
-    # PERSONAL / unclassified OUTGOING rows are not deductible gastos (a real
-    # taxpayer's groceries and rent). They are correctly excluded and need no
-    # advisory — skip them silently. Only a BUSINESS / MIXED expense that should
-    # be deductible but is dropped by a downstream gate (currency / period)
-    # surfaces an issue (no-silent-under-declaration), so the operator sees a
-    # genuinely lost gasto rather than advisory noise on every personal line.
-    proportion = business_proportion(transaction.business_classification, transaction.business_pct)
+    if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+        # Operator reviewed and deliberately excluded this row from filing. Keep
+        # that final disposition stronger than the actividad category tag.
+        return None
+
+    # PERSONAL / unclassified OUTGOING rows are not deductible gastos unless an
+    # explicit actividad-economica IRPF category already marks the row as part of
+    # the M130 activity set. Only rows that should be deductible but are dropped
+    # by a downstream gate (currency / period / missing taxable_base) surface an
+    # issue, so the operator sees a genuinely lost gasto rather than advisory
+    # noise on every personal line.
+    proportion = _gasto_business_proportion(transaction)
     if proportion is None:
         return None
 
@@ -328,6 +336,20 @@ def _classify_gasto_transaction(
         deductible_amount=deductible_amount,
         filing_date=filing_date,
     )
+
+
+def _gasto_business_proportion(transaction: Transaction) -> Decimal | None:
+    """Return the business-attributed gasto proportion, or None if not eligible.
+
+    ``irpf_category=actividad_economica`` is the explicit M130 activity marker
+    and may be present before the broader business-classification sweep has
+    resolved the row. Treat it as the full business proportion, mirroring the
+    income-side category gate, while reviewed exclusions are short-circuited by
+    the caller before reaching this helper.
+    """
+    if transaction.irpf_category == IRPF_CATEGORY_ACTIVIDAD_ECONOMICA:
+        return Decimal("1")
+    return business_proportion(transaction.business_classification, transaction.business_pct)
 
 
 def _gasto_casilla_aggregation(
