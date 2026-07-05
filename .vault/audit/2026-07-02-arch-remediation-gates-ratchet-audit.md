@@ -355,6 +355,24 @@ codebase-size rerun no longer reports `_calculation_actions.py`. The size gate
 remains red on the other known module/callable offenders inventoried in
 `var/log/codebase-size-after-calculation-adjustments-split-20260705.log`.
 
+### follow-up-m131-modulos-engine-test-size-budget | low | M131 modulos engine test below module budget
+
+Reviewed the 2026-07-05 ratchet follow-up that split the M131 EO modulos
+engine test data and activity cases without changing oracle values or
+assertions. Shared coefficient tables and independent expected-value helpers
+now live in `_modelo_131_modulos_engine_support.py`; food and hospitality cases
+live in `test_modelo_131_modulos_engine_food.py`; retail, repair, transport,
+and service cases live in `test_modelo_131_modulos_engine_retail_services.py`.
+The original `test_modelo_131_modulos_engine.py` keeps the core smoke,
+no-silent-fabrication, indices, and advisory flag coverage. Post-format line
+counts are 616 lines for the original module, 560 for the support module, 440
+for the food module, and 887 for the retail/services module. Ruff and syntax
+checks passed, the split M131 modulos suite passed (99 tests), and the
+codebase-size rerun no longer reports `test_modelo_131_modulos_engine.py`.
+The size gate remains red only on the known peer-owned `_formula_runtime.py`
+and `_modelo_payloads.py` offenders inventoried in
+`var/log/codebase-size-after-m131-modulos-test-split-20260705.log`.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
