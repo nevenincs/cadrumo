@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from ....tests._application_adapter_exports import BucketLifecycleStatus, bucket_paths, manifest_path, read_manifest
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     SANDBOX_LABEL_PREFIX,
@@ -85,8 +86,6 @@ def test_discard_refuses_a_non_sandbox_labelled_bucket_by_default(runtime: TestR
 
 def test_discard_of_non_sandbox_bucket_erases_nothing_on_refusal(runtime: TestRuntimeProfile) -> None:
     """The refused non-sandbox discard leaves the bucket directory and manifest untouched."""
-    from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
-
     paths = bucket_paths(runtime.storage_root, runtime.bucket_id)
     assert manifest_path(paths).is_file()
 
@@ -128,8 +127,6 @@ def test_archive_refuses_a_non_sandbox_labelled_bucket_by_default(runtime: TestR
 
 def test_archive_of_non_sandbox_bucket_tombstones_nothing_on_refusal(runtime: TestRuntimeProfile) -> None:
     """The refused non-sandbox archive leaves the bucket's manifest status untouched."""
-    from ....adapters.persistence.storage.bucket import BucketLifecycleStatus, bucket_paths, read_manifest
-
     paths = bucket_paths(runtime.storage_root, runtime.bucket_id)
 
     with pytest.raises(SandboxDiscardRefusedError):

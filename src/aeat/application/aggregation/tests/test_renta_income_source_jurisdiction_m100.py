@@ -9,11 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.resources import resources
 from ....domain.calculations.registry import resolve_ledger_renta_income_aggregation_binding_values
 from ....domain.transactions import TransactionCatalogue
+from ....tests._application_adapter_exports import SecureObjectRepository, TransactionCatalogueRepository
 from .._renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
     aggregate_renta_income_ledger,

@@ -24,10 +24,10 @@ from typing import TYPE_CHECKING
 from pydantic import ValidationError
 
 if TYPE_CHECKING:
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...domain.transactions import LedgerClassificationRule
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.errors import AeatError
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets import (

@@ -39,6 +39,11 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     derive_work_unit_id,
 )
+from ....tests._review_package_adapters import (
+    MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
+    SecureObjectRow,
+    session_scope,
+)
 from ....tests.secure_sql import MultiBucketTestRuntime, isolated_two_bucket_runtime
 from .._review_package import build_review_package
 from .._review_package_counter_sign import (
@@ -323,10 +328,6 @@ def test_counter_signer_keys_never_stored_as_plaintext(tmp_path: Path) -> None:
     counter-signer's keypair is scoped to.
     """
     from sqlalchemy import select
-
-    from ....adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE
-    from ....adapters.persistence.storage.sql import SecureObjectRow
-    from ....adapters.persistence.storage.sql.session import session_scope
 
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
         accountant_keypair = _mint_accountant_keypair(runtime)

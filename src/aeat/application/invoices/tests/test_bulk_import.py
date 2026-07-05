@@ -20,9 +20,9 @@ import pytest
 from openpyxl import Workbook
 from pydantic import ValidationError
 
-from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
+from ....tests._application_adapter_exports import InvoiceCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     BulkInvoiceImportRow,

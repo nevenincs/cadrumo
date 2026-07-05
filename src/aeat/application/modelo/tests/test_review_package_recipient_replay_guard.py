@@ -19,6 +19,14 @@ from pathlib import Path
 
 import pytest
 
+from ....tests._review_package_adapters import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
+)
+from ....tests._review_package_adapters import (
+    DecryptionError,
+    SecureObjectRow,
+    session_scope,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package_recipient_replay_guard import (
     ConsumedNonceLedger,
@@ -74,12 +82,6 @@ def test_ledger_is_never_stored_as_plaintext(tmp_path: Path) -> None:
         repository.mark_consumed(nonce_hex, consumed_at=_NOW)
 
         from sqlalchemy import select
-
-        from ....adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
-        )
-        from ....adapters.persistence.storage.sql import SecureObjectRow
-        from ....adapters.persistence.storage.sql.session import session_scope
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
@@ -137,12 +139,6 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
 
         from sqlalchemy import select, update
 
-        from ....adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
-        )
-        from ....adapters.persistence.storage.sql import SecureObjectRow
-        from ....adapters.persistence.storage.sql.session import session_scope
-
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
                 select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
@@ -153,8 +149,6 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
                 .where(SecureObjectRow.namespace == _NAMESPACE.namespace)
                 .values(payload=corrupted_payload),
             )
-
-        from ....adapters.persistence.storage import DecryptionError
 
         with pytest.raises(DecryptionError):
             repository.load()

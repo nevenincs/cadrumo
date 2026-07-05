@@ -29,7 +29,6 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import Period
 from ....domain.calculations.registry import (
     BindingId,
@@ -48,6 +47,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....tests._application_adapter_exports import TransactionCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .._impatriado_income_ledger import (
     ImpatriadoIncomeLedgerAggregation,

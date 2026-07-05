@@ -18,10 +18,15 @@ from pathlib import Path
 import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
-from ....adapters.persistence.storage import (
+from ....tests._review_package_adapters import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
 )
-from ....adapters.persistence.storage import SensitivityClass
+from ....tests._review_package_adapters import (
+    DecryptionError,
+    SecureObjectRow,
+    SensitivityClass,
+    session_scope,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package_recipient_registry import (
     RecipientAlreadyRegisteredError,
@@ -93,9 +98,6 @@ def test_register_is_never_stored_as_plaintext(tmp_path: Path) -> None:
         assert public_key_hex.encode("utf-8") in raw_record.payload
 
         from sqlalchemy import select
-
-        from ....adapters.persistence.storage.sql import SecureObjectRow
-        from ....adapters.persistence.storage.sql.session import session_scope
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
@@ -179,9 +181,6 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
 
         from sqlalchemy import select, update
 
-        from ....adapters.persistence.storage.sql import SecureObjectRow
-        from ....adapters.persistence.storage.sql.session import session_scope
-
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
                 select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
@@ -192,8 +191,6 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
                 .where(SecureObjectRow.namespace == _NAMESPACE.namespace)
                 .values(payload=corrupted_payload),
             )
-
-        from ....adapters.persistence.storage import DecryptionError
 
         with pytest.raises(DecryptionError):
             repository.load()
