@@ -23,6 +23,18 @@ required gates run cleanly.
 
 No open findings.
 
+### follow-up-profile-activity-test-boundary | low | application test no longer imports CLI test helpers
+
+Reviewed the 2026-07-05 ratchet follow-up that rewired
+`test_review_profile_activity_staleness` away from the CLI test-support
+package. The test still provisions a real encrypted profile bucket and mutates
+the relation-scoping `activities.description` fact through application
+profile primitives; it no longer adds an application-to-entrypoints edge to the
+layered contract. Focused pytest passed, and the layered linter rerun no longer
+reports an application-to-entrypoints violation. The layered contract remains
+red on the broader application-to-adapters inventory, so this is a boundary
+reduction only, not program closure.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
