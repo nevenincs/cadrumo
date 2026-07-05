@@ -13,7 +13,7 @@ Each helper rejects a malformed arity, an unknown casilla reference, or an
 unsupported literal at registry-load time rather than letting the runtime
 evaluator's defensive bad-arity branch silently hold (or, for the ADVISORY
 form, silently never fire) — see
-:mod:`aeat.application.modelo._verification_actions` for the runtime
+:mod:`application.modelo._verification_actions` for the runtime
 counterpart these gates keep honest.
 """
 

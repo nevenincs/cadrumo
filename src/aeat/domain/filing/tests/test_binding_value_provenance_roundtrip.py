@@ -53,6 +53,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "filing-binding-provenance"
 _DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
+_PROVENANCE_FIELDS = ("source", "legal_refs", "source_refs")
 _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
     "03",
     surface="_M130_RENDIMIENTO_NETO_CASILLA",
@@ -140,16 +141,7 @@ def test_binding_value_provenance_roundtrips_through_encrypted_boundary(
             profile.repository._engine.dispose()
 
 
-@pytest.mark.parametrize(
-    "field_name",
-    [
-        "source",
-        "legal_refs",
-        "source_refs",
-    ],
-)
 def test_boundary_catches_binding_provenance_field_drop(
-    field_name: str,
     tmp_path: Path,
 ) -> None:
     """Drop a binding-value provenance field on disk; the boundary must surface it.
@@ -169,38 +161,40 @@ def test_boundary_catches_binding_provenance_field_drop(
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         try:
-            original = _populated_draft()
-            ModeloDraftRepository(bucket_id=_BUCKET_ID).save(original)
+            repository = ModeloDraftRepository(bucket_id=_BUCKET_ID)
+            for index, field_name in enumerate(_PROVENANCE_FIELDS, start=1):
+                original = _populated_draft().model_copy(update={"draft_id": str(index) * 64})
+                repository.save(original)
 
-            with session_scope(profile.repository._engine) as session:
-                row = session.execute(select(SecureObjectRow).limit(1)).scalar_one()
-                aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-                plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)
-                decoded = json.loads(plain.decode("utf-8"))
-                binding_values = decoded["payload"]["binding_values"]
-                assert binding_values, "fixture must serialise binding_values for this proof to be meaningful"
-                assert field_name in binding_values[0], (
-                    f"fixture must serialise binding-value {field_name!r} into the envelope payload"
-                )
-                del binding_values[0][field_name]
-                row.payload = encrypt_secure_object_payload(json.dumps(decoded).encode("utf-8"), associated_data=aad)
+                with session_scope(profile.repository._engine) as session:
+                    row = session.execute(
+                        select(SecureObjectRow).where(
+                            SecureObjectRow.namespace == ModeloDraftRepository.namespace,
+                            SecureObjectRow.object_key == original.draft_id,
+                        ),
+                    ).scalar_one()
+                    aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+                    plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)
+                    decoded = json.loads(plain.decode("utf-8"))
+                    binding_values = decoded["payload"]["binding_values"]
+                    assert binding_values, "fixture must serialise binding_values for this proof to be meaningful"
+                    assert field_name in binding_values[0], (
+                        f"fixture must serialise binding-value {field_name!r} into the envelope payload"
+                    )
+                    del binding_values[0][field_name]
+                    row.payload = encrypt_secure_object_payload(
+                        json.dumps(decoded).encode("utf-8"),
+                        associated_data=aad,
+                    )
 
-            regression_caught = False
-            try:
-                mutated = ModeloDraftRepository(bucket_id=_BUCKET_ID).load(original.draft_id)
-            except ValidationError:
-                regression_caught = True
-            else:
+                try:
+                    mutated = repository.load(original.draft_id)
+                except ValidationError:
+                    continue
                 assert mutated is not None
                 assert mutated != original, (
                     f"binding-value field {field_name!r} was dropped on disk but the loaded "
                     "model is still equal to the original — the boundary regression is invisible"
                 )
-                regression_caught = True
-
-            assert regression_caught, (
-                f"boundary did not detect deliberate drop of binding-value field {field_name!r} — "
-                "re-audit every roundtrip test in the suite"
-            )
         finally:
             profile.repository._engine.dispose()

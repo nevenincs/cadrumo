@@ -13,10 +13,10 @@ Each persisted observation is grounded against the law-determined
 non-official.
 
 See Also:
-    :func:`~aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+    :func:`~application.modelo._filed_revision_observation.persist_filed_revision_observation`:
         Local-filing projection that uses ``app_filing`` rather than
         operator-manual source.
-    :mod:`~aeat.application.calculations._cross_period_clean_state`:
+    :mod:`~application.calculations._cross_period_clean_state`:
         Classifies local observations as non-official for filing-grade readiness.
 """
 

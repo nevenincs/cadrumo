@@ -19,7 +19,7 @@ tests, surfaced as click ``Choice`` at the CLI):
   the domestic baseline) into a computable decision.
 
 Both enums are consumed by the cross-cutting ``registry/aeat/treaties/`` authoring
-tree and its :class:`~aeat.domain.calculations.registry.ConvenioAuthority`
+tree and its :class:`~domain.calculations.registry.ConvenioAuthority`
 projection. The registry TOML stays free-form (a plain string token); the loader
 hydrates the enum at the boundary.
 """

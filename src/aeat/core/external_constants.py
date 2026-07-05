@@ -524,10 +524,10 @@ IVA_BIEN_INVERSION_INMUEBLE_DIVISOR: Final[Decimal] = Decimal("10")
 #: excluded. Binding provision: Art. 108.Dos.5.º LIVA (Ley 37/1992).
 IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR: Final[Decimal] = Decimal("3005.06")
 
-#: Modelo 720 declaration floor per asset class (``bloque``). Binding provision: RD 1065/2007
+#: Modelo 720 declaration floor per regulatory obligation ``bloque``. Binding provision: RD 1065/2007
 #: arts. 42 bis/ter/quater (added by RD 1558/2012) under LGT DA 18ª — each block
 #: (cuentas / valores-seguros / inmuebles) carries an independent 50.000 € umbral.
-#: An asset class is declarable iff its total valuation strictly exceeds this amount.
+#: An obligation block is declarable iff its aggregate valuation strictly exceeds this amount.
 MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
 
 #: Art. 7.p) LIRPF (Ley 35/2006, BOE-A-2006-20764) annual exemption cap for

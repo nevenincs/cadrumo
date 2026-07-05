@@ -17,6 +17,21 @@ from ..storage_write_policy import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_PROFILE_BOUND_VERB_CASES = (
+    ("app ledger link tx --invoice-id inv", True),
+    ("app ledger rule add --description-pattern fuel --classification expense", True),
+    ("app ledger rule apply --dry-run", True),
+    ("app modelo work file abc", True),
+    ("config profile censo pull", True),
+    ("config profile edit operator", False),
+    ("config profile delete operator --yes", False),
+    ("config profile duplicate operator operator-copy", False),
+    ("config profile rename operator renamed", False),
+    ("config switch operator", False),
+    ("app ledger list", False),
+    ("app registry legal view ley-37-1992:art-99", False),
+)
+
 
 def test_profile_bound_write_refuses_root_fallback_route(tmp_path: Path) -> None:
     decision = inspect_storage_write_policy(
@@ -183,22 +198,11 @@ def test_read_only_and_recovery_verbs_do_not_trigger_write_policy(tmp_path: Path
     assert decision.route_kind is None
 
 
-@pytest.mark.parametrize(
-    ("verb_path", "expected"),
-    (
-        ("app ledger link tx --invoice-id inv", True),
-        ("app ledger rule add --description-pattern fuel --classification expense", True),
-        ("app ledger rule apply --dry-run", True),
-        ("app modelo work file abc", True),
-        ("config profile censo pull", True),
-        ("config profile edit operator", False),
-        ("config profile delete operator --yes", False),
-        ("config profile duplicate operator operator-copy", False),
-        ("config profile rename operator renamed", False),
-        ("config switch operator", False),
-        ("app ledger list", False),
-        ("app registry legal view ley-37-1992:art-99", False),
-    ),
-)
-def test_profile_bound_write_verb_catalogue_classifies_operator_paths(verb_path: str, expected: bool) -> None:
-    assert is_profile_bound_write_verb_path(verb_path) is expected
+def test_profile_bound_write_verb_catalogue_classifies_operator_paths() -> None:
+    failures: list[str] = []
+    for verb_path, expected in _PROFILE_BOUND_VERB_CASES:
+        actual = is_profile_bound_write_verb_path(verb_path)
+        if actual is not expected:
+            failures.append(f"{verb_path!r}: expected {expected}, got {actual}")
+
+    assert not failures, "\n".join(failures)

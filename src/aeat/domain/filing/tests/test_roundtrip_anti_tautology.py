@@ -56,6 +56,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _BUCKET_ID = "filing-runtime"
 _DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
 _APPROVED_AT = datetime(2026, 5, 25, 14, 30, tzinfo=UTC)
+_OPTIONAL_FIELD_DROP_FIELDS = (
+    "casilla_provenance",
+    "notes",
+    "approved_at",
+    "approved_by",
+    "review_checksum",
+    "approval_basis",
+)
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -181,7 +189,7 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
 
 
 # ---------------------------------------------------------------------------
-# Parametrized field-drop proofs for the 6 optional fields that previously
+# Field-drop proofs for the 6 optional fields that previously
 # used pydantic defaults in the fixture (casilla_provenance, notes,
 # approved_at, approved_by, review_checksum, approval_basis).
 #
@@ -192,21 +200,7 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "field_name",
-    [
-        "casilla_provenance",
-        "notes",
-        "approved_at",
-        "approved_by",
-        "review_checksum",
-        "approval_basis",
-    ],
-)
-def test_boundary_catches_optional_field_drop(
-    field_name: str,
-    tmp_path: Path,
-) -> None:
+def test_boundary_catches_optional_field_drop(tmp_path: Path) -> None:
     """Drop an optional field from the on-disk envelope; boundary must surface the loss.
 
     For each of the six optional fields that carry non-default values in the
@@ -224,42 +218,38 @@ def test_boundary_catches_optional_field_drop(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         try:
-            original = _populated_draft()
             repo = ModeloDraftRepository(bucket_id=_BUCKET_ID)
-            repo.save(original)
+            for index, field_name in enumerate(_OPTIONAL_FIELD_DROP_FIELDS, start=1):
+                original = _populated_draft().model_copy(update={"draft_id": str(index) * 64})
+                repo.save(original)
 
-            with session_scope(profile.repository._engine) as session:
-                stmt = select(SecureObjectRow).limit(1)
-                row = session.execute(stmt).scalar_one()
-                _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-                _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-                decoded = json.loads(_h3_plain.decode("utf-8"))
-                assert field_name in decoded["payload"], (
-                    f"fixture must serialise {field_name!r} into the envelope payload "
-                    "for this parametrize case to be a meaningful proof"
-                )
-                del decoded["payload"][field_name]
-                row.payload = encrypt_secure_object_payload(
-                    json.dumps(decoded).encode("utf-8"), associated_data=_h3_aad
-                )
+                with session_scope(profile.repository._engine) as session:
+                    stmt = select(SecureObjectRow).where(
+                        SecureObjectRow.namespace == ModeloDraftRepository.namespace,
+                        SecureObjectRow.object_key == original.draft_id,
+                    )
+                    row = session.execute(stmt).scalar_one()
+                    _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+                    _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
+                    decoded = json.loads(_h3_plain.decode("utf-8"))
+                    assert field_name in decoded["payload"], (
+                        f"fixture must serialise {field_name!r} into the envelope payload "
+                        "for this field-drop case to be a meaningful proof"
+                    )
+                    del decoded["payload"][field_name]
+                    row.payload = encrypt_secure_object_payload(
+                        json.dumps(decoded).encode("utf-8"), associated_data=_h3_aad
+                    )
 
-            regression_caught = False
-            try:
-                mutated = ModeloDraftRepository(bucket_id=_BUCKET_ID).load(original.draft_id)
-            except ValidationError:
-                regression_caught = True
-            else:
+                try:
+                    mutated = repo.load(original.draft_id)
+                except ValidationError:
+                    continue
                 assert mutated is not None
                 assert mutated != original, (
                     f"field {field_name!r} was dropped from the envelope but the loaded "
                     "model is still equal to the original — the fixture used the pydantic "
                     "default for this field and the boundary regression is invisible"
                 )
-                regression_caught = True
-
-            assert regression_caught, (
-                f"boundary did not detect deliberate drop of field {field_name!r} — "
-                "re-audit every roundtrip test in the suite"
-            )
         finally:
             profile.repository._engine.dispose()

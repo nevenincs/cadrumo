@@ -1,15 +1,15 @@
 """Shared source-casilla-id helpers for cross-model validation.
 
-Returns the canonical :class:`~aeat.domain.calculations.registry.CasillaId`
-values a :class:`~aeat.domain.calculations.registry.ModeloRevision` can expose
+Returns the canonical :class:`~domain.calculations.registry.CasillaId`
+values a :class:`~domain.calculations.registry.ModeloRevision` can expose
 to cross-model relation validators.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._casilla_membership`
+    :mod:`domain.calculations.registry._casilla_membership`
         Declared-id membership and non-canonical metadata-token lookup.
-    :mod:`aeat.domain.calculations.registry._validate_relation_sources`
+    :mod:`domain.calculations.registry._validate_relation_sources`
         Relation source validation that consumes these canonical outputs.
-    :mod:`aeat.domain.calculations.registry._validate_previous_filing_sources`
+    :mod:`domain.calculations.registry._validate_previous_filing_sources`
         Previous-filing binding validation that shares the same source check.
 """
 
@@ -23,9 +23,9 @@ from ._schema import ModeloRevision
 def revision_output_ids(revision: ModeloRevision) -> set[CasillaId]:
     """Return canonical source ids exposed by one registry revision.
 
-    The returned :class:`~aeat.domain.calculations.registry.CasillaId` set
+    The returned :class:`~domain.calculations.registry.CasillaId` set
     includes declared casillas plus algorithm-binding outputs from the
-    supplied :class:`~aeat.domain.calculations.registry.ModeloRevision`.
+    supplied :class:`~domain.calculations.registry.ModeloRevision`.
     """
     outputs = set(declared_casilla_ids(revision))
     outputs.update(output for binding in revision.algorithm_bindings for output in binding.output_casilla_ids.values())
@@ -48,11 +48,11 @@ def source_casilla_id_reference_failure(
 
     Args:
         revision: Source
-            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            :class:`~domain.calculations.registry.ModeloRevision` whose
             canonical outputs are available to relation or previous-filing
             closure.
         source_casilla_id: Candidate
-            :class:`~aeat.domain.calculations.registry.CasillaId` source
+            :class:`~domain.calculations.registry.CasillaId` source
             reference token to validate.
         source_scope: Human-readable scope prefix for the emitted failure.
         missing_failure: Failure message to reuse for a truly unknown source id.

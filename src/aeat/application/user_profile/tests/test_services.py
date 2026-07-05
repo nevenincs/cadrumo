@@ -19,6 +19,15 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_NON_ISO_DATE_VALUES = (
+    "1978-13-45",  # month 13, day 45 — impossible calendar date
+    "15/03/1978",  # DD/MM/YYYY layout, not ISO 8601
+    "1978-02-30",  # February never has 30 days
+    "not-a-date",  # plainly not a date
+    "1978-3-15",  # non-zero-padded ISO components
+    "19780315",  # ISO-ish but missing separators
+)
+
 
 @pytest.fixture(scope="module")
 def schema() -> ProfileSchemaDefinition:
@@ -53,29 +62,28 @@ def test_validation_accepts_known_field(schema: ProfileSchemaDefinition) -> None
     assert not any(issue.code == "unknown_field" for issue in report.issues)
 
 
-@pytest.mark.parametrize(
-    "garbage",
-    [
-        "1978-13-45",  # month 13, day 45 — impossible calendar date
-        "15/03/1978",  # DD/MM/YYYY layout, not ISO 8601
-        "1978-02-30",  # February never has 30 days
-        "not-a-date",  # plainly not a date
-        "1978-3-15",  # non-zero-padded ISO components
-        "19780315",  # ISO-ish but missing separators
-    ],
-)
-def test_validation_rejects_non_iso_date_value(schema: ProfileSchemaDefinition, garbage: str) -> None:
+def test_validation_rejects_non_iso_date_value(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)
-    report = svc.validate_facts(
-        "11111111-1111-4111-8111-111111111111",
-        [UserProfileFact(path="renta_taxpayer.birth_date", value=garbage)],
-    )
-    date_errors = [
-        issue for issue in report.issues if issue.code == "invalid_date_value" and issue.severity is BaseSeverity.ERROR
-    ]
-    assert len(date_errors) == 1
-    assert "YYYY-MM-DD" in date_errors[0].message
-    assert date_errors[0].path == "renta_taxpayer.birth_date"
+    failures: list[str] = []
+    for garbage in _NON_ISO_DATE_VALUES:
+        report = svc.validate_facts(
+            "11111111-1111-4111-8111-111111111111",
+            [UserProfileFact(path="renta_taxpayer.birth_date", value=garbage)],
+        )
+        date_errors = [
+            issue
+            for issue in report.issues
+            if issue.code == "invalid_date_value" and issue.severity is BaseSeverity.ERROR
+        ]
+        if len(date_errors) != 1:
+            failures.append(f"{garbage!r}: expected one invalid_date_value error, got {len(date_errors)}")
+            continue
+        if "YYYY-MM-DD" not in date_errors[0].message:
+            failures.append(f"{garbage!r}: message did not mention YYYY-MM-DD")
+        if date_errors[0].path != "renta_taxpayer.birth_date":
+            failures.append(f"{garbage!r}: error path was {date_errors[0].path!r}")
+
+    assert not failures, "\n".join(failures)
 
 
 def test_validation_accepts_valid_iso_date_value(schema: ProfileSchemaDefinition) -> None:
@@ -150,41 +158,40 @@ def test_preflight_accepts_legal_entity_legal_name_for_export_headers(schema: Pr
     assert report.missing == ()
 
 
-@pytest.mark.parametrize(
-    "identity_fact",
-    (
-        UserProfileFact(path="identity.surnames", value="Ferrer"),
-        UserProfileFact(path="identity.name", value="Rocio"),
-    ),
-    ids=("surnames-only", "short-name-only"),
-)
 def test_preflight_rejects_legal_entity_export_identity_fragments(
     schema: ProfileSchemaDefinition,
-    identity_fact: UserProfileFact,
 ) -> None:
     period = Period.from_year_and_code(2026, "1P")
     snapshot = resources().modelos.authority.snapshot("202", filing_year=2026, period=period.registry_token)
-    record = UserProfileRecord(
-        profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Incomplete legal entity",
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
-            identity_fact,
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-        ),
-    )
+    failures: list[str] = []
+    for case_id, identity_fact in (
+        ("surnames-only", UserProfileFact(path="identity.surnames", value="Ferrer")),
+        ("short-name-only", UserProfileFact(path="identity.name", value="Rocio")),
+    ):
+        record = UserProfileRecord(
+            profile_id="11111111-1111-4111-8111-111111111111",
+            display_name="Incomplete legal entity",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="B12345674"),
+                identity_fact,
+                UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
+                UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+            ),
+        )
 
-    report = ProfilePreflightService(schema=schema).report(
-        record=record,
-        modelo="202",
-        revision_id=snapshot.revision.id,
-        period=period,
-        revision=snapshot.revision,
-    )
+        report = ProfilePreflightService(schema=schema).report(
+            record=record,
+            modelo="202",
+            revision_id=snapshot.revision.id,
+            period=period,
+            revision=snapshot.revision,
+        )
+        if report.ready is not False:
+            failures.append(f"{case_id}: report was unexpectedly ready")
+        if not any(item.section_key == "identity" and item.field_key == "legal_name" for item in report.missing):
+            failures.append(f"{case_id}: legal_name was not reported missing")
 
-    assert report.ready is False
-    assert any(item.section_key == "identity" and item.field_key == "legal_name" for item in report.missing)
+    assert not failures, "\n".join(failures)
 
 
 def test_preflight_carries_request_fields_through(schema: ProfileSchemaDefinition) -> None:

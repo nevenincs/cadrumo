@@ -673,13 +673,15 @@ class IntracomOperationType(StrEnum):
 class ForeignAssetClass(StrEnum):
     """Modelo 720 asset classes (clave de tipo de bien).
 
-    Source: AEAT Modelo 720 instrucciones. Each class is declared separately;
-    the declarability gate (50,000 EUR per class) is applied after the
-    aggregator runs. Declared in :mod:`core` as a closed value set.
+    Source: AEAT Modelo 720 instrucciones. Each clave is declared separately;
+    the declarability gate applies the 50,000 EUR floor to the regulatory
+    obligation block that contains the class after the aggregator runs.
+    Declared in :mod:`core` as a closed value set.
     """
 
-    ACCOUNT = "cuenta_entidad_financiera"  # clave C
-    SECURITY = "valor_seguro_renta"  # clave V
-    REAL_ESTATE = "inmueble_extranjero"  # clave I
-    INSURANCE = "seguro_renta_temporal_vitalicia"  # clave S
-    VIRTUAL_CURRENCY = "moneda_virtual"  # clave M
+    ACCOUNT = "cuenta_entidad_financiera"  # Modelo 720 clave C
+    SECURITY = "valor_derecho_extranjero"  # Modelo 720 clave V
+    COLLECTIVE_INVESTMENT = "institucion_inversion_colectiva"  # Modelo 720 clave I
+    INSURANCE = "seguro_renta_temporal_vitalicia"  # Modelo 720 clave S
+    REAL_ESTATE = "inmueble_derecho_real_extranjero"  # Modelo 720 clave B
+    VIRTUAL_CURRENCY = "moneda_virtual"  # Modelo 721 sibling; no Modelo 720 clave

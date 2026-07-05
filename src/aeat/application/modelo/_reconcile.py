@@ -18,7 +18,7 @@ For a filed declaración, the same header comparison runs, and — for the
 modelos enrolled in :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS` — every
 casilla the registry's verification policy reconciles is compared, one by one,
 against the persisted revision's ``casilla_values`` via
-:func:`aeat.application.modelo._reconcile_casilla.detect_casilla_divergences`.
+:func:`application.modelo._reconcile_casilla.detect_casilla_divergences`.
 A divergence surfaces as a typed ``casilla`` diff
 (:class:`ModeloReconciliationDiffKind.CASILLA`). A modelo not yet enrolled in
 casilla-level declaration reconcile is refused with
@@ -27,11 +27,11 @@ degrading to header-only comparison.
 
 The path-based service is local-only: it never contacts AEAT and never invokes
 ``require_live_read`` — the computed result is read from the already-persisted
-:class:`~aeat.domain.modelos.CalculationRevision`, never a fresh calculation.
+:class:`~domain.modelos.CalculationRevision`, never a fresh calculation.
 Authenticated live pulls use ``modelo_reconcile_bytes`` after storing captured
 justificante bytes in secure storage. Both paths append a ``MODELO_RECONCILED``
-:class:`~aeat.domain.buckets.BucketEvent` through
-:class:`~aeat.domain.buckets.BucketEventHistoryRepository`, persisting the
+:class:`~domain.buckets.BucketEvent` through
+:class:`~domain.buckets.BucketEventHistoryRepository`, persisting the
 structured diffs so ``reconcile history`` reports which fields diverged.
 """
 
@@ -75,7 +75,7 @@ level but is refused with
 grows one modelo at a time as each modelo's ``declaracion_pdf`` extraction
 profile is confirmed to line up with its registry casilla ids one-to-one (the
 same casilla-id vocabulary its
-:meth:`~aeat.domain.calculations.registry.RegistrySnapshot.verification_policy`
+:meth:`~domain.calculations.registry.RegistrySnapshot.verification_policy`
 reconciles, whether that vocabulary is the printed AEAT box number or an
 engine-internal compound id such as ``iva.resultado``).
 
@@ -84,8 +84,8 @@ Modelo 130 is the first: its extraction profile targets registry casilla ids
 layer is required between the extractor and the divergence detector. Modelo
 303 (IVA autoliquidación) and Modelo 390 (IVA resumen anual) mix printed box
 numbers with the compound ``iva.*`` primitive/result ids that
-:func:`aeat.adapters.inbound.declaracion.parse_declaracion` already extracts
-and :func:`aeat.application.verification.verify_declaracion` already
+:func:`adapters.inbound.declaracion.parse_declaracion` already extracts
+and :func:`application.verification.verify_declaracion` already
 reconciles pre-filing — the same casilla-id vocabulary carries through to the
 after-filing reconcile here. Modelo 111 (retenciones e ingresos a cuenta
 trimestral) targets casilla ids ``"01"``..``"30"`` directly. Modelo 190
@@ -134,7 +134,7 @@ class ModeloReconciliationDiffKind(StrEnum):
     per-casilla value disagreement between the persisted computed revision and
     a filed declaración, emitted for modelos enrolled in
     :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS`
-    (:func:`aeat.application.modelo._reconcile_casilla.detect_casilla_divergences`).
+    (:func:`application.modelo._reconcile_casilla.detect_casilla_divergences`).
     """
 
     HEADER_FIELD = "header_field"
@@ -147,7 +147,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
 
     ``modelo_reconcile`` persists no stored record: a reconciliation is
     repeatable on demand from the justificante, so the durable trace is the
-    append-only ``MODELO_RECONCILED`` :class:`~aeat.domain.buckets.BucketEvent`
+    append-only ``MODELO_RECONCILED`` :class:`~domain.buckets.BucketEvent`
     it emits. This typed entry projects one such event so the operator can
     enumerate past reconciliation verdicts without re-parsing any evidence.
     The read path is the same bucket-event catalogue the write path appends
@@ -182,7 +182,7 @@ class ModeloReconciliationDiff(BaseModel):
     ``casilla`` diff, ``field_name`` is the casilla id and ``work_unit_value`` /
     ``evidence_value`` carry the computed / filed decimal strings (empty when
     the corresponding side carried no value, per
-    :class:`~aeat.application.modelo._reconcile_casilla.CasillaDivergenceKind`).
+    :class:`~application.modelo._reconcile_casilla.CasillaDivergenceKind`).
     """
 
     model_config = _STRICT_FROZEN
@@ -202,7 +202,7 @@ class ModeloReconciliationAdvisory(BaseModel):
     Carries a stable ``code`` (``totals_not_reconciled`` /
     ``identity_anchor_unverified``), an operator-facing ``message``, and
     structured ``context`` (the reason, the anchor, the modelo). The CLI folds
-    each advisory into a typed :class:`~aeat.core.json_contract.Notice` on the
+    each advisory into a typed :class:`~core.json_contract.Notice` on the
     envelope's ``notices`` channel per
     ``cli-notices-are-the-only-diagnostic-channel`` — an advisory is never a
     bespoke result field. Advisories never flip the verdict: they disclose that
@@ -341,9 +341,9 @@ def _require_declaration_enrolled_modelo(work_unit_id: WorkUnitId) -> WorkUnit:
     file is opened, rather than only after a parse attempt happens to fail for
     an unrelated reason.
 
-    Returns the loaded :class:`~aeat.domain.modelos.WorkUnit` so the caller can
+    Returns the loaded :class:`~domain.modelos.WorkUnit` so the caller can
     reuse its already-known modelo/filing_year/period as
-    :func:`aeat.adapters.inbound.declaracion.parse_declaracion` overrides,
+    :func:`adapters.inbound.declaracion.parse_declaracion` overrides,
     rather than reloading the catalogue a second time.
     """
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -371,12 +371,12 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     Local-only: never contacts AEAT and never invokes ``require_live_read``.
 
     For a justificante, reimplements the metadata comparison inline against the
-    justificante parser at :mod:`aeat.adapters.inbound.justificante`. The
+    justificante parser at :mod:`adapters.inbound.justificante`. The
     receipt totals ARE reconciled against the persisted revision's computed
     result where the revision declares ``reconciliation_total_casilla_ids``.
 
     For a declaración, parses via
-    :func:`aeat.adapters.inbound.declaracion.parse_declaracion` and — for
+    :func:`adapters.inbound.declaracion.parse_declaracion` and — for
     modelos enrolled in :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS` — compares
     every registry-reconciled casilla against the persisted revision's
     ``casilla_values``, surfacing each divergence as a typed ``casilla`` diff. A
@@ -442,7 +442,7 @@ def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloR
 
     Declaración reconciliation is not offered on the bytes path: the only
     authenticated live-capture flow today captures justificante snapshots
-    (:func:`aeat.application.live.capture_justificante_snapshot`), never a filed
+    (:func:`application.live.capture_justificante_snapshot`), never a filed
     declaración. Use :func:`modelo_reconcile` with a local declaración PDF
     file for casilla-level reconcile.
 
@@ -838,7 +838,7 @@ def _reconcile_receipt_totals(
     Resolves the registry snapshot for ``work_unit``, reads the
     ``reconciliation_total_casilla_ids`` map its verification expectations
     declare (the same map ``calculation_result_summary`` consumes), loads the
-    filed / verified persisted :class:`~aeat.domain.modelos.CalculationRevision`,
+    filed / verified persisted :class:`~domain.modelos.CalculationRevision`,
     and compares the receipt's printed total against
     ``revision.casilla_values[target_casilla]`` at the expectation's declared
     tolerance. A divergence is a typed ``total`` diff carrying the reconciling
@@ -943,24 +943,24 @@ def _reconcile_declaracion_casillas(
     """Compare every registry-reconciled casilla against the filed declaración.
 
     Resolves the registry snapshot for ``work_unit`` and folds its verification
-    expectations into a :class:`~aeat.domain.calculations.registry.RegistryVerificationPolicy`
-    (the same policy :func:`aeat.application.verification.verify_declaracion`
+    expectations into a :class:`~domain.calculations.registry.RegistryVerificationPolicy`
+    (the same policy :func:`application.verification.verify_declaracion`
     consumes) — the registry's own declared reconciliation scope, never an ad
     hoc casilla list. ``computed_casilla_ids`` (the coverage-gated set) is
     compared in full, so a casilla the computed revision resolved but the
     declaración omitted surfaces as ``MISSING_IN_FILED``.
     ``reconcile_when_present_casilla_ids`` mirrors
-    :func:`aeat.application.verification.verify_declaracion`'s treatment: it is
+    :func:`application.verification.verify_declaracion`'s treatment: it is
     value-reconciled only when the declaración actually prints it (omission is
     legitimate — that is exactly why the casilla is excluded from the coverage
     denominator — so it never surfaces ``MISSING_IN_FILED``).
 
     Reads the persisted filed / verified
-    :class:`~aeat.domain.modelos.CalculationRevision` (never a fresh
+    :class:`~domain.modelos.CalculationRevision` (never a fresh
     calculation), decodes the declaración's
-    :class:`~aeat.adapters.inbound.pdf.ExtractedCasilla` rows into decimals, and
+    :class:`~adapters.inbound.pdf.ExtractedCasilla` rows into decimals, and
     delegates the comparison to
-    :func:`aeat.application.modelo._reconcile_casilla.detect_casilla_divergences`.
+    :func:`application.modelo._reconcile_casilla.detect_casilla_divergences`.
     Every branch that cannot perform the comparison returns a
     ``totals_not_reconciled``-shaped advisory instead of silently passing
     (``no-silent-under-declaration``); the advisory code is reused across the
@@ -1050,8 +1050,8 @@ def _casilla_divergence_diff(
 def _decimal_declaracion_values(declaracion: InboundDeclaracionObservation) -> dict[str, Decimal]:
     """Return decimal printed values keyed by canonical casilla id.
 
-    Mirrors :func:`aeat.application.verification._verify._decimal_extracted_values`:
-    a declaración's :class:`~aeat.adapters.inbound.pdf.ExtractedCasilla` rows may
+    Mirrors :func:`application.verification._verify._decimal_extracted_values`:
+    a declaración's :class:`~adapters.inbound.pdf.ExtractedCasilla` rows may
     carry a ``Decimal``, an ``int``, or a non-numeric printed value (text/enum
     casillas); only the numeric rows participate in a value-level reconcile.
     """
@@ -1189,9 +1189,9 @@ def list_modelo_reconciliations(
     """Return every recorded reconciliation in ``bucket_id`` as typed entries.
 
     ``modelo_reconcile`` stores no record; its durable trace is the
-    ``MODELO_RECONCILED`` :class:`~aeat.domain.buckets.BucketEvent` it appends.
+    ``MODELO_RECONCILED`` :class:`~domain.buckets.BucketEvent` it appends.
     This read-back enumerates those events from the same
-    :class:`~aeat.domain.buckets.BucketEventHistoryRepository` catalogue the
+    :class:`~domain.buckets.BucketEventHistoryRepository` catalogue the
     write path appends into (no parallel read path), filtered to the active
     ``bucket_id`` and ordered oldest-first by ``occurred_at``. Each event is
     projected onto a typed :class:`ModeloReconciliationHistoryEntry` — the

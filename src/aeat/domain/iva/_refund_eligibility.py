@@ -11,7 +11,7 @@ election.
 
 This module is the law-determined eligibility gate of the REDEME company refund
 schema. It is a pure predicate over the typed ``redeme_enrolled`` axis and the
-:class:`~aeat.core.Period` — it raises no error and resolves no locale, so it has
+:class:`~core.Period` — it raises no error and resolves no locale, so it has
 no dependency on the result-disposition serialization framework or on operator
 message catalogues; a consumer layers the operator-facing election + refusal on
 top. The ``reason`` it returns is a machine code, not operator-facing prose.

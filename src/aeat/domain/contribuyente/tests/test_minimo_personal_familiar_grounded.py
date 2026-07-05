@@ -44,14 +44,21 @@ _MINIMO_AMOUNTS: tuple[tuple[str, str], ...] = (
     ("minimo-discapacidad-gastos-asistencia", "3000"),
 )
 
+_GROUNDING_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 
-@pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
-@pytest.mark.parametrize(("stem", "expected"), _MINIMO_AMOUNTS)
-def test_minimo_personal_familiar_amount_matches_aeat(year: int, stem: str, expected: str) -> None:
-    value = read_parameter(
-        Modelo.M100.value,
-        str(year),
-        f"renta-{year}-{stem}-{year}",
-        date_context={"filing_period": date(year, 12, 31)},
-    )
-    assert value == Decimal(expected), f"renta-{year}-{stem}: {value} != AEAT {expected}"
+
+def test_minimo_personal_familiar_amount_matches_aeat() -> None:
+    failures: list[str] = []
+    for year in _GROUNDING_YEARS:
+        for stem, expected in _MINIMO_AMOUNTS:
+            value = read_parameter(
+                Modelo.M100.value,
+                str(year),
+                f"renta-{year}-{stem}-{year}",
+                date_context={"filing_period": date(year, 12, 31)},
+            )
+            expected_value = Decimal(expected)
+            if value != expected_value:
+                failures.append(f"renta-{year}-{stem}: {value} != AEAT {expected_value}")
+
+    assert not failures, "\n".join(failures)
