@@ -196,6 +196,18 @@ roundtrip passed. The codebase-size gate rerun no longer reports
 `secure_objects.py`, but remains red on the other known module and callable
 offenders.
 
+### follow-up-config-payloads-module-size-budget | low | config payloads below module budget
+
+Reviewed the 2026-07-05 ratchet follow-up that tightened `_config_payloads.py`
+transport-schema prose and removed separator-only comments without changing any
+registered command key, payload field, `extra="allow"` branch, or schema
+projection helper. The module line count dropped from 1289 to 1249, below the
+default 1250-line budget. Ruff passed, the integration JSON-schema conformance
+suite passed, and the app contract manifest suite passed. The CLI module-size
+gate rerun no longer reports `_config_payloads.py`, but remains red on the other
+known CLI module offenders; the codebase-size gate likewise no longer reports
+the file and remains red on the other known module and callable offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
