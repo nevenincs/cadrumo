@@ -184,6 +184,18 @@ passed, and the full domain transaction test suite passed. The codebase-size
 gate rerun no longer reports `domain/transactions/_models.py`, but remains red
 on the other known module and callable offenders.
 
+### follow-up-secure-objects-module-size-budget | low | secure-object adapter at module budget
+
+Reviewed the 2026-07-05 ratchet follow-up that tightened the
+`SecureObjectRepository.list_records` docstring without changing the fail-closed
+listing behavior, mixed readable/unreadable diagnostic path, encryption,
+revision-integrity checks, or SQL writes. The module line count dropped from
+1305 to 1295, matching its 1295-line budget. Ruff passed, and the secure-object
+SQL tests for unreadable rows, revision metadata, batch writes, and archive
+roundtrip passed. The codebase-size gate rerun no longer reports
+`secure_objects.py`, but remains red on the other known module and callable
+offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
