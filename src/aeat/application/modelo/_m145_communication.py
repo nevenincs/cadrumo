@@ -5,6 +5,21 @@ local communication workflow: create the communication, validate it, export the
 official record, mark payer delivery, and mark local completion. This module is
 the P04 ownership contract for that backend service; later steps add the
 mutating behavior behind the same vocabulary.
+
+See Also:
+    :mod:`~application.modelo`
+        Public facade that exports the Modelo 145 communication contract.
+    :class:`M145CommunicationServiceContract`
+        Immutable, registry-backed ownership record returned by this module.
+    :class:`M145CommunicationAction`
+        Closed backend action vocabulary for the local communication workflow.
+    :func:`build_m145_communication_service_contract`
+        Builder that reads the registry snapshot and refuses filing-like drift.
+    :class:`~domain.calculations.registry.ModeloRevision`
+        Registry revision whose application links, legal refs, source refs, and
+        export layouts ground the returned contract.
+    :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
+        Bundled authority loader that supplies the Modelo 145 snapshot.
 """
 
 from __future__ import annotations
