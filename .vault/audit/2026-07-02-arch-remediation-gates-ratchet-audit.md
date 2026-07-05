@@ -208,6 +208,20 @@ gate rerun no longer reports `_config_payloads.py`, but remains red on the other
 known CLI module offenders; the codebase-size gate likewise no longer reports
 the file and remains red on the other known module and callable offenders.
 
+### follow-up-review-package-cli-module-size-budget | low | review-package CLI below module budget
+
+Reviewed the 2026-07-05 ratchet follow-up that moved review-package CLI
+envelope projection into the existing `_modelo_review_package_rendering.py`
+helper without changing command registration, option names, validation branches,
+application calls, file writes, or emitted command keys. The CLI module line
+count dropped from 1332 to 1129, below the default 1250-line budget. Ruff
+passed, the review-package CLI integration suite passed, the integration
+JSON-schema conformance suite passed, and the app contract manifest suite
+passed. The CLI module-size gate rerun no longer reports
+`_modelo_review_package_cli.py`, but remains red on `_modelo_payloads.py` and
+`_overview.py`; the codebase-size gate likewise still has unrelated module and
+callable offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
