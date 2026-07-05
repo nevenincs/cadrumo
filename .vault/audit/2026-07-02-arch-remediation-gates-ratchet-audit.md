@@ -162,6 +162,18 @@ annual IVA aggregation passed. The codebase-size gate rerun no longer reports
 `_ledger_bindings.py`, but remains red on the other known module and callable
 offenders.
 
+### follow-up-modelo-reconcile-module-size-budget | low | reconcile module below budget
+
+Reviewed the 2026-07-05 ratchet follow-up that tightened the
+`_DECLARATION_CASILLA_RECONCILE_MODELOS` explanatory docstring without changing
+the enrolled modelo set, the declaration-source refusal contract, or any
+reconcile logic. The module line count dropped from 1254 to 1246, below its
+1250-line budget. Ruff passed, and the real reconcile service/CLI tests covering
+justificante reconciliation, declaration casilla reconciliation, multi-modelo
+enrollment, value comparison, and CLI behavior passed. The codebase-size gate
+rerun no longer reports `_reconcile.py`, but remains red on the other known
+module and callable offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit

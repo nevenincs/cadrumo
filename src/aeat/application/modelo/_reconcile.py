@@ -80,19 +80,11 @@ reconciles, whether that vocabulary is the printed AEAT box number or an
 engine-internal compound id such as ``iva.resultado``).
 
 Modelo 100 (Renta) joins the same post-filing reconcile path for the current
-2024/2025 annual declaration profiles, including the M130/M131
-pagos-fraccionados credit casilla ``0604``. Modelo 130 is the first quarterly
-precedent: its extraction profile targets registry casilla ids ``"01"``..``"19"``
-directly (the printed AEAT box numbers), so no id-mapping layer is required
-between the extractor and the divergence detector. Modelo 303 (IVA
-autoliquidación) and Modelo 390 (IVA resumen anual) mix printed box numbers with
-the compound ``iva.*`` ids that
-:func:`adapters.inbound.declaracion.parse_declaracion` already extracts
-and :func:`application.verification.verify_declaracion` already
-reconciles pre-filing — the same casilla-id vocabulary carries through to the
-after-filing reconcile here. Modelo 111 (retenciones e ingresos a cuenta
-trimestral) targets casilla ids ``"01"``..``"30"`` directly. Modelo 190
-(resumen anual de retenciones) targets the compound ``decl.*`` summary ids.
+2024/2025 annual declaration profiles, including credit casilla ``0604``.
+Modelo 130 and 111 target printed numeric ids directly; Modelo 303 and 390 mix
+printed ids with the compound ``iva.*`` ids already extracted and reconciled
+pre-filing; Modelo 190 targets the compound ``decl.*`` summary ids. The same
+casilla-id vocabulary carries through to the after-filing reconcile here.
 Modelos whose extraction profile has not yet been authored (e.g. Modelo 200,
 Modelo 202 — no ``declaracion_pdf`` surface at all) or whose casilla-id
 alignment has not yet been confirmed stay outside this set and are refused;
