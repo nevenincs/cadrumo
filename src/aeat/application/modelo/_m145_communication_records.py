@@ -18,6 +18,7 @@ from ...core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id_map
 from ...core.decimal import coerce_decimal_strict
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, IdentityError, validate_spanish_tax_id
+from ...core.logging import get_logger
 from ...core.money import round_to_cents
 from ...core.time import now
 from ...domain.buckets import (
@@ -36,6 +37,7 @@ from ...domain.calculations.registry import (
     resolve_export_layout,
     undeclared_casilla_ids,
 )
+from ...domain.modelos import ModeloError
 from ._m145_communication import (
     M145_COMMUNICATION_MODELO,
     M145_COMMUNICATION_SERVICE_OWNER,
@@ -49,12 +51,37 @@ _ISO_DATE_PATTERN = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")
 _AEAT_DATE_PATTERN = re.compile(r"^(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{4}$")
 _LINE_ENDINGS: Mapping[str, bytes] = {"none": b"", "lf": b"\n", "crlf": b"\r\n"}
 _M145_COMMUNICATION_EVENT_ACTOR = M145_COMMUNICATION_SERVICE_OWNER
+_LOGGER = get_logger(__name__)
 
 M145CommunicationRecordId = Annotated[
     str,
     Field(min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
 ]
 M145CommunicationFieldValue = Annotated[str, Field(max_length=512)]
+
+
+class M145CommunicationServiceError(ModeloError):
+    """Base error for Modelo 145 local communication service failures."""
+
+
+class M145CommunicationRecordNotFoundError(M145CommunicationServiceError, KeyError):
+    """Raised when a Modelo 145 communication record lookup targets no record."""
+
+
+class M145CommunicationRecordAmbiguousError(M145CommunicationServiceError, KeyError):
+    """Raised when a Modelo 145 communication record prefix matches multiple records."""
+
+
+class M145CommunicationRecordValidationError(M145CommunicationServiceError, ValueError):
+    """Raised when a Modelo 145 communication operation is blocked by validation."""
+
+
+class M145CommunicationRecordExportError(M145CommunicationServiceError, ValueError):
+    """Raised when a Modelo 145 communication export cannot be rendered."""
+
+
+class M145CommunicationRecordTransitionError(M145CommunicationServiceError, ValueError):
+    """Raised when a Modelo 145 communication state transition is not allowed."""
 
 
 class M145CommunicationPeriod(StrEnum):
@@ -252,16 +279,29 @@ def m145_communication_record_object_key(bucket_id: str, communication_record_id
 
 
 def _m145_communication_record_not_found(communication_record_id: str) -> KeyError:
-    return KeyError(f"Modelo 145 communication record {communication_record_id!r} not found")
+    _LOGGER.warning(
+        "m145 communication record lookup missing communication_record_id=%s",
+        communication_record_id,
+    )
+    return M145CommunicationRecordNotFoundError(
+        f"Modelo 145 communication record {communication_record_id!r} not found",
+        context={"communication_record_id": communication_record_id},
+    )
 
 
 def _m145_communication_record_ambiguous_prefix(
     communication_record_id: str,
     full_ids: tuple[str, ...],
 ) -> KeyError:
-    return KeyError(
+    _LOGGER.warning(
+        "m145 communication record lookup ambiguous communication_record_id=%s match_count=%d",
+        communication_record_id,
+        len(full_ids),
+    )
+    return M145CommunicationRecordAmbiguousError(
         f"Modelo 145 communication record prefix {communication_record_id!r} "
         f"is ambiguous; matches {list(full_ids)!r}",
+        context={"communication_record_id": communication_record_id, "match_count": len(full_ids)},
     )
 
 
@@ -304,7 +344,15 @@ def _snapshot_for_scope(
     if declared_surfaces != contract_surfaces:
         got = tuple(sorted(declared_surfaces))
         expected = tuple(sorted(contract_surfaces))
-        raise ValueError(f"Modelo 145 communication record expected surfaces {expected!r}; got {got!r}")
+        _LOGGER.error(
+            "m145 communication record contract mismatch expected_surfaces=%s declared_surfaces=%s",
+            expected,
+            got,
+        )
+        raise M145CommunicationRecordValidationError(
+            f"Modelo 145 communication record expected surfaces {expected!r}; got {got!r}",
+            context={"expected_surfaces": expected, "declared_surfaces": got},
+        )
     return snapshot
 
 
@@ -555,7 +603,10 @@ def _export_record_length(record: ExportRecordDefinition) -> int:
         field for field in record.fields if field.offset is not None and field.length is not None
     )
     if not fields_with_offsets:
-        raise ValueError(f"Modelo 145 export record {record.id!r} declares no fixed-width fields")
+        raise M145CommunicationRecordExportError(
+            f"Modelo 145 export record {record.id!r} declares no fixed-width fields",
+            context={"export_record_id": record.id, "reason": "no_fixed_width_fields"},
+        )
     return max((field.offset or 0) + (field.length or 0) - 1 for field in fields_with_offsets)
 
 
@@ -568,29 +619,48 @@ def _pad_character(field: ExportFieldDefinition) -> str:
         case "none":
             return ""
         case _:
-            raise ValueError(f"Modelo 145 export field {field.id!r} uses unsupported padding {field.padding!r}")
+            raise M145CommunicationRecordExportError(
+                f"Modelo 145 export field {field.id!r} uses unsupported padding {field.padding!r}",
+                context={"export_field_id": field.id, "padding": field.padding, "reason": "unsupported_padding"},
+            )
 
 
 def _encode_fixed_width_value(value: str, *, field: ExportFieldDefinition, encoding: str) -> bytes:
     if field.length is None:
-        raise ValueError(f"Modelo 145 export field {field.id!r} lacks a fixed length")
+        raise M145CommunicationRecordExportError(
+            f"Modelo 145 export field {field.id!r} lacks a fixed length",
+            context={"export_field_id": field.id, "reason": "missing_length"},
+        )
     try:
         raw = value.encode(encoding)
     except UnicodeEncodeError as exc:
-        raise ValueError(
+        raise M145CommunicationRecordExportError(
             f"Modelo 145 export field {field.id!r} contains characters not encodable as {encoding!r}",
+            context={"export_field_id": field.id, "encoding": encoding, "reason": "encoding"},
         ) from exc
     if len(raw) > field.length:
-        raise ValueError(
+        raise M145CommunicationRecordExportError(
             f"Modelo 145 export field {field.id!r} overflows length {field.length}; "
             f"encoded value needs {len(raw)} bytes",
+            context={
+                "export_field_id": field.id,
+                "length": field.length,
+                "encoded_length": len(raw),
+                "reason": "overflow",
+            },
         )
     pad_character = _pad_character(field)
     if not pad_character:
         if len(raw) != field.length:
-            raise ValueError(
+            raise M145CommunicationRecordExportError(
                 f"Modelo 145 export field {field.id!r} must encode exactly {field.length} bytes; "
                 f"got {len(raw)}",
+                context={
+                    "export_field_id": field.id,
+                    "length": field.length,
+                    "encoded_length": len(raw),
+                    "reason": "exact_length",
+                },
             )
         return raw
     pad = pad_character.encode(encoding)
@@ -602,11 +672,19 @@ def _encode_fixed_width_value(value: str, *, field: ExportFieldDefinition, encod
             return padding + raw
         case "none":
             if padding:
-                raise ValueError(f"Modelo 145 export field {field.id!r} cannot pad with justification='none'")
+                raise M145CommunicationRecordExportError(
+                    f"Modelo 145 export field {field.id!r} cannot pad with justification='none'",
+                    context={"export_field_id": field.id, "reason": "unsupported_justification"},
+                )
             return raw
         case _:
-            raise ValueError(
+            raise M145CommunicationRecordExportError(
                 f"Modelo 145 export field {field.id!r} uses unsupported justification {field.justification!r}",
+                context={
+                    "export_field_id": field.id,
+                    "justification": field.justification,
+                    "reason": "unsupported_justification",
+                },
             )
 
 
@@ -615,7 +693,10 @@ def _money_export_digits(value: str, *, field: ExportFieldDefinition) -> str:
         return ""
     amount = coerce_decimal_strict(value.strip())
     if amount < 0 and not field.signed:
-        raise ValueError(f"Modelo 145 export field {field.id!r} cannot encode a negative amount")
+        raise M145CommunicationRecordExportError(
+            f"Modelo 145 export field {field.id!r} cannot encode a negative amount",
+            context={"export_field_id": field.id, "reason": "negative_amount"},
+        )
     cents = int(round_to_cents(abs(amount)) * Decimal("100"))
     return str(cents)
 
@@ -632,7 +713,10 @@ def _field_export_text(
             return ""
         case CasillaFieldKind.CASILLA:
             if field.casilla_id is None:
-                raise ValueError(f"Modelo 145 export field {field.id!r} has no casilla id")
+                raise M145CommunicationRecordExportError(
+                    f"Modelo 145 export field {field.id!r} has no casilla id",
+                    context={"export_field_id": field.id, "reason": "missing_casilla"},
+                )
             value = record.field_values.get(field.casilla_id, "")
             match field.data_type:
                 case "money":
@@ -642,11 +726,15 @@ def _field_export_text(
                 case "text":
                     return value
                 case _:
-                    raise ValueError(
+                    raise M145CommunicationRecordExportError(
                         f"Modelo 145 export field {field.id!r} uses unsupported data_type {field.data_type!r}",
+                        context={"export_field_id": field.id, "data_type": field.data_type, "reason": "data_type"},
                     )
         case _:
-            raise ValueError(f"Modelo 145 export field {field.id!r} uses unsupported kind {field.kind!r}")
+            raise M145CommunicationRecordExportError(
+                f"Modelo 145 export field {field.id!r} uses unsupported kind {field.kind!r}",
+                context={"export_field_id": field.id, "kind": str(field.kind), "reason": "field_kind"},
+            )
 
 
 def _render_m145_export_record(record_definition: ExportRecordDefinition, record: M145CommunicationRecord) -> bytes:
@@ -658,7 +746,10 @@ def _render_m145_export_record(record_definition: ExportRecordDefinition, record
         key=lambda item: (-1 if item.offset is None else item.offset, item.id),
     ):
         if field.offset is None or field.length is None:
-            raise ValueError(f"Modelo 145 export field {field.id!r} lacks fixed-width coordinates")
+            raise M145CommunicationRecordExportError(
+                f"Modelo 145 export field {field.id!r} lacks fixed-width coordinates",
+                context={"export_field_id": field.id, "reason": "missing_coordinates"},
+            )
         text = _field_export_text(field, record=record)
         encoded = _encode_fixed_width_value(text, field=field, encoding=encoding)
         start = field.offset - 1
@@ -676,9 +767,19 @@ def export_m145_communication_record(
     """Render one Modelo 145 communication record through the registry export layout."""
     validation = validate_m145_communication_record(communication_record_id, bucket_id=bucket_id)
     if not validation.valid:
-        raise ValueError(
+        _LOGGER.warning(
+            "m145 communication record export refused communication_record_id=%s issue_count=%d",
+            validation.communication_record_id,
+            validation.issue_count,
+        )
+        raise M145CommunicationRecordValidationError(
             "Modelo 145 communication record cannot be exported until validation passes; "
             f"issues: {_validation_issue_summary(validation)}",
+            context={
+                "communication_record_id": validation.communication_record_id,
+                "issue_count": validation.issue_count,
+                "issue_kinds": tuple(issue.kind.value for issue in validation.issues),
+            },
         )
     record = read_m145_communication_record(communication_record_id, bucket_id=bucket_id)
     snapshot = _snapshot_for_scope(
@@ -688,13 +789,22 @@ def export_m145_communication_record(
     resolved_layout = resolve_export_layout(snapshot)
     layout = resolved_layout.layout
     if layout.format != "fixed_width":
-        raise ValueError(f"Modelo 145 export layout {layout.id!r} uses unsupported format {layout.format!r}")
+        raise M145CommunicationRecordExportError(
+            f"Modelo 145 export layout {layout.id!r} uses unsupported format {layout.format!r}",
+            context={"export_layout_id": layout.id, "format": layout.format, "reason": "unsupported_format"},
+        )
     records = tuple(sorted(layout.records, key=lambda item: item.order))
     if not records:
-        raise ValueError(f"Modelo 145 export layout {layout.id!r} declares no records")
+        raise M145CommunicationRecordExportError(
+            f"Modelo 145 export layout {layout.id!r} declares no records",
+            context={"export_layout_id": layout.id, "reason": "no_records"},
+        )
     encodings = {record_definition.encoding for record_definition in records}
     if len(encodings) != 1:
-        raise ValueError(f"Modelo 145 export layout {layout.id!r} declares mixed encodings: {sorted(encodings)!r}")
+        raise M145CommunicationRecordExportError(
+            f"Modelo 145 export layout {layout.id!r} declares mixed encodings: {sorted(encodings)!r}",
+            context={"export_layout_id": layout.id, "encodings": tuple(sorted(encodings)), "reason": "encodings"},
+        )
     payload = b"".join(_render_m145_export_record(record_definition, record) for record_definition in records)
     result = M145CommunicationExportResult(
         communication_record_id=record.communication_record_id,
@@ -724,6 +834,12 @@ def export_m145_communication_record(
             "record_count": str(result.record_count),
         },
     )
+    _LOGGER.info(
+        "m145 communication record exported communication_record_id=%s export_layout_id=%s byte_length=%d",
+        record.communication_record_id,
+        result.export_layout_id,
+        result.byte_length,
+    )
     return result
 
 
@@ -750,12 +866,27 @@ def mark_m145_communication_record_delivered_to_payer(
         M145CommunicationRecordState.DELIVERED_TO_PAYER,
         M145CommunicationRecordState.LOCALLY_COMPLETED,
     }:
+        _LOGGER.debug(
+            "m145 communication record delivery reused state communication_record_id=%s state=%s",
+            record.communication_record_id,
+            record.state.value,
+        )
         return record
     validation = validate_m145_communication_record(record.communication_record_id, bucket_id=bucket_id)
     if not validation.valid:
-        raise ValueError(
+        _LOGGER.warning(
+            "m145 communication record delivery refused communication_record_id=%s issue_count=%d",
+            record.communication_record_id,
+            validation.issue_count,
+        )
+        raise M145CommunicationRecordValidationError(
             "Modelo 145 communication record cannot be marked delivered to payer until validation passes; "
             f"issues: {_validation_issue_summary(validation)}",
+            context={
+                "communication_record_id": record.communication_record_id,
+                "issue_count": validation.issue_count,
+                "issue_kinds": tuple(issue.kind.value for issue in validation.issues),
+            },
         )
     transitioned_at = now()
     transitioned = _m145_communication_record_with_updates(
@@ -771,6 +902,10 @@ def mark_m145_communication_record_delivered_to_payer(
         actor=actor,
         bucket_event_repository=bucket_event_repository,
     )
+    _LOGGER.info(
+        "m145 communication record delivered_to_payer communication_record_id=%s",
+        transitioned.communication_record_id,
+    )
     return transitioned
 
 
@@ -785,10 +920,21 @@ def mark_m145_communication_record_locally_completed(
     repository = _m145_communication_record_repository(bucket_id)
     record = repository.resolve(communication_record_id)
     if record.state is M145CommunicationRecordState.LOCALLY_COMPLETED:
+        _LOGGER.debug(
+            "m145 communication record completion reused state communication_record_id=%s state=%s",
+            record.communication_record_id,
+            record.state.value,
+        )
         return record
     if record.state is not M145CommunicationRecordState.DELIVERED_TO_PAYER:
-        raise ValueError(
+        _LOGGER.warning(
+            "m145 communication record completion refused communication_record_id=%s state=%s",
+            record.communication_record_id,
+            record.state.value,
+        )
+        raise M145CommunicationRecordTransitionError(
             "Modelo 145 communication record must be delivered to payer before local completion",
+            context={"communication_record_id": record.communication_record_id, "state": record.state.value},
         )
     transitioned_at = now()
     transitioned = _m145_communication_record_with_updates(
@@ -803,6 +949,10 @@ def mark_m145_communication_record_locally_completed(
         occurred_at=transitioned_at,
         actor=actor,
         bucket_event_repository=bucket_event_repository,
+    )
+    _LOGGER.info(
+        "m145 communication record locally_completed communication_record_id=%s",
+        transitioned.communication_record_id,
     )
     return transitioned
 
@@ -825,7 +975,14 @@ def create_m145_communication_record(
     field_values = dict(sorted(command.field_values.items()))
     unknown = tuple(sorted(undeclared_casilla_ids(snapshot.revision, field_values)))
     if unknown:
-        raise ValueError(f"Modelo 145 communication record contains undeclared casilla ids: {unknown!r}")
+        _LOGGER.warning(
+            "m145 communication record create refused unknown_casilla_count=%d",
+            len(unknown),
+        )
+        raise M145CommunicationRecordValidationError(
+            f"Modelo 145 communication record contains undeclared casilla ids: {unknown!r}",
+            context={"unknown_casilla_count": len(unknown), "unknown_casillas": unknown},
+        )
 
     record_id = derive_m145_communication_record_id(
         bucket_id=bucket_id,
@@ -836,6 +993,10 @@ def create_m145_communication_record(
     )
     repository = _m145_communication_record_repository(bucket_id)
     if repository.exists(record_id):
+        _LOGGER.debug(
+            "m145 communication record create reused existing communication_record_id=%s",
+            record_id,
+        )
         return repository.load(record_id)
 
     record = M145CommunicationRecord(
@@ -858,6 +1019,12 @@ def create_m145_communication_record(
         actor=actor,
         bucket_event_repository=bucket_event_repository,
     )
+    _LOGGER.info(
+        "m145 communication record created communication_record_id=%s communication_year=%d period=%s",
+        record.communication_record_id,
+        record.communication_year,
+        record.period_token.value,
+    )
     return record
 
 
@@ -867,8 +1034,14 @@ __all__ = [
     "M145CommunicationFieldValue",
     "M145CommunicationPeriod",
     "M145CommunicationRecord",
+    "M145CommunicationRecordAmbiguousError",
+    "M145CommunicationRecordExportError",
     "M145CommunicationRecordId",
+    "M145CommunicationRecordNotFoundError",
     "M145CommunicationRecordState",
+    "M145CommunicationRecordTransitionError",
+    "M145CommunicationRecordValidationError",
+    "M145CommunicationServiceError",
     "M145CommunicationValidationIssue",
     "M145CommunicationValidationIssueKind",
     "M145CommunicationValidationResult",
