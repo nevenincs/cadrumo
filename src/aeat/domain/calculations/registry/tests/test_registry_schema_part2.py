@@ -258,9 +258,12 @@ def test_validator_rejects_roll_forward_balances_with_wrong_arity() -> None:
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
-@pytest.mark.parametrize(
-    ("operator_name", "expression"),
-    (
+def test_validator_rejects_verification_predicate_unknown_casilla_refs() -> None:
+    """Every casilla-list predicate operator must resolve ids against the revision."""
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    cases = (
         ("all_nonzero", 'all_nonzero(["01", "missing-casilla"])'),
         ("at_most_one_positive", 'at_most_one_positive(["01", "missing-casilla"])'),
         ("any_nonzero", 'any_nonzero(["01", "missing-casilla"])'),
@@ -269,31 +272,24 @@ def test_validator_rejects_roll_forward_balances_with_wrong_arity() -> None:
         ("implies_nonzero", 'implies_nonzero(["01", "missing-casilla"])'),
         ("implies_any_nonzero", 'implies_any_nonzero(["01", "02", "missing-casilla"])'),
         ("roll_forward_balances", 'roll_forward_balances(["01", "02", "03", "missing-casilla"])'),
-    ),
-)
-def test_validator_rejects_verification_predicate_unknown_casilla_refs(
-    operator_name: str,
-    expression: str,
-) -> None:
-    """Every casilla-list predicate operator must resolve ids against the revision."""
-
-    modelo, catalogues = _committed_modelo("130")
-    revision = next(iter(modelo.revisions.values()))
-    predicate = VerificationPredicateDefinition(
-        predicate_id=f"modelo-130-{operator_name}-missing-casilla",
-        legal_refs=("rd-439-2007:art-110",),
-        expression=expression,
-        finding_kind="ADVISORY",
     )
-    mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, predicate)},
-    )
+    validator = RegistryValidator(catalogues, source_root=bundled_path())
+    for operator_name, expression in cases:
+        predicate = VerificationPredicateDefinition(
+            predicate_id=f"modelo-130-{operator_name}-missing-casilla",
+            legal_refs=("rd-439-2007:art-110",),
+            expression=expression,
+            finding_kind="ADVISORY",
+        )
+        mutated = revision.model_copy(
+            update={"verification_predicates": (*revision.verification_predicates, predicate)},
+        )
 
-    with pytest.raises(
-        RegistryValidationError,
-        match=rf"{operator_name} references unknown casilla 'missing-casilla'",
-    ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        with pytest.raises(
+            RegistryValidationError,
+            match=rf"{operator_name} references unknown casilla 'missing-casilla'",
+        ):
+            validator.validate_modelo(_with_revision(modelo, mutated))
 
 
 def test_validator_rejects_known_verification_predicate_with_malformed_casilla_list() -> None:
@@ -1045,49 +1041,20 @@ def test_deadline_window_any_mode_requires_conditions() -> None:
         type(window).model_validate(payload)
 
 
-@pytest.mark.parametrize(
-    ("authored_period", "expected_code"),
-    (
+def test_deadline_window_accepts_current_display_periods_at_schema_boundary() -> None:
+    cases = (
         ("2026 1T", "1T"),
         ("2026 0A", "0A"),
         ("2026 03", "03"),
         ("2026 1P", "1P"),
         ("2026 EXT-1T", "EXT-1T"),
-    ),
-)
-def test_deadline_window_accepts_current_display_periods_at_schema_boundary(
-    authored_period: str,
-    expected_code: str,
-) -> None:
-    window = DeadlineWindowDefinition.model_validate(
-        {
-            "id": f"test-window-{authored_period.lower().replace(' ', '-')}",
-            "filing_year": 2026,
-            "period": authored_period,
-            "period_kind": "quarterly",
-            "opens_on": date(2026, 4, 1),
-            "closes_on": date(2026, 4, 20),
-            "legal_refs": ("test-law:art-1",),
-            "source_refs": ("test-source",),
-        },
     )
-
-    expected_period = Period.from_year_and_code(2026, expected_code)
-    assert window.period == expected_period
-    assert window.model_dump()["period"] == {"filing_year": 2026, "code": expected_code}
-    assert window.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": expected_code}
-    assert '"period":"2026' not in window.model_dump_json()
-    assert DeadlineWindowDefinition.model_validate(window.model_dump()).period == expected_period
-
-
-@pytest.mark.parametrize("combined_period", ("2026Q1", "2026-1T", "2026-0A", "2026-03", "2026"))
-def test_deadline_window_rejects_combined_period_shapes(combined_period: str) -> None:
-    with pytest.raises(ValueError, match="expected 'YYYY <period-code>'"):
-        DeadlineWindowDefinition.model_validate(
+    for authored_period, expected_code in cases:
+        window = DeadlineWindowDefinition.model_validate(
             {
-                "id": f"test-window-{combined_period.lower()}",
+                "id": f"test-window-{authored_period.lower().replace(' ', '-')}",
                 "filing_year": 2026,
-                "period": combined_period,
+                "period": authored_period,
                 "period_kind": "quarterly",
                 "opens_on": date(2026, 4, 1),
                 "closes_on": date(2026, 4, 20),
@@ -1095,6 +1062,30 @@ def test_deadline_window_rejects_combined_period_shapes(combined_period: str) ->
                 "source_refs": ("test-source",),
             },
         )
+
+        expected_period = Period.from_year_and_code(2026, expected_code)
+        assert window.period == expected_period
+        assert window.model_dump()["period"] == {"filing_year": 2026, "code": expected_code}
+        assert window.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": expected_code}
+        assert '"period":"2026' not in window.model_dump_json()
+        assert DeadlineWindowDefinition.model_validate(window.model_dump()).period == expected_period
+
+
+def test_deadline_window_rejects_combined_period_shapes() -> None:
+    for combined_period in ("2026Q1", "2026-1T", "2026-0A", "2026-03", "2026"):
+        with pytest.raises(ValueError, match="expected 'YYYY <period-code>'"):
+            DeadlineWindowDefinition.model_validate(
+                {
+                    "id": f"test-window-{combined_period.lower()}",
+                    "filing_year": 2026,
+                    "period": combined_period,
+                    "period_kind": "quarterly",
+                    "opens_on": date(2026, 4, 1),
+                    "closes_on": date(2026, 4, 20),
+                    "legal_refs": ("test-law:art-1",),
+                    "source_refs": ("test-source",),
+                },
+            )
 
 
 def test_keyed_bracket_table_parses_with_distinct_keys() -> None:
