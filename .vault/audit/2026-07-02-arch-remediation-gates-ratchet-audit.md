@@ -338,6 +338,23 @@ smoke check passed, and the codebase-size rerun no longer reports `_verification
 other known module/callable offenders inventoried in
 `var/log/codebase-size-after-verification-predicate-split-20260705.log`.
 
+### follow-up-calculation-actions-adjustments-size-budget | low | calculation actions below module budget
+
+Reviewed the 2026-07-05 ratchet follow-up that moved the modelo-specific
+calculation adjustment helpers from `_calculation_actions.py` into the new
+`_calculation_modelo_adjustments.py` module: M131 fixed-record data-base
+projection, M390/303 silent-zero reconciliation refusal, M349 row-template
+output suppression, and M349 detail-row binding totals. `_calculation_actions.py`
+still imports those helpers back under the same private names used by the
+existing tests, while the source-mesh resolver, calculation persistence call,
+and registry-engine invocation stay in the action module. The module line count
+dropped from 1500 to 1262, below its pinned 1400-line budget; the new adjustment
+module is 261 lines. Ruff passed, focused M131/M349/M390/calculation tests
+passed (41 tests), a re-export identity smoke check passed, and the
+codebase-size rerun no longer reports `_calculation_actions.py`. The size gate
+remains red on the other known module/callable offenders inventoried in
+`var/log/codebase-size-after-calculation-adjustments-split-20260705.log`.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
