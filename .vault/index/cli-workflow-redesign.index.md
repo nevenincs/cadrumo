@@ -327,6 +327,7 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-P06-S28]]'
   - '[[2026-05-14-cli-workflow-redesign-P06-S29]]'
   - '[[2026-05-14-cli-workflow-redesign-P06-S30]]'
+  - '[[2026-05-14-cli-workflow-redesign-P06-S31]]'
   - '[[2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-exec]]'
@@ -860,6 +861,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-P06-S28` - Add real service tests for create, validate, export, delivered-to-payer, and locally completed behavior
 - `2026-05-14-cli-workflow-redesign-P06-S29` - Add CLI behavior tests exercising Modelo 145 through real backend services
 - `2026-05-14-cli-workflow-redesign-P06-S30` - Add negative tests proving Modelo 145 has no filing, deadline, live-read, portal, submit, receipt, or AEAT electronic tramite surface
+- `2026-05-14-cli-workflow-redesign-P06-S31` - Add negative tests proving Modelo 145 has no shims, stubs, fake support, deprecated spellings, or compatibility aliases
 
 ### plan
 
