@@ -19,9 +19,11 @@ related:
   - '[[2026-07-05-modelo-720-prior-year-baseline-W02-P03-S09]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-W02-P03-S10]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-W02-P03-S11]]'
+  - '[[2026-07-05-modelo-720-prior-year-baseline-W03-P04-S12]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-adr]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-audit]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-plan]]'
+  - '[[2026-07-05-modelo-720-row-carrier-adr]]'
 ---
 
 # `modelo-720-prior-year-baseline` feature index
@@ -34,6 +36,7 @@ Auto-generated index of all documents tagged with `#modelo-720-prior-year-baseli
 
 - `2026-06-02-modelo-720-prior-year-baseline-adr` - `modelo-720-prior-year-baseline` adr: `modelo 720 prior-year asset baseline and re-declaration trigger` | (**status:** `accepted`)
 - `2026-07-05-modelo-720-prior-year-baseline-adr` - `modelo-720-prior-year-baseline` adr: `M720 class-code taxonomy` | (**status:** `proposed`)
+- `2026-07-05-modelo-720-row-carrier-adr` - `modelo-720-prior-year-baseline` adr: `M720 row-carrier source mesh` | (**status:** `proposed`)
 
 ### audit
 
@@ -52,6 +55,7 @@ Auto-generated index of all documents tagged with `#modelo-720-prior-year-baseli
 - `2026-07-05-modelo-720-prior-year-baseline-W02-P03-S09` - Migrate the typed M720 asset-code map so real estate emits B and unsupported or split-out classes cannot emit the wrong record-design clave
 - `2026-07-05-modelo-720-prior-year-baseline-W02-P03-S10` - Update the central foreign-asset class taxonomy tests to pin the official M720 clave set and any Modelo 721 split
 - `2026-07-05-modelo-720-prior-year-baseline-W02-P03-S11` - Add M720 row-projection tests proving real estate emits B and virtual currency cannot be emitted through Modelo 720
+- `2026-07-05-modelo-720-prior-year-baseline-W03-P04-S12` - Author the M720 row-carrier ADR deciding how row-indexed binding values flow through the source mesh and export draft surfaces
 
 ### plan
 
