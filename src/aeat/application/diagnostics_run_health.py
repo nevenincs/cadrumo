@@ -45,6 +45,20 @@ usage/cost/confidence report, which folds the distinct completion-call
 :class:`~adapters.outbound.llm.UsageRecord` log). This report again
 reuses :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
 directly -- there is no parallel capture or storage path here either.
+
+See Also:
+    :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`
+        Local encrypted recorder that supplies every run row this module reads.
+    :class:`~adapters.outbound.llm.LLMRunRecord`
+        Timing/outcome-only record projected into each diagnostic report.
+    :func:`~application.auth.test_operator_auth`
+        Local auth-session probe folded into the run-health report.
+    :mod:`~entrypoints.cli._app_diagnostics`
+        CLI transport for the run-health, runs, latency, errors, and
+        llm-usage verbs.
+    :mod:`~application.diagnostics_telemetry`
+        Remote-telemetry posture/flush service that reuses the aggregate
+        LLM-run signal without widening the payload.
 """
 
 from __future__ import annotations
