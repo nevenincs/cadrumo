@@ -40,13 +40,13 @@ collaboration integrity: an unverifiable countersignature is not evidence of
 review).
 
 See Also:
-    :mod:`application.modelo._review_package_recipient_encryption`
+    :mod:`~application.modelo._review_package_recipient_encryption`
         Owns the X25519 ECIES primitive this module reuses verbatim, in both
         directions.
-    :mod:`application.modelo._review_package_counter_sign`
+    :mod:`~application.modelo._review_package_counter_sign`
         Owns the counter-signed receipt this module's feedback optionally
         carries and verifies on import.
-    :mod:`application.modelo._review_package_collab_audit`
+    :mod:`~application.modelo._review_package_collab_audit`
         Owns the bucket-event audit-tag emission this module's import
         composition appends to the originator's journal.
 """

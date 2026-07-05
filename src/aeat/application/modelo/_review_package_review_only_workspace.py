@@ -31,10 +31,10 @@ flow, a future decrypt-then-file verb) that touches a
 package as filing-grade.
 
 See Also:
-    :mod:`application.modelo._review_package_recipient_encryption`
+    :mod:`~application.modelo._review_package_recipient_encryption`
         Produces the :class:`~application.modelo.RecipientDecryptedPackage`
         this module wraps, and defines the ``review_only`` disposition flag.
-    :mod:`application.modelo._review_package`
+    :mod:`~application.modelo._review_package`
         Defines :class:`~application.modelo.ReviewPackageManifest`, the
         descriptor recovered alongside the decrypted package bytes.
 """

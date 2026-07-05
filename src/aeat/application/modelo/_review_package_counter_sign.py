@@ -1,7 +1,7 @@
 """Counter-signed accountant receipt round trip for signed review packages.
 
 This module implements the counter-sign slice deferred by
-:mod:`application.modelo._review_package_signing`: that module adds an
+:mod:`~application.modelo._review_package_signing`: that module adds an
 AUTHENTICITY layer over a review package's checksum manifest by having the
 operator sign the manifest digest with their own Ed25519 keypair
 (:func:`~application.modelo.sign_review_package`). It makes no claim
@@ -36,9 +36,9 @@ mechanism to introduce. The private key never leaves that primitive as raw
 bytes except transiently in process memory to sign.
 
 See Also:
-    :mod:`application.modelo._review_package_signing`
+    :mod:`~application.modelo._review_package_signing`
         The operator-side signing primitive this module counter-signs on top of.
-    :mod:`application.modelo._review_package`
+    :mod:`~application.modelo._review_package`
         Builds and integrity-verifies the review package that is signed.
 """
 

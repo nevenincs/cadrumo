@@ -1,9 +1,9 @@
 """Encrypt-for-recipient transport for review packages (X25519 ECIES).
 
 This module adds a CONFIDENTIALITY layer on top of the review-package
-checksum-integrity (:mod:`application.modelo._review_package`) and
-authenticity (:mod:`application.modelo._review_package_signing`,
-:mod:`application.modelo._review_package_counter_sign`) layers: a
+checksum-integrity (:mod:`~application.modelo._review_package`) and
+authenticity (:mod:`~application.modelo._review_package_signing`,
+:mod:`~application.modelo._review_package_counter_sign`) layers: a
 review package sealed with :func:`encrypt_review_package_for_recipient`
 can be opened only by the holder of the matching X25519 private key --
 unlike ``sign``/``counter-sign``, which leave the archive itself in
@@ -85,7 +85,7 @@ the public key a taxpayer registered via
 :func:`ensure_recipient_encryption_keypair` mints one on first use and persists
 it -- private key included -- ONLY as ciphertext through a
 :class:`~adapters.persistence.storage.SecureObjectRepository`, at
-:class:`SensitivityClass` ``SECRET``
+:class:`~adapters.persistence.storage.SensitivityClass` ``SECRET``
 (:data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE`),
 exactly as the Ed25519 signing keypair is minted and stored. It is never
 logged, never written to a plaintext file, and never leaves this module as raw
@@ -94,13 +94,13 @@ half (:func:`recipient_encryption_public_key`) is what a taxpayer registers via
 the fingerprint registry -- never the private key.
 
 See Also:
-    :mod:`application.modelo._review_package_recipient_registry`
+    :mod:`~application.modelo._review_package_recipient_registry`
         Where a recipient's trusted public key is registered and looked
         up before calling this module.
-    :mod:`application.modelo._review_package_recipient_replay_guard`
+    :mod:`~application.modelo._review_package_recipient_replay_guard`
         The consumed-nonce ledger a caller composes around
         :func:`decrypt_review_package_for_recipient` for replay defence.
-    :mod:`application.modelo._review_package`
+    :mod:`~application.modelo._review_package`
         Builds and integrity-verifies the review package this module
         encrypts.
     :func:`~application.modelo.ensure_review_package_signing_keypair`
@@ -219,7 +219,7 @@ class RecipientEncryptionPublicKey(BaseModel):
 
 
 def _recipient_encryption_key_object_key(bucket_id: str) -> str:
-    """Return the natural :class:`SecureObjectRepository` key for ``bucket_id``'s keypair.
+    """Return the natural :class:`~adapters.persistence.storage.SecureObjectRepository` key for ``bucket_id``'s keypair.
 
     Matches the namespace's declared
     ``object_key_grammar="review-package-recipient-encryption-key:{bucket_id}"``.
@@ -296,7 +296,8 @@ def load_recipient_encryption_keypair(
 
     Args:
         bucket_id: The bucket this keypair is scoped to.
-        repository: The bucket's :class:`SecureObjectRepository`.
+        repository: The bucket's
+            :class:`~adapters.persistence.storage.SecureObjectRepository`.
 
     Raises:
         RecipientEncryptionKeyNotFoundError: If no keypair has been minted yet
