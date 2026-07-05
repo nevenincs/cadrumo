@@ -1,7 +1,7 @@
 """Shared TOML-table narrowing helper for the registry loader family.
 
-Extracted so both :mod:`domain.calculations.registry._loader` and
-:mod:`domain.calculations.registry._loader_locales` can narrow a parsed
+Extracted so both :mod:`~domain.calculations.registry._loader` and
+:mod:`~domain.calculations.registry._loader_locales` can narrow a parsed
 TOML value to a string-keyed table without importing each other (avoiding a
 runtime import cycle between the compiler and the locale-merge submodule).
 """
@@ -14,7 +14,7 @@ from typing import cast
 def as_toml_table(value: object) -> dict[str, object] | None:
     """Narrow a parsed TOML value to a string-keyed table, or ``None``.
 
-    ``tomllib`` and :func:`core.freeze_toml` always emit ``str`` keys, so
+    ``tomllib`` and :func:`~core.freeze_toml` always emit ``str`` keys, so
     a parsed-TOML ``dict`` is genuinely ``dict[str, object]``. The runtime
     ``isinstance`` check loses the key type because TOML payloads flow
     through ``object``; the annotation below re-attaches the known ``str``
