@@ -5,8 +5,9 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from datetime import datetime
-from decimal import InvalidOperation
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
+from hashlib import sha256
 from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator
@@ -16,11 +17,16 @@ from ...core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id_map
 from ...core.decimal import coerce_decimal_strict
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, IdentityError, validate_spanish_tax_id
+from ...core.money import round_to_cents
 from ...core.time import now
 from ...domain.calculations.registry import (
     CasillaDefinition,
+    CasillaFieldKind,
+    ExportFieldDefinition,
+    ExportRecordDefinition,
     RegistrySnapshot,
     casillas_by_id,
+    resolve_export_layout,
     undeclared_casilla_ids,
 )
 from ._m145_communication import (
@@ -33,6 +39,7 @@ _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
 _FOUR_DIGIT_YEAR_PATTERN = re.compile(r"^\d{4}$")
 _ISO_DATE_PATTERN = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")
 _AEAT_DATE_PATTERN = re.compile(r"^(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{4}$")
+_LINE_ENDINGS: Mapping[str, bytes] = {"none": b"", "lf": b"\n", "crlf": b"\r\n"}
 
 M145CommunicationRecordId = Annotated[
     str,
@@ -98,6 +105,32 @@ class M145CommunicationValidationResult(BaseModel):
     valid: bool
     issue_count: int = Field(ge=0)
     issues: tuple[M145CommunicationValidationIssue, ...]
+    legal_refs: tuple[str, ...]
+    source_refs: tuple[str, ...]
+
+
+class M145CommunicationExportResult(BaseModel):
+    """Registry-layout export payload for one local communication record."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_version: str = "1"
+    communication_record_id: M145CommunicationRecordId
+    bucket_id: BucketId
+    service_owner: str = Field(
+        default=M145_COMMUNICATION_SERVICE_OWNER,
+        pattern=r"^aeat\.application\.modelo$",
+    )
+    modelo: str = Field(default=M145_COMMUNICATION_MODELO, pattern=r"^145$")
+    communication_year: int = Field(ge=2012, le=2099)
+    period_token: M145CommunicationPeriod
+    revision_id: str = Field(min_length=1)
+    export_layout_id: str = Field(min_length=1)
+    encoding: str = Field(min_length=1)
+    record_count: int = Field(ge=1)
+    byte_length: int = Field(ge=1)
+    payload_sha256: str = Field(min_length=64, max_length=64, pattern=_HEX_64_PATTERN)
+    payload: bytes
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
 
@@ -434,6 +467,172 @@ def validate_m145_communication_record(
     )
 
 
+def _validation_issue_summary(result: M145CommunicationValidationResult) -> str:
+    issue_kinds = tuple(issue.kind.value for issue in result.issues)
+    return ", ".join(issue_kinds)
+
+
+def _export_record_length(record: ExportRecordDefinition) -> int:
+    fields_with_offsets = tuple(
+        field for field in record.fields if field.offset is not None and field.length is not None
+    )
+    if not fields_with_offsets:
+        raise ValueError(f"Modelo 145 export record {record.id!r} declares no fixed-width fields")
+    return max((field.offset or 0) + (field.length or 0) - 1 for field in fields_with_offsets)
+
+
+def _pad_character(field: ExportFieldDefinition) -> str:
+    match field.padding:
+        case "left_zero":
+            return "0"
+        case "left_space" | "right_space":
+            return " "
+        case "none":
+            return ""
+        case _:
+            raise ValueError(f"Modelo 145 export field {field.id!r} uses unsupported padding {field.padding!r}")
+
+
+def _encode_fixed_width_value(value: str, *, field: ExportFieldDefinition, encoding: str) -> bytes:
+    if field.length is None:
+        raise ValueError(f"Modelo 145 export field {field.id!r} lacks a fixed length")
+    try:
+        raw = value.encode(encoding)
+    except UnicodeEncodeError as exc:
+        raise ValueError(
+            f"Modelo 145 export field {field.id!r} contains characters not encodable as {encoding!r}",
+        ) from exc
+    if len(raw) > field.length:
+        raise ValueError(
+            f"Modelo 145 export field {field.id!r} overflows length {field.length}; "
+            f"encoded value needs {len(raw)} bytes",
+        )
+    pad_character = _pad_character(field)
+    if not pad_character:
+        if len(raw) != field.length:
+            raise ValueError(
+                f"Modelo 145 export field {field.id!r} must encode exactly {field.length} bytes; "
+                f"got {len(raw)}",
+            )
+        return raw
+    pad = pad_character.encode(encoding)
+    padding = pad * (field.length - len(raw))
+    match field.justification:
+        case "left":
+            return raw + padding
+        case "right":
+            return padding + raw
+        case "none":
+            if padding:
+                raise ValueError(f"Modelo 145 export field {field.id!r} cannot pad with justification='none'")
+            return raw
+        case _:
+            raise ValueError(
+                f"Modelo 145 export field {field.id!r} uses unsupported justification {field.justification!r}",
+            )
+
+
+def _money_export_digits(value: str, *, field: ExportFieldDefinition) -> str:
+    if not value.strip():
+        return ""
+    amount = coerce_decimal_strict(value.strip())
+    if amount < 0 and not field.signed:
+        raise ValueError(f"Modelo 145 export field {field.id!r} cannot encode a negative amount")
+    cents = int(round_to_cents(abs(amount)) * Decimal("100"))
+    return str(cents)
+
+
+def _field_export_text(
+    field: ExportFieldDefinition,
+    *,
+    record: M145CommunicationRecord,
+) -> str:
+    match field.kind:
+        case CasillaFieldKind.LITERAL:
+            return field.literal or ""
+        case CasillaFieldKind.FILLER:
+            return ""
+        case CasillaFieldKind.CASILLA:
+            if field.casilla_id is None:
+                raise ValueError(f"Modelo 145 export field {field.id!r} has no casilla id")
+            value = record.field_values.get(field.casilla_id, "")
+            match field.data_type:
+                case "money":
+                    return _money_export_digits(value, field=field)
+                case "integer":
+                    return str(int(value.strip())) if value.strip() else ""
+                case "text":
+                    return value
+                case _:
+                    raise ValueError(
+                        f"Modelo 145 export field {field.id!r} uses unsupported data_type {field.data_type!r}",
+                    )
+        case _:
+            raise ValueError(f"Modelo 145 export field {field.id!r} uses unsupported kind {field.kind!r}")
+
+
+def _render_m145_export_record(record_definition: ExportRecordDefinition, record: M145CommunicationRecord) -> bytes:
+    encoding = record_definition.encoding
+    total_length = _export_record_length(record_definition)
+    payload = bytearray(b" " * total_length)
+    for field in sorted(
+        record_definition.fields,
+        key=lambda item: (-1 if item.offset is None else item.offset, item.id),
+    ):
+        if field.offset is None or field.length is None:
+            raise ValueError(f"Modelo 145 export field {field.id!r} lacks fixed-width coordinates")
+        text = _field_export_text(field, record=record)
+        encoded = _encode_fixed_width_value(text, field=field, encoding=encoding)
+        start = field.offset - 1
+        payload[start : start + field.length] = encoded
+    return bytes(payload) + _LINE_ENDINGS[record_definition.line_ending]
+
+
+def export_m145_communication_record(
+    communication_record_id: str,
+    *,
+    bucket_id: BucketId,
+) -> M145CommunicationExportResult:
+    """Render one Modelo 145 communication record through the registry export layout."""
+    validation = validate_m145_communication_record(communication_record_id, bucket_id=bucket_id)
+    if not validation.valid:
+        raise ValueError(
+            "Modelo 145 communication record cannot be exported until validation passes; "
+            f"issues: {_validation_issue_summary(validation)}",
+        )
+    record = read_m145_communication_record(communication_record_id, bucket_id=bucket_id)
+    snapshot = _snapshot_for_scope(
+        communication_year=record.communication_year,
+        period_token=record.period_token,
+    )
+    resolved_layout = resolve_export_layout(snapshot)
+    layout = resolved_layout.layout
+    if layout.format != "fixed_width":
+        raise ValueError(f"Modelo 145 export layout {layout.id!r} uses unsupported format {layout.format!r}")
+    records = tuple(sorted(layout.records, key=lambda item: item.order))
+    if not records:
+        raise ValueError(f"Modelo 145 export layout {layout.id!r} declares no records")
+    encodings = {record_definition.encoding for record_definition in records}
+    if len(encodings) != 1:
+        raise ValueError(f"Modelo 145 export layout {layout.id!r} declares mixed encodings: {sorted(encodings)!r}")
+    payload = b"".join(_render_m145_export_record(record_definition, record) for record_definition in records)
+    return M145CommunicationExportResult(
+        communication_record_id=record.communication_record_id,
+        bucket_id=record.bucket_id,
+        communication_year=record.communication_year,
+        period_token=record.period_token,
+        revision_id=record.revision_id,
+        export_layout_id=layout.id,
+        encoding=records[0].encoding,
+        record_count=len(records),
+        byte_length=len(payload),
+        payload_sha256=sha256(payload).hexdigest(),
+        payload=payload,
+        legal_refs=tuple(sorted(str(ref) for ref in layout.legal_refs)),
+        source_refs=tuple(sorted(str(ref) for ref in layout.source_refs)),
+    )
+
+
 def create_m145_communication_record(
     command: M145CommunicationCreateCommand,
     *,
@@ -444,8 +643,8 @@ def create_m145_communication_record(
     Creation stores the operator-provided registry casilla values as a local
     payer communication record. It validates that every value is keyed by a
     casilla declared in the active Modelo 145 registry revision, but leaves
-    required-field/type validation, export rendering, local state transitions,
-    and bucket-event emission to the later plan steps that own those behaviors.
+    required-field/type validation, local state transitions, and bucket-event
+    emission to the later plan steps that own those behaviors.
     """
     snapshot = _snapshot_for_command(command)
     field_values = dict(sorted(command.field_values.items()))
@@ -482,6 +681,7 @@ def create_m145_communication_record(
 
 __all__ = [
     "M145CommunicationCreateCommand",
+    "M145CommunicationExportResult",
     "M145CommunicationFieldValue",
     "M145CommunicationPeriod",
     "M145CommunicationRecord",
@@ -492,6 +692,7 @@ __all__ = [
     "M145CommunicationValidationResult",
     "create_m145_communication_record",
     "derive_m145_communication_record_id",
+    "export_m145_communication_record",
     "list_m145_communication_records",
     "m145_communication_record_object_key",
     "read_m145_communication_record",

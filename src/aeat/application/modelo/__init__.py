@@ -216,6 +216,7 @@ from ._m145_communication import (
 )
 from ._m145_communication_records import (
     M145CommunicationCreateCommand,
+    M145CommunicationExportResult,
     M145CommunicationPeriod,
     M145CommunicationRecord,
     M145CommunicationRecordState,
@@ -224,6 +225,7 @@ from ._m145_communication_records import (
     M145CommunicationValidationResult,
     create_m145_communication_record,
     derive_m145_communication_record_id,
+    export_m145_communication_record,
     list_m145_communication_records,
     m145_communication_record_object_key,
     read_m145_communication_record,
@@ -552,6 +554,7 @@ __all__ = [
     "M036DeclarationResult",
     "M145CommunicationAction",
     "M145CommunicationCreateCommand",
+    "M145CommunicationExportResult",
     "M145CommunicationPeriod",
     "M145CommunicationRecord",
     "M145CommunicationRecordState",
@@ -764,6 +767,7 @@ __all__ = [
     "ensure_modelo_work_unit_for_visible_target",
     "ensure_recipient_encryption_keypair",
     "ensure_review_package_signing_keypair",
+    "export_m145_communication_record",
     "export_modelo_revision",
     "file_modelo_revision",
     "get_calculation_revision",
