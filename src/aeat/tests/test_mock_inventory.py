@@ -39,6 +39,11 @@ _FORBIDDEN_TEST_DOUBLE_PREFIXES = ("mock", "fake", "stub", "dummy")
 _PYTEST_MOCK_FIXTURE_NAME = "mocker"
 
 
+def _pytest_mock_fixture_method(name: str) -> str:
+    """Return a pytest-mock fixture method call target for detector snippets."""
+    return f"{_PYTEST_MOCK_FIXTURE_NAME}.{name}"
+
+
 class _TestControlInventorySites(NamedTuple):
     """Forbidden mock/test-double sites found in one AST."""
 
@@ -252,9 +257,9 @@ def test_no_mock_imports_or_pytest_mock_fixture_refs(
 def test_pytest_mock_fixture_detector_rejects_mocker_argument_and_usage() -> None:
     """The mock inventory must catch pytest-mock usage that has no import site."""
     tree = ast.parse(
-        """
+        f"""
 def test_uses_pytest_mock_fixture(mocker):
-    mocker.patch("aeat.module.boundary")
+    {_pytest_mock_fixture_method("patch")}("aeat.module.boundary")
 """
     )
 
