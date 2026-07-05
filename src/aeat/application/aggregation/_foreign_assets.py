@@ -17,14 +17,14 @@ only the four canonical source-kind values ``ledger_transaction``,
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from decimal import Decimal
-from types import MappingProxyType
 
 from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Modelo, Period
 from ...core._foreign_asset_obligation import (
+    MODELO_720_FOREIGN_ASSET_CLASS_CODES,
     ForeignAssetObligationGroup,
     foreign_asset_declaration_threshold,
     foreign_asset_obligation_group,
@@ -43,15 +43,6 @@ _CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     },
 )
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.FOREIGN_ASSET,)
-_ASSET_CLASS_CODES: Mapping[ForeignAssetClass, str] = MappingProxyType(
-    {
-        ForeignAssetClass.ACCOUNT: "C",
-        ForeignAssetClass.SECURITY: "V",
-        ForeignAssetClass.REAL_ESTATE: "I",
-        ForeignAssetClass.INSURANCE: "S",
-        ForeignAssetClass.VIRTUAL_CURRENCY: "M",
-    },
-)
 
 
 def _foreign_asset_source_kind(value: object) -> BindingSourceKind:
@@ -329,7 +320,10 @@ def _registry_observation_from_foreign_asset(
 
 
 def _asset_class_code(asset_class: ForeignAssetClass) -> str:
-    return _ASSET_CLASS_CODES[asset_class]
+    try:
+        return MODELO_720_FOREIGN_ASSET_CLASS_CODES[asset_class]
+    except KeyError as exc:
+        raise ValueError(f"{asset_class.value!r} is not a Modelo 720 foreign-asset class") from exc
 
 
 __all__ = [

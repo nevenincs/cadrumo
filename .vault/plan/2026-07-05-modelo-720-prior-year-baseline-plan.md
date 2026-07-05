@@ -10,6 +10,16 @@ related:
   - '[[2026-06-02-modelo-720-prior-year-baseline-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `modelo-720-prior-year-baseline` plan
 
 ## Wave `W01` - M720 obligation-block threshold
@@ -42,9 +52,9 @@ Ground the BOE and AEAT class-code authority, decide whether M720 needs a distin
 
 Apply the approved taxonomy to the typed aggregation-to-row projection and add tests that prove the emitted fichero class code is official for each supported M720 asset category.
 
-- [ ] `W02.P03.S09` - Migrate the typed M720 asset-code map so real estate emits B and unsupported or split-out classes cannot emit the wrong record-design clave; `src/aeat/application/aggregation/_foreign_assets.py`.
-- [ ] `W02.P03.S10` - Update the central foreign-asset class taxonomy tests to pin the official M720 clave set and any Modelo 721 split; `src/aeat/core/tests/test_foreign_asset_obligation.py`.
-- [ ] `W02.P03.S11` - Add M720 row-projection tests proving real estate emits B and virtual currency cannot be emitted through Modelo 720; `src/aeat/application/aggregation/tests/test_foreign_assets.py`.
+- [x] `W02.P03.S09` - Migrate the typed M720 asset-code map so real estate emits B and unsupported or split-out classes cannot emit the wrong record-design clave; `src/aeat/application/aggregation/_foreign_assets.py`.
+- [x] `W02.P03.S10` - Update the central foreign-asset class taxonomy tests to pin the official M720 clave set and any Modelo 721 split; `src/aeat/core/tests/test_foreign_asset_obligation.py`.
+- [x] `W02.P03.S11` - Add M720 row-projection tests proving real estate emits B and virtual currency cannot be emitted through Modelo 720; `src/aeat/application/aggregation/tests/test_foreign_assets.py`.
 
 ## Wave `W03` - M720 row-carrier mesh promotion
 
