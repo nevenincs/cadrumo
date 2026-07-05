@@ -160,19 +160,19 @@ def test_constructed_binding_stores_hydrated_selector_model() -> None:
     assert binding.model_dump(mode="json")["selector"] == {"profile_key": "taxpayer.nif"}
 
 
-@pytest.mark.parametrize("source", (BindingSourceKind.BORRADOR, BindingSourceKind.IVA_WALLET_DECISION))
-def test_mesh_only_source_kind_is_not_constructible_as_registry_binding(source: BindingSourceKind) -> None:
+def test_mesh_only_source_kinds_are_not_constructible_as_registry_bindings() -> None:
     """Mesh-only source kinds are first-class enum members, not registry bindings."""
 
-    with pytest.raises(ValidationError) as excinfo:
-        _binding(
-            source=source,
-            selector={"profile_key": "tax.id"},
-            binding_id=f"bad-mesh-only-{source.value}",
-        )
-    message = str(excinfo.value)
-    assert source.value in message
-    assert "not a registry binding source" in message
+    for source in (BindingSourceKind.BORRADOR, BindingSourceKind.IVA_WALLET_DECISION):
+        with pytest.raises(ValidationError) as excinfo:
+            _binding(
+                source=source,
+                selector={"profile_key": "tax.id"},
+                binding_id=f"bad-mesh-only-{source.value}",
+            )
+        message = str(excinfo.value)
+        assert source.value in message
+        assert "not a registry binding source" in message
 
 
 def test_previous_filing_selector_accepts_well_shaped_selector() -> None:
@@ -190,72 +190,70 @@ def test_previous_filing_selector_accepts_well_shaped_selector() -> None:
     assert validate_binding_selector_shape(binding) == []
 
 
-def test_previous_filing_selector_rejects_legacy_source_casillas_key() -> None:
-    _assert_selector_refused_at_construction(
-        source="previous_filing",
-        selector={
-            "source_modelo": "303",
-            "filing_year_delta": -1,
-            "period": "0A",
-            "source_casillas": ("66",),
-        },
-        binding_id="bad-legacy-source-casillas",
-        expected_substrings=("source_casilla_ids", "source_casillas"),
+def test_cross_filing_selectors_reject_legacy_and_invalid_source_keys() -> None:
+    cases = (
+        (
+            "previous_filing",
+            {
+                "source_modelo": "303",
+                "filing_year_delta": -1,
+                "period": "0A",
+                "source_casillas": ("66",),
+            },
+            "bad-legacy-source-casillas",
+            ("source_casilla_ids", "source_casillas"),
+        ),
+        (
+            "relation_prefill",
+            {
+                "source_modelo": "322",
+                "source_periods": ("1T",),
+                "source_casillas": (_M303_CUOTA_DEVENGADA_TOTAL_CASILLA,),
+            },
+            "bad-relation-prefill-legacy-source-casillas",
+            ("source_casilla_ids", "source_casillas"),
+        ),
+        (
+            "previous_filing",
+            {"source_modelo": "111", "source_output": "28"},
+            "bad-legacy-source-output",
+            ("source_casilla_id", "source_output"),
+        ),
+        (
+            "relation_prefill",
+            {"source_modelo": "303", "source_output": "iva.cuota-devengada-total"},
+            "bad-relation-prefill-source-output",
+            ("source_casilla_id", "source_output"),
+        ),
+        (
+            "previous_filing",
+            {
+                "source_modelo": "modelo-303",
+                "source_casilla_id": _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+            },
+            "bad-previous_filing-source-modelo",
+            ("source_modelo", r"^\d{3}$"),
+        ),
+        (
+            "relation_prefill",
+            {
+                "source_modelo": "modelo-303",
+                "source_casilla_id": _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+            },
+            "bad-relation_prefill-source-modelo",
+            ("source_modelo", r"^\d{3}$"),
+        ),
     )
+    for source, selector, binding_id, expected_substrings in cases:
+        _assert_selector_refused_at_construction(
+            source=source,
+            selector=selector,
+            binding_id=binding_id,
+            expected_substrings=expected_substrings,
+        )
 
 
-def test_relation_prefill_selector_rejects_legacy_source_casillas_key() -> None:
-    _assert_selector_refused_at_construction(
-        source="relation_prefill",
-        selector={
-            "source_modelo": "322",
-            "source_periods": ("1T",),
-            "source_casillas": (_M303_CUOTA_DEVENGADA_TOTAL_CASILLA,),
-        },
-        binding_id="bad-relation-prefill-legacy-source-casillas",
-        expected_substrings=("source_casilla_ids", "source_casillas"),
-    )
-
-
-def test_previous_filing_selector_rejects_legacy_source_output_key() -> None:
-    _assert_selector_refused_at_construction(
-        source="previous_filing",
-        selector={
-            "source_modelo": "111",
-            "source_output": "28",
-        },
-        binding_id="bad-legacy-source-output",
-        expected_substrings=("source_casilla_id", "source_output"),
-    )
-
-
-def test_relation_prefill_selector_rejects_legacy_source_output_key() -> None:
-    _assert_selector_refused_at_construction(
-        source="relation_prefill",
-        selector={
-            "source_modelo": "303",
-            "source_output": "iva.cuota-devengada-total",
-        },
-        binding_id="bad-relation-prefill-source-output",
-        expected_substrings=("source_casilla_id", "source_output"),
-    )
-
-
-@pytest.mark.parametrize("source", ("previous_filing", "relation_prefill"))
-def test_cross_filing_selectors_reject_non_modelo_id_source_modelo(source: str) -> None:
-    selector: dict[str, object] = {
-        "source_modelo": "modelo-303",
-        "source_casilla_id": _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
-    }
-    _assert_selector_refused_at_construction(
-        source=source,
-        selector=selector,
-        binding_id=f"bad-{source}-source-modelo",
-        expected_substrings=("source_modelo", r"^\d{3}$"),
-    )
-
-
-def test_previous_filing_selector_accepts_singular_source_casilla_id_shape() -> None:
+def test_previous_filing_selector_accepts_singular_source_casilla_id_shapes() -> None:
     """The direct-value-copy shape (singular source_casilla_id) passes.
 
     Real registry bindings (e.g. M100 retenciones relations against
@@ -267,26 +265,20 @@ def test_previous_filing_selector_accepts_singular_source_casilla_id_shape() -> 
     RelationDefinition.target_binding.)
     """
 
-    binding = _binding(
-        source="previous_filing",
-        selector={
+    selectors = (
+        {
             "source_modelo": "111",
             "source_casilla_id": _M111_RETENCIONES_CASILLA,
         },
-    )
-    assert validate_binding_selector_shape(binding) == []
-
-
-def test_previous_filing_selector_accepts_singular_source_casilla_id_with_period_offset() -> None:
-    binding = _binding(
-        source="previous_filing",
-        selector={
+        {
             "source_modelo": "303",
             "source_casilla_id": _M303_COMPENSACION_DISPONIBLE_CASILLA,
             "source_period_offset_from_target": -1,
         },
     )
-    assert validate_binding_selector_shape(binding) == []
+    for selector in selectors:
+        binding = _binding(source="previous_filing", selector=selector)
+        assert validate_binding_selector_shape(binding) == []
 
 
 def test_previous_filing_selector_rejects_both_source_shapes() -> None:
@@ -478,30 +470,21 @@ def test_counterpart_sources_validate_against_invoice_selector() -> None:
         assert validate_binding_selector_shape(binding) == [], f"well-shaped {source} selector should pass the gate"
 
 
-def test_manual_input_accepts_boolean_casilla_shape() -> None:
-    """The casilla_id-shape manual_input selector (boolean toggles) validates.
+def test_manual_input_accepts_supported_selector_shapes() -> None:
+    """The casilla-id and record-field manual_input selector shapes validate.
 
-    Used by Modelo 100 estimacion-directa modality flags etc.
+    The boolean casilla-id shape is used by Modelo 100 estimacion-directa
+    modality flags; the record-field shape is used by Modelo 131 etc.
     """
 
-    binding = _binding(
-        source="manual_input",
-        selector={
+    selectors = (
+        {
             "casilla_id": _M100_MANUAL_BOOLEAN_CASILLA,
             "data_type": "boolean",
             "true_value": "N",
             "false_value": "S",
         },
-    )
-    assert validate_binding_selector_shape(binding) == []
-
-
-def test_manual_input_accepts_record_field_shape() -> None:
-    """The record-field-shape manual_input selector (M131 etc) validates."""
-
-    binding = _binding(
-        source="manual_input",
-        selector={
+        {
             "record": "DPA",
             "field": "ano-inicio-actividad",
             "offset": 25,
@@ -509,88 +492,55 @@ def test_manual_input_accepts_record_field_shape() -> None:
             "data_type": "integer",
         },
     )
-    assert validate_binding_selector_shape(binding) == []
+    for selector in selectors:
+        binding = _binding(source="manual_input", selector=selector)
+        assert validate_binding_selector_shape(binding) == []
 
 
-def test_manual_input_rejects_both_shapes_together() -> None:
-    """Declaring casilla_id AND record-field in the same selector fails."""
+def test_manual_input_rejects_malformed_selector_shapes() -> None:
+    """Malformed manual_input selector shapes are rejected at construction."""
 
-    _assert_selector_refused_at_construction(
-        source="manual_input",
-        selector={
-            "casilla_id": _M100_MANUAL_BOOLEAN_CASILLA,
-            "record": "DPA",
-            "field": "x",
-            "offset": 1,
-            "length": 1,
-            "data_type": "integer",
-        },
-        binding_id="bad-mixed",
-        expected_substrings=("bad-mixed",),
+    cases = (
+        (
+            {
+                "casilla_id": _M100_MANUAL_BOOLEAN_CASILLA,
+                "record": "DPA",
+                "field": "x",
+                "offset": 1,
+                "length": 1,
+                "data_type": "integer",
+            },
+            "bad-mixed",
+        ),
+        (
+            {
+                "casilla": _M100_MANUAL_BOOLEAN_CASILLA,
+                "data_type": "boolean",
+                "true_value": "N",
+                "false_value": "S",
+            },
+            "bad-generic-casilla-key",
+        ),
+        (
+            {
+                "casilla_id": _M100_MANUAL_BOOLEAN_CASILLA,
+                "data_type": "boolean",
+                "true_value": "N",
+            },
+            "bad-boolean",
+        ),
     )
+    for selector, binding_id in cases:
+        _assert_selector_refused_at_construction(
+            source="manual_input",
+            selector=selector,
+            binding_id=binding_id,
+            expected_substrings=(binding_id,),
+        )
 
 
-def test_manual_input_rejects_generic_casilla_key() -> None:
-    _assert_selector_refused_at_construction(
-        source="manual_input",
-        selector={
-            "casilla": _M100_MANUAL_BOOLEAN_CASILLA,
-            "data_type": "boolean",
-            "true_value": "N",
-            "false_value": "S",
-        },
-        binding_id="bad-generic-casilla-key",
-        expected_substrings=("bad-generic-casilla-key",),
-    )
-
-
-def test_manual_input_boolean_casilla_requires_value_strings() -> None:
-    """A boolean casilla must declare both true_value and false_value."""
-
-    _assert_selector_refused_at_construction(
-        source="manual_input",
-        selector={
-            "casilla_id": _M100_MANUAL_BOOLEAN_CASILLA,
-            "data_type": "boolean",
-            "true_value": "N",
-            # missing false_value
-        },
-        binding_id="bad-boolean",
-        expected_substrings=("bad-boolean",),
-    )
-
-
-def test_profile_selector_accepts_scalar_shape() -> None:
-    """A scalar profile_key selector (taxpayer.tax.id etc) passes the gate."""
-
-    binding = _binding(
-        source="profile",
-        selector={
-            "profile_key": "tax.id",
-            "xsd_path": "/DatosIdentificativos/Declarante/DPNIF_D",
-            "dictionary_field": "DPNIF_D",
-        },
-    )
-    assert validate_binding_selector_shape(binding) == []
-
-
-def test_profile_selector_accepts_composite_shape() -> None:
-    """A composite profile_keys + format selector passes the gate."""
-
-    binding = _binding(
-        source="profile",
-        selector={
-            "profile_keys": ("surnames", "name"),
-            "format": "surnames_name",
-            "xsd_path": "/DatosIdentificativos/Declarante/DP_APENOM_D",
-            "dictionary_field": "DP_APENOM_D",
-        },
-    )
-    assert validate_binding_selector_shape(binding) == []
-
-
-def test_profile_selector_accepts_model_scalar_shape() -> None:
-    """A profile_model + field selector (non-repeating) passes the gate.
+def test_profile_selector_accepts_supported_shapes() -> None:
+    """The scalar, composite, and profile-model selector shapes pass the gate.
 
     The TaxResidenceProfile shape on M100 uses this: ``profile_model``
     plus ``field`` without ``collection``, addressing a scalar field on
@@ -598,46 +548,57 @@ def test_profile_selector_accepts_model_scalar_shape() -> None:
     ``collection`` is only required when ``repeating = true``.
     """
 
-    binding = _binding(
-        source="profile",
-        selector={
+    selectors = (
+        {
+            "profile_key": "tax.id",
+            "xsd_path": "/DatosIdentificativos/Declarante/DPNIF_D",
+            "dictionary_field": "DPNIF_D",
+        },
+        {
+            "profile_keys": ("surnames", "name"),
+            "format": "surnames_name",
+            "xsd_path": "/DatosIdentificativos/Declarante/DP_APENOM_D",
+            "dictionary_field": "DP_APENOM_D",
+        },
+        {
             "profile_model": "TaxResidenceProfile",
             "field": "ccaa",
             "xsd_attribute": "codigoCADeclaracion",
             "dictionary_field": "ZCCAD",
         },
     )
-    assert validate_binding_selector_shape(binding) == []
+    for selector in selectors:
+        binding = _binding(source="profile", selector=selector)
+        assert validate_binding_selector_shape(binding) == []
 
 
-def test_profile_selector_rejects_multiple_shapes() -> None:
-    """Declaring scalar + composite shapes in the same selector fails."""
+def test_profile_selector_rejects_malformed_shapes() -> None:
+    """Malformed profile selector shapes are rejected at construction."""
 
-    _assert_selector_refused_at_construction(
-        source="profile",
-        selector={
-            "profile_key": "tax.id",
-            "profile_keys": ("a", "b"),
-            "format": "surnames_name",
-        },
-        binding_id="bad-double-shape",
-        expected_substrings=("bad-double-shape",),
+    cases = (
+        (
+            {
+                "profile_key": "tax.id",
+                "profile_keys": ("a", "b"),
+                "format": "surnames_name",
+            },
+            "bad-double-shape",
+        ),
+        (
+            {
+                "profile_key": "spouse.tax.id",
+                "required_when_profile_key": "declaration.type",
+            },
+            "bad-required-when",
+        ),
     )
-
-
-def test_profile_selector_required_when_pair_must_match() -> None:
-    """required_when_profile_key without required_when_value is rejected."""
-
-    _assert_selector_refused_at_construction(
-        source="profile",
-        selector={
-            "profile_key": "spouse.tax.id",
-            "required_when_profile_key": "declaration.type",
-            # missing required_when_value
-        },
-        binding_id="bad-required-when",
-        expected_substrings=("bad-required-when",),
-    )
+    for selector, binding_id in cases:
+        _assert_selector_refused_at_construction(
+            source="profile",
+            selector=selector,
+            binding_id=binding_id,
+            expected_substrings=(binding_id,),
+        )
 
 
 def test_invoice_binding_fact_op_mismatch_caught_at_snapshot_build() -> None:
