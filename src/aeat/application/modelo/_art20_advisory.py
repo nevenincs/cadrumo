@@ -7,13 +7,13 @@ non-blocking :class:`ModeloVerificationFinding` when the RNT band makes a
 zero general reduction suspicious, but do not block a legitimate zero.
 
 See Also:
-    :func:`aeat.application.modelo._verification_actions._collect_revision_verification_findings`
+    :func:`application.modelo._verification_actions._collect_revision_verification_findings`
         Verification collector that appends this advisory beside the DT 12ª
         advisory.
-    :func:`aeat.application.modelo._dt12_advisory._dt12_reduccion_advisory_finding`
+    :func:`application.modelo._dt12_advisory._dt12_reduccion_advisory_finding`
         Sibling registry-independent reduction advisory using the same helper
         mechanism.
-    :func:`aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`
+    :func:`application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`
         Structural revision semantic-role lookup used to find the RNT and
         reduction casillas without hard-coding numbers.
 """
@@ -60,7 +60,7 @@ def _art20_reduccion_advisory_finding(
     (``no-silent-under-declaration``).
 
     The ``revision`` is a structural registry revision compatible with
-    :func:`aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`.
+    :func:`application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`.
     A matching case returns a :class:`ModeloVerificationFinding` with
     ``ley-35-2006:art-20`` grounding; absent roles or out-of-band values return
     ``None``.
