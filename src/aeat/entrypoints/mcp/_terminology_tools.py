@@ -111,7 +111,7 @@ def build_terminology_search_tool() -> Tool:
     ``aeat[agent]`` extra. Annotated ``readOnlyHint`` / ``idempotentHint``.
 
     Returns:
-        The ``aeat_terminology_search`` :class:`mcp.types.Tool` object.
+        The ``aeat_terminology_search`` :class:`~mcp.types.Tool` object.
     """
     from mcp.types import Tool, ToolAnnotations
 

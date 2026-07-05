@@ -2,8 +2,8 @@
 
 Each operator-callable registry command key resolves to exactly one leaf in the
 ``aeat`` Typer/click command tree. This module walks that tree once, reads each
-command's declared parameters (positional :class:`click.Argument`s and
-``--option`` :class:`click.Option`s), and projects them into a strict, typed
+command's declared parameters (positional :class:`~click.Argument`s and
+``--option`` :class:`~click.Option`s), and projects them into a strict, typed
 :class:`VerbInputSchema`: the ordered parameter list, each parameter's JSON type,
 requiredness, enum choices, multiplicity, and flag shape, plus the *resolved* CLI
 path tokens.
@@ -61,11 +61,12 @@ class VerbParameter(BaseModel):
     """One CLI parameter projected into a JSON-schema property.
 
     ``name`` is the click parameter name (the JSON property key). For an
-    :attr:`VerbParamKind.OPTION` the ``cli_flag`` is the long option token
-    (``--file``); for an :attr:`VerbParamKind.ARGUMENT` it is empty and the value
-    is a bare positional. ``multiple`` renders the property as a JSON array and
-    repeats the token per element; ``is_flag`` is a bare boolean switch that
-    emits only its flag when truthy.
+    :attr:`~entrypoints.mcp._input_schema.VerbParamKind.OPTION` the
+    ``cli_flag`` is the long option token (``--file``); for an
+    :attr:`~entrypoints.mcp._input_schema.VerbParamKind.ARGUMENT` it is empty
+    and the value is a bare positional. ``multiple`` renders the property as a
+    JSON array and repeats the token per element; ``is_flag`` is a bare boolean
+    switch that emits only its flag when truthy.
     """
 
     model_config = _STRICT_FROZEN
@@ -211,7 +212,7 @@ def _resolve_command(
 ) -> tuple[ClickCommand | None, tuple[str, ...]]:
     """Walk the CLI tree to the leaf command for ``command_key``.
 
-    Threads a fresh child :class:`click.Context` at each level so lazily-loaded
+    Threads a fresh child :class:`~click.Context` at each level so lazily-loaded
     subcommand modules materialise exactly as they do under real dispatch. A key
     segment is matched against the underscored token first, then the hyphenated
     form, so ``iva_wallet`` resolves to the ``iva-wallet`` command. Returns the
