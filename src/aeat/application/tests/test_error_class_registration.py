@@ -13,10 +13,17 @@ depending on broad exception swallowing.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from pydantic import BaseModel
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.serialization import pkcs12
+from cryptography.x509.oid import NameOID
+from pydantic import BaseModel, SecretStr
 
 from ...core import BindingSourceKind
 from ...core.errors import (
@@ -218,18 +225,61 @@ def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
 # Narrowed except-clause types do not swallow programmer errors
 # ---------------------------------------------------------------------------
 
+_PKCS12_TEST_TEXT = "correct-horse-battery-staple"
 
-def test_probe_certificate_bundle_does_not_swallow_unrelated_exceptions() -> None:
-    """_probe_certificate_bundle propagates a non-CertificateError, non-OSError failure.
+
+def _build_valid_pkcs12_bundle(tmp_path: Path) -> Path:
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = issuer = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "application-auth-probe"),
+        ],
+    )
+    certificate = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(datetime(2026, 1, 1, tzinfo=UTC))
+        .not_valid_after(datetime(2099, 1, 1, tzinfo=UTC))
+        .sign(key, hashes.SHA256())
+    )
+    out = tmp_path / "probe-valid.p12"
+    out.write_bytes(
+        pkcs12.serialize_key_and_certificates(
+            name=b"application-auth-probe",
+            key=key,
+            cert=certificate,
+            cas=None,
+            encryption_algorithm=serialization.BestAvailableEncryption(_PKCS12_TEST_TEXT.encode("utf-8")),
+        ),
+    )
+    return out
+
+
+def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(tmp_path: Path) -> None:
+    """The public certificate probe propagates non-CertificateError/non-OSError failures.
 
     The narrowed ``except CertificateError`` clause around the PKCS#12
     health evaluation must not widen back to a bare ``except Exception``
     that would mask a genuine programmer error as a merely-corrupt
     certificate.
     """
-    from ..auth._operator_probes import _probe_certificate_bundle
+    from ...adapters.outbound.aeat.auth import AuthProviderKind, AuthValidationError
+    from ...core.config import Settings
+    from ..auth import probe_provider_configuration
 
-    assert _probe_certificate_bundle.__doc__ is not None  # function exists and has a docstring
+    settings = Settings(
+        aeat_certificate_path=_build_valid_pkcs12_bundle(tmp_path),
+        aeat_certificate_password_secret=SecretStr(_PKCS12_TEST_TEXT),
+        aeat_cert_warn_days=10,
+        aeat_cert_critical_days=30,
+    )
+
+    with pytest.raises(AuthValidationError, match=r"warn_days.*critical_days"):
+        probe_provider_configuration(AuthProviderKind.CERTIFICATE.value, settings=settings)
 
 
 def test_live_auth_identity_state_does_not_swallow_unrelated_exceptions() -> None:

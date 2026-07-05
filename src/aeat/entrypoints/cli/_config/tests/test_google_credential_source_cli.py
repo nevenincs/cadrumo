@@ -43,8 +43,7 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.outbound.google import GoogleAuthAdcUnavailableError
-from .....adapters.outbound.google._session_store import load_credential_source_selection
+from .....adapters.outbound.google import GoogleAuthAdcUnavailableError, load_credential_source_selection
 from .....adapters.outbound.storage import build_google_credentials
 from .....core import GoogleCredentialSourceKind
 from .....core.config import override_settings
