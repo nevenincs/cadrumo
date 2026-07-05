@@ -170,7 +170,7 @@ def build_corpus_search_tool() -> Tool:
     reads the bundled corpus and never mutates state.
 
     Returns:
-        The ``aeat_corpus_search`` :class:`mcp.types.Tool` object.
+        The ``aeat_corpus_search`` :class:`~mcp.types.Tool` object.
     """
     from mcp.types import Tool, ToolAnnotations
 
