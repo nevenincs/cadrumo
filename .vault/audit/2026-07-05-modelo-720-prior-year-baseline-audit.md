@@ -14,6 +14,8 @@ Audited the W02.P03 Modelo 720 taxonomy implementation against the W02 plan, the
 
 Audited implementation files: `src/aeat/core/aggregation.py`, `src/aeat/core/_foreign_asset_obligation.py`, `src/aeat/core/__init__.py`, `src/aeat/application/aggregation/_foreign_assets.py`, `src/aeat/core/tests/test_foreign_asset_obligation.py`, and `src/aeat/application/aggregation/tests/test_foreign_assets.py`.
 
+Audited W03.P05.S13 source-mesh row-carrier implementation against the row-carrier ADR and the S13 plan row. The review covered the new row-binding carrier, merge ownership rules, JSON serialization shape, source-mesh readiness behavior, and the focused source-mesh tests.
+
 ## Findings
 
 ### import-boundary | medium | cross-package private import regressed the production import-hygiene gate
@@ -24,8 +26,13 @@ The first review pass found `src/aeat/application/aggregation/_foreign_assets.py
 
 The implementation steps were checked in the plan while the plan frontmatter still related only to the older June 2026 baseline ADR/research. Resolution: the plan now carries a related edge to `2026-07-05-modelo-720-prior-year-baseline-adr`, so W02.P03 traces to the taxonomy decision record. The ADR status remains `proposed`; that is preserved rather than silently promoted without an explicit ADR-approval action.
 
+### s13-carrier-docstring | low | source-mesh carrier summary omitted the new row-indexed channel
+
+The W03.P05.S13 review found the `CalculationSourceResolution` module summary still listing only the pre-existing scalar and detail-row channels. That stale summary could mislead the next row-carrier step into treating the carrier as ad hoc. Resolution: the source-mesh summary now names the row-indexed binding channel, and the focused S13 static and pytest gates pass after the correction.
+
 ## Recommendations
 
 - Keep W03 row-carrier work separate from this taxonomy commit; the new untracked row-carrier ADR placeholder is not part of the W02.P03 source migration.
 - Before promoting the full feature to done, resolve or explicitly approve the taxonomy ADR status according to the ADR workflow.
 - Continue to run the import-hygiene gate when changing cross-package imports; the production Family-1 gate is hard-zero.
+- No additional S13 code-review blockers remain; proceed to S14 only through the approved row-binding carrier.

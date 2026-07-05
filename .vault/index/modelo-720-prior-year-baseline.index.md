@@ -20,6 +20,7 @@ related:
   - '[[2026-07-05-modelo-720-prior-year-baseline-W02-P03-S10]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-W02-P03-S11]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-W03-P04-S12]]'
+  - '[[2026-07-05-modelo-720-prior-year-baseline-W03-P05-S13]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-adr]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-audit]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-plan]]'
@@ -40,7 +41,7 @@ Auto-generated index of all documents tagged with `#modelo-720-prior-year-baseli
 
 ### audit
 
-- `2026-07-05-modelo-720-prior-year-baseline-audit` - `modelo-720-prior-year-baseline` audit: `M720 W02 taxonomy implementation review`
+- `2026-07-05-modelo-720-prior-year-baseline-audit` - 2026-07-05-modelo-720-prior-year-baseline-audit
 
 ### exec
 
@@ -56,6 +57,7 @@ Auto-generated index of all documents tagged with `#modelo-720-prior-year-baseli
 - `2026-07-05-modelo-720-prior-year-baseline-W02-P03-S10` - Update the central foreign-asset class taxonomy tests to pin the official M720 clave set and any Modelo 721 split
 - `2026-07-05-modelo-720-prior-year-baseline-W02-P03-S11` - Add M720 row-projection tests proving real estate emits B and virtual currency cannot be emitted through Modelo 720
 - `2026-07-05-modelo-720-prior-year-baseline-W03-P04-S12` - Author the M720 row-carrier ADR deciding how row-indexed binding values flow through the source mesh and export draft surfaces
+- `2026-07-05-modelo-720-prior-year-baseline-W03-P05-S13` - Add the approved row-indexed M720 carrier to the calculation source resolution envelope
 
 ### plan
 

@@ -11,6 +11,16 @@ related:
   - '[[2026-07-05-modelo-720-prior-year-baseline-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `modelo-720-prior-year-baseline` plan
 
 ## Wave `W01` - M720 obligation-block threshold
@@ -61,7 +71,7 @@ Decide the row-indexed binding-value carrier for M720 detail rows, comparing a f
 
 Implement the approved row carrier in the aggregation source-mesh envelope and merge path before enrolling the foreign-asset resolver.
 
-- [ ] `W03.P05.S13` - Add the approved row-indexed M720 carrier to the calculation source resolution envelope; `src/aeat/application/aggregation/_source_mesh.py`.
+- [x] `W03.P05.S13` - Add the approved row-indexed M720 carrier to the calculation source resolution envelope; `src/aeat/application/aggregation/_source_mesh.py`.
 - [ ] `W03.P05.S14` - Return validated M720 row-indexed binding values from the foreign-assets aggregation resolver through the approved carrier; `src/aeat/application/aggregation/_foreign_assets.py`.
 - [ ] `W03.P05.S15` - Carry row-indexed mesh values into modelo draft and export replay without flattening them into scalar binding ids; `src/aeat/application/modelo/_calculation_resolution.py`.
 
