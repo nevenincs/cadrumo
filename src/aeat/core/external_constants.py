@@ -36,8 +36,8 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ..core import STRICT_FROZEN_CONFIG
-from . import Modelo
+from ._modelo import Modelo
+from ._models import STRICT_FROZEN_CONFIG
 from .errors import CoreValidationError
 
 #: ISO 4217 currency code for the Euro, used as the functional currency throughout AEAT.
