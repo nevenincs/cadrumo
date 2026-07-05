@@ -15,6 +15,15 @@ live) and :func:`embed_corpus` refuses with an install hint rather than
 crashing, mirroring every other optional-integration boundary in the
 tree. numpy is imported function-locally for the same reason, so the
 lexical-only surface never depends on it at import time.
+
+See Also:
+    :func:`~application.corpus_search.ensure_corpus_embeddings`
+        Runtime build-once cache that calls this precompute behind the
+        ``aeat[search]`` extra.
+    :class:`~application.corpus_search.QueryEmbedder`
+        Live-query half that embeds operator text into the same vector space.
+    :func:`~application.corpus_search.hybrid_search`
+        Retrieval fusion consumer of the precomputed matrix.
 """
 
 from __future__ import annotations
