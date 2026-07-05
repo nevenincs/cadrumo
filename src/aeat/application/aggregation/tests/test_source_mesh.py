@@ -38,6 +38,7 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
         binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("21.00")},
         enum_binding_values={"profile-ccaa": "madrid"},
         date_binding_values={"profile-birth-date": date(1980, 1, 31)},
+        row_binding_values={("modelo-720-asset-row-valuation", 2): Decimal("60000.00")},
         relation_values={"modelo-180-rel-115-base-anual": Decimal("2128.75")},
         bound_inputs_by_casilla_id={_IVA_REPERCUTIDO_GENERAL_CASILLA: Decimal("21.00")},
         source_transaction_ids=("tx-2", "tx-1"),
@@ -63,6 +64,9 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
     assert resolution.provenance[0].binding_source is BindingSourceKind.LEDGER_IVA_AGGREGATION
     assert resolution.model_dump(mode="json")["binding_values"] == {"modelo-303-iva-repercutido-general-cuota": "21.00"}
     assert resolution.model_dump(mode="json")["date_binding_values"] == {"profile-birth-date": "1980-01-31"}
+    assert resolution.model_dump(mode="json")["row_binding_values"] == [
+        {"binding_id": "modelo-720-asset-row-valuation", "row_index": 2, "value": "60000.00"},
+    ]
     assert resolution.model_dump(mode="json")["relation_values"] == {"modelo-180-rel-115-base-anual": "2128.75"}
     with pytest.raises(ValidationError, match="Extra inputs"):
         CalculationSourceResolution.model_validate({"resolver_id": "ledger-iva", "unexpected": True})
@@ -294,6 +298,30 @@ def test_source_resolution_merge_rejects_duplicate_relation_ownership() -> None:
     assert context["second_resolver"] == "aeat-live"
 
 
+def test_source_resolution_merge_rejects_duplicate_row_binding_ownership() -> None:
+    left = CalculationSourceResolution(
+        resolver_id="foreign-assets",
+        owned_sources=(BindingSourceKind.FOREIGN_ASSET,),
+        row_binding_values={("modelo-720-asset-row-class", 1): "B"},
+    )
+    right = CalculationSourceResolution(
+        resolver_id="manual-bridge",
+        owned_sources=(BindingSourceKind.MANUAL_INPUT,),
+        row_binding_values={("modelo-720-asset-row-class", 1): "I"},
+    )
+
+    with pytest.raises(AggregationValidationError) as exc_info:
+        merge_source_resolutions((left, right))
+
+    assert str(exc_info.value) == "aggregation.source_mesh.errors.duplicate_row_binding_owner"
+    context = exc_info.value.context
+    assert context is not None
+    assert context["binding_id"] == "modelo-720-asset-row-class"
+    assert context["row_index"] == 1
+    assert context["first_resolver"] == "foreign-assets"
+    assert context["second_resolver"] == "manual-bridge"
+
+
 def test_source_resolution_merge_rejects_duplicate_binding_across_value_channels() -> None:
     left = CalculationSourceResolution(
         resolver_id="profile",
@@ -336,6 +364,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
         resolver_id="ledger-iva",
         owned_sources=(BindingSourceKind.LEDGER_IVA_AGGREGATION,),
         binding_values={"binding-decimal": binding_input},
+        row_binding_values={("modelo-720-asset-row-valuation", 1): Decimal("60000.00")},
         relation_values={"relation-decimal": relation_input},
         date_binding_values={"profile-birth-date": date(1980, 1, 31)},
         source_transaction_ids=("tx-1",),
@@ -356,6 +385,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
     assert merged.resolver_id == "source_mesh"
     assert merged.owned_sources == (BindingSourceKind.LEDGER_IVA_AGGREGATION, BindingSourceKind.PROFILE)
     assert merged.binding_values["binding-decimal"] == ledger_resolution.binding_values["binding-decimal"]
+    assert merged.row_binding_values[("modelo-720-asset-row-valuation", 1)] == Decimal("60000.00")
     assert merged.relation_values["relation-decimal"] == ledger_resolution.relation_values["relation-decimal"]
     assert merged.date_binding_values["profile-birth-date"] == date(1980, 1, 31)
     assert merged.enum_binding_values["profile-ccaa"] == "madrid"

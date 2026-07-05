@@ -71,6 +71,7 @@ def _assert_resolves_no_value(resolution: CalculationSourceResolution) -> None:
     assert dict(resolution.binding_values) == {}
     assert dict(resolution.enum_binding_values) == {}
     assert dict(resolution.date_binding_values) == {}
+    assert dict(resolution.row_binding_values) == {}
     assert dict(resolution.relation_values) == {}
     assert dict(resolution.bound_inputs_by_casilla_id) == {}
     assert resolution.detail_rows == ()

@@ -9,9 +9,9 @@ relation prefill, and other registry-declared sources. A
 members and returns a :class:`CalculationSourceResolution`.
 
 ``CalculationSourceResolution`` is the single resolved-source carrier consumed
-by modelo calculation. It carries decimal, enum, date, relation, bound-casilla,
-detail-row, transaction-id, diagnostic, and provenance channels. Exclusive
-merges use :func:`merge_source_resolutions`; precedence overlays use
+by modelo calculation. It carries decimal, enum, date, row-indexed binding,
+relation, bound-casilla, detail-row, transaction-id, diagnostic, and provenance
+channels. Exclusive merges use :func:`merge_source_resolutions`; precedence overlays use
 :func:`merge_source_resolutions_by_precedence`; and
 :func:`collect_unhandled_source_diagnostics` is the no-silent-blank safety net
 for declared binding sources without an enrolled resolver.
@@ -45,6 +45,9 @@ from ...domain.calculations.registry import (
 )
 from ...domain.modelos import ModeloDetailRow
 from ._errors import AggregationValidationError, t
+
+RowBindingKey = tuple[BindingId, int]
+RowBindingValue = Decimal | str
 
 
 class SourceMeshError(CoreValidationError):
@@ -496,6 +499,7 @@ class CalculationSourceResolution(BaseModel):
     binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
     enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
     date_binding_values: Mapping[BindingId, date] = Field(default_factory=dict)
+    row_binding_values: Mapping[RowBindingKey, RowBindingValue] = Field(default_factory=dict)
     relation_values: Mapping[RelationId, Decimal] = Field(default_factory=dict)
     unresolved_relation_ids: tuple[RelationId, ...] = Field(default_factory=tuple)
     unresolved_binding_ids: tuple[BindingId, ...] = Field(default_factory=tuple)
@@ -572,6 +576,19 @@ class CalculationSourceResolution(BaseModel):
     def _freeze_date_binding_values(cls, value: Mapping[BindingId, date]) -> Mapping[BindingId, date]:
         return MappingProxyType(dict(sorted(value.items())))
 
+    @field_validator("row_binding_values")
+    @classmethod
+    def _freeze_row_binding_values(
+        cls,
+        value: Mapping[RowBindingKey, RowBindingValue],
+    ) -> Mapping[RowBindingKey, RowBindingValue]:
+        normalized: dict[RowBindingKey, RowBindingValue] = {}
+        for (binding_id, row_index), row_value in value.items():
+            if row_index < 1:
+                raise SourceMeshError("aggregation.source_mesh.errors.row_binding_index_invalid")
+            normalized[(binding_id, row_index)] = row_value
+        return MappingProxyType(dict(sorted(normalized.items(), key=lambda item: (item[0][0], item[0][1]))))
+
     @field_validator("relation_values")
     @classmethod
     def _freeze_relation_values(cls, value: Mapping[RelationId, Decimal]) -> Mapping[RelationId, Decimal]:
@@ -623,6 +640,20 @@ class CalculationSourceResolution(BaseModel):
     @field_serializer("date_binding_values")
     def _serialize_date_binding_values(self, value: Mapping[BindingId, date]) -> dict[BindingId, date]:
         return dict(value)
+
+    @field_serializer("row_binding_values")
+    def _serialize_row_binding_values(
+        self,
+        value: Mapping[RowBindingKey, RowBindingValue],
+    ) -> tuple[dict[str, object], ...]:
+        return tuple(
+            {
+                "binding_id": binding_id,
+                "row_index": row_index,
+                "value": row_value,
+            }
+            for (binding_id, row_index), row_value in value.items()
+        )
 
     @field_serializer("relation_values")
     def _serialize_relation_values(self, value: Mapping[RelationId, Decimal]) -> dict[RelationId, Decimal]:
@@ -680,6 +711,7 @@ def merge_source_resolutions(
     binding_values: dict[BindingId, Decimal] = {}
     enum_binding_values: dict[BindingId, str] = {}
     date_binding_values: dict[BindingId, date] = {}
+    row_binding_values: dict[RowBindingKey, RowBindingValue] = {}
     relation_values: dict[RelationId, Decimal] = {}
     unresolved_relation_ids: set[RelationId] = set()
     unresolved_binding_ids: set[BindingId] = set()
@@ -690,6 +722,7 @@ def merge_source_resolutions(
     provenance: list[CalculationSourceProvenance] = []
     owned_sources: set[BindingSourceKind] = set()
     binding_owners: dict[BindingId, str] = {}
+    row_binding_owners: dict[RowBindingKey, str] = {}
     relation_owners: dict[RelationId, str] = {}
     casilla_owners: dict[CasillaId, str] = {}
     # The borrador resolution is the sole contributor of the typed borrador
@@ -720,6 +753,10 @@ def merge_source_resolutions(
             _claim_binding(binding_owners, binding_id, resolution.resolver_id)
             date_binding_values[binding_id] = value
             unresolved_binding_ids.discard(binding_id)
+        for row_binding_key, value in resolution.row_binding_values.items():
+            _claim_row_binding(row_binding_owners, row_binding_key, resolution.resolver_id)
+            row_binding_values[row_binding_key] = value
+            unresolved_binding_ids.discard(row_binding_key[0])
         for relation_id, value in resolution.relation_values.items():
             _claim_relation(relation_owners, relation_id, resolution.resolver_id)
             relation_values[relation_id] = value
@@ -734,11 +771,17 @@ def merge_source_resolutions(
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         date_binding_values=date_binding_values,
+        row_binding_values=row_binding_values,
         relation_values=relation_values,
         unresolved_relation_ids=tuple(sorted(unresolved_relation_ids.difference(relation_values))),
         unresolved_binding_ids=tuple(
             sorted(
-                unresolved_binding_ids.difference(binding_values, enum_binding_values, date_binding_values),
+                unresolved_binding_ids.difference(
+                    binding_values,
+                    enum_binding_values,
+                    date_binding_values,
+                    {binding_id for binding_id, _row_index in row_binding_values},
+                ),
             ),
         ),
         bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
@@ -775,6 +818,7 @@ def merge_source_resolutions_by_precedence(
     binding_values: dict[BindingId, Decimal] = {}
     enum_binding_values: dict[BindingId, str] = {}
     date_binding_values: dict[BindingId, date] = {}
+    row_binding_values: dict[RowBindingKey, RowBindingValue] = {}
     relation_values: dict[RelationId, Decimal] = {}
     unresolved_relation_ids: set[RelationId] = set()
     unresolved_binding_ids: set[BindingId] = set()
@@ -800,6 +844,9 @@ def merge_source_resolutions_by_precedence(
         binding_values.update(tier.binding_values)
         enum_binding_values.update(tier.enum_binding_values)
         date_binding_values.update(tier.date_binding_values)
+        row_binding_values.update(tier.row_binding_values)
+        for binding_id, _row_index in tier.row_binding_values:
+            unresolved_binding_ids.discard(binding_id)
         bound_inputs_by_casilla_id.update(tier.bound_inputs_by_casilla_id)
         for relation_id, value in tier.relation_values.items():
             relation_values[relation_id] = value
@@ -811,11 +858,17 @@ def merge_source_resolutions_by_precedence(
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         date_binding_values=date_binding_values,
+        row_binding_values=row_binding_values,
         relation_values=relation_values,
         unresolved_relation_ids=tuple(sorted(unresolved_relation_ids.difference(relation_values))),
         unresolved_binding_ids=tuple(
             sorted(
-                unresolved_binding_ids.difference(binding_values, enum_binding_values, date_binding_values),
+                unresolved_binding_ids.difference(
+                    binding_values,
+                    enum_binding_values,
+                    date_binding_values,
+                    {binding_id for binding_id, _row_index in row_binding_values},
+                ),
             ),
         ),
         bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
@@ -898,6 +951,23 @@ def _claim_binding(owners: dict[BindingId, str], binding_id: BindingId, resolver
     )
 
 
+def _claim_row_binding(owners: dict[RowBindingKey, str], row_binding_key: RowBindingKey, resolver_id: str) -> None:
+    existing = owners.get(row_binding_key)
+    if existing is None:
+        owners[row_binding_key] = resolver_id
+        return
+    binding_id, row_index = row_binding_key
+    raise AggregationValidationError(
+        t("aggregation.source_mesh.errors.duplicate_row_binding_owner"),
+        context={
+            "binding_id": binding_id,
+            "row_index": row_index,
+            "first_resolver": existing,
+            "second_resolver": resolver_id,
+        },
+    )
+
+
 def _claim_bound_casilla(owners: dict[CasillaId, str], casilla_id: CasillaId, resolver_id: str) -> None:
     existing = owners.get(casilla_id)
     if existing is None:
@@ -936,6 +1006,8 @@ __all__ = [
     "CallerOverridePrecedenceTier",
     "DeferredSourceTarget",
     "ModeloSourceResolver",
+    "RowBindingKey",
+    "RowBindingValue",
     "build_binding_source_dispositions",
     "collect_unhandled_source_diagnostics",
     "merge_source_resolutions",
