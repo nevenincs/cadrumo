@@ -71,7 +71,7 @@ This Phase implements real backend-owned local communication behavior before any
 This Phase exposes only thin CLI delegation after backend behavior exists.
 
 - [x] `P05.S23` - Add Modelo 145 command handlers that delegate to the backend communication service; `src/aeat/entrypoints/cli`.
-- [ ] `P05.S24` - Keep Modelo 145 argument parsing separate from business behavior; `src/aeat/entrypoints/cli`.
+- [x] `P05.S24` - Keep Modelo 145 argument parsing separate from business behavior; `src/aeat/entrypoints/cli`.
 - [ ] `P05.S25` - Render Modelo 145 command results through centralized output emitters; `src/aeat/entrypoints/cli`.
 - [ ] `P05.S26` - Route Modelo 145 command failures through the central command error boundary; `src/aeat/entrypoints/cli`.
 - [ ] `P05.S27` - Validate Modelo 145 help text avoids file, filing, deadline, live-read, and AEAT submission vocabulary; `tests/entrypoints/cli`.
