@@ -46,10 +46,6 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -59,6 +55,12 @@ from ....domain.calculations.registry import (
 )
 from ....domain.modelos import CalculationRevision
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests._application_adapter_exports import (
+    BucketEventHistoryRepository,
+    CalculationRevisionCatalogueRepository,
+    SecureObjectRepository,
+    WorkUnitCatalogueRepository,
+)
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit

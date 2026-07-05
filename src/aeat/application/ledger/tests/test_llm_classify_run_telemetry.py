@@ -18,8 +18,6 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.llm import LLMRunTelemetryRecorder
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.transactions import (
     LLMClassifierError,
     RawProvenance,
@@ -30,6 +28,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
+from ....tests._application_adapter_exports import LLMRunTelemetryRecorder, TransactionCatalogueRepository
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._llm_classification import suggest_llm_classification
 

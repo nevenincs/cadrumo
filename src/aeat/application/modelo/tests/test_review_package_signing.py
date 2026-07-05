@@ -23,7 +23,6 @@ from pathlib import Path
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from ....adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE, SensitivityClass
 from ....core import Period
 from ....domain.calculations.registry import CasillaObservation, validated_casilla_id
 from ....domain.modelos import (
@@ -34,6 +33,12 @@ from ....domain.modelos import (
     WorkUnitState,
     derive_calculation_revision_id,
     derive_work_unit_id,
+)
+from ....tests._review_package_adapters import (
+    MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
+    SecureObjectRow,
+    SensitivityClass,
+    session_scope,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package import build_review_package
@@ -161,9 +166,6 @@ def test_private_key_is_never_stored_as_plaintext(tmp_path: Path) -> None:
         # ciphertext directly (bypassing the repository's decrypt step) and
         # confirm the plaintext private-key hex does NOT appear in it.
         from sqlalchemy import select
-
-        from ....adapters.persistence.storage.sql import SecureObjectRow
-        from ....adapters.persistence.storage.sql.session import session_scope
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(

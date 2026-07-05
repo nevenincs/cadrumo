@@ -40,6 +40,13 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     derive_work_unit_id,
 )
+from ....tests._review_package_adapters import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _ENCRYPTION_KEY_NAMESPACE,
+)
+from ....tests._review_package_adapters import (
+    SecureObjectRow,
+    session_scope,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package import build_review_package
 from .._review_package_recipient_encryption import (
@@ -603,15 +610,9 @@ def test_recipient_encryption_key_is_stored_only_as_ciphertext_at_rest(tmp_path:
 
         from sqlalchemy import select
 
-        from ....adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
-        )
-        from ....adapters.persistence.storage.sql import SecureObjectRow
-        from ....adapters.persistence.storage.sql.session import session_scope
-
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
+                select(SecureObjectRow).where(SecureObjectRow.namespace == _ENCRYPTION_KEY_NAMESPACE.namespace),
             ).scalar_one()
             ciphertext_bytes = bytes(row.payload)
 

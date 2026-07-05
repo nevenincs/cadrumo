@@ -355,8 +355,6 @@ ignore_imports =
     aeat.application.invoices.tests.test_source_resolver -> aeat.tests.secure_sql
     aeat.application.ledger.tests.test_business_operation_invoice -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_evidence -> aeat.adapters.persistence.storage.sql
-    aeat.application.ledger.tests.test_evidence_draft -> aeat.adapters.persistence.profile.invoices
-    aeat.application.ledger.tests.test_evidence_draft -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_llm_evidence_split -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_llm_reject -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_llm_reject -> aeat.tests.secure_sql
@@ -595,10 +593,8 @@ ignore_imports =
     aeat.application.modelo.tests.test_modelo_100_pagos_fraccionados_fold_in_live -> aeat.adapters.persistence.storage.sql
     aeat.application.modelo.tests.test_modelo_130_prior_payment_advisory -> aeat.adapters.persistence.storage.sql
     aeat.application.modelo.tests.test_modelo_131_data_base_binding_projection -> aeat.adapters.persistence.storage.sql
-    aeat.application.modelo.tests.test_modelo_200_2024_ejemplo1_tributacion_minima_manual_worked_example -> aeat.adapters.persistence.storage.sql
     aeat.application.modelo.tests.test_modelo_200_accounting_input_guard -> aeat.adapters.persistence.storage.sql
     aeat.application.modelo.tests.test_modelo_200_first_year_cuota_e2e -> aeat.adapters.persistence.storage.sql
-    aeat.application.modelo.tests.test_modelo_202_2025_pago_fraccionado_manual_worked_example -> aeat.adapters.persistence.storage.sql
     aeat.application.modelo.tests.test_modelo_210_inmobiliaria_e2e -> aeat.adapters.persistence.storage.sql.secure_objects
     aeat.application.modelo.tests.test_modelo_303_deductible_evidence_gate -> aeat.adapters.persistence.storage.sql
     aeat.application.modelo.tests.test_modelo_303_official_box_under_declaration -> aeat.adapters.persistence.storage.sql
@@ -763,9 +759,15 @@ ignore_imports =
     # roundtrip-discipline tests; ignoring its adapter edge breaks the layer
     # path for every application/domain test that routes fixtures through it.
     aeat.tests.secure_sql -> aeat.adapters.**
+    # Application-layer tests centralise real adapter constructors and storage
+    # layout helpers here instead of each owning direct adapter pins.
+    aeat.tests._application_adapter_exports -> aeat.adapters.**
     # The manual-ledger action support centralises its concrete adapter
     # constructors here so split application tests keep one test-support edge.
     aeat.tests._ledger_action_adapters -> aeat.adapters.**
+    # Review-package roundtrip tests centralise raw storage/sql probes here so
+    # application tests do not each own direct adapter pins.
+    aeat.tests._review_package_adapters -> aeat.adapters.**
     # The custody-store recovery matrix centralises its real concrete adapter
     # constructors here so the application test owns one test-support edge
     # instead of eleven direct adapter pins.
@@ -944,12 +946,43 @@ ignore_imports =
     aeat.application.ledger.tests.test_evidence_input -> aeat.adapters.persistence.storage.attachment
     aeat.application.ledger.tests.test_evidence_input -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_llm_evidence_wiring -> aeat.tests.secure_sql
-    aeat.application.calculations.tests.test_pull_path_calculate_path_casilla_parity -> aeat.adapters.persistence.storage.sql
     aeat.application.calculations.tests.test_pull_path_calculate_path_casilla_parity -> aeat.tests.secure_sql
-    aeat.application.modelo.tests.test_modelo_100_2025_retenciones_credit_fold_in_live -> aeat.adapters.persistence.storage.sql
     aeat.application.modelo.tests.test_modelo_100_2025_retenciones_credit_fold_in_live -> aeat.tests.secure_sql
     aeat.application.modelo.tests.test_modelo_200_fold_in_live -> aeat.adapters.persistence.storage.sql
     aeat.application.modelo.tests.test_modelo_200_fold_in_live -> aeat.tests.secure_sql
+    aeat.application.aggregation.tests.test_ledger_scale_benchmark -> aeat.adapters.persistence.profile.invoices
+    aeat.application.aggregation.tests.test_ledger_scale_benchmark -> aeat.adapters.persistence.profile.modelos_calculation
+    aeat.application.aggregation.tests.test_ledger_scale_benchmark -> aeat.adapters.persistence.profile.modelos_work_units
+    aeat.application.aggregation.tests.test_ledger_scale_benchmark -> aeat.adapters.persistence.profile.transactions
+    aeat.application.aggregation.tests.test_ledger_scale_benchmark -> aeat.adapters.persistence.storage.sql
+    aeat.application.modelo.tests.test_review_package_counter_sign -> aeat.tests._review_package_adapters
+    aeat.application.modelo.tests.test_review_package_recipient_encryption -> aeat.tests._review_package_adapters
+    aeat.application.modelo.tests.test_review_package_recipient_registry -> aeat.tests._review_package_adapters
+    aeat.application.modelo.tests.test_review_package_recipient_replay_guard -> aeat.tests._review_package_adapters
+    aeat.application.modelo.tests.test_review_package_signing -> aeat.tests._review_package_adapters
+    aeat.application.aggregation.tests.test_impatriado_income_ledger -> aeat.tests._application_adapter_exports
+    aeat.application.aggregation.tests.test_renta_income_source_jurisdiction_m100 -> aeat.tests._application_adapter_exports
+    aeat.application.bucket_maintenance.tests.test_sandbox -> aeat.tests._application_adapter_exports
+    aeat.application.bucket_maintenance.tests.test_service_archive_restore -> aeat.tests._application_adapter_exports
+    aeat.application.bucket_maintenance.tests.test_service_disk_usage -> aeat.tests._application_adapter_exports
+    aeat.application.calculations.tests.test_modelo_100_base_negativa_general_compensation -> aeat.tests._application_adapter_exports
+    aeat.application.calculations.tests.test_modelo_130_multiyear_renta_enrollment -> aeat.tests._application_adapter_exports
+    aeat.application.calculations.tests.test_pull_path_calculate_path_casilla_parity -> aeat.tests._application_adapter_exports
+    aeat.application.filing.tests.test_source_mesh_review -> aeat.tests._application_adapter_exports
+    aeat.application.invoices.tests.test_bulk_import -> aeat.tests._application_adapter_exports
+    aeat.application.ledger.tests.test_evidence_draft -> aeat.tests._application_adapter_exports
+    aeat.application.ledger.tests.test_llm_classify_run_telemetry -> aeat.tests._application_adapter_exports
+    aeat.application.modelo.tests.test_amend_kind_resolution -> aeat.tests._application_adapter_exports
+    aeat.application.modelo.tests.test_bienes_inversion_advisory -> aeat.tests._application_adapter_exports
+    aeat.application.modelo.tests.test_m145_communication_create -> aeat.tests._application_adapter_exports
+    aeat.application.modelo.tests.test_m145_communication_events -> aeat.tests._application_adapter_exports
+    aeat.application.modelo.tests.test_memoized_transaction_catalogue_repository -> aeat.tests._application_adapter_exports
+    aeat.application.modelo.tests.test_modelo_100_2025_retenciones_credit_fold_in_live -> aeat.tests._application_adapter_exports
+    aeat.application.modelo.tests.test_modelo_200_2024_ejemplo1_tributacion_minima_manual_worked_example -> aeat.tests._application_adapter_exports
+    aeat.application.modelo.tests.test_modelo_202_2025_pago_fraccionado_manual_worked_example -> aeat.tests._application_adapter_exports
+    aeat.application.modelo.tests.test_review_package_collab_audit -> aeat.tests._application_adapter_exports
+    aeat.application.modelo.tests.test_review_package_feedback -> aeat.tests._application_adapter_exports
+    aeat.application.tests.test_diagnostics_telemetry -> aeat.tests._application_adapter_exports
     # ── participation-index derived encrypted cache: domain module wraps secure storage
     #    like the sibling per-domain repositories (ledger-participation-index-is-derived-rebuildable) ──
     # ── sanctioned cross-layer test/fixture edges (roundtrip discipline; secure_sql harness) ──
@@ -1090,7 +1123,6 @@ ignore_imports =
     aeat.application.aggregation._renta_ledger -> aeat.adapters.persistence.profile.invoices
     aeat.application.aggregation.tests.test_modelo_source_mesh_ledger -> aeat.adapters.persistence.profile.invoices
     aeat.application.aggregation.tests.test_renta_ledger -> aeat.adapters.persistence.profile.invoices
-    aeat.application.calculations.tests.test_pull_path_calculate_path_casilla_parity -> aeat.adapters.persistence.profile.invoices
     aeat.application.filing._review -> aeat.adapters.persistence.profile.invoices
     aeat.application.invoices._bulk_import -> aeat.adapters.persistence.profile.invoices
     aeat.application.invoices._creation -> aeat.adapters.persistence.profile.invoices
@@ -1113,13 +1145,10 @@ ignore_imports =
     aeat.application.modelo.tests.test_dormant_m349_invoice_resolver_live -> aeat.adapters.persistence.profile.invoices
     aeat.application.modelo.tests.test_dormant_m369_oss_resolver_live -> aeat.adapters.persistence.profile.invoices
     aeat.application.modelo.tests.test_m111_retenciones_observation_live -> aeat.adapters.persistence.profile.invoices
-    aeat.application.modelo.tests.test_modelo_100_2025_retenciones_credit_fold_in_live -> aeat.adapters.persistence.profile.invoices
     aeat.application.modelo.tests.test_modelo_100_negative_general_base_carry_live -> aeat.adapters.persistence.profile.invoices
-    aeat.application.modelo.tests.test_modelo_200_2024_ejemplo1_tributacion_minima_manual_worked_example -> aeat.adapters.persistence.profile.invoices
     aeat.application.modelo.tests.test_modelo_200_accounting_input_guard -> aeat.adapters.persistence.profile.invoices
     aeat.application.modelo.tests.test_modelo_200_first_year_cuota_e2e -> aeat.adapters.persistence.profile.invoices
     aeat.application.modelo.tests.test_modelo_200_fold_in_live -> aeat.adapters.persistence.profile.invoices
-    aeat.application.modelo.tests.test_modelo_202_2025_pago_fraccionado_manual_worked_example -> aeat.adapters.persistence.profile.invoices
     aeat.application.modelo.tests.test_modelo_202_sociedades_fold_in_live -> aeat.adapters.persistence.profile.invoices
     aeat.application.modelo.tests.test_modelo_390_303_fold_in_live -> aeat.adapters.persistence.profile.invoices
     aeat.application.modelo.tests.test_modelo_390_303_simplificado_fold_in_live -> aeat.adapters.persistence.profile.invoices
@@ -1150,7 +1179,6 @@ ignore_imports =
     aeat.application.calculations.tests.test_modelo_100_multiyear_renta_enrollment -> aeat.adapters.persistence.profile.modelos_calculation
     aeat.application.calculations.tests.test_modelo_130_carry_forward_continuity -> aeat.adapters.persistence.profile.modelos_calculation
     aeat.application.calculations.tests.test_modelo_130_casilla_05_carry -> aeat.adapters.persistence.profile.modelos_calculation
-    aeat.application.calculations.tests.test_modelo_130_multiyear_renta_enrollment -> aeat.adapters.persistence.profile.modelos_calculation
     aeat.application.ledger.tests._remove_draft_revision_support -> aeat.adapters.persistence.profile.modelos_calculation
     aeat.application.ledger.tests.test_remove_draft_revision_advisory -> aeat.adapters.persistence.profile.modelos_calculation
     aeat.application.ledger.tests.test_remove_finalized_revision_block -> aeat.adapters.persistence.profile.modelos_calculation
@@ -1172,7 +1200,6 @@ ignore_imports =
     aeat.application.modelo.tests._iva_wallet_engine_support -> aeat.adapters.persistence.profile.modelos_calculation
     aeat.application.modelo.tests._verification_substance_support -> aeat.adapters.persistence.profile.modelos_calculation
     aeat.application.modelo.tests.test_amend_flow -> aeat.adapters.persistence.profile.modelos_calculation
-    aeat.application.modelo.tests.test_amend_kind_resolution -> aeat.adapters.persistence.profile.modelos_calculation
     aeat.application.modelo.tests.test_art109_activity_income_period_evidence -> aeat.adapters.persistence.profile.modelos_calculation
     aeat.application.modelo.tests.test_borrador_binding -> aeat.adapters.persistence.profile.modelos_calculation
     aeat.application.modelo.tests.test_bucket_aggregation_flow -> aeat.adapters.persistence.profile.modelos_calculation
@@ -1252,11 +1279,8 @@ ignore_imports =
     aeat.application.modelo._work_lifecycle -> aeat.adapters.persistence.profile.modelos_work_units
     # ── application test-fixture edges: modelos_work_units catalogue repository
     #    (roundtrip-discipline fixtures seeding work-unit rows) ──
-    aeat.application.calculations.tests.test_modelo_100_base_negativa_general_compensation -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.calculations.tests.test_modelo_100_multiyear_renta_enrollment -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.calculations.tests.test_modelo_130_carry_forward_continuity -> aeat.adapters.persistence.profile.modelos_work_units
-    aeat.application.calculations.tests.test_modelo_130_multiyear_renta_enrollment -> aeat.adapters.persistence.profile.modelos_work_units
-    aeat.application.calculations.tests.test_pull_path_calculate_path_casilla_parity -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.ledger.tests._remove_draft_revision_support -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.ledger.tests.test_remove_draft_revision_advisory -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.ledger.tests.test_remove_finalized_revision_block -> aeat.adapters.persistence.profile.modelos_work_units
@@ -1289,17 +1313,14 @@ ignore_imports =
     aeat.application.modelo.tests.test_m111_retenciones_observation_live -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.modelo.tests.test_m303_m349_intracom_reconcile -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.modelo.tests.test_modelo_100_2025_expense_inspection_live -> aeat.adapters.persistence.profile.modelos_work_units
-    aeat.application.modelo.tests.test_modelo_100_2025_retenciones_credit_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.modelo.tests.test_modelo_100_negative_general_base_carry_live -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.modelo.tests.test_modelo_100_pagos_fraccionados_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.modelo.tests.test_modelo_100_retenciones_credit_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.modelo.tests.test_modelo_130_prior_payment_advisory -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.modelo.tests.test_modelo_131_data_base_binding_projection -> aeat.adapters.persistence.profile.modelos_work_units
-    aeat.application.modelo.tests.test_modelo_200_2024_ejemplo1_tributacion_minima_manual_worked_example -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.modelo.tests.test_modelo_200_accounting_input_guard -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.modelo.tests.test_modelo_200_first_year_cuota_e2e -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.modelo.tests.test_modelo_200_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
-    aeat.application.modelo.tests.test_modelo_202_2025_pago_fraccionado_manual_worked_example -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.modelo.tests.test_modelo_202_modality_lifecycle -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.modelo.tests.test_modelo_202_sociedades_fold_in_live -> aeat.adapters.persistence.profile.modelos_work_units
     aeat.application.modelo.tests.test_modelo_210_inmobiliaria_e2e -> aeat.adapters.persistence.profile.modelos_work_units
@@ -1397,10 +1418,8 @@ ignore_imports =
     aeat.application.bucket_maintenance.tests.test_service_rename -> aeat.adapters.persistence.profile.buckets
     aeat.application.bucket_maintenance.tests.test_service_retention_floor -> aeat.adapters.persistence.profile.buckets
     aeat.application.calculations.tests.test_cross_period_clean_state_provenance -> aeat.adapters.persistence.profile.buckets
-    aeat.application.calculations.tests.test_modelo_100_base_negativa_general_compensation -> aeat.adapters.persistence.profile.buckets
     aeat.application.calculations.tests.test_modelo_100_multiyear_renta_enrollment -> aeat.adapters.persistence.profile.buckets
     aeat.application.calculations.tests.test_modelo_130_carry_forward_continuity -> aeat.adapters.persistence.profile.buckets
-    aeat.application.calculations.tests.test_modelo_130_multiyear_renta_enrollment -> aeat.adapters.persistence.profile.buckets
     aeat.application.inventory._service -> aeat.adapters.persistence.profile.buckets
     aeat.application.inventory.tests.test_inventory -> aeat.adapters.persistence.profile.buckets
     aeat.application.ledger._actions_common -> aeat.adapters.persistence.profile.buckets
@@ -1519,7 +1538,6 @@ ignore_imports =
     aeat.application.ledger.tests._split_test_support -> aeat.adapters.persistence.profile.transactions
     aeat.application.ledger.tests.test_attach_purchase_evidence_store -> aeat.adapters.persistence.profile.transactions
     aeat.application.ledger.tests.test_bulk_classify_scale -> aeat.adapters.persistence.profile.transactions
-    aeat.application.ledger.tests.test_llm_classify_run_telemetry -> aeat.adapters.persistence.profile.transactions
     aeat.application.ledger.tests.test_llm_evidence_no_split -> aeat.adapters.persistence.profile.transactions
     aeat.application.ledger.tests.test_llm_evidence_split -> aeat.adapters.persistence.profile.transactions
     aeat.application.ledger.tests.test_llm_evidence_split_apply -> aeat.adapters.persistence.profile.transactions
