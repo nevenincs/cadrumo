@@ -43,7 +43,8 @@ def emit_command_invocation_telemetry(
     Carries only an invocation count, a succeeded/failed split, and a
     wall-clock duration -- never the command's arguments, output, or any
     operator-supplied content. Registered under the closed
-    ``"diagnostics.command_invocation"`` :class:`~core.telemetry.MetricSchema`.
+    ``"diagnostics.command_invocation"``
+    :class:`~core.telemetry._schema.MetricSchema`.
 
     Args:
         workspace_hash: Stable pseudonymous local-deployment identifier (see
@@ -90,7 +91,7 @@ def emit_llm_run_telemetry(
     (run count, succeeded/failed split, duration) into the remote-eligible
     allowlist -- never the run's prompt text, response text, or provider
     payload. Registered under the closed ``"diagnostics.llm_run"``
-    :class:`~core.telemetry.MetricSchema`.
+    :class:`~core.telemetry._schema.MetricSchema`.
 
     Args:
         workspace_hash: Stable pseudonymous local-deployment identifier.
@@ -135,7 +136,7 @@ def emit_error_frequency_telemetry(
     :attr:`~adapters.outbound.llm.LLMRunRecord.error_kind`) -- never raw
     exception text, a stack trace, or any operator-controlled string.
     Registered under the closed ``"diagnostics.error_frequency"``
-    :class:`~core.telemetry.MetricSchema`.
+    :class:`~core.telemetry._schema.MetricSchema`.
 
     Args:
         workspace_hash: Stable pseudonymous local-deployment identifier.

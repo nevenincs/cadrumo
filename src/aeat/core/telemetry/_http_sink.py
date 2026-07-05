@@ -1,15 +1,16 @@
 """The real network-transmitting :class:`~core.telemetry.TelemetrySink`.
 
-:class:`HttpTelemetrySink` is the transport slice deferred by
+:class:`~core.telemetry.HttpTelemetrySink` is the transport slice deferred by
 ``2026-07-04-remote-telemetry-adr``: every prior piece (the consent gate, the
 closed allowlisted :class:`~core.telemetry.TelemetryEventPayload`, and
 :class:`~core.telemetry.LocalNoopTelemetrySink`) proved the pipeline
 end-to-end without ever touching the network. This module adds the one sink
 that actually POSTs a payload off the operator's host, and it is
-**structurally inert by default**: :func:`emit_telemetry_event` never
-constructs a sink on its own, so an ``HttpTelemetrySink`` only ever exists (and
-therefore only ever sends) when a call site both explicitly builds one AND
-already passed the four-way consent gate
+**structurally inert by default**:
+:func:`~core.telemetry.emit_telemetry_event` never constructs a sink on its own,
+so an ``HttpTelemetrySink`` only ever exists (and therefore only ever sends)
+when a call site both explicitly builds one AND already passed the four-way
+consent gate
 (:func:`~core.telemetry.telemetry_emit_permitted`).
 
 Two additional invariants beyond the consent gate keep this sink safe:
@@ -50,13 +51,14 @@ _DEFAULT_TIMEOUT_S = 5.0
 
 
 class HttpTelemetrySink:
-    """Posts an allowlisted :class:`TelemetryEventPayload` to a configured endpoint.
+    """Posts an allowlisted payload to a configured endpoint.
 
     Attributes:
         endpoint: The remote telemetry collector URL, or ``None``. When
             ``None`` (the default-off posture's natural value for
-            ``settings.aeat_telemetry_endpoint``), :meth:`send` is a pure
-            no-op -- the sink never dials out.
+            ``settings.aeat_telemetry_endpoint``),
+            :meth:`~core.telemetry.HttpTelemetrySink.send` is a pure no-op --
+            the sink never dials out.
     """
 
     def __init__(self, endpoint: str | None, *, timeout_s: float = _DEFAULT_TIMEOUT_S) -> None:
@@ -79,18 +81,20 @@ class HttpTelemetrySink:
         return self._endpoint
 
     def send(self, payload: TelemetryEventPayload) -> None:
-        """Best-effort POST of ``payload`` to :attr:`endpoint`.
+        """Best-effort POST of ``payload`` to the configured endpoint.
 
-        A no-op when :attr:`endpoint` is ``None`` (no transport configured).
-        Any transport-level failure (connection error, timeout, non-2xx
-        response) is caught, logged at debug level with no payload content,
-        and swallowed -- telemetry delivery failure must never surface to or
-        affect the caller.
+        A no-op when :attr:`~core.telemetry.HttpTelemetrySink.endpoint` is
+        ``None`` (no transport configured). Any transport-level failure
+        (connection error, timeout, non-2xx response) is caught, logged at debug
+        level with no payload content, and swallowed -- telemetry delivery
+        failure must never surface to or affect the caller.
 
         Args:
             payload: The already-gated, already-allowlisted payload to
-                transmit. Only this model's own JSON representation is sent;
-                no other data is attached to the request.
+                transmit. Only
+                :class:`~core.telemetry.TelemetryEventPayload`'s own JSON
+                representation is sent; no other data is attached to the
+                request.
         """
         if not self._endpoint:
             return
