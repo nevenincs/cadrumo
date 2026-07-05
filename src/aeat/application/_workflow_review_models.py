@@ -1,6 +1,6 @@
 """Shared leaf models for the workflow and review packages.
 
-:mod:`application.workflow` and :mod:`application.review` need each
+:mod:`~application.workflow` and :mod:`~application.review` need each
 other's pydantic models at runtime: :class:`WorkflowEvent` is instantiated by
 review actions and embedded as a field type on
 :class:`~application.review.InvoiceReviewRecord` and
@@ -14,16 +14,17 @@ dependency runtime-bound rather than annotation-only, so neither side of the
 former direct cross-import was ``TYPE_CHECKING``-deferrable.
 
 This module is the structural fix: it is a leaf with no dependency on either
-:mod:`workflow` or :mod:`review`, so both packages import these four names
-from here instead of from each other. :mod:`workflow` re-exports
-:class:`WorkflowEvent` and :func:`utc_now` from its facade; :mod:`review`
-re-exports :class:`InvoiceReviewRecord` and :class:`LedgerReviewRecord` from
+:mod:`~application.workflow` or :mod:`~application.review`, so both packages import
+these four names from here instead of from each other. :mod:`~application.workflow`
+re-exports :class:`WorkflowEvent` and :func:`utc_now` from its facade;
+:mod:`~application.review` re-exports :class:`InvoiceReviewRecord` and
+:class:`LedgerReviewRecord` from
 its facade. Consumers outside these two packages are unaffected — they already
 import through the public facades, which keep re-exporting the same names.
 
 This module is private application-layer plumbing consumed only by
-:mod:`application.workflow` and :mod:`application.review`; it is not
-part of the :mod:`application` public surface and carries no `__all__`.
+:mod:`~application.workflow` and :mod:`~application.review`; it is not
+part of the :mod:`~application` public surface and carries no `__all__`.
 """
 
 from __future__ import annotations
