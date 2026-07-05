@@ -12,9 +12,9 @@ activity (``no-silent-under-declaration``). M100 2020-2023 are the live advisory
 case.
 
 This module surfaces that STRUCTURAL gap on the calculate path as a non-blocking
-:class:`~aeat.application.aggregation.CalculationSourceDiagnostic`, grounded in
+:class:`~application.aggregation.CalculationSourceDiagnostic`, grounded in
 the loaded :class:`ModeloRevision` casilla ``input_kind`` and its
-:class:`~aeat.domain.calculations.registry.InputKind` value (format-agnostic:
+:class:`~domain.calculations.registry.InputKind` value (format-agnostic:
 inline and fragmented registry content have already
 been merged) -- never the formula output, so it is non-tautological. It is the
 structural complement to the value-level settlement-completeness ADVISORY predicate
@@ -29,12 +29,12 @@ chains are modelled. A revision with no formula chain at all yields no advisory
 (an informativa or an unmodelled revision is not a partial-settlement calc surface).
 
 See Also:
-    :func:`~aeat.application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
+    :func:`~application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
         Wires this structural advisory into the bucket-aggregation calculate path.
-    :mod:`~aeat.application.modelo._verification_actions`:
+    :mod:`~application.modelo._verification_actions`:
         Evaluates the value-level settlement-completeness predicates that complement
         this structural guard.
-    :class:`~aeat.domain.calculations.registry.InputKind`:
+    :class:`~domain.calculations.registry.InputKind`:
         The registry enum used to distinguish manual settlement cells from computed
         ones.
 """
@@ -80,13 +80,13 @@ def collect_settlement_not_computed_diagnostics(
 
     Returns:
         Tuple of
-        :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+        :class:`~application.aggregation.CalculationSourceDiagnostic`
         advisories for settlement casillas that require operator verification.
 
     See Also:
         :data:`SETTLEMENT_SEMANTIC_ROLES`:
             The narrow terminal-liquidación role allowlist this collector inspects.
-        :func:`~aeat.application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
+        :func:`~application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
             Calls this collector after calculation revision creation.
     """
     if not revision.formulas:
