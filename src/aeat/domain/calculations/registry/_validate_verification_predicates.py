@@ -15,6 +15,17 @@ evaluator's defensive bad-arity branch silently hold (or, for the ADVISORY
 form, silently never fire) — see
 :mod:`~application.modelo._verification_actions` for the runtime
 counterpart these gates keep honest.
+
+See Also:
+    :data:`~domain.calculations.registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS`
+        Canonical operator set shared by the registry-load validator and the
+        runtime evaluator.
+    :func:`~domain.calculations.registry._validate_surfaces.validate_verification_expectation_section`
+        Parent dispatcher that owns revision-level reference closure and calls
+        these per-operator validators.
+    :func:`~application.modelo._verification_actions._evaluate_predicate_expression`
+        Runtime predicate evaluator these authoring-time shape checks keep in
+        sync.
 """
 
 from __future__ import annotations
