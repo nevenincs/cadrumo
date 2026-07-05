@@ -422,20 +422,16 @@ def _classify_renta_transaction(
 
     direction = _renta_direction_for(transaction.direction, purchase_invoice_evidence_id)
     if direction is None:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
-            detail=f"transaction direction {transaction.direction.value!r} is not a Renta expense flow",
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
+            f"transaction direction {transaction.direction.value!r} is not a Renta expense flow",
         )
     if is_non_eur_without_conversion(transaction):
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
-            detail=f"transaction currency {transaction.raw.currency!r} is not supported for Renta expenses",
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
+            f"transaction currency {transaction.raw.currency!r} is not supported for Renta expenses",
         )
     # Use the EUR-projected amount for the business gate so a non-EUR row
     # that passed the is_non_eur_without_conversion check (because
@@ -451,53 +447,41 @@ def _classify_renta_transaction(
             if transaction.business_classification is BusinessClassification.PERSONAL
             else RentaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
         )
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=reason,
-            detail=(
-                f"business classification {transaction.business_classification.value!r} cannot feed Renta expenses"
-            ),
+        return _renta_transaction_issue(
+            transaction,
+            reason,
+            f"business classification {transaction.business_classification.value!r} cannot feed Renta expenses",
         )
     business_amount = _business_fact_amount(eur_amount, proportion)
     if category_id is None:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.MISSING_CATEGORY,
-            detail="classified expense transaction has no ledger category",
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.MISSING_CATEGORY,
+            "classified expense transaction has no ledger category",
         )
     try:
         category = normalize_spending_category(category_id)
     except ValueError:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
-            detail=f"ledger category {category_id!r} is not in the spending taxonomy",
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
+            f"ledger category {category_id!r} is not in the spending taxonomy",
         )
     if category not in RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.CATEGORY_OUTSIDE_FIRST_SLICE,
-            detail=(
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.CATEGORY_OUTSIDE_FIRST_SLICE,
+            (
                 f"category {category.value!r} has no first-slice Modelo 100 casilla mapping; "
                 f"current supported mappings: {_first_slice_supported_mappings()}"
             ),
         )
     profile = profiles.get(category)
     if profile is None:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.MISSING_CATEGORY_PROFILE,
-            detail=f"category {category.value!r} has no profile for {resolved_profile_year}",
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.MISSING_CATEGORY_PROFILE,
+            f"category {category.value!r} has no profile for {resolved_profile_year}",
         )
     category_region_overrides = {
         ccaa: overrides[category] for ccaa, overrides in region_overrides.items() if category in overrides
@@ -508,12 +492,10 @@ def _classify_renta_transaction(
         context=context,
     )
     if selected_profile is None:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.REGION_UNDECLARED_FOR_OVERRIDE,
-            detail=(
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.REGION_UNDECLARED_FOR_OVERRIDE,
+            (
                 f"category {category.value!r} carries a territorial-regime deductibility override for "
                 f"{resolved_profile_year} but the residence comunidad autonoma is undeclared"
             ),
@@ -547,29 +529,23 @@ def _classify_renta_transaction(
             activity_key=activity_key,
         )
     except ValueError as exc:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
-            detail=_bounded_detail(str(exc)),
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
+            _bounded_detail(str(exc)),
         )
     if not resolved_period.contains(fact.filing_date):
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-            detail=f"filing date {fact.filing_date.isoformat()} is outside {resolved_period}",
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+            f"filing date {fact.filing_date.isoformat()} is outside {resolved_period}",
         )
     result = evaluate_renta_deductibility(fact, profile, context)
     if result.status is not RentaDeductibilityStatus.ELIGIBLE:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY,
-            detail=result.reason,
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY,
+            result.reason,
         )
     try:
         return build_renta_deductible_expense_observation(
@@ -578,13 +554,25 @@ def _classify_renta_transaction(
             tax_year=resolved_period.year,
         )
     except ValueError as exc:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
-            detail=_bounded_detail(str(exc)),
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
+            _bounded_detail(str(exc)),
         )
+
+
+def _renta_transaction_issue(
+    transaction: Transaction,
+    reason: RentaLedgerAggregationIssueReason,
+    detail: str,
+) -> RentaLedgerAggregationIssue:
+    return RentaLedgerAggregationIssue(
+        transaction_id=transaction.transaction_id,
+        purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
+        category_id=transaction.category_id,
+        reason=reason,
+        detail=detail,
+    )
 
 
 def _resolve_annual_period(period: Period) -> Period:
