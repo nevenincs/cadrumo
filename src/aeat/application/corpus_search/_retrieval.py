@@ -5,10 +5,11 @@ The R3 grounding search runs three cooperating retrievers and fuses them:
 * an exact-citation short-circuit — when the query IS a citation id
   (``ley-58-2003:art-27.2``), it resolves directly through the structured
   lookup, no ranking needed;
-* the FTS5 lexical index (:mod:`._lexical_index`) for exact and stemmed
+* the FTS5 lexical index
+  (:mod:`~application.corpus_search._lexical_index`) for exact and stemmed
   in-prose recall;
 * a brute-force numpy cosine over the build-time-precomputed corpus matrix,
-  with the live query embedded by :class:`._query_embed.QueryEmbedder`.
+  with the live query embedded by :class:`~application.corpus_search.QueryEmbedder`.
 
 The lexical and semantic rankings are fused with Reciprocal Rank Fusion
 (RRF, ``k=60``), each side capped at its top ~50, in plain Python — no ANN

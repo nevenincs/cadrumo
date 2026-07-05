@@ -1,11 +1,13 @@
 """Shared model2vec loader for the semantic-search stack.
 
-Both the build-time precompute (:mod:`._embed_build`) and the runtime query
-embedder (:mod:`._query_embed`) load the same ``potion-multilingual-128M``
-static model behind the capability-gated ``aeat[search]`` extra. This module
-is the one place that lazily imports ``model2vec`` and refuses with an install
-hint when it is absent, so neither consumer duplicates the gate and the
-degraded lexical-only mode never depends on the semantic stack at import time.
+Both the build-time precompute
+(:mod:`~application.corpus_search._embed_build`) and the runtime query embedder
+(:mod:`~application.corpus_search._query_embed`) load the same
+``potion-multilingual-128M`` static model behind the capability-gated
+``aeat[search]`` extra. This module is the one place that lazily imports
+``model2vec`` and refuses with an install hint when it is absent, so neither
+consumer duplicates the gate and the degraded lexical-only mode never depends
+on the semantic stack at import time.
 """
 
 from __future__ import annotations
