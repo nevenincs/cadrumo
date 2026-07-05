@@ -9,6 +9,14 @@ and reused thereafter (the corpus is static, so a present index is current).
 Precomputed corpus vectors are loaded when they have been shipped/materialised
 into the same cache directory; absent them (or the ``search`` extra) the
 service runs in lexical-only + citation mode, the shippable degraded default.
+
+See Also:
+    :func:`~application.corpus_search.hybrid_search`
+        Retrieval primitive this runtime service provisions and calls.
+    :func:`~application.corpus_search.ensure_corpus_embeddings`
+        Build-once semantic-vector cache behind the ``aeat[search]`` extra.
+    :class:`~application.corpus_search.QueryEmbedder`
+        Live-query embedder used only when semantic vectors are available.
 """
 
 from __future__ import annotations

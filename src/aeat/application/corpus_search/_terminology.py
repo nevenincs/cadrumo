@@ -10,6 +10,14 @@ Per the ``glossary-concepts-are-taxpayer-facing`` rule the shipped search
 surfaces only ``approved``-lifecycle concepts — the ratified taxpayer/operator
 vocabulary — excluding ``draft`` (unreviewed) and ``deprecated`` (internal
 machinery) concepts, which the taxpayer glossary also excludes.
+
+See Also:
+    :func:`~application.corpus_search.search_terminology`
+        Public facade for approved-concept terminology search.
+    :func:`~application.corpus_search.lookup_terminology`
+        Public facade for exact concept-id lookup.
+    :func:`~entrypoints.mcp._terminology_tools.terminology_payload_from_hits`
+        MCP transport mapper for ranked terminology hits.
 """
 
 from __future__ import annotations
