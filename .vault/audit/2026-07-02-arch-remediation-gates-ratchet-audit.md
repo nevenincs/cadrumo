@@ -95,6 +95,19 @@ The registration callable line count dropped from 185 to 139, below the default
 `register_m145_communication_commands`, but remains red on the other known
 module and callable offenders.
 
+### follow-up-amendment-action-size-budget | low | amendment workflow callable below budget
+
+Reviewed the 2026-07-05 ratchet follow-up that extracted amendment draft
+revision construction and filing-catalogue supersession updates from
+`amend_modelo_revision` into `_build_amendment_draft_revision` and
+`_build_amendment_filing_updates`. The public workflow still performs the same
+baseline loading, amendment-kind guards, registry completeness gate,
+verification/filed transitions, and side-effect persistence in the same order.
+The callable line count dropped from 197 to 173, below the default 180-line
+budget. Ruff passed, and the focused amendment flow/kind-resolution suites
+passed. The codebase-size gate rerun no longer reports `amend_modelo_revision`,
+but remains red on the other known module and callable offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
