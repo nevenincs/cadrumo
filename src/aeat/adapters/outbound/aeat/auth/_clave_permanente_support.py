@@ -1,16 +1,19 @@
-"""Shared support surface for the :class:`ClavePermanenteAuthProvider`.
+"""Shared support surface for :class:`~adapters.outbound.aeat.auth.ClavePermanenteAuthProvider`.
 
 The helpers here keep the live Cl@ve Permanente form driver small: they
 classify the configured DNI/NIE identity (reusing the shared
-:func:`adapters.outbound.aeat.auth._clave_movil_support.classify_identity`
+:func:`~adapters.outbound.aeat.auth._clave_movil_support.classify_identity`
 format check, since DNI/NIE shape validation is not Móvil-specific) and attach
-the closed :class:`ClavePermanenteFailureMode` taxonomy to provider errors.
+the closed
+:class:`~adapters.outbound.aeat.auth.ClavePermanenteFailureMode` taxonomy to
+provider errors.
 
 Cl@ve Permanente login failures are raised as the existing registered
-:class:`AuthConfigurationError` / :class:`AuthError` classes (carrying a
-``failure_mode`` key in ``context``) rather than new dedicated subclasses.
-Every :class:`core.errors.AeatError` subclass requires a declared
-:class:`core.errors.ErrorCode` registry row with a locale-backed
+:class:`~adapters.outbound.aeat.auth.AuthConfigurationError` /
+:class:`~adapters.outbound.aeat.auth.AuthError` classes (carrying a
+``failure_mode`` key in ``context``) rather than new dedicated subclasses. Every
+:class:`~core.errors.AeatError` subclass requires a declared
+:class:`~core.errors.ErrorCode` registry row with a locale-backed
 ``message_key``; reusing the already-registered Cl@ve Móvil-sibling base
 classes here avoids growing that registry (and its locale surface) as part of
 this slice. A future pass may promote dedicated
@@ -68,7 +71,8 @@ class ClavePermanenteFailureMode(StrEnum):
     """Closed failure taxonomy for Cl@ve Permanente login errors.
 
     Stored under the ``failure_mode`` key of the raised
-    :class:`AuthConfigurationError` / :class:`AuthError` ``context`` mapping.
+    :class:`~adapters.outbound.aeat.auth.AuthConfigurationError` /
+    :class:`~adapters.outbound.aeat.auth.AuthError` ``context`` mapping.
     """
 
     INITIAL_NAVIGATION_TIMEOUT = "initial_navigation_timeout"
@@ -84,7 +88,7 @@ def clave_permanente_configuration_error(
     *,
     failure_mode: ClavePermanenteFailureMode,
 ) -> AuthConfigurationError:
-    """Build a registered :class:`AuthConfigurationError` carrying ``failure_mode``.
+    """Build a registered :class:`~adapters.outbound.aeat.auth.AuthConfigurationError`.
 
     Used for local precondition faults (identity/password unset or
     malformed) raised before any browser work begins.
@@ -99,7 +103,7 @@ def clave_permanente_login_error(
     suggestion: str | None = None,
     context: dict[str, object] | None = None,
 ) -> AuthError:
-    """Build a registered :class:`AuthError` carrying ``failure_mode``.
+    """Build a registered :class:`~adapters.outbound.aeat.auth.AuthError`.
 
     Used for live login-flow faults: the Cl@ve IdP rejected credentials,
     reported a locked account, an expired password, requested an SMS-OTP
