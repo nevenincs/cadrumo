@@ -14,9 +14,9 @@ HTTP sink would send is already the allowlisted, scrubbed shape
 (``2026-07-04-remote-telemetry-adr``).
 
 See Also:
-    :func:`core.telemetry.build_telemetry_payload`
+    :func:`~core.telemetry.build_telemetry_payload`
         Constructs the allowlisted payload consumed here.
-    :class:`core.telemetry.HttpTelemetrySink`
+    :class:`~core.telemetry.HttpTelemetrySink`
         Optional network transport that implements the same sink protocol.
 """
 

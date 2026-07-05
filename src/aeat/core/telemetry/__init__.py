@@ -8,7 +8,7 @@ call. This package is the one deliberate, narrow exception -- a REMOTE
 telemetry tier an operator may opt into to help improve the project.
 
 The consent gate mirrors
-:func:`application.ledger.cloud_evidence_read_permitted`'s shape
+:func:`~application.ledger.cloud_evidence_read_permitted`'s shape
 exactly (gestor-mode absolute bar -> deployment opt-in -> tier -> per-
 invocation acknowledgement, all ANDed, never sticky). The payload contract is
 a closed, code-authored allowlist
@@ -37,11 +37,11 @@ Three non-sensitive operational producers are wired in this slice
 gate-then-schema-then-emit pipeline against the local sink.
 
 See Also:
-    :func:`core.telemetry.telemetry_emit_permitted`
+    :func:`~core.telemetry.telemetry_emit_permitted`
         Consent gate every remote-eligible event must pass.
-    :func:`core.telemetry.build_telemetry_payload`
+    :func:`~core.telemetry.build_telemetry_payload`
         Payload builder that enforces the metric allowlist before emission.
-    :class:`core.telemetry.HttpTelemetrySink`
+    :class:`~core.telemetry.HttpTelemetrySink`
         Optional network sink; never the default transport.
 """
 
