@@ -1,7 +1,7 @@
 """Typed summary surface for filing draft calculation results.
 
 This module does not run the registry formula graph. It summarises an
-already-built :class:`aeat.domain.filing.ModeloDraft` into a frozen
+already-built :class:`domain.filing.ModeloDraft` into a frozen
 :class:`DeclaracionCalculateSummary` so CLI renderers can display the
 draft status, finding counts, repair hints, and
 :class:`DeclaracionCalculateNextAction` without re-implementing lifecycle
@@ -22,12 +22,12 @@ summary consumed by renderers::
     render(summary)
 
 See Also:
-    :func:`aeat.application.filing.build_draft`
+    :func:`application.filing.build_draft`
         Registry-backed draft construction that produces the
-        :class:`aeat.domain.filing.ModeloDraft` summarised here.
-    :class:`aeat.domain.submission.ModeloDraftStatus`
+        :class:`domain.filing.ModeloDraft` summarised here.
+    :class:`domain.submission.ModeloDraftStatus`
         Lifecycle states that drive the next-action mapping.
-    :func:`aeat.application.modelo.calculation_result_summary`
+    :func:`application.modelo.calculation_result_summary`
         Separate persisted-revision summary for headline casillas chosen
         from registry verification expectations.
 """
@@ -85,7 +85,7 @@ class DeclaracionCalculateSummary(BaseModel):
     """Typed summary of a single modelo calculation run.
 
     Attributes:
-        draft_id: The :class:`aeat.domain.filing.ModeloDraft` identity
+        draft_id: The :class:`domain.filing.ModeloDraft` identity
             the summary was produced from.
         modelo: AEAT modelo identifier.
         period: Typed filing period for the draft.
@@ -180,7 +180,7 @@ def summarise_calculation(
 
     Args:
         draft: The :class:`ModeloDraft` returned by
-            :func:`aeat.application.filing.build_draft`.
+            :func:`application.filing.build_draft`.
         repair_hints: Translation keys for remediation hints. Required when
             the draft carries any ``ERROR`` finding (the CLI must not
             surface a silent blocker); rejected
