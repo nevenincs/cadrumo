@@ -1,24 +1,24 @@
 """Governed-persistence repository for filing-history records.
 
-This repository persists lightweight :class:`aeat.application.filing.ModeloHistory`
+This repository persists lightweight :class:`application.filing.ModeloHistory`
 payloads keyed by modelo. Each payload contains submitted modelos, typed
 periods, timestamps, and recorded status strings; richer current /
 superseded filing lifecycle records live in
-:class:`aeat.domain.modelos.ModeloRecordCatalogue`.
+:class:`domain.modelos.ModeloRecordCatalogue`.
 
 Records are stored as encrypted byte objects in the primary SQL backend at
-``AUDIT`` :class:`~aeat.adapters.persistence.storage.SensitivityClass` via a
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`; no
+``AUDIT`` :class:`~adapters.persistence.storage.SensitivityClass` via a
+:class:`~adapters.persistence.storage.SecureObjectRepository`; no
 plaintext filing-history JSON or envelope file lands on disk.
 
 See Also:
-    :class:`aeat.application.filing.ModeloHistory`
+    :class:`application.filing.ModeloHistory`
         Strict payload persisted by this repository.
-    :mod:`aeat.application.filing._runtime_repository`
+    :mod:`application.filing._runtime_repository`
         Active-profile bucket resolution and runtime secure-object creation.
-    :class:`aeat.domain.modelos.ModeloRecordCatalogueRepository`
+    :class:`domain.modelos.ModeloRecordCatalogueRepository`
         FINANCIAL-class repository for authoritative work-unit filing records.
-    :data:`aeat.adapters.persistence.storage.APPLICATION_FILING_HISTORY_NAMESPACE`
+    :data:`adapters.persistence.storage.APPLICATION_FILING_HISTORY_NAMESPACE`
         Namespace, sensitivity, schema-version, and object-key contract for
         these secure objects.
 """
@@ -48,21 +48,21 @@ from ._runtime_repository import (
 class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
     """Encrypted filing-history store for bucket-local :class:`ModeloHistory`.
 
-    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`
+    The :class:`~adapters.persistence.storage.SecureBoundRepository`
     base wraps each payload in an
-    :class:`~aeat.adapters.persistence.storage.Envelope` and binds it to
-    :data:`aeat.adapters.persistence.storage.APPLICATION_FILING_HISTORY_NAMESPACE`.
+    :class:`~adapters.persistence.storage.Envelope` and binds it to
+    :data:`adapters.persistence.storage.APPLICATION_FILING_HISTORY_NAMESPACE`.
     The modelo identifier is the natural object key, so list and iteration APIs
     expose one lightweight history per modelo rather than the authoritative
     work-unit filing catalogue. The namespace definition supplies the ``AUDIT``
-    :class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema
+    :class:`~adapters.persistence.storage.SensitivityClass`, schema
     version, bucket-local scope, ``{modelo}`` key grammar, and custody
     contract.
 
     See Also:
         :class:`ModeloHistory`
             Strict payload stored by this repository.
-        :class:`aeat.domain.modelos.ModeloRecordCatalogueRepository`
+        :class:`domain.modelos.ModeloRecordCatalogueRepository`
             FINANCIAL-class filing-record catalogue for current and superseded
             work-unit lifecycle records.
     """
