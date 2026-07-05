@@ -16,7 +16,11 @@ related:
   - '[[2026-07-05-modelo-720-prior-year-baseline-W01-P01-S06]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-W01-P01-S07]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-W02-P02-S08]]'
+  - '[[2026-07-05-modelo-720-prior-year-baseline-W02-P03-S09]]'
+  - '[[2026-07-05-modelo-720-prior-year-baseline-W02-P03-S10]]'
+  - '[[2026-07-05-modelo-720-prior-year-baseline-W02-P03-S11]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-adr]]'
+  - '[[2026-07-05-modelo-720-prior-year-baseline-audit]]'
   - '[[2026-07-05-modelo-720-prior-year-baseline-plan]]'
 ---
 
@@ -31,6 +35,10 @@ Auto-generated index of all documents tagged with `#modelo-720-prior-year-baseli
 - `2026-06-02-modelo-720-prior-year-baseline-adr` - `modelo-720-prior-year-baseline` adr: `modelo 720 prior-year asset baseline and re-declaration trigger` | (**status:** `accepted`)
 - `2026-07-05-modelo-720-prior-year-baseline-adr` - `modelo-720-prior-year-baseline` adr: `M720 class-code taxonomy` | (**status:** `proposed`)
 
+### audit
+
+- `2026-07-05-modelo-720-prior-year-baseline-audit` - `modelo-720-prior-year-baseline` audit: `M720 W02 taxonomy implementation review`
+
 ### exec
 
 - `2026-07-05-modelo-720-prior-year-baseline-W01-P01-S01` - Repair M720 declarability to aggregate present classes by regulatory obligation block before applying the strict declaration floor
@@ -41,6 +49,9 @@ Auto-generated index of all documents tagged with `#modelo-720-prior-year-baseli
 - `2026-07-05-modelo-720-prior-year-baseline-W01-P01-S06` - Clean stale threshold-axis row-binding comments so registry helpers point to obligation-block semantics
 - `2026-07-05-modelo-720-prior-year-baseline-W01-P01-S07` - Clean stale threshold-axis registry comments beside the M720 deadline-window scaffold
 - `2026-07-05-modelo-720-prior-year-baseline-W02-P02-S08` - Author the M720 class-code taxonomy ADR covering B real estate, I IIC, V securities, S insurance, and the Modelo 721 virtual-currency split
+- `2026-07-05-modelo-720-prior-year-baseline-W02-P03-S09` - Migrate the typed M720 asset-code map so real estate emits B and unsupported or split-out classes cannot emit the wrong record-design clave
+- `2026-07-05-modelo-720-prior-year-baseline-W02-P03-S10` - Update the central foreign-asset class taxonomy tests to pin the official M720 clave set and any Modelo 721 split
+- `2026-07-05-modelo-720-prior-year-baseline-W02-P03-S11` - Add M720 row-projection tests proving real estate emits B and virtual currency cannot be emitted through Modelo 720
 
 ### plan
 

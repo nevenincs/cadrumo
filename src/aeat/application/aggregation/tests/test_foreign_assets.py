@@ -310,6 +310,52 @@ class TestForeignAssetSourceResolver:
         assert row_values[("modelo-720-asset-row-acquisition-date", 2)] == "2021-02-20"
         assert row_values[("modelo-720-asset-row-valuation", 2)] == Decimal("15000.00")
 
+    def test_row_projection_uses_official_iic_and_real_estate_codes(self) -> None:
+        period = Period.from_year_and_code(2025, "0A")
+        observations = (
+            _obs(
+                asset_class=ForeignAssetClass.COLLECTIVE_INVESTMENT,
+                valuation="60000.00",
+                asset_external_id="LI-IIC-001",
+                country="LI",
+                source_id="tx-iic-li",
+            ),
+            _obs(
+                asset_class=ForeignAssetClass.REAL_ESTATE,
+                valuation="60000.00",
+                asset_external_id="AD-REAL-001",
+                country="AD",
+                source_id="tx-real-ad",
+            ),
+        )
+        snapshot = resources().modelos.authority.snapshot("720", filing_year=2025, period="0A")
+        aggregation = aggregate_foreign_assets_720(observations, period=period)
+        row_observations = _registry_observations_from_foreign_assets_aggregation(aggregation, observations)
+
+        row_values = resolve_foreign_asset_binding_row_values(snapshot.revision, row_observations)
+
+        assert {observation.asset_class_code for observation in row_observations} == {"I", "B"}
+        assert row_values[("modelo-720-asset-row-class", 1)] == "B"
+        assert row_values[("modelo-720-asset-row-country", 1)] == "AD"
+        assert row_values[("modelo-720-asset-row-identifier", 1)] == "AD-REAL-001"
+        assert row_values[("modelo-720-asset-row-class", 2)] == "I"
+        assert row_values[("modelo-720-asset-row-country", 2)] == "LI"
+        assert row_values[("modelo-720-asset-row-identifier", 2)] == "LI-IIC-001"
+
+    def test_virtual_currency_cannot_be_projected_as_modelo_720_row(self) -> None:
+        observations = (
+            _obs(
+                asset_class=ForeignAssetClass.VIRTUAL_CURRENCY,
+                valuation="60000.00",
+                asset_external_id="CRYPTO-001",
+                source_id="tx-crypto",
+            ),
+        )
+        aggregation = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
+
+        with pytest.raises(ValueError, match="not a Modelo 720 foreign-asset class"):
+            _registry_observations_from_foreign_assets_aggregation(aggregation, observations)
+
     def test_resolver_silent_when_revision_declares_no_foreign_asset_source(self) -> None:
         snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
 

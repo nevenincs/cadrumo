@@ -5,7 +5,7 @@ declares the ``clave-tipo-de-bien-o-derecho`` field and a ``foreign_asset``
 row source whose ``asset_class_code`` an operator otherwise reads as an opaque
 one-character clave. This module lifts that clave onto the four regulatory
 declaration bloques of the Reglamento General de Gestión e Inspección
-(RD 1065/2007) — cuentas (art. 42 bis), valores/derechos/seguros/rentas
+(RD 1065/2007) — cuentas (art. 42 bis), valores/derechos/IIC/seguros/rentas
 (art. 42 ter), inmuebles (art. 54 bis), and monedas virtuales (art. 42
 quater, the Modelo 721 sibling) — and carries each bloque's grounded
 declaration thresholds: the 50.000 EUR initial declaration floor and the
@@ -67,12 +67,13 @@ class ForeignAssetObligationGroup(StrEnum):
     Members:
         CUENTAS: Cuentas en entidades financieras situadas en el extranjero
             (RD 1065/2007 art. 42 bis). Feeds :attr:`ForeignAssetClass.ACCOUNT`.
-        VALORES_DERECHOS_SEGUROS: Valores, derechos, seguros y rentas
+        VALORES_DERECHOS_SEGUROS: Valores, derechos, IIC, seguros y rentas
             depositados, gestionados u obtenidos en el extranjero
-            (RD 1065/2007 art. 42 ter). Feeds both
-            :attr:`ForeignAssetClass.SECURITY` and
-            :attr:`ForeignAssetClass.INSURANCE`, which share this single bloque
-            umbral.
+            (RD 1065/2007 art. 42 ter). Feeds
+            :attr:`ForeignAssetClass.SECURITY`,
+            :attr:`ForeignAssetClass.COLLECTIVE_INVESTMENT`, and
+            :attr:`ForeignAssetClass.INSURANCE`, which share this single
+            bloque umbral.
         INMUEBLES: Bienes inmuebles y derechos sobre bienes inmuebles situados
             en el extranjero (RD 1065/2007 art. 54 bis). Feeds
             :attr:`ForeignAssetClass.REAL_ESTATE`.
@@ -91,6 +92,7 @@ FOREIGN_ASSET_CLASS_OBLIGATION_GROUP: Final[Mapping[ForeignAssetClass, ForeignAs
     {
         ForeignAssetClass.ACCOUNT: ForeignAssetObligationGroup.CUENTAS,
         ForeignAssetClass.SECURITY: ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS,
+        ForeignAssetClass.COLLECTIVE_INVESTMENT: ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS,
         ForeignAssetClass.INSURANCE: ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS,
         ForeignAssetClass.REAL_ESTATE: ForeignAssetObligationGroup.INMUEBLES,
         ForeignAssetClass.VIRTUAL_CURRENCY: ForeignAssetObligationGroup.MONEDAS_VIRTUALES,
@@ -101,8 +103,29 @@ FOREIGN_ASSET_CLASS_OBLIGATION_GROUP: Final[Mapping[ForeignAssetClass, ForeignAs
 Complete by construction: every :class:`ForeignAssetClass` member is a key, so
 :func:`foreign_asset_obligation_group` is total and a new asset class cannot be
 added without also declaring its bloque (the parity test fails otherwise). The
-art. 42 ter valores bloque carries two claves (``SECURITY``, ``INSURANCE``);
-the other three bloques carry one each.
+art. 42 ter valores bloque carries three Modelo 720 claves (``SECURITY``,
+``COLLECTIVE_INVESTMENT``, ``INSURANCE``); cuentas and inmuebles carry one
+Modelo 720 clave each; monedas virtuales is the Modelo 721 sibling and carries
+no Modelo 720 clave.
+"""
+
+
+MODELO_720_FOREIGN_ASSET_CLASS_CODES: Final[Mapping[ForeignAssetClass, str]] = MappingProxyType(
+    {
+        ForeignAssetClass.ACCOUNT: "C",
+        ForeignAssetClass.SECURITY: "V",
+        ForeignAssetClass.COLLECTIVE_INVESTMENT: "I",
+        ForeignAssetClass.INSURANCE: "S",
+        ForeignAssetClass.REAL_ESTATE: "B",
+    },
+)
+"""Official Modelo 720 position-102 ``clave-tipo-de-bien-o-derecho`` map.
+
+The bundled AEAT record design limits Modelo 720's asset-row class code to
+``C``/``V``/``I``/``S``/``B``. ``I`` is participaciones en instituciones de
+inversion colectiva, while real estate is ``B``. ``VIRTUAL_CURRENCY`` is
+deliberately absent because RD 1065/2007 art. 42 quater is declared through the
+Modelo 721 sibling, not Modelo 720.
 """
 
 
@@ -214,6 +237,7 @@ def foreign_asset_class_declaration_threshold(
 __all__ = [
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
     "FOREIGN_ASSET_DECLARATION_THRESHOLDS",
+    "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
     "MODELO_720_REDECLARATION_INCREASE_THRESHOLD_EUR",
     "ForeignAssetDeclarationThreshold",
     "ForeignAssetObligationGroup",
