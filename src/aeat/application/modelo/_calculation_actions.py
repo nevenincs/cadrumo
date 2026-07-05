@@ -704,7 +704,10 @@ class _MemoizedTransactionCatalogueRepository:
         return cached
 
     def save(self, catalogue: TransactionCatalogue) -> None:
-        """Delegate to the wrapped repository; never called during mesh resolution."""
+        """Delegate the :class:`~domain.transactions.TransactionCatalogue` save to the wrapped repository.
+
+        This method is never called during mesh resolution.
+        """
         self._repository.save(catalogue)
 
 

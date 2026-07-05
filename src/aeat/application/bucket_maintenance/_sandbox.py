@@ -133,6 +133,11 @@ class SandboxMergeScope(StrEnum):
     carries classification decisions on each row). ``MODELO`` promotes the
     modelo work-unit, calculation-revision, and filing-record catalogues.
     ``ALL`` promotes every one of the above in one call.
+
+    Ledger promotion reads the sandbox
+    :class:`~domain.transactions.TransactionCatalogue` through the concrete
+    :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`
+    and upserts the rows into the target bucket.
     """
 
     LEDGER = "ledger"

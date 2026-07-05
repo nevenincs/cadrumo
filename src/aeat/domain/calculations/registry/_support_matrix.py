@@ -25,7 +25,9 @@ reports an explicit empty/False value, never a fabricated positive.
 
 See Also:
     :func:`~domain.calculations.registry.build_support_matrix`
-        Pure builder that folds validated registry authority into typed rows.
+        Pure builder that folds the
+        :class:`~domain.calculations.registry.ValidatedRegistryAuthority` into
+        typed rows.
     :class:`~domain.calculations.registry.ModeloSupportMatrixReport`
         Query-service envelope returned by
         :meth:`~domain.calculations.registry.RegistryQueryService.support_matrix`.
@@ -268,7 +270,9 @@ def build_support_matrix(authority: ValidatedRegistryAuthority) -> tuple[ModeloE
     """Probe every modelo in ``authority`` and return its typed support row.
 
     Args:
-        authority: The registry authority to probe.
+        authority: The
+            :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
+            to probe.
 
     Returns:
         Every modelo's :class:`~domain.calculations.registry.ModeloEntry`,

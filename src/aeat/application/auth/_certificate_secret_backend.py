@@ -40,6 +40,9 @@ See Also:
         module's backend complements.
     :class:`~adapters.persistence.storage.SecretStore`
         Encrypted substrate the default backend persists through.
+    :class:`~adapters.persistence.storage.SensitivityClass`
+        Storage classification policy used by the secure-storage backend for
+        certificate passphrases.
     :class:`~adapters.persistence.storage.master_key.KeyringClient`
         Injection seam for the OS-keychain operations the keyring backend
         depends on; mirrored here rather than imported directly so this

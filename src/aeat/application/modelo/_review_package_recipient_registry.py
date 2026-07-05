@@ -22,6 +22,11 @@ one ``FINANCIAL``-sensitivity secure-object singleton per bucket, an
 empty register when absent, and duplicate-``recipient_id`` refusal on
 add.
 
+The encrypted row's storage policy is governed by
+:class:`~adapters.persistence.storage.SensitivityClass`; this registry stores
+public-key trust records at ``FINANCIAL`` sensitivity, never private key
+material.
+
 See Also:
     :mod:`~application.modelo._review_package_recipient_encryption`
         Consumes a registered recipient's public key to encrypt a
