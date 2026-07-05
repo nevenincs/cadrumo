@@ -174,6 +174,16 @@ enrollment, value comparison, and CLI behavior passed. The codebase-size gate
 rerun no longer reports `_reconcile.py`, but remains red on the other known
 module and callable offenders.
 
+### follow-up-transaction-models-module-size-budget | low | transaction models at module budget
+
+Reviewed the 2026-07-05 ratchet follow-up that tightened top-level and catalogue
+docstrings in `domain/transactions/_models.py` without changing the transaction
+models, validators, serializers, catalogue behavior, or public exports. The
+module line count dropped from 1353 to 1340, matching its 1340-line budget. Ruff
+passed, and the full domain transaction test suite passed. The codebase-size
+gate rerun no longer reports `domain/transactions/_models.py`, but remains red
+on the other known module and callable offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
