@@ -399,6 +399,7 @@ aggregation:
         duplicado en la malla de fuentes.'
       duplicate_relation_owner: 'Error interno: propietario de relacion duplicado
         en la malla de fuentes.'
+      duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
       owned_sources_blank: Las fuentes propiedad del mallado de fuentes no pueden
         contener tipos de fuente en blanco.
       owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
@@ -406,6 +407,8 @@ aggregation:
       relation_provenance_incomplete: La procedencia de la relacion debe incluir modelo
         origen, ejercicio, periodos, casillas, referencias legales y referencias de
         origen.
+      row_binding_index_invalid: aggregation.source_mesh.errors.row_binding_index_invalid
+      row_binding_value_invalid: aggregation.source_mesh.errors.row_binding_value_invalid
       source_transaction_ids_blank: Los identificadores de transacción del mallado
         de fuentes no pueden contener blancos.
       source_transaction_ids_duplicate: Los identificadores de transacción del mallado
@@ -620,10 +623,10 @@ application:
         invoice_catalogue_changed: el catalogo de facturas ha cambiado
         prior_filing_observations_changed: las observaciones de declaraciones anteriores
           han cambiado
+        profile_activity_changed: la actividad del perfil del contribuyente ha cambiado
         schema_formula_changed: la procedencia del esquema o la formula ha cambiado
         transaction_catalogue_changed: el catalogo de transacciones ha cambiado
         unknown: '%{reason}'
-        profile_activity_changed: 'la actividad del perfil del contribuyente ha cambiado'
     runtime:
       errors:
         active_profile_load_failed: 'No se pudo cargar el perfil activo de presentacion:
@@ -2093,8 +2096,13 @@ cli:
         app_help: 'Concilia una unidad de trabajo de modelo con su justificante AEAT:
           pull descarga el justificante de AEAT y concilia; file concilia un PDF local;
           history lista las conciliaciones anteriores.'
-        file_help: 'Concilia una unidad de trabajo contra un PDF de justificante o declaración local. Solo local; nunca contacta con AEAT.'
-        file_path_help: 'Ruta al PDF local de justificante o declaración con el que conciliar.'
+        file_help: Concilia una unidad de trabajo contra un PDF de justificante o
+          declaración local. Solo local; nunca contacta con AEAT.
+        file_kind_help: 'Tipo de documento de evidencia: justificante (recibo AEAT,
+          todos los modelos) o declaration (PDF de declaración presentada, conciliación
+          a nivel de casilla, solo modelos habilitados). Por defecto justificante.'
+        file_path_help: Ruta al PDF local de justificante o declaración con el que
+          conciliar.
         history_empty: Aun no hay conciliaciones registradas.
         history_help: Lista las conciliaciones registradas para el perfil activo.
         history_work_unit_id_help: Id de unidad de trabajo opcional para acotar el
@@ -2103,7 +2111,6 @@ cli:
           contra el. Contacta con AEAT (solo lectura).
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
           inequívoco).
-        file_kind_help: 'Tipo de documento de evidencia: justificante (recibo AEAT, todos los modelos) o declaration (PDF de declaración presentada, conciliación a nivel de casilla, solo modelos habilitados). Por defecto justificante.'
       requires:
         help: 'Muestra la lista de datos necesarios para un modelo y periodo: qué
           casillas hay que rellenar a mano, cuáles son opcionales, cuáles se rellenan
@@ -2226,7 +2233,10 @@ cli:
           contacta con la AEAT.
         work_unit_id_help: Id de la unidad de trabajo (SHA-256 o prefijo inequívoco).
       support_matrix:
-        help: 'Muestra la matriz de soporte por modelo a nivel de registro: grado de cálculo, manifiesto de completitud, formatos de exportación, cobertura de extractores, renombrados de casillas declarados, decisiones de baja de soporte y referencias cruzadas con el portal de la AEAT.'
+        help: 'Muestra la matriz de soporte por modelo a nivel de registro: grado
+          de cálculo, manifiesto de completitud, formatos de exportación, cobertura
+          de extractores, renombrados de casillas declarados, decisiones de baja de
+          soporte y referencias cruzadas con el portal de la AEAT.'
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por

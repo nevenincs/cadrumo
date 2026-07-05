@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Literal, NamedTuple, Protocol, runtime_checkable
@@ -47,7 +47,7 @@ from ...domain.modelos import ModeloDetailRow
 from ._errors import AggregationValidationError, t
 
 RowBindingKey = tuple[BindingId, int]
-RowBindingValue = Decimal | str
+RowBindingValue = str | Decimal
 
 
 class SourceMeshError(CoreValidationError):
@@ -576,6 +576,24 @@ class CalculationSourceResolution(BaseModel):
     def _freeze_date_binding_values(cls, value: Mapping[BindingId, date]) -> Mapping[BindingId, date]:
         return MappingProxyType(dict(sorted(value.items())))
 
+    @field_validator("row_binding_values", mode="before")
+    @classmethod
+    def _coerce_row_binding_values(cls, value: object) -> object:
+        if isinstance(value, Mapping) or not isinstance(value, (list, tuple)):
+            return value
+        normalized: dict[tuple[object, object], object] = {}
+        for item in value:
+            if not isinstance(item, Mapping):
+                return value
+            row_value = item.get("value")
+            if item.get("value_kind") == "decimal":
+                try:
+                    row_value = Decimal(str(row_value))
+                except InvalidOperation as exc:
+                    raise SourceMeshError("aggregation.source_mesh.errors.row_binding_value_invalid") from exc
+            normalized[(item.get("binding_id"), item.get("row_index"))] = row_value
+        return normalized
+
     @field_validator("row_binding_values")
     @classmethod
     def _freeze_row_binding_values(
@@ -651,6 +669,7 @@ class CalculationSourceResolution(BaseModel):
                 "binding_id": binding_id,
                 "row_index": row_index,
                 "value": row_value,
+                "value_kind": "decimal" if isinstance(row_value, Decimal) else "text",
             }
             for (binding_id, row_index), row_value in value.items()
         )
