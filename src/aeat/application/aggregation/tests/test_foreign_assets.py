@@ -18,6 +18,7 @@ from .._foreign_assets import (
     ForeignAssetsAggregationSourceResolver,
     _registry_observations_from_foreign_assets_aggregation,
     aggregate_foreign_assets_720,
+    declarable_asset_classes_720,
     declarable_class,
 )
 from .._source_mesh import CalculationSourceContext
@@ -184,6 +185,62 @@ class TestThreshold720:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="49999.99", asset_external_id="A1"),)
         result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is False
+
+    def test_security_and_insurance_share_valores_obligation_block_threshold(self) -> None:
+        observations = (
+            _obs(
+                asset_class=ForeignAssetClass.SECURITY,
+                valuation="30000.00",
+                asset_external_id="LI-SECURITY-001",
+                source_id="security-001",
+            ),
+            _obs(
+                asset_class=ForeignAssetClass.INSURANCE,
+                valuation="25000.00",
+                asset_external_id="CH-INSURANCE-001",
+                source_id="insurance-001",
+            ),
+            _obs(
+                asset_class=ForeignAssetClass.ACCOUNT,
+                valuation="1000.00",
+                asset_external_id="AD-ACCOUNT-001",
+                source_id="account-001",
+            ),
+        )
+
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
+
+        assert declarable_asset_classes_720(result) == frozenset(
+            {
+                ForeignAssetClass.SECURITY,
+                ForeignAssetClass.INSURANCE,
+            },
+        )
+        assert declarable_class(result, asset_class=ForeignAssetClass.SECURITY) is True
+        assert declarable_class(result, asset_class=ForeignAssetClass.INSURANCE) is True
+        assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is False
+
+    def test_shared_obligation_block_threshold_stays_strict_at_exactly_50000(self) -> None:
+        observations = (
+            _obs(
+                asset_class=ForeignAssetClass.SECURITY,
+                valuation="25000.00",
+                asset_external_id="LI-SECURITY-001",
+                source_id="security-001",
+            ),
+            _obs(
+                asset_class=ForeignAssetClass.INSURANCE,
+                valuation="25000.00",
+                asset_external_id="CH-INSURANCE-001",
+                source_id="insurance-001",
+            ),
+        )
+
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
+
+        assert declarable_asset_classes_720(result) == frozenset()
+        assert declarable_class(result, asset_class=ForeignAssetClass.SECURITY) is False
+        assert declarable_class(result, asset_class=ForeignAssetClass.INSURANCE) is False
 
 
 class TestForeignAssetSourceResolver:
