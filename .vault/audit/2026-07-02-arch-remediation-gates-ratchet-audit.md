@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#arch-remediation-gates-ratchet'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-05'
 related:
   - "[[2026-07-02-arch-remediation-gates-ratchet-plan]]"
 ---
@@ -252,6 +252,22 @@ after excluding the pre-existing `.env.example` telemetry-field alignment gap
 inventoried in `var/log/core-config-integration-fields-split-20260705.log`.
 The codebase-size gate rerun no longer reports `core/config.py`, but remains red
 on the other known module and callable offenders.
+
+### follow-up-ledger-llm-classification-contracts-size-budget | low | LLM classification module below budget
+
+Reviewed the 2026-07-05 ratchet follow-up that moved the LLM ledger
+suggestion/result contracts and classify-surface provider enum into the new
+`_llm_suggestions.py` module. `_llm_classification.py` still imports and
+re-exports the same public names, keeps provider availability probing local to
+the behavior module, and leaves suggest/apply/reject call paths unchanged. The
+module line count dropped from 1714 to 1506, below its pinned 1664-line budget;
+the new contract module is 176 lines. Ruff passed, the focused real LLM ledger
+suggest/saturate/split/reject suites passed, CLI/import smoke tests passed, and
+the facade identity check confirmed the public `aeat.application.ledger`
+provider export is still the `_llm_classification` re-export. The codebase-size
+gate rerun no longer reports `_llm_classification.py`, but remains red on the
+other known module and callable offenders inventoried in
+`var/log/codebase-size-after-ledger-llm-split-20260705.log`.
 
 ## Recommendations
 
