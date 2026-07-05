@@ -16,13 +16,11 @@ from ...application.modelo import (
     validate_m145_communication_record,
 )
 from ...core.i18n import tr
-from ._common import _emit_envelope
 from ._modelo_m145_parsing import ParseCasillaOverride, m145_actor_from_cli, m145_create_command_from_cli
-from ._modelo_payloads_m145 import (
-    M145CommunicationExportResultPayload,
-    M145CommunicationRecordPayload,
-    M145CommunicationRecordResult,
-    M145CommunicationValidationResultPayload,
+from ._modelo_m145_rendering import (
+    emit_m145_export_result,
+    emit_m145_record_result,
+    emit_m145_validation_result,
 )
 
 
@@ -49,32 +47,6 @@ def register_m145_communication_commands(
     def _bucket_id() -> str:
         require_active_profile()
         return active_bucket_id()
-
-    def _record_result(operation: str, record) -> M145CommunicationRecordResult:
-        return M145CommunicationRecordResult(
-            operation=operation,
-            record=M145CommunicationRecordPayload.from_record(record),
-        )
-
-    def _record_lines(operation: str, record) -> list[str]:
-        lines = [
-            f"operation\t{operation}",
-            f"communication_record_id\t{record.communication_record_id}",
-            f"bucket_id\t{record.bucket_id}",
-            f"modelo\t{record.modelo}",
-            f"communication_year\t{record.communication_year}",
-            f"period\t{record.period_token.value}",
-            f"revision_id\t{record.revision_id}",
-            f"state\t{record.state.value}",
-            f"created_at\t{record.created_at.isoformat()}",
-        ]
-        if record.delivered_to_payer_at is not None:
-            lines.append(f"delivered_to_payer_at\t{record.delivered_to_payer_at.isoformat()}")
-        if record.locally_completed_at is not None:
-            lines.append(f"locally_completed_at\t{record.locally_completed_at.isoformat()}")
-        if record.note is not None:
-            lines.append(f"note\t{record.note}")
-        return lines
 
     @m145_app.command(
         "create",
@@ -135,13 +107,7 @@ def register_m145_communication_commands(
             bucket_id=bucket_id,
             actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
         )
-        operation = "modelo.m145.create"
-        _emit_envelope(
-            ctx,
-            command=operation,
-            result=_record_result(operation, record),
-            lines=_record_lines(operation, record),
-        )
+        emit_m145_record_result(ctx, operation="modelo.m145.create", record=record)
 
     @m145_app.command(
         "validate",
@@ -164,16 +130,7 @@ def register_m145_communication_commands(
     ) -> None:
         """Validate a persisted Modelo 145 local communication record."""
         result = validate_m145_communication_record(communication_record_id, bucket_id=_bucket_id())
-        payload = M145CommunicationValidationResultPayload.from_result(result)
-        lines = [
-            "operation\tmodelo.m145.validate",
-            f"communication_record_id\t{result.communication_record_id}",
-            f"valid\t{result.valid}",
-            f"issue_count\t{result.issue_count}",
-        ]
-        for issue in result.issues:
-            lines.append(f"issue\t{issue.kind.value}\t{issue.casilla_id or ''}\t{issue.message}")
-        _emit_envelope(ctx, command="modelo.m145.validate", result=payload, lines=lines)
+        emit_m145_validation_result(ctx, result=result)
 
     @m145_app.command(
         "export",
@@ -199,18 +156,7 @@ def register_m145_communication_commands(
             bucket_id=_bucket_id(),
             actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
         )
-        payload = M145CommunicationExportResultPayload.from_result(result)
-        lines = [
-            "operation\tmodelo.m145.export",
-            f"communication_record_id\t{result.communication_record_id}",
-            f"export_layout_id\t{result.export_layout_id}",
-            f"encoding\t{result.encoding}",
-            f"record_count\t{result.record_count}",
-            f"byte_length\t{result.byte_length}",
-            f"payload_sha256\t{result.payload_sha256}",
-            f"payload_text\t{payload.payload_text}",
-        ]
-        _emit_envelope(ctx, command="modelo.m145.export", result=payload, lines=lines)
+        emit_m145_export_result(ctx, result=result)
 
     @m145_app.command(
         "mark-delivered-to-payer",
@@ -236,13 +182,7 @@ def register_m145_communication_commands(
             bucket_id=_bucket_id(),
             actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
         )
-        operation = "modelo.m145.mark_delivered_to_payer"
-        _emit_envelope(
-            ctx,
-            command=operation,
-            result=_record_result(operation, record),
-            lines=_record_lines(operation, record),
-        )
+        emit_m145_record_result(ctx, operation="modelo.m145.mark_delivered_to_payer", record=record)
 
     @m145_app.command(
         "mark-locally-completed",
@@ -268,13 +208,7 @@ def register_m145_communication_commands(
             bucket_id=_bucket_id(),
             actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
         )
-        operation = "modelo.m145.mark_locally_completed"
-        _emit_envelope(
-            ctx,
-            command=operation,
-            result=_record_result(operation, record),
-            lines=_record_lines(operation, record),
-        )
+        emit_m145_record_result(ctx, operation="modelo.m145.mark_locally_completed", record=record)
 
 
 __all__ = ["register_m145_communication_commands"]
