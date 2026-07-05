@@ -40,10 +40,10 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     derive_work_unit_id,
 )
-from ....tests._review_package_adapters import (
+from ....tests.review_package_adapters import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _ENCRYPTION_KEY_NAMESPACE,
 )
-from ....tests._review_package_adapters import (
+from ....tests.review_package_adapters import (
     SecureObjectRow,
     session_scope,
 )

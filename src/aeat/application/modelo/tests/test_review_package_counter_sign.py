@@ -39,7 +39,7 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     derive_work_unit_id,
 )
-from ....tests._review_package_adapters import (
+from ....tests.review_package_adapters import (
     MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
     SecureObjectRow,
     session_scope,

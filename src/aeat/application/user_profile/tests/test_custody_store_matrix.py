@@ -26,7 +26,8 @@ from ....core.hashing import sha256_hex
 from ....core.resources import resources
 from ....domain.filing import ModeloDraft
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
-from ....tests._custody_store_matrix_adapters import (
+from ....tests.aeat_literal_fixtures import aeat_url
+from ....tests.custody_store_matrix_adapters import (
     AmortizacionLedgerRepository,
     AssetsLedgerRepository,
     BucketEventHistoryRepository,
@@ -45,7 +46,6 @@ from ....tests._custody_store_matrix_adapters import (
     save_usage_ratios,
     secure_object_repository_for_active_bucket,
 )
-from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
 from ...bucket_maintenance import (
     BucketMaintenanceService,

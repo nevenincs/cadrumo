@@ -61,7 +61,7 @@ from ....domain.transactions import (
     TransactionValidationError,
 )
 from ....domain.usage_ratios import UsageRatioProfile
-from ....tests._ledger_action_adapters import (
+from ....tests.ledger_action_adapters import (
     AttachmentStore,
     BucketEventHistoryRepository,
     CalculationRevisionCatalogueRepository,

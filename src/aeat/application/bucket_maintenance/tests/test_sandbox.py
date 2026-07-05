@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests._application_adapter_exports import BucketLifecycleStatus, bucket_paths, manifest_path, read_manifest
+from ....tests.application_adapter_exports import BucketLifecycleStatus, bucket_paths, manifest_path, read_manifest
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     SANDBOX_LABEL_PREFIX,

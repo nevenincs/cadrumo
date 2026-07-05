@@ -28,7 +28,7 @@ import pytest
 
 from ...core.config import Settings
 from ...core.telemetry import TelemetryTier
-from ...tests._application_adapter_exports import LLMRunRecord, LLMRunTelemetryRecorder
+from ...tests.application_adapter_exports import LLMRunRecord, LLMRunTelemetryRecorder
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..diagnostics_telemetry import (
     build_telemetry_flush_preview,

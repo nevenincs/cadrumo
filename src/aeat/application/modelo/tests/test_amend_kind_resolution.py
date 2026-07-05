@@ -39,7 +39,7 @@ from ....domain.modelos import (
     upsert_filing_record,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests._application_adapter_exports import (
+from ....tests.application_adapter_exports import (
     BucketEventHistoryRepository,
     CalculationRevisionCatalogueRepository,
     ModeloRecordCatalogueRepository,

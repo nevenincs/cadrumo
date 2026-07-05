@@ -19,10 +19,10 @@ from pathlib import Path
 
 import pytest
 
-from ....tests._review_package_adapters import (
+from ....tests.review_package_adapters import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
 )
-from ....tests._review_package_adapters import (
+from ....tests.review_package_adapters import (
     DecryptionError,
     SecureObjectRow,
     session_scope,

@@ -22,7 +22,7 @@ from pydantic import ValidationError
 
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
-from ....tests._application_adapter_exports import InvoiceCatalogueRepository
+from ....tests.application_adapter_exports import InvoiceCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     BulkInvoiceImportRow,
