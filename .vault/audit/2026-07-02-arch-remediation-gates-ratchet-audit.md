@@ -122,6 +122,20 @@ with `-m integration`. The codebase-size gate rerun no longer reports either
 ledger evidence confirm callable, but remains red on the other known module and
 callable offenders.
 
+### follow-up-review-package-build-size-budget | low | review-package build callable below budget
+
+Reviewed the 2026-07-05 ratchet follow-up that extracted review-package build
+payload/line projection into the new `_modelo_review_package_rendering` module.
+The `review_package_build` command still resolves the target revision, exports
+the fichero-BOE draft, builds the package, and emits the same envelope shape;
+only the final result projection moved out of the oversized CLI module. The
+callable line count dropped from 199 to 179, below the default 180-line budget,
+and the CLI module line count dropped from 1349 to 1332. Ruff passed, the real
+review-package CLI integration suite passed with `-m integration`, and the new
+rendering module is reachable from existing tests. The codebase-size gate rerun
+no longer reports `review_package_build`, but remains red on the other known
+module and callable offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
