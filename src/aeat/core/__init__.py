@@ -126,6 +126,17 @@ if TYPE_CHECKING:
         resolve_repository_bucket_id,
         write_pointer,
     )
+    from ._foreign_asset_obligation import (
+        FOREIGN_ASSET_CLASS_OBLIGATION_GROUP,
+        FOREIGN_ASSET_DECLARATION_THRESHOLDS,
+        MODELO_720_FOREIGN_ASSET_CLASS_CODES,
+        MODELO_720_REDECLARATION_INCREASE_THRESHOLD_EUR,
+        ForeignAssetDeclarationThreshold,
+        ForeignAssetObligationGroup,
+        foreign_asset_class_declaration_threshold,
+        foreign_asset_declaration_threshold,
+        foreign_asset_obligation_group,
+    )
     from .aggregation import BindingSourceKind, IntracomOperationType
 
 __all__: list[str] = [
@@ -133,8 +144,12 @@ __all__: list[str] = [
     "ANTHROPIC_EXTRA",
     "BROWSER_EXTRA",
     "DEFAULT_WRITE_PROVENANCE",
+    "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
+    "FOREIGN_ASSET_DECLARATION_THRESHOLDS",
     "GOOGLE_EXTRA",
     "IBAN_SHAPE_RE",
+    "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
+    "MODELO_720_REDECLARATION_INCREASE_THRESHOLD_EUR",
     "NON_REGISTRY_MODELOS",
     "OPTIONAL_EXTRAS",
     "OUT_OF_SCOPE_OBLIGATIONS",
@@ -146,6 +161,8 @@ __all__: list[str] = [
     "BucketPointer",
     "CasillaId",
     "ConvenioOverrideKind",
+    "ForeignAssetDeclarationThreshold",
+    "ForeignAssetObligationGroup",
     "GoogleCredentialSourceKind",
     "IntracomOperationType",
     "LedgerSortField",
@@ -171,6 +188,9 @@ __all__: list[str] = [
     "classify_amendment_liability_direction",
     "classify_post_filing_event_kind",
     "derive_result_disposition",
+    "foreign_asset_class_declaration_threshold",
+    "foreign_asset_declaration_threshold",
+    "foreign_asset_obligation_group",
     "freeze_toml",
     "freeze_toml_value",
     "iban_mod_97",
@@ -206,6 +226,20 @@ def __getattr__(name: str) -> object:
         from .aggregation import IntracomOperationType
 
         return IntracomOperationType
+    if name in (
+        "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
+        "FOREIGN_ASSET_DECLARATION_THRESHOLDS",
+        "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
+        "MODELO_720_REDECLARATION_INCREASE_THRESHOLD_EUR",
+        "ForeignAssetDeclarationThreshold",
+        "ForeignAssetObligationGroup",
+        "foreign_asset_class_declaration_threshold",
+        "foreign_asset_declaration_threshold",
+        "foreign_asset_obligation_group",
+    ):
+        from . import _foreign_asset_obligation
+
+        return getattr(_foreign_asset_obligation, name)
     if name == "BucketPointer":
         from ._bucket_pointer import BucketPointer
 

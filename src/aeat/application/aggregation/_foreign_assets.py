@@ -22,10 +22,13 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Modelo, Period
-from ...core._foreign_asset_obligation import (
+from ...core import (
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
+    STRICT_FROZEN_CONFIG,
+    BindingSourceKind,
     ForeignAssetObligationGroup,
+    Modelo,
+    Period,
     foreign_asset_declaration_threshold,
     foreign_asset_obligation_group,
 )
