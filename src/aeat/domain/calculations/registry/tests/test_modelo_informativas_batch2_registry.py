@@ -62,7 +62,7 @@ _MODELOS = [
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,kind", _MODELOS)
-def test_validator_accepts_committed_definition(
+def test_committed_definition_legal_refs_and_deadlines_are_grounded(
     mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str
 ) -> None:
     modelo, catalogues = _committed_modelo(mid)
@@ -70,28 +70,14 @@ def test_validator_accepts_committed_definition(
     assert rev in modelo.revisions
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,kind", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(
-    mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str
-) -> None:
-    """Approval (art 1) and plazo (art 4/6) resolve as bundled legal authority.
-
-    Both required_text sets are cross-checked against the bundled orden corpus at
-    build; here we pin their evidence tier and document id.
-    """
-    _, catalogues = _committed_modelo(mid)
+    # Approval (art 1) and plazo (art 4/6) resolve as bundled legal authority.
+    # Both required_text sets are cross-checked against the bundled orden corpus
+    # at build; here we pin their evidence tier and document id.
     for ref in (approval, plazo):
         entry = catalogues.legal[ref]
         assert entry.evidence_tier == "legal_authority"
         assert entry.document_id == doc
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,kind", _MODELOS)
-def test_deadline_windows_cite_plazo_and_match_cadence(
-    mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str
-) -> None:
-    modelo, _ = _committed_modelo(mid)
     revision = modelo.revisions[rev]
     assert revision.deadline_windows, f"{mid} must declare deadline windows"
     for window in revision.deadline_windows:

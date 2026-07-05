@@ -393,12 +393,15 @@ aggregation:
         duplicat a la malla de fonts.'
       duplicate_relation_owner: 'Error intern: propietari de relacio duplicat a la
         malla de fonts.'
+      duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
       owned_sources_blank: Les fonts propietat de la malla de fonts no poden contenir
         tipus de font en blanc.
       owned_sources_duplicate: Les fonts propietat de la malla de fonts han de ser
         úniques.
       relation_provenance_incomplete: La procedencia de la relacio ha d'incloure model
         d'origen, exercici, periodes, caselles, referencies legals i referencies d'origen.
+      row_binding_index_invalid: aggregation.source_mesh.errors.row_binding_index_invalid
+      row_binding_value_invalid: aggregation.source_mesh.errors.row_binding_value_invalid
       source_transaction_ids_blank: Els identificadors de transacció de la malla de
         fonts no poden contenir blancs.
       source_transaction_ids_duplicate: Els identificadors de transacció de la malla
@@ -614,10 +617,10 @@ application:
         invoice_catalogue_changed: el cataleg de factures ha canviat
         prior_filing_observations_changed: les observacions de declaracions anteriors
           han canviat
+        profile_activity_changed: l'activitat del perfil del contribuent ha canviat
         schema_formula_changed: la procedencia de l'esquema o la formula ha canviat
         transaction_catalogue_changed: el cataleg de transaccions ha canviat
         unknown: '%{reason}'
-        profile_activity_changed: 'l''activitat del perfil del contribuent ha canviat'
     runtime:
       errors:
         active_profile_load_failed: 'No s ha pogut carregar el perfil actiu de presentacio:
@@ -2065,8 +2068,13 @@ cli:
         app_help: 'Concilia una unitat de treball de model amb el seu justificant
           AEAT: pull descarrega el justificant d''AEAT i concilia; file concilia un
           PDF local; history llista les conciliacions anteriors.'
-        file_help: 'Concilia una unitat de treball contra un PDF de justificant o declaracio local. Nomes local; mai contacta amb AEAT.'
-        file_path_help: 'Cami al PDF local de justificant o declaracio amb el qual conciliar.'
+        file_help: Concilia una unitat de treball contra un PDF de justificant o declaracio
+          local. Nomes local; mai contacta amb AEAT.
+        file_kind_help: 'Tipus de document d''evidencia: justificante (rebut AEAT,
+          tots els models) o declaration (PDF de declaracio presentada, conciliacio
+          a nivell de casella, nomes models habilitats). Per defecte justificante.'
+        file_path_help: Cami al PDF local de justificant o declaracio amb el qual
+          conciliar.
         history_empty: Encara no hi ha conciliacions registrades.
         history_help: Llista les conciliacions registrades per al perfil actiu.
         history_work_unit_id_help: Id d'unitat de treball opcional per acotar l'historial
@@ -2075,7 +2083,6 @@ cli:
           Contacta amb AEAT (nomes lectura).
         work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
           inequívoc).
-        file_kind_help: 'Tipus de document d''evidencia: justificante (rebut AEAT, tots els models) o declaration (PDF de declaracio presentada, conciliacio a nivell de casella, nomes models habilitats). Per defecte justificante.'
       requires:
         help: 'Mostra la llista de dades necessàries per a un model i un període:
           quines caselles cal emplenar manualment, quines són opcionals, quines s''emplenen
@@ -2198,7 +2205,10 @@ cli:
           l'AEAT.
         work_unit_id_help: Id de la unitat de treball (SHA-256 o prefix inequívoc).
       support_matrix:
-        help: 'Mostra la matriu de suport per model a nivell de registre: grau de càlcul, manifest de completesa, formats d''exportació, cobertura d''extractors, canvis de nom de casella declarats, decisions de baixa de suport i referències creuades amb el portal de l''AEAT.'
+        help: 'Mostra la matriu de suport per model a nivell de registre: grau de
+          càlcul, manifest de completesa, formats d''exportació, cobertura d''extractors,
+          canvis de nom de casella declarats, decisions de baixa de suport i referències
+          creuades amb el portal de l''AEAT.'
       verification_report:
         app_help: Inspeccionar els informes de verificació registrats
         list_help: Llistar els informes de verificació, opcionalment filtrats per

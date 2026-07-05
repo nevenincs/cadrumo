@@ -367,10 +367,13 @@ aggregation:
       duplicate_bound_casilla_owner: 'Belső hiba: ismétlődő mező-kötési tulajdonos
         a forráshálon.'
       duplicate_relation_owner: 'Belső hiba: ismétlődő kapcsolati tulajdonos a forráshálon.'
+      duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
       owned_sources_blank: A forrásháló saját forrásai nem tartalmazhatnak üres forrástípusokat.
       owned_sources_duplicate: A forrásháló saját forrásainak egyedinek kell lenniük.
       relation_provenance_incomplete: A kapcsolat eredetenek tartalmaznia kell a forras
         modellt, evet, idoszakokat, mezoket, jogi hivatkozasokat es forrashivatkozasokat.
+      row_binding_index_invalid: aggregation.source_mesh.errors.row_binding_index_invalid
+      row_binding_value_invalid: aggregation.source_mesh.errors.row_binding_value_invalid
       source_transaction_ids_blank: A forrásháló tranzakcióazonosítói nem tartalmazhatnak
         üres értékeket.
       source_transaction_ids_duplicate: A forrásháló tranzakcióazonosítóinak egyedinek
@@ -571,10 +574,10 @@ application:
         draft_review_changed: a tervezet ellenorzesi felulete megvaltozott
         invoice_catalogue_changed: a szamlakatalogus megvaltozott
         prior_filing_observations_changed: a korabbi bevallasi megfigyelesek megvaltoztak
+        profile_activity_changed: az adofizetoi profil tevekenysege megvaltozott
         schema_formula_changed: a sema vagy keplet eredete megvaltozott
         transaction_catalogue_changed: a tranzakcios katalogus megvaltozott
         unknown: '%{reason}'
-        profile_activity_changed: 'az adofizetoi profil tevekenysege megvaltozott'
     runtime:
       errors:
         active_profile_load_failed: 'Az aktiv bevallasi profil nem toltheto be: %{reason}.'
@@ -2009,8 +2012,13 @@ cli:
         app_help: 'Egyeztet egy modelo munkaegyseget az AEAT igazolasaval: a pull
           letolti az igazolast az AEAT-tol es egyeztet; a file egy helyi PDF-et egyeztet;
           a history a korabbi futtatasokat listazza.'
-        file_help: 'Egyeztet egy munkaegyseget egy helyi igazolas vagy bevallas PDF ellen. Csak helyi; soha nem lep kapcsolatba az AEAT-tal.'
-        file_path_help: 'A helyi igazolas vagy bevallas PDF utvonala, amellyel egyeztetni kell.'
+        file_help: Egyeztet egy munkaegyseget egy helyi igazolas vagy bevallas PDF
+          ellen. Csak helyi; soha nem lep kapcsolatba az AEAT-tal.
+        file_kind_help: 'Bizonyitek dokumentum tipusa: justificante (AEAT igazolas,
+          minden modelo) vagy declaration (benyujtott bevallas PDF, rovat szintu egyeztetes,
+          csak engedelyezett modelok). Alapertelmezetten justificante.'
+        file_path_help: A helyi igazolas vagy bevallas PDF utvonala, amellyel egyeztetni
+          kell.
         history_empty: Meg nincsenek rogzitett egyeztesek.
         history_help: Listazza az aktiv profilhoz rogzitett egyeztteseket.
         history_work_unit_id_help: Opcionalis munkaegyseg-azonosito a tortenet egy
@@ -2018,7 +2026,6 @@ cli:
         pull_help: Letolti egy munkaegyseg igazolasat az AEAT-tol, es egyeztet ellene.
           Kapcsolatba lep az AEAT-tal (csak olvasas).
         work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).
-        file_kind_help: 'Bizonyitek dokumentum tipusa: justificante (AEAT igazolas, minden modelo) vagy declaration (benyujtott bevallas PDF, rovat szintu egyeztetes, csak engedelyezett modelok). Alapertelmezetten justificante.'
       requires:
         help: 'Megjeleníti az egy adott modelo-hoz és időszakhoz szükséges adatok
           ellenőrzőlistáját: mely mezőket kell kézzel kitölteni, melyek opcionálisak,
@@ -2144,7 +2151,10 @@ cli:
           az AEAT-tal.
         work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
       support_matrix:
-        help: 'Megjeleníti a regisztráció szintű, modellenkénti támogatási mátrixot: számítási szint, teljességi jegyzék, exportformátumok, kinyerő lefedettség, deklarált casilla-átnevezések, támogatás-visszavonási döntések és AEAT-portál kereszthivatkozások.'
+        help: 'Megjeleníti a regisztráció szintű, modellenkénti támogatási mátrixot:
+          számítási szint, teljességi jegyzék, exportformátumok, kinyerő lefedettség,
+          deklarált casilla-átnevezések, támogatás-visszavonási döntések és AEAT-portál
+          kereszthivatkozások.'
       verification_report:
         app_help: Rögzített ellenőrzési jelentések vizsgálata.
         list_help: Ellenőrzési jelentések listázása, opcionálisan egy számítási revízióra
