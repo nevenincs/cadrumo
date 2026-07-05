@@ -79,10 +79,12 @@ def _boe_representable_ids(modelo: str, year: int, period: str) -> set[str]:
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
-def test_fichero_boe_files_no_casilla_the_workbook_does_not_compute(
+def test_fichero_boe_and_workbook_share_computed_export_surface(
     modelo: str, year: int, period: str, on: date
 ) -> None:
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
+    revision = snapshot.revision
+    by_id = {casilla.id: casilla for casilla in revision.casillas}
     workbook = _workbook_emitted_ids(snapshot)
     boe = _boe_representable_ids(modelo, year, period)
 
@@ -94,18 +96,9 @@ def test_fichero_boe_files_no_casilla_the_workbook_does_not_compute(
         f"the two transports diverge from the shared calculation surface"
     )
 
-
-@pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
-def test_both_transports_cover_the_computed_manifest_casillas(modelo: str, year: int, period: str, on: date) -> None:
     # Both transports must cover every COMPUTED manifest casilla the fichero-BOE
     # can represent (the fichero-BOE via its representable set, the workbook via an
     # emitted cell), so neither drops a required calculation result the other keeps.
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
-    revision = snapshot.revision
-    by_id = {casilla.id: casilla for casilla in revision.casillas}
-    workbook = _workbook_emitted_ids(snapshot)
-    boe = _boe_representable_ids(modelo, year, period)
-
     assert revision.completeness_manifest is not None
     computed_representable = {
         mc.casilla_id
