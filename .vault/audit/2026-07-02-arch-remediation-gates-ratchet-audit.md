@@ -108,6 +108,20 @@ budget. Ruff passed, and the focused amendment flow/kind-resolution suites
 passed. The codebase-size gate rerun no longer reports `amend_modelo_revision`,
 but remains red on the other known module and callable offenders.
 
+### follow-up-ledger-evidence-confirm-size-budget | low | evidence confirm CLI callables below budget
+
+Reviewed the 2026-07-05 ratchet follow-up that moved the
+`evidence_confirm` command body into `_run_evidence_confirm`, leaving the Typer
+handler as a parameter bridge. The command still validates exactly-one evidence
+reference, delegates to `confirm_invoice_draft_from_evidence`, renders the same
+payload rows, and emits the same idempotent/next-action notices. The
+`_register_evidence_confirm_command` callable dropped from 211 to 125 lines and
+`evidence_confirm` dropped from 203 to 117, both below the default 180-line
+budget. Ruff passed, and the real evidence-confirm CLI integration suite passed
+with `-m integration`. The codebase-size gate rerun no longer reports either
+ledger evidence confirm callable, but remains red on the other known module and
+callable offenders.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
