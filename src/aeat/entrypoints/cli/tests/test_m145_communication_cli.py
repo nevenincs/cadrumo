@@ -55,6 +55,18 @@ _FORBIDDEN_COMMAND_SURFACES = (
     "submit",
     "tramite",
 )
+_FORBIDDEN_COMPATIBILITY_COMMAND_ALIASES = (
+    "complete",
+    "completed",
+    "deliver",
+    "deliver-to-payer",
+    "delivered-to-payer",
+    "locally-complete",
+    "mark-complete",
+    "mark-completed",
+    "mark-delivered",
+    "mark-locally-complete",
+)
 _FORBIDDEN_HELP_WORDS = frozenset(
     {
         "deadline",
@@ -227,6 +239,14 @@ def test_m145_transition_failure_uses_central_error_boundary(isolated_m145_cli_b
 @pytest.mark.parametrize("surface", _FORBIDDEN_COMMAND_SURFACES)
 def test_m145_cli_rejects_forbidden_filing_like_command_surfaces(surface: str) -> None:
     result = _invoke(["app", "modelo", "m145", surface, "--help"])
+
+    assert result.exit_code != 0, result.output
+    assert "No such command" in result.output
+
+
+@pytest.mark.parametrize("alias", _FORBIDDEN_COMPATIBILITY_COMMAND_ALIASES)
+def test_m145_cli_rejects_compatibility_alias_command_spellings(alias: str) -> None:
+    result = _invoke(["app", "modelo", "m145", alias, "--help"])
 
     assert result.exit_code != 0, result.output
     assert "No such command" in result.output

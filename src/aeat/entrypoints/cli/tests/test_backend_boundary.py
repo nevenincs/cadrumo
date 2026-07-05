@@ -527,6 +527,43 @@ def test_censo_modelo_removed_shims_and_stubs_stay_removed() -> None:
     assert offenders == [], "removed censo modelo shim/stub surfaces returned:\n  " + "\n  ".join(offenders)
 
 
+def test_modelo_145_shims_stubs_and_compatibility_aliases_stay_absent() -> None:
+    """Modelo 145 must stay a real local communication surface, not a compatibility shell."""
+
+    application_dir = PROJECT_ROOT / "src" / "aeat" / "application" / "modelo"
+    scanned_files = (
+        _CLI_ROOT / "_modelo_m145_cli.py",
+        _CLI_ROOT / "_modelo_m145_parsing.py",
+        _CLI_ROOT / "_modelo_m145_rendering.py",
+        _CLI_ROOT / "_modelo_payloads_m145.py",
+        application_dir / "_m145_communication.py",
+        application_dir / "_m145_communication_records.py",
+        *_modelo_source_paths("145"),
+    )
+    forbidden_tokens = (
+        "NotImplementedError",
+        "_Fake",
+        "_Stub",
+        "aliases also accepted",
+        "backwards compatibility",
+        "compatibility alias",
+        "deprecated",
+        "deprecated spelling",
+        "deprecation",
+        "fake support",
+        "not implemented",
+        "shim",
+        "stub",
+    )
+    offenders: list[str] = []
+    for path in scanned_files:
+        text = path.read_text(encoding="utf-8")
+        for token in forbidden_tokens:
+            if token in text:
+                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
+    assert offenders == [], "modelo 145 shim/stub/compatibility surfaces returned:\n  " + "\n  ".join(offenders)
+
+
 def test_legacy_application_aggregation_test_tree_stays_absent() -> None:
     """Retired top-level aggregation tests must not shadow package-owned tests."""
 
