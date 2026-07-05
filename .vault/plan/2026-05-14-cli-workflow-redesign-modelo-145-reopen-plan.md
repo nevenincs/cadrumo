@@ -80,7 +80,7 @@ This Phase exposes only thin CLI delegation after backend behavior exists.
 
 This Phase proves the successor behavior is real, local, and free of forbidden surfaces.
 
-- [ ] `P06.S28` - Add real service tests for create, validate, export, delivered-to-payer, and locally completed behavior; `tests/application/modelo`.
+- [x] `P06.S28` - Add real service tests for create, validate, export, delivered-to-payer, and locally completed behavior; `tests/application/modelo`.
 - [ ] `P06.S29` - Add CLI behavior tests exercising Modelo 145 through real backend services; `tests/entrypoints/cli`.
 - [ ] `P06.S30` - Add negative tests proving Modelo 145 has no filing, deadline, live-read, portal, submit, receipt, or AEAT electronic tramite surface; `tests`.
 - [ ] `P06.S31` - Add negative tests proving Modelo 145 has no shims, stubs, fake support, deprecated spellings, or compatibility aliases; `tests`.

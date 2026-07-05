@@ -324,6 +324,7 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-P05-S25]]'
   - '[[2026-05-14-cli-workflow-redesign-P05-S26]]'
   - '[[2026-05-14-cli-workflow-redesign-P05-S27]]'
+  - '[[2026-05-14-cli-workflow-redesign-P06-S28]]'
   - '[[2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-exec]]'
@@ -854,6 +855,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-P05-S25` - Render Modelo 145 command results through centralized output emitters
 - `2026-05-14-cli-workflow-redesign-P05-S26` - Route Modelo 145 command failures through the central command error boundary
 - `2026-05-14-cli-workflow-redesign-P05-S27` - Validate Modelo 145 help text avoids file, filing, deadline, live-read, and AEAT submission vocabulary
+- `2026-05-14-cli-workflow-redesign-P06-S28` - Add real service tests for create, validate, export, delivered-to-payer, and locally completed behavior
 
 ### plan
 
