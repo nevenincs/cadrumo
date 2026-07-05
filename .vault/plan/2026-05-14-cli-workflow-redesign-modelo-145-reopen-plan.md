@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-07-04'
+modified: '2026-07-05'
 tier: L2
 related:
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]'
@@ -11,6 +11,16 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-14-cli-workflow-redesign-w51-modelo-145-deferral-baseline-exec]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `cli-workflow-redesign` `modelo-145-local-payer-communication-reopening` plan
 
@@ -48,7 +58,7 @@ This Phase adds the Modelo 145 registry foundation as a non-filing local payer c
 
 This Phase implements real backend-owned local communication behavior before any CLI exposure.
 
-- [ ] `P04.S16` - Add backend service ownership for Modelo 145 local payer communication; `src/aeat/application/modelo`.
+- [x] `P04.S16` - Add backend service ownership for Modelo 145 local payer communication; `src/aeat/application/modelo`.
 - [ ] `P04.S17` - Add create behavior for bucket-scoped Modelo 145 communication records; `src/aeat/application/modelo`.
 - [ ] `P04.S18` - Add validate behavior backed by registry and source authority; `src/aeat/application/modelo`.
 - [ ] `P04.S19` - Add export behavior backed by the Modelo 145 registry layout; `src/aeat/application/modelo`.

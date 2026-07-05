@@ -206,6 +206,14 @@ from ._m036_lifecycle import (
     read_m036_declaration,
     record_m036_declaration,
 )
+from ._m145_communication import (
+    M145_COMMUNICATION_MODELO,
+    M145_COMMUNICATION_PERIOD,
+    M145_COMMUNICATION_SERVICE_OWNER,
+    M145CommunicationAction,
+    M145CommunicationServiceContract,
+    build_m145_communication_service_contract,
+)
 from ._maritime_preview import (
     ModeloMaritimeExemptionPreview,
     maritime_facts_from_active_profile,
@@ -494,6 +502,9 @@ __all__ = [
     "CALLER_OVERRIDABLE_CARRY_SOURCES",
     "CEDED_AUTONOMIC_MODELOS",
     "CEDED_AUTONOMIC_MODELO_LOCALE_KEYS",
+    "M145_COMMUNICATION_MODELO",
+    "M145_COMMUNICATION_PERIOD",
+    "M145_COMMUNICATION_SERVICE_OWNER",
     "OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND",
     "QUICKFILE_STAGE_ORDER",
     "STUB_MODELO_LOCALE_KEYS",
@@ -524,6 +535,8 @@ __all__ = [
     "ImportedFeedback",
     "M036DeclarationCommand",
     "M036DeclarationResult",
+    "M145CommunicationAction",
+    "M145CommunicationServiceContract",
     "Modelo100BorradorBindingCommand",
     "Modelo100BorradorBindingError",
     "Modelo100BorradorSourceResolver",
@@ -690,6 +703,7 @@ __all__ = [
     "assert_workspace_permits_official_action",
     "authorization_advisory_for_modelo",
     "build_feedback_package",
+    "build_m145_communication_service_contract",
     "build_review_package",
     "build_work_calculate_input_bundle",
     "calculate_modelo_revision",
