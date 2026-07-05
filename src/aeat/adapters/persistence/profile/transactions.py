@@ -35,6 +35,20 @@ commit all-or-nothing, preserving the co-write atomicity the single-blob
 decryption-free
 :meth:`~adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
 scan, so an unchanged transaction is never rewritten.
+
+See Also:
+    :class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`
+        Domain port this concrete persistence adapter implements.
+    :class:`~domain.transactions.Transaction`
+        Domain transaction payload stored one encrypted row at a time.
+    :data:`~adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
+        Central namespace, sensitivity, schema-version, and object-key contract
+        for transaction secure objects.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
+        Runtime-created encrypted storage boundary used for atomic batches.
+    :mod:`~application.ledger`
+        Application ledger workflows that consume this repository through the
+        transaction catalogue boundary.
 """
 
 from __future__ import annotations
