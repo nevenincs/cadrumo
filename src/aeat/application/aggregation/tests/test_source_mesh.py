@@ -65,11 +65,71 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
     assert resolution.model_dump(mode="json")["binding_values"] == {"modelo-303-iva-repercutido-general-cuota": "21.00"}
     assert resolution.model_dump(mode="json")["date_binding_values"] == {"profile-birth-date": "1980-01-31"}
     assert resolution.model_dump(mode="json")["row_binding_values"] == [
-        {"binding_id": "modelo-720-asset-row-valuation", "row_index": 2, "value": "60000.00"},
+        {
+            "binding_id": "modelo-720-asset-row-valuation",
+            "row_index": 2,
+            "value": "60000.00",
+            "value_kind": "decimal",
+        },
     ]
     assert resolution.model_dump(mode="json")["relation_values"] == {"modelo-180-rel-115-base-anual": "2128.75"}
     with pytest.raises(ValidationError, match="Extra inputs"):
         CalculationSourceResolution.model_validate({"resolver_id": "ledger-iva", "unexpected": True})
+
+
+def test_source_resolution_row_binding_json_replay_restores_serialized_coordinates() -> None:
+    resolution = CalculationSourceResolution(
+        resolver_id="foreign-assets",
+        owned_sources=(BindingSourceKind.FOREIGN_ASSET,),
+        row_binding_values={
+            ("modelo-720-asset-row-class", 2): "B",
+            ("modelo-720-asset-row-identifier", 2): "000123",
+            ("modelo-720-asset-row-valuation", 2): Decimal("60000.00"),
+        },
+    )
+
+    raw = resolution.model_dump_json()
+    replayed = CalculationSourceResolution.model_validate_json(raw)
+
+    assert replayed.row_binding_values == {
+        ("modelo-720-asset-row-class", 2): "B",
+        ("modelo-720-asset-row-identifier", 2): "000123",
+        ("modelo-720-asset-row-valuation", 2): Decimal("60000.00"),
+    }
+    assert replayed.model_dump_json() == raw
+
+
+def test_source_resolution_rejects_serialized_row_binding_index_below_one() -> None:
+    raw = (
+        '{"resolver_id":"foreign-assets",'
+        '"row_binding_values":[{"binding_id":"modelo-720-asset-row-class","row_index":0,"value":"B"}]}'
+    )
+
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceResolution.model_validate_json(raw)
+
+    context = exc_info.value.errors()[0].get("ctx")
+    assert context is not None
+    error = context["error"]
+    assert isinstance(error, SourceMeshError)
+    assert str(error) == "aggregation.source_mesh.errors.row_binding_index_invalid"
+
+
+def test_source_resolution_rejects_invalid_serialized_decimal_row_binding_value() -> None:
+    raw = (
+        '{"resolver_id":"foreign-assets",'
+        '"row_binding_values":[{"binding_id":"modelo-720-asset-row-valuation",'
+        '"row_index":1,"value":"not-decimal","value_kind":"decimal"}]}'
+    )
+
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceResolution.model_validate_json(raw)
+
+    context = exc_info.value.errors()[0].get("ctx")
+    assert context is not None
+    error = context["error"]
+    assert isinstance(error, SourceMeshError)
+    assert str(error) == "aggregation.source_mesh.errors.row_binding_value_invalid"
 
 
 def test_source_diagnostic_keeps_advisory_category_separate_from_binding_source() -> None:

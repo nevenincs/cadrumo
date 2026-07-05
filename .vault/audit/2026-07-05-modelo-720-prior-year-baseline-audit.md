@@ -32,10 +32,18 @@ The implementation steps were checked in the plan while the plan frontmatter sti
 
 The W03.P05.S13 review found the `CalculationSourceResolution` module summary still listing only the pre-existing scalar and detail-row channels. That stale summary could mislead the next row-carrier step into treating the carrier as ad hoc. Resolution: the source-mesh summary now names the row-indexed binding channel, and the focused S13 static and pytest gates pass after the correction.
 
+### s13-json-replay | high | row-binding JSON replay corrupted numeric-looking text values
+
+The W03.P05.S13 replay review found that the first JSON parser converted every serialized row-binding string through `Decimal` when possible. That preserved monetary fields but corrupted text fields such as asset identifiers: a value like `000123` replayed as a decimal and serialized back as `123`. Resolution: the row-binding JSON object now carries `value_kind`, replay restores only tagged decimal values as `Decimal`, and the source-mesh tests pin both decimal restoration and numeric-looking text preservation.
+
+### s13-locale-catalogue | medium | new source-mesh diagnostics were missing from locale catalogues
+
+The W03.P05.S13 review found the new row-binding validation diagnostics missing from the locale catalogues. Resolution: the locale scaffold added the source-mesh row-binding keys to every shipped locale catalogue, and both locale scaffold check and locale audit now pass.
+
 ## Recommendations
 
 - Keep W03 row-carrier work separate from this taxonomy commit; the new untracked row-carrier ADR placeholder is not part of the W02.P03 source migration.
 - Before promoting the full feature to done, resolve or explicitly approve the taxonomy ADR status according to the ADR workflow.
 - Continue to run the import-hygiene gate when changing cross-package imports; the production Family-1 gate is hard-zero.
-- No additional S13 code-review blockers remain; proceed to S14 only through the approved row-binding carrier.
+- No additional S13 code-review blockers remain; proceed to downstream row-carrier steps only through the approved, replay-safe row-binding carrier.
 - No S14 code-review defects were found; proceed to S15 by consuming `row_binding_values` directly rather than recomputing foreign-asset row values downstream.
