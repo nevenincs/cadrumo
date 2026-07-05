@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#binding-vocabulary-cli-cohesion'
-date: '2026-07-04'
-modified: '2026-07-04'
+date: '2026-07-05'
+modified: '2026-07-05'
 related:
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S01]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S02]]'
@@ -38,6 +38,7 @@ related:
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-reference]]'
   - '[[2026-07-02-binding-vocabulary-cli-cohesion-audit]]'
   - '[[2026-07-04-binding-vocabulary-cli-cohesion-audit]]'
+  - '[[2026-07-05-binding-vocabulary-cli-cohesion-research]]'
 ---
 
 # `binding-vocabulary-cli-cohesion` feature index
@@ -92,3 +93,7 @@ Auto-generated index of all documents tagged with `#binding-vocabulary-cli-cohes
 ### reference
 
 - `2026-06-26-binding-vocabulary-cli-cohesion-reference` - `binding-vocabulary-cli-cohesion` reference: `phase-2.4 rename and re-home anchors: binding homonyms, CLI verb fork, selector typing`
+
+### research
+
+- `2026-07-05-binding-vocabulary-cli-cohesion-research` - `binding-vocabulary-cli-cohesion` research: `closure grounding inventory`
