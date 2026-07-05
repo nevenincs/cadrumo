@@ -319,6 +319,25 @@ reports `_schema.py`, but remains red on the other known module and callable
 offenders inventoried in
 `var/log/codebase-size-after-registry-schema-extraction-split-20260705.log`.
 
+### follow-up-verification-predicate-runtime-size-budget | low | verification actions below module and callable budgets
+
+Reviewed the 2026-07-05 ratchet follow-up that moved registry-authored
+verification predicate parsing/evaluation from `_verification_actions.py` into
+the new `_verification_predicates.py` runtime module. `_verification_actions.py`
+still re-exports the existing private predicate constants and evaluator names
+used by tests and by `_official_box_advisory.py`, while verification collection
+continues to call the same predicate, unresolved-rate, and advisory sources.
+The advisory predicate dispatcher was split into per-operator evaluators, and
+the revision advisory tail was extracted into `_append_revision_advisory_findings`.
+The module line count dropped from 1877 to 1131, below its pinned 1750-line
+budget; the new predicate runtime module is 855 lines. Ruff passed, focused
+predicate/verification behavior tests passed (181 tests), a re-export identity
+smoke check passed, and the codebase-size rerun no longer reports `_verification_actions.py`,
+`_evaluate_advisory_predicate_fires`, or
+`_collect_revision_verification_findings`. The size gate remains red on the
+other known module/callable offenders inventoried in
+`var/log/codebase-size-after-verification-predicate-split-20260705.log`.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
