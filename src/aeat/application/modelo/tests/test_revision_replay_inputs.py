@@ -5,6 +5,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....application.filing import ModeloOperatorProfile, build_draft, build_runtime_schema_provider
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, InputKind, validated_casilla_id
@@ -71,12 +72,14 @@ def _revision(
     state: CalculationRevisionState = CalculationRevisionState.BORRADOR,
     input_values_by_casilla_id: dict[CasillaId, str] | None = None,
     binding_overrides: dict[str, str] | None = None,
+    row_binding_values: dict[str, dict[str, str]] | None = None,
     relation_overrides: dict[str, str] | None = None,
     casilla_values: dict[CasillaId, Decimal] | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
 ) -> CalculationRevision:
     inputs = input_values_by_casilla_id or {}
     bindings = binding_overrides or {}
+    row_bindings = row_binding_values or {}
     relations = relation_overrides or {}
     values = casilla_values or {}
     return CalculationRevision(
@@ -84,6 +87,7 @@ def _revision(
             work_unit_id=work_unit.work_unit_id,
             input_values_by_casilla_id=inputs,
             binding_overrides=bindings,
+            row_binding_values=row_bindings,
             relation_overrides=relations,
             casilla_values=values,
             detail_rows=detail_rows,
@@ -92,6 +96,7 @@ def _revision(
         state=state,
         input_values_by_casilla_id=inputs,
         binding_overrides=bindings,
+        row_binding_values=row_bindings,
         relation_overrides=relations,
         detail_rows=detail_rows,
         casilla_values=values,
@@ -272,3 +277,45 @@ def test_revision_replay_inputs_project_m349_rectification_row_bindings() -> Non
     assert replay_inputs["iva-349-rectificacion-row-periodo"] == {"1": "2T"}
     assert replay_inputs["iva-349-rectificacion-row-base-rectificada"] == {"1": Decimal("1100.00")}
     assert replay_inputs["iva-349-rectificacion-row-base-anterior"] == {"1": Decimal("1000.00")}
+
+
+def test_revision_replay_inputs_project_m720_row_binding_values_into_draft_rows() -> None:
+    work_unit = _work_unit(modelo="720", filing_year=2025, period_code="0A")
+    row_binding_values = {
+        "modelo-720-asset-row-class": {"1": "C"},
+        "modelo-720-asset-row-country": {"1": "AD"},
+        "modelo-720-asset-row-currency": {"1": "EUR"},
+        "modelo-720-asset-row-identifier": {"1": "AD-ACCOUNT-001"},
+        "modelo-720-asset-row-acquisition-date": {"1": "2020-01-15"},
+        "modelo-720-asset-row-valuation": {"1": "40000"},
+    }
+    revision = _revision(work_unit, row_binding_values=row_binding_values)
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+    draft = build_draft(
+        modelo="720",
+        period=work_unit.period,
+        profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="TEST DECLARANTE"),
+        inputs=replay_inputs,
+        schema_provider=build_runtime_schema_provider(
+            modelos=("720",),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+        ),
+    )
+
+    assert revision.binding_overrides == {}
+    assert revision.row_binding_values == row_binding_values
+    assert replay_inputs["modelo-720-asset-row-class"] == {"1": "C"}
+    assert "modelo-720-asset-row-class:1" not in replay_inputs
+    draft_rows = {
+        (value.binding_id, value.row_index): value.value
+        for value in draft.binding_values
+        if value.binding_id.startswith("modelo-720-asset-row-")
+    }
+    assert draft_rows[("modelo-720-asset-row-class", 1)] == "C"
+    assert draft_rows[("modelo-720-asset-row-country", 1)] == "AD"
+    assert draft_rows[("modelo-720-asset-row-currency", 1)] == "EUR"
+    assert draft_rows[("modelo-720-asset-row-identifier", 1)] == "AD-ACCOUNT-001"
+    assert draft_rows[("modelo-720-asset-row-acquisition-date", 1)] == "2020-01-15"
+    assert draft_rows[("modelo-720-asset-row-valuation", 1)] == Decimal("40000")

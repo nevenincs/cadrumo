@@ -18,6 +18,8 @@ Audited W03.P05.S13 source-mesh row-carrier implementation against the row-carri
 
 Audited W03.P05.S14 foreign-assets resolver carrier implementation against the S14 plan row and row-carrier ADR. The review covered the resolver's handoff from registry row-value validation to `CalculationSourceResolution.row_binding_values`, the no-scalar-binding invariant, and the focused M720 resolver parity tests.
 
+Audited W03.P05.S15 modelo replay implementation against the S15 plan row and row-carrier ADR. The review covered the structured `row_binding_values` replay payload, persisted revision identity, filing replay shape, real M720 draft row materialization, and the no-synthetic-scalar-id invariant.
+
 ## Findings
 
 ### import-boundary | medium | cross-package private import regressed the production import-hygiene gate
@@ -47,3 +49,4 @@ The W03.P05.S13 review found the new row-binding validation diagnostics missing 
 - Continue to run the import-hygiene gate when changing cross-package imports; the production Family-1 gate is hard-zero.
 - No additional S13 code-review blockers remain; proceed to downstream row-carrier steps only through the approved, replay-safe row-binding carrier.
 - No S14 code-review defects were found; proceed to S15 by consuming `row_binding_values` directly rather than recomputing foreign-asset row values downstream.
+- No S15 code-review defects were found; proceed to S16 by enrolling the existing foreign-assets resolver through the source mesh and preserving the structured row replay surface.
