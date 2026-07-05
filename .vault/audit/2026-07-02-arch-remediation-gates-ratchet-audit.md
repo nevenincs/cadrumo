@@ -302,6 +302,23 @@ codebase-size gate rerun no longer reports `_queries.py`, but remains red on
 the other known module and callable offenders inventoried in
 `var/log/codebase-size-after-registry-query-reports-split-20260705.log`.
 
+### follow-up-registry-schema-extraction-size-budget | low | registry schema below module budget
+
+Reviewed the 2026-07-05 ratchet follow-up that moved the registry extraction
+profile schema family (`BboxAnchorSpec`, `ExtractionTargetDefinition`, and
+`ExtractionProfileDefinition`) from `_schema.py` into `_schema_extraction.py`.
+`_schema.py` still imports and re-exports the same public names through the
+existing `_schema` and package facade paths, while revision, snapshot, and
+validation models continue to reference the same classes. The module line count
+dropped from 1553 to 1412, below its pinned 1490-line budget; the new extraction
+schema module is 97 lines. Ruff passed, registry schema/referential/corpus
+round-trip/provisional-specimen tests passed, declaration parser boundary tests
+passed, and the facade identity check confirmed `ExtractionProfileDefinition`
+still resolves through `_schema`. The codebase-size gate rerun no longer
+reports `_schema.py`, but remains red on the other known module and callable
+offenders inventoried in
+`var/log/codebase-size-after-registry-schema-extraction-split-20260705.log`.
+
 ## Recommendations
 
 Keep the `aeat.tests.secure_sql -> aeat.adapters.**` wildcard under explicit
