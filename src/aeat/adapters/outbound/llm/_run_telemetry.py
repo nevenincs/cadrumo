@@ -27,6 +27,19 @@ saved under embeds a random UUID4 suffix (so two runs starting in the same
 microsecond never collide); that suffix is persisted inside the record's own
 payload alongside its natural fields so pruning can reconstruct the exact
 save-time key and issue a matching delete, without a parallel index.
+
+See Also:
+    :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`
+        Public recorder that appends and reads these local-only records.
+    :class:`~adapters.outbound.llm.LLMRunRecord`
+        Timing/outcome-only payload stored for each completed LLM run.
+    :func:`~application.diagnostics_run_health.build_run_health_report`
+        Application diagnostic that aggregates these records for operators.
+    :mod:`~application.diagnostics_telemetry`
+        Remote-telemetry preview/flush layer that aggregates only the same
+        non-sensitive accounting signal through a separate consent gate.
+    :data:`~adapters.persistence.storage.LLM_RUN_TELEMETRY_NAMESPACE`
+        Secure-object namespace used for the encrypted local store.
 """
 
 from __future__ import annotations
