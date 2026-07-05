@@ -158,6 +158,19 @@ def register_m145_communication_commands(
         )
         emit_m145_export_result(ctx, result=result)
 
+    _register_m145_transition_commands(
+        m145_app,
+        bucket_id=_bucket_id,
+        resolve_default_actor=resolve_default_actor,
+    )
+
+
+def _register_m145_transition_commands(
+    m145_app: typer.Typer,
+    *,
+    bucket_id: Callable[[], str],
+    resolve_default_actor: Callable[[], str],
+) -> None:
     @m145_app.command(
         "mark-delivered-to-payer",
         help=tr(
@@ -179,7 +192,7 @@ def register_m145_communication_commands(
         """Mark a Modelo 145 local communication record delivered to the payer."""
         record = mark_m145_communication_record_delivered_to_payer(
             communication_record_id,
-            bucket_id=_bucket_id(),
+            bucket_id=bucket_id(),
             actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
         )
         emit_m145_record_result(ctx, operation="modelo.m145.mark_delivered_to_payer", record=record)
@@ -205,7 +218,7 @@ def register_m145_communication_commands(
         """Mark a Modelo 145 local communication record locally completed."""
         record = mark_m145_communication_record_locally_completed(
             communication_record_id,
-            bucket_id=_bucket_id(),
+            bucket_id=bucket_id(),
             actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
         )
         emit_m145_record_result(ctx, operation="modelo.m145.mark_locally_completed", record=record)
