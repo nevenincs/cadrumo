@@ -19,7 +19,7 @@ path and honours the same ``D2`` decrypted-payload custody contract.
 
 The set of carried namespaces is registry-driven: it is exactly the namespaces
 whose
-:class:`~aeat.adapters.persistence.storage.StorageCustodyDisposition`
+:class:`~adapters.persistence.storage.StorageCustodyDisposition`
 is in the requested custody profile, minus the five typed-category namespaces
 this module deliberately leaves to the typed bundle fields. A populated,
 carried-disposition namespace with no natural key resolver fails the export
