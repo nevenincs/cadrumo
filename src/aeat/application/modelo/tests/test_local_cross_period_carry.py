@@ -575,6 +575,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
         work_unit_303,
         transaction_repository=None,
         invoice_repository=None,
+        foreign_asset_observations=(),
     )
 
     assert MODELO_303_IVA_COMPENSATION_BINDING_ID not in resolution.binding_values
