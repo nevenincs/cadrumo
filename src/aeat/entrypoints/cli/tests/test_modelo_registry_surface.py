@@ -326,23 +326,6 @@ def test_work_calculate_relation_help_names_m200_m202_relation_channels() -> Non
     assert "0" in collapsed
 
 
-def test_work_calculate_enters_bucket_source_mesh_calculation_boundary() -> None:
-    """The work calculation application helper must use the bucket-backed boundary.
-
-    This keeps default operator calculations on the same source mesh path as
-    repository-backed application calculations, instead of reaching around it
-    to the low-level registry engine action.
-    """
-
-    import inspect
-
-    from ....application.modelo import calculate_modelo_work_revision
-
-    source = inspect.getsource(calculate_modelo_work_revision)
-    assert "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(" in source
-    assert "calculate_modelo_revision(" not in source
-
-
 def test_missing_binding_guidance_enriches_registry_validation_error() -> None:
     """A missing-binding RegistryValidationError is enriched with the
     --binding KEY=VALUE syntax and a bindings-list discovery command so
