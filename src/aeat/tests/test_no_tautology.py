@@ -59,7 +59,7 @@ def _is_tautological_assert(node: ast.AST) -> bool:
         return False
     test = node.test
 
-    if _literal_truthiness(test) is True or _is_not_literal_falsey(test):
+    if _literal_truthiness(test) is True or _is_not_literal_falsey(test) or _is_tautological_boolop(test):
         return True
 
     if isinstance(test, ast.Compare):
@@ -94,6 +94,16 @@ def _is_singleton_constant(node: ast.AST) -> bool:
 def _is_not_literal_falsey(node: ast.AST) -> bool:
     """Return True for ``not`` applied to a literal known to be falsey."""
     return isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not) and _literal_truthiness(node.operand) is False
+
+
+def _is_tautological_boolop(node: ast.AST) -> bool:
+    """Return True when a boolean expression is structurally guaranteed truthy."""
+    if not isinstance(node, ast.BoolOp):
+        return False
+    truthiness = tuple(_literal_truthiness(value) for value in node.values)
+    if isinstance(node.op, ast.Or):
+        return any(value is True for value in truthiness)
+    return isinstance(node.op, ast.And) and all(value is True for value in truthiness)
 
 
 def _is_tautological_compare(left: ast.expr, op: ast.cmpop, right: ast.expr) -> bool:
@@ -226,6 +236,9 @@ def test_detection_is_non_trivial() -> None:
         "assert 1 == 1 == 1",
         "assert 1 != 2 != 1",
         "assert x == x == x",
+        "assert True or x",
+        'assert x or "fallback"',
+        'assert True and 1 and "x"',
         "assert x in (x,)",
         "assert x in [x]",
         "assert x in {x}",
@@ -250,6 +263,10 @@ def test_detection_is_non_trivial() -> None:
         "assert x != x",
         "assert x == x == y",
         "assert x != y != x",
+        "assert x or y",
+        "assert True and x",
+        "assert x and 1",
+        'assert "x" in haystack or "y" in haystack',
         "assert len(x) == len(y)",
         "assert x in [y]",
         "assert x in values",
