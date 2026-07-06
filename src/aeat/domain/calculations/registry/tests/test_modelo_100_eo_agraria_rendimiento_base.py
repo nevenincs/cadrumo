@@ -21,6 +21,23 @@ independently transcribed from the AEAT Manual práctico de Renta 2022, Parte
 its libro registro de bienes de inversión, proving the subtraction is real,
 non-tautological arithmetic against two independently-sourced AEAT figures —
 see ``TestRendimientoNetoMinoradoSubtractsAmortizacion``.
+
+See Also:
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Real registry engine used to evaluate the M100 2025 snapshot.
+    :func:`~domain.calculations.registry.build_snapshot`
+        Snapshot builder that loads the committed Modelo 100 revision under
+        test.
+    :func:`~domain.calculations.registry.validated_casilla_id`
+        Casilla-id constructor used for the 1521/1522/1523/1537/1538/1539
+        assertions.
+    ``src/aeat/_data/registry/aeat/modelos/100/revisions/2025/formulas/0293-renta-2025-eo-agraria-rendimiento-base.toml``
+        Registry formulas for the Fase 1ª product base, Fase 1ª aggregate, and
+        Fase 2ª minorado chain.
+    ``2026-05-19-schema-hardening-m100-actividad-agraria-audit`` and
+    ``2026-07-03-registry-grounding-spotcheck-audit``
+        Audit records for the M100 agraria cluster and 2025 estimación
+        objetiva grounding.
 """
 
 from __future__ import annotations
