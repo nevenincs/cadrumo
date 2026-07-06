@@ -1,4 +1,19 @@
-"""Tests for the multi-year enrollment evidence type boundary."""
+"""Tests for the multi-year enrollment evidence type boundary.
+
+See Also:
+    :class:`~application.calculations.EnrollmentEvidence`
+        Strict evidence aggregate whose type boundary rejects a single renta
+        year and reports sorted distinct years.
+    :class:`~application.calculations.EnrollmentYearObservation`
+        Per-year observation record used by the recorder and by these boundary
+        tests.
+    :class:`~application.calculations.EnrollmentRecorder`
+        Runtime recorder that accumulates the same observation type before
+        producing verified enrollment evidence.
+    :data:`~core.access_gate.MIN_DISTINCT_RENTA_YEARS`
+        Manifest and evidence floor that requires at least two distinct renta
+        years.
+"""
 
 from __future__ import annotations
 
