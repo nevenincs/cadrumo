@@ -43,6 +43,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W05-P08-S34]]'
   - '[[2026-07-06-cross-period-prorrata-W05-P08-S35]]'
   - '[[2026-07-06-cross-period-prorrata-W05-P08-S36]]'
+  - '[[2026-07-06-cross-period-prorrata-W06-P09-S37]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-reference]]'
@@ -101,6 +102,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W05-P08-S34` - add the settlement-period verify ADVISORY predicate so the gate never grants verified_complete with zero findings on an applies-but-unresolved prorrata, mirroring the Modelo 200 implies_nonzero worked example (no-silent-under-declaration)
 - `2026-07-06-cross-period-prorrata-W05-P08-S35` - add tests proving a mixed trader can no longer silently deduct 100% in-year, silently skip casilla 44, or silently zero the deducible side, while a fully-taxable trader keeps the art-94 full-deduction default untouched
 - `2026-07-06-cross-period-prorrata-W05-P08-S36` - verify-close the silent-zero-base deferred prorrata volume rows (W01.P02.S03/S04 of the silent-zero-base plan) with an exec record referencing this feature's cross-period model as their resolution
+- `2026-07-06-cross-period-prorrata-W06-P09-S37` - record the deferred prorrata especial per-input apportionment and the art-103.Dos.2 +10% mandatory-especial comparison advisory as an honest deferred Step behind the from-birth regime schema slot (needs especial to exist first)
 
 ### plan
 
