@@ -13,27 +13,33 @@ from .. import ProfileId
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _Holder = single_field_model("profile_id", ProfileId)
+_VALID_PROFILE_ID = str(uuid4())
+_UPPERCASE_PROFILE_ID = str(uuid4()).upper()
+_EXTRA_SUFFIX_PROFILE_ID = f"{uuid4()}-extra"
 
 
-def test_profile_id_constraint_accepts_valid_values_and_rejects_invalid_values() -> None:
-    minted = str(uuid4())
-    valid_cases = (
-        (minted, minted),
-        (f"  {minted}  ", minted),
-    )
+@pytest.mark.parametrize(
+    ("profile_id", "expected"),
+    (
+        pytest.param(_VALID_PROFILE_ID, _VALID_PROFILE_ID, id="canonical"),
+        pytest.param(f"  {_VALID_PROFILE_ID}  ", _VALID_PROFILE_ID, id="trimmed"),
+    ),
+)
+def test_profile_id_constraint_accepts_valid_values(profile_id: str, expected: str) -> None:
+    assert single_field_value(_Holder(profile_id=profile_id), "profile_id") == expected
 
-    for profile_id, expected in valid_cases:
-        assert single_field_value(_Holder(profile_id=profile_id), "profile_id") == expected
 
-    invalid_cases = (
-        "operator",
-        str(uuid4()).upper(),
-        "",
-        f"{uuid4()}-extra",
-        "bad/id",
-        " leading-space-after-strip-still-bad?",
-    )
-
-    for profile_id in invalid_cases:
-        with pytest.raises(ValidationError):
-            _Holder(profile_id=profile_id)
+@pytest.mark.parametrize(
+    "profile_id",
+    (
+        pytest.param("operator", id="plain-label"),
+        pytest.param(_UPPERCASE_PROFILE_ID, id="uppercase-uuid"),
+        pytest.param("", id="empty"),
+        pytest.param(_EXTRA_SUFFIX_PROFILE_ID, id="extra-suffix"),
+        pytest.param("bad/id", id="slash"),
+        pytest.param(" leading-space-after-strip-still-bad?", id="invalid-after-trim"),
+    ),
+)
+def test_profile_id_constraint_rejects_invalid_values(profile_id: str) -> None:
+    with pytest.raises(ValidationError):
+        _Holder(profile_id=profile_id)
