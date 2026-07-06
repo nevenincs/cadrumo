@@ -9,6 +9,7 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-W01-P02-S08]]'
   - '[[2026-06-02-modelo-multiyear-renta-W01-P03-S09]]'
   - '[[2026-06-02-modelo-multiyear-renta-W01-P03-S10]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W01-P03-S11]]'
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-audit]]'
   - '[[2026-06-02-modelo-multiyear-renta-plan]]'
@@ -36,6 +37,7 @@ Auto-generated index of all documents tagged with `#modelo-multiyear-renta`.
 - `2026-06-02-modelo-multiyear-renta-W01-P02-S08` - write an anti-tautology test proving a single-year evidence record raises ValidationError (vaultspec-standard-executor)
 - `2026-06-02-modelo-multiyear-renta-W01-P03-S09` - maintain the hard-cut no-baseline authorization meta-test over the live canonical fleet, printing authorized N/FLEET_SIZE with the UNAUTHORIZED id list (vaultspec-high-executor)
 - `2026-06-02-modelo-multiyear-renta-W01-P03-S10` - cross-check each recorded year-set equals the manifest renta_years claim, contains >=2 distinct years, and calls the enrollment contract (vaultspec-high-executor)
+- `2026-06-02-modelo-multiyear-renta-W01-P03-S11` - add the ADVISORY work-calculate banner naming the unauthorized state for unauthorized-but-has-engine modelos (vaultspec-standard-executor)
 
 ### plan
 
