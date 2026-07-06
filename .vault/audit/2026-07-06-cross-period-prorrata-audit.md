@@ -192,3 +192,32 @@ projection, facade, and test files. The prorrata regularización calculation tes
 file passes sequentially with 7 tests, and the model-level advisory regression
 passes sequentially with 5 tests. The combined focused slice passes sequentially
 with 12 tests.
+
+## S26 Review
+
+Reviewed the `W04.P06.S26` settlement persistence change after re-grounding the
+step against the cross-period prorrata ADR, the W04 plan row, the existing
+participation-index co-emission pattern, and the current prorrata-register
+payload contract. The diff keeps M303 settlement casillas under their existing
+registry ids, adds no binding source kind, resolver convention, validator
+convention, or registry selector shape, and routes the register update through
+the existing filing secure-object transaction. The register adapter exposes a
+`to_secure_object_write` helper while preserving its direct JSON payload format,
+so existing save/load and corrupt-payload roundtrip proofs remain valid.
+
+The filing path now recognizes only M303 `4T` and `0A` revisions that carry all
+three definitive prorrata settlement values: total volume,
+con-derecho volume, and definitive percentage. It writes those values back to the
+whole-entity register entry, derives sin-derecho volume as total minus
+con-derecho, preserves existing regime/provisional provenance/source-observation
+facts, retains sector entries, and creates a minimal whole-entity entry when no
+current-year row exists. Invalid negative sin-derecho volume is left to the
+domain model validation rather than being silently accepted.
+
+Findings: no open S26 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the touched persistence,
+filing, and test files. The new prorrata settlement write-back test file passes
+sequentially with 3 tests, the prorrata register roundtrip file passes
+sequentially with 4 tests, and the existing participation co-emission regression
+passes sequentially with 1 test.

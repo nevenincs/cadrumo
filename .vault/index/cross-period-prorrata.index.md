@@ -32,6 +32,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W03-P05-S23]]'
   - '[[2026-07-06-cross-period-prorrata-W04-P06-S24]]'
   - '[[2026-07-06-cross-period-prorrata-W04-P06-S25]]'
+  - '[[2026-07-06-cross-period-prorrata-W04-P06-S26]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-reference]]'
@@ -79,6 +80,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W03-P05-S23` - add the pull==calculate parity regression proving the apportioned deducible casilla resolves identically on the calculate path and the Sheets-pull path (one-aggregation-path-pull-equals-calculate)
 - `2026-07-06-cross-period-prorrata-W04-P06-S24` - feed M303 casilla 44 and M390 regularizacion projection
 - `2026-07-06-cross-period-prorrata-W04-P06-S25` - project prorrata declared-volume ledger divergence advisory
+- `2026-07-06-cross-period-prorrata-W04-P06-S26` - co-emit prorrata settlement register write-back
 
 ### plan
 
