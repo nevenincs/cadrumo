@@ -372,6 +372,142 @@ def test_date_index_updates_when_filing_date_changes(
     assert filing_date == date(2024, 8, 20)
 
 
+def test_partition_by_date_range_splits_in_window_and_out_of_window(
+    tmp_path: Path,
+) -> None:
+    """The completeness-gated partition returns exactly the right in/out-of-window split.
+
+    Regression coverage for the O2 period-first partition
+    (``2026-07-05-ledger-latency-budget-adr``): in-window rows are real,
+    decrypted :class:`Transaction` records; out-of-window rows are plaintext
+    stubs (id + filing date only) reconstructed from the index without
+    decryption.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        inside_q1 = _transaction(
+            provider_id="row-q1", filing_date=date(2024, 2, 10), amount=Decimal("10.00"), description="Q1 expense"
+        )
+        outside_q2 = _transaction(
+            provider_id="row-q2", filing_date=date(2024, 4, 1), amount=Decimal("30.00"), description="Q2 expense"
+        )
+        repo.save(TransactionCatalogue.from_transactions([inside_q1, outside_q2]))
+
+        partition = TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(
+            date(2024, 1, 1), date(2024, 3, 31)
+        )
+
+    assert partition.index_complete is True
+    assert set(partition.in_window.transactions) == {inside_q1.transaction_id}
+    assert partition.in_window.transactions[inside_q1.transaction_id] == inside_q1
+    assert len(partition.out_of_window) == 1
+    stub = partition.out_of_window[0]
+    assert stub.transaction_id == outside_q2.transaction_id
+    assert stub.filing_date == date(2024, 4, 1)
+
+
+def test_partition_by_date_range_matches_full_load_filtered_in_memory(
+    tmp_path: Path,
+) -> None:
+    """Aggregation-identity proof: the partition's two halves cover every row exactly once."""
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        rows = [
+            _transaction(
+                provider_id=f"row-{i}",
+                filing_date=date(2022 + (i % 4), (i % 12) + 1, 15),
+                amount=Decimal("5.00") * i,
+                description=f"txn {i}",
+            )
+            for i in range(1, 13)
+        ]
+        repo.save(TransactionCatalogue.from_transactions(rows))
+
+        start, end = date(2023, 1, 1), date(2024, 12, 31)
+        partition = TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(start, end)
+        full = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+    expected_in_window = {
+        transaction_id
+        for transaction_id, transaction in full.transactions.items()
+        if start <= (transaction.raw.value_date or transaction.raw.booked_date) <= end
+    }
+    expected_out_of_window = set(full.transactions) - expected_in_window
+
+    assert set(partition.in_window.transactions) == expected_in_window
+    assert {stub.transaction_id for stub in partition.out_of_window} == expected_out_of_window
+    # Every out-of-window stub's filing date matches the real (decrypted) date.
+    for stub in partition.out_of_window:
+        real_transaction = full.transactions[stub.transaction_id]
+        real_filing_date = real_transaction.raw.value_date or real_transaction.raw.booked_date
+        assert stub.filing_date == real_filing_date
+
+
+def test_partition_by_date_range_falls_back_to_full_scan_on_stale_index(
+    tmp_path: Path,
+) -> None:
+    """Anti-staleness proof (mandatory): a mismatched index forces a full-scan fallback, never a silent drop.
+
+    Deletes ONE index row (simulating a crash between the encrypted commit and
+    the separate index-sync transaction, or a partially-rebuilt index) and
+    asserts the completeness gate detects the count/id mismatch and falls back
+    to a full decrypt scan -- reproducing the identical partition a complete
+    index would have produced, with ``index_complete=False`` recording which
+    path served the read. This is the guard against reopening the
+    #599/#408 silent-drop class: a stale index must cost latency, never
+    correctness.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        inside = _transaction(
+            provider_id="row-stale-in", filing_date=date(2024, 2, 1), amount=Decimal("9.00"), description="in"
+        )
+        outside = _transaction(
+            provider_id="row-stale-out", filing_date=date(2024, 6, 1), amount=Decimal("11.00"), description="out"
+        )
+        repo.save(TransactionCatalogue.from_transactions([inside, outside]))
+
+        engine = profile.repository.engine
+        # Delete only the OUT-of-window row's index entry: the membership
+        # index still lists both transaction ids, but the date index is now
+        # incomplete for this bucket -- a genuine staleness signal, not an
+        # empty-index case already covered by the full-fallback test above.
+        with session_scope(engine) as session:
+            session.execute(
+                delete(_orm.TransactionDateIndexRow).where(
+                    _orm.TransactionDateIndexRow.bucket_id == profile.bucket_id,
+                    _orm.TransactionDateIndexRow.transaction_id == outside.transaction_id,
+                ),
+            )
+        with session_scope(engine) as session:
+            remaining = (
+                session.execute(
+                    select(_orm.TransactionDateIndexRow.transaction_id).where(
+                        _orm.TransactionDateIndexRow.bucket_id == profile.bucket_id,
+                    ),
+                )
+                .scalars()
+                .all()
+            )
+        assert remaining == [inside.transaction_id], (
+            "fixture must leave the index with exactly one stale (missing) row for this proof to be meaningful"
+        )
+
+        partition = TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(
+            date(2024, 1, 1), date(2024, 3, 31)
+        )
+
+    assert partition.index_complete is False
+    assert set(partition.in_window.transactions) == {inside.transaction_id}
+    assert partition.in_window.transactions[inside.transaction_id] == inside
+    assert len(partition.out_of_window) == 1
+    assert partition.out_of_window[0].transaction_id == outside.transaction_id
+    assert partition.out_of_window[0].filing_date == date(2024, 6, 1)
+
+
 def test_date_index_removes_row_for_deleted_transaction(
     tmp_path: Path,
 ) -> None:
