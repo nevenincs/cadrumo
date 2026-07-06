@@ -23,7 +23,7 @@ def test_profile_errors_have_registered_codes() -> None:
     assert get_registered_error_code(ForalRegimeError("navarra")).code == "REFUSED_PROFILE_FORAL_REGIME"
 
 
-def test_foral_regime_detection() -> None:
-    for raw in ("pais-vasco", "país_vasco", "navarra"):
-        with pytest.raises(ForalRegimeError, match="foral regime outside the scope"):
-            parse_tax_region(raw)
+@pytest.mark.parametrize("raw", ("pais-vasco", "país_vasco", "navarra"))
+def test_foral_regime_detection(raw: str) -> None:
+    with pytest.raises(ForalRegimeError, match="foral regime outside the scope"):
+        parse_tax_region(raw)
