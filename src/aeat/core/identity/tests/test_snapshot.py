@@ -1,4 +1,22 @@
-"""Real-behavior tests for the :data:`SnapshotId` alias."""
+"""Real-behavior tests for the :data:`~core.identity.SnapshotId` alias.
+
+The suite pins ``SnapshotId`` as a lowercase hex-64 content-addressed identity
+for live snapshot records that are persisted by application services and read by
+storage adapters. It accepts the canonical SHA-256 digest shape and rejects
+uppercase, wrong-length, and non-hex values at the pydantic boundary.
+
+See Also:
+    :mod:`~core.identity._snapshot`
+        Alias definition under test.
+    :class:`~application.live.PersistedNotificationsSnapshot`
+        Bucket-scoped live snapshot payload that stores a ``SnapshotId``.
+    :mod:`~application.live._snapshot_base`
+        Shared secure snapshot persistence base for live capture services.
+    Governing vault records
+        ``2026-05-30-identity-primitives-adr`` promotes ``SnapshotId`` to
+        ``core.identity``; the live-pull verification sweep records authenticated
+        notification snapshot identity handling.
+"""
 
 from __future__ import annotations
 
