@@ -61,7 +61,7 @@ Author the hard-cut no-baseline meta-test that prints authorized N/30 and cross-
 
 - [x] `W01.P03.S09` - maintain the hard-cut no-baseline authorization meta-test over the live canonical fleet, printing authorized N/FLEET_SIZE with the UNAUTHORIZED id list (vaultspec-high-executor); `src/aeat/tests/test_modelo_authorization_gate.py`.
 - [x] `W01.P03.S10` - cross-check each recorded year-set equals the manifest renta_years claim, contains >=2 distinct years, and calls the enrollment contract (vaultspec-high-executor); `src/aeat/tests/test_modelo_authorization_gate.py`.
-- [ ] `W01.P03.S11` - add the ADVISORY work-calculate banner naming the unauthorized state for unauthorized-but-has-engine modelos (vaultspec-standard-executor); `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W01.P03.S11` - add the ADVISORY work-calculate banner naming the unauthorized state for unauthorized-but-has-engine modelos (vaultspec-standard-executor); `src/aeat/entrypoints/cli/_modelo_work_calculate_cli.py; src/aeat/entrypoints/cli/tests/test_modelo_authorization_advisory_banner.py`.
 - [ ] `W01.P03.S12` - assert the existing _guard_stub_modelo hard refusal at work create still fires for no-engine stubs (vaultspec-code-reviewer); `src/aeat/entrypoints/cli/test_authorization_advisory_banner.py`.
 
 ### Phase `W01.P04` - Mechanism-specific backing ADRs
