@@ -7,8 +7,11 @@ mutating imports, environment variables, or provider behavior through pytest hel
 
 from __future__ import annotations
 
-import ast
 import hashlib
+import json
+import subprocess
+import sys
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -43,20 +46,35 @@ def _hash(payload: bytes) -> str:
 
 
 def test_factory_import_does_not_import_concrete_backends() -> None:
-    tree = ast.parse((Path(__file__).parent.parent / "_factory.py").read_text(encoding="utf-8"))
-    concrete_backend_modules = {
-        "aeat.adapters.outbound.storage._google_drive",
-        "aeat.adapters.outbound.storage._local",
-        "._google_drive",
-        "._local",
-    }
-    top_level_imports = {
-        node.module
-        for node in tree.body
-        if isinstance(node, ast.ImportFrom) and node.module in concrete_backend_modules
-    }
+    probe = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+        [
+            sys.executable,
+            "-c",
+            textwrap.dedent(
+                """
+                import json
+                import sys
 
-    assert top_level_imports == set()
+                import aeat.adapters.outbound.storage._factory
+
+                watched = (
+                    "aeat.adapters.outbound.storage._google_drive",
+                    "aeat.adapters.outbound.storage._local",
+                )
+                print(json.dumps({name: name in sys.modules for name in watched}, sort_keys=True))
+                """
+            ),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert probe.returncode == 0, probe.stderr
+    assert json.loads(probe.stdout) == {
+        "aeat.adapters.outbound.storage._google_drive": False,
+        "aeat.adapters.outbound.storage._local": False,
+    }
 
 
 def test_get_storage_provider_local_uses_active_profile_bucket_root(tmp_path: Path) -> None:
