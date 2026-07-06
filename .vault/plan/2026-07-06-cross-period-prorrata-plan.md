@@ -59,7 +59,7 @@ The carried_prior_definitiva seed via select_revision + stamped_revision_id re-c
 
 - [x] `W02.P03.S10` - implement the seed function: resolve the prior settlement revision via select_revision(M303, ejercicio-1, settlement period), read the iva.prorrata-porcentaje observation, and re-confirm its stamped_revision_id before seeding the carried_prior_definitiva entry; `src/aeat/application/prorrata_register/_seed.py`.
 - [x] `W02.P03.S11` - make a divergent stamped_revision_id block the seed with a REGISTRY_REVISION_DIVERGENCE-class finding and a missing legacy stamp surface a non-blocking advisory, never silence (carried-observations-stamp-their-revision); `src/aeat/application/prorrata_register/_seed.py`.
-- [ ] `W02.P03.S12` - record the source observation identity on the seeded entry so the register stays cross-checkable against the prior filing forever after; `src/aeat/application/prorrata_register/_seed.py`.
+- [x] `W02.P03.S12` - record the source observation identity on the seeded entry so the register stays cross-checkable against the prior filing forever after; `src/aeat/application/prorrata_register/_seed.py`.
 - [ ] `W02.P03.S13` - add tests for the seed happy path, divergence-blocks, and missing-stamp-advises paths against real filed observations; `src/aeat/application/prorrata_register/tests/test_seed.py`.
 
 ### Phase `W02.P04` - Provenance overrides and precedence
