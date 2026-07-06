@@ -24,6 +24,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W02-P04-S15]]'
   - '[[2026-07-06-cross-period-prorrata-W02-P04-S16]]'
   - '[[2026-07-06-cross-period-prorrata-W02-P04-S17]]'
+  - '[[2026-07-06-cross-period-prorrata-W02-P04-S18]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-reference]]'
@@ -42,7 +43,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 
 ### audit
 
-- `2026-07-06-cross-period-prorrata-audit` - `cross-period-prorrata` audit: `S10-S17 seed/override review`
+- `2026-07-06-cross-period-prorrata-audit` - `cross-period-prorrata` audit: `S10-S18 seed/override review`
 
 ### exec
 
@@ -63,6 +64,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W02-P04-S15` - add the inicio_actividad override entry recording the art-105.Tres (via art-111.Dos) inicio-de-actividades proposed percentage plus its reference
 - `2026-07-06-cross-period-prorrata-W02-P04-S16` - wire the single declared precedence ladder into the register in-force-percentage lookup so authorised/inicio provenance outranks the carried prior definitive
 - `2026-07-06-cross-period-prorrata-W02-P04-S17` - surface a BLOCKING divergence finding when a carried_prior_definitiva entry contradicts the prior observation, and an informational notice naming the provenance when an aeat_autorizada or inicio_actividad entry legitimately differs from the prior definitive (never silence)
+- `2026-07-06-cross-period-prorrata-W02-P04-S18` - add tests for override precedence and both observation cross-check surfaces (blocking contradiction vs informational regulated-difference notice)
 
 ### plan
 
