@@ -31,10 +31,12 @@ related:
   - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S23]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S24]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S25]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S26]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-adr]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-audit]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-plan]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-research]]'
+  - '[[2026-07-06-cpdefix-followup-allgreen-audit]]'
 ---
 
 # `cpdefix-followup-allgreen` feature index
@@ -50,6 +52,7 @@ Auto-generated index of all documents tagged with `#cpdefix-followup-allgreen`.
 ### audit
 
 - `2026-07-05-cpdefix-followup-allgreen-audit` - `cpdefix-followup-allgreen` audit: `current blocker resync`
+- `2026-07-06-cpdefix-followup-allgreen-audit` - `cpdefix-followup-allgreen` audit: `post execution review`
 
 ### exec
 
@@ -78,6 +81,7 @@ Auto-generated index of all documents tagged with `#cpdefix-followup-allgreen`.
 - `2026-07-05-cpdefix-followup-allgreen-W06-P09-S23` - Execution Notes
 - `2026-07-05-cpdefix-followup-allgreen-W06-P09-S24` - Execution Notes
 - `2026-07-05-cpdefix-followup-allgreen-W06-P09-S25` - Execution Notes
+- `2026-07-05-cpdefix-followup-allgreen-W06-P09-S26` - Execution Notes
 
 ### plan
 
