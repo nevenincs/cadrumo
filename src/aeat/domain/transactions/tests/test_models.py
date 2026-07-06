@@ -18,6 +18,8 @@ from .. import (
     BusinessClassification,
     ClassificationHistoryEntry,
     DecisionProvenance,
+    OutOfWindowTransactionStub,
+    OutOfWindowTransactionSummary,
     RawProvenance,
     RawTransaction,
     SourceFormat,
@@ -752,3 +754,41 @@ def test_python_mode_dict_with_real_instances_round_trips() -> None:
     restored = Transaction.model_validate(python_mode_dict)
 
     assert restored == original
+
+
+def test_out_of_window_transaction_summary_carries_no_decrypted_field() -> None:
+    """The diagnostics-only summary is structurally incapable of leaking decrypted facts.
+
+    ``OutOfWindowTransactionSummary`` (the 2026-07-06 diagnostic-summary
+    amendment to the latency ADR) collapses N out-of-window
+    ``OutOfWindowTransactionStub`` rows into one summary carrying ONLY the
+    excluded-row count and the filing-date span. This pins that guarantee
+    structurally -- the declared field set is exactly
+    ``{count, min_filing_date, max_filing_date}`` -- so a future field
+    addition (amount, counterparty, category, direction, business
+    classification, or any other decrypted transaction fact) is a loud
+    model-shape test failure, not a silent contract erosion.
+    """
+    assert set(OutOfWindowTransactionSummary.model_fields) == {
+        "count",
+        "min_filing_date",
+        "max_filing_date",
+    }
+
+    stubs = (
+        OutOfWindowTransactionStub(transaction_id="a" * 40, filing_date=date(2026, 1, 5)),
+        OutOfWindowTransactionStub(transaction_id="b" * 40, filing_date=date(2026, 3, 20)),
+        OutOfWindowTransactionStub(transaction_id="c" * 40, filing_date=date(2026, 2, 1)),
+    )
+    summary = OutOfWindowTransactionSummary.from_stubs(stubs)
+
+    assert summary is not None
+    assert summary.count == 3
+    assert summary.min_filing_date == date(2026, 1, 5)
+    assert summary.max_filing_date == date(2026, 3, 20)
+    assert summary.model_dump().keys() == {"count", "min_filing_date", "max_filing_date"}
+
+
+def test_out_of_window_transaction_summary_is_none_for_empty_stubs() -> None:
+    """An empty out-of-window set collapses to ``None``, not a zero-count summary."""
+    assert OutOfWindowTransactionSummary.from_stubs(()) is None
