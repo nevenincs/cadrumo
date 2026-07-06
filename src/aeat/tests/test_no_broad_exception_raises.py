@@ -236,6 +236,8 @@ def _contains_broad_exception_root(node: ast.AST, broad_exception_names: set[str
     name = qualified_name(node)
     if name in broad_exception_names:
         return True
+    if isinstance(node, ast.Starred):
+        return _contains_broad_exception_root(node.value, broad_exception_names)
     if isinstance(node, ast.Tuple | ast.List | ast.Set):
         return any(_contains_broad_exception_root(element, broad_exception_names) for element in node.elts)
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
@@ -398,6 +400,31 @@ with pytest.raises(NarrowAlias):
     )
 
     assert _broad_pytest_raises_sites(tree) == [8, 11]
+
+
+def test_broad_exception_detector_rejects_starred_exception_containers() -> None:
+    """Starred exception tuples must not hide broad exception roots."""
+    tree = ast.parse(
+        """
+import contextlib
+import pytest
+
+with pytest.raises(*(ValueError, Exception)):
+    pass
+
+with pytest.raises(*(ValueError,)):
+    pass
+
+with contextlib.suppress(*(RuntimeError, BaseException)):
+    pass
+
+with contextlib.suppress(*(RuntimeError,)):
+    pass
+"""
+    )
+
+    assert _broad_pytest_raises_sites(tree) == [5]
+    assert _broad_contextlib_suppress_sites(tree) == [11]
 
 
 def test_broad_suppress_detector_rejects_contextlib_alias_shapes() -> None:
