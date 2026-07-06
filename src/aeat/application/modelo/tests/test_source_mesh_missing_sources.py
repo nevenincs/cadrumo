@@ -21,6 +21,24 @@ invariants:
 The registry-inventory integrity half (no committed revision declares a reserved
 kind) lives in the domain companion
 ``domain/calculations/registry/tests/test_source_enrollment.py``.
+
+See Also:
+    :class:`BindingSourceKind`
+        Closed source-kind enum whose committed members are audited here.
+    :class:`~domain.calculations.registry.RegistryQueryService`
+        Domain query service that supplies the source-inventory report.
+    :class:`~domain.calculations.registry.DataBindingDefinition`
+        Binding schema mutated in the novel-source anti-tautology check.
+    :func:`~application.aggregation.build_binding_source_dispositions`
+        Builds the enrolled/deferred/reserved taxonomy used by this gate.
+    :class:`~application.aggregation.BindingSourceDisposition`
+        Disposition enum this gate accepts only as enrolled or deferred.
+    :func:`~application.modelo.assert_no_novel_source_kinds`
+        Live calculate-path guard proved by the synthetic source case.
+    :exc:`~application.modelo.ModeloAggregationBindingError`
+        Loud failure raised for novel source kinds instead of silent zero.
+    :mod:`~domain.calculations.registry.tests.test_source_enrollment`
+        Domain companion that verifies committed registry inventory.
 """
 
 from __future__ import annotations
