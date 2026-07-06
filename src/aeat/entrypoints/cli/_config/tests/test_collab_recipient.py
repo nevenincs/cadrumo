@@ -6,7 +6,27 @@ it lists with its derived fingerprint, confirm a duplicate id refuses, and
 confirm removal drops it from the register. The registered public key is then
 proven to be the exact key
 ``aeat app modelo review-package encrypt-for-recipient`` seals against in
-:mod:`~aeat.entrypoints.cli.tests.test_modelo_review_package_recipient_encryption_verb`.
+:mod:`~entrypoints.cli.tests.test_modelo_review_package_recipient_encryption_verb`.
+
+See Also:
+    :mod:`~entrypoints.cli._config._collab`
+        Command handlers for the ``config collab recipient`` surface.
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
+        Encrypted active-bucket registry the CLI delegates to.
+    :class:`~application.modelo.RecipientFingerprintRecord`
+        Public-key trust record projected by ``add`` and ``list``.
+    :func:`~application.modelo.public_key_hex_from_raw_bytes`
+        Application validator for raw X25519 public-key bytes.
+    :class:`~entrypoints.cli._config._collab_payloads.ConfigCollabRecipientAddResult`
+        JSON result schema asserted after ``recipient add``.
+    :class:`~entrypoints.cli._config._collab_payloads.ConfigCollabRecipientListResult`
+        JSON result schema asserted after ``recipient list``.
+    :class:`~entrypoints.cli._config._collab_payloads.ConfigCollabRecipientRemoveResult`
+        JSON result schema asserted after ``recipient remove``.
+    :func:`~tests.cli_runner.invoke_typer_app`
+        Real Typer runner used to exercise the config root.
+    :func:`~tests.secure_sql.isolated_profile_storage_root`
+        Encrypted profile-storage harness used by these integration tests.
 """
 
 from __future__ import annotations
