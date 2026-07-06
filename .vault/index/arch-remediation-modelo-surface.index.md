@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-modelo-surface'
-date: '2026-07-04'
-modified: '2026-07-04'
+date: '2026-07-06'
+modified: '2026-07-06'
 related:
   - '[[2026-07-02-arch-remediation-modelo-surface-W01-P01-S01]]'
   - '[[2026-07-02-arch-remediation-modelo-surface-W01-P01-S02]]'
@@ -30,6 +30,7 @@ related:
   - '[[2026-07-02-arch-remediation-modelo-surface-adr]]'
   - '[[2026-07-02-arch-remediation-modelo-surface-plan]]'
   - '[[2026-07-04-arch-remediation-modelo-surface-audit]]'
+  - '[[2026-07-06-arch-remediation-modelo-surface-research]]'
 ---
 
 # `arch-remediation-modelo-surface` feature index
@@ -73,3 +74,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-modelo-surf
 ### plan
 
 - `2026-07-02-arch-remediation-modelo-surface-plan` - `arch-remediation-modelo-surface` plan
+
+### research
+
+- `2026-07-06-arch-remediation-modelo-surface-research` - `arch-remediation-modelo-surface` research: `program-track decision research bridge`
