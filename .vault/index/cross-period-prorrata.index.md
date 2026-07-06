@@ -20,6 +20,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W02-P03-S11]]'
   - '[[2026-07-06-cross-period-prorrata-W02-P03-S12]]'
   - '[[2026-07-06-cross-period-prorrata-W02-P03-S13]]'
+  - '[[2026-07-06-cross-period-prorrata-W02-P04-S14]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-research]]'
@@ -37,7 +38,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 
 ### audit
 
-- `2026-07-06-cross-period-prorrata-audit` - `cross-period-prorrata` audit: `S10-S13 seed review`
+- `2026-07-06-cross-period-prorrata-audit` - `cross-period-prorrata` audit: `S10-S14 seed/override review`
 
 ### exec
 
@@ -54,6 +55,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W02-P03-S11` - make a divergent stamped_revision_id block the seed with a REGISTRY_REVISION_DIVERGENCE-class finding and a missing legacy stamp surface a non-blocking advisory, never silence (carried-observations-stamp-their-revision)
 - `2026-07-06-cross-period-prorrata-W02-P03-S12` - record the source observation identity on the seeded entry so the register stays cross-checkable against the prior filing forever after
 - `2026-07-06-cross-period-prorrata-W02-P03-S13` - add tests for the seed happy path, divergence-blocks, and missing-stamp-advises paths against real filed observations
+- `2026-07-06-cross-period-prorrata-W02-P04-S14` - add the aeat_autorizada override entry recording the art-105.Dos AEAT-authorised provisional percentage plus its authorisation reference
 
 ### plan
 

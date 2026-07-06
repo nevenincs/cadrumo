@@ -27,9 +27,12 @@ See Also:
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 from ...adapters.persistence.profile.prorrata_register import (
     ProrrataRegisterRepository,
 )
+from ...core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ...domain.prorrata_register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
@@ -53,6 +56,37 @@ class ProrrataRegisterService:
             The updated :class:`ProrrataRegister`.
         """
         return self._repository.upsert_entry(entry)
+
+    def record_aeat_autorizada(
+        self,
+        *,
+        ejercicio: int,
+        provisional_percentage: Decimal,
+        authorisation_reference: str,
+        sector_id: str | None = None,
+        regime: ProrrataRegisterRegime = ProrrataRegisterRegime.GENERAL,
+    ) -> ProrrataRegister:
+        """Record an art. 105.Dos AEAT-authorised provisional prorrata override.
+
+        Args:
+            ejercicio: Filing year whose provisional prorrata is authorised.
+            provisional_percentage: AEAT-authorised provisional deduction percentage.
+            authorisation_reference: Operator-held reference for the AEAT authorisation.
+            sector_id: Optional sector identifier for sectores diferenciados.
+            regime: Prorrata regime in force for the entry. Defaults to general.
+
+        Returns:
+            The updated :class:`ProrrataRegister`.
+        """
+        entry = ProrrataRegisterEntry(
+            ejercicio=ejercicio,
+            regime=regime,
+            sector_id=sector_id,
+            provisional_percentage=provisional_percentage,
+            provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
+            authorisation_reference=authorisation_reference,
+        )
+        return self.declare(entry)
 
     def list_all(self) -> ProrrataRegister:
         """Return the full active-profile register.

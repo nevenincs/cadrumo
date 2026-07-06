@@ -28,20 +28,21 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline backtick code: `src/module.py`. -->
 
-# `cross-period-prorrata` audit: `S10-S13 seed review`
+# `cross-period-prorrata` audit: `S10-S14 seed/override review`
 
 ## Scope
 
-Reviewed the `W02.P03.S10` through `W02.P03.S13` seed implementation and vault
+Reviewed the `W02.P03.S10` through `W02.P04.S14` seed/override implementation and vault
 closure artifacts: the carried-prior-definitive seed helper, the evaluation
 surface for blocking/advisory findings, source-observation identity recording on
 the carried entry, the committed real-observation seed tests, the legacy
 field-absent observation compatibility needed to exercise the missing-stamp
-advisory, the S10/S11/S12/S13 exec records, the plan checkbox mutations
-performed by the vault CLI, and the rebuilt feature index. The review checked
-intent alignment with the accepted prorrata ADR, the period-revision carry rule,
-the existing anti-tautology null-refusal proof, and the plan boundary for the
-next override-recording row.
+advisory, the AEAT-authorised override recording service, the S10/S11/S12/S13/S14
+exec records, the plan checkbox mutations performed by the vault CLI, and the
+rebuilt feature index. The review checked intent alignment with the accepted
+prorrata ADR, the period-revision carry rule, the existing anti-tautology
+null-refusal proof, and the plan boundary that leaves inicio and precedence
+wiring to the next rows.
 
 ## Findings
 
@@ -49,5 +50,5 @@ No open findings.
 
 ## Recommendations
 
-- Continue with `W02.P04.S14` for AEAT-authorised prorrata recording.
+- Continue with `W02.P04.S15` for inicio-de-actividades prorrata recording.
 - Do not treat this narrow seed review as the campaign close honesty audit.
