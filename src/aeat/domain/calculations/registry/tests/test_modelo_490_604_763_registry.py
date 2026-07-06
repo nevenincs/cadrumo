@@ -10,6 +10,20 @@ reproduce the verbatim plazo (490/763: month following each quarter; 604: days
 10-20 of the month following each month). Scheduling/applicability-grade:
 declaration-header casillas only, no bundled diseño de registro, so the base/cuota
 money-closure casillas are not fabricated.
+
+See Also:
+    :class:`~core.TaxDomain`
+        Closed tax-family enum that carries the IDSD, ITF and juego members.
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
+        Test loader for committed registry definitions and legal catalogues.
+    :class:`~domain.calculations.registry._validate.RegistryValidator`
+        Registry validator that checks the plazo and legal catalogue references.
+    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
+        Canonical fleet membership these new-tax registrations extend.
+    :data:`~core.UNMODELED_OBLIGATIONS`
+        Former recognized-unmodeled set reduced by these promotions.
+    :mod:`~domain.calculations.registry.tests.test_modelo_592_576_121_122_registry`
+        Companion final-tail registry coverage from the same burndown.
 """
 
 from __future__ import annotations
