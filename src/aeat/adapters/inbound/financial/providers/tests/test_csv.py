@@ -188,7 +188,20 @@ def test_csv_provider_ignores_invalid_configured_encoding_name() -> None:
 _INVALID_PREFERRED = "definitely-not-a-codec"
 
 
-def test_csv_provider_decode_bytes_follows_fallback_chain() -> None:
+@pytest.mark.parametrize(
+    ("label", "raw_bytes", "expected_encoding", "expected_char"),
+    [
+        pytest.param("utf-8-sig", "é".encode("utf-8-sig"), "utf-8-sig", "é", id="utf-8-sig"),
+        pytest.param("cp1252", b"\x80", "cp1252", "€", id="cp1252"),
+        pytest.param("iso-8859-1", b"\x81", "iso-8859-1", "\x81", id="iso-8859-1"),
+    ],
+)
+def test_csv_provider_decode_bytes_follows_fallback_chain(
+    label: str,
+    raw_bytes: bytes,
+    expected_encoding: str,
+    expected_char: str,
+) -> None:
     """_decode_bytes must probe encodings in CSV_ENCODING_FALLBACK_CHAIN order.
 
     Each parametrised case supplies bytes that are uniquely decodable by
@@ -198,23 +211,14 @@ def test_csv_provider_decode_bytes_follows_fallback_chain() -> None:
     decoded text round-trips correctly.  No mocks or stubs — _decode_bytes is
     exercised directly on a real CsvProvider instance.
     """
-    cases = (
-        # utf-8-sig wins: BOM-prefixed bytes with invalid preferred codec.
-        ("utf-8-sig", "é".encode("utf-8-sig"), "utf-8-sig", "é"),
-        # cp1252 wins: 0x80 is a utf-8 continuation byte; cp1252 maps it to U+20AC.
-        ("cp1252", b"\x80", "cp1252", "€"),
-        # iso-8859-1 wins after utf-8-sig, utf-8, and cp1252 reject 0x81.
-        ("iso-8859-1", b"\x81", "iso-8859-1", "\x81"),
+    with override_settings(financial_default_csv_encoding=_INVALID_PREFERRED):
+        provider = CsvProvider()
+        text, winning_encoding = provider._decode_bytes(raw_bytes)
+    assert winning_encoding == expected_encoding, (
+        f"{label}: expected encoding {expected_encoding!r} but got {winning_encoding!r}; "
+        f"chain is {CSV_ENCODING_FALLBACK_CHAIN}"
     )
-    for label, raw_bytes, expected_encoding, expected_char in cases:
-        with override_settings(financial_default_csv_encoding=_INVALID_PREFERRED):
-            provider = CsvProvider()
-            text, winning_encoding = provider._decode_bytes(raw_bytes)
-        assert winning_encoding == expected_encoding, (
-            f"{label}: expected encoding {expected_encoding!r} but got {winning_encoding!r}; "
-            f"chain is {CSV_ENCODING_FALLBACK_CHAIN}"
-        )
-        assert expected_char in text, f"{label}: decoded text {text!r} lacks {expected_char!r}"
+    assert expected_char in text, f"{label}: decoded text {text!r} lacks {expected_char!r}"
 
 
 def test_csv_provider_decode_bytes_preferred_codec_wins_over_chain() -> None:
