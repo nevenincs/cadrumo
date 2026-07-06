@@ -1,12 +1,23 @@
 """Territorial-regime region-scoped deductibility selection (region-Renta D1/D4).
 
 These tests pin the region layer added to the Renta expense-deductibility surface:
-the optional ``residence_ccaa`` axis on :class:`RentaDeductibilityContext` (D1) and
-the :func:`select_deductibility_profile` fail-closed selection (D4). General expense
-deductibility is state base-imponible law and does not vary by comunidad, so the
-override layer (:func:`resolve_region_category_profiles`) is provisioned empty; the
-selection mechanism is exercised here with a SYNTHETIC override profile to prove the
-wiring and the fail-closed refusal, never a real territorial-regime figure.
+the optional ``residence_ccaa`` axis on
+:class:`~domain.renta.RentaDeductibilityContext` (D1) and the
+:func:`~domain.renta.select_deductibility_profile` fail-closed selection (D4).
+General expense deductibility is state base-imponible law and does not vary by
+comunidad, so the override layer
+(:func:`~domain.renta.resolve_region_category_profiles`) is provisioned empty;
+the selection mechanism is exercised here with a SYNTHETIC override profile to
+prove the wiring and the fail-closed refusal, never a real territorial-regime
+figure.
+
+See Also:
+    :class:`~domain.contribuyente.CCAA`
+        Closed ordinary-residence comunidad enum used as the selector key.
+    :class:`~domain.categories.CategoryProfile`
+        Deductibility profile selected from state law or a regional override.
+    :func:`~application.aggregation._renta_ledger.aggregate_renta_ledger_expenses`
+        Application aggregation caller that forwards the region axis into Renta.
 """
 
 from __future__ import annotations
