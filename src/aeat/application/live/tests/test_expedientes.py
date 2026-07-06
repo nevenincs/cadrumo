@@ -1,4 +1,24 @@
-"""Tests for the bucket-scoped expedientes snapshot service."""
+"""Tests for the bucket-scoped expedientes snapshot service.
+
+The suite pins :class:`~application.live.ExpedientesService` as a read-only
+capture/list/show/latest surface backed by content-addressed
+:class:`~application.live.PersistedExpedientesSnapshot` records in encrypted
+bucket-local secure-object storage. It also verifies lookup refusals, object-key
+validation, bucket isolation, and absence of AEAT-side write verbs.
+
+See Also:
+    :mod:`~application.live._expedientes`
+        Service, payload, object-key, and not-found contracts under test.
+    :mod:`~application.live._snapshot_base`
+        Shared secure snapshot repository and stateless snapshot lifecycle.
+    :data:`~adapters.persistence.storage.LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE`
+        Registered namespace, sensitivity, schema-version, and object-key
+        grammar for persisted expedientes captures.
+    Governing vault records
+        ``2026-05-12-cli-workflow-redesign-adr`` locks live reads under
+        ``app live`` with no write surface; the secure-storage side-store audit
+        records expedientes snapshots as secure-object migrated remote mirrors.
+"""
 
 from __future__ import annotations
 
