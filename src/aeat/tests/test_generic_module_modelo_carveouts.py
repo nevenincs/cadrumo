@@ -8,15 +8,15 @@ modules — modelo-branched logic keyed on ``Modelo.M###`` members or on
 prove the codebase already knows the right shape.
 
 This AST gate inventories those per-modelo tokens across a NAMED list of generic
-modules and records a per-module baseline. The count may only DECREASE: a new
-``Modelo.M###`` branch or ``_M###_*`` constant in one of these modules pushes its
-distinct-token count above the baseline and fails the gate, unless the baseline
-is CONSCIOUSLY lowered (never raised) — so a new per-modelo carve-out in a
-generic module is a deliberate, reviewed act, not an accident.
+modules and records a per-module baseline set. The set may only SHRINK: a new
+``Modelo.M###`` branch or ``_M###_*`` constant in one of these modules creates an
+unexpected token and fails the gate, unless the baseline is CONSCIOUSLY changed
+in the same review — so a new per-modelo carve-out in a generic module is a
+deliberate, reviewed act, not an accident.
 
-Distinct tokens are counted (not raw occurrences) so the gate is stable under
-refactors that merely add or remove a use of an existing token; only introducing
-a genuinely NEW per-modelo symbol trips it.
+Distinct tokens are compared as a named set (not raw occurrences) so the gate is
+stable under refactors that merely add or remove a use of an existing token, but
+still catches swaps where one per-modelo symbol disappears and another appears.
 
 Scope note (no silent caps): the domain formula runtime
 (``domain/calculations/registry/_formula_runtime.py``) is deliberately NOT in
@@ -46,14 +46,40 @@ _MODELO_ATTR_RE = re.compile(r"^M\d+$")
 
 _SRC_ROOT = SRC_AEAT
 
-#: The named generic application modules under ratchet, mapped to the distinct
+#: The named generic application modules under ratchet, mapped to the exact
 #: per-modelo-token baseline recorded after the architecture-remediation sweep.
-#: The count for each module may only decrease. Raising a baseline is a
-#: conscious, reviewed decision (a new per-modelo carve-out) — never an accident.
-_RATCHET_BASELINE: dict[str, int] = {
-    "application/modelo/_projection.py": 14,
-    "application/modelo/_calculation_actions.py": 14,
-    "application/modelo/_verification_cross_period.py": 6,
+#: The set for each module may only shrink. Adding a token to a baseline is a
+#: conscious, reviewed decision (a new per-modelo carve-out) - never an accident.
+_RATCHET_BASELINE: dict[str, frozenset[str]] = {
+    "application/modelo/_projection.py": frozenset(
+        {
+            "Modelo.M100",
+            "Modelo.M130",
+            "_M100_BASE_LIQUIDABLE_GENERAL_CASILLA",
+            "_M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA",
+            "_M100_CUOTA_INTEGRA_ESTATAL_CASILLA",
+            "_M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA",
+            "_M100_CUOTA_LIQUIDA_ESTATAL_CASILLA",
+            "_M100_CUOTA_RESULTANTE_CASILLA",
+            "_M100_PAGOS_FRACCIONADOS_CASILLA",
+            "_M100_RENDIMIENTO_NETO_PROJECTED_CASILLA",
+            "_M130_GASTOS_CASILLA",
+            "_M130_INGRESOS_CASILLA",
+            "_M130_RENDIMIENTO_NETO_CASILLA",
+            "_M130_RESULTADO_FINAL_CASILLA",
+        }
+    ),
+    "application/modelo/_calculation_actions.py": frozenset(),
+    "application/modelo/_verification_cross_period.py": frozenset(
+        {
+            "Modelo.M202",
+            "Modelo.M303",
+            "_M100_ZERO_BIN_LEGAL_REFS",
+            "_M100_ZERO_VALUE_PREVIOUS_FILING_BINDING_RE",
+            "_M111_NO_RETENCIONES_LEGAL_REFS",
+            "_M202_FIRST_YEAR_LEGAL_REFS",
+        }
+    ),
 }
 
 
@@ -79,21 +105,22 @@ def _per_modelo_tokens(source: str) -> set[str]:
     return tokens
 
 
-def test_per_modelo_token_count_does_not_exceed_baseline() -> None:
-    """Each named generic module carries no more distinct per-modelo tokens than its baseline."""
+def test_per_modelo_token_set_does_not_exceed_baseline() -> None:
+    """Each named generic module carries only previously reviewed per-modelo tokens."""
     violations: list[str] = []
     for relative_path, baseline in sorted(_RATCHET_BASELINE.items()):
         module_path = _SRC_ROOT / relative_path
         if not module_path.is_file():
             violations.append(f"named ratchet module missing: {relative_path}")
             continue
-        count = len(_per_modelo_tokens(module_path.read_text(encoding="utf-8")))
-        if count > baseline:
+        tokens = _per_modelo_tokens(module_path.read_text(encoding="utf-8"))
+        unexpected = tokens - baseline
+        if unexpected:
             violations.append(
-                f"{relative_path} now references {count} distinct per-modelo tokens, above the "
-                f"ratchet baseline of {baseline}. A new per-modelo carve-out in a generic module "
-                f"must move to a named `_m<id>_*` module or registry data; if this is a conscious, "
-                f"reviewed addition, lower nothing - the baseline only ratchets DOWN.",
+                f"{relative_path} now references unexpected per-modelo token(s): {sorted(unexpected)}. "
+                f"The reviewed baseline is {sorted(baseline)}. A new per-modelo carve-out in a generic "
+                "module must move to a named `_m<id>_*` module or registry data; if this is a "
+                "conscious, reviewed addition, update the named baseline in the same commit.",
             )
 
     assert not violations, "\n".join(violations)
