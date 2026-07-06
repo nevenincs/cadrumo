@@ -51,7 +51,7 @@ _TARGET_PRINCIPAL = "aeat-export@example-project.iam.gserviceaccount.com"
 
 
 def test_google_credential_source_kind_has_exactly_two_members() -> None:
-    """The taxonomy is closed to the two mechanisms this ADR distinguishes."""
+    """The taxonomy is closed to the two supported credential mechanisms."""
     assert {member.value for member in GoogleCredentialSourceKind} == {
         "oauth_desktop",
         "service_account_impersonation",

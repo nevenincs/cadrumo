@@ -24,10 +24,6 @@ test resolves is persisted; the minted token lives only in process memory
 for the duration of the test.
 
 See Also:
-    `.vault/adr/2026-07-04-google-sa-impersonation-adr.md`
-        The accepted ADR this test closes out (issue #591 remainder: "a
-        live-gated integration test analogous to the certificate-source
-        live probes").
     `adapters.outbound.google._impersonation.resolve_impersonated_credentials`
         The resolver under test.
 """
