@@ -1,4 +1,23 @@
-"""Tests for the filing persistence-adapter runtime repository helpers."""
+"""Tests for filing persistence-adapter runtime repository helpers.
+
+The suite pins explicit bucket-id resolution, active-profile fallback, typed
+refusal context, and runtime-readiness failure for filing repositories that bind
+to secure-object storage through the bucket runtime.
+
+See Also:
+    :mod:`~adapters.persistence.profile._filing_runtime`
+        Adapter-layer resolver and secure-object factory under test.
+    :func:`~core.resolve_repository_bucket_id`
+        Shared explicit-or-active bucket resolver used by filing and modelo
+        repositories.
+    :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`
+        Runtime storage factory that refuses unready bucket sessions.
+    Governing vault records
+        ``2026-06-04-secure-storage-production-hardening-w12-p26-s210-review-audit``
+        closes the filing runtime helper as runtime-default; the secure-storage
+        production-hardening architecture ADR requires this fail-closed runtime
+        readiness gate.
+"""
 
 from __future__ import annotations
 
