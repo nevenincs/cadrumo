@@ -203,6 +203,7 @@ _CASILLA_RESULTADO: CasillaId = validated_casilla_id(
     "iva.anual.resultado-regimen-general",
     surface="_CASILLA_RESULTADO",
 )
+_M390_BIENES_INVERSION_REGULARIZACION_BINDING = "modelo-390-bienes-inversion-regularizacion-casilla-63"
 
 _FILING_YEAR = 2024
 _PERIOD = "0A"
@@ -347,6 +348,7 @@ def _calculate(
         # iva_compensation_annual_partition) bindings, which read prior filed
         # 303 quarters this test never files. Every bound casilla still needs
         # a resolved fact, so these are pinned to zero.
+        _M390_BIENES_INVERSION_REGULARIZACION_BINDING: Decimal("0"),
         "modelo-390-prev-303-cuota-devengada-total": Decimal("0"),
         "modelo-390-prev-303-cuota-deducible-total": Decimal("0"),
         "modelo-390-prev-303-resultado-regimen-general": Decimal("0"),
@@ -481,6 +483,7 @@ def _calculate_with_super_reducido_recargo(*, include_super_reducido_recargo: bo
         ),
     )
     binding_values: dict[str, Decimal] = {
+        _M390_BIENES_INVERSION_REGULARIZACION_BINDING: Decimal("0"),
         "modelo-390-prev-303-cuota-devengada-total": Decimal("0"),
         "modelo-390-prev-303-cuota-deducible-total": Decimal("0"),
         "modelo-390-prev-303-resultado-regimen-general": Decimal("0"),
