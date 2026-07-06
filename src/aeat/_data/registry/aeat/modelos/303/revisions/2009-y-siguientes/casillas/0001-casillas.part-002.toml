@@ -553,8 +553,9 @@ section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "dr303_62"
 required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-criterio-caja-entregas-art75-base"
+legal_refs = ["ley-37-1992:art-75", "ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-62"]
 
@@ -566,8 +567,9 @@ section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "dr303_63"
 required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-criterio-caja-entregas-art75-cuota"
+legal_refs = ["ley-37-1992:art-75", "ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-63"]
 
@@ -579,8 +581,9 @@ section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "dr303_74"
 required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-criterio-caja-adquisiciones-base"
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "ley-37-1992:art-163-quinquiesdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-74"]
 
@@ -592,8 +595,9 @@ section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "dr303_75"
 required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-criterio-caja-adquisiciones-cuota"
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "ley-37-1992:art-163-quinquiesdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-75"]
 

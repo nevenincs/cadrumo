@@ -3,6 +3,24 @@
 The public facade and engine must use the canonical ``_models.py`` helpers,
 and ``declaration_key`` stores the filing year and bare registry token as
 separate key segments, never as a combined token such as ``2025Q1``.
+
+See Also:
+    :func:`~application.workflow.declaration_key`
+        Public facade helper that must remain the single declaration-key entry
+        point for callers.
+    :func:`~application.workflow._models.declaration_key`
+        Canonical model helper whose separated period identity is under test.
+    :func:`~application.workflow._models.update_declaration_pointer`
+        Pointer upsert helper that writes keys through the same canonical path.
+    :class:`~application.workflow.WorkflowState`
+        Immutable state record whose ``declarations`` map is keyed by
+        ``declaration_key``.
+    :class:`~core.Period`
+        Typed period identity required instead of combined string period tokens.
+    Governing vault records
+        ``2026-06-01-domain-boundary-audit-audit`` DB-05 and
+        ``2026-06-01-domain-boundary-audit-plan`` W07.P19.S67-S69 record the
+        duplicate-helper collapse and this regression surface.
 """
 
 from __future__ import annotations

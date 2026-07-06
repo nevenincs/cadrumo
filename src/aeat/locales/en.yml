@@ -359,6 +359,8 @@ aggregation:
       duplicate_relation_owner: 'Internal error: duplicate relation owner in source
         mesh.'
       duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
+      out_of_window_summary_date_span_invalid: 'An out-of-window summary''s maximum filing date must not precede its minimum filing date.'
+      out_of_window_summary_incomplete: 'An out-of-window summary must set the count, minimum filing date, and maximum filing date together.'
       owned_sources_blank: Source mesh owned sources must not contain blank source
         kinds.
       owned_sources_duplicate: Source mesh owned sources must be unique.
@@ -1917,6 +1919,21 @@ cli:
           filed at sede.
         note_help: Optional operator note (up to 512 chars).
         view_help: View one recorded M036 declaration by id (or unambiguous prefix).
+      m145:
+        actor_help: 'Operator label for the event.'
+        casilla_help: 'Repeatable registry field assignment, ID=VALUE.'
+        communication_record_id_help: 'Communication record id or unambiguous prefix.'
+        create_help: 'Create a Modelo 145 local payer communication record.'
+        errors:
+          casilla_required: 'Provide at least one --casilla ID=VALUE entry.'
+        export_help: 'Export a Modelo 145 local payer communication record.'
+        group_help: 'Manage Modelo 145 local payer communication records.'
+        mark_delivered_to_payer_help: 'Mark a Modelo 145 local communication record delivered to the payer.'
+        mark_locally_completed_help: 'Mark a Modelo 145 local communication record locally completed.'
+        note_help: 'Optional operator note.'
+        period_help: 'Communication period token: comunicacion or variacion.'
+        validate_help: 'Validate a Modelo 145 local payer communication record.'
+        year_help: 'Communication year.'
       project:
         binding_help: Additional M100 binding override as KEY=VALUE. Repeat for multiple.
           Retenciones bindings default to zero when not supplied.
@@ -4735,6 +4752,8 @@ errors:
     error_profile_cross_store_drift: A profile's physical stores disagree on its identity.
       The profile is not usable.
     error_profile_inventory_ledger: A profile inventory ledger operation is not valid.
+    error_profile_prorrata_register_record: A cross-period IVA prorrata register record
+      is structurally invalid.
     error_profile_tax_residence: A tax-residence profile error occurred.
     error_profile_validation: A profile record failed validation.
     error_redaction: A redaction helper received an argument of the wrong type.
@@ -4782,6 +4801,8 @@ errors:
     error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
+    m145_communication_record_not_found: 'No Modelo 145 local communication record matches the requested id.'
+    m145_communication_service: 'A Modelo 145 local communication service operation failed.'
     modelo_calculation_revision_selector: Calculation revision selection failed.
     modelo_calculation_revision_selector_not_found: No calculation revision matched
       the requested selector.
@@ -4798,7 +4819,6 @@ errors:
       modelo, year, and period.
     modelo_work_selector: The modelo work selector failed.
     modelo_work_selector_unit_not_found: The selected modelo work unit was not found.
-    error_profile_prorrata_register_record: 'A cross-period IVA prorrata register record is structurally invalid.'
   fail:
     censo_sync: The Modelo 036 censo sync failed.
     currency_error: Currency normalization failed.
@@ -5080,6 +5100,10 @@ errors:
       for IAE, or your certificate may not be registered against your NIF.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
       fileable.
+    m145_communication_record_ambiguous: 'The Modelo 145 communication record id prefix matches multiple records.'
+    m145_communication_record_export: 'The Modelo 145 local communication record could not be exported.'
+    m145_communication_record_transition: 'The Modelo 145 local communication record does not allow that state transition.'
+    m145_communication_record_validation: 'The Modelo 145 local communication operation is blocked by validation.'
     modelo_036_prior_alta_required: A Modelo 036 modification or deregistration cannot
       be requested without a prior registration.
     modelo_036_terminal_state: The Modelo 036 record is already deregistered and accepts
@@ -5311,6 +5335,8 @@ errors:
     refused_profile_not_found: No profile exists with the identifier provided.
     refused_profile_preflight_missing: Modelo preflight could not find a required
       profile selector. Complete the profile before continuing.
+    refused_profile_prorrata_register_validation: A cross-period IVA prorrata register
+      record failed validation.
     refused_profile_schema_validation: The profile data violates the schema contract.
       Correct the values shown.
     refused_renta_maritime_exemption_inactive: errors.refused.refused_renta_maritime_exemption_inactive
@@ -5377,7 +5403,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    refused_profile_prorrata_register_validation: 'A cross-period IVA prorrata register record failed validation.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'

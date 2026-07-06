@@ -112,6 +112,13 @@ def _m303_zero_bindings() -> dict[str, Decimal]:
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
         "modelo-303-autoconsumo-promotor-base": Decimal("0"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
+        # Criterio-de-caja informational bindings (LIVA arts. 163 decies ff.)
+        # for casillas 62/63/74/75; zero — no cash-accounting rows in the
+        # AEAT manual oracle scenario.
+        "modelo-303-criterio-caja-entregas-art75-base": Decimal("0"),
+        "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
     }
 
 

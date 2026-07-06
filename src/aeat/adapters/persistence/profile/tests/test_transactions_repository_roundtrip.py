@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....domain.iva import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from .....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -1041,3 +1042,73 @@ def test_loaded_envelope_bytes_equal_fresh_serialization_of_the_same_instance(
         fresh_bytes = reload_repo._serialise_transaction(loaded_transaction)
 
     assert fresh_bytes == stored_record.payload
+
+
+def test_transaction_catalogue_preserves_populated_cash_accounting_evidence_through_encrypted_storage(
+    tmp_path: Path,
+) -> None:
+    """A populated ``cash_accounting_payment_evidence`` tuple survives the encrypted roundtrip.
+
+    The prior gap: every roundtrip in this suite exercised only the
+    empty-tuple default for the criterio-de-caja axis, so the exact shape
+    that broke (a save/load cycle over a NON-EMPTY payment-evidence tuple,
+    ``246ba49ae4``, fixed by ``f514824d18``) was untested. Builds a
+    TAXPAYER_REGIME row satisfying every ``_enforce_cash_accounting_axis``
+    invariant (a real operation date, a payment-evidence tuple whose totals
+    stay within taxable_base/iva_amount/recargo_amount, and a payment_date at
+    or before the statutory 31 December fallback), saves it, reloads through a
+    FRESH repository instance, and asserts strict equality plus per-entry
+    witnesses on the reconstituted evidence tuple.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        cash_sale = Transaction.model_validate(
+            {
+                "raw": _raw("provider-cash-accounting", Decimal("1210.00"), "Venta criterio de caja"),
+                "direction": TransactionDirection.INCOMING,
+                "group_label": None,
+                "business_classification": BusinessClassification.BUSINESS,
+                "source_jurisdiction": "ES",
+                "taxable_base": Decimal("1000.00"),
+                "iva_rate": Decimal("0.21"),
+                "iva_amount": Decimal("210.00"),
+                "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+                "cash_accounting_treatment": IvaCashAccountingTreatment.TAXPAYER_REGIME,
+                "cash_accounting_operation_date": date(2026, 3, 20),
+                "cash_accounting_payment_evidence": (
+                    IvaCashAccountingPaymentEvidence(
+                        payment_date=date(2026, 4, 15),
+                        taxable_base=Decimal("600.00"),
+                        iva_amount=Decimal("126.00"),
+                    ),
+                    IvaCashAccountingPaymentEvidence(
+                        payment_date=date(2026, 6, 10),
+                        taxable_base=Decimal("400.00"),
+                        iva_amount=Decimal("84.00"),
+                    ),
+                ),
+            },
+        )
+        original = TransactionCatalogue.from_transactions([cash_sale])
+        repo.save(original)
+        loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+    assert loaded == original
+    loaded_txn = loaded.transactions[cash_sale.transaction_id]
+    assert loaded_txn.cash_accounting_treatment is IvaCashAccountingTreatment.TAXPAYER_REGIME
+    assert loaded_txn.cash_accounting_operation_date == date(2026, 3, 20)
+    assert len(loaded_txn.cash_accounting_payment_evidence) == 2
+    first, second = loaded_txn.cash_accounting_payment_evidence
+    assert isinstance(first, IvaCashAccountingPaymentEvidence)
+    assert first.payment_date == date(2026, 4, 15)
+    assert first.taxable_base == Decimal("600.00")
+    assert first.iva_amount == Decimal("126.00")
+    assert first.recargo_amount == Decimal("0")
+    assert second.payment_date == date(2026, 6, 10)
+    assert second.taxable_base == Decimal("400.00")
+    assert second.iva_amount == Decimal("84.00")
+    total_base = sum((evidence.taxable_base for evidence in loaded_txn.cash_accounting_payment_evidence), Decimal("0"))
+    total_iva = sum((evidence.iva_amount for evidence in loaded_txn.cash_accounting_payment_evidence), Decimal("0"))
+    assert total_base == Decimal("1000.00")
+    assert total_iva == Decimal("210.00")

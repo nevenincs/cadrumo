@@ -368,6 +368,8 @@ aggregation:
         a forráshálon.'
       duplicate_relation_owner: 'Belső hiba: ismétlődő kapcsolati tulajdonos a forráshálon.'
       duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
+      out_of_window_summary_date_span_invalid: 'Az ablakon kívüli összesítő legkésőbbi benyújtási dátuma nem előzheti meg a legkorábbi benyújtási dátumot.'
+      out_of_window_summary_incomplete: 'Az ablakon kívüli összesítőnek együtt kell megadnia a számot, a legkorábbi és a legkésőbbi benyújtási dátumot.'
       owned_sources_blank: A forrásháló saját forrásai nem tartalmazhatnak üres forrástípusokat.
       owned_sources_duplicate: A forrásháló saját forrásainak egyedinek kell lenniük.
       relation_provenance_incomplete: A kapcsolat eredetenek tartalmaznia kell a forras
@@ -1986,6 +1988,21 @@ cli:
         note_help: Opcionális operátori megjegyzés (legfeljebb 512 karakter).
         view_help: Egy rögzített M036 nyilatkozat megtekintése azonosító (vagy egyértelmű
           előtag) alapján.
+      m145:
+        actor_help: 'Az esemény operátori címkéje.'
+        casilla_help: 'Ismételhető nyilvántartási mezőhozzárendelés, ID=ÉRTÉK formában.'
+        communication_record_id_help: 'A kommunikációs rekord azonosítója (vagy egyértelmű előtagja).'
+        create_help: 'Hozzon létre egy helyi Modelo 145 kifizetői kommunikációs rekordot.'
+        errors:
+          casilla_required: 'Adjon meg legalább egy --casilla ID=ÉRTÉK bejegyzést.'
+        export_help: 'Exportáljon egy helyi Modelo 145 kifizetői kommunikációs rekordot.'
+        group_help: 'Kezelje a Modelo 145 helyi kifizetői kommunikációs rekordjait.'
+        mark_delivered_to_payer_help: 'Jelölje meg a helyi Modelo 145 kommunikációs rekordot a kifizetőnek kézbesítettként.'
+        mark_locally_completed_help: 'Jelölje meg a helyi Modelo 145 kommunikációs rekordot helyileg befejezettként.'
+        note_help: 'Opcionális operátori megjegyzés.'
+        period_help: 'A kommunikáció időszakának tokenje: comunicacion vagy variacion.'
+        validate_help: 'Ellenőrizzen egy helyi Modelo 145 kifizetői kommunikációs rekordot.'
+        year_help: 'A kommunikáció éve.'
       project:
         binding_help: Kötési érték KEY=VALUE szintaxissal (ismételhető).
         casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető).
@@ -4979,6 +4996,8 @@ errors:
     error_profile_cross_store_drift: A profil fizikai tárolói eltérnek az azonosságától.
       A profil nem használható.
     error_profile_inventory_ledger: Egy profil készlet-főkönyvi művelete érvénytelen.
+    error_profile_prorrata_register_record: Egy időszakok közötti áfa-arányosítási
+      nyilvántartás szerkezetileg érvénytelen.
     error_profile_tax_residence: Adóügyi illetőségi profil hiba történt.
     error_profile_validation: Egy profil-rekord nem ment át az érvényesítésen.
     error_redaction: Egy szerkesztési segédprogram rossz típusú argumentumot kapott.
@@ -5027,6 +5046,8 @@ errors:
     error_wizard_compile: A varázsló-katalógus hibás formátumú és nem fordítható le.
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
+    m145_communication_record_not_found: 'Nincs olyan Modelo 145 helyi kommunikációs rekord, amely megfelelne a kért azonosítónak.'
+    m145_communication_service: 'A Modelo 145 helyi kommunikációs szolgáltatás egyik művelete meghiúsult.'
     modelo_calculation_revision_selector: A számítási revízió kiválasztása sikertelen.
     modelo_calculation_revision_selector_not_found: Nincs a megadott választónak megfelelő
       számítási revízió.
@@ -5041,7 +5062,6 @@ errors:
       évhez és időszakhoz.
     modelo_work_selector: A modelo munkavalaszto hibazott.
     modelo_work_selector_unit_not_found: A kiválasztott modelo munkaegység nem található.
-    error_profile_prorrata_register_record: 'Egy időszakok közötti áfa-arányosítási nyilvántartás szerkezetileg érvénytelen.'
   fail:
     censo_sync: A Modelo 036 censo-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
@@ -5324,6 +5344,10 @@ errors:
       hogy nincs IAE-n regisztrálva, vagy a tanúsítványa nincs a NIF-jéhez rendelve.
     ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a modelo-futtatást,
       mert az még nem nyújtható be.
+    m145_communication_record_ambiguous: 'A Modelo 145 kommunikációs rekord azonosítójának előtagja több rekorddal egyezik.'
+    m145_communication_record_export: 'A Modelo 145 helyi kommunikációs rekordot nem sikerült exportálni.'
+    m145_communication_record_transition: 'A Modelo 145 helyi kommunikációs rekord nem engedélyezi ezt az állapotátmenetet.'
+    m145_communication_record_validation: 'A Modelo 145 helyi kommunikációs műveletet az ellenőrzés blokkolja.'
     modelo_036_prior_alta_required: Modelo 036 módosítás vagy törlés nem kérhető előzetes
       bejegyzés nélkül.
     modelo_036_terminal_state: A Modelo 036 rekord már törölve van, és nem fogad el
@@ -5558,6 +5582,8 @@ errors:
     refused_profile_not_found: Nem létezik profil a megadott azonosítóval.
     refused_profile_preflight_missing: A modelo-előzetes-ellenőrzés nem talált kötelező
       profilválasztót. A folytatás előtt töltse ki a profilt.
+    refused_profile_prorrata_register_validation: Egy időszakok közötti áfa-arányosítási
+      nyilvántartás nem ment át az ellenőrzésen.
     refused_profile_schema_validation: A profiladatok sértik a séma-szerződést. Javítsa
       a megjelenített értékeket.
     refused_renta_maritime_exemption_inactive: errors.refused.refused_renta_maritime_exemption_inactive
@@ -5624,7 +5650,6 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
-    refused_profile_prorrata_register_validation: 'Egy időszakok közötti áfa-arányosítási nyilvántartás nem ment át az ellenőrzésen.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'

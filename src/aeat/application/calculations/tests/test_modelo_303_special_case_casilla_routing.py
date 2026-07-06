@@ -91,6 +91,12 @@ _LEDGER_CUOTA_BINDINGS = (
     "modelo-303-recargo-equivalencia-general-cuota",
     "modelo-303-recargo-equivalencia-reducido-cuota",
     "modelo-303-recargo-equivalencia-super-reducido-cuota",
+    # Criterio-de-caja informational bindings (LIVA arts. 163 decies ff.) for
+    # casillas 62/63/74/75; zero when the fixture has no cash-accounting rows.
+    "modelo-303-criterio-caja-entregas-art75-base",
+    "modelo-303-criterio-caja-entregas-art75-cuota",
+    "modelo-303-criterio-caja-adquisiciones-base",
+    "modelo-303-criterio-caja-adquisiciones-cuota",
 )
 _AUTOCONSUMO_BINDING = "modelo-303-autoconsumo-promotor-base"
 _STATE_RATIO_BINDING = "modelo-303-profile-state-attribution-ratio"

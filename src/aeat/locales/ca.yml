@@ -394,6 +394,8 @@ aggregation:
       duplicate_relation_owner: 'Error intern: propietari de relacio duplicat a la
         malla de fonts.'
       duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
+      out_of_window_summary_date_span_invalid: 'La data màxima de presentació d''un resum fora de finestra no pot ser anterior a la seva data mínima.'
+      out_of_window_summary_incomplete: 'Un resum fora de finestra ha d''establir conjuntament el recompte, la data mínima de presentació i la data màxima de presentació.'
       owned_sources_blank: Les fonts propietat de la malla de fonts no poden contenir
         tipus de font en blanc.
       owned_sources_duplicate: Les fonts propietat de la malla de fonts han de ser
@@ -2042,6 +2044,21 @@ cli:
           censal) presentada a seu.
         note_help: Nota opcional de l'operador (fins a 512 caràcters).
         view_help: Mostra una declaració M036 registrada pel seu id (o un prefix inequívoc).
+      m145:
+        actor_help: 'Etiqueta de l''operador per a l''esdeveniment.'
+        casilla_help: 'Assignació de camp del registre repetible, ID=VALOR.'
+        communication_record_id_help: 'L''id del registre de comunicació (o un prefix inequívoc).'
+        create_help: 'Crea un registre local de comunicació al pagador del Model 145.'
+        errors:
+          casilla_required: 'Proporcioneu almenys una entrada --casilla ID=VALOR.'
+        export_help: 'Exporta un registre local de comunicació al pagador del Model 145.'
+        group_help: 'Gestiona els registres locals de comunicació al pagador del Model 145.'
+        mark_delivered_to_payer_help: 'Marca un registre local de comunicació del Model 145 com a lliurat al pagador.'
+        mark_locally_completed_help: 'Marca un registre local de comunicació del Model 145 com a completat localment.'
+        note_help: 'Nota opcional de l''operador.'
+        period_help: 'Token del període de la comunicació: comunicacion o variacion.'
+        validate_help: 'Valida un registre local de comunicació al pagador del Model 145.'
+        year_help: 'Any de la comunicació.'
       project:
         binding_help: Valor d'enllaç amb la sintaxi KEY=VALUE (repetible).
         casilla_help: Valor de casilla amb la sintaxi CASILLA_ID=DECIMAL (repetible).
@@ -5043,6 +5060,8 @@ errors:
       en la seva identitat. El perfil no és utilitzable.
     error_profile_inventory_ledger: Una operació del llibre d'inventari del perfil
       no és vàlida.
+    error_profile_prorrata_register_record: Un registre de prorrata d'IVA entre períodes
+      no és estructuralment vàlid.
     error_profile_tax_residence: S'ha produït un error en el perfil de residència
       fiscal.
     error_profile_validation: Un registre de perfil no ha superat la validació.
@@ -5098,6 +5117,8 @@ errors:
     error_workflow: S'ha produït un error en el flux de treball.
     error_workflow_component: Un component del flux de treball ha llançat una excepció
       inesperada.
+    m145_communication_record_not_found: 'Cap registre local de comunicació del Model 145 coincideix amb l''id sol·licitat.'
+    m145_communication_service: 'Ha fallat una operació del servei local de comunicació del Model 145.'
     modelo_calculation_revision_selector: La seleccio de revisio de calcul ha fallat.
     modelo_calculation_revision_selector_not_found: Cap revisio de calcul coincideix
       amb el selector indicat.
@@ -5115,7 +5136,6 @@ errors:
     modelo_work_selector: El selector de treball de modelo ha fallat.
     modelo_work_selector_unit_not_found: No s'ha trobat la unitat de treball de modelo
       seleccionada.
-    error_profile_prorrata_register_record: 'Un registre de prorrata d''IVA entre períodes no és estructuralment vàlid.'
   fail:
     censo_sync: La sincronització del cens del Model 036 ha fallat.
     currency_error: Ha fallat la normalització de la moneda.
@@ -5422,6 +5442,10 @@ errors:
       al teu NIF.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
       model perquè encara no es pot presentar.
+    m145_communication_record_ambiguous: 'El prefix de l''id de registre de comunicació del Model 145 coincideix amb diversos registres.'
+    m145_communication_record_export: 'El registre local de comunicació del Model 145 no s''ha pogut exportar.'
+    m145_communication_record_transition: 'El registre local de comunicació del Model 145 no permet aquesta transició d''estat.'
+    m145_communication_record_validation: 'L''operació local de comunicació del Model 145 està bloquejada per la validació.'
     modelo_036_prior_alta_required: No es pot sol·licitar una modificació o baixa
       del Model 036 sense una alta prèvia.
     modelo_036_terminal_state: El registre del Model 036 ja està en estat de baixa;
@@ -5669,6 +5693,8 @@ errors:
     refused_profile_not_found: No existeix cap perfil amb l'identificador indicat.
     refused_profile_preflight_missing: La comprovació prèvia del model no ha trobat
       una dada de perfil obligatòria. Completa el perfil abans de continuar.
+    refused_profile_prorrata_register_validation: Un registre de prorrata d'IVA entre
+      períodes no ha superat la validació.
     refused_profile_schema_validation: Les dades del perfil infringeixen el contracte
       de l'esquema. Corregeix els valors indicats.
     refused_renta_maritime_exemption_inactive: errors.refused.refused_renta_maritime_exemption_inactive
@@ -5738,7 +5764,6 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    refused_profile_prorrata_register_validation: 'Un registre de prorrata d''IVA entre períodes no ha superat la validació.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'

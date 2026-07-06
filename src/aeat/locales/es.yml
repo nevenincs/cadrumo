@@ -400,6 +400,8 @@ aggregation:
       duplicate_relation_owner: 'Error interno: propietario de relacion duplicado
         en la malla de fuentes.'
       duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
+      out_of_window_summary_date_span_invalid: 'La fecha máxima de presentación de un resumen fuera de ventana no puede ser anterior a su fecha mínima.'
+      out_of_window_summary_incomplete: 'Un resumen fuera de ventana debe establecer conjuntamente el recuento, la fecha mínima de presentación y la fecha máxima de presentación.'
       owned_sources_blank: Las fuentes propiedad del mallado de fuentes no pueden
         contener tipos de fuente en blanco.
       owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
@@ -2070,6 +2072,21 @@ cli:
         note_help: Nota opcional del operador (hasta 512 caracteres).
         view_help: Muestra una declaración M036 registrada por su id (o un prefijo
           inequívoco).
+      m145:
+        actor_help: 'Etiqueta del operador para el evento.'
+        casilla_help: 'Asignación de campo del registro repetible, ID=VALOR.'
+        communication_record_id_help: 'El id del registro de comunicación (o un prefijo inequívoco).'
+        create_help: 'Crea un registro local de comunicación al pagador del Modelo 145.'
+        errors:
+          casilla_required: 'Proporcione al menos una entrada --casilla ID=VALOR.'
+        export_help: 'Exporta un registro local de comunicación al pagador del Modelo 145.'
+        group_help: 'Gestiona los registros locales de comunicación al pagador del Modelo 145.'
+        mark_delivered_to_payer_help: 'Marca un registro local de comunicación del Modelo 145 como entregado al pagador.'
+        mark_locally_completed_help: 'Marca un registro local de comunicación del Modelo 145 como completado localmente.'
+        note_help: 'Nota opcional del operador.'
+        period_help: 'Token del periodo de la comunicación: comunicacion o variacion.'
+        validate_help: 'Valida un registro local de comunicación al pagador del Modelo 145.'
+        year_help: 'Año de la comunicación.'
       project:
         binding_help: Valor de enlace con la sintaxis KEY=VALUE (repetible).
         casilla_help: Valor de casilla con la sintaxis CASILLA_ID=DECIMAL (repetible).
@@ -5090,6 +5107,8 @@ errors:
       en su identidad. El perfil no es utilizable.
     error_profile_inventory_ledger: Una operación del libro de inventario del perfil
       no es válida.
+    error_profile_prorrata_register_record: Un registro de prorrata de IVA entre periodos
+      no es estructuralmente válido.
     error_profile_tax_residence: Se produjo un error en el perfil de residencia fiscal.
     error_profile_validation: Un registro de perfil no superó la validación.
     error_redaction: Un helper de redacción recibió un argumento del tipo incorrecto.
@@ -5147,6 +5166,8 @@ errors:
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
+    m145_communication_record_not_found: 'Ningún registro local de comunicación del Modelo 145 coincide con el id solicitado.'
+    m145_communication_service: 'Falló una operación del servicio local de comunicación del Modelo 145.'
     modelo_calculation_revision_selector: La selección de revisión de cálculo falló.
     modelo_calculation_revision_selector_not_found: Ninguna revisión de cálculo coincide
       con el selector indicado.
@@ -5165,7 +5186,6 @@ errors:
     modelo_work_selector: El selector de trabajo de modelo fallo.
     modelo_work_selector_unit_not_found: No se encontro la unidad de trabajo de modelo
       seleccionada.
-    error_profile_prorrata_register_record: 'Un registro de prorrata de IVA entre periodos no es estructuralmente válido.'
   fail:
     censo_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.
@@ -5468,6 +5488,10 @@ errors:
       NIF.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
       porque aún no se puede presentar.
+    m145_communication_record_ambiguous: 'El prefijo del id de registro de comunicación del Modelo 145 coincide con varios registros.'
+    m145_communication_record_export: 'El registro local de comunicación del Modelo 145 no pudo exportarse.'
+    m145_communication_record_transition: 'El registro local de comunicación del Modelo 145 no permite esa transición de estado.'
+    m145_communication_record_validation: 'La operación local de comunicación del Modelo 145 está bloqueada por la validación.'
     modelo_036_prior_alta_required: No se puede solicitar una modificación o baja
       del Modelo 036 sin un alta previa.
     modelo_036_terminal_state: El registro del Modelo 036 ya está en estado de baja;
@@ -5717,6 +5741,8 @@ errors:
     refused_profile_not_found: No existe ningún perfil con el identificador indicado.
     refused_profile_preflight_missing: La comprobación previa del modelo no encontró
       un dato de perfil obligatorio. Completa el perfil antes de continuar.
+    refused_profile_prorrata_register_validation: Un registro de prorrata de IVA entre
+      periodos no superó la validación.
     refused_profile_schema_validation: Los datos del perfil infringen el contrato
       del esquema. Corrige los valores indicados.
     refused_renta_maritime_exemption_inactive: 'La exención DA 41 LIRPF (flota atunera)
@@ -5790,7 +5816,6 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    refused_profile_prorrata_register_validation: 'Un registro de prorrata de IVA entre periodos no superó la validación.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'

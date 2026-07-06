@@ -55,6 +55,11 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -64,13 +69,6 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.application_adapter_exports import (
-    CalculationRevisionCatalogueRepository,
-    InvoiceCatalogueRepository,
-    SecureObjectRepository,
-    TransactionCatalogueRepository,
-    WorkUnitCatalogueRepository,
-)
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (

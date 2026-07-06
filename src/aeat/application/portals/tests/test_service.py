@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
+
 import pytest
 
 from ....core.i18n import tr
@@ -99,15 +102,27 @@ class TestNoLiveOrWriteSurface:
             assert not hasattr(PortalsService, forbidden), f"PortalsService must not expose {forbidden!r}"
 
     def test_service_does_not_import_browser_or_require_live_read(self) -> None:
-        # The service is local-only: the module text must not import
-        # require_live_read (or any live-gate symbol). A simple module
-        # source scan suffices.
-        from pathlib import Path
+        script = """
+import sys
 
-        source = Path(__file__).parent.parent.joinpath("_service.py").read_text(encoding="utf-8")
-        assert "require_live_read" not in source
-        assert "require_live_write" not in source
-        assert "BrowserSession" not in source
+from aeat.application.portals import PortalsService
+
+service = PortalsService()
+service.list_portals()
+
+for module_name in sys.modules:
+    if module_name.startswith("aeat.adapters.outbound.aeat.browser"):
+        raise SystemExit(f"imported browser module: {module_name}")
+"""
+        result = subprocess.run(  # noqa: S603 - fixed interpreter and literal script for import isolation.
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+
+        assert result.returncode == 0, result.stderr or result.stdout
 
 
 class TestRegistryInjection:

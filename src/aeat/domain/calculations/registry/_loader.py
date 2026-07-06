@@ -1179,7 +1179,6 @@ def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:
     _validate_legal_parameter_refs(legal_dir, parameters=parameters, legal=legal)
     return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
 
-
 def _load_all_modelo_definitions(modelos_dir: Path) -> tuple[ModeloDefinition, ...]:
     """Load every modelo (single-file + directory-mode) and reject layout collisions.
 

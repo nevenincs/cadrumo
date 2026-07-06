@@ -15,6 +15,14 @@ short-lived `bytes` copies of the buffers when callers materialised the
 `kek` / `dek` properties; the garbage collector owns the lifetime of
 those copies. The contract is documented honestly so callers do not
 assume Python guarantees a deeper wipe than the language can deliver.
+
+See Also:
+    :class:`~adapters.persistence.storage.master_key.KeyringMasterKeyProvider`
+        Provider whose former process cache is replaced by this session.
+    :class:`~adapters.persistence.storage.master_key.FileFallbackMasterKeyProvider`
+        File-backed provider whose unlocked buffers are session-scoped.
+    ``2026-05-14-profile-bucket-lifecycle-adr``
+        Decision that made unlocked key material bucket-session-owned.
 """
 
 from __future__ import annotations

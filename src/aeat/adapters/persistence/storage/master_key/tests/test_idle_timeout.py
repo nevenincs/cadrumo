@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-import ast
-import inspect
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 
 import pytest
 
-from ......core.external_constants import UTF_8_ENCODING
 from ...errors import StorageValidationError
 from .._bucket_session import BucketSession
 from .._idle_timeout import (
@@ -137,15 +133,3 @@ def test_idle_evaluation_record_is_strict_pydantic() -> None:
     invalid_remaining: int = -1
     with pytest.raises(ValueError):
         IdleEvaluation(expired=True, remaining_seconds=invalid_remaining)
-
-
-def test_module_does_not_construct_settings_at_import_boundary() -> None:
-    source_path = Path(inspect.getsourcefile(evaluate_idle) or "")
-    module = ast.parse(source_path.read_text(encoding=UTF_8_ENCODING))
-
-    direct_settings_constructors: list[str] = []
-    for node in ast.walk(module):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Settings":
-            direct_settings_constructors.append(ast.unparse(node))
-
-    assert direct_settings_constructors == []

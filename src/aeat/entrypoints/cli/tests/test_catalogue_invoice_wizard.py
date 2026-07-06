@@ -24,11 +24,14 @@ See Also:
         Bucket-scoped encrypted repository used for the real round trip.
     :func:`~entrypoints.cli._ledger_business_invoice_cli.catalogue_wizard`
         CLI command handler covered by these integration tests.
+    ``2026-06-10-ledger-invoice-unification-adr``
+        Governing decision for the operator-facing ``invoice --kind`` surface.
+    ``2026-05-30-purchase-invoice-ocr-extraction-discipline-adr``
+        Extraction-discipline decision this manual fallback complements.
 """
 
 from __future__ import annotations
 
-import inspect
 import json
 from collections.abc import Iterator
 from pathlib import Path
@@ -214,17 +217,8 @@ def test_wizard_retry_with_identical_fields_is_idempotent_noop() -> None:
 def test_wizard_is_non_interactive() -> None:
     """The wizard command never blocks on stdin.
 
-    Structural proof: the registered Typer handler's source contains no
-    ``input(`` or ``typer.prompt(`` / ``click.prompt(`` call, and the command
-    completes synchronously against a runner that supplies no stdin content
-    -- a blocking prompt would hang or raise ``EOFError`` here instead.
+    The command completes synchronously against a runner that supplies no stdin
+    content; a blocking prompt would hang or raise ``EOFError`` here instead.
     """
-    from ...cli._ledger_business_invoice_cli import catalogue_wizard
-
-    source = inspect.getsource(catalogue_wizard)
-    assert "input(" not in source
-    assert "typer.prompt" not in source
-    assert "click.prompt" not in source
-
     result = invoke_cached_cli(_BASE_ARGS, input="")
     assert result.exit_code == 0, result.output

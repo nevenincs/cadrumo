@@ -19,6 +19,24 @@ axis the CLI compels an impatriado to declare:
 The expected base is derived from the art. 93.2 source-scope rule (which amounts
 are in scope), not by re-running the aggregation arithmetic — a scope/structure
 assertion, per no-tautological-calculation-tests.
+
+See Also:
+    :mod:`~application.aggregation._impatriado_income_ledger`
+        Application classifier that consumes ``source_jurisdiction`` for Modelo
+        151 Spanish-source income.
+    :func:`~application.aggregation._impatriado_income_ledger.aggregate_impatriado_income_ledger`
+        Pure aggregation entry point exercised by the source-scope cases.
+    :func:`~application.aggregation._impatriado_income_ledger.aggregate_impatriado_income_ledger_from_repositories`
+        Repository-backed entry point covered by the bucket roundtrip cases.
+    :func:`~domain.calculations.registry.resolve_ledger_impatriado_income_aggregation_binding_values`
+        Registry binding resolver that turns source-scoped observations into
+        Modelo 151 binding values.
+    :class:`~domain.transactions.Transaction`
+        Ledger record carrying the per-row ``source_jurisdiction`` axis.
+    Governing vault records
+        ``2026-07-01-modelo-151-beckham-source-scope-adr`` and
+        ``2026-07-01-modelo-151-beckham-source-scope-plan`` authorize the
+        Spanish-source aggregation path this suite protects.
 """
 
 from __future__ import annotations
