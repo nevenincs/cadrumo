@@ -1,11 +1,13 @@
 # Prorrata settlement silent-under-declaration ADVISORY.
 #
 # Casilla 44 is the annual settlement regularizacion for the definitive
-# prorrata percentage (LIVA art. 105.Cuatro) and remains manual while the
-# `PRORRATA_REGULARIZACION` source feed is deferred. When annual prorrata
-# volumes are declared, a zero/absent casilla 44 would otherwise let the verify
-# gate grant verified_complete with no finding even though the provisional
-# carry and annual regularizacion must be confirmed.
+# prorrata percentage (LIVA art. 105.Cuatro). The governed
+# `PRORRATA_REGULARIZACION` binding row is provisioned for registry consumers,
+# but casilla 44 stays manual until the live resolver and calculation-order seam
+# can materialise current-year values. When annual prorrata volumes are declared,
+# a zero/absent casilla 44 would otherwise let the verify gate grant
+# verified_complete with no finding even though the provisional carry and annual
+# regularizacion must be confirmed.
 #
 # ADVISORY (non-blocking): a zero regularizacion can be legitimate once the
 # operator has confirmed the provisional carry and definitive calculation, so
