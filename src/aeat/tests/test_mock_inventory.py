@@ -131,9 +131,12 @@ def _add_forbidden_binding_sites(node: ast.AST, test_double_assignments: list[tu
     if isinstance(node, ast.Assign):
         targets = list(node.targets)
         lineno = node.lineno
-    elif isinstance(node, ast.AnnAssign | ast.For | ast.AsyncFor):
+    elif isinstance(node, ast.AnnAssign | ast.For | ast.AsyncFor | ast.NamedExpr):
         targets = [node.target]
         lineno = node.lineno
+    elif isinstance(node, ast.comprehension):
+        targets = [node.target]
+        lineno = getattr(node.target, "lineno", None)
     for target in targets:
         for name in _target_names(target):
             if lineno is not None and _is_test_double_name(name):
@@ -307,6 +310,25 @@ def mock_response_factory():
         (18, "mock_error"),
     }
     assert _forbidden_test_double_definitions(tree) == [(21, "MockTransport"), (24, "mock_response_factory")]
+
+
+def test_test_double_name_detector_rejects_comprehension_targets() -> None:
+    """Comprehension bindings must not hide mock/fake/stub/dummy helper names."""
+    tree = ast.parse(
+        """
+items = [mock_row for mock_row in rows]
+mapping = {fake_key: value for fake_key, value in rows}
+total = sum(stub.value for stub in rows)
+chosen = next((item for item in rows if (dummy_value := item.value)), None)
+"""
+    )
+
+    assert set(_forbidden_test_double_assignments(tree)) == {
+        (2, "mock_row"),
+        (3, "fake_key"),
+        (4, "stub"),
+        (5, "dummy_value"),
+    }
 
 
 def test_no_fake_stub_or_dummy_imports(
