@@ -1,8 +1,8 @@
 """CLI regression for bulk catalogue-invoice import (``ledger invoice catalogue import``).
 
 Covers the #254 sub-slice 4c (CSV/XLSX bulk import): a spreadsheet of invoice
-rows creates one catalogue :class:`~aeat.domain.invoices.Invoice` per row,
-delegating every write to :func:`aeat.application.invoices.create_catalogue_invoice`
+rows creates one catalogue :class:`~domain.invoices.Invoice` per row,
+delegating every write to :func:`~application.invoices.create_catalogue_invoice`
 (the sole sanctioned writer), a re-import of the identical file is a guarded
 idempotent no-op (every row reports ``skipped_duplicate``), and a malformed row
 is refused with its row number and failing field while the remaining valid
@@ -10,6 +10,18 @@ rows still import.
 
 Real behaviour only: a real encrypted bucket session, the live Typer tree, and
 real CSV/XLSX bytes. No mocks, stubs, or monkeypatch.
+
+See Also:
+    :func:`~entrypoints.cli._ledger_business_invoice_cli.catalogue_import`
+        Typer command exercised by this regression file.
+    :func:`~application.invoices.import_invoices_from_rows`
+        Application service receiving the rows parsed by the CLI.
+    :func:`~application.invoices.read_bulk_invoice_import_rows`
+        CSV/XLSX reader covering required-column and unknown-column refusal.
+    :data:`~application.invoices.BULK_INVOICE_IMPORT_REQUIRED_COLUMNS`
+        Public row-shape contract asserted by the CLI regression.
+    ``2026-04-17-invoice-catalogue-adr``
+        Catalogue identity and validation contract preserved by bulk imports.
 """
 
 from __future__ import annotations
