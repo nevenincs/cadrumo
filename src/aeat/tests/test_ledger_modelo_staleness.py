@@ -31,6 +31,7 @@ from ..application.aggregation import (
 from ..application.ledger import ManualLedgerTransactionPatch, update_manual_transaction_fields
 from ..core import Period
 from ..domain.calculations.registry import CasillaId, validated_casilla_id
+from ..domain.iva import IvaCategory
 from ..domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -106,7 +107,7 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
             "taxable_base": taxable_base,
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
-            "iva_category": "domestic_general_21",
+            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",

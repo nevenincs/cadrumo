@@ -33,10 +33,12 @@ from ..domain.currency import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
 )
-from ..domain.iva import IvaCategory, IvaFlowDirection
+from ..domain.iva import EUMemberState, IvaCategory, IvaFlowDirection
 from ..domain.transactions import (
+    BusinessClassification,
     Transaction,
     TransactionCatalogue,
+    TransactionDirection,
     TransactionLifecycleState,
 )
 
@@ -117,18 +119,18 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
 
             taxable_base, iva_rate, iva_amount = _derive_base_iva(rule, abs(raw.amount))
 
+            iva_category = rule.get("iva_category")
+            eu_member_state = rule.get("eu_member_state")
             payload: dict[str, Any] = {
                 "raw": raw,
-                "direction": rule["direction"],
-                "business_classification": rule["classification"],
+                "direction": TransactionDirection(rule["direction"]),
+                "business_classification": BusinessClassification(rule["classification"]),
                 "taxable_base": taxable_base,
                 "iva_rate": iva_rate,
                 "iva_amount": iva_amount,
                 "category_id": rule.get("category_id"),
-                "iva_category": rule.get("iva_category"),
-                "counterparty_eu_member_state": (
-                    rule["eu_member_state"].lower() if rule.get("eu_member_state") else None
-                ),
+                "iva_category": IvaCategory(iva_category) if iva_category else None,
+                "counterparty_eu_member_state": (EUMemberState(eu_member_state.lower()) if eu_member_state else None),
                 "irpf_category": rule.get("irpf_category"),
                 "source_jurisdiction": "ES",
                 "group_label": None,
