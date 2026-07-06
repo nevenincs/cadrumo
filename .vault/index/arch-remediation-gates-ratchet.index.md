@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-gates-ratchet'
-date: '2026-07-05'
-modified: '2026-07-05'
+date: '2026-07-06'
+modified: '2026-07-06'
 related:
   - '[[2026-07-02-arch-remediation-gates-ratchet-P01-S01]]'
   - '[[2026-07-02-arch-remediation-gates-ratchet-P01-S02]]'
@@ -20,6 +20,7 @@ related:
   - '[[2026-07-02-arch-remediation-gates-ratchet-P03-S12]]'
   - '[[2026-07-02-arch-remediation-gates-ratchet-audit]]'
   - '[[2026-07-02-arch-remediation-gates-ratchet-plan]]'
+  - '[[2026-07-06-arch-remediation-gates-ratchet-adr]]'
   - '[[2026-07-06-arch-remediation-gates-ratchet-research]]'
 ---
 
@@ -28,6 +29,10 @@ related:
 Auto-generated index of all documents tagged with `#arch-remediation-gates-ratchet`.
 
 ## Documents
+
+### adr
+
+- `2026-07-06-arch-remediation-gates-ratchet-adr` - `arch-remediation-gates-ratchet` adr: `same-feature authority alignment for Wave 0 ratchets` | (**status:** `accepted`)
 
 ### audit
 
