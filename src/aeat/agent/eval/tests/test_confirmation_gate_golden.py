@@ -1,4 +1,4 @@
-"""HITL confirmation gate wired end-to-end for the operator golden-task eval (category 8).
+"""HITL confirmation gate wiring for the operator golden-task eval.
 
 Covers eval-catalogue category 8 (HITL / confirmation bypass): an autonomous
 agent optimising for completion may pass ``--yes``, a failure mode no human
@@ -25,6 +25,20 @@ real ``McpAnnotations`` built by the real ``build_tool_descriptors`` /
 ``annotations_for_command``, and the argument-independence proof drives the real
 MCP server over an in-memory client session instead of asserting a hand-rolled
 boolean (``no-tautological-calculation-tests``, ``aeat-quality-gates``).
+
+See Also:
+    :mod:`~entrypoints.mcp._hitl`
+        Human-in-the-loop confirmation policy projected onto MCP tool calls.
+    :class:`~agent.eval.ConfirmationGateCheck`
+        Caller-injected golden-eval verdict that records expected and actual
+        confirmation tiers.
+    :func:`~agent.eval.run_golden_scenario`
+        Golden runner that fails a scenario when an injected confirmation tier
+        mismatches.
+    Governing vault records
+        ``2026-07-02-agent-harness-refoundation-adr`` wires confirmation gates
+        into serving behavior; ``2026-06-30-agent-harness-adr`` defines the MCP
+        harness layers and live-write prohibition.
 """
 
 from __future__ import annotations
