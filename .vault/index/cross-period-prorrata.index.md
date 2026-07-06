@@ -26,6 +26,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W02-P04-S17]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
+  - '[[2026-07-06-cross-period-prorrata-reference]]'
   - '[[2026-07-06-cross-period-prorrata-research]]'
 ---
 
@@ -66,6 +67,10 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 ### plan
 
 - `2026-07-06-cross-period-prorrata-plan` - `cross-period-prorrata` plan
+
+### reference
+
+- `2026-07-06-cross-period-prorrata-reference` - `cross-period-prorrata` reference: `cross-period-prorrata handover: W01 landed foundation, design decisions, plan roadmap, grounding surprises for the W02+ builder`
 
 ### research
 
