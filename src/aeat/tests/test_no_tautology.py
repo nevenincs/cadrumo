@@ -62,11 +62,13 @@ def _is_tautological_assert(node: ast.AST) -> bool:
     if _literal_truthiness(test) is True or _is_not_literal_falsey(test):
         return True
 
-    if isinstance(test, ast.Compare) and len(test.ops) == 1:
+    if isinstance(test, ast.Compare):
+        if _is_tautological_compare_chain(test):
+            return True
+        if len(test.ops) != 1:
+            return False
         left = test.left
         right = test.comparators[0]
-        if _is_tautological_compare(left, test.ops[0], right):
-            return True
         if _is_tautological_membership(left, test.ops[0], right):
             return True
 
@@ -110,6 +112,15 @@ def _is_tautological_compare(left: ast.expr, op: ast.cmpop, right: ast.expr) -> 
         return isinstance(op, ast.Eq | ast.Is)
 
     return False
+
+
+def _is_tautological_compare_chain(node: ast.Compare) -> bool:
+    """Return True when every adjacent comparison is guaranteed to pass."""
+    lefts = [node.left, *node.comparators[:-1]]
+    return all(
+        _is_tautological_compare(left, op, right)
+        for left, op, right in zip(lefts, node.ops, node.comparators, strict=True)
+    )
 
 
 def _is_tautological_membership(left: ast.expr, op: ast.cmpop, right: ast.expr) -> bool:
@@ -212,6 +223,9 @@ def test_detection_is_non_trivial() -> None:
         "assert True is not False",
         "assert x == x",
         "assert x is x",
+        "assert 1 == 1 == 1",
+        "assert 1 != 2 != 1",
+        "assert x == x == x",
         "assert x in (x,)",
         "assert x in [x]",
         "assert x in {x}",
@@ -234,6 +248,8 @@ def test_detection_is_non_trivial() -> None:
         "assert x",
         "assert x == y",
         "assert x != x",
+        "assert x == x == y",
+        "assert x != y != x",
         "assert len(x) == len(y)",
         "assert x in [y]",
         "assert x in values",
